@@ -204,7 +204,6 @@ Void TDecEntropy::decodeAlfParam(ALFParam* pAlfParam, TComPic* pcPic )
       {
         TComDataCU* pcCU = pAlfParam->pcQuadTree->getCU(uiCUAddr );
         pcCU->initCU( pcPic , uiCUAddr );
-        pcCU->setIsDecoderCU( true );
       }
       decodeAlfQuadTree( pAlfParam->pcQuadTree , uiSymbol );
     }
