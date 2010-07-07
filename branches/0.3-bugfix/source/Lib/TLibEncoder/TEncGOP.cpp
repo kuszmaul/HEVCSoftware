@@ -371,7 +371,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if HHI_ALF
         if ( pcSlice->getSymbolMode() )
         {
-          m_pcAdaptiveLoopFilter->startALFEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder() );
+          m_pcAdaptiveLoopFilter->startALFEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcCfg->getUseSBACRD() ?  m_pcEncTop->getRDGoOnSbacCoder() : NULL );
         }
         else
         {
