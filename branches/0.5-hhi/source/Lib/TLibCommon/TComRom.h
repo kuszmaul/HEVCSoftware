@@ -288,7 +288,24 @@ extern FILE*  g_hTrace;
 extern Bool   g_bJustDoIt;
 extern const Bool g_bEncDecTraceEnable;
 extern const Bool g_bEncDecTraceDisable;
-extern UInt64 g_nSymbolCounter;
+
+class CounterWithTrace
+{
+public:
+  CounterWithTrace( UInt64 ui ) : m_uiSymbolCounter( ui ) {}
+  UInt64 operator++( int )
+  {
+    if( m_uiSymbolCounter == 135428 )
+      printf("");
+    return m_uiSymbolCounter++;
+  }
+  bool operator<=( UInt64 ui ) const { return m_uiSymbolCounter <= ui; }
+  bool operator>=( UInt64 ui ) const { return m_uiSymbolCounter >= ui; }
+  void operator=( UInt64 ui ) { m_uiSymbolCounter = ui; }
+private:
+  UInt64 m_uiSymbolCounter;
+};
+extern CounterWithTrace g_nSymbolCounter;
 
 #define COUNTER_START    1
 #define COUNTER_END      0 //( UInt64(1) << 63 )

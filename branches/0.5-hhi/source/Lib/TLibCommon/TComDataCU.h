@@ -281,6 +281,9 @@ public:
   UChar         getCbf    ( UInt uiIdx, TextType eType, UInt uiTrDepth )  { return ( ( getCbf( uiIdx, eType ) >> uiTrDepth ) & 0x1 ); }
   Void          setCbf    ( UInt uiIdx, TextType eType, UChar uh )        { m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx] = uh;    }
   Void          clearCbf  ( UInt uiIdx, TextType eType, UInt uiNumParts );
+#if HHI_RQT_ROOT
+  UChar         getQtRootCbf          ( UInt uiIdx )                      { return getCbf( uiIdx, TEXT_LUMA, 0 ) || getCbf( uiIdx, TEXT_CHROMA_U, 0 ) || getCbf( uiIdx, TEXT_CHROMA_V, 0 ); }
+#endif
 
   Void          setCuCbfLuma          ( UInt uiAbsPartIdx, UInt uiLumaTrMode, UInt uiPartDepth = 0                      );
   Void          setCuCbfChroma        ( UInt uiAbsPartIdx, UInt uiChromaTrMode, UInt uiPartDepth = 0                    );
@@ -481,6 +484,9 @@ public:
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
   UInt          getCtxCbf                       ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 #if HHI_RQT
+#if HHI_RQT_ROOT
+  UInt          getCtxQtRootCbf                 ( UInt   uiAbsPartIdx                                 );
+#endif
   UInt          getCtxQtCbf                     ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 #endif
   UInt          getCtxRefIdx                    ( UInt   uiAbsPartIdx, RefPicList eRefPicList         );

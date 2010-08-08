@@ -103,6 +103,9 @@ public:
 
 #if HHI_RQT
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
+#if HHI_RQT_ROOT
+  virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
 #endif
   virtual Void codeTransformIdx  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -208,6 +211,9 @@ public:
   Void encodeTransformIdx      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
 #if HHI_RQT
   Void encodeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
+#if HHI_RQT_ROOT
+  Void encodeQtRootCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void encodeQtCbf             ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 #endif
   Void encodeCbf               ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, Bool bRD = false );

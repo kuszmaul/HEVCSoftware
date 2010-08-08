@@ -58,8 +58,33 @@
 #define HHI_AMVP_OFF                      0           ///< SOPH: Advanced Motion Vector Predictor deactivated [not in TMuC]
 #define HHI_DEBLOCKING_FILTER             0           ///< MW: deblocking filter supporting residual quadtrees
 
+// HHI cleanup and bug fixes
+#define HHI_RQT_FORCE_SPLIT_ACC2_PU       0           ///< MWHK: force split flags of residual quadtree according to PU-mode such that transform blocks are guaranteed to not span PUs
+#define HHI_RQT_ROOT                      1           ///< PHHK: signaling of residual quadtree root flag
+#define HHI_IMVP_FIX                      1           ///< SOPH: bug fixes for Interleaved Motion Vector Predictor 
+#define HHI_MRG_FIX                       1           ///< SOPH: bug fixes for inter partition merging
+#define HHI_CU_FIX                        1           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
+#define HHI_INTERP_FILTER_KERNEL_FIX      1           ///< BB: interpolation filter fixed spline kernel
+
+
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
+#endif
+
+#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU && !HHI_RQT )
+#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT is equal to 1"
+#endif
+
+#if ( HHI_RQT_ROOT && !HHI_RQT )
+#error "HHI_RQT_ROOT can only be equal to 1 if HHI_RQT is equal to 1"
+#endif
+
+#if ( HHI_MRG_FIX && !HHI_MRG )
+#error "HHI_MRG_FIX can only be equal to 1 if HHI_MRG is equal to 1"
+#endif
+
+#if ( HHI_IMVP_FIX && !HHI_IMVP )
+#error "HHI_IMVP_FIX can only be equal to 1 if HHI_IMVP is equal to 1"
 #endif
 
 #if HHI_AIS

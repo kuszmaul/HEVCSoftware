@@ -70,6 +70,9 @@ TDecSbac::TDecSbac()
   , m_cCUDeltaQpSCModel       ( 1,             1,               NUM_DELTA_QP_CTX              )
   , m_cCUCbfSCModel           ( 1,             2,               NUM_CBF_CTX                   )
 #if HHI_RQT
+#if HHI_RQT_ROOT
+  , m_cCUQtRootCbfSCModel     ( 1,             1,               NUM_QT_ROOT_CBF_CTX           )
+#endif
   , m_cCUQtCbfSCModel         ( 1,             3,               NUM_QT_CBF_CTX                )
 #endif
 #if HHI_TRANSFORM_CODING
@@ -145,6 +148,9 @@ Void TDecSbac::resetEntropy          (TComSlice* pcSlice)
   m_cCUDeltaQpSCModel.initBuffer      ( eSliceType, iQp, (Short*)INIT_DQP );
   m_cCUCbfSCModel.initBuffer          ( eSliceType, iQp, (Short*)INIT_CBF );
 #if HHI_RQT
+#if HHI_RQT_ROOT
+  m_cCUQtRootCbfSCModel.initBuffer    ( eSliceType, iQp, (Short*)INIT_QT_ROOT_CBF );
+#endif
   m_cCUQtCbfSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_QT_CBF );
 #endif
 
@@ -836,52 +842,56 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   else
   {
-    UInt uiMaxNumBits = 3;
-    for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
-    {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
-      if ( uiSymbol )
+      UInt uiMaxNumBits = 3;
+      for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
       {
-        break;
+        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+        if ( uiSymbol )
+        {
+          break;
+        }
+        uiMode++;
       }
-      uiMode++;
-    }
 
-    eMode = (PartSize) uiMode;
+      eMode = (PartSize) uiMode;
 
-    if (pcCU->getSlice()->isInterB() && uiMode == 3)
-    {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3) );
-      if (uiSymbol == 0)
+      if (pcCU->getSlice()->isInterB() && uiMode == 3)
       {
-        pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
-        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 4) );
-        if (uiSymbol == 0)
-          eMode = SIZE_2Nx2N;
-      }
-    }
-
-    if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
-    {
-      if (eMode == SIZE_2NxN)
-      {
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+#if HHI_CU_FIX
+        uiSymbol = 0;
+        if( g_uiMaxCUWidth>>uiDepth == 8 )
+#endif
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3) );
         if (uiSymbol == 0)
         {
-          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 1 ));
-          eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+          pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 4) );
+          if (uiSymbol == 0)
+            eMode = SIZE_2Nx2N;
         }
       }
-      else if (eMode == SIZE_Nx2N)
+
+      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
       {
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 0 ));
-        if (uiSymbol == 0)
+        if (eMode == SIZE_2NxN)
         {
-          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 1 ));
-          eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+          if (uiSymbol == 0)
+          {
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 1 ));
+            eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+          }
+        }
+        else if (eMode == SIZE_Nx2N)
+        {
+          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 0 ));
+          if (uiSymbol == 0)
+          {
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 1 ));
+            eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+          }
         }
       }
-    }
   }
 
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
@@ -1355,6 +1365,26 @@ Void TDecSbac::parseCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
 }
 
 #if HHI_RQT
+#if HHI_RQT_ROOT
+Void TDecSbac::parseQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf )
+{
+  UInt uiSymbol;
+  const UInt uiCtx = pcCU->getCtxQtRootCbf( uiAbsPartIdx );
+  m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtRootCbfSCModel.get( 0, 0, uiCtx ) );
+
+  DTRACE_CABAC_V( g_nSymbolCounter++ )
+  DTRACE_CABAC_T( "\tparseQtRootCbf()" )
+  DTRACE_CABAC_T( "\tsymbol=" )
+  DTRACE_CABAC_V( uiSymbol )
+  DTRACE_CABAC_T( "\tctx=" )
+  DTRACE_CABAC_V( uiCtx )
+  DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+  DTRACE_CABAC_V( uiAbsPartIdx )
+  DTRACE_CABAC_T( "\n" )
+
+  uiQtRootCbf = uiSymbol;
+}
+#endif
 Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth )
 {
   UInt uiSymbol;

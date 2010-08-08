@@ -164,6 +164,9 @@ public:
 
 #if HHI_RQT
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
+#if HHI_RQT_ROOT
+  Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 #endif
   Void codeTransformIdx  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -233,6 +236,9 @@ private:
 #endif
   ContextModel3DBuffer m_cCUCbfSCModel;
 #if HHI_RQT
+#if HHI_RQT_ROOT
+  ContextModel3DBuffer m_cCUQtRootCbfSCModel;
+#endif
   ContextModel3DBuffer m_cCUQtCbfSCModel;
   ContextModel3DBuffer m_cCUTransSubdivFlagSCModel;
 #endif

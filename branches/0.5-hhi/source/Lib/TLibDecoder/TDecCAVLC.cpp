@@ -523,6 +523,10 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
     if (pcCU->getSlice()->isInterB() && uiMode == 3)
     {
+#if HHI_CU_FIX
+      uiSymbol = 0;
+      if( g_uiMaxCUWidth>>uiDepth == 8 )
+#endif
       xReadFlag( uiSymbol );
       if (uiSymbol == 0)
       {
@@ -1323,6 +1327,15 @@ Void TDecCavlc::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2Transf
 {
   xReadFlag( ruiSubdivFlag );
 }
+
+#if HHI_RQT_ROOT
+Void TDecCavlc::parseQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf )
+{
+  UInt uiSymbol;
+  xReadFlag( uiSymbol );
+  uiQtRootCbf = uiSymbol;
+}
+#endif
 
 Void TDecCavlc::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth )
 {

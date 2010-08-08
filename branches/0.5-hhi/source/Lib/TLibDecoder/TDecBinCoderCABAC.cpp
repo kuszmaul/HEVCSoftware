@@ -84,6 +84,14 @@ TDecBinCABAC::finish()
 Void
 TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
 {
+#if HHI_RQT
+  {
+    DTRACE_CABAC_V( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tstate=" )
+    DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
+    DTRACE_CABAC_T( "\tsymbol=" )
+  }
+#endif
   UInt  uiLPS   = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) & 3 ];
   m_uiRange    -= uiLPS;
   if( m_uiValue < m_uiRange )
@@ -103,6 +111,12 @@ TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     m_uiRange  += m_uiRange;
     xReadBit( m_uiValue );
   }
+#if HHI_RQT
+  {
+    DTRACE_CABAC_V( ruiBin )
+    DTRACE_CABAC_T( "\n" )
+  }
+#endif
 }
 
 
@@ -119,6 +133,14 @@ TDecBinCABAC::decodeBinEP( UInt& ruiBin )
   {
     ruiBin      = 0;
   }
+#if HHI_RQT
+  {
+    DTRACE_CABAC_V( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tEPsymbol=" )
+    DTRACE_CABAC_V( ruiBin )
+    DTRACE_CABAC_T( "\n" )
+  }
+#endif
 }
 
 
