@@ -147,6 +147,9 @@ public:
 
 #if HHI_RQT
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
+#if HHI_RQT_ROOT
+  Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 #endif
 

@@ -380,7 +380,12 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
 {
   if( bRD )
     uiAbsPartIdx = 0;
-
+#if HHI_MRG_FIX
+  if ( pcCU->getSlice()->isIntra() )
+  {
+    return;
+  }
+#endif
   m_pcEntropyCoderIf->codeMergeFlag( pcCU, uiAbsPartIdx );
 }
   
@@ -632,7 +637,27 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   else
   {
     assert( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#if HHI_RQT_FORCE_SPLIT_ACC2_PU
+    UInt uiCtx = uiDepth;
+    const UInt uiTrMode = uiDepth - pcCU->getDepth( uiAbsPartIdx );
+    const Bool bSymmetricOK  = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxN  && pcCU->getPartitionSize( uiAbsPartIdx ) <= SIZE_NxN   && uiTrMode > 0;
+    const Bool bAsymmetricOK = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxnU && pcCU->getPartitionSize( uiAbsPartIdx ) <= SIZE_nRx2N && uiTrMode > 1;
+    const Bool b2NxnUOK      = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2NxnU && uiInnerQuadIdx > 1      && uiTrMode == 1;
+    const Bool b2NxnDOK      = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2NxnD && uiInnerQuadIdx < 2      && uiTrMode == 1;
+    const Bool bnLx2NOK      = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_nLx2N &&  ( uiInnerQuadIdx & 1 ) && uiTrMode == 1;
+    const Bool bnRx2NOK      = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_nRx2N && !( uiInnerQuadIdx & 1 ) && uiTrMode == 1;
+    const Bool bNeedSubdivFlag = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ||
+                                 bSymmetricOK || bAsymmetricOK ||
+                                 b2NxnUOK || b2NxnDOK || bnLx2NOK || bnRx2NOK ||
+                                 pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_INTRA;
+    assert( bNeedSubdivFlag || uiSubdiv );
+    if( bNeedSubdivFlag )
+    {
+      m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, uiCtx );
+    }
+#else
     m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, uiDepth );
+#endif
   }
 
 #if HHI_RQT_CHROMA_CBF_MOD
@@ -685,7 +710,15 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
     }
     UInt uiLumaTrMode, uiChromaTrMode;
     pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx( uiAbsPartIdx ), uiLumaTrMode, uiChromaTrMode );
-    m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, uiLumaTrMode );
+#if HHI_RQT_ROOT && HHI_RQT_CHROMA_CBF_MOD
+    if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, 0 ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, 0 ) )
+    {
+      assert( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, 0 ) );
+//      printf( "saved one bin! " );
+    }
+    else
+#endif
+      m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, uiLumaTrMode );
 #if HHI_RQT_CHROMA_CBF_MOD
     if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA )
 #endif
@@ -897,7 +930,10 @@ Void TEncEntropy::encodeMergeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
   {
     return;
   }
-
+#if HHI_MRG_FIX
+  if( bRD )
+    uiAbsPartIdx = 0;
+#endif
   // find left and top vectors. take vectors from PUs to the left and above.
   TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
   UInt uiNeighbourInfo;
@@ -1376,6 +1412,13 @@ Void TEncEntropy::encodeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRe
 }
 
 #if HHI_RQT
+#if HHI_RQT_ROOT
+Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  m_pcEntropyCoderIf->codeQtRootCbf( pcCU, uiAbsPartIdx );
+}
+#endif
+
 Void TEncEntropy::encodeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
 {
   m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, eType, uiTrDepth );
@@ -1548,6 +1591,17 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
   else
   {
+#if HHI_RQT_ROOT
+    if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() )
+    {
+      m_pcEntropyCoderIf->codeQtRootCbf( pcCU, uiAbsPartIdx );
+      if ( !pcCU->getQtRootCbf( uiAbsPartIdx ) )
+      {
+        return;
+      }
+    }
+#endif
+
     m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, 0 );
     m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0 );
     m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, 0 );

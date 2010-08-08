@@ -1499,6 +1499,31 @@ UInt TComDataCU::getCtxCbf( UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
 }
 
 #if HHI_RQT
+#if HHI_RQT_ROOT
+UInt TComDataCU::getCtxQtRootCbf( UInt uiAbsPartIdx )
+{
+  UInt uiCtx = 0;
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+
+  // Get RootCbf of left PU
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  if ( pcTempCU )
+  {
+    uiCtx = pcTempCU->getQtRootCbf( uiTempPartIdx );
+  }
+
+  // Get RootCbf of above PU
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  if ( pcTempCU )
+  {
+    uiCtx += pcTempCU->getQtRootCbf( uiTempPartIdx ) << 1;
+  }
+
+  return uiCtx;
+}
+#endif
+
 UInt TComDataCU::getCtxQtCbf( UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
 {
 #if HHI_RQT_CHROMA_CBF_MOD
@@ -2700,7 +2725,11 @@ Void TComDataCU::insertCollocated( RefPicList eRefPicList, Int uiPartIdx, Int iR
     {
       if( racNeighbourMvs[ uiIdx ] == cMv )
       {
+#if HHI_IMVP_FIX
+        return;
+#else
         break;
+#endif
       }
     }
     racNeighbourMvs.push_back( cMv );
@@ -3095,17 +3124,17 @@ Void TComDataCU::xUniqueMVPCand_one_fourth(AMVPInfo* pInfo)
     // BugFix for 1603
 		for ( j=iNTmp - 1; j>=0; j-- )
 		{
-			TComMv predMV = pInfo->m_acMvCand[i];
-			predMV.scale_down();
+      TComMv predMV = pInfo->m_acMvCand[i];
+      predMV.scale_down();
 #if HHI_IMVP
-			if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
-			{
-				if ( predMV.getVer() == acMv_round[j].getVer() ) break;
-			}
-	        else
-			{
-				if ( predMV == acMv_round[j] ) break;
-	        }
+      if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
+      {
+        if ( predMV.getVer() == acMv_round[j].getVer() ) break;
+      }
+      else
+      {
+        if ( predMV == acMv_round[j] ) break;
+      }
 #else
 			if ( predMV == acMv_round[j] ) break;
 #endif
@@ -3166,7 +3195,44 @@ Bool TComDataCU::clearMVPCand_one_fourth( TComMv cMvd, AMVPInfo* pInfo)
 		cMvPred_round.round();
 		cMvd_round.round();
 		// recreate the MV 
-		cMvCand = cMvPred_round + cMvd_round;
+    cMvCand = cMvPred_round + cMvd_round;
+
+#if HHI_IMVP_FIX
+    cMvPred_round.scale_down();
+    cMvd_round.scale_down();
+    cMvCand = cMvPred_round + cMvd_round;
+
+    UInt uiBestYBits = xGetComponentBits(cMvd_round.getVer());
+    UInt uiBestBits = xGetMvdBits(cMvd_round);
+    for ( j=0; j<pInfo->iN; j++ )
+    {
+      TComMv cMvPred_round_j;
+
+      cMvPred_round_j=pInfo->m_acMvCand[j];
+      cMvPred_round_j.scale_down();
+#if HHI_IMVP
+      if ( getSlice()->getSPS()->getUseIMP() )
+      {
+        if (aiValid[j] && i!=j && xGetComponentBits(cMvCand.getVer()-cMvPred_round_j.getVer()) < uiBestYBits)
+        {
+          aiValid[i] = 0;
+        }
+      }
+      else
+      {
+        if (aiValid[j] && i!=j && xGetMvdBits(cMvCand-cMvPred_round_j) < uiBestBits)
+        {
+          aiValid[i] = 0;
+        }
+      }
+#else
+      if (aiValid[j] && i!=j && xGetMvdBits(cMvCand-cMvPred_round_j) < uiBestBits)
+      {
+        aiValid[i] = 0;
+      }
+#endif
+    }
+#else
 #if HHI_IMVP
 		Int iMvCompPredX = 0;
 		if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
@@ -3211,6 +3277,7 @@ Bool TComDataCU::clearMVPCand_one_fourth( TComMv cMvd, AMVPInfo* pInfo)
 			  aiValid[i] = 0;
 			}
 		}
+#endif
 	}
   iNTmp = 0;
   for ( i=0; i<pInfo->iN; i++ )
@@ -3249,12 +3316,12 @@ Int TComDataCU::searchMVPIdx_one_fourth(TComMv cMv, AMVPInfo* pInfo)
   {
     for ( Int i=0; i<pInfo->iN; i++ )
     {
-		TComMv cCurMv=cMv;
-		TComMv cCurPredMv=pInfo->m_acMvCand[i];
-		cCurMv.scale_down();
-		cCurPredMv.scale_down();
-        if (cCurMv.getVer() == cCurPredMv.getVer() )
-            return i;
+      TComMv cCurMv=cMv;
+      TComMv cCurPredMv=pInfo->m_acMvCand[i];
+      cCurMv.scale_down();
+      cCurPredMv.scale_down();
+      if (cCurMv.getVer() == cCurPredMv.getVer() )
+        return i;
     }
   }
   else
@@ -3287,10 +3354,43 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
   {
     return false;
   }
-
+#if HHI_IMVP_FIX
+  Int iMvCandY[ AMVP_MAX_NUM_CANDS ];
+  Int iNOri = pInfo->iN;
+  if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
+  {
+    Int iNTmp, i, j;
+    // make it be unique
+    iNTmp = 0;
+    iMvCandY[ iNTmp++ ] = pInfo->m_acMvCand[0].getVer();
+    for ( i=1; i<pInfo->iN; i++ )
+    {
+      for ( j=iNTmp - 1; j>=0; j-- )
+      {
+        if ( pInfo->m_acMvCand[i].getVer() == iMvCandY[j] ) break;
+      }
+      if ( j<0 )
+      {
+        iMvCandY[ iNTmp++ ] = pInfo->m_acMvCand[i].getVer();
+      }
+    }
+    for ( i=0; i<iNTmp; i++ ) pInfo->m_acMvCand[i].setVer(iMvCandY[i]) ;
+    pInfo->iN = iNTmp;
+  }
+  if (pInfo->iN <= 1)
+  {
+    return true;
+  }
+#endif
   // only works for non-zero mvd case
   if (cMvd.getHor() == 0 && cMvd.getVer() == 0)
   {
+#if HHI_IMVP_FIX
+if ( getSlice()->getSPS()->getUseIMP() )
+{
+   return (iNOri != pInfo->iN);
+}
+#endif
     return false;
   }
 
@@ -3309,6 +3409,16 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
 #if HHI_IMVP
     TComMv cMvCand;
     Int iMvCompPredX = 0;
+#if HHI_IMVP_FIX
+    UInt uiBestYBits = 0;
+    if ( getSlice()->getSPS()->getUseIMP() )
+    {
+      // recreate the MV 
+      // MVy from the AMVP y component
+      cMvCand.setVer(  pInfo->m_acMvCand[i].getVer() + cMvd.getVer() );
+      uiBestYBits = xGetComponentBits(cMvd.getVer());
+    }
+#else
     if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
     {
       // recreate the MV 
@@ -3318,6 +3428,7 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
       getMvPredXDep( eRefPicList, uiPartIdx, iRefIdx, cMvCand.getVer(), iMvCompPredX );
       cMvCand.setHor(  iMvCompPredX + cMvd.getHor() );
     }
+#endif
     else
     {
       cMvCand = pInfo->m_acMvCand[i] + cMvd;
@@ -3330,6 +3441,16 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
     for ( j=0; j<pInfo->iN; j++ )
     {
 #if HHI_IMVP
+#if HHI_IMVP_FIX
+      if ( getSlice()->getSPS()->getUseIMP() )
+      {
+        int iYPred = pInfo->m_acMvCand[j].getVer();
+        if (aiValid[j] && i!=j && xGetComponentBits(cMvCand.getVer()-iYPred) < uiBestYBits)
+        {
+          aiValid[i] = 0;
+        }
+      }
+#else
       if ( getSlice()->getSPS()->getUseIMP() && !isSkip(uiPartIdx) )
       {
         // recreate the new MVp to test
@@ -3343,6 +3464,7 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
           aiValid[i] = 0;
         }
       }
+#endif
       else
       {
       if (aiValid[j] && i!=j && xGetMvdBits(cMvCand-pInfo->m_acMvCand[j]) < uiBestBits)
@@ -3368,6 +3490,12 @@ Bool TComDataCU::clearMVPCand( TComMv cMvd, AMVPInfo* pInfo )
 
   if (iNTmp == pInfo->iN)
   {
+#if HHI_IMVP_FIX
+if ( getSlice()->getSPS()->getUseIMP() )
+{
+  return (iNOri != pInfo->iN);
+}
+#endif
     return false;
   }
 

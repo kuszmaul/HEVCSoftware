@@ -2127,7 +2127,7 @@ FILE*  g_hTrace = NULL;
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
 Bool   g_bJustDoIt = false;
-UInt64 g_nSymbolCounter = 0;
+CounterWithTrace g_nSymbolCounter = 0;
 #endif
 #endif
 // ====================================================================================================================

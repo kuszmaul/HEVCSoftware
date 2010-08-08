@@ -66,6 +66,9 @@
 #define NUM_REF_NO_CTX                6       ///< number of context models for reference index
 #if HHI_RQT
 #define NUM_TRANS_SUBDIV_FLAG_CTX     10      ///< number of context models for transform subdivision flags
+#if HHI_RQT_ROOT
+#define NUM_QT_ROOT_CBF_CTX           20      ///< number of context models for QT ROOT CBF
+#endif
 #define NUM_QT_CBF_CTX                15      ///< number of context models for QT CBF
 #endif
 #define NUM_TRANS_IDX_CTX             4       ///< number of context models for transform index
@@ -419,6 +422,33 @@ INIT_CBF[3][8][2] =
 };
 
 #if HHI_RQT
+#if HHI_RQT_ROOT
+static const Short
+INIT_QT_ROOT_CBF[3][NUM_QT_ROOT_CBF_CTX][2] =
+{
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+  }
+};
+#endif
 static const Short
 INIT_QT_CBF[3][3*NUM_QT_CBF_CTX][2] =
 {

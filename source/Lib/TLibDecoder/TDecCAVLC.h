@@ -91,6 +91,9 @@ public:
 
 #if HHI_RQT
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
+#if HHI_RQT_ROOT
+  Void parseQtRootCbf       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
+#endif
   Void parseQtCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
 #endif
   Void  parseAlfFlag        ( UInt& ruiVal );

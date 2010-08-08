@@ -361,7 +361,14 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     xWriteFlag( 0 );
     xWriteFlag( 0 );
     xWriteFlag( 0 );
+#if HHI_CU_FIX
+    if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+    {
+      xWriteFlag( 0 );
+    }
+#else
     xWriteFlag( 0 );
+#endif
     xWriteFlag( (eSize == SIZE_2Nx2N? 0 : 1) );
     return;
   }
@@ -424,13 +431,18 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     }
   case SIZE_NxN:
     {
-      xWriteFlag( 0 );
-      xWriteFlag( 0 );
-      xWriteFlag( 0 );
-
-      if (pcCU->getSlice()->isInterB())
+#if HHI_CU_FIX
+      if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+#endif
       {
-        xWriteFlag( 1 );
+        xWriteFlag( 0 );
+        xWriteFlag( 0 );
+        xWriteFlag( 0 );
+
+        if (pcCU->getSlice()->isInterB())
+        {
+          xWriteFlag( 1 );
+        }
       }
       break;
     }
@@ -671,6 +683,14 @@ Void TEncCavlc::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
 {
   xWriteFlag( uiSymbol );
 }
+
+#if HHI_RQT_ROOT
+Void TEncCavlc::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiCbf = pcCU->getQtRootCbf( uiAbsPartIdx );
+  xWriteFlag( uiCbf ? 1 : 0 );
+}
+#endif
 
 Void TEncCavlc::codeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
 {
