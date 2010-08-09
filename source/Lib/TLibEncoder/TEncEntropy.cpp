@@ -381,6 +381,11 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
   if( bRD )
     uiAbsPartIdx = 0;
 
+  if ( pcCU->getSlice()->isIntra() )
+  {
+    return;
+  }
+  
   m_pcEntropyCoderIf->codeMergeFlag( pcCU, uiAbsPartIdx );
 }
   
@@ -897,6 +902,9 @@ Void TEncEntropy::encodeMergeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
   {
     return;
   }
+
+  if( bRD )
+    uiAbsPartIdx = 0;
 
   // find left and top vectors. take vectors from PUs to the left and above.
   TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
