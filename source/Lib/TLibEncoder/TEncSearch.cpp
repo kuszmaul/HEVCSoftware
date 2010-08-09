@@ -725,16 +725,13 @@ UInt TEncSearch::xPatternRefinementHAM_MOMS_Bi    ( TComPattern* pcPatternKey, P
 {
   UInt  uiDist;
   UInt  uiDistBest  = uiDistBest_onefourth;
-  UInt  uiDirecBest = 0;
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
   m_pcRdCost->setDistParam_Bi( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
 
-  TComMv* pcMvRefine = (s_acMvRefineQ);
   TComMv cMvQ;
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
   rcMvFrac <<=1;
   TComMv cMvHAM;
 
@@ -745,8 +742,6 @@ UInt TEncSearch::xPatternRefinementHAM_MOMS_Bi    ( TComPattern* pcPatternKey, P
       if (dMVy!=0 || dMVx!=0)
       {
         TComMv cMvTest = rcMvFrac;
-        Pel* piOrg   = m_cDistParam.pOrg;
-        Int iStrideOrg = m_cDistParam.iStrideOrg;
 #if HHI_IMVP
         if ( m_pcEncCfg->getUseIMP() )
         {
@@ -780,17 +775,14 @@ UInt TEncSearch::xPatternRefinementHAM_DIF_Bi( TComPattern* pcPatternKey, Pel* p
 {
   UInt  uiDist;
   UInt  uiDistBest  = uiDistBest_onefourth;
-  UInt  uiDirecBest = 0;
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
 
   m_pcRdCost->setDistParam_Bi( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME());
 
-  TComMv* pcMvRefine = (s_acMvRefineQ);
   TComMv cMvQ;
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
   rcMvFrac <<=1;
   TComMv cMvHAM;
   for (Int dMVx = -1; dMVx <= 1; dMVx++)
@@ -800,8 +792,6 @@ UInt TEncSearch::xPatternRefinementHAM_DIF_Bi( TComPattern* pcPatternKey, Pel* p
       if (dMVy!=0 || dMVx!=0)
       {
         TComMv cMvTest = rcMvFrac;
-        Pel* piOrg   = m_cDistParam.pOrg;
-        Int iStrideOrg = m_cDistParam.iStrideOrg;
 #if HHI_IMVP
         if ( m_pcEncCfg->getUseIMP() )
         {
@@ -841,17 +831,14 @@ UInt TEncSearch::xPatternRefinementHAM_MOMS    ( TComPattern* pcPatternKey, Pel*
 {
   UInt  uiDist;
   UInt  uiDistBest  = uiDistBest_onefourth;
-  UInt  uiDirecBest = 0;
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
 
   m_pcRdCost->setDistParam( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
 
-  TComMv* pcMvRefine = (s_acMvRefineQ);
   TComMv cMvQ;
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
   rcMvFrac <<=1;
   TComMv cMvHAM;
 
@@ -862,8 +849,6 @@ UInt TEncSearch::xPatternRefinementHAM_MOMS    ( TComPattern* pcPatternKey, Pel*
       if (dMVy!=0 || dMVx!=0)
       {
         TComMv cMvTest = rcMvFrac;
-        Pel* piOrg   = m_cDistParam.pOrg;
-        Int iStrideOrg = m_cDistParam.iStrideOrg;
 #if HHI_IMVP
         if ( m_pcEncCfg->getUseIMP() )
         {
@@ -897,17 +882,14 @@ UInt TEncSearch::xPatternRefinementHAM_DIF( TComPattern* pcPatternKey, Pel* piRe
 {
   UInt  uiDist;
   UInt  uiDistBest  = uiDistBest_onefourth;
-  UInt  uiDirecBest = 0;
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
 
   m_pcRdCost->setDistParam( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
 
-  TComMv* pcMvRefine = (s_acMvRefineQ);
   TComMv cMvQ;
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
   rcMvFrac <<=1;
   TComMv cMvHAM;
   for (Int dMVx = -1; dMVx <= 1; dMVx++)
@@ -917,8 +899,6 @@ UInt TEncSearch::xPatternRefinementHAM_DIF( TComPattern* pcPatternKey, Pel* piRe
       if (dMVy!=0 || dMVx!=0)
       {
         TComMv cMvTest = rcMvFrac;
-        Pel* piOrg   = m_cDistParam.pOrg;
-        Int iStrideOrg = m_cDistParam.iStrideOrg;
 #if HHI_IMVP
         if ( m_pcEncCfg->getUseIMP() )
         {
@@ -2811,9 +2791,7 @@ Bool TEncSearch::predIntraLumaDirAvailable( UInt uiMode, UInt uiWidthBit, Bool a
 Void TEncSearch::xIntraPlanarRecon( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, TCoeff* piCoeff, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, TextType eText )
 {
   UInt uiX, uiY;
-  UInt uiCoeffOffset = uiWidth*uiHeight;
   UInt uiReconStride;
-  UInt uiAbsSum      = 0;
   Int  iSample;
 
   Pel* pOrg  = piOrg;
@@ -5446,13 +5424,12 @@ UInt TEncSearch::xPatternRefinementMC_Bi  ( TComPattern* pcPatternKey, Pel* piRe
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
-  Int iBestX = 0, iBestY = 0; 
 
   m_pcRdCost->setDistParam_Bi( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
 
   TComMv* pcMvRefine = (iFrac == 2 ? s_acMvRefineH : s_acMvRefineQ);
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
+  UInt i = 0;
   Int search_pos=16;
 
   for ( i = 0; i < search_pos; i++)
@@ -5815,13 +5792,12 @@ UInt TEncSearch::xPatternRefinementMC  ( TComPattern* pcPatternKey, Pel* piRef, 
 
   Pel* piLumaExt = m_cYuvExt.getLumaAddr();
   Int iYuvExtStride = m_cYuvExt.getStride();
-  Int iBestX = 0, iBestY = 0; 
 
   m_pcRdCost->setDistParam( pcPatternKey, piLumaExt, iYuvExtStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
 
   TComMv* pcMvRefine = (iFrac == 2 ? s_acMvRefineH : s_acMvRefineQ);
 
-  Int dMVx = 0; Int dMVy = 0; UInt i = 0;
+  UInt i = 0;
   Int search_pos=16;
 
   for ( i = 0; i < search_pos; i++)
@@ -7485,7 +7461,6 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
         Pel*  piDstYPel;
         Pel*  piSrcYPel;
 
-        Int iSrcStride4 = (iSrcStride<<2);
         Int iDstStride4 = (iDstStride<<2);
 
         Int i,j,i0,j0;
