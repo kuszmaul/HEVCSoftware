@@ -7016,6 +7016,9 @@ Void  TEncSearch::xAddSymbolBitsIntra( TComDataCU* pcCU, TCoeff* pCoeff, UInt ui
     if( !pcCU->getSlice()->isIntra() )
     {
       m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
+#if HHI_MRG
+      m_pcEntropyCoder->encodeMergeInfo( pcCU, 0, true );      
+#endif
       m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     }
     
