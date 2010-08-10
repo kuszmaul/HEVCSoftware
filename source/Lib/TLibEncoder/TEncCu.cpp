@@ -529,6 +529,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostIntra(rpcBestCU, rpcTempCU, eSize);  rpcTempCU->initEstData();
           }
         } else {
+#if HHI_ALLOW_CIP_SWITCH
+        if ( rpcTempCU->getSlice()->getSPS()->getUseCIP() )
+        {
+#endif
           rpcTempCU->setROTindex(0,0);
           rpcTempCU->setROTindexSubParts(0, 0, rpcTempCU->getDepth(0) );
           if (SIZE_NxN != eSize){
@@ -540,6 +544,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             rpcTempCU->setCIPflagSubParts( 1, 0, rpcTempCU->getDepth(0) );
             xCheckRDCostIntra(rpcBestCU, rpcTempCU, SIZE_2Nx2N);  rpcTempCU->initEstData();
           }
+#if HHI_ALLOW_CIP_SWITCH
+        }
+#endif
+
         }
       }
     }
