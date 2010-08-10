@@ -1537,7 +1537,11 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 	m_pcEntropyCoderIf->codeCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0);
 	m_pcEntropyCoderIf->codeCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_V, 0);
 
+#if HHI_ALLOW_ROT_SWITCH
     if (pcCU->getSlice()->getSPS()->getUseROT() && uiWidth >= 16)
+#else
+    if (uiWidth >= 16)
+#endif
 		encodeROTindex( pcCU, uiAbsPartIdx, uiDepth );
 
 	xEncodeCoeff( pcCU, pcCU->getCoeffY()  + uiLumaOffset,   uiAbsPartIdx, uiDepth, uiWidth,    uiHeight,    0, uiLumaTrMode,   TEXT_LUMA     );
