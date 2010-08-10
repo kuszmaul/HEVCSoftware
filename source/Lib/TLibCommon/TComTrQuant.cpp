@@ -7474,21 +7474,37 @@ Void TComTrQuant::xRateDistOptQuant( TComDataCU* pcCU, Long* pSrcCoeff, TCoeff*&
     j = iPos >> iShift;
     i = iPos % uiWidth;
 
-    if ( bExt8x8Flag )
-    {
-      if ( ( j < 8 ) && ( i < 8 ) && indexROT )
-        levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] );
-      else
-#if QC_MDDT
-        levelData[iPos].levelDouble =  (Int64)abs(pSrcCoeff[iPos]) * (Int64)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] );//precision increase
-#else
-        levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] * (Long)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] ) );
-#endif
-    }
-    else
+#if HHI_ALLOW_ROT_SWITCH
+		if ( m_bUseROT )
 		{
-      levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] );
+#endif
+			if ( bExt8x8Flag )
+			{
+				if ( ( j < 8 ) && ( i < 8 ) && indexROT )
+					levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] );
+				else
+#if QC_MDDT
+					levelData[iPos].levelDouble =  (Int64)abs(pSrcCoeff[iPos]) * (Int64)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] );//precision increase
+#else
+					levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] * (Long)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] ) );
+#endif
+			}
+			else
+			{
+				levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] );
+			}
+#if HHI_ALLOW_ROT_SWITCH
 		}
+		else
+		{
+#if QC_MDDT
+			levelData[iPos].levelDouble =  (Int64)abs(pSrcCoeff[iPos]) * (Int64)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] );//precision increase
+#else
+			levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] * (Long)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] ) );
+#endif
+		}
+#endif
+
 
 #if QC_MDDT
     levelData[iPos].levelQ		= (Long)( levelData[iPos].levelDouble >> q_bits );
