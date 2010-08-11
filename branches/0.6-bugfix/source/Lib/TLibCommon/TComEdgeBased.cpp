@@ -196,8 +196,6 @@ Int TComEdgeBased::intrapred_luma_edge(Int iHeight, Int iWidth, Int uiStride, In
   int limit_left_low = (above_flag) ? -1 : 0;
   int limit_left_high = a_end-4;
 
-  int max_value = 1<<(g_uiBitDepth + g_uiBitIncrement);
-
   /////////////////////////////////////////////////////////////////////////////
   // Calculate edge based prediction
   /////////////////////////////////////////////////////////////////////////////
@@ -273,7 +271,7 @@ Int TComEdgeBased::intrapred_luma_edge(Int iHeight, Int iWidth, Int uiStride, In
             pred_pix = ((pred-uiStride)[k-1] + (pred-uiStride)[k] + pred[k-1]) / 3;
         }
         
-        pred[k] = (Pel)Clip3(0, max_value, pred_pix);
+        pred[k] = (Pel)Clip(pred_pix);
       }
       pred += uiStride;
     }
