@@ -379,7 +379,10 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_uiQuadtreeTULog2MaxSize < m_uiQuadtreeTULog2MinSize,                "QuadtreeTULog2MaxSize must be greater than or equal to m_uiQuadtreeTULog2MinSize.");
     xConfirmPara( (1<<m_uiQuadtreeTULog2MinSize)>(m_uiMaxCUWidth >>(m_uiMaxCUDepth-1)), "QuadtreeTULog2MinSize must not be greater than minimum CU size" ); // HS
     xConfirmPara( (1<<m_uiQuadtreeTULog2MinSize)>(m_uiMaxCUHeight>>(m_uiMaxCUDepth-1)), "QuadtreeTULog2MinSize must not be greater than minimum CU size" ); // HS
-  }
+
+    xConfirmPara( 8 != (m_uiMaxCUWidth >>(m_uiMaxCUDepth-1)), "Minimum CU width must be 8" );
+    xConfirmPara( 8 != (m_uiMaxCUHeight>>(m_uiMaxCUDepth-1)), "Minimum CU height must be 8" );
+}
 #endif
 
 #if HHI_INTERP_FILTER && !TEN_DIRECTIONAL_INTERP
