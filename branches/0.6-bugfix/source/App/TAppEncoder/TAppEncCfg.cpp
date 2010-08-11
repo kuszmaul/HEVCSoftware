@@ -147,7 +147,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     /* Coding structure paramters */
     ("IntraPeriod,-ip",m_iIntraPeriod, -1, "intra period in frames, (-1: only first frame)")
     ("GOPSize,g",      m_iGOPSize,      1, "GOP size of temporal structure")
-    ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment")
+    ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment (-1: implies inherit GOPSize value)")
     ("NumOfReference,r",       m_iNumOfReference,     1, "Number of reference (P)")
     ("NumOfReferenceB_L0,-rb0",m_iNumOfReferenceB_L0, 1, "Number of reference (B_L0)")
     ("NumOfReferenceB_L1,-rb1",m_iNumOfReferenceB_L1, 1, "Number of reference (B_L1)")
