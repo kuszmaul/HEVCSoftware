@@ -148,6 +148,9 @@ void InitScanOrderForSlice();
 void updateScanOrder(int first);
 void normalizeScanStats();
 #endif
+
+#define BUGFIX48 0
+
 ///////////////////////////////
 // QUALCOMM defines section end
 ///////////////////////////////
