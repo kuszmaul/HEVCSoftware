@@ -1371,6 +1371,15 @@ Void TDecCavlc::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType,
   xReadFlag( uiSymbol );
   pcCU->setCbfSubParts( uiSymbol << uiTrDepth, eType, uiAbsPartIdx, uiDepth );
 }
+
+#if HHI_RQT_ROOT
+Void TDecCavlc::parseQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf )
+{
+  UInt uiSymbol;
+  xReadFlag( uiSymbol );
+  uiQtRootCbf = uiSymbol;
+}
+#endif
 #endif
 
 Void TDecCavlc::parseAlfFlag (UInt& ruiVal)
