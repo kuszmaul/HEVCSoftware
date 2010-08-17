@@ -222,7 +222,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
 
   rpcSlice->setReferenced       (uiCode ? true : false);
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   if(!rpcSlice->isIntra())
   {
 	xReadFlag( uiCode );
