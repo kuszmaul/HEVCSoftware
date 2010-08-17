@@ -2657,7 +2657,11 @@ Void TComTrQuant::xRateDistOptQuant_VLC             ( TComDataCU*               
 
     dErr = Double( lLevelDouble );
     rd64UncodedCost = dErr * dErr * dTemp;     
-    rd64CodedCost   = rd64UncodedCost + xGetICost( iRate );
+#if HHI_TRANSFORM_CODING
+    rd64CodedCost = rd64UncodedCost + xGetICost( iRate ); 
+#else
+    rd64CodedCost = rd64UncodedCost + m_dLambda * iRate; 
+#endif
     for(uiAbsLevel = uiMinLevel; uiAbsLevel <= uiMaxLevel ; uiAbsLevel++ )
     {
       if (uiWidth==4)
@@ -2666,7 +2670,11 @@ Void TComTrQuant::xRateDistOptQuant_VLC             ( TComDataCU*               
         iRate = bitCountVLC(iSign*uiAbsLevel,iScanning,iBlockType,iLpFlag,iLevelMode,iRun,iMaxrun,iVlc_adaptive,8)<<uiBitShift; 
       dErr = Double( lLevelDouble  - Long( uiAbsLevel << iQBits ) );
       rd64UncodedCost = dErr * dErr * dTemp;
-      dCurrCost = rd64UncodedCost + xGetICost( iRate );
+#if HHI_TRANSFORM_CODING
+      dCurrCost = rd64UncodedCost + xGetICost( iRate ); 
+#else
+      dCurrCost = rd64UncodedCost + m_dLambda * iRate; 
+#endif
       if( dCurrCost < rd64CodedCost )
       {         
         uiBestAbsLevel  = uiAbsLevel;
