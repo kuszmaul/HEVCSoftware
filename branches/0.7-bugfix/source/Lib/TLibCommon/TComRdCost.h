@@ -51,7 +51,7 @@ class TComPattern;
 // for function pointer
 typedef UInt (*FpDistFunc) (DistParam*);
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 typedef UInt (*FpDistFuncRnd) (DistParam*, Pel*, Bool);
 #endif
 
@@ -71,7 +71,7 @@ public:
   Int   iCols;
   Int   iStep;
   FpDistFunc DistFunc;
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   FpDistFuncRnd DistFuncRnd;
 #endif
 
@@ -95,7 +95,7 @@ private:
   Int                     m_iBlkHeight;
 
   FpDistFunc              m_afpDistortFunc[33]; // [eDFunc]
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   FpDistFuncRnd           m_afpDistortFuncRnd[33];
 #endif
 
@@ -130,7 +130,7 @@ public:
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   Void    setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
   Void    setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
 #endif
@@ -197,7 +197,7 @@ private:
   static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 
   static UInt xGetSSE           ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
   static UInt xGetSSE4          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
