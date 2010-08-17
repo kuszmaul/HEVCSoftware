@@ -75,6 +75,10 @@ Void TComEdgeBased::setThreshold(Int p_threshold_edge_detection)
 //-----------------------------------------------------------------------------
 inline int TComEdgeBased::shift_right_round(int val, int b) 
 {
+#if BUGFIX51
+  if (b <= 0)
+    return val;
+#endif
   return (val + (1 << (b-1))) >> b;
 }
 
