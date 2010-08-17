@@ -695,6 +695,14 @@ Void TEncCavlc::codeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
   UInt uiCbf = pcCU->getCbf( uiAbsPartIdx, eType, uiTrDepth );
   xWriteFlag( uiCbf );
 }
+
+#if HHI_RQT_ROOT
+Void TEncCavlc::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiCbf = pcCU->getQtRootCbf( uiAbsPartIdx );
+  xWriteFlag( uiCbf ? 1 : 0 );
+}
+#endif
 #endif
 
 Void TEncCavlc::codeTransformIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
