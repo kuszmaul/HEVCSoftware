@@ -161,6 +161,7 @@ void normalizeScanStats();
 ///////////////////////////////////
 
 #define EDGE_BASED_PREDICTION   // Enable edge based prediction for intra
+#define BUGFIX51 0
 
 ///////////////////////////////////
 // Panasonic defines section start
