@@ -2471,6 +2471,24 @@ Void TEncAdaptiveLoopFilter::xInitParam()
   }
   else
   {
+#ifdef FIX1
+    m_puiCUCorr = new CorrBlk*[m_pcPic->getNumCUsInFrame()];
+    for (i = 0; i < m_pcPic->getNumCUsInFrame(); i++)
+    {
+      m_puiCUCorr[i] = new CorrBlk[m_uiNumSCUInCU];
+
+      for (j = 0; j < m_uiNumSCUInCU; j++)
+      {
+        for (k = 0; k < ALF_MIN_NUM_COEF; k++)
+        {
+          for (l = 0; l< ALF_MIN_NUM_COEF+1; l++)
+          {
+            m_puiCUCorr[i][j][k][l] = 0;
+          }
+        }
+      }        
+    }
+#else
     m_puiCUCorr = new UInt***[m_pcPic->getNumCUsInFrame()];
     for (i = 0; i < m_pcPic->getNumCUsInFrame(); i++)
     {
@@ -2488,6 +2506,7 @@ Void TEncAdaptiveLoopFilter::xInitParam()
         }
       }
     }
+#endif
   }
 
   if (m_pdDoubleAlfCoeff != NULL)
@@ -2526,6 +2545,7 @@ Void TEncAdaptiveLoopFilter::xUninitParam()
   {
     for (i = 0; i < m_pcPic->getNumCUsInFrame(); i++)
     {
+#ifndef FIX1
       for (j = 0; j < m_uiNumSCUInCU; j++)
       {
         for (k = 0; k < ALF_MIN_NUM_COEF; k++)
@@ -2536,6 +2556,7 @@ Void TEncAdaptiveLoopFilter::xUninitParam()
         delete[] m_puiCUCorr[i][j];
         m_puiCUCorr[i][j] = NULL;
       }
+#endif
       delete[] m_puiCUCorr[i];
       m_puiCUCorr[i] = NULL;
     }
@@ -2692,7 +2713,11 @@ Void TEncAdaptiveLoopFilter::xCalcALFCoeff( ALFParam* pAlfParam )
   }
 }
 
+#ifdef FIX1
+Void TEncAdaptiveLoopFilter::xCalcStoredCorrelationFuncBlock(Pel* pOrg, Pel* pCmp, CorrBlk& ppuiCorr, Int iTap, Int iWidth, Int iHeight, Int iOrgStride, Int iCmpStride)
+#else
 Void TEncAdaptiveLoopFilter::xCalcStoredCorrelationFuncBlock(Pel* pOrg, Pel* pCmp, UInt** ppuiCorr, Int iTap, Int iWidth, Int iHeight, Int iOrgStride, Int iCmpStride)
+#endif
 {
   Int N      = (iTap*iTap+1)>>1;
   Int offset = iTap>>1;
@@ -3214,8 +3239,10 @@ Void TEncAdaptiveLoopFilter::xFilteringFrameLuma(TComPicYuv* pcPicOrg, TComPicYu
   Int    i, tap, N, err_code;
   Int* qh;
   Int    j, k;
+#ifndef FIX1
   UInt** ppuiBlkCorr;
-
+#endif
+  
   tap  = m_pcTempAlfParam->tap;
   N    = m_pcTempAlfParam->num_coeff;
   qh   = m_pcTempAlfParam->coeff;
@@ -3238,15 +3265,19 @@ Void TEncAdaptiveLoopFilter::xFilteringFrameLuma(TComPicYuv* pcPicOrg, TComPicYu
       {
         continue;
       }
+#ifdef FIX1
+      CorrBlk &ppuiBlkCorr = m_puiCUCorr[uiCUAddr][(uiIdx>>2)]; 
+#else
       ppuiBlkCorr = m_puiCUCorr[uiCUAddr][(uiIdx>>2)];
+#endif
 
       for(j=0; j<N; j++)
-        memset(ppuiBlkCorr[j], 0, sizeof(UInt)*(N+1-j));
+        memset(ppuiBlkCorr[j], 0, sizeof(UInt)*(N+1-j));      
 
       Pel* pOrg = pcPicOrg->getLumaAddr(uiCUAddr, uiIdx);
       Pel* pCmp = pcPicDec->getLumaAddr(uiCUAddr, uiIdx);
       xCalcStoredCorrelationFuncBlock(pOrg, pCmp, ppuiBlkCorr, tap, m_uiSCUWidth, m_uiSCUHeight, pcPicOrg->getStride(), pcPicDec->getStride());
-
+      
       for(j=0; j<N; j++)
         for(k=j; k<N+1; k++)
           m_ppdAlfCorr[j][k] += (Double) ppuiBlkCorr[j][k-j];
