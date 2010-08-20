@@ -75,15 +75,25 @@ public:
   FpDistFuncRnd DistFuncRnd;
 #endif
 
-  // for DF_YUV_SAD
-  Pel*  pCbOrg;
-  Pel*  pCbCur;
-  Pel*  pCrOrg;
-  Pel*  pCrCur;
-
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
   Int   iSubShift;
+  
+  DistParam()
+  {
+    pOrg = NULL;
+    pCur = NULL;
+    iStrideOrg = 0;
+    iStrideCur = 0;
+    iRows = 0;
+    iCols = 0;
+    iStep = 1;
+    DistFunc = NULL;
+#ifdef ROUNDING_CONTROL_BIPRED
+    DistFuncRnd = NULL;
+#endif
+    iSubShift = 0;
+  }
 };
 
 /// RD cost computation class
