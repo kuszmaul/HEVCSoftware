@@ -128,7 +128,7 @@ public:
 protected:
 
   /// sub-function for motion vector refinement used in fractional-pel accuracy
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   UInt  xPatternRefinement_Bi( TComPattern* pcPatternKey, Pel* piRef, Int iRefStride, Int iIntStep, Int iFrac, TComMv& rcMvFrac, Pel* pRefY2, Bool bRound );
 #ifdef QC_AMVRES
 #if HHI_INTERP_FILTER
@@ -473,7 +473,7 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   Void xPatternSearch_Bi             ( TComPattern*  pcPatternKey,
                                     Pel*          piRefY,
                                     Int           iRefStride,
