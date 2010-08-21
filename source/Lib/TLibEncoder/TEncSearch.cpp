@@ -37,7 +37,7 @@
 #include "../TLibCommon/TComMotionInfo.h"
 #include "TEncSearch.h"
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 __inline Pel  xClip  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)g_uiIBDI_MAX) ? (Pel)g_uiIBDI_MAX : x ); }
 #endif
 
@@ -666,7 +666,7 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
   } // iDist == 1
 }
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 UInt TEncSearch::xPatternRefinement_Bi    ( TComPattern* pcPatternKey, Pel* piRef, Int iRefStride, Int iIntStep, Int iFrac, TComMv& rcMvFrac, Pel* pcRef2, Bool bRound )
 {
   UInt  uiDist;
@@ -4557,7 +4557,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   TComMv        cMvSrchRngRB;
   
   TComYuv*  pcYuv = pcYuvOrg;
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   Pel			pRefBufY[16384];  // 128x128
 #endif
 #ifdef QC_SIFO
@@ -4581,7 +4581,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     
     pcYuvOrg->copyPartToPartYuv( pcYuv, uiPartAddr, iRoiWidth, iRoiHeight );
     
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 	Int y;
 	//Int x;
 	Pel *pRefY = pcYuvOther->getLumaAddr(uiPartAddr);
@@ -4636,7 +4636,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->setCostScale  ( 2 );
   
   //  Do integer search
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   if( bBi ) 
   {
 	xPatternSearch_Bi      ( pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, pRefBufY, pcCU->getSlice()->isRounding() );
@@ -4676,7 +4676,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
       FullpelOffset = getOffset_FullpelME(iList,MEloop);
       xAddSubFullPelOffset(pcPatternKey, FullpelOffset, 1);
       //  Do integer search
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 	  if( bBi ) 
 	  {
 #if BUGFIX48
@@ -4723,7 +4723,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->getMotionCost( 1, 0 );
   m_pcRdCost->setCostScale ( 1 );
   
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
   if( bBi ) 
   {
 	Bool bRound =  pcCU->getSlice()->isRounding() ;
@@ -4904,7 +4904,7 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
 
 
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 Void TEncSearch::xPatternSearch_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, UInt& ruiSAD, Pel* pcRefY2, Bool bRound )
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
@@ -5300,7 +5300,7 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
 }
 
 
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 #ifdef QC_AMVRES
 Void TEncSearch::xPatternSearchFracDIF_Bi( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvInt, TComMv& rcMvHalf, TComMv& rcMvQter, UInt& ruiCost,TComMv *PredMv, Int iRefIdxPred , Pel* piRefY2, Bool bRound )
 #else
