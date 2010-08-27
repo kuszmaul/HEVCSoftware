@@ -209,6 +209,7 @@
 
 /* Rounding control */
 #define ROUNDING_CONTROL_BIPRED ///< From JCTVC-B074
+#define ROUNDING_CONTROL_BIPRED_FIX
 #define TRANS_PRECISION_EXT     ///< From JCTVC-B074
 
 const int g_iShift8x8    = 7;
