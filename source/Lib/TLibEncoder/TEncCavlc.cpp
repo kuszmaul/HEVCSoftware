@@ -1319,6 +1319,14 @@ Void TEncCavlc::codeAlfUvlc( UInt uiCode )
   xWriteUvlc( uiCode );
 }
 
+#if (WIENER_3_INPUT && !QC_ALF)
+Void TEncCavlc::golombEncode(Int coeff, Int k)
+{
+  //tbd
+}
+#endif
+
+
 Void TEncCavlc::codeAlfSvlc( Int iCode )
 {
   xWriteSvlc( iCode );

@@ -73,6 +73,11 @@ private:
   UChar*          m_puhQTTempCbf[3];
 
   TComYuv*        m_pcQTTempTComYuv;
+#if WIENER_3_INPUT
+  TComYuv*        m_pcQTTempTComYuv_P;
+  TComYuv*        m_pcQTTempTComYuv_Q;
+#endif  
+  
 #endif
 protected:
   // interface to option
@@ -151,7 +156,11 @@ protected:
 #endif
 
 #if PLANAR_INTRA
+#if WIENER_3_INPUT
+  Void xIntraPlanarRecon( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPred, Pel* piResi, Pel* piReco, Pel* piP, Pel* piQ, UInt uiStride, TCoeff* piCoeff, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, TextType eText );
+#else
   Void xIntraPlanarRecon( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, TCoeff* piCoeff, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, TextType eText );
+#endif
 #endif
 
   typedef struct
@@ -179,7 +188,15 @@ public:
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*&    rpcRecoYuv,
+                                  TComYuv*&    rpcPYuv,
+                                  TComYuv*&    rpcQYuv );
+#else  
                                   TComYuv*&   rpcRecoYuv );
+#endif
+
+
 
 #if PLANAR_INTRA
   /// encoder estimation - planar intra prediction (luma & chroma)
@@ -187,7 +204,13 @@ public:
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*&   rpcRecoYuv,
+                                  TComYuv*&   rpcPYuv,
+                                  TComYuv*&   rpcQYuv);
+#else
                                   TComYuv*&   rpcRecoYuv );
+#endif
 #endif
 
   /// encoder estimation - intra prediction (chroma)
@@ -196,6 +219,10 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*&    rpcPYuv,
+                                  TComYuv*&    rpcQYuv,
+#endif                                  
                                   UInt        uiChromaTrMode );
 
 #if HHI_RQT_INTRA
@@ -207,6 +234,10 @@ public:
                                   TComYuv*    pcPredYuv, 
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*    pcPYuv,
+                                  TComYuv*    pcQYuv,
+#endif                                  
                                   UInt&       ruiDistC,
                                   Bool        bLumaOnly );
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU, 
@@ -214,6 +245,10 @@ public:
                                   TComYuv*    pcPredYuv, 
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*    pcPYuv,
+                                  TComYuv*    pcQYuv,
+#endif                                  
                                   UInt        uiPreCalcDistC );
 #endif
 
@@ -224,6 +259,10 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*&    rpcPYuv,
+                                  TComYuv*&    rpcQYuv,
+#endif                                  
                                   Bool        bUseRes = false );
 
   /// encoder estimation - intra prediction (skip)
@@ -231,7 +270,13 @@ public:
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
+#if WIENER_3_INPUT
+                                  TComYuv*&    rpcRecoYuv, 
+                                  TComYuv*&    rpcPYuv, 
+                                  TComYuv*&    rpcQYuv );
+#else                                  
                                   TComYuv*&   rpcRecoYuv );
+#endif
 
 #if HHI_MRG
   /// encoder estimation - inter prediction (merge)
@@ -240,6 +285,10 @@ public:
                                    TComYuv*&   rpcPredYuv,
                                    TComYuv*&   rpcResiYuv,
                                    TComYuv*&   rpcRecoYuv,
+#if WIENER_3_INPUT
+                                   TComYuv*&   rpcPYuv,
+                                   TComYuv*&   rpcQYuv,
+#endif                                   
                                    TComMvField cMFieldNeighbourToTest[2],
                                    UChar uhInterDirNeighbourToTest);
 #endif
@@ -253,6 +302,10 @@ public:
                                   TComYuv*&   rpcYuvResiBest,
 #endif
                                   TComYuv*&   rpcYuvRec,
+#if WIENER_3_INPUT                             
+                                  TComYuv*&   rpcYuvP,
+                                  TComYuv*&   rpcYuvQ,
+#endif                            
                                   Bool        bSkipRes );
 
   /// set ME search range
@@ -316,7 +369,13 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     Bool         bLumaOnly,
+#if WIENER_3_INPUT
+                                    TComYuv*     pcRecoYuv,
+                                    TComYuv*     pcPYuv,
+                                    TComYuv*     pcQYuv);
+#else  
                                     TComYuv*     pcRecoYuv );
+#endif
 
   Void  xRecurIntraChromaCodingQT ( TComDataCU*  pcCU, 
                                     UInt         uiTrDepth,
@@ -324,11 +383,21 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
+#if WIENER_3_INPUT
+                                    TComYuv*     pcPYuv, 
+                                    TComYuv*     pcQYuv,                                     
+#endif                                    
                                     UInt&        ruiDist );
   Void  xSetIntraResultChromaQT   ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
+#if WIENER_3_INPUT
+                                    TComYuv*     pcRecoYuv,
+                                    TComYuv*     pcPYuv,
+                                    TComYuv*     pcQYuv);
+#else                                    
                                     TComYuv*     pcRecoYuv );
+#endif
 #endif
 
   Void xRecurIntraLumaSearchADI   ( TComDataCU* pcCU,
@@ -337,6 +406,10 @@ protected:
                                     Pel*        piPred,
                                     Pel*        piResi,
                                     Pel*        piReco,
+#if WIENER_3_INPUT
+                                    Pel*        piP,
+                                    Pel*        piQ,
+#endif                                    
                                     UInt        uiStride,
                                     TCoeff*     piCoeff,
                                     UInt        uiMode,
@@ -357,6 +430,10 @@ protected:
                                     Pel*        piPred,
                                     Pel*        piResi,
                                     Pel*        piReco,
+#if WIENER_3_INPUT
+                                    Pel*        piP,
+                                    Pel*        piQ,
+#endif                                    
                                     UInt        uiStride,
                                     TCoeff*     piCoeff,
                                     UInt        uiMode,

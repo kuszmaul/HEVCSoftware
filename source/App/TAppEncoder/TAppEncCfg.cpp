@@ -67,8 +67,8 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 
 TAppEncCfg::TAppEncCfg()
 {
-  m_aidQP = NULL;
-  m_pchGRefMode = NULL;
+  m_aidQP                         = NULL;
+  m_pchGRefMode     = NULL;
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -102,6 +102,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_InputFile;
   string cfg_BitstreamFile;
   string cfg_ReconFile;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES   
+  string cfg_PFile;
+  string cfg_QFile;
+#endif
   string cfg_dQPFile;
   string cfg_GRefMode;
   po::Options opts;
@@ -113,7 +117,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("InputFile,i",     cfg_InputFile,     string(""), "original YUV input file name")
     ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream output file name")
     ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name")
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+    ("PFile,o",         cfg_PFile,         string(""), "prediction YUV output file name")
+    ("QFile,o",         cfg_QFile,         string(""), "quantized prediction error YUV output file name")
+#endif
     ("SourceWidth,-wdt",      m_iSourceWidth,  0, "Source picture width")
     ("SourceHeight,-hgt",     m_iSourceHeight, 0, "Source picture height")
     ("BitDepth",              m_uiBitDepth,    8u)
@@ -239,6 +246,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("EdgePredictionEnable", m_bEdgePredictionEnable, true, "Enable edge based prediction for intra")
     ("EdgeDetectionThreshold", m_iEdgeDetectionThreshold, 10240, "Threshold for edge detection of edge based prediction")
 #endif //EDGE_BASED_PREDICTION
+#if WIENER_3_INPUT
+    ("ALF_enable_Y",    m_iAlf_enable_Y,   1)
+    ("ALF_enable_U",    m_iAlf_enable_U,   1)
+    ("ALF_enable_V",    m_iAlf_enable_V,   1)
+    ("ALF_fs_max_rec",  m_iAlf_fs_max_rec,  9)
+    ("ALF_fs_max_pred", m_iAlf_fs_max_pred, 5)
+    ("ALF_fs_max_qpe",  m_iAlf_fs_max_qpe,  3)
+#endif
+
     /* Misc. */
     ("FEN", m_bUseFastEnc, false, "fast encoder setting")
 
@@ -264,6 +280,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchInputFile = cfg_InputFile.empty() ? NULL : strdup(cfg_InputFile.c_str());
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES   
+  m_pchPFile = cfg_PFile.empty() ? NULL : strdup(cfg_PFile.c_str());
+  m_pchQFile = cfg_QFile.empty() ? NULL : strdup(cfg_QFile.c_str());
+#endif   
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   m_pchGRefMode = cfg_GRefMode.empty() ? NULL : strdup(cfg_GRefMode.c_str());
 
@@ -480,6 +500,10 @@ Void TAppEncCfg::xSetGlobal()
 #else
   g_uiIBDI_MAX     = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
 #endif
+#if WIENER_3_INPUT
+  g_uiIBDI_MAX_Q   = g_uiIBDI_MAX;
+  g_uiIBDI_MAX_Q_D = g_uiIBDI_MAX_Q<<1; 
+#endif   
 }
 
 Void TAppEncCfg::xPrintParameter()
@@ -488,6 +512,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Input          File          : %s\n", m_pchInputFile          );
   printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  printf("Prediction     File          : %s\n", m_pchPFile          );
+  printf("QPE            File          : %s\n", m_pchQFile          );
+#endif  
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_aiPad[0], m_iSourceHeight-m_aiPad[1], m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Frame index                  : %d - %d (%d frames)\n", m_iFrameSkip, m_iFrameSkip+m_iFrameToBeEncoded-1, m_iFrameToBeEncoded );

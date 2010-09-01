@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TComYuv.h
+/** \file      TComYuv.h
     \brief    general YUV buffer class (header)
     \todo     this should be merged with TComPicYuv \n
               check usage of removeHighFreq function
@@ -77,11 +77,14 @@ public:
   // ------------------------------------------------------------------------------------------------------------------
 
   Void    create            ( UInt iWidth, UInt iHeight );  ///< Create  YUV buffer
-  Void    destroy           ();                             ///< Destroy YUV buffer
-  Void    clear             ();                             ///< clear   YUV buffer
-  Void    clearLuma         ();                             ///< clear   Y buffer
-  Void    clearChroma       ();                             ///< clear   UV buffer
-  Void    clearChromaUV     (UInt UV);                      ///< clear   U or V buffer
+  Void    destroy           ();                              ///< Destroy YUV buffer
+  Void    clear             ();                              ///< clear   YUV buffer
+#if WIENER_3_INPUT
+  Void    clear             (Int val);                       ///< set     YUV buffer to value
+#endif  
+  Void    clearLuma         ();                              ///< clear   Y buffer
+  Void    clearChroma       ();                              ///< clear   UV buffer
+  Void    clearChromaUV      (UInt UV);                      ///< clear   U or V buffer
 
   // ------------------------------------------------------------------------------------------------------------------
   //  Copy, load, store YUV buffer
@@ -101,6 +104,12 @@ public:
   Void    copyToPartYuv         ( TComYuv*    pcYuvDst,    UInt uiDstPartIdx );
   Void    copyToPartLuma        ( TComYuv*    pcYuvDst,    UInt uiDstPartIdx );
   Void    copyToPartChroma      ( TComYuv*    pcYuvDst,    UInt uiDstPartIdx );
+#if WIENER_3_INPUT
+  //  Set YUV partition buffer to 0 partition buffer
+  Void    setPartYuv         ( Int val,     UInt uiDstPartIdx );
+  Void    setPartLuma        ( Int val,     UInt uiDstPartIdx );
+  Void    setPartChroma      ( Int val,     UInt uiDstPartIdx );
+#endif
 
   //  Copy the part of Big YUV buffer to other Small YUV buffer
   Void    copyPartToYuv         ( TComYuv*    pcYuvDst,    UInt uiSrcPartIdx );
@@ -111,7 +120,13 @@ public:
   Void    copyPartToPartYuv     ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
-
+#if WIENER_3_INPUT
+  //  Set YUV partition buffer to 0 partition buffer
+  Void    setPartToPartYuv     ( Int val, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+  Void    setPartToPartLuma    ( Int val, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+  Void    setPartToPartChroma  ( Int val, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+#endif
+  
   //  Copy same size YUV buffers
   Void    copyToLuma        ( TComYuv*    pcYuvDst );
   Void    copyToChroma      ( TComYuv*    pcYuvDst );
@@ -125,11 +140,20 @@ public:
   Void    addClip           ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipLuma       ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-
+#if WIENER_3_INPUT
+  Void    subtract          ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+  Void    subtractLuma      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+  Void    subtractChroma    ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+  
+  Void    ClipYUV           ( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+  Void    ClipLuma          ( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+  Void    ClipChroma        ( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean );
+#else  
   //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
   Void    subtract          ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractLuma      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractChroma    ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
+#endif
 
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
 #ifdef ROUNDING_CONTROL
@@ -161,13 +185,13 @@ public:
   Pel*    getCrAddr         ( UInt iTransUnitIdx, UInt iBlkSize );
 
   //  Get stride value of YUV buffer
-  UInt    getStride   ()    { return  m_iWidth;   }
+  UInt    getStride    ()    { return  m_iWidth;    }
   UInt    getCStride  ()    { return  m_iCWidth;  }
-  UInt    getHeight   ()    { return  m_iHeight;  }
+  UInt    getHeight    ()    { return  m_iHeight;  }
 
-  UInt    getWidth    ()    { return  m_iWidth;   }
+  UInt    getWidth    ()    { return  m_iWidth;    }
   UInt    getCHeight  ()    { return  m_iCHeight; }
-  UInt    getCWidth   ()    { return  m_iCWidth;  }
+  UInt    getCWidth    ()    { return  m_iCWidth;  }
 
   Void    printout();
 
@@ -176,9 +200,10 @@ public:
   // ------------------------------------------------------------------------------------------------------------------
 
   __inline Pel  xClip  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)g_uiIBDI_MAX) ? (Pel)g_uiIBDI_MAX : x ); }
-
+#if WIENER_3_INPUT  
+  __inline Pel  xClip1  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)(g_uiIBDI_MAX_Q_D)) ? (Pel)(g_uiIBDI_MAX_Q_D) : x ); }
+#endif
 };// END CLASS DEFINITION TComYuv
 
 
 #endif // __TCOMYUV__
-

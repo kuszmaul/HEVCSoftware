@@ -57,10 +57,18 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_ppcPredYuvBest = new TComYuv*[m_uhTotalDepth-1];
   m_ppcResiYuvBest = new TComYuv*[m_uhTotalDepth-1];
   m_ppcRecoYuvBest = new TComYuv*[m_uhTotalDepth-1];
+#if WIENER_3_INPUT
+  m_ppcPYuvBest    = new TComYuv*[m_uhTotalDepth-1];
+  m_ppcQYuvBest    = new TComYuv*[m_uhTotalDepth-1];
+#endif  
   m_ppcPredYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcResiYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcRecoYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcOrigYuv     = new TComYuv*[m_uhTotalDepth-1];
+#if WIENER_3_INPUT
+  m_ppcPYuvTemp    = new TComYuv*[m_uhTotalDepth-1];
+  m_ppcQYuvTemp    = new TComYuv*[m_uhTotalDepth-1];
+#endif
 
   UInt uiNumPartitions;
   for( i=0 ; i<m_uhTotalDepth-1 ; i++)
@@ -75,11 +83,17 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
     m_ppcPredYuvBest[i] = new TComYuv; m_ppcPredYuvBest[i]->create(uiWidth, uiHeight);
     m_ppcResiYuvBest[i] = new TComYuv; m_ppcResiYuvBest[i]->create(uiWidth, uiHeight);
     m_ppcRecoYuvBest[i] = new TComYuv; m_ppcRecoYuvBest[i]->create(uiWidth, uiHeight);
-
+#if WIENER_3_INPUT
+    m_ppcPYuvBest   [i] = new TComYuv; m_ppcPYuvBest   [i]->create(uiWidth, uiHeight);
+    m_ppcQYuvBest   [i] = new TComYuv; m_ppcQYuvBest   [i]->create(uiWidth, uiHeight);
+#endif
     m_ppcPredYuvTemp[i] = new TComYuv; m_ppcPredYuvTemp[i]->create(uiWidth, uiHeight);
     m_ppcResiYuvTemp[i] = new TComYuv; m_ppcResiYuvTemp[i]->create(uiWidth, uiHeight);
     m_ppcRecoYuvTemp[i] = new TComYuv; m_ppcRecoYuvTemp[i]->create(uiWidth, uiHeight);
-
+#if WIENER_3_INPUT
+    m_ppcPYuvTemp   [i] = new TComYuv; m_ppcPYuvTemp   [i]->create(uiWidth, uiHeight);
+    m_ppcQYuvTemp   [i] = new TComYuv; m_ppcQYuvTemp   [i]->create(uiWidth, uiHeight);
+#endif
     m_ppcOrigYuv    [i] = new TComYuv; m_ppcOrigYuv    [i]->create(uiWidth, uiHeight);
   }
 
@@ -118,6 +132,16 @@ Void TEncCu::destroy()
     {
       m_ppcRecoYuvBest[i]->destroy(); delete m_ppcRecoYuvBest[i]; m_ppcRecoYuvBest[i] = NULL;
     }
+#if WIENER_3_INPUT
+    if(m_ppcPYuvBest[i])
+    {
+      m_ppcPYuvBest[i]->destroy(); delete m_ppcPYuvBest[i]; m_ppcPYuvBest[i] = NULL;
+    }
+    if(m_ppcQYuvBest[i])
+    {
+      m_ppcQYuvBest[i]->destroy(); delete m_ppcQYuvBest[i]; m_ppcQYuvBest[i] = NULL;
+    }
+#endif    
     if(m_ppcPredYuvTemp[i])
     {
       m_ppcPredYuvTemp[i]->destroy(); delete m_ppcPredYuvTemp[i]; m_ppcPredYuvTemp[i] = NULL;
@@ -130,6 +154,16 @@ Void TEncCu::destroy()
     {
       m_ppcRecoYuvTemp[i]->destroy(); delete m_ppcRecoYuvTemp[i]; m_ppcRecoYuvTemp[i] = NULL;
     }
+#if WIENER_3_INPUT
+    if(m_ppcPYuvTemp[i])
+    {
+      m_ppcPYuvTemp[i]->destroy(); delete m_ppcPYuvTemp[i]; m_ppcPYuvTemp[i] = NULL;
+    }
+    if(m_ppcQYuvTemp[i])
+    {
+      m_ppcQYuvTemp[i]->destroy(); delete m_ppcQYuvTemp[i]; m_ppcQYuvTemp[i] = NULL;
+    }
+#endif    
     if(m_ppcOrigYuv[i])
     {
       m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i] = NULL;
@@ -161,6 +195,18 @@ Void TEncCu::destroy()
     delete [] m_ppcRecoYuvBest;
     m_ppcRecoYuvBest = NULL;
   }
+#if WIENER_3_INPUT
+  if(m_ppcPYuvBest)
+  {
+    delete [] m_ppcPYuvBest;
+    m_ppcPYuvBest = NULL;
+  }
+  if(m_ppcQYuvBest)
+  {
+    delete [] m_ppcQYuvBest;
+    m_ppcQYuvBest = NULL;
+  }
+#endif  
   if(m_ppcPredYuvTemp)
   {
     delete [] m_ppcPredYuvTemp;
@@ -176,6 +222,18 @@ Void TEncCu::destroy()
     delete [] m_ppcRecoYuvTemp;
     m_ppcRecoYuvTemp = NULL;
   }
+#if WIENER_3_INPUT
+  if(m_ppcPYuvTemp)
+  {
+    delete [] m_ppcPYuvTemp;
+    m_ppcPYuvTemp = NULL;
+  }
+  if(m_ppcQYuvTemp)
+  {
+    delete [] m_ppcQYuvTemp;
+    m_ppcQYuvTemp = NULL;
+  }
+#endif  
   if(m_ppcOrigYuv)
   {
     delete [] m_ppcOrigYuv;
@@ -425,7 +483,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // 2NxN, Nx2N
       xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );  rpcTempCU->initEstData();
       xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );  rpcTempCU->initEstData();
-
 
       // fast encoder decision for asymmetric motion partition: try asymmetric motion partition only when best != 2Nx2N
       if ( m_pcEncCfg->getUseFastEnc() )
@@ -742,7 +799,13 @@ Void TEncCu::xCheckRDCostSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, B
                                               m_ppcOrigYuv    [uhDepth],
                                               m_ppcPredYuvTemp[uhDepth],
                                               m_ppcResiYuvTemp[uhDepth],
+#if WIENER_3_INPUT
+                                              m_ppcRecoYuvTemp[uhDepth], 
+                                              m_ppcPYuvTemp[uhDepth], 
+                                              m_ppcQYuvTemp[uhDepth]); 
+#else                                              
                                               m_ppcRecoYuvTemp[uhDepth] );
+#endif
 
   m_pcPredSearch->encodeResAndCalcRdInterCU ( rpcTempCU,
                                               m_ppcOrigYuv    [uhDepth],
@@ -752,6 +815,10 @@ Void TEncCu::xCheckRDCostSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, B
                                               m_ppcResiYuvBest[uhDepth],
 #endif
                                               m_ppcRecoYuvTemp[uhDepth],
+#if WIENER_3_INPUT
+                                              m_ppcPYuvTemp[uhDepth],
+                                              m_ppcQYuvTemp[uhDepth],
+#endif                                              
                                               bSkipRes );
 
   xCheckBestMode(rpcBestCU, rpcTempCU);
@@ -806,6 +873,10 @@ Void TEncCu::xCheckRDCostMerge( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
                                           m_ppcPredYuvTemp[uhDepth],
                                           m_ppcResiYuvTemp[uhDepth],
                                           m_ppcRecoYuvTemp[uhDepth],
+#if WIENER_3_INPUT                             
+                                          m_ppcPYuvTemp[uhDepth],
+                                          m_ppcQYuvTemp[uhDepth],
+#endif                                          
                                           cMvFieldNeighbourToTest,
                                           uhInterDirNeighbourToTest);
 
@@ -817,6 +888,10 @@ Void TEncCu::xCheckRDCostMerge( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
                                                m_ppcResiYuvBest[uhDepth],
 #endif
                                                m_ppcRecoYuvTemp[uhDepth],
+#if WIENER_3_INPUT                             
+                                               m_ppcPYuvTemp[uhDepth],
+                                               m_ppcQYuvTemp[uhDepth],                                               
+#endif                                               
                                                false );
     xCheckBestMode(rpcBestCU, rpcTempCU);
 
@@ -845,11 +920,24 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
 
+#if WIENER_3_INPUT
+  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], m_ppcPYuvTemp[uhDepth], m_ppcQYuvTemp[uhDepth] );
+#else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
+#endif   
+
 #if HHI_RQT
+#if WIENER_3_INPUT
+  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], m_ppcPYuvTemp[uhDepth], m_ppcQYuvTemp[uhDepth], false );
+#else   
   m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
+#endif
+#else
+#if WIENER_3_INPUT
+  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], m_ppcPYuvTemp[uhDepth], m_ppcQYuvTemp[uhDepth], false );
 #else
   m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
+#endif
 #endif
 
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
@@ -866,8 +954,11 @@ Void TEncCu::xCheckPlanarIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setPlanarInfoSubParts ( 1, 0, 0, 0, 0, uiDepth );
 
+#if WIENER_3_INPUT
+  m_pcPredSearch->predIntraPlanarSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], m_ppcPYuvTemp[uiDepth], m_ppcQYuvTemp[uiDepth] );
+#else
   m_pcPredSearch->predIntraPlanarSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] );
-
+#endif
   if( m_bUseSBACRD ) m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
 
   m_pcEntropyCoder->resetBits();
@@ -903,14 +994,23 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     {
       m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
     }
+#if WIENER_3_INPUT     
+    m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], m_ppcPYuvTemp[uiDepth], m_ppcQYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma );
+    m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], m_ppcPYuvTemp[uiDepth], m_ppcQYuvTemp[uiDepth], uiPreCalcDistC );
+#else     
     m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma );
     m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC );
+#endif     
   }
   else
   {
 #endif
 
+#if WIENER_3_INPUT     
+    m_pcPredSearch->predIntraLumaAdiSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] , m_ppcPYuvTemp[uiDepth] , m_ppcQYuvTemp[uiDepth] );
+#else     
     m_pcPredSearch->predIntraLumaAdiSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] );
+#endif  
 
     UInt uiChromaTrMode = 0;
 
@@ -922,7 +1022,11 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
     if( m_bUseSBACRD ) m_pppcRDSbacCoder[uiDepth][CI_CHROMA_INTRA]->load( m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST] );
 
+#if WIENER_3_INPUT
+    m_pcPredSearch->predIntraChromaAdiSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], m_ppcPYuvTemp[uiDepth], m_ppcQYuvTemp[uiDepth], uiChromaTrMode );
+#else  
     m_pcPredSearch->predIntraChromaAdiSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiChromaTrMode );
+#endif  
     rpcTempCU->setCuCbfChroma( 0, uiChromaTrMode );
 
     if( m_bUseSBACRD ) m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
@@ -1016,6 +1120,17 @@ Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
     m_ppcRecoYuvBest[uhDepth] = m_ppcRecoYuvTemp[uhDepth];
     m_ppcRecoYuvTemp[uhDepth] = pcYuv;
 
+#if WIENER_3_INPUT
+    // Change Prediction data
+    pcYuv = m_ppcPYuvBest[uhDepth];
+    m_ppcPYuvBest[uhDepth] = m_ppcPYuvTemp[uhDepth];
+    m_ppcPYuvTemp[uhDepth] = pcYuv;
+    
+    // Change Quantized prediction error data
+    pcYuv = m_ppcQYuvBest[uhDepth];
+    m_ppcQYuvBest[uhDepth] = m_ppcQYuvTemp[uhDepth];
+    m_ppcQYuvTemp[uhDepth] = pcYuv;
+#endif
     pcYuv = NULL;
     pcCU  = NULL;
 
@@ -1126,11 +1241,19 @@ Void TEncCu::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
 Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsZorderIdx, UInt uiDepth)
 {
   m_ppcRecoYuvBest[uiDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsZorderIdx );
+#if WIENER_3_INPUT
+  m_ppcPYuvBest[uiDepth]->copyToPicYuv( rpcPic->getPicYuvP (), uiCUAddr, uiAbsZorderIdx );
+  m_ppcQYuvBest[uiDepth]->copyToPicYuv( rpcPic->getPicYuvQ (), uiCUAddr, uiAbsZorderIdx );
+#endif  
 }
 
 Void TEncCu::xCopyYuv2Tmp( UInt uiPartUnitIdx, UInt uiNextDepth )
 {
   UInt uiCurrDepth = uiNextDepth - 1;
   m_ppcRecoYuvBest[uiNextDepth]->copyToPartYuv( m_ppcRecoYuvTemp[uiCurrDepth], uiPartUnitIdx );
+#if WIENER_3_INPUT
+  m_ppcPYuvBest[uiNextDepth]->copyToPartYuv( m_ppcPYuvTemp[uiCurrDepth], uiPartUnitIdx );
+  m_ppcQYuvBest[uiNextDepth]->copyToPartYuv( m_ppcQYuvTemp[uiCurrDepth], uiPartUnitIdx );
+#endif
 }
 

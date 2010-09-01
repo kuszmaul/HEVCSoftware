@@ -132,7 +132,10 @@ public:
   virtual Void codeAlfFlag          ( UInt uiCode ) = 0;
   virtual Void codeAlfUvlc          ( UInt uiCode ) = 0;
   virtual Void codeAlfSvlc          ( Int   iCode ) = 0;
-
+#if (WIENER_3_INPUT && !QC_ALF)
+  virtual Void golombEncode         (Int coeff, Int k) = 0;
+#endif
+  
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType) = 0;
 #ifdef QC_SIFO
   virtual Void encodeSwitched_Filters(TComSlice* pcSlice,TComPrediction *m_cPrediction) = 0;
@@ -154,7 +157,12 @@ public:
   Void    encodeSliceHeader         ( TComSlice* pcSlice );
   Void    encodeTerminatingBit      ( UInt uiIsLast );
   Void    encodeSliceFinish         ();
-
+#if (WIENER_3_INPUT && !QC_ALF)
+  Void encodeAlfParam_control_data(ALFParam* pAlfParam, Int component);
+  Void encodeAlfParam_golomb(ALFParam* pAlfParam, Int component);
+  Void encodeAlfParam_coeffs(ALFParam* pAlfParam, Int component);
+  Void encode_symbols_golomb(Int *symbols_to_code, Int number, Int k);
+#endif
   Void encodeAlfParam(ALFParam* pAlfParam);
   Void encodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Bool bRD = false );
 
@@ -237,12 +245,21 @@ public:
   Void codeFilt (ALFParam* pAlfParam);
   Int codeFilterCoeff(ALFParam* ALFp);
   Int writeFilterCodingParams(int minKStart, int maxScanVal, int kMinTab[]);
+#if WIENER_3_INPUT
+  Int writeFilterCoeffs(int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int filters_per_group, int pDepthInt[], 
+                      int **FilterCoeff, int kMinTab[], int kMinTab_pr[], int two_codes);
+#else  
   Int writeFilterCoeffs(int sqrFiltLength, int filters_per_group, int pDepthInt[], 
                       int **FilterCoeff, int kMinTab[]);
+#endif
   Int golombEncode(int coeff, int k);
   Int lengthGolomb(int coeffVal, int k);
-
 #endif
+  
+#if (WIENER_3_INPUT && !QC_ALF)
+  Int lengthGolomb(int coeffVal, int k);
+#endif  
+  
 };// END CLASS DEFINITION TEncEntropy
 
 

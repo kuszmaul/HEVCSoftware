@@ -204,7 +204,11 @@ Void TEncTop::deletePicBuffer()
    \retval  rcListBitstreamOut  list of output bitstreams
    \retval  iNumEncoded         number of encoded pictures
  */
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES    
+Void TEncTop::encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComPicYuv*>& rcListPicYuvPOut, TComList<TComPicYuv*>& rcListPicYuvQOut, TComList<TComBitstream*>& rcListBitstreamOut, Int& iNumEncoded )
+#else    
 Void TEncTop::encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComBitstream*>& rcListBitstreamOut, Int& iNumEncoded )
+#endif
 {
   TComPic* pcPicCurr = NULL;
 
@@ -219,7 +223,11 @@ Void TEncTop::encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   }
 
   // compress GOP
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES    
+  m_cGOPEncoder.compressGOP( m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, rcListPicYuvPOut, rcListPicYuvQOut, rcListBitstreamOut );
+#else  
   m_cGOPEncoder.compressGOP( m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, rcListBitstreamOut );
+#endif
 
   iNumEncoded         = m_iNumPicRcvd;
   m_iNumPicRcvd       = 0;
@@ -290,6 +298,11 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
 #if HHI_INTERP_FILTER
   rpcPic->getPicYuvRecFilt()->setBorderExtension(false);
 #endif
+  
+#if WIENER_3_INPUT    
+  rpcPic->getPicYuvP()->setBorderExtension(false);
+  rpcPic->getPicYuvQ()->setBorderExtension(false);
+#endif  
 }
 
 Void TEncTop::xInitSPS()
@@ -316,6 +329,10 @@ Void TEncTop::xInitSPS()
   m_cSPS.setALFSymmetry   ( m_bALFSymmetry      );
   m_cSPS.setALFMinLength  ( m_iALFMinLength     );
   m_cSPS.setALFMaxLength  ( m_iALFMaxLength     );
+#endif
+#if WIENER_3_INPUT
+  m_cSPS.setALFEnable                    ( m_iALF_enable_Y, m_iALF_enable_U, m_iALF_enable_V        );
+  m_cSPS.setALFMaxFilterSize             ( m_iALF_fs_max_rec, m_iALF_fs_max_pred, m_iALF_fs_max_qpe );
 #endif
 
   m_cSPS.setUseDQP        ( m_iMaxDeltaQP != 0  );

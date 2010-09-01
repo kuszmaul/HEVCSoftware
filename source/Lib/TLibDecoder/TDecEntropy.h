@@ -119,6 +119,9 @@ public:
   virtual Void parseAlfCtrlDepth  ( UInt& ruiAlfCtrlDepth  ) = 0;
   virtual Void parseAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 
+#if (WIENER_3_INPUT && !QC_ALF)
+  virtual Int  golombDecode(Int k) = 0;
+#endif  
 #if HHI_ALF
   virtual Void parseAlfCoeff      ( Int&  riCoeff, Int iLength, Int iPos                               ) = 0;
   virtual Void parseAlfDc         ( Int&  riDc                                                         ) = 0;
@@ -158,6 +161,12 @@ public:
   Void decodeAlfParam(ALFParam* pAlfParam , TComPic* pcPic );
 #else
   Void decodeAlfParam(ALFParam* pAlfParam);
+#endif
+  
+#if (WIENER_3_INPUT && !QC_ALF)
+  Void decodeAlfParam_control_data(ALFParam* pAlfParam, Int component);
+  Void decodeAlfParam_golomb(ALFParam* pAlfParam, Int component);
+  Void decodeAlfParam_coeffs(ALFParam* pAlfParam, Int component);
 #endif
   //--Adaptive Loop filter
 

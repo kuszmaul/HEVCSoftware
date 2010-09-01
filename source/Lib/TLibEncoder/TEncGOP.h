@@ -112,8 +112,11 @@ public:
   UInt getBalancedCPUs()         { return m_uiBalancedCPUs; }
 
   Void  init        ( TEncTop* pcTEncTop );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, TComList<TComPicYuv*>& rcListPicYuvP, TComList<TComPicYuv*>& rcListPicYuvQ, TComList<TComBitstream*> rcListBitstream );
+#else  
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, TComList<TComBitstream*> rcListBitstream );
-
+#endif
   Int   getGOPSize()          { return  m_iGopSize;  }
   Int   getRateGOPSize()      { return  m_iRateGopSize;  }
   Int   isHierarchicalB()     { return  m_pcCfg->getHierarchicalCoding();  }
@@ -129,13 +132,38 @@ public:
   Void setCABAC4V2V (TEncBinCABAC4V2V* p) { m_pcBinCABAC4V2V = p; }
 
 protected:
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  Void  xInitGOP          ( Int iPOC, 
+			    Int iNumPicRcvd, 
+			    TComList<TComPic*>& rcListPic, 
+			    TComList<TComPicYuv*>& rcListPicYuvRecOut, 
+			    TComList<TComPicYuv*>& rcListPicYuvPOut, 
+			    TComList<TComPicYuv*>& rcListPicYuvQOut );
+  Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, 
+			    TComList<TComPicYuv*>& rcListPicYuvRecOut, 
+			    TComList<TComPicYuv*>& rcListPicYuvPOut, 
+			    TComList<TComPicYuv*>& rcListPicYuvQOut, 
+			    TComList<TComBitstream*>& rcListBitstream, 
+			    Int iNumPicRcvd, 
+			    Int iTimeOffset,
+			    TComPic*& rpcPic, 
+                            TComPicYuv*& rpcPicYuvRecOut, 
+			    TComPicYuv*& rpcPicYuvPOut,
+			    TComPicYuv*& rpcPicYuvQOut, 
+			    TComBitstream*& rpcBitstreamOut, 
+			    UInt uiPOCCurr );
+#else
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComBitstream*>& rcListBitstream, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, TComBitstream*& rpcBitstreamOut, UInt uiPOCCurr );
-
+#endif
   // for scaling & descaing of picture
   // note: IBDI is handled here
   Void  xScalePic         ( TComPic* pcPic );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  Void  xDeScalePic        ( TComPic* pcPic, TComPicYuv* pcPicD , TComPicYuv* pcPicPD , TComPicYuv* pcPicQD );
+#else  
   Void  xDeScalePic       ( TComPic* pcPic, TComPicYuv* pcPicD );
+#endif
 
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, UInt uiBits );
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, UInt uiBits, Double dEncTime );

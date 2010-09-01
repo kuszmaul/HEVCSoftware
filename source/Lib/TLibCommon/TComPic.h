@@ -53,9 +53,17 @@ private:
   TComPicSym*           m_apcPicSym;              //  Symbol
 
 #if HHI_INTERP_FILTER
+#if WIENER_3_INPUT   
+  TComPicYuv*           m_apcPicYuv[5];           //  Texture,  0:org / 1:rec / 2:rec-filtered / 3:prediction / 4:quantized prediction error
+#else
   TComPicYuv*           m_apcPicYuv[3];           //  Texture,  0:org / 1:rec / 2:rec-filtered
+#endif
+#else
+#if WIENER_3_INPUT   
+  TComPicYuv*           m_apcPicYuv[4];           //  Texture,  0:org / 1:rec / 2:prediction / 3:quantized prediction error
 #else
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
+#endif   
 #endif
 
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
@@ -82,7 +90,11 @@ public:
 #if HHI_INTERP_FILTER
   TComPicYuv*   getPicYuvRecFilt()    { return  m_apcPicYuv[2]; }
 #endif
-
+#if WIENER_3_INPUT
+  TComPicYuv*   getPicYuvP()    { return  m_apcPicYuv[WF3_P]; }
+  TComPicYuv*   getPicYuvQ()    { return  m_apcPicYuv[WF3_Q]; }   
+#endif
+   
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }

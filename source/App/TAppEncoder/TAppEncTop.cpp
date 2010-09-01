@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TAppEncTop.cpp
+/** \file      TAppEncTop.cpp
     \brief    Encoder application class
 */
 
@@ -98,6 +98,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setALFMaxLength                 ( m_iAlfMaxLength            ); //MS
 #endif
 
+#if WIENER_3_INPUT
+  m_cTEncTop.setALFEnable                    ( m_iAlf_enable_Y, m_iAlf_enable_U, m_iAlf_enable_V        ); //MN
+  m_cTEncTop.setALFMaxFilterSize             ( m_iAlf_fs_max_rec, m_iAlf_fs_max_pred, m_iAlf_fs_max_qpe ); //MN
+#endif
+  
   //====== Motion search ========
   m_cTEncTop.setFastSearch                   ( m_iFastSearch  );
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
@@ -105,12 +110,12 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Tool list ========
   m_cTEncTop.setGRefMode                     ( m_pchGRefMode  );
-  m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
-  m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
+  m_cTEncTop.setUseSBACRD                     ( m_bUseSBACRD    );
+  m_cTEncTop.setDeltaQpRD                     ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
   m_cTEncTop.setUseALF                       ( m_bUseALF      );
-  m_cTEncTop.setUseGPB                       ( m_bUseGPB      );
+  m_cTEncTop.setUseGPB                       ( m_bUseGPB       );
   m_cTEncTop.setdQPs                         ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                      ( m_bUseRDOQ     );
   m_cTEncTop.setUseLDC                       ( m_bUseLDC      );
@@ -161,9 +166,14 @@ Void TAppEncTop::xInitLibCfg()
 Void TAppEncTop::xCreateLib()
 {
   // Video I/O
-  m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false );  // read  mode
-  m_cTVideoIOYuvReconFile.open( m_pchReconFile,     true  );  // write mode
-  m_cTVideoIOBitsFile.openBits( m_pchBitstreamFile, true  );  // write mode
+  m_cTVideoIOYuvInputFile.open( m_pchInputFile,      false );  // read  mode
+  m_cTVideoIOYuvReconFile.open( m_pchReconFile,      true  );  // write mode  
+  m_cTVideoIOBitsFile.openBits( m_pchBitstreamFile,  true  );  // write mode
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  m_cTVideoIOYuvPFile.open( m_pchPFile,      true  );  // write mode  
+  m_cTVideoIOYuvQFile.open( m_pchQFile,      true  );  // write mode  
+#endif    
+  
 
   // Neo Decoder
   m_cTEncTop.create();
@@ -174,6 +184,10 @@ Void TAppEncTop::xDestroyLib()
   // Video I/O
   m_cTVideoIOYuvInputFile.close();
   m_cTVideoIOYuvReconFile.close();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  m_cTVideoIOYuvPFile.close();
+  m_cTVideoIOYuvQFile.close();
+#endif    
   m_cTVideoIOBitsFile.closeBits();
 
   // Neo Decoder
@@ -201,6 +215,10 @@ Void TAppEncTop::encode()
 {
   TComPicYuv*       pcPicYuvOrg = new TComPicYuv;
   TComPicYuv*       pcPicYuvRec = NULL;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComPicYuv*       pcPicYuvP   = NULL;
+  TComPicYuv*       pcPicYuvQ   = NULL;
+#endif  
   TComBitstream*    pcBitstream = NULL;
 
   // initialize internal class & member variables
@@ -218,7 +236,11 @@ Void TAppEncTop::encode()
   while ( !bEos )
   {
     // get buffers
-    xGetBuffer( pcPicYuvRec, pcBitstream );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    xGetBuffer( pcPicYuvRec, pcPicYuvP, pcPicYuvQ, pcBitstream );
+#else    
+    xGetBuffer( pcPicYuvRec, pcBitstream );    
+#endif
 
     // read input YUV file
     m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad );
@@ -231,7 +253,11 @@ Void TAppEncTop::encode()
     bEos = ( m_iFrameRcvd == m_iFrameToBeEncoded ?    true : bEos   );
 
     // call encoding function for one frame
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    m_cTEncTop.encode( bEos, pcPicYuvOrg, m_cListPicYuvRec, m_cListPicYuvP, m_cListPicYuvQ, m_cListBitstream, iNumEncoded );
+#else    
     m_cTEncTop.encode( bEos, pcPicYuvOrg, m_cListPicYuvRec, m_cListBitstream, iNumEncoded );
+#endif
 
     // write bistream to file if necessary
     if ( iNumEncoded > 0 )
@@ -265,26 +291,50 @@ Void TAppEncTop::encode()
     - end of the list has the latest picture
     .
  */
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, TComPicYuv*& rpcPicYuvP, TComPicYuv*& rpcPicYuvQ, TComBitstream*& rpcBitStream )
+#else  
 Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, TComBitstream*& rpcBitStream )
+#endif
 {
   if ( m_iGOPSize == 0 )
   {
     if (m_cListPicYuvRec.size() == 0)
     {
       rpcPicYuvRec = new TComPicYuv;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      rpcPicYuvP = new TComPicYuv;
+      rpcPicYuvQ = new TComPicYuv;
+#endif
       rpcBitStream = new TComBitstream;
 
       rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      rpcPicYuvP->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+      rpcPicYuvQ->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+#endif      
       rpcBitStream->create( (m_iSourceWidth * m_iSourceHeight * 3) >> 1 );
 
       m_cListPicYuvRec.pushBack( rpcPicYuvRec );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      m_cListPicYuvP.pushBack( rpcPicYuvP );
+      m_cListPicYuvQ.pushBack( rpcPicYuvQ );
+#endif      
       m_cListBitstream.pushBack( rpcBitStream );
     }
 
     rpcPicYuvRec = m_cListPicYuvRec.popFront();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    rpcPicYuvP = m_cListPicYuvP.popFront();
+    rpcPicYuvQ = m_cListPicYuvQ.popFront();
+#endif    
     rpcBitStream = m_cListBitstream.popFront();
 
     m_cListPicYuvRec.pushBack( rpcPicYuvRec );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    m_cListPicYuvP.pushBack( rpcPicYuvP );
+    m_cListPicYuvQ.pushBack( rpcPicYuvQ );
+#endif    
     m_cListBitstream.pushBack( rpcBitStream );
 
     return;
@@ -294,6 +344,10 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, TComBitstream*& rpcBitSt
   if ( m_cListPicYuvRec.size() == (UInt)m_iGOPSize )
   {
     rpcPicYuvRec = m_cListPicYuvRec.popFront();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    rpcPicYuvP = m_cListPicYuvP.popFront();
+    rpcPicYuvQ = m_cListPicYuvQ.popFront();
+#endif    
     rpcBitStream = m_cListBitstream.popFront();
 
     rpcBitStream->rewindStreamPacket();
@@ -301,18 +355,34 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, TComBitstream*& rpcBitSt
   else
   {
     rpcPicYuvRec = new TComPicYuv;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    rpcPicYuvP = new TComPicYuv;
+    rpcPicYuvQ = new TComPicYuv;
+#endif
     rpcBitStream = new TComBitstream;
 
     rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    rpcPicYuvP->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+    rpcPicYuvQ->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+#endif    
     rpcBitStream->create( (m_iSourceWidth * m_iSourceHeight * 3) >> 1 );
   }
   m_cListPicYuvRec.pushBack( rpcPicYuvRec );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  m_cListPicYuvP.pushBack( rpcPicYuvP );
+  m_cListPicYuvQ.pushBack( rpcPicYuvQ );
+#endif  
   m_cListBitstream.pushBack( rpcBitStream );
 }
 
 Void TAppEncTop::xDeleteBuffer( )
 {
   TComList<TComPicYuv*>::iterator iterPicYuvRec  = m_cListPicYuvRec.begin();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComList<TComPicYuv*>::iterator iterPicYuvP  = m_cListPicYuvP.begin();
+  TComList<TComPicYuv*>::iterator iterPicYuvQ  = m_cListPicYuvQ.begin();
+#endif  
   TComList<TComBitstream*>::iterator iterBitstream = m_cListBitstream.begin();
 
   Int iSize = Int( m_cListPicYuvRec.size() );
@@ -320,12 +390,24 @@ Void TAppEncTop::xDeleteBuffer( )
   for ( Int i = 0; i < iSize; i++ )
   {
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    TComPicYuv*  pcPicYuvP  = *(iterPicYuvP++);
+    TComPicYuv*  pcPicYuvQ  = *(iterPicYuvQ++);
+#endif    
     TComBitstream* pcBitstream = *(iterBitstream++);
 
     pcPicYuvRec->destroy();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    pcPicYuvP->destroy();
+    pcPicYuvQ->destroy();
+#endif    
     pcBitstream->destroy();
 
     delete pcPicYuvRec; pcPicYuvRec = NULL;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    delete pcPicYuvP; pcPicYuvP = NULL;
+    delete pcPicYuvQ; pcPicYuvQ = NULL;
+#endif
     delete pcBitstream; pcBitstream = NULL;
   }
 
@@ -339,19 +421,34 @@ Void TAppEncTop::xWriteOutput( Int iNumEncoded )
 
   TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
   TComList<TComBitstream*>::iterator iterBitstream = m_cListBitstream.begin();
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComList<TComPicYuv*>::iterator iterPicYuvP = m_cListPicYuvP.end();
+  TComList<TComPicYuv*>::iterator iterPicYuvQ = m_cListPicYuvQ.end();
+#endif
+  
   for ( i = 0; i < iNumEncoded; i++ )
   {
     --iterPicYuvRec;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    --iterPicYuvP;
+    --iterPicYuvQ;
+#endif    
   }
 
   for ( i = 0; i < iNumEncoded; i++ )
   {
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    TComPicYuv*  pcPicYuvP    = *(iterPicYuvP++);
+    TComPicYuv*  pcPicYuvQ    = *(iterPicYuvQ++);
+#endif    
     TComBitstream* pcBitstream = *(iterBitstream++);
 
     m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_aiPad );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    m_cTVideoIOYuvPFile.write( pcPicYuvP, m_aiPad );
+    m_cTVideoIOYuvQFile.write( pcPicYuvQ, m_aiPad );
+#endif  
     m_cTVideoIOBitsFile.writeBits( pcBitstream );
   }
 }
-
