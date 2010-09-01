@@ -96,6 +96,9 @@ public:
   Void  parseAlfFlag        ( UInt& ruiVal );
   Void  parseAlfUvlc        ( UInt& ruiVal );
   Void  parseAlfSvlc        ( Int&  riVal  );
+#if (WIENER_3_INPUT && !QC_ALF)
+  Int   golombDecode        (Int k);
+#endif  
 
   Void  parseSPS            ( TComSPS* pcSPS );
   Void  parsePPS            ( TComPPS* pcPPS);
@@ -142,6 +145,7 @@ public:
   Void parseAlfCtrlDepth    ( UInt& ruiAlfCtrlDepth );
   Void parseAlfCtrlFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
+  
 #if HHI_ALF
   Void parseAlfCoeff        ( Int& riCoeff, Int iLength, Int iPos );
   Void parseAlfDc           ( Int& riDc    );

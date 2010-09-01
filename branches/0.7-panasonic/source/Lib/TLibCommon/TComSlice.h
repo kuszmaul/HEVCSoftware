@@ -108,6 +108,14 @@ private:
   Int         m_iALFMinLength;
   Int         m_iALFMaxLength;
 #endif
+#if WIENER_3_INPUT
+  Int         m_iALF_enable_Y;
+  Int         m_iALF_enable_U;
+  Int         m_iALF_enable_V;
+  Int         m_iALF_fs_max_rec;
+  Int         m_iALF_fs_max_pred;
+  Int         m_iALF_fs_max_qpe;
+#endif
 
   // Max physical transform size
   UInt        m_uiMaxTrSize;
@@ -222,6 +230,27 @@ public:
   Void setALFSymmetry   ( Bool b ) { m_bALFSymmetry   = b;    }
   Void setALFMinLength  ( Int  i ) { m_iALFMinLength  = i;    }
   Void setALFMaxLength  ( Int  i ) { m_iALFMaxLength  = i;    }
+#endif
+#if WIENER_3_INPUT
+  Int      getALFEnableY                   ()      { return  m_iALF_enable_Y;   }//MN
+  Int      getALFEnableU                   ()      { return  m_iALF_enable_U;   }//MN
+  Int      getALFEnableV                   ()      { return  m_iALF_enable_V;   }//MN
+  Int      getALFMaxFilterSize_rec         ()      { return  m_iALF_fs_max_rec; }//MN
+  Int      getALFMaxFilterSize_pred        ()      { return  m_iALF_fs_max_pred;}//MN
+  Int      getALFMaxFilterSize_qpe         ()      { return  m_iALF_fs_max_qpe; }//MN
+  
+  Void      setALFEnable                    ( Int a, Int b, Int c ) //MN
+  {
+    m_iALF_enable_Y = a;
+    m_iALF_enable_U = b;
+    m_iALF_enable_V = c;
+  }
+  Void      setALFMaxFilterSize             ( Int a, Int b, Int c ) //MN
+  {
+    m_iALF_fs_max_rec  = a;
+    m_iALF_fs_max_pred = b;
+    m_iALF_fs_max_qpe  = c;
+  }
 #endif
 
 #ifdef QC_SIFO_PRED

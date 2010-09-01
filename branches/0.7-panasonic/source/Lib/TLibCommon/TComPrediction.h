@@ -143,8 +143,11 @@ public:
   Void predIntraChromaAdi         ( TComPattern* pcTComPattern, Int* piSrc, UInt uiDirMode,                  Pel* piPred, UInt uiStride, Int iWidth, Int iHeight,  TComDataCU* pcCU, Bool bAbove, Bool bLeft );
 
   // CIP
+#if WIENER_3_INPUT
+  Void recIntraLumaCIP            ( TComPattern* pcTComPattern, Pel* pPred, Pel* pResi, Pel* pReco, Pel* pP, Pel* pQ, UInt uiStride, UInt uiStride_PQ, Int iWidth, Int iHeight, TComDataCU* pcCU, Bool bAboveAvail, Bool bLeftAvail );
+#else
   Void recIntraLumaCIP            ( TComPattern* pcTComPattern, Pel* pPred, Pel* pResi, Pel* pReco, UInt uiStride, Int iWidth, Int iHeight, TComDataCU* pcCU, Bool bAboveAvail, Bool bLeftAvail );
-
+#endif
 #if ANG_INTRA
   // Angular Intra
 #if HHI_AIS

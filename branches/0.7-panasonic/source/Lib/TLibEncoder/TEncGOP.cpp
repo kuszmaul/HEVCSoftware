@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TEncGOP.cpp
+/** \file      TEncGOP.cpp
     \brief    GOP encoder class
 */
 
@@ -115,10 +115,19 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 // Public member functions
 // ====================================================================================================================
 
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComPicYuv*>& rcListPicYuvPOut, TComList<TComPicYuv*>& rcListPicYuvQOut, TComList<TComBitstream*> rcListBitstreamOut )
+#else    
 Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComBitstream*> rcListBitstreamOut )
+#endif
 {
   TComPic*        pcPic;
   TComPicYuv*     pcPicYuvRecOut;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComPicYuv*     pcPicYuvPOut;
+  TComPicYuv*     pcPicYuvQOut;
+#endif
+  
   TComBitstream*  pcBitstreamOut;
   TComPicYuv      cPicOrg;
   TComPic*        pcOrgRefList[2][MAX_REF_PIC_NUM];
@@ -126,7 +135,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   TComBitstream*  pcOut = new TComBitstream;
   pcOut->create( 500000 );
 
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut , rcListPicYuvPOut , rcListPicYuvQOut );
+#else  
   xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut );
+#endif
 
   m_iNumPicCoded = 0;
   for ( Int iDepth = 0; iDepth < m_iHrchDepth; iDepth++ )
@@ -157,7 +170,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       /////////////////////////////////////////////////////////////////////////////////////////////////// Initial to start encoding
       UInt  uiPOCCurr = iPOCLast - (iNumPicRcvd - iTimeOffset);
 
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      xGetBuffer( rcListPic, rcListPicYuvRecOut, rcListPicYuvPOut, rcListPicYuvQOut, rcListBitstreamOut, iNumPicRcvd, iTimeOffset,  pcPic, pcPicYuvRecOut, pcPicYuvPOut, pcPicYuvQOut, pcBitstreamOut, uiPOCCurr );
+#else      
       xGetBuffer( rcListPic, rcListPicYuvRecOut, rcListBitstreamOut, iNumPicRcvd, iTimeOffset,  pcPic, pcPicYuvRecOut, pcBitstreamOut, uiPOCCurr );
+#endif
 
       // save original picture
       cPicOrg.create( pcPic->getPicYuvOrg()->getWidth(), pcPic->getPicYuvOrg()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
@@ -302,7 +319,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           }
         }
       }
-
       //-- Loop filter
       m_pcLoopFilter->setCfg(pcSlice->getLoopFilterDisable(), m_pcCfg->getLoopFilterAlphaC0Offget(), m_pcCfg->getLoopFilterBetaOffget());
       m_pcLoopFilter->loopFilterPic( pcPic );
@@ -377,7 +393,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       /////////////////////////////////////////////////////////////////////////////////////////////////// Reconstructed image output
       TComPicYuv pcPicD;
       pcPicD.create( pcPic->getPicYuvOrg()->getWidth(), pcPic->getPicYuvOrg()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      TComPicYuv pcPicPD;
+      pcPicPD.create( pcPic->getPicYuvP()->getWidth(), pcPic->getPicYuvP()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+      TComPicYuv pcPicQD;
+      pcPicQD.create( pcPic->getPicYuvQ()->getWidth(), pcPic->getPicYuvQ()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#endif
       // adaptive loop filter
       if ( pcSlice->getSPS()->getUseALF() )
       {
@@ -411,7 +432,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
 
         UInt uiMaxAlfCtrlDepth;
-
         UInt64 uiDist, uiBits;
         m_pcAdaptiveLoopFilter->ALFProcess( &cAlfParam, pcPic->getSlice()->getLambda(), uiDist, uiBits, uiMaxAlfCtrlDepth );
         m_pcAdaptiveLoopFilter->endALFEnc();
@@ -480,9 +500,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         m_pcEntropyCoder->resetEntropy    ();
         m_pcEntropyCoder->setBitstream    ( pcBitstreamOut );
+
         if (cAlfParam.cu_control_flag)
         {
-          m_pcEntropyCoder->setAlfCtrl( true );
+          m_pcEntropyCoder->setAlfCtrl(true);
           m_pcEntropyCoder->setMaxAlfCtrlDepth(uiMaxAlfCtrlDepth);
           if (pcSlice->getSymbolMode() == 0)
           {
@@ -537,14 +558,16 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcBitstreamOut->write( 1, 1 );
         pcBitstreamOut->writeAlignZero();
       }
-
       pcBitstreamOut->flushBuffer();
 #if HHI_NAL_UNIT_SYNTAX
       pcBitstreamOut->convertRBSPToPayload( uiPosBefore );
 #endif
       // de-scaling of picture
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      xDeScalePic( pcPic, &pcPicD, &pcPicPD, &pcPicQD );
+#else
       xDeScalePic( pcPic, &pcPicD );
-
+#endif
       // save original picture
       cPicOrg.copyToPic( pcPic->getPicYuvOrg() );
 
@@ -558,8 +581,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       //  Reconstruction buffer update
       pcPicD.copyToPic(pcPicYuvRecOut);
-
       pcPicD.destroy();
+
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      //  Prediction buffer update
+      pcPicPD.copyToPic(pcPicYuvPOut);
+      //  Quantized prediction error buffer update
+      pcPicQD.copyToPic(pcPicYuvQOut);
+
+      pcPicPD.destroy();
+      pcPicQD.destroy();
+#endif
 
       pcPic->setReconMark   ( true );
 
@@ -652,7 +684,11 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 // Protected member functions
 // ====================================================================================================================
 
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, TComList<TComPicYuv*>& rcListPicYuvPOut, TComList<TComPicYuv*>& rcListPicYuvQOut )
+#else    
 Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut )
+#endif
 {
   assert( iNumPicRcvd > 0 );
   Int i;
@@ -685,24 +721,43 @@ Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcLis
 
 Void TEncGOP::xGetBuffer( TComList<TComPic*>&       rcListPic,
                           TComList<TComPicYuv*>&    rcListPicYuvRecOut,
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES                            
+                          TComList<TComPicYuv*>&    rcListPicYuvPOut,
+                          TComList<TComPicYuv*>&    rcListPicYuvQOut,
+#endif                          
                           TComList<TComBitstream*>& rcListBitstreamOut,
                           Int                       iNumPicRcvd,
                           Int                       iTimeOffset,
                           TComPic*&                 rpcPic,
                           TComPicYuv*&              rpcPicYuvRecOut,
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+                          TComPicYuv*&              rpcPicYuvPOut,
+                          TComPicYuv*&              rpcPicYuvQOut,
+#endif                          
                           TComBitstream*&           rpcBitstreamOut,
                           UInt                      uiPOCCurr )
 {
   Int i;
   //  Rec. output
   TComList<TComPicYuv*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComList<TComPicYuv*>::iterator     iterPicYuvP   = rcListPicYuvPOut.end();
+  TComList<TComPicYuv*>::iterator     iterPicYuvQ   = rcListPicYuvQOut.end();
+#endif  
   for ( i = 0; i < iNumPicRcvd - iTimeOffset + 1; i++ )
   {
     iterPicYuvRec--;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    iterPicYuvP--;
+    iterPicYuvQ--;
+#endif    
   }
 
   rpcPicYuvRecOut = *(iterPicYuvRec);
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  rpcPicYuvPOut = *(iterPicYuvP);
+  rpcPicYuvQOut = *(iterPicYuvQ);
+#endif
   //  Bitstream output
   TComList<TComBitstream*>::iterator  iterBitstream = rcListBitstreamOut.begin();
   for ( i = 0; i < m_iNumPicCoded; i++ )
@@ -712,7 +767,7 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&       rcListPic,
   rpcBitstreamOut = *(iterBitstream);
 
   //  Current pic.
-  TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
+  TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();  
   while (iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic);
@@ -773,7 +828,11 @@ Void TEncGOP::xScalePic( TComPic* pcPic )
   }
 }
 
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD , TComPicYuv* pcPicPD , TComPicYuv* pcPicQD )
+#else    
 Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
+#endif
 {
   Int     x, y;
   Int     offset = (g_uiBitIncrement>0)?(1<<(g_uiBitIncrement-1)):0;
@@ -781,6 +840,13 @@ Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
   //===== calculate PSNR =====
   Pel*  pRecD   = pcPicD->getLumaAddr();
   Pel*  pRec    = pcPic->getPicYuvRec()->getLumaAddr();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  Pel*  pPD   = pcPicPD->getLumaAddr();
+  Pel*  pP    = pcPic->getPicYuvP()->getLumaAddr();
+  Pel*  pQD   = pcPicQD->getLumaAddr();
+  Pel*  pQ    = pcPic->getPicYuvQ()->getLumaAddr();
+  Int   Q_shift = g_uiBitIncrement+1;
+#endif  
   Int   iStride = pcPic->getStride();
   Int   iWidth  = pcPic->getPicYuvOrg()->getWidth();
   Int   iHeight = pcPic->getPicYuvOrg()->getHeight();
@@ -789,14 +855,31 @@ Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
   {
     for( x = 0; x < iWidth; x++ )
     {
-#if IBDI_NOCLIP_RANGE
+#if IBDI_NOCLIP_RANGE     
       pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ( pP[x] + offset ) >> g_uiBitIncrement;
+      pQD[x] = ( pQ[x] + offset ) >> Q_shift;
+#endif
+            
 #else
       pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
+      
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ClipMax( ( pP[x] + offset ) >> g_uiBitIncrement );
+      pQD[x] = ClipMax( ( pQ[x] + offset ) >> Q_shift );
+#endif
+      
 #endif
     }
     pRecD += iStride;
     pRec += iStride;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+    pPD += iStride;
+    pP  += iStride;
+    pQD += iStride;
+    pQ  += iStride;
+#endif    
   }
 
   iHeight >>= 1;
@@ -804,23 +887,50 @@ Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
   iStride >>= 1;
   pRecD = pcPicD->getCbAddr();
   pRec  = pcPic->getPicYuvRec()->getCbAddr();
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  pPD = pcPicPD->getCbAddr();
+  pP  = pcPic->getPicYuvP()->getCbAddr();
+  pQD = pcPicQD->getCbAddr();
+  pQ  = pcPic->getPicYuvQ()->getCbAddr();
+#endif
   for( y = 0; y < iHeight; y++ )
   {
     for( x = 0; x < iWidth; x++ )
     {
 #if IBDI_NOCLIP_RANGE
       pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ( pP[x] + offset ) >> g_uiBitIncrement;
+      pQD[x] = ( pQ[x] + offset ) >> Q_shift;
+#endif
+            
 #else
       pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ClipMax( ( pP[x] + offset ) >> g_uiBitIncrement );
+      pQD[x] = ClipMax( ( pQ[x] + offset ) >> Q_shift );
+#endif
+            
 #endif
     }
     pRecD += iStride;
     pRec += iStride;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+    pPD += iStride;
+    pP  += iStride;
+    pQD += iStride;
+    pQ  += iStride;
+#endif
   }
 
   pRecD = pcPicD->getCrAddr();
   pRec  = pcPic->getPicYuvRec()->getCrAddr();
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+  pPD = pcPicPD->getCrAddr();
+  pP  = pcPic->getPicYuvP()->getCrAddr();
+  pQD = pcPicQD->getCrAddr();
+  pQ  = pcPic->getPicYuvQ()->getCrAddr();
+#endif
 
   for( y = 0; y < iHeight; y++ )
   {
@@ -828,12 +938,28 @@ Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
     {
 #if IBDI_NOCLIP_RANGE
       pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ( pP[x] + offset ) >> g_uiBitIncrement;
+      pQD[x] = ( pQ[x] + offset ) >> Q_shift;
+#endif
+            
 #else
       pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+      pPD[x] = ClipMax( ( pP[x] + offset ) >> g_uiBitIncrement );
+      pQD[x] = ClipMax( ( pQ[x] + offset ) >> Q_shift );
+#endif
+            
 #endif
     }
     pRecD += iStride;
     pRec += iStride;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES        
+    pPD += iStride;
+    pP  += iStride;
+    pQD += iStride;
+    pQ  += iStride;
+#endif
   }
 }
 
@@ -1021,4 +1147,3 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, UInt uibits
 
   fflush(stdout);
 }
-

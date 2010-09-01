@@ -149,6 +149,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #else
   g_uiIBDI_MAX  = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
 #endif
+#if WIENER_3_INPUT
+  g_uiIBDI_MAX_Q   = g_uiIBDI_MAX;
+  g_uiIBDI_MAX_Q_D = g_uiIBDI_MAX_Q<<1; 
+#endif
 
   g_uiAddCUDepth = 0;
   if( ((g_uiMaxCUWidth>>(g_uiMaxCUDepth-1)) > pcSPS->getMaxTrSize()) )
@@ -1310,7 +1314,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       {
         for (uiScanning=0; uiScanning<64; uiScanning++)
         {
-          piCoeff[ pucScan[ (uiSize/64) * uiScanning + uiInterleaving ] ] = 0;
+            piCoeff[ pucScan[ (uiSize/64) * uiScanning + uiInterleaving ] ] = 0;
         }
       }
       else
@@ -1357,6 +1361,12 @@ Void TDecCavlc::parseAlfFlag (UInt& ruiVal)
   xReadFlag( ruiVal );
 }
 
+#if (WIENER_3_INPUT && !QC_ALF)
+Int TDecCavlc::golombDecode(Int k)
+{
+  //tbd
+}
+#endif
 Void TDecCavlc::parseAlfUvlc (UInt& ruiVal)
 {
   xReadUvlc( ruiVal );
