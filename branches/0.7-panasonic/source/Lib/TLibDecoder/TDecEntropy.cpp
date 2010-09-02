@@ -727,7 +727,6 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
   for(ind = 0; ind < pAlfParam->filters_per_group_diff; ++ind)
   {
 #if WIENER_3_INPUT
-#if WIENER_3_INPUT_QC
     int recon_filt = sqrFiltLengthTab[filtNo]-1;
     int resi_filt = sqrFiltLengthTab_pr[filtNo_resi];
     int pred_filt = sqrFiltLengthTab_pr[filtNo_pred]; 
@@ -739,10 +738,8 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
     resi_zeroflag = uiSymbol;
     m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
     pred_zeroflag = uiSymbol;
-#endif//WIENER_3_INPUT_QC
     if (two_codes)    
     {
-#if WIENER_3_INPUT_QC
       for(i = 0; i < recon_filt; i++)
       {
         if (!recon_zeroflag)
@@ -783,26 +780,9 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
       i = pAlfParam->num_coeff - 1;
       scanPos = pDepthInt[i] - 1;
       pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
-#else//WIENER_3_INPUT_QC
-      for(i = 0; i < pAlfParam->num_coeff-pAlfParam->num_coeff_pred-pAlfParam->num_coeff_resi-1; i++)
-      {   
-        scanPos = pDepthInt[i] - 1;
-        pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
-      }
-      scanPos = pDepthInt[pAlfParam->num_coeff-1] - 1;//DC
-      pAlfParam->coeffmulti[ind][pAlfParam->num_coeff-1] = golombDecode(pAlfParam->kMinTab[scanPos]);
-      
-      for(i = pAlfParam->num_coeff-pAlfParam->num_coeff_pred-pAlfParam->num_coeff_resi-1; i < pAlfParam->num_coeff-1; i++)
-      {   
-        scanPos = pDepthInt[i] - 1;
-        pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab_pr[scanPos]);
-      }
-#endif//WIENER_3_INPUT_QC
     }
     else
     {
-#endif//WIENER_3_INPUT
-#if WIENER_3_INPUT_QC && WIENER_3_INPUT
       for(i = 0; i < recon_filt; i++)
       {
         if (!recon_zeroflag)
@@ -843,14 +823,12 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
       i = pAlfParam->num_coeff - 1;
       scanPos = pDepthInt[i] - 1;
       pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
-#else//WIENER_3_INPUT_QC && WIENER_3_INPUT
+    }
+#else
     for(i = 0; i < pAlfParam->num_coeff; i++)
-    {	
+    {
       scanPos = pDepthInt[i] - 1;
       pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
-    }
-#endif//WIENER_3_INPUT_QC && WIENER_3_INPUT
-#if WIENER_3_INPUT
     }
 #endif
   }
