@@ -148,8 +148,6 @@ void InitScanOrderForSlice();
 void updateScanOrder(int first);
 void normalizeScanStats();
 #endif
-
-#define WIENER_3_INPUT_QC                  1
 ///////////////////////////////
 // QUALCOMM defines section end
 ///////////////////////////////

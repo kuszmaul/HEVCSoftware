@@ -413,7 +413,6 @@ Int TEncEntropy::writeFilterCoeffs(int sqrFiltLength, int filters_per_group, int
   for(ind = 0; ind < filters_per_group; ++ind)
   {
 #if WIENER_3_INPUT
-#if WIENER_3_INPUT_QC
     int recon_filt = sqrFiltLength-sqrFiltLength_pred-sqrFiltLength_resi-1;
     int resi_filt = sqrFiltLength_resi;
     int pred_filt = sqrFiltLength_pred;
@@ -436,10 +435,8 @@ Int TEncEntropy::writeFilterCoeffs(int sqrFiltLength, int filters_per_group, int
     m_pcEntropyCoderIf->codeAlfFlag(recon_zeroflag);
     m_pcEntropyCoderIf->codeAlfFlag(resi_zeroflag);
     m_pcEntropyCoderIf->codeAlfFlag(pred_zeroflag);
-#endif
     if (two_codes)
     {
-#if WIENER_3_INPUT_QC
       for(i = 0; i < recon_filt; i++)
       {
         if (!recon_zeroflag)
@@ -468,26 +465,9 @@ Int TEncEntropy::writeFilterCoeffs(int sqrFiltLength, int filters_per_group, int
       i = sqrFiltLength-1;
       scanPos = pDepthInt[i] - 1;
       golombEncode(FilterCoeff[ind][i], kMinTab[scanPos]);
-#else
-      for(i = 0; i < sqrFiltLength-sqrFiltLength_pred-sqrFiltLength_resi-1; i++)
-      {
-        scanPos = pDepthInt[i] - 1;
-        golombEncode(FilterCoeff[ind][i], kMinTab[scanPos]);
-      }
-      scanPos = pDepthInt[sqrFiltLength-1] - 1;
-      golombEncode(FilterCoeff[ind][sqrFiltLength-1], kMinTab[scanPos]);//DC
-      
-      for(i = sqrFiltLength-sqrFiltLength_pred-sqrFiltLength_resi-1; i < sqrFiltLength-1; i++)
-      {
-        scanPos = pDepthInt[i] - 1;
-        golombEncode(FilterCoeff[ind][i], kMinTab_pr[scanPos]);
-      }
-#endif
     }
     else
     {
-#endif
-#if WIENER_3_INPUT_QC && WIENER_3_INPUT
       for(i = 0; i < recon_filt; i++)
       {
         if (!recon_zeroflag)
@@ -516,14 +496,12 @@ Int TEncEntropy::writeFilterCoeffs(int sqrFiltLength, int filters_per_group, int
       i = sqrFiltLength-1;
       scanPos = pDepthInt[i] - 1;
       golombEncode(FilterCoeff[ind][i], kMinTab[scanPos]);
+    }
 #else
     for(i = 0; i < sqrFiltLength; i++)
     {
       scanPos = pDepthInt[i] - 1;
       golombEncode(FilterCoeff[ind][i], kMinTab[scanPos]);
-    }
-#endif
-#if WIENER_3_INPUT
     }
 #endif
   }
