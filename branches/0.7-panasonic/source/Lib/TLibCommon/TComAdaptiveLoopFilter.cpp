@@ -2350,23 +2350,16 @@ Void TComAdaptiveLoopFilter::getCurrentFilter(int **filterCoeffSym,ALFParam* pcA
     {
       if (patternMap_pred[i]>0)
       {
-        filterCoeffPrevSelected[varInd][i+length+length_resi]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];
+        filterCoeffPrevSelected[varInd][i+length+length]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];
         k++;
       }
       else
       {
-        filterCoeffPrevSelected[varInd][i+length+length_resi]=0;
+        filterCoeffPrevSelected[varInd][i+length+length]=0;
       }
     }
      
-    if (patternMap[length]>0)
-    {
-      filterCoeffPrevSelected[varInd][MAX_SQR_FILT_LENGTH-1]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];//DC
-    }
-    else
-    {
-      filterCoeffPrevSelected[varInd][i]=0;
-    }
+    filterCoeffPrevSelected[varInd][MAX_SQR_FILT_LENGTH-1]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];//DC
   }
 #else
     patternMap=patternMapTab[pcAlfParam->realfiltNo];

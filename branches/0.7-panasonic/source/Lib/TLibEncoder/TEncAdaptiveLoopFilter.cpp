@@ -5547,6 +5547,9 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
   Int tap               = ALF_MIN_NUM_TAP;
   m_pcTempAlfParam->tap = tap;
 #if WIENER_3_INPUT
+  m_pcTempAlfParam->filter_precision[0] = 5;
+  m_pcTempAlfParam->filter_precision[1] = 5;
+  m_pcTempAlfParam->filter_precision[2] = 5;
   m_pcTempAlfParam->tap_pred = ALF_MIN_NUM_TAP_PQ;
   m_pcTempAlfParam->tap_resi = ALF_MIN_NUM_TAP_PQ;
   m_pcTempAlfParam->num_coeff = (Int)(tap*tap/4 + 2 + m_pcTempAlfParam->tap_pred*m_pcTempAlfParam->tap_pred/4 + 1 +  m_pcTempAlfParam->tap_resi*m_pcTempAlfParam->tap_resi/4 + 1);
@@ -6245,12 +6248,12 @@ Void TEncAdaptiveLoopFilter::xcalcPredFilterCoeff(int filtNo, int filtNo_pred, i
     {
       if (patternMap_pred[i]>0)
       {
-        g_filterCoeffPrevSelected[varInd][i+length+length_resi]=g_filterCoeffSym[varIndTab[varInd]][k];
+        g_filterCoeffPrevSelected[varInd][i+length+length]=g_filterCoeffSym[varIndTab[varInd]][k];
         k++;
       }
       else
       {
-        g_filterCoeffPrevSelected[varInd][i+length+length_resi]=0;
+        g_filterCoeffPrevSelected[varInd][i+length+length]=0;
       }
     }
     g_filterCoeffPrevSelected[varInd][MAX_SQR_FILT_LENGTH-1]=g_filterCoeffSym[varIndTab[varInd]][k];//DC
@@ -6624,7 +6627,7 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
     for (Int iTap_pred = ALF_MIN_NUM_TAP_PQ; iTap_pred <= iTap; iTap_pred += 2)
     {
       for (Int iTap_resi = ALF_MIN_NUM_TAP_PQ; iTap_resi <= iTap; iTap_resi += 2)
-      {        
+      {
         copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
         m_pcTempAlfParam->tap = iTap;
         m_pcTempAlfParam->tap_pred = iTap_pred;
@@ -6812,7 +6815,11 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
       xCopyDecToRestCUs(pcPicDec, pcPicRest);
     }
   }
+#if WIENER_3_INPUT
+  else if (m_pcBestAlfParam->tap > ALF_MIN_NUM_TAP || m_pcBestAlfParam->tap_pred > ALF_MIN_NUM_TAP_PQ || m_pcBestAlfParam->tap_resi > ALF_MIN_NUM_TAP_PQ)
+#else
   else if (m_pcBestAlfParam->tap > ALF_MIN_NUM_TAP)
+#endif
   {
     m_pcPicYuvBest->copyToPicLuma(pcPicRest);
   }
