@@ -76,6 +76,9 @@ public:
   Void  parseSwitched_Filters      (TComSlice*& rpcSlice, TComPrediction* m_cPrediction)   {}
 #endif
   Void parseMVPIdx        ( TComDataCU* pcCU, Int& riMVPIdx, Int iMVPNum, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
+#ifdef DCM_PBIC
+  Void parseICPIdx        ( TComDataCU* pcCU, Int& riICPIdx, Int iICPNum, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 
   Void parseAlfFlag       ( UInt& ruiVal            );
   Void parseAlfUvlc       ( UInt& ruiVal            );
@@ -89,9 +92,18 @@ private:
   Void  xReadExGolombLevel  ( UInt& ruiSymbol, ContextModel& rcSCModel  );
 
   Void  xReadMvd            ( Int& riMvdComp, UInt uiAbsSum, UInt uiCtx );
+#ifdef DCM_PBIC
+  Void  xReadMvdNZ          ( Int& riMvdComp, UInt uiCtx );
+  Void  xReadIcdNZ          ( Int& riIcdComp, UInt uiCtx );
+  Void  xReadExGolombIcd    ( UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
+#endif
+
   Void  xReadExGolombMvd    ( UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
 #ifdef QC_AMVRES
   Void xReadMvResFlag ( Int& riVal, UInt uiCtx );
+#ifdef DCM_PBIC
+  Bool xParseMvResFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+#endif
 #endif
 #if PLANAR_INTRA
   UInt xParsePlanarBins( );
@@ -140,6 +152,11 @@ public:
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+#ifdef DCM_PBIC
+  Void parseMvdIcd        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+  Int  parseZTree         ( TComZeroTree* pcZTree, ContextModel *pcCtxModel);
+  ContextModel* getZTreeCtx ( Int iIdx );
+#endif
 
 #if HHI_RQT
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
@@ -182,6 +199,10 @@ private:
 #ifdef QC_AMVRES 
   ContextModel3DBuffer m_cCUMvResCModel;
 #endif
+#ifdef DCM_PBIC
+  ContextModel3DBuffer m_cCUIcdSCModel;
+#endif
+
 #if HHI_RQT
   ContextModel3DBuffer m_cCUTransSubdivFlagSCModel;
 #endif
@@ -206,6 +227,12 @@ private:
 #endif
 
   ContextModel3DBuffer m_cMVPIdxSCModel;
+#ifdef DCM_PBIC
+  ContextModel3DBuffer m_cICPIdxSCModel;
+  ContextModel3DBuffer m_cZTreeMV0SCModel;
+  ContextModel3DBuffer m_cZTreeMV1SCModel;
+  ContextModel3DBuffer m_cZTreeMV2SCModel;
+#endif
 
   ContextModel3DBuffer m_cCUROTindexSCModel;
   ContextModel3DBuffer m_cCUCIPflagCCModel;

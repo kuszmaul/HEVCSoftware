@@ -39,6 +39,9 @@
 
 #include "CommonDef.h"
 #include "TComList.h"
+#ifdef DCM_PBIC
+#include "TComZeroTree.h"
+#endif
 
 class TComPic;
 
@@ -96,6 +99,10 @@ private:
 #ifdef QC_SIFO_PRED
   Bool          m_bUseSIFO_Pred;
 #endif
+#ifdef DCM_PBIC 
+  Bool          m_bUseIC;
+#endif
+
   Bool        m_bUseAMP;
   // Parameter
   AMVP_MODE   m_aeAMVPMode[MAX_CU_DEPTH];
@@ -229,6 +236,11 @@ public:
 	Bool getUseSIFO_Pred      ()         { return m_bUseSIFO_Pred;        }
 #endif
 
+#ifdef DCM_PBIC 
+	Void setUseIC       ( Bool b ) { m_bUseIC   = b;          }
+  Bool getUseIC       ()         { return m_bUseIC;         }
+#endif
+
   Bool getUseAMP      ()         { return m_bUseAMP; }
   Void setUseAMP      ( Bool b ) { m_bUseAMP  = b; }
 
@@ -323,6 +335,12 @@ private:
 #ifdef QC_SIFO_PRED
 	Bool        m_bUseSIFO_Pred;
 #endif
+#ifdef DCM_PBIC
+  TComZeroTree* m_apcZTree  [MAX_NUM_ZTREE];
+  Void        xCreateZTrees();
+  Void        xDeleteZTrees();
+#endif
+
 public:
   TComSlice();
   virtual ~TComSlice();
@@ -356,6 +374,9 @@ public:
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
   Int       getDepth            ()                              { return  m_iDepth;                     }
   UInt      getColDir           ()                              { return  m_uiColDir;                   }
+#ifdef DCM_PBIC
+  TComZeroTree* getZTree        ( UInt uiZTreeIdx )             { return  m_apcZTree[uiZTreeIdx];       }
+#endif
 
   Void      setReferenced(Bool b)                               { m_bRefenced = b; }
   Bool      isReferenced()                                      { return m_bRefenced; }

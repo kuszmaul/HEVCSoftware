@@ -153,6 +153,10 @@ protected:
   Bool      m_bUseIMP;                                        // SOPH : coding tools (interleaved MV Predictor)
 #endif
 
+#ifdef DCM_PBIC 
+  Bool      m_bUseIC;                                         // Partition-based IC
+#endif
+
   Bool      m_bUseAMP;                                        ///< flag for using asymmetric partition
 
   // coding tools (encoder-only parameters)

@@ -154,6 +154,9 @@ Void TAppEncTop::xInitLibCfg()
 #ifdef QC_SIFO_PRED
     m_cTEncTop.setUseSIFO_Pred                ( m_bUseSIFO_Pred );
 #endif
+#ifdef DCM_PBIC 
+  m_cTEncTop.setUseIC                        ( m_bUseIC       );
+#endif
     m_cTEncTop.setUseAMP                      ( m_bUseAMP );
 
 }

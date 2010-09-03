@@ -344,6 +344,9 @@ Void TEncTop::xInitSPS()
 #ifdef QC_SIFO_PRED
  m_cSPS.setUseSIFO_Pred ( m_bUseSIFO_Pred    );
 #endif
+#ifdef DCM_PBIC
+  m_cSPS.setUseIC         ( m_bUseIC            );
+#endif
   m_cSPS.setDIFTap        ( m_iDIFTap           );
 
   m_cSPS.setMaxTrSize     ( m_uiMaxTrSize       );
