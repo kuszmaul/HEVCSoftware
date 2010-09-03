@@ -1060,7 +1060,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   TCoeff* piCoeff = pcCoef;
   UInt uiNumSig = 0;
   UInt uiScanning;
-#if !QC_MDDT
+#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
   UInt uiInterleaving;
 #endif
 
@@ -1159,7 +1159,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 
   TCoeff scoeff[64];
   Int iBlockType;
-#if !QC_MDDT
+#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
   UInt uiNumSigInterleaved;
 #endif
 #if NEWVLC
@@ -1288,6 +1288,21 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       xCodeCoeff8x8( scoeff, iBlockType );
     }
 #else
+#if NEWVLC_ADAPT_ENABLE
+    if(pcCU->isIntra( uiAbsPartIdx ))
+    {
+      for (uiScanning=0; uiScanning<64; uiScanning++)
+      {
+        scoeff[63-uiScanning] = piCoeff[ pucScan[ uiScanning ] ];
+      }
+
+      if (eTType==TEXT_CHROMA_U || eTType==TEXT_CHROMA_V) 
+        iBlockType = eTType-2;
+      else
+        iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+      xCodeCoeff8x8( scoeff, iBlockType );
+    }
+#else
     for (uiInterleaving=0; uiInterleaving<uiSize/64; uiInterleaving++)
     {
       uiNumSigInterleaved = 0;
@@ -1311,6 +1326,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
         xWriteFlag( 0 );
       }
     }
+#endif
 #endif // QC_MDDT
 //#endif
   }

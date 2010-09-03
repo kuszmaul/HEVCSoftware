@@ -1214,7 +1214,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 #endif
 
   UInt uiScanning;
-#if !QC_MDDT
+#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
   UInt uiInterleaving, uiIsCoded;
 #endif
 
@@ -1324,6 +1324,23 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       }
     }
 #else
+#if NEWVLC_ADAPT_ENABLE
+    if(pcCU->isIntra( uiAbsPartIdx ))
+    {
+	    memset(piCoeff,0,sizeof(TCoeff)*uiSize);
+
+      if (eTType==TEXT_CHROMA_U || eTType==TEXT_CHROMA_V) 
+        iBlockType = eTType-2;
+      else
+        iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+      xParseCoeff8x8( scoeff, iBlockType );
+
+      for (uiScanning=0; uiScanning<64; uiScanning++)
+      {
+        piCoeff[ pucScan[ uiScanning ] ] = scoeff[63-uiScanning];
+      }
+    }
+#else
     for (uiInterleaving=0; uiInterleaving<uiSize/64; uiInterleaving++)
     {
       xReadFlag( uiIsCoded );
@@ -1345,6 +1362,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         }
       }
     }
+#endif
 #endif // QC_MDDT
 //#endif
   }
