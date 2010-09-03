@@ -3439,6 +3439,7 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
 
 #if QC_ALF
 #if WIENER_3_INPUT
+  adapt_precision=1;
  // adaptive in-loop wiener filtering
   xEncALFLuma_qc( pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, pcPicYuvPred, pcPicYuvResi, uiMinRate, uiMinDist, dMinCost );
   // cu-based filter on/off control
