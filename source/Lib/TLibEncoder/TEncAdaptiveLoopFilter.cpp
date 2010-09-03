@@ -6609,8 +6609,11 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
 
   UInt64 uiRate, uiDist;
   Double dCost;
+#if WIENER_3_INPUT
+  int changed=0;
+#endif
 #if (WIENER_3_INPUT && WIENER_3_INPUT_FAST)
-  int tap_rec_best=ALF_MAX_NUM_TAP;
+  int tap_rec_best=ALF_MIN_NUM_TAP;
   int tap_pred_best=ALF_MIN_NUM_TAP_PQ;
   int tap_resi_best=ALF_MIN_NUM_TAP_PQ;
 #endif
@@ -6658,8 +6661,8 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
         {
           tap_rec_best =iTap;
           tap_pred_best=iTap_pred;
-          tap_resi_best=iTap_resi;
-          
+          tap_resi_best=iTap_resi;          
+          changed=1;          
           rdMinCost = dCost;
           ruiMinDist = uiDist;
           ruiMinRate = uiRate;
@@ -6706,7 +6709,8 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
     rdMinCost = dCost;
     ruiMinDist = uiDist;
     ruiMinRate = uiRate;
-    m_pcPicYuvTmp->copyToPicLuma(m_pcPicYuvBest);
+    m_pcPicYuvTmp->copyToPicLuma(m_pcPicYuvBest);    
+    changed=1;
     copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
     bChanged = true;
     if (m_pcTempAlfParam->cu_control_flag)
@@ -6786,8 +6790,11 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
 #endif
     }
 
-    if (dCost < rdMinCost)
+    if (dCost < rdMinCost)      
     {
+#if WIENER_3_INPUT
+      changed=1;
+#endif
       rdMinCost = dCost;
       ruiMinDist = uiDist;
       ruiMinRate = uiRate;
@@ -6816,7 +6823,7 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPic
     }
   }
 #if WIENER_3_INPUT
-  else if (m_pcBestAlfParam->tap > ALF_MIN_NUM_TAP || m_pcBestAlfParam->tap_pred > ALF_MIN_NUM_TAP_PQ || m_pcBestAlfParam->tap_resi > ALF_MIN_NUM_TAP_PQ)
+  else if (changed==1)
 #else
   else if (m_pcBestAlfParam->tap > ALF_MIN_NUM_TAP)
 #endif
