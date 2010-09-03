@@ -143,6 +143,9 @@ protected:
 #ifdef QC_SIFO_PRED
   Bool      m_bUseSIFO_Pred;
 #endif
+#ifdef DCM_PBIC 
+  Bool      m_bUseIC;
+#endif
   Int       m_iDIFTap;  // Number of interpolation filter taps
 
   Int*      m_aidQP;
@@ -313,6 +316,9 @@ public:
  Void      setUseSIFO_Pred                       ( Bool  b )     { m_bUseSIFO_Pred     = b; }
  Bool      getUseSIFO_Pred                     ()     {return  m_bUseSIFO_Pred; }
 #endif
+#ifdef DCM_PBIC 
+  Void      setUseIC                        ( Bool  b )     { m_bUseIC      = b; }
+#endif
 
   Void      setDIFTap                       ( Int   i )     { m_iDIFTap     = i; }
 
@@ -352,6 +358,9 @@ public:
 #endif
 #ifdef QC_AMVRES
  Bool      getUseAMVRes                     ()     {return  m_bUseAMVRes; }
+#endif
+#ifdef DCM_PBIC 
+  Bool      getUseIC                        ()      { return m_bUseIC;      }
 #endif
   Int       getDIFTap                       ()      { return m_iDIFTap;  }
 

@@ -80,11 +80,63 @@ TComSlice::TComSlice()
     m_bEdgePredictionEnable = false;
 #endif //EDGE_BASED_PREDICTION
   initEqualRef();
+#ifdef DCM_PBIC
+  xCreateZTrees();
+#endif
 }
 
 TComSlice::~TComSlice()
 {
+#ifdef DCM_PBIC
+  xDeleteZTrees();
+#endif
 }
+
+#ifdef DCM_PBIC
+Void TComSlice::xCreateZTrees()
+{
+  Int* piPattern               = NULL;
+  Int  aiPattern_MVDICDUNI[12] = {4, 1, 1, 0, 0, 1, 0, 0, 0, 1, 2, 3};
+  Int  aiPattern_MVDICDBI [21] = {7, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 2, 1, 3, 4, 5, 6};
+  Int  aiPattern_MVDUNI   [ 6] = {2, 1, 0, 0, 0, 1};
+  Int  aiPattern_MVDBI    [12] = {4, 1, 1, 0, 0, 1, 0, 0, 0, 2, 1, 3};
+
+  for (UInt uiZTreeIdx = 0; uiZTreeIdx < MAX_NUM_ZTREE; uiZTreeIdx++)
+  {
+    switch (uiZTreeIdx)
+    {
+    case IDX_ZTREE_MVDICDUNI:
+      piPattern = aiPattern_MVDICDUNI;
+      m_apcZTree[uiZTreeIdx] = new TComZeroTree(piPattern);
+      break;
+    case IDX_ZTREE_MVDICDBI:
+      piPattern = aiPattern_MVDICDBI;
+      m_apcZTree[uiZTreeIdx] = new TComZeroTree(piPattern);
+      break;
+    case IDX_ZTREE_MVDUNI:
+      piPattern = aiPattern_MVDUNI;
+      m_apcZTree[uiZTreeIdx] = new TComZeroTree(piPattern);
+      break;
+    case IDX_ZTREE_MVDBI:
+      piPattern = aiPattern_MVDBI;
+      m_apcZTree[uiZTreeIdx] = new TComZeroTree(piPattern);
+      break;
+    default:
+      m_apcZTree[uiZTreeIdx] = NULL;
+      break;
+    }
+  }
+}
+
+Void TComSlice::xDeleteZTrees()
+{
+  for (UInt uiZTreeIdx = 0; uiZTreeIdx < MAX_NUM_ZTREE; uiZTreeIdx++)
+  {
+    if ( m_apcZTree[uiZTreeIdx] != NULL )
+      delete m_apcZTree[uiZTreeIdx];
+  }
+}
+#endif
 
 Void TComSlice::initSlice()
 {
@@ -734,6 +786,10 @@ TComSPS::TComSPS()
   m_bALFSymmetry   = false;//MS
   m_iALFMinLength  = 3;    //MS
   m_iALFMaxLength  = 9;    //MS
+#endif
+
+#ifdef DCM_PBIC
+  m_bUseIC       = false;
 #endif
 
   // AMVP parameter

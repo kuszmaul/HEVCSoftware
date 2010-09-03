@@ -239,6 +239,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("EdgePredictionEnable", m_bEdgePredictionEnable, true, "Enable edge based prediction for intra")
     ("EdgeDetectionThreshold", m_iEdgeDetectionThreshold, 10240, "Threshold for edge detection of edge based prediction")
 #endif //EDGE_BASED_PREDICTION
+#ifdef DCM_PBIC 
+    ("PBIC", m_bUseIC, false,"Partition-based IC")// Partition-based IC
+#endif
     /* Misc. */
     ("FEN", m_bUseFastEnc, false, "fast encoder setting")
 
@@ -608,6 +611,9 @@ Void TAppEncCfg::xPrintParameter()
 #ifdef QC_SIFO_PRED
 	printf("SPF:%d ", m_bUseSIFO_Pred			);
 #endif
+#ifdef DCM_PBIC
+	printf("PBIC :%d ", m_bUseIC			);
+#endif
     printf("AMP:%d ", m_bUseAMP);
   printf("\n");
 
@@ -640,6 +646,9 @@ Void TAppEncCfg::xPrintUsage()
 #endif
 #ifdef QC_AMVRES
   printf( "                   AMVRES - Adaptive motion resolution\n");
+#endif
+#ifdef DCM_PBIC 
+  printf( "                   PBIC - Partition-based Illumination Compensation \n");
 #endif
   printf( "\n" );
   printf( "  Example 1) TAppEncoder.exe -c test.cfg -q 32 -g 8 -f 9 -s 64 -h 4\n");
