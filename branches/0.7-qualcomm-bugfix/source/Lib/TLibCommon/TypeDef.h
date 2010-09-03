@@ -151,7 +151,7 @@ void normalizeScanStats();
 #endif
 
 #define BUGFIX48 0
-
+#define SCAN_LUT_FIX 1
 ///////////////////////////////
 // QUALCOMM defines section end
 ///////////////////////////////

@@ -151,8 +151,15 @@ extern Int g_aiDequantCoef_klt[6][16];
 extern UInt g_aiQuantCoef_klt[6][16] ;
 extern Int g_aiDequantCoef64_klt[6][64];
 extern UInt g_aiQuantCoef64_klt[6][64];
+
+#if SCAN_LUT_FIX
+extern const char LUT16x16[5][34];
+extern const char LUT32x32[5][34];
+#else
 extern const char LUT16x16[5][33];
 extern const char LUT32x32[5][33];
+#endif
+
 extern const char LUT64x64[5][5];
 
 extern Bool g_bUpdateStats;
