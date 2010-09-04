@@ -3358,8 +3358,8 @@ Void TEncAdaptiveLoopFilter::endALFEnc()
   free_mem2Dpel (imgY_resi);
   free_mem2Dpel (imgY_pext);
   free_mem2Dpel (imgY_rext);
-  destroyMatrix4D_double(EGlobalSym, NO_TEST_FILT*(NO_TEST_FILT+2)*(NO_TEST_FILT+2),  NO_VAR_BINS);
-  destroyMatrix3D_double(yGlobalSym, NO_TEST_FILT*(NO_TEST_FILT+2)*(NO_TEST_FILT+2));  
+  destroyMatrix4D_double(EGlobalSym, (NO_TEST_FILT+2)*(NO_TEST_FILT+2)*(NO_TEST_FILT+2),  NO_VAR_BINS);
+  destroyMatrix3D_double(yGlobalSym, (NO_TEST_FILT+2)*(NO_TEST_FILT+2)*(NO_TEST_FILT+2));  
 #else  
 // delete qc filters
   destroyMatrix4D_double(EGlobalSym, NO_TEST_FILT,  NO_VAR_BINS);
