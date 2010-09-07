@@ -376,6 +376,40 @@ Void  print(ALFParam* pAlfParam)
 
 
 #if HHI_MRG
+#if HHI_MRG_PU
+Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{ 
+  TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
+  UInt uiNeighbourInfo;
+  UChar uhInterDirNeighbours[2];
+  pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+
+  if ( uiNeighbourInfo )
+  {
+    // at least one merge candidate exists
+    m_pcEntropyCoderIf->codeMergeFlag( pcCU, uiAbsPartIdx );
+  }
+  else
+  {
+    assert( !pcCU->getMergeFlag( uiAbsPartIdx ) );
+  }
+}
+
+Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
+  UInt uiNeighbourInfo;
+  UChar uhInterDirNeighbours[2];
+  pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+
+  UInt uiMergeIndex = 0;
+  if ( uiNeighbourInfo == 3 ) 
+  {
+    m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
+  }
+}
+
+#else
 Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -396,6 +430,7 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bR
 
   m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
 }
+#endif
 #endif
 
 Void TEncEntropy::encodeAlfParam(ALFParam* pAlfParam)
@@ -573,7 +608,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   if ( pcCU->getMergeFlag( uiAbsPartIdx ) )
   {
     return;
@@ -600,7 +635,7 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   if( bRD )
     uiAbsPartIdx = 0;
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   if ( pcCU->getMergeFlag( uiAbsPartIdx ) )
   {
     return;
@@ -821,7 +856,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   if( bRD )
     uiAbsPartIdx = 0;
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   if ( pcCU->getMergeFlag( uiAbsPartIdx ) )
   {
     return;
@@ -880,6 +915,9 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
+#if HHI_MRG_PU
+    encodePUWise( pcCU, uiAbsPartIdx, bRD );
+#else
     encodeInterDir( pcCU, uiAbsPartIdx, bRD );
 
     if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )       // if ( ref. frame list0 has at least 1 entry )
@@ -895,10 +933,11 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       encodeMvd       ( pcCU, uiAbsPartIdx, REF_PIC_LIST_1, bRD );
       encodeMVPIdx    ( pcCU, uiAbsPartIdx, REF_PIC_LIST_1      );
     }
+#endif
   }
 }
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
 Void TEncEntropy::encodeMergeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( !pcCU->getSlice()->getSPS()->getUseMRG() )
@@ -1023,6 +1062,103 @@ Void TEncEntropy::encodeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
   return;
 }
+
+#if HHI_MRG_PU
+Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( bRD )
+    uiAbsPartIdx = 0;
+
+  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
+  UInt uiDepth = pcCU->getDepth( uiAbsPartIdx );
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+
+  for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
+  {
+    encodeMergeFlag( pcCU, uiSubPartIdx );
+    if ( pcCU->getMergeFlag( uiSubPartIdx ) )
+    {
+      encodeMergeIndex( pcCU, uiSubPartIdx );
+    }
+    else
+    {
+      encodeInterDirPU( pcCU, uiSubPartIdx );
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          encodeRefFrmIdxPU ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+          encodeMvdPU       ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+          encodeMVPIdxPU    ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+        }
+      }
+    }
+  }
+
+  return;
+}
+
+Void TEncEntropy::encodeInterDirPU( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  if ( !pcCU->getSlice()->isInterB() )
+  {
+    return;
+  }
+
+  m_pcEntropyCoderIf->codeInterDir( pcCU, uiAbsPartIdx );
+  return;
+}
+
+Void TEncEntropy::encodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  assert( !pcCU->isIntra( uiAbsPartIdx ) );
+  assert( !pcCU->isSkip( uiAbsPartIdx ) );
+
+#ifdef QC_AMVRES
+  if ( ( pcCU->getSlice()->getNumRefIdx( eRefList ) == 1 ))
+  {
+    if ((pcCU->getSlice()->getSymbolMode() != 0) || (!pcCU->getSlice()->getSPS()->getUseAMVRes()))
+      return;
+  }
+#else
+  if ( ( pcCU->getSlice()->getNumRefIdx( eRefList ) == 1 ) )
+  {
+    return;
+  }
+#endif
+
+  if ( pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList ) )
+  {
+    m_pcEntropyCoderIf->codeRefFrmIdx( pcCU, uiAbsPartIdx, eRefList );
+  }
+
+  return;
+}
+
+Void TEncEntropy::encodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  assert( !pcCU->isIntra( uiAbsPartIdx ) );
+  assert( !pcCU->isSkip( uiAbsPartIdx ) );
+
+  if ( pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList ) )
+  {
+    m_pcEntropyCoderIf->codeMvd( pcCU, uiAbsPartIdx, eRefList );
+  }
+  return;
+}
+
+Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  if ( (pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getMVPNum(eRefList, uiAbsPartIdx)> 1) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
+  {
+    m_pcEntropyCoderIf->codeMVPIdx( pcCU, uiAbsPartIdx, eRefList );
+  }
+
+  return;
+}
+
+#endif
 
 Void TEncEntropy::encodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Bool bRD )
 {

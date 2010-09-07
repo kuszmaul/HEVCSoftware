@@ -374,11 +374,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       pcTempCU = rpcTempCU;
 
 #if HHI_MRG
+#if HHI_MRG_PU
+      if( !pcPic->getSlice()->getSPS()->getUseMRG() )
+#else
       if( pcPic->getSlice()->getSPS()->getUseMRG() )
       {
         xCheckRDCostMerge( rpcBestCU, rpcTempCU );            rpcTempCU->initEstData();
       }
       else
+#endif
       {
         xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
       }
@@ -677,7 +681,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   m_pcEntropyCoder->encodeMergeInfo( pcCU, uiAbsPartIdx );
 #endif
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
@@ -757,7 +761,7 @@ Void TEncCu::xCheckRDCostSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, B
   xCheckBestMode(rpcBestCU, rpcTempCU);
 }
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
 Void TEncCu::xCheckRDCostMerge( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 {
   // test if Top and Left exist
@@ -872,7 +876,7 @@ Void TEncCu::xCheckPlanarIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 
   m_pcEntropyCoder->resetBits();
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   m_pcEntropyCoder->encodeMergeInfo( rpcTempCU, 0,          true );
 #endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
@@ -933,7 +937,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   m_pcEntropyCoder->resetBits();
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   m_pcEntropyCoder->encodeMergeInfo( rpcTempCU, 0,          true );
 #endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
