@@ -57,6 +57,7 @@
 #define HHI_MRG                           1           ///< SOPH: inter partition merging
 #define HHI_AMVP_OFF                      0           ///< SOPH: Advanced Motion Vector Predictor deactivated [not in TMuC]
 #define HHI_DEBLOCKING_FILTER             0           ///< MW: deblocking filter supporting residual quadtrees
+#define HHI_RQT_ROOT                      0           ///< PHHK: signaling of residual quadtree root flag
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
@@ -67,10 +68,10 @@
 #define DEFAULT_IS                        1           ///< BB: set intra filtering always 0:off 1:on if AIS is disabled
 #define AIS_TEST_BEST                     0           ///< BB: 0: compare every intra mode with filter on and off (encoder only)
                                                       ///<     1: compare best intra mode with filter on and off (encoder only)
+#endif
 
 #define HHI_INTERP_FILTER_KERNEL_FIX      1           ///< BB: interpolation filter fixed spline kernel
 
-#endif
 //////////////////////////
 // HHI defines section end
 //////////////////////////
@@ -148,6 +149,11 @@ void InitScanOrderForSlice();
 void updateScanOrder(int first);
 void normalizeScanStats();
 #endif
+
+#define BUGFIX48 0
+#define BUGFIX50 0
+#define BUGFIX50TMP 1 // for compatibility with previous versions without the crash
+
 ///////////////////////////////
 // QUALCOMM defines section end
 ///////////////////////////////
@@ -158,6 +164,7 @@ void normalizeScanStats();
 ///////////////////////////////////
 
 #define EDGE_BASED_PREDICTION   // Enable edge based prediction for intra
+#define BUGFIX51 0
 
 ///////////////////////////////////
 // Panasonic defines section start
