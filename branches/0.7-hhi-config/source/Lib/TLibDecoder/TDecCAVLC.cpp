@@ -562,6 +562,10 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
     if (pcCU->getSlice()->isInterB() && uiMode == 3)
     {
+#if HHI_DISABLE_INTER_NxN_SPLIT
+       uiSymbol = 0;
+       if( g_uiMaxCUWidth>>uiDepth == 8 )
+#endif
       xReadFlag( uiSymbol );
       if (uiSymbol == 0)
       {

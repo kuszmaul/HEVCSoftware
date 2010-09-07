@@ -857,7 +857,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
     if (pcCU->getSlice()->isInterB() && uiMode == 3)
     {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3) );
+#if HHI_DISABLE_INTER_NxN_SPLIT
+      uiSymbol = 0;
+      if( g_uiMaxCUWidth>>uiDepth == 8 )
+#endif
+        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3) );
       if (uiSymbol == 0)
       {
         pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
