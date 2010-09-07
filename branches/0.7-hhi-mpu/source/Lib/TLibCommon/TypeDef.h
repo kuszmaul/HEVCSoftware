@@ -55,12 +55,17 @@
 #define HHI_TRANSFORM_CODING              1           ///< TN: modified transform coefficient coding with RDOQ
 #define HHI_IMVP                          1           ///< SOPH: Interleaved Motion Vector Predictor 
 #define HHI_MRG                           1           ///< SOPH: inter partition merging
+#define HHI_MRG_PU                        1           ///< SOPH: inter partition merging on pu basis
 #define HHI_AMVP_OFF                      0           ///< SOPH: Advanced Motion Vector Predictor deactivated [not in TMuC]
 #define HHI_DEBLOCKING_FILTER             0           ///< MW: deblocking filter supporting residual quadtrees
-#define HHI_RQT_ROOT                      0           ///< PHHK: signaling of residual quadtree root flag
+#define HHI_RQT_ROOT                      1           ///< PHHK: signaling of residual quadtree root flag
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
+#endif
+
+#if ( HHI_MRG_PU && !HHI_MRG )
+#error "HHI_MRG_PU can only be equal to 1 if HHI_MRG is equal to 1"
 #endif
 
 #if HHI_AIS

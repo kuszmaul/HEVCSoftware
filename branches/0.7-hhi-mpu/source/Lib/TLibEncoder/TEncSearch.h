@@ -433,7 +433,16 @@ protected:
                                     TComMv&         rcMvPred,
                                     MvPredMeasure&  rcMvPredMeasure );
 #endif
-
+#if HHI_MRG_PU
+Void xMergeEstimation             ( TComDataCU*     pcCU,
+                                    TComYuv*        pcYuvOrg,
+                                    Int             iPartIdx,
+                                    Int*            piRefIdxPred,
+                                    TComMv*         pcMvTemp,
+                                    UInt&           uiInterDir,
+                                    UInt&           uiMergeIndex,
+                                    UInt&           ruiCost);
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // motion estimation
   // -------------------------------------------------------------------------------------------------------------------

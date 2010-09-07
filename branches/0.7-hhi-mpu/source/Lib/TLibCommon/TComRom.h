@@ -87,6 +87,10 @@ extern       UInt g_uiMaxCUHeight;
 extern       UInt g_uiMaxCUDepth;
 extern       UInt g_uiAddCUDepth;
 
+#if HHI_MRG_PU
+extern       UInt g_auiPUOffset[8];
+#endif
+
 // ====================================================================================================================
 // Quantization & DeQuantization
 // ====================================================================================================================

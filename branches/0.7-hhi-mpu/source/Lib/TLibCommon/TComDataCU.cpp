@@ -664,6 +664,11 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_acCUMvField[eRefPicList].setMvPtr(pcCU->getCUMvField(eRefPicList)->getMv()     + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setMvdPtr(pcCU->getCUMvField(eRefPicList)->getMvd()    + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setRefIdxPtr(pcCU->getCUMvField(eRefPicList)->getRefIdx() + uiAbsPartIdx);
+#if HHI_MRG_PU
+  m_pbMergeFlag         = pcCU->getMergeFlag()        + uiAbsPartIdx;
+  m_puhMergeIndex       = pcCU->getMergeIndex()       + uiAbsPartIdx;
+#endif
+
 #ifdef QC_AMVRES
   m_acCUMvField[eRefPicList].setMVResPtr(pcCU->getCUMvField(eRefPicList)->getMVRes() + uiAbsPartIdx);
 #endif
@@ -1893,7 +1898,174 @@ Void TComDataCU::setLumaIntraFiltFlagSubParts( Bool bFlag, UInt uiAbsPartIdx, UI
 }
 #endif
 
+#if HHI_MRG_PU
+Void TComDataCU::setSubPartUChar( UInt uiParameter, UChar* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx )
+{
+  UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (uiCUDepth << 1)) >> 2;
+  switch ( m_pePartSize[ uiCUAddr ] )
+  {
+  case SIZE_2Nx2N:
+    memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*uiCurrPartNumQ << 2 );                      break;
+  case SIZE_2NxN:
+    memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*uiCurrPartNumQ << 1 );                      break;
+  case SIZE_Nx2N:
+    memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*uiCurrPartNumQ );
+    memset( puhBaseLCU + uiCUAddr + ( uiCurrPartNumQ << 1 ), uiParameter, sizeof(UChar)*uiCurrPartNumQ ); break;
+  case SIZE_NxN:
+    memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*uiCurrPartNumQ );                           break;
+  case SIZE_2NxnU:
+    {
+      memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>1) );
+      if( uiPUIdx == 0 )
+        memset( puhBaseLCU + uiCUAddr + uiCurrPartNumQ, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>1) );
+      else
+        memset( puhBaseLCU + uiCUAddr + uiCurrPartNumQ, uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>1) + (uiCurrPartNumQ<<1) ) );
+      break;
+    }
+  case SIZE_2NxnD:
+    {
+      if( uiPUIdx == 0 )
+      {
+        memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>1) + (uiCurrPartNumQ<<1) ) );
+        memset( puhBaseLCU + uiCUAddr + ( uiCurrPartNumQ + (uiCurrPartNumQ<<1) ), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>1) );
+      }
+      else
+      {
+        memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>1) );
+        memset( puhBaseLCU + uiCUAddr + uiCurrPartNumQ, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>1) );
+      }
+      break;
+    }
+  case SIZE_nLx2N:
+    {
+      memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+      memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+      if( uiPUIdx == 0 )
+      {
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1) + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+      }
+      else
+      {
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>2) + uiCurrPartNumQ ) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1) + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>2) + uiCurrPartNumQ ) );
+      }
+      break;
+    }
+  case SIZE_nRx2N:
+    {
+      if( uiPUIdx == 0 )
+      {
+        memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>2) + uiCurrPartNumQ ) );
+        memset( puhBaseLCU + uiCUAddr + uiCurrPartNumQ + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1), uiParameter, sizeof(UChar)*( (uiCurrPartNumQ>>2) + uiCurrPartNumQ ) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1) + uiCurrPartNumQ + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+      }
+      else
+      {
+        memset( puhBaseLCU + uiCUAddr, uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+        memset( puhBaseLCU + uiCUAddr + (uiCurrPartNumQ<<1) + (uiCurrPartNumQ>>1), uiParameter, sizeof(UChar)*(uiCurrPartNumQ>>2) );
+      }
+      break;
+    }
+  default:
+    assert( 0 );
+  }
+}
+
+Void TComDataCU::setSubPartBool( Bool bParameter, Bool* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx )
+{
+  UInt uiQuaterCUPartNum = (m_pcPic->getNumPartInCU() >> (uiCUDepth << 1)) >> 2;
+  switch ( m_pePartSize[ uiCUAddr ] )
+  {
+  case SIZE_2Nx2N:
+    memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*uiQuaterCUPartNum << 2 );                      break;
+  case SIZE_2NxN:
+    memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*uiQuaterCUPartNum << 1 );                      break;
+  case SIZE_Nx2N:
+    memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*uiQuaterCUPartNum );
+    memset( pbBaseLCU + uiCUAddr + ( uiQuaterCUPartNum << 1 ), bParameter, sizeof(Bool)*uiQuaterCUPartNum ); break;
+  case SIZE_NxN:
+    memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*uiQuaterCUPartNum );                           break;
+  case SIZE_2NxnU:
+    {
+      memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>1) );
+      if( uiPUIdx == 0 )
+        memset( pbBaseLCU + uiCUAddr + uiQuaterCUPartNum, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>1) );
+      else
+        memset( pbBaseLCU + uiCUAddr + uiQuaterCUPartNum, bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>1) + (uiQuaterCUPartNum<<1) ) );
+      break;
+    }
+  case SIZE_2NxnD:
+    {
+      if( uiPUIdx == 0 )
+      {
+        memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>1) + (uiQuaterCUPartNum<<1) ) );
+        memset( pbBaseLCU + uiCUAddr + ( uiQuaterCUPartNum + (uiQuaterCUPartNum<<1) ), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>1) );
+      }
+      else
+      {
+        memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>1) );
+        memset( pbBaseLCU + uiCUAddr + uiQuaterCUPartNum, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>1) );
+      }
+      break;
+    }
+  case SIZE_nLx2N:
+    {
+      memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+      memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+      if( uiPUIdx == 0 )
+      {
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1) + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+      }
+      else
+      {
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>2) + uiQuaterCUPartNum ) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1) + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>2) + uiQuaterCUPartNum ) );
+      }
+      break;
+    }
+  case SIZE_nRx2N:
+    {
+      if( uiPUIdx == 0 )
+      {
+        memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>2) + uiQuaterCUPartNum ) );
+        memset( pbBaseLCU + uiCUAddr + uiQuaterCUPartNum + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1), bParameter, sizeof(Bool)*( (uiQuaterCUPartNum>>2) + uiQuaterCUPartNum ) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1) + uiQuaterCUPartNum + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+      }
+      else
+      {
+        memset( pbBaseLCU + uiCUAddr, bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+        memset( pbBaseLCU + uiCUAddr + (uiQuaterCUPartNum<<1) + (uiQuaterCUPartNum>>1), bParameter, sizeof(Bool)*(uiQuaterCUPartNum>>2) );
+      }
+      break;
+    }
+  default:
+    assert( 0 );
+  }
+}
+#endif
+
 #if HHI_MRG
+#if HHI_MRG_PU
+Void TComDataCU::setMergeFlagSubParts ( Bool bMergeFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  setSubPartBool( bMergeFlag, m_pbMergeFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
+}
+
+Void TComDataCU::setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  setSubPartUChar( uiMergeIndex, m_puhMergeIndex, uiAbsPartIdx, uiDepth, uiPartIdx );
+}
+
+#else
+
 Void TComDataCU::setMergeFlagSubParts ( Bool bMergeFlag, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
@@ -1907,6 +2079,7 @@ Void TComDataCU::setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, U
 
   memset( m_puhMergeIndex + uiAbsPartIdx, uiMergeIndex, sizeof(UChar)*uiCurrPartNumb );
 }
+#endif
 #endif
 
 #if ANG_INTRA
@@ -1931,6 +2104,14 @@ Void TComDataCU::setChromIntraDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt u
   memset( m_puhChromaIntraDir + uiAbsPartIdx, uiDir, sizeof(UChar)*uiCurrPartNumb );
 }
 
+#if HHI_MRG_PU
+
+Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  setSubPartUChar( uiDir, m_puhInterDir, uiAbsPartIdx, uiDepth, uiPartIdx );
+}
+
+#else
 Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (uiDepth << 1)) >> 2;
@@ -2007,6 +2188,7 @@ Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPart
     assert( 0 );
   }
 }
+#endif
 
 Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
