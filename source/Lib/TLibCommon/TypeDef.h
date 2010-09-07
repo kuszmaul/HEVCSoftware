@@ -44,6 +44,7 @@
 #define HHI_NAL_UNIT_SYNTAX               1           ///< enable/disable NalUnit syntax 
 #define HHI_ALLOW_CIP_SWITCH              1           ///< BB: allow to switch off CIP, via CIP : 0 in cfg file or -0 CIP in command line
 #define HHI_ALLOW_ROT_SWITCH              1           ///< BB: allow to switch off ROT, via ROT : 0 in cfg file or -0 ROT in command line
+#define HHI_DISABLE_INTER_NxN_SPLIT       1           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
 
 // HHI tools
 #define HHI_RQT                           1           ///< MWHK: residual quadtree
@@ -61,6 +62,7 @@
 #define HHI_RQT_FORCE_SPLIT_NxN           1           ///< MSHK: force split flags of residual quadtree for NxN PUs such that transform blocks are guaranteed to not span NxN PUs
 #define HHI_RQT_FORCE_SPLIT_RECT          1           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
 #define HHI_RQT_FORCE_SPLIT_ASYM          1           ///< MSHK: force split flags of residual quadtree for asymmetric such that transform blocks are guaranteed to not span PUs asymmetric PUs
+
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
