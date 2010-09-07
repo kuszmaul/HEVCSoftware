@@ -57,11 +57,25 @@
 #define HHI_MRG                           1           ///< SOPH: inter partition merging
 #define HHI_AMVP_OFF                      0           ///< SOPH: Advanced Motion Vector Predictor deactivated [not in TMuC]
 #define HHI_DEBLOCKING_FILTER             0           ///< MW: deblocking filter supporting residual quadtrees
-#define HHI_RQT_ROOT                      0           ///< PHHK: signaling of residual quadtree root flag
+#define HHI_RQT_ROOT                      1           ///< PHHK: signaling of residual quadtree root flag
+#define HHI_RQT_FORCE_SPLIT_NxN           1           ///< MSHK: force split flags of residual quadtree for NxN PUs such that transform blocks are guaranteed to not span NxN PUs
+#define HHI_RQT_FORCE_SPLIT_RECT          1           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
+#define HHI_RQT_FORCE_SPLIT_ASYM          1           ///< MSHK: force split flags of residual quadtree for asymmetric such that transform blocks are guaranteed to not span PUs asymmetric PUs
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
 #endif
+
+#if ( HHI_RQT_FORCE_SPLIT_NxN || HHI_RQT_FORCE_SPLIT_RECT || HHI_RQT_FORCE_SPLIT_ASYM )
+#define HHI_RQT_FORCE_SPLIT_ACC2_PU       1
+#else
+#define HHI_RQT_FORCE_SPLIT_ACC2_PU       0
+#endif
+
+#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU && ( !HHI_RQT || !HHI_RQT_ROOT ) )
+#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT and HHI_RQT_ROOT are equal to 1"
+#endif
+
 
 #if HHI_AIS
 // AIS

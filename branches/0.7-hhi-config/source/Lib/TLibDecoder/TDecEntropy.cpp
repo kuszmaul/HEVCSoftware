@@ -2053,7 +2053,42 @@ Void TDecEntropy::xDecodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   else
   {
     assert( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#if HHI_RQT_FORCE_SPLIT_ACC2_PU
+    const UInt uiTrMode = uiDepth - pcCU->getDepth( uiAbsPartIdx );
+    UInt uiCtx = uiDepth;
+#if HHI_RQT_FORCE_SPLIT_NxN
+   const Bool bNxNOK = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN && uiTrMode > 0;
+#else
+   const Bool bNxNOK = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN;
+#endif
+#if HHI_RQT_FORCE_SPLIT_RECT
+   const Bool bSymmetricOK  = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxN  && pcCU->getPartitionSize( uiAbsPartIdx ) < SIZE_NxN   && uiTrMode > 0;
+#else
+   const Bool bSymmetricOK  = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxN  && pcCU->getPartitionSize( uiAbsPartIdx ) < SIZE_NxN;
+#endif
+#if HHI_RQT_FORCE_SPLIT_ASYM
+  const Bool bAsymmetricOK   = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxnU && pcCU->getPartitionSize( uiAbsPartIdx ) <= SIZE_nRx2N && uiTrMode > 1;
+  const Bool b2NxnUOK        = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2NxnU && uiInnerQuadIdx > 1      && uiTrMode == 1;
+  const Bool b2NxnDOK        = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2NxnD && uiInnerQuadIdx < 2      && uiTrMode == 1;
+  const Bool bnLx2NOK        = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_nLx2N &&  ( uiInnerQuadIdx & 1 ) && uiTrMode == 1;
+  const Bool bnRx2NOK        = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_nRx2N && !( uiInnerQuadIdx & 1 ) && uiTrMode == 1;
+  const Bool bNeedSubdivFlag = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_INTRA ||
+                               bNxNOK || bSymmetricOK || bAsymmetricOK || b2NxnUOK || b2NxnDOK || bnLx2NOK || bnRx2NOK;
+#else
+  const Bool bAsymmetricOK   = pcCU->getPartitionSize( uiAbsPartIdx ) >= SIZE_2NxnU && pcCU->getPartitionSize( uiAbsPartIdx ) <= SIZE_nRx2N;
+  const Bool bNeedSubdivFlag = pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_INTRA ||
+                               bNxNOK || bSymmetricOK || bAsymmetricOK;
+#endif
+
+    if( ! bNeedSubdivFlag )
+    {
+      uiSubdiv = 1;
+    }
+    else
+      m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, uiCtx );
+#else
     m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, uiDepth );
+#endif
   }
 
   const UInt uiTrDepth = uiDepth - pcCU->getDepth( uiAbsPartIdx );
