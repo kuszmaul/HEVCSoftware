@@ -45,6 +45,7 @@
 #define HHI_ALLOW_CIP_SWITCH              1           ///< BB: allow to switch off CIP, via CIP : 0 in cfg file or -0 CIP in command line
 #define HHI_ALLOW_ROT_SWITCH              1           ///< BB: allow to switch off ROT, via ROT : 0 in cfg file or -0 ROT in command line
 #define HHI_DISABLE_INTER_NxN_SPLIT       1           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
+#define HHI_RMP_SWITCH                    0
 
 // HHI tools
 #define HHI_RQT                           1           ///< MWHK: residual quadtree
