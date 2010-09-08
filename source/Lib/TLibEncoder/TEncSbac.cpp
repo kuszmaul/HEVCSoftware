@@ -2024,15 +2024,22 @@ Void TEncSbac::estBit (estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType
 Void TEncSbac::estCBFBit (estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType)
 {
   Int ctx;
+#if !BUGFIX85TMP
   Short cbp_bit;
-
+#endif
+  
   for ( ctx = 0; ctx <= 3; ctx++ )
   {
+#if BUGFIX85TMP
+    pcEstBitsSbac->blockCbpBits[ctx][0] = entropyBits[64];
+    pcEstBitsSbac->blockCbpBits[ctx][1] = entropyBits[64];
+#else
     cbp_bit = 0;
     pcEstBitsSbac->blockCbpBits[ctx][cbp_bit] = biari_no_bits (cbp_bit, m_cCUCbfSCModel.get( uiCTXIdx, eTType, ctx ));
 
     cbp_bit = 1;
     pcEstBitsSbac->blockCbpBits[ctx][cbp_bit] = biari_no_bits (cbp_bit, m_cCUCbfSCModel.get( uiCTXIdx, eTType, ctx ));
+#endif
   }
 }
 
