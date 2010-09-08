@@ -754,7 +754,28 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
 #if HHI_MRG_PU
-    decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
+    {
+      decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
+    }
+    else
+    {
+      decodeInterDir( pcCU, uiAbsPartIdx, uiDepth );
+
+      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
+      {
+        decodeRefFrmIdx ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+        decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+        decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0, pcSubCU);
+      }
+
+      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
+      {
+        decodeRefFrmIdx ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+        decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+        decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1, pcSubCU);
+      }
+    }
 #else
     decodeInterDir( pcCU, uiAbsPartIdx, uiDepth );
 

@@ -916,7 +916,28 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
 #if HHI_MRG_PU
-    encodePUWise( pcCU, uiAbsPartIdx, bRD );
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
+    {
+      encodePUWise( pcCU, uiAbsPartIdx, bRD );
+    }
+    else
+    {
+      encodeInterDir( pcCU, uiAbsPartIdx, bRD );
+
+      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )       // if ( ref. frame list0 has at least 1 entry )
+      {
+        encodeRefFrmIdx ( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, bRD );
+        encodeMvd       ( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, bRD );
+        encodeMVPIdx    ( pcCU, uiAbsPartIdx, REF_PIC_LIST_0      );
+      }
+
+      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )       // if ( ref. frame list1 has at least 1 entry )
+      {
+        encodeRefFrmIdx ( pcCU, uiAbsPartIdx, REF_PIC_LIST_1, bRD );
+        encodeMvd       ( pcCU, uiAbsPartIdx, REF_PIC_LIST_1, bRD );
+        encodeMVPIdx    ( pcCU, uiAbsPartIdx, REF_PIC_LIST_1      );
+      }
+    }
 #else
     encodeInterDir( pcCU, uiAbsPartIdx, bRD );
 
