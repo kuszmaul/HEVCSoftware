@@ -345,6 +345,21 @@ Void TDecCavlc::resetEntropy          (TComSlice* pcSlice)
   ::memcpy(m_uiLPTableD8,        g_auiLPTableD8,        10*128*sizeof(UInt));
   ::memcpy(m_uiLPTableD4,        g_auiLPTableD4,        3*32*sizeof(UInt));
   ::memcpy(m_uiLastPosVlcIndex, g_auiLastPosVlcIndex, 10*sizeof(UInt));
+
+#if LCEC_PHASE2
+  ::memcpy(m_uiCBPTableD,        g_auiCBPTableD,        2*8*sizeof(UInt));
+  m_uiCbpVlcIdx[0] = 0;
+  m_uiCbpVlcIdx[1] = 0;
+#endif
+
+#if LCEC_PHASE2
+  ::memcpy(m_uiMITableD,        g_auiMITableD,        8*sizeof(UInt));
+
+  m_uiMITableVlcIdx = 0;
+
+#endif
+
+
 }
 
 Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )
@@ -882,6 +897,50 @@ Void TDecCavlc::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPa
 {
   UInt uiSymbol;
 
+#if LCEC_PHASE2
+  /* Note: Joint coding of uiInterDir and RefFrmIdx should be done also for AMVRes */
+#ifdef QC_AMVRES
+  if(!pcCU->getSlice()->getSPS()->getUseAMVRes() && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) <= 2 && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) <= 2)
+#else
+  if(pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) <= 2 && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) <= 2)
+#endif
+  {
+    UInt uiIndex,uiInterDir,tmp;
+    Int x,cx,y,cy;
+
+	  UInt vlcn = g_auiMITableVlcNum[m_uiMITableVlcIdx];
+	  tmp = xReadVlc( vlcn );
+
+    
+
+
+    x = m_uiMITableD[tmp];
+    uiIndex = x;
+
+    /* Adapt table */
+    
+    cx = tmp;
+    cy = Max(0,cx-1);  
+    y = m_uiMITableD[cy];
+    m_uiMITableD[cy] = x;
+    m_uiMITableD[cx] = y;
+	m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
+
+
+    uiInterDir = Min(2,uiIndex>>1);  
+    if (uiInterDir==0)
+      m_iRefFrame0[uiAbsPartIdx] = uiIndex&1;
+    else if (uiInterDir==1)
+      m_iRefFrame1[uiAbsPartIdx] = uiIndex&1;
+    else
+    {
+      m_iRefFrame0[uiAbsPartIdx] = (uiIndex>>1)&1;
+      m_iRefFrame1[uiAbsPartIdx] = (uiIndex>>0)&1;
+    }  
+    ruiInterDir = uiInterDir+1;
+    return;
+  }
+#endif
   xReadFlag( uiSymbol );
 
   if ( uiSymbol )
@@ -929,6 +988,20 @@ Void TDecCavlc::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPa
 	}
 	else
 	{
+#if LCEC_PHASE2 
+    if (pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) <= 2 && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) <= 2)
+    {
+      if (eRefList==REF_PIC_LIST_0)
+      {
+        riRefFrmIdx = m_iRefFrame0[uiAbsPartIdx];      
+      }
+      if (eRefList==REF_PIC_LIST_1)
+      {
+         riRefFrmIdx = m_iRefFrame1[uiAbsPartIdx];
+      }
+      return;
+    }    
+#endif
 	  xReadFlag ( uiSymbol );
 	  if ( uiSymbol  )
 	  {
@@ -938,6 +1011,20 @@ Void TDecCavlc::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPa
 	  riRefFrmIdx = uiSymbol;
 	}
 #else
+#if LCEC_PHASE2
+    if (pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) <= 2 && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) <= 2)
+    {
+      if (eRefList==REF_PIC_LIST_0)
+      {
+        riRefFrmIdx = m_iRefFrame0[uiAbsPartIdx];      
+      }
+      if (eRefList==REF_PIC_LIST_1)
+      {
+         riRefFrmIdx = m_iRefFrame1[uiAbsPartIdx];
+      }
+      return;
+    }    
+#endif
   xReadFlag ( uiSymbol );
   if ( uiSymbol )
   {
@@ -1350,6 +1437,46 @@ Void TDecCavlc::parseCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, U
 #endif
   }
 #endif
+
+#if LCEC_PHASE2
+  if (eType == TEXT_ALL)
+  {
+    UInt uiCbf,tmp;
+    UInt uiCBP,uiCbfY,uiCbfU,uiCbfV;
+    Int n,x,cx,y,cy;
+
+    /* Start adaptation */
+    n = pcCU->isIntra( uiAbsPartIdx ) ? 0 : 1;
+    UInt vlcn = g_auiCbpVlcNum[n][m_uiCbpVlcIdx[n]];
+    tmp = xReadVlc( vlcn );    
+    uiCBP = m_uiCBPTableD[n][tmp];
+    
+    /* Adapt LP table */
+    cx = tmp;
+    cy = Max(0,cx-1);
+    x = uiCBP;
+    y = m_uiCBPTableD[n][cy];
+    m_uiCBPTableD[n][cy] = x;
+    m_uiCBPTableD[n][cx] = y;
+    m_uiCbpVlcIdx[n] += cx == m_uiCbpVlcIdx[n] ? 0 : (cx < m_uiCbpVlcIdx[n] ? -1 : 1);
+
+    uiCbfY = (uiCBP>>0)&1;
+    uiCbfU = (uiCBP>>1)&1;
+    uiCbfV = (uiCBP>>2)&1;
+
+    uiCbf = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA );
+    pcCU->setCbfSubParts( uiCbf | ( uiCbfY << uiTrDepth ), TEXT_LUMA, uiAbsPartIdx, uiDepth );
+    
+    uiCbf = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U );
+    pcCU->setCbfSubParts( uiCbf | ( uiCbfU << uiTrDepth ), TEXT_CHROMA_U, uiAbsPartIdx, uiDepth );
+        
+    uiCbf = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V );
+    pcCU->setCbfSubParts( uiCbf | ( uiCbfV << uiTrDepth ), TEXT_CHROMA_V, uiAbsPartIdx, uiDepth );
+    return;
+  }
+  
+#endif
+
   UInt uiSymbol;
   UInt uiCbf = pcCU->getCbf( uiAbsPartIdx, eType );
 
@@ -1375,7 +1502,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   // initialize scan
   const UInt*  pucScan;
 
-#if NEWVLC
+#if LCEC_PHASE1
   //UInt uiConvBit = g_aucConvertToBit[ Min(8,uiWidth) ];
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : Min(8,uiWidth)    ];
 #else
@@ -1436,7 +1563,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   }
 #endif
 
-#if NEWVLC
+#if LCEC_PHASE1
   UInt uiDecodeDCCoeff = 0;
   Int dcCoeff = 0;
   if (pcCU->isIntra(uiAbsPartIdx))
@@ -1511,7 +1638,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   }
   else if ( uiSize == 8*8 )
   {
-#if NEWVLC
+#if LCEC_PHASE1
     if (eTType==TEXT_CHROMA_U || eTType==TEXT_CHROMA_V) //8x8 specific
       iBlockType = eTType-2;
     else
@@ -1538,7 +1665,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   }
   else
   {
-#if NEWVLC
+#if LCEC_PHASE1
     if (!pcCU->isIntra( uiAbsPartIdx ))
     {
 	    memset(piCoeff,0,sizeof(TCoeff)*uiSize);
@@ -1620,7 +1747,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 //#endif
   }
 
-#if NEWVLC
+#if LCEC_PHASE1
   if (uiDecodeDCCoeff == 1)
   {
     piCoeff[0] = dcCoeff;
