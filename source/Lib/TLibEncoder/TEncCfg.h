@@ -157,6 +157,9 @@ protected:
 #endif
 
   Bool      m_bUseAMP; // ilkoo.kim@samsung.com
+#if HHI_RMP_SWITCH
+  Bool      m_bUseRMP;
+#endif
 
 public:
   TEncCfg()          {}
@@ -364,7 +367,10 @@ public:
 #endif //EDGE_BASED_PREDICTION
   Void      setUseAMP                       ( Bool  b )     { m_bUseAMP     = b; }
   Bool      getUseAMP                       ()      { return m_bUseAMP; }
-
+#if HHI_RMP_SWITCH
+  Void      setUseRMP                      ( Bool b ) { m_bUseRMP = b; }
+  Bool      getUseRMP                      ()      {return m_bUseRMP; }
+#endif
 #if HHI_INTERP_FILTER
   Void      setInterpFilterType             ( Int   i )     { m_iInterpFilterType = i;    }
   Int       getInterpFilterType             ()              { return m_iInterpFilterType; }

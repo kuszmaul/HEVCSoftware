@@ -150,6 +150,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
    xWriteFlag ( (pcSPS->getUseIMP ()) ? 1 : 0 ); // SOPH:
 #endif
   xWriteFlag  ( (pcSPS->getUseAMP ()) ? 1 : 0 );
+#if HHI_RMP_SWITCH
+  xWriteFlag  ( (pcSPS->getUseRMP()) ? 1 : 0 );
+#endif
 
   // write number of taps for DIF
   xWriteUvlc  ( (pcSPS->getDIFTap ()>>1)-2 ); // 4, 6, 8, 10, 12

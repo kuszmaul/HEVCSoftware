@@ -154,6 +154,9 @@ protected:
 #endif
 
   Bool      m_bUseAMP;                                        ///< flag for using asymmetric partition
+#if HHI_RMP_SWITCH
+  Bool      m_bUseRMP;
+#endif
 
   // coding tools (encoder-only parameters)
   Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC

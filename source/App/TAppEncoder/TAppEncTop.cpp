@@ -155,6 +155,9 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseSIFO_Pred                ( m_bUseSIFO_Pred );
 #endif
     m_cTEncTop.setUseAMP                      ( m_bUseAMP );
+#if HHI_RMP_SWITCH
+    m_cTEncTop.setUseRMP                     ( m_bUseRMP );
+#endif
 
 }
 
