@@ -191,14 +191,10 @@ public:
   ~TComTrQuant();
 
   // initialize class
-#if HHI_ALLOW_ROT_SWITCH
 #if NEWVLC
   Void init                 ( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseROT, Int iSymbolMode = 0, Bool bUseRDOQ = false,  Bool bEnc = false );
 #else
   Void init                 ( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseROT, Bool bUseRDOQ = false, Bool bEnc = false );
-#endif
-#else
-  Void init                 ( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseRDOQ = false, Bool bEnc = false );
 #endif
 
   // transform & inverse transform functions
@@ -253,9 +249,7 @@ protected:
   Double   m_dLambda;
 
   UInt     m_uiMaxTrSize;
-#if HHI_ALLOW_ROT_SWITCH
-	Bool		 m_bUseROT;
-#endif
+  Bool	   m_bUseROT;
   Bool     m_bEnc;
   Bool     m_bUseRDOQ;
 

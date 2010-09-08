@@ -79,6 +79,9 @@ protected:
   Void  xWriteCode            ( UInt uiCode, UInt uiLength );
   Void  xWriteUvlc            ( UInt uiCode );
   Void  xWriteSvlc            ( Int iCode   );
+#ifdef DCM_PBIC
+  Void  xWriteSvlcNZ          ( Int iCode   );
+#endif
   Void  xWriteFlag            ( UInt uiCode );
   Void  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
   Void  xWriteExGolombLevel    ( UInt uiSymbol );
@@ -117,6 +120,9 @@ public:
   Void  codeSliceFinish         ();
 
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+#ifdef DCM_PBIC
+  Void codeICPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeAlfFlag       ( UInt uiCode );
   Void codeAlfUvlc       ( UInt uiCode );
   Void codeAlfSvlc       ( Int   iCode );
@@ -167,6 +173,11 @@ public:
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+#ifdef DCM_PBIC
+  Void codeMvdIcd        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void codeZTree         ( TComZeroTree* pcZTree, TComZTNode* pcZTNode );
+  ContextModel* getZTreeCtx ( Int iIdx );
+#endif
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );

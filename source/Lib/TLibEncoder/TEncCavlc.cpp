@@ -137,9 +137,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if HHI_ALLOW_CIP_SWITCH
   xWriteFlag  ( (pcSPS->getUseCIP ()) ? 1 : 0 ); // BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
 	xWriteFlag	( (pcSPS->getUseROT ()) ? 1 : 0 ); // BB:
-#endif
 #if HHI_AIS
   xWriteFlag  ( (pcSPS->getUseAIS ()) ? 1 : 0 ); // BB:
 #endif
@@ -149,6 +147,10 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if HHI_IMVP
    xWriteFlag ( (pcSPS->getUseIMP ()) ? 1 : 0 ); // SOPH:
 #endif
+#ifdef DCM_PBIC
+   xWriteFlag ( (pcSPS->getUseIC  ()) ? 1 : 0 );
+#endif
+
   xWriteFlag  ( (pcSPS->getUseAMP ()) ? 1 : 0 );
 
   // write number of taps for DIF
@@ -370,6 +372,16 @@ Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRe
   xWriteUnaryMaxSymbol(iSymbol, iNum-1);
 }
 
+#ifdef DCM_PBIC
+Void TEncCavlc::codeICPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Int iSymbol = pcCU->getICPIdx(uiAbsPartIdx);
+  Int iNum    = pcCU->getICPNum(uiAbsPartIdx);
+
+  xWriteUnaryMaxSymbol(iSymbol, iNum-1);
+}
+#endif
+
 Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
@@ -379,7 +391,14 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     xWriteFlag( 0 );
     xWriteFlag( 0 );
     xWriteFlag( 0 );
+#if HHI_DISABLE_INTER_NxN_SPLIT
+    if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+    {
+      xWriteFlag( 0 );
+    }
+#else
     xWriteFlag( 0 );
+#endif
     xWriteFlag( (eSize == SIZE_2Nx2N? 0 : 1) );
     return;
   }
@@ -442,13 +461,18 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     }
   case SIZE_NxN:
     {
-      xWriteFlag( 0 );
-      xWriteFlag( 0 );
-      xWriteFlag( 0 );
-
-      if (pcCU->getSlice()->isInterB())
+#if HHI_DISABLE_INTER_NxN_SPLIT
+      if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+#endif
       {
-        xWriteFlag( 1 );
+        xWriteFlag( 0 );
+        xWriteFlag( 0 );
+        xWriteFlag( 0 );
+
+        if (pcCU->getSlice()->isInterB())
+        {
+          xWriteFlag( 1 );
+        }
       }
       break;
     }
@@ -464,7 +488,7 @@ Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
   // get context function is here
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
 
-#if HHI_MRG
+#if HHI_MRG && !HHI_MRG_PU
   if ( !pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     xWriteFlag( iPredMode == MODE_SKIP ? 0 : 1 );
@@ -1004,6 +1028,140 @@ Void TEncCavlc::codeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefLis
   return;
 }
 
+#ifdef DCM_PBIC
+Void TEncCavlc::codeMvdIcd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  Int iZeroPatt = 0;
+  TComMv acMvd[2];
+  Int iIcParam[3];
+  TComZeroTree* pcZTree;
+
+#ifdef QC_AMVRES
+  // Determine and Code MV resolution flag (if necessary)
+  Bool bMvResFlag[2] = {false, false};
+  if ( pcCU->getSlice()->getSPS()->getUseAMVRes() )
+  {
+    if ( (eRefList == REF_PIC_LIST_0) || (eRefList == REF_PIC_LIST_X) )
+      bMvResFlag[REF_PIC_LIST_0] = !(pcCU->getCUMvField( REF_PIC_LIST_0 )->getMv ( uiAbsPartIdx ).isHAM());
+    if ( (eRefList == REF_PIC_LIST_1) || (eRefList == REF_PIC_LIST_X) )
+      bMvResFlag[REF_PIC_LIST_1] = !(pcCU->getCUMvField( REF_PIC_LIST_1 )->getMv ( uiAbsPartIdx ).isHAM());
+  }
+#endif
+
+  // Identify the non-zero components
+  if (eRefList == REF_PIC_LIST_X)
+  {
+    acMvd[ REF_PIC_LIST_0 ] = pcCU->getCUMvField( REF_PIC_LIST_0 )->getMvd( uiAbsPartIdx );
+#ifdef QC_AMVRES
+    if (bMvResFlag[REF_PIC_LIST_0] == true)
+      acMvd[REF_PIC_LIST_0].scale_down();
+#endif
+    acMvd[ REF_PIC_LIST_1 ] = pcCU->getCUMvField( REF_PIC_LIST_1 )->getMvd( uiAbsPartIdx );
+#ifdef QC_AMVRES
+    if (bMvResFlag[REF_PIC_LIST_1] == true)
+      acMvd[REF_PIC_LIST_1].scale_down();
+#endif
+    iZeroPatt |= ( acMvd[REF_PIC_LIST_0].getHor() == 0 ) ? 0 : 1;
+    iZeroPatt |= ( acMvd[REF_PIC_LIST_0].getVer() == 0 ) ? 0 : 2;
+    iZeroPatt |= ( acMvd[REF_PIC_LIST_1].getHor() == 0 ) ? 0 : 4;
+    iZeroPatt |= ( acMvd[REF_PIC_LIST_1].getVer() == 0 ) ? 0 : 8;
+
+    if (pcCU->getSlice()->getSPS()->getUseIC())
+    {
+      pcCU->getCUIcField()->getIcd( uiAbsPartIdx ).getIcParam( iIcParam[0], iIcParam[1], iIcParam[2] );
+      iZeroPatt |= ( iIcParam[0] == 0 ) ? 0 : 16;
+      iZeroPatt |= ( iIcParam[1] == 0 ) ? 0 : 32;
+      iZeroPatt |= ( iIcParam[2] == 0 ) ? 0 : 64;
+
+      pcZTree    = pcCU->getSlice()->getZTree(IDX_ZTREE_MVDICDBI);
+    }
+    else
+    {
+      pcZTree    = pcCU->getSlice()->getZTree(IDX_ZTREE_MVDBI);
+    }
+  }
+  else
+  {
+    acMvd[ eRefList ] = pcCU->getCUMvField( eRefList )->getMvd( uiAbsPartIdx );
+#ifdef QC_AMVRES
+    if (bMvResFlag[eRefList] == true)
+      acMvd[eRefList].scale_down();
+#endif
+    iZeroPatt |= ( acMvd[eRefList].getHor() == 0 ) ? 0 : 1;
+    iZeroPatt |= ( acMvd[eRefList].getVer() == 0 ) ? 0 : 2;
+
+    if (pcCU->getSlice()->getSPS()->getUseIC())
+    {
+      pcCU->getCUIcField()->getIcd( uiAbsPartIdx ).getIcParam( iIcParam[0], iIcParam[1], iIcParam[2] );
+      iZeroPatt |= ( iIcParam[0] == 0 ) ? 0 : 4;
+      assert ( iIcParam[1] == 0 );
+      iZeroPatt |= ( iIcParam[2] == 0 ) ? 0 : 8;
+
+      pcZTree    = pcCU->getSlice()->getZTree(IDX_ZTREE_MVDICDUNI);
+    }
+    else
+    {
+      pcZTree    = pcCU->getSlice()->getZTree(IDX_ZTREE_MVDUNI);
+    }
+  }
+
+  // Encode zeroflag and zerotree (if necessary)
+  if (iZeroPatt == 0)
+    xWriteFlag( 1 );
+  else
+  {
+    xWriteFlag( 0 );
+    pcZTree->updateVal(iZeroPatt);
+    codeZTree( pcZTree, pcZTree->m_pcRoot );
+  }
+
+  //Encode the non-zero components
+  if ( (eRefList == REF_PIC_LIST_X) || (eRefList == REF_PIC_LIST_0) )
+  {
+    xWriteSvlcNZ( acMvd[REF_PIC_LIST_0].getHor() );
+    xWriteSvlcNZ( acMvd[REF_PIC_LIST_0].getVer() );
+  }
+  if ( (eRefList == REF_PIC_LIST_X) || (eRefList == REF_PIC_LIST_1) )
+  {
+    xWriteSvlcNZ( acMvd[REF_PIC_LIST_1].getHor() );
+    xWriteSvlcNZ( acMvd[REF_PIC_LIST_1].getVer() );
+  }
+  if (pcCU->getSlice()->getSPS()->getUseIC())
+  {
+    xWriteSvlcNZ( iIcParam[0] );
+    xWriteSvlcNZ( iIcParam[1] );
+    xWriteSvlcNZ( iIcParam[2] );
+  }
+}
+
+Void TEncCavlc::codeZTree( TComZeroTree* pcZTree, TComZTNode* pcZTNode )
+{
+  Int iVal, iLval, iRval;
+
+  if (pcZTNode->IsLeaf() == false)
+  {
+    iLval = pcZTNode->m_pcLeft->m_iVal;
+    iRval = pcZTNode->m_pcRight->m_iVal;
+
+    iVal = iLval & iRval;
+    xWriteFlag( iVal );
+
+    if (iVal == 0)
+      xWriteFlag( iLval );
+
+    if (iLval != 0)
+      codeZTree( pcZTree,  pcZTNode->m_pcLeft );
+    if (iRval != 0)
+      codeZTree( pcZTree, pcZTNode->m_pcRight );
+  }
+}
+
+ContextModel* TEncCavlc::getZTreeCtx ( Int iIdx )
+{
+  return NULL;
+}
+#endif
+
 Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int iDQp  = pcCU->getQP( uiAbsPartIdx ) - pcCU->getSlice()->getSliceQp();
@@ -1060,7 +1218,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   TCoeff* piCoeff = pcCoef;
   UInt uiNumSig = 0;
   UInt uiScanning;
-#if !QC_MDDT
+#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
   UInt uiInterleaving;
 #endif
 
@@ -1159,7 +1317,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 
   TCoeff scoeff[64];
   Int iBlockType;
-#if !QC_MDDT
+#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
   UInt uiNumSigInterleaved;
 #endif
 #if NEWVLC
@@ -1288,6 +1446,21 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       xCodeCoeff8x8( scoeff, iBlockType );
     }
 #else
+#if NEWVLC_ADAPT_ENABLE
+    if(pcCU->isIntra( uiAbsPartIdx ))
+    {
+      for (uiScanning=0; uiScanning<64; uiScanning++)
+      {
+        scoeff[63-uiScanning] = piCoeff[ pucScan[ uiScanning ] ];
+      }
+
+      if (eTType==TEXT_CHROMA_U || eTType==TEXT_CHROMA_V) 
+        iBlockType = eTType-2;
+      else
+        iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+      xCodeCoeff8x8( scoeff, iBlockType );
+    }
+#else
     for (uiInterleaving=0; uiInterleaving<uiSize/64; uiInterleaving++)
     {
       uiNumSigInterleaved = 0;
@@ -1311,6 +1484,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
         xWriteFlag( 0 );
       }
     }
+#endif
 #endif // QC_MDDT
 //#endif
   }
@@ -1381,6 +1555,24 @@ Void TEncCavlc::xWriteSvlc     ( Int iCode )
   uiCode = xConvertToUInt( iCode );
   xWriteUvlc( uiCode );
 }
+
+#ifdef DCM_PBIC
+Void TEncCavlc::xWriteSvlcNZ   ( Int iCode )
+{
+  if (iCode == 0)
+    return;
+
+  UInt uiSign = 0;
+  if (iCode < 0)
+  {
+    uiSign = 1;
+    iCode = -iCode;
+  }
+
+  xWriteUvlc( iCode-1 );
+  xWriteFlag( uiSign );
+}
+#endif
 
 Void TEncCavlc::xWriteFlag( UInt uiCode )
 {
