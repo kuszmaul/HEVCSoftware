@@ -134,6 +134,9 @@ protected:
   UInt  xWriteCode            ( UInt uiCode, UInt uiLength );
   UInt  xWriteUvlc            ( UInt uiCode );
   UInt  xWriteSvlc            ( Int iCode   );
+#ifdef DCM_PBIC
+  UInt  xWriteSvlcNZ          ( Int iCode   );
+#endif
   Void  xWriteFlag            ( UInt uiCode );
   UInt  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
   UInt  xWriteExGolombLevel   ( UInt uiSymbol );

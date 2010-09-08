@@ -2523,6 +2523,26 @@ Void TEncCavlc::xWriteSvlc     ( Int iCode )
 }
 #endif
 #ifdef DCM_PBIC
+#if LCEC_STAT
+UInt TEncCavlc::xWriteSvlcNZ   ( Int iCode )
+{
+  UInt uiNumBits;
+  
+  if (iCode == 0)
+    return 0;
+  
+  UInt uiSign = 0;
+  if (iCode < 0)
+  {
+    uiSign = 1;
+    iCode = -iCode;
+  }
+  
+  uiNumBits = xWriteUvlc( iCode-1 );
+  xWriteFlag( uiSign );
+  return uiNumBits+1;
+}
+#else // LCEC_STAT
 Void TEncCavlc::xWriteSvlcNZ   ( Int iCode )
 {
   if (iCode == 0)
@@ -2538,7 +2558,8 @@ Void TEncCavlc::xWriteSvlcNZ   ( Int iCode )
   xWriteUvlc( iCode-1 );
   xWriteFlag( uiSign );
 }
-#endif
+#endif // LCEC_STAT
+#endif // DCM_PBIC
 
 Void TEncCavlc::xWriteFlag( UInt uiCode )
 {
