@@ -7106,14 +7106,10 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     
 #if !USLESS_TR_CODE
     // ROT index
-#if HHI_ALLOW_ROT_SWITCH
     if ( pcCU->getSlice()->getSPS()->getUseROT() )
     {
       m_pcEntropyCoder->encodeROTindex( pcCU, 0, pcCU->getDepth(0) );
     }
-#else
-    m_pcEntropyCoder->encodeROTindex( pcCU, 0, pcCU->getDepth(0) );
-#endif
 #endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }

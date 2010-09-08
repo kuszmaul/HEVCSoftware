@@ -248,7 +248,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
 #if QC_MDDT == 0
   // ROT index
-#if HHI_ALLOW_ROT_SWITCH
   if ( pcCU->getSlice()->getSPS()->getUseROT() )
   {
 #if DISABLE_ROT_LUMA_4x4_8x8
@@ -264,20 +263,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_pcEntropyDecoder->decodeROTIdx( pcCU, uiAbsPartIdx, uiDepth );
 #endif
   }
-#else
-#if DISABLE_ROT_LUMA_4x4_8x8
-  if ( uiCurrWidth > 8)
-  {
-    m_pcEntropyDecoder->decodeROTIdx( pcCU, uiAbsPartIdx, uiDepth );
-  }
-  else
-  {
-    pcCU->setROTindexSubParts( 0, uiAbsPartIdx, uiDepth );
-  }
-#else
-  m_pcEntropyDecoder->decodeROTIdx( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#endif
 #endif
 
   // CIP flag

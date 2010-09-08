@@ -137,9 +137,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if HHI_ALLOW_CIP_SWITCH
   xWriteFlag  ( (pcSPS->getUseCIP ()) ? 1 : 0 ); // BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
 	xWriteFlag	( (pcSPS->getUseROT ()) ? 1 : 0 ); // BB:
-#endif
 #if HHI_AIS
   xWriteFlag  ( (pcSPS->getUseAIS ()) ? 1 : 0 ); // BB:
 #endif

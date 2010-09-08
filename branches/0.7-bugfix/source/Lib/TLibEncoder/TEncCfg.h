@@ -125,9 +125,7 @@ protected:
 #if HHI_ALLOW_CIP_SWITCH
   Bool      m_bUseCIP; // BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
   Bool      m_bUseROT; // BB:
-#endif
 #if HHI_AIS
   Bool      m_bUseAIS; // BB:
 #endif
@@ -294,9 +292,7 @@ public:
 #if HHI_ALLOW_CIP_SWITCH
   Void      setUseCIP                       ( Bool  b )     { m_bUseCIP     = b; } // BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
   Void      setUseROT                       ( Bool  b )     { m_bUseROT	    = b; } // BB:
-#endif
 #if HHI_AIS
   Void      setUseAIS                       ( Bool  b )     { m_bUseAIS     = b; } // BB:
 #endif
@@ -338,9 +334,7 @@ public:
 #if HHI_ALLOW_CIP_SWITCH
 	Bool      getUseCIP                       ()      { return m_bUseCIP;     }	// BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
 	Bool      getUseROT                       ()      { return m_bUseROT;     } // BB:
-#endif
 #if HHI_AIS
   Bool      getUseAIS                       ()      { return m_bUseAIS;     } // BB:
 #endif

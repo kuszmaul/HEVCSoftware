@@ -130,9 +130,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if HHI_ALLOW_CIP_SWITCH
   xReadFlag( uiCode ); pcSPS->setUseCIP ( uiCode ? true : false ); // BB:
 #endif
-#if HHI_ALLOW_ROT_SWITCH
   xReadFlag( uiCode ); pcSPS->setUseROT ( uiCode ? true : false ); // BB:
-#endif
 #if HHI_AIS
   xReadFlag( uiCode ); pcSPS->setUseAIS ( uiCode ? true : false ); // BB:
 #endif

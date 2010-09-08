@@ -43,7 +43,6 @@
 ////////////////////////////
 #define HHI_NAL_UNIT_SYNTAX               1           ///< enable/disable NalUnit syntax 
 #define HHI_ALLOW_CIP_SWITCH              1           ///< BB: allow to switch off CIP, via CIP : 0 in cfg file or -0 CIP in command line
-#define HHI_ALLOW_ROT_SWITCH              1           ///< BB: allow to switch off ROT, via ROT : 0 in cfg file or -0 ROT in command line
 
 // HHI tools
 #define HHI_RQT                           1           ///< MWHK: residual quadtree

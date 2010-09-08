@@ -2767,11 +2767,7 @@ Void TComTrQuant::xQuantLTR  (TComDataCU* pcCU, Long* pSrc, TCoeff*& pDes, Int i
     }
   }
 
-#if HHI_ALLOW_ROT_SWITCH
   if ( m_bUseROT && indexROT )
-#else
-  if ( indexROT )
-#endif
   {
     Int x, x2, y, y2, y3;
     static Long ROT_DOMAIN[64];
@@ -2819,11 +2815,7 @@ if ( !(pcCU->isIntra( uiAbsPartIdx ) && m_iSymbolMode == 0 )  && m_bUseRDOQ  && 
     {
       Long iLevel;
       Int  iSign;
-#if HHI_ALLOW_ROT_SWITCH
       if ( m_bUseROT && indexROT )
-#else
-      if ( indexROT )
-#endif
       {
         iLevel  = (Long) piCoef[n];
         iSign   = (iLevel < 0 ? -1: 1);
@@ -3005,11 +2997,7 @@ Void TComTrQuant::xDeQuantLTR( TCoeff* pSrc, Long*& pDes, Int iWidth, Int iHeigh
     }
   }
 
-#if HHI_ALLOW_ROT_SWITCH
   if ( m_bUseROT && indexROT )
-#else
-  if ( indexROT )
-#endif
   {
     Int y,y2, y3;
     static Long ROT_DOMAIN[64];
@@ -5146,24 +5134,18 @@ Void TComTrQuant::xIT64 ( Long* pSrc, Pel* pDes, UInt uiStride )
   }
 }
 
-#if HHI_ALLOW_ROT_SWITCH
 #if NEWVLC
 Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseROT, Int iSymbolMode, /*UInt *aTableLP4, UInt *aTableLP8, */Bool bUseRDOQ,  Bool bEnc )
 #else
 Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseROT, Bool bUseRDOQ, Bool bEnc )
 #endif
-#else
-Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Bool bUseRDOQ, Bool bEnc )
-#endif
 {
   m_uiMaxTrSize  = uiMaxTrSize;
   m_bEnc         = bEnc;
   m_bUseRDOQ     = bUseRDOQ;
-#if HHI_ALLOW_ROT_SWITCH
   m_bUseROT			 = bUseROT;
 #if NEWVLC
   m_iSymbolMode = iSymbolMode;
-#endif
 #endif
 
   if ( m_bEnc )
@@ -5597,7 +5579,6 @@ Void TComTrQuant::xQuant4x4( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
     uiMode = REG_DCT;
 #endif
 
-#if HHI_ALLOW_ROT_SWITCH
   if ( m_bUseROT )
   {
 #if QC_MDDT
@@ -5611,19 +5592,6 @@ Void TComTrQuant::xQuant4x4( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
       RotTransform4I( plSrcCoef, indexROT-1 );
     }
   }
-#else
-#if QC_MDDT
-  if(!getUseMDDT(uiMode, indexROT))
-#endif
-  for( Int i=0; i<16; i++ )
-    plSrcCoef[i] *= m_puiQuantMtx[i];
-
-  if ( indexROT )
-  {
-    RotTransform4I( plSrcCoef, indexROT-1 );
-  }
-
-#endif
 
 #if NEWVLC && (!QC_MDDT)
   if ( !(pcCU->isIntra( uiAbsPartIdx ) && m_iSymbolMode == 0) && m_bUseRDOQ && (eTType == TEXT_LUMA || RDOQ_CHROMA) && (!RDOQ_ROT_IDX0_ONLY || indexROT == 0 ) )
@@ -5655,7 +5623,6 @@ Void TComTrQuant::xQuant4x4( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
     for( Int n = 0; n < 16; n++ )
     {
       Int iLevel, iSign;
-#if HHI_ALLOW_ROT_SWITCH
       if ( m_bUseROT )
       {
         iLevel  = plSrcCoef[n];
@@ -5668,12 +5635,6 @@ Void TComTrQuant::xQuant4x4( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
         iSign   = iLevel;
         iLevel  = abs( iLevel ) * m_puiQuantMtx[n];
       }
-#else
-
-      iLevel  = plSrcCoef[n];
-      iSign   = iLevel;
-      iLevel  = abs( iLevel ) ;
-#endif
 
       iLevel      = ( iLevel + m_cQP.m_iAdd4x4 ) >> m_cQP.m_iBits;
 
@@ -5704,7 +5665,6 @@ Void TComTrQuant::xQuant8x8( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
   else
     uiMode = REG_DCT;
 #endif
-#if HHI_ALLOW_ROT_SWITCH
   if ( m_bUseROT )
   {
 #if QC_MDDT
@@ -5718,18 +5678,6 @@ Void TComTrQuant::xQuant8x8( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
       RotTransformLI2( plSrcCoef, indexROT-1, 8 );
     }
   }
-#else
-#if QC_MDDT
-  if(!getUseMDDT(uiMode, indexROT))
-#endif
-  for( Int i=0; i<64; i++ )
-    plSrcCoef[i] *= m_puiQuantMtx[i];
-
-  if ( indexROT )
-  {
-    RotTransformLI2( plSrcCoef, indexROT-1, 8 );
-  }
-#endif
 
   Int iBit = m_cQP.m_iBits + 1;
 
@@ -5764,7 +5712,6 @@ Void TComTrQuant::xQuant8x8( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
     {
       Int iLevel, iSign;
 
-#if HHI_ALLOW_ROT_SWITCH
       if ( m_bUseROT )
       {
       iLevel  = plSrcCoef[n];
@@ -5777,11 +5724,6 @@ Void TComTrQuant::xQuant8x8( TComDataCU* pcCU, Long* plSrcCoef, TCoeff*& pDstCoe
         iSign   = iLevel;	
         iLevel  = abs( iLevel ) * m_puiQuantMtx[n];
       }
-#else
-      iLevel  = plSrcCoef[n];
-      iSign   = iLevel;
-      iLevel  = abs( iLevel ) ;
-#endif
 
       iLevel      = ( iLevel + m_cQP.m_iAdd8x8 ) >> iBit;
 
@@ -6165,11 +6107,7 @@ Void TComTrQuant::xDeQuant4x4( TCoeff* pSrcCoef, Long*& rplDstCoef, UChar indexR
   Int iLevel;
   Int iDeScale;
 
-#if HHI_ALLOW_ROT_SWITCH
   if ( !m_bUseROT || !indexROT )
-#else
-  if ( !indexROT )
-#endif
   {
     for( Int n = 0; n < 16; n++ )
     {
@@ -6207,11 +6145,7 @@ Void TComTrQuant::xDeQuant8x8( TCoeff* pSrcCoef, Long*& rplDstCoef, UChar indexR
   Int iAdd = ( 1 << 5 ) >> m_cQP.m_iPer;
 
   // without ROT case
-#if HHI_ALLOW_ROT_SWITCH
   if ( !m_bUseROT || !indexROT )
-#else  
-  if ( !indexROT )
-#endif
   {
     for( Int n = 0; n < 64; n++ )
     {
@@ -6844,10 +6778,8 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
     else if ( uiWidth == 8 ) dTemp = estErr8x8[ iQpRem ][ uiPosX ][ uiPosY ] / dNormFactor;
     }
 
-#if HHI_ALLOW_ROT_SWITCH
     if ( m_bUseROT )
     {
-#endif
 #if QC_MDDT
       if ( bExt8x8Flag )
       {
@@ -6874,14 +6806,12 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       }
 #endif
 
-#if HHI_ALLOW_ROT_SWITCH
     }
     else
 #if QC_MDDT
       lLevelDouble = (Int64)absm( lLevelDouble) * (Int64)( b64Flag ? iQuantCoeff : m_puiQuantMtx[ uiBlkPos ] );//precision increase
 #else
       lLevelDouble = abs( lLevelDouble * (Long)( b64Flag ? iQuantCoeff : m_puiQuantMtx[ uiBlkPos ] ) );
-#endif
 #endif
 
     plLevelDouble[ uiBlkPos ] = lLevelDouble;
@@ -7490,10 +7420,8 @@ Void TComTrQuant::xRateDistOptQuant( TComDataCU* pcCU, Long* pSrcCoeff, TCoeff*&
     j = iPos >> iShift;
     i = iPos % uiWidth;
 
-#if HHI_ALLOW_ROT_SWITCH
 		if ( m_bUseROT )
 		{
-#endif
 			if ( bExt8x8Flag )
 			{
 				if ( ( j < 8 ) && ( i < 8 ) && indexROT )
@@ -7509,7 +7437,6 @@ Void TComTrQuant::xRateDistOptQuant( TComDataCU* pcCU, Long* pSrcCoeff, TCoeff*&
 			{
 				levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] );
 			}
-#if HHI_ALLOW_ROT_SWITCH
 		}
 		else
 		{
@@ -7519,7 +7446,6 @@ Void TComTrQuant::xRateDistOptQuant( TComDataCU* pcCU, Long* pSrcCoeff, TCoeff*&
 			levelData[iPos].levelDouble = abs( pSrcCoeff[iPos] * (Long)( b64Flag ? iQuantCoef : m_puiQuantMtx[iPos] ) );
 #endif
 		}
-#endif
 
 
 #if QC_MDDT

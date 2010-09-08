@@ -224,9 +224,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if HHI_IMVP
     ("IMP", m_bUseIMP, true, "interleaved motion vector predictor")
 #endif
-#if HHI_ALLOW_ROT_SWITCH
     ("ROT", m_bUseROT, true)
-#endif
     ("ALF", m_bUseALF, true, "Adaptive Loop Filter")
 #if HHI_ALF
     ("ALFSeparateTree", m_bALFUseSeparateQT, true)
@@ -600,9 +598,7 @@ Void TAppEncCfg::xPrintParameter()
 #if HHI_ALLOW_CIP_SWITCH
   printf("CIP:%d ", m_bUseCIP             );
 #endif
-#if HHI_ALLOW_ROT_SWITCH
   printf("ROT:%d ", m_bUseROT             );
-#endif
 #if HHI_AIS
   printf("AIS:%d ", m_bUseAIS             ); // BB: adaptive intra smoothing
 #endif
