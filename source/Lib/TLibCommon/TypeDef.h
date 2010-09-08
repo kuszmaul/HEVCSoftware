@@ -99,7 +99,9 @@
 #error "Only one of TENTM_DEBLOCKING_FILTER and HHI_DEBLOCKING_FILTER can be defined"
 #endif
 
-#define NEWVLC                            1           // Improved VLC coding
+#define LCEC_PHASE1                       1           // LCEC - integration phase 1
+#define LCEC_PHASE2                       1           // LCEC - integration phase 2
+#define LCEC_STAT                         1           // LCEC - support for LCEC bitusage statistics
 
 //////////////////////////
 // TEN defines section end
@@ -110,7 +112,7 @@
 // QUALCOMM defines section start
 /////////////////////////////////
 
-#define NEWVLC_ADAPT_ENABLE                1           // Enable CU level VLC adaptation 
+#define LCEC_PHASE1_ADAPT_ENABLE                1           // Enable CU level VLC adaptation 
 
 #define QC_AMVRES    
 #ifdef QC_AMVRES  
@@ -356,7 +358,9 @@ enum TextType
   TEXT_CHROMA,          ///< chroma (U+V)
   TEXT_CHROMA_U,        ///< chroma U
   TEXT_CHROMA_V,        ///< chroma V
-
+#if LCEC_PHASE2
+  TEXT_ALL,             ///< Y+U+V
+#endif
   TEXT_NONE = 15
 };
 
