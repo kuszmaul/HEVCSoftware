@@ -74,8 +74,8 @@
 #define HHI_RQT_FORCE_SPLIT_ACC2_PU       0
 #endif
 
-#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU && ( !HHI_RQT || !HHI_RQT_ROOT ) )
-#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT and HHI_RQT_ROOT are equal to 1"
+#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU &&  !HHI_RQT  )
+#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT is equal to 1"
 #endif
 
 
