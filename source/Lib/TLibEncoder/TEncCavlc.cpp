@@ -464,7 +464,7 @@ Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
   // get context function is here
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
 
-#if HHI_MRG && !HHI_MRG_PU
+#if HHI_MRG
   if ( !pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     xWriteFlag( iPredMode == MODE_SKIP ? 0 : 1 );
