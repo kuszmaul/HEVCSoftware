@@ -1597,7 +1597,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 #endif
 
   UInt uiScanning;
-#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
+#if !QC_MDDT && !LCEC_PHASE1_ADAPT_ENABLE
   UInt uiInterleaving, uiIsCoded;
 #endif
 
@@ -1707,7 +1707,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       }
     }
 #else
-#if NEWVLC_ADAPT_ENABLE
+#if LCEC_PHASE1_ADAPT_ENABLE
     if(pcCU->isIntra( uiAbsPartIdx ))
     {
 	    memset(piCoeff,0,sizeof(TCoeff)*uiSize);

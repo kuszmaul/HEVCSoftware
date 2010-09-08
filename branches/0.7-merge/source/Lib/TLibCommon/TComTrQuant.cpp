@@ -2821,7 +2821,7 @@ Void TComTrQuant::xQuantLTR  (TComDataCU* pcCU, Long* pSrc, TCoeff*& pDes, Int i
   }
   else
   {
-#if QC_MDDT || NEWVLC_ADAPT_ENABLE
+#if QC_MDDT || LCEC_PHASE1_ADAPT_ENABLE
     UInt uiAcSum_init = uiAcSum;
 #endif
     for( Int n = 0; n < iWidth*iHeight; n++ )
@@ -2869,7 +2869,7 @@ Void TComTrQuant::xQuantLTR  (TComDataCU* pcCU, Long* pSrc, TCoeff*& pDes, Int i
         piQCoef[n] = 0;
       }
     }
-#if NEWVLC_ADAPT_ENABLE
+#if LCEC_PHASE1_ADAPT_ENABLE
   const UInt*  pucScan;
   if(pcCU->isIntra( uiAbsPartIdx ) && m_iSymbolMode == 0 && iWidth >= 16)
   {

@@ -2131,7 +2131,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   TCoeff* piCoeff = pcCoef;
   UInt uiNumSig = 0;
   UInt uiScanning;
-#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
+#if !QC_MDDT && !LCEC_PHASE1_ADAPT_ENABLE
   UInt uiInterleaving;
 #endif
 
@@ -2230,7 +2230,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 
   TCoeff scoeff[64];
   Int iBlockType;
-#if !QC_MDDT && !NEWVLC_ADAPT_ENABLE
+#if !QC_MDDT && !LCEC_PHASE1_ADAPT_ENABLE
   UInt uiNumSigInterleaved;
 #endif
 #if LCEC_PHASE1
@@ -2359,7 +2359,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       xCodeCoeff8x8( scoeff, iBlockType );
     }
 #else
-#if NEWVLC_ADAPT_ENABLE
+#if LCEC_PHASE1_ADAPT_ENABLE
     if(pcCU->isIntra( uiAbsPartIdx ))
     {
       for (uiScanning=0; uiScanning<64; uiScanning++)
@@ -3308,7 +3308,7 @@ Void TEncCavlc::encodeSwitched_Filters(TComSlice* pcSlice,TComPrediction *m_cPre
               m_uiBitSF +=       
 #endif
               xWriteCode(m_cPrediction->getSIFOFilter(sub_pos),bitsPerFilter);
-
+            else
 #if LCEC_STAT
               m_uiBitSF += 
 #endif
