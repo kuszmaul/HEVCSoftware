@@ -1815,7 +1815,11 @@ Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 {
   UInt uiSymbol;
   xReadFlag( uiSymbol );
+#if HHI_MRG_PU
+  pcCU->setMergeFlagSubParts( uiSymbol ? true : false, uiAbsPartIdx, uiPUIdx, uiDepth );
+#else
   pcCU->setMergeFlag( uiAbsPartIdx, uiSymbol ? true : false );
+#endif
 }
 
 #if HHI_MRG_PU
@@ -1827,6 +1831,9 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   UInt uiMergeIndex;
   xReadFlag( uiMergeIndex );
   pcCU->setMergeIndex( uiAbsPartIdx, uiMergeIndex );
+#if HHI_MRG_PU
+  ruiMergeIndex = uiMergeIndex;
+#endif
 }
 #endif
 
