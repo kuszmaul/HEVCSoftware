@@ -140,9 +140,7 @@ protected:
   Bool      m_bUseAIS;                                        ///< BB: flag for using adaptive intra smoothing
 #endif  
 	// coding tools (transform)
-#if HHI_ALLOW_ROT_SWITCH
 	Bool			m_bUseROT;																				///< flag for using rotational transform
-#endif
 
 #if HHI_MRG
   // coding tools (inter - merge motion partitions)
