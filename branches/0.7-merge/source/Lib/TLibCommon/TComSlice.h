@@ -102,6 +102,9 @@ private:
 #endif
 
   Bool        m_bUseAMP;
+#if HHI_RMP_SWITCH
+  Bool        m_bUseRMP;
+#endif
   // Parameter
   AMVP_MODE   m_aeAMVPMode[MAX_CU_DEPTH];
   UInt        m_uiBitDepth;
@@ -237,6 +240,11 @@ public:
 
   Bool getUseAMP      ()         { return m_bUseAMP; }
   Void setUseAMP      ( Bool b ) { m_bUseAMP  = b; }
+
+#if HHI_RMP_SWITCH
+  Bool getUseRMP     ()         { return m_bUseRMP; }
+  Void setUseRMP     ( Bool b ) { m_bUseRMP = b;    }
+#endif
 
   // AMVP mode (for each depth)
   AMVP_MODE getAMVPMode ( UInt uiDepth ) { assert(uiDepth < g_uiMaxCUDepth);  return m_aeAMVPMode[uiDepth]; }

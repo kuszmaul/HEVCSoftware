@@ -434,10 +434,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
       }
 
-      // 2NxN, Nx2N
-      xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );  rpcTempCU->initEstData();
-      xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );  rpcTempCU->initEstData();
-
+#if HHI_RMP_SWITCH
+      if( pcPic->getSlice()->getSPS()->getUseRMP() )
+#endif
+      { // 2NxN, Nx2N
+        xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );  rpcTempCU->initEstData();
+        xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );  rpcTempCU->initEstData();
+      }
 
       // fast encoder decision for asymmetric motion partition: try asymmetric motion partition only when best != 2Nx2N
       if ( m_pcEncCfg->getUseFastEnc() )
