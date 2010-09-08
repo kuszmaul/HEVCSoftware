@@ -145,6 +145,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
 
   xReadFlag( uiCode ); pcSPS->setUseAMP ( uiCode ? true : false );
+#if HHI_RMP_SWITCH
+  xReadFlag( uiCode ); pcSPS->setUseRMP( uiCode ? true : false );
+#endif
   // number of taps for DIF
   xReadUvlc( uiCode ); pcSPS->setDIFTap ( (uiCode+2)<<1 );  // 4, 6, 8, 10, 12
 
@@ -1936,32 +1939,35 @@ Void TDecCavlc::parseAlfCoeff( Int& riCoeff, Int iLength, Int iPos )
 #if HHI_MRG
 #if HHI_MRG_PU
 Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx )
+{
+  UInt uiSymbol;
+  UInt uiCtxIdx = pcCU->getCtxMergeFlag( uiAbsPartIdx );
+  xReadFlag( uiSymbol );
+  pcCU->setMergeFlagSubParts( uiSymbol ? true : false, uiAbsPartIdx, uiPUIdx, uiDepth );
+}
+
+Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiSymbol;
+  UInt uiCtxIdx = pcCU->getCtxMergeIndex( uiAbsPartIdx );
+  xReadFlag( uiSymbol );
+  ruiMergeIndex = uiSymbol;
+}
 #else
 Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-#endif
 {
   UInt uiSymbol;
   xReadFlag( uiSymbol );
-#if HHI_MRG_PU
-  pcCU->setMergeFlagSubParts( uiSymbol ? true : false, uiAbsPartIdx, uiPUIdx, uiDepth );
-#else
-  pcCU->setMergeFlag( uiAbsPartIdx, uiSymbol ? true : false );
-#endif
+  pcCU->setMergeFlagSubParts( uiSymbol ? true : false, uiAbsPartIdx, uiDepth );
 }
 
-#if HHI_MRG_PU
-Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
-#else
 Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-#endif
 {
-  UInt uiMergeIndex;
-  xReadFlag( uiMergeIndex );
-  pcCU->setMergeIndex( uiAbsPartIdx, uiMergeIndex );
-#if HHI_MRG_PU
-  ruiMergeIndex = uiMergeIndex;
-#endif
+  UInt uiSymbol;
+  xReadFlag( uiSymbol );
+  pcCU->setMergeIndexSubParts( uiSymbol, uiAbsPartIdx, uiDepth );
 }
+#endif
 #endif
 
 #if HHI_AIS

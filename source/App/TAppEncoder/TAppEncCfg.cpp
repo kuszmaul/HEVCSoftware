@@ -233,6 +233,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("ALFMaxLength", m_iAlfMaxLength, 9)
 #endif
     ("AMP", m_bUseAMP, true, "Asymmetric motion partition")
+#if HHI_RMP_SWITCH
+    ("RMP", m_bUseRMP ,true, "Rectangular motion partition" )
+#endif
 #ifdef EDGE_BASED_PREDICTION
     ("EdgePredictionEnable", m_bEdgePredictionEnable, true, "Enable edge based prediction for intra")
     ("EdgeDetectionThreshold", m_iEdgeDetectionThreshold, 10240, "Threshold for edge detection of edge based prediction")
@@ -621,6 +624,9 @@ Void TAppEncCfg::xPrintParameter()
 	printf("PBIC :%d ", m_bUseIC			);
 #endif
     printf("AMP:%d ", m_bUseAMP);
+#if HHI_RMP_SWITCH
+    printf("RMP:%d ", m_bUseRMP);
+#endif
   printf("\n");
 
   fflush(stdout);

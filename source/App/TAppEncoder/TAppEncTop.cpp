@@ -156,6 +156,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseIC                        ( m_bUseIC       );
 #endif
     m_cTEncTop.setUseAMP                      ( m_bUseAMP );
+#if HHI_RMP_SWITCH
+    m_cTEncTop.setUseRMP                     ( m_bUseRMP );
+#endif
 
 }
 

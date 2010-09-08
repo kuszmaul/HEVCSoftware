@@ -44,6 +44,7 @@
 #define HHI_NAL_UNIT_SYNTAX               1           ///< enable/disable NalUnit syntax 
 #define HHI_ALLOW_CIP_SWITCH              1           ///< BB: allow to switch off CIP, via CIP : 0 in cfg file or -0 CIP in command line
 #define HHI_DISABLE_INTER_NxN_SPLIT       0           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
+#define HHI_RMP_SWITCH                    0
 
 // HHI tools
 #define HHI_RQT                           1           ///< MWHK: residual quadtree
@@ -78,8 +79,8 @@
 #define HHI_RQT_FORCE_SPLIT_ACC2_PU       0
 #endif
 
-#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU && ( !HHI_RQT || !HHI_RQT_ROOT ) )
-#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT and HHI_RQT_ROOT are equal to 1"
+#if ( HHI_RQT_FORCE_SPLIT_ACC2_PU &&  !HHI_RQT  )
+#error "HHI_RQT_FORCE_SPLIT_ACC2_PU can only be equal to 1 if HHI_RQT is equal to 1"
 #endif
 
 #if HHI_AIS
