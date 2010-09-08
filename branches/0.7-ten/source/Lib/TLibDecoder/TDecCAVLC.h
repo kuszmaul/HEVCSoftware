@@ -83,6 +83,20 @@ private:
   UInt                      m_uiLPTableD8[10][128];
   UInt                      m_uiLastPosVlcIndex[10];
 
+#if LCEC_PHASE2
+  UInt                      m_uiCBPTableD[2][8];
+  UInt                      m_uiCbpVlcIdx[2];
+#endif
+
+#if LCEC_PHASE2
+  Int                   m_iRefFrame0[1000];
+  Int                   m_iRefFrame1[1000];
+  UInt                  m_uiMITableD[8];  
+
+  UInt                  m_uiMITableVlcIdx;
+
+#endif
+
 public:
   Void  resetEntropy        ( TComSlice* pcSlice  );
   Void  setBitstream        ( TComBitstream* p    )      { m_pcBitstream = p; }
