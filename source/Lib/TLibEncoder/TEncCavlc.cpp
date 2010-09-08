@@ -355,6 +355,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   m_uiBitHLS += xWriteUvlc  ( pcSPS->getMaxCUWidth ()   );
   m_uiBitHLS += xWriteUvlc  ( pcSPS->getMaxCUHeight()   );
+#if HHI_RQT
+  if (pcSPS->getQuadtreeTUFlag())
+  {
+    m_uiBitHLS += xWriteUvlc  ( pcSPS->getMaxCUDepth () - g_uiAddCUDepth );
+  }
+  else
+#endif
   m_uiBitHLS += xWriteUvlc  ( pcSPS->getMaxCUDepth ()-1 ); //xWriteUvlc ( pcSPS->getMaxCUDepth ()-g_uiAddCUDepth );
 
   // Transform
@@ -392,10 +399,8 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   xWriteFlag  ( (pcSPS->getUseCIP ()) ? 1 : 0 ); // BB:
   m_uiBitHLS += 1;
 #endif
-#if HHI_ALLOW_ROT_SWITCH
-	xWriteFlag	( (pcSPS->getUseROT ()) ? 1 : 0 ); // BB:
+  xWriteFlag	( (pcSPS->getUseROT ()) ? 1 : 0 ); // BB:
   m_uiBitHLS += 1;
-#endif
 #if HHI_AIS
   xWriteFlag  ( (pcSPS->getUseAIS ()) ? 1 : 0 ); // BB:
   m_uiBitHLS += 1;
@@ -408,9 +413,17 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
    xWriteFlag ( (pcSPS->getUseIMP ()) ? 1 : 0 ); // SOPH:
    m_uiBitHLS += 1;
 #endif
+#ifdef DCM_PBIC
+  xWriteFlag ( (pcSPS->getUseIC ()) ? 1 : 0 ); // SOPH:
+  m_uiBitHLS += 1;
+#endif
   xWriteFlag  ( (pcSPS->getUseAMP ()) ? 1 : 0 );
   m_uiBitHLS += 1;
-
+#if HHI_RMP_SWITCH
+  xWriteFlag  ( (pcSPS->getUseRMP ()) ? 1 : 0 );
+  m_uiBitHLS += 1;
+#endif
+  
   // write number of taps for DIF
   m_uiBitHLS += xWriteUvlc  ( (pcSPS->getDIFTap ()>>1)-2 ); // 4, 6, 8, 10, 12
 
