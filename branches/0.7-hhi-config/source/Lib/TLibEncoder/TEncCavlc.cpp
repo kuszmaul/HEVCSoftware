@@ -380,8 +380,13 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   if ( pcCU->getSlice()->isInterB() && pcCU->isIntra( uiAbsPartIdx ) )
   {
     xWriteFlag( 0 );
-    xWriteFlag( 0 );
-    xWriteFlag( 0 );
+#if HHI_RMP_SWITCH
+    if( pcCU->getSlice()->getSPS()->getUseRMP() ||  pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
+    {
+      xWriteFlag( 0 );
+      xWriteFlag( 0 );
+    }
 #if HHI_DISABLE_INTER_NxN_SPLIT
     if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
     {
@@ -414,7 +419,11 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       xWriteFlag( 0 );
       xWriteFlag( 1 );
 
+#if HHI_RMP_SWITCH
+      if (pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && pcCU->getSlice()->getSPS()->getUseRMP() )
+#else
       if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
       {
         if (eSize == SIZE_2NxN)
         {
@@ -426,6 +435,12 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           xWriteFlag( (eSize == SIZE_2NxnU? 0: 1) );
         }
       }
+#if HHI_RMP_SWITCH
+      else if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && !pcCU->getSlice()->getSPS()->getUseRMP() )
+      {
+        xWriteFlag( (eSize == SIZE_2NxnU? 0: 1) );
+      }
+#endif
       break;
     }
   case SIZE_Nx2N:
@@ -436,7 +451,11 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       xWriteFlag( 0 );
       xWriteFlag( 1 );
 
+#if HHI_RMP_SWITCH
+      if (pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && pcCU->getSlice()->getSPS()->getUseRMP() )
+#else
       if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
       {
         if (eSize == SIZE_Nx2N)
         {
@@ -448,6 +467,12 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           xWriteFlag( (eSize == SIZE_nLx2N? 0: 1) );
         }
       }
+#if HHI_RMP_SWITCH
+      else if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && !pcCU->getSlice()->getSPS()->getUseRMP() )
+      {
+        xWriteFlag( (eSize == SIZE_nLx2N? 0: 1) );
+      }
+#endif
       break;
     }
   case SIZE_NxN:
@@ -457,8 +482,13 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #endif
       {
         xWriteFlag( 0 );
-        xWriteFlag( 0 );
-        xWriteFlag( 0 );
+#if HHI_RMP_SWITCH
+        if( pcCU->getSlice()->getSPS()->getUseRMP() ||  pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
+        {
+          xWriteFlag( 0 );
+          xWriteFlag( 0 );
+        }
 
         if (pcCU->getSlice()->isInterB())
         {
