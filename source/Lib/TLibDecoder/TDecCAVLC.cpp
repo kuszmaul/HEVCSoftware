@@ -550,17 +550,29 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
   else
   {
-    UInt uiMaxNumBits = 3;
-    for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
+#if HHI_RMP_SWITCH
+    if ( !pcCU->getSlice()->getSPS()->getUseRMP() && !pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
     {
       xReadFlag( uiSymbol );
-      if ( uiSymbol )
-      {
-        break;
-      }
-      uiMode++;
+      if( uiSymbol )
+        uiMode = 0;
+      else
+        uiMode = 3;
     }
-
+    else
+#endif
+    {
+      UInt uiMaxNumBits = 3;
+      for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
+      {
+        xReadFlag( uiSymbol );
+        if ( uiSymbol )
+        {
+          break;
+        }
+        uiMode++;
+      }
+    }
     eMode = (PartSize) uiMode;
 
     if (pcCU->getSlice()->isInterB() && uiMode == 3)
@@ -579,7 +591,11 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
     }
 
+#if HHI_RMP_SWITCH
+    if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && pcCU->getSlice()->getSPS()->getUseRMP() )
+#else
     if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
     {
       if (eMode == SIZE_2NxN)
       {
@@ -600,6 +616,21 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
         }
       }
     }
+#if HHI_RMP_SWITCH
+    if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && !pcCU->getSlice()->getSPS()->getUseRMP() )
+    {
+      if ( eMode == SIZE_2NxN )
+      {
+        xReadFlag(uiSymbol);
+        eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+      }
+      else if ( eMode == SIZE_Nx2N )
+      {
+        xReadFlag(uiSymbol);
+        eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+      }
+    }
+#endif
   }
 
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
