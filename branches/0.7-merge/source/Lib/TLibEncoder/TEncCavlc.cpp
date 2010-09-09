@@ -482,7 +482,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
     xWriteFlag  (pcSlice->isReferenced() ? 1 : 0);
     m_uiBitHLS += 1;
-#ifdef ROUNDING_CONTROL
+#ifdef ROUNDING_CONTROL_BIPRED
 	xWriteFlag  (pcSlice->isRounding() ? 1 : 0);
   m_uiBitHLS += 1;
 #endif
