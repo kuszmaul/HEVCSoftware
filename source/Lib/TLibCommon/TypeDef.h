@@ -215,6 +215,11 @@ void normalizeScanStats();
 // SAMSUNG defines section start
 ///////////////////////////////
 #define SAMSUNG_REMOVE_AMP_FEN_PENALTY        1           ///< removal of FEN penality of AMP
+
+#if HHI_MRG
+#define SAMSUNG_MRG_SKIP_DIRECT               0           ///< enabling of skip and direct when mrg is on
+#endif
+
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////

@@ -659,7 +659,7 @@ Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
   // get context function is here
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
 
-#if HHI_MRG
+#if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
   if ( !pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     m_pcBinIf->encodeBin( iPredMode == MODE_SKIP ? 0 : 1, m_cCUPredModeSCModel.get( 0, 0, 0 ) );

@@ -832,7 +832,7 @@ Void TDecSbac::parseAlfCtrlFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 
 Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if HHI_MRG
+#if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
   if ( pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     return;
@@ -1109,7 +1109,7 @@ Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   UInt uiSymbol;
   Int  iPredMode = MODE_INTER;
 
-#if HHI_MRG
+#if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
   if ( !pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPredModeSCModel.get( 0, 0, 0 ) );

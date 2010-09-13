@@ -73,7 +73,7 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
 
 Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if HHI_MRG
+#if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
   if ( pcCU->getSlice()->getSPS()->getUseMRG() )
   {
     return;
@@ -1057,6 +1057,13 @@ Void TEncEntropy::encodeMergeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
   {
     return;
   }
+
+#if SAMSUNG_MRG_SKIP_DIRECT
+  if ( pcCU->isSkipped(uiAbsPartIdx) )
+  {
+    return;
+  }  
+#endif
 
   if( bRD )
     uiAbsPartIdx = 0;
