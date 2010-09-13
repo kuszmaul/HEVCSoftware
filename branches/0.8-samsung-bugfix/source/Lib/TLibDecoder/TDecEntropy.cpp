@@ -900,6 +900,13 @@ Void TDecEntropy::decodeMergeInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
     return;
   }
 
+#if SAMSUNG_MRG_SKIP_DIRECT
+  if ( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_SKIP )
+  {
+  	return;
+  }
+#endif
+
   // find left and top vectors. take vectors from PUs to the left and above.
   TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
   UInt uiNeighbourInfo;

@@ -379,6 +379,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #else
       if( pcPic->getSlice()->getSPS()->getUseMRG() )
       {
+        #if SAMSUNG_MRG_SKIP_DIRECT
+        xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
+        #endif
         xCheckRDCostMerge( rpcBestCU, rpcTempCU );            rpcTempCU->initEstData();
       }
       else
@@ -390,7 +393,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
 #endif
 
-#if HHI_MRG
+#if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
       if( !pcPic->getSlice()->getSPS()->getUseMRG() )
       {
         // fast encoder decision for early skip
