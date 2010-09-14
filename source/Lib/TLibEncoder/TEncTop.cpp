@@ -156,6 +156,9 @@ Void TEncTop::init()
 
   // initialize DIF
   m_cSearch.setDIFTap ( m_cSPS.getDIFTap () );
+#if SAMSUNG_CHROMA_IF_EXT
+  m_cSearch.setDIFTapC( m_cSPS.getDIFTapC() );
+#endif
 
   // initialize transform & quantization class
 #if LCEC_PHASE1
@@ -352,6 +355,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseIC         ( m_bUseIC            );
 #endif
   m_cSPS.setDIFTap        ( m_iDIFTap           );
+#if SAMSUNG_CHROMA_IF_EXT
+  m_cSPS.setDIFTapC       ( m_iDIFTapC          );
+#endif
 
   m_cSPS.setMaxTrSize     ( m_uiMaxTrSize       );
 

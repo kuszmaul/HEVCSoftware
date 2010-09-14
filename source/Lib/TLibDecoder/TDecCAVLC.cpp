@@ -150,6 +150,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   // number of taps for DIF
   xReadUvlc( uiCode ); pcSPS->setDIFTap ( (uiCode+2)<<1 );  // 4, 6, 8, 10, 12
+#if SAMSUNG_CHROMA_IF_EXT
+  xReadUvlc( uiCode ); pcSPS->setDIFTapC ( (uiCode+1)<<1 );  //2, 4, 6, 8, 10, 12
+#endif
 
   // AMVP mode for each depth (AM_NONE or AM_EXPL)
   for (Int i = 0; i < pcSPS->getMaxCUDepth(); i++)

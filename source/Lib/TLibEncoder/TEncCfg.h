@@ -145,6 +145,9 @@ protected:
   Bool      m_bUseIC;
 #endif
   Int       m_iDIFTap;  // Number of interpolation filter taps
+#if SAMSUNG_CHROMA_IF_EXT
+  Int       m_iDIFTapC;  // Number of chroma interpolation filter taps
+#endif
 
   Int*      m_aidQP;
   UInt      m_uiMaxTrSize;
@@ -360,6 +363,10 @@ public:
   Bool      getUseIC                        ()      { return m_bUseIC;      }
 #endif
   Int       getDIFTap                       ()      { return m_iDIFTap;  }
+#if SAMSUNG_CHROMA_IF_EXT
+ Int       getDIFTapC                       ()      { return m_iDIFTapC;  }
+ Void      setDIFTapC              ( Int   i )      { m_iDIFTapC     = i; }
+#endif
 
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getMaxTrSize                    ()      { return m_uiMaxTrSize; }
