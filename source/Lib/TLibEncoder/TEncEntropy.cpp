@@ -1991,7 +1991,9 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 	m_pcEntropyCoderIf->codeCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_V, 0);
 #endif
 
+#if !QC_MDDT_ROT_UNIFIED
     if (pcCU->getSlice()->getSPS()->getUseROT() && uiWidth >= 16)
+#endif
 		encodeROTindex( pcCU, uiAbsPartIdx, uiDepth );
 
 	xEncodeCoeff( pcCU, pcCU->getCoeffY()  + uiLumaOffset,   uiAbsPartIdx, uiDepth, uiWidth,    uiHeight,    0, uiLumaTrMode,   TEXT_LUMA     );
