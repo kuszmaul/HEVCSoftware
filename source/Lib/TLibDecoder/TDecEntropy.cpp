@@ -2608,9 +2608,19 @@ Void TDecEntropy::xDecodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   {
     uiSubdiv = 0;
   }
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  else if( uiLog2TrafoSize == pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+  {
+    uiSubdiv = 0;
+  }
+#endif  
   else
   {
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+    assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+#else
     assert( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#endif
 #if HHI_RQT_FORCE_SPLIT_ACC2_PU
     const UInt uiTrMode = uiDepth - pcCU->getDepth( uiAbsPartIdx );
     UInt uiCtx = uiDepth;

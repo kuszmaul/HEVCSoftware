@@ -380,6 +380,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     {
       m_uiBitHLS += xWriteUvlc( pcSPS->getQuadtreeTULog2MaxSize() - pcSPS->getQuadtreeTULog2MinSize() );
     }
+#if HHI_RQT_DEPTH
+    m_uiBitHLS += xWriteUvlc  ( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#endif	
   }
 #endif
 
@@ -645,6 +648,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     {
       xWriteUvlc( pcSPS->getQuadtreeTULog2MaxSize() - pcSPS->getQuadtreeTULog2MinSize() );
     }
+#if HHI_RQT_DEPTH
+    xWriteUvlc  ( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#endif	
   }
 #endif
 

@@ -142,6 +142,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("QuadtreeTUFlag", m_bQuadtreeTUFlag, true)
     ("QuadtreeTULog2MaxSize", m_uiQuadtreeTULog2MaxSize, 6u)
     ("QuadtreeTULog2MinSize", m_uiQuadtreeTULog2MinSize, 2u)
+#if HHI_RQT_DEPTH
+    ("QuadtreeTUMaxDepth", m_uiQuadtreeTUMaxDepth, 5u)
+#endif
 #endif
 
     /* Coding structure paramters */
@@ -393,6 +396,10 @@ Void TAppEncCfg::xCheckParameter()
 
     xConfirmPara( ( 1 << m_uiQuadtreeTULog2MinSize ) > ( m_uiMaxCUWidth  >> m_uiMaxCUDepth ), "Minimum CU width must be greater than minimum transform size." );
     xConfirmPara( ( 1 << m_uiQuadtreeTULog2MinSize ) > ( m_uiMaxCUHeight >> m_uiMaxCUDepth ), "Minimum CU height must be greater than minimum transform size." );
+#if HHI_RQT_DEPTH
+    xConfirmPara( m_uiQuadtreeTUMaxDepth < 1,                                                         "QuadtreeTUMaxDepth must be greater than or equal to 1" );
+    xConfirmPara( m_uiQuadtreeTUMaxDepth > m_uiQuadtreeTULog2MaxSize - m_uiQuadtreeTULog2MinSize + 1, "QuadtreeTUMaxDepth must be less than or equal to the difference between QuadtreeTULog2MaxSize and QuadtreeTULog2MinSize plus 1" );
+#endif
 }
 #endif
 
@@ -518,6 +525,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("Number of Reference frames   : %d\n", m_iNumOfReference);
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("Transform depth (min / max)  : %d / %d\n", m_uiMinTrDepth, m_uiMaxTrDepth );
+#if HHI_RQT_DEPTH
+  printf("Max RQT depth                : %d\n", m_uiQuadtreeTUMaxDepth);
+#endif
   printf("Motion search range          : %d\n", m_iSearchRange );
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("QP                           : %5.2f\n", m_fQP );

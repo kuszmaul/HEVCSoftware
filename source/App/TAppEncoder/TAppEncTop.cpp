@@ -122,6 +122,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQuadtreeTUFlag               ( m_bQuadtreeTUFlag );
   m_cTEncTop.setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
   m_cTEncTop.setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
+#if HHI_RQT_DEPTH
+  m_cTEncTop.setQuadtreeTUMaxDepth           ( m_uiQuadtreeTUMaxDepth );
+#endif
 #endif
   m_cTEncTop.setMaxTrSize                    ( m_uiMaxTrSize  );
   m_cTEncTop.setUseQBO                       ( m_bUseQBO      );
