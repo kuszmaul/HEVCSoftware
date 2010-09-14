@@ -1374,9 +1374,19 @@ TEncSearch::xEncSubdivCbfQT( TComDataCU*  pcCU,
   {
     assert( !uiSubdiv );
   }
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  else if( uiLog2TrafoSize == pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+  {
+    assert( !uiSubdiv );
+  }
+#endif  
   else
   {
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+    assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+#else 
     assert( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#endif
     if( bLuma )
     {
       m_pcEntropyCoder->encodeTransformSubdivFlag( uiSubdiv, uiFullDepth );
@@ -1949,7 +1959,11 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   UInt    uiFullDepth   = pcCU->getDepth( 0 ) +  uiTrDepth;
   UInt    uiLog2TrSize  = g_aucConvertToBit[ pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiFullDepth ] + 2;
   Bool    bCheckFull    = ( uiLog2TrSize  <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  Bool    bCheckSplit   = ( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+#else
   Bool    bCheckSplit   = ( uiLog2TrSize  >  pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#endif
   
   Double  dSingleCost   = MAX_DOUBLE;
   UInt    uiSingleDistY = 0;
@@ -6839,7 +6853,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   const Bool bCheckFull    = ( uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
 #endif
 
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  const Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+#else
   const Bool bCheckSplit   = ( uiLog2TrSize >  pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#endif
   
   assert( bCheckFull || bCheckSplit );
   
@@ -7073,7 +7091,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     
     m_pcEntropyCoder->resetBits();
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+    if( uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+#else	
     if( uiLog2TrSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
+#endif
     {
       m_pcEntropyCoder->encodeTransformSubdivFlag( 0, uiDepth );
     }
@@ -7201,7 +7223,11 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   const Bool bSubdiv = uiCurrTrMode != uiTrMode;
   
   const UInt uiLog2TrSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth]+2;
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  if( bSubdivAndCbf && uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() && uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+#else
   if( bSubdivAndCbf && uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() && uiLog2TrSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
+#endif
   {
     m_pcEntropyCoder->encodeTransformSubdivFlag( bSubdiv, uiDepth );
   }

@@ -318,6 +318,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUFlag       ( m_bQuadtreeTUFlag         );
   m_cSPS.setQuadtreeTULog2MaxSize( m_uiQuadtreeTULog2MaxSize );
   m_cSPS.setQuadtreeTULog2MinSize( m_uiQuadtreeTULog2MinSize );
+#if HHI_RQT_DEPTH
+  m_cSPS.setQuadtreeTUMaxDepth   ( m_uiQuadtreeTUMaxDepth    );
+#endif
 #endif
 
 #if HHI_ALF

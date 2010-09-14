@@ -216,6 +216,14 @@ void normalizeScanStats();
 ///////////////////////////////
 #define SAMSUNG_REMOVE_AMP_FEN_PENALTY        1           ///< removal of FEN penality of AMP
 
+#if HHI_RQT
+#define HHI_RQT_DEPTH                         0           ///< controlling max quadtree depth
+#define HHI_RQT_DISABLE_SUB                   0           ///< disabling subtree whose node size is smaller than partition size
+#if     HHI_RQT_DEPTH && HHI_RQT_DISABLE_SUB
+#error "Only one of HHI_RQT_DEPTH and HHI_RQT_DISABLE_SUB can be defined"
+#endif
+#endif
+
 #if HHI_MRG
 #define SAMSUNG_MRG_SKIP_DIRECT               0           ///< enabling of skip and direct when mrg is on
 #endif

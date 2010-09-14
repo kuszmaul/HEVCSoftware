@@ -68,6 +68,9 @@ private:
   Bool        m_bQuadtreeTUFlag;
   UInt        m_uiQuadtreeTULog2MaxSize;
   UInt        m_uiQuadtreeTULog2MinSize;
+#if HHI_RQT_DEPTH
+  UInt        m_uiQuadtreeTUMaxDepth;
+#endif
 #endif
   Bool        m_bUseALF;
   Bool        m_bUseDQP;
@@ -154,6 +157,10 @@ public:
   UInt getQuadtreeTULog2MaxSize()         { return m_uiQuadtreeTULog2MaxSize; }
   Void setQuadtreeTULog2MinSize( UInt u ) { m_uiQuadtreeTULog2MinSize = u;    }
   UInt getQuadtreeTULog2MinSize()         { return m_uiQuadtreeTULog2MinSize; }
+#if HHI_RQT_DEPTH
+  Void setQuadtreeTUMaxDepth( UInt u ) { m_uiQuadtreeTUMaxDepth = u;    }
+  UInt getQuadtreeTUMaxDepth()         { return m_uiQuadtreeTUMaxDepth; }
+#endif
 #endif
   Void setPad         (Int iPad[2]) { m_aiPad[0] = iPad[0]; m_aiPad[1] = iPad[1]; }
   Void setPadX        ( Int  u ) { m_aiPad[0] = u; }

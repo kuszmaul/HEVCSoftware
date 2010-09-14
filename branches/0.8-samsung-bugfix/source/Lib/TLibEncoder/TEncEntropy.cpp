@@ -669,9 +669,19 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   {
     assert( !uiSubdiv );
   }
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+  else if( uiLog2TrafoSize == pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+  {
+    assert( !uiSubdiv );
+  }
+#endif  
   else
   {
+#if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
+    assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+#else  
     assert( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
+#endif
 #if HHI_RQT_FORCE_SPLIT_ACC2_PU
     UInt uiCtx = uiDepth;
     const UInt uiTrMode = uiDepth - pcCU->getDepth( uiAbsPartIdx );
