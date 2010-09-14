@@ -2021,11 +2021,20 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
     }
 
     //===== update scan direction =====
+#if !HHI_DISABLE_SCAN
     if( ( uiDownLeft == 1 && ( uiPosX == 0 || uiPosY == uiHeight - 1 ) ) ||
         ( uiDownLeft == 0 && ( uiPosY == 0 || uiPosX == uiWidth  - 1 ) )   )
     {
       uiDownLeft = ( uiNumSigTopRight >= uiNumSigBotLeft ? 1 : 0 );
     }
+#else
+		if( uiScanPos && 
+			( ( uiDownLeft == 1 && ( uiPosX == 0 || uiPosY == uiHeight - 1 ) ) ||
+        ( uiDownLeft == 0 && ( uiPosY == 0 || uiPosX == uiWidth  - 1 ) )   ) )
+    {
+      uiDownLeft = 1 - uiDownLeft;
+    }
+#endif
   }
   if( !bLastReceived )
   {

@@ -234,6 +234,10 @@ void normalizeScanStats();
 #define QC_MDDT_ROT_UNIFIED                   0           ///< better unification of MDDT and ROT
 #endif
 
+#if HHI_TRANSFORM_CODING
+#define HHI_DISABLE_SCAN                      0           ///< disable adaptive scan
+#endif
+
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////
