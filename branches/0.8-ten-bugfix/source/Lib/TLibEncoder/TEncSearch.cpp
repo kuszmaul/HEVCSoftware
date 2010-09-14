@@ -6082,6 +6082,25 @@ Void TEncSearch::xExtDIFUpSamplingH_QC ( TComPattern* pcPattern, TComYuv* pcYuvE
   
   //center
 #if USE_DIAGONAL_FILT==1
+#if SIFO_DIF_COMPATIBILITY==1
+  UInt DIF_filter_position = getNum_SIFOFilters() - getNum_AvailableFilters();
+  if(filterC>=DIF_filter_position && m_iDIFTap==6)
+  {
+    piSrcYPel = pcPattern->getROIY()   -  iPatStride - 1;
+    piDstYPel = pcYuvExt->getLumaAddr() + (iExtStride<<1) - 2;
+    xCTI_FilterDIF_TEN (piSrcYPel, iPatStride, 1,  iWidth + 1, iHeight + 1, iExtStride<<2, 4, piDstYPel, 2, 2, filterC-DIF_filter_position);
+    if(OffsetC)
+    {
+      for (Int y = 0; y < iHeight + 1; y++)
+      {
+        for ( Int x = 0; x < iWidth + 1; x++)
+          piDstYPel[x*4] = Clip( piDstYPel[x*4] + OffsetC);
+        piDstYPel += (iExtStride<<2);
+      }
+    }
+    return;
+  }
+#else
   if(filterC==5 && m_iDIFTap==6)
   {
     piSrcYPel = pcPattern->getROIY()   -  iPatStride - 1;
@@ -6098,6 +6117,7 @@ Void TEncSearch::xExtDIFUpSamplingH_QC ( TComPattern* pcPattern, TComYuv* pcYuvE
     }
     return;
   }
+#endif
 #endif
   i=10;
   Int filterC_0 = getTabFilters(i,getSIFOFilter(i),0);

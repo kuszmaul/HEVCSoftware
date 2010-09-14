@@ -123,7 +123,7 @@
 #define LCEC_PHASE1                       1           // LCEC - integration phase 1
 #define LCEC_PHASE2                       0           // LCEC - integration phase 2
 #define LCEC_STAT                         0           // LCEC - support for LCEC bitusage statistics
-
+#define SIFO_DIF_COMPATIBILITY					  1           // SIFO Extensions
 //////////////////////////
 // TEN defines section end
 //////////////////////////
