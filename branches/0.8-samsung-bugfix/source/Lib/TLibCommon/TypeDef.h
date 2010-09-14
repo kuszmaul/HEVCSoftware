@@ -228,7 +228,12 @@ void normalizeScanStats();
 #define SAMSUNG_MRG_SKIP_DIRECT               0           ///< enabling of skip and direct when mrg is on
 #endif
 
-#define SAMSUNG_CHROMA_IF_EXT                 0           // DCT-based Interpolation filter for chroma signal
+#define SAMSUNG_CHROMA_IF_EXT                 0           ///< DCT-based Interpolation filter for chroma signal
+
+#if QC_MDDT
+#define QC_MDDT_ROT_UNIFIED                   0           ///< better unification of MDDT and ROT
+#endif
+
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////

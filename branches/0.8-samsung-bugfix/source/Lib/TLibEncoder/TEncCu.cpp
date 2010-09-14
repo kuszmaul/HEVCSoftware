@@ -527,7 +527,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 
       // try ROT
-#if QC_MDDT || DISABLE_ROT_LUMA_4x4_8x8
+#if (QC_MDDT || DISABLE_ROT_LUMA_4x4_8x8) && !QC_MDDT_ROT_UNIFIED
       if ((rpcBestCU->getWidth(0) > 16) || ((rpcBestCU->getWidth(0) == 16) && (eSize == SIZE_2Nx2N)))
 #endif
       {
