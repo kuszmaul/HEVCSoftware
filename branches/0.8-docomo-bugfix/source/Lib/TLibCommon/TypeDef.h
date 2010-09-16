@@ -225,10 +225,6 @@ void normalizeScanStats();
 //#define DCM_PBIC //Partition-Based Illumination Compensation
 #define DCM_RDCOST_TEMP_FIX //Enables temporary bug fixes to RD cost computation (does not affect TMuC0.7 performance under current encoder settings, but is needed for proper RD cost computation when DCM_PBIC is enabled)
 
-#if defined(DCM_PBIC) && HHI_MRG_PU
-#error "Only one of DCM_PBIC and HHI_MRG_PU can be defined"
-#endif
-
 ///////////////////////////////
 // DOCOMO defines section end
 ///////////////////////////////
