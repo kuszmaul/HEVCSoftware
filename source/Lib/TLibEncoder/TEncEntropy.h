@@ -194,6 +194,10 @@ public:
   Void encodeRefFrmIdxPU  ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMvdPU        ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
+#ifdef DCM_PBIC
+  Void encodeMvdIcdPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx );
+  Void encodeICPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx );
+#endif
 #else
   Void encodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeMergeIndex        ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

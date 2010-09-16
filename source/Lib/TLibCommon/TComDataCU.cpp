@@ -726,6 +726,11 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_puhWidth           = pcCU->getWidth ()                + uiAbsPartIdx;
   m_puhHeight          = pcCU->getHeight()                + uiAbsPartIdx;
 
+#if HHI_MRG_PU
+  m_pbMergeFlag        = pcCU->getMergeFlag()             + uiAbsPartIdx;
+  m_puhMergeIndex      = pcCU->getMergeIndex()            + uiAbsPartIdx;
+#endif
+
 #ifdef DCM_PBIC
   if ( eRefPicList == REF_PIC_LIST_X )
   {
@@ -768,10 +773,6 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_acCUMvField[eRefPicList].setMvPtr(pcCU->getCUMvField(eRefPicList)->getMv()     + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setMvdPtr(pcCU->getCUMvField(eRefPicList)->getMvd()    + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setRefIdxPtr(pcCU->getCUMvField(eRefPicList)->getRefIdx() + uiAbsPartIdx);
-#if HHI_MRG_PU
-  m_pbMergeFlag         = pcCU->getMergeFlag()        + uiAbsPartIdx;
-  m_puhMergeIndex       = pcCU->getMergeIndex()       + uiAbsPartIdx;
-#endif
 
 #ifdef QC_AMVRES
   m_acCUMvField[eRefPicList].setMVResPtr(pcCU->getCUMvField(eRefPicList)->getMVRes() + uiAbsPartIdx);
