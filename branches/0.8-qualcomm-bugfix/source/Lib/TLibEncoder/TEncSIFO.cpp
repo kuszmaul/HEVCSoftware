@@ -62,10 +62,35 @@ TEncSIFO::TEncSIFO()
   SequenceAccErrorP     = NULL;                    // [Filter][Sppos]
   SequenceAccErrorB     = NULL;                    // [FilterF][FilterB][SpposF][SpposB]
   SIFO_FILTER           = NULL;                    // [num_SIFO][16 subpels][SQR_FILTER]
+#if FIX_TICKET67==1
+  m_pcPredSearch        = NULL;
+#if USE_DIAGONAL_FILT==1
+  SIFO_FILTER_DIAG      = NULL;
+#endif
+#endif
 }
+
 TEncSIFO::~TEncSIFO()
 {
 }
+
+#if FIX_TICKET67==1
+Void TEncSIFO::destropy()
+{
+  if( m_pcPredSearch != NULL )
+  {
+    UInt num_SIFO = m_pcPredSearch->getNum_SIFOFilters();
+    xFree_mem2Ddouble(AccErrorP);
+    xFree_mem2Ddouble(SequenceAccErrorP);
+    xFree_mem4Ddouble(SequenceAccErrorB, num_SIFO, num_SIFO);
+    xFree_mem3Ddouble(SIFO_FILTER, num_SIFO);
+#if USE_DIAGONAL_FILT==1
+    xFree_mem2Ddouble(SIFO_FILTER_DIAG);
+#endif
+  }
+}
+#endif
+
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -379,7 +404,10 @@ Void TEncSIFO::setFirstPassSubpelOffset(RefPicList iRefList, TComSlice* pcSlice)
 
     if(ref_frame==0)
     {
-
+#if FIX_TICKET92==1
+      if(fabs(DCdiff[ref_frame]) <= 1)
+        DCdiff[ref_frame] = 0;
+#endif
       sign = (DCdiff[ref_frame] >= 0)? 1: -1;
       noOffsets = (Int)(fabs(DCdiff[ref_frame]) + 0.5);
       DCint = noOffsets * sign;
@@ -443,28 +471,54 @@ Void TEncSIFO::setFirstPassSubpelOffset(RefPicList iRefList, TComSlice* pcSlice)
       {
         if((i != firstVal) && (i != secondVal))
         {
+#if FIX_TICKET92==1
+          if(abs(i) > 1)
+          {
           subpelOffset[subPelPosOrder[NumOffsets]] = i;
           offsetMETab[NumOffsets] = i + addOffset;
           NumOffsets++;
           if(NumOffsets == 15)
             break;
         }
+#else
+          subpelOffset[subPelPosOrder[NumOffsets]] = i;
+          offsetMETab[NumOffsets] = i + addOffset;
+          NumOffsets++;
+          if(NumOffsets == 15)
+            break;
+#endif
+        }
       }
 
       NumMEOffsets = NumOffsets;
       if((NumOffsets < 15) && (noOffsetsSecond > 0))
       {
+#if FIX_TICKET92==1
+        if(abs(secondVal) > 1)
+        {
+          offsetMETab[NumMEOffsets] = secondVal + addOffset;
+          (NumMEOffsets)++;
+        }
+#else
         offsetMETab[NumMEOffsets] = secondVal + addOffset;
         (NumMEOffsets)++;
+#endif
       }
 
       for(i = 0; i < noOffsetsSecond; i++)
       {
         if(NumOffsets == 15)
           break;
-
+#if FIX_TICKET92==1
+        if(abs(secondVal) > 1)
+        {
+          subpelOffset[subPelPosOrder[NumOffsets]] = secondVal;
+          (NumOffsets)++;
+        }
+#else
         subpelOffset[subPelPosOrder[NumOffsets]] = secondVal;
         (NumOffsets)++;
+#endif
       }
     }
     else
@@ -600,6 +654,50 @@ Int TEncSIFO::xGet_mem4Ddouble(Double *****array4D, Int idx, Int frames, Int row
 
   return idx*frames*rows*columns*sizeof(Double);
 }
+
+
+#if FIX_TICKET67==1
+Void TEncSIFO::xFree_mem2Ddouble(Double **array2D)
+{
+  if(array2D)
+  {
+    if(array2D[0])
+      free (array2D[0]);
+    else
+    {
+      printf("xFree_mem2Ddouble: trying to free unused memory");
+      exit(100);
+    }
+    free (array2D);
+  }
+}
+
+Void TEncSIFO::xFree_mem3Ddouble(Double ***array3D, Int frames)
+{
+  int i;
+
+  if(array3D)
+  {
+    for(i=0;i<frames;i++)
+    {
+      xFree_mem2Ddouble(array3D[i]);
+    }
+    free(array3D);
+  }
+}
+
+Void TEncSIFO::xFree_mem4Ddouble(Double ****array4D, Int idx, Int frames)
+{
+  int j;
+
+  if(array4D)
+  {
+    for(j=0;j<idx;j++)
+      xFree_mem3Ddouble( array4D[j], frames) ;
+    free(array4D);
+  }
+}
+#endif
 
 Void TEncSIFO::xResetSequenceFilters()
 {

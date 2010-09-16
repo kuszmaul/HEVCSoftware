@@ -152,6 +152,7 @@
 #define QC_ALF              1
 #if QC_ALF
 #define ENABLE_FORCECOEFF0  0
+#define ALF_MEM_PATCH       1
 #endif
 #if (QC_ALF && HHI_ALF)
 #error "Only one of QC_ALF and HHI_ALF can be defined"
@@ -189,6 +190,8 @@ void normalizeScanStats();
 #define BUGFIX50TMP 0 // for compatibility with previous versions without the crash
 #define SCAN_LUT_FIX 1
 #define ROUNDING_CONTROL_BIPRED_FIX
+#define FIX_TICKET67  1     // solves memory leak problem in SIFO
+#define FIX_TICKET92  1     // faster SIFO encoder (encoder only change)
 #endif // V0_7_COMPAT
 
 ///////////////////////////////
