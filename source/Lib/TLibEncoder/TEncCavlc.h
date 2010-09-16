@@ -96,12 +96,18 @@ protected:
   UInt m_uiBitIntraDir;
   UInt m_uiBitIRefFrmIdx;
   UInt m_uiBitMVD;
+#ifdef DCM_PBIC
+  UInt m_uiBitMVDICD;
+#endif
   UInt m_uiBitDeltaQP;
   UInt m_uiBitCbf;
   UInt m_uiBitAlfFlag;
   UInt m_uiBitAlfUvlc;
   UInt m_uiBitAlfSvlc;
   UInt m_uiBitMVPIdx;
+#ifdef DCM_PBIC
+  UInt m_uiBitICPIdx;
+#endif
   UInt m_uiBitPlanarInfo;
   UInt m_uiBitInterDir;
 #if LCEC_PHASE2
@@ -252,7 +258,11 @@ public:
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 #ifdef DCM_PBIC
   Void codeMvdIcd        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+#if LCEC_STAT
+  UInt codeZTree         ( TComZeroTree* pcZTree, TComZTNode* pcZTNode );
+#else
   Void codeZTree         ( TComZeroTree* pcZTree, TComZTNode* pcZTNode );
+#endif
   ContextModel* getZTreeCtx ( Int iIdx );
 #endif
 
