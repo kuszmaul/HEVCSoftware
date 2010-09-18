@@ -1,3 +1,41 @@
+/*! ====================================================================================================================
+ * \file
+    TEncBinCoderMultiPIPE.cpp
+ *  \brief
+    Copyright information.
+ *  \par Copyright statements
+    HEVC (JCTVC cfp)
+
+    This software, including its corresponding source code, object code and executable, may only be used for
+    (1) research purposes or (2) for evaluation for standardisation purposes within the joint collaborative team on
+    video coding for HEVC , provided that this copyright notice and this corresponding notice appear in all copies,
+    and that the name of Research in Motion Limited not be used in advertising or publicity without specific, written
+    prior permission.  This software, as defined above, is provided as a proof-of-concept and for demonstration
+    purposes only; there is no representation about the suitability of this software, as defined above, for any purpose.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+    USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+    TRADEMARKS, Product and company names mentioned herein may be the trademarks of their respective owners.
+    Any rights not expressly granted herein are reserved.
+
+    Copyright (C) 2010 by Research in Motion Limited, Canada
+    All rights reserved.
+
+ *  \par Full Contact Information
+    Standards & Licensing Department      (standards-ipr@rim.com)
+    Research in Motion
+    122 West John Carpenter Parkway
+    Irving, TX 75039, USA
+
+ * ====================================================================================================================
+ */
+
 /* ====================================================================================================================
 
   The copyright in this software is being made available under the License included below.
@@ -35,6 +73,7 @@
 
 #include "TEncBinCoderMultiPIPE.h"
 
+#define BALANCED_SEGMENT_SIZE 128
 
 TEncBinMultiPIPE::TEncBinMultiPIPE()
 : m_pacStat2Idx( TEncPIPETables::sm_State2Idx )
@@ -63,6 +102,7 @@ TEncBinMultiPIPE::start()
   {
     m_acBinBuffer[ uiIdx ].reset();
   }
+  lbTempSpace.clear();
 }
 
 Void
@@ -72,6 +112,7 @@ TEncBinMultiPIPE::finish()
   UInt  auiWrittenBits[ NUM_V2V_CODERS ];
   UInt  uiNumOverallBits = 0;
   m_cBitBuffer.reset();
+  uiBalancedOffset = 0;
   for( UInt uiIdx = NUM_V2V_CODERS - 1; uiIdx > 0; uiIdx-- )
   {
     xEncode( uiIdx, auiWrittenBits[ uiIdx ] );
@@ -85,6 +126,12 @@ TEncBinMultiPIPE::finish()
     Int   iDiff   = Int( auiWrittenBits[ uiIdx ] ) - Int( auiWrittenBits[ uiIdx + 1 ] );
     UInt  uiCode  = ( iDiff < 0 ? ( UInt( -iDiff ) << 1 ) - 1 : UInt( iDiff ) << 1 );
     xEncodePartSize( m_pcTComBitIf, uiCode );
+  }
+
+  //===== write load balancing information =====
+  for (UInt uiIdx = 1; uiIdx < m_uiBalancedCPUs; ++uiIdx) {
+      m_pcTComBitIf->write( lbTempSpace[uiIdx * uiNumOverallBits
+            / BALANCED_SEGMENT_SIZE / m_uiBalancedCPUs], 8 );
   }
 
   //===== write data of partitions 11-1 to bitstream =====
@@ -184,14 +231,26 @@ TEncBinMultiPIPE::xEncode( UInt uiIdx, UInt& ruiWrittenBits )
     ui64CW  = paui64Codeword[ uiState ];
     if( ui64CW )
     {
-      m_cBitBuffer.insertBits( UInt( ui64CW >> 6 ), UInt( ui64CW & 63 ) );
+      UInt uiLength = UInt( ui64CW & 63 );
+      m_cBitBuffer.insertBits( UInt( ui64CW >> 6 ), uiLength );
+      uiBalancedOffset += uiLength;
+      if (uiBalancedOffset >= BALANCED_SEGMENT_SIZE) {
+          lbTempSpace << (uiBalancedOffset - BALANCED_SEGMENT_SIZE);
+          uiBalancedOffset -= BALANCED_SEGMENT_SIZE;
+      }
       uiState = 0;
     }
   }
   if( uiState )
   {
     ui64CW  = paui64Codeword[ paucStateTrans[ ( uiState << 2 ) + 2 ] ];
-    m_cBitBuffer.insertBits ( UInt( ui64CW >> 6 ), UInt( ui64CW & 63 ) );
+    UInt uiLength = UInt( ui64CW & 63 );
+    m_cBitBuffer.insertBits ( UInt( ui64CW >> 6 ), uiLength );
+    uiBalancedOffset += uiLength;
+    if (uiBalancedOffset >= BALANCED_SEGMENT_SIZE) {
+        lbTempSpace << (uiBalancedOffset - BALANCED_SEGMENT_SIZE);
+        uiBalancedOffset -= BALANCED_SEGMENT_SIZE;
+    }
   }
   ruiWrittenBits = m_cBitBuffer.getWrittenBits() - uiStartBits;
 }
