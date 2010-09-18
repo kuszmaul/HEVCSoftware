@@ -120,6 +120,7 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
     else if( pcSlice->getMultiCodeword() )
     {
       m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinMultiPIPE );
+      m_pcBinMultiPIPE->setBalancedCPUs( getBalancedCPUs() );
     }
     else
     {
