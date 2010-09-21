@@ -42,90 +42,83 @@
 
 #include "TypeDef.h"
 
-// Templates the C way
+class DynamicExtentUChar {
+    friend class DynamicArrayUChar;
 
-#define DYNAMICARRAY(type)              \
-class DynamicExtent ## type {           \
-    friend class DynamicArray ## type;  \
-                                        \
-    UInt size;                          \
-    type *data;                         \
-    DynamicExtent ## type *next;        \
-                                        \
-    DynamicExtent ## type (UInt size) { \
-        this->size = size;              \
-        data = new type[size];          \
-        next = 0;                       \
-    }                                   \
-                                        \
-    ~DynamicExtent ## type () {         \
-        delete next;                    \
-        delete [] data;                 \
-    }                                   \
-};                                      \
-                                        \
-class DynamicArray ## type {                   \
-public:                                        \
-    type & operator[] (UInt index) {           \
-        if (index >= totalCount) {             \
-        }                                      \
-        UInt size = 0;                         \
-        DynamicExtent ## type *ext = headExt;  \
-        while (size + ext->size <= index) {    \
-            size += ext->size;                 \
-            ext = ext->next;                   \
-        }                                      \
-        return ext->data[index - size];        \
-    }                                          \
-                                               \
-    DynamicArray ## type & operator<< (type value) {                   \
-        if (writePos == writeExt->size) {                              \
-            writeExt->next = new DynamicExtent##type(totalSize / 2);   \
-            totalSize += totalSize / 2;        \
-            writeExt = writeExt->next;         \
-            writePos = 0;                      \
-        }                                      \
-        writeExt->data[writePos++] = value;    \
-        ++totalCount;                          \
-        return *this;                          \
-    }                                          \
-                                               \
-    DynamicArray ## type & operator>> (type &value) {                  \
-        if (readExt == writeExt && readPos == writePos) {              \
-        }                                      \
-        if (readPos == readExt->size) {        \
-            readExt = readExt->next;           \
-            readPos = 0;                       \
-        }                                      \
-        value = readExt->data[readPos++];      \
-        return *this;                          \
-    }                                          \
-                                               \
-    DynamicArray ## type () {                  \
-        readExt = writeExt =                   \
-        headExt = new DynamicExtent ## type(totalSize = 1000);         \
-        readPos = writePos = totalCount = 0;   \
-    }                                          \
-    ~DynamicArray ## type () {                 \
-        delete headExt;                        \
-    }                                          \
-                                               \
-    void clear () {                            \
-        delete headExt;                        \
-        readExt = writeExt =                   \
-        headExt = new DynamicExtent ## type(totalSize = 1000);         \
-        readPos = writePos = totalCount = 0;   \
-    }                                          \
-                                               \
-private:                                       \
-    DynamicExtent ## type *headExt;            \
-    DynamicExtent ## type *readExt, *writeExt; \
-    UInt readPos, writePos, totalSize, totalCount;                     \
-}
+    UInt size;
+    UChar *data;
+    DynamicExtentUChar *next;
 
-DYNAMICARRAY(UInt);
-DYNAMICARRAY(UChar);
+    DynamicExtentUChar (UInt size) {
+        this->size = size;
+        data = new UChar[size];
+        next = 0;
+    }
 
+    ~DynamicExtentUChar () {
+        delete next;
+        delete [] data;
+    }
+};
+
+class DynamicArrayUChar {
+public:
+    UChar & operator[] (UInt index) {
+        if (index >= totalCount) {
+        }
+        UInt size = 0;
+        DynamicExtentUChar *ext = headExt;
+        while (size + ext->size <= index) {
+            size += ext->size;
+            ext = ext->next;
+        }
+        return ext->data[index - size];
+    }
+
+    DynamicArrayUChar & operator<< (UChar value) {
+        if (writePos == writeExt->size) {
+            writeExt->next = new DynamicExtentUChar(totalSize / 2);
+            totalSize += totalSize / 2;
+            writeExt = writeExt->next;
+            writePos = 0;
+        }
+        writeExt->data[writePos++] = value;
+        ++totalCount;
+        return *this;
+    }
+
+    DynamicArrayUChar & operator>> (UChar &value) {
+        if (readExt == writeExt && readPos == writePos) {
+        }
+        if (readPos == readExt->size) {
+            readExt = readExt->next;
+            readPos = 0;
+        }
+        value = readExt->data[readPos++];
+        return *this;
+    }
+
+    DynamicArrayUChar () {
+        readExt = writeExt =
+        headExt = new DynamicExtentUChar(totalSize = 1000);
+        readPos = writePos = totalCount = 0;
+    }
+    ~DynamicArrayUChar () {
+        delete headExt;
+    }
+
+    void clear () {
+        delete headExt;
+        readExt = writeExt =
+        headExt = new DynamicExtentUChar(totalSize = 1000);
+        readPos = writePos = totalCount = 0;
+    }
+
+private:
+    DynamicExtentUChar *headExt;
+    DynamicExtentUChar *readExt, *writeExt;
+    UInt readPos, writePos, totalSize, totalCount;
+};
 
 #endif
 
