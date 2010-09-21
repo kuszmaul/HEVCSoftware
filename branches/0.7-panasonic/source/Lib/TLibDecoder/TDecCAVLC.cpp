@@ -1364,7 +1364,28 @@ Void TDecCavlc::parseAlfFlag (UInt& ruiVal)
 #if (WIENER_3_INPUT && !QC_ALF)
 Int TDecCavlc::golombDecode(Int k)
 {
-  //tbd
+  Int iSymbol;
+  UInt uiSymbol;
+  Int q = -1;
+  Int nr = 0;
+  Int m = (Int)pow(2.0, k);
+  Int a;
+  
+  parseAlfSvlc (iSymbol);
+  q=iSymbol;
+  
+  for(a = 0; a < k; ++a)          // read out the sequential log2(M) bits
+  {
+    parseAlfFlag(uiSymbol);
+    if(uiSymbol)
+      nr += 1 << a;
+  }
+  nr += q * m;                    // add the bits and the multiple of M
+  if(nr != 0){
+    parseAlfFlag(uiSymbol);
+    nr = (uiSymbol)? nr: -nr;
+  }
+  return nr;
 }
 #endif
 Void TDecCavlc::parseAlfUvlc (UInt& ruiVal)
