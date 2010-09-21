@@ -359,6 +359,7 @@ private:
   Void   xCalcRDCost					( ALFParam* pAlfParam, UInt64& ruiRate, UInt64 uiDist, Double& rdCost );
   Int		 xGauss								( Double **a, Int N );
 #if WIENER_3_INPUT
+  Void   sgaus  (double **a, double *x, double *b, int n);  
   Void   xCalcRDCost_precision     (imgpel** ImgOrg, imgpel** imgCmp, Int width, Int height, ALFParam* pAlfParam, Int64& iRate, Int64& iDist, Double& rdCost);
 #endif
 protected:
@@ -398,10 +399,10 @@ public:
   Void xcodeFiltCoeff(Int **filterCoeffSymQuant, Int filtNo, int filtNo_pred, int filtNo_resi, Int varIndTab[], Int filters_per_fr_best, Int frNo, ALFParam* ALFp);
   Void xfindBestFilterVarPred(double **ySym, double ***ESym, double *pixAcc, Int **filterCoeffSym, Int **filterCoeffSymQuant,
         Int filtNo, int filtNo_pred, int filtNo_resi, Int *filters_per_fr_best, Int varIndTab[], imgpel **imgY_rec, imgpel **varImg, 
-        imgpel **maskImg, imgpel **imgY_pad, double lambda_val, int shift_rec, int shift_pred, int shift_resi);
+        imgpel **maskImg, imgpel **imgY_pad, double lambda_val, int prec_rec, int prec_pred, int prec_resi, int shift_rec, int shift_pred, int shift_resi);
   Void xcollectStatCodeFilterCoeffForce0(int **pDiffQFilterCoeffIntPP, int fl, int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int filters_per_group, 
         int bitsVarBin[]);
-  double xfindBestCoeffCodMethod(int codedVarBins[NO_VAR_BINS], int *forceCoeff0, int bits_rec, int bits_pred, int bits_resi,
+  double xfindBestCoeffCodMethod(int codedVarBins[NO_VAR_BINS], int *forceCoeff0, int prec_rec, int prec_pred, int prec_resi,
                               int **filterCoeffSymQuant, int fl, int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi,
                               int filters_per_fr, double errorForce0CoeffTab[NO_VAR_BINS][2], 
                               double *errorQuant, double lambda);
@@ -416,9 +417,9 @@ public:
   Void xFirstFilteringFrameLuma(imgpel** ImgOrg, imgpel** ImgDec, imgpel** ImgRest, imgpel** ImgResi, imgpel** ImgPred, ALFParam* ALFp, Int tap);
   Void xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, TComPicYuv* pcPicPred, TComPicYuv* pcPicResi, UInt64& ruiMinRate, 
         UInt64& ruiMinDist, Double& rdMinCost );
-  Int xsendAllFiltersPPPredForce0(int **FilterCoeffQuant, int fl, int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int bits_rec, int bits_pred, int bits_resi, int filters_per_group, 
+  Int xsendAllFiltersPPPredForce0(int **FilterCoeffQuant, int fl, int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int prec_rec, int prec_pred, int prec_resi, int filters_per_group, 
                                int codedVarBins[NO_VAR_BINS], int createBistream, ALFParam* ALFp);
-  Int xsendAllFiltersPPPred(int **FilterCoeffQuant, int fl, int sqrFiltLength,  int sqrFiltLength_pred, int sqrFiltLength_resi, int bits_rec, int bits_pred, int bits_resi,
+  Int xsendAllFiltersPPPred(int **FilterCoeffQuant, int fl, int sqrFiltLength,  int sqrFiltLength_pred, int sqrFiltLength_resi, int prec_rec, int prec_pred, int prec_resi,
                          int filters_per_group, int createBistream, ALFParam* ALFp);
 #else  
   Void xReDesignFilterCoeff_qc          (TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec,  TComPicYuv* pcPicRest, Bool bReadCorr);
@@ -461,7 +462,7 @@ public:
         int **filterCoeffQuantSeq, int intervalBest[NO_VAR_BINS][2], int varIndTab[NO_VAR_BINS], int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, 
         int filters_per_fr, int *weights, int shift_rec, int shift_pred, int shift_resi, double errorTabForce0Coeff[NO_VAR_BINS][2]);
   Double QuantizeIntegerFilterPP(double *filterCoeff, int *filterCoeffQuant, double **E, double *y, 
-        int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int *weights, int bit_depth_rec, int bit_depth_pred, int bit_depth_resi);
+        int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int *weights, int shift_rec, int shift_pred, int shift_resi);
   Void roundFiltCoeff(int *FilterCoeffQuan, double *FilterCoeff, int sqrFiltLength, int sqrFiltLength_pred, int sqrFiltLength_resi, int factor_rec, int factor_pred, int factor_resi);
 #else  
   Double findFilterCoeff(double ***EGlobalSeq, double **yGlobalSeq, double *pixAccGlobalSeq, int **filterCoeffSeq,
