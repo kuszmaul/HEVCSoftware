@@ -211,6 +211,10 @@ public:
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if TSB_ALF_HEADER
+  Void codeAlfFlagNum    ( UInt uiCode, UInt minValue );
+  Void codeAlfCtrlFlag   ( UInt uiSymbol );
+#endif
 
 #if HHI_ALF
   Void codeAlfCoeff           ( Int iCoeff, Int iLength, Int iPos );

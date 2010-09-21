@@ -2465,6 +2465,45 @@ Void TDecSbac::parseAlfFlag (UInt& ruiVal)
   ruiVal = uiSymbol;
 }
 
+#if TSB_ALF_HEADER
+Void TDecSbac::parseAlfFlagNum( UInt& ruiVal, UInt minValue, UInt depth )
+{
+  UInt uiLength = 0;
+  UInt maxValue = (minValue << (depth*2));
+  UInt temp = maxValue - minValue;
+  for(UInt i=0; i<32; i++)
+  {
+    if(temp&0x1)
+    {
+      uiLength = i+1;
+    }
+    temp = (temp >> 1);
+  }
+  ruiVal = 0;
+  UInt uiBit;
+  if(uiLength)
+  {
+    while( uiLength-- )
+    {
+      m_pcTDecBinIf->decodeBinEP( uiBit );
+      ruiVal += uiBit << uiLength;
+    }
+  }
+  else
+  {
+    ruiVal = 0;
+  }
+  ruiVal += minValue;
+}
+
+Void TDecSbac::parseAlfCtrlFlag( UInt &ruiAlfCtrlFlag )
+{
+  UInt uiSymbol;
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUAlfCtrlFlagSCModel.get( 0, 0, 0 ) );
+  ruiAlfCtrlFlag = uiSymbol;
+}
+#endif
+
 Void TDecSbac::parseAlfUvlc (UInt& ruiVal)
 {
   UInt uiCode;

@@ -1875,6 +1875,39 @@ Void TDecCavlc::parseAlfFlag (UInt& ruiVal)
   xReadFlag( ruiVal );
 }
 
+#if TSB_ALF_HEADER
+Void TDecCavlc::parseAlfFlagNum( UInt& ruiVal, UInt minValue, UInt depth )
+{
+  UInt uiLength = 0;
+  UInt maxValue = (minValue << (depth*2));
+  UInt temp = maxValue - minValue;
+  for(UInt i=0; i<32; i++)
+  {
+    if(temp&0x1)
+    {
+      uiLength = i+1;
+    }
+    temp = (temp >> 1);
+  }
+  if(uiLength)
+  {
+    xReadCode( uiLength, ruiVal );
+  }
+  else
+  {
+    ruiVal = 0;
+  }
+  ruiVal += minValue;
+}
+
+Void TDecCavlc::parseAlfCtrlFlag( UInt &ruiAlfCtrlFlag )
+{
+  UInt uiSymbol;
+  xReadFlag( uiSymbol );
+  ruiAlfCtrlFlag = uiSymbol;
+}
+#endif
+
 Void TDecCavlc::parseAlfUvlc (UInt& ruiVal)
 {
   xReadUvlc( ruiVal );

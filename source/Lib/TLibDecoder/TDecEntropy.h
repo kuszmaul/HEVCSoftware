@@ -137,6 +137,10 @@ public:
   virtual Void parseAlfSvlc       ( Int&  riVal            ) = 0;
   virtual Void parseAlfCtrlDepth  ( UInt& ruiAlfCtrlDepth  ) = 0;
   virtual Void parseAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if TSB_ALF_HEADER
+  virtual Void parseAlfFlagNum    ( UInt& ruiVal, UInt minValue, UInt depth ) = 0;
+  virtual Void parseAlfCtrlFlag   ( UInt &ruiAlfCtrlFlag ) = 0;
+#endif
 
 #if HHI_ALF
   virtual Void parseAlfCoeff      ( Int&  riCoeff, Int iLength, Int iPos                               ) = 0;
@@ -206,6 +210,9 @@ public:
 #endif
 #endif
   Void decodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if TSB_ALF_HEADER
+  Void decodeAlfCtrlParam      ( ALFParam *pAlfParam );
+#endif
 
 #if HHI_ALF
   Void decodeAlfQuadTree       ( TComPicSym* pcQuadTree, UInt uiMaxDepth );

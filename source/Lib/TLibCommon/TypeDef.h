@@ -233,6 +233,17 @@ void normalizeScanStats();
 // DOCOMO defines section end
 ///////////////////////////////
 
+////////////////////////////////
+// TOSHIBA defines section start
+////////////////////////////////
+#define TSB_ALF_HEADER                 1           // Send ALF ON/OFF flag in slice header
+#if (TSB_ALF_HEADER && HHI_ALF)
+#error "Only one of TSB_ALF_HEADER and HHI_ALF can be defined"
+#endif
+////////////////////////////////
+// TOSHIBA defines section end
+////////////////////////////////
+
 #define BUGFIX85TMP 1 // Ignore cost of CBF (affects RQT off setting)
 
 // ====================================================================================================================
@@ -331,6 +342,12 @@ struct _AlfParam
   Int minKStart;
   Int maxScanVal;
   Int kMinTab[42];
+#endif
+#if TSB_ALF_HEADER
+  UInt num_alf_cu_flag;
+  UInt num_cus_in_frame;
+  UInt alf_max_depth;
+  UInt *alf_cu_flag;
 #endif
 };
 

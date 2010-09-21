@@ -598,6 +598,18 @@ Void TEncEntropy::encodeAlfCtrlFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
 }
 #endif
 
+#if TSB_ALF_HEADER
+Void TEncEntropy::encodeAlfCtrlParam( ALFParam* pAlfParam )
+{
+  m_pcEntropyCoderIf->codeAlfFlagNum( pAlfParam->num_alf_cu_flag, pAlfParam->num_cus_in_frame );
+
+  for(UInt i=0; i<pAlfParam->num_alf_cu_flag; i++)
+  {
+    m_pcEntropyCoderIf->codeAlfCtrlFlag( pAlfParam->alf_cu_flag[i] );
+  }
+}
+#endif
+
 Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
