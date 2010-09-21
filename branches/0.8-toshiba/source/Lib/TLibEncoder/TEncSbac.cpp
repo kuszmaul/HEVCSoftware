@@ -2287,6 +2287,37 @@ Void TEncSbac::codeAlfFlag       ( UInt uiCode )
   m_pcBinIf->encodeBin( uiSymbol, m_cALFFlagSCModel.get( 0, 0, 0 ) );
 }
 
+#if TSB_ALF_HEADER
+Void TEncSbac::codeAlfFlagNum( UInt uiCode, UInt minValue )
+{
+  UInt uiLength = 0;
+  UInt maxValue = (minValue << (this->getMaxAlfCtrlDepth()*2));
+  assert((uiCode>=minValue)&&(uiCode<=maxValue));
+  UInt temp = maxValue - minValue;
+  for(UInt i=0; i<32; i++)
+  {
+    if(temp&0x1)
+    {
+      uiLength = i+1;
+    }
+    temp = (temp >> 1);
+  }
+  UInt uiSymbol = uiCode - minValue;
+  if(uiLength)
+  {
+    while( uiLength-- )
+    {
+      m_pcBinIf->encodeBinEP( (uiSymbol>>uiLength) & 0x1 );
+    }
+  }
+}
+
+Void TEncSbac::codeAlfCtrlFlag( UInt uiSymbol )
+{
+  m_pcBinIf->encodeBin( uiSymbol, m_cCUAlfCtrlFlagSCModel.get( 0, 0, 0) );
+}
+#endif
+
 Void TEncSbac::codeAlfUvlc       ( UInt uiCode )
 {
   Int i;

@@ -2482,6 +2482,33 @@ Void TEncCavlc::codeAlfFlag( UInt uiCode )
 #endif
 }
 
+#if TSB_ALF_HEADER
+Void TEncCavlc::codeAlfFlagNum( UInt uiCode, UInt minValue )
+{
+  UInt uiLength = 0;
+  UInt maxValue = (minValue << (this->getMaxAlfCtrlDepth()*2));
+  assert((uiCode>=minValue)&&(uiCode<=maxValue));
+  UInt temp = maxValue - minValue;
+  for(UInt i=0; i<32; i++)
+  {
+    if(temp&0x1)
+    {
+      uiLength = i+1;
+    }
+    temp = (temp >> 1);
+  }
+  if(uiLength)
+  {
+    xWriteCode( uiCode - minValue, uiLength );
+  }
+}
+
+Void TEncCavlc::codeAlfCtrlFlag( UInt uiSymbol )
+{
+  xWriteFlag( uiSymbol );
+}
+#endif
+
 Void TEncCavlc::codeAlfUvlc( UInt uiCode )
 {
 #if LCEC_STAT

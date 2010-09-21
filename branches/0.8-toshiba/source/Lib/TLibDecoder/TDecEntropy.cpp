@@ -540,11 +540,29 @@ Void TDecEntropy::decodeAlfParam(ALFParam* pAlfParam)
     m_pcEntropyDecoderIf->setAlfCtrl(true);
     m_pcEntropyDecoderIf->parseAlfCtrlDepth(uiSymbol);
     m_pcEntropyDecoderIf->setMaxAlfCtrlDepth(uiSymbol);
+#if TSB_ALF_HEADER
+    pAlfParam->alf_max_depth = uiSymbol;
+    decodeAlfCtrlParam(pAlfParam);
+#endif
   }
   else
   {
     m_pcEntropyDecoderIf->setAlfCtrl(false);
     m_pcEntropyDecoderIf->setMaxAlfCtrlDepth(0); //unncessary
+  }
+}
+#endif
+
+#if TSB_ALF_HEADER
+Void TDecEntropy::decodeAlfCtrlParam( ALFParam* pAlfParam )
+{
+  UInt uiSymbol;
+  m_pcEntropyDecoderIf->parseAlfFlagNum( uiSymbol, pAlfParam->num_cus_in_frame, pAlfParam->alf_max_depth );
+  pAlfParam->num_alf_cu_flag = uiSymbol;
+
+  for(UInt i=0; i<pAlfParam->num_alf_cu_flag; i++)
+  {
+    m_pcEntropyDecoderIf->parseAlfCtrlFlag( pAlfParam->alf_cu_flag[i] );
   }
 }
 #endif

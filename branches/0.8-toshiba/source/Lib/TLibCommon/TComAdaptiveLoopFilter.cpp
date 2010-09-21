@@ -1326,6 +1326,11 @@ Void TComAdaptiveLoopFilter::allocALFParam(ALFParam* pAlfParam)
     ::memset(pAlfParam->coeffmulti[i],				0, sizeof(Int)*ALF_MAX_NUM_COEF		);
   }
 #endif
+#if TSB_ALF_HEADER
+  pAlfParam->num_cus_in_frame = m_uiNumCUsInFrame;
+  pAlfParam->num_alf_cu_flag  = 0;
+  pAlfParam->alf_cu_flag      = new UInt[(m_uiNumCUsInFrame << ((g_uiMaxCUDepth-1)*2))];
+#endif
 }
 
 Void TComAdaptiveLoopFilter::freeALFParam(ALFParam* pAlfParam)
@@ -1351,6 +1356,13 @@ Void TComAdaptiveLoopFilter::freeALFParam(ALFParam* pAlfParam)
   }
   delete[] pAlfParam->coeffmulti;
   pAlfParam->coeffmulti = NULL;
+#endif
+#if TSB_ALF_HEADER
+  if(pAlfParam->alf_cu_flag != NULL)
+  {
+    delete[] pAlfParam->alf_cu_flag;
+    pAlfParam->alf_cu_flag = NULL;
+  }
 #endif
 }
 
@@ -1384,6 +1396,10 @@ Void TComAdaptiveLoopFilter::copyALFParam(ALFParam* pDesAlfParam, ALFParam* pSrc
     ::memcpy(pDesAlfParam->coeffmulti[i], pSrcAlfParam->coeffmulti[i], sizeof(Int)*ALF_MAX_NUM_COEF);
   }
 
+#endif
+#if TSB_ALF_HEADER
+  pDesAlfParam->num_alf_cu_flag = pSrcAlfParam->num_alf_cu_flag;
+  ::memcpy(pDesAlfParam->alf_cu_flag, pSrcAlfParam->alf_cu_flag, sizeof(UInt)*pSrcAlfParam->num_alf_cu_flag);
 #endif
 }
 
@@ -1477,6 +1493,17 @@ Void TComAdaptiveLoopFilter::ALFProcess(TComPic* pcPic, ALFParam* pcAlfParam)
 	pcPicYuvExtRec->setBorderExtension	( false );
   pcPicYuvExtRec->extendPicBorder			();
 
+#if TSB_ALF_HEADER
+  if(pcAlfParam->cu_control_flag)
+  {
+    UInt idx = 0;
+    for(UInt uiCUAddr = 0; uiCUAddr < pcPic->getNumCUsInFrame(); uiCUAddr++)
+    {
+      TComDataCU *pcCU = pcPic->getCU(uiCUAddr);
+      setAlfCtrlFlags(pcAlfParam, pcCU, 0, 0, idx);
+    }
+  }
+#endif
 #if QC_ALF
   xALFLuma_qc(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec);
 #else
@@ -2920,4 +2947,60 @@ Void TComAdaptiveLoopFilter::xFrameChroma( TComPicYuv* pcPicDec, TComPicYuv* pcP
     break;
   }
 }
+
+#if TSB_ALF_HEADER
+Void TComAdaptiveLoopFilter::setNumCUsInFrame(TComPic *pcPic)
+{
+  m_uiNumCUsInFrame = pcPic->getNumCUsInFrame();
+}
+
+Void TComAdaptiveLoopFilter::setAlfCtrlFlags(ALFParam *pAlfParam, TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &idx)
+{
+  TComPic* pcPic = pcCU->getPic();
+  UInt uiCurNumParts    = pcPic->getNumPartInCU() >> (uiDepth<<1);
+  UInt uiQNumParts      = uiCurNumParts>>2;
+
+  Bool bBoundary = false;
+  UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
+  UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
+
+  if( ( uiRPelX >= pcCU->getSlice()->getSPS()->getWidth() ) || ( uiBPelY >= pcCU->getSlice()->getSPS()->getHeight() ) )
+  {
+    bBoundary = true;
+  }
+
+  if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
+  {
+    UInt uiIdx = uiAbsPartIdx;
+    for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++ )
+    {
+      uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiIdx] ];
+      uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiIdx] ];
+
+      if( ( uiLPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiTPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
+      {
+        setAlfCtrlFlags(pAlfParam, pcCU, uiIdx, uiDepth+1, idx);
+      }
+      uiIdx += uiQNumParts;
+    }
+
+    return;
+  }
+
+  if( uiDepth <= pAlfParam->alf_max_depth || pcCU->isFirstAbsZorderIdxInDepth(uiAbsPartIdx, pAlfParam->alf_max_depth))
+  {
+    if (uiDepth > pAlfParam->alf_max_depth)
+    {
+      pcCU->setAlfCtrlFlagSubParts(pAlfParam->alf_cu_flag[idx], uiAbsPartIdx, pAlfParam->alf_max_depth);
+    }
+    else
+    {
+      pcCU->setAlfCtrlFlagSubParts(pAlfParam->alf_cu_flag[idx], uiAbsPartIdx, uiDepth );
+    }
+    idx++;
+  }
+}
+#endif
 #endif

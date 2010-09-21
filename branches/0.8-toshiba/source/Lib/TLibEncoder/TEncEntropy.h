@@ -142,6 +142,10 @@ public:
   virtual Void codeAlfFlag          ( UInt uiCode ) = 0;
   virtual Void codeAlfUvlc          ( UInt uiCode ) = 0;
   virtual Void codeAlfSvlc          ( Int   iCode ) = 0;
+#if TSB_ALF_HEADER
+  virtual Void codeAlfFlagNum       ( UInt uiCode, UInt minValue ) = 0;
+  virtual Void codeAlfCtrlFlag      ( UInt uiSymbol ) = 0;
+#endif
 
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType) = 0;
 #ifdef QC_SIFO
@@ -204,6 +208,9 @@ public:
   Void encodeAlfQTSplitFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiMaxDepth, Bool bRD = false );
 #else
   Void encodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
+#if TSB_ALF_HEADER
+  Void encodeAlfCtrlParam      ( ALFParam *pAlfParam );
 #endif
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );

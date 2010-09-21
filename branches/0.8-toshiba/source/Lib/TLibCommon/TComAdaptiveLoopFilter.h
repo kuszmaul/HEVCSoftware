@@ -250,6 +250,10 @@ protected:
 
 
 #endif
+#if TSB_ALF_HEADER
+  UInt  m_uiNumCUsInFrame;
+  Void  setAlfCtrlFlags (ALFParam *pAlfParam, TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &idx);
+#endif
 	/// ALF for luma component
   Void	xALFLuma				( TComPic* pcPic, ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest );
 
@@ -284,6 +288,9 @@ public:
   Void	allocALFParam						( ALFParam* pAlfParam );
   Void	freeALFParam						( ALFParam* pAlfParam );
   Void	copyALFParam						( ALFParam* pDesAlfParam, ALFParam* pSrcAlfParam );
+#if TSB_ALF_HEADER
+  Void  setNumCUsInFrame        (TComPic *pcPic);
+#endif
 
 	// predict filter coefficients
   Void	predictALFCoeff					( ALFParam* pAlfParam );									///< prediction of luma ALF coefficients

@@ -661,6 +661,8 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
 
+#if TSB_ALF_HEADER
+#else
 #if HHI_ALF
   if( !pcCU->getSlice()->getSPS()->getALFSeparateQt() )
   {
@@ -668,6 +670,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
 #else
   m_pcEntropyCoder->encodeAlfCtrlFlag( pcCU, uiAbsPartIdx );
+#endif
 #endif
 
   if( !pcCU->getSlice()->isIntra() )
