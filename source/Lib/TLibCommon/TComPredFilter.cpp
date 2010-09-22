@@ -390,6 +390,12 @@ Void TComPredFilter::setDIFTap( Int i )
 #ifdef QC_SIFO
   m_uiNum_AvailableFilters = (m_iDIFTap == 6) ? 4 : 2;
   m_uiNum_SIFOFilters = m_uiNum_AvailableFilters*m_uiNum_AvailableFilters;
+
+#if SIFO_DIF_COMPATIBILITY==1
+  if(m_iDIFTap == 6)
+    m_uiNum_SIFOFilters += m_uiNum_AvailableFilters; //Directional is separate
+#endif
+
   for(i = 0; i < 16; ++i)
   {
     if (i<=4 || i==8 || i==12)
