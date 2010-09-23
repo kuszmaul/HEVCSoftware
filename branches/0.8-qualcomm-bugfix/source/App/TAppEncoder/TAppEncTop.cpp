@@ -243,7 +243,9 @@ Void TAppEncTop::encode()
       xWriteOutput( iNumEncoded );
     }
   }
-
+#if FIX_TICKET67==1  
+  m_cTEncTop.getSIFOEncoder()->destroy();
+#endif
   // delete original YUV buffer
   pcPicYuvOrg->destroy();
   delete pcPicYuvOrg;

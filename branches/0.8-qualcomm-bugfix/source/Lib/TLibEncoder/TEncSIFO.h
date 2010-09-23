@@ -127,7 +127,7 @@ public:
   TEncSIFO();
   virtual ~TEncSIFO();
 #if FIX_TICKET67==1
-  Void destropy();
+  Void destroy();
 #endif
   Void    init								( TEncTop* pcEncTop, Int Tap);
   Void    initEncSIFO				  ( TComSlice*& rpcSlice );
