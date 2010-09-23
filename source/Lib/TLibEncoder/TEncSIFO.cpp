@@ -75,17 +75,22 @@ TEncSIFO::~TEncSIFO()
 }
 
 #if FIX_TICKET67==1
-Void TEncSIFO::destropy()
+Void TEncSIFO::destroy()
 {
   if( m_pcPredSearch != NULL )
   {
     UInt num_SIFO = m_pcPredSearch->getNum_SIFOFilters();
-    xFree_mem2Ddouble(AccErrorP);
-    xFree_mem2Ddouble(SequenceAccErrorP);
-    xFree_mem4Ddouble(SequenceAccErrorB, num_SIFO, num_SIFO);
-    xFree_mem3Ddouble(SIFO_FILTER, num_SIFO);
+    if(AccErrorP)         { xFree_mem2Ddouble(AccErrorP);                             AccErrorP         = NULL; }
+    if(SequenceAccErrorP) { xFree_mem2Ddouble(SequenceAccErrorP);                     SequenceAccErrorP = NULL; }
+    if(SequenceAccErrorB) { xFree_mem4Ddouble(SequenceAccErrorB, num_SIFO, num_SIFO); SequenceAccErrorB = NULL; }
+    if (SIFO_FILTER)      { xFree_mem3Ddouble(SIFO_FILTER, num_SIFO);                 SIFO_FILTER       = NULL; }
 #if USE_DIAGONAL_FILT==1
-    xFree_mem2Ddouble(SIFO_FILTER_DIAG);
+#if SIFO_DIF_COMPATIBILITY==1
+    UInt numFilters = m_pcPredSearch->getNum_AvailableFilters();
+    if (SIFO_FILTER_DIAG) { xFree_mem3Ddouble(SIFO_FILTER_DIAG, numFilters);          SIFO_FILTER_DIAG  = NULL; }
+#else
+    if (SIFO_FILTER_DIAG) { xFree_mem2Ddouble(SIFO_FILTER_DIAG);                      SIFO_FILTER_DIAG  = NULL; }
+#endif
 #endif
   }
 }
