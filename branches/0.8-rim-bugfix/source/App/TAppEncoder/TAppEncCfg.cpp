@@ -400,7 +400,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iSymbolMode < 0 || m_iSymbolMode > 3,                                     "SymbolMode must be equal to 0, 1, 2, or 3" );
   xConfirmPara( m_uiMaxPIPEDelay != 0 && m_uiMaxPIPEDelay < 64,                             "MaxPIPEBufferDelay must be greater than or equal to 64" );
   m_uiMaxPIPEDelay = ( m_uiMCWThreshold > 0 ? 0 : ( m_uiMaxPIPEDelay >> 6 ) << 6 );
+#ifdef ENABLE_LOAD_BALANCING
   xConfirmPara( m_uiBalancedCPUs > 255,                                                     "BalancedCPUs must not be greater than 255" );
+#else
+  m_uiBalancedCPUs = 0;
+#endif
 
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;

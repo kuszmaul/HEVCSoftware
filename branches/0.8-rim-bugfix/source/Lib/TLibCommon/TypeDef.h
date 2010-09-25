@@ -233,6 +233,18 @@ void normalizeScanStats();
 // DOCOMO defines section end
 ///////////////////////////////
 
+
+////////////////////////////
+// RIM defines section start
+////////////////////////////
+
+//#define ENABLE_LOAD_BALANCING
+#define BALANCED_SEGMENT_SIZE 128
+
+////////////////////////////
+// RIM defines section end
+////////////////////////////
+
 #define BUGFIX85TMP 1 // Ignore cost of CBF (affects RQT off setting)
 
 // ====================================================================================================================

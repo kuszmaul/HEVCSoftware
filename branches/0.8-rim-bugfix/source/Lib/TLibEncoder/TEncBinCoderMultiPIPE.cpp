@@ -73,8 +73,6 @@
 
 #include "TEncBinCoderMultiPIPE.h"
 
-#define BALANCED_SEGMENT_SIZE 128
-
 TEncBinMultiPIPE::TEncBinMultiPIPE()
 : m_pacStat2Idx( TEncPIPETables::sm_State2Idx )
 {
