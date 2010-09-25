@@ -73,8 +73,6 @@
 
 #include "TDecBinCoderMultiPIPE.h"
 
-#define BALANCED_SEGMENT_SIZE 128
-
 
 TDecBinMultiPIPE::TDecBinMultiPIPE()
 : m_pacState2Idx( TDecPIPETables::sm_State2Idx )
@@ -103,13 +101,12 @@ TDecBinMultiPIPE::start()
 {
   //===== read partition sizes =====
   UInt auiWrittenBits[ NUM_V2V_CODERS ];
-  UInt  uiNumOverallBits = 0;
-  uiNumOverallBits += auiWrittenBits[ NUM_V2V_CODERS - 1 ] = xDecodePartSize( m_pcTComBitstream );
+  auiWrittenBits[ NUM_V2V_CODERS - 1 ] = xDecodePartSize( m_pcTComBitstream );
   for( UInt uiIdx = NUM_V2V_CODERS - 2; uiIdx > 0; uiIdx-- )
   {
     UInt  uiCode            = xDecodePartSize( m_pcTComBitstream );
     Int   iDiff             = ( uiCode & 1 ? -Int( ( uiCode + 1 ) >> 1 ) : Int( uiCode >> 1 ) );
-    uiNumOverallBits += auiWrittenBits[ uiIdx ] = UInt( (Int)auiWrittenBits[ uiIdx + 1 ] + iDiff );
+    auiWrittenBits[ uiIdx ] = UInt( (Int)auiWrittenBits[ uiIdx + 1 ] + iDiff );
   }
 
   //===== read load balancing information; ignore for now =====

@@ -425,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComDynamicArray.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComEdgeBased.h"
 				>
 			</File>
