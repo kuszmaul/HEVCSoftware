@@ -47,7 +47,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "trunk"                 ///< Current software version
+#define NV_VERSION        "0.7-panasonic"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
