@@ -1735,7 +1735,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
     {
       piCoeff[ pucScan[ uiScanning ] ] = scoeff[15-uiScanning];
 
-#if QC_MDDT//VLC_MDDT ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0//VLC_MDDT ADAPTIVE_SCAN
       if(scoeff[15-uiScanning])
       {
         if(pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)//  && (uiWidth == 4 && ipredmode<=8&&indexROT == 0))
@@ -1764,7 +1764,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
     {
       piCoeff[ pucScan[ uiScanning ] ] = scoeff[63-uiScanning];
 
-#if QC_MDDT//VLC_MDDT ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0//VLC_MDDT ADAPTIVE_SCAN
       if(scoeff[63-uiScanning])
       {
         if(pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)//  && (uiWidth == 8 && ipredmode<=8 && indexROT == 0))
@@ -1815,11 +1815,13 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       {
         if(piCoeff[ pucScan[ uiScanning ] ] = scoeff[63-uiScanning])
         {
+#if DISABLE_ADAPTIVE_SCAN == 0
           if(eTType == TEXT_LUMA)
 #if FAST_ADAPTIVE_SCAN
           updateScan(scanStats, pucScan, uiScanning, maxCount);
 #else
           scanStats[uiScanning]++;
+#endif
 #endif
         }
       }

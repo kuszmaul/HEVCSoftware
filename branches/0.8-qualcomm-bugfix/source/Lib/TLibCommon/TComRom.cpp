@@ -6172,6 +6172,9 @@ void InitScanOrderForSlice()
 }
 void updateScanOrder(int first)
 {
+#if DISABLE_ADAPTIVE_SCAN
+  return;
+#endif
   int ipredmode;
 
   int orderChanged;
@@ -6405,6 +6408,9 @@ static void scaleScanStats(UInt *stats, int size)
 
 void normalizeScanStats()
 {
+#if DISABLE_ADAPTIVE_SCAN
+  return;
+#endif
   int ipredmode;
 
     for(ipredmode = 0; ipredmode < 9; ipredmode++)

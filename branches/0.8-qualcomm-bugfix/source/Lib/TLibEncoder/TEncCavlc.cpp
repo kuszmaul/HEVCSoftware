@@ -2368,7 +2368,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
     {
       scoeff[15-uiScanning] = piCoeff[ pucScan[ uiScanning ] ];
 
-#if QC_MDDT// VLC_MDDT ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0 // VLC_MDDT ADAPTIVE_SCAN
       if(scoeff[15-uiScanning])
       {
         if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)// && (uiWidth == 4 && uiMode<=8&&indexROT == 0))
@@ -2392,7 +2392,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
     {
       scoeff[63-uiScanning] = piCoeff[ pucScan[ uiScanning ] ];
 
-#if QC_MDDT// VLC_MDDT ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0 // VLC_MDDT ADAPTIVE_SCAN
       if(scoeff[63-uiScanning])
       {
         if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)// && (uiWidth == 8 && uiMode<=8 && indexROT == 0))
@@ -2441,11 +2441,13 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       {
         if(scoeff[63-uiScanning] = piCoeff[ pucScan[ uiScanning ] ])
         {
+#if DISABLE_ADAPTIVE_SCAN == 0
           if(g_bUpdateStats && eTType == TEXT_LUMA )
 #if FAST_ADAPTIVE_SCAN
           updateScan(scanStats, pucScan, uiScanning, maxCount);
 #else
           scanStats[uiScanning]++;
+#endif
 #endif
         }
       }
