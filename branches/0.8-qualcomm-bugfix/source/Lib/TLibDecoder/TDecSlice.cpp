@@ -92,7 +92,12 @@ Void TDecSlice::decompressSlice(TComBitstream* pcBitstream, TComPic*& rpcPic)
   TComDataCU* pcCU;
   UInt        uiIsLast = 0;
 #if QC_MDDT//ADAPTIVE_SCAN
-    InitScanOrderForSlice(); 
+#if FAST_ADAPTIVE_SCAN
+  Int iSymbolMode = rpcPic->getSlice()->getSymbolMode();
+  InitScanOrderForSlice(iSymbolMode);
+#else
+    InitScanOrderForSlice();
+#endif
 #endif
   // decoder don't need prediction & residual frame buffer
   rpcPic->setPicYuvPred( 0 );
@@ -125,8 +130,12 @@ Void TDecSlice::decompressSlice(TComBitstream* pcBitstream, TComPic*& rpcPic)
     m_pcCuDecoder->decompressCU ( pcCU );
 
 #if QC_MDDT//ADAPTIVE_SCAN
+#if FAST_ADAPTIVE_SCAN
+    updateScanOrder(iSymbolMode);
+#else
     updateScanOrder(0);
     normalizeScanStats();
+#endif
 #endif
 #if HHI_RQT
 #if ENC_DEC_TRACE

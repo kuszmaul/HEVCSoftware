@@ -531,7 +531,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_uiPicDist       = 0;
 
 #if QC_MDDT
-    InitScanOrderForSlice(); 
+#if FAST_ADAPTIVE_SCAN
+  Int iSymbolMode = rpcPic->getSlice()->getSymbolMode();
+  InitScanOrderForSlice(iSymbolMode);
+#else
+    InitScanOrderForSlice();
+#endif
 #endif
 
   // set entropy coder
@@ -583,10 +588,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
 
       m_pcCuEncoder->encodeCU( pcCU );
-#if QC_MDDT//ADAPTIVE_SCAN
-      updateScanOrder(0);
-      normalizeScanStats();
-#endif
     }
     // other case: encodeCU is not called
     else
@@ -596,13 +597,17 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       m_pcCavlcCoder ->setAdaptFlag(true);
       m_pcCuEncoder->encodeCU( pcCU );
 
-#if QC_MDDT
-      updateScanOrder(0);
-	    normalizeScanStats();
-#endif
       m_pcCavlcCoder ->setAdaptFlag(false);
 #endif
     }
+#if QC_MDDT
+#if FAST_ADAPTIVE_SCAN
+    updateScanOrder(iSymbolMode);
+#else
+    updateScanOrder(0);
+	  normalizeScanStats();
+#endif
+#endif
 
     m_uiPicTotalBits += pcCU->getTotalBits();
     m_dPicRdCost     += pcCU->getTotalCost();
@@ -660,7 +665,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
   // set bitstream
   m_pcEntropyCoder->setBitstream( rpcBitstream );
 #if QC_MDDT//ADAPTIVE_SCAN
-    InitScanOrderForSlice(); 
+#if FAST_ADAPTIVE_SCAN
+  InitScanOrderForSlice( iSymbolMode );
+#else
+  InitScanOrderForSlice();
+#endif
 #endif
   // for every CU
 #if HHI_RQT
@@ -694,8 +703,12 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
 
 #if QC_MDDT//ADAPTIVE_SCAN
 	// synchronize with the scanning table with the one we obtain in compressSlice()
-    updateScanOrder(0);
+#if FAST_ADAPTIVE_SCAN
+  updateScanOrder(iSymbolMode);
+#else
+  updateScanOrder(0);
 	normalizeScanStats();
+#endif
 #endif
   }
 }

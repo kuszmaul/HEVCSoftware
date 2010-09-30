@@ -2211,7 +2211,13 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   }
 
   // initialize scan
+
+#if FAST_ADAPTIVE_SCAN
+  UInt* maxCount;
+  UInt*  pucScan;
+#else
   const UInt*  pucScan;
+#endif
 #if LCEC_PHASE1
   //UInt uiConvBit = g_aucConvertToBit[ Min(8,uiWidth)    ];
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : Min(8,uiWidth)    ];
@@ -2234,11 +2240,16 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
     if(uiWidth == 4)// && uiMode<=8&&indexROT == 0)
     {
       UInt uiPredMode = g_aucIntra9Mode[uiMode];
-       pucScan = scanOrder4x4[uiPredMode]; //pucScanX = scanOrder4x4X[ipredmode]; pucScanY = scanOrder4x4Y[ipredmode];
+      pucScan = scanOrder4x4[uiPredMode]; //pucScanX = scanOrder4x4X[ipredmode]; pucScanY = scanOrder4x4Y[ipredmode];
 
 	   if(g_bUpdateStats)
        {
-         scanStats = scanStats4x4[uiPredMode]; update4x4Count[uiPredMode]++;
+         scanStats = scanStats4x4[uiPredMode];
+#if FAST_ADAPTIVE_SCAN
+         maxCount = &maxScanCount4x4[uiPredMode];
+#else
+         update4x4Count[uiPredMode]++;
+#endif
        }
     }
     else if(uiWidth == 8)// && uiMode<=8 && indexROT == 0)
@@ -2248,7 +2259,12 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 
 	   if(g_bUpdateStats)
       {
-        scanStats = scanStats8x8[uiPredMode]; update8x8Count[uiPredMode]++;
+        scanStats = scanStats8x8[uiPredMode];
+#if FAST_ADAPTIVE_SCAN
+         maxCount = &maxScanCount8x8[uiPredMode];
+#else
+         update8x8Count[uiPredMode]++;
+#endif
       }
     }
 	else if(uiWidth == 16)
@@ -2259,6 +2275,9 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 	   if(g_bUpdateStats)
 		{
 			scanStats = scanStats16x16[scan_index];
+#if FAST_ADAPTIVE_SCAN
+         maxCount = &maxScanCount16x16[scan_index];
+#endif
 		}
     }
     else if(uiWidth == 32)
@@ -2269,6 +2288,9 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 	   if(g_bUpdateStats)
 		{
 			scanStats = scanStats32x32[scan_index];
+#if FAST_ADAPTIVE_SCAN
+         maxCount = &maxScanCount32x32[scan_index];
+#endif
 		}
     }
     else if(uiWidth == 64)
@@ -2279,6 +2301,9 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 	   if(g_bUpdateStats)
 		{
 			scanStats = scanStats64x64[scan_index];
+#if FAST_ADAPTIVE_SCAN
+         maxCount = &maxScanCount32x32[scan_index];
+#endif
 		}
     }
     else
@@ -2348,7 +2373,11 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       {
         if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)// && (uiWidth == 4 && uiMode<=8&&indexROT == 0))
         {
+#if FAST_ADAPTIVE_SCAN
+          updateScan(scanStats, pucScan, uiScanning, maxCount);
+#else
           scanStats[uiScanning]++;
+#endif
         }
       }
 #endif
@@ -2368,7 +2397,11 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
       {
         if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA)// && (uiWidth == 8 && uiMode<=8 && indexROT == 0))
         {
+#if FAST_ADAPTIVE_SCAN
+          updateScan(scanStats, pucScan, uiScanning, maxCount);
+#else
           scanStats[uiScanning]++;
+#endif
         }
       }
 #endif
@@ -2409,7 +2442,11 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
         if(scoeff[63-uiScanning] = piCoeff[ pucScan[ uiScanning ] ])
         {
           if(g_bUpdateStats && eTType == TEXT_LUMA )
-            scanStats[ uiScanning ]++;
+#if FAST_ADAPTIVE_SCAN
+          updateScan(scanStats, pucScan, uiScanning, maxCount);
+#else
+          scanStats[uiScanning]++;
+#endif
         }
       }
 

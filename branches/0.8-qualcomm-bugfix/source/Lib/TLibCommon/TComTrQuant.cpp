@@ -7901,30 +7901,54 @@ Double TComTrQuant::xEst_writeRunLevel_SBAC(levelDataStruct* levelData, Int* lev
   {
 	int indexROT = pcCU->getROTindex(uiAbsPartIdx);
 	int scan_index;
+#if FAST_ADAPTIVE_SCAN
+  pucScanX = g_auiFrameRasterScanX[ uiConvBit ];
+  pucScanY = g_auiFrameRasterScanY[ uiConvBit ];
+#endif
     if(uiWidth == 4)
     {
       UInt uiPredMode = g_aucIntra9Mode[uiMode];
-      pucScan = scanOrder4x4[uiPredMode]; pucScanX = scanOrder4x4X[uiPredMode]; pucScanY = scanOrder4x4Y[uiPredMode];
+      pucScan = scanOrder4x4[uiPredMode];
+#if !FAST_ADAPTIVE_SCAN
+      pucScanX = scanOrder4x4X[uiPredMode];
+      pucScanY = scanOrder4x4Y[uiPredMode];
+#endif
     }
     else if(uiWidth == 8)
     {
       UInt uiPredMode = m_bQT ?  g_aucIntra9Mode[uiMode]: g_aucAngIntra9Mode[uiMode];
-      pucScan = scanOrder8x8[uiPredMode]; pucScanX = scanOrder8x8X[uiPredMode]; pucScanY = scanOrder8x8Y[uiPredMode];
+      pucScan = scanOrder8x8[uiPredMode];
+#if !FAST_ADAPTIVE_SCAN
+      pucScanX = scanOrder8x8X[uiPredMode];
+      pucScanY = scanOrder8x8Y[uiPredMode];
+#endif
     }
 	else if(uiWidth == 16)
     {
 		scan_index = LUT16x16[indexROT][uiMode];
-		pucScan = scanOrder16x16[scan_index]; pucScanX = scanOrder16x16X[scan_index]; pucScanY = scanOrder16x16Y[scan_index];
+		pucScan = scanOrder16x16[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+    pucScanX = scanOrder16x16X[scan_index];
+    pucScanY = scanOrder16x16Y[scan_index];
+#endif
     }
     else if(uiWidth == 32)
     {
 		scan_index = LUT32x32[indexROT][uiMode];
-		pucScan = scanOrder32x32[scan_index]; pucScanX = scanOrder32x32X[scan_index]; pucScanY = scanOrder32x32Y[scan_index];
+		pucScan = scanOrder32x32[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+    pucScanX = scanOrder32x32X[scan_index];
+    pucScanY = scanOrder32x32Y[scan_index];
+#endif
     }
     else if(uiWidth == 64)
     {
-		scan_index = LUT64x64[indexROT][uiMode];
-		pucScan = scanOrder64x64[scan_index]; pucScanX = scanOrder64x64X[scan_index]; pucScanY = scanOrder64x64Y[scan_index];
+		  scan_index = LUT64x64[indexROT][uiMode];
+		  pucScan = scanOrder64x64[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+      pucScanX = scanOrder64x64X[scan_index];
+      pucScanY = scanOrder64x64Y[scan_index];
+#endif
     }
     else
     {
@@ -7956,30 +7980,54 @@ Double TComTrQuant::xEst_writeRunLevel_SBAC(levelDataStruct* levelData, Int* lev
 
 	int indexROT = pcCU->getROTindex(uiAbsPartIdx);
 	int scan_index;
+#if FAST_ADAPTIVE_SCAN
+  pucScanX = g_auiFrameRasterScanX[ uiConvBit ];
+  pucScanY = g_auiFrameRasterScanY[ uiConvBit ];
+#endif
     if(uiWidth == 4)
     {
       UInt uiPredMode = g_aucIntra9Mode[uiMode];
-      pucScan = scanOrder4x4[uiPredMode]; pucScanX = scanOrder4x4X[uiPredMode]; pucScanY = scanOrder4x4Y[uiPredMode];
+      pucScan = scanOrder4x4[uiPredMode];
+#if !FAST_ADAPTIVE_SCAN
+      pucScanX = scanOrder4x4X[uiPredMode];
+      pucScanY = scanOrder4x4Y[uiPredMode];
+#endif
     }
     else if(uiWidth == 8)
     {
       UInt uiPredMode = m_bQT ?  g_aucIntra9Mode[uiMode]: g_aucAngIntra9Mode[uiMode];
-      pucScan = scanOrder8x8[uiPredMode]; pucScanX = scanOrder8x8X[uiPredMode]; pucScanY = scanOrder8x8Y[uiPredMode];
+      pucScan = scanOrder8x8[uiPredMode];
+#if !FAST_ADAPTIVE_SCAN
+      pucScanX = scanOrder8x8X[uiPredMode];
+      pucScanY = scanOrder8x8Y[uiPredMode];
+#endif
     }
 	else if(uiWidth == 16)
     {
 		scan_index = LUT16x16[indexROT][uiMode];
-		pucScan = scanOrder16x16[scan_index]; pucScanX = scanOrder16x16X[scan_index]; pucScanY = scanOrder16x16Y[scan_index];
+		pucScan = scanOrder16x16[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+    pucScanX = scanOrder16x16X[scan_index];
+    pucScanY = scanOrder16x16Y[scan_index];
+#endif
     }
     else if(uiWidth == 32)
     {
 		scan_index = LUT32x32[indexROT][uiMode];
-		pucScan = scanOrder32x32[scan_index]; pucScanX = scanOrder32x32X[scan_index]; pucScanY = scanOrder32x32Y[scan_index];
+		pucScan = scanOrder32x32[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+    pucScanX = scanOrder32x32X[scan_index];
+    pucScanY = scanOrder32x32Y[scan_index];
+#endif
     }
     else if(uiWidth == 64)
     {
 		scan_index = LUT64x64[indexROT][uiMode];
-		pucScan = scanOrder64x64[scan_index]; pucScanX = scanOrder64x64X[scan_index]; pucScanY = scanOrder64x64Y[scan_index];
+		pucScan = scanOrder64x64[scan_index];
+#if !FAST_ADAPTIVE_SCAN
+    pucScanX = scanOrder64x64X[scan_index];
+    pucScanY = scanOrder64x64Y[scan_index];
+#endif
     }
     else
     {
@@ -8030,9 +8078,13 @@ Double TComTrQuant::xEst_writeRunLevel_SBAC(levelDataStruct* levelData, Int* lev
         if (uiCtxSize != maxK)
         {
           UInt uiXX, uiYY;
+#if FAST_ADAPTIVE_SCAN
+          uiXX = pucScanX[iPos]/(uiWidth >> 3  );
+          uiYY = pucScanY[iPos]/(uiHeight >> 3 );
+#else
           uiXX = pucScanX[k]/(uiWidth >> 3  );
           uiYY = pucScanY[k]/(uiHeight >> 3 );
-
+#endif
           uiCtxSigMap = g_auiAntiScan8[uiYY*8+uiXX];
         }
         else
@@ -8090,9 +8142,13 @@ Double TComTrQuant::xEst_writeRunLevel_SBAC(levelDataStruct* levelData, Int* lev
       if (uiCtxSize != maxK)
       {
         UInt uiXX, uiYY;
+#if FAST_ADAPTIVE_SCAN
+        uiXX = pucScanX[iPos]/(uiWidth  >> 3);
+        uiYY = pucScanY[iPos]/(uiHeight >> 3);
+#else
         uiXX = pucScanX[k]/(uiWidth  >> 3);
         uiYY = pucScanY[k]/(uiHeight >> 3);
-
+#endif
         uiCtxSigMap = g_auiAntiScan8[uiYY*8+uiXX];
       }
       else

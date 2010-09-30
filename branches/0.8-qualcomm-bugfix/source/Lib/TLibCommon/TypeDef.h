@@ -161,16 +161,14 @@
 #define DISABLE_ROT_LUMA_4x4_8x8           0
 #define QC_MDDT                            1
 #if QC_MDDT
+#define FAST_ADAPTIVE_SCAN                 1
 #define ROT_CHECK                          0
 #define absm(A) ((A)<(0) ? (-(A)):(A))
 #define REG_DCT 65535
 #define COMBINED_MAP
-void InitScanOrderForSlice();
 #define NUM_SCANS_16x16 9
 #define NUM_SCANS_32x32 9
-#define NUM_SCANS_64x64 9
-void updateScanOrder(int first);
-void normalizeScanStats();
+#define NUM_SCANS_64x64 5
 #endif
 
 /* Rounding control */
