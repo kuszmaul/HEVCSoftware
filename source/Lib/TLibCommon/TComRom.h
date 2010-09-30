@@ -136,6 +136,9 @@ extern       UInt   g_auiAntiScan8[64];                   // 2D context mapping 
 #if FAST_ADAPTIVE_SCAN
 __inline void updateScan(UInt* scanStats, UInt* scanOrder, UInt uiIdx, UInt* maxCount)
 {
+#if DISABLE_ADAPTIVE_SCAN
+  return;
+#endif
         scanStats[uiIdx]++;
         if ( uiIdx > 0 && scanStats[uiIdx] > scanStats[uiIdx-1])
         {

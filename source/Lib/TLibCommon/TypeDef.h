@@ -162,6 +162,9 @@
 #define QC_MDDT                            1
 #if QC_MDDT
 #define FAST_ADAPTIVE_SCAN                 1
+#if FAST_ADAPTIVE_SCAN
+#define DISABLE_ADAPTIVE_SCAN              0
+#endif
 #define ROT_CHECK                          0
 #define absm(A) ((A)<(0) ? (-(A)):(A))
 #define REG_DCT 65535

@@ -94,7 +94,9 @@ Void TDecSlice::decompressSlice(TComBitstream* pcBitstream, TComPic*& rpcPic)
 #if QC_MDDT//ADAPTIVE_SCAN
 #if FAST_ADAPTIVE_SCAN
   Int iSymbolMode = rpcPic->getSlice()->getSymbolMode();
+#if DISABLE_ADAPTIVE_SCAN == 0
   InitScanOrderForSlice(iSymbolMode);
+#endif
 #else
     InitScanOrderForSlice();
 #endif
