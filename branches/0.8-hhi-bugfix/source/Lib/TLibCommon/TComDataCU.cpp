@@ -3760,7 +3760,7 @@ Int TComDataCU::getMvPredXCompDep( const std::vector<Int>& rcYThresLst, const st
 }
 #endif
 
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
 Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo, bool bIsSkip )
 #else
 Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
@@ -3788,7 +3788,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
   deriveLeftRightTopIdx( eCUMode, uiPartIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdx( eCUMode, uiPartIdx, uiPartIdxLB );
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
   if( !bIsSkip )
   {
 #endif
@@ -3814,7 +3814,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     }
     if (bAdded) break;
   }
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
   }
 #endif
   bAdded = false;
@@ -3848,7 +3848,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
   assert(iLeftMvIdx!=0 && iAboveMvIdx!=0 && iCornerMvIdx!=0);
 
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
   if( bIsSkip )
   {
     if( pInfo->iN > 1 )
@@ -3902,7 +3902,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       assert(0);
     }
   }
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
   }
 #endif
 
