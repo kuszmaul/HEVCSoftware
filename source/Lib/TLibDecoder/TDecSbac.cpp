@@ -1931,8 +1931,6 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 #if FAST_ADAPTIVE_SCAN
        maxCount = &maxScanCount4x4[uiPredMode];
 #else
-       pucScanX = scanOrder4x4X[uiPredMode];
-       pucScanY = scanOrder4x4Y[uiPredMode];
        update4x4Count[uiPredMode]++;
 #endif
        scanStats = scanStats4x4[uiPredMode];
@@ -1948,8 +1946,6 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 #if FAST_ADAPTIVE_SCAN
        maxCount = &maxScanCount8x8[uiPredMode];
 #else
-      pucScanX = scanOrder8x8X[uiPredMode];
-      pucScanY = scanOrder8x8Y[uiPredMode];
       update8x8Count[uiPredMode]++;
 #endif
       scanStats = scanStats8x8[uiPredMode];
