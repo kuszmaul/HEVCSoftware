@@ -64,7 +64,13 @@
 #define HHI_RQT_FORCE_SPLIT_RECT          0           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
 #define HHI_RQT_FORCE_SPLIT_ASYM          0           ///< MSHK: force split flags of residual quadtree for asymmetric such that transform blocks are guaranteed to not span PUs asymmetric PUs
 
-#define HHI_RQT_ROOT_FIX                  1           
+#if HHI_MRG_PU
+#define HHI_MRG_PU_BUGFIX                 1           ///< PU merge bug fix. addresses Tickets #95 and #97
+#else
+#define HHI_MRG_PU_BUGFIX                 0
+#endif
+
+#define HHI_RQT_ROOT_FIX                  1           ///< fix for RQT root flag. Ticket #96
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
@@ -261,6 +267,10 @@ void normalizeScanStats();
 ///////////////////////////////
 //#define DCM_PBIC //Partition-Based Illumination Compensation
 #define DCM_RDCOST_TEMP_FIX //Enables temporary bug fixes to RD cost computation (does not affect TMuC0.7 performance under current encoder settings, but is needed for proper RD cost computation when DCM_PBIC is enabled)
+
+#if defined(DCM_PBIC) && HHI_MRG_PU_BUGFIX
+#error "PU-Merge fix is not yet compatible with PBIC"
+#endif
 
 ///////////////////////////////
 // DOCOMO defines section end

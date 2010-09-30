@@ -588,7 +588,11 @@ Void TDecEntropy::decodeMergeFlag( TComDataCU* pcSubCU, UInt uiAbsPartIdx, UInt 
   TComIc cIcNeighbours[2]; //above, left
   pcSubCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, cIcNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
 #else
+#if HHI_MRG_PU_BUGFIX
+  pcSubCU->getInterMergeCandidates( uiAbsPartIdx, uiPUIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#else
   pcSubCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#endif
 #endif
 
   if ( uiNeighbourInfo )
@@ -612,7 +616,11 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   TComIc cIcNeighbours[2]; //above, left
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, cIcNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
 #else
+#if HHI_MRG_PU_BUGFIX
+  pcCU->getInterMergeCandidates( uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#else
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#endif
 #endif
 
   // Merge to left or above depending on uiMergeIndex
@@ -791,10 +799,17 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
 #if HHI_MRG_PU
+#if SAMSUNG_MRG_SKIP_DIRECT
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() && !pcCU->isSkip( uiAbsPartIdx ) )
+    {
+      decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
+    }
+#else
     if ( pcCU->getSlice()->getSPS()->getUseMRG() )
     {
       decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
     }
+#endif
     else
 #endif
     {
@@ -908,7 +923,7 @@ Void TDecEntropy::decodeMergeInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 
 #if SAMSUNG_MRG_SKIP_DIRECT
-  if ( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_SKIP )
+  if ( pcCU->isSkip( uiAbsPartIdx ) )
   {
   	return;
   }

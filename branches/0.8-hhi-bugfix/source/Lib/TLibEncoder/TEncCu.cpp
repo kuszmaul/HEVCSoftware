@@ -375,13 +375,26 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if HHI_MRG
 #if HHI_MRG_PU
+
+#if HHI_MRG_PU_BUGFIX
+      if( pcPic->getSlice()->getSPS()->getUseMRG() )
+      {
+#if SAMSUNG_MRG_SKIP_DIRECT
+        xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
+#endif
+        xCheckRDCostMerge2Nx2NPU( rpcBestCU, rpcTempCU );            rpcTempCU->initEstData();
+      }
+      else
+#else
       if( !pcPic->getSlice()->getSPS()->getUseMRG() )
+#endif
+
 #else
       if( pcPic->getSlice()->getSPS()->getUseMRG() )
       {
-        #if SAMSUNG_MRG_SKIP_DIRECT
+#if SAMSUNG_MRG_SKIP_DIRECT
         xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
-        #endif
+#endif
         xCheckRDCostMerge( rpcBestCU, rpcTempCU );            rpcTempCU->initEstData();
       }
       else
@@ -773,7 +786,8 @@ Void TEncCu::xCheckRDCostSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, B
   xCheckBestMode(rpcBestCU, rpcTempCU);
 }
 
-#if HHI_MRG && !HHI_MRG_PU
+#if HHI_MRG
+#if !HHI_MRG_PU
 Void TEncCu::xCheckRDCostMerge( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 {
   // test if Top and Left exist
@@ -858,6 +872,104 @@ Void TEncCu::xCheckRDCostMerge( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   }
 
 }
+#endif
+
+#if HHI_MRG_PU_BUGFIX
+Void TEncCu::xCheckRDCostMerge2Nx2NPU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
+{
+  assert( rpcTempCU->getSlice()->getSliceType() != I_SLICE );
+
+  // test if Top and Left exist
+  // test if top and left are inter
+  // get the MVs from Top and left neighbours
+  // test if MVs from Top and Left are the same or not
+  // if they are the same, only test one
+  // if they are different, test both
+  UInt        uiNeighbourInfos = 0;
+  TComMvField  cMFieldNeighbours[4]; // 0: above ref_list 0, above ref list 1, left ref list 0, left ref list 1
+  UChar uhInterDirNeighbours[2];
+
+  UChar uhDepth = rpcTempCU->getDepth( 0 );
+
+#ifdef DCM_PBIC
+  TComIc cIcNeighbours[2]; // 0: above 1: left
+  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMFieldNeighbours, cIcNeighbours,uhInterDirNeighbours, uiNeighbourInfos );
+#else
+  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfos );
+#endif
+
+  // uiNeighbourInfos (binary):
+  // 000: no merge candidate
+  // 001: only above is merge candidate
+  // 010: only left is merge candidate
+  // 011: above and left are different candidates
+  // 100: above and left have the same motion parameters. only one merge candidate exists.
+
+  UInt uiNeighbourIdx = 0; // 0: top, 1: left
+  if ( uiNeighbourInfos == 2 )
+  {
+    // test left parameters first
+    uiNeighbourIdx = 1;
+  }
+
+  while ( uiNeighbourInfos > 0 && uiNeighbourIdx < 2 )
+  {
+    // set MC parameters
+    rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uhDepth ); // interprets depth relative to LCU level
+    rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N,  0, uhDepth ); // interprets depth relative to LCU level
+    rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
+    rpcTempCU->setMergeIndexSubParts( uiNeighbourIdx, 0, 0, uhDepth ); // interprets depth relative to LCU level
+    rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiNeighbourIdx], 0, 0, uhDepth ); // interprets depth relative to LCU level
+#ifdef QC_AMVRES
+    if (rpcTempCU->getSlice()->getSPS()->getUseAMVRes())
+    {
+      if( uhInterDirNeighbours[uiNeighbourIdx] != 2 )
+        rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField_AMVRes( cMFieldNeighbours[0 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[0 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+      else
+        rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField       ( cMFieldNeighbours[0 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[0 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+      if( uhInterDirNeighbours[uiNeighbourIdx] != 1 )
+        rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField_AMVRes( cMFieldNeighbours[1 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[1 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+      else
+        rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField       ( cMFieldNeighbours[1 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[1 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+    }
+    else
+#endif
+    {
+      rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMFieldNeighbours[0 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[0 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+      rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMFieldNeighbours[1 + 2*uiNeighbourIdx].getMv(), cMFieldNeighbours[1 + 2*uiNeighbourIdx].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+    }
+
+    // do MC
+    m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+
+    // estimate residual and encode everything
+    m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
+      m_ppcOrigYuv    [uhDepth],
+      m_ppcPredYuvTemp[uhDepth],
+      m_ppcResiYuvTemp[uhDepth],
+#if HHI_RQT
+      m_ppcResiYuvBest[uhDepth],
+#endif
+      m_ppcRecoYuvTemp[uhDepth],
+      false );
+
+    xCheckBestMode(rpcBestCU, rpcTempCU);
+
+    if ( uiNeighbourInfos != 3 )
+    {
+      // there is only one merge candidate
+      // only one candidate has to be tested.
+      break;
+    }
+    else
+    {
+      uiNeighbourIdx++;
+      rpcTempCU->initEstData();
+    }
+  }
+
+}
+#endif
 #endif
 
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize )

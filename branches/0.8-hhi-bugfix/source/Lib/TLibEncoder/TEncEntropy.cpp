@@ -377,7 +377,11 @@ Void  print(ALFParam* pAlfParam)
 
 #if HHI_MRG
 #if HHI_MRG_PU
+#if HHI_MRG_PU_BUGFIX
+Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth )
+#else
 Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+#endif
 { 
   TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
   UInt uiNeighbourInfo;
@@ -386,7 +390,11 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   TComIc cIcNeighbours[2]; //above, left
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, cIcNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
 #else
+#if HHI_MRG_PU_BUGFIX
+  pcCU->getInterMergeCandidates( uiAbsPartIdx, uiPUIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#else
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#endif
 #endif
 
   if ( uiNeighbourInfo )
@@ -400,7 +408,11 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 
+#if HHI_MRG_PU_BUGFIX
+Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth )
+#else
 Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
+#endif
 {
   TComMvField cMvFieldNeighbours[4]; // above ref_list_0, above ref_list_1, left ref_list_0, left ref_list_1
   UInt uiNeighbourInfo;
@@ -409,7 +421,11 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
   TComIc cIcNeighbours[2]; //above, left
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, cIcNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
 #else
+#if HHI_MRG_PU_BUGFIX
+  pcCU->getInterMergeCandidates( uiAbsPartIdx, uiPUIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#else
   pcCU->getInterMergeCandidates( uiAbsPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, uiNeighbourInfo );
+#endif
 #endif
 
   UInt uiMergeIndex = 0;
@@ -1061,10 +1077,10 @@ Void TEncEntropy::encodeMergeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD
   }
 
 #if SAMSUNG_MRG_SKIP_DIRECT
-  if ( pcCU->isSkipped(uiAbsPartIdx) )
+  if ( pcCU->isSkipped( uiAbsPartIdx ) )
   {
     return;
-  }  
+  }
 #endif
 
   if( bRD )
@@ -1197,10 +1213,18 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
+#if HHI_MRG_PU_BUGFIX
+    encodeMergeFlag( pcCU, uiSubPartIdx, uiPartIdx, uiDepth );
+#else
     encodeMergeFlag( pcCU, uiSubPartIdx );
+#endif
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
+#if HHI_MRG_PU_BUGFIX
+      encodeMergeIndex( pcCU, uiSubPartIdx, uiPartIdx, uiDepth );
+#else
       encodeMergeIndex( pcCU, uiSubPartIdx );
+#endif
     }
     else
     {

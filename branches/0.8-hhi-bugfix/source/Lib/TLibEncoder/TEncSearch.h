@@ -175,6 +175,10 @@ protected:
   __inline Void xTZ8PointSquareSearch ( TComPattern* pcPatternKey, IntTZSearchStruct& rcStrukt, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
   __inline Void xTZ8PointDiamondSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStrukt, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
 
+#if HHI_MRG_PU_BUGFIX
+  Void xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, UInt& ruiSAD, Bool Hadamard );
+#endif
+
 public:
 
   /// encoder estimation - intra prediction (luma)
@@ -453,6 +457,17 @@ protected:
                                     MvPredMeasure&  rcMvPredMeasure );
 #endif
 #if HHI_MRG_PU
+#if HHI_MRG_PU_BUGFIX
+Void xMergeEstimation             ( TComDataCU*     pcCU,
+                                    TComYuv*        pcYuvOrg,
+                                    Int             iPartIdx,
+                                    UInt&           uiInterDir,
+                                    TComMvField*    pacMvField,
+                                    UInt&           uiMergeIndex,
+                                    UInt&           ruiCost,
+                                    UInt&           ruiBits,
+                                    Bool&           bValid);
+#else
 Void xMergeEstimation             ( TComDataCU*     pcCU,
                                     TComYuv*        pcYuvOrg,
                                     Int             iPartIdx,
@@ -464,6 +479,7 @@ Void xMergeEstimation             ( TComDataCU*     pcCU,
                                     UInt&           uiInterDir,
                                     UInt&           uiMergeIndex,
                                     UInt&           ruiCost);
+#endif
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // motion estimation
