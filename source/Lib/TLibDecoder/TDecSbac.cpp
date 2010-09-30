@@ -2016,7 +2016,7 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 
     if( uiSig )
     {
-#if QC_MDDT//ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0 //ADAPTIVE_SCAN
 #if ROT_CHECK
       if(pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA  && ((uiWidth == 4 && /*ipredmode<=8&&*/indexROT == 0)|| (uiWidth == 8 && /* ipredmode<=8 && */ indexROT == 0) /*|| uiWidth==16 || uiWidth==32 || uiWidth==64*/)) 
 #else
@@ -2464,7 +2464,7 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 
 		if( uiSig )
 		{
-#if QC_MDDT//ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0 //ADAPTIVE_SCAN
 #if ROT_CHECK
          if(pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA  && ((uiWidth == 4 && indexROT == 0)|| (uiWidth == 8 && indexROT == 0) || uiWidth==16 || uiWidth==32 || uiWidth==64))
 #else

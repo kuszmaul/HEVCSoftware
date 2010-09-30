@@ -1731,7 +1731,7 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
 
     if( uiSig )
     {
-#if QC_MDDT//ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0 //ADAPTIVE_SCAN
 #if ROT_CHECK
       if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA && ((uiWidth == 4 && /* uiMode<=8 && */ indexROT == 0)|| (uiWidth == 8 && /* uiMode<=8 &&*/ indexROT == 0) /*|| uiWidth == 16 || uiWidth == 32 || uiWidth == 64*/))
 #else
@@ -2178,7 +2178,7 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
 
 		if( uiSig )
 		{
-#if QC_MDDT//ADAPTIVE_SCAN
+#if QC_MDDT && DISABLE_ADAPTIVE_SCAN == 0//ADAPTIVE_SCAN
 #if ROT_CHECK
       if(g_bUpdateStats && pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA && ((uiWidth == 4 && /*uiMode<=8 &&*/ indexROT == 0)|| (uiWidth == 8 &&/*uiMode<=8 &&*/ indexROT == 0) || uiWidth == 16 || uiWidth == 32 || uiWidth == 64)) 
 #else
