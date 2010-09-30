@@ -1058,14 +1058,23 @@ Void TEncCu::xCheckRDCostAMVPSkip           ( TComDataCU*& rpcBestCU, TComDataCU
 
     if ( rpcTempCU->getSlice()->isInterP() && rpcTempCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
     {
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+        rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_0, 0, &cAMVPInfo0, true );
+#else
       rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_0, 0, &cAMVPInfo0);
+#endif
     }
     else if ( rpcTempCU->getSlice()->isInterB() &&
               rpcTempCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 &&
               rpcTempCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0  )
     {
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+      rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_0, 0, &cAMVPInfo0, true );
+      rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_1, 0, &cAMVPInfo1, true );
+#else
       rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_0, 0, &cAMVPInfo0);
       rpcTempCU->fillMvpCand(0, 0, REF_PIC_LIST_1, 0, &cAMVPInfo1);
+#endif
     }
     else
     {

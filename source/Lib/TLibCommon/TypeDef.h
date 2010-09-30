@@ -229,7 +229,10 @@ void normalizeScanStats();
 #endif
 
 #if HHI_MRG
-#define SAMSUNG_MRG_SKIP_DIRECT               0           ///< enabling of skip and direct when mrg is on
+#define SAMSUNG_MRG_SKIP_DIRECT               1           ///< enabling of skip and direct when mrg is on
+#if SAMSUNG_MRG_SKIP_DIRECT
+#define HHI_ONLY_COL_CORNER_FOR_SKIP          1           ///< enabling of skip and direct only Corner and Collocated predictors
+#endif
 #endif
 
 #define SAMSUNG_CHROMA_IF_EXT                 0           ///< DCT-based Interpolation filter for chroma signal

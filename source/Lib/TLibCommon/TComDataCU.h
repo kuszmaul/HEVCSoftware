@@ -433,7 +433,11 @@ public:
 #endif
 
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo, bool bIsSkip = false );
+#else
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#endif
 #ifdef QC_AMVRES
 #if HHI_IMVP
   Bool          clearMVPCand_one_fourth        ( TComMv cMvd, AMVPInfo* pInfo, RefPicList eRefPicList, UInt uiPartIdx, Int iRefIdx );

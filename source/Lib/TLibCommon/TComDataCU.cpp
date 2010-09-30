@@ -3760,7 +3760,11 @@ Int TComDataCU::getMvPredXCompDep( const std::vector<Int>& rcYThresLst, const st
 }
 #endif
 
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo, bool bIsSkip )
+#else
 Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
+#endif
 {
   PartSize eCUMode = m_pePartSize[0];
 
@@ -3784,7 +3788,10 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
   deriveLeftRightTopIdx( eCUMode, uiPartIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdx( eCUMode, uiPartIdx, uiPartIdxLB );
-
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+  if( !bIsSkip )
+  {
+#endif
   //Left
   for ( uiIdx = g_auiZscanToRaster[uiPartIdxLT]; uiIdx <= g_auiZscanToRaster[uiPartIdxLB]; uiIdx+= uiNumPartInCUWidth )
   {
@@ -3807,7 +3814,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     }
     if (bAdded) break;
   }
-
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+  }
+#endif
   bAdded = false;
   //Above Right
   bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, uiPartIdxRT, MD_ABOVE_RIGHT);
@@ -3839,6 +3848,21 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
   assert(iLeftMvIdx!=0 && iAboveMvIdx!=0 && iCornerMvIdx!=0);
 
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+  if( bIsSkip )
+  {
+    if( pInfo->iN > 1 )
+    {
+      for( int i = 1; i < pInfo->iN; ++i )
+        pInfo->m_acMvCand[i-1] = pInfo->m_acMvCand[i];
+      pInfo->iN--;
+    }
+
+  }
+  else
+ {
+#endif
+ 
   if (iLeftMvIdx < 0 && iAboveMvIdx < 0 && iCornerMvIdx < 0)
   {
     //done --> already zero Mv
@@ -3878,6 +3902,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       assert(0);
     }
   }
+#if HHI_ONLY_COL_CORNER_FOR_SKIP
+  }
+#endif
 
   clipMv(pInfo->m_acMvCand[0]);
 
