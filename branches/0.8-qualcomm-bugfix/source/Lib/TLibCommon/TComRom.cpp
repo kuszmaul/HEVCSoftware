@@ -5792,6 +5792,9 @@ static void initScanOrder(void)
     ::memcpy(scanOrderInit64x64[uiScanIdx], g_auiFrameScanXY [ g_aucConvertToBit[ 64 ] + 1 ], 64*64*sizeof(UInt));
     sort(scanStatsInit64x64[uiScanIdx], scanOrderInit64x64[uiScanIdx],64*64);
   }
+#if DISABLE_ADAPTIVE_SCAN
+  InitScanOrderForSlice(0);
+#endif
 }
 
 void InitScanOrderForSlice(Int iSymbolMode)
@@ -5865,6 +5868,9 @@ static void scaleScanStats(UInt *stats, UInt uiSize, Int iSymbolMode, UInt* maxC
 
 void updateScanOrder(int iSymbolMode)
 {
+#if DISABLE_ADAPTIVE_SCAN
+  return;
+#endif;
   UInt uiScanIdx;
 
   for(uiScanIdx = 0; uiScanIdx < 9; uiScanIdx++)

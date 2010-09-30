@@ -533,7 +533,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if QC_MDDT
 #if FAST_ADAPTIVE_SCAN
   Int iSymbolMode = rpcPic->getSlice()->getSymbolMode();
+#if DISABLE_ADAPTIVE_SCAN == 0
   InitScanOrderForSlice(iSymbolMode);
+#endif
 #else
     InitScanOrderForSlice();
 #endif
@@ -666,7 +668,9 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
   m_pcEntropyCoder->setBitstream( rpcBitstream );
 #if QC_MDDT//ADAPTIVE_SCAN
 #if FAST_ADAPTIVE_SCAN
+#if DISABLE_ADAPTIVE_SCAN == 0
   InitScanOrderForSlice( iSymbolMode );
+#endif
 #else
   InitScanOrderForSlice();
 #endif
