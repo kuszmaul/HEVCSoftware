@@ -2075,7 +2075,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   else
   {
 #if HHI_RQT_ROOT
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_RQT_ROOT_FIX
     if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && !( pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_SKIP && pcCU->getInterDir(uiAbsPartIdx) == 3 ) )
 #else
     if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() )

@@ -64,6 +64,7 @@
 #define HHI_RQT_FORCE_SPLIT_RECT          0           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
 #define HHI_RQT_FORCE_SPLIT_ASYM          0           ///< MSHK: force split flags of residual quadtree for asymmetric such that transform blocks are guaranteed to not span PUs asymmetric PUs
 
+#define HHI_RQT_ROOT_FIX                  1           
 
 #if ( HHI_RQT_INTRA && !HHI_RQT )
 #error "HHI_RQT_INTRA can only be equal to 1 if HHI_RQT is equal to 1"
@@ -229,9 +230,15 @@ void normalizeScanStats();
 #endif
 
 #if HHI_MRG
-#define SAMSUNG_MRG_SKIP_DIRECT               1           ///< enabling of skip and direct when mrg is on
-#if SAMSUNG_MRG_SKIP_DIRECT
-#define HHI_ONLY_COL_CORNER_FOR_SKIP          1           ///< enabling of skip and direct only Corner and Collocated predictors
+#define SAMSUNG_MRG_SKIP_DIRECT               0                          ///< enabling of skip and direct when mrg is on
+#if HHI_MRG_PU
+#define HHI_MRG_ONLY_COL_CORNER_FOR_SKIP      SAMSUNG_MRG_SKIP_DIRECT    ///< restrict skip and direct to corner and colocated predictors
+#else
+#if V0_7_COMPAT
+#define HHI_MRG_ONLY_COL_CORNER_FOR_SKIP      0
+#else
+#define HHI_MRG_ONLY_COL_CORNER_FOR_SKIP      SAMSUNG_MRG_SKIP_DIRECT
+#endif
 #endif
 #endif
 

@@ -1377,7 +1377,7 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       iRefIdx = pcSubCUMvField->getRefIdx(0);
       iMVPIdx =-1;
       cMv = cZeroMv;
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
       pcSubCU->fillMvpCand(0, 0, eRefList, iRefIdx, pAMVPInfo, pcCU->isSkip( uiAbsPartIdx ) );
 #else
       pcSubCU->fillMvpCand(0, 0, eRefList, iRefIdx, pAMVPInfo);
@@ -3038,7 +3038,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   else
   {
 #if HHI_RQT_ROOT
-#if HHI_ONLY_COL_CORNER_FOR_SKIP
+#if HHI_RQT_ROOT_FIX
     if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && !( pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_SKIP && pcCU->getInterDir(uiAbsPartIdx) == 3 ) )
 #else
     if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() )
