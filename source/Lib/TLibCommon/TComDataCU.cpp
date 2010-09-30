@@ -1889,6 +1889,10 @@ UInt TComDataCU::getCtxSkipFlag( UInt uiAbsPartIdx )
 #if HHI_MRG
 UInt TComDataCU::getCtxMergeFlag( UInt uiAbsPartIdx )
 {
+#if HHI_MRG_PU_BUGFIX
+  return 0;
+#endif
+
   UInt        uiTempPartIdx;
   UInt        uiCtx = 0;
 
@@ -3358,10 +3362,99 @@ Void TComDataCU::deriveLeftBottomIdxAdi( UInt& ruiPartIdxLB, UInt uiPartOffset, 
 }
 
 #if HHI_MRG
+#if HHI_MRG_PU
+#if HHI_MRG_PU_BUGFIX
+Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx )
+{
+  assert( getInterDir( uiAbsPartIdx ) != 0 );
+
+  if ( getInterDir( uiAbsPartIdx ) != pcCandCU->getInterDir( uiCandAbsPartIdx ) )
+  {
+    return false;
+  }
+
+  for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+  {
+    if ( getInterDir( uiAbsPartIdx ) & ( 1 << uiRefListIdx ) )
+    {
+      if ( getCUMvField( RefPicList( uiRefListIdx ) )->getMv( uiAbsPartIdx )     != pcCandCU->getCUMvField( RefPicList( uiRefListIdx ) )->getMv( uiCandAbsPartIdx ) || 
+        getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx( uiAbsPartIdx ) != pcCandCU->getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx( uiCandAbsPartIdx ) )
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+Bool TComDataCU::avoidMergeCandidate( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx )
+{
+  // uiAbsPartIdx has to be the first index of the current PU
+
+  if ( !pcCandCU )
+  {
+    return true;
+  }
+
+  PartSize ePartSize = getPartitionSize( uiAbsPartIdx );
+
+  if ( ePartSize != SIZE_NxN && ePartSize != SIZE_2Nx2N )
+  {
+    // we have exactly 2 PUs. Avoid imitating 2Nx2N.
+    if ( uiPUIdx == 1 )
+    {
+      // we would merge the second PU
+      UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+      UInt uiAbsPartIdxOfFirstPU = uiAbsPartIdx - uiPUOffset;
+      if ( hasEqualMotion( uiAbsPartIdxOfFirstPU, pcCandCU, uiCandAbsPartIdx ) )
+      {
+        // don't merge
+        return true;
+      }
+    }
+  }
+
+  if ( ePartSize == SIZE_NxN )
+  {
+    if ( uiPUIdx == 3 )
+    {
+      UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+      UInt uiPUOffsetIdx0 = uiAbsPartIdx - 3*uiPUOffset;
+      UInt uiPUOffsetIdx1 = uiAbsPartIdx - 2*uiPUOffset;
+      UInt uiPUOffsetIdx2 = uiAbsPartIdx -   uiPUOffset;
+
+      // avoid imitating 2Nx2N and Nx2N partitioning.
+      if ( hasEqualMotion( uiPUOffsetIdx0, this, uiPUOffsetIdx2 ) &&
+           hasEqualMotion( uiPUOffsetIdx1, pcCandCU, uiCandAbsPartIdx ) )
+      {
+        // don't merge
+        return true;
+      }
+
+      // avoid imitating 2NxN partitioning.
+      if ( hasEqualMotion( uiPUOffsetIdx0, this, uiPUOffsetIdx1 ) &&
+           hasEqualMotion( uiPUOffsetIdx2, pcCandCU, uiCandAbsPartIdx ) )
+      {
+        // don't merge
+        return true;
+      }
+
+    }
+  }
+  return false;
+}
+#endif // HHI_MRG_PU_SHORTEN_CANDIDATE_LIST
+#endif // HHI_MRG_PU
+
 #ifdef DCM_PBIC
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, TComMvField cMFieldNeighbours[4], TComIc cIcNeighbours[2],UChar uhInterDirNeighbours[2], UInt& uiNeighbourInfos )
 #else
+#if HHI_MRG_PU_BUGFIX
+Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField cMFieldNeighbours[4], UChar uhInterDirNeighbours[2], UInt& uiNeighbourInfos )
+#else
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, TComMvField cMFieldNeighbours[4], UChar uhInterDirNeighbours[2], UInt& uiNeighbourInfos )
+#endif
 #endif
 {
   // uiNeighbourInfos (binary):
@@ -3383,6 +3476,18 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, TComMvField cMField
   TComDataCU* pcCULeft = 0;
   pcCUAbove = getPUAbove( uiAbovePartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   pcCULeft  = getPULeft( uiLeftPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+
+#if HHI_MRG_PU_BUGFIX
+  if ( avoidMergeCandidate( uiAbsPartIdx, uiPUIdx, uiDepth, pcCUAbove, uiAbovePartIdx ) )
+  {
+    pcCUAbove = NULL;
+  }
+
+  if ( avoidMergeCandidate( uiAbsPartIdx, uiPUIdx, uiDepth, pcCULeft, uiLeftPartIdx ) )
+  {
+    pcCULeft = NULL;
+  }
+#endif
 
   if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) )
   {

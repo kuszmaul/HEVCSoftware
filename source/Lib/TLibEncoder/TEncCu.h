@@ -128,8 +128,13 @@ protected:
 
   Void  xCheckRDCostAMVPSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
 
-#if HHI_MRG && !HHI_MRG_PU
+#if HHI_MRG
+#if !HHI_MRG_PU
   Void  xCheckRDCostMerge   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+#endif
+#if HHI_MRG_PU_BUGFIX
+   Void xCheckRDCostMerge2Nx2NPU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                  );
+#endif
 #endif
 
   Void  xCheckRDCostSkip    ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bBSkipRes      );
