@@ -64,6 +64,15 @@ Void         initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidt
 Void         initSigLastScanPattern( UInt* puiScanPattern, const UInt uiLog2BlockSize, const bool bDownLeft );
 #endif
 
+#if QC_MDDT
+void updateScanOrder(int first);
+#if FAST_ADAPTIVE_SCAN
+void InitScanOrderForSlice(Int m_iSymbolMode);
+#else
+void InitScanOrderForSlice();
+void normalizeScanStats();
+#endif
+#endif
 // ====================================================================================================================
 // Data structure related table & variable
 // ====================================================================================================================
@@ -124,32 +133,71 @@ extern       UInt*  g_auiFrameScanY [ MAX_CU_DEPTH  ];    // raster index (y) fr
 extern       UInt   g_auiAntiScan8[64];                   // 2D context mapping for coefficients
 
 #if QC_MDDT//ADAPTIVE_SCAN
-extern  UInt *scanOrder4x4[9];
+#if FAST_ADAPTIVE_SCAN
+__inline void updateScan(UInt* scanStats, UInt* scanOrder, UInt uiIdx, UInt* maxCount)
+{
+        scanStats[uiIdx]++;
+        if ( uiIdx > 0 && scanStats[uiIdx] > scanStats[uiIdx-1])
+        {
+          if ( scanStats[uiIdx] > *maxCount )
+          {
+            *maxCount = scanStats[uiIdx];
+          }
+          UInt tmp = scanStats[uiIdx-1];
+          scanStats[uiIdx-1] = scanStats[uiIdx];
+          scanStats[uiIdx] = tmp;
+
+          tmp = scanOrder[uiIdx-1];
+          scanOrder[uiIdx-1] = scanOrder[uiIdx];
+          scanOrder[uiIdx] = tmp;
+        }
+}
+
+extern  UInt*  g_auiFrameRasterScanX [ 5 ];
+extern  UInt*  g_auiFrameRasterScanY [ 5 ];
+
+extern  UInt  maxScanCount4x4[9];
+extern  UInt  maxScanCount8x8[9];
+extern  UInt  maxScanCount16x16[NUM_SCANS_16x16];
+extern  UInt  maxScanCount32x32[NUM_SCANS_32x32];
+extern  UInt  maxScanCount64x64[NUM_SCANS_64x64];
+
+extern  UInt *scanOrderInit4x4[9];
+extern  UInt *scanOrderInit8x8[9];
+extern  UInt *scanStatsInit4x4[9];
+extern  UInt *scanStatsInit8x8[9];
+extern  UInt *scanOrderInit16x16[NUM_SCANS_16x16];
+extern  UInt *scanStatsInit16x16[NUM_SCANS_16x16];
+extern  UInt *scanOrderInit32x32[NUM_SCANS_32x32];
+extern  UInt *scanStatsInit32x32[NUM_SCANS_32x32];
+extern  UInt *scanOrderInit64x64[NUM_SCANS_64x64];
+extern  UInt *scanStatsInit64x64[NUM_SCANS_64x64];
+#else
 extern  UInt *scanOrder4x4X[9];
 extern  UInt *scanOrder4x4Y[9];
-extern  UInt *scanOrder8x8[9];
 extern  UInt *scanOrder8x8X[9];
 extern  UInt *scanOrder8x8Y[9];
-extern  UInt *scanStats4x4[9];
-extern  UInt *scanStats8x8[9];
-
-extern  UInt *scanOrder16x16[NUM_SCANS_16x16];
 extern  UInt *scanOrder16x16X[NUM_SCANS_16x16];
 extern  UInt *scanOrder16x16Y[NUM_SCANS_16x16];
-extern  UInt *scanStats16x16[NUM_SCANS_16x16];
-
-extern  UInt *scanOrder32x32[NUM_SCANS_32x32];
 extern  UInt *scanOrder32x32X[NUM_SCANS_32x32];
 extern  UInt *scanOrder32x32Y[NUM_SCANS_32x32];
-extern  UInt *scanStats32x32[NUM_SCANS_32x32];
-
-extern  UInt *scanOrder64x64[NUM_SCANS_64x64];
 extern  UInt *scanOrder64x64X[NUM_SCANS_64x64];
 extern  UInt *scanOrder64x64Y[NUM_SCANS_64x64];
-extern  UInt *scanStats64x64[NUM_SCANS_64x64];
-
 extern  int  update4x4Count[9];
 extern  int  update8x8Count[9];
+#endif
+
+extern  UInt *scanStats4x4[9];
+extern  UInt *scanStats8x8[9];
+extern  UInt *scanStats16x16[NUM_SCANS_16x16];
+extern  UInt *scanStats32x32[NUM_SCANS_32x32];
+extern  UInt *scanStats64x64[NUM_SCANS_64x64];
+
+extern  UInt *scanOrder4x4[9];
+extern  UInt *scanOrder8x8[9];
+extern  UInt *scanOrder16x16[NUM_SCANS_16x16];
+extern  UInt *scanOrder32x32[NUM_SCANS_32x32];
+extern  UInt *scanOrder64x64[NUM_SCANS_64x64];
 
 extern Int g_aiDequantCoef_klt[6][16];
 extern UInt g_aiQuantCoef_klt[6][16] ;
