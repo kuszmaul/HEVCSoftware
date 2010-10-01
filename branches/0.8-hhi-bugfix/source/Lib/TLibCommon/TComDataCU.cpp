@@ -3894,7 +3894,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   deriveLeftRightTopIdx( eCUMode, uiPartIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdx( eCUMode, uiPartIdx, uiPartIdxLB );
 #if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
-  if( !bIsSkip )
+  if( !( bIsSkip && getSlice()->getSPS()->getUseMRG() ) )
   {
 #endif
   //Left
@@ -3954,7 +3954,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   assert(iLeftMvIdx!=0 && iAboveMvIdx!=0 && iCornerMvIdx!=0);
 
 #if HHI_MRG && HHI_MRG_ONLY_COL_CORNER_FOR_SKIP
-  if( bIsSkip )
+  if( bIsSkip && getSlice()->getSPS()->getUseMRG() )
   {
     if( pInfo->iN > 1 )
     {
