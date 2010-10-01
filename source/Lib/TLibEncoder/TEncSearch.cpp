@@ -2369,7 +2369,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
   UInt    uiOverallDistC = 0;
 #if HHI_AIS
   Bool    bAISEnabled    = pcCU->getSlice()->getSPS()->getUseAIS();
+#if HHI_AIS_ANGULAR_FIX
+  Bool bDefaultIS        = ( bAISEnabled ? false : DEFAULT_IS );
+#else
   Bool    bDefaultIS     = ( bAISEnabled ? true : DEFAULT_IS );
+#endif
 #endif
 #if ANG_INTRA
   Bool    angIntraEnabled= pcCU->angIntraEnabledPredPart( 0 );
@@ -2471,6 +2475,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     //===== check modes (using r-d costs) =====
 #if HHI_AIS
     Bool    bBestISMode   = bDefaultIS;
+#if HHI_AIS_SPEEDUP
+    Double dModeCost[10];
+    for( UInt ui = 0; ui < 10; ui++ )
+    {
+      dModeCost[ ui ] = MAX_DOUBLE;
+    }
+#endif
 #endif
     UInt    uiBestPUMode  = 0;
     UInt    uiBestPUDistY = 0;
@@ -2512,6 +2523,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       Double dPUCost   = 0.0;
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost );
       
+#if HHI_AIS
+#if HHI_AIS_SPEEDUP
+      dModeCost[ uiMode ] = dPUCost;
+#endif
+#endif
+
       // check r-d cost
       if( dPUCost < dBestPUCost )
       {
@@ -2541,6 +2558,32 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     if( bAISEnabled )
     {
       Bool bTestISMode = !bBestISMode;
+
+#if HHI_AIS_SPEEDUP
+      Double dCostMin = MAX_DOUBLE;
+      Double dCostMax = MAX_DOUBLE;
+
+      for( UInt ui = 0; ui < 10; ui++ )
+      {
+        if( dModeCost[ ui ] < MAX_DOUBLE )
+        {
+          if( dModeCost[ ui ] < dCostMin )
+          {
+            dCostMin = dModeCost[ ui ];
+          }
+
+          if( dCostMax == MAX_DOUBLE || dModeCost[ ui ] > dCostMax )
+          {
+            dCostMax = dModeCost[ ui ];
+          }
+        }
+      }
+
+      Double dThreshold = ( dCostMax - dCostMin ) / 8;
+      dThreshold *= 3;
+      dThreshold += dCostMin;
+#endif
+
       for( UInt uiMode = uiMinMode; uiMode < uiNewMaxMode; uiMode++ )
       {
         if( uiRdModeList[uiMode] == 2 )
@@ -2568,6 +2611,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         }
 #endif
         
+#if HHI_AIS_SPEEDUP
+        if( dModeCost[ uiMode ] > dThreshold )
+        {
+          continue;
+        }
+#endif
+
         pcCU->setLumaIntraDirSubParts ( uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
         
         // set intra smoothing mode
