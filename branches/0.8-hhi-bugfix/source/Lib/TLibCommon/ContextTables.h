@@ -57,7 +57,11 @@
 #define NUM_ADI_CTX                   2       ///< number of context models for intra prediction
 
 #if HHI_AIS
+#if HHI_AIS_ANGULAR_FIX
+#define NUM_ADI_FILT_CTX              35      ///< BB: number of context models for AIS flag (one for every row in Table 2‑5 in JCTVC-A125r1 except DC)
+#else
 #define NUM_ADI_FILT_CTX              5       ///< BB: number of context models for AIS flag (one for every row in Table 2‑5 in JCTVC-A125r1 except DC)
+#endif
 #endif
 
 #define NUM_CHROMA_PRED_CTX           4       ///< number of context models for intra prediction (chroma)
@@ -298,6 +302,41 @@ INIT_PLANAR_INTRA[3][NUM_PLANAR_INTRA_CTX][2] =
 static const Short
 INIT_INTRA_PRED_FILT[3][NUM_ADI_FILT_CTX][2] =
 {
+#if HHI_AIS_ANGULAR_FIX
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {   -5,   64 }, {   -3,   61 }, 
+    {    0,   64 }, {  -27,   83 }, {    0,   64 }, {    6,   55 }, 
+    {   11,   50 }, {    0,   64 }, {   -2,   50 }, {    0,   64 }, 
+    {   12,   41 }, {   15,   30 }, {    0,   64 }, {    4,   42 }, 
+    {    0,   64 }, {   13,   38 }, {   22,   14 }, {    0,   64 }, 
+    {   12,   38 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    5,   51 }, {    6,   53 }, 
+    {    0,   64 }, {    5,   44 }, {    0,   64 }, {    9,   53 }, 
+    {   -2,   72 }, {    0,   64 }, {    6,   44 }, {    0,   64 }, 
+    {   14,   40 }, {   11,   51 }, {    0,   64 }, {   -1,   57 }, 
+    {    0,   64 }, {   13,   59 }, {    0,   64 }, {    0,   64 }, 
+    {  -38,  144 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  }
+#else
   {
     {   -2,   62 }, {    0,   59 }, {    8,   44 }, {    4,   76 }, 
     {   56,  -54 }
@@ -310,6 +349,7 @@ INIT_INTRA_PRED_FILT[3][NUM_ADI_FILT_CTX][2] =
     {  -19,   94 }, {   -3,   62 }, {  -24,   97 }, {   -7,   82 }, 
     {    0,   64 }
   }
+#endif
 };
 #endif
 

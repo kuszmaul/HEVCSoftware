@@ -508,6 +508,42 @@ Void TComPrediction::predIntraLumaAng(TComPattern* pcTComPattern, UInt uiDirMode
   assert( iIntraSizeIdx <= 6 ); // 128x128
   assert( iWidth == iHeight  );
 
+#if HHI_AIS_ANGULAR_FIX
+  UInt uiFilter = UInt( g_aucIntraFilter[iIntraSizeIdx][uiDirMode] );
+  assert( uiFilter == 0 || uiFilter == 2 );
+
+  if( pcCU->getSlice()->getSPS()->getUseAIS() )
+  {
+    if( bSmoothing )
+    {
+      uiFilter = uiFilter == 0 ? 2 : 0;
+    }
+  } 
+  else
+  {
+    uiFilter = DEFAULT_IS == 0 ? 0: uiFilter;
+  }
+
+  if( uiDirMode == 2 )
+  {
+    ptrSrc = pcTComPattern->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
+  }
+#if HHI_AIS
+  else if( uiFilter == 0 )
+  {
+    ptrSrc = pcTComPattern->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
+  }
+  else if( uiFilter == 2 )
+  {
+    ptrSrc = pcTComPattern->getAdiFilteredBuf2( iWidth, iHeight, m_piYuvExt );
+  }
+#endif
+  else
+  {
+    ptrSrc = pcTComPattern->getAdiFilteredBuf1( iWidth, iHeight, m_piYuvExt );
+    assert(0);
+  }
+#else
   // Unfiltered buffer for DC prediction, once filtered for the rest of the modes (if not disabled by AIS)
   if( uiDirMode == 2 )
     ptrSrc = pcTComPattern->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
@@ -517,6 +553,7 @@ Void TComPrediction::predIntraLumaAng(TComPattern* pcTComPattern, UInt uiDirMode
 #endif
   else
     ptrSrc = pcTComPattern->getAdiFilteredBuf1( iWidth, iHeight, m_piYuvExt );
+#endif
 
   // get starting pixel in block
   Int sw = ( iWidth<<1 ) + 1;

@@ -2030,7 +2030,10 @@ UInt TComDataCU::getCtxIntraFiltFlagLumaAng( UInt uiAbsPartIdx )
 {
   UInt uiIntraDir    = (UInt)getLumaIntraDir( uiAbsPartIdx );
   UInt uiCtx         = 0;
-
+#if HHI_AIS_ANGULAR_FIX
+  // angular fix should be enabled for unified only
+  UInt uiCtxOffset   = 5 * ( g_aucConvertToBit[ getWidth( uiAbsPartIdx ) ] + 1 );
+#endif
   if( uiIntraDir < 2 )        // vert., hor.
     uiCtx = uiIntraDir;
   else if( uiIntraDir == 2 )  // DC
@@ -2038,7 +2041,11 @@ UInt TComDataCU::getCtxIntraFiltFlagLumaAng( UInt uiAbsPartIdx )
   else                        // angular
     uiCtx = 3;
 
+#if HHI_AIS_ANGULAR_FIX
+  return uiCtx + uiCtxOffset;
+#else
   return uiCtx;
+#endif
 }
 #endif
 

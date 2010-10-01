@@ -63,6 +63,8 @@
 #define HHI_RQT_FORCE_SPLIT_NxN           0           ///< MSHK: force split flags of residual quadtree for NxN PUs such that transform blocks are guaranteed to not span NxN PUs
 #define HHI_RQT_FORCE_SPLIT_RECT          0           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
 #define HHI_RQT_FORCE_SPLIT_ASYM          0           ///< MSHK: force split flags of residual quadtree for asymmetric such that transform blocks are guaranteed to not span PUs asymmetric PUs
+#define HHI_AIS_ANGULAR_FIX               1
+#define HHI_AIS_SPEEDUP                   1
 
 #if HHI_MRG_PU
 #define HHI_MRG_PU_BUGFIX                 1           ///< PU merge bug fix. addresses Tickets #95 and #97
