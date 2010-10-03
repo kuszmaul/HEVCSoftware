@@ -64,14 +64,16 @@ public:
       m_pcBitstream->read( 1, ruiBit    );
   }                   
 
+#ifdef ENABLE_LOAD_BALANCING
   Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
   UInt  getBalancedCPUs() { return m_uiBalancedCPUs; }
 
-protected:
-  TComBitstream*  m_pcBitstream;
-
 private:
 	UInt m_uiBalancedCPUs;
+#endif
+
+protected:
+  TComBitstream*  m_pcBitstream;
 };
 
 

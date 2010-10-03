@@ -96,9 +96,6 @@ public:
   Void  decodeBinEP       ( UInt& ruiBin                           );
   Void  decodeBinTrm      ( UInt& ruiBin                           );
 
-  Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
-  UInt  getBalancedCPUs() { return m_uiBalancedCPUs; }
-
 private:
   Void  xDecode           ( UInt uiIdx, UInt uiBits );
   Void  xDecodeEP         ();
@@ -108,7 +105,14 @@ private:
   TComBitstream*  m_pcTComBitstream;
   TComBitBuffer   m_acBinBuffer[ NUM_V2V_CODERS ];
 
+#ifdef ENABLE_LOAD_BALANCING
+public:
+  Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
+  UInt  getBalancedCPUs() { return m_uiBalancedCPUs; }
+
+private:
   UInt m_uiBalancedCPUs;
+#endif
 };
 
 

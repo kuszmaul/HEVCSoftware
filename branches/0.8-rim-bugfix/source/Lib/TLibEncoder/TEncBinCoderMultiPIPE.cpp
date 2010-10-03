@@ -110,7 +110,9 @@ TEncBinMultiPIPE::finish()
   UInt  auiWrittenBits[ NUM_V2V_CODERS ];
   UInt  uiNumOverallBits = 0;
   m_cBitBuffer.reset();
+#ifdef ENABLE_LOAD_BALANCING
   uiBalancedOffset = 0;
+#endif
   for( UInt uiIdx = NUM_V2V_CODERS - 1; uiIdx > 0; uiIdx-- )
   {
     xEncode( uiIdx, auiWrittenBits[ uiIdx ] );
@@ -126,11 +128,13 @@ TEncBinMultiPIPE::finish()
     xEncodePartSize( m_pcTComBitIf, uiCode );
   }
 
+#ifdef ENABLE_LOAD_BALANCING
   //===== write load balancing information =====
   for (UInt uiIdx = 1; uiIdx < m_uiBalancedCPUs; ++uiIdx) {
       m_pcTComBitIf->write( lbTempSpace[uiIdx * uiNumOverallBits
             / BALANCED_SEGMENT_SIZE / m_uiBalancedCPUs], 8 );
   }
+#endif
 
   //===== write data of partitions 11-1 to bitstream =====
   while( m_cBitBuffer.numAvailableBits() >= 32 )
@@ -231,11 +235,13 @@ TEncBinMultiPIPE::xEncode( UInt uiIdx, UInt& ruiWrittenBits )
     {
       UInt uiLength = UInt( ui64CW & 63 );
       m_cBitBuffer.insertBits( UInt( ui64CW >> 6 ), uiLength );
+#ifdef ENABLE_LOAD_BALANCING
       uiBalancedOffset += uiLength;
       if (uiBalancedOffset >= BALANCED_SEGMENT_SIZE) {
           lbTempSpace << (uiBalancedOffset - BALANCED_SEGMENT_SIZE);
           uiBalancedOffset -= BALANCED_SEGMENT_SIZE;
       }
+#endif
       uiState = 0;
     }
   }
@@ -244,11 +250,13 @@ TEncBinMultiPIPE::xEncode( UInt uiIdx, UInt& ruiWrittenBits )
     ui64CW  = paui64Codeword[ paucStateTrans[ ( uiState << 2 ) + 2 ] ];
     UInt uiLength = UInt( ui64CW & 63 );
     m_cBitBuffer.insertBits ( UInt( ui64CW >> 6 ), uiLength );
+#ifdef ENABLE_LOAD_BALANCING
     uiBalancedOffset += uiLength;
     if (uiBalancedOffset >= BALANCED_SEGMENT_SIZE) {
         lbTempSpace << (uiBalancedOffset - BALANCED_SEGMENT_SIZE);
         uiBalancedOffset -= BALANCED_SEGMENT_SIZE;
     }
+#endif
   }
   ruiWrittenBits = m_cBitBuffer.getWrittenBits() - uiStartBits;
 }

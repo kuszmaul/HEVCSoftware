@@ -111,7 +111,9 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
     if( iSymbolMode == 3 )
     {
       m_pcSbacDecoder->init( m_pcBinV2VwLB );
+#ifdef ENABLE_LOAD_BALANCING
       m_pcBinV2VwLB->setBalancedCPUs( getBalancedCPUs() );
+#endif
     }
     else if( iSymbolMode == 1 )
     {
@@ -120,7 +122,9 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
     else if( pcSlice->getMultiCodeword() )
     {
       m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinMultiPIPE );
+#ifdef ENABLE_LOAD_BALANCING
       m_pcBinMultiPIPE->setBalancedCPUs( getBalancedCPUs() );
+#endif
     }
     else
     {

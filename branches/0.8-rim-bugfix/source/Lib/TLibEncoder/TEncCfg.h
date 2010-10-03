@@ -201,7 +201,9 @@ public:
   Void      setSymbolMode                   ( Int   i )      { m_iSymbolMode = i; }
   Void      setMCWThreshold                 ( UInt ui )      { m_uiMCWThreshold = ui; }
   Void      setMaxPIPEDelay                 ( UInt ui )      { m_uiMaxPIPEDelay = ui; }
+#ifdef ENABLE_LOAD_BALANCING
   UInt      m_uiBalancedCPUs; //  number of CPUs for load balancing: 0 or 1 - disabled
+#endif
 
   //====== Loop/Deblock Filter ========
   Void      setLoopFilterDisable            ( Bool  b )      { m_bLoopFilterDisable       = b; }
@@ -259,8 +261,10 @@ public:
   Int       getSymbolMode                   ()      { return  m_iSymbolMode; }
   UInt      getMCWThreshold                 ()      { return  m_uiMCWThreshold; }
   UInt      getMaxPIPEDelay                 ()      { return  m_uiMaxPIPEDelay; }
+#ifdef ENABLE_LOAD_BALANCING
   Void      setBalancedCPUs                 ( UInt ui )  { m_uiBalancedCPUs = ui; }
   UInt      getBalancedCPUs                 ()           { return m_uiBalancedCPUs; }
+#endif
 
   //==== Loop/Deblock Filter ========
   Bool      getLoopFilterDisable            ()      { return  m_bLoopFilterDisable;       }

@@ -162,7 +162,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   xReadUvlc( uiCode ); pcSPS->setBitDepth     ( uiCode+8 ); g_uiBitDepth     = uiCode + 8;
   xReadUvlc( uiCode ); pcSPS->setBitIncrement ( uiCode   ); g_uiBitIncrement = uiCode;
 
+#ifdef ENABLE_LOAD_BALANCING
   xReadCode( 8, uiCode ); pcSPS->setBalancedCPUs( uiCode );
+#endif
 
   g_uiBASE_MAX  = ((1<<(g_uiBitDepth))-1);
 

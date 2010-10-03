@@ -113,7 +113,9 @@ Void TEncClearBuffer::finish() {
         putPrefCode(len);
     }
 
+#ifdef ENABLE_LOAD_BALANCING
     addLoadBalancingHeader();
+#endif
     for (k = 0; k < offset; myPutByte(temp_space[k++]));
 
     init();

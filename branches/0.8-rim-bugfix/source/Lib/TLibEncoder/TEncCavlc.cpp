@@ -440,7 +440,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   m_uiBitHLS += xWriteUvlc( pcSPS->getBitDepth() - 8 );
   m_uiBitHLS += xWriteUvlc( pcSPS->getBitIncrement() );
 
+#ifdef ENABLE_LOAD_BALANCING
   m_uiBitHLS += xWriteCode( pcSPS->getBalancedCPUs(), 8);
+#endif
 
 }
 
@@ -692,7 +694,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   xWriteUvlc( pcSPS->getBitDepth() - 8 );
   xWriteUvlc( pcSPS->getBitIncrement() );
 
+#ifdef ENABLE_LOAD_BALANCING
   xWriteCode( pcSPS->getBalancedCPUs(), 8);
+#endif
 
 }
 

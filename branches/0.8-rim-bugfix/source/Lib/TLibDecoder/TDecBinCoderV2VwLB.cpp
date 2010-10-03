@@ -42,7 +42,6 @@
 void TDecClearBuffer::init() {
 
     int k, n;
-    UInt cpus = getBalancedCPUs();
 
     UChar buf = 0;
     mergedStateCount = 0;
@@ -67,8 +66,11 @@ void TDecClearBuffer::init() {
 
     for (k = 0; k < mergedStateCount; ++k)
         seq_coded_len[k] = get_pref_code();
+#ifdef ENABLE_LOAD_BALANCING
+    UInt cpus = getBalancedCPUs();
     for (k = 1; k < cpus; ++k)
         get_pref_code();
+#endif
 
     temp_space[1] = temp_space[0] = 0;
     index = 1;
