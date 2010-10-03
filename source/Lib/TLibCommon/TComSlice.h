@@ -122,7 +122,9 @@ private:
 
   Int m_iAMPAcc[MAX_CU_DEPTH];
 
+#ifdef ENABLE_LOAD_BALANCING
   UInt        m_uiBalancedCPUs;
+#endif
 
 public:
   TComSPS();
@@ -156,8 +158,10 @@ public:
   Void setPadY        ( Int  u ) { m_aiPad[1] = u; }
   Int  getPad         ( Int  u ) { assert(u < 2); return m_aiPad[u];}
   Int* getPad         ( )        { return m_aiPad; }
+#ifdef ENABLE_LOAD_BALANCING
   Void setBalancedCPUs( UInt u ) { m_uiBalancedCPUs = u; }
   UInt getBalancedCPUs()         { return m_uiBalancedCPUs; }
+#endif
 
   // physical transform
   Void setMaxTrSize   ( UInt u ) { m_uiMaxTrSize = u;       }
@@ -286,7 +290,9 @@ private:
   UInt        m_uiMaxPIPEDelay;
   Bool        m_bLoopFilterDisable;
 
+#ifdef ENABLE_LOAD_BALANCING
   UInt        m_uiBalancedCPUs;
+#endif
 
   Bool        m_bDRBFlag;             //  flag for future usage as reference buffer
   ERBIndex    m_eERBIndex;            //  flag for future usage as reference buffer
@@ -365,7 +371,9 @@ public:
   Bool      getMultiCodeword    ()                      { return  m_bMultiCodeword;     }
   UInt      getMaxPIPEDelay     ()                      { return  m_uiMaxPIPEDelay;     }
   Bool      getLoopFilterDisable()                      { return  m_bLoopFilterDisable; }
+#ifdef ENABLE_LOAD_BALANCING
   UInt      getBalancedCPUs     ()                      { return  m_uiBalancedCPUs;     }
+#endif
 #ifdef QC_SIFO_PRED
 	Void setUseSIFO_Pred      ( Bool b ) { m_bUseSIFO_Pred    =b;        }
 	Bool getUseSIFO_Pred      ()         { return m_bUseSIFO_Pred;        }
@@ -397,7 +405,9 @@ public:
   Void      setMultiCodeword    ( Bool b )                      { m_bMultiCodeword    = b;      }
   Void      setMaxPIPEDelay     ( UInt ui )                     { m_uiMaxPIPEDelay    = ui;     }
   Void      setLoopFilterDisable( Bool b )                      { m_bLoopFilterDisable= b;      }
+#ifdef ENABLE_LOAD_BALANCING
   Void      setBalancedCPUs     ( UInt ui )                     { m_uiBalancedCPUs    = ui;     }
+#endif
 
   Void      setRefPic           ( TComPic* p, RefPicList e, Int iRefIdx ) { m_apcRefPicList[e][iRefIdx] = p; }
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }

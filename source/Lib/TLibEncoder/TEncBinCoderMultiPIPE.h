@@ -101,9 +101,6 @@ public:
   Void  encodeBinEP       ( UInt  uiBin                            );
   Void  encodeBinTrm      ( UInt  uiBin                            );
 
-  Void    setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
-  UInt    getBalancedCPUs() { return m_uiBalancedCPUs; }
-
 private:
   Void  xEncode           ( UInt uiIdx, UInt& ruiWrittenBits );
   Void  xEncodePartSize   ( TComBitIf* pcTComBitIf, UInt uiSize );
@@ -113,8 +110,15 @@ private:
   TComBitBuffer   m_acBinBuffer[ NUM_V2V_CODERS ];
   TComBitBuffer   m_cBitBuffer;
   DynamicArrayUChar lbTempSpace;
+
+#ifdef ENABLE_LOAD_BALANCING
   UInt uiBalancedOffset;
   UInt m_uiBalancedCPUs;
+
+public:
+  Void    setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
+  UInt    getBalancedCPUs() { return m_uiBalancedCPUs; }
+#endif
 };
 
 

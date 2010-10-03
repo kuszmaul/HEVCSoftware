@@ -109,11 +109,13 @@ TDecBinMultiPIPE::start()
     auiWrittenBits[ uiIdx ] = UInt( (Int)auiWrittenBits[ uiIdx + 1 ] + iDiff );
   }
 
+#ifdef ENABLE_LOAD_BALANCING
   //===== read load balancing information; ignore for now =====
   for (UInt uiIdx = 1; uiIdx < m_uiBalancedCPUs; ++uiIdx) {
       UInt uiSize;
       m_pcTComBitstream->read( 8, uiSize );
   }
+#endif
 
   //===== fill bit buffers =====
   for( UInt uiIdx = NUM_V2V_CODERS - 1; uiIdx > 0; uiIdx-- )

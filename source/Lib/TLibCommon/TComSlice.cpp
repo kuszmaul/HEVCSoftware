@@ -45,7 +45,9 @@ TComSlice::TComSlice()
   m_iSymbolMode         = 1;
   m_bMultiCodeword      = false;
   m_uiMaxPIPEDelay      = 0;
+#ifdef ENABLE_LOAD_BALANCING
   m_uiBalancedCPUs      = 8;
+#endif
   m_aiNumRefIdx[0]      = 0;
   m_aiNumRefIdx[1]      = 0;
   m_bLoopFilterDisable  = false;

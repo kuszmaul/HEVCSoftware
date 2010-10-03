@@ -342,7 +342,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
   //---------------
   pcSlice->setRefPOCList();
 
+#ifdef ENABLE_LOAD_BALANCING
   m_cGopDecoder.setBalancedCPUs( getBalancedCPUs() );
+#endif
   //  Decode a picture
   m_cGopDecoder.decompressGop ( bEos, pcBitstream, pcPic );
 

@@ -58,7 +58,6 @@ private:
   Int                     m_iGopSize;
   Bool                    m_bGopSizeSet;
   int                     m_iMaxRefPicNum;
-  UInt                    m_uiBalancedCPUs;
 
   UInt                    m_uiValidPS;
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
@@ -95,8 +94,12 @@ public:
 
   Void  deletePicBuffer();
 
+#ifdef ENABLE_LOAD_BALANCING
   Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
   UInt  getBalancedCPUs() { return m_cSPS.getBalancedCPUs(); }
+private:
+  UInt                    m_uiBalancedCPUs;
+#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

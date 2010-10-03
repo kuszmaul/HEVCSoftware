@@ -59,9 +59,6 @@ public:
   virtual Void  resetBits         () { assert(0); }
   virtual UInt  getNumWrittenBits () { assert(0); return 0; }
 
-  Void    setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
-  UInt    getBalancedCPUs() { return m_uiBalancedCPUs; }
-
 protected:
   virtual Void  encodeBin ( UInt uiSymbol, ContextModel& rcSCModel ) {
       m_pcBitIf->write( uiSymbol, 1 );
@@ -76,8 +73,14 @@ protected:
 protected:
   TComBitIf*  m_pcBitIf;
 
+#ifdef ENABLE_LOAD_BALANCING
 private:
   UInt m_uiBalancedCPUs;
+
+public:
+  Void    setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
+  UInt    getBalancedCPUs() { return m_uiBalancedCPUs; }
+#endif
 };
 
 const int BUFFER_SIZE = 5000000;
@@ -116,7 +119,9 @@ public:
 
 protected:
     void myPutByte(UChar v) { m_pcBitIf->write( v, 8 ); }
+#ifdef ENABLE_LOAD_BALANCING
     virtual UInt addLoadBalancingHeader() { return 0; }
+#endif
     virtual void groupStates() { }
     UInt putPrefCode(UInt v);
     UInt getPrefCost(UInt v);
@@ -162,6 +167,7 @@ class TEncV2V : public TEncClearBuffer {
     void encode_bit(unsigned short state, UChar symbol);
     virtual UInt encode_seq(int tree);
 
+#ifdef ENABLE_LOAD_BALANCING
     virtual UInt addLoadBalancingHeader() {
         UInt res = 0;
         UInt cpus = getBalancedCPUs();
@@ -169,6 +175,7 @@ class TEncV2V : public TEncClearBuffer {
             res += putPrefCode(LB_temp_space[k * offset / cpus]);
         return res;
     }
+#endif
 
     virtual void groupStates();
 

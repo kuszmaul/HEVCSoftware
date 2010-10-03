@@ -104,7 +104,9 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_pcLoopFilter         = pcTEncTop->getLoopFilter();
   m_pcBitCounter         = pcTEncTop->getBitCounter();
   m_pcBinCABAC4V2V       = pcTEncTop->getBinCABAC4V2V();
+#ifdef ENABLE_LOAD_BALANCING
   m_uiBalancedCPUs       = pcTEncTop->getBalancedCPUs();
+#endif
 
   // Adaptive Loop filter
   m_pcAdaptiveLoopFilter = pcTEncTop->getAdaptiveLoopFilter();
@@ -315,7 +317,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       // write SPS
       if ( m_bSeqFirst )
       {
+#ifdef ENABLE_LOAD_BALANCING
         pcSlice->getSPS()->setBalancedCPUs( getBalancedCPUs() );
+#endif
         m_pcEntropyCoder->encodeSPS( pcSlice->getSPS() );
 #if HHI_NAL_UNIT_SYNTAX
         pcBitstreamOut->write( 1, 1 );
@@ -355,7 +359,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if( pcSlice->getSymbolMode() == 3 )
         {
           m_pcSbacCoder->init( (TEncBinIf*)m_pcBinV2VwLB );
+#ifdef ENABLE_LOAD_BALANCING
           m_pcBinV2VwLB->setBalancedCPUs( getBalancedCPUs() );
+#endif
         }
         else if( pcSlice->getSymbolMode() == 1 )
         {
@@ -364,7 +370,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         else if( pcSlice->getMultiCodeword() )
         {
           m_pcSbacCoder->init( (TEncBinIf*)m_pcBinMultiPIPE );
+#ifdef ENABLE_LOAD_BALANCING
           m_pcBinMultiPIPE->setBalancedCPUs( getBalancedCPUs() );
+#endif
         }
         else
         {
@@ -454,7 +462,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             m_pcBinV2VwLB->setState( m_pcBinCABAC4V2V->getState() );
             m_pcBinV2VwLB->setpState( m_pcBinCABAC4V2V->getpState() );
           }
+#ifdef ENABLE_LOAD_BALANCING
           m_pcBinV2VwLB->setBalancedCPUs( getBalancedCPUs() );
+#endif
         }
         else if( pcSlice->getSymbolMode() == 1 )
         {
@@ -463,7 +473,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         else if( pcSlice->getMultiCodeword() )
         {
           m_pcSbacCoder->init( (TEncBinIf*)m_pcBinMultiPIPE );
+#ifdef ENABLE_LOAD_BALANCING
           m_pcBinMultiPIPE->setBalancedCPUs( getBalancedCPUs() );
+#endif
         }
         else
         {

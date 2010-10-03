@@ -204,7 +204,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("SBACRD", m_bUseSBACRD, true, "SBAC based RD estimation")
     ("MultiCodewordThreshold", m_uiMCWThreshold, 0u)
     ("MaxPIPEBufferDelay", m_uiMaxPIPEDelay, 0u)
+#ifdef ENABLE_LOAD_BALANCING
     ("BalancedCPUs", m_uiBalancedCPUs, 8u)
+#endif  
 
     /* Deblocking filter parameters */
     ("LoopFilterDisable", m_bLoopFilterDisable, false)
@@ -402,8 +404,6 @@ Void TAppEncCfg::xCheckParameter()
   m_uiMaxPIPEDelay = ( m_uiMCWThreshold > 0 ? 0 : ( m_uiMaxPIPEDelay >> 6 ) << 6 );
 #ifdef ENABLE_LOAD_BALANCING
   xConfirmPara( m_uiBalancedCPUs > 255,                                                     "BalancedCPUs must not be greater than 255" );
-#else
-  m_uiBalancedCPUs = 0;
 #endif
 
   // max CU width and height should be power of 2
@@ -579,7 +579,11 @@ Void TAppEncCfg::xPrintParameter()
   }
   else
   {
+#ifdef ENABLE_LOAD_BALANCING
     printf("Entropy coder                : V2V with load balancing on %d bin decoders\n", m_uiBalancedCPUs);
+#else
+    printf("Entropy coder                : V2V\n");
+#endif  
   }
 
   printf("\n");

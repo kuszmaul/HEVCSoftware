@@ -70,7 +70,6 @@ private:
   Int                     m_iRateGopSize;
   Int                     m_iNumPicCoded;
   Bool                    m_bFirst;
-  UInt                    m_uiBalancedCPUs;
 
   //  Access channel
   TEncTop*                m_pcEncTop;
@@ -108,8 +107,13 @@ public:
   Void  create      ();
   Void  destroy     ();
 
+#ifdef ENABLE_LOAD_BALANCING
+private:
+  UInt                    m_uiBalancedCPUs;
+public:
   Void setBalancedCPUs( UInt u ) { m_uiBalancedCPUs = u; }
   UInt getBalancedCPUs()         { return m_uiBalancedCPUs; }
+#endif
 
   Void  init        ( TEncTop* pcTEncTop );
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, TComList<TComBitstream*> rcListBitstream );
