@@ -73,6 +73,20 @@ protected:
   TComYuv   m_acYuvPred[2];
   TComYuv   m_cYuvPredTemp;
   TComYuv   m_cYuvExt;
+
+#ifdef GEOM
+  GeometricPartition*       m_pcGeometricPartition;
+  Int                       m_iMAX_mask_amplitude;
+  Int**                     m_aaiMbPartitionMaskLuma;
+  Int**			            m_aaiMbMask_start_stop_p_Luma;
+  Int**                     m_aaiMbPartitionMaskChroma;
+  Int**			            m_aaiMbMask_start_stop_p_Chroma;
+#endif
+#ifdef GEOM
+  Char **m_aacMbMVPMask;
+  Char **m_aacMbObmcMaskLuma;
+  Char **m_aacMbObmcMaskChroma;
+#endif
 #ifdef DCM_PBIC
   TComYuv   m_acYuvTempIC[2];
 #endif
@@ -123,6 +137,10 @@ protected:
   Void xPredICompChromaBlk      (TComIc* pcIc, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel* piDst, Int iSrcStride, Int iSrcStep, Pel* piSrc, RefPicList eRefPicList);
 #endif
 
+#ifdef GEOM
+  Void xPredInterLumaGeo        (Pel *pLumaTemp, TComYuv* rpcYuvSrc, Int iWidth, Int iHeight);
+  Void xPredInterChromaGeo      (Pel *pCbTemp, Pel *pCrTemp, TComYuv* rpcYuvSrc, Int iWidth, Int iHeight);
+#endif
 public:
   TComPrediction();
   virtual ~TComPrediction();
@@ -173,6 +191,19 @@ public:
 
 #if PLANAR_INTRA
   Void predIntraPlanar            ( Int* piSrc, Int iDelta, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft );
+#endif
+
+#ifdef GEOM
+  Void setGeometricPartitionPtr    ( GeometricPartition*  pcGeometricPartition )   { m_pcGeometricPartition      = pcGeometricPartition; }
+  Void setGeoPartitionMaskPtrLuma  ( Int** aaiMbPartitionMask )                    { m_aaiMbPartitionMaskLuma    = aaiMbPartitionMask;   } 
+  Void setGeoPartitionMaskPtrChroma( Int** aaiMbPartitionMask )                    { m_aaiMbPartitionMaskChroma  = aaiMbPartitionMask;   } 
+#ifdef OBMC
+  Void setGeoObmcMaskPtrLuma       ( Char** aacMbObmcMaskLuma   )                   { m_aacMbObmcMaskLuma         = aacMbObmcMaskLuma;    } 
+  Void setGeoObmcMaskPtrChroma     ( Char** aacMbObmcMaskChroma )                   { m_aacMbObmcMaskChroma       = aacMbObmcMaskChroma;  } 
+#endif
+  Void setGeoMAXMaskAmplitude      ( Int iMAX_mask_amplitude  )                    { m_iMAX_mask_amplitude       = iMAX_mask_amplitude;  } 
+  Void setGeoMVPMask               ( Char** aacMbMVPMask )                         { m_aacMbMVPMask              = aacMbMVPMask; }
+  Char** getGeoMVPMask             ()                                              { return m_aacMbMVPMask; }
 #endif
 
   Int* getPredicBuf()             { return m_piYuvExt;      }

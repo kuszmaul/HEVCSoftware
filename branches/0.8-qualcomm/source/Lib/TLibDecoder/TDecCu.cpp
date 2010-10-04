@@ -49,12 +49,18 @@ TDecCu::TDecCu()
 TDecCu::~TDecCu()
 {
 }
-
+#ifdef GEOM
+Void TDecCu::init( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction,  GeometricPartition*       pcGeometricPartition)
+#else
 Void TDecCu::init( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction)
+#endif
 {
   m_pcEntropyDecoder  = pcEntropyDecoder;
   m_pcTrQuant         = pcTrQuant;
   m_pcPrediction      = pcPrediction;
+#ifdef GEOM
+  m_pcGeometricPartition = pcGeometricPartition;
+#endif
 }
 
 /** \param    uiMaxDepth    total number of allowable depth
@@ -85,6 +91,16 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   UInt* piTmp = &g_auiZscanToRaster[0];
   initZscanToRaster(m_uiMaxDepth, 1, 0, piTmp);
   initRasterToZscan( uiMaxWidth, uiMaxHeight, m_uiMaxDepth );
+
+#ifdef GEOM
+  piTmp = &g_auiZscanToRasterDepth1[0];
+  if (m_uiMaxDepth > 1)
+	  initZscanToRaster(m_uiMaxDepth-1, 1, 0, piTmp);
+
+  piTmp = &g_auiZscanToRasterDepth2[0];
+  if (m_uiMaxDepth > 2)
+	  initZscanToRaster(m_uiMaxDepth-2, 1, 0, piTmp);
+#endif
 
   // initialize conversion matrix from partition index to pel
   initRasterToPelXY( uiMaxWidth, uiMaxHeight, m_uiMaxDepth );
@@ -350,7 +366,9 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
 
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-
+#ifdef GEOM
+  m_pcPrediction->setGeometricPartitionPtr (m_pcGeometricPartition);
+#endif
   // inter prediction
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 

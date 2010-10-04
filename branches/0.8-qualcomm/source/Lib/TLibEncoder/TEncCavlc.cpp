@@ -919,6 +919,12 @@ Void TEncCavlc::codeROTindex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   return;
 }
 
+#ifdef GEOM
+Void TEncCavlc::codeMVPIdxGeo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar uhSegm )
+{
+}
+#endif
+
 Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
   Int iSymbol = pcCU->getMVPIdx(eRefList, uiAbsPartIdx);

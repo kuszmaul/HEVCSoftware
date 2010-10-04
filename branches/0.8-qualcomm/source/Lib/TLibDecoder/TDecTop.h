@@ -82,7 +82,9 @@ private:
   TDecV2V                 m_cBinV2VwLB;
   TComLoopFilter          m_cLoopFilter;
   TComAdaptiveLoopFilter  m_cAdaptiveLoopFilter;
-
+#ifdef GEOM
+  GeometricPartition*     m_pcGeometricPartition;
+#endif
 public:
   TDecTop();
   virtual ~TDecTop();
@@ -97,6 +99,9 @@ public:
 
   Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
   UInt  getBalancedCPUs() { return m_cSPS.getBalancedCPUs(); }
+#ifdef GEOM
+  GeometricPartition*     getGEOPart            () {return m_pcGeometricPartition;}
+#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

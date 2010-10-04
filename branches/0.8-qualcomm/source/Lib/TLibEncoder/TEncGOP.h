@@ -100,7 +100,9 @@ private:
 
   // indicate sequence first
   Bool                    m_bSeqFirst;
-
+#ifdef GEOM
+  GeometricPartition*       m_pcGeometricPartition;
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();

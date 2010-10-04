@@ -114,6 +114,10 @@ protected:
   MvPredMeasure   m_cMvPredMeasure;
 #endif
 
+#ifdef GEOM
+  GeoData       m_GeoData [TCH_GEO_NUM_CAND + 1];
+  UInt          m_uiGeoCand;
+#endif
 public:
   TEncSearch();
   virtual ~TEncSearch();
@@ -228,7 +232,25 @@ public:
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
                                   Bool        bUseRes = false );
-
+#ifdef GEOM
+  UInt    getNumGeoCand ()             {return m_uiGeoCand;      }
+  GeoData* getGeoData    () {return m_GeoData;}
+  GeoData getGeoData    ( UInt uiIdx ) {return m_GeoData [uiIdx];}
+  /// encoder estimation - inter prediction (non-skip)
+  Void predInterSearchGeo          ( TComDataCU* pcCU,
+                                  TComYuv*    pcOrgYuv,
+                                  TComYuv*&   rpcPredYuv,
+                                  TComYuv*&   rpcResiYuv,
+                                  TComYuv*&   rpcRecoYuv,                                  
+                                  Bool        bPreSelect,
+                                  UInt        uiGeoCand,
+                                  Bool        bMvReuse,
+                                  Bool        bUseRes = false );
+#ifdef GEOM_SPEED
+  Bool xGetRegularMotion( TComDataCU* pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred );
+  Void xCheckRegularMV( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred, TComMv* pcMv, UInt& ruiBits, UInt& ruiCost );
+#endif
+#endif
   /// encoder estimation - intra prediction (skip)
   Void predInterSkipSearch      ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,

@@ -41,6 +41,10 @@
 #include "TComPattern.h"
 #include "TComMv.h"
 
+#ifdef GEOM
+#include "GeometricPartition.h"
+#endif
+
 class DistParam;
 class TComPattern;
 
@@ -94,6 +98,12 @@ public:
 #endif
     iSubShift = 0;
   }
+
+#ifdef GEOM
+  Int**           m_aaiMbPartitionMask;
+  Int             m_iMAX_mask_amplitude;
+  Int**			  m_aaiMbMask_start_stop_p;
+#endif
 };
 
 /// RD cost computation class
@@ -122,6 +132,12 @@ private:
   UInt                    m_uiCost;
   Int                     m_iCostScale;
   Int                     m_iSearchLimit;
+
+#ifdef GEOM
+  Int**                   m_aaiMbPartitionMask;
+  Int                     m_iMAX_mask_amplitude;
+  Int**			          m_aaiMbMask_start_stop_p;
+#endif
 
 public:
   TComRdCost();
@@ -174,6 +190,13 @@ public:
   UInt    getCost( UInt b )                 { return ( m_uiCost * b ) >> 16; }
   UInt    getBits( Int x, Int y )           { return m_puiHorCost[ x * (1<<m_iCostScale)] + m_puiVerCost[ y * (1<<m_iCostScale) ]; }
 
+#ifdef GEOM
+ Void setDistParamGeo( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam );
+ Void setGeoPartitionMaskPtr (Int** aaiMbPartitionMask)      { m_aaiMbPartitionMask     = aaiMbPartitionMask;     } 
+ Void setGeoMAXMaskAmplitude (Int iMAX_mask_amplitude)       { m_iMAX_mask_amplitude    = iMAX_mask_amplitude;  } 
+ Void setGeoMaskTablePtr     (Int**	 aaiMbMask_start_stop_p) { m_aaiMbMask_start_stop_p = aaiMbMask_start_stop_p; } 
+#endif
+
 private:
 
   static UInt xGetSSE           ( DistParam* pcDtParam );
@@ -199,6 +222,12 @@ private:
   static UInt xGetSADs32        ( DistParam* pcDtParam );
   static UInt xGetSADs64        ( DistParam* pcDtParam );
   static UInt xGetSADs16N       ( DistParam* pcDtParam );
+  
+#ifdef GEOM
+  //static UInt xGetSSEGEO          ( DistParam* pcDtParam );
+  static UInt xGetSADGEO          ( DistParam* pcDtParam );
+  static UInt xGetSADsGEO         ( DistParam* pcDtParam );
+#endif
 
   static UInt xGetHADs4         ( DistParam* pcDtParam );
   static UInt xGetHADs8         ( DistParam* pcDtParam );
@@ -239,12 +268,18 @@ private:
   static UInt xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
   static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
   static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
-
+#if defined GEOM && defined ROUNDING_CONTROL_BIPRED
+  //static UInt xGetSSEGEO          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
+  static UInt xGetSADGEO          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
+  static UInt xGetSADsGEO         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
+#endif
 #endif
 
 public:
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
-
+#ifdef GEOM
+  UInt   getDistPartGeo( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
+#endif
 };// END CLASS DEFINITION TComRdCost
 
 

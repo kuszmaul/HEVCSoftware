@@ -101,6 +101,9 @@ private:
   UInt                  m_uiMITableVlcIdx;
 #endif
 
+#ifdef GEOM
+   GeometricPartitionBlock * m_pcGeometricPartitionBlock;
+#endif
 public:
   Void  resetEntropy        ( TComSlice* pcSlice  );
   Void  setBitstream        ( TComBitstream* p    )      { m_pcBitstream = p; }
@@ -186,6 +189,13 @@ public:
 #endif
 #ifdef QC_SIFO
   Void  parseSwitched_Filters      (TComSlice*& rpcSlice, TComPrediction* m_cPrediction);
+#endif
+
+#ifdef GEOM
+  Void parseInterDirGeo     ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth );
+  Void parseRefFrmIdxGeo    ( TComDataCU* pcCU, Int&  riRefFrmIdx, UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth, RefPicList eRefList );
+  Void parseMvdGeo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void setGeometricPartitionBlockPtr (GeometricPartitionBlock* pcGeometricPartitionBlock) {m_pcGeometricPartitionBlock = pcGeometricPartitionBlock;}
 #endif
 
 };

@@ -95,7 +95,9 @@ private:
   Int*                    m_piRdPicQp;                          ///< array of picture QP candidates (int-type)
 
   UInt                    m_uiV2V;
-
+#ifdef GEOM
+  GeometricPartition*       m_pcGeometricPartition;
+#endif
 protected:
   Bool    xEstimateWPSlice    ( TComSlice* rpcSlice, RefPicList eRefPicList, EFF_MODE eEffMode  );  ///< generate effect virtual ref.
 

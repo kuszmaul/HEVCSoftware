@@ -129,6 +129,12 @@ public:
   virtual Void codeMvdIcd        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
   virtual ContextModel* getZTreeCtx ( Int iIdx ) = 0;
 #endif
+#ifdef GEOM
+  virtual Void codeInterDirGeo   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UChar ucSegm ) = 0;
+  virtual Void codeRefFrmIdxGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm ) = 0;
+  virtual Void codeMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm ) = 0;
+  virtual Void codeMVPIdxGeo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar uhSegm )= 0;
+#endif
   virtual Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
 #if QC_MDDT
@@ -172,9 +178,14 @@ public:
 #endif
 
   TEncEntropyIf*      m_pcEntropyCoderIf;
-
+#ifdef GEOM
+	GeometricPartitionBlock * m_pcGeometricPartitionBlock;
+#endif
 public:
-  // SPS
+#ifdef GEOM
+	Void setpcGeometricPartitionBlock (GeometricPartitionBlock*  pcGeometricPartitionBlock) { m_pcGeometricPartitionBlock = pcGeometricPartitionBlock; }
+#endif
+	// SPS
   Void encodeSPS               ( TComSPS* pcSPS );
   Void encodePPS               ( TComPPS* pcPPS );
   Bool getAlfCtrl() {return m_pcEntropyCoderIf->getAlfCtrl();}

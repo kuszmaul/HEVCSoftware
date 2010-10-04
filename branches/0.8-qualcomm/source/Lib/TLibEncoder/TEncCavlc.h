@@ -255,6 +255,12 @@ public:
   Void codeZTree         ( TComZeroTree* pcZTree, TComZTNode* pcZTNode );
   ContextModel* getZTreeCtx ( Int iIdx );
 #endif
+#ifdef GEOM
+  Void codeInterDirGeo   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UChar ucSegm ) {}
+  Void codeRefFrmIdxGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm ){}
+  Void codeMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm ){}
+  Void codeMVPIdxGeo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar uhSegm );
+#endif
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );

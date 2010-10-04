@@ -376,6 +376,13 @@ Void TComLoopFilter::xSetEdgefilterPU( TComDataCU* pcCU, UInt uiAbsZorderIdx )
       xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_VER, uiWidthInBaseUnits - uiQWidthInBaseUnits, m_stLFCUParam.bInternalEdge );
       break;
     }
+#ifdef GEOM
+ case SIZE_GEO: 
+    {
+      break;
+    }
+
+#endif
   default:
     {
       assert(0);

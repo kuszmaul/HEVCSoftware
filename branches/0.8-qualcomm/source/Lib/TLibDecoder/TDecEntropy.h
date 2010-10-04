@@ -104,6 +104,12 @@ public:
   virtual Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 
   virtual Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#ifdef GEOM
+  virtual Void parseInterDirGeo   ( TComDataCU* pcCU, UInt& ruiInterDir,  UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth ) = 0;
+  virtual Void parseRefFrmIdxGeo  ( TComDataCU* pcCU, Int& riRefFrmIdx,   UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth, RefPicList eRefList ) = 0;
+  virtual Void parseMvdGeo        ( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock ) = 0;
+  virtual Void setGeometricPartitionBlockPtr (GeometricPartitionBlock* pcGeometricPartitionBlock) = 0;
+#endif
   virtual Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
 
@@ -152,9 +158,17 @@ class TDecEntropy
 private:
   TDecEntropyIf*  m_pcEntropyDecoderIf;
   TComPrediction* m_pcPrediction;
+#ifdef GEOM
+ GeometricPartition* m_pcGeometricPartition;
+ GeometricPartitionBlock * m_pcGeometricPartitionBlock;
+#endif
 
 public:
+#ifdef GEOM
+  Void init (TComPrediction* p, GeometricPartition*  pcGeometricPartition) {m_pcPrediction = p; m_pcGeometricPartition = pcGeometricPartition; m_pcGeometricPartitionBlock = NULL;}
+#else
   Void init (TComPrediction* p) {m_pcPrediction = p;}
+#endif
   Void decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList, TComDataCU* pcSubCU );
 #if HHI_MRG
 #if HHI_MRG_PU

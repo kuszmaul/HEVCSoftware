@@ -172,6 +172,13 @@ public:
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#ifdef GEOM
+  Void codeMVPIdxGeo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar uhSegm );
+  Void codeGeoMode       (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
+  Void codeInterDirGeo   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UChar ucSegm );
+  Void codeRefFrmIdxGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm );
+  Void codeMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm );
+#endif
 #if PLANAR_INTRA
   Void codePlanarInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif

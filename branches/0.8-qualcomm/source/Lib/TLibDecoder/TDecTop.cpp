@@ -73,6 +73,14 @@ Void TDecTop::destroy()
   m_apcSlicePilot = NULL;
 
   m_cSliceDecoder.destroy();
+
+#ifdef GEOM
+  if (m_pcGeometricPartition)
+  {
+    m_pcGeometricPartition->destroy ();
+    m_pcGeometricPartition = NULL;
+  }
+#endif
 }
 
 Void TDecTop::init()
@@ -80,9 +88,22 @@ Void TDecTop::init()
   // initialize ROM
   initROM();
 
+#ifdef GEOM
+  float AnglesStep   =   11.25;  
+  float DistanceStep =    1;  
+  GeometricPartition ::create( m_pcGeometricPartition, true  );
+  printf("\nUsing Geometric Mode: QAngle=%f, QPosition=%f\n\n",AnglesStep,DistanceStep);  
+  m_pcGeometricPartition       ->initEdgeDictionaries(AnglesStep, DistanceStep);            
+  m_pcGeometricPartition       ->initLookUpTables(true);   //Uncoment when ready to use it
+  m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cBinMultiCABAC, &m_cBinPIPE, &m_cBinMultiPIPE, &m_cBinV2VwLB, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter, m_pcGeometricPartition );
+  m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder, m_pcGeometricPartition );
+  m_cEntropyDecoder.init(&m_cPrediction, m_pcGeometricPartition );
+#else
   m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cBinMultiCABAC, &m_cBinPIPE, &m_cBinMultiPIPE, &m_cBinV2VwLB, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter );
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
+#endif
+
 }
 
 Void TDecTop::deletePicBuffer ( )
@@ -259,7 +280,11 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
   // Recursive structure
   m_cCuDecoder.create ( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
+#ifdef GEOM
+  m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction, m_pcGeometricPartition );
+#else
   m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
+#endif
   m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize(), m_apcSlicePilot->getSPS()->getUseROT() );
 
   m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );

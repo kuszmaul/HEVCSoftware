@@ -114,6 +114,9 @@ TDecSbac::TDecSbac()
 
   m_bAlfCtrl = false;
   m_uiMaxAlfCtrlDepth = 0;
+#ifdef GEOM
+  m_pcGeometricPartitionBlock = NULL;
+#endif
 }
 
 TDecSbac::~TDecSbac()
@@ -976,7 +979,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
-
+#ifdef GEOM	
+  Int iGeoMode=-1;
+#endif
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
@@ -1024,7 +1029,18 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           eMode = SIZE_2Nx2N;
       }
     }
-
+#ifdef GEOM
+	if (eMode == SIZE_2NxN)
+	{
+      //if(pcCU->getHeight(uiAbsPartIdx)>8 && pcCU->getHeight(uiAbsPartIdx)<64) height not set yet.
+      if((g_uiMaxCUHeight>>uiDepth)>8 && (g_uiMaxCUHeight>>uiDepth)<64)
+        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 0 ));     
+      if (uiSymbol == 0)
+      {
+        eMode = SIZE_GEO;
+      }              
+    }
+#endif
 #if HHI_RMP_SWITCH
     if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && pcCU->getSlice()->getSPS()->getUseRMP() )
 #else
@@ -1070,6 +1086,29 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+#ifdef GEOM
+      if (eMode == SIZE_GEO)
+      {
+		    iGeoMode = 0;
+			UChar iGeoModeBits;
+
+			UChar ucHeight = pcCU->getHeight(uiAbsPartIdx);
+			assert(ucHeight == 16 || ucHeight == 32);
+			if(ucHeight == 16) iGeoModeBits = 8;
+			if(ucHeight == 32) iGeoModeBits = 9;
+			for(Int i=0; i<iGeoModeBits; i++)
+			{
+				m_pcTDecBinIf->decodeBinEP( uiSymbol );
+				iGeoMode |= (uiSymbol<<i);
+			}	        
+#ifdef PEISONG_DEBUG
+            if(g_uhWritingFlag)
+              printf("iGeoMode = %d\n", iGeoMode);
+#endif
+      }
+  pcCU->setGeoModeSubParts( iGeoMode, uiAbsPartIdx, uiDepth );
+
+#endif
 
   UInt uiTrLevel = 0;
 
@@ -1315,6 +1354,162 @@ Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPar
   return;
 }
 
+#ifdef GEOM 
+Void TDecSbac::parseInterDirGeo(  TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth )
+{
+	UInt uiSymbol;
+	UInt uiCtx = pcCU->getCtxInterDirGeo( uiAbsPartIdx, ucSegm );
+
+	m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUInterDirSCModel.get( 0, 0, uiCtx ) );
+	if ( uiSymbol )
+	{
+		uiSymbol = 2;
+	}
+	else
+	{
+		m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUInterDirSCModel.get( 0, 0, 3 ) );
+	}
+	uiSymbol++;
+	ruiInterDir = uiSymbol;
+
+
+	return;
+}
+
+Void TDecSbac::parseRefFrmIdxGeo   ( TComDataCU* pcCU, Int& riRefFrmIdx,   UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth, RefPicList eRefList )
+{
+	UInt uiSymbol;
+	UInt uiCtx = pcCU->getCtxRefIdxGeo( uiAbsPartIdx, eRefList, ucSegm );
+
+	m_pcTDecBinIf->decodeBin ( uiSymbol, m_cCURefPicSCModel.get( 0, 0, uiCtx ) );
+	if ( uiSymbol )
+	{
+		xReadUnaryMaxSymbol( uiSymbol, &m_cCURefPicSCModel.get( 0, 0, 4 ), 1, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
+
+		uiSymbol++;
+	}
+	riRefFrmIdx = uiSymbol;
+
+	return;
+}
+
+#ifdef QC_AMVRES
+Void TDecSbac::parseMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{  
+  Int iHor, iVer;  
+  UInt uiAbsPartIdxL, uiAbsPartIdxA; 
+  Int iHorPred, iVerPred;
+  Int MVres=0;
+
+  Char** aacMbMVPMask = pcCU->getGeoMVPMask();
+
+  TComDataCU* pcCUL   = NULL;
+  TComDataCU* pcCUA   = NULL;
+  UChar ucLeft = aacMbMVPMask[eParIdxGeo][0]; //a
+  UChar ucAbove = aacMbMVPMask[eParIdxGeo][1]; //b
+
+  if(ucLeft)
+    pcCUL   = pcCU->getPULeft ( uiAbsPartIdxL, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+  if(ucAbove)
+    pcCUA   = pcCU->getPUAbove( uiAbsPartIdxA, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+
+  TComCUMvField* pcCUMvFieldL = ( pcCUL == NULL || pcCUL->isIntra( uiAbsPartIdxL ) ) ? NULL : pcCUL->getCUMvField( eRefList );
+  TComCUMvField* pcCUMvFieldA = ( pcCUA == NULL || pcCUA->isIntra( uiAbsPartIdxA ) ) ? NULL : pcCUA->getCUMvField( eRefList );
+
+  if( pcCU->getSlice()->getSPS()->getUseAMVRes() )
+  {
+	  Int iL =   ( (pcCUMvFieldL == NULL) ? 1 : (Int)(pcCUMvFieldL->getMVRes(uiAbsPartIdxL)));
+	  Int iV =   ( (pcCUMvFieldA == NULL) ? 1 : (Int)(pcCUMvFieldA->getMVRes(uiAbsPartIdxA)));  
+	  xReadMvResFlag(MVres,iL+iV);
+	  if (MVres)
+	  {
+		  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor()>>1 ) + 
+					 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor()>>1 );
+		  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer()>>1 ) + 
+					 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer()>>1 );
+
+		  xReadMvd( iHor, iHorPred, 0 );
+		  xReadMvd( iVer, iVerPred, 1 );
+		  iHor *=2;
+		  iVer *=2;
+	  } 
+	  else
+	  {
+		  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) + 
+					 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
+		  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) + 
+					 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
+	  
+		  xReadMvd( iHor, iHorPred, 0 );
+		  xReadMvd( iVer, iVerPred, 1 );
+	  }
+	  pcCU->getCUMvField( eRefList )->setAllMVRes( MVres>0, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+	  pcCU->getCUMvField( eRefList )->setAllMVResGeo( MVres>0, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, eParIdxGeo, uiDepth );
+  }
+  else
+  {
+	  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) + 
+				 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
+	  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) + 
+				 ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
+	  xReadMvd( iHor, iHorPred, 0 );
+      xReadMvd( iVer, iVerPred, 1 );
+	  pcCU->getCUMvField( eRefList )->setAllMVRes( 0, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+	  pcCU->getCUMvField( eRefList )->setAllMVResGeo( 0, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, eParIdxGeo, uiDepth );
+  }
+  TComMv cTmpMv( 0, 0 );
+  pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+  pcCU->getCUMvField( eRefList )->setAllMvGeo( cTmpMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth );
+
+  TComMv cMv( iHor, iVer );
+  pcCU->getCUMvField( eRefList )->setAllMvd( cMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+  pcCU->getCUMvField( eRefList )->setAllMvdGeo( cMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth );
+
+  return;
+}
+#else
+Void TDecSbac::parseMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+  Int iHor, iVer;
+  UInt uiAbsPartIdxL, uiAbsPartIdxA;
+  Int iHorPred, iVerPred;
+
+  Char** aacMbMVPMask = pcCU->getGeoMVPMask();
+
+  TComDataCU* pcCUL   = NULL;
+  TComDataCU* pcCUA   = NULL;
+  UChar ucLeft = aacMbMVPMask[eParIdxGeo][0]; //a
+  UChar ucAbove = aacMbMVPMask[eParIdxGeo][1]; //b
+
+  if(ucLeft)
+    pcCUL   = pcCU->getPULeft ( uiAbsPartIdxL, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+  if(ucAbove)
+    pcCUA   = pcCU->getPUAbove( uiAbsPartIdxA, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+
+  TComCUMvField* pcCUMvFieldL = ( pcCUL == NULL || pcCUL->isIntra( uiAbsPartIdxL ) ) ? NULL : pcCUL->getCUMvField( eRefList );
+  TComCUMvField* pcCUMvFieldA = ( pcCUA == NULL || pcCUA->isIntra( uiAbsPartIdxA ) ) ? NULL : pcCUA->getCUMvField( eRefList );
+
+  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) +
+       ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
+  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) +
+       ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
+
+  TComMv cTmpMv( 0, 0 );
+  pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+  pcCU->getCUMvField( eRefList )->setAllMvGeo( cTmpMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth );
+
+  xReadMvd( iHor, iHorPred, 0 );
+  xReadMvd( iVer, iVerPred, 1 );
+
+  // set mvd
+  TComMv cMv( iHor, iVer );
+  pcCU->getCUMvField( eRefList )->setAllMvd( cMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth, uiDepth, uiEdgeIndex, pcGeometricPartitionBlock );
+  pcCU->getCUMvField( eRefList )->setAllMvdGeo( cMv, SIZE_GEO, uiAbsPartIdx, eParIdxGeo, uiDepth );
+
+  return;
+}
+#endif
+#endif
 Void TDecSbac::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList )
 {
   UInt uiSymbol;

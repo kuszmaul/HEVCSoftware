@@ -40,7 +40,9 @@
 #include <memory.h>
 #include "CommonDef.h"
 #include "TComMv.h"
-
+#ifdef GEOM
+#include "GeometricPartition.h"
+#endif
 // ====================================================================================================================
 // Type definition
 // ====================================================================================================================
@@ -91,6 +93,19 @@ private:
   Int*      m_piRefIdx;
   UInt      m_uiNumPartition;
   AMVPInfo  m_cAMVPInfo;
+#ifdef GEOM
+  TComMv*   m_pcMvGeoPart0;
+  TComMv*   m_pcMvGeoPart1;
+  TComMv*   m_pcMvdGeoPart0;
+  TComMv*   m_pcMvdGeoPart1;
+  Int*      m_piRefIdxGeoPart0;
+  Int*      m_piRefIdxGeoPart1;
+#ifdef QC_AMVRES
+  Bool*     m_bMVResGeoPart0;
+  Bool*     m_bMVResGeoPart1;
+#endif
+#endif
+
 #ifdef QC_AMVRES
   Bool*      m_bMVRes;
 #endif
@@ -100,6 +115,18 @@ public:
     m_pcMv     = NULL;
     m_pcMvd    = NULL;
     m_piRefIdx = NULL;
+#ifdef GEOM
+    m_pcMvGeoPart0  = NULL;
+    m_pcMvGeoPart1  = NULL;
+    m_pcMvdGeoPart0 = NULL;
+    m_pcMvdGeoPart1 = NULL;
+    m_piRefIdxGeoPart0 = NULL;
+    m_piRefIdxGeoPart1 = NULL;
+#ifdef QC_AMVRES
+    m_bMVResGeoPart0 = NULL;
+    m_bMVResGeoPart1 = NULL;
+#endif
+#endif
 #ifdef QC_AMVRES
     m_bMVRes     = NULL;
 #endif
@@ -109,6 +136,18 @@ public:
     m_pcMv     = NULL;
     m_pcMvd    = NULL;
     m_piRefIdx = NULL;
+#ifdef GEOM
+    m_pcMvGeoPart0  = NULL;
+    m_pcMvGeoPart1  = NULL;
+    m_pcMvdGeoPart0 = NULL;
+    m_pcMvdGeoPart1 = NULL;
+    m_piRefIdxGeoPart0 = NULL;
+    m_piRefIdxGeoPart1 = NULL;
+#ifdef QC_AMVRES
+    m_bMVResGeoPart0 = NULL;
+    m_bMVResGeoPart1 = NULL;
+#endif
+#endif
 #ifdef QC_AMVRES
     m_bMVRes     = NULL;
 #endif
@@ -145,6 +184,27 @@ public:
   Int     getRefIdx         ( Int iIdx )               { return  m_piRefIdx[iIdx]; }
   Int*    getRefIdx         ()                         { return  m_piRefIdx;       }
 
+#ifdef GEOM
+  TComMv& getMvGeoPart0             ( Int iIdx )       { return  m_pcMvGeoPart0    [iIdx]; }
+  TComMv* getMvGeoPart0             ()                 { return  m_pcMvGeoPart0;           }
+  TComMv& getMvGeoPart1             ( Int iIdx )       { return  m_pcMvGeoPart1    [iIdx]; }
+  TComMv* getMvGeoPart1             ()                 { return  m_pcMvGeoPart1;           }
+  TComMv& getMvdGeoPart0            ( Int iIdx )       { return  m_pcMvdGeoPart0   [iIdx]; }
+  TComMv* getMvdGeoPart0            ()                 { return  m_pcMvdGeoPart0;          }
+  TComMv& getMvdGeoPart1            ( Int iIdx )       { return  m_pcMvdGeoPart1   [iIdx]; }
+  TComMv* getMvdGeoPart1            ()                 { return  m_pcMvdGeoPart1;          }
+  Int    getRefIdxGeoPart0          ( Int iIdx )       { return  m_piRefIdxGeoPart0[iIdx]; }
+  Int*   getRefIdxGeoPart0          ()                 { return  m_piRefIdxGeoPart0;       }
+  Int    getRefIdxGeoPart1          ( Int iIdx )       { return  m_piRefIdxGeoPart1[iIdx]; }
+  Int*   getRefIdxGeoPart1          ()                 { return  m_piRefIdxGeoPart1;       }
+#ifdef QC_AMVRES
+  Bool   getMVResGeoPart0           ( Int iIdx )       { return  m_bMVResGeoPart0[iIdx]; }
+  Bool*  getMVResGeoPart0           ()                 { return  m_bMVResGeoPart0; }
+  Bool   getMVResGeoPart1           ( Int iIdx )       { return  m_bMVResGeoPart1[iIdx]; }
+  Bool*  getMVResGeoPart1           ()                 { return  m_bMVResGeoPart1; }
+#endif
+#endif
+
   AMVPInfo* getAMVPInfo () { return &m_cAMVPInfo; }
 #ifdef QC_AMVRES
   Bool  getMVRes                        ( Int iIdx )               { return  m_bMVRes   [iIdx]; }     
@@ -168,11 +228,58 @@ public:
   Void    setAllRefIdx      ( Int     iRefIdx, PartSize eMbMode, Int iPartAddr, Int iPartIdx, UInt uiDepth );
   Void    setAllMvField     ( TComMv& rcMv, Int iRefIdx, PartSize eMbMode, Int iPartAddr, Int iPartIdx, UInt uiDepth );
 
+#ifdef GEOM
+  Void    setMvGeoPart0      ( TComMv  cMv,     Int iIdx) { m_pcMvGeoPart0    [iIdx] = cMv;      }
+  Void    setMvGeoPart1      ( TComMv  cMv,     Int iIdx) { m_pcMvGeoPart1    [iIdx] = cMv;      }
+  Void    setMvdGeoPart0     ( TComMv  cMvd,    Int iIdx) { m_pcMvdGeoPart0    [iIdx] = cMvd;    }
+  Void    setMvdGeoPart1     ( TComMv  cMvd,    Int iIdx) { m_pcMvdGeoPart1    [iIdx] = cMvd;    }
+  Void    setRefIdxGeoPart0  ( Int iRefIdx,     Int iIdx) { m_piRefIdxGeoPart0[iIdx] = iRefIdx; }
+  Void    setRefIdxGeoPart1  ( Int iRefIdx,     Int iIdx) { m_piRefIdxGeoPart1[iIdx] = iRefIdx; }
+
+  Void    setMvGeoPtrPart0      ( TComMv*  cMvPtr)      { m_pcMvGeoPart0      = cMvPtr;     }
+  Void    setMvGeoPtrPart1      ( TComMv*  cMvPtr)      { m_pcMvGeoPart1      = cMvPtr;     }
+  Void    setMvdGeoPtrPart0     ( TComMv*  cMvdPtr)     { m_pcMvdGeoPart0     = cMvdPtr;    }
+  Void    setMvdGeoPtrPart1     ( TComMv*  cMvdPtr)     { m_pcMvdGeoPart1     = cMvdPtr;    }
+  Void    setRefIdxGeoPtrPart0  ( Int*     iRefIdxPtr ) { m_piRefIdxGeoPart0  = iRefIdxPtr; }
+  Void    setRefIdxGeoPtrPart1  ( Int*     iRefIdxPtr ) { m_piRefIdxGeoPart1  = iRefIdxPtr; }
+  // Void    setNumPartition   ( Int      iNumPart   ) { m_uiNumPartition=iNumPart;  }
+
+  Void    setAllMv          ( TComMv& rcMv,    PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void    setAllMvd         ( TComMv& rcMvd,   PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void    setAllRefIdx      ( Int     iRefIdx, PartSize eMbMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void    setAllMvField     ( TComMv& rcMv, Int iRefIdx, PartSize eMbMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+
+  //Void    setAllMvGeo       ( TComMv& rcMv0 , TComMv& rcMv1 ,   PartSize eCUMode, Int iPartAddr, UInt uiDepth );
+  //Void    setAllMvdGeo      ( TComMv& rcMvd0, TComMv& rcMvd1,   PartSize eCUMode, Int iPartAddr, UInt uiDepth );
+  //Void    setAllRefIdxGeo   ( Int     iRefIdx0, Int     iRefIdx1, PartSize eMbMode, Int iPartAddr, UInt uiDepth );
+  //Void    setAllMvFieldGeo  ( TComMv& rcMv0, TComMv& rcMv1, Int     iRefIdx0, Int     iRefIdx1,  PartSize eMbMode, Int iPartAddr, UInt uiDepth );
+
+
+  Void    setAllMvGeo       ( TComMv& rcMv ,    PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth);
+  Void    setAllMvdGeo      ( TComMv& rcMvd,    PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void    setAllRefIdxGeo   ( Int     iRefIdx,  PartSize eMbMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void    setAllMvFieldGeo  ( TComMv& rcMv, Int     iRefIdx,  PartSize eMbMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth );
+
+  UInt    GeoPartDetection  (UInt uiUnitIdxY, UInt uiUnitIdxX, UInt uiUnitHeight, UInt uiUnitWidth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  UInt *  getZscanToRasterTable (UInt uiTrueDepth);
+#ifdef QC_AMVRES
+  Void    setMVResGeoPart0     ( Bool MVRes,   Int iIdx ) { m_bMVResGeoPart0[iIdx] = MVRes; }
+  Void    setMVResGeoPart1     ( Bool MVRes,   Int iIdx ) { m_bMVResGeoPart1[iIdx] = MVRes; }
+  Void    setMVResPtrGeoPart0  ( Bool *MVRes )            { m_bMVResGeoPart0  = MVRes; }
+  Void    setMVResPtrGeoPart1  ( Bool *MVRes )            { m_bMVResGeoPart1  = MVRes; }
+#endif
+#endif
+
 #ifdef QC_AMVRES
   Void    setAllMvField_AMVRes ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth );
   Void    setMVRes				    ( Bool  bMVRes,     Int iIdx ) { m_bMVRes    [iIdx] = bMVRes;     }
   Void    setMVResPtr					( Bool*  bMVResptr			) { m_bMVRes    = bMVResptr;					}
   Void    setAllMVRes( Bool bMVRes, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth );
+#ifdef GEOM
+  Void    setAllMVResGeo       ( Bool bMVRes, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void    setAllMvField_AMVRes ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void    setAllMVRes          ( Bool bMVRes, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+#endif
 #endif
 
 

@@ -60,6 +60,9 @@
 #include "TDecBinCoderPIPE.h"
 #include "TDecBinCoderMultiPIPE.h"
 #include "TDecBinCoderV2VwLB.h"
+#ifdef GEOM
+#include "../TLibCommon/GeometricPartition.h"
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -88,7 +91,9 @@ private:
 
   // Adaptive Loop filter
   TComAdaptiveLoopFilter*       m_pcAdaptiveLoopFilter;
-
+#ifdef GEOM
+  GeometricPartition*       m_pcGeometricPartition;
+#endif
 public:
   TDecGop();
   virtual ~TDecGop();
@@ -103,7 +108,12 @@ public:
                   TDecCavlc*              pcCavlcDecoder, 
                   TDecSlice*              pcSliceDecoder, 
                   TComLoopFilter*         pcLoopFilter, 
+#ifdef GEOM
+                  TComAdaptiveLoopFilter* pcAdaptiveLoopFilter,
+				  GeometricPartition*       m_pcGeometricPartition);
+#else
                   TComAdaptiveLoopFilter* pcAdaptiveLoopFilter );
+#endif
   Void  create  ();
   Void  destroy ();
 

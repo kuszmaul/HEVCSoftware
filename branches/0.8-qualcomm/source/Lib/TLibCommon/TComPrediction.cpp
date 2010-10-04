@@ -43,6 +43,14 @@
 TComPrediction::TComPrediction()
 {
   m_piYuvExt = NULL;
+#ifdef GEOM
+  m_pcGeometricPartition          = NULL;
+  m_aaiMbPartitionMaskLuma        = NULL;
+  m_aaiMbMask_start_stop_p_Luma   = NULL;
+  m_aaiMbPartitionMaskChroma      = NULL;
+  m_aaiMbMask_start_stop_p_Chroma = NULL;
+#endif
+
 #ifdef EDGE_BASED_PREDICTION
   m_piYExtEdgeBased = NULL;
 #endif //EDGE_BASED_PREDICTION
@@ -61,6 +69,13 @@ TComPrediction::~TComPrediction()
   m_acYuvPred[1].destroy();
 
   m_cYuvPredTemp.destroy();
+#ifdef GEOM
+  m_pcGeometricPartition          = NULL;
+  m_aaiMbPartitionMaskLuma        = NULL;
+  m_aaiMbMask_start_stop_p_Luma   = NULL;
+  m_aaiMbPartitionMaskChroma      = NULL;
+  m_aaiMbMask_start_stop_p_Chroma = NULL;
+#endif
 #ifdef DCM_PBIC
   m_acYuvTempIC[0].destroy();
   m_acYuvTempIC[1].destroy();
@@ -1025,6 +1040,33 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     }
     return;
   }
+#ifdef GEOM
+  Pel pLumaTemp[128*128];
+  Pel pCbTemp  [128*128];
+  Pel pCrTemp  [128*128];
+  GeometricPartitionBlock * pcGeometricPartitionBlock, *pcGeometricPartitionBlockChroma;
+  if (pcCU->getPartitionSize (0) == SIZE_GEO)
+  {
+    switch (pcCU->getHeight(0))
+    {
+    case 16:
+      pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition16x16Inter_Luma   ();
+      pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition16x16Inter_Chroma ();
+      break;
+    case 32:
+      pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition32x32Inter_Luma   ();
+      pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition32x32Inter_Chroma ();   
+      break;
+    //case 64:
+    //  pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition64x64Inter_Luma   ();
+    //  pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition64x64Inter_Chroma ();
+    //  break;
+    default:
+      printf ("Only Support GEO 64, 32 and 16");  exit (-1);
+      break;
+    }
+  }
+#endif
 
   for ( iPartIdx = 0; iPartIdx < pcCU->getNumPartInter(); iPartIdx++ )
   {
@@ -1038,20 +1080,65 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     {
       xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
     }
+
+#ifdef GEOM
+    if (pcCU->getPartitionSize (0) == SIZE_GEO && iPartIdx == 0)
+    {
+      memcpy(pLumaTemp, pcYuvPred->getLumaAddr(), sizeof(Pel)* iWidth* iHeight);
+      memcpy(pCbTemp,   pcYuvPred->getCbAddr(),   sizeof(Pel)*(iWidth>>1)* (iHeight>>1));
+      memcpy(pCrTemp,   pcYuvPred->getCrAddr(),   sizeof(Pel)*(iWidth>>1)* (iHeight>>1));
+    }
+#endif
   }
+#ifdef GEOM
+  if (pcCU->getPartitionSize (0) == SIZE_GEO)
+  {
+    setGeoPartitionMaskPtrLuma           ( pcGeometricPartitionBlock       ->getMbPartitionMaskPointerFromTable(pcCU->getGeoMode(0)) );   
+    setGeoPartitionMaskPtrChroma         ( pcGeometricPartitionBlockChroma ->getMbPartitionMaskPointerFromTable(pcCU->getGeoMode(0)) );   
+#ifdef OBMC
+    setGeoObmcMaskPtrLuma                ( pcGeometricPartitionBlock       ->getMbObmcMaskPointerFromTable      (pcCU->getGeoMode(0)) );   
+    setGeoObmcMaskPtrChroma              ( pcGeometricPartitionBlock       ->getMbObmcMaskPointerChromaFromTable(pcCU->getGeoMode(0)) );   
+#endif
+    xPredInterLumaGeo   ( pLumaTemp, pcYuvPred, iWidth,   iHeight );
+    xPredInterChromaGeo ( pCbTemp, pCrTemp, pcYuvPred, iWidth,   iHeight );
+  }
+#endif
+
   return;
 }
 
 #if HHI_INTERP_FILTER
 Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx )
 {
-  Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
+	Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );       
+#ifdef GEOM
+ if (pcCU->getPartitionSize (0) != SIZE_GEO)
+#endif
+	 assert (iRefIdx >= 0);
+
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
 #ifdef DCM_PBIC
   TComIc      cIc         = pcCU->getCUIcField()->getIc( uiPartAddr );
 #endif
 
   InterpFilterType ePFilt = (InterpFilterType)pcCU->getSlice()->getInterpFilterType();
+
+#ifdef GEOM
+  if (pcCU->getPartitionSize (0) == SIZE_GEO)
+  {
+	  if (iPartIdx == 0)
+	  {
+		  iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdxGeoPart0 ( uiPartAddr );
+		  cMv     = pcCU->getCUMvField( eRefPicList )->getMvGeoPart0( uiPartAddr );
+	  }
+	  else
+	  {
+		  iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdxGeoPart1 ( uiPartAddr );
+		  cMv     = pcCU->getCUMvField( eRefPicList )->getMvGeoPart1( uiPartAddr );
+	  }
+	   assert (iRefIdx >= 0);
+  }
+#endif
 
   pcCU->clipMv(cMv);
 #ifdef QC_SIFO
@@ -1161,6 +1248,16 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
   {
     RefPicList eRefPicList = (iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
     iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+
+#ifdef GEOM
+	if (pcCU->getPartitionSize (0) == SIZE_GEO)
+	{
+		if (iPartIdx == 0)
+			iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdxGeoPart0 ( uiPartAddr );
+		else
+			iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdxGeoPart1 ( uiPartAddr );
+	}
+#endif
 
     if ( iRefIdx[iRefList] < 0 )  { continue; }
 
@@ -1625,6 +1722,80 @@ Void  TComPrediction::xPredInterLumaBlk_TEN( TComDataCU* pcCU, TComPicYuv* pcPic
   xCTI_FilterDIF_TEN ( piRefY, iRefStride, 1, iWidth, iHeight, iDstStride, 1, piDstY, iyFrac, ixFrac);
   return;
 }
+
+#ifdef GEOM
+Void TComPrediction:: xPredInterLumaGeo   (Pel *pLumaTemp, TComYuv* pcYuvSrc, Int iWidth, Int iHeight)
+{
+  Int iStride = pcYuvSrc->getStride();
+  Pel* piSrc  = pcYuvSrc->getLumaAddr ();
+
+  for( Int iLoop = 0; iLoop < iHeight; iLoop++ )
+  {
+    for (Int n =0; n < iWidth; n++)
+    {
+      Int mask = m_aaiMbPartitionMaskLuma[iLoop][n];
+#ifdef OBMC
+      Int obmcflag = m_aacMbObmcMaskLuma[iLoop][n];
+      if(obmcflag)
+      {
+        if(mask)
+          piSrc[n]  = (pLumaTemp[n] * 3 + piSrc[n]     + 2) >> 2 ;
+        else
+          piSrc[n]  = (pLumaTemp[n]     + piSrc[n] * 3 + 2) >> 2 ;
+      }
+      else
+#endif
+        piSrc[n]  = pLumaTemp[n] * mask + piSrc[n] * (1 - mask);
+    }
+    pLumaTemp += iStride;
+    piSrc += iStride;
+  }
+}
+
+Void TComPrediction:: xPredInterChromaGeo   (Pel *pCbTemp, Pel *pCrTemp, TComYuv* pcYuvSrc,  Int iWidth, Int iHeight)
+{
+  Int iStride   = pcYuvSrc->getCStride();
+  Pel* piCbSrc  = pcYuvSrc->getCbAddr ();
+  Pel* piCrSrc  = pcYuvSrc->getCrAddr ();
+
+  UInt    uiCWidth  = iWidth  >> 1;
+  UInt    uiCHeight = iHeight >> 1;
+
+  for( Int iLoop = 0; iLoop < uiCHeight; iLoop++ )
+  {
+    for (Int n =0; n < uiCWidth; n++)
+    {
+      Int mask = m_aaiMbPartitionMaskChroma[iLoop][n];
+#ifdef OBMC         
+      Int obmcflag = m_aacMbObmcMaskChroma[iLoop][n];
+      if(obmcflag)
+      {
+        if(mask)
+        {
+          piCbSrc[n] = ( pCbTemp[n] * 3 + piCbSrc[n] + 2 ) >> 2;
+          piCrSrc[n] = ( pCrTemp[n] * 3 + piCrSrc[n] + 2 ) >> 2;
+        }
+        else
+        {
+          piCbSrc[n] = ( pCbTemp[n] + piCbSrc[n] * 3 + 2 ) >> 2;
+          piCrSrc[n] = ( pCrTemp[n] + piCrSrc[n] * 3 + 2 ) >> 2;
+        }
+      }
+      else
+#endif
+      {
+      piCbSrc[n] = pCbTemp[n] * mask + piCbSrc[n] * (1-mask);
+      piCrSrc[n] = pCrTemp[n] * mask + piCrSrc[n] * (1-mask);
+      }
+
+    }
+    piCbSrc += iStride;
+    piCrSrc += iStride;
+    pCbTemp += iStride;
+    pCrTemp += iStride;
+  }
+}
+#endif
 
 Void TComPrediction::xPredInterChromaBlk_TEN( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, TComYuv*& rpcYuv )
 {
