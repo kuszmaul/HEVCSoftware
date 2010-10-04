@@ -80,11 +80,17 @@ Void TDecSlice::destroy()
     }
   }
 }
-
+#ifdef GEOM
+Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder,  GeometricPartition*       pcGeometricPartition)
+#else
 Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
+#endif
 {
   m_pcEntropyDecoder  = pcEntropyDecoder;
   m_pcCuDecoder       = pcCuDecoder;
+#ifdef GEOM
+  m_pcGeometricPartition = pcGeometricPartition;
+#endif//
 }
 
 Void TDecSlice::decompressSlice(TComBitstream* pcBitstream, TComPic*& rpcPic)

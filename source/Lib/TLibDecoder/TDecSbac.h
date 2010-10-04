@@ -58,10 +58,13 @@ class TDecSbac : public TDecEntropyIf
 public:
   TDecSbac();
   virtual ~TDecSbac();
-
+#ifdef GEOM 
+  Void  init                      ( TDecBinIf* p )    { m_pcTDecBinIf = p; m_pcGeometricPartitionBlock = NULL;}
+  Void  uninit                    ()                  { m_pcTDecBinIf = 0; m_pcGeometricPartitionBlock = NULL;}
+#else
   Void  init                      ( TDecBinIf* p )    { m_pcTDecBinIf = p; }
   Void  uninit                    ()                  { m_pcTDecBinIf = 0; }
-
+#endif
   Void  resetEntropy              (TComSlice* pcSlice);
   Void  setBitstream              (TComBitstream* p)        { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
 
@@ -116,6 +119,9 @@ private:
 
   Bool m_bAlfCtrl;
   UInt m_uiMaxAlfCtrlDepth;
+#ifdef GEOM
+   GeometricPartitionBlock * m_pcGeometricPartitionBlock;
+#endif
 
 public:
   Void parseAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -140,7 +146,9 @@ public:
 #endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-
+#ifdef GEOM
+  UInt parseGeoMode   (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
+#endif
   Void parseIntraDirLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void parseIntraDirLumaAdi( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -163,6 +171,12 @@ public:
   ContextModel* getZTreeCtx ( Int iIdx );
 #endif
 
+#ifdef GEOM
+  Void parseInterDirGeo   ( TComDataCU* pcCU, UInt& ruiInterDir,  UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth );
+  Void parseRefFrmIdxGeo  ( TComDataCU* pcCU, Int& riRefFrmIdx,   UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth, RefPicList eRefList );
+  Void parseMvdGeo        ( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+#endif
+
 #if HHI_RQT
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
@@ -182,6 +196,9 @@ public:
   Void parsePlanarInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
+#ifdef GEOM
+  Void setGeometricPartitionBlockPtr (GeometricPartitionBlock* pcGeometricPartitionBlock) {m_pcGeometricPartitionBlock = pcGeometricPartitionBlock;}
+#endif
 private:
   UInt m_uiLastDQpNonZero;
   UInt m_uiLastQp;

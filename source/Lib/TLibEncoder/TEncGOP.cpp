@@ -109,6 +109,9 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   // Adaptive Loop filter
   m_pcAdaptiveLoopFilter = pcTEncTop->getAdaptiveLoopFilter();
   //--Adaptive Loop filter
+#ifdef GEOM
+  m_pcGeometricPartition     = pcTEncTop->getGEOPart();   //Uncoment when ready to use it
+#endif
 }
 
 // ====================================================================================================================

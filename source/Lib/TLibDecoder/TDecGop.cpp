@@ -79,7 +79,12 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
                     TDecCavlc*              pcCavlcDecoder, 
                     TDecSlice*              pcSliceDecoder, 
                     TComLoopFilter*         pcLoopFilter, 
+#ifdef GEOM
+                    TComAdaptiveLoopFilter* pcAdaptiveLoopFilter,
+					GeometricPartition*     pcGeometricPartition)
+#else
                     TComAdaptiveLoopFilter* pcAdaptiveLoopFilter )
+#endif
 {
   m_pcEntropyDecoder      = pcEntropyDecoder;
   m_pcSbacDecoder         = pcSbacDecoder;
@@ -92,6 +97,10 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
   m_pcSliceDecoder        = pcSliceDecoder;
   m_pcLoopFilter          = pcLoopFilter;
   m_pcAdaptiveLoopFilter  = pcAdaptiveLoopFilter;
+
+#ifdef GEOM
+  m_pcGeometricPartition     = pcGeometricPartition;   //Uncoment when ready to use it
+#endif
 }
 
 // ====================================================================================================================

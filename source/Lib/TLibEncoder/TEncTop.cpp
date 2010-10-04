@@ -149,6 +149,15 @@ Void TEncTop::init()
   // initialize SPS
   xInitSPS();
 
+#ifdef GEOM
+  float AnglesStep   =   11.25;  
+  float DistanceStep =    1;  
+  GeometricPartition ::create( m_pcGeometricPartition  );
+  printf("\nUsing Geometric Mode: QAngle=%f, QPosition=%f\n\n",AnglesStep,DistanceStep);  
+  m_pcGeometricPartition       ->initEdgeDictionaries(AnglesStep, DistanceStep);            
+  m_pcGeometricPartition       ->initLookUpTables();   //Uncoment when ready to use it
+#endif
+
   // initialize processing unit classes
   m_cGOPEncoder.  init( this );
   m_cSliceEncoder.init( this );

@@ -132,6 +132,18 @@
 /////////////////////////////////
 // QUALCOMM defines section start
 /////////////////////////////////
+//#define GEOM
+#ifdef GEOM
+#define TCH_GEO_NUM_CAND       8
+#define NUM_GEO_MVP            7  
+#define THETASTEP 11.25
+#define OBMC
+#define GEOM_SPEED
+
+#if ( HHI_MRG_PU || DCM_PBIC )
+#error "HHI_MRG_PU and DCM_PBIC can only be equal to 1 if GEOM is defined"
+#endif
+#endif
 
 #define LCEC_PHASE1_ADAPT_ENABLE                1           // Enable CU level VLC adaptation 
 
@@ -391,6 +403,9 @@ enum PartSize
   SIZE_nLx2N,           ///< asymmetric motion partition, ( N/2)x2N + (3N/2)x2N
   SIZE_nRx2N,           ///< asymmetric motion partition, (3N/2)x2N + ( N/2)x2N
 
+#ifdef GEOM
+  SIZE_GEO,
+#endif
   SIZE_NONE = 15
 };
 
@@ -470,6 +485,11 @@ enum DFunc
   DF_HADS64   = 27,     ///<  64xM HAD with step
   DF_HADS16N  = 28,     ///< 16NxM HAD with step
 
+#ifdef GEOM
+  DF_SSEGEO   = 29,
+  DF_SADGEO   = 30,
+  DF_SADSGEO  = 31,
+#endif
   DF_SSE_FRAME = 33     ///< Frame-based SSE
 };
 

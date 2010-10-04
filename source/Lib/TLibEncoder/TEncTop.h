@@ -56,6 +56,9 @@
 
 #include "TEncBinCoderCABAC4V2V.h"
 
+#ifdef GEOM
+#include "../TLibCommon/GeometricPartition.h"
+#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -108,7 +111,9 @@ private:
   TEncSbac                m_cRDGoOnSbacCoder;             ///< going on SBAC model for RD stage
   TEncBinCABAC***         m_pppcBinCoderCABAC;            ///< temporal CABAC state storage for RD computation
   TEncBinCABAC            m_cRDGoOnBinCoderCABAC;         ///< going on bin coder CABAC for RD stage
-
+#ifdef GEOM
+  GeometricPartition*     m_pcGeometricPartition;
+#endif
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -156,7 +161,9 @@ public:
 
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
-
+#ifdef GEOM
+  GeometricPartition*     getGEOPart            () {return m_pcGeometricPartition;}
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------

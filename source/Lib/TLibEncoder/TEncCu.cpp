@@ -88,6 +88,34 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   initZscanToRaster( m_uhTotalDepth, 1, 0, piTmp);
   initRasterToZscan( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
 
+#ifdef GEOM
+  piTmp = &g_auiZscanToRasterDepth1[0];
+  if (m_uhTotalDepth > 1)
+	  initZscanToRaster(m_uhTotalDepth-1, 1, 0, piTmp);
+
+  piTmp = &g_auiZscanToRasterDepth2[0];
+  if (m_uhTotalDepth > 2)
+	  initZscanToRaster(m_uhTotalDepth-2, 1, 0, piTmp);
+
+#ifdef GEOM_SPEED
+  uiNumPartitions = 1<<( ( m_uhTotalDepth - 1 )<<1 );
+  m_ppppcRegularMv = new TComMv*** [2];
+  for ( Int iList = 0; iList < 2; iList++ )
+  {
+    m_ppppcRegularMv[iList] = new TComMv** [33];
+
+    for (Int iRefIdx = 0; iRefIdx < 33; iRefIdx ++ )
+    {
+      m_ppppcRegularMv[iList][iRefIdx] = new TComMv*[3*m_uhTotalDepth];//??? more than enough
+
+      for (Int iLev = 0; iLev < 3*m_uhTotalDepth; iLev ++ )
+      {
+        m_ppppcRegularMv[iList][iRefIdx][iLev] = new TComMv[uiNumPartitions];
+      }
+    }
+  }
+#endif
+#endif
   // initialize conversion matrix from partition index to pel
   initRasterToPelXY( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
 }
@@ -181,6 +209,34 @@ Void TEncCu::destroy()
     delete [] m_ppcOrigYuv;
     m_ppcOrigYuv = NULL;
   }
+#ifdef GEOM_SPEED   
+  if(m_ppppcRegularMv)
+  {
+    for ( Int iList = 0; iList < 2; iList++ )
+    {
+      for (Int iRefIdx = 0; iRefIdx < 33; iRefIdx ++ )
+      {
+        for (Int iLev = 0; iLev < 3*m_uhTotalDepth; iLev ++ )
+        {
+          delete [] m_ppppcRegularMv[iList][iRefIdx][iLev];
+        }
+      }
+    }
+    for ( Int iList = 0; iList < 2; iList++ )
+    {
+      for (Int iRefIdx = 0; iRefIdx < 33; iRefIdx ++ )
+      {
+        delete [] m_ppppcRegularMv[iList][iRefIdx];
+      }
+    }
+    for ( Int iList = 0; iList < 2; iList++ )
+    {
+      delete [] m_ppppcRegularMv[iList];
+    }
+    delete [] m_ppppcRegularMv;
+    m_ppppcRegularMv = NULL;
+  }
+#endif
 }
 
 /** \param    pcEncTop      pointer of encoder class
@@ -207,6 +263,10 @@ Void TEncCu::init( TEncTop* pcEncTop )
   m_pcRDGoOnSbacCoder = pcEncTop->getRDGoOnSbacCoder();
 
   m_bUseSBACRD        = pcEncTop->getUseSBACRD();
+
+#ifdef GEOM
+  m_pcGeometricPartition     = pcEncTop->getGEOPart();   //Uncoment when ready to use it
+#endif
 }
 
 // ====================================================================================================================
@@ -365,6 +425,20 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   UInt uiTPelY   = rpcBestCU->getCUPelY();
   UInt uiBPelY   = uiTPelY + rpcBestCU->getHeight(0) - 1;
 
+#ifdef GEOM
+  UInt uiCurCUSize = rpcBestCU->getWidth(0);
+#ifdef GEOM_SPEED
+  if(uiDepth == 0 && pcPic->getSlice()->getSliceType() != I_SLICE )
+  {
+    for ( Int iList = 0; iList < 2; iList++ )
+      for (Int iRefIdx = 0; iRefIdx < 33; iRefIdx ++ )
+        for (Int iLev = 0; iLev < 3*m_uhTotalDepth; iLev ++ )
+          for (Int iPartition=0; iPartition<rpcBestCU->getTotalNumPart(); iPartition++) 
+            m_ppppcRegularMv[iList][iRefIdx][iLev][iPartition].setMax();
+  }
+  rpcTempCU->setRegularMV(m_ppppcRegularMv);
+#endif
+#endif
   if( ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getHeight() ) )
   {
     // do inter modes
@@ -614,6 +688,72 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     xCheckBestMode( rpcBestCU, rpcTempCU );                                          // RD compare current larger prediction
   }                                                                                  // with sub partitioned prediction.
 
+#ifdef GEOM  // Perform GEO after testing regular smaller block such that fast ME may be possible, do not test GEO8
+  if( ( rpcBestCU->getPredictionMode(0) != MODE_SKIP || rpcBestCU->getDepth(0) > uiDepth) && pcPic->getSlice()->getSliceType() != I_SLICE && uiCurCUSize >8 && uiCurCUSize< 64 && !bBoundary)
+  {
+    //until this point, rpcTempCU->getDepth( 0 ) != uiDepth;
+	rpcTempCU->resetForGeo( uiDepth); 
+    rpcTempCU->initEstData();
+
+    rpcTempCU->setDepthSubParts( uiDepth, 0 );
+    rpcTempCU->setPartSizeSubParts  ( SIZE_GEO,   0, uiDepth );
+    rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uiDepth );
+    m_pcPredSearch->setGeometricPartitionPtr (m_pcGeometricPartition);
+
+#ifdef PRINT_COST
+    Int iRegularCost = (Int)(rpcBestCU->getTotalCost());
+#endif
+
+#ifdef FULL_GEO_RD
+    
+#else
+    m_pcPredSearch->predInterSearchGeo  ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], true, 0, false );// when bPreSelect is trun, uiGeoCand is a dummy variable
+#endif
+
+#if defined FULL_GEO_RD || defined PRINT_COST
+    GeometricPartitionBlock * pcGeometricPartitionBlock, *pcGeometricPartitionBlockChroma;
+
+    switch (uiCurCUSize)
+    {
+    case 16:
+      pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition16x16Inter_Luma   ();
+      pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition16x16Inter_Chroma ();
+      break;
+    case 32:
+      pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition32x32Inter_Luma   ();
+      pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition32x32Inter_Chroma ();   
+      break;
+      //case 64:
+      //  pcGeometricPartitionBlock       = m_pcGeometricPartition->getGeometricPartition64x64Inter_Luma   ();
+      //  pcGeometricPartitionBlockChroma = m_pcGeometricPartition->getGeometricPartition64x64Inter_Chroma ();
+      //  break;
+    default:
+      printf ("Only Support GEO 64, 32 and 16");  exit (-1);
+      break;
+    }    
+#endif
+#ifdef FULL_GEO_RD
+    for (UInt uiIdx = 0;  uiIdx <pcGeometricPartitionBlock->getNumberOfQuantizedEdges(); uiIdx++)	
+#else
+    for (UInt uiIdx = 0;  uiIdx < m_pcPredSearch->getNumGeoCand (); uiIdx++)
+#endif
+	{ 	
+		rpcTempCU->resetForGeo( uiDepth); 
+		rpcTempCU->initEstData();
+        rpcTempCU->setDepthSubParts( uiDepth, 0 );
+		rpcTempCU->setPartSizeSubParts  ( SIZE_GEO,   0, uiDepth );
+		rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uiDepth );
+		xCheckRDCostInterGeo( rpcBestCU, rpcTempCU, uiIdx);    
+	}
+
+
+#ifdef PRINT_COST
+    if(rpcBestCU->getPartitionSize(0) == SIZE_GEO)
+      printf("geo_mode = %3d (rho %2.0f theta %6.2f), Regular_cost = %6d, Geo_cost = %6d\n", pcGeometricPartitionBlock->getLineDistance(rpcBestCU->getGeoMode(0)), pcGeometricPartitionBlock->getLineAngle(rpcBestCU->getGeoMode(0)), rpcBestCU->getGeoMode(0), iRegularCost, (Int)(rpcBestCU->getTotalCost()) );
+#endif
+  }
+  
+#endif
   rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
 
   if( bBoundary )
@@ -709,6 +849,27 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
 
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
+
+#ifdef GEOM
+  if (pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_GEO)
+  {
+	  switch (pcCU->getHeight (uiAbsPartIdx)) 
+	  {
+	  case 16:
+		  m_pcEntropyCoder->setpcGeometricPartitionBlock ( m_pcGeometricPartition->getGeometricPartition16x16Inter_Luma   () );
+		  break;
+	  case 32:
+		  m_pcEntropyCoder->setpcGeometricPartitionBlock ( m_pcGeometricPartition->getGeometricPartition32x32Inter_Luma   () );
+		  break;
+	  //case 64:
+		 // m_pcEntropyCoder->setpcGeometricPartitionBlock ( m_pcGeometricPartition->getGeometricPartition64x64Inter_Luma   () );
+		 // break;
+	  default:
+		  printf ("Only Support GEO 64, 32 and 16"); exit(-1);
+		  break;
+	  }
+  }
+#endif
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
@@ -874,7 +1035,69 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   xCheckBestMode( rpcBestCU, rpcTempCU );
 }
+#ifdef GEOM
+Void TEncCu::xCheckBestModeGeo( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
+{
+  if( rpcTempCU->getTotalCost() < rpcBestCU->getTotalCost() )
+  {
+    TComYuv* pcYuv;
+    //UChar uhDepth = rpcBestCU->getDepth(0);
+    UChar uhDepth = rpcTempCU->getDepth(0);// rather than using rpcBestCU->getDepth(0), because rpcBestCU may store the RD results of one level down. 
 
+    // Change Information data
+    TComDataCU* pcCU = rpcBestCU;
+    rpcBestCU = rpcTempCU;
+    rpcTempCU = pcCU;
+
+    // Change Prediction data
+    pcYuv = m_ppcPredYuvBest[uhDepth];
+    m_ppcPredYuvBest[uhDepth] = m_ppcPredYuvTemp[uhDepth];
+    m_ppcPredYuvTemp[uhDepth] = pcYuv;
+
+#if HHI_RQT
+#else
+    // Change Residual data
+    pcYuv = m_ppcResiYuvBest[uhDepth];
+    m_ppcResiYuvBest[uhDepth] = m_ppcResiYuvTemp[uhDepth];
+    m_ppcResiYuvTemp[uhDepth] = pcYuv;
+#endif
+
+    // Change Reconstruction data
+    pcYuv = m_ppcRecoYuvBest[uhDepth];
+    m_ppcRecoYuvBest[uhDepth] = m_ppcRecoYuvTemp[uhDepth];
+    m_ppcRecoYuvTemp[uhDepth] = pcYuv;
+
+    pcYuv = NULL;
+    pcCU  = NULL;
+
+    if( m_bUseSBACRD )  // store temp best CI for next CU coding
+      m_pppcRDSbacCoder[uhDepth][CI_TEMP_BEST]->store(m_pppcRDSbacCoder[uhDepth][CI_NEXT_BEST]);
+  }
+}
+
+Void TEncCu::xCheckRDCostInterGeo( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiGeoCand, Bool bMvReuse)
+{
+  UChar uhDepth = rpcTempCU->getDepth( 0 );
+
+  rpcTempCU->setDepthSubParts( uhDepth, 0 );
+
+  rpcTempCU->setPartSizeSubParts  ( SIZE_GEO,  0, uhDepth );
+  rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
+
+  m_pcPredSearch->setGeometricPartitionPtr ( m_pcGeometricPartition );
+  m_pcPredSearch->predInterSearchGeo       ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, uiGeoCand, bMvReuse );
+
+#if HHI_RQT
+  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
+#else
+  m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
+#endif
+
+  rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+
+  xCheckBestModeGeo( rpcBestCU, rpcTempCU );
+}
+#endif
 #if PLANAR_INTRA
 Void TEncCu::xCheckPlanarIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 {

@@ -261,6 +261,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     return false;
   }
 
+#ifdef GEOM
+  m_bUseMRG = false;
+  m_bUseIMP = false;
+  m_bUseAMP = false;
+  printf("turn off MRG, IMP and AMP when GEOM is on\n");
+#endif
+
   /*
    * Set any derived parameters
    */

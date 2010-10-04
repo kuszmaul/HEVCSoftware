@@ -46,6 +46,9 @@
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
+#ifdef GEOM
+#include "../TLibCommon/GeometricPartition.h"
+#endif
 
 class TEncTop;
 class TEncSbac;
@@ -99,6 +102,12 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
+#ifdef GEOM
+  GeometricPartition*     m_pcGeometricPartition;
+#ifdef GEOM_SPEED
+  TComMv****              m_ppppcRegularMv;//[list][refIdx][depth*partsize][NumPartition]
+#endif
+#endif
 
 public:
   /// copy parameters from encoder class
@@ -136,6 +145,10 @@ protected:
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+#ifdef GEOM
+  Void  xCheckBestModeGeo    ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+  Void  xCheckRDCostInterGeo ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiGeoCand, Bool bMvReuse = false);
+#endif
 #if PLANAR_INTRA
   Void  xCheckPlanarIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
 #endif

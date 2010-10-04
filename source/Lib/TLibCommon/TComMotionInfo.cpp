@@ -52,6 +52,19 @@ Void TComCUMvField::create( UInt uiNumPartition )
   m_pcMvd    = ( TComMv* )xMalloc( TComMv, uiNumPartition );
   m_piRefIdx = (    Int* )xMalloc( Int,    uiNumPartition );
 
+#ifdef GEOM
+  m_pcMvGeoPart0      =  ( TComMv* )xMalloc( TComMv, uiNumPartition );
+  m_pcMvGeoPart1      =  ( TComMv* )xMalloc( TComMv, uiNumPartition );
+  m_pcMvdGeoPart0     =  ( TComMv* )xMalloc( TComMv, uiNumPartition );
+  m_pcMvdGeoPart1     =  ( TComMv* )xMalloc( TComMv, uiNumPartition );
+  m_piRefIdxGeoPart0  =  (    Int* )xMalloc( Int,    uiNumPartition );
+  m_piRefIdxGeoPart1  =  (    Int* )xMalloc( Int,    uiNumPartition );
+#ifdef QC_AMVRES
+  m_bMVResGeoPart0    =  (   Bool* )xMalloc( Bool,   uiNumPartition );
+  m_bMVResGeoPart1    =  (   Bool* )xMalloc( Bool,   uiNumPartition );
+#endif
+#endif
+
 #ifdef QC_AMVRES
   m_bMVRes     = (    Bool* )xMalloc( Bool,    uiNumPartition );
 #endif
@@ -73,6 +86,44 @@ Void TComCUMvField::destroy()
   {
     xFree( m_piRefIdx ); m_piRefIdx = NULL;
   }
+
+#ifdef GEOM
+  if(m_pcMvGeoPart0)
+  {
+    xFree( m_pcMvGeoPart0 );     m_pcMvGeoPart0     = NULL;
+  }
+  if(m_pcMvGeoPart1)
+  {
+    xFree( m_pcMvGeoPart1 );     m_pcMvGeoPart1     = NULL;
+  }
+  if(m_pcMvdGeoPart0)
+  {
+    xFree( m_pcMvdGeoPart0 );     m_pcMvdGeoPart0     = NULL;
+  }
+  if(m_pcMvdGeoPart1)
+  {
+    xFree( m_pcMvdGeoPart1 );     m_pcMvdGeoPart1     = NULL;
+  }
+  if( m_piRefIdxGeoPart0 )
+  {
+    xFree( m_piRefIdxGeoPart0 );  m_piRefIdxGeoPart0 = NULL;
+  }
+  if( m_piRefIdxGeoPart1 )
+  {
+    xFree( m_piRefIdxGeoPart1 );  m_piRefIdxGeoPart1 = NULL;
+  }
+#ifdef QC_AMVRES
+  if( m_bMVResGeoPart0 )
+  {
+    xFree( m_bMVResGeoPart0 );  m_bMVResGeoPart0 = NULL;
+  }
+  if( m_bMVResGeoPart1 )
+  {
+    xFree( m_bMVResGeoPart1 );  m_bMVResGeoPart1 = NULL;
+  }
+#endif
+#endif 
+
 #ifdef QC_AMVRES
   if( m_bMVRes )
   {
@@ -112,6 +163,19 @@ Void TComCUMvField::clearMvField()
     m_pcMv    [ i ].setZero();
     m_pcMvd   [ i ].setZero();
     m_piRefIdx[ i ] = NOT_VALID;
+#ifdef GEOM
+	m_pcMvGeoPart0     [ i ].setZero();
+	m_pcMvGeoPart1     [ i ].setZero();
+	m_pcMvdGeoPart0    [ i ].setZero();
+	m_pcMvdGeoPart1    [ i ].setZero();
+	m_piRefIdxGeoPart0 [ i ] = NOT_VALID;
+	m_piRefIdxGeoPart1 [ i ] = NOT_VALID;
+#ifdef QC_AMVRES
+    m_bMVResGeoPart0   [ i ] = false;
+    m_bMVResGeoPart1   [ i ] = false;
+#endif
+#endif
+
 #ifdef QC_AMVRES
 	m_bMVRes[ i ] = false;
 #endif
@@ -125,6 +189,18 @@ Void TComCUMvField::copyFrom( TComCUMvField* pcCUMvFieldSrc, Int iNumPartSrc, In
   memcpy( m_pcMv     + iPartAddrDst, pcCUMvFieldSrc->getMv(),     iSizeInTComMv );
   memcpy( m_pcMvd    + iPartAddrDst, pcCUMvFieldSrc->getMvd(),    iSizeInTComMv );
   memcpy( m_piRefIdx + iPartAddrDst, pcCUMvFieldSrc->getRefIdx(), sizeof( Int ) * iNumPartSrc );
+#ifdef GEOM
+  memcpy( m_pcMvGeoPart0 + iPartAddrDst, pcCUMvFieldSrc->getMvGeoPart0(),     iSizeInTComMv );
+  memcpy( m_pcMvGeoPart1 + iPartAddrDst, pcCUMvFieldSrc->getMvGeoPart1(),     iSizeInTComMv );
+  memcpy( m_pcMvdGeoPart0 + iPartAddrDst, pcCUMvFieldSrc->getMvdGeoPart0(),    iSizeInTComMv );
+  memcpy( m_pcMvdGeoPart1 + iPartAddrDst, pcCUMvFieldSrc->getMvdGeoPart1(),    iSizeInTComMv );
+  memcpy( m_piRefIdxGeoPart0 + iPartAddrDst, pcCUMvFieldSrc->getRefIdxGeoPart0(), sizeof( Int ) * iNumPartSrc );
+  memcpy( m_piRefIdxGeoPart1 + iPartAddrDst, pcCUMvFieldSrc->getRefIdxGeoPart1(), sizeof( Int ) * iNumPartSrc );
+#ifdef QC_AMVRES
+  memcpy( m_bMVResGeoPart0 + iPartAddrDst, pcCUMvFieldSrc->getMVResGeoPart0(), sizeof( Bool ) * iNumPartSrc );
+  memcpy( m_bMVResGeoPart1 + iPartAddrDst, pcCUMvFieldSrc->getMVResGeoPart1(), sizeof( Bool ) * iNumPartSrc );
+#endif
+#endif
 #ifdef QC_AMVRES
   memcpy( m_bMVRes + iPartAddrDst, pcCUMvFieldSrc->getMVRes(), sizeof( Bool ) * iNumPartSrc );
 #endif
@@ -138,6 +214,20 @@ Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst )
   memcpy( pcCUMvFieldDst->getMv()     + iPartAddrDst, m_pcMv,     iSizeInTComMv );
   memcpy( pcCUMvFieldDst->getMvd()    + iPartAddrDst, m_pcMvd,    iSizeInTComMv );
   memcpy( pcCUMvFieldDst->getRefIdx() + iPartAddrDst, m_piRefIdx, sizeof( Int ) * m_uiNumPartition );
+
+#ifdef GEOM
+  memcpy( pcCUMvFieldDst->getMvGeoPart0()     + iPartAddrDst, m_pcMvGeoPart0,     iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvGeoPart1()     + iPartAddrDst, m_pcMvGeoPart1,     iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvdGeoPart0()    + iPartAddrDst, m_pcMvdGeoPart0,    iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvdGeoPart1()    + iPartAddrDst, m_pcMvdGeoPart1,    iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getRefIdxGeoPart0() + iPartAddrDst, m_piRefIdxGeoPart0, sizeof( Int ) * m_uiNumPartition );
+  memcpy( pcCUMvFieldDst->getRefIdxGeoPart1() + iPartAddrDst, m_piRefIdxGeoPart1, sizeof( Int ) * m_uiNumPartition );
+#ifdef QC_AMVRES
+  memcpy( pcCUMvFieldDst->getMVResGeoPart0() + iPartAddrDst, m_bMVResGeoPart0, sizeof( Bool ) * m_uiNumPartition );
+  memcpy( pcCUMvFieldDst->getMVResGeoPart1() + iPartAddrDst, m_bMVResGeoPart1, sizeof( Bool ) * m_uiNumPartition );
+#endif
+#endif
+
 #ifdef QC_AMVRES
   memcpy( pcCUMvFieldDst->getMVRes()    + iPartAddrDst, m_bMVRes , sizeof( Bool ) * m_uiNumPartition );
 #endif
@@ -151,6 +241,19 @@ Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst, UIn
   memcpy( pcCUMvFieldDst->getMv()     + iOffset, m_pcMv     + uiOffset, iSizeInTComMv );
   memcpy( pcCUMvFieldDst->getMvd()    + iOffset, m_pcMvd    + uiOffset, iSizeInTComMv );
   memcpy( pcCUMvFieldDst->getRefIdx() + iOffset, m_piRefIdx + uiOffset, sizeof( Int ) * uiNumPart );
+#ifdef GEOM
+  memcpy( pcCUMvFieldDst->getMvGeoPart0()     + iOffset, m_pcMvGeoPart0     + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvGeoPart1()     + iOffset, m_pcMvGeoPart1     + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvdGeoPart0()    + iOffset, m_pcMvdGeoPart0    + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getMvdGeoPart1()    + iOffset, m_pcMvdGeoPart1    + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->getRefIdxGeoPart0() + iOffset, m_piRefIdxGeoPart0 + uiOffset, sizeof( Int ) * uiNumPart );
+  memcpy( pcCUMvFieldDst->getRefIdxGeoPart1() + iOffset, m_piRefIdxGeoPart1 + uiOffset, sizeof( Int ) * uiNumPart );
+#ifdef QC_AMVRES
+  memcpy( pcCUMvFieldDst->getMVResGeoPart0() + iOffset, m_bMVResGeoPart0 + uiOffset, sizeof( Bool ) * uiNumPart );
+  memcpy( pcCUMvFieldDst->getMVResGeoPart1() + iOffset, m_bMVResGeoPart1 + uiOffset, sizeof( Bool ) * uiNumPart );
+#endif
+#endif
+
 #ifdef QC_AMVRES
   memcpy( pcCUMvFieldDst->getMVRes()+ iPartAddrDst,  m_bMVRes + uiOffset, sizeof( Bool ) * uiNumPart );
 #endif
@@ -683,6 +786,16 @@ Void TComCUMvField::setAllRefIdx ( Int iRefIdx, PartSize eCUMode, Int iPartAddr,
       }
       break;
     }
+#ifdef GEOM 
+ case SIZE_GEO:
+    assert (0);
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+    {
+      piRefIdx[ i ] = iRefIdx;
+    }
+    break;
+#endif
+
   default:
     assert(0);
     break;
@@ -700,7 +813,312 @@ Void TComCUMvField::setAllMvField ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode,
 }
 
 
+#ifdef GEOM
+
+UInt TComCUMvField:: GeoPartDetection (UInt uiUnitIdxY, UInt uiUnitIdxX, UInt uiUnitHeight, UInt uiUnitWidth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+  Int ** aaiMbPartitionMask_table = pcGeometricPartitionBlock->getMbPartitionMaskPointerFromTable(uiEdgeIndex);
+  UInt uiSum = 0;
+
+  for (UInt uiPelIdxY = 0; uiPelIdxY < uiUnitHeight; uiPelIdxY ++ )
+    for (UInt uiPelIdxX = 0; uiPelIdxX < uiUnitWidth; uiPelIdxX ++ )
+      uiSum += aaiMbPartitionMask_table [uiUnitIdxY * uiUnitHeight + uiPelIdxY] [uiUnitIdxX * uiUnitWidth + uiPelIdxX];
+
+  if (uiSum > uiUnitHeight*uiUnitWidth / 2)
+    return 0;
+  else
+    return 1;
+
+}
+
+UInt * TComCUMvField:: getZscanToRasterTable (UInt uiTrueDepth) 
+{
+  switch (uiTrueDepth)
+  {
+  case 0:
+    return g_auiZscanToRaster; 
+  case 1:
+    return g_auiZscanToRasterDepth1;
+  case 2: 
+    return g_auiZscanToRasterDepth2;
+  default: 
+    {
+      printf ("currently only support 3 depths");
+      exit (-1);
+    }		 
+  }
+}
+
+Void TComCUMvField::setAllMv( TComMv& rcMv, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock  )
+{
+  Int i;
+  TComMv* pcMv = m_pcMv + iPartAddr;
+  register TComMv cMv = rcMv;
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+  UInt uiMbSize;
+  UInt uiGeoPart;
+  UInt * puiZscanToRaster;
+
+  uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+  uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+  uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+
+  uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+  if (  eCUMode != SIZE_GEO )
+    assert(0);
+
+  puiZscanToRaster = getZscanToRasterTable (uiTrueDepth);
+
+  for ( i = 0 ; i <= iNumPartition - 1; i++ )
+  {
+    UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+    uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+    uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+    uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+    if ( uiGeoPart == uiGeoPartDetected)
+      pcMv[ i ]  = cMv;
+  }
+
+}
+
+
+Void TComCUMvField::setAllMvd( TComMv& rcMvd, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock  )
+{
+  Int i;
+  TComMv* pcMvd = m_pcMvd + iPartAddr;
+  register TComMv cMvd = rcMvd;
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+  if (  eCUMode != SIZE_GEO )
+    assert(0);
+
+  UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+  UInt uiMbSize;
+  UInt uiGeoPart;
+  UInt * puiZscanToRaster;
+
+  uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+  uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+  uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+
+  uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+  puiZscanToRaster = getZscanToRasterTable (uiTrueDepth);
+
+  for ( i = 0 ; i <= iNumPartition - 1; i++ )
+  {
+    UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+    uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+    uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+    uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+    if ( uiGeoPart == uiGeoPartDetected)
+      pcMvd[ i ]  = cMvd;
+  }
+}
+
+
+Void TComCUMvField::setAllRefIdx ( Int iRefIdx, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock  )
+{
+  Int i;
+  Int* piRefIdx = m_piRefIdx + iPartAddr;
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  if (  eCUMode != SIZE_GEO )
+    assert(0);
+
+  UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+  UInt uiMbSize;
+  UInt uiGeoPart;
+  UInt * puiZscanToRaster;
+
+  uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+  uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+  uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+
+  uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+  puiZscanToRaster = getZscanToRasterTable (uiTrueDepth);
+
+  for ( i = 0 ; i <= iNumPartition - 1; i++ )
+  {
+    UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+    uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+    uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+    uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+    if ( uiGeoPart == uiGeoPartDetected)
+      piRefIdx[ i ]  = iRefIdx;
+  }
+
+}
+
+Void TComCUMvField::setAllMvField ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock   )
+{
+  setAllMv    ( rcMv,   eCUMode, iPartAddr, eParIdxGeo, uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock);
+  setAllRefIdx(iRefIdx, eCUMode, iPartAddr, eParIdxGeo, uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock);
 #ifdef QC_AMVRES
+  setAllMVRes(false, eCUMode,iPartAddr,eParIdxGeo,uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock);
+#endif
+  return;
+}
+Void    TComCUMvField::setAllMvGeo       ( TComMv& rcMv ,   PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+  Int i;
+  TComMv* pcMvPart0 = m_pcMvGeoPart0+iPartAddr;
+  TComMv* pcMvPart1 = m_pcMvGeoPart1+iPartAddr;
+
+  register TComMv cMv = rcMv;
+
+
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  assert( eCUMode == SIZE_GEO );
+
+  if (eParIdxGeo == PART_GEO_0 )
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      pcMvPart0[ i ]  = cMv;
+  }
+  else
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      pcMvPart1[ i ]  = cMv;
+  }
+}
+
+Void    TComCUMvField::setAllMvdGeo      ( TComMv& rcMvd,   PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+  Int i;
+  TComMv* pcMvdPart0 = m_pcMvdGeoPart0 + iPartAddr;
+  TComMv* pcMvdPart1 = m_pcMvdGeoPart1 + iPartAddr;
+
+  register TComMv cMvd = rcMvd;
+
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  assert( eCUMode == SIZE_GEO );
+
+  if (eParIdxGeo == PART_GEO_0 )
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      pcMvdPart0[ i ] = cMvd;
+  }
+  else
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      pcMvdPart1[ i ] = cMvd;
+  }  
+}
+
+Void   TComCUMvField::setAllRefIdxGeo   ( Int     iRefIdx, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+  Int i;
+  Int* piRefIdxPart0 = m_piRefIdxGeoPart0 + iPartAddr;
+  Int* piRefIdxPart1 = m_piRefIdxGeoPart1 + iPartAddr;
+
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  assert( eCUMode == SIZE_GEO );
+
+  if (eParIdxGeo == PART_GEO_0)
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      piRefIdxPart0[ i ]  = iRefIdx;
+  }    
+  else
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      piRefIdxPart1[ i ]  = iRefIdx;
+  }
+}
+
+Void    TComCUMvField::setAllMvFieldGeo  ( TComMv& rcMv,  Int     iRefIdx,  PartSize eMbMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+  setAllMvGeo    ( rcMv,    eMbMode, iPartAddr, eParIdxGeo, uiDepth);
+  setAllRefIdxGeo(iRefIdx,  eMbMode, iPartAddr, eParIdxGeo, uiDepth);
+
+  /* //Does not support AMVR for GEO yet.
+  #ifdef QC_AMVRES
+  setAllMVRes(false, eCUMode,iPartAddr,iPartIdx,uiDepth);
+  #endif
+  */
+}
+#endif
+
+
+#ifdef QC_AMVRES
+#ifdef GEOM
+Void TComCUMvField::setAllMvField_AMVRes ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+  setAllMv( rcMv, eCUMode, iPartAddr, eParIdxGeo, uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock );
+  setAllRefIdx(iRefIdx, eCUMode,iPartAddr,eParIdxGeo,uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock );
+#ifdef QC_AMVRES
+  setAllMVRes(!rcMv.isHAM(), eCUMode,iPartAddr,eParIdxGeo,uiDepth, uiTrueDepth,  uiEdgeIndex, pcGeometricPartitionBlock );
+#endif
+  return;
+}
+
+Void TComCUMvField::setAllMVRes( Bool bMVRes, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+  Int i;
+  Bool* pbMVRes = m_bMVRes + iPartAddr;
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  if (  eCUMode != SIZE_GEO )
+    assert(0);
+
+  UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+  UInt uiMbSize;
+  UInt uiGeoPart;
+  UInt * puiZscanToRaster;
+
+  uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+  uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+  uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+
+  uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+  puiZscanToRaster = getZscanToRasterTable (uiTrueDepth);
+
+  for ( i = 0 ; i <= iNumPartition - 1; i++ )
+  {
+    UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+    uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+    uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+    uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+    if ( uiGeoPart == uiGeoPartDetected)
+      pbMVRes[ i ] = bMVRes;
+  }
+}
+Void TComCUMvField::setAllMVResGeo( Bool bMVRes, PartSize eCUMode, Int iPartAddr, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+  Int i;
+  Bool* bMVResGeoPart0 = m_bMVResGeoPart0 + iPartAddr;
+  Bool* bMVResGeoPart1 = m_bMVResGeoPart1 + iPartAddr;
+
+  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+
+  assert( eCUMode == SIZE_GEO );
+
+  if (eParIdxGeo == PART_GEO_0)
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      bMVResGeoPart0[ i ]  = bMVRes;
+  }    
+  else
+  {
+    for ( i = iNumPartition - 1; i >= 0; i-- )
+      bMVResGeoPart1[ i ]  = bMVRes;
+  }
+
+}
+#endif
+
 Void TComCUMvField::setAllMvField_AMVRes ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth )
 {
   setAllMv( rcMv, eCUMode, iPartAddr, iPartIdx, uiDepth);

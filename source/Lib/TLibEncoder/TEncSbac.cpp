@@ -569,6 +569,12 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
       m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
 
+#ifdef GEOM
+      //write SIZE_GEO mode codeword
+      if(pcCU->getHeight(uiAbsPartIdx)>8 && pcCU->getHeight(uiAbsPartIdx)<64)
+        m_pcBinIf->encodeBin(1, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+#endif
+
 #if HHI_RMP_SWITCH
       if (pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && pcCU->getSlice()->getSPS()->getUseRMP() )
 #else
@@ -647,6 +653,13 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       }
       break;
     }
+#ifdef GEOM  
+  case SIZE_GEO: //TCH_QCM: it is related to AMP disabled or not. QCM need to work on this. We can also write GEO mode here here.
+#ifdef GEOM
+    codeGeoMode(pcCU, uiAbsPartIdx, uiDepth);
+#endif
+      break;
+#endif
   default:
     {
       assert(0);
@@ -2554,6 +2567,160 @@ Bool TEncSbac::xCodeMvResFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList e
 Void TEncSbac::encodeSwitched_Filters(TComSlice* pcSlice,TComPrediction *m_cPrediction)
 {
 	assert(0);
+  return;
+}
+#endif
+#ifdef GEOM
+Void TEncSbac::codeMVPIdxGeo ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar uhSegm )
+{
+  Int iSymbol, iNum;
+  if(uhSegm == 0)
+  {
+    iSymbol = pcCU->getGeoMVPIdxPart0(eRefList, uiAbsPartIdx);
+    iNum    = pcCU->getGeoMVPNumPart0(eRefList, uiAbsPartIdx);
+  }
+  else
+  {
+    iSymbol = pcCU->getGeoMVPIdxPart1(eRefList, uiAbsPartIdx);
+    iNum    = pcCU->getGeoMVPNumPart1(eRefList, uiAbsPartIdx);
+  }
+
+  xWriteUnaryMaxSymbol(iSymbol, m_cMVPIdxSCModel.get(0), 1, iNum-1);
+#ifdef PEISONG_DEBUG
+    if(g_uhWritingFlag)
+      printf("iSymbol = %d, iNum = %d \n", iSymbol, iNum);
+#endif
+}
+
+Void TEncSbac::codeGeoMode(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth)
+{
+  Int iGeoMode = pcCU->getGeoMode(uiAbsPartIdx);
+  UChar ucHeight = pcCU->getHeight(uiAbsPartIdx);
+  UChar iGeoModeBits;
+
+  assert(ucHeight == 16 || ucHeight == 32);
+  if(ucHeight == 16) iGeoModeBits = 8;
+  if(ucHeight == 32) iGeoModeBits = 9;
+ 
+  //write SIZE_GEO mode codeword
+  m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+  m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+  m_pcBinIf->encodeBin( 0, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+
+  //write GEO mode
+  for(Int i=0; i<iGeoModeBits; i++)
+    m_pcBinIf->encodeBinEP( (iGeoMode>>i)&1 );
+
+#ifdef PEISONG_DEBUG
+    if(g_uhWritingFlag)
+      printf("iGeoMode = %d\n", iGeoMode);
+#endif
+}
+Void TEncSbac::codeInterDirGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, UChar ucSegm )
+{
+  UInt uiInterDir = ucSegm==0 ? pcCU->getGeoInterDirPart0( uiAbsPartIdx ) : pcCU->getGeoInterDirPart1( uiAbsPartIdx );
+  UInt uiCtx      = pcCU->getCtxInterDirGeo( uiAbsPartIdx, ucSegm );
+  uiInterDir--;
+  m_pcBinIf->encodeBin( ( uiInterDir == 2 ? 1 : 0 ), m_cCUInterDirSCModel.get( 0, 0, uiCtx ) );
+
+  if ( uiInterDir < 2 )
+  {
+    m_pcBinIf->encodeBin( uiInterDir, m_cCUInterDirSCModel.get( 0, 0, 3 ) );
+  }
+#ifdef PEISONG_DEBUG
+    if(g_uhWritingFlag)
+      printf("uiInterDir = %d, uiCtx = %d\n", uiInterDir+1, uiCtx);
+#endif
+  return;
+}
+Void TEncSbac::codeRefFrmIdxGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm )
+{
+  Int iRefFrame = ucSegm==0 ? pcCU->getCUMvField( eRefList )->getRefIdxGeoPart0( uiAbsPartIdx ) : pcCU->getCUMvField( eRefList )->getRefIdxGeoPart1( uiAbsPartIdx );
+
+  UInt uiCtx = pcCU->getCtxRefIdxGeo( uiAbsPartIdx, eRefList, ucSegm );
+
+  m_pcBinIf->encodeBin( ( iRefFrame == 0 ? 0 : 1 ), m_cCURefPicSCModel.get( 0, 0, uiCtx ) );
+
+  if ( iRefFrame > 0 )
+  {
+    xWriteUnaryMaxSymbol( iRefFrame - 1, &m_cCURefPicSCModel.get( 0, 0, 4 ), 1, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
+  }
+#ifdef PEISONG_DEBUG
+    if(g_uhWritingFlag)
+      printf("iRefFrame = %d, uiCtx = %d\n", iRefFrame, uiCtx);
+#endif
+  return;
+}
+#endif
+#ifdef GEOM
+Void TEncSbac::codeMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, UChar ucSegm )
+{
+  TComCUMvField* pcCUMvField = pcCU->getCUMvField( eRefList );
+  Int iHor = ucSegm==0 ? pcCUMvField->getMvdGeoPart0( uiAbsPartIdx ).getHor() : pcCUMvField->getMvdGeoPart1( uiAbsPartIdx ).getHor();
+  Int iVer = ucSegm==0 ? pcCUMvField->getMvdGeoPart0( uiAbsPartIdx ).getVer() : pcCUMvField->getMvdGeoPart1( uiAbsPartIdx ).getVer();
+
+  UInt uiAbsPartIdxL, uiAbsPartIdxA;
+  Int iHorPred, iVerPred;
+  Char** aacMbMVPMask = pcCU->getGeoMVPMask();
+
+  UChar ucLeft = aacMbMVPMask[ucSegm][0]; //a
+  UChar ucAbove = aacMbMVPMask[ucSegm][1]; //b
+
+  TComDataCU* pcCUL   = NULL;
+  TComDataCU* pcCUA   = NULL;
+  
+  if(ucLeft)
+    pcCUL = pcCU->getPULeft ( uiAbsPartIdxL, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+  if(ucAbove)
+    pcCUA = pcCU->getPUAbove( uiAbsPartIdxA, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+
+  TComCUMvField* pcCUMvFieldL = ( pcCUL == NULL || pcCUL->isIntra( uiAbsPartIdxL ) ) ? NULL : pcCUL->getCUMvField( eRefList );
+  TComCUMvField* pcCUMvFieldA = ( pcCUA == NULL || pcCUA->isIntra( uiAbsPartIdxA ) ) ? NULL : pcCUA->getCUMvField( eRefList );
+
+#ifdef QC_AMVRES
+  if(pcCU->getSlice()->getSPS()->getUseAMVRes())
+  {
+	  TComMv rcMv  = ucSegm==0 ? pcCUMvField->getMvGeoPart0( uiAbsPartIdx ) : pcCUMvField->getMvGeoPart1( uiAbsPartIdx );
+	  //Int iHor = pcCUMvField->getMvd( uiAbsPartIdx ).getHor();
+	  //Int iVer = pcCUMvField->getMvd( uiAbsPartIdx ).getVer();
+	  Int iL =   ( (pcCUMvFieldL == NULL) ? 1 : (Int)(pcCUMvFieldL->getMVRes(uiAbsPartIdxL)));
+	  Int iV =   ( (pcCUMvFieldA == NULL) ? 1 : (Int)(pcCUMvFieldA->getMVRes(uiAbsPartIdxA)));
+
+	  xWriteMvResFlag(!rcMv.isHAM(),iL+iV);
+#ifdef PEISONG_DEBUG
+      if(g_uhWritingFlag)
+        printf("mvres = %d iL %d iV %d\n", !rcMv.isHAM(), iL, iV);
+#endif
+      if (!rcMv.isHAM()) 
+	  {
+		  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : (pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor()>>1) ) +
+					 ( (pcCUMvFieldA == NULL) ? 0 : (pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor()>>1) );
+		  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : (pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer()>>1) ) +
+					 ( (pcCUMvFieldA == NULL) ? 0 : (pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer()>>1) );
+	      xWriteMvd( iHor/2, iHorPred, 0 );
+	      xWriteMvd( iVer/2, iVerPred, 1 );
+#ifdef PEISONG_DEBUG
+          if(g_uhWritingFlag)
+            printf("mvd iHor %d iHorPred = %d, iVer %d iVerPred = %d\n", iHor, iHorPred, iVer, iVerPred);
+#endif  
+
+		  return;
+	  }
+  }
+#endif
+ 
+  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) +
+       ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
+  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) +
+       ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
+
+  xWriteMvd( iHor, iHorPred, 0 );
+  xWriteMvd( iVer, iVerPred, 1 );
+
+#ifdef PEISONG_DEBUG
+    if(g_uhWritingFlag)
+      printf("mvd iHor %d iHorPred = %d, iVer %d iVerPred = %d\n", iHor, iHorPred, iVer, iVerPred);
+#endif  
   return;
 }
 #endif

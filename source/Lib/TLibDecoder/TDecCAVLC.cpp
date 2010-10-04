@@ -1021,6 +1021,18 @@ Void TDecCavlc::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPa
   return;
 }
 
+#ifdef GEOM
+Void TDecCavlc::parseInterDirGeo   (  TComDataCU* pcCU, UInt& ruiInterDir,  UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth )
+{
+}
+Void TDecCavlc::parseRefFrmIdxGeo   ( TComDataCU* pcCU, Int& riRefFrmIdx,   UInt uiAbsPartIdx, UChar ucSegm, UInt uiDepth, RefPicList eRefList )
+{
+}
+Void TDecCavlc::parseMvdGeo( TComDataCU* pcCU, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, RefPicList eRefList, UInt uiTrueDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+}
+#endif
+
 Void TDecCavlc::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList )
 {
   UInt uiSymbol;

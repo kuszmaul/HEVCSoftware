@@ -284,6 +284,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\GeometricPartition.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.cpp"
 				>
 			</File>
@@ -395,6 +399,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\ContextTables.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\GeometricPartition.h"
 				>
 			</File>
 			<File

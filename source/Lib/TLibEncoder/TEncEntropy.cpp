@@ -977,6 +977,12 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       }
     }
 #else
+#ifdef GEOM
+    if(eSize == SIZE_GEO)
+    {
+      pcCU->setGeoMVPMask( m_pcGeometricPartitionBlock->getMbMVPMaskPointerFromTable(pcCU->getGeoMode (uiAbsPartIdx)) );
+    }
+#endif
     encodeInterDir( pcCU, uiAbsPartIdx, bRD );
 
 #ifdef DCM_PBIC
@@ -1168,6 +1174,14 @@ Void TEncEntropy::encodeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       m_pcEntropyCoderIf->codeInterDir( pcCU, uiAbsPartIdx + uiPartOffset + (uiPartOffset>>2) );
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      m_pcEntropyCoderIf->codeInterDirGeo( pcCU, uiAbsPartIdx, 0 );
+      m_pcEntropyCoderIf->codeInterDirGeo( pcCU, uiAbsPartIdx, 1 );
+      break;
+    }
+#endif
   default:
     break;
   }
@@ -1376,6 +1390,21 @@ Void TEncEntropy::encodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList 
 
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      if ( (pcCU->getGeoInterDirPart0( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getGeoMVPNumPart0(eRefList, uiAbsPartIdx)> 1) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
+      {
+        m_pcEntropyCoderIf->codeMVPIdxGeo( pcCU, uiAbsPartIdx, eRefList, 0 );
+      }
+      if ( (pcCU->getGeoInterDirPart1( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getGeoMVPNumPart1(eRefList, uiAbsPartIdx)> 1) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
+      {
+        m_pcEntropyCoderIf->codeMVPIdxGeo( pcCU, uiAbsPartIdx, eRefList, 1 );
+      }
+      break;
+    }
+
+#endif
   default:
     break;
   }
@@ -1585,6 +1614,21 @@ Void TEncEntropy::encodeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicLi
 
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      if ( pcCU->getGeoInterDirPart0( uiAbsPartIdx ) & ( 1 << eRefList ) )
+      {
+        m_pcEntropyCoderIf->codeRefFrmIdxGeo( pcCU, uiAbsPartIdx, eRefList, 0 );
+      }
+
+      if ( pcCU->getGeoInterDirPart1( uiAbsPartIdx ) & ( 1 << eRefList ) )
+      {
+        m_pcEntropyCoderIf->codeRefFrmIdxGeo( pcCU, uiAbsPartIdx, eRefList, 1 );
+      }
+      break;
+    }
+#endif
   default:
     break;
   }
@@ -1707,6 +1751,21 @@ Void TEncEntropy::encodeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRe
 
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      if ( pcCU->getGeoInterDirPart0( uiAbsPartIdx ) & ( 1 << eRefList ) )
+      {
+        m_pcEntropyCoderIf->codeMvdGeo( pcCU, uiAbsPartIdx, eRefList, 0 );
+      }
+
+      if ( pcCU->getGeoInterDirPart1( uiAbsPartIdx ) & ( 1 << eRefList ) )
+      {
+        m_pcEntropyCoderIf->codeMvdGeo( pcCU, uiAbsPartIdx, eRefList, 1 );
+      }
+      break;
+    }
+#endif
   default:
     break;
   }

@@ -48,7 +48,7 @@ TComRdCost::~TComRdCost()
 }
 
 #ifdef ROUNDING_CONTROL_BIPRED
-#ifndef ROUNDING_CONTROL_BIPRED_FIX
+#if !defined ROUNDING_CONTROL_BIPRED_FIX || defined GEOM
   __inline Pel  xClip  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)g_uiIBDI_MAX) ? (Pel)g_uiIBDI_MAX : x ); }
 #endif
 #endif
@@ -186,6 +186,15 @@ Void TComRdCost::init()
   m_afpDistortFunc[27] = TComRdCost::xGetHADs;
   m_afpDistortFunc[28] = TComRdCost::xGetHADs;
 
+#ifdef GEOM
+  //m_afpDistortFunc[DF_SSEGEO]  = TComRdCost::xGetSSEGEO;
+  m_afpDistortFunc[DF_SADGEO]  = TComRdCost::xGetSADGEO;
+  m_afpDistortFunc[DF_SADSGEO] = TComRdCost::xGetSADsGEO;
+
+  m_aaiMbPartitionMask        = NULL;
+  m_iMAX_mask_amplitude       = 0;
+  m_aaiMbMask_start_stop_p    = NULL;
+#endif
 #ifdef ROUNDING_CONTROL_BIPRED
   m_afpDistortFuncRnd[0]  =	NULL;
   m_afpDistortFuncRnd[1]  = TComRdCost::xGetSSE;
@@ -219,6 +228,12 @@ Void TComRdCost::init()
   m_afpDistortFuncRnd[26] = TComRdCost::xGetHADs;
   m_afpDistortFuncRnd[27] = TComRdCost::xGetHADs;
   m_afpDistortFuncRnd[28] = TComRdCost::xGetHADs;
+
+#ifdef GEOM
+  //m_afpDistortFuncRnd[DF_SSEGEO]  = TComRdCost::xGetSSEGEO;
+  m_afpDistortFuncRnd[DF_SADGEO]  = TComRdCost::xGetSADGEO;
+  m_afpDistortFuncRnd[DF_SADSGEO] = TComRdCost::xGetSADsGEO;
+#endif
 #endif
 
   m_puiComponentCostOriginP = NULL;
@@ -293,6 +308,16 @@ Void TComRdCost::setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iR
   // set Block Width / Height
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
+#ifdef GEOM
+  if (pcPatternKey->getGeoSearchValue () == true)
+  {
+    rcDistParam.DistFuncRnd              = m_afpDistortFuncRnd [DF_SADGEO];
+    rcDistParam.m_aaiMbMask_start_stop_p = m_aaiMbMask_start_stop_p;
+    rcDistParam.m_aaiMbPartitionMask     = m_aaiMbPartitionMask;
+    rcDistParam.m_iMAX_mask_amplitude    = m_iMAX_mask_amplitude;
+  }
+  else
+#endif 
   rcDistParam.DistFuncRnd = m_afpDistortFuncRnd[DF_SAD + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
 
   // initialize
@@ -316,15 +341,47 @@ Void TComRdCost::setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iR
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
 
+#ifdef GEOM
+	if (pcPatternKey->getGeoSearchValue () == true)
+		bHADME = false;
+#endif
+
   // set distortion function
   if ( !bHADME )
   {
+#ifdef GEOM
+      if (pcPatternKey->getGeoSearchValue () == true)
+      {
+        rcDistParam.DistFuncRnd = m_afpDistortFuncRnd[DF_SADSGEO];
+        rcDistParam.m_aaiMbMask_start_stop_p = m_aaiMbMask_start_stop_p;
+        rcDistParam.m_aaiMbPartitionMask     = m_aaiMbPartitionMask;
+        rcDistParam.m_iMAX_mask_amplitude    = m_iMAX_mask_amplitude;
+      }
+      else
+#endif
     rcDistParam.DistFuncRnd = m_afpDistortFuncRnd[DF_SADS + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   }
   else
   {
     rcDistParam.DistFuncRnd = m_afpDistortFuncRnd[DF_HADS + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   }
+
+  // initialize
+  rcDistParam.iSubShift  = 0;
+}
+#endif
+
+#ifdef GEOM
+Void TComRdCost::setDistParamGeo( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam )
+{
+  // set Block Width / Height
+  rcDistParam.iCols    = uiBlkWidth;
+  rcDistParam.iRows    = uiBlkHeight;
+
+  rcDistParam.DistFunc = m_afpDistortFunc [DF_SADGEO];
+  rcDistParam.m_aaiMbMask_start_stop_p = m_aaiMbMask_start_stop_p;
+  rcDistParam.m_aaiMbPartitionMask     = m_aaiMbPartitionMask;
+  rcDistParam.m_iMAX_mask_amplitude    = m_iMAX_mask_amplitude;
 
   // initialize
   rcDistParam.iSubShift  = 0;
@@ -355,6 +412,17 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   // set Block Width / Height
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
+
+#ifdef GEOM
+  if (pcPatternKey->getGeoSearchValue () == true)
+  {
+    rcDistParam.DistFunc = m_afpDistortFunc [DF_SADGEO];
+    rcDistParam.m_aaiMbMask_start_stop_p = m_aaiMbMask_start_stop_p;
+    rcDistParam.m_aaiMbPartitionMask     = m_aaiMbPartitionMask;
+    rcDistParam.m_iMAX_mask_amplitude    = m_iMAX_mask_amplitude;
+  }
+  else
+#endif 
   rcDistParam.DistFunc = m_afpDistortFunc[DF_SAD + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
 
   // initialize
@@ -378,10 +446,24 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
 
+#ifdef GEOM
+  if (pcPatternKey->getGeoSearchValue () == true)
+    bHADME = false;
+#endif
   // set distortion function
   if ( !bHADME )
   {
-    rcDistParam.DistFunc = m_afpDistortFunc[DF_SADS + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
+#ifdef GEOM
+    if (pcPatternKey->getGeoSearchValue () == true)
+    {
+      rcDistParam.DistFunc = m_afpDistortFunc[DF_SADSGEO];
+      rcDistParam.m_aaiMbMask_start_stop_p = m_aaiMbMask_start_stop_p;
+      rcDistParam.m_aaiMbPartitionMask     = m_aaiMbPartitionMask;
+      rcDistParam.m_iMAX_mask_amplitude    = m_iMAX_mask_amplitude;
+    }
+    else
+#endif
+      rcDistParam.DistFunc = m_afpDistortFunc[DF_SADS + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   }
   else
   {
@@ -436,7 +518,18 @@ UInt TComRdCost::calcHAD( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iW
 
   return ( uiSum >> g_uiBitIncrement );
 }
-
+#ifdef GEOM
+UInt TComRdCost::getDistPartGeo( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
+{
+  DistParam cDtParam;
+  setDistParamGeo( uiBlkWidth, uiBlkHeight, eDFunc, cDtParam );
+  cDtParam.pOrg       = piOrg;
+  cDtParam.pCur       = piCur;
+  cDtParam.iStrideOrg = iOrgStride;
+  cDtParam.iStrideCur = iCurStride;
+  return cDtParam.DistFunc( &cDtParam );
+}
+#endif
 UInt TComRdCost::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
 {
   DistParam cDtParam;
@@ -2232,6 +2325,175 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
   return ( uiSum );
 }
 
+#ifdef GEOM
+UInt TComRdCost::xGetSADGEO( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iCols   = pcDtParam->iCols;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+
+  UInt uiSum = 0;
+
+#if TCH_GEO_FAST_DISORT
+  for( Int iLoop=0; iLoop<iRows; iLoop += iSubStep)
+  {
+    for (Int n = pcDtParam->m_aaiMbMask_start_stop_p[iLoop][0]; n < pcDtParam->m_aaiMbMask_start_stop_p[iLoop][1]; n++ )
+    {
+      uiSum += abs( piOrg[n] - piCur[n] );
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+#else
+  for( Int iLoop=0; iLoop<iRows;  iLoop ++ )
+  {
+	  for (Int n =0; n <iCols; n++)
+	  {
+        if(pcDtParam->m_aaiMbPartitionMask[iLoop][n])
+		  uiSum += abs( piOrg[n] - piCur[n] );
+	  }
+	  piOrg += iStrideOrg;
+	  piCur += iStrideCur;
+  }
+  //uiSum=static_cast<UInt>(floor(static_cast<Float>(uiSum)/static_cast<Float>(pcDtParam->m_iMAX_mask_amplitude)));
+#endif//TCH_GEO_FAST_DISORT
+
+  return ( uiSum >> g_uiBitIncrement );
+}
+UInt TComRdCost::xGetSADsGEO( DistParam* pcDtParam )
+{
+	Pel* piOrg   = pcDtParam->pOrg;
+	Pel* piCur   = pcDtParam->pCur;
+	Int  iRows   = pcDtParam->iRows;
+	Int  iCols   = pcDtParam->iCols;
+	Int  iStrideCur = pcDtParam->iStrideCur;
+	Int  iStrideOrg = pcDtParam->iStrideOrg;
+	Int  iStep  = pcDtParam->iStep;
+
+	UInt uiSum = 0;
+#if TCH_GEO_FAST_DISORT
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n = pcDtParam->m_aaiMbMask_start_stop_p[iLoop][0]; n < pcDtParam->m_aaiMbMask_start_stop_p[iLoop][1]; n++ )
+		{
+			uiSum += abs( piOrg[n] - piCur[n*iStep] );
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+	}
+#else
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n =0; n <iCols; n++)
+		{
+          if(pcDtParam->m_aaiMbPartitionMask[iLoop][n])
+			uiSum += abs( piOrg[n] - piCur[n*iStep] );
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+	}
+	//uiSum=static_cast<UInt>(floor(static_cast<Float>(uiSum)/static_cast<Float>(pcDtParam->m_iMAX_mask_amplitude)));
+
+#endif//TCH_GEO_FAST_DISORT
+	return ( uiSum >> g_uiBitIncrement );
+}
+
+#ifdef ROUNDING_CONTROL_BIPRED
+UInt TComRdCost:: xGetSADGEO   ( DistParam* pcDtParam, Pel* pRefY, Bool bRound )
+{
+	Pel* piOrg   = pcDtParam->pOrg;
+	Pel* piCur   = pcDtParam->pCur;
+	Pel* piRef   = pRefY;
+	Int  iRows   = pcDtParam->iRows;
+	Int  iCols   = pcDtParam->iCols;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+	Pel  pred;
+
+	UInt uiSum = 0;
+
+#if TCH_GEO_FAST_DISORT_BI
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n = pcDtParam->m_aaiMbMask_start_stop_p[iLoop][0]; n < pcDtParam->m_aaiMbMask_start_stop_p[iLoop][1]; n++ )
+		{
+			pred = xClip( (piCur[n] + piRef[n] + bRound) >> 1 );
+			uiSum += abs( piOrg[n] - pred );
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+		piRef += pcDtParam->iCols*iSubStep;
+	}
+#else
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n =0; n <iCols; n++)
+		{
+          if(pcDtParam->m_aaiMbPartitionMask[iLoop][n])
+          {
+			pred = xClip( (piCur[n] + piRef[n] + bRound) >> 1 );
+			uiSum += abs( piOrg[n] - pred );
+          }
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+	piRef += iCols;
+	}
+	//uiSum=static_cast<UInt>(floor(static_cast<float>(uiSum)/static_cast<float>(pcDtParam->m_iMAX_mask_amplitude)));
+#endif //TCH_GEO_FAST_DISORT_BI
+  return ( uiSum >> g_uiBitIncrement );
+}
+
+UInt TComRdCost:: xGetSADsGEO   ( DistParam* pcDtParam, Pel* pRefY, Bool bRound )
+{
+	Pel* piOrg   = pcDtParam->pOrg;
+	Pel* piCur   = pcDtParam->pCur;
+	Pel* piRef   = pRefY;
+	Int  iRows   = pcDtParam->iRows;
+	Int  iCols   = pcDtParam->iCols;
+	Int  iStrideCur = pcDtParam->iStrideCur;
+	Int  iStrideOrg = pcDtParam->iStrideOrg;
+	Int  iStep  = pcDtParam->iStep;
+
+	Pel  pred;
+
+	UInt uiSum = 0;
+#if TCH_GEO_FAST_DISORT_BI
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n = pcDtParam->m_aaiMbMask_start_stop_p[iLoop][0]; n < pcDtParam->m_aaiMbMask_start_stop_p[iLoop][1]; n++ )
+		{
+			pred   = xClip( (piCur[n*iStep] + piRef[n] + bRound) >> 1 );
+			uiSum += abs( piOrg[n] - pred );
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+		piRef += iCols;
+	}
+#else
+	for( Int iLoop=0; iLoop<iRows; iLoop++ )
+	{
+		for (Int n =0; n <iCols; n++)
+		{
+          if(pcDtParam->m_aaiMbPartitionMask[iLoop][n])
+          {
+			pred   = xClip( (piCur[n*iStep] + piRef[n] + bRound) >> 1 );
+			uiSum += abs( piOrg[n] - pred ) ;
+          }
+		}
+		piOrg += iStrideOrg;
+		piCur += iStrideCur;
+		piRef += iCols;
+	}
+	//uiSum=static_cast<UInt>(floor(static_cast<float>(uiSum)/static_cast<float>(pcDtParam->m_iMAX_mask_amplitude)));
+#endif //TCH_GEO_FAST_DISORT_BI
+	return ( uiSum >> g_uiBitIncrement );	
+}
+#endif//ROUNDING_CONTROL
+#endif
 // --------------------------------------------------------------------------------------------------------------------
 // HADAMARD with step (used in fractional search)
 // --------------------------------------------------------------------------------------------------------------------

@@ -107,9 +107,15 @@ private:
   TComPatternParam  m_cPatternY;
   TComPatternParam  m_cPatternCb;
   TComPatternParam  m_cPatternCr;
-
+#ifdef GEOM
+  Bool              m_bGeoSearchValue;
+#endif
 public:
 
+#ifdef GEOM
+ Bool  getGeoSearchValue()                      { return m_bGeoSearchValue;           }
+ Void  setGeoSearchValue (bool bGeoSearchValue) { m_bGeoSearchValue = bGeoSearchValue;}
+#endif
   // ROI & pattern information, (ROI = &pattern[AboveOffset][LeftOffset])
   Pel*  getROIY()                 { return m_cPatternY.getROIOrigin();    }
   Pel*  getROICb()                { return m_cPatternCb.getROIOrigin();   }

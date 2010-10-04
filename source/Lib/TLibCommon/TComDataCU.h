@@ -89,6 +89,54 @@ public:
 
 #endif
 
+#ifdef GEOM
+class GeoData
+{
+public:	
+	UInt   m_uiGeoMode;
+	UInt   m_uiGeoCost;
+	Int    m_aiDir[2];
+	TComMv m_aaMvGeo[2][2];
+	Int    m_aaiRefIdx[2][2];
+    TComMv m_aaMvdGeo[2][2];
+	
+
+	GeoData()
+	{
+		init ();
+	}
+	Void init()
+	{
+		m_uiGeoMode = 0;
+		m_uiGeoCost = MAX_UINT;
+		m_aiDir[0] = 0;
+		m_aiDir[1] = 0;
+		m_aaiRefIdx[0][0] = -1;
+		m_aaiRefIdx[0][1] = -1;
+		m_aaiRefIdx[1][0] = -1;
+		m_aaiRefIdx[1][1] = -1;
+	}
+	Void copy (GeoData GeodataSrc)
+	{
+		m_uiGeoMode = GeodataSrc.m_uiGeoMode;
+		m_uiGeoCost = GeodataSrc.m_uiGeoCost;
+		m_aiDir[0] = GeodataSrc.m_aiDir[0];
+		m_aiDir[1] = GeodataSrc.m_aiDir[1];
+		m_aaiRefIdx[0][0] = GeodataSrc.m_aaiRefIdx[0][0];
+		m_aaiRefIdx[0][1] = GeodataSrc.m_aaiRefIdx[0][1];
+		m_aaiRefIdx[1][0] = GeodataSrc.m_aaiRefIdx[1][0];
+		m_aaiRefIdx[1][1] = GeodataSrc.m_aaiRefIdx[1][1];
+		m_aaMvGeo[0][0]   = GeodataSrc.m_aaMvGeo[0][0];
+		m_aaMvGeo[0][1]   = GeodataSrc.m_aaMvGeo[0][1];
+		m_aaMvGeo[1][0]   = GeodataSrc.m_aaMvGeo[1][0];
+		m_aaMvGeo[1][1]   = GeodataSrc.m_aaMvGeo[1][1];
+		m_aaMvdGeo[0][0]  = GeodataSrc.m_aaMvdGeo[0][0];
+		m_aaMvdGeo[0][1]  = GeodataSrc.m_aaMvdGeo[0][1];
+		m_aaMvdGeo[1][0]  = GeodataSrc.m_aaMvdGeo[1][0];
+		m_aaMvdGeo[1][1]  = GeodataSrc.m_aaMvdGeo[1][1];
+	}
+};
+#endif
 /// CU data structure class
 class TComDataCU
 {
@@ -150,6 +198,20 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
   // coding tool information
   // -------------------------------------------------------------------------------------------------------------------
+#ifdef GEOM
+  Int   *   m_piGeoMode;  ///< array of geo partition mode
+  UChar * m_puhInterDirGeoPart0;
+  UChar * m_puhInterDirGeoPart1; 
+  UChar * m_puhMVPIdxGeoPart0[2];
+  UChar * m_puhMVPIdxGeoPart1[2]; 
+  UChar * m_puhMVPNumGeoPart0[2];
+  UChar * m_puhMVPNumGeoPart1[2]; 
+  Char  ** m_aacMbMVPMask;
+#ifdef GEOM_SPEED
+  Bool ***m_aaabMotionMask;
+  TComMv **** m_ppppcRegularMv;
+#endif
+#endif
 
 #if HHI_MRG
   Bool*         m_pbMergeFlag;        ///< array of merge flags
@@ -325,6 +387,48 @@ public:
   // member functions for coding tool information
   // -------------------------------------------------------------------------------------------------------------------
 
+#ifdef GEOM
+  Void          resetForGeo           (UInt uiDepth); 
+  Int *         getGeoMode            ()                        { return m_piGeoMode;                }
+  Int           getGeoMode            ( UInt uiIdx )            { return m_piGeoMode[uiIdx];         }
+  Void          setGeoMode            ( UInt uiIdx,  Int iMode ){ m_piGeoMode[uiIdx] =  iMode;       }
+  Void          setGeoModeSubParts    ( Int  iMode,  UInt uiAbsPartIdx, UInt uiDepth );
+  
+  UChar*        getGeoInterDirPart0   ()                        { return m_puhInterDirGeoPart0;       }
+  UChar         getGeoInterDirPart0   ( UInt uiIdx )            { return m_puhInterDirGeoPart0[uiIdx];  }
+  Void          setGeoInterDirPart0   ( UInt uiIdx, UChar  uh ) { m_puhInterDirGeoPart0[uiIdx] = uh;       }
+  UChar*        getGeoInterDirPart1   ()                        { return m_puhInterDirGeoPart1;       }
+  UChar         getGeoInterDirPart1   ( UInt uiIdx )            { return m_puhInterDirGeoPart1[uiIdx];  }
+  Void          setGeoInterDirPart1   ( UInt uiIdx, UChar  uh ) { m_puhInterDirGeoPart1[uiIdx] = uh;       }
+  UChar *       getGeoMVPIdxPart0     (Int iRefList )           { return m_puhMVPIdxGeoPart0[iRefList]; }
+  UChar         getGeoMVPIdxPart0     (Int iRefList,UInt uiIdx ){ return m_puhMVPIdxGeoPart0[iRefList][uiIdx]; }
+  UChar *       getGeoMVPIdxPart1     (Int iRefList )           { return m_puhMVPIdxGeoPart1[iRefList]; }
+  UChar         getGeoMVPIdxPart1     (Int iRefList,UInt uiIdx ){ return m_puhMVPIdxGeoPart1[iRefList][uiIdx]; }
+  UChar *       getGeoMVPNumPart0     (Int iRefList )           { return m_puhMVPNumGeoPart0[iRefList]; }
+  UChar         getGeoMVPNumPart0     (Int iRefList,UInt uiIdx ){ return m_puhMVPNumGeoPart0[iRefList][uiIdx]; }
+  UChar *       getGeoMVPNumPart1     (Int iRefList )           { return m_puhMVPNumGeoPart1[iRefList]; }
+  UChar         getGeoMVPNumPart1     (Int iRefList,UInt uiIdx ){ return m_puhMVPNumGeoPart1[iRefList][uiIdx]; }
+  Void          setMVPIdxSubParts     ( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx,ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void          setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx,ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void          setGeoMVPIdxSubParts   ( UChar ucMVPIdx,  RefPicList eRefPicList, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void          setGeoMVPNumSubParts   ( UChar ucMVPNum,  RefPicList eRefPicList, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void          setGeoInterDirSubParts( UInt uiDir,  UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth );
+  Void          setInterDirSubParts   ( UInt uiDir,  UInt uiAbsPartIdx,ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  UInt *        getZscanToRasterTable (UInt uiTrueDepth);
+  UInt          GeoPartDetection      (UInt uiUnitIdxY, UInt uiUnitIdxX, UInt uiUnitHeight, UInt uiUnitWidth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock );
+  Void          setGeoMVPMask         ( Char** aacMbMVPMask )                         { m_aacMbMVPMask              = aacMbMVPMask; }
+  Char**        getGeoMVPMask         ()                         { return m_aacMbMVPMask; }
+  UInt          getCtxInterDirGeo( UInt uiAbsPartIdx, UChar ucSegm );
+  UInt          getCtxRefIdxGeo( UInt uiAbsPartIdx, RefPicList eRefPicList, UChar ucSegm );
+  Void          fillMvpCandGeo        ( Char **aacMbMVPMask, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#ifdef GEOM_SPEED
+  Void          setGeoMotionMask      ( Bool*** aaabMotionMask )                    { m_aaabMotionMask              = aaabMotionMask; }
+  Bool***       getMotionMask         ()                         { return m_aaabMotionMask; }
+  Void          setRegularMV          (TComMv**** ppppcRegularMv){ m_ppppcRegularMv = ppppcRegularMv;}
+  TComMv****    getRegularMV          ()                         { return m_ppppcRegularMv; }
+  Void          saveRegularMV         ( RefPicList eRefPicList, Int iRefIdxTemp, TComMv *cMvTemp, UInt uiPartAddr, Int iPartIdx );
+#endif
+#endif
 #if HHI_MRG
   Bool*         getMergeFlag          ()                        { return m_pbMergeFlag;               }
   Bool          getMergeFlag          ( UInt uiIdx )            { return m_pbMergeFlag[uiIdx];        }

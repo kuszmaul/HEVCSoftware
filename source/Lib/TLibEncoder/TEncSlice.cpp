@@ -139,6 +139,10 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pppcRDSbacCoder   = pcEncTop->getRDSbacCoder();
   m_pcRDGoOnSbacCoder = pcEncTop->getRDGoOnSbacCoder();
 
+#ifdef GEOM
+  m_pcGeometricPartition     = pcEncTop->getGEOPart();   //Uncoment when ready to use it
+#endif
+
   // create lambda and QP arrays
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );

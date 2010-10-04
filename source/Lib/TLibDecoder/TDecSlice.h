@@ -60,12 +60,17 @@ private:
 
   // additional buffers for generated reference frames
   TComPic*        m_apcVirtPic[2][GRF_MAX_NUM_EFF];
-
+#ifdef GEOM
+  GeometricPartition*       m_pcGeometricPartition;
+#endif
 public:
   TDecSlice();
   virtual ~TDecSlice();
-
+#ifdef GEOM
+  Void  init              ( TDecEntropy* pcEntropyDecoder, TDecCu* pcMbDecoder, GeometricPartition*       m_pcGeometricPartition );
+#else
   Void  init              ( TDecEntropy* pcEntropyDecoder, TDecCu* pcMbDecoder );
+#endif
   Void  create            ( TComSlice* pcSlice, Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
   Void  destroy           ();
 

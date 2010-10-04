@@ -54,6 +54,22 @@ TComDataCU::TComDataCU()
   m_puhWidth           = NULL;
   m_puhHeight          = NULL;
   m_phQP               = NULL;
+
+#ifdef GEOM
+  m_piGeoMode          = NULL;
+  m_puhInterDirGeoPart0= NULL;
+  m_puhInterDirGeoPart1= NULL;
+
+  m_puhMVPIdxGeoPart0[0]=NULL;
+  m_puhMVPIdxGeoPart0[1]=NULL;
+  m_puhMVPIdxGeoPart1[0]=NULL;
+  m_puhMVPIdxGeoPart1[1]=NULL;
+
+  m_puhMVPNumGeoPart0[0]=NULL;
+  m_puhMVPNumGeoPart0[1]=NULL;
+  m_puhMVPNumGeoPart1[0]=NULL;
+  m_puhMVPNumGeoPart1[1]=NULL;    
+#endif
 #if HHI_MRG
   m_pbMergeFlag        = NULL;
   m_puhMergeIndex      = NULL;
@@ -127,6 +143,21 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_pePredMode         = (PredMode* )xMalloc(PredMode, uiNumPartition);
 
     m_puiAlfCtrlFlag     = (UInt*  )xMalloc(UInt,   uiNumPartition);
+#ifdef GEOM
+    m_piGeoMode          = (Int *  )xMalloc(Int,    uiNumPartition);
+	m_puhInterDirGeoPart0= (UChar* )xMalloc(UChar,  uiNumPartition);
+	m_puhInterDirGeoPart1= (UChar* )xMalloc(UChar,  uiNumPartition);
+
+    m_puhMVPIdxGeoPart0[0]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPIdxGeoPart0[1]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPIdxGeoPart1[0]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPIdxGeoPart1[1]=(UChar* )xMalloc(UChar,  uiNumPartition);
+
+    m_puhMVPNumGeoPart0[0]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPNumGeoPart0[1]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPNumGeoPart1[0]=(UChar* )xMalloc(UChar,  uiNumPartition);
+    m_puhMVPNumGeoPart1[1]=(UChar* )xMalloc(UChar,  uiNumPartition);    
+#endif
 
 #if HHI_MRG
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
@@ -230,6 +261,21 @@ Void TComDataCU::destroy()
     if ( m_piPlanarInfo[2]    ) { xFree(m_piPlanarInfo[2]);     m_piPlanarInfo[2]   = NULL; }
     if ( m_piPlanarInfo[3]    ) { xFree(m_piPlanarInfo[3]);     m_piPlanarInfo[3]   = NULL; }
 #endif
+
+#ifdef GEOM
+    if ( m_piGeoMode          ) { xFree(m_piGeoMode);            m_piGeoMode        = NULL; }
+	if ( m_puhInterDirGeoPart0) { xFree(m_puhInterDirGeoPart0);  m_puhInterDirGeoPart0= NULL; }
+	if ( m_puhInterDirGeoPart1) { xFree(m_puhInterDirGeoPart1);  m_puhInterDirGeoPart1= NULL; }
+	if ( m_puhMVPIdxGeoPart0[0]) { xFree(m_puhMVPIdxGeoPart0[0]);  m_puhMVPIdxGeoPart0[0]= NULL; }
+    if ( m_puhMVPIdxGeoPart0[1]) { xFree(m_puhMVPIdxGeoPart0[1]);  m_puhMVPIdxGeoPart0[1]= NULL; }
+	if ( m_puhMVPIdxGeoPart1[0]) { xFree(m_puhMVPIdxGeoPart1[0]);  m_puhMVPIdxGeoPart1[0]= NULL; }
+    if ( m_puhMVPIdxGeoPart1[1]) { xFree(m_puhMVPIdxGeoPart1[1]);  m_puhMVPIdxGeoPart1[1]= NULL; }
+	if ( m_puhMVPNumGeoPart0[0]) { xFree(m_puhMVPNumGeoPart0[0]);  m_puhMVPNumGeoPart0[0]= NULL; }
+    if ( m_puhMVPNumGeoPart0[1]) { xFree(m_puhMVPNumGeoPart0[1]);  m_puhMVPNumGeoPart0[1]= NULL; }
+	if ( m_puhMVPNumGeoPart1[0]) { xFree(m_puhMVPNumGeoPart1[0]);  m_puhMVPNumGeoPart1[0]= NULL; }
+    if ( m_puhMVPNumGeoPart1[1]) { xFree(m_puhMVPNumGeoPart1[1]);  m_puhMVPNumGeoPart1[1]= NULL; }
+#endif
+
 #if HHI_MRG
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag       = NULL; }
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex     = NULL; }
@@ -308,13 +354,28 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #if HHI_AIS || HHI_MRG
   Int iSizeInBool  = sizeof( Bool  ) * m_uiNumPartition;
 #endif
-#if PLANAR_INTRA
+#if PLANAR_INTRA || defined GEOM
   Int iSizeInInt   = sizeof( Int   ) * m_uiNumPartition;
 #endif
 
   memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
 
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt  );
+
+#ifdef GEOM
+  memset( m_piGeoMode,           0, iSizeInInt  );
+  memset( m_puhInterDirGeoPart0, 0, iSizeInUchar );
+  memset( m_puhInterDirGeoPart1, 0, iSizeInUchar );
+  memset( m_puhMVPIdxGeoPart0[0],0, iSizeInUchar );
+  memset( m_puhMVPIdxGeoPart0[1],0, iSizeInUchar );
+  memset( m_puhMVPIdxGeoPart1[0],0, iSizeInUchar );
+  memset( m_puhMVPIdxGeoPart1[1],0, iSizeInUchar );
+  memset( m_puhMVPNumGeoPart0[0],0, iSizeInUchar );
+  memset( m_puhMVPNumGeoPart0[1],0, iSizeInUchar );
+  memset( m_puhMVPNumGeoPart1[0],0, iSizeInUchar );
+  memset( m_puhMVPNumGeoPart1[1],0, iSizeInUchar );
+#endif
+
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
@@ -428,13 +489,16 @@ Void TComDataCU::initEstData()
 #if HHI_AIS || HHI_MRG
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
 #endif
-#if PLANAR_INTRA
+#if PLANAR_INTRA || defined GEOM
   Int iSizeInInt   = sizeof( Int   ) * m_uiNumPartition;
 #endif
 
   memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
 
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
+#ifdef GEOM
+  memset( m_piGeoMode,          0, iSizeInInt  );
+#endif
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
@@ -516,13 +580,17 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
 #if HHI_AIS || HHI_MRG
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
 #endif
-#if PLANAR_INTRA
+#if PLANAR_INTRA || defined GEOM
   Int iSizeInInt   = sizeof( Int    ) * m_uiNumPartition;
 #endif
 
   memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
 
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
+
+#ifdef GEOM
+  memset( m_piGeoMode,          0, iSizeInInt  );
+#endif
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
@@ -617,6 +685,13 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_pePartSize=pcCU->getPartitionSize()   + uiPart;
   m_pePredMode=pcCU->getPredictionMode()  + uiPart;
 
+
+#ifdef GEOM
+  m_piGeoMode           = pcCU->getGeoMode()         + uiPart; 
+  m_puhInterDirGeoPart0 = pcCU->getGeoInterDirPart0()+ uiPart;
+  m_puhInterDirGeoPart1 = pcCU->getGeoInterDirPart1()+ uiPart; 
+#endif
+
 #if HHI_MRG
   m_pbMergeFlag         = pcCU->getMergeFlag()        + uiPart;
   m_puhMergeIndex       = pcCU->getMergeIndex()       + uiPart;
@@ -695,7 +770,27 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_acCUIcField.setIcPtr(pcCU->getCUIcField()->getIc()     + uiPart);
   m_acCUIcField.setIcdPtr(pcCU->getCUIcField()->getIcd()    + uiPart);
 #endif
-
+#ifdef GEOM
+  m_acCUMvField[0].setMvGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_0)->getMvGeoPart0()     + uiPart);
+  m_acCUMvField[0].setMvGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_0)->getMvGeoPart1()     + uiPart);
+  m_acCUMvField[0].setMvdGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_0)->getMvdGeoPart0()     + uiPart);
+  m_acCUMvField[0].setMvdGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_0)->getMvdGeoPart1()     + uiPart);
+  m_acCUMvField[0].setRefIdxGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_0)->getRefIdxGeoPart0() + uiPart);
+  m_acCUMvField[0].setRefIdxGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_0)->getRefIdxGeoPart1() + uiPart);
+ 
+  m_acCUMvField[1].setMvGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_1)->getMvGeoPart0()     + uiPart);
+  m_acCUMvField[1].setMvGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_1)->getMvGeoPart1()     + uiPart);
+  m_acCUMvField[1].setMvdGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_1)->getMvdGeoPart0()     + uiPart);
+  m_acCUMvField[1].setMvdGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_1)->getMvdGeoPart1()     + uiPart);
+  m_acCUMvField[1].setRefIdxGeoPtrPart0(pcCU->getCUMvField(REF_PIC_LIST_1)->getRefIdxGeoPart0() + uiPart);
+  m_acCUMvField[1].setRefIdxGeoPtrPart1(pcCU->getCUMvField(REF_PIC_LIST_1)->getRefIdxGeoPart1() + uiPart);
+#ifdef QC_AMVRES
+  m_acCUMvField[0].setMVResPtrGeoPart0(pcCU->getCUMvField(REF_PIC_LIST_0)->getMVResGeoPart0() + uiPart);
+  m_acCUMvField[0].setMVResPtrGeoPart1(pcCU->getCUMvField(REF_PIC_LIST_0)->getMVResGeoPart1() + uiPart);
+  m_acCUMvField[1].setMVResPtrGeoPart0(pcCU->getCUMvField(REF_PIC_LIST_1)->getMVResGeoPart0() + uiPart);
+  m_acCUMvField[1].setMVResPtrGeoPart1(pcCU->getCUMvField(REF_PIC_LIST_1)->getMVResGeoPart1() + uiPart);
+#endif
+#endif
 }
 
 // Copy inter prediction info from the biggest CU
@@ -785,7 +880,27 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_acCUIcField.setIcPtr(pcCU->getCUIcField()->getIc()     + uiAbsPartIdx);
   m_acCUIcField.setIcdPtr(pcCU->getCUIcField()->getIcd()    + uiAbsPartIdx);
 #endif
+#ifdef GEOM
+  m_piGeoMode              = pcCU->getGeoMode             ()        + uiAbsPartIdx;
+  m_puhInterDirGeoPart0    = pcCU->getGeoInterDirPart0    ()        + uiAbsPartIdx;
+  m_puhInterDirGeoPart1    = pcCU->getGeoInterDirPart1    ()        + uiAbsPartIdx; 
 
+  m_puhMVPIdxGeoPart0[eRefPicList] = pcCU->getGeoMVPIdxPart0 (eRefPicList)  + uiAbsPartIdx;
+  m_puhMVPIdxGeoPart1[eRefPicList] = pcCU->getGeoMVPIdxPart1 (eRefPicList)  + uiAbsPartIdx; 
+  m_puhMVPNumGeoPart0[eRefPicList] = pcCU->getGeoMVPNumPart0 (eRefPicList)  + uiAbsPartIdx;
+  m_puhMVPNumGeoPart1[eRefPicList] = pcCU->getGeoMVPNumPart1 (eRefPicList)  + uiAbsPartIdx;
+
+  m_acCUMvField[eRefPicList].setMvGeoPtrPart0    (pcCU->getCUMvField(eRefPicList)->getMvGeoPart0()     + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setMvGeoPtrPart1    (pcCU->getCUMvField(eRefPicList)->getMvGeoPart1()     + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setMvdGeoPtrPart0   (pcCU->getCUMvField(eRefPicList)->getMvdGeoPart0()    + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setMvdGeoPtrPart1   (pcCU->getCUMvField(eRefPicList)->getMvdGeoPart1()    + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setRefIdxGeoPtrPart0(pcCU->getCUMvField(eRefPicList)->getRefIdxGeoPart0() + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setRefIdxGeoPtrPart1(pcCU->getCUMvField(eRefPicList)->getRefIdxGeoPart1() + uiAbsPartIdx);
+#ifdef QC_AMVRES
+  m_acCUMvField[eRefPicList].setMVResPtrGeoPart0(pcCU->getCUMvField(eRefPicList)->getMVResGeoPart0() + uiAbsPartIdx);
+  m_acCUMvField[eRefPicList].setMVResPtrGeoPart1(pcCU->getCUMvField(eRefPicList)->getMVResGeoPart1() + uiAbsPartIdx);
+#endif
+#endif
 }
 
 // Copy inter prediction info to the biggest CU
@@ -838,6 +953,21 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_pePredMode + uiOffset, pcCU->getPredictionMode(), sizeof( PredMode ) * uiNumPartition );
 
   memcpy( m_puiAlfCtrlFlag      + uiOffset, pcCU->getAlfCtrlFlag(),       iSizeInUInt  );
+
+#ifdef GEOM 
+  memcpy( m_piGeoMode                   + uiOffset, pcCU->getGeoMode(),                   iSizeInInt   );
+  memcpy( m_puhInterDirGeoPart0         + uiOffset, pcCU->getGeoInterDirPart0(),          iSizeInUchar );
+  memcpy( m_puhInterDirGeoPart1         + uiOffset, pcCU->getGeoInterDirPart1(),          iSizeInUchar );
+  memcpy( m_puhMVPIdxGeoPart0[0]        + uiOffset, pcCU->getGeoMVPIdxPart0(0),           iSizeInUchar );
+  memcpy( m_puhMVPIdxGeoPart0[1]        + uiOffset, pcCU->getGeoMVPIdxPart0(1),           iSizeInUchar );
+  memcpy( m_puhMVPIdxGeoPart1[0]        + uiOffset, pcCU->getGeoMVPIdxPart1(0),           iSizeInUchar );
+  memcpy( m_puhMVPIdxGeoPart1[1]        + uiOffset, pcCU->getGeoMVPIdxPart1(1),           iSizeInUchar );
+  memcpy( m_puhMVPNumGeoPart0[0]        + uiOffset, pcCU->getGeoMVPNumPart0(0),           iSizeInUchar );
+  memcpy( m_puhMVPNumGeoPart0[1]        + uiOffset, pcCU->getGeoMVPNumPart0(1),           iSizeInUchar );
+  memcpy( m_puhMVPNumGeoPart1[0]        + uiOffset, pcCU->getGeoMVPNumPart1(0),           iSizeInUchar );
+  memcpy( m_puhMVPNumGeoPart1[1]        + uiOffset, pcCU->getGeoMVPNumPart1(1),           iSizeInUchar );
+#endif
+
 #if HHI_MRG
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
@@ -926,6 +1056,22 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 
   memcpy( rpcCU->getAlfCtrlFlag()    + m_uiAbsIdxInLCU, m_puiAlfCtrlFlag,    iSizeInUInt  );
 
+
+#ifdef GEOM 
+  memcpy( rpcCU->getGeoMode()           + m_uiAbsIdxInLCU, m_piGeoMode,                   iSizeInInt   );
+  memcpy( rpcCU->getGeoInterDirPart0()  + m_uiAbsIdxInLCU, m_puhInterDirGeoPart0,         iSizeInUchar );
+  memcpy( rpcCU->getGeoInterDirPart1()  + m_uiAbsIdxInLCU, m_puhInterDirGeoPart1,         iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart0(0)   + m_uiAbsIdxInLCU, m_puhMVPIdxGeoPart0[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart0(1)   + m_uiAbsIdxInLCU, m_puhMVPIdxGeoPart0[1],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart1(0)   + m_uiAbsIdxInLCU, m_puhMVPIdxGeoPart1[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart1(1)   + m_uiAbsIdxInLCU, m_puhMVPIdxGeoPart1[1],        iSizeInUchar );
+
+  memcpy( rpcCU->getGeoMVPNumPart0(0)   + m_uiAbsIdxInLCU, m_puhMVPNumGeoPart0[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart0(1)   + m_uiAbsIdxInLCU, m_puhMVPNumGeoPart0[1],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart1(0)   + m_uiAbsIdxInLCU, m_puhMVPNumGeoPart1[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart1(1)   + m_uiAbsIdxInLCU, m_puhMVPNumGeoPart1[1],        iSizeInUchar );
+#endif
+
 #if HHI_MRG
   memcpy( rpcCU->getMergeFlag()         + m_uiAbsIdxInLCU, m_pbMergeFlag,         iSizeInBool  );
   memcpy( rpcCU->getMergeIndex()        + m_uiAbsIdxInLCU, m_puhMergeIndex,       iSizeInUchar );
@@ -1007,6 +1153,22 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getPredictionMode() + uiPartOffset, m_pePredMode, sizeof( PredMode ) * uiQNumPart );
 
   memcpy( rpcCU->getAlfCtrlFlag()       + uiPartOffset, m_puiAlfCtrlFlag,      iSizeInUInt  );
+
+#ifdef GEOM
+  memcpy( rpcCU->getGeoMode()           + uiPartOffset, m_piGeoMode,                   iSizeInInt   );
+  memcpy( rpcCU->getGeoInterDirPart0()  + uiPartOffset, m_puhInterDirGeoPart0,         iSizeInUchar );
+  memcpy( rpcCU->getGeoInterDirPart1()  + uiPartOffset, m_puhInterDirGeoPart1,         iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart0(0)   + uiPartOffset, m_puhMVPIdxGeoPart0[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart0(1)   + uiPartOffset, m_puhMVPIdxGeoPart0[1],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart1(0)   + uiPartOffset, m_puhMVPIdxGeoPart1[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPIdxPart1(1)   + uiPartOffset, m_puhMVPIdxGeoPart1[1],        iSizeInUchar );
+
+  memcpy( rpcCU->getGeoMVPNumPart0(0)   + uiPartOffset, m_puhMVPNumGeoPart0[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart0(1)   + uiPartOffset, m_puhMVPNumGeoPart0[1],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart1(0)   + uiPartOffset, m_puhMVPNumGeoPart1[0],        iSizeInUchar );
+  memcpy( rpcCU->getGeoMVPNumPart1(1)   + uiPartOffset, m_puhMVPNumGeoPart1[1],        iSizeInUchar );
+#endif
+
 #if HHI_MRG
   memcpy( rpcCU->getMergeFlag()         + uiPartOffset, m_pbMergeFlag,         iSizeInBool  );
   memcpy( rpcCU->getMergeIndex()        + uiPartOffset, m_puhMergeIndex,       iSizeInUchar );
@@ -2514,6 +2676,17 @@ Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt ui
       }
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      pi = m_apiMVPIdx[eRefPicList] + uiAbsPartIdx;
+      for (i = 0; i < (uiCurrPartNumQ << 2); i++)
+      {
+        pi[i] = iMVPIdx;
+      }
+      break;
+    }
+#endif
   default:
     assert( 0 );
   }
@@ -2695,6 +2868,17 @@ Void TComDataCU::setMVPNumSubParts( Int iMVPNum, RefPicList eRefPicList, UInt ui
       }
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+    {
+      pi = m_apiMVPNum[eRefPicList] + uiAbsPartIdx;
+      for (i = 0; i < (uiCurrPartNumQ << 2); i++)
+      {
+        pi[i] = iMVPNum;
+      }
+      break;
+    }
+#endif
   default:
     assert( 0 );
   }
@@ -3087,6 +3271,9 @@ UChar TComDataCU::getNumPartInter()
   case SIZE_2NxnD:    iNumPart = 2; break;
   case SIZE_nLx2N:    iNumPart = 2; break;
   case SIZE_nRx2N:    iNumPart = 2; break;
+#ifdef GEOM
+  case SIZE_GEO:      iNumPart = 2; break;
+#endif
   default:            assert (0);   break;
   }
 
@@ -3121,6 +3308,11 @@ Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& ri
       riHeight    = getHeight(0);
       ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (m_uiNumPartition >> 2) + (m_uiNumPartition >> 4);
       break;
+#ifdef GEOM
+    case SIZE_GEO: riWidth = getWidth(0);      riHeight = getHeight(0);      ruiPartAddr = 0;                              
+      break;
+#endif
+
     default: assert (0); break;
   }
 }
@@ -3180,6 +3372,13 @@ Void TComDataCU::deriveLeftRightTopIdx ( PartSize eCUMode, UInt uiPartIdx, UInt&
       ruiPartIdxLT += ( uiPartIdx == 0 )? 0 : ( m_uiNumPartition >> 2 ) + ( m_uiNumPartition >> 4 );
       ruiPartIdxRT -= ( uiPartIdx == 1 )? 0 : m_uiNumPartition >> 4;
       break;
+#ifdef GEOM
+	case SIZE_GEO:
+      assert(uiPartIdx == 0);
+		ruiPartIdxLT += ( uiPartIdx == 0 )? 0 : m_uiNumPartition >> 1; ruiPartIdxRT += ( uiPartIdx == 0 )? 0 : m_uiNumPartition >> 1;  break;
+		break;
+#endif
+
     default:
       assert (0);
     break;
@@ -3210,6 +3409,11 @@ Void TComDataCU::deriveLeftBottomIdx( PartSize      eCUMode,   UInt  uiPartIdx, 
     case SIZE_nRx2N:
       ruiPartIdxLB += ( uiPartIdx == 0 ) ? m_uiNumPartition >> 1 : (m_uiNumPartition >> 1) + (m_uiNumPartition >> 2) + (m_uiNumPartition >> 4);
       break;
+#ifdef GEOM
+	case SIZE_GEO:
+      assert(uiPartIdx == 0);
+		ruiPartIdxLB += m_uiNumPartition >> 1;   break;
+#endif
     default:
       assert (0);
       break;
@@ -3635,6 +3839,530 @@ Int TComDataCU::getMvPredXCompDep( const std::vector<Int>& rcYThresLst, const st
     }
   }
   return rcXPredLst[ uiSM1 ];
+}
+#endif
+
+#ifdef GEOM
+#ifdef GEOM_SPEED
+Void TComDataCU::saveRegularMV( RefPicList eRefPicList, Int iRefIdxTemp, TComMv *cMvTemp , UInt uiPartAddr, Int iPartIdx )
+{
+  PartSize eCUMode = m_pePartSize[0];
+  UInt uiDepth = m_puhDepth[0];
+  UInt uiCurrPartNumQ = m_pcPic->getNumPartInCU() >> (uiDepth << 1) >> 2;
+  Int i;
+  TComMv* ip;
+  Int fracDepth;
+  switch ( eCUMode )
+  {
+  case SIZE_2Nx2N:    fracDepth = 0;            break;
+  case SIZE_2NxN:     fracDepth = 1;            break;
+  case SIZE_Nx2N:     fracDepth = 2;            break;
+  case SIZE_NxN:      fracDepth = 0; uiDepth++; break;
+  default:            assert (0);   break;
+  }
+  fracDepth += uiDepth * 3;
+
+  ip = m_ppppcRegularMv[eRefPicList][iRefIdxTemp][fracDepth] + m_uiAbsIdxInLCU + uiPartAddr;  
+
+  switch ( eCUMode )
+  {
+  case SIZE_2Nx2N:
+      for (i = 0; i < (uiCurrPartNumQ << 2); i++)
+        memcpy( ip+i, cMvTemp, sizeof(TComMv) );
+  break;
+  case SIZE_2NxN:
+      for (i = 0; i < (uiCurrPartNumQ << 1); i++)
+        memcpy( ip+i, cMvTemp, sizeof(TComMv) );
+  break;
+  case SIZE_Nx2N:
+    {
+      TComMv* ip2 = ip + ( uiCurrPartNumQ << 1 );      
+      for (i = 0; i < uiCurrPartNumQ; i++)
+      {
+        memcpy( ip+i, cMvTemp, sizeof(TComMv) );
+        memcpy( ip2+i, cMvTemp, sizeof(TComMv) );
+      }
+      break;
+    }
+  case SIZE_NxN:
+      for (i = 0; i < uiCurrPartNumQ; i++)
+        memcpy( ip+i, cMvTemp, sizeof(TComMv) );
+      break;
+  default:
+    assert( 0 );
+  }
+}
+#endif
+Void TComDataCU::fillMvpCandGeo ( Char **aacMbMVPMask, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
+{
+  PartSize eCUMode = m_pePartSize[0];
+
+  TComMv cMvPred;
+
+  pInfo->iN = 0;
+  UInt uiIdx;
+
+  if (iRefIdx < 0)
+    return;
+
+  pInfo->m_acMvCand[pInfo->iN++] = cMvPred;   //dummy mv
+
+  //-- Get Spatial MV
+  UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB;
+  UInt uiNumPartInCUWidth = m_pcPic->getNumPartInWidth();
+  Bool bAdded = false;
+  Int iLeftMvIdx = -1;
+  Int iAboveMvIdx = -1;
+  Int iCornerMvIdx = -1;
+
+  deriveLeftRightTopIdx( SIZE_GEO, 0, uiPartIdxLT, uiPartIdxRT );
+  deriveLeftBottomIdx( SIZE_GEO, 0, uiPartIdxLB );
+
+  //Left
+  //for ( uiIdx = g_auiZscanToRaster[uiPartIdxLT]; uiIdx <= g_auiZscanToRaster[uiPartIdxLB]; uiIdx+= uiNumPartInCUWidth )  
+  if(aacMbMVPMask[uiPartIdx][0])//a
+  {   
+    uiIdx = g_auiZscanToRaster[uiPartIdxLT];
+    bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, g_auiRasterToZscan[uiIdx], MD_LEFT );
+    if (bAdded && iLeftMvIdx < 0)
+    {
+      iLeftMvIdx = pInfo->iN-1;
+    }
+    //if (bAdded) break;
+  }
+
+  //bAdded = false;  
+  if(!bAdded && aacMbMVPMask[uiPartIdx][4])//e
+  {   
+    uiIdx = g_auiZscanToRaster[uiPartIdxLB];
+    bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, g_auiRasterToZscan[uiIdx], MD_LEFT );
+    if (bAdded && iLeftMvIdx < 0)
+    {
+      iLeftMvIdx = pInfo->iN-1;
+    }
+    //if (bAdded) break;
+  }
+
+  bAdded = false;
+  //Above
+  //for ( uiIdx = g_auiZscanToRaster[uiPartIdxLT]; uiIdx <= g_auiZscanToRaster[uiPartIdxRT]; uiIdx++ )  
+  if(aacMbMVPMask[uiPartIdx][1])//b
+  {
+    uiIdx = g_auiZscanToRaster[uiPartIdxLT];
+    bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, g_auiRasterToZscan[uiIdx], MD_ABOVE);
+    if (bAdded && iAboveMvIdx < 0)
+    {
+      iAboveMvIdx = pInfo->iN-1;
+    }
+    //if (bAdded) break;
+  }
+
+  //bAdded = false;
+  //Above
+  //for ( uiIdx = g_auiZscanToRaster[uiPartIdxLT]; uiIdx <= g_auiZscanToRaster[uiPartIdxRT]; uiIdx++ )
+  if(!bAdded && aacMbMVPMask[uiPartIdx][5])//f
+  {
+    uiIdx = g_auiZscanToRaster[uiPartIdxRT];
+    bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, g_auiRasterToZscan[uiIdx], MD_ABOVE);
+    if (bAdded && iAboveMvIdx < 0)
+    {
+      iAboveMvIdx = pInfo->iN-1;
+    }
+    //if (bAdded) break;
+  }
+
+  bAdded = false;
+  //Above Right
+  if(aacMbMVPMask[uiPartIdx][2])//c
+  {
+    bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, uiPartIdxRT, MD_ABOVE_RIGHT);
+    if (bAdded && iCornerMvIdx < 0)
+    {
+      iCornerMvIdx = pInfo->iN-1;
+    }
+  }
+  //Below Left
+  if(aacMbMVPMask[uiPartIdx][6])//g
+  {
+    if (!bAdded)
+    {
+      bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, uiPartIdxLB, MD_BELOW_LEFT);
+    }
+    if (bAdded && iCornerMvIdx < 0)
+    {
+      iCornerMvIdx = pInfo->iN-1;
+    }
+  }
+
+  //Above Left
+  if(aacMbMVPMask[uiPartIdx][3])//d
+  {
+    if (!bAdded)
+    {
+      bAdded = xAddMVPCand( pInfo, eRefPicList, iRefIdx, uiPartIdxLT, MD_ABOVE_LEFT);
+    }
+
+    if (bAdded && iCornerMvIdx < 0)
+    {
+      iCornerMvIdx = pInfo->iN-1;
+    }
+  }
+
+  assert(iLeftMvIdx!=0 && iAboveMvIdx!=0 && iCornerMvIdx!=0);
+
+  if (iLeftMvIdx < 0 && iAboveMvIdx < 0 && iCornerMvIdx < 0)
+  {
+    //done --> already zero Mv
+  }
+  else if ( (iLeftMvIdx > 0 && iAboveMvIdx > 0 && iCornerMvIdx > 0) || iLeftMvIdx*iAboveMvIdx*iCornerMvIdx < 0)
+  {
+    TComMv cLeftMv, cAboveMv, cCornerMv;
+
+    if (iLeftMvIdx > 0)
+      cLeftMv = pInfo->m_acMvCand[iLeftMvIdx];
+
+    if (iAboveMvIdx > 0)
+      cAboveMv = pInfo->m_acMvCand[iAboveMvIdx];
+
+    if (iCornerMvIdx > 0)
+      cCornerMv = pInfo->m_acMvCand[iCornerMvIdx];
+
+    pInfo->m_acMvCand[0].setHor ( Median (cLeftMv.getHor(), cAboveMv.getHor(), cCornerMv.getHor()) );
+    pInfo->m_acMvCand[0].setVer ( Median (cLeftMv.getVer(), cAboveMv.getVer(), cCornerMv.getVer()) );
+  }
+  else //only one is available among three candidates
+  {
+    if (iLeftMvIdx > 0)
+    {
+      pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iLeftMvIdx];
+    }
+    else if (iAboveMvIdx > 0)
+    {
+      pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iAboveMvIdx];
+    }
+    else if (iCornerMvIdx > 0)
+    {
+      pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iCornerMvIdx];
+    }
+    else
+    {
+      assert(0);
+    }
+  }
+
+  clipMv(pInfo->m_acMvCand[0]);
+
+  //TComMv cTempMv;
+  //if ( ( ( ((eCUMode == SIZE_2NxN) || (eCUMode == SIZE_2NxnU) || (eCUMode == SIZE_2NxnD)) && uiPartIdx == 1 ) ||
+  //  ( ((eCUMode == SIZE_Nx2N) || (eCUMode == SIZE_nLx2N) || (eCUMode == SIZE_nRx2N)) && uiPartIdx == 0 ) )
+  //  && iLeftMvIdx > 0 )
+  //{
+  //  cTempMv = pInfo->m_acMvCand[0];
+  //  pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iLeftMvIdx];
+  //  pInfo->m_acMvCand[iLeftMvIdx] = cTempMv;
+  //}
+  //else if ( ( ((eCUMode == SIZE_2NxN) || (eCUMode == SIZE_2NxnU) || (eCUMode == SIZE_2NxnD)) && uiPartIdx == 0 && m_pcSlice->isEqualRef(eRefPicList, m_cMvFieldB.getRefIdx(), iRefIdx) )
+  //  && iAboveMvIdx > 0 )
+  //{
+  //  cTempMv = pInfo->m_acMvCand[0];
+  //  pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iAboveMvIdx];
+  //  pInfo->m_acMvCand[iAboveMvIdx] = cTempMv;
+  //}
+  //else if ( ( ((eCUMode == SIZE_Nx2N) || (eCUMode == SIZE_nLx2N) || (eCUMode == SIZE_nRx2N)) && uiPartIdx == 1 && m_pcSlice->isEqualRef(eRefPicList, m_cMvFieldC.getRefIdx(), iRefIdx))
+  //  && iCornerMvIdx > 0 )
+  //{
+  //  cTempMv = pInfo->m_acMvCand[0];
+  //  pInfo->m_acMvCand[0] = pInfo->m_acMvCand[iCornerMvIdx];
+  //  pInfo->m_acMvCand[iCornerMvIdx] = cTempMv;
+  //}
+
+  if (getAMVPMode(uiPartAddr) == AM_NONE)  //Should be optimized later for special cases
+  {
+    assert(pInfo->iN > 0);
+    pInfo->iN = 1;
+    return;
+  }
+
+  // Get Temporal Motion Predictor
+#if AMVP_NEIGH_COL
+  UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiPartAddr;
+
+  UInt uiColDir = (m_pcSlice->isInterB()? m_pcSlice->getColDir() : 0);
+
+  TComDataCU* pcCUColocated = getCUColocated(RefPicList(uiColDir));
+
+  RefPicList eColRefPicList = (m_pcSlice->isInterB()? RefPicList(1-uiColDir) : REF_PIC_LIST_0);
+
+  if ( pcCUColocated && !pcCUColocated->isIntra(uiAbsPartAddr) &&
+    pcCUColocated->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr) >= 0 )
+  {
+    Int iColPOC = pcCUColocated->getSlice()->getPOC();
+    Int iColRefPOC = pcCUColocated->getSlice()->getRefPOC(eColRefPicList, pcCUColocated->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr));
+    TComMv cColMv = pcCUColocated->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
+
+    Int iCurrPOC = m_pcSlice->getPOC();
+    Int iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getPOC();
+
+    TComMv cMv;
+    Int iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
+
+    if (iScale == 1024)
+    {
+      cMv = cColMv;
+    }
+    else
+    {
+      cMv = cColMv.scaleMv( iScale );
+    }
+
+    clipMv(cMv);
+
+    pInfo->m_acMvCand[pInfo->iN++] = cMv ;
+  }
+#endif
+  // Check No MV Candidate
+  xUniqueMVPCand( pInfo );
+  return ;
+}
+UInt TComDataCU::getCtxInterDirGeo( UInt uiAbsPartIdx, UChar ucSegm )
+{
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+  UInt        uiCtx = 0;
+
+  UChar uhLeft = m_aacMbMVPMask[ucSegm][0]; //a
+  UChar uhAbove = m_aacMbMVPMask[ucSegm][1]; //b
+
+  // Get BCBP of left PU
+  if(uhLeft)
+  {
+    pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+    uiCtx += ( pcTempCU ) ? ( ( pcTempCU->getInterDir( uiTempPartIdx ) % 3 ) ? 0 : 1 ) : 0;
+  }
+
+  // Get BCBP of Above PU
+  if(uhAbove)
+  {
+    pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+    uiCtx += ( pcTempCU ) ? ( ( pcTempCU->getInterDir( uiTempPartIdx ) % 3 ) ? 0 : 1 ) : 0;
+  }
+
+  return uiCtx;
+}
+UInt TComDataCU::getCtxRefIdxGeo( UInt uiAbsPartIdx, RefPicList eRefPicList, UChar uhSegm )
+{
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+  TComMvField cMvFieldTemp;
+  UInt        uiCtx = 0;
+
+  UChar ucLeft = m_aacMbMVPMask[uhSegm][0]; //a
+  UChar ucAbove = m_aacMbMVPMask[uhSegm][1]; //b
+
+  // Get BCBP of left PU
+  if(ucLeft)
+  {
+    pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+    getMvField( pcTempCU, uiTempPartIdx, eRefPicList, cMvFieldTemp );
+    uiCtx += cMvFieldTemp.getRefIdx() > 0 ? 1 : 0;
+  }
+
+  // Get BCBP of Above PU
+  if(ucAbove)
+  {
+    pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+    getMvField( pcTempCU, uiTempPartIdx, eRefPicList, cMvFieldTemp );
+    uiCtx += cMvFieldTemp.getRefIdx() > 0 ? 2 : 0;
+  }
+  return uiCtx;
+}
+Void TComDataCU::setGeoModeSubParts    ( Int iMode,  UInt uiAbsPartIdx, UInt uiDepth )
+{
+	UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+
+	for (UInt ui = 0; ui < uiCurrPartNumb; ui++ )
+	{
+		m_piGeoMode[uiAbsPartIdx + ui] = iMode;
+	}
+}
+
+Void TComDataCU::setGeoMVPIdxSubParts   ( UChar ucMVPIdx,  RefPicList eRefPicList, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+	UInt uiCurrPartNum = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+	if (eParIdxGeo == PART_GEO_0)
+		memset( m_puhMVPIdxGeoPart0[eRefPicList] + uiAbsPartIdx, ucMVPIdx, sizeof(UChar)*uiCurrPartNum);                      
+	else
+		memset( m_puhMVPIdxGeoPart1[eRefPicList] + uiAbsPartIdx, ucMVPIdx, sizeof(UChar)*uiCurrPartNum );                      
+}
+Void TComDataCU::setGeoMVPNumSubParts   ( UChar ucMVPNum,  RefPicList eRefPicList, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+	UInt uiCurrPartNum = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+	if (eParIdxGeo == PART_GEO_0)
+		memset( m_puhMVPNumGeoPart0[eRefPicList] + uiAbsPartIdx, ucMVPNum, sizeof(UChar)*uiCurrPartNum );                      
+	else
+		memset( m_puhMVPNumGeoPart1[eRefPicList] + uiAbsPartIdx, ucMVPNum, sizeof(UChar)*uiCurrPartNum );                      
+}
+Void TComDataCU::setGeoInterDirSubParts   ( UInt uiDir,  UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth )
+{
+	UInt uiCurrPartNum = m_pcPic->getNumPartInCU() >> (uiDepth << 1) ;
+	if (eParIdxGeo == PART_GEO_0)
+		memset( m_puhInterDirGeoPart0 + uiAbsPartIdx, uiDir, sizeof(UChar)*uiCurrPartNum );                      
+	else
+		memset( m_puhInterDirGeoPart1 + uiAbsPartIdx, uiDir, sizeof(UChar)*uiCurrPartNum );                      
+}
+
+UInt * TComDataCU:: getZscanToRasterTable (UInt uiTrueDepth) 
+{
+	switch (uiTrueDepth)
+	{
+	case 0:
+		return g_auiZscanToRaster; 
+	case 1:
+		return g_auiZscanToRasterDepth1;
+	case 2: 
+		return g_auiZscanToRasterDepth2;
+	default: 
+		{
+			printf ("currently only support 3 depths");
+			exit (-1);
+		}
+	}
+}
+
+UInt TComDataCU:: GeoPartDetection (UInt uiUnitIdxY, UInt uiUnitIdxX, UInt uiUnitHeight, UInt uiUnitWidth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+	Int ** aaiMbPartitionMask_table = pcGeometricPartitionBlock->getMbPartitionMaskPointerFromTable(uiEdgeIndex);
+	UInt uiSum = 0;
+
+	for (UInt uiPelIdxY = 0; uiPelIdxY < uiUnitHeight; uiPelIdxY ++ )
+		for (UInt uiPelIdxX = 0; uiPelIdxX < uiUnitWidth; uiPelIdxX ++ )
+			uiSum += aaiMbPartitionMask_table [uiUnitIdxY * uiUnitHeight + uiPelIdxY] [uiUnitIdxX * uiUnitWidth + uiPelIdxX];
+
+	//if (uiSum > iMAX_mask_amplitude*uiUnitHeight*uiUnitWidth / 2)
+    if (uiSum > uiUnitHeight*uiUnitWidth / 2)
+		return 0;
+	else
+		return 1;
+}
+
+Void TComDataCU::setInterDirSubParts     ( UInt uiDir,  UInt uiAbsPartIdx,  ParIdxGEO eParIdxGeo,  UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+	UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (uiDepth << 1)) >> 2;
+	Int   iNumPartition = (uiCurrPartNumQ<<2);
+	UChar* puhInterDir  = m_puhInterDir + uiAbsPartIdx;
+
+	UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+	UInt uiMbSize;
+	UInt uiGeoPart;
+	UInt * puiZscanToRaster;
+
+	uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+	uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+	uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+    
+    assert(uiUnitWidth == m_pcPic->getMinCUWidth());
+    assert(uiUnitHeight == m_pcPic->getMinCUHeight());
+
+	uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+
+	puiZscanToRaster = getZscanToRasterTable (uiDepth);
+
+	for ( Int i = 0 ; i <= iNumPartition - 1; i++ )
+	{
+		UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+		uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+		uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+		uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+		if ( uiGeoPart == uiGeoPartDetected)
+			puhInterDir[ i ]  = uiDir;
+	}
+}
+
+Void TComDataCU:: resetForGeo (UInt uiDepth)
+{
+	UInt uiDepthSub =  m_puhDepth[0];
+	assert ((uiDepthSub - uiDepth) >= 0);
+
+	UChar uhWidth  = g_uiMaxCUWidth >> uiDepth ;
+    UChar uhHeight = g_uiMaxCUHeight>> uiDepth;
+    Int iSizeInUchar = sizeof( UChar ) * m_uiNumPartition;
+	Int iSizeInUInt  = sizeof( UInt  ) * m_uiNumPartition;
+	
+	memset( m_puhWidth,           uhWidth, iSizeInUchar );
+    memset( m_puhHeight,         uhHeight, iSizeInUchar );
+    memset( m_puhDepth,           uiDepth, iSizeInUchar );
+}
+Void TComDataCU::setMVPIdxSubParts     ( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx,ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+	UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (uiDepth << 1)) >> 2;
+	Int   iNumPartition = (uiCurrPartNumQ<<2);
+	Int* piMVPIdx  = m_apiMVPIdx[eRefPicList] + uiAbsPartIdx;
+
+	UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+	UInt uiMbSize;
+	UInt uiGeoPart;
+	UInt * puiZscanToRaster;
+
+	uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+	uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+	uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;//???
+    
+    assert(uiUnitWidth == m_pcPic->getMinCUWidth());
+    assert(uiUnitHeight == m_pcPic->getMinCUHeight());
+
+	uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+
+	puiZscanToRaster = getZscanToRasterTable (uiDepth);
+
+	for ( Int i = 0 ; i <= iNumPartition - 1; i++ )
+	{
+		UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+		uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+		uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+		uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+		if ( uiGeoPart == uiGeoPartDetected)
+			piMVPIdx[ i ]  = iMVPIdx;
+	}
+
+}
+Void TComDataCU::setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, ParIdxGEO eParIdxGeo, UInt uiDepth, UInt uiEdgeIndex, GeometricPartitionBlock *pcGeometricPartitionBlock )
+{
+	UInt uiCurrPartNumQ = (m_pcPic->getNumPartInCU() >> (uiDepth << 1)) >> 2;
+	Int   iNumPartition = (uiCurrPartNumQ<<2);
+	Int* piMVPNum  = m_apiMVPNum[eRefPicList] + uiAbsPartIdx;
+
+	UInt uiWidthInUnit, uiHeightInUnit, uiUnitWidth, uiUnitHeight;
+	UInt uiMbSize;
+	UInt uiGeoPart;
+	UInt * puiZscanToRaster;
+
+	uiMbSize = pcGeometricPartitionBlock->getMbSize ();
+	uiWidthInUnit = uiHeightInUnit = (UInt) (sqrt((Double) iNumPartition));
+	uiUnitWidth   = uiUnitHeight   = uiMbSize/uiHeightInUnit;
+    
+    assert(uiUnitWidth == m_pcPic->getMinCUWidth());
+    assert(uiUnitHeight == m_pcPic->getMinCUHeight());
+
+	uiGeoPart = ( eParIdxGeo == PART_GEO_0) ? 0: 1; 
+
+	puiZscanToRaster = getZscanToRasterTable (uiDepth);
+
+	for ( Int i = 0 ; i <= iNumPartition - 1; i++ )
+	{
+		UInt uiUnitIdxY, uiUnitIdxX, uiGeoPartDetected;
+
+		uiUnitIdxY =  puiZscanToRaster[i]/uiWidthInUnit;
+		uiUnitIdxX =  puiZscanToRaster[i]%uiWidthInUnit;
+		uiGeoPartDetected = GeoPartDetection (uiUnitIdxY, uiUnitIdxX, uiUnitHeight, uiUnitWidth, uiEdgeIndex, pcGeometricPartitionBlock);
+
+		if ( uiGeoPart == uiGeoPartDetected)
+			piMVPNum[ i ]  = iMVPNum;
+	}
+
 }
 #endif
 

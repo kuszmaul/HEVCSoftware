@@ -61,13 +61,20 @@ private:
   TComTrQuant*        m_pcTrQuant;
   TComPrediction*     m_pcPrediction;
   TDecEntropy*        m_pcEntropyDecoder;
+#ifdef GEOM
+ GeometricPartition*       m_pcGeometricPartition;
+#endif
 
 public:
   TDecCu();
   virtual ~TDecCu();
 
   /// initialize access channels
+#ifdef GEOM
+  Void init                     ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction,  GeometricPartition*       pcGeometricPartition);
+#else
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
+#endif
 
   /// create internal buffers
   Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight );

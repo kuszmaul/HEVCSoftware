@@ -34,6 +34,7 @@ DEFS			= -DMSYS_LINUX
 OBJS          	= \
 			$(OBJ_DIR)/ContextModel.o \
 			$(OBJ_DIR)/ContextModel3DBuffer.o \
+			$(OBJ_DIR)/GeometricPartition.o\
 			$(OBJ_DIR)/TComCABACTables.o \
 			$(OBJ_DIR)/TComAdaptiveLoopFilter.o \
 			$(OBJ_DIR)/TComBitStream.o \

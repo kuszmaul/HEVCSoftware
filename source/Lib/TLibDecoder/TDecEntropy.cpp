@@ -720,6 +720,27 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 
   PartSize eMode = pcCU->getPartitionSize( uiAbsPartIdx );
 
+#ifdef GEOM
+  if (eMode == SIZE_GEO)
+  {
+  	switch (pcCU->getHeight (uiAbsPartIdx)) //TCH_QQ: need double check this height
+	{
+	case 16:
+		m_pcGeometricPartitionBlock = m_pcGeometricPartition->getGeometricPartition16x16Inter_Luma   ();
+		break;
+	case 32:
+		m_pcGeometricPartitionBlock = m_pcGeometricPartition->getGeometricPartition32x32Inter_Luma   ();
+		break;
+	//case 64:
+	//	m_pcGeometricPartitionBlock = m_pcGeometricPartition->getGeometricPartition64x64Inter_Luma   ();
+	//	break;
+	default:
+		printf ("Only Support GEO 64, 32 and 16"); exit(-1);
+		break;
+	}
+  }
+#endif
+
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     if( eMode == SIZE_NxN )                                         // if it is NxN size, encode 4 intra directions.
@@ -777,6 +798,10 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
       }
     }
 #else
+#ifdef GEOM
+     if (eMode == SIZE_GEO)
+      pcCU->setGeoMVPMask( m_pcGeometricPartitionBlock->getMbMVPMaskPointerFromTable(pcCU->getGeoMode (uiAbsPartIdx)) );
+#endif
     decodeInterDir( pcCU, uiAbsPartIdx, uiDepth );
 
 #ifdef DCM_PBIC
@@ -995,6 +1020,10 @@ Void TDecEntropy::decodeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   if ( pcCU->getSlice()->isInterP() )
   {
     memset( pcCU->getInterDir() + uiAbsPartIdx, 1, sizeof(UChar)*( pcCU->getTotalNumPart() >> (uiDepth << 1) ) );
+#ifdef GEOM
+    memset( pcCU->getGeoInterDirPart0() + uiAbsPartIdx, 1, sizeof(UChar)*( pcCU->getTotalNumPart() >> (uiDepth << 1) ) );
+    memset( pcCU->getGeoInterDirPart1() + uiAbsPartIdx, 1, sizeof(UChar)*( pcCU->getTotalNumPart() >> (uiDepth << 1) ) );
+#endif
     return;
   }
 
@@ -1090,6 +1119,16 @@ Void TDecEntropy::decodeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO: 
+	  m_pcEntropyDecoderIf->parseInterDirGeo( pcCU, uiInterDir, uiAbsPartIdx, 0, uiDepth );  
+	  pcCU->setInterDirSubParts             ( uiInterDir,  uiAbsPartIdx, PART_GEO_0, uiDepth, pcCU->getGeoMode (uiAbsPartIdx), m_pcGeometricPartitionBlock );
+	  pcCU->setGeoInterDirSubParts          ( uiInterDir,  uiAbsPartIdx, PART_GEO_0, uiDepth );
+      m_pcEntropyDecoderIf->parseInterDirGeo( pcCU, uiInterDir, uiAbsPartIdx, 1, uiDepth );
+	  pcCU->setInterDirSubParts             ( uiInterDir,  uiAbsPartIdx, PART_GEO_1, uiDepth, pcCU->getGeoMode (uiAbsPartIdx), m_pcGeometricPartitionBlock );
+	  pcCU->setGeoInterDirSubParts          ( uiInterDir,  uiAbsPartIdx, PART_GEO_1, uiDepth );
+      break;
+#endif
   default:
     break;
   }
@@ -1915,6 +1954,98 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
       break;
     }
+#ifdef GEOM
+	  case SIZE_GEO:
+      for ( UChar uhSegm = 0, uiPartAddr = 0; uhSegm < 2; uhSegm++ )
+      {
+        ParIdxGEO eParIdxGeo = uhSegm==0 ? PART_GEO_0 : PART_GEO_1;
+
+        iRefIdx = uhSegm==0 ? pcSubCUMvField->getRefIdxGeoPart0(uiPartAddr) : pcSubCUMvField->getRefIdxGeoPart1(uiPartAddr);
+        iMVPIdx =-1;
+        cMv = cZeroMv;
+        pcSubCU->fillMvpCandGeo(pcCU->getGeoMVPMask(), uhSegm, 0, eRefList, iRefIdx, pAMVPInfo);
+#if HHI_IMVP
+#ifdef QC_AMVRES
+        Bool MVRes = uhSegm==0 ? pcSubCUMvField->getMVResGeoPart0(uiPartAddr) : pcSubCUMvField->getMVResGeoPart1(uiPartAddr);
+	  if (MVRes)//(pcSubCUMvField->getMVRes(uiPartAddr))
+      {
+        if( uhSegm == 0)
+		  pcSubCU->clearMVPCand_one_fourth(pcSubCUMvField->getMvdGeoPart0(uiPartAddr), pAMVPInfo, eRefList, uiPartAddr, iRefIdx);
+        else
+          pcSubCU->clearMVPCand_one_fourth(pcSubCUMvField->getMvdGeoPart1(uiPartAddr), pAMVPInfo, eRefList, uiPartAddr, iRefIdx);
+      }
+	  else
+#endif
+        if( uhSegm == 0)
+          pcSubCU->clearMVPCand(pcSubCUMvField->getMvdGeoPart0(uiPartAddr), pAMVPInfo, eRefList, 0, iRefIdx);
+        else
+          pcSubCU->clearMVPCand(pcSubCUMvField->getMvdGeoPart1(uiPartAddr), pAMVPInfo, eRefList, 0, iRefIdx);
+#else
+#ifdef QC_AMVRES
+	  if (pcSubCUMvField->getMVRes(uiPartAddr))
+		  pcSubCU->clearMVPCand_one_fourth(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+	  else
+#endif
+        pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+#endif
+      //??? do we need to call regular setMVPNumSubParts
+        pcSubCU->setGeoMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, eParIdxGeo, uiDepth);
+
+        UChar uhDir = uhSegm==0 ? pcSubCU->getGeoInterDirPart0(uiPartAddr) : pcSubCU->getGeoInterDirPart1(uiPartAddr);
+
+        if ( (uhDir & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
+        {
+          m_pcEntropyDecoderIf->parseMVPIdx( pcSubCU, iMVPIdx, pAMVPInfo->iN, uiPartAddr, uiDepth, eRefList );
+        }
+        
+        pcSubCU->setGeoMVPIdxSubParts( iMVPIdx, eRefList, uiPartAddr, eParIdxGeo, uiDepth );
+        
+        pcSubCU->setMVPIdxSubParts( iMVPIdx, eRefList, 0, 0, uiDepth );//the following getMvPredAMVP will use the info set here
+
+        if ( iRefIdx >= 0 )
+        {
+          m_pcPrediction->getMvPredAMVP( pcSubCU, 0, uiPartAddr, eRefList, iRefIdx, cMv);
+
+#ifdef QC_AMVRES
+		if (MVRes)//(pcSubCUMvField->getMVRes(uiPartAddr))
+		{
+#if HHI_IMVP
+			if (  pcSubCU->getSlice()->getSPS()->getUseIMP() && !pcSubCU->isSkip(uiPartAddr) )
+			{
+			  m_pcPrediction->getMvPredIMVP_onefourth( pcSubCU, 0, uiPartAddr, eRefList, iRefIdx, pcSubCUMvField, cMv );
+			}
+#endif
+		   cMv.round();
+		}
+		else
+		{
+#if HHI_IMVP
+			if (  pcSubCU->getSlice()->getSPS()->getUseIMP() && !pcSubCU->isSkip(uiPartAddr) )
+			{
+			  m_pcPrediction->getMvPredIMVP( pcSubCU, 0, uiPartAddr, eRefList, iRefIdx, pcSubCUMvField, cMv );
+			}
+#endif
+		}
+#else
+#if HHI_IMVP
+          if ( pcSubCU->getSlice()->getSPS()->getUseIMP() && !pcSubCU->isSkip(uiPartAddr) )
+          {
+            m_pcPrediction->getMvPredIMVP( pcSubCU, 0, uiPartAddr, eRefList, iRefIdx, pcSubCUMvField, cMv );
+          }
+#endif
+#endif
+          cMv += uhSegm == 0? pcSubCUMvField->getMvdGeoPart0( uiPartAddr ) : pcSubCUMvField->getMvdGeoPart1( uiPartAddr );
+        }
+
+        pcSubCU->getCUMvField( eRefList )->setAllMv(cMv, ePartSize, uiPartAddr, eParIdxGeo, 0, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock);
+        pcSubCU->getCUMvField( eRefList )->setAllMvGeo(cMv, ePartSize, uiPartAddr, eParIdxGeo, 0);
+
+#ifdef QC_AMVRES
+  	   pcSubCU->getCUMvField( eRefList )->setAllMVRes(!cMv.isHAM()&&(iRefIdx!=-1), ePartSize, uiPartAddr, eParIdxGeo, 0, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock);
+#endif
+      }
+		  break;
+#endif
   default:
     break;
   }
@@ -2360,6 +2491,54 @@ Void TDecEntropy::decodeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
       pcCU->getCUMvField( eRefList )->setAllRefIdx( iRefFrmIdx, SIZE_nRx2N, uiAbsPartIdx, 1, uiDepth );
       break;
     }
+#ifdef GEOM
+  case SIZE_GEO:
+	  {
+          iParseRefFrmIdx = pcCU->getGeoInterDirPart0( uiAbsPartIdx ) & ( 1 << eRefList );
+		  if ( pcCU->getSlice()->getNumRefIdx( eRefList ) > 1 && iParseRefFrmIdx)
+		  {
+			  m_pcEntropyDecoderIf->parseRefFrmIdxGeo ( pcCU, iRefFrmIdx, uiAbsPartIdx, 0, uiDepth, eRefList ); 
+		  }
+		  else if ( !iParseRefFrmIdx )
+		  {
+			  iRefFrmIdx = NOT_VALID;
+		  }
+		  else
+		  {
+			  iRefFrmIdx = 0;
+		  }
+
+#ifdef QC_AMVRES
+		  xDecodeMvRes(pcCU, uiAbsPartIdx, uiDepth, eRefList, iRefFrmIdx, iParseRefFrmIdx, SIZE_2Nx2N,0);
+#endif
+
+          pcCU->getCUMvField( eRefList )->setAllRefIdx    ( iRefFrmIdx, SIZE_GEO, uiAbsPartIdx, PART_GEO_0, uiDepth, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock );
+          pcCU->getCUMvField( eRefList )->setAllRefIdxGeo ( iRefFrmIdx, SIZE_GEO, uiAbsPartIdx, PART_GEO_0, uiDepth );
+          
+          iParseRefFrmIdx = pcCU->getGeoInterDirPart1( uiAbsPartIdx ) & ( 1 << eRefList );
+
+		  if ( pcCU->getSlice()->getNumRefIdx( eRefList ) > 1 && iParseRefFrmIdx)
+		  {
+			  m_pcEntropyDecoderIf->parseRefFrmIdxGeo ( pcCU, iRefFrmIdx, uiAbsPartIdx, 1, uiDepth, eRefList );
+		  }
+		  else if ( !iParseRefFrmIdx )
+		  {
+			  iRefFrmIdx = NOT_VALID;
+		  }
+		  else
+		  {
+			  iRefFrmIdx = 0;
+		  }
+
+#ifdef QC_AMVRES
+		  xDecodeMvRes(pcCU, uiAbsPartIdx, uiDepth, eRefList, iRefFrmIdx, iParseRefFrmIdx, SIZE_2Nx2N,0);
+#endif
+          pcCU->getCUMvField( eRefList )->setAllRefIdx    ( iRefFrmIdx, SIZE_GEO, uiAbsPartIdx, PART_GEO_1, uiDepth, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock );
+          pcCU->getCUMvField( eRefList )->setAllRefIdxGeo ( iRefFrmIdx, SIZE_GEO, uiAbsPartIdx, PART_GEO_1, uiDepth );
+          
+          break;
+	  }
+#endif
   default:
     break;
   }
@@ -2479,6 +2658,21 @@ Void TDecEntropy::decodeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, 
       }
       break;
     }
+
+#ifdef GEOM
+  case SIZE_GEO:
+      if ( pcCU->getGeoInterDirPart0( uiAbsPartIdx ) & ( 1 << eRefList ) )      
+      {
+        m_pcEntropyDecoderIf->parseMvdGeo( pcCU, uiAbsPartIdx, PART_GEO_0, uiDepth, eRefList, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock );
+      }
+
+      if ( pcCU->getGeoInterDirPart1( uiAbsPartIdx ) & ( 1 << eRefList ) )
+      {
+        m_pcEntropyDecoderIf->parseMvdGeo( pcCU, uiAbsPartIdx, PART_GEO_1, uiDepth, eRefList, uiDepth, pcCU->getGeoMode(uiAbsPartIdx), m_pcGeometricPartitionBlock );
+      }
+
+	  break;
+#endif
   default:
     break;
   }

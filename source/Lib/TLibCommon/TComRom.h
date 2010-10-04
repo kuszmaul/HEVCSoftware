@@ -71,7 +71,10 @@ Void         initSigLastScanPattern( UInt* puiScanPattern, const UInt uiLog2Bloc
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
-
+#ifdef GEOM
+extern       UInt   g_auiZscanToRasterDepth1[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
+extern       UInt   g_auiZscanToRasterDepth2[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
+#endif
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
 
