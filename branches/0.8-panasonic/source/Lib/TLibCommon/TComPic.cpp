@@ -47,6 +47,10 @@ TComPic::TComPic()
 #if HHI_INTERP_FILTER
   m_apcPicYuv[2]      = NULL;
 #endif
+#if WIENER_3_INPUT
+  m_apcPicYuv[WF3_P]  = NULL;
+  m_apcPicYuv[WF3_Q]  = NULL;
+#endif   
   m_pcPicYuvPred      = NULL;
   m_pcPicYuvResi      = NULL;
 
@@ -70,6 +74,10 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   // buffer for filtered reconstructed pic
   m_apcPicYuv[2]  = new TComPicYuv;  m_apcPicYuv[2]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
 #endif
+#if WIENER_3_INPUT
+  m_apcPicYuv[WF3_P]  = new TComPicYuv;  m_apcPicYuv[WF3_P]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_apcPicYuv[WF3_Q]  = new TComPicYuv;  m_apcPicYuv[WF3_Q]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+#endif   
 
   return;
 }
@@ -105,6 +113,20 @@ Void TComPic::destroy()
     m_apcPicYuv[2]  = NULL;
   }
 #endif
-
+#if WIENER_3_INPUT
+  if (m_apcPicYuv[WF3_P])
+  {
+    m_apcPicYuv[WF3_P]->destroy();
+    delete m_apcPicYuv[WF3_P];
+    m_apcPicYuv[WF3_P]  = NULL;
+  }
+  if (m_apcPicYuv[WF3_Q])
+  {
+    m_apcPicYuv[WF3_Q]->destroy();
+    delete m_apcPicYuv[WF3_Q];
+    m_apcPicYuv[WF3_Q]  = NULL;
+  }
+#endif   
 }
+
 

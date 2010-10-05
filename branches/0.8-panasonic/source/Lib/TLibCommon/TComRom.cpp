@@ -2341,6 +2341,10 @@ UInt g_uiBitDepth     = 8;    // base bit-depth
 UInt g_uiBitIncrement = 0;    // increments
 UInt g_uiIBDI_MAX     = 255;  // max. value after  IBDI
 UInt g_uiBASE_MAX     = 255;  // max. value before IBDI
+#if WIENER_3_INPUT
+UInt g_uiIBDI_MAX_Q  = 255;
+UInt g_uiIBDI_MAX_Q_D= 510;
+#endif
 
 // ====================================================================================================================
 // Misc.

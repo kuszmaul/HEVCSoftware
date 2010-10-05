@@ -40,6 +40,194 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
   m_pcEntropyDecoderIf = p;
 }
 
+#if (WIENER_3_INPUT && !QC_ALF)
+Void TDecEntropy::decodeAlfParam_control_data(ALFParam* pAlfParam, Int component)
+{
+  UInt uiSymbol;
+  
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_length_RD_rec [component] = 1+(uiSymbol<<1);
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_length_RD_pred[component] = 1+(uiSymbol<<1);
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_length_RD_qpe [component] = 1+(uiSymbol<<1);
+
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[component][0] = uiSymbol;
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[component][1] = pAlfParam->filter_precision[component][0]-uiSymbol;
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[component][2] = pAlfParam->filter_precision[component][0]-uiSymbol;
+}
+
+Void TDecEntropy::decodeAlfParam_golomb(ALFParam* pAlfParam, Int component)
+{
+  UInt uiSymbol=0;
+  
+  Int size_rec    = pAlfParam->filter_length_RD_rec [component];
+  Int size_pred   = pAlfParam->filter_length_RD_pred[component];
+  Int size_qpe    = pAlfParam->filter_length_RD_qpe [component];
+  Int length      = size_rec *size_rec + size_pred*size_pred+ size_qpe *size_qpe + 1;
+  Int prec        = pAlfParam->filter_precision[component][0];
+  Int prec2       = pAlfParam->filter_precision[component][1];
+  
+  if (length>19 && prec>4)//only worth for a lot of coefficients of higher precision
+  {  
+    m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+    pAlfParam->golomb_enable[component] = uiSymbol;
+    
+    if (pAlfParam->golomb_enable[component]!=0)
+    {
+      m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+      pAlfParam->golomb_code[component][0] = uiSymbol;
+      if (length>39 && size_rec<5 && prec2>4)//only worth for a lot of coefficients of higher precision
+      {
+        m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+        pAlfParam->golomb_code[component][1] = uiSymbol;
+      }
+      else
+      {
+        pAlfParam->golomb_code[component][1] = pAlfParam->golomb_code[component][0];
+      }
+    }    
+  }
+  else
+  {
+    pAlfParam->golomb_enable[component] = 0;
+  }
+}
+
+
+Void TDecEntropy::decodeAlfParam_coeffs(ALFParam* pAlfParam, Int component)
+{
+  Int m,n,offset, tmp=0;
+  Int k_rec, k_pred, k_qpe;
+  Int *i_p;
+  Int iSymbol;
+  UInt uiSymbol=0;
+    
+  Int size_rec =pAlfParam->filter_length_RD_rec [component];
+  Int size_pred=pAlfParam->filter_length_RD_pred[component];  
+  Int size_qpe =pAlfParam->filter_length_RD_qpe [component];
+  
+  i_p=(pAlfParam->coeffs)[component];
+  
+  for (m=0;m<size_rec;m++)
+  {
+    for (n=0;n<size_rec;n++)
+    {
+      if (pAlfParam->golomb_enable[component]==0)
+      {
+        m_pcEntropyDecoderIf->parseAlfSvlc(iSymbol);
+        (*i_p)=iSymbol;
+      }
+      else
+      {
+        (*i_p)=m_pcEntropyDecoderIf->golombDecode(pAlfParam->golomb_code[component][0]);
+      }
+      
+      if (m==(size_rec-1)/2 && n==(size_rec-1)/2)
+      {
+        tmp=(*i_p); 
+        tmp*=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][1]];
+        tmp/=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][0]];
+        (*i_p)+=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][0]];
+      }
+      i_p++;
+    }
+  }
+  
+  if (pAlfParam->golomb_enable[component]==0)
+  {
+    m_pcEntropyDecoderIf->parseAlfSvlc(iSymbol);
+    offset=iSymbol;
+  }
+  else
+  {
+    offset=m_pcEntropyDecoderIf->golombDecode(pAlfParam->golomb_code[component][0]);
+  }
+    
+  for (m=0;m<size_pred;m++)
+  {
+    for (n=0;n<size_pred;n++)
+    {
+      if (pAlfParam->golomb_enable[component]==0)
+      {
+        m_pcEntropyDecoderIf->parseAlfSvlc(iSymbol);
+        (*i_p)=iSymbol;
+      }
+      else
+      {
+        (*i_p)=m_pcEntropyDecoderIf->golombDecode(pAlfParam->golomb_code[component][1]);
+      }
+      
+      if (m==(size_pred-1)/2 && n==(size_pred-1)/2)
+      {
+        (*i_p)-=tmp;
+        tmp=(*i_p);
+        tmp*=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][2]];
+        tmp/=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][1]];
+      }
+      i_p++;
+    }
+  }
+  
+  for (m=0;m<size_qpe;m++)
+  {
+    for (n=0;n<size_qpe;n++)
+    {
+      if (pAlfParam->golomb_enable[component]==0)
+      {
+        m_pcEntropyDecoderIf->parseAlfSvlc(iSymbol);
+        (*i_p)=iSymbol;
+      }
+      else
+      {
+        (*i_p)=m_pcEntropyDecoderIf->golombDecode(pAlfParam->golomb_code[component][1]);
+      }
+      
+      if (m==(size_qpe-1)/2 && n==(size_qpe-1)/2)
+      {
+        (*i_p)+=tmp;
+      }
+      i_p++;
+    }
+  }
+  
+  (*i_p)=offset;
+}
+
+
+
+
+Void TDecEntropy::decodeAlfParam(ALFParam* pAlfParam)
+{
+  UInt uiSymbol;
+  
+  m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+  pAlfParam->alf_flag = uiSymbol;  
+  
+  if (!pAlfParam->alf_flag)
+  {
+    return;
+  }
+  
+  for (Int c=0; c<3; c++)
+  {
+    m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+    pAlfParam->enable_flag[c] = uiSymbol;
+    
+    if (pAlfParam->enable_flag[c])
+    {
+      decodeAlfParam_control_data(pAlfParam, c);
+      decodeAlfParam_golomb      (pAlfParam, c);
+      decodeAlfParam_coeffs      (pAlfParam, c);
+    }
+  }
+  
+}
+#else
+
 #if HHI_ALF
 Void TDecEntropy::decodeAlfParam(ALFParam* pAlfParam, TComPic* pcPic )
 {
@@ -273,6 +461,9 @@ Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
   UInt uiSymbol;
   Int sqrFiltLengthTab[3] = {SQR_FILT_LENGTH_9SYM, SQR_FILT_LENGTH_7SYM, SQR_FILT_LENGTH_5SYM};
   Int FiltTab[3] = {9, 7, 5};
+#if WIENER_3_INPUT
+  Int sqrFiltLengthTab_pr[NO_TEST_FILT+2]={SQR_FILT_LENGTH_1SYM, SQR_FILT_LENGTH_3SYM, SQR_FILT_LENGTH_5SYM-1, SQR_FILT_LENGTH_7SYM-1, SQR_FILT_LENGTH_9SYM-1}; 
+#endif
 
   pAlfParam->filters_per_group = 0;
   
@@ -288,38 +479,55 @@ Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
   Int TabIdx = uiSymbol;
   pAlfParam->realfiltNo = 2-TabIdx;
   pAlfParam->tap = FiltTab[pAlfParam->realfiltNo];
-  pAlfParam->num_coeff = sqrFiltLengthTab[pAlfParam->realfiltNo];
+#if WIENER_3_INPUT
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->tap_pred = uiSymbol*2 + 1; 
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->tap_resi = uiSymbol*2 + 1; 
 
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[0] = uiSymbol; 
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[1] = pAlfParam->filter_precision[0] - uiSymbol; 
+  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+  pAlfParam->filter_precision[2] = pAlfParam->filter_precision[0] - uiSymbol;
+
+  pAlfParam->num_coeff = sqrFiltLengthTab[pAlfParam->realfiltNo]+ sqrFiltLengthTab_pr[(pAlfParam->tap_resi-1)/2] + sqrFiltLengthTab_pr[(pAlfParam->tap_pred-1)/2];
+  pAlfParam->num_coeff_pred = sqrFiltLengthTab_pr[(pAlfParam->tap_pred-1)/2];
+  pAlfParam->num_coeff_resi = sqrFiltLengthTab_pr[(pAlfParam->tap_resi-1)/2];  
+#else
+  pAlfParam->num_coeff = sqrFiltLengthTab[pAlfParam->realfiltNo];
+#endif
   if (pAlfParam->filtNo>=0)
   {
 	if(pAlfParam->realfiltNo >= 0)
-	{
-	  // filters_per_fr
-	  m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
-	  pAlfParam->noFilters = uiSymbol + 1;
-	  pAlfParam->filters_per_group = pAlfParam->noFilters; 
-
-	  if(pAlfParam->noFilters == 2)
-	  {
-		m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
-		pAlfParam->startSecondFilter = uiSymbol;
-		pAlfParam->filterPattern [uiSymbol] = 1;
-	  }
-	  else if (pAlfParam->noFilters > 2)
-	  {
-		pAlfParam->filters_per_group = 1;
-		for (int i=1; i<NO_VAR_BINS; i++) 
-		{
-		  m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
-		  pAlfParam->filterPattern[i] = uiSymbol;
-		  pAlfParam->filters_per_group += uiSymbol;
-		}
-	  }
-	}
+    {
+      // filters_per_fr
+      m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+      pAlfParam->noFilters = uiSymbol + 1;
+      pAlfParam->filters_per_group = pAlfParam->noFilters; 
+  
+      if(pAlfParam->noFilters == 2)
+      {
+        m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+        pAlfParam->startSecondFilter = uiSymbol;
+        pAlfParam->filterPattern [uiSymbol] = 1;
+      }
+      else if (pAlfParam->noFilters > 2)
+      {
+        pAlfParam->filters_per_group = 1;
+        for (int i=1; i<NO_VAR_BINS; i++) 
+        {
+          m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+          pAlfParam->filterPattern[i] = uiSymbol;
+          pAlfParam->filters_per_group += uiSymbol;
+        }
+      }
+    }
   }
   else
   {
-	memset (pAlfParam->filterPattern, 0, NO_VAR_BINS*sizeof(Int));
+    memset (pAlfParam->filterPattern, 0, NO_VAR_BINS*sizeof(Int));
   }
  // Reconstruct varIndTab[]
   memset(pAlfParam->varIndTab, 0, NO_VAR_BINS * sizeof(int));
@@ -341,6 +549,34 @@ Void TDecEntropy::readFilterCodingParams(ALFParam* pAlfParam)
   int kMin;
   int maxScanVal;
   int *pDepthInt;
+#if WIENER_3_INPUT
+  int maxScanVal_pr;
+  int two_codes=0;
+  int filtNo = pAlfParam->realfiltNo;
+  int flTab[]={9/2, 7/2, 5/2};
+  int fl = flTab[filtNo];
+  
+  int filtNo_resi = (pAlfParam->tap_resi-1)/2;
+  int filtNo_pred = (pAlfParam->tap_pred-1)/2;
+  int sqrFiltLengthTab_pr[NO_TEST_FILT+2]={SQR_FILT_LENGTH_1SYM, SQR_FILT_LENGTH_3SYM, SQR_FILT_LENGTH_5SYM-1, SQR_FILT_LENGTH_7SYM-1, SQR_FILT_LENGTH_9SYM-1};
+  int sqrFiltLengthTab[NO_TEST_FILT]={SQR_FILT_LENGTH_9SYM, SQR_FILT_LENGTH_7SYM, SQR_FILT_LENGTH_5SYM};
+  int i,k;
+
+  for (i=0; i<sqrFiltLengthTab[filtNo]-1; i++)
+    depth[i]=pDepthIntTab[2-filtNo][i];               
+  k=i;
+  for (i=0; i<sqrFiltLengthTab_pr[filtNo_resi]; i++)
+    depth[k+i]=pDepthIntTab_pr[filtNo_resi][i];               
+  k=k+i;
+  for (i=0; i<sqrFiltLengthTab_pr[filtNo_pred]; i++)
+    depth[k+i]=pDepthIntTab_pr[filtNo_pred][i];
+  depth[k+i] = pDepthIntTab[2-filtNo][sqrFiltLengthTab[filtNo]-1];
+
+  pDepthInt = depth;  
+  
+  // Determine maxScanVal
+  maxScanVal = 0;
+#else  
   int fl;
 
   // Determine fl
@@ -350,13 +586,34 @@ Void TDecEntropy::readFilterCodingParams(ALFParam* pAlfParam)
     fl = 3;
   else
     fl = 2;
-
+  
   // Determine maxScanVal
   maxScanVal = 0;
   pDepthInt = pDepthIntTab[fl - 2];
+#endif  
+#if WIENER_3_INPUT
+  maxScanVal_pr = 0;
+  if (pAlfParam->num_coeff > WIENER_3_INPUT_ADAPTIVE_GOLOMB_TS && pAlfParam->filter_precision[0]>WIENER_3_INPUT_ADAPTIVE_GOLOMB_TP)
+  {
+    two_codes=1;
+  }
+  if (two_codes)
+  {
+    for(ind = 0; ind < pAlfParam->num_coeff-pAlfParam->num_coeff_pred-pAlfParam->num_coeff_resi-1; ind++)
+      maxScanVal = max(maxScanVal, pDepthInt[ind]);
+    maxScanVal = max(maxScanVal, pDepthInt[pAlfParam->num_coeff-1]);//DC
+    
+    for(ind = pAlfParam->num_coeff-pAlfParam->num_coeff_pred-pAlfParam->num_coeff_resi-1; ind < pAlfParam->num_coeff-1; ind++)
+      maxScanVal_pr = max(maxScanVal_pr, pDepthInt[ind]);
+  }
+  else
+  {
+#endif  
   for(ind = 0; ind < pAlfParam->num_coeff; ind++)
     maxScanVal = max(maxScanVal, pDepthInt[ind]);
-
+#if WIENER_3_INPUT
+  }
+#endif
   // Golomb parameters
   m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
   pAlfParam->minKStart = 1 + uiSymbol;
@@ -372,6 +629,25 @@ Void TDecEntropy::readFilterCodingParams(ALFParam* pAlfParam)
       pAlfParam->kMinTab[scanPos] = kMin;
     kMin = pAlfParam->kMinTab[scanPos];
   }
+#if WIENER_3_INPUT
+  if (two_codes)
+  {
+    m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+    pAlfParam->minKStart_pr = 1 + uiSymbol;
+  
+    kMin = pAlfParam->minKStart_pr;
+    for(scanPos = 0; scanPos < maxScanVal_pr; scanPos++)
+    {
+      m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+      golombIndexBit = uiSymbol;
+      if(golombIndexBit)
+        pAlfParam->kMinTab_pr[scanPos] = kMin + 1;
+      else
+        pAlfParam->kMinTab_pr[scanPos] = kMin;
+      kMin = pAlfParam->kMinTab_pr[scanPos];
+    }    
+  }  
+#endif  
 }
 
 Int TDecEntropy::golombDecode(Int k)
@@ -385,19 +661,19 @@ Int TDecEntropy::golombDecode(Int k)
   uiSymbol = 1;
   while (uiSymbol)
   {
-	m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
-	q++;
+    m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+    q++;
   }
   for(a = 0; a < k; ++a)          // read out the sequential log2(M) bits
   {
-	m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
+    m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
     if(uiSymbol)
       nr += 1 << a;
   }
   nr += q * m;                    // add the bits and the multiple of M
   if(nr != 0){
     m_pcEntropyDecoderIf->parseAlfFlag(uiSymbol);
-	nr = (uiSymbol)? nr: -nr;
+    nr = (uiSymbol)? nr: -nr;
   }
   return nr;
 }
@@ -408,6 +684,33 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
 {
   int ind, scanPos, i;
   int *pDepthInt;
+  
+#if WIENER_3_INPUT
+  int filtNo = pAlfParam->realfiltNo;
+  int flTab[]={9/2, 7/2, 5/2};
+  int fl = flTab[filtNo];
+  
+  int filtNo_resi = (pAlfParam->tap_resi-1)/2;
+  int filtNo_pred = (pAlfParam->tap_pred-1)/2;
+  Int sqrFiltLengthTab_pr[NO_TEST_FILT+2]={SQR_FILT_LENGTH_1SYM, SQR_FILT_LENGTH_3SYM, SQR_FILT_LENGTH_5SYM-1, SQR_FILT_LENGTH_7SYM-1, SQR_FILT_LENGTH_9SYM-1};
+  int sqrFiltLengthTab[NO_TEST_FILT]={SQR_FILT_LENGTH_9SYM, SQR_FILT_LENGTH_7SYM, SQR_FILT_LENGTH_5SYM};
+  int k;
+  int two_codes=0;
+
+  if (pAlfParam->num_coeff > WIENER_3_INPUT_ADAPTIVE_GOLOMB_TS && pAlfParam->filter_precision[0]>WIENER_3_INPUT_ADAPTIVE_GOLOMB_TP)
+    two_codes=1;
+  for (i=0; i<sqrFiltLengthTab[filtNo]-1; i++)
+    depth[i]=pDepthIntTab[2-filtNo][i];
+  k=i;
+  for (i=0; i<sqrFiltLengthTab_pr[filtNo_resi]; i++)
+    depth[k+i]=pDepthIntTab_pr[filtNo_resi][i];
+  k=k+i;
+  for (i=0; i<sqrFiltLengthTab_pr[filtNo_pred]; i++)
+    depth[k+i]=pDepthIntTab_pr[filtNo_pred][i];
+  depth[k+i] = pDepthIntTab[2-filtNo][sqrFiltLengthTab[filtNo]-1];
+
+  pDepthInt = depth;
+#else
   int fl;
 
   if(pAlfParam->num_coeff == SQR_FILT_LENGTH_9SYM)
@@ -418,17 +721,118 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
     fl = 2;
     
   pDepthInt = pDepthIntTab[fl - 2];
+#endif    
 
   for(ind = 0; ind < pAlfParam->filters_per_group_diff; ++ind)
   {
+#if WIENER_3_INPUT
+    int recon_filt = sqrFiltLengthTab[filtNo]-1;
+    int resi_filt = sqrFiltLengthTab_pr[filtNo_resi];
+    int pred_filt = sqrFiltLengthTab_pr[filtNo_pred]; 
+    int recon_zeroflag, resi_zeroflag, pred_zeroflag;
+    UInt uiSymbol;
+    m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+    recon_zeroflag = uiSymbol;
+    m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+    resi_zeroflag = uiSymbol;
+    m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+    pred_zeroflag = uiSymbol;
+    if (two_codes)    
+    {
+      for(i = 0; i < recon_filt; i++)
+      {
+        if (!recon_zeroflag)
+        {
+	  scanPos = pDepthInt[i] - 1;
+	  pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+	}
+	else
+	{
+	  pAlfParam->coeffmulti[ind][i] = 0;
+	}
+      }
+      for(i = recon_filt; i < recon_filt + resi_filt; i++)
+      {
+        if (!resi_zeroflag)
+        {
+          scanPos = pDepthInt[i] - 1;
+	  pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab_pr[scanPos]);
+	}
+	else
+	{
+	  pAlfParam->coeffmulti[ind][i] = 0;
+	}
+      }
+      for(i = recon_filt + resi_filt; i < recon_filt + resi_filt + pred_filt; i++)
+      {
+        if (!pred_zeroflag)
+        {
+	  scanPos = pDepthInt[i] - 1;
+	  pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab_pr[scanPos]);
+        }
+	else
+	{
+	  pAlfParam->coeffmulti[ind][i] = 0;
+	}
+      }
+      
+      i = pAlfParam->num_coeff - 1;
+      scanPos = pDepthInt[i] - 1;
+      pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+    }
+    else
+    {
+      for(i = 0; i < recon_filt; i++)
+      {
+        if (!recon_zeroflag)
+        {
+          scanPos = pDepthInt[i] - 1;
+          pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+        }
+        else
+        {
+          pAlfParam->coeffmulti[ind][i] = 0;
+        }
+      }
+      for(i = recon_filt; i < recon_filt + resi_filt; i++)
+      {
+        if (!resi_zeroflag)
+        {
+          scanPos = pDepthInt[i] - 1;
+          pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+        }
+        else
+        {
+          pAlfParam->coeffmulti[ind][i] = 0;
+        }
+      }
+      for(i = recon_filt + resi_filt; i < recon_filt + resi_filt + pred_filt; i++)
+      {
+        if (!pred_zeroflag)
+        {
+          scanPos = pDepthInt[i] - 1;
+          pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+        }
+        else
+        {
+          pAlfParam->coeffmulti[ind][i] = 0;
+        }
+      }
+      
+      i = pAlfParam->num_coeff - 1;
+      scanPos = pDepthInt[i] - 1;
+      pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
+    }
+#else
     for(i = 0; i < pAlfParam->num_coeff; i++)
     {	
       scanPos = pDepthInt[i] - 1;
 	  pAlfParam->coeffmulti[ind][i] = golombDecode(pAlfParam->kMinTab[scanPos]);
     }
+#endif
+  }
   }
 
-}
 Void TDecEntropy::decodeFilterCoeff (ALFParam* pAlfParam)
 {
   readFilterCodingParams (pAlfParam);
@@ -443,41 +847,41 @@ Void TDecEntropy::decodeFilt(ALFParam* pAlfParam)
 
   if (pAlfParam->filtNo >= 0)
   {
-	pAlfParam->filters_per_group_diff = pAlfParam->filters_per_group;
-	if (pAlfParam->filters_per_group > 1)
-	{
+    pAlfParam->filters_per_group_diff = pAlfParam->filters_per_group;
+    if (pAlfParam->filters_per_group > 1)
+    {
 #if ENABLE_FORCECOEFF0
-	  m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
-	  pAlfParam->forceCoeff0 = uiSymbol;
+      m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+      pAlfParam->forceCoeff0 = uiSymbol;
 
-	  if (pAlfParam->forceCoeff0)
-	  {
-		pAlfParam->filters_per_group_diff = 0;
-		for (int i=0; i<pAlfParam->filters_per_group; i++){
-		  m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
-		  pAlfParam->codedVarBins[i] = uiSymbol;
-		  pAlfParam->filters_per_group_diff += uiSymbol;
-		}
-	  }
-	  else
+      if (pAlfParam->forceCoeff0)
+      {
+        pAlfParam->filters_per_group_diff = 0;
+        for (int i=0; i<pAlfParam->filters_per_group; i++){
+          m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+          pAlfParam->codedVarBins[i] = uiSymbol;
+          pAlfParam->filters_per_group_diff += uiSymbol;
+        }
+      }
+      else
 #else
-      pAlfParam->forceCoeff0 = 0;
+        pAlfParam->forceCoeff0 = 0;
 #endif
-	  {
-		for (int i=0; i<NO_VAR_BINS; i++)
-		  pAlfParam->codedVarBins[i] = 1;
+      {
+        for (int i=0; i<NO_VAR_BINS; i++)
+          pAlfParam->codedVarBins[i] = 1;
 
-	  }
-	  m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
-	  pAlfParam->predMethod = uiSymbol;
-	}
-	else
-	{
-	  pAlfParam->forceCoeff0 = 0;
-	  pAlfParam->predMethod = 0;
-	}
+      }
+      m_pcEntropyDecoderIf->parseAlfFlag (uiSymbol);
+      pAlfParam->predMethod = uiSymbol;
+    }
+    else
+    {
+      pAlfParam->forceCoeff0 = 0;
+      pAlfParam->predMethod = 0;
+    }
 
-	decodeFilterCoeff (pAlfParam);
+    decodeFilterCoeff (pAlfParam);
   }
 }
 
@@ -565,6 +969,7 @@ Void TDecEntropy::decodeAlfCtrlParam( ALFParam* pAlfParam )
     m_pcEntropyDecoderIf->parseAlfCtrlFlag( pAlfParam->alf_cu_flag[i] );
   }
 }
+#endif
 #endif
 
 Void TDecEntropy::decodeAlfCtrlFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
@@ -837,15 +1242,15 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
         if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
         {
           decodeRefFrmIdx ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
-          decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
-          decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0, pcSubCU);
-        }
+      decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+      decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0, pcSubCU);
+    }
 
-        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
-        {
-          decodeRefFrmIdx ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
-          decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
-          decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1, pcSubCU);
+    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
+    {
+      decodeRefFrmIdx ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+      decodeMvd       ( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+      decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1, pcSubCU);
         }
       }
     }

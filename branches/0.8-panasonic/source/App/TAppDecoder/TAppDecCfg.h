@@ -51,19 +51,21 @@
 class TAppDecCfg
 {
 protected:
-  TAppOption*   m_apcOpt;                             ///< option handling class
-  char*         m_pchBitstreamFile;                   ///< input bitstream file name
-  char*         m_pchReconFile;                       ///< output reconstruction file name
-
+  TAppOption*    m_apcOpt;                              ///< option handling class
+  char*          m_pchBitstreamFile;                    ///< input bitstream file name
+  char*          m_pchReconFile;                        ///< output reconstruction file name
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  char*          m_pchPFile;                            ///< output prediction file name
+  char*          m_pchQFile;                            ///< output quantized prediction error file name
+#endif
+  
   Void  xSetCfgCommand  ( TAppOption* pcOpt );        ///< initialize member variables from option class
 
 public:
   TAppDecCfg()          {}
   virtual ~TAppDecCfg() {}
 
-  Bool  parseCfg        ( Int argc, Char* argv[] );   ///< initialize option class from configuration
+  Bool  parseCfg        ( Int argc, Char* argv[] );    ///< initialize option class from configuration
 };
 
 #endif
-
-

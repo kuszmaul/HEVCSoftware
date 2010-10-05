@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TAppEncTop.h
+/** \file      TAppEncTop.h
     \brief    Encoder application class (header)
 */
 
@@ -54,6 +54,11 @@ private:
   TEncTop                    m_cTEncTop;                    ///< encoder class
   TVideoIOYuv                m_cTVideoIOYuvInputFile;       ///< input YUV file
   TVideoIOYuv                m_cTVideoIOYuvReconFile;       ///< output reconstruction file
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  TVideoIOYuv                m_cTVideoIOYuvPFile;            ///< output prediction file
+  TVideoIOYuv                m_cTVideoIOYuvQFile;            ///< output quantized prediction error file
+#endif   
+   
 #if HHI_NAL_UNIT_SYNTAX
   TVideoIOBitsStartCode      m_cTVideoIOBitsFile;           ///< output bitstream file
 #else
@@ -61,19 +66,27 @@ private:
 #endif
 
   TComList<TComPicYuv*>      m_cListPicYuvRec;              ///< list of reconstruction YUV files
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  TComList<TComPicYuv*>      m_cListPicYuvP;                ///< list of prediction YUV files
+  TComList<TComPicYuv*>      m_cListPicYuvQ;                ///< list of quantized prediction error YUV files
+#endif  
   TComList<TComBitstream*>   m_cListBitstream;              ///< list of bitstreams
 
   Int                        m_iFrameRcvd;                  ///< number of received frames
 
 protected:
   // initialization
-  Void  xCreateLib        ();                               ///< create files & encoder class
-  Void  xInitLibCfg       ();                               ///< initialize internal variables
-  Void  xInitLib          ();                               ///< initialize encoder class
+  Void  xCreateLib        ();                                ///< create files & encoder class
+  Void  xInitLibCfg        ();                                ///< initialize internal variables
+  Void  xInitLib          ();                                ///< initialize encoder class
   Void  xDestroyLib       ();                               ///< destroy encoder class
 
   /// obtain required buffers
   Void  xGetBuffer        ( TComPicYuv*& rpcPicYuvRec,
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+                            TComPicYuv*& rpcPicYuvP,
+                            TComPicYuv*& rpcPicYuvQ,
+#endif                            
                             TComBitstream*& rpcBitStream );
 
   /// delete allocated buffers
@@ -86,7 +99,7 @@ public:
   TAppEncTop();
   virtual ~TAppEncTop();
 
-  Void        encode      ();                               ///< main encoding function
+  Void        encode      ();                                ///< main encoding function
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
 
 };// END CLASS DEFINITION TAppEncTop

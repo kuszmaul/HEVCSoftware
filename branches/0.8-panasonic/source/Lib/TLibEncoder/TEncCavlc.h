@@ -210,6 +210,9 @@ public:
   Void codeAlfUvlc       ( UInt uiCode );
   Void codeAlfSvlc       ( Int   iCode );
   Void codeAlfCtrlDepth();
+#if (WIENER_3_INPUT && !QC_ALF)
+  Void golombEncode(Int coeff, Int k);
+#endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if HHI_MRG

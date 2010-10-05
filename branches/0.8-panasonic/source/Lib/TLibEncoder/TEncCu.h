@@ -69,11 +69,18 @@ private:
   TComYuv**               m_ppcPredYuvBest; ///< Best Prediction Yuv for each depth
   TComYuv**               m_ppcResiYuvBest; ///< Best Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvBest; ///< Best Reconstruction Yuv for each depth
+#if WIENER_3_INPUT
+  TComYuv**               m_ppcPYuvBest; ///< Best Reconstruction Yuv for each depth
+  TComYuv**               m_ppcQYuvBest; ///< Best Reconstruction Yuv for each depth
+#endif  
   TComYuv**               m_ppcPredYuvTemp; ///< Temporary Prediction Yuv for each depth
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
-
+#if WIENER_3_INPUT
+  TComYuv**               m_ppcPYuvTemp; ///< Temporary Prediction Yuv for each depth
+  TComYuv**               m_ppcQYuvTemp; ///< Temporary Quantized prediction error Yuv for each depth
+#endif
   //  Data : encoder control
   Int                     m_iQp;            ///< Last QP
 

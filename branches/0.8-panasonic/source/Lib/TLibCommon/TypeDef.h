@@ -211,9 +211,38 @@ void normalizeScanStats();
 #define BUGFIX51 1
 #endif
 
-///////////////////////////////////
-// Panasonic defines section start
-///////////////////////////////////
+
+#define WIENER_3_INPUT                     1 ///< M. Narroschke: Loop filter with three input signals (Reconstruction, Prediction, Quantized prediction error)
+                                             ///< Usage of WIENER_3_INPUT: IF QC_ALF=1  and WIENER_3_INPUT=1 => 3-Input-Signals are used in QC_ALF
+                                             ///<                          IF QC_ALF=1  and WIENER_3_INPUT=0 => QC_ALF is used
+                                             ///<                          IF HHI_ALF=1 and WIENER_3_INPUT=1 => not possible
+                                             ///<                          IF QC_ALF=0  and WIENER_3_INPUT=1 => 3-Input-Signals are used in a filter with the features of JCT-VC A114
+
+#if WIENER_3_INPUT
+  #if (HHI_ALF)
+    #error "Currently, only QC_ALF and WIENER_3_INPUT are harmonized."
+  #endif
+
+  #define WIENER_3_INPUT_WRITE_OUT_PICTURES  0  //This is to write out the quantized prediction error and the prediction
+  #define WIENER_3_INPUT_FAST                1
+  #define WIENER_3_INPUT_ADAPTIVE_GOLOMB_TS  20
+  #define WIENER_3_INPUT_ADAPTIVE_GOLOMB_TP  4
+               
+
+#define FILTER_PRECISION_TABLE_NUMBER      11
+  #define MAX_WIENER_FILTER_LENGTH         15
+
+  #ifdef HHI_INTERP_FILTER
+    #define WF3_P                           3
+    #define WF3_Q                           4
+  #else
+    #define WF3_P                           2
+    #define WF3_Q                           3
+  #endif
+#endif
+////////////////////////////////
+// Panasonic defines section end
+////////////////////////////////
 
 ///////////////////////////////
 // SAMSUNG defines section start
@@ -337,6 +366,24 @@ class TComPicSym;
 
 struct _AlfParam
 {
+#if WIENER_3_INPUT
+  Int filter_precision_table      [FILTER_PRECISION_TABLE_NUMBER];
+  Int filter_precision_table_shift[FILTER_PRECISION_TABLE_NUMBER];
+  Int filter_precision_table_half [FILTER_PRECISION_TABLE_NUMBER];    
+#endif
+#if (WIENER_3_INPUT && !QC_ALF)
+  Int alf_flag;                           ///< indicates use of ALF
+  Int cu_control_flag;                    ///< coding unit based control flag
+  Int filter_length_RD_rec [3];
+  Int filter_length_RD_pred[3];
+  Int filter_length_RD_qpe [3];
+  Int filter_precision     [3][3];         ///< [component][signal]
+  Int enable_flag          [3];
+  Int golomb_enable        [3];
+  Int golomb_code          [3][2];
+  Int **coeffs;  
+  Int **dont_care;  
+#else
   Int alf_flag;                           ///< indicates use of ALF
   Int cu_control_flag;                    ///< coding unit based control flag
   Int chroma_idc;                         ///< indicates use of ALF for chroma
@@ -347,6 +394,16 @@ struct _AlfParam
   Int num_coeff_chroma;                   ///< number of filter coefficients (chroma)
   Int *coeff_chroma;                      ///< filter coefficient array (chroma)
 #if QC_ALF
+#if WIENER_3_INPUT
+  Int tap_pred;                           ///< number of filter taps for prediction signal
+  Int tap_resi;                           ///< number of filter taps for residual signal
+  Int num_coeff_pred;                     ///< number of filter coefficients for prediction signal
+  Int num_coeff_resi;                     ///< number of filter coefficients for residual signal
+  Int kMinTab_pr[42];
+  Int minKStart_pr;
+  Int maxScanVal_pr;
+  Int filter_precision     [3];
+#endif
   //CodeAux related
   Int realfiltNo;
   Int filtNo;
@@ -365,6 +422,7 @@ struct _AlfParam
   Int minKStart;
   Int maxScanVal;
   Int kMinTab[42];
+#endif
 #endif
 #if TSB_ALF_HEADER
   UInt num_alf_cu_flag;

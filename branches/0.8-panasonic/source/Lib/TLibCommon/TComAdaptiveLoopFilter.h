@@ -38,6 +38,78 @@
 
 #include "TComPic.h"
 
+
+
+#if (WIENER_3_INPUT && !QC_ALF)
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Plane class
+ *
+ * A template class to hold 2D data of any type
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+class Plane
+{
+  T *m_data;         //!< Pointer to allocated memory
+  T *m_origin;       //!< Pointer to top-left sample
+  int m_width;       //!< Width of plane
+  int m_height;      //!< Height of plane
+  int m_pitch;       //!< Data pitch
+  int m_border_size; //!< Border size
+
+public:
+  Plane();
+  Plane(int width, int height, int border_size);
+  virtual ~Plane();
+
+  void set_size(int width, int height, int border_size);
+
+  int get_width() const { return m_width; }   //!< Get width
+  int get_height() const { return m_height; } //!< Get height
+  int get_pitch() const { return m_pitch; }   //!< Get pitch
+
+  const T *operator[](int row) const { return m_origin + row * m_pitch; } //!< Get pointer to a given row
+  T *operator[](int row) { return m_origin + row * m_pitch; }             //!< Get pointer to a given row
+
+  void set(int row, int col, T val, int numRows, int numCols);
+
+  void mirror();
+};
+
+
+
+
+
+class TComAdaptiveLoopFilter
+{
+protected:
+  Int  get_mem1Dint(Int **array1D, Int rows);
+  Int  get_mem2Dint(Int ***array2D, Int rows, Int columns);
+  Void free_mem1Dint(Int *array1D);
+  Void free_mem2Dint(Int **array2D);
+  Void no_mem_exit(const char *where);  
+public:
+  TComAdaptiveLoopFilter();
+  virtual ~TComAdaptiveLoopFilter() {}
+  
+  Void  allocALFParam           ( ALFParam* pAlfParam );
+  Void  freeALFParam            ( ALFParam* pAlfParam );
+  Void  copyALFParam            ( ALFParam* pDesAlfParam, ALFParam* pSrcAlfParam );
+  Void  destroy                 ();
+  Void  create                  ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth );
+
+
+  // interface function
+  Void  ALFProcess              ( TComPic* pcPic, ALFParam* pcAlfParam ); ///< interface function for ALF process
+  
+  Void  filter                  (ALFParam* pAlfParam, const Plane<Pel> &xY, Pel *oY, const Plane<Pel> &pY, const Plane<Int> &qpe, Int width, Int height, Int Stride, Int component);
+  Void  filter                  (ALFParam* pAlfParam, Pel *in, Pel *out, Pel *pred, Pel *qpe, Int component, Int height, Int width, Int Stride_in, Int Stride_out);
+};
+
+#else //WIENER_3_INPUT
+
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
@@ -50,10 +122,15 @@
 #define ALF_MAX_NUM_COEF      12                                         ///< maximum number of filter coefficients
 #define ALF_NUM_BIT_SHIFT     8                                         ///< bit shift parameter for quantization of ALF param.
 #else
+#if WIENER_3_INPUT
+  #define ALF_MIN_NUM_TAP_PQ     1                                    ///< minimum number of filter taps (1x1)
+  #define ALF_MAX_NUM_COEF     126                                    ///< maximum number of filter coefficients
+#else
+  #define ALF_MAX_NUM_COEF      42                                    ///< maximum number of filter coefficients
+#endif
 #define ALF_MAX_NUM_TAP       9                                       ///< maximum number of filter taps (9x9)
 #define ALF_MIN_NUM_TAP       5                                       ///< minimum number of filter taps (5x5)
 #define ALF_MAX_NUM_TAP_C     5                                       ///< number of filter taps for chroma (5x5)
-#define ALF_MAX_NUM_COEF      42                                      ///< maximum number of filter coefficients
 #define ALF_MIN_NUM_COEF      14                                      ///< minimum number of filter coefficients
 #define ALF_MAX_NUM_COEF_C    14                                      ///< number of filter taps for chroma
 #define ALF_NUM_BIT_SHIFT     8                                       ///< bit shift parameter for quantization of ALF param.
@@ -75,7 +152,21 @@
 #define VAR_SIZE               3
 #define FILTER_LENGTH          9
 
-#define MAX_SQR_FILT_LENGTH   ((FILTER_LENGTH*FILTER_LENGTH) / 2 + 2)
+#if WIENER_3_INPUT
+  #define FILTER_LENGTH_PRED     9
+  #define FILTER_LENGTH_RESI     9
+  #define MAX_SQR_FILT_LENGTH   ((FILTER_LENGTH*FILTER_LENGTH) / 2 + 2) + ((FILTER_LENGTH_PRED*FILTER_LENGTH_PRED) / 2 + 1) + ((FILTER_LENGTH_RESI*FILTER_LENGTH_RESI) / 2 + 1)
+  #define SQR_FILT_LENGTH_3SYM  ((3*3) / 4 + 1)
+  #define SQR_FILT_LENGTH_1SYM  ((1*1) / 4 + 1)
+  #define SQR_FILT_LENGTH_3     ((3*3) / 2 + 1)
+  #define SQR_FILT_LENGTH_1     ((1*1) / 2 + 1)
+  #define SQR_FILT_LENGTH_9     ((9*9) / 2 + 1)
+  #define SQR_FILT_LENGTH_7     ((7*7) / 2 + 1)
+  #define SQR_FILT_LENGTH_5     ((5*5) / 2 + 1)
+#else
+  #define MAX_SQR_FILT_LENGTH   ((FILTER_LENGTH*FILTER_LENGTH) / 2 + 2)
+#endif
+
 #define SQR_FILT_LENGTH_9SYM  ((9*9) / 4 + 2) 
 #define SQR_FILT_LENGTH_7SYM  ((7*7) / 4 + 2) 
 #define SQR_FILT_LENGTH_5SYM  ((5*5) / 4 + 2) 
@@ -85,6 +176,12 @@
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 #define imgpel  unsigned short
+
+#if WIENER_3_INPUT
+extern Int *pDepthIntTab_pr[NO_TEST_FILT+2];
+extern Int weights[MAX_SQR_FILT_LENGTH];
+extern Int depth[MAX_SQR_FILT_LENGTH];
+#endif
 
 extern Int depthInt9x9Sym[22];
 extern Int depthInt7x7Sym[14];
@@ -176,11 +273,44 @@ protected:
 
 	// temporary picture buffer
 	TComPicYuv*		m_pcTempPicYuv;																					///< temporary picture buffer for ALF processing
-
+#if (WIENER_3_INPUT && ALF_MEM_PATCH)
+  TComPicYuv* m_pcTempPicPredYuv;
+  TComPicYuv* m_pcTempPicResiYuv;   
+#endif  
 	// ------------------------------------------------------------------------------------------------------------------
 	// For luma component
 	// ------------------------------------------------------------------------------------------------------------------
 #if QC_ALF
+#if WIENER_3_INPUT 
+  Int  get_mem2Dint(Int ***array2D, Int rows, Int columns);
+  Void free_mem2Dint(Int **array2D);
+   
+  static Int pattern9x9Sym[SQR_FILT_LENGTH_9];
+  static Int weights9x9Sym[SQR_FILT_LENGTH_9SYM];
+  static Int pattern9x9Sym_Quart[45];
+  static Int pattern7x7Sym[SQR_FILT_LENGTH_7];
+  static Int weights7x7Sym[SQR_FILT_LENGTH_7SYM];
+  static Int pattern7x7Sym_Quart[45];
+  static Int pattern5x5Sym[SQR_FILT_LENGTH_5];
+  static Int weights5x5Sym[SQR_FILT_LENGTH_5SYM];
+  static Int pattern5x5Sym_Quart[45];
+  static Int pattern9x9Sym_9[SQR_FILT_LENGTH_9];
+  static Int pattern9x9Sym_7[SQR_FILT_LENGTH_7];
+  static Int pattern9x9Sym_5[SQR_FILT_LENGTH_5];
+  static Int pattern3x3Sym_Quart[6];
+  static Int pattern1x1Sym_Quart[6];
+  static Int pattern9x9Sym_3[SQR_FILT_LENGTH_3];
+  static Int pattern9x9Sym_1[SQR_FILT_LENGTH_1];
+  static Int pattern1x1Sym[SQR_FILT_LENGTH_1];
+  static Int pattern3x3Sym[SQR_FILT_LENGTH_3];
+  static Int weights3x3Sym[SQR_FILT_LENGTH_3SYM];
+  static Int weights1x1Sym[SQR_FILT_LENGTH_1SYM];
+  static Int *patternTab_pr[NO_TEST_FILT+2];
+  static Int sqrFiltLengthTab_pr[NO_TEST_FILT+2];
+  static Int *weightsTab_pr[NO_TEST_FILT+2];
+  static Int *patternTab_filt_pr[NO_TEST_FILT+2];
+  static Int *patternMapTab_pr[NO_TEST_FILT+2];
+#else
   static Int pattern9x9Sym[41];
   static Int weights9x9Sym[22];
   static Int pattern9x9Sym_Quart[42];
@@ -193,7 +323,7 @@ protected:
   static Int pattern9x9Sym_9[41];
   static Int pattern9x9Sym_7[25];
   static Int pattern9x9Sym_5[13];
-
+#endif
   static Int *patternTab_filt[NO_TEST_FILT];
   static Int flTab[NO_TEST_FILT];
   static Int *patternTab[NO_TEST_FILT]; 
@@ -206,11 +336,16 @@ protected:
 #if !ALF_MEM_PATCH
   imgpel **ImgDec;
   imgpel **ImgRest;
+#if WIENER_3_INPUT
+  imgpel **ImgResi;
+  imgpel **ImgPred;
+  imgpel **imgYr_pad;
+  imgpel **imgYp_pad;
+#endif  
 #endif
   imgpel **imgY_pad;
   imgpel **imgY_var;
   Int    **imgY_temp;
-
   Int **filterCoeffSym;
   Int **filterCoeffPrevSelected;
   Int **filterCoeffTmp;
@@ -218,15 +353,19 @@ protected:
 
 	/// ALF for luma component
   Void	xALFLuma_qc				( TComPic* pcPic, ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest );
-  Void	xCUAdaptive_qc			( TComPic*	  pcPic, ALFParam* pcAlfParam, imgpel **imgY_rec_post, imgpel **imgY_rec );
+  Void  xCUAdaptive_qc                  ( TComPic*        pcPic, ALFParam* pcAlfParam, imgpel **imgY_rec_post, imgpel **imgY_rec );
   Void	xSubCUAdaptive_qc	( TComDataCU* pcCU,  ALFParam* pcAlfParam, imgpel **imgY_rec_post, imgpel **imgY_rec,
-													UInt uiAbsPartIdx, UInt uiDepth );
-
+				    UInt uiAbsPartIdx, UInt uiDepth );
+#if WIENER_3_INPUT
+  Void	xALFLuma_qc ( TComPic* pcPic, ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, TComPicYuv* pcPicPred, TComPicYuv* pcPicResi );
+  Void  filterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int filtNo_resi, int filtNo_pred, int bits_rec, int bits_pred, int bits_resi);
+  Void  subfilterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int filtNo_resi, int filtNo_pred, int start_height, int end_height, int start_width, int end_width, int bits_rec, int bits_pred, int bits_resi);
+#endif  
   Void calcVar(imgpel **imgY_var, imgpel **imgY_pad,int pad_size, int fl, int img_height, int img_width);
-  Void filterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec,int filtNo);
-  Void subfilterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width);
+  Void  filterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec,int filtNo);
+  Void  subfilterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width);
 
-  Void DecFilter_qc(imgpel** imgY_rec,ALFParam* pcAlfParam);
+  Void  DecFilter_qc(imgpel** imgY_rec,ALFParam* pcAlfParam);
   Void reconstructFilterCoeffs(ALFParam* pcAlfParam,int **pfilterCoeffSym, int bit_depth);
   Void getCurrentFilter(int **filterCoeffSym,ALFParam* pcAlfParam);
   Void padImage(imgpel **imgY,  imgpel **imgY_pad, int fl, int img_height, int img_width);
@@ -252,10 +391,17 @@ protected:
 #if ALF_MEM_PATCH
   Void calcVar(imgpel **imgY_var, imgpel *imgY_pad, int pad_size, int fl, int img_height, int img_width, int img_stride);
   Void DecFilter_qc(imgpel* imgY_rec,ALFParam* pcAlfParam, int Stride);
+#if WIENER_3_INPUT
+  Void xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, UInt uiAbsPartIdx, UInt uiDepth, Int Stride);
+  Void xCUAdaptive_qc(TComPic* pcPic, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, Int Stride);
+  Void subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, int filtNo, int filtNo_resi, int filtNo_pred, int start_height, int end_height, int start_width, int end_width, int bits_rec, int bits_pred, int bits_resi, int Stride);
+  Void filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, int filtNo, int filtNo_resi, int filtNo_pred, int bits_rec, int bits_pred, int bits_resi, int Stride);
+#else  
   Void xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, UInt uiAbsPartIdx, UInt uiDepth, Int Stride);
   Void xCUAdaptive_qc(TComPic* pcPic, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, Int Stride);
   Void subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width, int Stride);
   Void filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, int filtNo, int Stride);
+#endif  
 #endif
 #if TSB_ALF_HEADER
   UInt  m_uiNumCUsInFrame;
@@ -309,3 +455,5 @@ public:
 };
 #endif
 #endif
+
+#endif //WIENER_3_INPUT

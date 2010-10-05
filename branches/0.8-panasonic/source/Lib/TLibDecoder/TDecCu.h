@@ -55,6 +55,10 @@ private:
   UInt                m_uiMaxDepth;       ///< max. number of depth
   TComYuv**           m_ppcYuvResi;       ///< array of residual buffer
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
+#if WIENER_3_INPUT
+  TComYuv**           m_ppcYuvP;        ///< array of prediction buffer
+  TComYuv**           m_ppcYuvQ;        ///< array of quantized prediction error buffer
+#endif
   TComDataCU**        m_ppcCU;            ///< CU data array
 
   // access channel
@@ -91,19 +95,34 @@ protected:
 
 #if PLANAR_INTRA
   Void xReconIntraPlanar        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if WIENER_3_INPUT
+  Void xDecodePlanarTexture     ( TComDataCU* pcCU, UInt uiPartIdx, Pel* piReco, Pel* piP, Pel* piQ, Pel* piPred, Pel* piResi, UInt uiStride, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, TextType ttText );
+#else
   Void xDecodePlanarTexture     ( TComDataCU* pcCU, UInt uiPartIdx, Pel* piReco, Pel* piPred, Pel* piResi, UInt uiStride, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, TextType ttText );
+#endif
 #endif
 
 #if HHI_RQT_INTRA
   Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if WIENER_3_INPUT  
+  Void  xIntraRecLumaBlk        ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPYuv, TComYuv* pcQYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
+  Void  xIntraRecChromaBlk      ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPYuv, TComYuv* pcQYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, UInt uiChromaId );
+  Void  xIntraRecQT             ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPYuv, TComYuv* pcQYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
+#else
   Void  xIntraRecLumaBlk        ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
   Void  xIntraRecChromaBlk      ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, UInt uiChromaId );
   Void  xIntraRecQT             ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
 #endif
+#endif
 
   Void xDecodeInterTexture      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if WIENER_3_INPUT
+  Void xDecodeIntraTexture      ( TComDataCU* pcCU, UInt uiPartIdx, Pel* piReco, Pel* piP, Pel* piQ, Pel* pPred, Pel* piResi, UInt uiStride, TCoeff* pCoeff, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, UInt indexROT );
+  Void xRecurIntraInvTransChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piResi, Pel* piPred, Pel* piReco, Pel* piP, Pel* piQ, UInt uiStride, TCoeff* piCoeff, UInt uiWidth, UInt uiHeight, UInt uiTrMode, UInt uiCurrTrMode, TextType eText );
+#else  
   Void xDecodeIntraTexture      ( TComDataCU* pcCU, UInt uiPartIdx, Pel* piReco, Pel* pPred, Pel* piResi, UInt uiStride, TCoeff* pCoeff, UInt uiWidth, UInt uiHeight, UInt uiCurrDepth, UInt indexROT );
   Void xRecurIntraInvTransChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piResi, Pel* piPred, Pel* piReco, UInt uiStride, TCoeff* piCoeff, UInt uiWidth, UInt uiHeight, UInt uiTrMode, UInt uiCurrTrMode, TextType eText );
+#endif  
 
   Void xCopyToPic               ( TComDataCU* pcCU, TComPic* pcPic, UInt uiZorderIdx, UInt uiDepth );
   Void xCopyToPicLuma           ( TComPic* pcPic, UInt uiCUAddr, UInt uiZorderIdx, UInt uiDepth );

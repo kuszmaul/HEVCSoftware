@@ -103,6 +103,16 @@ protected:
   Int       m_iALFMaxLength;
 #endif
 
+#if WIENER_3_INPUT  
+  Int       m_iALF_enable_Y;
+  Int       m_iALF_enable_U;
+  Int       m_iALF_enable_V;
+  Int       m_iALF_fs_max_rec;
+  Int       m_iALF_fs_max_pred;
+  Int       m_iALF_fs_max_qpe;
+#endif
+  
+  
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -223,6 +233,21 @@ public:
   Void      setALFMinLength                 ( Int   i )      { m_iALFMinLength            = i; }  //MS:
   Void      setALFMaxLength                 ( Int   i )      { m_iALFMaxLength            = i; }  //MS:
 #endif
+  
+#if WIENER_3_INPUT
+  Void      setALFEnable                    ( Int a, Int b, Int c ) //MN
+  {
+    m_iALF_enable_Y = a;
+    m_iALF_enable_U = b;
+    m_iALF_enable_V = c;
+  }
+  Void      setALFMaxFilterSize             ( Int a, Int b, Int c ) //MN
+  {
+    m_iALF_fs_max_rec  = a;
+    m_iALF_fs_max_pred = b;
+    m_iALF_fs_max_qpe  = c;
+  }
+#endif
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
@@ -286,6 +311,16 @@ public:
   Int       getALFMaxLength                 ()      { return  m_iALFMaxLength;            } //MS:
 #endif
 
+#if WIENER_3_INPUT
+  Int      getALFEnableY                   ()      { return  m_iALF_enable_Y;   }//MN
+  Int      getALFEnableU                   ()      { return  m_iALF_enable_U;   }//MN
+  Int      getALFEnableV                   ()      { return  m_iALF_enable_V;   }//MN
+  Int      getALFMaxFilterSize_rec         ()      { return  m_iALF_fs_max_rec; }//MN
+  Int      getALFMaxFilterSize_pred        ()      { return  m_iALF_fs_max_pred;}//MN
+  Int      getALFMaxFilterSize_qpe         ()      { return  m_iALF_fs_max_qpe; }//MN
+#endif
+  
+  
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }

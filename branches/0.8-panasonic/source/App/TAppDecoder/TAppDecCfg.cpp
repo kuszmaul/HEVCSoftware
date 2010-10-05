@@ -56,7 +56,10 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   // set command line option strings/characters
   m_apcOpt->setCommandOption( 'b' );
   m_apcOpt->setCommandOption( 'o' );
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  m_apcOpt->setCommandOption( 'P' );  
+  m_apcOpt->setCommandOption( 'Q' );  
+#endif
   // command line parsing
   m_apcOpt->processCommandArgs( argc, argv );
   if( ! m_apcOpt->hasOptions() || !m_apcOpt->getValue( 'b' ) )
@@ -82,9 +85,17 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 Void TAppDecCfg::xSetCfgCommand   ( TAppOption* pcOpt )
 {
   m_pchBitstreamFile = m_pchReconFile = NULL;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  m_pchPFile = NULL;
+  m_pchQFile = NULL;
+#endif
 
   if ( pcOpt->getValue( 'b' ) ) m_pchBitstreamFile = pcOpt->getValue( 'b' );
   if ( pcOpt->getValue( 'o' ) ) m_pchReconFile     = pcOpt->getValue( 'o' );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  if ( pcOpt->getValue( 'P' ) ) m_pchPFile     = pcOpt->getValue( 'P' );
+  if ( pcOpt->getValue( 'Q' ) ) m_pchQFile     = pcOpt->getValue( 'Q' );  
+#endif  
 }
 
 

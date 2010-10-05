@@ -130,7 +130,16 @@ Void TAppDecTop::decode()
   {
     m_cTempPicYuv.destroy();
   }
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  if ( bAlloc )
+  {
+    m_cTempPicPYuv.destroy();
+  }
+  if ( bAlloc )
+  {
+    m_cTempPicQYuv.destroy();
+  }
+#endif
   // delete buffers
   m_cTDecTop.deletePicBuffer();
 
@@ -151,7 +160,16 @@ Void TAppDecTop::xCreateDecLib()
   {
     m_cTVideoIOYuvReconFile.open( m_pchReconFile, true );         // write mode
   }
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  if ( m_pchPFile )
+  {
+    m_cTVideoIOYuvPFile.open( m_pchPFile, true );          // write mode
+  }
+  if ( m_pchQFile )
+  {
+    m_cTVideoIOYuvQFile.open( m_pchQFile, true );          // write mode
+  }  
+#endif
   // create decoder class
   m_cTDecTop.create();
 }
@@ -165,6 +183,17 @@ Void TAppDecTop::xDestroyDecLib()
   {
     m_cTVideoIOYuvReconFile. close();
   }
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  if ( m_pchPFile )
+  {
+    m_cTVideoIOYuvPFile. close();
+  }
+  if ( m_pchQFile )
+  {
+    m_cTVideoIOYuvQFile. close();
+  }
+#endif
+  
 
   // destroy decoder class
   m_cTDecTop.destroy();
@@ -177,7 +206,7 @@ Void TAppDecTop::xInitDecLib()
 }
 
 /** \param pcListPic list of pictures to be written to file
-    \aram  bFirst    first picture?
+    \aram  bFirst     first picture?
     \todo            DYN_REF_FREE should be revised
  */
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
@@ -194,7 +223,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
       if ( g_uiBitIncrement )
       {
         TComPicYuv* pcPicD = &m_cTempPicYuv;
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+        TComPicYuv* pcPicPD = &m_cTempPicPYuv;
+        TComPicYuv* pcPicQD = &m_cTempPicQYuv;
+#endif
+        
         // allocate temporary buffer if first time
         if ( !rbAlloc )
         {
@@ -203,17 +236,44 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
                                 g_uiMaxCUWidth,
                                 g_uiMaxCUHeight,
                                 g_uiMaxCUDepth );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+          m_cTempPicPYuv.create( pcPic->getPicYuvRec()->getWidth (),
+                                 pcPic->getPicYuvRec()->getHeight(),
+                                 g_uiMaxCUWidth,
+                                 g_uiMaxCUHeight,
+                                 g_uiMaxCUDepth );
+          m_cTempPicQYuv.create( pcPic->getPicYuvRec()->getWidth (),
+                                 pcPic->getPicYuvRec()->getHeight(),
+                                 g_uiMaxCUWidth,
+                                 g_uiMaxCUHeight,
+                                 g_uiMaxCUDepth );
+#endif
           rbAlloc = true;
         }
 
         // descaling of frame
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+        xDeScalePic( pcPic, pcPicD, pcPicPD, pcPicQD );
+#else        
         xDeScalePic( pcPic, pcPicD );
-
+#endif
         // write to file
         if ( m_pchReconFile )
         {
           m_cTVideoIOYuvReconFile.write( pcPicD, pcPic->getSlice()->getSPS()->getPad() );
         }
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+        // write to file
+        if ( m_pchPFile )
+        {
+          m_cTVideoIOYuvPFile.write( pcPicPD, pcPic->getSlice()->getSPS()->getPad() );
+        }        
+        // write to file
+        if ( m_pchQFile )
+        {
+          m_cTVideoIOYuvQFile.write( pcPicQD, pcPic->getSlice()->getSPS()->getPad() );
+        }        
+#endif        
       }
       // normal case
       else
@@ -223,6 +283,18 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
         {
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), pcPic->getSlice()->getSPS()->getPad() );
         }
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+        // write to file
+        if ( m_pchPFile )
+        {
+          m_cTVideoIOYuvPFile.write( pcPic->getPicYuvP(), pcPic->getSlice()->getSPS()->getPad() );
+        }
+        // write to file
+        if ( m_pchQFile )
+        {
+          m_cTVideoIOYuvQFile.write( pcPic->getPicYuvQ(), pcPic->getSlice()->getSPS()->getPad() );
+        }
+#endif            
       }
 
       // update POC of display order
@@ -253,11 +325,30 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
   }
 }
 
-/** \param    pcPic   input picture to be descaled
-    \retval   pcPicD  output picture which is descaled
+/** \param    pcPic    input picture to be descaled
+    \retval    pcPicD  output picture which is descaled
  */
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+Void TAppDecTop::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD , TComPicYuv* pcPicPD , TComPicYuv* pcPicQD )
+#else
 Void TAppDecTop::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
+#endif        
 {
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  Pel*  pPD   = pcPicPD->getLumaAddr();
+  Pel*  pPDCb = pcPicPD->getCbAddr();
+  Pel*  pPDCr = pcPicPD->getCrAddr();
+  Pel*  pP    = pcPic->getPicYuvP()->getLumaAddr();
+  Pel*  pPCb  = pcPic->getPicYuvP()->getCbAddr();
+  Pel*  pPCr  = pcPic->getPicYuvP()->getCrAddr();
+  
+  Pel*  pQD   = pcPicQD->getLumaAddr();
+  Pel*  pQDCb = pcPicQD->getCbAddr();
+  Pel*  pQDCr = pcPicQD->getCrAddr();
+  Pel*  pQ    = pcPic->getPicYuvQ()->getLumaAddr();
+  Pel*  pQCb  = pcPic->getPicYuvQ()->getCbAddr();
+  Pel*  pQCr  = pcPic->getPicYuvQ()->getCrAddr();
+#endif
   Pel*  pRecD   = pcPicD->getLumaAddr();
   Pel*  pRecDCb = pcPicD->getCbAddr();
   Pel*  pRecDCr = pcPicD->getCrAddr();
@@ -271,7 +362,9 @@ Void TAppDecTop::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
   Int   offset  = (g_uiBitIncrement>0)?(1<<(g_uiBitIncrement-1)):0;
 
   Int   x, y;
-
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+  Int   Q_shift = g_uiBitIncrement+1;
+#endif
   // ------------------------------------------------------------------------------------------------------------------
   // Luma descaling
   // ------------------------------------------------------------------------------------------------------------------
@@ -282,12 +375,26 @@ Void TAppDecTop::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
     {
 #if IBDI_NOCLIP_RANGE
       pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      pPD  [x] = ( pP  [x] + offset ) >> g_uiBitIncrement;
+      pQD  [x] = ( pQ  [x] + offset ) >> Q_shift;
+#endif      
 #else
       pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      pPD  [x] = ClipMax( ( pP  [x] + offset ) >> g_uiBitIncrement );
+      pQD  [x] = ClipMax( ( pQ  [x] + offset ) >> Q_shift );
+#endif      
 #endif
     }
     pRecD += iStride;
     pRec  += iStride;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    pPD += iStride;
+    pP  += iStride;
+    pQD += iStride;
+    pQ  += iStride;
+#endif    
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -305,15 +412,39 @@ Void TAppDecTop::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
 #if IBDI_NOCLIP_RANGE
       pRecDCb[x] = ( pRecCb[x] + offset) >> g_uiBitIncrement;
       pRecDCr[x] = ( pRecCr[x] + offset) >> g_uiBitIncrement;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      pPDCb  [x] = ( pPCb[x] + offset) >> g_uiBitIncrement;
+      pPDCr  [x] = ( pPCr[x] + offset) >> g_uiBitIncrement;
+      pQDCb  [x] = ( pQCb[x] + offset) >> Q_shift;
+      pQDCr  [x] = ( pQCr[x] + offset) >> Q_shift;
+#endif
+            
 #else
       pRecDCb[x] = ClipMax( ( pRecCb[x] + offset) >> g_uiBitIncrement );
       pRecDCr[x] = ClipMax( ( pRecCr[x] + offset) >> g_uiBitIncrement );
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+      pPDCb  [x] =  ClipMax( ( pPCb[x] + offset) >> g_uiBitIncrement );
+      pPDCr  [x] =  ClipMax( ( pPCr[x] + offset) >> g_uiBitIncrement );
+      pQDCb  [x] =  ClipMax( ( pQCb[x] + offset) >> Q_shift );
+      pQDCr  [x] =  ClipMax( ( pQCr[x] + offset) >> Q_shift );
+#endif
+      
 #endif
     }
     pRecDCb += iStride;
     pRecCb  += iStride;
     pRecDCr += iStride;
     pRecCr  += iStride;
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES  
+    pPDCb += iStride;
+    pPCb  += iStride;
+    pPDCr += iStride;
+    pPCr  += iStride;
+    pQDCb += iStride;
+    pQCb  += iStride;
+    pQDCr += iStride;
+    pQCr  += iStride;    
+#endif    
   }
 }
 
