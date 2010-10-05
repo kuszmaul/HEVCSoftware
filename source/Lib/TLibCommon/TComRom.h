@@ -287,6 +287,10 @@ extern       UInt g_uiBitDepth;
 extern       UInt g_uiBitIncrement;
 extern       UInt g_uiIBDI_MAX;
 extern       UInt g_uiBASE_MAX;
+#if WIENER_3_INPUT
+extern       UInt g_uiIBDI_MAX_Q;
+extern       UInt g_uiIBDI_MAX_Q_D; 
+#endif
 
 // ====================================================================================================================
 // Texture type to integer mapping

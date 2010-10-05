@@ -2346,6 +2346,33 @@ Void TEncSbac::codeAlfUvlc       ( UInt uiCode )
   }
 }
 
+#if (WIENER_3_INPUT && !QC_ALF)
+Void TEncSbac::golombEncode(Int coeff, Int k)
+{
+  Int q, i, m;
+  Int symbol = abs(coeff);
+
+  m = (int)pow(2.0, k);
+  q = symbol / m;
+
+  codeAlfUvlc       ( q );
+
+  for(i = 0; i < k; i++)
+  {
+    m_pcBinIf->encodeBin( symbol & 0x01, m_cALFFlagSCModel.get( 0, 0, 0 ) );//Flags
+    symbol >>= 1;
+  }
+  if ( coeff > 0 )
+  {
+    m_pcBinIf->encodeBin( 1, m_cALFFlagSCModel.get( 0, 0, 0 ) );
+  }
+  else if ( coeff < 0 )
+  {
+    m_pcBinIf->encodeBin( 0, m_cALFFlagSCModel.get( 0, 0, 0 ) );
+  }  
+}
+#endif
+
 Void TEncSbac::codeAlfSvlc       ( Int iCode )
 {
   Int i;

@@ -2474,6 +2474,34 @@ Void TDecSbac::parseAlfFlag (UInt& ruiVal)
   ruiVal = uiSymbol;
 }
 
+
+#if (WIENER_3_INPUT && !QC_ALF)
+Int TDecSbac::golombDecode(Int k)
+{
+  UInt uiSymbol;
+  Int q = -1;
+  Int nr = 0;
+  Int m = (Int)pow(2.0, k);
+  Int a;
+  
+  parseAlfUvlc (uiSymbol);
+  q=uiSymbol;
+  
+  for(a = 0; a < k; ++a)          // read out the sequential log2(M) bits
+  {
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cALFFlagSCModel.get( 0, 0, 0 ) );    
+    if(uiSymbol)
+      nr += 1 << a;
+  }
+  nr += q * m;                    // add the bits and the multiple of M
+  if(nr != 0){
+   m_pcTDecBinIf->decodeBin( uiSymbol, m_cALFFlagSCModel.get( 0, 0, 0 ) );
+   nr = (uiSymbol)? nr: -nr;
+  }
+  return nr;  
+}
+#endif
+
 #if TSB_ALF_HEADER
 Void TDecSbac::parseAlfFlagNum( UInt& ruiVal, UInt minValue, UInt depth )
 {

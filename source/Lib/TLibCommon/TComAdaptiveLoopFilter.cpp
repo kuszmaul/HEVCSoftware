@@ -39,6 +39,531 @@
 #include <stdio.h>
 #include <math.h>
 
+
+#if (WIENER_3_INPUT && !QC_ALF)
+
+//-----------------------------------------------------------------------------
+// Constructor/destructor
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Default constructor
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+Plane<T>::Plane()
+{
+  m_width = 0;
+  m_height = 0;
+  m_pitch = 0;
+  m_border_size =0;
+  m_data = NULL;
+  m_origin = NULL;
+}
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Constructor
+ *
+ * \param[in] width Width of plane
+ * \param[in] height Height of plane
+ * \param[in] border_size Number of samples added at each border
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+Plane<T>::Plane(int width, int height, int border_size)
+{
+  m_data = NULL;
+  set_size(width, height, border_size);
+}
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Destructor
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+Plane<T>::~Plane()
+{
+  if (m_data != NULL)
+    delete[] m_data;
+}
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Set size
+ *
+ * \param[in] width Width of plane
+ * \param[in] height Height of plane
+ * \param[in] border_size Number of samples added at each border
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+void Plane<T>::set_size(int width, int height, int border_size)
+{
+  if (m_data != NULL)
+    delete[] m_data;
+
+  m_width = width;
+  m_height = height;
+  m_pitch = width + 2 * border_size;
+  m_border_size = border_size;
+
+  m_data = new T[m_pitch * (height + 2 * border_size)];
+  m_origin = m_data + border_size * m_pitch + border_size;
+}
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Fill a rectangular window with a given value
+ *
+ * \param[in] row Top row of window
+ * \param[in] col Leftmost column of window
+ * \param[in] val Value to be assigned
+ * \param[in] numRows Number of rows to fill
+ * \param[in] numCols Number of columns to fill
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+void Plane<T>::set(int row, int col, T val, int numRows, int numCols)
+{
+  int i, j;
+
+  for (i = 0; i < numRows; i++)
+  {
+    for (j = 0; j < numCols; j++)
+    {
+      (*this)[row+i][col+j] = val;
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+/*!
+ * \brief Fill border samples by mirroring
+ */
+//-----------------------------------------------------------------------------
+template <typename T>
+void Plane<T>::mirror()
+{
+  int i, j;
+
+  for (i = 0; i < m_height; i++)
+  {
+    for (j = 0; j < m_border_size; j++)
+    {
+      (*this)[i][-(1 + j)] = (*this)[i][1 + j];
+      (*this)[i][m_width + j] = (*this)[i][m_width - 2 - j];
+    }
+  }
+
+  for (i = 0; i < m_border_size; i++)
+  {
+    for (j = 0; j < m_pitch; j++)
+    {
+      (*this)[-(1 + i)][j - m_border_size] = (*this)[1 + i][j - m_border_size];
+      (*this)[m_height + i][j - m_border_size] = (*this)[m_height - 2 - i][j - m_border_size];
+    }
+  }
+}
+
+// Explicit instantiations
+template class Plane<Pel>;
+template class Plane<Int>;
+
+
+TComAdaptiveLoopFilter::TComAdaptiveLoopFilter()
+{
+
+}
+
+
+Void TComAdaptiveLoopFilter::allocALFParam(ALFParam* pAlfParam)
+{  
+  Int qtable [FILTER_PRECISION_TABLE_NUMBER]={8,16,32,64,128,256,512,1024,2048,4096,8192};
+  Int qtable2[FILTER_PRECISION_TABLE_NUMBER]={3, 4, 5, 6,  7,  8,  9,  10,  11,  12,  13};
+  Int qtable3[FILTER_PRECISION_TABLE_NUMBER]={4, 8,16,32, 64,128,256, 512,1024,2048,4096};
+  
+  for (Int i=0; i<FILTER_PRECISION_TABLE_NUMBER; i++)
+  {
+    pAlfParam->filter_precision_table      [i] = qtable [i];
+    pAlfParam->filter_precision_table_shift[i] = qtable2[i];
+    pAlfParam->filter_precision_table_half [i] = qtable3[i];
+  }
+ 
+  get_mem2Dint   (&(pAlfParam->coeffs), 3, 1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH);
+  ::memset(pAlfParam->coeffs[0], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+  ::memset(pAlfParam->coeffs[1], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+  ::memset(pAlfParam->coeffs[2], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+
+    
+  get_mem2Dint   (&(pAlfParam->dont_care), 3, 1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH);
+  ::memset(pAlfParam->dont_care[0], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+  ::memset(pAlfParam->dont_care[1], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+  ::memset(pAlfParam->dont_care[2], 0, sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH));
+
+  
+  pAlfParam->alf_flag        = false;
+  pAlfParam->cu_control_flag = false;
+    
+  for (Int c=0;c<3;c++)
+  {
+    pAlfParam->enable_flag  [c]    = 0;
+    pAlfParam->golomb_enable[c]    = 0;
+    pAlfParam->golomb_code  [c][0] = 0;
+    pAlfParam->golomb_code  [c][1] = 0;
+  }
+}
+
+Void TComAdaptiveLoopFilter::freeALFParam(ALFParam* pAlfParam)
+{  
+  free_mem2Dint   (pAlfParam->coeffs);
+  free_mem2Dint   (pAlfParam->dont_care);
+}
+
+Void TComAdaptiveLoopFilter::destroy()
+{
+}
+
+Void TComAdaptiveLoopFilter::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth )
+{
+}
+
+Void TComAdaptiveLoopFilter::copyALFParam(ALFParam* pDesAlfParam, ALFParam* pSrcAlfParam)
+{
+  pDesAlfParam->alf_flag = pSrcAlfParam->alf_flag;
+  pDesAlfParam->cu_control_flag = pSrcAlfParam->cu_control_flag;
+  
+  for (Int c=0;c<3;c++)
+  {
+    pDesAlfParam->filter_length_RD_rec [c]    = pSrcAlfParam->filter_length_RD_rec [c];
+    pDesAlfParam->filter_length_RD_pred[c]    = pSrcAlfParam->filter_length_RD_pred[c];
+    pDesAlfParam->filter_length_RD_qpe [c]    = pSrcAlfParam->filter_length_RD_qpe [c];
+    pDesAlfParam->enable_flag          [c]    = pSrcAlfParam->enable_flag          [c];
+    pDesAlfParam->golomb_enable        [c]    = pSrcAlfParam->golomb_enable        [c];
+    pDesAlfParam->golomb_code          [c][0] = pSrcAlfParam->golomb_code          [c][0];
+    pDesAlfParam->golomb_code          [c][1] = pSrcAlfParam->golomb_code          [c][1];
+    pDesAlfParam->filter_precision     [c][0] = pSrcAlfParam->filter_precision     [c][0];
+    pDesAlfParam->filter_precision     [c][1] = pSrcAlfParam->filter_precision     [c][1];
+    pDesAlfParam->filter_precision     [c][2] = pSrcAlfParam->filter_precision     [c][2];
+  }
+  
+  ::memcpy(pDesAlfParam->coeffs[0], pSrcAlfParam->coeffs[0], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+  ::memcpy(pDesAlfParam->coeffs[1], pSrcAlfParam->coeffs[1], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+  ::memcpy(pDesAlfParam->coeffs[2], pSrcAlfParam->coeffs[2], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+
+  ::memcpy(pDesAlfParam->dont_care[0], pSrcAlfParam->dont_care[0], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+  ::memcpy(pDesAlfParam->dont_care[1], pSrcAlfParam->dont_care[1], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+  ::memcpy(pDesAlfParam->dont_care[2], pSrcAlfParam->dont_care[2], sizeof(Int)* (1+3*MAX_WIENER_FILTER_LENGTH*MAX_WIENER_FILTER_LENGTH) );
+}
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// interface function for actual ALF process
+// --------------------------------------------------------------------------------------------------------------------
+
+/**
+    \param  pcPic         picture (TComPic) class (input/output)
+    \param  pcAlfParam    ALF parameter
+ */
+Void TComAdaptiveLoopFilter::ALFProcess(  TComPic* pcPic , ALFParam* pcAlfParam )
+{
+  if(!pcAlfParam->alf_flag)
+  {
+    return;
+  }
+  
+  Int height;
+  Int width;
+  Int stride;
+  Int stride_out;
+  
+  Pel* pDec;
+  Pel* pP;
+  Pel* pQ;
+  Pel* pout;
+  
+  TComPicYuv* pcPicYuvRec          = pcPic->getPicYuvRec();
+  TComPicYuv* pcPicYuvP            = pcPic->getPicYuvP();
+  TComPicYuv* pcPicYuvQ            = pcPic->getPicYuvQ();
+
+  TComPicYuv* pcPicYuvFiltered = new TComPicYuv ;
+  pcPicYuvFiltered->create(pcPicYuvRec->getWidth(), pcPicYuvRec->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth ) ;
+  
+  
+  for (Int c = 0; c < 3; c++)
+  {
+    if (1 == pcAlfParam->enable_flag[c])
+    {
+      if (c==0)
+      {
+        pDec = pcPicYuvRec->getLumaAddr();
+        pP   = pcPicYuvP->getLumaAddr();
+        pQ   = pcPicYuvQ->getLumaAddr();
+        pout = pcPicYuvFiltered->getLumaAddr();
+        
+        height      = pcPic->getSlice()->getSPS()->getHeight();
+        width       = pcPic->getSlice()->getSPS()->getWidth ();
+        stride      = pcPicYuvRec->getStride();
+        stride_out  = pcPicYuvFiltered->getStride();
+      }
+      else if (c==1)
+      {
+        pDec = pcPicYuvRec->getCbAddr();
+        pP   = pcPicYuvP->getCbAddr();
+        pQ   = pcPicYuvQ->getCbAddr();
+        pout = pcPicYuvFiltered->getCbAddr();
+        
+        height      = (pcPic->getSlice()->getSPS()->getHeight())>>1;
+        width       = (pcPic->getSlice()->getSPS()->getWidth ())>>1;            
+        stride      = pcPicYuvRec->getCStride();
+        stride_out  = pcPicYuvFiltered->getCStride();
+      }
+      else
+      {
+        pDec = pcPicYuvRec->getCrAddr();
+        pP   = pcPicYuvP->getCrAddr();
+        pQ   = pcPicYuvQ->getCrAddr();      
+        pout = pcPicYuvFiltered->getCrAddr();
+        
+        height      = (pcPic->getSlice()->getSPS()->getHeight())>>1;
+        width       = (pcPic->getSlice()->getSPS()->getWidth ())>>1;            
+        stride      = pcPicYuvRec->getCStride();
+        stride_out  = pcPicYuvFiltered->getCStride();
+      }
+    
+      filter (pcAlfParam, pDec, pout, pP, pQ, c, height, width, stride, stride_out);
+      
+      if (0 == c)
+      {
+        pcPicYuvFiltered->copyToPicLuma( pcPicYuvRec );
+      }
+      else if (1 == c)
+      {
+        pcPicYuvFiltered->copyToPicCb( pcPicYuvRec );
+      }
+      else
+      {
+        pcPicYuvFiltered->copyToPicCr( pcPicYuvRec );
+      }
+    }
+  }
+  
+  pcPicYuvFiltered->destroy() ;
+  delete pcPicYuvFiltered ;  
+}
+
+Void TComAdaptiveLoopFilter::filter(ALFParam* pAlfParam, Pel *in, Pel *out, Pel *pred, Pel *qpe, Int component, Int height, Int width, Int Stride_in, Int Stride_out)
+{
+
+  if (1 == pAlfParam->enable_flag[component])
+  {
+    Pel *p_out = out;
+    
+    Pel* pPel_1;
+    Pel* pPel_2;
+    Pel* pPel_3;
+    
+    Plane<Pel> p_xY (width, height, (MAX_WIENER_FILTER_LENGTH - 1) / 2);
+    Plane<Pel> p_pY (width, height, (MAX_WIENER_FILTER_LENGTH - 1) / 2);
+    Plane<Int> p_qpe(width, height, (MAX_WIENER_FILTER_LENGTH - 1) / 2);
+  
+    pPel_1 = in;
+    pPel_2 = pred; 
+    pPel_3 = qpe; 
+    for (Int i = 0; i < height; i++)
+    {
+      for (Int j = 0; j < width; j++)
+      {
+        p_xY [i][j] = pPel_1 [j];
+        p_pY [i][j] = pPel_2 [j];
+        p_qpe[i][j] = pPel_3 [j] - g_uiIBDI_MAX_Q;
+      }
+      pPel_1 +=Stride_in;
+      pPel_2 +=Stride_in;
+      pPel_3 +=Stride_in;
+    }
+
+    p_xY.mirror();
+    p_pY.mirror();
+    p_qpe.mirror();
+    
+    filter(pAlfParam, 
+           p_xY, 
+           out, 
+           p_pY, 
+           p_qpe, 
+           width, 
+           height,
+           Stride_out,
+           component);
+  }
+  else
+  {
+    //leave as is
+  }
+}
+
+
+
+
+
+Void TComAdaptiveLoopFilter::filter  (ALFParam* pAlfParam,
+                                      const Plane<Pel> &xY,
+                                      Pel *oY, 
+                                      const Plane<Pel> &pY, 
+                                      const Plane<Int> &qpe, 
+                                      Int width, 
+                                      Int height, 
+                                      Int Stride, 
+                                      Int component)
+{
+  
+      
+
+  
+  int i, j, m, n, sum;
+  int tmp_rec1  = pAlfParam->filter_length_RD_rec [component];
+  int tmp_pred1 = pAlfParam->filter_length_RD_pred[component];
+  int tmp_qpe1  = pAlfParam->filter_length_RD_qpe [component];
+  int tmp_rec  = (tmp_rec1  - 1) >> 1;
+  int tmp_pred = (tmp_pred1 - 1) >> 1;
+  int tmp_qpe  = (tmp_qpe1  - 1) >> 1;
+
+  Pel *p_oY = oY;
+  const Pel *uc_ptr;
+  const Int *s_ptr;
+  int pitch;
+  int filter_precision_half  = pAlfParam->filter_precision_table_half  [pAlfParam->filter_precision[component][0]];
+  int filter_precision_shift = pAlfParam->filter_precision_table_shift [pAlfParam->filter_precision[component][0]];
+
+  Int half = pAlfParam->filter_precision_table_half [pAlfParam->filter_precision[component][0]];
+  Int shift= pAlfParam->filter_precision_table_shift[pAlfParam->filter_precision[component][0]];
+  
+  
+  Int *p_coeffs = new Int[tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1+tmp_qpe1*tmp_qpe1+1];
+  
+  for (i = 0; i < tmp_rec1*tmp_rec1; i++)
+  {
+    p_coeffs[i]=pAlfParam->coeffs[component][i];
+  }
+  for (i = tmp_rec1*tmp_rec1; i < tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1; i++)
+  {
+    p_coeffs[i] =pAlfParam->coeffs[component][i]*pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][0]];
+    p_coeffs[i]/=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][1]];
+  }
+  for (i = tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1; i < tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1+tmp_qpe1*tmp_qpe1; i++)
+  {
+    p_coeffs[i] =pAlfParam->coeffs[component][i]*pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][0]];
+    p_coeffs[i]/=pAlfParam->filter_precision_table[pAlfParam->filter_precision[component][2]];
+  }
+  p_coeffs[tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1+tmp_qpe1*tmp_qpe1]=pAlfParam->coeffs[component][tmp_rec1*tmp_rec1+tmp_pred1*tmp_pred1+tmp_qpe1*tmp_qpe1];
+  
+  for (j = 0; j < height; j++) 
+  {
+    for (i = 0; i < width; i++) 
+    {
+//       int *co = (pAlfParam->coeffs)[component];
+      Int *co = p_coeffs;
+            
+      sum = 0;
+      
+      uc_ptr = xY[j - tmp_rec] + (i - tmp_rec);
+      pitch = xY.get_pitch() - tmp_rec1;
+
+      for (n = 0; n < tmp_rec1; n++)
+      {        
+        for (m = 0; m < tmp_rec; m++)
+        {
+          sum += (*uc_ptr++) * (*co++);
+          sum += (*uc_ptr++) * (*co++);
+        }
+        sum += (*uc_ptr++) * (*co++);
+
+        uc_ptr += pitch;
+      }
+            
+      uc_ptr = pY[j - tmp_pred] + (i - tmp_pred);
+      pitch = pY.get_pitch() - tmp_pred1;
+
+      for (n = 0; n < tmp_pred1; n++)
+      {
+        for (m = 0; m < tmp_pred; m++)
+        {
+          sum += (*uc_ptr++) * (*co++);
+          sum += (*uc_ptr++) * (*co++);
+        }
+        sum += (*uc_ptr++) * (*co++);
+
+        uc_ptr += pitch;
+      }
+
+      s_ptr = qpe[j - tmp_qpe] + (i - tmp_qpe);
+      pitch = qpe.get_pitch() - tmp_qpe1;
+
+      for (n = 0; n < tmp_qpe1; n++) 
+      {//y
+        for (m = 0; m < tmp_qpe; m++)
+        {//x
+          sum += (*s_ptr++) * (*co++);
+          sum += (*s_ptr++) * (*co++);
+        }
+        sum += (*s_ptr++) * (*co++);
+
+        s_ptr += pitch;
+      }
+     
+      sum +=(*co++);
+      
+      sum  +=  filter_precision_half;
+      sum >>=  filter_precision_shift;
+      p_oY[i] = (Pel)Clip(sum);
+    }
+    p_oY +=Stride;
+  }  
+  
+  delete [] p_coeffs;
+}
+
+
+
+
+
+
+
+
+void TComAdaptiveLoopFilter::no_mem_exit(const char *where)
+{
+  printf ("Memory error in %s\n", where);
+  exit(0);
+}
+
+Int TComAdaptiveLoopFilter::get_mem1Dint(Int **array1D, Int raws)
+{
+  Int j;
+
+  if((*array1D      = (Int*)calloc(raws, sizeof(Int))) == NULL)
+    no_mem_exit("get_mem1Dint: array3D");
+
+  for(j = 0; j < raws; j++)
+    (*array1D)[j] = 0;
+  return sizeof(int)*raws;
+}
+
+void TComAdaptiveLoopFilter::free_mem1Dint(Int *array1D)
+{
+  if (array1D)
+    free (array1D);
+  else
+    no_mem_exit("free_mem1Dint: array1D");
+}
+
+
+
+#else
+
+
 #if HHI_ALF
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
@@ -834,7 +1359,11 @@ Void TComAdaptiveLoopFilter::xFrameChroma( TComPicYuv* pcPicDec, TComPicYuv* pcP
 // ====================================================================================================================
 #if QC_ALF
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern9x9Sym[SQR_FILT_LENGTH_9] = 
+#else
 Int TComAdaptiveLoopFilter::pattern9x9Sym[41] = 
+#endif
 {
                    0,
 	           1,  2,  3,
@@ -844,39 +1373,59 @@ Int TComAdaptiveLoopFilter::pattern9x9Sym[41] =
       15, 14, 13, 12, 11, 10,  9, 
            8,  7,  6,  5,  4,
 		       3,  2,  1,
-			       0
+		   0
 };
  
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::weights9x9Sym[SQR_FILT_LENGTH_9SYM] = 
+#else
 Int TComAdaptiveLoopFilter::weights9x9Sym[22] = 
+#endif
 {
-                  2,
-              2,  2,  2,   
+                   2,
+               2,  2,  2,   
           2,  2,  2,  2,  2, 
 	   2, 2,  2,  2,  2,  2,  2,  
-   2,  2, 2,  2,  1,  1
+   2,  2,  2,  2,  1,  1
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern9x9Sym_Quart[45] = 
+#else
 Int TComAdaptiveLoopFilter::pattern9x9Sym_Quart[42] = 
+#endif
 {
    0,  0,  0,  0,  1,  0,  0,  0,  0,
    0,  0,  0,  2,  3,  4,  0,  0,  0,
    0,  0,  5,  6,  7,  8,  9,  0,  0,  
    0, 10, 11, 12, 13, 14, 15, 16,  0,
+#if WIENER_3_INPUT
+  17, 18, 19, 20, 21, 22,  0,  0,  0
+#else
   17, 18, 19, 20, 21, 22
+#endif
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern7x7Sym[SQR_FILT_LENGTH_7] = 
+#else
 Int TComAdaptiveLoopFilter::pattern7x7Sym[25] = 
+#endif
 {
                    0,
-	           1,  2,  3,
+	       1,  2,  3,
 		   4,  5,  6,  7,  8,
        9, 10, 11, 12, 11, 10, 9,
            8,  7,  6,  5,  4,
 		       3,  2,  1,
-			       0
+		   0
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::weights7x7Sym[SQR_FILT_LENGTH_7SYM] = 
+#else
 Int TComAdaptiveLoopFilter::weights7x7Sym[14] = 
+#endif
 {
                   2,  
               2,  2,  2,   
@@ -884,25 +1433,41 @@ Int TComAdaptiveLoopFilter::weights7x7Sym[14] =
       2,  2,  2,  1,  1
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern7x7Sym_Quart[45] =
+#else
 Int TComAdaptiveLoopFilter::pattern7x7Sym_Quart[42] = 
+#endif
 {
    0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  0,  1,  0,  0,  0,  0,
    0,  0,  0,  2,  3,  4,  0,  0,  0,
    0,  0,  5,  6,  7,  8,  9,  0,  0,  
+#if WIENER_3_INPUT
+   0, 10, 11, 12, 13, 14,  0,  0,  0
+#else
    0, 10, 11, 12, 13, 14,  
+#endif
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern5x5Sym[SQR_FILT_LENGTH_5] =
+#else
 Int TComAdaptiveLoopFilter::pattern5x5Sym[13] = 
+#endif
 {
                    0,
-	           1,  2,  3,
+	       1,  2,  3,
 		   4,  5,  6,  5,  4,
                3,  2,  1,
-			       0
+	      	   0
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::weights5x5Sym[SQR_FILT_LENGTH_5SYM] = 
+#else
 Int TComAdaptiveLoopFilter::weights5x5Sym[8] = 
+#endif
 {
            2, 
         2, 2, 2,
@@ -918,7 +1483,11 @@ Int TComAdaptiveLoopFilter::pattern5x5Sym_Quart[45] =
    0,  0,  5,  6,  7,  8,  0,  0,  0,  
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern9x9Sym_9[SQR_FILT_LENGTH_9] = 
+#else
 Int TComAdaptiveLoopFilter::pattern9x9Sym_9[41] = 
+#endif
 {
                    4,  
               12, 13, 14,  
@@ -931,7 +1500,11 @@ Int TComAdaptiveLoopFilter::pattern9x9Sym_9[41] =
                    4,  
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern9x9Sym_7[SQR_FILT_LENGTH_7] = 
+#else
 Int TComAdaptiveLoopFilter::pattern9x9Sym_7[25] = 
+#endif
 {    
                13,   
            21, 22, 23,  
@@ -943,7 +1516,11 @@ Int TComAdaptiveLoopFilter::pattern9x9Sym_7[25] =
                      
 };
 
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::pattern9x9Sym_5[SQR_FILT_LENGTH_5] = 
+#else
 Int TComAdaptiveLoopFilter::pattern9x9Sym_5[13] = 
+#endif
 {
           22, 
       30, 31, 32,    
@@ -986,6 +1563,73 @@ Int depthInt5x5Sym[8] =
 
 Int* pDepthIntTab[NO_TEST_FILT]={ depthInt5x5Sym, depthInt7x7Sym, depthInt9x9Sym };
 
+
+#if WIENER_3_INPUT
+Int depthInt3x3Sym[SQR_FILT_LENGTH_3SYM] =
+{
+      5,
+  5,  6,
+};
+
+Int depthInt1x1Sym[SQR_FILT_LENGTH_1SYM] =
+{
+      5
+};
+
+Int TComAdaptiveLoopFilter::pattern3x3Sym_Quart[6] =
+{
+    0,  1,  0,
+    2,  3,  0,
+};
+Int TComAdaptiveLoopFilter::pattern1x1Sym_Quart[6] =
+{
+    0,  0,  0,
+    0,  1,  0,
+};
+Int TComAdaptiveLoopFilter::pattern9x9Sym_3[SQR_FILT_LENGTH_3] =
+{
+      1,
+  3,  4,  3,
+      1,
+};
+
+Int TComAdaptiveLoopFilter::pattern9x9Sym_1[SQR_FILT_LENGTH_1] =
+{
+      4
+};
+
+Int TComAdaptiveLoopFilter::pattern3x3Sym[SQR_FILT_LENGTH_3] =
+{
+      0,
+  1,  2,  1,
+      0
+};
+Int TComAdaptiveLoopFilter::pattern1x1Sym[SQR_FILT_LENGTH_1] =
+{
+      0
+};
+Int TComAdaptiveLoopFilter::weights3x3Sym[SQR_FILT_LENGTH_3SYM] =
+{
+      2,
+   2, 1,
+};
+Int TComAdaptiveLoopFilter::weights1x1Sym[SQR_FILT_LENGTH_1SYM] =
+{
+      1
+};
+
+
+Int* TComAdaptiveLoopFilter::patternTab_pr[NO_TEST_FILT+2]={pattern1x1Sym, pattern3x3Sym, pattern5x5Sym, pattern7x7Sym, pattern9x9Sym};
+Int TComAdaptiveLoopFilter::sqrFiltLengthTab_pr[NO_TEST_FILT+2]={SQR_FILT_LENGTH_1SYM, SQR_FILT_LENGTH_3SYM, SQR_FILT_LENGTH_5SYM-1, SQR_FILT_LENGTH_7SYM-1, SQR_FILT_LENGTH_9SYM-1};
+Int* TComAdaptiveLoopFilter::weightsTab_pr[NO_TEST_FILT+2]={weights1x1Sym, weights3x3Sym, weights5x5Sym, weights7x7Sym, weights9x9Sym};//DC may be to much
+Int* pDepthIntTab_pr[NO_TEST_FILT+2]={ depthInt1x1Sym, depthInt3x3Sym, depthInt5x5Sym, depthInt7x7Sym, depthInt9x9Sym };//DC may be to much
+Int* TComAdaptiveLoopFilter::patternMapTab_pr[NO_TEST_FILT+2]={pattern1x1Sym_Quart, pattern3x3Sym_Quart, pattern5x5Sym_Quart, pattern7x7Sym_Quart, pattern9x9Sym_Quart};
+Int* TComAdaptiveLoopFilter::patternTab_filt_pr[NO_TEST_FILT+2]={pattern9x9Sym_1, pattern9x9Sym_3, pattern9x9Sym_5, pattern9x9Sym_7, pattern9x9Sym_9};
+Int weights[MAX_SQR_FILT_LENGTH];
+Int depth[MAX_SQR_FILT_LENGTH];
+#endif
+
+
 #endif
 // scaling factor for quantization of filter coefficients (9x9)
 const Int TComAdaptiveLoopFilter::m_aiSymmetricMag9x9[41] =
@@ -1021,6 +1665,10 @@ const Int TComAdaptiveLoopFilter::m_aiSymmetricMag5x5[13] =
 TComAdaptiveLoopFilter::TComAdaptiveLoopFilter()
 {
 	m_pcTempPicYuv = NULL;
+#if (WIENER_3_INPUT && ALF_MEM_PATCH)
+  m_pcTempPicPredYuv = NULL;
+  m_pcTempPicResiYuv = NULL;
+#endif          
 }
 #if QC_ALF
 Void TComAdaptiveLoopFilter:: error(const char *text, int code)
@@ -1264,31 +1912,66 @@ Void TComAdaptiveLoopFilter::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCU
 		m_pcTempPicYuv = new TComPicYuv;
 		m_pcTempPicYuv->create( iPicWidth, iPicHeight, uiMaxCUWidth, uiMaxCUHeight, uiMaxCUDepth );
 	}
+        
+#if (WIENER_3_INPUT && ALF_MEM_PATCH)
+  if ( !m_pcTempPicPredYuv )
+  {
+    m_pcTempPicPredYuv = new TComPicYuv;
+    m_pcTempPicPredYuv->create( iPicWidth, iPicHeight, uiMaxCUWidth, uiMaxCUHeight, uiMaxCUDepth );
+  }
+  if ( !m_pcTempPicResiYuv )
+  {
+    m_pcTempPicResiYuv = new TComPicYuv;
+    m_pcTempPicResiYuv->create( iPicWidth, iPicHeight, uiMaxCUWidth, uiMaxCUHeight, uiMaxCUDepth );
+  }
+#endif  
+        
 #if QC_ALF
 	img_height = iPicHeight;
 	img_width = iPicWidth;
 	initMatrix_imgpel(&imgY_var, img_height, img_width); 
 #if !ALF_MEM_PATCH
-	initMatrix_imgpel(&ImgDec, img_height, img_width); 
-	initMatrix_imgpel(&ImgRest, img_height, img_width); 
-    initMatrix_imgpel(&imgY_pad, img_height+2*(FILTER_LENGTH/2), img_width+2*(FILTER_LENGTH/2));
+  initMatrix_imgpel(&ImgDec, img_height, img_width); 
+  initMatrix_imgpel(&ImgRest, img_height, img_width); 
+  initMatrix_imgpel(&imgY_pad, img_height+2*(FILTER_LENGTH/2), img_width+2*(FILTER_LENGTH/2));
 #endif
-    initMatrix_int(&imgY_temp, img_height+2*VAR_SIZE+3, img_width+2*VAR_SIZE+3);
+  initMatrix_int(&imgY_temp, img_height+2*VAR_SIZE+3, img_width+2*VAR_SIZE+3);
 
-    initMatrix_int(&filterCoeffSym, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);
-    initMatrix_int(&filterCoeffPrevSelected, NO_VAR_BINS, MAX_SQR_FILT_LENGTH); 
-	initMatrix_int(&filterCoeffTmp, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);      
-	initMatrix_int(&filterCoeffSymTmp, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);   
+  initMatrix_int(&filterCoeffSym, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);
+  initMatrix_int(&filterCoeffPrevSelected, NO_VAR_BINS, MAX_SQR_FILT_LENGTH); 
+  initMatrix_int(&filterCoeffTmp, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);      
+  initMatrix_int(&filterCoeffSymTmp, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);   
+#if WIENER_3_INPUT
+#if !ALF_MEM_PATCH
+  initMatrix_imgpel(&ImgResi, img_height, img_width);
+  initMatrix_imgpel(&ImgPred, img_height, img_width);
+  initMatrix_imgpel(&imgYr_pad, img_height+2*(FILTER_LENGTH/2), img_width+2*(FILTER_LENGTH/2));
+  initMatrix_imgpel(&imgYp_pad, img_height+2*(FILTER_LENGTH/2), img_width+2*(FILTER_LENGTH/2));
+#endif
+#endif
+
 #endif
 }
 
 Void TComAdaptiveLoopFilter::destroy()
 {
-	if ( m_pcTempPicYuv )
-	{
-		m_pcTempPicYuv->destroy();
-		delete m_pcTempPicYuv;
-	}
+  if ( m_pcTempPicYuv )
+  {
+    m_pcTempPicYuv->destroy();
+    delete m_pcTempPicYuv;
+  }
+#if (WIENER_3_INPUT && ALF_MEM_PATCH)
+  if ( m_pcTempPicPredYuv )
+  {
+    m_pcTempPicPredYuv->destroy();
+    delete m_pcTempPicPredYuv;
+  }
+  if ( m_pcTempPicResiYuv )
+  {
+    m_pcTempPicResiYuv->destroy();
+    delete m_pcTempPicResiYuv;
+  }
+#endif  
 #if QC_ALF
 	destroyMatrix_imgpel(imgY_var); 
 #if !ALF_MEM_PATCH
@@ -1296,13 +1979,17 @@ Void TComAdaptiveLoopFilter::destroy()
 	destroyMatrix_imgpel(ImgDec); 
 	destroyMatrix_imgpel(ImgRest);
 	destroyMatrix_int(imgY_temp);
+#if WIENER_3_INPUT
+  destroyMatrix_imgpel(imgYr_pad);
+  destroyMatrix_imgpel(imgYp_pad);
+  destroyMatrix_imgpel(ImgResi);
+  destroyMatrix_imgpel(ImgPred); 
+#endif        
 #endif
-
-	destroyMatrix_int(filterCoeffSym);
-	destroyMatrix_int(filterCoeffPrevSelected);
-	destroyMatrix_int(filterCoeffTmp);
-	destroyMatrix_int(filterCoeffSymTmp);
-
+  destroyMatrix_int(filterCoeffSym);
+  destroyMatrix_int(filterCoeffPrevSelected);
+  destroyMatrix_int(filterCoeffTmp);
+  destroyMatrix_int(filterCoeffSymTmp);
 #endif
 }
 
@@ -1316,9 +2003,22 @@ Void TComAdaptiveLoopFilter::destroy()
 
 Void TComAdaptiveLoopFilter::allocALFParam(ALFParam* pAlfParam)
 {
+#if (QC_ALF && WIENER_3_INPUT)
+  Int qtable [FILTER_PRECISION_TABLE_NUMBER]={8,16,32,64,128,256,512,1024,2048,4096,8192};
+  Int qtable2[FILTER_PRECISION_TABLE_NUMBER]={3, 4, 5, 6,  7,  8,  9,  10,  11,  12,  13};
+  Int qtable3[FILTER_PRECISION_TABLE_NUMBER]={4, 8,16,32, 64,128,256, 512,1024,2048,4096};
+  
+  for (Int i=0; i<FILTER_PRECISION_TABLE_NUMBER; i++)
+  {
+    pAlfParam->filter_precision_table      [i] = qtable [i];
+    pAlfParam->filter_precision_table_shift[i] = qtable2[i];
+    pAlfParam->filter_precision_table_half [i] = qtable3[i];
+  }
+#endif  
+  
   pAlfParam->alf_flag = 0;
 
-  pAlfParam->coeff				= new Int[ALF_MAX_NUM_COEF];
+  pAlfParam->coeff                              = new Int[ALF_MAX_NUM_COEF];
   pAlfParam->coeff_chroma = new Int[ALF_MAX_NUM_COEF_C];
 
   ::memset(pAlfParam->coeff,				0, sizeof(Int)*ALF_MAX_NUM_COEF		);
@@ -1386,6 +2086,15 @@ Void TComAdaptiveLoopFilter::copyALFParam(ALFParam* pDesAlfParam, ALFParam* pSrc
 #if QC_ALF
   pDesAlfParam->realfiltNo = pSrcAlfParam->realfiltNo;
   pDesAlfParam->filtNo = pSrcAlfParam->filtNo;
+#if WIENER_3_INPUT
+  pDesAlfParam->filter_precision[0] = pSrcAlfParam->filter_precision[0];
+  pDesAlfParam->filter_precision[1] = pSrcAlfParam->filter_precision[1];
+  pDesAlfParam->filter_precision[2] = pSrcAlfParam->filter_precision[2];
+  pDesAlfParam->num_coeff_resi = pSrcAlfParam->num_coeff_resi;
+  pDesAlfParam->num_coeff_pred = pSrcAlfParam->num_coeff_pred;
+  pDesAlfParam->tap_pred = pSrcAlfParam->tap_pred;
+  pDesAlfParam->tap_resi = pSrcAlfParam->tap_resi;
+#endif
   ::memcpy(pDesAlfParam->filterPattern, pSrcAlfParam->filterPattern, sizeof(Int)*NO_VAR_BINS);
   pDesAlfParam->startSecondFilter = pSrcAlfParam->startSecondFilter;
   pDesAlfParam->noFilters = pSrcAlfParam->noFilters;
@@ -1493,11 +2202,26 @@ Void TComAdaptiveLoopFilter::ALFProcess(TComPic* pcPic, ALFParam* pcAlfParam)
 
   TComPicYuv* pcPicYuvRec    = pcPic->getPicYuvRec();
   TComPicYuv* pcPicYuvExtRec = m_pcTempPicYuv;
-
-  pcPicYuvRec		->copyToPic						( pcPicYuvExtRec );
-	pcPicYuvExtRec->setBorderExtension	( false );
-  pcPicYuvExtRec->extendPicBorder			();
-
+#if WIENER_3_INPUT
+  TComPicYuv* pcPicYuvPred   = pcPic->getPicYuvP();
+  TComPicYuv* pcPicYuvResi   = pcPic->getPicYuvQ();
+#if ALF_MEM_PATCH
+  TComPicYuv* pcPicYuvExtPred = m_pcTempPicPredYuv;
+  TComPicYuv* pcPicYuvExtResi = m_pcTempPicResiYuv;
+#endif  
+#endif
+  pcPicYuvRec->copyToPic	        ( pcPicYuvExtRec );
+  pcPicYuvExtRec->setBorderExtension	( false );
+  pcPicYuvExtRec->extendPicBorder	();
+#if ALF_MEM_PATCH
+  pcPicYuvPred->copyToPic                ( pcPicYuvExtPred );
+  pcPicYuvResi->copyToPic                ( pcPicYuvExtResi );
+  pcPicYuvExtPred->setBorderExtension    ( false );
+  pcPicYuvExtResi->setBorderExtension    ( false );
+  pcPicYuvExtPred->extendPicBorder       ();
+  pcPicYuvExtResi->extendPicBorder       ();
+#endif
+  
 #if TSB_ALF_HEADER
   if(pcAlfParam->cu_control_flag)
   {
@@ -1510,9 +2234,18 @@ Void TComAdaptiveLoopFilter::ALFProcess(TComPic* pcPic, ALFParam* pcAlfParam)
   }
 #endif
 #if QC_ALF
-  xALFLuma_qc(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec);
+ 
+#if WIENER_3_INPUT
+#if ALF_MEM_PATCH
+  xALFLuma_qc(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec, pcPicYuvExtPred, pcPicYuvExtResi);
+#else  
+  xALFLuma_qc(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec, pcPicYuvPred, pcPicYuvResi);
+#endif
 #else
-	predictALFCoeff(pcAlfParam);
+  xALFLuma_qc(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec);
+#endif
+#else
+  predictALFCoeff(pcAlfParam);
   xALFLuma(pcPic, pcAlfParam, pcPicYuvExtRec, pcPicYuvRec);
 #endif
 
@@ -1532,25 +2265,46 @@ Void TComAdaptiveLoopFilter::ALFProcess(TComPic* pcPic, ALFParam* pcAlfParam)
 // --------------------------------------------------------------------------------------------------------------------
 #if QC_ALF
 
-
+#if WIENER_3_INPUT
+Void TComAdaptiveLoopFilter::xALFLuma_qc(TComPic* pcPic, ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, TComPicYuv* pcPicPred, TComPicYuv* pcPicResi)
+#else
 Void TComAdaptiveLoopFilter::xALFLuma_qc(TComPic* pcPic, ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest)
+#endif    
 {
-  Int    Height = pcPicDec->getHeight();
+  Int  Height = pcPicDec->getHeight();
   Int    Width = pcPicDec->getWidth();
   Int    LumaStride = pcPicDec->getStride();
 #if ALF_MEM_PATCH
   imgpel* pDec = (imgpel*)pcPicDec->getLumaAddr();
   imgpel* pRest = (imgpel*)pcPicRest->getLumaAddr();
+#if WIENER_3_INPUT
+  imgpel* pResi = (imgpel*)pcPicResi->getLumaAddr();
+  imgpel* pPred = (imgpel*)pcPicPred->getLumaAddr();
+#endif
 #else
   Pel* pDec = pcPicDec->getLumaAddr();
   Pel* pRest = pcPicRest->getLumaAddr();
+#if WIENER_3_INPUT
+  Pel* pResi = pcPicResi->getLumaAddr();
+  Pel* pPred = pcPicPred->getLumaAddr();
+  int fl=FILTER_LENGTH/2;
+#endif  
   for (Int i=0; i<Height; i++)
-	for (Int j=0; j<Width; j++)
-	{
-	  ImgDec[i][j] = ImgRest[i][j] = pDec[j + i*LumaStride];
-	}
+    for (Int j=0; j<Width; j++)
+    {
+      ImgDec[i][j] = ImgRest[i][j] = pDec[j + i*LumaStride];
+#if WIENER_3_INPUT      
+      ImgResi[i][j] = pResi[j + i*LumaStride];
+      ImgPred[i][j] = pPred[j + i*LumaStride];
+#endif
+    }
+    
+#if WIENER_3_INPUT
+  padImage(ImgResi, imgYr_pad, fl, img_height, img_width);
+  padImage(ImgPred, imgYp_pad, fl, img_height, img_width);
 #endif
 
+#endif  
   //Decode and reconst filter coefficients
 #if ALF_MEM_PATCH
   DecFilter_qc(pDec,pcAlfParam,LumaStride);
@@ -1561,7 +2315,11 @@ Void TComAdaptiveLoopFilter::xALFLuma_qc(TComPic* pcPic, ALFParam* pcAlfParam, T
   if(pcAlfParam->cu_control_flag)
   {
 #if ALF_MEM_PATCH
-	xCUAdaptive_qc(pcPic, pcAlfParam, pRest, pDec, LumaStride);
+#if WIENER_3_INPUT    
+        xCUAdaptive_qc(pcPic, pcAlfParam, pRest, pDec, pPred, pResi, LumaStride);
+#else        
+        xCUAdaptive_qc(pcPic, pcAlfParam, pRest, pDec, LumaStride);
+#endif
 #else
 	xCUAdaptive_qc(pcPic, pcAlfParam, ImgRest, ImgDec);
 #endif
@@ -1570,9 +2328,25 @@ Void TComAdaptiveLoopFilter::xALFLuma_qc(TComPic* pcPic, ALFParam* pcAlfParam, T
   {
 	//then do whole frame filtering
 #if ALF_MEM_PATCH
-	filterFrame(pRest, pDec, pcAlfParam->realfiltNo, LumaStride);
+#if WIENER_3_INPUT
+        filterFrame(pRest, pDec, pPred, pResi, pcAlfParam->realfiltNo, 
+                    (pcAlfParam->tap_resi-1)/2, (pcAlfParam->tap_pred-1)/2,
+                    pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]],
+                    pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[1]],
+                    pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[2]],
+                    LumaStride);
+#else        
+        filterFrame(pRest, pDec, pcAlfParam->realfiltNo, LumaStride);
+#endif
+#else
+#if WIENER_3_INPUT      
+    filterFrame(ImgRest, ImgDec, pcAlfParam->realfiltNo, (pcAlfParam->tap_resi-1)/2, (pcAlfParam->tap_pred-1)/2,
+                pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]],
+                pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[1]],
+                pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[2]]);
 #else
 	filterFrame(ImgRest, ImgDec, pcAlfParam->realfiltNo);
+#endif
 #endif
   }
 
@@ -1604,9 +2378,9 @@ Void TComAdaptiveLoopFilter::DecFilter_qc(imgpel* imgY_rec,ALFParam* pcAlfParam,
 	{
 	  for(i = 0; i < NO_VAR_BINS; i++)
 	  {
-		pcAlfParam->varIndTab[i]=0;
-		memset(pfilterCoeffSym[i],0,sizeof(int)*MAX_SQR_FILT_LENGTH);
-}
+	    pcAlfParam->varIndTab[i]=0;
+	    memset(pfilterCoeffSym[i],0,sizeof(int)*MAX_SQR_FILT_LENGTH);
+          }
 	}
 	getCurrentFilter(pfilterCoeffSym,pcAlfParam);
 
@@ -1685,12 +2459,74 @@ Void TComAdaptiveLoopFilter::getCurrentFilter(int **filterCoeffSym,ALFParam* pcA
 { 
   int i,  k, varInd;
   int *patternMap;
+#if WIENER_3_INPUT
+  int *patternMap_resi, *patternMap_pred;
+  int length = (FILTER_LENGTH*FILTER_LENGTH)/2 + 1;
+  int length_pred = (FILTER_LENGTH_PRED*FILTER_LENGTH_PRED)/2 + 1;
+  int length_resi = (FILTER_LENGTH_RESI*FILTER_LENGTH_RESI)/2 + 1;
+  int filtNo_resi = (pcAlfParam->tap_resi-1)/2;
+  int filtNo_pred = (pcAlfParam->tap_pred-1)/2;
+  int filtNo = pcAlfParam->realfiltNo;
+#else   
   int *patternMapTab[3]={pattern9x9Sym_Quart, pattern7x7Sym_Quart, pattern5x5Sym_Quart};
+#endif
+  for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
   {
+    memset(filterCoeffPrevSelected[varInd],0,sizeof(int)*MAX_SQR_FILT_LENGTH);
+  }
+#if WIENER_3_INPUT  
+  if (filtNo_resi<2)
+    length_resi = (3*3)/2 + 1;
+  if (filtNo_pred<2)
+    length_pred = (3*3)/2 + 1;
+  
+  patternMap      = patternMapTab   [filtNo];
+  patternMap_resi = patternMapTab_pr[filtNo_resi];
+  patternMap_pred = patternMapTab_pr[filtNo_pred];
+  // filter for reconstructions
     for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
 	{		
-      memset(filterCoeffPrevSelected[varInd],0,sizeof(int)*MAX_SQR_FILT_LENGTH);
+    k=0;
+    for(i = 0; i < length; i++)
+    {
+      if (patternMap[i]>0)
+      {
+        filterCoeffPrevSelected[varInd][i]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];
+        k++;
+      }
+      else
+      {
+        filterCoeffPrevSelected[varInd][i]=0;
+      }
     }
+    for(i = 0; i < length_resi; i++)
+    {
+      if (patternMap_resi[i]>0)
+      {
+        filterCoeffPrevSelected[varInd][i+length]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];
+        k++;
+      }
+      else
+      {
+        filterCoeffPrevSelected[varInd][i+length]=0;
+      }
+    }
+    for(i = 0; i < length_pred; i++)
+    {
+      if (patternMap_pred[i]>0)
+      {
+        filterCoeffPrevSelected[varInd][i+length+length]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];
+        k++;
+      }
+      else
+      {
+        filterCoeffPrevSelected[varInd][i+length+length]=0;
+      }
+    }
+     
+    filterCoeffPrevSelected[varInd][MAX_SQR_FILT_LENGTH-1]=filterCoeffSym[pcAlfParam->varIndTab[varInd]][k];//DC
+    }
+#else
 	patternMap=patternMapTab[pcAlfParam->realfiltNo];
     for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
 	{		
@@ -1708,12 +2544,21 @@ Void TComAdaptiveLoopFilter::getCurrentFilter(int **filterCoeffSym,ALFParam* pcA
 		}
       }
     }
-  }
+#endif
 }
 
 Void TComAdaptiveLoopFilter::reconstructFilterCoeffs(ALFParam* pcAlfParam,int **pfilterCoeffSym, int bit_depth)
 {
   int i, src, ind;
+#if WIENER_3_INPUT
+  int mid_rec =pcAlfParam->num_coeff-pcAlfParam->num_coeff_pred-pcAlfParam->num_coeff_resi-2;
+  int mid_pred=mid_rec+pcAlfParam->num_coeff_resi+pcAlfParam->num_coeff_pred;
+  int mid_resi=mid_rec+pcAlfParam->num_coeff_resi;
+  int one   =1<<(pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]]);
+  int bits_rec =(pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]]);
+  int bits_pred=(pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[1]]);
+  int bits_resi=(pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[2]]);
+#endif  
 
   // Copy non zero filters in filterCoeffTmp
   for(ind = 0; ind < pcAlfParam->filters_per_group_diff; ++ind)
@@ -1735,7 +2580,30 @@ Void TComAdaptiveLoopFilter::reconstructFilterCoeffs(ALFParam* pcAlfParam,int **
 		filterCoeffSymTmp[ind][i] = (int)(filterCoeffTmp[ind][i] + filterCoeffSymTmp[ind - 1][i]);
     }
   }
-
+  
+#if WIENER_3_INPUT
+  for(ind = 0; ind < pcAlfParam->filters_per_group_diff; ++ind)
+  {
+    filterCoeffSymTmp[ind][mid_rec ]+=one;
+    if (bits_rec>bits_pred)
+    {
+      filterCoeffSymTmp[ind][mid_pred]+=(one-filterCoeffSymTmp[ind][mid_rec]) >> (bits_rec-bits_pred);
+    }
+    else
+    {
+      filterCoeffSymTmp[ind][mid_pred]+=(one-filterCoeffSymTmp[ind][mid_rec]) << (bits_pred-bits_rec);
+    }
+    if (bits_pred>bits_resi)
+    {    
+      filterCoeffSymTmp[ind][mid_resi]+=filterCoeffSymTmp[ind][mid_pred] << (bits_pred-bits_resi);
+    }
+    else
+    {
+      filterCoeffSymTmp[ind][mid_resi]+=filterCoeffSymTmp[ind][mid_pred] << (bits_resi-bits_pred);
+    }
+  }
+#endif
+  
   // Inverse quantization
   // Add filters forced to zero
   if(pcAlfParam->forceCoeff0)
@@ -1785,8 +2653,8 @@ Void TComAdaptiveLoopFilter::calcVar(imgpel **imgY_var, imgpel **imgY_pad,int pa
 
   if (VAR_SIZE ==0)
   {
-	  imgpel *p_imgY_var;
-	  shift = g_uiBitIncrement;
+    imgpel *p_imgY_var;
+    shift = g_uiBitIncrement;
   //current
   for(i = 1; i < img_height + fl2plusOne; i++)
   {
@@ -1905,24 +2773,24 @@ Void TComAdaptiveLoopFilter::calcVar(imgpel **imgY_var, imgpel *imgY_pad, int pa
 
   if (VAR_SIZE ==0)
   {
-	  imgpel *p_imgY_var;
-	  shift = g_uiBitIncrement;
+    imgpel *p_imgY_var;
+    shift = g_uiBitIncrement;
   //current
   for(i = 1; i < img_height + fl2plusOne; i++)
   {
-		imgpel *p_imgY_pad = &imgY_pad[(pad_offset+i-pad_size) * img_stride + pad_offset-pad_size];
-        imgpel *p_imgY_pad_up   = &imgY_pad[(pad_offset+i+1-pad_size) * img_stride + pad_offset-pad_size];
-		imgpel *p_imgY_pad_down = &imgY_pad[(pad_offset+i-1-pad_size) * img_stride + pad_offset-pad_size];
-        p_imgY_temp = (int*)&imgY_temp[i-1][0];
-		p_imgY_var  = &imgY_var [i-1][0];
+    imgpel *p_imgY_pad = &imgY_pad[(pad_offset+i-pad_size) * img_stride + pad_offset-pad_size];
+    imgpel *p_imgY_pad_up   = &imgY_pad[(pad_offset+i+1-pad_size) * img_stride + pad_offset-pad_size];
+    imgpel *p_imgY_pad_down = &imgY_pad[(pad_offset+i-1-pad_size) * img_stride + pad_offset-pad_size];
+    p_imgY_temp = (int*)&imgY_temp[i-1][0];
+    p_imgY_var  = &imgY_var [i-1][0];
     for(j = 1; j < img_width +fl2plusOne; j++)	
-	{
-			  *(p_imgY_temp) = abs((p_imgY_pad[j]<<1) - p_imgY_pad[j+1] - p_imgY_pad[j-1])+
-							   abs((p_imgY_pad[j]<<1) - p_imgY_pad_down[j] - p_imgY_pad_up[j]);
-			  *(p_imgY_var++) =(imgpel) Clip_post(var_max, (int) ((*(p_imgY_temp++))>>shift));
-		}
-	  }
-	  return;
+    {
+      *(p_imgY_temp) = abs((p_imgY_pad[j]<<1) - p_imgY_pad[j+1] - p_imgY_pad[j-1])+
+                        abs((p_imgY_pad[j]<<1) - p_imgY_pad_down[j] - p_imgY_pad_up[j]);
+                      *(p_imgY_var++) =(imgpel) Clip_post(var_max, (int) ((*(p_imgY_temp++))>>shift));
+    }
+  }
+  return;
   }
 
   //current
@@ -2009,7 +2877,11 @@ Void TComAdaptiveLoopFilter::calcVar(imgpel **imgY_var, imgpel *imgY_pad, int pa
   }
 }
 
+#if WIENER_3_INPUT
+Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, int filtNo, int filtNo_resi, int filtNo_pred, int bits_rec, int bits_pred, int bits_resi, int Stride)
+#else    
 Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, int filtNo, int Stride)
+#endif
 {
   int i, j, ii, jj, pixelInt,m=0;
   imgpel *p_imgY_var,*p_imgY_pad;
@@ -2020,43 +2892,140 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
+#if WIENER_3_INPUT
+  imgpel *p_imgYr_pad, *p_imgYp_pad;
+  int offset     = (1<<(bits_rec-1));
+  int shift_pred = (1<<(bits_rec - bits_pred));
+  int shift_resi = (1<<(bits_rec - bits_resi));
+  int num_bits_minus_1= bits_rec;
+  int flTab_pr[5] = {0,1,2,3,4};
+  int length = 0;
+  int coef_new[NO_VAR_BINS][MAX_SQR_FILT_LENGTH];
+  int *cp, *cp1;
+#else
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
   int *pattern_fix=patternTab_filt[filtNo];
   fl_temp=flTab[filtNo];
-
+#endif
+  
+#if WIENER_3_INPUT
+  for (j=0;j<NO_VAR_BINS;j++)
+  {
+    cp  = coef_new[j];
+    cp1 = filterCoeffPrevSelected[j];
+    
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_resi;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_pred;
+    }
+    *cp++=*cp1++;
+  }
+#endif
   // Filter
   for (i = fl; i < img_height+fl; i++)
   {
     p_imgY_var = imgY_var[i-fl];
-	p_imgY_pad = imgY_rec + (i-fl)*Stride;
+    p_imgY_pad = imgY_rec + (i-fl)*Stride;
+#if WIENER_3_INPUT  
+    p_imgYr_pad = imgY_resi + (i-fl)*Stride;
+    p_imgYp_pad = imgY_pred + (i-fl)*Stride;
+#endif        
     for (j = fl; j < img_width+fl; j++)
-	{
-	  coef = filterCoeffPrevSelected[*(p_imgY_var++)];
-	  pixelInt=coef[last_coef];
-	  pattern=pattern_fix;
-  	  
-	  for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
-	  {
-		im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
-		im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
-		for (jj=-m; jj<=m; jj++)
-			pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
-	  }
+    {
+#if WIENER_3_INPUT
+      coef = coef_new[*(p_imgY_var++)];
+#else      
+      coef = filterCoeffPrevSelected[*(p_imgY_var++)];
+#endif
+      pixelInt=coef[last_coef];
+#if WIENER_3_INPUT
+      // reconstruction
+      fl_temp=flTab[filtNo];
+      pattern=patternTab_filt[filtNo];
+#else       
+      pattern=pattern_fix;
+#endif  	  
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+	im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
+	im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
+	for (jj=-m; jj<=m; jj++)
+	  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+      }
 
-	  im1= &(p_imgY_pad[(j-fl)-fl_temp]);
-	  im2= &(p_imgY_pad[(j-fl)+fl_temp]);	
-	  for (jj=0; jj<fl_temp; jj++)
-		  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+      im1= &(p_imgY_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgY_pad[(j-fl)+fl_temp]);	
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
 
-	  pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
-	  pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
-	  imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+      pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+#if WIENER_3_INPUT  
+      // residual
+      length = (FILTER_LENGTH*FILTER_LENGTH)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_resi];
+      fl_temp=flTab_pr[filtNo_resi];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgY_resi[(i-fl+ii)*Stride + j-fl-m]);
+        im2= &(imgY_resi[(i-fl-ii)*Stride + j-fl+m]);
+        for (jj=-m; jj<=m; jj++)
+        {
+          pixelInt+=(( (Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q) )*coef[(*(pattern++))+length]);
+        }
+      }
+
+      im1= &(p_imgYr_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgYr_pad[(j-fl)+fl_temp]);
+      for (jj=0; jj<fl_temp; jj++)
+      {
+        pixelInt+=(( (Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q) )*coef[(*(pattern++))+length]);
+      }
+      
+      pixelInt+=(((Int)p_imgYr_pad[j-fl] - (Int)(g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+
+      // prediction
+      length += (FILTER_LENGTH_RESI*FILTER_LENGTH_RESI)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_pred];
+      fl_temp=flTab_pr[filtNo_pred];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgY_pred[(i-fl+ii)*Stride + j-fl-m]);
+        im2= &(imgY_pred[(i-fl-ii)*Stride + j-fl+m]);
+        for (jj=-m; jj<=m; jj++)
+        {
+          pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+        }
+      }
+
+      im1= &(p_imgYp_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgYp_pad[(j-fl)+fl_temp]);
+      for (jj=0; jj<fl_temp; jj++)
+      {
+        pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      }
+      
+      pixelInt+=(p_imgYp_pad[j-fl]*coef[(*(pattern++))+length]);
+#endif      
+      pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+      imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
     }
   }
 }
 
+#if WIENER_3_INPUT
+Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, int filtNo, int filtNo_resi, int filtNo_pred, int start_height, int end_height, int start_width, int end_width, int bits_rec, int bits_pred, int bits_resi, int Stride)
+#else
 Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width, int Stride)
+#endif    
 {
   int i, j, ii, jj, pixelInt,m=0;
   imgpel *p_imgY_var,*p_imgY_pad;
@@ -2067,55 +3036,152 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
+#if WIENER_3_INPUT
+  imgpel *p_imgYr_pad, *p_imgYp_pad;
+  int offset     = (1<<(bits_rec - 1));
+  int shift_pred = (1<<(bits_rec - bits_pred));
+  int shift_resi = (1<<(bits_rec - bits_resi));
+  int num_bits_minus_1= bits_rec;
+  int length = 0;
+  int flTab_pr[5] = {0,1,2,3,4};
+  int coef_new[NO_VAR_BINS][MAX_SQR_FILT_LENGTH];
+  int *cp, *cp1;
+#else  
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
   int *pattern_fix=patternTab_filt[filtNo];
   fl_temp=flTab[filtNo];
-
+#endif
+  
+#if WIENER_3_INPUT
+  for (j=0;j<NO_VAR_BINS;j++)
+  {
+    cp  = coef_new[j];
+    cp1 = filterCoeffPrevSelected[j];
+    
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_resi;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_pred;
+    }
+    *cp++=*cp1++;
+  }
+#endif    
+  
   // Filter
   for (i = fl + start_height; i < end_height+fl; i++)
   {
     p_imgY_var = imgY_var[i-fl] + start_width;
-	p_imgY_pad = imgY_rec + (i-fl)*Stride;
+    p_imgY_pad = imgY_rec + (i-fl)*Stride;
+#if WIENER_3_INPUT  
+    p_imgYr_pad = imgY_resi + (i-fl)*Stride;
+    p_imgYp_pad = imgY_pred + (i-fl)*Stride;
+#endif        
     for (j = fl + start_width; j < end_width+fl; j++)
-	{
-	  coef = filterCoeffPrevSelected[*(p_imgY_var++)];
-	  pixelInt=coef[last_coef];
-	  pattern=pattern_fix;
+    {
+#if WIENER_3_INPUT  
+      coef = coef_new[*(p_imgY_var++)];
+#else
+      coef = filterCoeffPrevSelected[*(p_imgY_var++)];
+#endif
+      pixelInt=coef[last_coef];
+#if WIENER_3_INPUT  
+      // reconstruction
+      fl_temp=flTab[filtNo];
+      pattern=patternTab_filt[filtNo];
+#else
+      pattern=pattern_fix;
+#endif
   	  
-	  for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
-	  {
-		im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
-		im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
-		for (jj=-m; jj<=m; jj++)
-			pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
-	  }
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+	im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
+	im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
+	for (jj=-m; jj<=m; jj++)
+	  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+      }
 
-	  im1= &(p_imgY_pad[(j-fl)-fl_temp]);
-	  im2= &(p_imgY_pad[(j-fl)+fl_temp]);	
-	  for (jj=0; jj<fl_temp; jj++)
-		  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+      im1= &(p_imgY_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgY_pad[(j-fl)+fl_temp]);	
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
 
-	  pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
-	  pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
-	  imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+      pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+#if WIENER_3_INPUT  
+      // residual
+      length = (FILTER_LENGTH*FILTER_LENGTH)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_resi];
+      fl_temp=flTab_pr[filtNo_resi];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgY_resi[(i-fl+ii)*Stride + j-fl-m]);
+        im2= &(imgY_resi[(i-fl-ii)*Stride + j-fl+m]);
+        for (jj=-m; jj<=m; jj++)
+          pixelInt+=(((Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      }
+
+      im1= &(p_imgYr_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgYr_pad[(j-fl)+fl_temp]);       
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=(((Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      
+      pixelInt+=(((Int)p_imgYr_pad[j-fl]-(Int)(g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      // pred
+      length += (FILTER_LENGTH_RESI*FILTER_LENGTH_RESI)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_pred];
+      fl_temp=flTab_pr[filtNo_pred];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgY_pred[(i-fl+ii)*Stride + j-fl-m]);
+        im2= &(imgY_pred[(i-fl-ii)*Stride + j-fl+m]);
+        for (jj=-m; jj<=m; jj++)
+          pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      }
+  
+      im1= &(p_imgYp_pad[(j-fl)-fl_temp]);
+      im2= &(p_imgYp_pad[(j-fl)+fl_temp]);       
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      pixelInt+=(p_imgYp_pad[j-fl]*coef[(*(pattern++))+length]);
+#endif      
+      pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+      imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
     }
   }
 }
 
 
 
+#if WIENER_3_INPUT
+Void TComAdaptiveLoopFilter::xCUAdaptive_qc(TComPic* pcPic, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, Int Stride)
+#else    
 Void TComAdaptiveLoopFilter::xCUAdaptive_qc(TComPic* pcPic, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, Int Stride)
+#endif    
 {
 	// for every CU, call CU-adaptive ALF process
   for( UInt uiCUAddr = 0; uiCUAddr < pcPic->getNumCUsInFrame() ; uiCUAddr++ )
   {
     TComDataCU* pcCU = pcPic->getCU( uiCUAddr );
+#if WIENER_3_INPUT
+    xSubCUAdaptive_qc(pcCU, pcAlfParam, imgY_rec_post, imgY_rec, imgY_pred, imgY_resi, 0, 0, Stride);
+#else    
     xSubCUAdaptive_qc(pcCU, pcAlfParam, imgY_rec_post, imgY_rec, 0, 0, Stride);
+#endif
   }
 }
 
+#if WIENER_3_INPUT
+Void TComAdaptiveLoopFilter::xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, imgpel *imgY_pred, imgpel *imgY_resi, UInt uiAbsPartIdx, UInt uiDepth, Int Stride)
+#else    
 Void TComAdaptiveLoopFilter::xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, UInt uiAbsPartIdx, UInt uiDepth, Int Stride)
+#endif
 {
   TComPic* pcPic = pcCU->getPic();
 
@@ -2141,7 +3207,11 @@ Void TComAdaptiveLoopFilter::xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlf
       uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
       if( ( uiLPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiTPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
+#if WIENER_3_INPUT
+        xSubCUAdaptive_qc(pcCU, pcAlfParam, imgY_rec_post, imgY_rec, imgY_pred, imgY_resi, uiAbsPartIdx, uiDepth+1, Stride);
+#else      
         xSubCUAdaptive_qc(pcCU, pcAlfParam, imgY_rec_post, imgY_rec, uiAbsPartIdx, uiDepth+1, Stride);
+#endif
     }
     return;
   }
@@ -2149,13 +3219,21 @@ Void TComAdaptiveLoopFilter::xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlf
 	// check maskImagedec
   if ( pcCU->getAlfCtrlFlag(uiAbsPartIdx) )
   {
-	 subfilterFrame(imgY_rec_post, imgY_rec, pcAlfParam->realfiltNo, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)), Stride);
-
+#if WIENER_3_INPUT
+    subfilterFrame(imgY_rec_post, imgY_rec, imgY_pred, imgY_resi, pcAlfParam->realfiltNo, (pcAlfParam->tap_resi-1)/2, (pcAlfParam->tap_pred-1)/2, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)), pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]], pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[1]], pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[2]], Stride);
+#else
+    subfilterFrame(imgY_rec_post, imgY_rec, pcAlfParam->realfiltNo, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)), Stride);
+#endif
   }
 }
 
 #endif
+
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+Void TComAdaptiveLoopFilter::filterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int filtNo_resi, int filtNo_pred, int bits_rec, int bits_pred, int bits_resi)
+#else    
 Void TComAdaptiveLoopFilter::filterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo)
+#endif
 {
   int i, j, ii, jj, pixelInt,m=0;
   imgpel *p_imgY_var,*p_imgY_pad;
@@ -2166,22 +3244,68 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel **imgY_rec_post, imgpel **imgY_r
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+  imgpel *p_imgYr_pad, *p_imgYp_pad;
+  int offset     = (1<<(bits_rec-1));
+  int shift_pred = (1<<(bits_rec - bits_pred));
+  int shift_resi = (1<<(bits_rec - bits_resi));
+  int num_bits_minus_1= bits_rec;
+  int flTab_pr[5] = {0,1,2,3,4};
+  int length = 0;
+  int coef_new[NO_VAR_BINS][MAX_SQR_FILT_LENGTH];
+  int *cp, *cp1;
+#else    
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
   int *pattern_fix=patternTab_filt[filtNo];
   fl_temp=flTab[filtNo];
+#endif
 
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+  for (j=0;j<NO_VAR_BINS;j++)
+  {
+    cp  = coef_new[j];
+    cp1 = filterCoeffPrevSelected[j];
+
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_resi;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_pred;
+    }
+    *cp++=*cp1++;
+  }
+#endif  
   // Filter
   for (i = fl; i < img_height+fl; i++)
   {
     p_imgY_var = imgY_var[i-fl];
 	p_imgY_pad = imgY_pad[i];
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+    p_imgYr_pad = imgYr_pad[i];
+    p_imgYp_pad = imgYp_pad[i];
+#endif    
     for (j = fl; j < img_width+fl; j++)
 	{
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      coef = coef_new[*(p_imgY_var++)];
+#else
 	  coef = filterCoeffPrevSelected[*(p_imgY_var++)];
+#endif
 	  pixelInt=coef[last_coef];
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      // reconstruction
+      fl_temp=flTab[filtNo];
+      pattern=patternTab_filt[filtNo];
+#else      
 	  pattern=pattern_fix;
-  	  
+#endif
 	  for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
 	  {
 		im1= &(imgY_pad[i+ii][j-m]);
@@ -2196,13 +3320,64 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel **imgY_rec_post, imgpel **imgY_r
 		  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
 
 	  pixelInt+=(p_imgY_pad[j]*coef[*(pattern++)]);
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      // residual
+      length = (FILTER_LENGTH*FILTER_LENGTH)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_resi];
+      fl_temp=flTab_pr[filtNo_resi];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgYr_pad[i+ii][j-m]);
+        im2= &(imgYr_pad[i-ii][j+m]);
+        for (jj=-m; jj<=m; jj++)
+        {
+          pixelInt+=(( (Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q) )*coef[(*(pattern++))+length]);
+        }
+      }
+
+      im1= &(p_imgYr_pad[j-fl_temp]);
+      im2= &(p_imgYr_pad[j+fl_temp]);
+      for (jj=0; jj<fl_temp; jj++)
+      {
+        pixelInt+=(( (Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q) )*coef[(*(pattern++))+length]);
+      }
+      
+      pixelInt+=(((Int)p_imgYr_pad[j] - (Int)(g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+
+      // prediction
+      length += (FILTER_LENGTH_RESI*FILTER_LENGTH_RESI)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_pred];
+      fl_temp=flTab_pr[filtNo_pred];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgYp_pad[i+ii][j-m]);
+        im2= &(imgYp_pad[i-ii][j+m]);
+        for (jj=-m; jj<=m; jj++)
+        {
+          pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+        }
+      }
+
+      im1= &(p_imgYp_pad[j-fl_temp]);
+      im2= &(p_imgYp_pad[j+fl_temp]);
+      for (jj=0; jj<fl_temp; jj++)
+      {
+        pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      }
+      
+      pixelInt+=(p_imgYp_pad[j]*coef[(*(pattern++))+length]);
+#endif
 	  pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
 	  imgY_rec_post[i-fl][j-fl]=max(0, min(pixelInt,max_val));
     }
   }
 }
 
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+Void TComAdaptiveLoopFilter::subfilterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int filtNo_resi, int filtNo_pred, int start_height, int end_height, int start_width, int end_width, int bits_rec, int bits_pred, int bits_resi)
+#else    
 Void TComAdaptiveLoopFilter::subfilterFrame(imgpel **imgY_rec_post, imgpel **imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width)
+#endif
 {
   int i, j, ii, jj, pixelInt,m=0;
   imgpel *p_imgY_var,*p_imgY_pad;
@@ -2213,22 +3388,68 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel **imgY_rec_post, imgpel **img
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+  imgpel *p_imgYr_pad, *p_imgYp_pad;
+  int offset     = (1<<(bits_rec - 1));
+  int shift_pred = (1<<(bits_rec - bits_pred));
+  int shift_resi = (1<<(bits_rec - bits_resi));
+  int num_bits_minus_1= bits_rec;
+  int length = 0;
+  int flTab_pr[5] = {0,1,2,3,4};
+  int coef_new[NO_VAR_BINS][MAX_SQR_FILT_LENGTH];
+  int *cp, *cp1;
+#else
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
   int *pattern_fix=patternTab_filt[filtNo];
   fl_temp=flTab[filtNo];
+#endif
 
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+  for (j=0;j<NO_VAR_BINS;j++)
+  {
+    cp  = coef_new[j];
+    cp1 = filterCoeffPrevSelected[j];
+
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_resi;
+    }
+    for (i=0;i<(FILTER_LENGTH*FILTER_LENGTH)/2 + 1;i++)
+    {
+      *cp++=*cp1++ * shift_pred;
+    }
+    *cp++=*cp1++;
+  }
+#endif  
   // Filter
   for (i = fl + start_height; i < end_height+fl; i++)
   {
     p_imgY_var = imgY_var[i-fl] + start_width;
 	p_imgY_pad = imgY_pad[i];
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+    p_imgYr_pad = imgYr_pad[i];
+    p_imgYp_pad = imgYp_pad[i];
+#endif    
     for (j = fl + start_width; j < end_width+fl; j++)
 	{
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      coef = coef_new[*(p_imgY_var++)];
+#else
 	  coef = filterCoeffPrevSelected[*(p_imgY_var++)];
+#endif
 	  pixelInt=coef[last_coef];
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      // reconstruction
+      fl_temp=flTab[filtNo];
+      pattern=patternTab_filt[filtNo];
+#else      
 	  pattern=pattern_fix;
-    	  
+#endif    	  
 	  for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
 	  {
 		im1= &(imgY_pad[i+ii][j-m]);
@@ -2240,11 +3461,47 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel **imgY_rec_post, imgpel **img
 	  im1= &(p_imgY_pad[j-fl_temp]);
 	  im2= &(p_imgY_pad[j+fl_temp]);	
 	  for (jj=0; jj<fl_temp; jj++)
-		  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+        pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
 
-	  pixelInt+=(p_imgY_pad[j]*coef[*(pattern++)]);
-	  pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
-	  imgY_rec_post[i-fl][j-fl]=max(0, min(pixelInt,max_val));
+      pixelInt+=(p_imgY_pad[j]*coef[*(pattern++)]);
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+      // residual
+      length = (FILTER_LENGTH*FILTER_LENGTH)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_resi];
+      fl_temp=flTab_pr[filtNo_resi];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgYr_pad[i+ii][j-m]);
+        im2= &(imgYr_pad[i-ii][j+m]);
+        for (jj=-m; jj<=m; jj++)
+          pixelInt+=(((Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      }
+
+      im1= &(p_imgYr_pad[j-fl_temp]);
+      im2= &(p_imgYr_pad[j+fl_temp]);	
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=(((Int)(*(im1++)+ *(im2--))-(Int)(2*g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      pixelInt+=(((Int)p_imgYr_pad[j]-(Int)(g_uiIBDI_MAX_Q))*coef[(*(pattern++))+length]);
+      // pred
+      length += (FILTER_LENGTH_RESI*FILTER_LENGTH_RESI)/2 + 1;
+      pattern=patternTab_filt_pr[filtNo_pred];
+      fl_temp=flTab_pr[filtNo_pred];
+      for (ii=-fl_temp, m = 0; ii<0; ii++,m++)
+      {
+        im1= &(imgYp_pad[i+ii][j-m]);
+        im2= &(imgYp_pad[i-ii][j+m]);
+        for (jj=-m; jj<=m; jj++)
+          pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      }
+  
+      im1= &(p_imgYp_pad[j-fl_temp]);
+      im2= &(p_imgYp_pad[j+fl_temp]);	
+      for (jj=0; jj<fl_temp; jj++)
+        pixelInt+=((*(im1++)+ *(im2--))*coef[(*(pattern++))+length]);
+      pixelInt+=(p_imgYp_pad[j]*coef[(*(pattern++))+length]);
+#endif
+      pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+      imgY_rec_post[i-fl][j-fl]=max(0, min(pixelInt,max_val));
     }
   }
 }
@@ -2295,8 +3552,11 @@ Void TComAdaptiveLoopFilter::xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlf
 	// check maskImagedec
   if ( pcCU->getAlfCtrlFlag(uiAbsPartIdx) )
   {
-	 subfilterFrame(imgY_rec_post, imgY_rec, pcAlfParam->realfiltNo, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)));
-
+#if (WIENER_3_INPUT && !ALF_MEM_PATCH)
+    subfilterFrame(imgY_rec_post, imgY_rec, pcAlfParam->realfiltNo, (pcAlfParam->tap_resi-1)/2, (pcAlfParam->tap_pred-1)/2, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)), pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[0]], pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[1]], pcAlfParam->filter_precision_table_shift[pcAlfParam->filter_precision[2]]);
+#else
+    subfilterFrame(imgY_rec_post, imgY_rec, pcAlfParam->realfiltNo, uiTPelY, min(uiBPelY+1,(unsigned int)(img_height)), uiLPelX, min(uiRPelX+1,(unsigned int)(img_width)));
+#endif    
   }
 }
 
@@ -3264,6 +4524,8 @@ Void TComAdaptiveLoopFilter::xFrameChroma( TComPicYuv* pcPicDec, TComPicYuv* pcP
     break;
   }
 }
+#endif
+#endif //WIENER_3_INPUT
 
 #if TSB_ALF_HEADER
 Void TComAdaptiveLoopFilter::setNumCUsInFrame(TComPic *pcPic)
@@ -3320,4 +4582,39 @@ Void TComAdaptiveLoopFilter::setAlfCtrlFlags(ALFParam *pAlfParam, TComDataCU *pc
   }
 }
 #endif
+
+
+
+#if WIENER_3_INPUT
+Int TComAdaptiveLoopFilter::get_mem2Dint(Int ***array2D, Int rows, Int columns)
+{
+  Int i;
+
+  if((*array2D      = (Int**)calloc(rows,        sizeof(Int*))) == NULL)
+    no_mem_exit("get_mem2Dint: array2D");
+  if(((*array2D)[0] = (Int* )calloc(rows*columns,sizeof(Int ))) == NULL)
+    no_mem_exit("get_mem2Dint: array2D");
+
+  for(i=1 ; i<rows ; i++)
+    (*array2D)[i] =  (*array2D)[i-1] + columns  ;
+
+  return rows*columns*sizeof(Int);
+}
+
+void TComAdaptiveLoopFilter::free_mem2Dint(Int **array2D)
+{
+  if (array2D)
+  {
+    if (array2D[0]) 
+      free (array2D[0]);
+    else exit(0);
+
+    free (array2D);
+
+  } 
+  else
+  {
+    exit(0);
+  }
+}
 #endif

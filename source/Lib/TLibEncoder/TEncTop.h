@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TEncTop.h
+/** \file      TEncTop.h
     \brief    encoder class (header)
 */
 
@@ -65,10 +65,10 @@ class TEncTop : public TEncCfg
 {
 private:
   // picture
-  Int                     m_iPOCLast;                     ///< time index (POC)
-  Int                     m_iNumPicRcvd;                  ///< number of received pictures
-  UInt                    m_uiNumAllPicCoded;             ///< number of coded pictures
-  TComList<TComPic*>      m_cListPic;                     ///< dynamic list of pictures
+  Int                      m_iPOCLast;                      ///< time index (POC)
+  Int                      m_iNumPicRcvd;                  ///< number of received pictures
+  UInt                    m_uiNumAllPicCoded;              ///< number of coded pictures
+  TComList<TComPic*>      m_cListPic;                      ///< dynamic list of pictures
 
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
@@ -111,27 +111,27 @@ private:
 
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
-  Void  xInitSPS          ();                             ///< initialize SPS from encoder options
+  Void  xInitSPS          ();                              ///< initialize SPS from encoder options
 
 public:
   TEncTop();
   virtual ~TEncTop();
 
   Void      create          ();
-  Void      destroy         ();
+  Void      destroy          ();
   Void      init            ();
-  Void      deletePicBuffer ();
+  Void      deletePicBuffer  ();
 
   // -------------------------------------------------------------------------------------------------------------------
   // member access functions
   // -------------------------------------------------------------------------------------------------------------------
 
-  TComList<TComPic*>*     getListPic            () { return  &m_cListPic;             }
-  TEncSearch*             getPredSearch         () { return  &m_cSearch;              }
+  TComList<TComPic*>*      getListPic            () { return  &m_cListPic;              }
+  TEncSearch*              getPredSearch          () { return  &m_cSearch;              }
 
-  TComTrQuant*            getTrQuant            () { return  &m_cTrQuant;             }
-  TComLoopFilter*         getLoopFilter         () { return  &m_cLoopFilter;          }
-  TEncAdaptiveLoopFilter* getAdaptiveLoopFilter () { return  &m_cAdaptiveLoopFilter;  }
+  TComTrQuant*            getTrQuant            () { return  &m_cTrQuant;              }
+  TComLoopFilter*          getLoopFilter          () { return  &m_cLoopFilter;          }
+  TEncAdaptiveLoopFilter* getAdaptiveLoopFilter  () { return  &m_cAdaptiveLoopFilter;  }
 
   TEncGOP*                getGOPEncoder         () { return  &m_cGOPEncoder;          }
   TEncSlice*              getSliceEncoder       () { return  &m_cSliceEncoder;        }
@@ -151,7 +151,7 @@ public:
 
   TComBitCounter*         getBitCounter         () { return  &m_cBitCounter;          }
   TComRdCost*             getRdCost             () { return  &m_cRdCost;              }
-  TEncSbac***             getRDSbacCoder        () { return  m_pppcRDSbacCoder;       }
+  TEncSbac***              getRDSbacCoder        () { return  m_pppcRDSbacCoder;        }
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
 
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
@@ -163,10 +163,13 @@ public:
 
   /// encode several number of pictures until end-of-sequence
   Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES    
+               TComList<TComPicYuv*>& rcListPicYuvPOut,
+               TComList<TComPicYuv*>& rcListPicYuvQOut,
+#endif               
                TComList<TComBitstream*>& rcListBitstreamOut, Int& iNumEncoded );
 
 };
 
 
 #endif // __TENCTOP__
-

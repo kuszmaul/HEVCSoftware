@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TComYuv.cpp
+/** \file      TComYuv.cpp
     \brief    general YUV buffer class
     \todo     this should be merged with TComPicYuv
 */
@@ -76,7 +76,7 @@ Void TComYuv::printout()
 Void TComYuv::create( UInt iWidth, UInt iHeight )
 {
   // memory allocation
-  m_apiBufY  = (Pel*)xMalloc( Pel, iWidth*iHeight    );
+  m_apiBufY  = (Pel*)xMalloc( Pel, iWidth*iHeight     );
   m_apiBufU  = (Pel*)xMalloc( Pel, iWidth*iHeight >> 2 );
   m_apiBufV  = (Pel*)xMalloc( Pel, iWidth*iHeight >> 2 );
 
@@ -101,7 +101,51 @@ Void TComYuv::clear()
   ::memset( m_apiBufU, 0, ( m_iCWidth * m_iCHeight )*sizeof(Pel) );
   ::memset( m_apiBufV, 0, ( m_iCWidth * m_iCHeight )*sizeof(Pel) );
 }
+#if WIENER_3_INPUT
+Void TComYuv::clear(Int val)
+{
+  Int  y,x;
 
+  Pel* pDst       = m_apiBufY;
+  Pel* pDstU      = m_apiBufU;
+  Pel* pDstV      = m_apiBufV;
+
+  Pel* pD         = m_apiBufY;
+  
+  UInt  iDstStride   = getStride();
+  UInt  iDstStrideUV = getCStride();
+  
+  for ( x = m_iWidth; x != 0; x-- )
+  {
+    pDst[x-1]=(Pel)val;
+  }
+  pDst += iDstStride;
+    
+  for ( y = m_iHeight-1; y != 0; y-- )
+  {
+    memcpy(pDst,pD,m_iWidth*sizeof(Pel));
+    pDst += iDstStride;
+  }
+  
+  
+  pD         = m_apiBufU;
+  for ( x = m_iCWidth; x != 0; x-- )
+  {
+    pDstU[x-1]=(Pel)val;
+  }
+  memcpy(pDstV,pDstU,m_iCWidth*sizeof(Pel));
+  pDstU += iDstStrideUV;
+  pDstV += iDstStrideUV;
+  
+  for ( y = m_iCHeight-1; y != 0; y-- )
+  {
+    memcpy(pDstU,pD,m_iCWidth*sizeof(Pel));
+    memcpy(pDstV,pD,m_iCWidth*sizeof(Pel));
+    pDstU += iDstStrideUV;
+    pDstV += iDstStrideUV;
+  }
+}
+#endif
 Void TComYuv::clearLuma()
 {
   ::memset( m_apiBufY, 0, ( m_iWidth  * m_iHeight  )*sizeof(Pel) );
@@ -215,6 +259,53 @@ Void TComYuv::copyFromPicChroma( TComPicYuv* pcPicYuvSrc, UInt iCuAddr, UInt uiA
     pDstV += iDstStride;
   }
 }
+#if WIENER_3_INPUT
+Void TComYuv::setPartYuv( Int val, UInt uiDstPartIdx )
+{
+  setPartLuma  ( val, uiDstPartIdx );
+  setPartChroma( val, uiDstPartIdx );
+}
+
+Void TComYuv::setPartLuma( Int val, UInt uiDstPartIdx )
+{
+  Int  y,x;
+
+  Pel* pDst     = m_apiBufY;
+
+  UInt  iDstStride  = getStride();
+  for ( y = m_iHeight; y != 0; y-- )
+  {
+    for ( x = m_iWidth; x != 0; x-- )
+    {
+      pDst[x-1]=(Pel)val;
+    }    
+//     ::memset( pDst, val, sizeof(Pel)*m_iWidth);
+    pDst += iDstStride;
+  }
+}
+
+Void TComYuv::setPartChroma( Int val, UInt uiDstPartIdx )
+{
+  Int  y,x;
+
+  Pel* pDstU      = m_apiBufU;
+  Pel* pDstV      = m_apiBufV;
+
+  UInt  iDstStride = getCStride();
+  for ( y = m_iCHeight; y != 0; y-- )
+  {
+    for ( x = m_iCWidth; x != 0; x-- )
+    {
+      pDstU[x-1]=(Pel)val;
+      pDstV[x-1]=(Pel)val;
+    }    
+/*    ::memset( pDstU, 0, sizeof(Pel)*(m_iCWidth) );
+    ::memset( pDstV, 0, sizeof(Pel)*(m_iCWidth) );*/
+    pDstU += iDstStride;
+    pDstV += iDstStride;
+  }
+}
+#endif
 
 Void TComYuv::copyToPartYuv( TComYuv* pcYuvDst, UInt uiDstPartIdx )
 {
@@ -313,6 +404,61 @@ Void TComYuv::copyPartToChroma( TComYuv* pcYuvDst, UInt uiSrcPartIdx )
     pDstV += iDstStride;
   }
 }
+#if WIENER_3_INPUT
+Void TComYuv::setPartToPartYuv   ( Int val, UInt uiPartIdx, UInt iWidth, UInt iHeight )
+{
+  setPartToPartLuma   (val, uiPartIdx, iWidth, iHeight );
+  setPartToPartChroma (val, uiPartIdx, iWidth>>1, iHeight>>1 );
+}
+
+Void TComYuv::setPartToPartLuma  ( Int val, UInt uiPartIdx, UInt iWidth, UInt iHeight )
+{
+  Pel* pDst =           getLumaAddr(uiPartIdx);
+  Pel* pD   =pDst;
+
+  UInt  iDstStride = getStride();
+  
+  for ( UInt x = iWidth; x != 0; x-- )
+  {
+    pDst[x-1]=(Pel)val;
+  }
+
+  pDst += iDstStride;
+  for ( UInt y = iHeight-1; y != 0; y-- )
+  {
+    memcpy(pDst,pD,iWidth*sizeof(Pel));
+    pDst += iDstStride;
+  }  
+}
+
+Void TComYuv::setPartToPartChroma( Int val, UInt uiPartIdx, UInt iWidth, UInt iHeight )
+{
+  Pel*  pDstU = getCbAddr(uiPartIdx);
+  Pel*  pDstV = getCrAddr(uiPartIdx);
+  
+  Pel*  pDst=pDstU;
+
+  UInt   iDstStride = getCStride();
+  
+  for ( UInt x = iWidth; x != 0; x-- )
+  {
+    pDstU[x-1]=(Pel)val;
+  }  
+  
+  memcpy(pDstV,pDstU,iWidth*sizeof(Pel));
+  pDstU += iDstStride;
+  pDstV += iDstStride;
+  
+  for ( UInt y = iHeight-1; y != 0; y-- )
+  {
+    memcpy(pDstU,pDst,iWidth*sizeof(Pel));
+    memcpy(pDstV,pDst,iWidth*sizeof(Pel));
+
+    pDstU += iDstStride;
+    pDstV += iDstStride;
+  }
+}
+#endif
 
 Void TComYuv::copyPartToPartYuv   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt iWidth, UInt iHeight )
 {
@@ -383,6 +529,94 @@ Void TComYuv::copyToYuv( TComYuv*    pcYuvDst )
   copyToChroma(pcYuvDst);
 }
 
+#if WIENER_3_INPUT
+Void TComYuv::ClipYUV( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean )
+{
+  ClipLuma   ( pcYuvSrc0, uiTrUnitIdx, uiPartSize     , add_mean);
+  ClipChroma ( pcYuvSrc0, uiTrUnitIdx, uiPartSize>>1  , add_mean);
+}
+
+Void TComYuv::ClipLuma( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean )
+{
+  Int x, y;
+
+  Pel* pSrc0 = pcYuvSrc0->getLumaAddr( uiTrUnitIdx, uiPartSize );
+  Pel* pDst  = getLumaAddr( uiTrUnitIdx, uiPartSize );
+
+  UInt iSrc0Stride = pcYuvSrc0->getStride();
+  UInt iDstStride  = getStride();
+  if (add_mean==0)
+  {
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDst[x] = xClip( pSrc0[x]);
+      }
+      pSrc0 += iSrc0Stride;
+      pDst  += iDstStride;
+    }
+  }   
+  else
+  {
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDst[x] = xClip1( pSrc0[x] + g_uiIBDI_MAX_Q );
+      }
+      pSrc0 += iSrc0Stride;
+      pDst  += iDstStride;
+    }    
+  }
+}
+
+Void TComYuv::ClipChroma( TComYuv* pcYuvSrc0, UInt uiTrUnitIdx, UInt uiPartSize, int add_mean )
+{
+  Int x, y;
+
+  Pel* pSrcU0 = pcYuvSrc0->getCbAddr( uiTrUnitIdx, uiPartSize );
+  Pel* pSrcV0 = pcYuvSrc0->getCrAddr( uiTrUnitIdx, uiPartSize );
+  Pel* pDstU = getCbAddr( uiTrUnitIdx, uiPartSize );
+  Pel* pDstV = getCrAddr( uiTrUnitIdx, uiPartSize );
+
+  UInt  iSrc0Stride = pcYuvSrc0->getCStride();
+  UInt  iDstStride  = getCStride();
+  if (add_mean==0)
+  {  
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDstU[x] = xClip( pSrcU0[x] );
+        pDstV[x] = xClip( pSrcV0[x] );
+      }
+  
+      pSrcU0 += iSrc0Stride;
+      pSrcV0 += iSrc0Stride;
+      pDstU  += iDstStride;
+      pDstV  += iDstStride;
+    }
+  }
+  else
+  {
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDstU[x] = xClip1( pSrcU0[x]+ g_uiIBDI_MAX_Q );
+        pDstV[x] = xClip1( pSrcV0[x]+ g_uiIBDI_MAX_Q );
+      }
+  
+      pSrcU0 += iSrc0Stride;
+      pSrcV0 += iSrc0Stride;
+      pDstU  += iDstStride;
+      pDstV  += iDstStride;
+    }    
+  }
+}
+#endif
+
 Void TComYuv::addClip( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 {
   addClipLuma   ( pcYuvSrc0, pcYuvSrc1, uiTrUnitIdx, uiPartSize     );
@@ -442,14 +676,25 @@ Void TComYuv::addClipChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUn
     pDstV  += iDstStride;
   }
 }
-
+#if WIENER_3_INPUT
+Void TComYuv::subtract( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, Int add_mean )
+{
+  subtractLuma  ( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize    , add_mean);
+  subtractChroma( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize>>1 , add_mean);
+}
+#else
 Void TComYuv::subtract( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 {
   subtractLuma  ( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize    );
   subtractChroma( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize>>1 );
 }
+#endif
 
+#if WIENER_3_INPUT
+Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, Int add_mean )
+#else    
 Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#endif
 {
   Int x, y;
 
@@ -460,19 +705,44 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
   Int  iSrc0Stride = pcYuvSrc0->getStride();
   Int  iSrc1Stride = pcYuvSrc1->getStride();
   Int  iDstStride  = getStride();
-  for ( y = uiPartSize-1; y >= 0; y-- )
+  
+#if WIENER_3_INPUT
+  if (add_mean==0)
   {
-    for ( x = uiPartSize-1; x >= 0; x-- )
+#endif    
+    for ( y = uiPartSize-1; y >= 0; y-- )
     {
-      pDst[x] = pSrc0[x] - pSrc1[x];
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDst[x] = pSrc0[x] - pSrc1[x];
+      }
+      pSrc0 += iSrc0Stride;
+      pSrc1 += iSrc1Stride;
+      pDst  += iDstStride;
     }
-    pSrc0 += iSrc0Stride;
-    pSrc1 += iSrc1Stride;
-    pDst  += iDstStride;
+#if WIENER_3_INPUT
   }
+  else
+  {
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDst[x] = pSrc0[x] - pSrc1[x] + g_uiIBDI_MAX_Q;
+      }
+      pSrc0 += iSrc0Stride;
+      pSrc1 += iSrc1Stride;
+      pDst  += iDstStride;
+    }    
+  }
+#endif
 }
 
+#if WIENER_3_INPUT
+Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize, Int add_mean )
+#else
 Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#endif
 {
   Int x, y;
 
@@ -486,20 +756,45 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
   Int  iSrc0Stride = pcYuvSrc0->getCStride();
   Int  iSrc1Stride = pcYuvSrc1->getCStride();
   Int  iDstStride  = getCStride();
-  for ( y = uiPartSize-1; y >= 0; y-- )
+  
+#if WIENER_3_INPUT
+  if (add_mean==0)
   {
-    for ( x = uiPartSize-1; x >= 0; x-- )
+#endif
+    for ( y = uiPartSize-1; y >= 0; y-- )
     {
-      pDstU[x] = pSrcU0[x] - pSrcU1[x];
-      pDstV[x] = pSrcV0[x] - pSrcV1[x];
-    }
-    pSrcU0 += iSrc0Stride;
-    pSrcU1 += iSrc1Stride;
-    pSrcV0 += iSrc0Stride;
-    pSrcV1 += iSrc1Stride;
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDstU[x] = pSrcU0[x] - pSrcU1[x];
+        pDstV[x] = pSrcV0[x] - pSrcV1[x];
+      }
+      pSrcU0 += iSrc0Stride;
+      pSrcU1 += iSrc1Stride;
+      pSrcV0 += iSrc0Stride;
+      pSrcV1 += iSrc1Stride;
     pDstU  += iDstStride;
     pDstV  += iDstStride;
   }
+#if WIENER_3_INPUT
+  }
+  else
+  {
+    for ( y = uiPartSize-1; y >= 0; y-- )
+    {
+      for ( x = uiPartSize-1; x >= 0; x-- )
+      {
+        pDstU[x] = pSrcU0[x] - pSrcU1[x] + g_uiIBDI_MAX_Q;
+        pDstV[x] = pSrcV0[x] - pSrcV1[x] + g_uiIBDI_MAX_Q;
+      }
+      pSrcU0 += iSrc0Stride;
+      pSrcU1 += iSrc1Stride;
+      pSrcV0 += iSrc0Stride;
+      pSrcV1 += iSrc1Stride;
+      pDstU  += iDstStride;
+      pDstV  += iDstStride;
+    }    
+  }
+#endif
 }
 
 #ifdef ROUNDING_CONTROL_BIPRED

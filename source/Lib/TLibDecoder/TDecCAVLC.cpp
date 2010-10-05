@@ -177,6 +177,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #else
   g_uiIBDI_MAX  = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
 #endif
+#if WIENER_3_INPUT
+  g_uiIBDI_MAX_Q   = g_uiIBDI_MAX;
+  g_uiIBDI_MAX_Q_D = g_uiIBDI_MAX_Q<<1; 
+#endif
 
 #if HHI_RQT
   if( !pcSPS->getQuadtreeTUFlag() )
@@ -185,7 +189,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     g_uiAddCUDepth = 0;
     if( ((g_uiMaxCUWidth>>(g_uiMaxCUDepth-1)) > pcSPS->getMaxTrSize()) )
     {
-      while( (g_uiMaxCUWidth>>(g_uiMaxCUDepth-1)) > (pcSPS->getMaxTrSize()<<g_uiAddCUDepth) ) g_uiAddCUDepth++;
+    while( (g_uiMaxCUWidth>>(g_uiMaxCUDepth-1)) > (pcSPS->getMaxTrSize()<<g_uiAddCUDepth) ) g_uiAddCUDepth++;
     }
     g_uiMaxCUDepth += g_uiAddCUDepth;
     g_uiAddCUDepth++;
@@ -606,10 +610,10 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       UInt uiMaxNumBits = 3;
       for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
       {
-        xReadFlag( uiSymbol );
-        if ( uiSymbol )
-        {
-          break;
+      xReadFlag( uiSymbol );
+      if ( uiSymbol )
+      {
+        break;
         }
         uiMode++;
       }
@@ -1062,21 +1066,21 @@ Void TDecCavlc::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPa
     xReadFlag ( uiSymbol );
     if ( uiSymbol )
     {
-	    xReadFlag ( uiSymbol_MVres );
-	    if (uiSymbol_MVres)
-	    {
-		    if (pcCU->getSlice()->getNumRefIdx( eRefList )>2)
-		    {
-			    xReadUnaryMaxSymbol( uiSymbol, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
-			    uiSymbol++;
-		    }
-	    }
-	    else
-	    {
-		    uiSymbol=0;
-	    }
-    }
-    riRefFrmIdx = uiSymbol;
+		xReadFlag ( uiSymbol_MVres );
+		if (uiSymbol_MVres)
+		{
+			if (pcCU->getSlice()->getNumRefIdx( eRefList )>2)
+			{
+				xReadUnaryMaxSymbol( uiSymbol, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
+				uiSymbol++;
+			}
+		}
+		else
+		{
+			uiSymbol=0;
+		}
+	  }
+      riRefFrmIdx = uiSymbol;
 	  if (!uiSymbol_MVres)
 	  {
 		  riRefFrmIdx = pcCU->getSlice()->getNumRefIdx( eRefList );
@@ -1824,7 +1828,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       {
         for (uiScanning=0; uiScanning<64; uiScanning++)
         {
-          piCoeff[ pucScan[ (uiSize/64) * uiScanning + uiInterleaving ] ] = 0;
+            piCoeff[ pucScan[ (uiSize/64) * uiScanning + uiInterleaving ] ] = 0;
         }
       }
       else
@@ -1880,6 +1884,34 @@ Void TDecCavlc::parseAlfFlag (UInt& ruiVal)
 {
   xReadFlag( ruiVal );
 }
+
+#if (WIENER_3_INPUT && !QC_ALF)
+Int TDecCavlc::golombDecode(Int k)
+{
+  Int iSymbol;
+  UInt uiSymbol;
+  Int q = -1;
+  Int nr = 0;
+  Int m = (Int)pow(2.0, k);
+  Int a;
+  
+  parseAlfSvlc (iSymbol);
+  q=iSymbol;
+  
+  for(a = 0; a < k; ++a)          // read out the sequential log2(M) bits
+  {
+    parseAlfFlag(uiSymbol);
+    if(uiSymbol)
+      nr += 1 << a;
+  }
+  nr += q * m;                    // add the bits and the multiple of M
+  if(nr != 0){
+    parseAlfFlag(uiSymbol);
+    nr = (uiSymbol)? nr: -nr;
+  }
+  return nr;
+}
+#endif
 
 #if TSB_ALF_HEADER
 Void TDecCavlc::parseAlfFlagNum( UInt& ruiVal, UInt minValue, UInt depth )

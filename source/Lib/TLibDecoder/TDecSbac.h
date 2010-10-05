@@ -84,6 +84,9 @@ public:
   Void parseAlfUvlc       ( UInt& ruiVal            );
   Void parseAlfSvlc       ( Int&  riVal             );
   Void parseAlfCtrlDepth  ( UInt& ruiAlfCtrlDepth   );
+#if (WIENER_3_INPUT && !QC_ALF)
+  Int  golombDecode       ( Int k);
+#endif  
 
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );

@@ -786,6 +786,15 @@ TComSPS::TComSPS()
   m_iALFMaxLength  = 9;    //MS
 #endif
 
+#if WIENER_3_INPUT
+  m_iALF_enable_Y     = 1;
+  m_iALF_enable_U     = 1;
+  m_iALF_enable_V     = 1;
+  m_iALF_fs_max_rec   = 9;
+  m_iALF_fs_max_pred  = 5;
+  m_iALF_fs_max_qpe   = 3;
+#endif
+
 #ifdef DCM_PBIC
   m_bUseIC       = false;
 #endif

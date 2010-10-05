@@ -1096,13 +1096,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
     xPredInterChromaBlk_TEN ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()    , uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
     break;
 #endif
-	  case IPF_HHI_4TAP_MOMS:
-	  case IPF_HHI_6TAP_MOMS:  
-		predInterLumaBlkMOMS    ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRecFilt(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, ePFilt );
-		predInterChromaBlkMOMS  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRecFilt(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, ePFilt );
-		break;
-	  default:
-	    xPredInterLumaBlk       ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
+  case IPF_HHI_4TAP_MOMS:
+  case IPF_HHI_6TAP_MOMS:
+    predInterLumaBlkMOMS    ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRecFilt(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, ePFilt );
+    predInterChromaBlkMOMS  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRecFilt(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, ePFilt );
+    break;
+  default:
+    xPredInterLumaBlk       ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()    , uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
       xPredInterChromaBlk     ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
 	  }
   }
@@ -2128,13 +2128,19 @@ Void TComPrediction::getIcPredAICP( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPar
 #endif
 
 // CIP
+#if WIENER_3_INPUT
+Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pel* pResi, Pel* pReco, Pel* pP, Pel* pQ, UInt uiStride, UInt uiStride_PQ, Int iWidth, Int iHeight, TComDataCU* pcCU, Bool bAboveAvail, Bool bLeftAvail )
+#else
 Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pel* pResi, Pel* pReco, UInt uiStride, Int iWidth, Int iHeight, TComDataCU* pcCU, Bool bAboveAvail, Bool bLeftAvail )
+#endif
 {
   Int*  ptrSrc;
   Int   sw, iWidth2;
   Int   x, y;
   Pel   iTemp;
-
+#if WIENER_3_INPUT
+  Pel   iTemp2;
+#endif
   // obtain source
   ptrSrc  = pcTComPattern->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
 
@@ -2190,24 +2196,52 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
   if ( bAboveAvail && bLeftAvail )
   {
     iTemp = CIP_PRED( ptrSrc[-1], ptrSrc[-sw], ptrSrc[-1-sw] );
+#if WIENER_3_INPUT
+    iTemp2 = CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT );
+    pP[0] = Clip( iTemp2);    
+    pReco[0] = Clip( iTemp2 + pResi[0] );
+    pQ[0] = pReco[0] - pP[0] + g_uiIBDI_MAX_Q;
+#else
     pReco[0] = Clip( CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT ) + pResi[0] );
+#endif
   }
   else
   if ( bAboveAvail )
   {
     iTemp = CIP_PRED( iDC, ptrSrc[-sw], iDC );
+#if WIENER_3_INPUT
+    iTemp2 = CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT );
+    pP[0] = Clip( iTemp2 );
+    pReco[0] = Clip( iTemp2 + pResi[0] );
+    pQ[0] = pReco[0] - pP[0] + g_uiIBDI_MAX_Q;
+#else    
     pReco[0] = Clip( CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT ) + pResi[0] );
+#endif
   }
   else
   if ( bLeftAvail )
   {
     iTemp = CIP_PRED( ptrSrc[-1], iDC, iDC );
+#if WIENER_3_INPUT
+    iTemp2 = CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT );
+    pP[0] = Clip( iTemp2 );
+    pReco[0] = Clip( iTemp2 + pResi[0] );
+    pQ[0] = pReco[0] - pP[0] + g_uiIBDI_MAX_Q;
+#else
     pReco[0] = Clip( CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT ) + pResi[0] );
+#endif    
   }
   else
   {
     iTemp = iDC;
+#if WIENER_3_INPUT
+    iTemp2 = CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT );
+    pP[0] = Clip( iTemp2 );
+    pReco[0] = Clip( iTemp2 + pResi[0] );
+    pQ[0] = pReco[0] - pP[0] + g_uiIBDI_MAX_Q;
+#else    
     pReco[0] = Clip( CIP_WSUM( pPred[0], iTemp, CIP_WEIGHT ) + pResi[0] );
+#endif    
   }
 
   // update prediction for top side
@@ -2216,7 +2250,14 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
     for ( x=1; x<iWidth; x++ )
     {
       iTemp = CIP_PRED( pReco[x-1], ptrSrc[x-sw], ptrSrc[x-1-sw] );
+#if WIENER_3_INPUT
+      iTemp2 = CIP_WSUM( pPred[x], iTemp, CIP_WEIGHT );
+      pP   [ x ] = Clip( iTemp2 );
+      pReco[ x ] = Clip( iTemp2 + pResi[x] );
+      pQ   [ x ] = pReco[ x ] - pP[ x ] + g_uiIBDI_MAX_Q;
+#else      
       pReco[ x ] = Clip( CIP_WSUM( pPred[x], iTemp, CIP_WEIGHT ) + pResi[x] );
+#endif          
     }
   }
   else
@@ -2224,7 +2265,14 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
     for ( x=1; x<iWidth; x++ )
     {
       iTemp = CIP_PRED( pReco[x-1], iDC, iDC );
+#if WIENER_3_INPUT
+      iTemp2 = CIP_WSUM( pPred[x], iTemp, CIP_WEIGHT );
+      pP   [ x ] = Clip( iTemp2 );
+      pReco[ x ] = Clip( iTemp2 + pResi[x] );
+      pQ   [ x ] = pReco[ x ] - pP   [ x ] + g_uiIBDI_MAX_Q;
+#else
       pReco[ x ] = Clip( CIP_WSUM( pPred[x], iTemp, CIP_WEIGHT ) + pResi[x] );
+#endif          
     }
   }
 
@@ -2234,7 +2282,14 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
     for ( y=1; y<iHeight; y++ )
     {
       iTemp = CIP_PRED( ptrSrc[-1+y*sw], pReco[(y-1)*uiStride], ptrSrc[-1+(y-1)*sw] );
+#if WIENER_3_INPUT
+      iTemp2 = CIP_WSUM( pPred[ y*uiStride ], iTemp, CIP_WEIGHT );
+      pP[ y*uiStride_PQ ] = Clip( iTemp2  );
+      pReco[ y*uiStride ] = Clip( iTemp2 + pResi[ y*uiStride ] );
+      pQ[ y*uiStride_PQ ] = pReco[ y*uiStride ] - pP[ y*uiStride_PQ ] + g_uiIBDI_MAX_Q;
+#else      
       pReco[ y*uiStride ] = Clip( CIP_WSUM( pPred[ y*uiStride ], iTemp, CIP_WEIGHT ) + pResi[ y*uiStride ] );
+#endif          
     }
   }
   else
@@ -2242,7 +2297,14 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
     for ( y=1; y<iHeight; y++ )
     {
       iTemp = CIP_PRED( iDC, pReco[(y-1)*uiStride], iDC );
+#if WIENER_3_INPUT
+      iTemp2 = CIP_WSUM( pPred[ y*uiStride ], iTemp, CIP_WEIGHT );
+      pP[ y*uiStride_PQ ] = Clip( iTemp2 );
+      pReco[ y*uiStride ] = Clip( iTemp2 + pResi[ y*uiStride ] );
+      pQ[ y*uiStride_PQ ] = pReco[ y*uiStride ] - pP[ y*uiStride_PQ ] + g_uiIBDI_MAX_Q;
+#else      
       pReco[ y*uiStride ] = Clip( CIP_WSUM( pPred[ y*uiStride ], iTemp, CIP_WEIGHT ) + pResi[ y*uiStride ] );
+#endif          
     }
   }
 
@@ -2252,7 +2314,14 @@ Void TComPrediction::recIntraLumaCIP( TComPattern* pcTComPattern, Pel* pPred, Pe
     for ( x=1; x<iWidth; x++ )
     {
       iTemp = CIP_PRED( pReco[ (x-1)+y*uiStride], pReco[ x+(y-1)*uiStride ], pReco[ (x-1)+(y-1)*uiStride ] );
+#if WIENER_3_INPUT
+      iTemp2 = CIP_WSUM( pPred[ x+y*uiStride ], iTemp, CIP_WEIGHT );
+      pP[ x+y*uiStride_PQ ] = Clip( iTemp2 );
+      pReco[ x+y*uiStride ] = Clip( iTemp2 + pResi[ x+y*uiStride ] );
+      pQ[ x+y*uiStride_PQ ] = pReco[ x+y*uiStride ] - pP[ x+y*uiStride_PQ ] + g_uiIBDI_MAX_Q;
+#else      
       pReco[ x+y*uiStride ] = Clip( CIP_WSUM( pPred[ x+y*uiStride ], iTemp, CIP_WEIGHT ) + pResi[ x+y*uiStride ] );
+#endif          
     }
   }
 }

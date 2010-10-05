@@ -102,6 +102,9 @@ public:
   Void  codeAlfUvlc       ( UInt uiCode );
   Void  codeAlfSvlc       ( Int  uiCode );
   Void  codeAlfCtrlDepth  ();
+#if (WIENER_3_INPUT && !QC_ALF)
+  Void  golombEncode      (Int coeff, Int k);
+#endif
 #if TSB_ALF_HEADER
   Void codeAlfFlagNum        ( UInt uiCode, UInt minValue );
   Void codeAlfCtrlFlag       ( UInt uiSymbol );

@@ -2609,6 +2609,34 @@ Void TEncCavlc::codeAlfFlag( UInt uiCode )
 #endif
 }
 
+#if (WIENER_3_INPUT && !QC_ALF)
+Void TEncCavlc::golombEncode(Int coeff, Int k)
+{
+  Int q, i, m;
+  Int symbol = abs(coeff);
+
+  m = (int)pow(2.0, k);
+  q = symbol / m;
+
+  codeAlfSvlc       ( q );
+
+  for(i = 0; i < k; i++)
+  {
+    codeAlfFlag(symbol & 0x01);//Flags
+    symbol >>= 1;
+  }
+  if ( coeff > 0 )
+  {
+    codeAlfFlag(1);
+  }
+  else if ( coeff < 0 )
+  {
+    codeAlfFlag(0);
+  }
+}
+#endif
+
+
 #if TSB_ALF_HEADER
 Void TEncCavlc::codeAlfFlagNum( UInt uiCode, UInt minValue )
 {

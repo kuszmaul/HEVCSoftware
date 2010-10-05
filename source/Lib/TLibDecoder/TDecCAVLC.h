@@ -117,6 +117,9 @@ public:
   Void  parseAlfFlag        ( UInt& ruiVal );
   Void  parseAlfUvlc        ( UInt& ruiVal );
   Void  parseAlfSvlc        ( Int&  riVal  );
+#if (WIENER_3_INPUT && !QC_ALF)
+  Int   golombDecode        (Int k);
+#endif  
 
   Void  parseSPS            ( TComSPS* pcSPS );
   Void  parsePPS            ( TComPPS* pcPPS);

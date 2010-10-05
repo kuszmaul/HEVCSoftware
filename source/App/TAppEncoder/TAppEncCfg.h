@@ -29,7 +29,7 @@
  * ====================================================================================================================
 */
 
-/** \file     TAppEncCfg.h
+/** \file      TAppEncCfg.h
     \brief    Handle encoder configuration parameters (header)
 */
 
@@ -47,23 +47,35 @@ class TAppEncCfg
 {
 protected:
   // file I/O
-  char*     m_pchInputFile;                                   ///< source file name
-  char*     m_pchBitstreamFile;                               ///< output bitstream file
-  char*     m_pchReconFile;                                   ///< output reconstruction file
-
+  char*     m_pchInputFile;                                    ///< source file name
+  char*     m_pchBitstreamFile;                                ///< output bitstream file
+  char*     m_pchReconFile;                                    ///< output reconstruction file
+#if WIENER_3_INPUT
+#if WIENER_3_INPUT_WRITE_OUT_PICTURES
+  char*     m_pchPFile;                                        ///< output prediction file
+  char*     m_pchQFile;                                        ///< output quantization error file
+#endif
+  Int       m_iAlf_enable_Y;
+  Int       m_iAlf_enable_U;
+  Int       m_iAlf_enable_V;
+  Int       m_iAlf_fs_max_rec;
+  Int       m_iAlf_fs_max_pred;
+  Int       m_iAlf_fs_max_qpe;
+#endif
+  
   // source specification
-  Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
-  Int       m_iFrameSkip;                                     ///< number of skipped frames from the beginning
-  Int       m_iSourceWidth;                                   ///< source width in pixel
+  Int       m_iFrameRate;                                      ///< source frame-rates (Hz)
+  Int       m_iFrameSkip;                                      ///< number of skipped frames from the beginning
+  Int       m_iSourceWidth;                                    ///< source width in pixel
   Int       m_iSourceHeight;                                  ///< source height in pixel
   Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
   Bool      m_bUsePAD;                                        ///< flag for using source padding
-  Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
+  Int       m_aiPad[2];                                        ///< number of padded pixels for width and height
 
   // coding structure
-  Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
-  Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
-  Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
+  Int       m_iIntraPeriod;                                    ///< period of I-slice (random access period)
+  Int       m_iGOPSize;                                        ///< GOP size of hierarchical structure
+  Int       m_iRateGOPSize;                                    ///< GOP size for QP variance
   Int       m_iNumOfReference;                                ///< total number of reference frames in P-slice
   Int       m_iNumOfReferenceB_L0;                            ///< total number of reference frames for reference list L0 in B-slice
   Int       m_iNumOfReferenceB_L1;                            ///< total number of reference frames for reference list L1 in B-slice
@@ -81,14 +93,14 @@ protected:
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
-  Int       m_aiTLayerQPOffset[MAX_TLAYER];                   ///< QP offset corresponding to temporal layer depth
-  char*     m_pchdQPFile;                                     ///< QP offset for each slice (initialized from external file)
+  Int       m_aiTLayerQPOffset[MAX_TLAYER];                    ///< QP offset corresponding to temporal layer depth
+  char*     m_pchdQPFile;                                      ///< QP offset for each slice (initialized from external file)
   Int*      m_aidQP;                                          ///< array of slice QP values
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
 
   // coding unit (CU) definition
-  UInt      m_uiMaxCUWidth;                                   ///< max. CU width in pixel
+  UInt      m_uiMaxCUWidth;                                    ///< max. CU width in pixel
   UInt      m_uiMaxCUHeight;                                  ///< max. CU height in pixel
   UInt      m_uiMaxCUDepth;                                   ///< max. CU depth
 
@@ -106,8 +118,8 @@ protected:
   UInt      m_uiMaxTrSize;                                    ///< max. physical transform size
 
   // coding tools (bit-depth)
-  UInt      m_uiBitDepth;                                     ///< base bit-depth
-  UInt      m_uiBitIncrement;                                 ///< bit-depth increment
+  UInt      m_uiBitDepth;                                      ///< base bit-depth
+  UInt      m_uiBitIncrement;                                  ///< bit-depth increment
 
   // coding tools (inter - motion)
   char*     m_pchGRefMode;                                    ///< array of generated reference modes
@@ -170,7 +182,7 @@ protected:
   Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
-  Bool      m_bUseRDOQ;                                       ///< flag for using RD optimized quantization
+  Bool      m_bUseRDOQ;                                        ///< flag for using RD optimized quantization
   Bool      m_bUseBQP;                                        ///< flag for using B-slice based QP assignment in low-delay hier. structure
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
@@ -187,21 +199,20 @@ protected:
 #endif
 
   // internal member functions
-  Void  xSetGlobal      ();                                   ///< set global variables
-  Void  xCheckParameter ();                                   ///< check validity of configuration values
-  Void  xPrintParameter ();                                   ///< print configuration values
-  Void  xPrintUsage     ();                                   ///< print usage
+  Void  xSetGlobal      ();                                    ///< set global variables
+  Void  xCheckParameter ();                                    ///< check validity of configuration values
+  Void  xPrintParameter ();                                    ///< print configuration values
+  Void  xPrintUsage     ();                                    ///< print usage
 
 public:
   TAppEncCfg();
   virtual ~TAppEncCfg();
 
 public:
-  Void  create    ();                                         ///< create option handling class
-  Void  destroy   ();                                         ///< destroy option handling class
-  Bool  parseCfg  ( Int argc, Char* argv[] );                 ///< parse configuration file to fill member variables
+  Void  create    ();                                          ///< create option handling class
+  Void  destroy   ();                                          ///< destroy option handling class
+  Bool  parseCfg  ( Int argc, Char* argv[] );                  ///< parse configuration file to fill member variables
 
 };// END CLASS DEFINITION TAppEncCfg
 
 #endif // __TAPPENCCFG__
-
