@@ -8069,7 +8069,8 @@ Double TEncAdaptiveLoopFilter::QuantizeIntegerFilterPP(double *filterCoeff, int 
 #if WIENER_3_INPUT
   for (i=0;i<sqrFiltLength;i++)
   {
-    if (isnan(filterCoeff[i]))
+//    if (isnan(filterCoeff[i]))
+    if (filterCoeff[i]!=filterCoeff[i])//check for NaN
     {
       not_solvable_by_cholesky=1;
       break;
@@ -8082,7 +8083,7 @@ Double TEncAdaptiveLoopFilter::QuantizeIntegerFilterPP(double *filterCoeff, int 
   too_large_coefficients=0;
   for (i=0;i<sqrFiltLength;i++)
   {
-    if (filterCoeff[i]>100.0 || filterCoeff[i]<-100.0)
+    if (filterCoeff[i]>30.0 || filterCoeff[i]<-30.0)
     {
       too_large_coefficients=1;
       break;
