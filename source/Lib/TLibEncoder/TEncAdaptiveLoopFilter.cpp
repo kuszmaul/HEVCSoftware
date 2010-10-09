@@ -38,6 +38,12 @@
 #include <stdio.h>
 #include <math.h>
 
+#if WIENER_3_INPUT
+#ifdef _WIN32
+#include <float.h>
+#define isnan(x) _isnan(x)
+#endif
+#endif
 
 #if (WIENER_3_INPUT && !QC_ALF)
 
@@ -5357,7 +5363,6 @@ Int TEncAdaptiveLoopFilter::xsendAllFiltersPPPredForce0(int **FilterCoeffQuant, 
   int mid_resi=mid_rec+sqrFiltLength_resi;
   int one=1<<(ALFp->filter_precision_table_shift[prec_rec]);
   int tapTab[3] = {22, 14, 8};
-  int filt_size;
   int pred_rec;
   int pred_pred;
   int pred_resi;
@@ -8069,8 +8074,7 @@ Double TEncAdaptiveLoopFilter::QuantizeIntegerFilterPP(double *filterCoeff, int 
 #if WIENER_3_INPUT
   for (i=0;i<sqrFiltLength;i++)
   {
-//    if (isnan(filterCoeff[i]))
-    if (filterCoeff[i]!=filterCoeff[i])//check for NaN
+    if (isnan(filterCoeff[i]))//check for NaN
     {
       not_solvable_by_cholesky=1;
       break;
@@ -8083,7 +8087,7 @@ Double TEncAdaptiveLoopFilter::QuantizeIntegerFilterPP(double *filterCoeff, int 
   too_large_coefficients=0;
   for (i=0;i<sqrFiltLength;i++)
   {
-    if (filterCoeff[i]>30.0 || filterCoeff[i]<-30.0)
+    if (filterCoeff[i]>100.0 || filterCoeff[i]<-100.0)
     {
       too_large_coefficients=1;
       break;
