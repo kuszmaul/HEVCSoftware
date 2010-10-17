@@ -250,6 +250,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #ifdef DCM_PBIC 
     ("PBIC", m_bUseIC, false,"Partition-based IC")// Partition-based IC
 #endif
+#ifdef ROUNDING_CONTROL_BIPRED
+    ("RoundingControlBipred", m_useRoundingControlBipred, false, "Rounding control for bi-prediction")
+#endif
     /* Misc. */
     ("FEN", m_bUseFastEnc, false, "fast encoder setting")
 
@@ -542,7 +545,18 @@ Void TAppEncCfg::xPrintParameter()
 #if TEN_DIRECTIONAL_INTERP
     case IPF_TEN_DIF:
       printf("Luma interpolation           : %s\n", "TEN directional interpolation filter"  );
+#if TEN_DIRECTIONAL_INTERP_CHROMA
       printf("Chroma interpolation         : %s\n", "TEN two-stage bi-linear filter"  );
+#else // TEN_DIRECTIONAL_INTERP_CHROMA
+#if SAMSUNG_CHROMA_IF_EXT
+	  if(m_iDIFTapC >=4)
+        printf("Chroma interpolation         : Samsung %d-tap filter\n", m_iDIFTapC );
+	  else
+        printf("Chroma interpolation         : %s\n", "Bi-linear filter"       );
+#else
+      printf("Chroma interpolation         : %s\n", "Bi-linear filter"       );
+#endif
+#endif // TEN_DIRECTIONAL_INTERP_CHROMA
       break;
 #endif
     case IPF_HHI_4TAP_MOMS:
