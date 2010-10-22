@@ -2116,7 +2116,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 		// Decode level Bin0 plane
         for ( UInt uiScanPos = 0; uiScanPos < 16; uiScanPos++ )
         {
+#if HHI_RQT
           UInt  uiBlkPos  = g_auiFrameScanXY[ 1 ][ 15 - uiScanPos ];
+#else
+          UInt  uiBlkPos  = g_auiFrameScanXY[ 0 ][ 15 - uiScanPos ];
+#endif
           UInt  uiPosY    = uiBlkPos >> 2;
           UInt  uiPosX    = uiBlkPos - ( uiPosY << 2 );
           UInt  uiIndex   = (uiSubPosY + uiPosY) * uiWidth + uiSubPosX + uiPosX;
@@ -2148,7 +2152,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 		// Decode other bins of level 
         for ( UInt uiScanPos = 0; uiScanPos < 16; uiScanPos++ )
         {
+#if HHI_RQT
           UInt  uiBlkPos  = g_auiFrameScanXY[ 1 ][ 15 - uiScanPos ];
+#else
+          UInt  uiBlkPos  = g_auiFrameScanXY[ 0 ][ 15 - uiScanPos ];
+#endif
           UInt  uiPosY    = uiBlkPos >> 2;
           UInt  uiPosX    = uiBlkPos - ( uiPosY << 2 );
           UInt  uiIndex   = (uiSubPosY + uiPosY) * uiWidth + uiSubPosX + uiPosX;
@@ -2172,7 +2180,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 		// Decode sign plane
         for ( UInt uiScanPos = 0; uiScanPos < 16; uiScanPos++ )
         {
+#if HHI_RQT
           UInt  uiBlkPos  = g_auiFrameScanXY[ 1 ][ 15 - uiScanPos ];
+#else
+          UInt  uiBlkPos  = g_auiFrameScanXY[ 0 ][ 15 - uiScanPos ];
+#endif
           UInt  uiPosY    = uiBlkPos >> 2;
           UInt  uiPosX    = uiBlkPos - ( uiPosY << 2 );
           UInt  uiIndex   = (uiSubPosY + uiPosY) * uiWidth + uiSubPosX + uiPosX;
@@ -2196,8 +2208,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
     // Decode level Bin0 plane
     for ( UInt uiScanPos = 0; uiScanPos < uiWidth*uiHeight; uiScanPos++ )
     {
+#if HHI_RQT
       UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] + 1 ][ uiWidth*uiHeight - uiScanPos - 1 ];
-
+#else
+      UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] ][ uiWidth*uiHeight - uiScanPos - 1 ];
+#endif
       uiLevel = pcCoef[ uiIndex ];
 
       if( uiLevel )
@@ -2225,7 +2240,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 	// Decode other bins of level 
     for ( UInt uiScanPos = 0; uiScanPos < uiWidth*uiHeight; uiScanPos++ )
     {
+#if HHI_RQT
       UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] + 1 ][ uiWidth*uiHeight - uiScanPos - 1 ];
+#else
+      UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] ][ uiWidth*uiHeight - uiScanPos - 1 ];
+#endif
 
       uiLevel = pcCoef[ uiIndex ];
 
@@ -2245,8 +2264,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 	// Decode sign plane
     for ( UInt uiScanPos = 0; uiScanPos < uiWidth*uiHeight; uiScanPos++ )
     {
+#if HHI_RQT
       UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] + 1 ][ uiWidth*uiHeight - uiScanPos - 1 ];
-
+#else
+      UInt uiIndex = g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] ][ uiWidth*uiHeight - uiScanPos - 1 ];
+#endif
       uiLevel = pcCoef[ uiIndex ];
 
       if( uiLevel )
