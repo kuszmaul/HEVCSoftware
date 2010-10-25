@@ -1174,6 +1174,13 @@ const UInt g_auiMI1TableD[8] = {0,2,1,4,3,6,5,7};
 const UInt g_auiMI2TableE[15] = {0,1,3,2,6,5,4,7,9,8,13,12,11,14,10};
 const UInt g_auiMI2TableD[15] = {0,1,3,2,6,5,4,7,9,8,14,12,11,10,13};
 
+#if MS_NO_BACK_PRED_IN_B0
+const UInt g_auiMI1TableENoL1[8] = {0,1,6,7,2,4,3,5};
+const UInt g_auiMI1TableDNoL1[8] = {0,1,4,6,5,7,2,3};
+const UInt g_auiMI2TableENoL1[15] = {0,1,2,12,14,13,3,4,6,5,10,9,8,11,7};
+const UInt g_auiMI2TableDNoL1[15] = {0,1,2,6,7,9,8,14,12,11,10,13,3,5,4};
+#endif
+
 // Below table need to be optimized
 const UInt g_auiMITableVlcNum[15] = 
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -1989,6 +1996,8 @@ const UChar g_aucIntraModeBits[7] =
    3   // 128x128  33   4+1
 };
 
+#if SAMSUNG_FAST_UDI
+#if SAMSUNG_FAST_UDI_MODESET==0
 const UChar g_aucIntraModeNumFast[7] =
 {
    3,  //   2x2
@@ -1999,6 +2008,30 @@ const UChar g_aucIntraModeNumFast[7] =
    5,  //  64x64   33
    4   // 128x128  33
 };
+#else
+const UChar g_aucIntraModeNumFast[7] =
+{
+	3,  //   2x2
+	9,  //   4x4
+	9,  //   8x8
+	9,  //  16x16   33
+	9,  //  32x32   33
+	5,  //  64x64   33
+	4   // 128x128  33
+};
+#endif
+#else
+const UChar g_aucIntraModeNumFast[7] =
+{
+   3,  //   2x2
+   9,  //   4x4
+   9,  //   8x8
+   4,  //  16x16   33
+   4,  //  32x32   33
+   5,  //  64x64   33
+   4   // 128x128  33
+};
+#endif
 
 const UChar g_aucIntraAvail[40][2] =
 {
