@@ -483,6 +483,18 @@ Void xMergeEstimation             ( TComDataCU*     pcCU,
                                     UInt&         ruiBits,
                                     UInt&         ruiCost,
                                     Bool          bBi = false  );
+#if MS_NO_BACK_PRED_IN_B0
+  Void xMotionEstimationForL1     ( TComDataCU*   pcCU,
+                                    TComYuv*      pcYuvOrg,
+                                    Int           iPartIdx,
+                                    RefPicList    eRefPicList,
+                                    TComMv*       pcMvPred,
+                                    Int           iRefIdxPred,
+                                    TComMv&       rcMv,
+                                    UInt&         ruiBits,
+                                    UInt&         ruiCost,
+                                    Bool          bBi = false  );
+#endif
 
   Void xTZSearch                  ( TComDataCU*   pcCU,
                                     TComPattern*  pcPatternKey,
@@ -731,6 +743,11 @@ Void xMergeEstimation             ( TComDataCU*     pcCU,
                                     TCoeff*&      rpcCoeff,
                                     TextType      eType,
                                     Int           indexROT = 0 );
+
+#if SAMSUNG_FAST_UDI
+  UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth );
+  UInt  xUpdateCandList( UInt uiMode, Double uiCost, UInt uiFastCandNum, UInt * CandModeList, Double * CandCostList );
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // compute symbol bits

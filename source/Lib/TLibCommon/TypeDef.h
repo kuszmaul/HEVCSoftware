@@ -119,7 +119,7 @@
 #define TENTM_DEBLOCKING_FILTER           1           // Enable TENTM deblocking
 #if HHI_INTERP_FILTER
 #define TEN_DIRECTIONAL_INTERP            1           ///< AF: interpolation filter
-#define TEN_DIRECTIONAL_INTERP_CHROMA     0           ///< DIF interpolation filter for chroma
+#define TEN_DIRECTIONAL_INTERP_CHROMA     1           ///< DIF interpolation filter for chroma
 #endif
 
 #if (HHI_DEBLOCKING_FILTER && TENTM_DEBLOCKING_FILTER)
@@ -250,6 +250,13 @@ void normalizeScanStats();
 #define HHI_DISABLE_SCAN                      0           ///< disable adaptive scan
 #endif
 
+#define FAST_UDI_MAX_RDMODE_NUM               10          ///< maximum number of RD comparison in fast-UDI estimation loop 
+
+#define SAMSUNG_FAST_UDI                      1           ///< improved mode decision for UDI (JCTVC-C207)
+#if     SAMSUNG_FAST_UDI                           
+#define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64} 
+#endif
+
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////
@@ -277,6 +284,16 @@ void normalizeScanStats();
 
 #define BUGFIX85TMP 1 // Ignore cost of CBF (affects RQT off setting)
 #define BUGFIX102 1 // Do not code terminating bit when using LCEC
+
+
+////////////////////////////////
+// MICROSOFT&USTC defines section start
+////////////////////////////////
+#define MS_NO_BACK_PRED_IN_B0           1           // disable backward prediction when list1 == list0, and disable list1 search, JCTVC-C278
+#define MS_LAST_CBF                     1           // last cbf handling, JCTVC-C277
+////////////////////////////////
+// MICROSOFT&USTC defines section end
+////////////////////////////////
 
 // ====================================================================================================================
 // Basic type redefinition
