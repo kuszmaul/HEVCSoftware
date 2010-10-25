@@ -1954,6 +1954,9 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
                                 TComYuv*     pcResiYuv, 
                                 UInt&        ruiDistY,
                                 UInt&        ruiDistC,
+#if HHI_RQT_INTRA_SPEEDUP
+                                Bool         bCheckFirst,
+#endif
                                 Double&      dRDCost )
 {
   UInt    uiFullDepth   = pcCU->getDepth( 0 ) +  uiTrDepth;
@@ -1964,7 +1967,13 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 #else
   Bool    bCheckSplit   = ( uiLog2TrSize  >  pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() );
 #endif
-  
+
+#if HHI_RQT_INTRA_SPEEDUP
+  if( bCheckFirst && bCheckFull )
+  {
+    bCheckSplit = false;
+  }
+#endif
   Double  dSingleCost   = MAX_DOUBLE;
   UInt    uiSingleDistY = 0;
   UInt    uiSingleDistC = 0;
@@ -2025,7 +2034,11 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     UInt    uiAbsPartIdxSub = uiAbsPartIdx;
     for( UInt uiPart = 0; uiPart < 4; uiPart++, uiAbsPartIdxSub += uiQPartsDiv )
     {
+#if HHI_RQT_INTRA_SPEEDUP
+      xRecurIntraCodingQT( pcCU, uiTrDepth + 1, uiAbsPartIdxSub, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiSplitDistY, uiSplitDistC, bCheckFirst, dSplitCost );
+#else
       xRecurIntraCodingQT( pcCU, uiTrDepth + 1, uiAbsPartIdxSub, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiSplitDistY, uiSplitDistC, dSplitCost );
+#endif
     }
     //----- restore context states -----
     if( m_bUseSBACRD )
@@ -2374,6 +2387,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if ANG_INTRA
   Bool    angIntraEnabled= pcCU->angIntraEnabledPredPart( 0 );
 #endif
+#if SAMSUNG_FAST_UDI
+  UInt    CandNum;
+  UInt    CandModeList[ FAST_UDI_MAX_RDMODE_NUM ];
+  Double  CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
+  UInt    uiFastCandNum=g_aucIntraModeNumFast[ uiWidthBit ];
+#endif
   
   //===== set QP and clear Cbf =====
   pcCU->setQPSubParts( pcCU->getSlice()->getSliceQp(), 0, uiDepth );
@@ -2406,8 +2425,19 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     Pel* piOrg         = pcOrgYuv ->getLumaAddr( uiPU, uiWidth );
     Pel* piPred        = pcPredYuv->getLumaAddr( uiPU, uiWidth );
     UInt uiStride      = pcPredYuv->getStride();
+
+#if SAMSUNG_FAST_UDI
+    if ( uiFastCandNum != uiMaxMode ) uiMaxModeFast = 0;
+    for( Int i=0; i < uiFastCandNum; i++ ) 
+    {
+      CandCostList[ i ] = MAX_DOUBLE;
+    }
+	  CandNum = 0;
+#else
     UInt uiBestSad     = MAX_UINT;
     UInt iBestPreMode  = 0;
+#endif
+
     for( UInt uiMode = uiMaxModeFast; uiMode < uiMaxMode; uiMode++ )
     {
 #if ANG_INTRA
@@ -2445,30 +2475,58 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       
       // use hadamard transform here
       UInt uiSad = m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
+
+#if SAMSUNG_FAST_UDI
+	    UInt   iModeBits = xModeBitsIntra( pcCU, uiMode, uiPU, uiPartOffset, uiDepth, uiInitTrDepth );
+	    Double dModeRate = m_pcRdCost->getLambda();
+	    Double uiCost    = (Double)uiSad+(Double)iModeBits*sqrt( dModeRate );
+
+	    CandNum += xUpdateCandList( uiMode, uiCost, uiFastCandNum, CandModeList, CandCostList );
+#else  
       if ( uiSad < uiBestSad )
       {
         uiBestSad    = uiSad;
         iBestPreMode = uiMode;
       }
+#endif
     }
-    UInt uiRdModeList[10];
+    UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
     UInt uiNewMaxMode;
     UInt uiMinMode = 0;
-    for( Int i = 0; i < 10; i++ ) 
+
+#if SAMSUNG_FAST_UDI
+    if(uiFastCandNum!=uiMaxMode)
     {
-      uiRdModeList[ i ] = i;
+      uiNewMaxMode = Min( uiFastCandNum, CandNum );
+      for( Int i=0; i < uiNewMaxMode; i++) uiRdModeList[i] = CandModeList[i];
     }
-    if( uiMaxModeFast >= uiMaxMode )
+    else
     {
       uiNewMaxMode = uiMaxMode;
+      for( Int i=0; i < uiNewMaxMode; i++) uiRdModeList[i] = i;
     }
+#else
+
+	for( Int i = 0; i < FAST_UDI_MAX_RDMODE_NUM; i++ ) uiRdModeList[ i ] = i;
+	if( uiMaxModeFast >= uiMaxMode )
+		uiNewMaxMode = uiMaxMode;
     else
     {
       uiNewMaxMode = uiMaxModeFast + 1;
       uiRdModeList[uiMaxModeFast] = iBestPreMode;
     }
     
+#endif
+    
     //===== check modes (using r-d costs) =====
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+    UInt   uiSecondBestMode  = MAX_UINT;
+#if HHI_AIS
+    Bool   bSecondBestISMode = bDefaultIS;
+#endif
+    Double dSecondBestPUCost = MAX_DOUBLE;
+#endif
+
 #if HHI_AIS
     Bool    bBestISMode   = bDefaultIS;
 #endif
@@ -2510,11 +2568,19 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt   uiPUDistY = 0;
       UInt   uiPUDistC = 0;
       Double dPUCost   = 0.0;
+#if HHI_RQT_INTRA_SPEEDUP
+      xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost );
+#else
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost );
+#endif
       
       // check r-d cost
       if( dPUCost < dBestPUCost )
       {
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+        uiSecondBestMode  = uiBestPUMode;
+        dSecondBestPUCost = dBestPUCost;
+#endif
         uiBestPUMode  = uiOrgMode;
         uiBestPUDistY = uiPUDistY;
         uiBestPUDistC = uiPUDistC;
@@ -2533,6 +2599,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
           m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
         }
       }
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+      else if( dPUCost < dSecondBestPUCost )
+      {
+        uiSecondBestMode  = uiOrgMode;
+        dSecondBestPUCost = dPUCost;
+      }
+#endif
     } // Mode loop
     
     
@@ -2584,11 +2657,19 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         UInt   uiPUDistY = 0;
         UInt   uiPUDistC = 0;
         Double dPUCost   = 0.0;
+#if HHI_RQT_INTRA_SPEEDUP
+        xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost );
+#else
         xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost );
-        
+#endif
         // check r-d cost
         if( dPUCost < dBestPUCost )
         {
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+          uiSecondBestMode  = uiBestPUMode;
+          bSecondBestISMode = bBestISMode;
+          dSecondBestPUCost = dBestPUCost;
+#endif
           bBestISMode   = bTestISMode;
           uiBestPUMode  = uiOrgMode;
           uiBestPUDistY = uiPUDistY;
@@ -2608,11 +2689,97 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
             m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
           }
         }
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+        else if( dPUCost < dSecondBestPUCost )
+        {
+          uiSecondBestMode  = uiOrgMode;
+          bSecondBestISMode = bTestISMode;
+          dSecondBestPUCost = dPUCost;
+        }
+#endif
       } // Mode loop
     } // AIS enabled
 #endif
     
-    
+#if HHI_RQT_INTRA_SPEEDUP
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+    for( UInt ui =0; ui < 2; ++ui )
+#endif
+    {
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+#if HHI_AIS
+      Bool bTestISMode = ui ? bSecondBestISMode : bBestISMode;
+#endif
+      UInt uiOrgMode   = ui ? uiSecondBestMode  : uiBestPUMode;
+      if( uiOrgMode == MAX_UINT )
+      {
+        break;
+      }
+#else
+#if HHI_AIS
+      Bool bTestISMode = bBestISMode;
+#endif
+      UInt uiOrgMode = uiBestPUMode;
+#endif
+
+#if ANG_INTRA
+      if ( !predIntraLumaDirAvailable( uiOrgMode, uiWidthBit, angIntraEnabled, bAboveAvail, bLeftAvail ) )
+        continue;
+#else
+      UInt uiNewMode = g_aucIntraModeOrder[uiWidthBit][uiOrgMode];
+      if ( ( g_aucIntraAvail[uiNewMode][0] && (!bAboveAvail) ) || ( g_aucIntraAvail[uiNewMode][1] && (!bLeftAvail) ) )
+      {
+        continue;
+      }
+#endif
+      
+      pcCU->setLumaIntraDirSubParts ( uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
+      
+#if HHI_AIS
+      // set intra smoothing mode
+      pcCU->setLumaIntraFiltFlagSubParts( bTestISMode, uiPartOffset, uiDepth + uiInitTrDepth );
+#endif
+      
+      // set context models
+      if( m_bUseSBACRD )
+      {
+        if( uiPU )  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
+        else        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth  ][CI_CURR_BEST] );
+      }
+      
+      // determine residual for partition
+      UInt   uiPUDistY = 0;
+      UInt   uiPUDistC = 0;
+      Double dPUCost   = 0.0;
+      xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, false, dPUCost );
+      
+      // check r-d cost
+      if( dPUCost < dBestPUCost )
+      {
+#if HHI_AIS
+        bBestISMode   = bTestISMode;
+#endif
+        uiBestPUMode  = uiOrgMode;
+        uiBestPUDistY = uiPUDistY;
+        uiBestPUDistC = uiPUDistC;
+        dBestPUCost   = dPUCost;
+        
+        xSetIntraResultQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcRecoYuv );
+        
+        UInt uiQPartNum = pcCU->getPic()->getNumPartInCU() >> ( ( pcCU->getDepth(0) + uiInitTrDepth ) << 1 );
+        ::memcpy( m_puhQTTempTrIdx,  pcCU->getTransformIdx()       + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+        ::memcpy( m_puhQTTempCbf[0], pcCU->getCbf( TEXT_LUMA     ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+        ::memcpy( m_puhQTTempCbf[1], pcCU->getCbf( TEXT_CHROMA_U ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+        ::memcpy( m_puhQTTempCbf[2], pcCU->getCbf( TEXT_CHROMA_V ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+        
+        if( m_bUseSBACRD )
+        {
+          m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
+        }
+      }
+    } // Mode loop
+#endif
+
     //--- update overall distortion ---
     uiOverallDistY += uiBestPUDistY;
     uiOverallDistC += uiBestPUDistC;
@@ -3030,7 +3197,7 @@ Void TEncSearch::predIntraLumaAdiSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TC
   UInt   uiHeight       = pcCU->getHeight(0)>> uiPartDepth;
   UInt   uiCoeffSize    = uiWidth*uiHeight;
   
-  UInt   uiWidthBit;
+  UInt   uiWidthBit     = pcCU->getIntraSizeIdx(0);
   
   UInt   uiNextDepth    = uiDepth + 1;
   
@@ -3100,8 +3267,14 @@ Void TEncSearch::predIntraLumaAdiSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TC
   Bool angIntraEnabled    = pcCU->angIntraEnabledPredPart( 0 );
 #endif
   
+#if SAMSUNG_FAST_UDI
+  UInt    CandNum;
+  UInt    CandModeList[ FAST_UDI_MAX_RDMODE_NUM ];
+  Double  CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
+  UInt    uiFastCandNum=g_aucIntraModeNumFast[ uiWidthBit ];
+#endif
+  
   pcCU->setTrIdxSubParts( uiMaxTrDepth, 0, uiDepth );
-  uiWidthBit = pcCU->getIntraSizeIdx(0);
   
   for ( idQp = iMindQp; idQp <= iMaxdQp; idQp++ )
   {
@@ -3150,8 +3323,21 @@ Void TEncSearch::predIntraLumaAdiSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TC
       
       dPUBestCost = MAX_DOUBLE;
       
+      
+#if SAMSUNG_FAST_UDI
+      if ( uiFastCandNum != uiMaxMode )
+      {
+        uiMaxModeFast = 0;
+      }
+      for ( Int i=0; i<uiFastCandNum; i++)
+      {
+        CandCostList[i]=MAX_DOUBLE;
+      }
+      CandNum=0;
+#else
       UInt uiBestSad    = MAX_UINT;
       UInt iBestPreMode = 0;
+#endif
       
       for ( uiMode = uiMaxModeFast; uiMode < uiMaxMode; uiMode++ )
       {
@@ -3193,26 +3379,54 @@ Void TEncSearch::predIntraLumaAdiSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TC
         
         // use hadamard transform here
         UInt uiSad   = m_pcRdCost->calcHAD( piOrgY, iStride, piPreY, iStride, uiWidth, uiHeight );
+
+#if SAMSUNG_FAST_UDI
+        UInt   iModeBits = xModeBitsIntra( pcCU, uiMode, uiPU, uiPartOffset, uiDepth, uiPartDepth );
+        Double dModeRate = m_pcRdCost->getLambda();
+        Double uiCost    = (Double)uiSad+(Double)iModeBits*sqrt(dModeRate);
+
+        CandNum += xUpdateCandList( uiMode, uiCost, uiFastCandNum, CandModeList, CandCostList );
+#else  
         if ( uiSad < uiBestSad )
         {
           uiBestSad    = uiSad;
           iBestPreMode = uiMode;
         }
+#endif
       }
       
-      UInt uiRdModeList[10];
+      UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
       UInt uiNewMaxMode;
-      for (Int i=0;i<10;i++) uiRdModeList[i]=i;
       
-      if (uiMaxModeFast>=uiMaxMode)
+#if SAMSUNG_FAST_UDI
+      if( uiFastCandNum!=uiMaxMode )
+      {
+        uiNewMaxMode=Min( uiFastCandNum, CandNum );
+        for ( Int i=0; i<uiNewMaxMode; i++)
+        {
+          uiRdModeList[i] = CandModeList[i];
+        }
+      }
+      else
       {
         uiNewMaxMode=uiMaxMode;
+        for ( Int i=0; i<uiNewMaxMode; i++ )
+        {
+          uiRdModeList[i] = i;
+        }
       }
+#else
+
+	  for( Int i = 0; i < FAST_UDI_MAX_RDMODE_NUM; i++ ) uiRdModeList[ i ] = i;
+	  if( uiMaxModeFast >= uiMaxMode )
+		  uiNewMaxMode = uiMaxMode;
       else
       {
         uiNewMaxMode=uiMaxModeFast+1;
         uiRdModeList[uiMaxModeFast]=iBestPreMode;
       }
+      
+#endif
       
       bAboveAvail = false;
       bLeftAvail  = false;
@@ -3955,7 +4169,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if GPB_SIMPLE_UNI
         if ( pcCU->getSlice()->getSPS()->getUseLDC() )
         {
+#if MS_NO_BACK_PRED_IN_B0
+          if ( iRefList && ( iRefIdxTemp != iRefIdx[0] || pcCU->getSlice()->getNoBackPredFlag() ) )
+#else
           if ( iRefList && iRefIdxTemp != iRefIdx[0] )
+#endif
           {
             uiCostTemp = MAX_UINT;
 #ifdef QC_AMVRES
@@ -3964,6 +4182,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             if ( pcCU->getSlice()->getSPS()->getUseIMP())
               cMvPred[iRefList][iRefIdxTemp] = m_cMvPredMeasure.getMVPred( cMvTemp[iRefList][iRefIdxTemp].getHor(), cMvTemp[iRefList][iRefIdxTemp].getVer() );
 #endif
+#endif
+#if MS_NO_BACK_PRED_IN_B0
+            if ( pcCU->getSlice()->getNoBackPredFlag() )
+            {
+              cMvTemp[1][iRefIdxTemp] = cMvTemp[0][iRefIdxTemp];
+              xMotionEstimationForL1 ( pcCU, pcOrgYuv, iPartIdx, eRefPicList, &cMvPred[iRefList][iRefIdxTemp], iRefIdxTemp, cMvTemp[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp );
+            }
 #endif
           }
           else
@@ -3994,7 +4219,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           }
 #endif
         }
+#if MS_NO_BACK_PRED_IN_B0
+        if ( ( iRefList == 0 && uiCostTemp < uiCost[iRefList] ) ||
+             ( iRefList == 1 &&  pcCU->getSlice()->getNoBackPredFlag() && iRefIdxTemp == iRefIdx[0] ) ||
+             ( iRefList == 1 && !pcCU->getSlice()->getNoBackPredFlag() && uiCostTemp < uiCost[iRefList] ) )
+#else
         if ( uiCostTemp < uiCost[iRefList] )
+#endif
         {
           uiCost[iRefList] = uiCostTemp;
           uiBits[iRefList] = uiBitsTemp; // storing for bi-prediction
@@ -4015,6 +4246,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             TComYuv*  pcYuvPred = &m_acYuvPred[iRefList];
             motionCompensation ( pcCU, pcYuvPred, eRefPicList, iPartIdx );
           }
+#if MS_NO_BACK_PRED_IN_B0
+          if ( pcCU->getSlice()->getNoBackPredFlag() && eRefPicList == REF_PIC_LIST_0 )
+          {
+            TComYuv*  pcYuvPred = &m_acYuvPred[iRefList];
+            motionCompensation ( pcCU, pcYuvPred, eRefPicList, iPartIdx );
+          }
+#endif
         }
       }
     }
@@ -4022,6 +4260,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     //  Bi-directional prediction
     if ( pcCU->getSlice()->isInterB() )
     {
+
       cMvBi[0] = cMv[0];            cMvBi[1] = cMv[1];
       iRefIdxBi[0] = iRefIdx[0];    iRefIdxBi[1] = iRefIdx[1];
       
@@ -4045,7 +4284,14 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       
       for ( Int iIter = 0; iIter < iNumIter; iIter++ )
       {
+
         Int         iRefList    = iIter % 2;
+#if MS_NO_BACK_PRED_IN_B0
+        if ( pcCU->getSlice()->getSPS()->getUseLDC() && m_pcEncCfg->getUseFastEnc() && pcCU->getSlice()->getNoBackPredFlag() )
+        {
+          iRefList = 1;
+        }
+#endif
         RefPicList  eRefPicList = ( iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
         
         Bool bChanged = false;
@@ -4064,6 +4310,14 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #else
         iRefStart = 0;
         iRefEnd   = pcCU->getSlice()->getNumRefIdx(eRefPicList)-1;
+#endif
+
+#if MS_NO_BACK_PRED_IN_B0
+        if ( pcCU->getSlice()->getSPS()->getUseLDC() && m_pcEncCfg->getUseFastEnc() && pcCU->getSlice()->getNoBackPredFlag() )
+        {
+          iRefStart = 0;
+          iRefEnd   = pcCU->getSlice()->getNumRefIdx(eRefPicList)-1;
+        }
 #endif
         
         for ( Int iRefIdxTemp = iRefStart; iRefIdxTemp <= iRefEnd; iRefIdxTemp++ )
@@ -4299,6 +4553,12 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     pcCU->setMVPNumSubParts( -1, REF_PIC_LIST_1, uiPartAddr, iPartIdx, pcCU->getDepth(uiPartAddr));
     
     // Set Motion Field_
+#if MS_NO_BACK_PRED_IN_B0
+    if ( pcCU->getSlice()->getNoBackPredFlag() )
+    {
+      uiCost[1] = MAX_UINT;
+    }
+#endif
     if ( uiCostBi <= uiCost[0] && uiCostBi <= uiCost[1])
     {
       uiLastMode = 2;
@@ -4933,6 +5193,70 @@ UInt TEncSearch::xGetTemplateCostIC   ( TComDataCU* pcCU,
 
 	return uiCost;
 }
+#endif
+
+#if MS_NO_BACK_PRED_IN_B0
+Void TEncSearch::xMotionEstimationForL1( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, RefPicList eRefPicList, TComMv* pcMvPred, Int iRefIdxPred, TComMv& rcMv, UInt& ruiBits, UInt& ruiCost, Bool bBi  )
+{
+
+  TComMv        cMvHalf, cMvQter;
+  TComMv        cMvSrchRngLT;
+  TComMv        cMvSrchRngRB;
+
+
+
+
+  TComMv      cMvPred = *pcMvPred;
+
+#ifdef QC_AMVRES
+  TComMv      cMvPred_onefourth;
+#endif
+
+
+  m_pcRdCost->setCostScale( 0 );
+#ifdef QC_AMVRES 
+
+  UInt uiMvBits;
+
+#if HHI_IMVP
+  if ( pcCU->getSlice()->getSPS()->getUseIMP() )
+  {
+    *pcMvPred = m_cMvPredMeasure.getMVPred( rcMv.getHor(), rcMv.getVer() ) ;
+  }
+#endif
+
+  if (!rcMv.isHAM()&& pcCU->getSlice()->getSPS()->getUseAMVRes())
+  {
+    cMvPred_onefourth=*pcMvPred;
+    cMvPred_onefourth.scale_down();
+    m_pcRdCost->setPredictor	( cMvPred_onefourth );
+    uiMvBits = m_pcRdCost->getBits( rcMv.getHor()/2, rcMv.getVer()/2 );
+  }
+  else
+  {
+    m_pcRdCost->setPredictor	( *pcMvPred );
+    uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer())+pcCU->getSlice()->getSPS()->getUseAMVRes();
+  }
+#else
+  rcMv <<= 2;
+  rcMv += (cMvHalf <<= 1);
+  rcMv +=  cMvQter;
+
+#if HHI_IMVP
+  if ( pcCU->getSlice()->getSPS()->getUseIMP() )
+  {
+    *pcMvPred = m_cMvPredMeasure.getMVPred( rcMv.getHor(), rcMv.getVer() ) ;
+    m_pcRdCost->setPredictor(*pcMvPred); 
+  }
+#endif
+
+  UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+#endif
+
+  ruiBits      += uiMvBits;
+ 
+}
+
 #endif
 
 Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, RefPicList eRefPicList, TComMv* pcMvPred, Int iRefIdxPred, TComMv& rcMv, UInt& ruiBits, UInt& ruiCost, Bool bBi  )
@@ -7203,8 +7527,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     
     uiSingleDist = uiDistY + uiDistU + uiDistV;
     dSingleCost = m_pcRdCost->calcRdCost( uiSingleBits, uiSingleDist );
-  }
-  
+  }  
+ 
   // code sub-blocks
   if( bCheckSplit )
   {
@@ -7228,7 +7552,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       xEstimateResidualQT( pcCU, uiAbsPartIdx + ui * uiQPartNumSubdiv, pcResi, uiDepth + 1, dSubdivCost, uiSubdivBits, uiSubdivDist );
 #endif
     }
-    
+
     UInt uiYCbf = 0;
     UInt uiUCbf = 0;
     UInt uiVCbf = 0;
@@ -7259,6 +7583,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     uiSubdivBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     dSubdivCost  = m_pcRdCost->calcRdCost( uiSubdivBits, uiSubdivDist );
     
+#if MS_LAST_CBF
+    if( uiYCbf || uiUCbf || uiVCbf || !bCheckFull )
+#endif
     if( dSubdivCost < dSingleCost )
     {
       rdCost += dSubdivCost;
@@ -7585,6 +7912,45 @@ Void TEncSearch::xRecurTransformNxN( TComDataCU* rpcCU, UInt uiAbsPartIdx, Pel* 
     xRecurTransformNxN( rpcCU, uiAbsPartIdx, pcResidual, uiAddr + uiAddrOffset + uiWidth, uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff, eType, indexROT );
   }
 }
+
+#if SAMSUNG_FAST_UDI
+UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth )
+{
+  if( m_bUseSBACRD )
+  {
+    if ( uiPU ) m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
+    else        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth  ][CI_CURR_BEST] );
+  }
+  pcCU->setLumaIntraDirSubParts ( uiMode, uiPartOffset, uiDepth + uiInitTrDepth );
+
+  m_pcEntropyCoder->resetBits();
+  m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPartOffset);
+  
+  return m_pcEntropyCoder->getNumberOfWrittenBits();
+}
+
+UInt TEncSearch::xUpdateCandList( UInt uiMode, Double uiCost, UInt uiFastCandNum, UInt * CandModeList, Double * CandCostList )
+{
+	UInt i;
+	UInt shift=0;
+	
+  while ( shift<uiFastCandNum && uiCost<CandCostList[ uiFastCandNum-1-shift ] ) shift++;
+
+	if( shift!=0 )
+	{
+		for(i=1; i<shift; i++)
+		{
+			CandModeList[ uiFastCandNum-i ] = CandModeList[ uiFastCandNum-1-i ];
+			CandCostList[ uiFastCandNum-i ] = CandCostList[ uiFastCandNum-1-i ];
+		}
+		CandModeList[ uiFastCandNum-shift ] = uiMode;
+		CandCostList[ uiFastCandNum-shift ] = uiCost;
+    return 1;
+	}
+
+  return 0;
+}
+#endif
 
 Void  TEncSearch::xAddSymbolBitsIntra( TComDataCU* pcCU, TCoeff* pCoeff, UInt uiPU, UInt uiQNumPart, UInt uiPartDepth, UInt uiNumPart, UInt uiMaxTrDepth, UInt uiTrDepth, UInt uiWidth, UInt uiHeight, UInt& ruiBits )
 {
