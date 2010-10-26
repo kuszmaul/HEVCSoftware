@@ -138,7 +138,12 @@
 // QUALCOMM defines section start
 /////////////////////////////////
 
-#define LCEC_PHASE1_ADAPT_ENABLE                1           // Enable CU level VLC adaptation 
+#define LCEC_PHASE1_ADAPT_ENABLE          1           // Enable CU level VLC adaptation 
+#define LCEC_CBP_YUV_ROOT                 1           // enable VLC phase-2 CBP root coding under RQT
+#define QC_BLK_CBP                        1           // block level CBP coding, to be enabled or disabled together with LCEC_CBP_YUV_ROOT
+#if LCEC_CBP_YUV_ROOT ^ QC_BLK_CBP
+#error
+#endif
 
 //#define QC_AMVRES    
 #ifdef QC_AMVRES  
