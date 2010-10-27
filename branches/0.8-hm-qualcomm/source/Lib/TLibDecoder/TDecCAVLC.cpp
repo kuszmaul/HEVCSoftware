@@ -103,7 +103,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       xReadUvlc( uiCode ); pcSPS->setQuadtreeTULog2MaxSize( uiCode + pcSPS->getQuadtreeTULog2MinSize() );
     }
 #if HHI_RQT_DEPTH
+#if HHI_C319
+    xReadUvlc ( uiCode ); pcSPS->setQuadtreeTUMaxDepthInter( uiCode+1 );
+    xReadUvlc ( uiCode ); pcSPS->setQuadtreeTUMaxDepthIntra( uiCode+1 );
+#else
     xReadUvlc ( uiCode ); pcSPS->setQuadtreeTUMaxDepth( uiCode+1 );
+#endif
 #endif	
   }
   
