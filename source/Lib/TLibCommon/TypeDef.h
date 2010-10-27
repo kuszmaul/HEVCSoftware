@@ -237,6 +237,8 @@ void normalizeScanStats();
 
 #if HHI_RQT
 #define HHI_RQT_DEPTH                         1           ///< controlling max quadtree depth
+#define HHI_C319                              1           ///< BB: two separate depths for inter and intra from JCTVC-C319
+#define HHI_C319_INTER_FIX                    1           ///< BB: forced/inferred splits are counted as depth (exeption: inferred from intra_split)
 #define HHI_RQT_DISABLE_SUB                   0           ///< disabling subtree whose node size is smaller than partition size
 #if     HHI_RQT_DEPTH && HHI_RQT_DISABLE_SUB
 #error "Only one of HHI_RQT_DEPTH and HHI_RQT_DISABLE_SUB can be defined"

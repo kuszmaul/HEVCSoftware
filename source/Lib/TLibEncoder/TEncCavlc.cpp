@@ -427,7 +427,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       m_uiBitHLS += xWriteUvlc( pcSPS->getQuadtreeTULog2MaxSize() - pcSPS->getQuadtreeTULog2MinSize() );
     }
 #if HHI_RQT_DEPTH
-    m_uiBitHLS += xWriteUvlc  ( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#if HHI_C319
+    m_uiBitHLS += xWriteUvlc( pcSPS->getQuadtreeTUMaxDepthInter() - 1 );
+    m_uiBitHLS += xWriteUvlc( pcSPS->getQuadtreeTUMaxDepthIntra() - 1 );
+#else
+    m_uiBitHLS += xWriteUvlc( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#endif
 #endif	
   }
 #endif
@@ -695,10 +700,15 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       xWriteUvlc( pcSPS->getQuadtreeTULog2MaxSize() - pcSPS->getQuadtreeTULog2MinSize() );
     }
 #if HHI_RQT_DEPTH
-    xWriteUvlc  ( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#if HHI_C319
+    xWriteUvlc( pcSPS->getQuadtreeTUMaxDepthInter() - 1 );
+    xWriteUvlc( pcSPS->getQuadtreeTUMaxDepthIntra() - 1 );
+#else
+    xWriteUvlc( pcSPS->getQuadtreeTUMaxDepth () - 1 );
+#endif
 #endif	
   }
-#endif
+#endif // HHI_RQT
 
   // Max transform size
   xWriteUvlc  ( pcSPS->getMaxTrSize() == 2 ? 0 : g_aucConvertToBit[pcSPS->getMaxTrSize()]+1 );
