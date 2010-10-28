@@ -2343,7 +2343,7 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
 }
 
 
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
 Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD )
 {
   UInt uiCbf0 = pcCU->getCbf   ( uiAbsPartIdx, eType, uiTrDepth );
@@ -2353,7 +2353,8 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
   UInt uiCbf = (uiCbf0<<3) | (uiCbf1<<2) | (uiCbf2<<1) | uiCbf3;
 
   assert(uiTrDepth > 0);
-  
+
+#if QC_BLK_CBP
   if(bRD && uiCbf==0)
   {
     xWriteCode(0, 4); 
@@ -2386,6 +2387,9 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
 
   xWriteVlc( vlcn, cx );
   return;
+#else
+  xWriteCode(uiCbf, 4);
+#endif
 }
 #endif
 

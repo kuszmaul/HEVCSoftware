@@ -3224,7 +3224,7 @@ Void TDecEntropy::xDecodeCoeff( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPar
       UInt uiQPartNum = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
       UInt uiIdx      = uiAbsPartIdx;
 
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
       if(pcCU->getSlice()->getSymbolMode() == 0)
       {
 #if HHI_RQT
@@ -3269,7 +3269,7 @@ Void TDecEntropy::xDecodeCoeff( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPar
 
       m_pcEntropyDecoderIf->parseCbf( pcCU, uiIdx, eType, uiTrIdx, uiDepth );
       xDecodeCoeff( pcCU, pcCoeff, uiIdx, uiDepth, uiWidth, uiHeight, uiTrIdx, uiCurrTrIdx, eType );
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
       }
 #endif
 #if HHI_RQT

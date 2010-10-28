@@ -1419,7 +1419,7 @@ Void TEncSbac::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UIn
 }
 
 
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
 Void TEncSbac::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD )
 {
   return;

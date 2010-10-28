@@ -1615,12 +1615,13 @@ Void TDecCavlc::parseCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, U
 }
 
 
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
 Void TDecCavlc::parseBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth, UInt uiQPartNum )
 {
   assert(uiTrDepth > 0);
   UInt uiCbf4, uiCbf;
 
+#if QC_BLK_CBP
   Int x,cx,y,cy;
   UInt tmp;
 
@@ -1640,6 +1641,9 @@ Void TDecCavlc::parseBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTy
     m_uiBlkCbpVlcIdx += cx == m_uiBlkCbpVlcIdx ? 0 : (cx < m_uiBlkCbpVlcIdx ? -1 : 1);
 
   uiCbf4++;
+#else
+  xReadCode(4, uiCbf4);
+#endif
 
   uiCbf = pcCU->getCbf( uiAbsPartIdx, eType );
   pcCU->setCbfSubParts( uiCbf | ( ((uiCbf4>>3)&0x01) << uiTrDepth ), eType, uiAbsPartIdx, uiDepth ); uiAbsPartIdx += uiQPartNum;

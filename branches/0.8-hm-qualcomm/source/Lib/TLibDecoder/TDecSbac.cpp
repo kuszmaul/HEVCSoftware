@@ -1850,7 +1850,7 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
 }
 #endif
 
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
 Void TDecSbac::parseBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth, UInt uiQPartNum )
 {
   return;
