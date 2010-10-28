@@ -211,7 +211,7 @@ public:
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
   Void	codeBlockCbf						( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD = false );
 #endif
 

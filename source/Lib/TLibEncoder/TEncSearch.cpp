@@ -1453,7 +1453,7 @@ TEncSearch::xEncCoeffQT( TComDataCU*  pcCU,
     if ( pcCU->getSlice()->getSymbolMode() || pcCU->getCbf( uiAbsPartIdx, eTextType, uiTrDepth ))
     {
 #endif
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
     if(pcCU->getSlice()->getSymbolMode() == 0)
     {
       if( eTextType == TEXT_LUMA || uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
@@ -7830,7 +7830,7 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
     if( bSubdivAndCbf || pcCU->getCbf( uiAbsPartIdx, eType, uiCurrTrMode ) )
     {
       const UInt uiQPartNumSubdiv = pcCU->getPic()->getNumPartInCU() >> ((uiDepth + 1 ) << 1);
-#if QC_BLK_CBP
+#if LCEC_CBP_YUV_ROOT
       if(pcCU->getSlice()->getSymbolMode() == 0)
       {
         if( eType == TEXT_LUMA || uiLog2TrSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
