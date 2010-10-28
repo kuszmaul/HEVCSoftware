@@ -1771,7 +1771,7 @@ UInt TComDataCU::getQuadtreeTULog2MinSizeInCU( UInt uiIdx )
   {
     uiLog2MinTUSizeInCU = m_pcSlice->getSPS()->getQuadtreeTULog2MaxSize();
   }  
-#endig
+#endif
 #else
   if (uiLog2MinTUSizeInCU < m_pcSlice->getSPS()->getQuadtreeTULog2MinSize() + m_pcSlice->getSPS()->getQuadtreeTUMaxDepth() - 1)
   {
