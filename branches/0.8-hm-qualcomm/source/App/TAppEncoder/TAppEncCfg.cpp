@@ -343,6 +343,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
+#if HHI_C319
+  if(m_iSymbolMode == 0)
+  {
+    m_uiQuadtreeTUMaxDepthIntra = Min(1, m_uiQuadtreeTUMaxDepthIntra);
+    m_uiQuadtreeTUMaxDepthInter = Min(2, m_uiQuadtreeTUMaxDepthInter);
+  }
+#endif
+
   // check validity of input parameters
   xCheckParameter();
 
