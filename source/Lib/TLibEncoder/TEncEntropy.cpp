@@ -743,7 +743,9 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   }
 
 #if LCEC_CBP_YUV_ROOT
-  if(pcCU->getSlice()->getSymbolMode() == 0)
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+  if(pcCU->getSlice()->getSymbolMode() == 0 && bConfinedRQT)
   {
     if( uiSubdiv )
     {
@@ -952,7 +954,9 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   }
 
 #if LCEC_CBP_YUV_ROOT
-  if(pcCU->getSlice()->getSymbolMode() == 0)
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+  if(pcCU->getSlice()->getSymbolMode() == 0 && bConfinedRQT)
   {
     if( uiSubdiv )
     {
@@ -2212,7 +2216,9 @@ Void TEncEntropy::xEncodeCoeff( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPar
       UInt uiIdx      = uiAbsPartIdx;
 
 #if LCEC_CBP_YUV_ROOT
-      if(pcCU->getSlice()->getSymbolMode() == 0)
+      const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+        (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+      if(pcCU->getSlice()->getSymbolMode() == 0 && (bConfinedRQT || !pcCU->getSlice()->getSPS()->getQuadtreeTUFlag()))
       {
 #if HHI_RQT
         if(pcCU->getSlice()->getSPS()->getQuadtreeTUFlag())
@@ -2272,10 +2278,15 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiLumaTrMode, uiChromaTrMode;
   pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx(uiAbsPartIdx), uiLumaTrMode, uiChromaTrMode );
 
+#if LCEC_CBP_YUV_ROOT
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+#endif
+
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode()==0)
+    if (pcCU->getSlice()->getSymbolMode()==0 && (bConfinedRQT || !pcCU->getSlice()->getSPS()->getQuadtreeTUFlag()))
     {
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
       if(pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA, 0)==0 && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U, 0)==0
@@ -2304,7 +2315,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if QC_MDDT
 #if LCEC_PHASE2
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode())
+    if (pcCU->getSlice()->getSymbolMode() || (!bConfinedRQT && pcCU->getSlice()->getSPS()->getQuadtreeTUFlag()))
     {
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, 0 );
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0 );
@@ -2340,7 +2351,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
 #if LCEC_PHASE2
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode())
+    if (pcCU->getSlice()->getSymbolMode() || (!bConfinedRQT && pcCU->getSlice()->getSPS()->getQuadtreeTUFlag()))
     {
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, 0 );
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0 );
@@ -2378,7 +2389,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   {
 #if HHI_RQT_ROOT
 #if LCEC_CBP_YUV_ROOT
-    if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && pcCU->getSlice()->getSymbolMode())
+    if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT))
 #else
     if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() )
 #endif
@@ -2397,7 +2408,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
 #if LCEC_CBP_YUV_ROOT
       if(pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA, 0)==0 && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U, 0)==0
-         && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V, 0)==0)
+         && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V, 0)==0 && (bConfinedRQT || !pcCU->getSlice()->getSPS()->getQuadtreeTUFlag()))
          return;
 #endif
     }
