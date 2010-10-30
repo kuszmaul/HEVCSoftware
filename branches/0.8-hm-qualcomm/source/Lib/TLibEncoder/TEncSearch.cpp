@@ -1404,7 +1404,9 @@ TEncSearch::xEncSubdivCbfQT( TComDataCU*  pcCU,
   }
   
 #if LCEC_CBP_YUV_ROOT
-  if(pcCU->getSlice()->getSymbolMode())
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+  if(pcCU->getSlice()->getSymbolMode() || !bConfinedRQT)
   {
 #endif
   //===== Cbfs =====
@@ -1450,11 +1452,11 @@ TEncSearch::xEncCoeffQT( TComDataCU*  pcCU,
   {
     UInt uiQPartNum = pcCU->getPic()->getNumPartInCU() >> ( ( uiFullDepth + 1 ) << 1 );
 #if LCEC_CBP_YUV_ROOT
-    if ( pcCU->getSlice()->getSymbolMode() || pcCU->getCbf( uiAbsPartIdx, eTextType, uiTrDepth ))
+    const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+      (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+    if ( pcCU->getSlice()->getSymbolMode() || pcCU->getCbf( uiAbsPartIdx, eTextType, uiTrDepth ) || !bConfinedRQT )
     {
-#endif
-#if LCEC_CBP_YUV_ROOT
-    if(pcCU->getSlice()->getSymbolMode() == 0)
+    if(pcCU->getSlice()->getSymbolMode() == 0 && bConfinedRQT)
     {
       if( eTextType == TEXT_LUMA || uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
         m_pcEntropyCoder->m_pcEntropyCoderIf->codeBlockCbf(pcCU, uiAbsPartIdx, eTextType, uiTrDepth + 1, uiQPartNum, true);
@@ -1593,7 +1595,9 @@ TEncSearch::xGetIntraBitsQT( TComDataCU*  pcCU,
   m_pcEntropyCoder->resetBits();
   xEncIntraHeader ( pcCU, uiTrDepth, uiAbsPartIdx, bLuma, bChroma );
 #if LCEC_CBP_YUV_ROOT
-  if (pcCU->getSlice()->getSymbolMode()==0 && uiTrDepth == 0)
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+  if (pcCU->getSlice()->getSymbolMode()==0 && uiTrDepth == 0 && bConfinedRQT)
   {
     if(bLuma && bChroma)
     {
@@ -7329,7 +7333,12 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   UInt uiSingleBits = 0;
   UInt uiSingleDist = 0;
   UInt uiAbsSumY = 0, uiAbsSumU = 0, uiAbsSumV = 0;
-  
+
+#if LCEC_CBP_YUV_ROOT
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+#endif
+
   if( m_bUseSBACRD )
   {
     m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
@@ -7373,12 +7382,12 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     
     m_pcEntropyCoder->resetBits();
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0)
+    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0 && bConfinedRQT)
       m_pcEntropyCoder->m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
 #endif
 
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode())
+    if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT)
 #endif
     m_pcEntropyCoder->encodeQtCbf( pcCU, uiAbsPartIdx, TEXT_LUMA,     uiTrMode );
 
@@ -7390,14 +7399,14 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     if( bCodeChroma )
     {
 #if LCEC_CBP_YUV_ROOT
-      if (pcCU->getSlice()->getSymbolMode())
+      if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT)
 #endif
       m_pcEntropyCoder->encodeQtCbf   ( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrMode );
       m_pcEntropyCoder->encodeCoeffNxN( pcCU, pcCoeffCurrU, uiAbsPartIdx, 1<<uiLog2TrSizeC, 1<<uiLog2TrSizeC, uiDepth, TEXT_CHROMA_U, false );
       uiSingleBitsU = m_pcEntropyCoder->getNumberOfWrittenBits() - uiSingleBitsY;
       
 #if LCEC_CBP_YUV_ROOT
-      if (pcCU->getSlice()->getSymbolMode())
+      if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT)
 #endif
       m_pcEntropyCoder->encodeQtCbf   ( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrMode );
       m_pcEntropyCoder->encodeCoeffNxN( pcCU, pcCoeffCurrV, uiAbsPartIdx, 1<<uiLog2TrSizeC, 1<<uiLog2TrSizeC, uiDepth, TEXT_CHROMA_V, false );
@@ -7567,7 +7576,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode())
+    if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT )
     {
 #endif
 #if HHI_RQT_CHROMA_CBF_MOD
@@ -7593,7 +7602,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #endif
 
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0)
+    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0 &&  bConfinedRQT )
       m_pcEntropyCoder->m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
 #endif
 
@@ -7658,7 +7667,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->resetBits();
     
 #if LCEC_CBP_YUV_ROOT
-    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0)
+    if (pcCU->getSlice()->getSymbolMode()==0 && uiTrMode == 0 &&  bConfinedRQT )
     {
       m_pcEntropyCoder->m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
       if(pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA, 0) || pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U, 0)
@@ -7726,6 +7735,12 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   const Bool bSubdiv = uiCurrTrMode != uiTrMode;
   
   const UInt uiLog2TrSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth]+2;
+
+#if LCEC_CBP_YUV_ROOT
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+#endif
+
 #if HHI_RQT_DEPTH || HHI_RQT_DISABLE_SUB
   if( bSubdivAndCbf && uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() && uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
 #else
@@ -7736,7 +7751,7 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   }
   
 #if LCEC_CBP_YUV_ROOT
-  if (pcCU->getSlice()->getSymbolMode())
+  if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT )
   {
 #endif
 #if HHI_RQT_CHROMA_CBF_MOD
@@ -7789,7 +7804,7 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
     if( bSubdivAndCbf )
     {
 #if LCEC_CBP_YUV_ROOT
-      if (pcCU->getSlice()->getSymbolMode())
+      if (pcCU->getSlice()->getSymbolMode() || !bConfinedRQT)
       {
 #endif
       m_pcEntropyCoder->encodeQtCbf( pcCU, uiAbsPartIdx, TEXT_LUMA,     uiTrMode );
@@ -7831,7 +7846,7 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
     {
       const UInt uiQPartNumSubdiv = pcCU->getPic()->getNumPartInCU() >> ((uiDepth + 1 ) << 1);
 #if LCEC_CBP_YUV_ROOT
-      if(pcCU->getSlice()->getSymbolMode() == 0)
+      if(pcCU->getSlice()->getSymbolMode() == 0 && bConfinedRQT)
       {
         if( eType == TEXT_LUMA || uiLog2TrSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() )
           m_pcEntropyCoder->m_pcEntropyCoderIf->codeBlockCbf(pcCU, uiAbsPartIdx, eType, uiCurrTrMode + 1, uiQPartNumSubdiv, true);

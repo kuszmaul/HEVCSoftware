@@ -2278,7 +2278,9 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
 {
 #if HHI_RQT
 #if LCEC_CBP_YUV_ROOT
-  if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && eType != TEXT_ALL)
+  const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
+    (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+  if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() && !(eType == TEXT_ALL && bConfinedRQT) )
 #else
   if( pcCU->getSlice()->getSPS()->getQuadtreeTUFlag() )
 #endif
