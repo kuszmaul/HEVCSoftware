@@ -1594,9 +1594,12 @@ TEncSearch::xGetIntraBitsQT( TComDataCU*  pcCU,
 {
   m_pcEntropyCoder->resetBits();
   xEncIntraHeader ( pcCU, uiTrDepth, uiAbsPartIdx, bLuma, bChroma );
+  xEncSubdivCbfQT ( pcCU, uiTrDepth, uiAbsPartIdx, bLuma, bChroma );
+
 #if LCEC_CBP_YUV_ROOT
   const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
     (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
+
   if (pcCU->getSlice()->getSymbolMode()==0 && uiTrDepth == 0 && bConfinedRQT)
   {
     if(bLuma && bChroma)
@@ -1630,7 +1633,7 @@ TEncSearch::xGetIntraBitsQT( TComDataCU*  pcCU,
     }
   }
 #endif
-  xEncSubdivCbfQT ( pcCU, uiTrDepth, uiAbsPartIdx, bLuma, bChroma );
+
   if( bLuma )
   {
     xEncCoeffQT   ( pcCU, uiTrDepth, uiAbsPartIdx, TEXT_LUMA,      bRealCoeff );
@@ -2109,32 +2112,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     dSplitCost       = m_pcRdCost->calcRdCost( uiSplitBits, uiSplitDistY + uiSplitDistC );
     
     //===== compare and set best =====
-#if LCEC_CBP_YUV_ROOT
-    const Bool bConfinedRQT = (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthIntra()==1 && 
-      (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter()<=2 ));
-    Bool bSplitCbfZero = 0;
-    if (pcCU->getSlice()->getSymbolMode()==0 && bConfinedRQT)
-    {
-      UInt  uiSplitCbfY = 0;
-      UInt  uiSplitCbfU = 0;
-      UInt  uiSplitCbfV = 0;
-      uiAbsPartIdxSub   = uiAbsPartIdx;
-      for( UInt uiPart  = 0; uiPart < 4; uiPart++, uiAbsPartIdxSub += uiQPartsDiv )
-      {
-        uiSplitCbfY |= pcCU->getCbf( uiAbsPartIdxSub, TEXT_LUMA, uiTrDepth + 1 );
-        if( !bLumaOnly )
-        {
-          uiSplitCbfU |= pcCU->getCbf( uiAbsPartIdxSub, TEXT_CHROMA_U, uiTrDepth + 1 );
-          uiSplitCbfV |= pcCU->getCbf( uiAbsPartIdxSub, TEXT_CHROMA_V, uiTrDepth + 1 );
-        }
-      }
-      bSplitCbfZero = ((uiSplitCbfY==0 && bLumaOnly)||(uiSplitCbfY+uiSplitCbfU+uiSplitCbfV==0 && !bLumaOnly));
-    }
-
-    if( dSplitCost < dSingleCost && !bSplitCbfZero)
-#else
     if( dSplitCost < dSingleCost )
-#endif
     {
       //--- set luma Cbf values ---
       UInt  uiSplitCbfY = 0;
