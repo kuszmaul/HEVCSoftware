@@ -309,6 +309,17 @@ void normalizeScanStats();
 // MICROSOFT&USTC defines section end
 ////////////////////////////////
 
+////////////////////////////
+// NEC defines section start
+////////////////////////////
+#define MC_MEMORY_ACCESS_CALC                   1
+#if MC_MEMORY_ACCESS_CALC
+#define DISABLE_CHROMA_MC_MEMORY_ACCESS_CALC    0
+#endif //MC_MEMORY_ACCESS_CALC
+//////////////////////////
+// NEC defines section end
+//////////////////////////
+
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================

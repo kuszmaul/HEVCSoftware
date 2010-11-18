@@ -48,6 +48,9 @@ TDecTop::TDecTop()
   g_nSymbolCounter = 0;
 #endif
 #endif
+#if MC_MEMORY_ACCESS_CALC
+  m_iNumPredictivePic = 0;
+#endif //MC_MEMORY_ACCESS_CALC
 }
 
 TDecTop::~TDecTop()
@@ -382,6 +385,14 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
     }
   }
 
+#if MC_MEMORY_ACCESS_CALC
+  m_cPrediction.updatePic();
+  if ( !pcSlice->isIntra() )
+  {
+    m_iNumPredictivePic++;
+  }
+#endif //MC_MEMORY_ACCESS_CALC
+
   pcSlice->sortPicList(m_cListPic);       //  sorting for application output
 
   ruiPOC = pcPic->getSlice()->getPOC();
@@ -393,3 +404,19 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
   return;
 }
 
+#if MC_MEMORY_ACCESS_CALC
+Void TDecTop::initMCMemoryAccessCalculator( const MemCmpParam& cLumaParam, const MemCmpParam& cChromaParam )
+{
+  m_cPrediction.initMCMemoryAccessCalculator( cLumaParam, cChromaParam );
+}
+
+UInt64 TDecTop::getTotalMCMemoryAccessBytes( Int iIndex )
+{
+  return m_cPrediction.getTotalMCMemoryAccessBytes( iIndex );
+}
+
+UInt64 TDecTop::getMaxMCMemoryAccessBytesPerPic( Int iIndex )
+{
+  return m_cPrediction.getMaxMCMemoryAccessBytesPerPic( iIndex );
+}
+#endif //MC_MEMORY_ACCESS_CALC

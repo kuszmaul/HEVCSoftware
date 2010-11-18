@@ -41,6 +41,9 @@
 #endif // _MSC_VER > 1000
 
 #include "../../Lib/TLibCommon/CommonDef.h"
+#if MC_MEMORY_ACCESS_CALC
+#include "../../Lib/TLibCommon/TComMemCalc.h" // for MemCmpParam
+#endif //MC_MEMORY_ACCESS_CALC
 #include "TAppDecOption.h"
 
 // ====================================================================================================================
@@ -56,6 +59,11 @@ protected:
   char*         m_pchReconFile;                       ///< output reconstruction file name
 
   Void  xSetCfgCommand  ( TAppOption* pcOpt );        ///< initialize member variables from option class
+
+#if MC_MEMORY_ACCESS_CALC
+  MemCmpParam   m_cLumaMemCmpParam;                   ///< Memory compression parameter set for luma
+  MemCmpParam   m_cChromaMemCmpParam;                 ///< Memory compression parameter set for chroma
+#endif //MC_MEMORY_ACCESS_CALC
 
 public:
   TAppDecCfg()          {}

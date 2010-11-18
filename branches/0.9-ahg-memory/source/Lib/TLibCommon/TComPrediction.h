@@ -52,6 +52,10 @@
 #include "TComPredFilterMOMS.h"
 #endif
 
+#if MC_MEMORY_ACCESS_CALC
+#include "TComMemCalc.h"
+#endif //MC_MEMORY_ACCESS_CALC
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -80,6 +84,10 @@ protected:
 #ifdef DCM_PBIC
   TComYuv   m_acYuvTempIC[2];
 #endif
+
+#if MC_MEMORY_ACCESS_CALC
+  TComFrameMemoryAccessCalculator* m_apcMemAccessCalc[ NUM_MEMORY_ARCHITECTURES ];
+#endif // MC_MEMORY_ACCESS_CALC
 
   // ADI functions
   Void xPredIntraAngleAdi       ( Int* pSrc, Int iSrcStride, Pel*& tpDst, Int iDstStride, UInt iWidth, UInt iHeight, UInt uiDirMode );
@@ -132,6 +140,12 @@ protected:
 #if SAMSUNG_CHROMA_IF_EXT
   Void  xDCTIF_FilterC ( Pel*  piRefC, Int iRefStride,Pel*  piDstC,Int iDstStride, Int iWidth, Int iHeight,Int iMVyFrac,Int iMVxFrac);
 #endif
+
+#if MC_MEMORY_ACCESS_CALC
+  Void initMCMemoryAccessCalculator ( TComPic* pcRefPic );
+  Void xCalcMCMemoryAccessLuma      ( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight );
+  Void xCalcMCMemoryAccessChroma    ( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight );
+#endif //MC_MEMORY_ACCESS_CALC
 
 public:
   TComPrediction();
@@ -192,6 +206,13 @@ public:
   TComEdgeBased* getEdgeBasedPred () { return &EdgeBasedPred; }
   Int* getEdgeBasedBuf()          { return m_piYExtEdgeBased; }
 #endif //EDGE_BASED_PREDICTION
+
+#if MC_MEMORY_ACCESS_CALC
+  Void   initMCMemoryAccessCalculator( const MemCmpParam& cLumaParam, const MemCmpParam& cChromaParam );
+  Void   updatePic( Void );
+  UInt64 getTotalMCMemoryAccessBytes( Int iIndex );
+  UInt64 getMaxMCMemoryAccessBytesPerPic( Int iIndex );
+#endif //MC_MEMORY_ACCESS_CALC
 };
 
 
