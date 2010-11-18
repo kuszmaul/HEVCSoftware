@@ -138,6 +138,11 @@ public:
   Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
   Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
 
+#if MC_MEMORY_ACCESS_CALC
+  Int   getLumaPosX ( Int iCuAddr, Int uiAbsZorderIdx );
+  Int   getLumaPosY ( Int iCuAddr, Int uiAbsZorderIdx );
+#endif //MC_MEMORY_ACCESS_CALC
+
 #if BUGFIX50TMP
   Pel *getMaxAddr   ()     { return m_apiPicBufY + (2*m_iLumaMarginY+m_iPicHeight) * (2*m_iLumaMarginX+m_iPicWidth); } 
 #endif

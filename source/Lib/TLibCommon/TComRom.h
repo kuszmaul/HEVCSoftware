@@ -313,6 +313,13 @@ extern const UChar g_aucConvertTxtTypeToIdx[4];
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
+#if MC_MEMORY_ACCESS_CALC
+#define      NUM_MEMORY_ARCHITECTURES     8
+extern       Int    g_aiMemArchDDRAlignBits[ NUM_MEMORY_ARCHITECTURES ];
+extern       Int    g_aiMemArchDDRBurstBits[ NUM_MEMORY_ARCHITECTURES ];
+extern       Int    g_aiMemArchCacheType   [ NUM_MEMORY_ARCHITECTURES ];
+#endif //MC_MEMORY_ACCESS_CALC
+
 #if HHI_RQT
 
 __inline UInt gCeilLog2( const UInt uiVal )
