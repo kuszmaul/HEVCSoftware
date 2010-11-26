@@ -191,7 +191,11 @@ Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiD
     if (m_stLFCUParam.bLeftEdge )
     {
       UInt        uiPartP;
+#if AD_HOC_SLICES
+      TComDataCU* pcCUP = pcCU->getPULeft(uiPartP, uiAbsZorderIdx, false);
+#else
       TComDataCU* pcCUP = pcCU->getPULeft(uiPartP, uiAbsZorderIdx);
+#endif
 
       if ( pcCUP->getPlanarInfo( uiPartP, PLANAR_FLAG) && (pcCU->getHeight(uiAbsZorderIdx) == pcCUP->getHeight(uiPartP) ) )
       {
@@ -204,7 +208,11 @@ Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiD
     if (m_stLFCUParam.bTopEdge )
     {
       UInt        uiPartP;
+#if AD_HOC_SLICES
+      TComDataCU* pcCUP = pcCU->getPUAbove(uiPartP, uiAbsZorderIdx, false);
+#else
       TComDataCU* pcCUP = pcCU->getPUAbove(uiPartP, uiAbsZorderIdx);
+#endif
 
       if ( pcCUP->getPlanarInfo( uiPartP, PLANAR_FLAG)  && (pcCU->getWidth(uiAbsZorderIdx) == pcCUP->getWidth(uiPartP) ))
       {
@@ -674,11 +682,19 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   //-- Calculate Block Index
   if (iDir == EDGE_VER)
   {
+#if AD_HOC_SLICES
+    pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, false);
+#else
     pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ);
+#endif
   }
   else  // (iDir == EDGE_HOR)
   {
+#if AD_HOC_SLICES
+    pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, false);
+#else
     pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ);
+#endif
   }
 
   //-- Set BS for Intra MB : BS = 4 or 3
@@ -1215,7 +1231,11 @@ Void TComLoopFilter::xGetBoundaryStrength( TComDataCU* pcCU, UInt uiAbsZorderIdx
       }
       else
       {
+#if AD_HOC_SLICES
+        pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, false);
+#else
         pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ);
+#endif
       }
     }
     else  // (iDir == EDGE_HOR)
@@ -1235,7 +1255,11 @@ Void TComLoopFilter::xGetBoundaryStrength( TComDataCU* pcCU, UInt uiAbsZorderIdx
       }
       else
       {
+#if AD_HOC_SLICES
+        pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, false);
+#else
         pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ);
+#endif
       }
     }
 

@@ -82,6 +82,11 @@ private:
   TDecV2V                 m_cBinV2VwLB;
   TComLoopFilter          m_cLoopFilter;
   TComAdaptiveLoopFilter  m_cAdaptiveLoopFilter;
+#if AD_HOC_SLICES
+  TComPic*                m_pcPic;
+  TComPic***              m_pcOrgRefList;
+  Bool                    m_bMemoryAllocated;
+#endif
 
 public:
   TDecTop();
@@ -97,6 +102,16 @@ public:
 
   Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
   UInt  getBalancedCPUs() { return m_cSPS.getBalancedCPUs(); }
+
+#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+  TComSPS* getSPS()        
+  { 
+    if (m_uiValidPS | 2)
+      return &m_cSPS;
+    else
+      return NULL;
+  }
+#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

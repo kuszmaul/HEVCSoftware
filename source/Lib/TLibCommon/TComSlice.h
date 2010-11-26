@@ -375,6 +375,12 @@ private:
   Bool m_bNoBackPredFlag;
 #endif
 
+#if AD_HOC_SLICES 
+  UInt        m_uiSliceMode;
+  UInt        m_uiSliceArgument;
+  UInt        m_uiSliceCurStartCUAddr;
+  UInt        m_uiSliceCurEndCUAddr;
+#endif
 public:
   TComSlice();
   virtual ~TComSlice();
@@ -510,6 +516,16 @@ public:
   Void setNoBackPredFlag( Bool b ) { m_bNoBackPredFlag = b; }
 #endif
 
+#if AD_HOC_SLICES 
+  Void setSliceMode              ( UInt uiMode )     { m_uiSliceMode = uiMode;              }
+  UInt getSliceMode              ()                  { return m_uiSliceMode;                }
+  Void setSliceArgument          ( UInt uiArgument ) { m_uiSliceArgument = uiArgument;      }
+  UInt getSliceArgument          ()                  { return m_uiSliceArgument;            }
+  Void setSliceCurStartCUAddr    ( UInt uiAddr )     { m_uiSliceCurStartCUAddr = uiAddr;    }
+  UInt getSliceCurStartCUAddr    ()                  { return m_uiSliceCurStartCUAddr;      }
+  Void setSliceCurEndCUAddr      ( UInt uiAddr )     { m_uiSliceCurEndCUAddr = uiAddr;      }
+  UInt getSliceCurEndCUAddr      ()                  { return m_uiSliceCurEndCUAddr;        }
+#endif
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Bool                bDRBFlag,

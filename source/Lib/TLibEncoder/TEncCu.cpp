@@ -302,9 +302,15 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   }
 }
 
+#if AD_HOC_SLICES
+/** \param  pcCU  pointer of CU data class, bForceTerminate when set to true terminates slice (default is false).
+ */
+Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
+#else
 /** \param  pcCU  pointer of CU data class
  */
 Void TEncCu::encodeCU ( TComDataCU* pcCU )
+#endif
 {
   // encode CU data
   xEncodeCU( pcCU, 0, 0 );
@@ -322,7 +328,19 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU )
   }
 
   //--- write terminating bit ---
+#if AD_HOC_SLICES
+  Bool bTerminateSlice = bForceTerminate;
+  UInt uiCUAddr = pcCU->getAddr();
+
+  if (uiCUAddr == (pcCU->getPic()->getNumCUsInFrame()-1) )
+    bTerminateSlice = true;
+
+  if (uiCUAddr == (pcCU->getPic()->getSlice()->getSliceCurEndCUAddr()-1))
+    bTerminateSlice = true;
+
+#else
   Bool bTerminateSlice = ( pcCU->getAddr() == pcCU->getPic()->getNumCUsInFrame()-1) ? true : false;
+#endif  
   m_pcEntropyCoder->encodeTerminatingBit( bTerminateSlice ? 1 : 0 );
 
   // Encode slice finish

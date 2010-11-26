@@ -48,6 +48,9 @@ TDecTop::TDecTop()
   g_nSymbolCounter = 0;
 #endif
 #endif
+#if AD_HOC_SLICES
+  m_bMemoryAllocated = false;
+#endif
 }
 
 TDecTop::~TDecTop()
@@ -167,9 +170,23 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 
 Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic)
 {
+#if AD_HOC_SLICES
+  if (pcBitstream->getFirstSliceEncounteredInPicture())
+  {
+    rpcListPic = NULL;
+    // Alternatively we can declare them as static global variables
+    m_pcOrgRefList     = new TComPic** [2];
+    m_pcOrgRefList[0]  = new TComPic*  [MAX_REF_PIC_NUM];
+    m_pcOrgRefList[1]  = new TComPic*  [MAX_REF_PIC_NUM];
+    m_bMemoryAllocated = true;
+  }
+  TComPic*&   pcPic         = m_pcPic;
+  TComPic***& pcOrgRefList  = m_pcOrgRefList;
+#else
   rpcListPic = NULL;
   TComPic*    pcPic = NULL;
   TComPic*    pcOrgRefList[2][MAX_REF_PIC_NUM];
+#endif
 
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
@@ -229,6 +246,15 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
   if( false == bDecodeSlice )
   {
+#if AD_HOC_SLICES
+    if (m_bMemoryAllocated)
+    {
+      delete [] m_pcOrgRefList[0];
+      delete [] m_pcOrgRefList[1];
+      delete [] m_pcOrgRefList;
+      m_bMemoryAllocated = false;
+    }
+#endif
     return;
   }
 
@@ -249,7 +275,12 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
   }
 #endif
 
-  // Buffer initialize for prediction.
+
+#if AD_HOC_SLICES
+  if (pcBitstream->getFirstSliceEncounteredInPicture())
+  {
+#endif
+    // Buffer initialize for prediction.
   m_cPrediction.initTempBuff();
 #ifdef EDGE_BASED_PREDICTION
   //Initialise edge based prediction for the current slice
@@ -260,16 +291,31 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
   xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
   // Recursive structure
-  m_cCuDecoder.create ( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
-  m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
-  m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize(), m_apcSlicePilot->getSPS()->getUseROT() );
+    m_cCuDecoder.create ( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
+    m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
+    m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize(), m_apcSlicePilot->getSPS()->getUseROT() );
 
-  m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+    m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#if AD_HOC_SLICES
+  }
+#endif
 
   //  Set picture slice pointer
   TComSlice*  pcSlice = m_apcSlicePilot;
+#if AD_HOC_SLICES
+  if (pcBitstream->getFirstSliceEncounteredInPicture()) 
+  {
+    m_apcSlicePilot = pcPic->getPicSym()->getSlice();
+    pcPic->getPicSym()->setSlice(pcSlice);
+  }
+  else
+  {
+    pcPic->getPicSym()->getSlice()->setSliceCurStartCUAddr( pcSlice->getSliceCurStartCUAddr() );
+  }
+#else
   m_apcSlicePilot = pcPic->getPicSym()->getSlice();
   pcPic->getPicSym()->setSlice(pcSlice);
+#endif
 
   // Set reference list
   pcSlice->setRefPicList( m_cListPic );
@@ -368,27 +414,42 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
   //  Decode a picture
   m_cGopDecoder.decompressGop ( bEos, pcBitstream, pcPic );
 
-  // quality-based reference reordering (QBO)
-  if ( !pcSlice->isIntra() && pcSlice->getSPS()->getUseQBO() )
+#if AD_HOC_SLICES 
+  if (pcBitstream->getLastSliceEncounteredInPicture())
   {
-    // restore original reference list
-    for ( Int iList = 0; iList < 2; iList++ )
+#endif
+    // quality-based reference reordering (QBO)
+    if ( !pcSlice->isIntra() && pcSlice->getSPS()->getUseQBO() )
     {
-      Int iNumRefIdx = pcSlice->getNumRefIdx( (RefPicList)iList );
-      for ( Int iRefIdx = 0; iRefIdx < iNumRefIdx; iRefIdx++ )
+      // restore original reference list
+      for ( Int iList = 0; iList < 2; iList++ )
       {
-        pcSlice->setRefPic( pcOrgRefList[ (RefPicList)iList ][ iRefIdx ], (RefPicList)iList, iRefIdx );
+        Int iNumRefIdx = pcSlice->getNumRefIdx( (RefPicList)iList );
+        for ( Int iRefIdx = 0; iRefIdx < iNumRefIdx; iRefIdx++ )
+        {
+          pcSlice->setRefPic( pcOrgRefList[ (RefPicList)iList ][ iRefIdx ], (RefPicList)iList, iRefIdx );
+        }
       }
     }
-  }
 
-  pcSlice->sortPicList(m_cListPic);       //  sorting for application output
+    pcSlice->sortPicList(m_cListPic);       //  sorting for application output
 
-  ruiPOC = pcPic->getSlice()->getPOC();
+    ruiPOC = pcPic->getSlice()->getPOC();
 
   rpcListPic = &m_cListPic;
 
   m_cCuDecoder.destroy();
+
+#if AD_HOC_SLICES 
+    if (m_bMemoryAllocated)
+    {
+      delete [] m_pcOrgRefList[0];
+      delete [] m_pcOrgRefList[1];
+      delete [] m_pcOrgRefList;
+      m_bMemoryAllocated = false;
+    }
+  }
+#endif
 
   return;
 }

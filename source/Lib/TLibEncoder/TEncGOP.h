@@ -101,11 +101,18 @@ private:
   // indicate sequence first
   Bool                    m_bSeqFirst;
 
+#if AD_HOC_SLICES 
+  UInt*                   m_uiStoredStartCUAddrForEncodingSlice;
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
 
+#if AD_HOC_SLICES
+  Void  create      ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight );
+#else
   Void  create      ();
+#endif
   Void  destroy     ();
 
   Void setBalancedCPUs( UInt u ) { m_uiBalancedCPUs = u; }

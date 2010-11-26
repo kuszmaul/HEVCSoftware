@@ -128,6 +128,9 @@ public:
 
   UInt    getV2Vflag()          { return m_uiV2V; }
   Void    setV2Vflag( UInt ui ) { m_uiV2V = ui;   }
+#if AD_HOC_SLICES 
+  Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddrSlice, UInt& uiBoundingCUAddrSlice, TComPic*& rpcPic, Bool bEncodeSlice );
+#endif
 };
 
 
