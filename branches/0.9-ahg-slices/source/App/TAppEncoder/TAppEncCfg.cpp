@@ -260,6 +260,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #ifdef ROUNDING_CONTROL_BIPRED
     ("RoundingControlBipred", m_useRoundingControlBipred, false, "Rounding control for bi-prediction")
 #endif
+#if AD_HOC_SLICES 
+    ("SliceMode",            m_iSliceMode,           0, "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes")
+    ("SliceArgument",        m_iSliceArgument,       0, "if SliceMode==1 SliceArgument represents max # of LCUs. if SliceMode==2 SliceArgument represents max # of bytes.")
+#endif
     /* Misc. */
     ("FEN", m_bUseFastEnc, false, "fast encoder setting")
 
@@ -433,6 +437,13 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_uiMaxPIPEDelay != 0 && m_uiMaxPIPEDelay < 64,                             "MaxPIPEBufferDelay must be greater than or equal to 64" );
   m_uiMaxPIPEDelay = ( m_uiMCWThreshold > 0 ? 0 : ( m_uiMaxPIPEDelay >> 6 ) << 6 );
   xConfirmPara( m_uiBalancedCPUs > 255,                                                     "BalancedCPUs must not be greater than 255" );
+#if AD_HOC_SLICES 
+  xConfirmPara( m_iSliceMode < 0 || m_iSliceMode > 2, "SliceMode exceeds supported range (0 to 2)" );
+  if (m_iSliceMode!=0)
+  {
+    xConfirmPara( m_iSliceArgument < 1 ,         "SliceArgument should be larger than or equal to 1" );
+  }
+#endif
 
 #if HHI_RQT
 #if LCEC_CBP_YUV_ROOT
@@ -723,6 +734,13 @@ Void TAppEncCfg::xPrintParameter()
     printf("AMP:%d ", m_bUseAMP);
 #if HHI_RMP_SWITCH
     printf("RMP:%d ", m_bUseRMP);
+#endif
+#if AD_HOC_SLICES 
+  printf("Slice:%d ",m_iSliceMode);
+  if (m_iSliceMode!=0)
+  {
+    printf("(%d) ", m_iSliceArgument);
+  }
 #endif
   printf("\n");
 

@@ -309,6 +309,25 @@ void normalizeScanStats();
 // MICROSOFT&USTC defines section end
 ////////////////////////////////
 
+/////////////////////////////////
+// AHG SLICES defines section start
+/////////////////////////////////
+
+#if HHI_NAL_UNIT_SYNTAX                                            ///< Multiple slice within a picture will need NALU syntax support
+
+#define AD_HOC_SLICES                                   1          ///< Used in enabling / disabling slice source code
+
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE              1          ///< OPTION IDENTIFIER. Limit maximum number of largest coding tree blocks in a slice
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE            2          ///< OPTION IDENTIFIER. Limit maximum number of bins/bits in a slice
+
+#define SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS          0          ///< Enable out-of-order slice decompression. Used for testing.
+
+#endif
+
+/////////////////////////////////
+// AHG SLICES defines section end
+/////////////////////////////////
+
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================

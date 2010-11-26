@@ -178,6 +178,11 @@ protected:
 #ifdef ROUNDING_CONTROL_BIPRED
   Bool m_useRoundingControlBipred;
 #endif
+#if AD_HOC_SLICES 
+	//====== Slice ========
+	Int		m_iSliceMode;
+	Int		m_iSliceArgument;
+#endif
 public:
   TEncCfg()          {}
   virtual ~TEncCfg() {}
@@ -423,6 +428,13 @@ public:
 #ifdef ROUNDING_CONTROL_BIPRED
   Void setUseRoundingControlBipred(Bool b) { m_useRoundingControlBipred = b; }
   Bool getUseRoundingControlBipred() { return m_useRoundingControlBipred; }
+#endif
+#if AD_HOC_SLICES 
+	//====== Slice ========
+  Void  setSliceMode                   ( Int	i )       { m_iSliceMode = i;              }
+  Void  setSliceArgument               ( Int	i )       { m_iSliceArgument = i;          }
+  Int   getSliceMode                   ()              { return m_iSliceMode;           }
+  Int   getSliceArgument               ()              { return m_iSliceArgument;       }
 #endif
 };
 

@@ -105,6 +105,10 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
   //-- For time output for each slice
   long iBeforeTime = clock();
 
+#if AD_HOC_SLICES
+  UInt uiRSStartCUAddr               = pcSlice->getSliceCurStartCUAddr();
+#endif
+
   UInt iSymbolMode = pcSlice->getSymbolMode();
   if (iSymbolMode)
   {
@@ -136,82 +140,100 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
   m_pcEntropyDecoder->setBitstream      (pcBitstream);
   m_pcEntropyDecoder->resetEntropy      (pcSlice);
 
-  ALFParam cAlfParam;
-
-  if ( rpcPic->getSlice()->getSPS()->getUseALF() )
-  {
-#if TSB_ALF_HEADER
-    m_pcAdaptiveLoopFilter->setNumCUsInFrame(rpcPic);
-#endif
-    m_pcAdaptiveLoopFilter->allocALFParam(&cAlfParam);
-#if HHI_ALF
-    m_pcEntropyDecoder->decodeAlfParam(&cAlfParam, rpcPic );
-    rpcPic->getSlice()->getSPS()->setALfSeparateQt( cAlfParam.bSeparateQt );
+#if AD_HOC_SLICES
+  ALFParam& cAlfParam = m_cAlfParam;
 #else
-    m_pcEntropyDecoder->decodeAlfParam( &cAlfParam );
+  ALFParam cAlfParam;
 #endif
+
+#if AD_HOC_SLICES
+  if (uiRSStartCUAddr==0)  // decode ALF params only from first slice header
+  {
+#endif
+    if ( rpcPic->getSlice()->getSPS()->getUseALF() )
+    {
+#if TSB_ALF_HEADER
+      m_pcAdaptiveLoopFilter->setNumCUsInFrame(rpcPic);
+#endif
+      m_pcAdaptiveLoopFilter->allocALFParam(&cAlfParam);
+#if HHI_ALF
+      m_pcEntropyDecoder->decodeAlfParam(&cAlfParam, rpcPic );
+      rpcPic->getSlice()->getSPS()->setALfSeparateQt( cAlfParam.bSeparateQt );
+#else
+      m_pcEntropyDecoder->decodeAlfParam( &cAlfParam );
+#endif
+    }
+#if AD_HOC_SLICES
   }
+#endif
 
   m_pcSliceDecoder->decompressSlice(pcBitstream, rpcPic);
 
-  // deblocking filter
-  m_pcLoopFilter->setCfg(pcSlice->getLoopFilterDisable(), 0, 0);
-  m_pcLoopFilter->loopFilterPic( rpcPic );
-
-  // adaptive loop filter
-  if( rpcPic->getSlice()->getSPS()->getUseALF() )
+#if AD_HOC_SLICES 
+  if (pcBitstream->getLastSliceEncounteredInPicture())
   {
-    m_pcAdaptiveLoopFilter->ALFProcess(rpcPic, &cAlfParam);
-#if HHI_ALF
-    if( cAlfParam.bSeparateQt && cAlfParam.cu_control_flag )
-    {
-      m_pcAdaptiveLoopFilter->destroyQuadTree(&cAlfParam);
-    }
 #endif
-    m_pcAdaptiveLoopFilter->freeALFParam(&cAlfParam);
-  }
+    // deblocking filter
+    m_pcLoopFilter->setCfg(pcSlice->getLoopFilterDisable(), 0, 0);
+    m_pcLoopFilter->loopFilterPic( rpcPic );
+
+    // adaptive loop filter
+    if( rpcPic->getSlice()->getSPS()->getUseALF() )
+    {
+      m_pcAdaptiveLoopFilter->ALFProcess(rpcPic, &cAlfParam);
+#if HHI_ALF
+      if( cAlfParam.bSeparateQt && cAlfParam.cu_control_flag )
+      {
+        m_pcAdaptiveLoopFilter->destroyQuadTree(&cAlfParam);
+      }
+#endif
+      m_pcAdaptiveLoopFilter->freeALFParam(&cAlfParam);
+    }
 
 #if HHI_INTERP_FILTER
-  // MOMS prefilter reconstructed pic
-  if( rpcPic->getSlice()->isReferenced() && rpcPic->getSlice()->getUseMOMS() )
-  {
-    TComCoeffCalcMOMS cCoeffCalc;
-    cCoeffCalc.calcCoeffs( rpcPic->getPicYuvRec(), rpcPic->getPicYuvRecFilt(), rpcPic->getSlice()->getInterpFilterType() );
+    // MOMS prefilter reconstructed pic
+    if( rpcPic->getSlice()->isReferenced() && rpcPic->getSlice()->getUseMOMS() )
+    {
+      TComCoeffCalcMOMS cCoeffCalc;
+      cCoeffCalc.calcCoeffs( rpcPic->getPicYuvRec(), rpcPic->getPicYuvRecFilt(), rpcPic->getSlice()->getInterpFilterType() );
+    }
+#endif
+
+    //-- For time output for each slice
+    printf("\nPOC %4d ( %c-SLICE, QP%3d ) ",
+                          pcSlice->getPOC(),
+                          pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B',
+                          pcSlice->getSliceQp() );
+
+    Double dDecTime = (double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
+    printf ("[DT %6.3f] ", dDecTime );
+
+    for (Int iRefList = 0; iRefList < 2; iRefList++)
+    {
+      printf ("[L%d ", iRefList);
+      for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(RefPicList(iRefList)); iRefIndex++)
+      {
+        UInt uiOrgNumRefIdx;
+        uiOrgNumRefIdx = pcSlice->getNumRefIdx(RefPicList(iRefList))-pcSlice->getAddRefCnt(RefPicList(iRefList));
+        UInt uiNewRefIdx= iRefIndex-uiOrgNumRefIdx;
+        if (iRefIndex >= (int)uiOrgNumRefIdx)
+        {
+          if ( pcSlice->getEffectMode(RefPicList(iRefList), uiNewRefIdx) == EFF_WP_SO ||
+               pcSlice->getEffectMode(RefPicList(iRefList), uiNewRefIdx) == EFF_WP_O )
+          {
+            printf ("%dw ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
+          }
+        }
+        else {
+          printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
+        }
+      }
+      printf ("] ");
+    }
+
+    rpcPic->setReconMark(true);
+#if AD_HOC_SLICES 
   }
 #endif
 
-  //-- For time output for each slice
-  printf("\nPOC %4d ( %c-SLICE, QP%3d ) ",
-                        pcSlice->getPOC(),
-                        pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B',
-                        pcSlice->getSliceQp() );
-
-  Double dDecTime = (double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
-  printf ("[DT %6.3f] ", dDecTime );
-
-  for (Int iRefList = 0; iRefList < 2; iRefList++)
-  {
-    printf ("[L%d ", iRefList);
-    for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(RefPicList(iRefList)); iRefIndex++)
-    {
-      UInt uiOrgNumRefIdx;
-      uiOrgNumRefIdx = pcSlice->getNumRefIdx(RefPicList(iRefList))-pcSlice->getAddRefCnt(RefPicList(iRefList));
-      UInt uiNewRefIdx= iRefIndex-uiOrgNumRefIdx;
-      if (iRefIndex >= (int)uiOrgNumRefIdx)
-      {
-        if ( pcSlice->getEffectMode(RefPicList(iRefList), uiNewRefIdx) == EFF_WP_SO ||
-             pcSlice->getEffectMode(RefPicList(iRefList), uiNewRefIdx) == EFF_WP_O )
-        {
-          printf ("%dw ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
-        }
-      }
-      else {
-        printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
-      }
-    }
-    printf ("] ");
-  }
-
-  rpcPic->setReconMark(true);
 }
-

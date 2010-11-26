@@ -173,6 +173,10 @@ Void TVideoIOBitsStartCode::closeBits()
 */
 Bool TVideoIOBitsStartCode::readBits( TComBitstream*& rpcBitstream )
 {
+#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+  m_bLastSliceEncounteredInPicture = true;
+#endif
+
   rpcBitstream->rewindStreamPacket();
 
   // check end-of-file
@@ -183,6 +187,11 @@ Bool TVideoIOBitsStartCode::readBits( TComBitstream*& rpcBitstream )
   {
     return true;
   }
+
+#if AD_HOC_SLICES
+  rpcBitstream->setFirstSliceEncounteredInPicture( m_bFirstSliceEncounteredInPicture );
+  rpcBitstream->setLastSliceEncounteredInPicture ( m_bLastSliceEncounteredInPicture  );
+#endif
 
   // initialize parsing process
 #if HHI_NAL_UNIT_SYNTAX
@@ -204,6 +213,40 @@ int TVideoIOBitsStartCode::xFindNextStartCode(UInt& ruiPacketSize, UChar* pucBuf
   if ( m_cHandle.eof() ) return -1;
   assert( 1 == uiDummy );
 
+#if AD_HOC_SLICES 
+  UInt uiCurPOC = UInt(-1);
+  UChar ucDummyByte;
+
+  // Peek ahead and check if the new NALU contains a slice with a POC different from one encountered previously
+  Int  iMovedForwardBytes = 0;
+  m_cHandle.read( reinterpret_cast<char*>(&ucDummyByte), 1 );
+  if ( m_cHandle.eof() ) return -1;  
+  iMovedForwardBytes++;
+  if ( (ucDummyByte & 0x1F) == NAL_UNIT_CODED_SLICE)
+  {
+    m_cHandle.read( reinterpret_cast<char*>(&ucDummyByte), 1 );
+    if ( m_cHandle.eof() ) return -1;  
+    iMovedForwardBytes++;
+    uiCurPOC   = ucDummyByte & 0xFF;
+    uiCurPOC <<= 2;
+    m_cHandle.read( reinterpret_cast<char*>(&ucDummyByte), 1 );
+    if ( m_cHandle.eof() ) return -1;  
+    iMovedForwardBytes++;
+    uiCurPOC |= ((ucDummyByte & 0xC0) >> 6);
+  }
+  m_cHandle.seekg(-iMovedForwardBytes, ios_base::cur);
+
+  if (m_uiLastPOC!=uiCurPOC)
+  {
+    m_bFirstSliceEncounteredInPicture = true;
+  }
+  else
+  {
+    m_bFirstSliceEncounteredInPicture = false;
+  }
+  m_uiLastPOC = uiCurPOC;
+#endif
+
   Int iNextStartCodeBytes = 0;
   Int iBytesRead = 0;
   UInt uiZeros = 0;
@@ -214,6 +257,9 @@ int TVideoIOBitsStartCode::xFindNextStartCode(UInt& ruiPacketSize, UChar* pucBuf
     if ( m_cHandle.eof() )
     {
       iNextStartCodeBytes = 0;
+#if AD_HOC_SLICES 
+      m_bLastSliceEncounteredInPicture = true;
+#endif
       break;
     }
     pucBuffer[iBytesRead++] = ucByte;
@@ -228,7 +274,45 @@ int TVideoIOBitsStartCode::xFindNextStartCode(UInt& ruiPacketSize, UChar* pucBuf
     else if( uiZeros > 2)
     {
       iNextStartCodeBytes = 3 + 1;
+#if AD_HOC_SLICES
+      // look ahead if it is not end of stream
+      Int iLookaheadBytesRead = 0;
+      if ( !m_cHandle.eof() )
+      {
+        UChar ucByte;
+        m_cHandle.read( reinterpret_cast<char*>(&ucByte), 1 );
+        iLookaheadBytesRead++;
+        if ( (ucByte & 0x1F) == NAL_UNIT_CODED_SLICE)
+        {
+          m_cHandle.read( reinterpret_cast<char*>(&ucByte), 1 );
+          if ( m_cHandle.eof() ) return -1;  
+          iLookaheadBytesRead++;
+          UInt uiReadPOC   = ucByte & 0xFF;
+          uiReadPOC <<= 2;
+          m_cHandle.read( reinterpret_cast<char*>(&ucByte), 1 );
+          if ( m_cHandle.eof() ) return -1;  
+          iLookaheadBytesRead++;
+          uiReadPOC |= ((ucByte & 0xC0) >> 6);
+          if ( uiReadPOC == uiCurPOC )
+          {
+            m_bLastSliceEncounteredInPicture = false;
+            m_cHandle.seekg(-iLookaheadBytesRead, ios_base::cur);
+            break;
+          }
+          else
+          {
+            m_bLastSliceEncounteredInPicture = true; // a new POC detected so signal that this is the last Slice/NALU for current picture.
+          }
+        }
+      }
+      if (iNextStartCodeBytes!=0)
+      {
+        m_cHandle.seekg(-iLookaheadBytesRead, ios_base::cur);
+        break;
+      }
+#else
       break;
+#endif
     }
     else
     {

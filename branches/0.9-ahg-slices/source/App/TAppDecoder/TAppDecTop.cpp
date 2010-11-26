@@ -109,6 +109,81 @@ Void TAppDecTop::decode()
   Bool  bEos        = false;
   while ( !bEos )
   {
+
+#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+    Int       iSliceCountInPicture  = 0;
+    Bool      bEosDetected          = false;
+    Bool      bEofDetected          = false;
+    TComSPS*  pcSPS                 = m_cTDecTop.getSPS();
+    Long      lLastFileLocation;
+    Long*     alFileByteLocationSlicesInPicture;
+    if (pcSPS==NULL)
+    {
+      // SPS not read yet so it is not known how many slices can occur within a picture
+      alFileByteLocationSlicesInPicture = new Long [10]; // just has to be >= 1
+    }
+    else
+    {
+      // Determine the number of LCUs per picture and allocate memory for writing slice locations
+      UInt uiWidthInCU       = ( pcSPS->getWidth()  % pcSPS->getMaxCUWidth()  ) ? pcSPS->getWidth() /pcSPS->getMaxCUWidth()  + 1 : pcSPS->getWidth() /pcSPS->getMaxCUWidth() ;
+      UInt uiHeightInCU      = ( pcSPS->getHeight() % pcSPS->getMaxCUHeight() ) ? pcSPS->getHeight()/pcSPS->getMaxCUHeight() + 1 : pcSPS->getHeight()/pcSPS->getMaxCUHeight();
+      UInt uiNumCUsInFrame   = uiWidthInCU * uiHeightInCU;
+      alFileByteLocationSlicesInPicture = new Long [uiNumCUsInFrame];
+    }
+
+    // Determine location of slices for a picture in the file
+    do 
+    {
+      alFileByteLocationSlicesInPicture[ iSliceCountInPicture++ ] = m_cTVideoIOBitstreamFile.getFileLocation();
+      bEos = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
+      if (bEos)
+      {
+        bEosDetected = true;
+        break;
+      }
+    }
+    while (!pcBitstream->getLastSliceEncounteredInPicture());
+    lLastFileLocation = m_cTVideoIOBitstreamFile.getFileLocation();
+    if (lLastFileLocation < 0 )
+    {
+      bEofDetected = true;
+      m_cTVideoIOBitstreamFile.rewindFile();
+    }
+
+    // Set file pointer and perform out-of-order slice decoding
+    // Slice1 Slice0 Slice3 Slice2 Slice5 Slice4 ...
+    for (Int iSliceProcessed = 0; iSliceProcessed < iSliceCountInPicture; iSliceProcessed++)
+    {
+      
+      Int iSliceIndxToDecode     = (iSliceProcessed%2==1) ? (iSliceProcessed-1) : (iSliceProcessed+1);
+      iSliceIndxToDecode         = (iSliceIndxToDecode<0) ? 0 : ( (iSliceIndxToDecode > (iSliceCountInPicture-1)) ? (iSliceCountInPicture-1) : iSliceIndxToDecode );
+
+      m_cTVideoIOBitstreamFile.setFileLocation( alFileByteLocationSlicesInPicture[ iSliceIndxToDecode ] );
+      m_cTVideoIOBitstreamFile.readBits( pcBitstream );
+      Long lLocalLastFileLocation = m_cTVideoIOBitstreamFile.getFileLocation();
+      if (lLocalLastFileLocation < 0 )
+      {
+        m_cTVideoIOBitstreamFile.rewindFile();
+      }
+
+      pcBitstream->setFirstSliceEncounteredInPicture( (iSliceProcessed==0) ? true : false );
+      pcBitstream->setLastSliceEncounteredInPicture( (iSliceProcessed==iSliceCountInPicture-1) ? true : false );
+      // call actual decoding function
+      m_cTDecTop.decode( bEos, pcBitstream, uiPOC, pcListPic ); 
+    }
+    if (lLastFileLocation>=0)
+    {
+      m_cTVideoIOBitstreamFile.setFileLocation( lLastFileLocation );
+    }
+
+    delete [] alFileByteLocationSlicesInPicture;
+
+    if (bEosDetected)
+    {
+      bEos = true;
+      break;
+    }
+#else
     bEos = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
     if (bEos)
     {
@@ -117,12 +192,20 @@ Void TAppDecTop::decode()
 
     // call actual decoding function
     m_cTDecTop.decode( bEos, pcBitstream, uiPOC, pcListPic );
+#endif
 
     if( pcListPic )
     {
       // write reconstuction to file
       xWriteOutput( pcListPic, bAlloc );
     }
+
+#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+    if (bEofDetected)
+    {
+      break;
+    }
+#endif
   }
 
   // delete temporary buffer
