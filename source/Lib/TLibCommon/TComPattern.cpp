@@ -290,13 +290,7 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
       for (i=0;i<uiCuWidth;i++)
         piAdiTemp[1+uiCuWidth+i]=piAdiTemp[uiCuWidth];
     }
-#if AD_HOC_SLICES 
-    if (bAboveLeftFlag)
-    {
-      piRoiTemp=piRoiOrigin-iPicStride-1;
-      piAdiTemp[0]=piRoiTemp[0];
-    }
-#else
+#if !AD_HOC_SLICES
     // BB: fill top left border corner with rec. sample
     if (bLeftFlag)//BB: why left not top left?
     {
@@ -305,6 +299,14 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     }
 #endif
   }
+
+#if AD_HOC_SLICES
+  if (bAboveLeftFlag)
+  {
+    piRoiTemp=piRoiOrigin-iPicStride-1;
+    piAdiTemp[0]=piRoiTemp[0];
+  }
+#endif
 
   if (bLeftFlag)
   {
@@ -468,19 +470,21 @@ Void TComPattern::initAdiPatternChroma( TComDataCU* pcCU, UInt uiZorderIdxInPart
       for (i=0;i<uiCuWidth;i++)
         piAdiTemp[1+uiCuWidth+i]=piAdiTemp[uiCuWidth];
     }
-#if AD_HOC_SLICES 
-    if (bAboveLeftFlag)
-    {
-      piRoiTemp=piRoiOrigin-iPicStride-1;
-      piAdiTemp[0]=piRoiTemp[0];
-    }
-#else
+#if !AD_HOC_SLICES 
     if (bLeftFlag){
       piRoiTemp=piRoiOrigin-iPicStride-1;
       piAdiTemp[0]=piRoiTemp[0];
     }
 #endif
   }
+
+#if AD_HOC_SLICES
+  if (bAboveLeftFlag)
+  {
+    piRoiTemp=piRoiOrigin-iPicStride-1;
+    piAdiTemp[0]=piRoiTemp[0];
+  }
+#endif
 
   if (bLeftFlag){
     piRoiTemp=piRoiOrigin-1;
