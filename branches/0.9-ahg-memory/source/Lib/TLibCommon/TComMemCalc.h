@@ -4,7 +4,7 @@
   This software may be subject to other third party and   contributor rights, including patent rights, and no such
   rights are granted under this license.
 
-  Copyright (c) 2010, NEC CORPORATION
+  Copyright (c) 2010, NEC, Panasonic, and TI
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without modification, are permitted only for
@@ -15,7 +15,7 @@
       the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
       the following disclaimer in the documentation and/or other materials provided with the distribution.
-    * The name of NEC CORPORATION
+    * The names of NEC, Panasonic, and TI
       may not be used to endorse or promote products derived from this software without specific prior written permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
