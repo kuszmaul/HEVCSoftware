@@ -1119,24 +1119,11 @@ TComDataCU* TComDataCU::getPULeft( UInt& uiLPartUnitIdx, UInt uiCurrPartUnitIdx 
     uiLPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdx - 1 ];
     if ( uiAbsPartIdx % uiNumPartInCUWidth == uiAbsZorderCUIdx % uiNumPartInCUWidth )
     {
-#if AD_HOC_SLICES 
-      TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-      if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-      {
-        return NULL;
-      }
-#endif
       return m_pcPic->getCU( getAddr() );
     }
     else
     {
       uiLPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-      if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-      {
-        return NULL;
-      }
-#endif
       return this;
     }
   }
@@ -1166,24 +1153,11 @@ TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx, UInt uiCurrPartUnitIdx
     uiAPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdx - uiNumPartInCUWidth ];
     if ( uiAbsPartIdx / uiNumPartInCUWidth == uiAbsZorderCUIdx / uiNumPartInCUWidth )
     {
-#if AD_HOC_SLICES 
-      TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-      if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-      {
-        return NULL;
-      }
-#endif
       return m_pcPic->getCU( getAddr() );
     }
     else
     {
       uiAPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-      if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-      {
-        return NULL;
-      }
-#endif
       return this;
     }
   }
@@ -1215,24 +1189,11 @@ TComDataCU* TComDataCU::getPUAboveLeft( UInt& uiALPartUnitIdx, UInt uiCurrPartUn
       uiALPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdx - uiNumPartInCUWidth - 1 ];
       if ( ( uiAbsPartIdx % uiNumPartInCUWidth == uiAbsZorderCUIdx % uiNumPartInCUWidth ) || ( uiAbsPartIdx / uiNumPartInCUWidth == uiAbsZorderCUIdx / uiNumPartInCUWidth ) )
       {
-#if AD_HOC_SLICES 
-        TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-        if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-        {
-          return NULL;
-        }
-#endif
         return m_pcPic->getCU( getAddr() );
       }
       else
       {
         uiALPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-        if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-        {
-          return NULL;
-        }
-#endif
         return this;
       }
     }
@@ -1293,24 +1254,11 @@ TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartU
         uiARPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdxRT - uiNumPartInCUWidth + 1 ];
         if ( ( uiAbsPartIdxRT % uiNumPartInCUWidth == uiAbsZorderCUIdx % uiNumPartInCUWidth ) || ( uiAbsPartIdxRT / uiNumPartInCUWidth == uiAbsZorderCUIdx / uiNumPartInCUWidth ) )
         {
-#if AD_HOC_SLICES 
-          TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-          if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-          {
-            return NULL;
-          }
-#endif
           return m_pcPic->getCU( getAddr() );
         }
         else
         {
           uiARPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-          if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-          {
-            return NULL;
-          }
-#endif
           return this;
         }
       }
@@ -1368,24 +1316,11 @@ TComDataCU* TComDataCU::getPUBelowLeft( UInt& uiBLPartUnitIdx, UInt uiCurrPartUn
         uiBLPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdxLB + uiNumPartInCUWidth - 1 ];
         if ( ( (uiAbsPartIdxLB % uiNumPartInCUWidth) == (uiAbsZorderCUIdxLB % uiNumPartInCUWidth) ) || ( (uiAbsPartIdxLB / uiNumPartInCUWidth) == (uiAbsZorderCUIdxLB / uiNumPartInCUWidth) ) )
         {
-#if AD_HOC_SLICES 
-          TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-          if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-          {
-            return NULL;
-          }
-#endif
           return m_pcPic->getCU( getAddr() );
         }
         else
         {
           uiBLPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-          if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-          {
-            return NULL;
-          }
-#endif
           return this;
         }
       }
@@ -1431,24 +1366,11 @@ TComDataCU* TComDataCU::getPUBelowLeftAdi(UInt& uiBLPartUnitIdx, UInt uiPuHeight
         uiBLPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdxLB + uiNumPartInCUWidth - 1 ];
         if ( ( (uiAbsPartIdxLB % uiNumPartInCUWidth) == (uiAbsZorderCUIdxLB % uiNumPartInCUWidth) ) || ( (uiAbsPartIdxLB / uiNumPartInCUWidth) == (uiAbsZorderCUIdxLB / uiNumPartInCUWidth) ) )
         {
-#if AD_HOC_SLICES 
-          TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-          if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-          {
-            return NULL;
-          }
-#endif
           return m_pcPic->getCU( getAddr() );
         }
         else
         {
           uiBLPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-          if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-          {
-            return NULL;
-          }
-#endif
           return this;
         }
       }
@@ -1494,24 +1416,11 @@ TComDataCU* TComDataCU::getPUAboveRightAdi(UInt&  uiARPartUnitIdx, UInt uiPuWidt
         uiARPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdxRT - uiNumPartInCUWidth + 1 ];
         if ( ( uiAbsPartIdxRT % uiNumPartInCUWidth == uiAbsZorderCUIdx % uiNumPartInCUWidth ) || ( uiAbsPartIdxRT / uiNumPartInCUWidth == uiAbsZorderCUIdx / uiNumPartInCUWidth ) )
         {
-#if AD_HOC_SLICES 
-          TComDataCU* pcTempReconCU = m_pcPic->getCU( getAddr() );
-          if (bEnforceSliceRestriction && (pcTempReconCU==NULL || pcTempReconCU->getSlice() == NULL || pcTempReconCU->getAddr() < m_uiSliceStartCU))
-          {
-            return NULL;
-          }
-#endif
           return m_pcPic->getCU( getAddr() );
         }
         else
         {
           uiARPartUnitIdx -= m_uiAbsIdxInLCU;
-#if AD_HOC_SLICES 
-          if (bEnforceSliceRestriction && (this->getAddr() < m_uiSliceStartCU || m_pcSlice==NULL))
-          {
-            return NULL;
-          }
-#endif
           return this;
         }
       }

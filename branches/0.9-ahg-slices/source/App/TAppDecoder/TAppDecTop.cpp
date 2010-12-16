@@ -150,6 +150,11 @@ Void TAppDecTop::decode()
       m_cTVideoIOBitstreamFile.rewindFile();
     }
 
+    if(bEosDetected)
+    {
+      break;
+    }
+
     // Set file pointer and perform out-of-order slice decoding
     // Slice1 Slice0 Slice3 Slice2 Slice5 Slice4 ...
     for (Int iSliceProcessed = 0; iSliceProcessed < iSliceCountInPicture; iSliceProcessed++)
