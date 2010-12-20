@@ -143,15 +143,18 @@ Void TAppDecTop::decode()
              m_cLumaMemCmpParam.iCmpRatioNum, m_cLumaMemCmpParam.iCmpRatioDenom,
              m_cChromaMemCmpParam.iCmpRatioNum, m_cChromaMemCmpParam.iCmpRatioDenom);
     }
-    printf("\n Frame memory access measurement results:");
-    for (Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++)
-    {
-      printf("\n   Align%3dbit/Burst%3dbit %-9s [Avg %8llu] [Max %8llu] ",
-             g_aiMemArchDDRAlignBits[i], g_aiMemArchDDRBurstBits[i],
-             g_aiMemArchCacheType[i]==2 ? "LRUCache" : g_aiMemArchCacheType[i]==1 ? "FIFOCache" : "",
-             m_cTDecTop.getTotalMCMemoryAccessBytes(i)/m_cTDecTop.getNumPredictivePic(),
-             m_cTDecTop.getMaxMCMemoryAccessBytesPerPic(i));
-    }
+	if(m_cTDecTop.getNumPredictivePic() > 0)
+	{
+		printf("\n Frame memory access measurement results:");
+		for (Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++)
+		{
+			printf("\n   Align%3dbit/Burst%3dbit %-9s [Avg %8llu] [Max %8llu] ",
+				g_aiMemArchDDRAlignBits[i], g_aiMemArchDDRBurstBits[i],
+				g_aiMemArchCacheType[i]==2 ? "LRUCache" : g_aiMemArchCacheType[i]==1 ? "FIFOCache" : "",
+				m_cTDecTop.getTotalMCMemoryAccessBytes(i)/m_cTDecTop.getNumPredictivePic(),
+				m_cTDecTop.getMaxMCMemoryAccessBytesPerPic(i));
+		}
+	}
   }
   printf ("\n");
 #endif //MC_MEMORY_ACCESS_CALC

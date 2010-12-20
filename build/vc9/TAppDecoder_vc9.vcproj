@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="TAppDecoder"
 	ProjectGUID="{A7A515D9-E917-4706-BD5B-57DC6C78D612}"
 	RootNamespace="TAppDecoder"
@@ -333,6 +333,11 @@
 				RelativePath="..\..\source\App\TAppDecoder\TAppDecTop.cpp"
 				>
 			</File>
+			<Filter
+				Name="Resource Files"
+				Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+				>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -350,11 +355,6 @@
 				RelativePath="..\..\source\App\TAppDecoder\TAppDecTop.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			>
 		</Filter>
 	</Files>
 	<Globals>
