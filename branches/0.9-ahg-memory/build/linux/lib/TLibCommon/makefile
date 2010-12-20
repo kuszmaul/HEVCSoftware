@@ -57,6 +57,7 @@ OBJS          	= \
 			$(OBJ_DIR)/TComTrQuant.o \
 			$(OBJ_DIR)/TComYuv.o \
 			$(OBJ_DIR)/TComZeroTree.o \
+			$(OBJ_DIR)/TComMemCalc.o \
 
 LIBS				= -lpthread
 
