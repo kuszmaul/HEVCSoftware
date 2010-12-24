@@ -373,8 +373,8 @@ Int TComCompressedFrameMemoryAccessCalculator::xCalcAccessBytes(Int iMCBlockWidt
   Int iBottomPos = (iMCBlockPosY + iMCBlockHeight + iMCBlockOverheadBottom);
 
   /* derive compression-unit aligned pixel positions */
-  Int iAlignedLeftPos    = AlignRoundDown (iLeftPos,   iCmpUnitWidth);
-  Int iAlignedRightPos   = AlignRoundUp   (iRightPos,  iCmpUnitWidth);
+  Int iAlignedLeftPos    = AlignRoundDown (iLeftPos,   iMul * iCmpUnitWidth);
+  Int iAlignedRightPos   = AlignRoundUp   (iRightPos,  iMul * iCmpUnitWidth);
   Int iAlignedTopPos     = AlignRoundDown (iTopPos,    iCmpUnitHeight);
   Int iAlignedBottomPos  = AlignRoundUp   (iBottomPos, iCmpUnitHeight);
 
