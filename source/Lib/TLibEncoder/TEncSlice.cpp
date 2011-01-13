@@ -183,7 +183,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Double dQP;
   Double dLambda;
 
-  rpcSlice = pcPic->getSlice();
+  rpcSlice = pcPic->getSlice(0);
   rpcSlice->setPic( pcPic );
   rpcSlice->initSlice();
 
@@ -283,7 +283,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Int* pdQPs = m_pcCfg->getdQPs();
   if ( pdQPs )
   {
-    dQP += pdQPs[ pcPic->getSlice()->getPOC() ];
+    dQP += pdQPs[ rpcSlice->getPOC() ];
   }
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -310,9 +310,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
     if ( iDepth == 0 )
     {
 #if QC_MDDT
-      if ( pcPic->getSlice()->isIntra() && dQP == dOrigQP )
+      if ( rpcSlice->isIntra() && dQP == dOrigQP )
 #else
-      if ( m_pcCfg->getUseRDOQ() && pcPic->getSlice()->isIntra() && dQP == dOrigQP )
+      if ( m_pcCfg->getUseRDOQ() && rpcSlice->isIntra() && dQP == dOrigQP )
 #endif
       {
         dLambda = 0.57 * pow( 2.0, qp_temp/3.0 );
@@ -333,7 +333,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
     else // P or B slices for HB or HP structure
     {
       dLambda = 0.68 * pow( 2.0, qp_temp/3.0 );
-      if ( pcPic->getSlice()->isInterB () )
+      if ( rpcSlice->isInterB () )
       {
         dLambda *= Clip3( 2.00, 4.00, (qp_temp / 6.0) ); // (j == B_SLICE && p_cur_frm->layer != 0 )
         if ( rpcSlice->isReferenced() ) // HB structure and referenced
@@ -464,7 +464,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
   // if deltaQP RD is not used, simply return
   if ( m_pcCfg->getDeltaQpRD() == 0 ) return;
 
-  TComSlice* pcSlice        = rpcPic->getSlice();
+  TComSlice* pcSlice        = rpcPic->getSlice(getSliceIdx());
   Double     dPicRdCostBest = MAX_DOUBLE;
   Double dSumCURdCostBest;
   UInt64     uiPicDistBest;
@@ -529,6 +529,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 {
   UInt   uiCUAddr;
 #if AD_HOC_SLICES 
+  TComSlice* pcSlice        = rpcPic->getSlice(getSliceIdx());
   UInt   uiStartCUAddrSlice;
   UInt   uiBoundingCUAddrSlice;
   UInt64 uiBitsCoded = 0;
@@ -548,14 +549,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   if( m_pcCfg->getUseSBACRD() )
   {
     m_pcSbacCoder->init( m_pcBinCABAC );
-    m_pcEntropyCoder->setEntropyCoder   ( m_pcSbacCoder, rpcPic->getSlice() );
+    m_pcEntropyCoder->setEntropyCoder   ( m_pcSbacCoder, pcSlice );
     m_pcEntropyCoder->resetEntropy      ();
     m_pppcRDSbacCoder[0][CI_CURR_BEST]->load(m_pcSbacCoder);
   }
   else
   {
     m_pcCavlcCoder  ->setAdaptFlag    ( false );
-    m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, rpcPic->getSlice() );
+    m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, pcSlice );
     m_pcEntropyCoder->resetEntropy      ();
     m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
   }
@@ -577,8 +578,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #endif
   {
     // set QP
-    m_pcCuEncoder->setQpLast( rpcPic->getSlice()->getSliceQp() );
-
+    m_pcCuEncoder->setQpLast( pcSlice->getSliceQp() );
     // initialize CU encoder
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
@@ -587,14 +587,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     if( m_pcCfg->getUseSBACRD() )
     {
       // set go-on entropy coder
-      m_pcEntropyCoder->setEntropyCoder ( m_pcRDGoOnSbacCoder, rpcPic->getSlice() );
+      m_pcEntropyCoder->setEntropyCoder ( m_pcRDGoOnSbacCoder, pcSlice );
       m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
 
       // run CU encoder
       m_pcCuEncoder->compressCU( pcCU );
 
       // restore entropy coder to an initial stage
-      m_pcEntropyCoder->setEntropyCoder ( m_pppcRDSbacCoder[0][CI_CURR_BEST], rpcPic->getSlice() );
+      m_pcEntropyCoder->setEntropyCoder ( m_pppcRDSbacCoder[0][CI_CURR_BEST], pcSlice );
       m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
 
       m_pcCuEncoder->encodeCU( pcCU );
@@ -651,7 +651,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     m_uiPicDist      += pcCU->getTotalDistortion();
   }
 #if AD_HOC_SLICES
-  rpcPic->getSlice()->setSliceCurEndCUAddr( uiCUAddr );
+  pcSlice->setSliceCurEndCUAddr( uiCUAddr );
 #endif
 }
 
@@ -667,8 +667,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
   xDetermineStartAndBoundingCUAddr  ( uiStartCUAddrSlice, uiBoundingCUAddrSlice, rpcPic, true );
 #endif
 
-  TComSlice* pcSlice = rpcPic->getSlice();
-
+  TComSlice* pcSlice = rpcPic->getSlice(getSliceIdx());
   // choose entropy coder
   Int iSymbolMode = pcSlice->getSymbolMode();
   if (iSymbolMode)
@@ -735,8 +734,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
   for( uiCUAddr = 0; uiCUAddr < rpcPic->getPicSym()->getNumberOfCUsInFrame() ; uiCUAddr++ )
 #endif
   {
-    m_pcCuEncoder->setQpLast( rpcPic->getSlice()->getSliceQp() );
-
+    m_pcCuEncoder->setQpLast( pcSlice->getSliceQp() );
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
 #if HHI_RQT
 #if ENC_DEC_TRACE
@@ -768,7 +766,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
 #endif
   }
 #if AD_HOC_SLICES
-  rpcPic->getSlice()->setSliceCurEndCUAddr( uiCUAddr );
+  pcSlice->setSliceCurEndCUAddr( uiCUAddr );
 #endif
 }
 
@@ -1052,7 +1050,8 @@ Double TEncSlice::xComputeNormMean( Pel* img, Double meanValue, Int width, Int h
  */
 Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddrSlice, UInt& uiBoundingCUAddrSlice, TComPic*& rpcPic, Bool bEncodeSlice )
 {
-  uiStartCUAddrSlice        = rpcPic->getSlice()->getSliceCurStartCUAddr();
+  TComSlice* pcSlice = rpcPic->getSlice(getSliceIdx());
+  uiStartCUAddrSlice        = pcSlice->getSliceCurStartCUAddr();
   UInt uiNumberOfCUsInFrame = rpcPic->getNumCUsInFrame();
   if (bEncodeSlice) 
   {
@@ -1065,14 +1064,14 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddrSlice, UI
       break;
     case AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE:
       uiCUAddrIncrementRecon   = rpcPic->getNumCUsInFrame();
-      uiBoundingCUAddrSlice    = rpcPic->getSlice()->getSliceCurEndCUAddr();
+      uiBoundingCUAddrSlice    = pcSlice->getSliceCurEndCUAddr();
       break;
     default:
       uiCUAddrIncrementRecon   = rpcPic->getNumCUsInFrame();
       uiBoundingCUAddrSlice    = uiNumberOfCUsInFrame;
       break;
     } 
-    rpcPic->getSlice()->setSliceCurEndCUAddr( uiBoundingCUAddrSlice );
+    pcSlice->setSliceCurEndCUAddr( uiBoundingCUAddrSlice );
   }
   else
   {
@@ -1088,7 +1087,7 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddrSlice, UI
       uiBoundingCUAddrSlice    = uiNumberOfCUsInFrame;
       break;
     } 
-    rpcPic->getSlice()->setSliceCurEndCUAddr( uiBoundingCUAddrSlice );
+    pcSlice->setSliceCurEndCUAddr( uiBoundingCUAddrSlice );
   }
 }
 #endif

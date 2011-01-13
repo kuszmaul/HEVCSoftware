@@ -66,6 +66,8 @@ Void TDecTop::create()
 {
   m_cGopDecoder.create();
   m_apcSlicePilot = new TComSlice;
+
+  m_uiSliceIdx = m_uiLastSliceIdx = 0;
 }
 
 Void TDecTop::destroy()
@@ -263,6 +265,13 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
   m_apcSlicePilot->initSlice();
 
+  if (pcBitstream->getFirstSliceEncounteredInPicture())
+  {
+    m_uiSliceIdx    = 0;
+    m_uiLastSliceIdx = 0;
+  }
+  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
+
   //  Read slice header
   m_apcSlicePilot->setSPS( &m_cSPS );
   m_apcSlicePilot->setPPS( &m_cPPS );
@@ -305,13 +314,19 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 #if AD_HOC_SLICES
   if (pcBitstream->getFirstSliceEncounteredInPicture()) 
   {
-    m_apcSlicePilot = pcPic->getPicSym()->getSlice();
-    pcPic->getPicSym()->setSlice(pcSlice);
+    if(pcPic->getNumAllocatedSlice() != 1)
+    {
+      pcPic->clearSliceBuffer();
+    }
   }
   else
   {
-    pcPic->getPicSym()->getSlice()->setSliceCurStartCUAddr( pcSlice->getSliceCurStartCUAddr() );
+     pcPic->allocateNewSlice();
   }
+  assert(pcPic->getNumAllocatedSlice() == (m_uiSliceIdx + 1));
+
+  m_apcSlicePilot = pcPic->getPicSym()->getSlice(m_uiSliceIdx); 
+  pcPic->getPicSym()->setSlice(pcSlice, m_uiSliceIdx);
 #else
   m_apcSlicePilot = pcPic->getPicSym()->getSlice();
   pcPic->getPicSym()->setSlice(pcSlice);
@@ -365,7 +380,7 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       for ( iRefIdx = 0; iRefIdx < iNumRefIdx; iRefIdx++ )
       {
         pRef = pcSlice->getRefPic( (RefPicList)iList, iRefIdx );
-        if ( pRef->getSlice()->getSliceQp() <= iMinQP )
+        if ( pRef->getSlice(0)->getSliceQp() <= iMinQP )
         {
           iMinIdx = iRefIdx;
           break;
@@ -411,6 +426,8 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 #endif
 
   m_cGopDecoder.setBalancedCPUs( getBalancedCPUs() );
+  pcPic->setCurrSliceIdx(m_uiSliceIdx);
+
   //  Decode a picture
   m_cGopDecoder.decompressGop ( bEos, pcBitstream, pcPic );
 
@@ -434,8 +451,7 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
     pcSlice->sortPicList(m_cListPic);       //  sorting for application output
 
-    ruiPOC = pcPic->getSlice()->getPOC();
-
+    ruiPOC = pcPic->getSlice(m_uiSliceIdx)->getPOC();
   rpcListPic = &m_cListPic;
 
   m_cCuDecoder.destroy();
@@ -450,6 +466,11 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
     }
   }
 #endif
+  else
+  {
+    m_uiLastSliceIdx = m_uiSliceIdx;
+    m_uiSliceIdx ++;
+  }
 
   return;
 }

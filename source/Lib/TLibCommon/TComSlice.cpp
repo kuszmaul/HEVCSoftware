@@ -189,11 +189,13 @@ Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
     iterPicExtract = rcListPic.begin();
     for (Int j = 0; j < i; j++) iterPicExtract++;
     pcPicExtract = *(iterPicExtract);
+    pcPicExtract->setCurrSliceIdx(0);
 
     iterPicInsert = rcListPic.begin();
     while (iterPicInsert != iterPicExtract)
     {
       pcPicInsert = *(iterPicInsert);
+      pcPicInsert->setCurrSliceIdx(0);
       if (pcPicInsert->getPOC() >= pcPicExtract->getPOC())
       {
         break;
@@ -242,11 +244,11 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
       iterPic--;
       pcPic = *(iterPic);
       if( ( !pcPic->getReconMark()                        ) ||
-          ( bDRBFlag  != pcPic->getSlice()->getDRBFlag()  ) ||
-          ( eERBIndex != pcPic->getSlice()->getERBIndex() ) )
+          ( bDRBFlag  != pcPic->getSlice(0)->getDRBFlag()  ) ||
+          ( eERBIndex != pcPic->getSlice(0)->getERBIndex() ) )
         continue;
 
-      if( !pcPic->getSlice()->isReferenced() )
+      if( !pcPic->getSlice(0)->isReferenced() )
         continue;
 
       uiCount++;
@@ -277,11 +279,11 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
 
       pcPic = *(iterPic);
       if( ( !pcPic->getReconMark()                        ) ||
-          ( bDRBFlag  != pcPic->getSlice()->getDRBFlag()  ) ||
-          ( eERBIndex != pcPic->getSlice()->getERBIndex() ) )
+          ( bDRBFlag  != pcPic->getSlice(0)->getDRBFlag()  ) ||
+          ( eERBIndex != pcPic->getSlice(0)->getERBIndex() ) )
         continue;
 
-      if( !pcPic->getSlice()->isReferenced() )
+      if( !pcPic->getSlice(0)->isReferenced() )
         continue;
 
       uiCount++;
@@ -303,11 +305,11 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
 
       pcPic = *(iterPic);
       if( ( !pcPic->getReconMark()                        ) ||
-          ( bDRBFlag  != pcPic->getSlice()->getDRBFlag()  ) ||
-          ( eERBIndex != pcPic->getSlice()->getERBIndex() ) )
+          ( bDRBFlag  != pcPic->getSlice(0)->getDRBFlag()  ) ||
+          ( eERBIndex != pcPic->getSlice(0)->getERBIndex() ) )
         continue;
 
-      if( !pcPic->getSlice()->isReferenced() )
+      if( !pcPic->getSlice(0)->isReferenced() )
         continue;
 
       uiCount++;
@@ -335,11 +337,11 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
       iterPic--;
       pcPic = *(iterPic);
       if( ( !pcPic->getReconMark()                        ) ||
-          ( bDRBFlag  != pcPic->getSlice()->getDRBFlag()  ) ||
-          ( eERBIndex != pcPic->getSlice()->getERBIndex() ) )
+          ( bDRBFlag  != pcPic->getSlice(0)->getDRBFlag()  ) ||
+          ( eERBIndex != pcPic->getSlice(0)->getERBIndex() ) )
         continue;
 
-      if( !pcPic->getSlice()->isReferenced() )
+      if( !pcPic->getSlice(0)->isReferenced() )
         continue;
 
       uiCount++;
@@ -695,8 +697,7 @@ Void TComSlice::generateWPSlice( RefPicList e, EFF_MODE eEffMode, UInt uiInsertI
 
   pcPicYuvRef = getRefPic(e, 0)->getPicYuvRec();
 
-  m_apcVirtPic[e][uiInsertIdx]->getSlice()->setPOC( getRefPic(e, 0)->getPOC() );
-
+  m_apcVirtPic[e][uiInsertIdx]->getSlice(0)->setPOC( getRefPic(e, 0)->getPOC() );
   // Luma
   iWidth  = pcPicYuvRef->getWidth();
   iHeight = pcPicYuvRef->getHeight();
@@ -749,6 +750,116 @@ Void TComSlice::generateWPSlice( RefPicList e, EFF_MODE eEffMode, UInt uiInsertI
     pDst += iStride;
     pSrc += iStride;
   }
+}
+
+Void TComSlice::copySliceInfo(TComSlice *pSrc)
+{
+  assert( pSrc != NULL );
+
+  Int i, j, k;
+
+  m_iPOC                 = pSrc->m_iPOC;
+  m_eSliceType           = pSrc->m_eSliceType;
+  m_iSliceQp             = pSrc->m_iSliceQp;
+  m_iSymbolMode          = pSrc->m_iSymbolMode;
+  m_bMultiCodeword       = pSrc->m_bMultiCodeword;
+  m_uiMaxPIPEDelay       = pSrc->m_uiMaxPIPEDelay;
+  m_bLoopFilterDisable   = pSrc->m_bLoopFilterDisable;
+  m_uiBalancedCPUs       = pSrc->m_uiBalancedCPUs;
+  m_bDRBFlag             = pSrc->m_bDRBFlag;
+  m_eERBIndex            = pSrc->m_eERBIndex;
+  for(i = 0; i < 2; i ++)
+  {
+    m_aiNumRefIdx[i]     = pSrc->m_aiNumRefIdx[i];
+  }
+
+  //  Data
+  m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
+  for(i = 0; i < 2; i ++)
+  {
+    for(j = 0; j < MAX_NUM_REF+GRF_MAX_NUM_EFF; j ++)
+    {
+       m_apcRefPicList[i][j]  = pSrc->m_apcRefPicList[i][j];
+       m_aiRefPOCList [i][j]  = pSrc->m_aiRefPOCList [i][j];
+    }
+  }
+  m_iDepth               = pSrc->m_iDepth;
+
+  // referenced slice
+  m_bRefenced            = pSrc->m_bRefenced;
+#ifdef ROUNDING_CONTROL_BIPRED
+  m_bRounding            = pSrc->m_bRounding;
+#endif
+
+  // access channel
+  m_pcSPS                = pSrc->m_pcSPS;
+  m_pcPPS                = pSrc->m_pcPPS;
+  m_pcPic                = pSrc->m_pcPic;
+
+  m_uiColDir             = pSrc->m_uiColDir;
+  m_dLambda              = pSrc->m_dLambda;
+
+  // generated reference frame for weighted prediction
+  for(i = 0; i < 2; i ++)
+  {
+    for(j = 0; j < GRF_MAX_NUM_EFF; j ++)
+    {
+      m_aeEffectMode[i][j]  = pSrc->m_aeEffectMode[i][j];
+      m_apcVirtPic  [i][j]  = pSrc->m_apcVirtPic  [i][j];
+    }
+    m_auiAddRefCnt[i]       = pSrc->m_auiAddRefCnt[i];
+    for(j = 0; j < MAX_NUM_REF+GRF_MAX_NUM_EFF; j ++)
+    {
+      for(k = 0; k < MAX_NUM_REF+GRF_MAX_NUM_EFF; k ++)
+      {
+        m_abEqualRef[i][j][k]  = pSrc->m_abEqualRef[i][j][k];
+      }
+    }
+    for(j = 0; j < GRF_MAX_NUM_WEFF; j ++)
+    {
+      for(k = 0; k < 3; k ++)
+      {
+        m_iWPWeight[i][j][k]  = pSrc->m_iWPWeight[i][j][k];
+        m_iWPOffset[i][j][k]  = pSrc->m_iWPOffset[i][j][k];
+      }
+    }
+    m_aiWPmode[i]           = pSrc->m_aiWPmode[i];
+  }
+
+  m_iRFmode              = pSrc->m_iRFmode;
+  m_iLumaLogWeightDenom  = pSrc->m_iLumaLogWeightDenom;
+  m_iChromaLogWeightDenom = pSrc->m_iChromaLogWeightDenom;
+  m_iWPLumaRound         = pSrc->m_iWPLumaRound;
+  m_iWPChromaRound       = pSrc->m_iWPChromaRound;
+
+#ifdef EDGE_BASED_PREDICTION
+  m_bEdgePredictionEnable   = pSrc->m_bEdgePredictionEnable;
+  m_iEdgeDetectionThreshold = pSrc->m_iEdgeDetectionThreshold;
+#endif //EDGE_BASED_PREDICTION
+#if HHI_INTERP_FILTER
+  m_iInterpFilterType    = pSrc->m_iInterpFilterType;
+#endif
+#ifdef QC_SIFO_PRED
+  m_bUseSIFO_Pred        = pSrc->m_bUseSIFO_Pred;
+#endif
+#ifdef DCM_PBIC
+  for(i = 0; i < MAX_NUM_ZTREE; i ++)
+  {
+    m_apcZTree[i]        = pSrc->m_apcZTree[i];
+  }
+#endif
+
+#if MS_NO_BACK_PRED_IN_B0
+  m_bNoBackPredFlag      = pSrc->m_bNoBackPredFlag;
+#endif
+
+#if AD_HOC_SLICES 
+  m_uiSliceMode          = pSrc->m_uiSliceMode;
+  m_uiSliceArgument      = pSrc->m_uiSliceArgument;
+  m_uiSliceCurStartCUAddr  = pSrc->m_uiSliceCurStartCUAddr;
+  m_uiSliceCurEndCUAddr  = pSrc->m_uiSliceCurEndCUAddr;
+  m_uiSliceIdx           = pSrc->m_uiSliceIdx;
+#endif
 }
 
 // ------------------------------------------------------------------------------------------------

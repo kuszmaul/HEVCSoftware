@@ -307,8 +307,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   m_iPOCLast++;
   m_iNumPicRcvd++;
 
-  rpcPic->getSlice()->setPOC( m_iPOCLast );
-
+  rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
 

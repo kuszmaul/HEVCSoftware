@@ -61,6 +61,7 @@ private:
   // additional buffers for generated reference frames
   TComPic*        m_apcVirtPic[2][GRF_MAX_NUM_EFF];
 
+  UInt            m_uiCurrSliceIdx;
 public:
   TDecSlice();
   virtual ~TDecSlice();

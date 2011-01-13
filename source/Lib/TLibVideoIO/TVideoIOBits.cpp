@@ -173,7 +173,7 @@ Void TVideoIOBitsStartCode::closeBits()
 */
 Bool TVideoIOBitsStartCode::readBits( TComBitstream*& rpcBitstream )
 {
-#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+#if AD_HOC_SLICES && AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
   m_bLastSliceEncounteredInPicture = true;
 #endif
 

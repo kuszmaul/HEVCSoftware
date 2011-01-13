@@ -331,8 +331,7 @@ Void TEncSIFO::initSeparableFilter(Int Tap)
 
 Void TEncSIFO::ComputeFiltersAndOffsets( TComPic*& rpcPic)
 {
-  TComSlice* pcSlice = rpcPic->getSlice();
-
+  TComSlice* pcSlice = rpcPic->getSlice(0);
   if (pcSlice->getSliceType() == I_SLICE)
   {
     xResetSequenceFilters();

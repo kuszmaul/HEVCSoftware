@@ -100,8 +100,7 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
 
 Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rpcPic)
 {
-  TComSlice*  pcSlice = rpcPic->getSlice();
-
+  TComSlice*  pcSlice = rpcPic->getSlice(rpcPic->getCurrSliceIdx());
   //-- For time output for each slice
   long iBeforeTime = clock();
 
@@ -150,7 +149,7 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
   if (uiRSStartCUAddr==0)  // decode ALF params only from first slice header
   {
 #endif
-    if ( rpcPic->getSlice()->getSPS()->getUseALF() )
+    if ( rpcPic->getSlice(0)->getSPS()->getUseALF() )
     {
 #if TSB_ALF_HEADER
       m_pcAdaptiveLoopFilter->setNumCUsInFrame(rpcPic);
@@ -158,7 +157,7 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
       m_pcAdaptiveLoopFilter->allocALFParam(&cAlfParam);
 #if HHI_ALF
       m_pcEntropyDecoder->decodeAlfParam(&cAlfParam, rpcPic );
-      rpcPic->getSlice()->getSPS()->setALfSeparateQt( cAlfParam.bSeparateQt );
+      pcSlice->getSPS()->setALfSeparateQt( cAlfParam.bSeparateQt );
 #else
       m_pcEntropyDecoder->decodeAlfParam( &cAlfParam );
 #endif
@@ -178,7 +177,7 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
     m_pcLoopFilter->loopFilterPic( rpcPic );
 
     // adaptive loop filter
-    if( rpcPic->getSlice()->getSPS()->getUseALF() )
+    if( pcSlice->getSPS()->getUseALF() )
     {
       m_pcAdaptiveLoopFilter->ALFProcess(rpcPic, &cAlfParam);
 #if HHI_ALF
@@ -192,10 +191,10 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
 
 #if HHI_INTERP_FILTER
     // MOMS prefilter reconstructed pic
-    if( rpcPic->getSlice()->isReferenced() && rpcPic->getSlice()->getUseMOMS() )
+    if( pcSlice->isReferenced() && pcSlice->getUseMOMS() )
     {
       TComCoeffCalcMOMS cCoeffCalc;
-      cCoeffCalc.calcCoeffs( rpcPic->getPicYuvRec(), rpcPic->getPicYuvRecFilt(), rpcPic->getSlice()->getInterpFilterType() );
+      cCoeffCalc.calcCoeffs( rpcPic->getPicYuvRec(), rpcPic->getPicYuvRecFilt(), pcSlice->getInterpFilterType() );
     }
 #endif
 

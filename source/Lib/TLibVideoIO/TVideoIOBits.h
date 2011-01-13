@@ -97,7 +97,7 @@ public:
 #if AD_HOC_SLICES
   Bool        getFirstSliceEncounteredInPicture()                   { return m_bFirstSliceEncounteredInPicture;           }
   Bool        getLastSliceEncounteredInPicture ()                   { return m_bLastSliceEncounteredInPicture;            }
-#if SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+#if AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
   Long        getFileLocation                  ()                   { return m_cHandle.tellg();                           }
   Void        setFileLocation                  (Long uiLocation)    { m_cHandle.seekg(uiLocation, ios_base::beg);         }
   Void        rewindFile                       ()                   { m_cHandle.clear();                                  }

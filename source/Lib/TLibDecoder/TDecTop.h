@@ -86,6 +86,8 @@ private:
   TComPic*                m_pcPic;
   TComPic***              m_pcOrgRefList;
   Bool                    m_bMemoryAllocated;
+  UInt                    m_uiSliceIdx;
+  UInt                    m_uiLastSliceIdx;
 #endif
 
 public:
@@ -103,7 +105,7 @@ public:
   Void  setBalancedCPUs( UInt ui ) { m_uiBalancedCPUs = ui; }
   UInt  getBalancedCPUs() { return m_cSPS.getBalancedCPUs(); }
 
-#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+#if AD_HOC_SLICES && AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
   TComSPS* getSPS()        
   { 
     if (m_uiValidPS | 2)

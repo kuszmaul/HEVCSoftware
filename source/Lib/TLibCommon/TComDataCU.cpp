@@ -295,10 +295,11 @@ Void TComDataCU::destroy()
 Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 {
 #if AD_HOC_SLICES 
-  m_uiSliceStartCU   = pcPic->getSlice()->getSliceCurStartCUAddr();
+  TComSlice* pcSlice   = pcPic->getSlice(pcPic->getCurrSliceIdx());
+  m_pcSlice            = pcSlice;
+  m_uiSliceStartCU     = pcSlice->getSliceCurStartCUAddr();
 #endif
   m_pcPic              = pcPic;
-  m_pcSlice            = pcPic->getSlice();
   m_uiCUAddr           = iCUAddr;
   m_uiCUPelX           = ( iCUAddr % pcPic->getFrameWidthInCU() ) * g_uiMaxCUWidth;
   m_uiCUPelY           = ( iCUAddr / pcPic->getFrameWidthInCU() ) * g_uiMaxCUHeight;
@@ -318,8 +319,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   Int iSizeInInt   = sizeof( Int   ) * m_uiNumPartition;
 #endif
 
-  memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
-
+  memset( m_phQP,               pcSlice->getSliceQp(), iSizeInUchar );
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt  );
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );
@@ -411,14 +411,14 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_pcCUAboveRight = pcPic->getCU( m_uiCUAddr - uiWidthInCU + 1 );
   }
 
-  if ( pcPic->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+  if ( pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
   {
-    m_apcCUColocated[0] = pcPic->getSlice()->getRefPic( REF_PIC_LIST_0, 0)->getCU( m_uiCUAddr );
+    m_apcCUColocated[0] = pcSlice->getRefPic( REF_PIC_LIST_0, 0)->getCU( m_uiCUAddr );
   }
 
-  if ( pcPic->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+  if ( pcSlice->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
   {
-    m_apcCUColocated[1] = pcPic->getSlice()->getRefPic( REF_PIC_LIST_1, 0)->getCU( m_uiCUAddr );
+    m_apcCUColocated[1] = pcSlice->getRefPic( REF_PIC_LIST_1, 0)->getCU( m_uiCUAddr );
   }
 }
 
@@ -438,8 +438,7 @@ Void TComDataCU::initEstData()
   Int iSizeInInt   = sizeof( Int   ) * m_uiNumPartition;
 #endif
 
-  memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
-
+  memset( m_phQP,              getSlice()->getSliceQp(), iSizeInUchar );
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );
@@ -526,8 +525,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   Int iSizeInInt   = sizeof( Int    ) * m_uiNumPartition;
 #endif
 
-  memset( m_phQP,              m_pcPic->getSlice()->getSliceQp(), iSizeInUchar );
-
+  memset( m_phQP,              getSlice()->getSliceQp(), iSizeInUchar );
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
 #if HHI_MRG
   memset( m_pbMergeFlag,        0, iSizeInBool  );

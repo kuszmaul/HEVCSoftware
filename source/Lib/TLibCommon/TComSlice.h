@@ -380,6 +380,7 @@ private:
   UInt        m_uiSliceArgument;
   UInt        m_uiSliceCurStartCUAddr;
   UInt        m_uiSliceCurEndCUAddr;
+  UInt        m_uiSliceIdx;
 #endif
 public:
   TComSlice();
@@ -525,7 +526,11 @@ public:
   UInt getSliceCurStartCUAddr    ()                  { return m_uiSliceCurStartCUAddr;      }
   Void setSliceCurEndCUAddr      ( UInt uiAddr )     { m_uiSliceCurEndCUAddr = uiAddr;      }
   UInt getSliceCurEndCUAddr      ()                  { return m_uiSliceCurEndCUAddr;        }
+  Void setSliceIdx               ( UInt i)           { m_uiSliceIdx = i;                    }
+  UInt getSliceIdx               ()                  { return  m_uiSliceIdx;                }
+  Void copySliceInfo             (TComSlice *pcSliceSrc);
 #endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Bool                bDRBFlag,
