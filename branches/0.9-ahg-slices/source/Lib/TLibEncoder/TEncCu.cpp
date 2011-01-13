@@ -335,7 +335,7 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU )
   if (uiCUAddr == (pcCU->getPic()->getNumCUsInFrame()-1) )
     bTerminateSlice = true;
 
-  if (uiCUAddr == (pcCU->getPic()->getSlice()->getSliceCurEndCUAddr()-1))
+  if (uiCUAddr == (pcCU->getSlice()->getSliceCurEndCUAddr()-1))
     bTerminateSlice = true;
 
 #else
@@ -386,16 +386,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   if( ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getHeight() ) )
   {
     // do inter modes
-    if( pcPic->getSlice()->getSliceType() != I_SLICE )
+    if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
     {
       // SKIP
       pcTempCU = rpcTempCU;
 
 #if HHI_MRG
 #if HHI_MRG_PU
-      if( !pcPic->getSlice()->getSPS()->getUseMRG() )
+      if( !pcPic->getSlice(0)->getSPS()->getUseMRG() )
 #else
-      if( pcPic->getSlice()->getSPS()->getUseMRG() )
+      if( pcPic->getSlice(0)->getSPS()->getUseMRG() )
       {
         #if SAMSUNG_MRG_SKIP_DIRECT
         xCheckRDCostAMVPSkip ( rpcBestCU, rpcTempCU );        rpcTempCU->initEstData();
@@ -412,7 +412,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #if HHI_MRG && !SAMSUNG_MRG_SKIP_DIRECT
-      if( !pcPic->getSlice()->getSPS()->getUseMRG() )
+      if( !pcPic->getSlice(0)->getSPS()->getUseMRG() )
       {
         // fast encoder decision for early skip
         if ( m_pcEncCfg->getUseFastEnc() )
@@ -456,7 +456,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 
 #if HHI_RMP_SWITCH
-      if( pcPic->getSlice()->getSPS()->getUseRMP() )
+      if( pcPic->getSlice(0)->getSPS()->getUseRMP() )
 #endif
       { // 2NxN, Nx2N
         xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );  rpcTempCU->initEstData();
@@ -473,7 +473,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 
       // SIZE_2NxnU, SIZE_2NxnD, SIZE_nLx2N, SIZE_nRx2N
-      if( bTryAsym && pcPic->getSlice()->getSPS()->getAMPAcc(uiDepth) )
+      if( bTryAsym && pcPic->getSlice(0)->getSPS()->getAMPAcc(uiDepth) )
       {
         xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );   rpcTempCU->initEstData();
         xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );   rpcTempCU->initEstData();
@@ -499,7 +499,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     if ( !bEarlySkip )
     {
 #if 1 // speedup for inter frames
-      if( pcPic->getSlice()->getSliceType() == I_SLICE || 
+      if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
           rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely

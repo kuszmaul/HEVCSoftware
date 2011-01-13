@@ -61,6 +61,7 @@ private:
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
+  UInt                  m_uiCurrSliceIdx;         // Index of current slice
 
 public:
   TComPic();
@@ -70,10 +71,10 @@ public:
   Void          destroy();
 
   TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
-  TComSlice*    getSlice()            { return  m_apcPicSym->getSlice();  }
-  Int           getPOC()              { return  m_apcPicSym->getSlice()->getPOC();  }
-  Bool          getDRBFlag()          { return  m_apcPicSym->getSlice()->getDRBFlag();  }
-  Int           getERBIndex()         { return  m_apcPicSym->getSlice()->getERBIndex();  }
+  TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
+  Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
+  Bool          getDRBFlag()          { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getDRBFlag();  }
+  Int           getERBIndex()         { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getERBIndex();  }
   TComDataCU*&  getCU( UInt uiCUAddr )  { return  m_apcPicSym->getCU( uiCUAddr ); }
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
@@ -106,6 +107,11 @@ public:
   Void          setReconMark (Bool b) { m_bReconstructed = b;     }
   Bool          getReconMark ()       { return m_bReconstructed;  }
 
+  UInt          getCurrSliceIdx()            { return m_uiCurrSliceIdx;                }
+  Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
+  UInt          getNumAllocatedSlice()       {return m_apcPicSym->getNumAllocatedSlice();}
+  Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
+  Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 };// END CLASS DEFINITION TComPic
 
 

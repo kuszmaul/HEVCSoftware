@@ -1960,9 +1960,8 @@ Void TEncAdaptiveLoopFilter::startALFEnc( TComPic* pcPic, TEncEntropy* pcEntropy
   m_pcPic = pcPic;
   m_pcEntropyCoder = pcEntropyCoder;
 
-  m_eSliceType = pcPic->getSlice()->getSliceType();
-  m_iPicNalReferenceIdc = (pcPic->getSlice()->isReferenced() ? 1 :0);
-
+  m_eSliceType = pcPic->getSlice(0)->getSliceType();
+  m_iPicNalReferenceIdc = (pcPic->getSlice(0)->isReferenced() ? 1 :0);
   m_uiNumSCUInCU = m_pcPic->getNumPartInCU();
   m_uiSCUWidth = (m_pcPic->getMinCUWidth()<<1);
   m_uiSCUHeight = (m_pcPic->getMinCUHeight()<<1);

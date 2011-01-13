@@ -96,6 +96,7 @@ private:
 
   UInt                    m_uiV2V;
 
+  UInt                    m_uiSliceIdx;
 protected:
   Bool    xEstimateWPSlice    ( TComSlice* rpcSlice, RefPicList eRefPicList, EFF_MODE eEffMode  );  ///< generate effect virtual ref.
 
@@ -130,6 +131,8 @@ public:
   Void    setV2Vflag( UInt ui ) { m_uiV2V = ui;   }
 #if AD_HOC_SLICES 
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddrSlice, UInt& uiBoundingCUAddrSlice, TComPic*& rpcPic, Bool bEncodeSlice );
+  UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
+  Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
 #endif
 };
 

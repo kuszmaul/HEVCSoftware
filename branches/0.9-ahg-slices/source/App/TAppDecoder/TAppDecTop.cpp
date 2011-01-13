@@ -110,7 +110,7 @@ Void TAppDecTop::decode()
   while ( !bEos )
   {
 
-#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+#if AD_HOC_SLICES && AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
     Int       iSliceCountInPicture  = 0;
     Bool      bEosDetected          = false;
     Bool      bEofDetected          = false;
@@ -205,7 +205,7 @@ Void TAppDecTop::decode()
       xWriteOutput( pcListPic, bAlloc );
     }
 
-#if AD_HOC_SLICES && SHARP_SLICE_TEST_OUTOFORDER_DECOMPRESS
+#if AD_HOC_SLICES && AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
     if (bEofDetected)
     {
       break;
@@ -300,7 +300,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
         // write to file
         if ( m_pchReconFile )
         {
-          m_cTVideoIOYuvReconFile.write( pcPicD, pcPic->getSlice()->getSPS()->getPad() );
+          m_cTVideoIOYuvReconFile.write( pcPicD, pcPic->getSlice(0)->getSPS()->getPad() );
         }
       }
       // normal case
@@ -309,7 +309,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
         // write to file
         if ( m_pchReconFile )
         {
-          m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), pcPic->getSlice()->getSPS()->getPad() );
+          m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
         }
       }
 
@@ -317,7 +317,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Bool& rbAlloc )
       m_iPOCLastDisplay = pcPic->getPOC();
 
       // erase non-referenced picture in the reference picture list after display
-      if ( !pcPic->getSlice()->isReferenced() && pcPic->getReconMark() == true )
+      if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
       {
 #if !DYN_REF_FREE
         pcPic->setReconMark(false);
