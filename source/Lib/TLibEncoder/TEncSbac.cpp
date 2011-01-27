@@ -181,12 +181,10 @@ Void TEncSbac::xWriteUnarySymbol( UInt uiSymbol, ContextModel* pcSCModel, Int iO
 
 Void TEncSbac::xWriteUnaryMaxSymbol( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol )
 {
-#if FIX108
   if (uiMaxSymbol == 0)
   {
     return;
   }
-#endif
   
   m_pcBinIf->encodeBin( uiSymbol ? 1 : 0, pcSCModel[ 0 ] );
   
@@ -879,18 +877,8 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
       UInt uiSubPosX   = 0;
       UInt uiSubPosY   = 0;
       
-      if( g_aucConvertToBit[ uiWidth ] > 1 )
-      {
-        uiSubPosX = g_auiFrameScanX[ g_aucConvertToBit[ uiWidth ] - 1 ][ uiSubBlk ] << 2;
-        uiSubPosY = g_auiFrameScanY[ g_aucConvertToBit[ uiWidth ] - 1 ][ uiSubBlk ] << 2;
-      }
-      else
-      {
-        uiSubPosX = ( uiSubBlk < 2      ) ? 0 : 1;
-        uiSubPosY = ( uiSubBlk % 2 == 0 ) ? 0 : 1;
-        uiSubPosX = uiSubPosX << 2;
-        uiSubPosY = uiSubPosY << 2;
-      }
+      uiSubPosX = g_auiFrameScanX[ g_aucConvertToBit[ uiWidth ] - 1 ][ uiSubBlk ] << 2;
+      uiSubPosY = g_auiFrameScanY[ g_aucConvertToBit[ uiWidth ] - 1 ][ uiSubBlk ] << 2;
       
       TCoeff* piCurr = &pcCoef[ uiSubPosX + uiSubPosY * uiWidth ];
       

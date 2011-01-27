@@ -39,8 +39,7 @@
 ////////////////////////////
 // HHI defines section start
 ////////////////////////////
-#define HHI_NAL_UNIT_SYNTAX               1           ///< enable/disable NalUnit syntax 
-#define HHI_DISABLE_INTER_NxN_SPLIT       0           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
+#define HHI_DISABLE_INTER_NxN_SPLIT       1           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
 #define HHI_RMP_SWITCH                    0
 
 // HHI tools
@@ -117,8 +116,6 @@
 #define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64} 
 #endif
 
-#define BUGFIX_106                            1           // bug fix on mapping intra directions from 34 to 9
-
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////
@@ -127,6 +124,7 @@
 // DOCOMO defines section start
 ///////////////////////////////
 #define DCM_RDCOST_TEMP_FIX //Enables temporary bug fixes to RD cost computation
+#define FIX_D235 1 // Fixes an issue with CABAC state management in intra mode search
 ///////////////////////////////
 // DOCOMO defines section end
 ///////////////////////////////
@@ -140,9 +138,7 @@
 ////////////////////////////////
 
 #define BUGFIX102 1 // Do not code terminating bit when using LCEC
-#define BUGFIX110 1 // Fix an issue related to interpolation filters and cost calculation
 #define BUGFIX118 1 // Fixes an issue related to ALF and all-0 filters
-#define BUGFIX119 0 // Fixes an issue with the deblocking filter for chroma
 
 ////////////////////////////////
 // MICROSOFT&USTC defines section start
@@ -152,9 +148,6 @@
 ////////////////////////////////
 // MICROSOFT&USTC defines section end
 ////////////////////////////////
-
-#define FIX108 0 // fixes issue where unary symbol is uncessesarily coded
-#define FIX117 0 // fixes issue where MVP derivation is inconsistent with original intent
 
 // ====================================================================================================================
 // Basic type redefinition
