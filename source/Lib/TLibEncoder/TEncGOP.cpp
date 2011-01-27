@@ -105,9 +105,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   TComPicYuv*     pcPicYuvRecOut;
   TComBitstream*  pcBitstreamOut;
   TComPicYuv      cPicOrg;
-  //stats
-  TComBitstream*  pcOut = new TComBitstream;
-  pcOut->create( 500000 );
   
   xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut );
   
@@ -255,26 +252,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       if ( m_bSeqFirst )
       {
         m_pcEntropyCoder->encodeSPS( pcSlice->getSPS() );
-#if HHI_NAL_UNIT_SYNTAX
         pcBitstreamOut->write( 1, 1 );
         pcBitstreamOut->writeAlignZero();
         // generate start code
         pcBitstreamOut->write( 1, 32);
-#endif
         
         m_pcEntropyCoder->encodePPS( pcSlice->getPPS() );
-#if HHI_NAL_UNIT_SYNTAX
         pcBitstreamOut->write( 1, 1 );
         pcBitstreamOut->writeAlignZero();
         // generate start code
         pcBitstreamOut->write( 1, 32);
-#endif
         m_bSeqFirst = false;
       }
       
-#if HHI_NAL_UNIT_SYNTAX
       UInt uiPosBefore = pcBitstreamOut->getNumberOfWrittenBits()>>3;
-#endif
       
       // write SliceHeader
       m_pcEntropyCoder->encodeSliceHeader ( pcSlice                 );
@@ -371,18 +362,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_pcSliceEncoder->encodeSlice( pcPic, pcBitstreamOut );
       
       //  End of bitstream & byte align
-#if ! HHI_NAL_UNIT_SYNTAX
-      if( pcSlice->getSymbolMode() )
-#endif
-      {
-        pcBitstreamOut->write( 1, 1 );
-        pcBitstreamOut->writeAlignZero();
-      }
+      pcBitstreamOut->write( 1, 1 );
+      pcBitstreamOut->writeAlignZero();
       
       pcBitstreamOut->flushBuffer();
-#if HHI_NAL_UNIT_SYNTAX
       pcBitstreamOut->convertRBSPToPayload( uiPosBefore );
-#endif
+      
       // de-scaling of picture
       xDeScalePic( pcPic, &pcPicD );
       
@@ -412,9 +397,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     if ( m_pcCfg->getHierarchicalCoding() == false && iDepth != 0 )
       break;
   }
-  
-  pcOut->destroy();
-  delete pcOut;
   
   assert ( m_iNumPicCoded == iNumPicRcvd );
 }
