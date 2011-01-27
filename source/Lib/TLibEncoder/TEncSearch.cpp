@@ -202,7 +202,7 @@ void TEncSearch::init(  TEncCfg*      pcEncCfg,
 #endif
 
 #define TZ_SEARCH_CONFIGURATION                                                                                 \
-const Int  iRaster                  = 3;  /* TZ soll von aussen ?ergeben werden */                            \
+const Int  iRaster                  = 5;  /* TZ soll von aussen ?ergeben werden */                            \
 const Bool bTestOtherPredictedMV    = 0;                                                                      \
 const Bool bTestZeroVector          = 1;                                                                      \
 const Bool bTestZeroVectorStart     = 0;                                                                      \
@@ -1974,8 +1974,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       // set context models
       if( m_bUseSBACRD )
       {
+#if FIX_D235
+        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#else
         if( uiPU )  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
         else        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth  ][CI_CURR_BEST] );
+#endif
       }
       
       // determine residual for partition
@@ -2008,10 +2012,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         ::memcpy( m_puhQTTempCbf[1], pcCU->getCbf( TEXT_CHROMA_U ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         ::memcpy( m_puhQTTempCbf[2], pcCU->getCbf( TEXT_CHROMA_V ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         
+#if !FIX_D235
         if( m_bUseSBACRD )
         {
           m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
         }
+#endif
       }
 #if HHI_RQT_INTRA_SPEEDUP_MOD
       else if( dPUCost < dSecondBestPUCost )
@@ -2045,8 +2051,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       // set context models
       if( m_bUseSBACRD )
       {
+#if FIX_D235
+        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#else
         if( uiPU )  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
         else        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth  ][CI_CURR_BEST] );
+#endif
       }
       
       // determine residual for partition
@@ -2071,10 +2081,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         ::memcpy( m_puhQTTempCbf[1], pcCU->getCbf( TEXT_CHROMA_U ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         ::memcpy( m_puhQTTempCbf[2], pcCU->getCbf( TEXT_CHROMA_V ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         
+#if !FIX_D235
         if( m_bUseSBACRD )
         {
           m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
         }
+#endif
       }
     } // Mode loop
 #endif
@@ -2854,7 +2866,6 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec();
   
   // prediction pattern
-#if BUGFIX110
   InterpFilterType filterType = (InterpFilterType)pcCU->getSlice()->getInterpFilterType();
   switch (filterType)
   {
@@ -2866,9 +2877,6 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
       xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand );
       break;      
   }
-#else
-  xPredInterLumaBlk ( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand );
-#endif
   
   // calc distortion
   uiCost = m_pcRdCost->getDistPart( pcTemplateCand->getLumaAddr(uiPartAddr), pcTemplateCand->getStride(), pcOrgYuv->getLumaAddr(uiPartAddr), pcOrgYuv->getStride(), iSizeX, iSizeY, DF_SAD );
@@ -2892,7 +2900,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 #endif
   m_iSearchRange = m_aaiAdaptSR[eRefPicList][iRefIdxPred];
   
-  Int           iSrchRng      = ( bBi ? 8 : m_iSearchRange );
+  Int           iSrchRng      = ( bBi ? 4 : m_iSearchRange );
   TComPattern*  pcPatternKey  = pcCU->getPattern        ();
   
   Double        fWeight       = 1.0;
@@ -4355,8 +4363,12 @@ UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt 
 {
   if( m_bUseSBACRD )
   {
+#if FIX_D235
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#else
     if ( uiPU ) m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth+1][CI_NEXT_BEST] );
     else        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth  ][CI_CURR_BEST] );
+#endif
   }
   pcCU->setLumaIntraDirSubParts ( uiMode, uiPartOffset, uiDepth + uiInitTrDepth );
   
