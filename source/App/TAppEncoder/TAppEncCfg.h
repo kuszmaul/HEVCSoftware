@@ -62,6 +62,9 @@ protected:
   
   // coding structure
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
+#if DCM_DECODING_REFRESH
+  Int       m_iDecodingRefreshType;                           ///< random access type
+#endif
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
   Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
   Int       m_iNumOfReference;                                ///< total number of reference frames in P-slice
@@ -71,6 +74,10 @@ protected:
   Bool      m_bUseLDC;                                        ///< flag for using low-delay coding mode
   Bool      m_bUseNRF;                                        ///< flag for using non-referenced frame in hierarchical structure
   Bool      m_bUseGPB;                                        ///< flag for using generalized P & B structure
+#if DOCOMO_COMB_LIST
+  Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
+  Bool      m_bLCMod;                                         ///< flag for specifying whether the combined reference list for uni-prediction in B-slices is uploaded explicitly
+#endif
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
@@ -97,7 +104,9 @@ protected:
   UInt      m_uiBitIncrement;                                 ///< bit-depth increment
   
   // coding tools (inter - interpolation filter)
+#if !DCTIF_8_6_LUMA
   Int       m_iDIFTap;                                        ///< number of taps in DIF (luma)
+#endif
   
   // coding tools (loop filter)
   Bool      m_bUseALF;                                        ///< flag for using adaptive loop filter
@@ -126,6 +135,7 @@ protected:
   Bool      m_bUseBQP;                                        ///< flag for using B-slice based QP assignment in low-delay hier. structure
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
+  Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   
   // coding tool (interpolation filter)

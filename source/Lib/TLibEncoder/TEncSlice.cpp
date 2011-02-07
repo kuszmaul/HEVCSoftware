@@ -250,6 +250,18 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Double dOrigQP = dQP;
   
   // pre-compute lambda and QP values for all possible QP candidates
+#if QC_MOD_LCEC_RDOQ
+  if (pcPic->getSlice()->isIntra()){
+    m_pcTrQuant->setRDOQOffset(1);
+  }
+  else{
+    if (m_pcCfg->getHierarchicalCoding())
+      m_pcTrQuant->setRDOQOffset(1);
+    else
+      m_pcTrQuant->setRDOQOffset(0);
+  }
+#endif
+
   for ( Int iDQpIdx = 0; iDQpIdx < 2 * m_pcCfg->getDeltaQpRD() + 1; iDQpIdx++ )
   {
     // compute QP value
@@ -350,13 +362,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   // reference picture usage indicator for next frames
   rpcSlice->setDRBFlag          ( true );
   rpcSlice->setERBIndex         ( ERB_NONE );
-  
-  // generalized B info. (for non-reference B)
-  if ( m_pcCfg->getHierarchicalCoding() == false && iDepth != 0 )
-  {
-    rpcSlice->setDRBFlag        ( false );
-    rpcSlice->setERBIndex       ( ERB_NONE );
-  }
   
   assert( m_apcPicYuvPred );
   assert( m_apcPicYuvResi );
