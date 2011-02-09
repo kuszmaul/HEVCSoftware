@@ -79,6 +79,7 @@ protected:
   
   // ME parameters
   Int             m_iSearchRange;
+  Int             m_bipredSearchRange; // Search range for bi-prediction
   Int             m_iFastSearch;
   Int             m_aaiAdaptSR[2][33];
   TComMv          m_cSrchRngLT;
@@ -94,7 +95,9 @@ protected:
   // Misc.
   Pel*            m_pTempPel;
   UInt*           m_puiDFilter;
+#if !DCTIF_8_6_LUMA
   Int             m_iDIFTap2;
+#endif
   Int             m_iMaxDeltaQP;
   
   // AMVP cost computation
@@ -108,6 +111,7 @@ public:
   Void init(  TEncCfg*      pcEncCfg,
             TComTrQuant*  pcTrQuant,
             Int           iSearchRange,
+            Int           bipredSearchRange,
             Int           iFastSearch,
             Int           iMaxDeltaQP,
             TEncEntropy*  pcEntropyCoder,
@@ -268,38 +272,6 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     TComYuv*     pcRecoYuv );
-  
-  Void xRecurIntraLumaSearchADI   ( TComDataCU* pcCU,
-                                    UInt        uiAbsPartIdx,
-                                    Pel*        piOrg,
-                                    Pel*        piPred,
-                                    Pel*        piResi,
-                                    Pel*        piReco,
-                                    UInt        uiStride,
-                                    TCoeff*     piCoeff,
-                                    UInt        uiMode,
-                                    UInt        uiWidth,
-                                    UInt        uiHeight,
-                                    UInt        uiMaxDepth,
-                                    UInt        uiCurrDepth,
-                                    Bool        bAbove,
-                                    Bool        bLeft,
-                                    Bool        bSmallTrs );
-  
-  Void xRecurIntraChromaSearchADI ( TComDataCU* pcCU,
-                                    UInt        uiAbsPartIdx,
-                                    Pel*        piOrg,
-                                    Pel*        piPred,
-                                    Pel*        piResi,
-                                    Pel*        piReco,
-                                    UInt        uiStride,
-                                    TCoeff*     piCoeff,
-                                    UInt        uiMode,
-                                    UInt        uiWidth,
-                                    UInt        uiHeight,
-                                    UInt        uiMaxDepth,
-                                    UInt        uiCurrDepth,
-                                    TextType    eText );
   
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)

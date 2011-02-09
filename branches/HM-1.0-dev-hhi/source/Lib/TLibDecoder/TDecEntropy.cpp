@@ -62,6 +62,9 @@ Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
   Int TabIdx = uiSymbol;
   pAlfParam->realfiltNo = 2-TabIdx;
   pAlfParam->tap = FiltTab[pAlfParam->realfiltNo];
+#if TI_ALF_MAX_VSIZE_7
+  pAlfParam->tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(pAlfParam->tap);
+#endif
   pAlfParam->num_coeff = sqrFiltLengthTab[pAlfParam->realfiltNo];
   
   if (pAlfParam->filtNo>=0)
@@ -476,6 +479,19 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
     else
 #endif
     {
+#if MS_LCEC_LOOKUP_TABLE_EXCEPTION
+      if ( pcCU->getSlice()->getSymbolMode() == 0 )
+      {
+        if ( pcCU->isSuroundingRefIdxException( uiAbsPartIdx ) )
+        {
+          pcCU->getSlice()->setRefIdxCombineCoding( false );
+        }
+        else
+        {
+          pcCU->getSlice()->setRefIdxCombineCoding( true );
+        }
+      }
+#endif
       decodeInterDir( pcCU, uiAbsPartIdx, uiDepth );
 
       if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
@@ -603,6 +619,19 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     }
     else
     {
+#if MS_LCEC_LOOKUP_TABLE_EXCEPTION
+      if ( pcCU->getSlice()->getSymbolMode() == 0 )
+      {
+        if ( pcCU->isSuroundingRefIdxException( uiAbsPartIdx ) )
+        {
+          pcCU->getSlice()->setRefIdxCombineCoding( false );
+        }
+        else
+        {
+          pcCU->getSlice()->setRefIdxCombineCoding( true );
+        }
+      }
+#endif
       decodeInterDirPU( pcCU, uiSubPartIdx, uiDepth, uiPartIdx );
       for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
       {        
@@ -638,6 +667,67 @@ Void TDecEntropy::decodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 {
   assert( !pcCU->isSkip( uiAbsPartIdx ) );
 
+#if DOCOMO_COMB_LIST
+  if(pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0)
+  {
+    if(eRefList == REF_PIC_LIST_1)
+    {
+      return;
+    }
+
+    Int iRefFrmIdx = 0;
+    Int iRefFrmIdxTemp;
+    UInt uiInterDir;
+    RefPicList eRefListTemp;
+
+    PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+
+    if( pcCU->getInterDir( uiAbsPartIdx ) != 3 ){ 
+
+      if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+      {
+        m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+      }else{
+        iRefFrmIdx=0;
+      }
+      uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+      iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+      eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+      pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, ePartSize, uiAbsPartIdx, uiPartIdx, uiDepth );
+
+      pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, uiPartIdx, uiDepth );
+    }
+    else
+    {
+      if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1 )
+      {
+        m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+      }
+      else
+      {
+        iRefFrmIdx = 0;
+      }
+
+      pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, ePartSize, uiAbsPartIdx, uiPartIdx, uiDepth );
+
+      if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1 )
+      {
+        m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+      }
+      else
+      {
+        iRefFrmIdx = 0;
+      }
+
+      pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, ePartSize, uiAbsPartIdx, uiPartIdx, uiDepth );
+    }
+
+  }
+  else
+  {
+#endif
+
   Int iRefFrmIdx = 0;
   Int iParseRefFrmIdx = pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList );
 
@@ -656,6 +746,10 @@ Void TDecEntropy::decodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   pcCU->getCUMvField( eRefList )->setAllRefIdx( iRefFrmIdx, ePartSize, uiAbsPartIdx, uiPartIdx, uiDepth );
+
+#if DOCOMO_COMB_LIST
+  }
+#endif  
 }
 
 Void TDecEntropy::decodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList )
@@ -683,7 +777,9 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   iMVPIdx = -1;
   cMv = cZeroMv;
   pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+#if DCM_SIMPLIFIED_MVP==0
   pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+#endif
   pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
   {
@@ -725,7 +821,9 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       iMVPIdx =-1;
       cMv = cZeroMv;
       pcSubCU->fillMvpCand(0, 0, eRefList, iRefIdx, pAMVPInfo);
+#if DCM_SIMPLIFIED_MVP==0
       pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(0), pAMVPInfo);
+#endif
       pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, 0, 0, uiDepth);
       if ( (pcSubCU->getInterDir(0) & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(0) == AM_EXPL) )
       {
@@ -750,7 +848,9 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         iMVPIdx =-1;
         cMv = cZeroMv;
         pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+#if DCM_SIMPLIFIED_MVP==0
         pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+#endif
         pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
         if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
         {
@@ -776,7 +876,9 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         iMVPIdx =-1;
         cMv = cZeroMv;
         pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+#if DCM_SIMPLIFIED_MVP==0
         pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+#endif
         pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
         if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
         {
@@ -803,7 +905,9 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         iMVPIdx =-1;
         cMv = cZeroMv;
         pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+#if DCM_SIMPLIFIED_MVP==0
         pcSubCU->clearMVPCand(pcSubCUMvField->getMvd(uiPartAddr), pAMVPInfo);
+#endif
         pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
         if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pAMVPInfo->iN > 1) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
         {
@@ -830,6 +934,296 @@ Void TDecEntropy::decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 
 Void TDecEntropy::decodeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList )
 {
+#if DOCOMO_COMB_LIST
+  if(pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0)
+  {
+
+    Int iRefFrmIdx = 0;
+    //Int iParseRefFrmIdx = pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList );
+
+    if(eRefList == REF_PIC_LIST_1)
+    {
+      return;
+    }
+
+    Int iRefFrmIdxTemp;
+    UInt uiInterDir;
+    RefPicList eRefListTemp;
+
+    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( uiDepth << 1 ) ) >> 2;
+
+    switch ( pcCU->getPartitionSize( uiAbsPartIdx ) )
+    {
+      case SIZE_2Nx2N:
+      {
+        if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+          }
+          else
+          {
+            iRefFrmIdx=0;
+          }
+          uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+          iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+          eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+          pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+          pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+
+        }
+        break;
+      }
+      case SIZE_2NxN:
+      {
+        if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+          }
+          else
+          {
+            iRefFrmIdx=0;
+          }
+          uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+          iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+          eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+          pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_2NxN, uiAbsPartIdx, 0, uiDepth );
+          pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_2NxN, uiAbsPartIdx, 0, uiDepth );
+          
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_2NxN, uiAbsPartIdx, 0, uiDepth );
+        }
+
+        uiAbsPartIdx += uiPartOffset << 1;
+
+        if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+          }
+          else
+          {
+            iRefFrmIdx=0;
+          }
+          uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+          iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+          eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+          pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_2NxN, uiAbsPartIdx, 1, uiDepth );
+          pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_2NxN, uiAbsPartIdx, 1, uiDepth );
+
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_2NxN, uiAbsPartIdx, 1, uiDepth );
+        }
+        break;
+      }
+      case SIZE_Nx2N:
+      {
+        if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+          }
+          else
+          {
+            iRefFrmIdx=0;
+          }
+          uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+          iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+          eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+          pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_Nx2N, uiAbsPartIdx, 0, uiDepth );
+          pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_Nx2N, uiAbsPartIdx, 0, uiDepth );
+
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_Nx2N, uiAbsPartIdx, 0, uiDepth );
+        }
+
+        uiAbsPartIdx += uiPartOffset;
+        
+        if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+          }
+          else
+          {
+            iRefFrmIdx=0;
+          }
+          uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+          iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+          eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+          pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_Nx2N, uiAbsPartIdx, 1, uiDepth );
+          pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_Nx2N, uiAbsPartIdx, 1, uiDepth );
+
+          if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+          {
+            m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+          }
+          else
+          {
+            iRefFrmIdx = 0;
+          }
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_Nx2N, uiAbsPartIdx, 1, uiDepth );
+        }
+        break;
+      }
+      case SIZE_NxN:
+      {
+        for ( Int iPartIdx = 0; iPartIdx < 4; iPartIdx++ )
+        {
+          if( pcCU->getInterDir( uiAbsPartIdx ) != 3 )
+          {
+            if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_C ) > 1 )
+            {
+              m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_C );
+            }
+            else
+            {
+              iRefFrmIdx=0;
+            }
+            uiInterDir = pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx) + 1;
+            iRefFrmIdxTemp = pcCU->getSlice()->getRefIdxFromIdxOfLC(iRefFrmIdx);
+            eRefListTemp = (RefPicList)pcCU->getSlice()->getListIdFromIdxOfLC(iRefFrmIdx);
+
+            pcCU->getCUMvField( eRefListTemp )->setAllRefIdx( iRefFrmIdxTemp, SIZE_NxN, uiAbsPartIdx, iPartIdx, uiDepth );
+            pcCU->setInterDirSubParts( uiInterDir, uiAbsPartIdx, 0, uiDepth );
+          }
+          else
+          {
+            if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_0 ) > 1)
+            {
+              m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_0 );
+            }
+            else
+            {
+              iRefFrmIdx = 0;
+            }
+
+            pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( iRefFrmIdx, SIZE_NxN, uiAbsPartIdx, iPartIdx, uiDepth );
+
+            if ( pcCU->getSlice()->getNumRefIdx ( REF_PIC_LIST_1 ) > 1)
+            {
+              m_pcEntropyDecoderIf->parseRefFrmIdx( pcCU, iRefFrmIdx, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1 );
+            }
+            else
+            {
+              iRefFrmIdx = 0;
+            }
+            pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefFrmIdx, SIZE_NxN, uiAbsPartIdx, iPartIdx, uiDepth );
+          }
+            uiAbsPartIdx += uiPartOffset;
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  else
+  {
+#endif  // DOCOMO_COMB_LIST
+
   Int iRefFrmIdx = 0;
   Int iParseRefFrmIdx = pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList );
   
@@ -966,6 +1360,10 @@ Void TDecEntropy::decodeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
     default:
       break;
   }
+#if DOCOMO_COMB_LIST
+  }
+#endif
+
   return;
 }
 

@@ -74,7 +74,7 @@
 // TEN defines section start
 ////////////////////////////
 
-#define TEN_DIRECTIONAL_INTERP            1           ///< AF: interpolation filter
+#define TEN_DIRECTIONAL_INTERP            0           ///< AF: interpolation filter
 
 #define LCEC_STAT                         0           // LCEC - support for LCEC bitusage statistics
 //////////////////////////
@@ -91,6 +91,14 @@
 #if LCEC_CBP_YUV_ROOT==0 && QC_BLK_CBP
 #error
 #endif
+
+#define QC_MOD_LCEC                       1           // JCTVC-D374: modified LCEC coeff. coding
+#define LCEC_INTRA_MODE                   1           // JCTVC-D366: improved luma intra mode coding
+#define QC_MOD_LCEC_RDOQ                  1           // JCTVC-D374: improved RDOQ
+#define QC_LCEC_INTER_MODE                1
+#define QC_MDIS                           1           // JCTVC-D282: enable mode dependent intra smoothing
+#define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding 
+#define LCEC_CBP_YUV_ROOT_RDFIX           1           // JCTVC-D375: RD fix associated with LCEC_CBP_YUV_ROOT
 
 #define ENABLE_FORCECOEFF0  0
 
@@ -120,6 +128,12 @@
 #define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64} 
 #endif
 
+#define DCTIF_8_6_LUMA                        1
+#define DCTIF_4_6_CHROMA                      1
+#if DCTIF_8_6_LUMA && TEN_DIRECTIONAL_INTERP
+#error TEN_DIRECTIONAL_INTERP should be disabled if DCTIF_8_6_LUMA is enabled
+#endif
+
 ///////////////////////////////
 // SAMSUNG defines section end
 ///////////////////////////////
@@ -129,6 +143,17 @@
 ///////////////////////////////
 #define DCM_RDCOST_TEMP_FIX //Enables temporary bug fixes to RD cost computation
 #define FIX_D235 1 // Fixes an issue with CABAC state management in intra mode search
+
+#define DCM_DECODING_REFRESH              1           ///< enable/disable decoding refresh (IDR and CDR)
+#if DCM_DECODING_REFRESH
+#define DCM_SKIP_DECODING_FRAMES          1           ///< enable/disable the random access by the decoder
+#endif
+
+#define DCM_SIMPLIFIED_MVP                1           ///< enable/disable the simplified motoin vector prediction(D231)
+
+#define DOCOMO_COMB_LIST                  1           ///< Use of combined list for uni-prediction in B-slices
+
+
 ///////////////////////////////
 // DOCOMO defines section end
 ///////////////////////////////
@@ -149,9 +174,27 @@
 ////////////////////////////////
 #define MS_NO_BACK_PRED_IN_B0           1           // disable backward prediction when list1 == list0, and disable list1 search, JCTVC-C278
 #define MS_LAST_CBF                     1           // last cbf handling, JCTVC-C277
+#define MS_LCEC_ONE_FRAME		        1           // change the initial table in LCEC when there is up to one reference frame in each list, JCTVC-D141
+#define MS_LCEC_LOOKUP_TABLE_MAX_VALUE  1           // use the information of the max position in the lookup table, JCTVC-D141
+#define MS_LCEC_LOOKUP_TABLE_EXCEPTION  1           // deal with the case when the number of reference frames is greater than 2, JCTVC-D141
+#define MS_LCEC_UNI_EXCEPTION_THRES     1           // for GPB case, uni-prediction, > MS_LCEC_UNI_EXCEPTION_THRES is exception
 ////////////////////////////////
 // MICROSOFT&USTC defines section end
 ////////////////////////////////
+
+#define MTK_DISABLE_INTRA_NxN_SPLIT       1           ///< Disable use of PUs-mode NxN for CUs larger 8x8 (intra only)
+#define FT_TCTR 1
+#define PANASONIC_AMVPTEMPORALEXT 1
+#define FAST_UDI_USE_MPM 1
+#define SONY_SIG_CTX 1
+
+#define AMVP_BUFFERCOMPRESS                   1     // motion vector buffer compression
+#define AMVP_DECIMATION_FACTOR                4
+
+#define TI_ALF_MAX_VSIZE_7 1
+
+#define CHROMA_CODEWORD 1                             ///< enable new intra chroma mode encoding by setting to 1. setting to 0 should yield same results as TMuC 0.9
+#define CHROMA_CODEWORD_SWITCH  1                     ///< Switch the places of the last two codewords 
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -206,7 +249,12 @@ struct _AlfParam
   Int alf_flag;                           ///< indicates use of ALF
   Int cu_control_flag;                    ///< coding unit based control flag
   Int chroma_idc;                         ///< indicates use of ALF for chroma
+#if TI_ALF_MAX_VSIZE_7
+  Int tap;                                ///< number of filter taps - horizontal
+  Int tapV;                               ///< number of filter taps - vertical
+#else
   Int tap;                                ///< number of filter taps
+#endif
   Int num_coeff;                          ///< number of filter coefficients
   Int *coeff;                             ///< filter coefficient array
   Int tap_chroma;                         ///< number of filter taps (chroma)
@@ -301,6 +349,9 @@ enum RefPicList
 {
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
+#if DOCOMO_COMB_LIST
+  REF_PIC_LIST_C = 2,   ///< combined reference list for uni-prediction in B-Slices
+#endif
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
@@ -392,6 +443,16 @@ enum InterpFilterType
 # endif
   ,IPF_LAST
 };
+
+#if QC_MDCS
+/// coefficient scanning type used in ACS
+enum COEFF_SCAN_TYPE
+{
+  SCAN_ZIGZAG = 0,			///< typical zigzag scan
+  SCAN_HOR,							///< horizontal first scan
+  SCAN_VER							///< vertical first scan
+};
+#endif //QC_MDCS
 
 #endif
 
