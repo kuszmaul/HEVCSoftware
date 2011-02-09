@@ -154,6 +154,11 @@ protected:
   /// calculate all CBF's from coefficients
   Void          xCalcCuCbf            ( UChar* puhCbf, UInt uiTrDepth, UInt uiCbfDepth, UInt uiCuDepth );
   
+#if FT_TCTR
+  Void xDeriveCenterIdx( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxCenter );
+  Bool xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, int iRefIdx, TComMv *pcMv );
+#endif
+  
 public:
   TComDataCU();
   virtual ~TComDataCU();
@@ -315,9 +320,11 @@ public:
   
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#if DCM_SIMPLIFIED_MVP==0
   Bool          clearMVPCand          ( TComMv cMvd, AMVPInfo* pInfo );
+#endif
   Int           searchMVPIdx          ( TComMv cMv,  AMVPInfo* pInfo );
-  
+
   Void          setMVPIdx             ( RefPicList eRefPicList, UInt uiIdx, Int iMVPIdx)  { m_apiMVPIdx[eRefPicList][uiIdx] = iMVPIdx;  }
   Int           getMVPIdx             ( RefPicList eRefPicList, UInt uiIdx)               { return m_apiMVPIdx[eRefPicList][uiIdx];     }
   Int*          getMVPIdx             ( RefPicList eRefPicList )                          { return m_apiMVPIdx[eRefPicList];            }
@@ -333,6 +340,10 @@ public:
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
+  
+#if AMVP_BUFFERCOMPRESS
+  Void          compressMV            ();
+#endif 
   
   // -------------------------------------------------------------------------------------------------------------------
   // utility functions for neighbouring information
@@ -386,6 +397,15 @@ public:
   UInt          getIntraSizeIdx                 ( UInt uiAbsPartIdx                                       );
   Void          convertTransIdx                 ( UInt uiAbsPartIdx, UInt uiTrIdx, UInt& ruiLumaTrMode, UInt& ruiChromaTrMode );
   
+#if LCEC_INTRA_MODE
+  Int           getLeftIntraDirLuma             ( UInt uiAbsPartIdx );
+  Int           getAboveIntraDirLuma            ( UInt uiAbsPartIdx );
+#endif
+
+#if MS_LCEC_LOOKUP_TABLE_EXCEPTION
+  Bool          isSuroundingRefIdxException     ( UInt   uiAbsPartIdx );
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for SBAC context
   // -------------------------------------------------------------------------------------------------------------------
@@ -413,6 +433,11 @@ public:
   UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
+
+#if QC_MDCS
+  UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
+#endif //QC_MDCS
+
 };
 
 #endif

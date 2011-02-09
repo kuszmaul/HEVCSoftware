@@ -322,19 +322,27 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
 #if HHI_DISABLE_INTER_NxN_SPLIT
     if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+#endif
     {
       m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 3) );
     }
-#else
-    m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 3) );
+#if MTK_DISABLE_INTRA_NxN_SPLIT
+    if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
 #endif
-    m_pcBinIf->encodeBin( (eSize == SIZE_2Nx2N? 0 : 1), m_cCUPartSizeSCModel.get( 0, 0, 4) );
+    {
+      m_pcBinIf->encodeBin( (eSize == SIZE_2Nx2N? 0 : 1), m_cCUPartSizeSCModel.get( 0, 0, 4) );
+    }
     return;
   }
   
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
-    m_pcBinIf->encodeBin( eSize == SIZE_2Nx2N? 1 : 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+#if MTK_DISABLE_INTRA_NxN_SPLIT
+    if( pcCU->getWidth( uiAbsPartIdx ) == 8 )
+#endif
+    {
+      m_pcBinIf->encodeBin( eSize == SIZE_2Nx2N? 1 : 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+    }
     return;
   }
   
@@ -665,7 +673,38 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiCtx            = pcCU->getCtxIntraDirChroma( uiAbsPartIdx );
   UInt uiIntraDirChroma = pcCU->getChromaIntraDir   ( uiAbsPartIdx );
+ 
+#if CHROMA_CODEWORD
+  UInt uiMode = pcCU->getLumaIntraDir(uiAbsPartIdx);
+  Int  iMax = uiMode < 4 ? 2 : 3; 
   
+  //switch codeword
+  if (uiIntraDirChroma == 4) {
+    uiIntraDirChroma = 0;
+  } 
+#if CHROMA_CODEWORD_SWITCH 
+  else {
+    if (uiIntraDirChroma < uiMode) {
+      uiIntraDirChroma++;
+    }
+    uiIntraDirChroma = ChromaMapping[iMax-2][uiIntraDirChroma];
+  }
+#else
+  else if (uiIntraDirChroma < uiMode) {
+    uiIntraDirChroma++;
+  }
+#endif
+  
+  if ( 0 == uiIntraDirChroma )
+  {
+    m_pcBinIf->encodeBin( 0, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
+  }
+  else
+  {
+    m_pcBinIf->encodeBin( 1, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
+    xWriteUnaryMaxSymbol( uiIntraDirChroma - 1, m_cCUChromaPredSCModel.get( 0, 0 ) + 3, 0, iMax );
+  }
+#else // CHROMA_CODEWORD
   if ( 0 == uiIntraDirChroma )
   {
     m_pcBinIf->encodeBin( 0, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
@@ -675,7 +714,7 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
     m_pcBinIf->encodeBin( 1, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
     xWriteUnaryMaxSymbol( uiIntraDirChroma - 1, m_cCUChromaPredSCModel.get( 0, 0 ) + 3, 0, 3 );
   }
-  
+#endif
   return;
 }
 
@@ -694,7 +733,11 @@ Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 #endif
   
+#if DOCOMO_COMB_LIST
+  if ( uiInterDir < 2 && pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) <= 0)
+#else
   if ( uiInterDir < 2 )
+#endif
   {
     m_pcBinIf->encodeBin( uiInterDir, m_cCUInterDirSCModel.get( 0, 0, 3 ) );
   }
@@ -704,6 +747,24 @@ Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 Void TEncSbac::codeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
+#if DOCOMO_COMB_LIST
+  if ( pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && pcCU->getInterDir( uiAbsPartIdx ) != 3)
+  {
+    Int iRefFrame = pcCU->getSlice()->getRefIdxOfLC(eRefList, pcCU->getCUMvField( eRefList )->getRefIdx( uiAbsPartIdx ));
+    UInt uiCtx;
+
+    uiCtx = pcCU->getCtxRefIdx( uiAbsPartIdx, RefPicList(pcCU->getSlice()->getListIdFromIdxOfLC(0)) );
+
+    m_pcBinIf->encodeBin( ( iRefFrame == 0 ? 0 : 1 ), m_cCURefPicSCModel.get( 0, 0, uiCtx ) );
+
+    if ( iRefFrame > 0 )
+    {
+      xWriteUnaryMaxSymbol( iRefFrame - 1, &m_cCURefPicSCModel.get( 0, 0, 4 ), 1, pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_C )-2 );
+    }
+  }
+  else
+  {
+#endif
   Int iRefFrame = pcCU->getCUMvField( eRefList )->getRefIdx( uiAbsPartIdx );
   
   UInt uiCtx = pcCU->getCtxRefIdx( uiAbsPartIdx, eRefList );
@@ -714,6 +775,9 @@ Void TEncSbac::codeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eR
   {
     xWriteUnaryMaxSymbol( iRefFrame - 1, &m_cCURefPicSCModel.get( 0, 0, 4 ), 1, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
   }
+#if DOCOMO_COMB_LIST
+  }
+#endif
   return;
 }
 
@@ -933,33 +997,28 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
   const UInt   uiMaxNumCoeff     = 1 << ( uiLog2BlockSize << 1 );
   const UInt   uiMaxNumCoeffM1   = uiMaxNumCoeff - 1;
   const UInt   uiNum4x4Blk       = max<UInt>( 1, uiMaxNumCoeff >> 4 );
-  UInt         uiDownLeft        = 1;
-  UInt         uiNumSigTopRight  = 0;
-  UInt         uiNumSigBotLeft   = 0;
+#if QC_MDCS
+  const UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#endif //QC_MDCS
   
   for( UInt uiScanPos = 0; uiScanPos < uiMaxNumCoeffM1; uiScanPos++ )
   {
-    UInt  uiBlkPos  = g_auiSigLastScan[ uiLog2BlockSize ][ uiDownLeft ][ uiScanPos ];
+#if QC_MDCS
+    UInt uiBlkPos   = g_auiSigLastScan[uiScanIdx][uiLog2BlockSize-1][uiScanPos]; 
+#else
+    UInt  uiBlkPos  = g_auiFrameScanXY[ uiLog2BlockSize-1 ][ uiScanPos ];
+#endif //QC_MDCS
     UInt  uiPosY    = uiBlkPos >> uiLog2BlockSize;
     UInt  uiPosX    = uiBlkPos - ( uiPosY << uiLog2BlockSize );
     
     //===== code significance flag =====
     UInt  uiSig    = pcCoef[ uiBlkPos ] != 0 ? 1 : 0;
-    UInt  uiCtxSig = TComTrQuant::getSigCtxInc( pcCoef, uiPosX, uiPosY, uiLog2BlockSize, uiWidth, ( uiDownLeft > 0 ) );
+    UInt  uiCtxSig = TComTrQuant::getSigCtxInc( pcCoef, uiPosX, uiPosY, uiLog2BlockSize, uiWidth );
     m_pcBinIf->encodeBin( uiSig, m_cCUSigSCModel.get( uiCTXIdx, eTType, uiCtxSig ) );
     
     if( uiSig )
     {
       uiNumSig--;
-      
-      if( uiPosX > uiPosY )
-      {
-        uiNumSigTopRight++;
-      }
-      else if( uiPosY > uiPosX )
-      {
-        uiNumSigBotLeft ++;
-      }
       
       //===== code last flag =====
       UInt  uiLast    = ( uiNumSig == 0 ) ? 1 : 0;
@@ -971,22 +1030,6 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
         break;
       }
     }
-    
-    //===== update scan direction =====
-#if !HHI_DISABLE_SCAN
-    if( ( uiDownLeft == 1 && ( uiPosX == 0 || uiPosY == uiHeight - 1 ) ) ||
-       ( uiDownLeft == 0 && ( uiPosY == 0 || uiPosX == uiWidth  - 1 ) )   )
-    {
-      uiDownLeft = ( uiNumSigTopRight >= uiNumSigBotLeft ? 1 : 0 );
-    }
-#else
-    if( uiScanPos && 
-       ( ( uiDownLeft == 1 && ( uiPosX == 0 || uiPosY == uiHeight - 1 ) ) ||
-        ( uiDownLeft == 0 && ( uiPosY == 0 || uiPosX == uiWidth  - 1 ) )   ) )
-    {
-      uiDownLeft = 1 - uiDownLeft;
-    }
-#endif
   }
   
   /*
