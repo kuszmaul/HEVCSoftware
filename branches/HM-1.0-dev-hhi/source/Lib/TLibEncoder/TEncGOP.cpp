@@ -109,7 +109,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   TComPic*        pcPic;
   TComPicYuv*     pcPicYuvRecOut;
   TComBitstream*  pcBitstreamOut;
-  TComPicYuv      cPicOrg;
   
   xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut );
   
@@ -143,16 +142,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       UInt  uiPOCCurr = iPOCLast - (iNumPicRcvd - iTimeOffset);
       
       xGetBuffer( rcListPic, rcListPicYuvRecOut, rcListBitstreamOut, iNumPicRcvd, iTimeOffset,  pcPic, pcPicYuvRecOut, pcBitstreamOut, uiPOCCurr );
-      
-      // save original picture
-      cPicOrg.create( pcPic->getPicYuvOrg()->getWidth(), pcPic->getPicYuvOrg()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-      pcPic->getPicYuvOrg()->copyToPic( &cPicOrg );
-      
-      // scaling of picture
-      if ( g_uiBitIncrement )
-      {
-        xScalePic( pcPic );
-      }
       
       //  Bitstream reset
       pcBitstreamOut->resetBits();
@@ -327,10 +316,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         m_pcEntropyCoder->resetEntropy    ();
       }
       
-      /////////////////////////////////////////////////////////////////////////////////////////////////// Reconstructed image output
-      TComPicYuv pcPicD;
-      pcPicD.create( pcPic->getPicYuvOrg()->getWidth(), pcPic->getPicYuvOrg()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-      
       // adaptive loop filter
       if ( pcSlice->getSPS()->getUseALF() )
       {
@@ -421,24 +406,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcPic->compressMotion(); 
 #endif 
       
-      // de-scaling of picture
-      xDeScalePic( pcPic, &pcPicD );
-      
-      // save original picture
-      cPicOrg.copyToPic( pcPic->getPicYuvOrg() );
-      
       //-- For time output for each slice
       Double dEncTime = (double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
       
-      xCalculateAddPSNR( pcPic, &pcPicD, pcBitstreamOut->getNumberOfWrittenBits(), dEncTime );
+      xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), pcBitstreamOut->getNumberOfWrittenBits(), dEncTime );
       
-      // free original picture
-      cPicOrg.destroy();
-      
-      //  Reconstruction buffer update
-      pcPicD.copyToPic(pcPicYuvRecOut);
-      
-      pcPicD.destroy();
+      pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
       
       pcPic->setReconMark   ( true );
       
@@ -608,115 +581,6 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&       rcListPic,
   return;
 }
 
-Void TEncGOP::xScalePic( TComPic* pcPic )
-{
-  Int     x, y;
-  
-  //===== calculate PSNR =====
-  Pel*  pRec    = pcPic->getPicYuvOrg()->getLumaAddr();
-  Int   iStride = pcPic->getStride();
-  Int   iWidth  = pcPic->getPicYuvOrg()->getWidth();
-  Int   iHeight = pcPic->getPicYuvOrg()->getHeight();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      pRec[x] <<= g_uiBitIncrement;
-    }
-    pRec += iStride;
-  }
-  
-  iHeight >>= 1;
-  iWidth  >>= 1;
-  iStride >>= 1;
-  pRec  = pcPic->getPicYuvOrg()->getCbAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      pRec[x] <<= g_uiBitIncrement;
-    }
-    pRec += iStride;
-  }
-  
-  pRec  = pcPic->getPicYuvOrg()->getCrAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      pRec[x] <<= g_uiBitIncrement;
-    }
-    pRec += iStride;
-  }
-}
-
-Void TEncGOP::xDeScalePic( TComPic* pcPic, TComPicYuv* pcPicD )
-{
-  Int     x, y;
-  Int     offset = (g_uiBitIncrement>0)?(1<<(g_uiBitIncrement-1)):0;
-  
-  //===== calculate PSNR =====
-  Pel*  pRecD   = pcPicD->getLumaAddr();
-  Pel*  pRec    = pcPic->getPicYuvRec()->getLumaAddr();
-  Int   iStride = pcPic->getStride();
-  Int   iWidth  = pcPic->getPicYuvOrg()->getWidth();
-  Int   iHeight = pcPic->getPicYuvOrg()->getHeight();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-#if IBDI_NOCLIP_RANGE
-      pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
-#else
-      pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
-#endif
-    }
-    pRecD += iStride;
-    pRec += iStride;
-  }
-  
-  iHeight >>= 1;
-  iWidth  >>= 1;
-  iStride >>= 1;
-  pRecD = pcPicD->getCbAddr();
-  pRec  = pcPic->getPicYuvRec()->getCbAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-#if IBDI_NOCLIP_RANGE
-      pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
-#else
-      pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
-#endif
-    }
-    pRecD += iStride;
-    pRec += iStride;
-  }
-  
-  pRecD = pcPicD->getCrAddr();
-  pRec  = pcPic->getPicYuvRec()->getCrAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-#if IBDI_NOCLIP_RANGE
-      pRecD[x] = ( pRec[x] + offset ) >> g_uiBitIncrement;
-#else
-      pRecD[x] = ClipMax( ( pRec[x] + offset ) >> g_uiBitIncrement );
-#endif
-    }
-    pRecD += iStride;
-    pRec += iStride;
-  }
-}
-
 UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
 {
   Int     x, y;
@@ -840,7 +704,8 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, UInt uibits
     pRec += iStride;
   }
   
-  Double fRefValueY = 255.0 * 255.0 * (Double)iSize;
+  unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
+  Double fRefValueY = (double) maxval * maxval * iSize;
   Double fRefValueC = fRefValueY / 4.0;
   dYPSNR            = ( uiSSDY ? 10.0 * log10( fRefValueY / (Double)uiSSDY ) : 99.99 );
   dUPSNR            = ( uiSSDU ? 10.0 * log10( fRefValueC / (Double)uiSSDU ) : 99.99 );
