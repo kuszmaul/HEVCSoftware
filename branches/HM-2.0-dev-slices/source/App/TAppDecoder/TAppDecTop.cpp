@@ -47,7 +47,7 @@
 /// maximum bitstream buffer Size per 1 picture (1920*1080*1.5)
 /** \todo fix this value according to suitable value
  */
-#define BITS_BUF_SIZE     3110400
+#define BITS_BUF_SIZE 65536
 
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
@@ -113,6 +113,7 @@ Void TAppDecTop::decode()
   // main decoder loop
   Bool  bEos        = false;
   bool recon_opened = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
+  Bool resizedBitstreamBuffer = false;
   while ( !bEos )
   {
 #if AD_HOC_SLICES && AD_HOC_SLICES_TEST_OUTOFORDER_DECOMPRESS
@@ -207,7 +208,16 @@ Void TAppDecTop::decode()
 #endif
     
 #endif
-
+    if (!resizedBitstreamBuffer)
+    {
+      TComSPS *sps = m_cTDecTop.getSPS();
+      if (sps)
+      {
+        pcBitstream->destroy();
+        pcBitstream->create(sps->getWidth() * sps->getHeight() * 2);
+        resizedBitstreamBuffer = true;
+      }
+    }
     if( pcListPic )
     {
       if ( m_pchReconFile && !recon_opened )
