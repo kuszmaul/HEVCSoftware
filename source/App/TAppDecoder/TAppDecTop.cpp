@@ -152,6 +152,40 @@ Void TAppDecTop::decode()
     }
   }
   
+#if MC_MEMORY_ACCESS_CALC
+  printf("\n");
+  {
+    printf("\n Frame memory access measurement setting:");
+    if (m_cLumaMemCmpParam.iUnitWidth==1 && m_cLumaMemCmpParam.iUnitHeight==1 && m_cLumaMemCmpParam.iCmpRatioNum==m_cLumaMemCmpParam.iCmpRatioDenom &&
+        m_cChromaMemCmpParam.iUnitWidth==1 && m_cChromaMemCmpParam.iUnitHeight==1 && m_cChromaMemCmpParam.iCmpRatioNum==m_cChromaMemCmpParam.iCmpRatioDenom)
+    {
+      printf("\n   Uncompressed");
+    }
+    else
+    {
+      printf("\n   Memory compression unit size = %dx%d (chroma %dx%d)"
+             "\n   Memory compression ratio = %d/%d (chroma %d/%d)",
+             m_cLumaMemCmpParam.iUnitWidth, m_cLumaMemCmpParam.iUnitHeight,
+             m_cChromaMemCmpParam.iUnitWidth, m_cChromaMemCmpParam.iUnitHeight,
+             m_cLumaMemCmpParam.iCmpRatioNum, m_cLumaMemCmpParam.iCmpRatioDenom,
+             m_cChromaMemCmpParam.iCmpRatioNum, m_cChromaMemCmpParam.iCmpRatioDenom);
+    }
+	if(m_cTDecTop.getNumPredictivePic() > 0)
+	{
+		printf("\n Frame memory access measurement results:");
+		for (Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++)
+		{
+			printf("\n   Align%3dbit/Burst%3dbit %-9s [Avg %8llu] [Max %8llu] ",
+				g_aiMemArchDDRAlignBits[i], g_aiMemArchDDRBurstBits[i],
+				g_aiMemArchCacheType[i]==2 ? "LRUCache" : g_aiMemArchCacheType[i]==1 ? "FIFOCache" : "",
+				m_cTDecTop.getTotalMCMemoryAccessBytes(i)/m_cTDecTop.getNumPredictivePic(),
+				m_cTDecTop.getMaxMCMemoryAccessBytesPerPic(i));
+		}
+	}
+  }
+  printf ("\n");
+#endif //MC_MEMORY_ACCESS_CALC
+
   // delete buffers
   m_cTDecTop.deletePicBuffer();
   
@@ -190,6 +224,10 @@ Void TAppDecTop::xInitDecLib()
 {
   // initialize decoder class
   m_cTDecTop.init();
+
+#if MC_MEMORY_ACCESS_CALC
+  m_cTDecTop.initMCMemoryAccessCalculator( m_cLumaMemCmpParam, m_cChromaMemCmpParam );
+#endif //MC_MEMORY_ACCESS_CALC
 }
 
 /** \param pcListPic list of pictures to be written to file

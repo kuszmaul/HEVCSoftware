@@ -207,6 +207,34 @@ Pel*  TComPicYuv::getCrAddr( Int iCuAddr, Int uiAbsZorderIdx )
   return (m_piPicOrgV + ( ( iOffsetCu + iOffsetBase)>>1 ) );
 }
 
+#if MC_MEMORY_ACCESS_CALC
+Int TComPicYuv::getLumaPosX( Int iCuAddr, Int uiAbsZorderIdx )
+{
+  Int iCuX           = iCuAddr % m_iNumCuInWidth;
+  Int iCuY           = iCuAddr / m_iNumCuInWidth;
+ 
+  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
+  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
+  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
+  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
+
+  return (iCuX*m_iCuWidth + iBaseX*m_iBaseUnitWidth);
+}
+
+Int TComPicYuv::getLumaPosY( Int iCuAddr, Int uiAbsZorderIdx )
+{
+  Int iCuX           = iCuAddr % m_iNumCuInWidth;
+  Int iCuY           = iCuAddr / m_iNumCuInWidth;
+ 
+  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
+  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
+  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
+  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
+
+  return (iCuY*m_iCuHeight + iBaseY*m_iBaseUnitHeight);
+}
+#endif //MC_MEMORY_ACCESS_CALC
+
 Void  TComPicYuv::copyToPic (TComPicYuv*  pcPicYuvDst)
 {
   assert( m_iPicWidth  == pcPicYuvDst->getWidth()  );

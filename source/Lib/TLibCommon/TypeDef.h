@@ -210,6 +210,17 @@
 
 #define FULL_NBIT 0 ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
 
+////////////////////////////
+// NEC defines section start
+////////////////////////////
+#define MC_MEMORY_ACCESS_CALC                   1
+#if MC_MEMORY_ACCESS_CALC
+#define DISABLE_CHROMA_MC_MEMORY_ACCESS_CALC    0
+#endif //MC_MEMORY_ACCESS_CALC
+//////////////////////////
+// NEC defines section end
+//////////////////////////
+
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================

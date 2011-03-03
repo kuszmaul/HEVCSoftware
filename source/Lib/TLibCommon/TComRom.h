@@ -292,6 +292,13 @@ __inline UInt xLeadingZeros(UInt uiCode)
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
+#if MC_MEMORY_ACCESS_CALC
+#define      NUM_MEMORY_ARCHITECTURES     8
+extern       Int    g_aiMemArchDDRAlignBits[ NUM_MEMORY_ARCHITECTURES ];
+extern       Int    g_aiMemArchDDRBurstBits[ NUM_MEMORY_ARCHITECTURES ];
+extern       Int    g_aiMemArchCacheType   [ NUM_MEMORY_ARCHITECTURES ];
+#endif //MC_MEMORY_ACCESS_CALC
+
 #if CHROMA_CODEWORD_SWITCH 
 extern const UChar ChromaMapping[2][5];
 #endif

@@ -36,6 +36,43 @@
 #include <memory.h>
 #include "TComPrediction.h"
 
+#if MC_MEMORY_ACCESS_CALC
+namespace {
+
+/*
+ * \brief Determine aligned address
+ *
+ * \param addr
+ * \param access_unit
+ *
+ * \return Access_unit aligned address
+ */
+__inline Int iAlignmentRoundDown( Int iAddr, Int iAccessUnit )
+{
+  Int iAlignedAddr = iAccessUnit * (iAddr/iAccessUnit);
+  if ( iAddr < 0 )
+  {
+    iAlignedAddr -= (iAddr%iAccessUnit) ? iAccessUnit : 0;
+  }
+  return iAlignedAddr;
+}
+
+/*
+ * \brief Determine aligned address
+ *
+ * \param addr
+ * \param access_unit
+ *
+ * \return Access_unit aligned address
+ */
+__inline Int iAlignmentRoundUp( Int iAddr, Int iAccessUnit )
+{
+  return iAccessUnit * (iAddr/iAccessUnit) + ((iAddr%iAccessUnit) ? iAccessUnit : 0);
+}
+
+} // end of nameless namespace
+#endif //MC_MEMORY_ACCESS_CALC
+
 // ====================================================================================================================
 // Constructor / destructor / initialize
 // ====================================================================================================================
@@ -43,6 +80,12 @@
 TComPrediction::TComPrediction()
 {
   m_piYuvExt = NULL;
+#if MC_MEMORY_ACCESS_CALC
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    m_apcMemAccessCalc[i] = 0;
+  }
+#endif //MC_MEMORY_ACCESS_CALC
 }
 
 TComPrediction::~TComPrediction()
@@ -55,6 +98,21 @@ TComPrediction::~TComPrediction()
   m_acYuvPred[1].destroy();
   
   m_cYuvPredTemp.destroy();
+
+#if MC_MEMORY_ACCESS_CALC
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    if ( m_apcMemAccessCalc[i] )
+    {
+      if ( m_apcMemAccessCalc[i]->getCache() )
+      {
+        delete m_apcMemAccessCalc[i]->getCache();
+      }
+      delete m_apcMemAccessCalc[i];
+    }
+  }
+#endif //MC_MEMORY_ACCESS_CALC
+
 }
 
 Void TComPrediction::initTempBuff()
@@ -367,6 +425,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
+
 #if DCTIF_8_6_LUMA
 #if HIGH_ACCURACY_BI
   xPredInterLumaBlk_ha  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()    , uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
@@ -395,6 +454,12 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #else
   xPredInterChromaBlk     ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred );
 #endif
+
+#if MC_MEMORY_ACCESS_CALC
+  initMCMemoryAccessCalculator( pcCU->getSlice()->getRefPic(eRefPicList, iRefIdx) );
+  xCalcMCMemoryAccessLuma( pcCU, uiPartAddr, eRefPicList, iRefIdx, &cMv, iWidth, iHeight );
+  xCalcMCMemoryAccessChroma( pcCU, uiPartAddr, eRefPicList, iRefIdx, &cMv, iWidth, iHeight );
+#endif //MC_MEMORY_ACCESS_CALC
 }
 
 Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
@@ -1394,3 +1459,172 @@ Void TComPrediction::getMvPredAMVP( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPar
   rcMvPred = pcAMVPInfo->m_acMvCand[pcCU->getMVPIdx(eRefPicList,uiPartAddr)];
   return;
 }
+
+#if MC_MEMORY_ACCESS_CALC
+Void TComPrediction::initMCMemoryAccessCalculator( TComPic* pcRefPic )
+{
+  /* Set high-level paramters */
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    m_apcMemAccessCalc[i]->setLumaBitDepth( g_uiBitDepth+g_uiBitIncrement );
+    m_apcMemAccessCalc[i]->setChromaBitDepth( g_uiBitDepth+g_uiBitIncrement );
+    m_apcMemAccessCalc[i]->setPictureWidth( pcRefPic->getPicYuvRec()->getWidth() );
+    m_apcMemAccessCalc[i]->setPictureIndex( pcRefPic->getPOC() );
+  }
+}
+
+
+/*
+ * \brief Compute the amount of virtual memory access for luma MC
+ *
+ * \return The amount of virtual memory access.
+ */
+Void TComPrediction::xCalcMCMemoryAccessLuma( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight )
+{
+  /* Derive reference block position and filter tap length for luma. */
+  Int iLumaPUPosX = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosX ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr );
+  Int iLumaPUPosY = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosY ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr );
+  Int iLumaPosX = pcMv->getHor() >> 2;
+  Int iLumaPosY = pcMv->getVer() >> 2;
+#if DCTIF_8_6_LUMA
+  Int iMCTapH = ((pcMv->getHor() & 0x3) != 0) ? 8 : 0;
+  Int iMCTapV = ((pcMv->getVer() & 0x3) != 0) ? 8 : 0;
+#else
+  InterpFilterType ePFilt = static_cast<InterpFilterType>(pcCU->getSlice()->getInterpFilterType());
+  Int iChromaFracX;
+  Int iChromaFracY;
+  if ( ePFilt == IPF_TEN_DIF )
+  {
+    iChromaFracX =((pcMv->getHor()>>1) & 0x3)<<1;
+    iChromaFracY =((pcMv->getVer()>>1) & 0x3)<<1;
+  }
+  else
+  {
+    iChromaFracX = pcMv->getHor() & 0x7;
+    iChromaFracY = pcMv->getVer() & 0x7;
+  }
+  Int iMCTapH = (iChromaFracX != 0) ? 2 : 0;
+  Int iMCTapV = (iChromaFracY != 0) ? 2 : 0;
+#endif
+
+  /* Calculate memory access bandwidth for luma. */
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    if (m_apcMemAccessCalc[i])
+    {
+      m_apcMemAccessCalc[i]->xCalcAccessBytes(iWidth, iHeight, iLumaPUPosX+iLumaPosX, iLumaPUPosY+iLumaPosY, iMCTapH, iMCTapV, false);
+    }
+  }
+}
+
+
+/*
+ * \brief Compute the amount of virtual memory access for chroma MC
+ *
+ * \return The amount of virtual memory access.
+ */
+Void TComPrediction::xCalcMCMemoryAccessChroma( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight )
+{
+  /* Derive reference block position and filter tap length for chroma. */
+  Int iChromaPUPosX = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosX ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr ) / 2;
+  Int iChromaPUPosY = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosY ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr ) / 2;
+  Int iChromaPosX = pcMv->getHor() >> 3;
+  Int iChromaPosY = pcMv->getVer() >> 3;
+#if DCTIF_4_6_CHROMA
+  Int iMCTapH = ((pcMv->getHor() & 0x7) != 0) ? 4 : 0;
+  Int iMCTapV = ((pcMv->getVer() & 0x7) != 0) ? 4 : 0;
+#else
+  InterpFilterType ePFilt = static_cast<InterpFilterType>(pcCU->getSlice()->getInterpFilterType());
+
+  /* Derive reference block position and filter tap length for luma. */
+  Int iLumaPUPosX = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosX ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr );
+  Int iLumaPUPosY = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getLumaPosY ( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartAddr );
+  Int iLumaPosX = pcMv->getHor() >> 2;
+  Int iLumaPosY = pcMv->getVer() >> 2;
+  Int iLumaFracX = pcMv->getHor() & 0x3;
+  Int iLumaFracY = pcMv->getVer() & 0x3;
+  Int iMCTapH;
+  Int iMCTapV;
+  if ( ePFilt == IPF_TEN_DIF )
+  {
+    if ( iLumaFracX == 2 && iLumaFracY == 2 )
+    {
+      iMCTapH = 4;
+      iMCTapV = 4;
+    }
+    else
+    {
+      /* Note: This setting may not be appropriate for the posisions, (1,1), (1,3), (3,1) and (3,3),
+         since interpolation of these positions is conducted by single directional (diagonal) interpolation. */
+      iMCTapH = (iLumaFracX != 0) ? 6 : 0;
+      iMCTapV = (iLumaFracY != 0) ? 6 : 0;
+    }
+  }
+  else
+  {
+    iMCTapH = (iLumaFracX != 0) ? m_iDIFTap : 0;
+    iMCTapV = (iLumaFracY != 0) ? m_iDIFTap : 0;
+  }
+  Int iMCTapH = ((pcMv->getHor() & 0x7) != 0) ? 2 : 0;
+  Int iMCTapV = ((pcMv->getVer() & 0x7) != 0) ? 2 : 0;
+#endif
+
+  /* Calculate memory access bandwidth for chroma. */
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    if (m_apcMemAccessCalc[i])
+    {
+      m_apcMemAccessCalc[i]->xCalcAccessBytes(iWidth/2, iHeight/2, iChromaPUPosX+iChromaPosX, iChromaPUPosY+iChromaPosY, iMCTapH, iMCTapV, true);
+    }
+  }
+}
+
+
+Void TComPrediction::initMCMemoryAccessCalculator( const MemCmpParam& cLumaParam, const MemCmpParam& cChromaParam )
+{
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    {
+      TComCompressedFrameMemoryAccessCalculator* pMAC = new TComCompressedFrameMemoryAccessCalculator;
+      pMAC->setLumaMemoryCompressionParameterSet( cLumaParam );
+      pMAC->setChromaMemoryCompressionParameterSet( cChromaParam );
+      m_apcMemAccessCalc[i] = pMAC;
+    }
+    m_apcMemAccessCalc[i]->initMemoryArchitecture( g_aiMemArchDDRAlignBits[i], g_aiMemArchDDRBurstBits[i] );
+    if ( g_aiMemArchCacheType[i] > 0 )
+    {
+      TComVirtualCache* pcCache;
+      if ( g_aiMemArchCacheType[i] == 2 )
+      {
+        pcCache = new TComVirtualCacheLRU;
+      }
+      else
+      {
+        pcCache = new TComVirtualCacheFIFO;
+      }
+      pcCache->initCache( TComVirtualCache::FOUR_WAY, TComVirtualCache::DEFAULT_LOG2_CACHE_LINE_SIZE, TComVirtualCache::DEFAULT_LOG2_CACHE_NUM_LINES );
+      m_apcMemAccessCalc[i]->attachCache( pcCache );
+    }
+  }
+}
+
+Void TComPrediction::updatePic( Void )
+{
+  for ( Int i=0; i<NUM_MEMORY_ARCHITECTURES; i++ )
+  {
+    if ( m_apcMemAccessCalc[i] ) m_apcMemAccessCalc[i]->update();
+  }
+}
+
+UInt64 TComPrediction::getTotalMCMemoryAccessBytes( Int iIndex )
+{
+  assert ( 0 <= iIndex && iIndex < NUM_MEMORY_ARCHITECTURES );
+  return (m_apcMemAccessCalc[iIndex]) ? m_apcMemAccessCalc[iIndex]->getTotalAccessBytes() : 0;
+}
+
+UInt64 TComPrediction::getMaxMCMemoryAccessBytesPerPic( Int iIndex )
+{
+  assert ( 0 <= iIndex && iIndex < NUM_MEMORY_ARCHITECTURES );
+  return (m_apcMemAccessCalc[iIndex]) ? m_apcMemAccessCalc[iIndex]->getMaxAccessBytes() : 0;
+}
+#endif //MC_MEMORY_ACCESS_CALC

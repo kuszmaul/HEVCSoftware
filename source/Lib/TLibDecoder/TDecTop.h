@@ -90,6 +90,9 @@ private:
   Bool isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay);
 #endif
 
+  #if MC_MEMORY_ACCESS_CALC
+  Int                     m_iNumPredictivePic;
+#endif //MC_MEMORY_ACCESS_CALC
 public:
   TDecTop();
   virtual ~TDecTop();
@@ -108,6 +111,14 @@ public:
   
   Void  deletePicBuffer();
   
+
+#if MC_MEMORY_ACCESS_CALC
+  Void  initMCMemoryAccessCalculator( const MemCmpParam& cLumaParam, const MemCmpParam& cChromaParam );
+  UInt64 getTotalMCMemoryAccessBytes( Int iIndex );
+  UInt64 getMaxMCMemoryAccessBytesPerPic( Int iIndex );
+  Int    getNumPredictivePic( Void ) { return m_iNumPredictivePic; }
+#endif //MC_MEMORY_ACCESS_CALC
+
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xUpdateGopSize    (TComSlice* pcSlice);
