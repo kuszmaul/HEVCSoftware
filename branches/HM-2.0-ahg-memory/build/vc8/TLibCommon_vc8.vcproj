@@ -351,6 +351,10 @@
 				RelativePath="..\..\source\Lib\TLibCommon\TComYuv.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComMemCalc.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -455,6 +459,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TypeDef.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComMemCalc.h"
 				>
 			</File>
 		</Filter>

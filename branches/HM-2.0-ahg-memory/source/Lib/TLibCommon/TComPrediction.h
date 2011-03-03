@@ -44,6 +44,10 @@
 #include "TComTrQuant.h"
 #include "TComPredFilter.h"
 
+#if MC_MEMORY_ACCESS_CALC
+#include "TComMemCalc.h"
+#endif //MC_MEMORY_ACCESS_CALC
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -63,6 +67,10 @@ protected:
   TComYuv   m_cYuvPredTemp;
   TComYuv   m_cYuvExt;
   
+#if MC_MEMORY_ACCESS_CALC
+  TComFrameMemoryAccessCalculator* m_apcMemAccessCalc[ NUM_MEMORY_ARCHITECTURES ];
+#endif // MC_MEMORY_ACCESS_CALC
+
   Void xPredIntraAng            ( Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
   
   // motion compensation functions
@@ -83,6 +91,12 @@ protected:
   Void xPredInterChromaBlk_ha      ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight,                         TComYuv*& rpcYuv                            );
   Void xDCTIF_FilterC_ha ( Pel*  piRefC, Int iRefStride,Pel*  piDstC,Int iDstStride,Int iWidth, Int iHeight,Int iMVyFrac,Int iMVxFrac);
 #endif
+
+#if MC_MEMORY_ACCESS_CALC
+  Void initMCMemoryAccessCalculator ( TComPic* pcRefPic );
+  Void xCalcMCMemoryAccessLuma      ( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight );
+  Void xCalcMCMemoryAccessChroma    ( TComDataCU* pcCU, Int uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv* pcMv, Int iWidth, Int iHeight );
+#endif //MC_MEMORY_ACCESS_CALC
 
 public:
   TComPrediction();
@@ -105,6 +119,13 @@ public:
   Int* getPredicBuf()             { return m_piYuvExt;      }
   Int  getPredicBufWidth()        { return m_iYuvExtStride; }
   Int  getPredicBufHeight()       { return m_iYuvExtHeight; }
+
+#if MC_MEMORY_ACCESS_CALC
+  Void   initMCMemoryAccessCalculator( const MemCmpParam& cLumaParam, const MemCmpParam& cChromaParam );
+  Void   updatePic( Void );
+  UInt64 getTotalMCMemoryAccessBytes( Int iIndex );
+  UInt64 getMaxMCMemoryAccessBytesPerPic( Int iIndex );
+#endif //MC_MEMORY_ACCESS_CALC
 };
 
 

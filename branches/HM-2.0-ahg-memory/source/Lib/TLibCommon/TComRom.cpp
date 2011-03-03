@@ -2259,3 +2259,9 @@ const UChar ChromaMapping[2][5] =
   {0, 1, 2, 4, 3}
 };
 #endif
+
+#if MC_MEMORY_ACCESS_CALC
+Int  g_aiMemArchDDRAlignBits[ NUM_MEMORY_ARCHITECTURES ] = {8, 32,  32,  64,  64,  64,  64,  64};
+Int  g_aiMemArchDDRBurstBits[ NUM_MEMORY_ARCHITECTURES ] = {8, 64, 128, 128, 256, 512, 256, 512};
+Int  g_aiMemArchCacheType   [ NUM_MEMORY_ARCHITECTURES ] = {0,  0,   0,   0,   0,   0,   1,   1};
+#endif //MC_MEMORY_ACCESS_CALC
