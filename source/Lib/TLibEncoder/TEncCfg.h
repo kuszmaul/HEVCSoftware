@@ -132,6 +132,19 @@ protected:
 #ifdef ROUNDING_CONTROL_BIPRED
   Bool m_useRoundingControlBipred;
 #endif
+#if CONSTRAINED_INTRA_PRED
+  Bool      m_bUseConstrainedIntraPred;
+#endif
+#if AD_HOC_SLICES 
+	//====== Slice ========
+	Int		m_iSliceMode;
+	Int		m_iSliceArgument;
+#if SHARP_ENTROPY_SLICE 
+	//====== Entropy Slice ========
+	Int		m_iEntropySliceMode;
+	Int		m_iEntropySliceArgument;
+#endif
+#endif
 public:
   TEncCfg()          {}
   virtual ~TEncCfg() {}
@@ -245,7 +258,10 @@ public:
 #if HHI_MRG
   Void      setUseMRG                       ( Bool  b )     { m_bUseMRG     = b; } // SOPH:
 #endif
-#if !DCTIF_8_6_LUMA  
+#if CONSTRAINED_INTRA_PRED
+  Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
+#endif
+#if !DCTIF_8_6_LUMA
   Void      setDIFTap                       ( Int   i )     { m_iDIFTap     = i; }
 #endif  
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
@@ -268,6 +284,9 @@ public:
 #if HHI_MRG
   Bool      getUseMRG                       ()      { return m_bUseMRG;     } // SOPH:
 #endif
+#if CONSTRAINED_INTRA_PRED
+  Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
+#endif
 #if !DCTIF_8_6_LUMA
   Int       getDIFTap                       ()      { return m_iDIFTap;  }
 #endif
@@ -285,6 +304,20 @@ public:
 #ifdef ROUNDING_CONTROL_BIPRED
   Void setUseRoundingControlBipred(Bool b) { m_useRoundingControlBipred = b; }
   Bool getUseRoundingControlBipred() { return m_useRoundingControlBipred; }
+#endif
+#if AD_HOC_SLICES 
+	//====== Slice ========
+  Void  setSliceMode                   ( Int	i )       { m_iSliceMode = i;              }
+  Void  setSliceArgument               ( Int	i )       { m_iSliceArgument = i;          }
+  Int   getSliceMode                   ()              { return m_iSliceMode;           }
+  Int   getSliceArgument               ()              { return m_iSliceArgument;       }
+#if SHARP_ENTROPY_SLICE 
+	//====== Entropy Slice ========
+  Void  setEntropySliceMode            ( Int	i )      { m_iEntropySliceMode = i;       }
+  Void  setEntropySliceArgument        ( Int	i )      { m_iEntropySliceArgument = i;   }
+  Int   getEntropySliceMode            ()              { return m_iEntropySliceMode;    }
+  Int   getEntropySliceArgument        ()              { return m_iEntropySliceArgument;}
+#endif
 #endif
 };
 
