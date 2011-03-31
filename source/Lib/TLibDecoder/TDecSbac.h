@@ -131,6 +131,9 @@ public:
   Void parseCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth ) {}
   Void parseBlockCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth, UInt uiQPartNum ) {}
   
+#if PCP_SIGMAP_SIMPLE_LAST
+  __inline Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx );
+#endif
   Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
   
 private:
@@ -158,7 +161,12 @@ private:
   ContextModel3DBuffer m_cCUQtCbfSCModel;
   
   ContextModel3DBuffer m_cCUSigSCModel;
+#if PCP_SIGMAP_SIMPLE_LAST
+  ContextModel3DBuffer m_cCuCtxLastX;
+  ContextModel3DBuffer m_cCuCtxLastY;
+#else  
   ContextModel3DBuffer m_cCULastSCModel;
+#endif
   ContextModel3DBuffer m_cCUOneSCModel;
   ContextModel3DBuffer m_cCUAbsSCModel;
   

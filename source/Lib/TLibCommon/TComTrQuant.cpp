@@ -4111,7 +4111,11 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
     assert( 0 );
   }
   
+#if PCP_SIGMAP_SIMPLE_LAST
+  UInt       uiLastScanPos       = 0;
+#else  
   UInt       uiMaxLineNum        = 0;
+#endif  
   Double     d64BlockUncodedCost = 0;
   const UInt uiLog2BlkSize       = g_aucConvertToBit[ uiWidth ] + 2;
   const UInt uiMaxNumCoeff       = 1 << ( uiLog2BlkSize << 1 );
@@ -4137,7 +4141,11 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   //===== quantization =====
   for( UInt uiScanPos = 0; uiScanPos < uiMaxNumCoeff; uiScanPos++ )
   {
+#if PCP_SIGMAP_SIMPLE_LAST
+    UInt    uiBlkPos = g_auiSigLastScan[uiScanIdx][uiLog2BlkSize-1][uiScanPos];  
+#else
     UInt    uiBlkPos = g_auiFrameScanXY[ uiLog2BlkSize-1 ][ uiScanPos ];
+#endif
     UInt    uiPosY   = uiBlkPos >> uiLog2BlkSize;
     UInt    uiPosX   = uiBlkPos - ( uiPosY << uiLog2BlkSize );
     Long lLevelDouble = plSrcCoeff[ uiBlkPos ];
@@ -4163,6 +4171,9 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
     
     if ( uiMaxAbsLevel > 0 )
     {
+#if PCP_SIGMAP_SIMPLE_LAST
+      uiLastScanPos = uiScanPos;
+#else
 #if QC_MDCS
       UInt uiLineNum = getCurrLineNum(uiScanIdx, uiPosX, uiPosY);
 #else
@@ -4173,9 +4184,14 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       {
         uiMaxLineNum = uiLineNum;
       }
+#endif
     }    
   }
   
+#if PCP_SIGMAP_SIMPLE_LAST
+  uiLastScanPos++;
+#endif
+
   //===== estimate context models =====
   if ( uiNum4x4Blk > 1 )
   {
@@ -4298,6 +4314,48 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   Double  d64CodedCost      = 0;
   Double  d64UncodedCost    = 0;
   
+#if PCP_SIGMAP_SIMPLE_LAST
+  Double  d64CostLast        = 0;
+  UInt    uiBestNonZeroLevel = 0;
+  TCoeff  iLastCoeffLevel    = 0;
+  Int     uiBestLastBlkPos   = 0;
+  for( UInt uiScanPos = 0; uiScanPos < uiLastScanPos; uiScanPos++ )
+  {
+    UInt   uiBlkPos     = g_auiSigLastScan[uiScanIdx][uiLog2BlkSize-1][uiScanPos];  
+    UInt   uiPosY       = uiBlkPos >> uiLog2BlkSize;
+    UInt   uiPosX       = uiBlkPos - ( uiPosY << uiLog2BlkSize );
+    UInt   uiCtxBase    = uiNum4x4Blk > 0 ? puiBaseCtx[ ( uiPosX >> 2 ) + ( uiPosY >> 2 ) * ( uiWidth >> 2 ) ] : 0;
+
+    if      ( uiWidth == 4 ) dTemp = estErr4x4[ iQpRem ][ uiPosX ][ uiPosY ] / dNormFactor;
+    else if ( uiWidth == 8 ) dTemp = estErr8x8[ iQpRem ][ uiPosX ][ uiPosY ] / dNormFactor;
+
+    UShort  uiCtxSig       = getSigCtxInc( piDstCoeff, uiPosX, uiPosY, uiLog2BlkSize, uiWidth );
+    UInt    uiMaxAbsLevel  = abs( piCoeff[ uiBlkPos ] );
+    UInt    uiLevel        = xGetCodedLevel  ( d64UncodedCost, d64CodedCost, d64CostLast, uiBestNonZeroLevel, plLevelDouble[ uiBlkPos ], uiMaxAbsLevel, uiCtxSig, puiOneCtx[ uiBlkPos ], puiAbsCtx[ uiBlkPos ], iQBits, dTemp, uiCtxBase ); 
+    piDstCoeff[ uiBlkPos ] = plSrcCoeff[ uiBlkPos ] < 0 ? -Int( uiLevel ) : uiLevel;
+    d64BaseCost           -= d64UncodedCost;
+
+    if( uiBestNonZeroLevel != 0 )
+    {
+      d64CostLast        += d64BaseCost;
+      d64CostLast        += uiScanIdx==SCAN_VER ? xGetRateLast ( uiPosY, uiPosX ) : xGetRateLast ( uiPosX, uiPosY );
+      if( d64CostLast < d64BestCost )
+      {
+        d64BestCost       = d64CostLast;
+        uiBestLastIdxP1   = uiScanPos + 1;
+        uiBestLastBlkPos  = uiBlkPos;
+        iLastCoeffLevel   = plSrcCoeff[ uiBlkPos ] < 0 ? -Int( uiBestNonZeroLevel ) : uiBestNonZeroLevel;
+      }
+    }
+    d64BaseCost           += d64CodedCost;
+  }
+  if( uiBestLastBlkPos > 0)
+  {
+    piDstCoeff[ uiBestLastBlkPos ] = iLastCoeffLevel;
+  }
+
+#else
+
   for( UInt uiScanPos = 0; uiScanPos < uiMaxNumCoeff; uiScanPos++ )
   {
 #if QC_MDCS
@@ -4348,6 +4406,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       }      
     }
   }
+#endif
   
   //===== clean uncoded coefficients =====
   {
@@ -4370,6 +4429,104 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
     }
   }
 }
+
+#if PCP_SIGMAP_SIMPLE_LAST
+
+__inline Double TComTrQuant::xGetRateLast  ( UInt                            uiPosX,
+                                            UInt                            uiPosY ) const
+{
+  return xGetICost( m_pcEstBitsSbac->lastXBits[ uiPosX ] + m_pcEstBitsSbac->lastYBits[ uiPosY ] );
+}
+
+__inline UInt TComTrQuant::xGetCodedLevel  ( Double&                         rd64UncodedCost,
+                                            Double&                         rd64CodedCost,
+                                            Double&                         rd64CodedLastCost,
+                                            UInt&                           uiBestNonZeroLevel,
+                                            Long                            lLevelDouble,
+                                            UInt                            uiMaxAbsLevel,
+                                            UShort                          ui16CtxNumSig,
+                                            UShort                          ui16CtxNumOne,
+                                            UShort                          ui16CtxNumAbs,
+                                            Int                             iQBits,
+                                            Double                          dTemp,
+                                            UShort                          ui16CtxBase ) const
+{
+  UInt uiBestAbsLevel  = 0;
+  uiBestNonZeroLevel   = 0;
+
+  Double dErr1    = Double( lLevelDouble );
+  rd64UncodedCost = dErr1 * dErr1 * dTemp;
+  rd64CodedCost   = rd64UncodedCost + xGetRateSigCoef( 0, ui16CtxNumSig );
+
+  if( uiMaxAbsLevel )
+  {
+    UInt uiAbsLevel    = uiMaxAbsLevel;
+    uiBestNonZeroLevel = uiMaxAbsLevel;
+    Double dErr        = Double( lLevelDouble  - Long( uiAbsLevel << iQBits ) );
+    rd64CodedLastCost  = dErr * dErr * dTemp + xGetICRateCost( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16CtxBase );
+  }
+  else
+  {
+    return uiBestAbsLevel;
+  }
+
+  UInt uiAbsLevel = ( uiMaxAbsLevel > 1 ? uiMaxAbsLevel - 1 : 1 );
+  if( uiAbsLevel!=uiMaxAbsLevel )
+  {
+    Double dErr        = Double( lLevelDouble  - Long( uiAbsLevel << iQBits ) );
+    Double dCurrCost   = dErr * dErr * dTemp + xGetICRateCost( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16CtxBase );
+    if( dCurrCost < rd64CodedLastCost )
+    {
+      uiBestNonZeroLevel  = uiAbsLevel;
+      rd64CodedLastCost   = dCurrCost;
+    }  
+  }
+
+  Double dCurrCost = rd64CodedLastCost + xGetRateSigCoef ( 1, ui16CtxNumSig );
+  if(  dCurrCost < rd64CodedCost )
+  {
+    uiBestAbsLevel  = uiBestNonZeroLevel;
+    rd64CodedCost   = dCurrCost;
+  }
+
+  return uiBestAbsLevel;
+}
+
+__inline Double TComTrQuant::xGetICRateCost  ( UInt                            uiAbsLevel,
+                                              UShort                          ui16CtxNumOne,
+                                              UShort                          ui16CtxNumAbs,
+                                              UShort                          ui16CtxBase   ) const
+{
+  Double iRate = xGetIEPRate();
+  if( uiAbsLevel == 1 )
+  {
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 0 ][ ui16CtxNumOne ][ 0 ];
+  }
+  else if( uiAbsLevel < 15 )
+  {
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 0 ][ ui16CtxNumOne ][ 1 ];
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 1 ][ ui16CtxNumAbs ][ 0 ];
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 1 ][ ui16CtxNumAbs ][ 1 ] * (int)( uiAbsLevel - 2 );
+  }
+  else
+  {
+    uiAbsLevel -= 14;
+    int iEGS    = 1;  for( UInt uiMax = 2; uiAbsLevel >= uiMax; uiMax <<= 1, iEGS += 2 );
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 0 ][ ui16CtxNumOne ][ 1 ];
+    iRate += m_pcEstBitsSbac->greaterOneBits[ ui16CtxBase ][ 1 ][ ui16CtxNumAbs ][ 1 ] * 13;
+    iRate += xGetIEPRate() * iEGS;
+  }
+  return xGetICost( iRate );
+}
+
+__inline Double TComTrQuant::xGetRateSigCoef ( UShort                          uiSignificance,
+                                              UShort                          ui16CtxNumSig ) const
+{
+  return xGetICost( m_pcEstBitsSbac->significantBits[ ui16CtxNumSig ][ uiSignificance ] );
+}
+
+#endif
+
 
 #if !SONY_SIG_CTX
 UInt TComTrQuant::getSigCtxInc    ( TCoeff*                         pcCoeff,
@@ -4516,6 +4673,7 @@ UInt TComTrQuant::getSigCtxInc    ( TCoeff*                         pcCoeff,
 }
 #endif
 
+#if !PCP_SIGMAP_SIMPLE_LAST
 UInt TComTrQuant::getLastCtxInc   ( const UInt                      uiPosX,
                                    const UInt                      uiPosY,
                                    const UInt                      uiLog2BlkSize )
@@ -4605,6 +4763,7 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
   }
   return xGetICost( iRate );
 }
+#endif
 
 __inline Double TComTrQuant::xGetICost        ( Double                          dRate         ) const
 {

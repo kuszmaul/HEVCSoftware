@@ -78,6 +78,13 @@
 // Nokia defines section end
 //////////////////////////////
 
+////////////////
+// E494 (E227/E338/E344/E489/E494): PCP SIGMAP + REDUCED CONTEXTS
+////////////////
+
+#define PCP_SIGMAP_SIMPLE_LAST            1
+#define SIMPLE_CONTEXT_SIG                1
+
 
 /////////////////////////////////
 // QUALCOMM defines section start
