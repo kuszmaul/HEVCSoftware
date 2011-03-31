@@ -159,15 +159,24 @@ Void TDecSbac::xReadUnaryMaxSymbol( UInt& ruiSymbol, ContextModel* pcSCModel, In
   ruiSymbol = uiSymbol;
 }
 
+#if MVD_CTX
+Void TDecSbac::xReadMvd( Int& riMvdComp, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx )
+#else
 Void TDecSbac::xReadMvd( Int& riMvdComp, UInt uiAbsSum, UInt uiCtx )
+#endif
 {
   UInt uiLocalCtx = 0;
-  
+
+#if MVD_CTX
+  uiLocalCtx += (uiAbsSumA>16) ? 1 : 0;
+  uiLocalCtx += (uiAbsSumL>16) ? 1 : 0;
+#else
   if( uiAbsSum >= 3 )
   {
     uiLocalCtx += ( uiAbsSum > 32) ? 2 : 1;
   }
-  
+#endif
+
   riMvdComp = 0;
   
   UInt uiSymbol;
@@ -857,25 +866,42 @@ Void TDecSbac::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UI
 {
   Int iHor, iVer;
   UInt uiAbsPartIdxL, uiAbsPartIdxA;
+#if MVD_CTX
+  Int iHorPredL, iVerPredL;
+  Int iHorPredA, iVerPredA;
+#else
   Int iHorPred, iVerPred;
-  
+#endif
+
   TComDataCU* pcCUL   = pcCU->getPULeft ( uiAbsPartIdxL, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
   TComDataCU* pcCUA   = pcCU->getPUAbove( uiAbsPartIdxA, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
   
   TComCUMvField* pcCUMvFieldL = ( pcCUL == NULL || pcCUL->isIntra( uiAbsPartIdxL ) ) ? NULL : pcCUL->getCUMvField( eRefList );
   TComCUMvField* pcCUMvFieldA = ( pcCUA == NULL || pcCUA->isIntra( uiAbsPartIdxA ) ) ? NULL : pcCUA->getCUMvField( eRefList );
-  
+
+#if MVD_CTX
+  iHorPredL = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() );
+  iVerPredL = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() );
+  iHorPredA = ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
+  iVerPredA = ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
+#else
   iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) +
   ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
   iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) +
   ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
-  
+#endif
+
   TComMv cTmpMv( 0, 0 );
   pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiPartIdx, uiDepth );
   
+#if MVD_CTX
+  xReadMvd( iHor, iHorPredL, iHorPredA, 0 );
+  xReadMvd( iVer, iVerPredL, iVerPredA, 1 );
+#else
   xReadMvd( iHor, iHorPred, 0 );
   xReadMvd( iVer, iVerPred, 1 );
-  
+#endif  
+
   // set mvd
   TComMv cMv( iHor, iVer );
   pcCU->getCUMvField( eRefList )->setAllMvd( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiPartIdx, uiDepth );
