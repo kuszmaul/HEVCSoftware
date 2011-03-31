@@ -160,6 +160,12 @@ Void TDecSbac::xReadUnaryMaxSymbol( UInt& ruiSymbol, ContextModel* pcSCModel, In
 }
 
 #if MVD_CTX
+/** Decode a motion vector difference
+ * \param riMvdComp motion vector difference
+ * \param uiAbsSumL motion vector difference of left PU
+ * \param uiAbsSumA motion vector difference of above PU
+ * \param uiCtx index for context set based on vertical or horizontal component
+ */
 Void TDecSbac::xReadMvd( Int& riMvdComp, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx )
 #else
 Void TDecSbac::xReadMvd( Int& riMvdComp, UInt uiAbsSum, UInt uiCtx )

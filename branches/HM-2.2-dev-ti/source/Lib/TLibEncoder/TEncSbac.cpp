@@ -1234,6 +1234,12 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
 }
 
 #if MVD_CTX
+/** Encode a motion vector difference
+ * \param iMvd motion vector difference
+ * \param uiAbsSumL motion vector difference of left PU
+ * \param uiAbsSumA motion vector difference of above PU
+ * \param uiCtx index for context set based on vertical or horizontal component
+ */
 Void TEncSbac::xWriteMvd( Int iMvd, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx )
 #else
 Void TEncSbac::xWriteMvd( Int iMvd, UInt uiAbsSum, UInt uiCtx )

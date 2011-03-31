@@ -214,13 +214,7 @@
 // MQT (MEDIATEK, QUALCOMM, TOSHIBA) defines section start
 /////////////////////////////////
 
-/////////////////////////////////
-// MIT defines section start
-/////////////////////////////////
 #define MVD_CTX            1           // JCTVC-E324: Modified context selection for MVD
-/////////////////////////////////
-// MIT defines section end
-/////////////////////////////////
 
 // ====================================================================================================================
 // Basic type redefinition
