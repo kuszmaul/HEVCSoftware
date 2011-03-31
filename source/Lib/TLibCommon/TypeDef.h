@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  Â 
+ * granted under this license.  Â
  *
  * Copyright (c) 2010-2011, ITU/ISO/IEC
  * All rights reserved.
@@ -88,7 +88,7 @@
 #define QC_MOD_LCEC_RDOQ                  1           // JCTVC-D374: improved RDOQ
 #define QC_LCEC_INTER_MODE                1
 #define QC_MDIS                           1           // JCTVC-D282: enable mode dependent intra smoothing
-#define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding 
+#define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding
 
 #define ENABLE_FORCECOEFF0  0
 
@@ -107,9 +107,9 @@
 
 #define SAMSUNG_MRG_SKIP_DIRECT               1           ///< enabling of skip and direct when mrg is on
 
-#define FAST_UDI_MAX_RDMODE_NUM               35          ///< maximum number of RD comparison in fast-UDI estimation loop 
+#define FAST_UDI_MAX_RDMODE_NUM               35          ///< maximum number of RD comparison in fast-UDI estimation loop
 
-#define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64} 
+#define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64}
 
 #define ZERO_MVD_EST                          0           ///< Zero Mvd Estimation in normal mode
 ///////////////////////////////
@@ -140,7 +140,7 @@
 ////////////////////////////////
 #define TSB_ALF_HEADER                 1           // Send ALF ON/OFF flag in slice header
 #define IBDI_DISTORTION                0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
-#define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used  
+#define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used
 ////////////////////////////////
 // TOSHIBA defines section end
 ////////////////////////////////
@@ -179,7 +179,7 @@
 #define TI_ALF_MAX_VSIZE_7 1
 
 #define CHROMA_CODEWORD 1                             ///< enable new intra chroma mode encoding by setting to 1. setting to 0 should yield same results as TMuC 0.9
-#define CHROMA_CODEWORD_SWITCH  1                     ///< Switch the places of the last two codewords 
+#define CHROMA_CODEWORD_SWITCH  1                     ///< Switch the places of the last two codewords
 
 #define FULL_NBIT 0 ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
 
@@ -214,13 +214,8 @@
 // MQT (MEDIATEK, QUALCOMM, TOSHIBA) defines section start
 /////////////////////////////////
 
-/////////////////////////////////
-// MIT defines section start
-/////////////////////////////////
 #define MVD_CTX            1           // JCTVC-E324: Modified context selection for MVD
-/////////////////////////////////
-// MIT defines section end
-/////////////////////////////////
+
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -293,11 +288,11 @@ struct _AlfParam
   Int startSecondFilter;
   Int noFilters;
   Int varIndTab[16];
-  
+
   //Coeff send related
   Int filters_per_group_diff; //this can be updated using codedVarBins
   Int filters_per_group;
-  Int codedVarBins[16]; 
+  Int codedVarBins[16];
   Int forceCoeff0;
   Int predMethod;
   Int **coeffmulti;
@@ -346,7 +341,7 @@ enum PartSize
   SIZE_2NxN,            ///< symmetric motion partition,  2Nx N
   SIZE_Nx2N,            ///< symmetric motion partition,   Nx2N
   SIZE_NxN,             ///< symmetric motion partition,   Nx N
-  
+
   SIZE_NONE = 15
 };
 
@@ -392,7 +387,7 @@ enum DFunc
   DF_SSE32    = 5,      ///<  32xM SSE
   DF_SSE64    = 6,      ///<  64xM SSE
   DF_SSE16N   = 7,      ///< 16NxM SSE
-  
+
   DF_SAD      = 8,      ///< general size SAD
   DF_SAD4     = 9,      ///<   4xM SAD
   DF_SAD8     = 10,     ///<   8xM SAD
@@ -400,7 +395,7 @@ enum DFunc
   DF_SAD32    = 12,     ///<  32xM SAD
   DF_SAD64    = 13,     ///<  64xM SAD
   DF_SAD16N   = 14,     ///< 16NxM SAD
-  
+
   DF_SADS     = 15,     ///< general size SAD with step
   DF_SADS4    = 16,     ///<   4xM SAD with step
   DF_SADS8    = 17,     ///<   8xM SAD with step
@@ -408,7 +403,7 @@ enum DFunc
   DF_SADS32   = 19,     ///<  32xM SAD with step
   DF_SADS64   = 20,     ///<  64xM SAD with step
   DF_SADS16N  = 21,     ///< 16NxM SAD with step
-  
+
   DF_HADS     = 22,     ///< general size Hadamard with step
   DF_HADS4    = 23,     ///<   4xM HAD with step
   DF_HADS8    = 24,     ///<   8xM HAD with step
@@ -416,7 +411,7 @@ enum DFunc
   DF_HADS32   = 26,     ///<  32xM HAD with step
   DF_HADS64   = 27,     ///<  64xM HAD with step
   DF_HADS16N  = 28,     ///< 16NxM HAD with step
-  
+
   DF_SSE_FRAME = 33     ///< Frame-based SSE
 };
 
