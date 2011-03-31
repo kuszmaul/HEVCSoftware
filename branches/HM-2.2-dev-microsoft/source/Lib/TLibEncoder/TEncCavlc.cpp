@@ -140,6 +140,18 @@ Void TEncCavlc::resetEntropy()
 #endif
   
   m_uiMITableVlcIdx = 0;  
+
+#if CAVLC_COUNTER_ADAPT
+  ::memset(m_ucCBFTableCounter,        0,        2*4*sizeof(UChar));
+  ::memset(m_ucBlkCBPTableCounter,     0,        2*2*sizeof(UChar));
+  ::memset(m_ucMI1TableCounter,        0,          4*sizeof(UChar));
+  ::memset(m_ucSplitTableCounter,      0,        4*4*sizeof(UChar));
+
+  m_ucCBFTableCounterSum[0]    = m_ucCBFTableCounterSum[1]    = 0;;
+  m_ucSplitTableCounterSum[0]  = m_ucSplitTableCounterSum[1]  = m_ucSplitTableCounterSum[2]= m_ucSplitTableCounterSum[3] = 0;
+  m_ucBlkCBPTableCounterSum[0] = m_ucBlkCBPTableCounterSum[1] = 0;
+  m_ucMI1TableCounterSum = 0;
+#endif
 }
 
 UInt* TEncCavlc::GetLP8Table()
@@ -651,7 +663,56 @@ Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
   UInt cx = m_uiSplitTableE[uiDepth][x];
   /* Adapt table */
   if ( m_bAdaptFlag)
-  {   
+  {
+#if CAVLC_COUNTER_ADAPT
+    Bool bRenorm = false;
+    if (cx>=0 && cx < 4)
+    {
+      m_ucSplitTableCounter[uiDepth][cx]++;
+      if ( m_ucSplitTableCounterSum[uiDepth] >= 15 )
+      {
+        bRenorm = true;
+      }
+      else
+      {
+        m_ucSplitTableCounterSum[uiDepth]++;
+      }
+    }
+
+
+    UInt cy = Max(0,cx-1);
+    if ((cx>0) && (cx < 4))
+    {
+      if (m_ucSplitTableCounter[uiDepth][cx] >= m_ucSplitTableCounter[uiDepth][cy])
+      {
+        UInt  y = m_uiSplitTableD[uiDepth][cy];
+        m_uiSplitTableD[uiDepth][cy] = x;
+        m_uiSplitTableD[uiDepth][cx] = y;
+        m_uiSplitTableE[uiDepth][x] = cy;
+        m_uiSplitTableE[uiDepth][y] = cx;
+        UChar ucTemp = m_ucSplitTableCounter[uiDepth][cx];
+        m_ucSplitTableCounter[uiDepth][cx] = m_ucSplitTableCounter[uiDepth][cy];
+        m_ucSplitTableCounter[uiDepth][cy] = ucTemp; 
+      }
+    }
+    else  if (cx >= 4)
+    {      
+      UInt  y = m_uiSplitTableD[uiDepth][cy];
+      m_uiSplitTableD[uiDepth][cy] = x;
+      m_uiSplitTableD[uiDepth][cx] = y;
+      m_uiSplitTableE[uiDepth][x] = cy;
+      m_uiSplitTableE[uiDepth][y] = cx;
+    }
+
+    if (bRenorm)
+    {
+      m_ucSplitTableCounterSum[uiDepth] = 0;
+      for (UInt uiIdx = 0; uiIdx < 4; uiIdx++)
+      {
+        m_ucSplitTableCounter[uiDepth][uiIdx] >>= 1;
+      }
+    }
+#else
     if(cx>0)
     {
       UInt cy = Max(0,cx-1);
@@ -661,6 +722,7 @@ Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
       m_uiSplitTableE[uiDepth][x] = cy;
       m_uiSplitTableE[uiDepth][y] = cx; 
     }
+#endif
   }
   return;
 }
@@ -897,6 +959,10 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiInterDir = pcCU->getInterDir   ( uiAbsPartIdx );
   uiInterDir--;
+
+#if CAVLC_COUNTER_ADAPT
+  UChar  *m_ucMITableCounter = m_ucMI1TableCounter;
+#endif
   
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   if ( pcCU->getSlice()->getRefIdxCombineCoding() )
@@ -1003,7 +1069,59 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
     UInt vlcn = g_auiMITableVlcNum[m_uiMITableVlcIdx];    
 #endif
     if ( m_bAdaptFlag )
-    {        
+    {
+#if CAVLC_COUNTER_ADAPT
+      Bool bRenorm = false;
+      if (cx>=0 && cx < 4 )
+      {
+        m_ucMITableCounter[cx]++;
+        if ( m_ucMI1TableCounterSum >= 15 )
+        {
+          bRenorm = true;
+        }
+        else
+        {
+          m_ucMI1TableCounterSum++;
+        }
+      }
+
+      if (cx>0 && cx < 4)
+      {
+        cy = Max(0,cx-1);
+        if (m_ucMITableCounter[cx] >= m_ucMITableCounter[cy])
+        {
+          y = m_uiMITableD[cy];
+          m_uiMITableD[cy] = x;
+          m_uiMITableD[cx] = y;
+          m_uiMITableE[x] = cy;
+          m_uiMITableE[y] = cx;
+          UChar ucTemp = m_ucMITableCounter[cx];
+          m_ucMITableCounter[cx] = m_ucMITableCounter[cy];
+          m_ucMITableCounter[cy] = ucTemp;
+          m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
+        }
+      }
+      else if (cx >= 4)
+      {
+        cy = Max(0,cx-1);
+        y = m_uiMITableD[cy];
+        m_uiMITableD[cy] = x;
+        m_uiMITableD[cx] = y;
+        m_uiMITableE[x] = cy;
+        m_uiMITableE[y] = cx;
+        m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
+      }
+
+      if(bRenorm) 
+      {
+        m_ucMI1TableCounterSum = 0;
+        for (UInt uiIdx = 0; uiIdx < 4; uiIdx++)
+        {
+          m_ucMITableCounter[uiIdx] >>= 1;
+        }
+      }
+
+#else
       cy = Max(0,cx-1);
       y = m_uiMITableD[cy];
       m_uiMITableD[cy] = x;
@@ -1011,6 +1129,7 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
       m_uiMITableE[x] = cy;
       m_uiMITableE[y] = cx;   
       m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
+#endif
     }
     
     {
@@ -1249,12 +1368,61 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
     if ( m_bAdaptFlag )
     {                
       cy = Max(0,cx-1);
+#if CAVLC_COUNTER_ADAPT
+      Bool bRenorm = false;
+      if (cx>=0 && cx < 4)
+      {
+        m_ucCBFTableCounter[n][cx]++;
+        if ( m_ucCBFTableCounterSum[n] >= 15 )
+        {
+          bRenorm = true;
+        }
+        else
+        {
+          m_ucCBFTableCounterSum[n]++;
+        }
+      }
+      if ((cx>0) && (cx < 4) )
+      {
+        if (m_ucCBFTableCounter[n][cx] >= m_ucCBFTableCounter[n][cy])
+        {
+          y = m_uiCBPTableD[n][cy];
+          m_uiCBPTableD[n][cy] = x;
+          m_uiCBPTableD[n][cx] = y;
+          m_uiCBPTableE[n][x] = cy;
+          m_uiCBPTableE[n][y] = cx;
+          UChar ucTemp = m_ucCBFTableCounter[n][cx];
+          m_ucCBFTableCounter[n][cx] = m_ucCBFTableCounter[n][cy];
+          m_ucCBFTableCounter[n][cy] = ucTemp;
+          m_uiCbpVlcIdx[n] += cx == m_uiCbpVlcIdx[n] ? 0 : (cx < m_uiCbpVlcIdx[n] ? -1 : 1);
+        }
+      }
+      else if (cx >= 4)
+      {
+        y = m_uiCBPTableD[n][cy];
+        m_uiCBPTableD[n][cy] = x;
+        m_uiCBPTableD[n][cx] = y;
+        m_uiCBPTableE[n][x] = cy;
+        m_uiCBPTableE[n][y] = cx;
+        m_uiCbpVlcIdx[n] += cx == m_uiCbpVlcIdx[n] ? 0 : (cx < m_uiCbpVlcIdx[n] ? -1 : 1);
+      }
+
+      if (bRenorm)
+      {
+        m_ucCBFTableCounterSum[n] = 0;
+        for (UInt uiIdx = 0; uiIdx < 4; uiIdx++)
+        {
+          m_ucCBFTableCounter[n][uiIdx] >>= 1;
+        }
+      }
+#else
       y = m_uiCBPTableD[n][cy];
       m_uiCBPTableD[n][cy] = x;
       m_uiCBPTableD[n][cx] = y;
       m_uiCBPTableE[n][x] = cy;
       m_uiCBPTableE[n][y] = cx;
       m_uiCbpVlcIdx[n] += cx == m_uiCbpVlcIdx[n] ? 0 : (cx < m_uiCbpVlcIdx[n] ? -1 : 1);
+#endif
     }
     xWriteVlc( vlcn, cx );
   }
@@ -1290,6 +1458,61 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
   if ( m_bAdaptFlag )
   {                
     cy = Max(0,cx-1);
+#if CAVLC_COUNTER_ADAPT
+    Bool bRenorm = false;
+    if (cx>=0 && cx < 2)
+    {
+      m_ucBlkCBPTableCounter[n][cx]++;
+      if ( m_ucBlkCBPTableCounterSum[n] >= 15 )
+      {
+        bRenorm = true;
+      }
+      else
+      {
+        m_ucBlkCBPTableCounterSum[n]++;
+      }
+    }
+
+    if ((cx>0) && (cx < 2))
+    {
+      if (m_ucBlkCBPTableCounter[n][cx] >= m_ucBlkCBPTableCounter[n][cy])
+      {
+        y = m_uiBlkCBPTableD[n][cy];
+        m_uiBlkCBPTableD[n][cy] = x;
+        m_uiBlkCBPTableD[n][cx] = y;
+        m_uiBlkCBPTableE[n][x] = cy;
+        m_uiBlkCBPTableE[n][y] = cx;
+        UChar ucTemp = m_ucBlkCBPTableCounter[n][cx];
+        m_ucBlkCBPTableCounter[n][cx] = m_ucBlkCBPTableCounter[n][cy];
+        m_ucBlkCBPTableCounter[n][cy] = ucTemp;
+        if(n==0)
+        {
+          m_uiBlkCbpVlcIdx += cx == m_uiBlkCbpVlcIdx ? 0 : (cx < m_uiBlkCbpVlcIdx ? -1 : 1);
+        }
+      }
+    }
+    else if (cx >= 2)
+    {
+      y = m_uiBlkCBPTableD[n][cy];
+      m_uiBlkCBPTableD[n][cy] = x;
+      m_uiBlkCBPTableD[n][cx] = y;
+      m_uiBlkCBPTableE[n][x] = cy;
+      m_uiBlkCBPTableE[n][y] = cx;
+      if(n==0)
+      {
+        m_uiBlkCbpVlcIdx += cx == m_uiBlkCbpVlcIdx ? 0 : (cx < m_uiBlkCbpVlcIdx ? -1 : 1);
+      }
+    }
+
+    if (bRenorm)
+    {
+      m_ucBlkCBPTableCounterSum[n] = 0;
+      for (UInt uiIdx = 0; uiIdx < 2; uiIdx++)
+      {
+        m_ucBlkCBPTableCounter[n][uiIdx] >>= 1;
+      }
+    }
+#else
     y = m_uiBlkCBPTableD[n][cy];
     m_uiBlkCBPTableD[n][cy] = x;
     m_uiBlkCBPTableD[n][cx] = y;
@@ -1297,6 +1520,7 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
     m_uiBlkCBPTableE[n][y] = cx;
     if(n==0)
       m_uiBlkCbpVlcIdx += cx == m_uiBlkCbpVlcIdx ? 0 : (cx < m_uiBlkCbpVlcIdx ? -1 : 1);
+#endif
     
   }
   
