@@ -111,6 +111,19 @@ protected:
   UInt          m_uiSplitTableE[4][7];
   UInt          m_uiSplitTableD[4][7];
 #endif
+
+#if CAVLC_COUNTER_ADAPT
+  UChar         m_ucCBFTableCounter    [2][4];
+  UChar         m_ucBlkCBPTableCounter [2][2];
+  UChar         m_ucMI1TableCounter       [4];
+  UChar         m_ucSplitTableCounter  [4][4];
+
+  UChar         m_ucCBFTableCounterSum[2];
+  UChar         m_ucSplitTableCounterSum[4];
+  UChar         m_ucBlkCBPTableCounterSum[2];
+  UChar         m_ucMI1TableCounterSum;
+#endif
+
   Void  xCheckCoeff( TCoeff* pcCoef, UInt uiSize, UInt uiDepth, UInt& uiNumofCoeff, UInt& uiPart );
   
   Void  xWriteCode            ( UInt uiCode, UInt uiLength );
