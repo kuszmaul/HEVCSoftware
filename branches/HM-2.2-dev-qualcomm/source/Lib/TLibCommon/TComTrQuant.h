@@ -68,7 +68,12 @@
 typedef struct
 {
   Int significantBits[16][2];
+#if PCP_SIGMAP_SIMPLE_LAST
+  Int lastXBits[32];
+  Int lastYBits[32];
+#else  
   Int lastBits[16][2];
+#endif
   Int greaterOneBits[6][2][5][2];
   Int blockCbpBits[4][2];
   Int scanZigzag[2];            ///< flag for zigzag scan
@@ -209,10 +214,11 @@ public:
                                     const UInt                      uiPosY,
                                     const UInt                      uiLog2BlkSize,
                                     const UInt                      uiStride );
+#if !PCP_SIGMAP_SIMPLE_LAST
   static UInt     getLastCtxInc    ( const UInt                      uiPosX,
                                     const UInt                      uiPosY,
                                     const UInt                      uiLog2BlkSize );
-  
+#endif
 protected:
   Long*    m_plTempCoeff;
   UInt*    m_puiQuantMtx;
@@ -283,7 +289,31 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
                                     UInt&                           uiAbsSum,
                                     TextType                        eTType,
                                     UInt                            uiAbsPartIdx );
+#if PCP_SIGMAP_SIMPLE_LAST
+  __inline Double xGetRateLast  ( UInt                            uiPosX,
+                                  UInt                            uiPosY ) const;
+
+  __inline UInt xGetCodedLevel  ( Double&                         rd64UncodedCost,
+                                  Double&                         rd64CodedCost,
+                                  Double&                         rd64CodedLastCost,
+                                  UInt&                           uiBestNonZeroLevel,
+                                  Long                            lLevelDouble,
+                                  UInt                            uiMaxAbsLevel,
+                                  UShort                          ui16CtxNumSig,
+                                  UShort                          ui16CtxNumOne,
+                                  UShort                          ui16CtxNumAbs,
+                                  Int                             iQBits,
+                                  Double                          dTemp,
+                                  UShort                          ui16CtxBase ) const;
   
+  __inline Double xGetICRateCost( UInt                            uiAbsLevel,
+                                  UShort                          ui16CtxNumOne,
+                                  UShort                          ui16CtxNumAbs,
+                                  UShort                          ui16CtxBase   ) const;
+
+  __inline Double xGetRateSigCoef ( UShort                        uiSignificance,
+                                    UShort                        ui16CtxNumSig ) const;
+#else
   __inline UInt  xGetCodedLevel    ( Double&                         rd64UncodedCost,
                                     Double&                         rd64CodedCost,
                                     Long                            lLevelDouble,
@@ -301,6 +331,7 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
                                     UShort                          ui16CtxNumOne,
                                     UShort                          ui16CtxNumAbs,
                                     UShort                          ui16CtxBase   ) const;
+#endif
   __inline Double xGetICost        ( Double                          dRate         ) const; 
   __inline Double xGetIEPRate      (                                               ) const;
   

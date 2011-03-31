@@ -122,6 +122,10 @@ extern       UInt   g_auiAntiScan8[64];                   // 2D context mapping 
 #if QC_MDCS
 extern       UInt*  g_auiSigLastScan[3][ MAX_CU_DEPTH ];  // raster index from scanning index (zigzag, hor, ver)
 #endif //QC_MDCS
+#if PCP_SIGMAP_SIMPLE_LAST
+extern       UInt   g_uiCtxXYOffset[ MAX_CU_DEPTH ]; 
+extern       UInt   g_uiCtxXY      [ 31 ]; 
+#endif
 
 // ====================================================================================================================
 // CAVLC table
