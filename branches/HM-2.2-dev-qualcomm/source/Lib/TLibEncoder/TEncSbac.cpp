@@ -1003,6 +1003,16 @@ Void TEncSbac::xCheckCoeff( TCoeff* pcCoef, UInt uiSize, UInt uiDepth, UInt& uiN
 UInt xCheckCoeffPlainCNoRecur( const TCoeff* pcCoef, UInt uiSize, UInt uiDepth );
 
 #if PCP_SIGMAP_SIMPLE_LAST
+/** Encode (X,Y) position of the last significant coefficient
+ * \param uiPosX X component of last coefficient
+ * \param uiPosY Y component of last coefficient
+ * \param uiWidth block width
+ * \param eTType plane type / luminance or chrominance
+ * \param uiCTXIdx block size context
+ * \param uiScanIdx scan type (zig-zag, hor, ver)
+ * \returns Void
+ * This method encodes the X and Y component within a block of the last significant coefficient.
+ */
 __inline Void TEncSbac::codeLastSignificantXY( UInt uiPosX, UInt uiPosY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx )
 {  
   UInt  uiCtxLast;
