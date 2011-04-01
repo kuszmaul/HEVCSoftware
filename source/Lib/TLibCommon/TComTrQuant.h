@@ -290,36 +290,18 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
                                      UInt&                           uiAbsSum,
                                      TextType                        eTType,
                                      UInt                            uiAbsPartIdx );
-#if PCP_SIGMAP_SIMPLE_LAST
-  __inline Double xGetRateLast  ( UInt                            uiPosX,
-                                  UInt                            uiPosY ) const;
-
-  __inline UInt xGetCodedLevel  ( Double&                         rd64UncodedCost,
-                                  Double&                         rd64CodedCost,
-                                  Double&                         rd64CodedLastCost,
-                                  UInt&                           uiBestNonZeroLevel,
-                                  Long                            lLevelDouble,
-                                  UInt                            uiMaxAbsLevel,
-                                  UShort                          ui16CtxNumSig,
-                                  UShort                          ui16CtxNumOne,
-                                  UShort                          ui16CtxNumAbs,
-                                  Int                             iQBits,
-                                  Double                          dTemp,
-                                  UShort                          ui16CtxBase ) const;
-  
-  __inline Double xGetICRateCost( UInt                            uiAbsLevel,
-                                  UShort                          ui16CtxNumOne,
-                                  UShort                          ui16CtxNumAbs,
-                                  UShort                          ui16CtxBase   ) const;
-
-  __inline Double xGetRateSigCoef ( UShort                        uiSignificance,
-                                    UShort                        ui16CtxNumSig ) const;
-#else
   __inline UInt  xGetCodedLevel    ( Double&                         rd64UncodedCost,
                                      Double&                         rd64CodedCost,
+#if PCP_SIGMAP_SIMPLE_LAST
+                                     Double&                         rd64CodedLastCost,
+                                     UInt&                           ruiBestNonZeroLevel,
+                                     Long                            lLevelDouble,
+                                     UInt                            uiMaxAbsLevel,
+#else
                                      Long                            lLevelDouble,
                                      UInt                            uiMaxAbsLevel,
                                      bool                            bLastScanPos,
+#endif
                                      UShort                          ui16CtxNumSig,
                                      UShort                          ui16CtxNumOne,
                                      UShort                          ui16CtxNumAbs,
@@ -330,14 +312,21 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
                                      Double                          dTemp,
                                      UShort                          ui16CtxBase   ) const;
   __inline Double xGetICRateCost   ( UInt                            uiAbsLevel,
-                                     bool                            bLastScanPos,
+#if !PCP_SIGMAP_SIMPLE_LAST
+                                     Bool                            bLastScanPos,
                                      UShort                          ui16CtxNumSig,
+#endif
                                      UShort                          ui16CtxNumOne,
                                      UShort                          ui16CtxNumAbs,
 #if E253
                                      UShort                          ui16AbsGoRice,
 #endif
                                      UShort                          ui16CtxBase   ) const;
+#if PCP_SIGMAP_SIMPLE_LAST
+  __inline Double xGetRateLast     ( UInt                            uiPosX,
+                                     UInt                            uiPosY        ) const;
+  __inline Double xGetRateSigCoef (  UShort                          uiSignificance,
+                                     UShort                          ui16CtxNumSig ) const;
 #endif
   __inline Double xGetICost        ( Double                          dRate         ) const; 
   __inline Double xGetIEPRate      (                                               ) const;
