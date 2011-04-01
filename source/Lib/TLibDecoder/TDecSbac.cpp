@@ -1026,6 +1026,16 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
 
 
 #if PCP_SIGMAP_SIMPLE_LAST
+/** Parse (X,Y) position of the last significant coefficient
+ * \param uiPosLastX reference to X component of last coefficient
+ * \param uiPosLastY reference to Y component of last coefficient
+ * \param uiWidth block width
+ * \param eTType plane type / luminance or chrominance
+ * \param uiCTXIdx block size context
+ * \param uiScanIdx scan type (zig-zag, hor, ver)
+ * \returns Void
+ * This method decodes the X and Y component within a block of the last significant coefficient.
+ */
 __inline Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx )
 {
   UInt uiLast;
@@ -1047,6 +1057,11 @@ __inline Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLas
     {
       break;
     }
+  }
+
+  if( uiScanIdx == SCAN_VER )
+  {
+    swap( uiPosLastX, uiPosLastY );
   }
 }
 #endif
@@ -1115,10 +1130,6 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
     //===== decode last significant =====
     UInt uiPosLastX, uiPosLastY;
     parseLastSignificantXY( uiPosLastX, uiPosLastY, uiWidth, eTType, uiCTXIdx, uiScanIdx );
-    if( uiScanIdx == SCAN_VER )
-    {
-      swap( uiPosLastX, uiPosLastY );
-    }
     UInt uiBlkPosLast      = uiPosLastX + (uiPosLastY<<uiLog2BlockSize);
     pcCoef[ uiBlkPosLast ] = 1;
 

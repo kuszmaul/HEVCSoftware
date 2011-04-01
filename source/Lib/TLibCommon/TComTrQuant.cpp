@@ -4502,12 +4502,32 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
 
 #if PCP_SIGMAP_SIMPLE_LAST
 
+/** Calculates the cost of signaling the last signifcant coefficient in the block
+ * \param uiPosX X coordinate of the last significant coefficient
+ * \param uiPosY Y coordinate of the last significant coefficient
+ * \returns cost of last significant coefficient
+ */
 __inline Double TComTrQuant::xGetRateLast  ( UInt                            uiPosX,
                                             UInt                            uiPosY ) const
 {
   return xGetICost( m_pcEstBitsSbac->lastXBits[ uiPosX ] + m_pcEstBitsSbac->lastYBits[ uiPosY ] );
 }
 
+/** Get the best level in RD sense
+ * \param rd64UncodedCost reference to uncoded cost
+ * \param rd64CodedCost reference to current coded cost
+ * \param rd64CodedLastCost reference to coded cost of coefficient without the significance cost
+ * \param lLevelDouble reference to unscaled quantized level
+ * \param uiMaxAbsLevel scaled quantized level
+ * \param ui16CtxNumSig current ctxInc for coeff_abs_significant_flag
+ * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
+ * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_minus2 (remaining bins of coeff_abs_level_minus1 in AVC)
+ * \param iQBits quantization step size
+ * \param dTemp correction factor
+ * \param ui16CtxBase current global offset for coeff_abs_level_greater1 and coeff_abs_level_minus2
+ * \returns best quantized transform level for given scan position
+ * This method calculates the best quantized transform level for a given scan position.
+ */
 __inline UInt TComTrQuant::xGetCodedLevel  ( Double&                         rd64UncodedCost,
                                             Double&                         rd64CodedCost,
                                             Double&                         rd64CodedLastCost,
@@ -4562,6 +4582,13 @@ __inline UInt TComTrQuant::xGetCodedLevel  ( Double&                         rd6
   return uiBestAbsLevel;
 }
 
+/** Calculates the cost for specific absolute transform level
+ * \param uiAbsLevel scaled quantized level
+ * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
+ * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
+ * \param ui16CtxBase current global offset for coeff_abs_level_greater1 and coeff_abs_level_greater2
+ * \returns cost of given absolute transform level
+ */
 __inline Double TComTrQuant::xGetICRateCost  ( UInt                            uiAbsLevel,
                                               UShort                          ui16CtxNumOne,
                                               UShort                          ui16CtxNumAbs,
@@ -4589,6 +4616,11 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
   return xGetICost( iRate );
 }
 
+/** Calculates the cost for the significance of a coefficient
+ * \param uiSignificance coefficient significance
+ * \param ui16CtxNumSig current ctxInc for coeff_abs_significant_flag
+ * \returns cost of coefficient significance
+ */
 __inline Double TComTrQuant::xGetRateSigCoef ( UShort                          uiSignificance,
                                               UShort                          ui16CtxNumSig ) const
 {
