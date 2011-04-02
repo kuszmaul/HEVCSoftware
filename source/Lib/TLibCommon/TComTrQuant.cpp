@@ -4743,7 +4743,6 @@ __inline UInt TComTrQuant::xGetCodedLevel  ( Double&                         rd6
                                              Double                          dTemp,
                                              UShort                          ui16CtxBase   ) const
 {
-  ruiBestNonZeroLevel   = 0;
   UInt   uiBestAbsLevel = 0;
   Double dErr1          = Double( lLevelDouble );
   
@@ -4751,6 +4750,7 @@ __inline UInt TComTrQuant::xGetCodedLevel  ( Double&                         rd6
 #if PCP_SIGMAP_SIMPLE_LAST
   rd64CodedCost   = rd64UncodedCost + xGetRateSigCoef( 0, ui16CtxNumSig );
 
+  ruiBestNonZeroLevel   = 0;
   if( uiMaxAbsLevel )
   {
     UInt uiAbsLevel     = uiMaxAbsLevel;
