@@ -140,6 +140,18 @@ Void TEncCavlc::resetEntropy()
 #endif
   
   m_uiMITableVlcIdx = 0;  
+
+#if CAVLC_COUNTER_ADAPT
+  ::memset(m_ucCBFTableCounter,        0,        2*4*sizeof(UChar));
+  ::memset(m_ucBlkCBPTableCounter,     0,        2*2*sizeof(UChar));
+  ::memset(m_ucMI1TableCounter,        0,          4*sizeof(UChar));
+  ::memset(m_ucSplitTableCounter,      0,        4*4*sizeof(UChar));
+
+  m_ucCBFTableCounterSum[0]    = m_ucCBFTableCounterSum[1]    = 0;
+  m_ucSplitTableCounterSum[0]  = m_ucSplitTableCounterSum[1]  = m_ucSplitTableCounterSum[2]= m_ucSplitTableCounterSum[3] = 0;
+  m_ucBlkCBPTableCounterSum[0] = m_ucBlkCBPTableCounterSum[1] = 0;
+  m_ucMI1TableCounterSum = 0;
+#endif
 }
 
 UInt* TEncCavlc::GetLP8Table()
@@ -651,7 +663,10 @@ Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
   UInt cx = m_uiSplitTableE[uiDepth][x];
   /* Adapt table */
   if ( m_bAdaptFlag)
-  {   
+  {
+#if CAVLC_COUNTER_ADAPT
+    adaptCodeword(cx, m_ucSplitTableCounter[uiDepth],  m_ucSplitTableCounterSum[uiDepth],   m_uiSplitTableD[uiDepth],  m_uiSplitTableE[uiDepth], 4);
+#else
     if(cx>0)
     {
       UInt cy = Max(0,cx-1);
@@ -661,6 +676,7 @@ Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
       m_uiSplitTableE[uiDepth][x] = cy;
       m_uiSplitTableE[uiDepth][y] = cx; 
     }
+#endif
   }
   return;
 }
@@ -897,6 +913,7 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiInterDir = pcCU->getInterDir   ( uiAbsPartIdx );
   uiInterDir--;
+
   
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   if ( pcCU->getSlice()->getRefIdxCombineCoding() )
@@ -904,7 +921,11 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
   if(pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) <= 2 && pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) <= 2)
 #endif
   {
+#if CAVLC_COUNTER_ADAPT
+    Int x,cx;
+#else
     Int x,cx,y,cy;
+#endif//   
     Int iRefFrame0,iRefFrame1;
     UInt uiIndex;
     
@@ -1003,7 +1024,10 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
     UInt vlcn = g_auiMITableVlcNum[m_uiMITableVlcIdx];    
 #endif
     if ( m_bAdaptFlag )
-    {        
+    {
+#if CAVLC_COUNTER_ADAPT
+      adaptCodeword(cx, m_ucMI1TableCounter,  m_ucMI1TableCounterSum,   m_uiMITableD,  m_uiMITableE, 4);
+#else
       cy = Max(0,cx-1);
       y = m_uiMITableD[cy];
       m_uiMITableD[cy] = x;
@@ -1011,6 +1035,7 @@ Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
       m_uiMITableE[x] = cy;
       m_uiMITableE[y] = cx;   
       m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
+#endif
     }
     
     {
@@ -1233,7 +1258,12 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
 {
   if (eType == TEXT_ALL)
   {
+#if CAVLC_COUNTER_ADAPT
+    Int n,x,cx;
+#else
     Int n,x,cx,y,cy;
+#endif//   
+
     UInt uiCBFY = pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA, 0);
     UInt uiCBFU = pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U, 0);
     UInt uiCBFV = pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V, 0);
@@ -1248,6 +1278,10 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
     
     if ( m_bAdaptFlag )
     {                
+
+#if CAVLC_COUNTER_ADAPT
+      adaptCodeword(cx, m_ucCBFTableCounter[n],  m_ucCBFTableCounterSum[n],  m_uiCBPTableD[n],  m_uiCBPTableE[n], 4);
+#else
       cy = Max(0,cx-1);
       y = m_uiCBPTableD[n][cy];
       m_uiCBPTableD[n][cy] = x;
@@ -1255,6 +1289,7 @@ Void TEncCavlc::codeCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UI
       m_uiCBPTableE[n][x] = cy;
       m_uiCBPTableE[n][y] = cx;
       m_uiCbpVlcIdx[n] += cx == m_uiCbpVlcIdx[n] ? 0 : (cx < m_uiCbpVlcIdx[n] ? -1 : 1);
+#endif
     }
     xWriteVlc( vlcn, cx );
   }
@@ -1279,9 +1314,13 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
   assert(uiCbf > 0);
   
   uiCbf --;
-  
+
+#if CAVLC_COUNTER_ADAPT
+  Int x,cx;
+#else
   Int x,cx,y,cy;
-  
+#endif//
+
   UInt n = (pcCU->isIntra(uiAbsPartIdx) && eType == TEXT_LUMA)? 0:1;
   cx = m_uiBlkCBPTableE[n][uiCbf];
   x = uiCbf;
@@ -1289,15 +1328,20 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
   
   if ( m_bAdaptFlag )
   {                
+
+#if CAVLC_COUNTER_ADAPT
+    adaptCodeword(cx, m_ucBlkCBPTableCounter[n],  m_ucBlkCBPTableCounterSum[n],  m_uiBlkCBPTableD[n],  m_uiBlkCBPTableE[n], 2);
+#else
     cy = Max(0,cx-1);
     y = m_uiBlkCBPTableD[n][cy];
     m_uiBlkCBPTableD[n][cy] = x;
     m_uiBlkCBPTableD[n][cx] = y;
     m_uiBlkCBPTableE[n][x] = cy;
     m_uiBlkCBPTableE[n][y] = cx;
+#endif
     if(n==0)
       m_uiBlkCbpVlcIdx += cx == m_uiBlkCbpVlcIdx ? 0 : (cx < m_uiBlkCbpVlcIdx ? -1 : 1);
-    
+  
   }
   
   xWriteVlc( vlcn, cx );
