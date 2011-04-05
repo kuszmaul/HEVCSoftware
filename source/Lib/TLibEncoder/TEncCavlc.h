@@ -76,8 +76,10 @@ protected:
   UInt          m_uiMaxAlfCtrlDepth;
   UInt          m_uiLPTableE4[3][32];
   UInt          m_uiLPTableD4[3][32];
+#if !CAVLC_COEF_LRG_BLK
   UInt          m_uiLPTableE8[10][128];
   UInt          m_uiLPTableD8[10][128];
+#endif
   UInt          m_uiLastPosVlcIndex[10];
   
 #if LCEC_INTRA_MODE
@@ -138,8 +140,12 @@ protected:
 #endif
   Void  xWriteVlc             ( UInt uiTableNumber, UInt uiCodeNumber );
 
+#if CAVLC_COEF_LRG_BLK
+  Void  xCodeCoeff             ( TCoeff* scoeff, Int n, Int blSize);
+#else
   Void  xCodeCoeff4x4          ( TCoeff* scoeff, Int iTableNumber );
   Void  xCodeCoeff8x8          ( TCoeff* scoeff, Int iTableNumber );
+#endif
   
   UInt  xConvertToUInt        ( Int iValue ) {  return ( iValue <= 0) ? -iValue<<1 : (iValue<<1)-1; }
   
@@ -147,7 +153,9 @@ public:
   
   Void  resetEntropy          ();
 
+#if !CAVLC_COEF_LRG_BLK
   UInt* GetLP8Table();
+#endif
   UInt* GetLP4Table();
 #if QC_MOD_LCEC
   UInt* GetLastPosVlcIndexTable();

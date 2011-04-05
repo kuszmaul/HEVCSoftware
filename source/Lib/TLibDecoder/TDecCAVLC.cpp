@@ -300,7 +300,9 @@ Void TDecCavlc::resetEntropy          (TComSlice* pcSlice)
   m_bRunLengthCoding = ! pcSlice->isIntra();
   m_uiRun = 0;
   
+#if !CAVLC_COEF_LRG_BLK
   ::memcpy(m_uiLPTableD8,        g_auiLPTableD8,        10*128*sizeof(UInt));
+#endif
   ::memcpy(m_uiLPTableD4,        g_auiLPTableD4,        3*32*sizeof(UInt));
   ::memcpy(m_uiLastPosVlcIndex,  g_auiLastPosVlcIndex,  10*sizeof(UInt));
   
@@ -1423,13 +1425,24 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   // initialize scan
   const UInt*  pucScan;
   
+#if CAVLC_COEF_LRG_BLK
+  UInt maxBlSize = (eTType==TEXT_LUMA)? 32:8;
+  UInt uiBlSize = Min(maxBlSize,uiWidth);
+  UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : uiBlSize];
+  UInt uiNoCoeff = uiBlSize*uiBlSize;
+#else
   //UInt uiConvBit = g_aucConvertToBit[ Min(8,uiWidth) ];
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : Min(8,uiWidth)    ];
+#endif
   pucScan        = g_auiFrameScanXY  [ uiConvBit + 1 ];
   
 #if QC_MDCS
   UInt uiBlkPos;
+#if CAVLC_COEF_LRG_BLK
+  UInt uiLog2BlkSize = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : uiBlSize] + 2;
+#else
   UInt uiLog2BlkSize = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : Min(8,uiWidth)    ] + 2;
+#endif
   const UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
 #endif //QC_MDCS
   
@@ -1458,7 +1471,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   
   UInt uiScanning;
   
+#if CAVLC_COEF_LRG_BLK
+  static TCoeff scoeff[1024];
+#else
   TCoeff scoeff[64];
+#endif
   Int iBlockType;
   if( uiSize == 2*2 )
   {
@@ -1471,7 +1488,12 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 #else
     iBlockType = pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType();
 #endif
+
+#if CAVLC_COEF_LRG_BLK
+    xParseCoeff( scoeff, iBlockType, 4 );
+#else
     xParseCoeff4x4( scoeff, iBlockType );
+#endif
     
     for (uiScanning=0; uiScanning<4; uiScanning++)
     {
@@ -1493,7 +1515,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 #else
     iBlockType = pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType();
 #endif
+#if CAVLC_COEF_LRG_BLK
+    xParseCoeff( scoeff, iBlockType, 4 );
+#else
     xParseCoeff4x4( scoeff, iBlockType );
+#endif
     
     for (uiScanning=0; uiScanning<16; uiScanning++)
     {
@@ -1511,7 +1537,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       iBlockType = eTType-2;
     else
       iBlockType = 2 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+#if CAVLC_COEF_LRG_BLK
+    xParseCoeff( scoeff, iBlockType, 8 );
+#else
     xParseCoeff8x8( scoeff, iBlockType );
+#endif
     
     for (uiScanning=0; uiScanning<64; uiScanning++)
     {
@@ -1533,8 +1563,24 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         iBlockType = eTType-2;
       else
         iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+#if CAVLC_COEF_LRG_BLK 
+      xParseCoeff( scoeff, iBlockType, uiBlSize );
+#else
       xParseCoeff8x8( scoeff, iBlockType );
+#endif
       
+#if CAVLC_COEF_LRG_BLK
+      for (uiScanning=0; uiScanning<uiNoCoeff; uiScanning++)
+      {
+#if QC_MDCS 
+        uiBlkPos = g_auiSigLastScan[uiScanIdx][uiLog2BlkSize-1][uiScanning]; 
+        uiBlkPos = (uiBlkPos/uiBlSize)* uiWidth + (uiBlkPos&(uiBlSize-1));
+        piCoeff[ uiBlkPos ] =  scoeff[uiNoCoeff-uiScanning-1];
+#else
+        piCoeff[(pucScan[uiScanning]/uiBlSize)*uiWidth + (pucScan[uiScanning]&(uiBlSize-1))]=scoeff[uiNoCoeff-uiScanning-1];      
+#endif
+      }
+#else
       for (uiScanning=0; uiScanning<64; uiScanning++)
       {  
 #if QC_MDCS
@@ -1545,6 +1591,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         piCoeff[(pucScan[uiScanning]/8)*uiWidth + (pucScan[uiScanning]%8)] = scoeff[63-uiScanning];
 #endif //QC_MDCS
       }
+#endif
       return;
     }
     
@@ -1556,6 +1603,19 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         iBlockType = eTType-2;
       else
         iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
+
+#if CAVLC_COEF_LRG_BLK
+      xParseCoeff( scoeff, iBlockType, uiBlSize );
+      for (uiScanning=0; uiScanning<uiNoCoeff; uiScanning++)
+      {
+#if QC_MDCS
+        uiBlkPos = g_auiSigLastScan[uiScanIdx][uiLog2BlkSize-1][uiScanning]; 
+        piCoeff[ uiBlkPos ] =  scoeff[uiNoCoeff - uiScanning - 1];
+#else
+        piCoeff[ pucScan[ uiScanning ] ] = scoeff[uiNoCoeff - uiScanning - 1];
+#endif //QC_MDCS
+      }
+#else
       xParseCoeff8x8( scoeff, iBlockType );
       
       for (uiScanning=0; uiScanning<64; uiScanning++)
@@ -1567,6 +1627,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         piCoeff[ pucScan[ uiScanning ] ] = scoeff[63-uiScanning];
 #endif //QC_MDCS
       }
+#endif
     }
   }
   
@@ -1871,7 +1932,11 @@ UInt TDecCavlc::xGetBit()
 
 Int TDecCavlc::xReadVlc( Int n )
 {
+#if CAVLC_COEF_LRG_BLK
+  assert( n>=0 && n<=13 );
+#else
   assert( n>=0 && n<=11 );
+#endif
   
   UInt zeroes=0, done=0, tmp;
   UInt cw, bit;
@@ -2035,10 +2100,69 @@ Int TDecCavlc::xReadVlc( Int n )
       val--;
     }
   }
+#if CAVLC_COEF_LRG_BLK
+  else if (n == 12)
+  {
+    while (!done)
+    {
+      m_pcBitstream->pseudoRead(32,val);
+      if (val)
+      {
+        tmp = 31;
+        while(!done)
+        {
+          if( val>>tmp )
+          {
+            xReadCode(32-tmp, val);
+            lead += 31-tmp;
+            xReadCode(6, val);
+            val += (lead<<6);
+            done = 1;
+          }
+          tmp--;
+        }    
+      }
+      else
+      {
+        xReadCode(32, val);
+        lead += 32;
+      }
+    }
+  }
+  else if (n == 13)
+  {
+    while (!done)
+    {
+      m_pcBitstream->pseudoRead(32,val);
+      if (val)
+      {
+        tmp = 31;
+        while(!done)
+        {
+          if(val>>tmp)
+          {
+            xReadCode(32-tmp, cw);
+            zeroes += 31-tmp;
+            xReadCode(4, cw);
+            done = 1;
+          }
+          tmp--;
+        } 
+      }
+      else
+      {
+        xReadCode(32, val);
+        zeroes += 32;
+      }
+    }
+    val = (zeroes<<4)+cw;
+  }
+#endif
   
   return val;
 }
 
+#if !CAVLC_COEF_LRG_BLK
 Void TDecCavlc::xParseCoeff4x4( TCoeff* scoeff, Int n )
 {
   Int i;
@@ -2225,6 +2349,7 @@ Void TDecCavlc::xParseCoeff4x4( TCoeff* scoeff, Int n )
   
   return;
 }
+#endif
 
 #if QC_MOD_LCEC
 
@@ -2314,6 +2439,7 @@ Void TDecCavlc::xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn
 #endif
 
 
+#if !CAVLC_COEF_LRG_BLK
 Void TDecCavlc::xParseCoeff8x8(TCoeff* scoeff, int n)
 {
   Int i;
@@ -2357,6 +2483,7 @@ Void TDecCavlc::xParseCoeff8x8(TCoeff* scoeff, int n)
     y = m_uiLPTableD8[n][cy];
     m_uiLPTableD8[n][cy] = x;
     m_uiLPTableD8[n][cx] = y;
+
     // ADAPT_VLC_NUM
     m_uiLastPosVlcIndex[n] += cx == m_uiLastPosVlcIndex[n] ? 0 : (cx < m_uiLastPosVlcIndex[n] ? -1 : 1);
   }
@@ -2496,3 +2623,157 @@ Void TDecCavlc::xParseCoeff8x8(TCoeff* scoeff, int n)
   }
   return;
 }
+#endif
+
+
+#if CAVLC_COEF_LRG_BLK
+/** Function for parsing a block of transform coeffcients in CAVLC.
+ * \param scoeff pointer to transform coefficient buffer
+ * \param n block type information, e.g. luma, chroma, intra, inter, etc. 
+ * \param blSize block size
+ * \returns 
+ * This function performs parsing for a block of transform coefficient in CAVLC. 
+ */
+Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
+{
+  static const Int switch_thr[10] = {49,49,0,49,49,0,49,49,49,49};
+  Int i, noCoeff=blSize*blSize;;
+  UInt sign;
+  LastCoeffStruct combo;
+  Int cn, maxrun, tmprun;
+  Int atable[5] = {4,6,14,28,0xfffffff};
+  Int done, tr1, tmp;
+  Int sum_big_coef = 0;
+
+  memset(scoeff,0,sizeof(TCoeff)*noCoeff);
+
+  /* Get the last nonzero coeff */
+  if(blSize >=8 )
+  {
+    /* Decode according to current LP table */
+    // ADAPT_VLC_NUM
+    tmp = g_auiLastPosVlcNum[n][Min(16,m_uiLastPosVlcIndex[n])];
+    cn = xReadVlc( tmp );
+    xLastLevelIndInv(combo.level, combo.last_pos, blSize, cn);
+
+    /* Adapt LP table */
+    cn = (blSize==8)?cn:(cn>>2);
+    // ADAPT_VLC_NUM
+    m_uiLastPosVlcIndex[n] += cn == m_uiLastPosVlcIndex[n] ? 0 : (cn < m_uiLastPosVlcIndex[n] ? -1 : 1);
+  }
+  else
+  {
+    /* Get the last nonzero coeff */
+    Int y,cy;
+    Int nTab = max(0,n-2);
+    
+    /* Decode according to current LP table */
+    tmp = xReadVlc( 2 );
+    cn = m_uiLPTableD4[nTab][tmp];
+    combo.level = (cn>15)?1:0;
+    combo.last_pos = cn&0x0f;
+    
+    /* Adapt LP table */
+    cy = Max( 0, tmp-1 );
+    y = m_uiLPTableD4[nTab][cy];
+    m_uiLPTableD4[nTab][cy] = cn;
+    m_uiLPTableD4[nTab][tmp] = y;
+  }
+
+  if (combo.level == 1)
+  {
+    tmp = xReadVlc( 0 );
+    sign = tmp&1;
+    tmp = (tmp>>1)+2;
+    tr1=0;
+  }
+  else
+  {
+    tmp = 1;
+    xReadFlag( sign );
+    tr1=1;
+  }
+
+  i = noCoeff - 1 - combo.last_pos;
+  scoeff[i++] = sign? -tmp:tmp;
+
+  done = 0;
+  const UInt *vlcTable = (n == 2||n == 5)? ((blSize<=8)? g_auiVlcTable8x8Intra:g_auiVlcTable16x16Intra):
+    ((blSize<=8)? g_auiVlcTable8x8Inter:g_auiVlcTable16x16Inter);
+  const UInt **pLumaRunTr1 = (blSize==4)? g_pLumaRunTr14x4:g_pLumaRunTr18x8;
+  while (!done && i < noCoeff)
+  {
+    maxrun = noCoeff - 1 -i;
+    tmprun = min(maxrun,28);
+    tmp = vlcTable[tmprun];
+
+    /* Go into run mode */
+    cn = xReadVlc( tmp );
+    if (n == 2 || n == 5)
+    {
+      xRunLevelIndInv(&combo, maxrun, pLumaRunTr1[tr1][tmprun], cn);
+    }
+    else
+    {
+      xRunLevelIndInterInv(&combo, maxrun, cn);
+    }
+
+    i += combo.last_pos;
+    if (i < noCoeff)
+    {
+      if (combo.level == 1)
+      {
+        tmp = xReadVlc( 0 );
+        sign = tmp&1;
+        tmp = (tmp>>1)+2;
+
+        sum_big_coef += tmp;
+        if (blSize==4 ||i > switch_thr[n] || sum_big_coef > 2)
+        {
+          done = 1;
+        }
+      }
+      else
+      {
+        tmp = 1;
+        xReadFlag( sign );
+      }
+      scoeff[i++] = sign? -tmp:tmp;
+    }
+
+    if (tr1==0 || combo.level != 0)
+    {
+      tr1=0;
+    }
+    else if( tr1 < MAX_TR1)
+    {
+      tr1++;
+    }
+  }
+
+  if (i < noCoeff)
+  {
+    /* Get the rest in level mode */
+    Int vlc_adaptive = 0;
+    while (i < noCoeff)
+    {
+      tmp = xReadVlc( vlc_adaptive );
+
+      if (tmp)
+      {
+        xReadFlag( sign );
+        scoeff[i] = sign?-tmp:tmp;
+        if (tmp > atable[vlc_adaptive])
+        {
+          vlc_adaptive++;
+        }
+      }
+      i++;
+    }
+  }
+
+  return;
+}
+
+#endif
+

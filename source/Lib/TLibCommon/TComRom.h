@@ -148,8 +148,10 @@ extern const UChar  g_aucLenTableTO4 [4][5];
 extern const UChar  g_aucACTab[6];
 extern const UChar  g_aucFrameBits[32];
 
+#if !CAVLC_COEF_LRG_BLK
 extern const UInt    g_auiLPTableE8[8][128];
 extern const UInt    g_auiLPTableD8[8][128];
+#endif
 extern const UInt    g_auiLPTableE4[3][32];
 extern const UInt    g_auiLPTableD4[3][32];
 extern const UInt    g_auiLastPosVlcIndex[10];
@@ -179,6 +181,11 @@ extern const UInt    g_acstructLumaRun8x8[28][29];
 extern const LastCoeffStruct g_acstructLumaRun8x8[29][127];
 #endif
 
+#if CAVLC_COEF_LRG_BLK
+extern const UInt   g_auiVlcTable16x16Intra[29];
+extern const UInt   g_auiVlcTable16x16Inter[29];
+#endif
+
 #if LCEC_INTRA_MODE
 extern const UInt huff17_2[2][17];
 extern const UInt lengthHuff17_2[2][17];
@@ -187,8 +194,13 @@ extern const UInt lengthHuff34_2[2][34];
 #endif
 
 #if QC_MOD_LCEC
+#if CAVLC_COEF_LRG_BLK
+extern const UInt   *g_pLumaRunTr14x4[5]; 
+extern const UInt   *g_pLumaRunTr18x8[5]; 
+#else
 extern const UInt    g_auiLumaRunTr14x4[5][15];
 extern const UInt    g_auiLumaRunTr18x8[5][29];
+#endif
 #endif
 
 extern const UInt    g_auiCBPTableE[2][8];
@@ -293,7 +305,7 @@ __inline UInt xRunLevelInd(Int lev, Int run, Int maxrun, UInt lrg1Pos)
  * \param maxrun maximum length of run for a given coefficient location
  * \returns the codeword index
  * This function derives codeword index in CAVLC run-level coding .
-*/
+ */
 __inline UInt xRunLevelIndInter(Int lev, Int run, Int maxrun)
 {
   UInt cn;
@@ -347,6 +359,63 @@ __inline UInt xLeadingZeros(UInt uiCode)
 #endif
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
+
+#if CAVLC_COEF_LRG_BLK
+/** Function for deriving codeword index in coding last significant position and level information.
+ * \param lev a value indicating coefficient level greater than one or not
+ * \param last_pos last significant coefficient position
+ * \param N block size
+ * \returns the codeword index
+ * This function derives codeword index in coding last significant position and level information in CAVLC. 
+ */
+__inline UInt xLastLevelInd(Int lev, Int last_pos, Int N)
+{
+  UInt cx;
+  UInt uiConvBit = g_aucConvertToBit[N]+2;
+
+  if (lev==0)
+  {
+    cx = ((last_pos + (last_pos>>uiConvBit))>>uiConvBit)+last_pos;
+  }
+  else
+  {
+    if (last_pos<N)
+    {
+      cx = (last_pos+1)<<uiConvBit;
+    }
+    else
+    {
+      cx = (0x01<<(uiConvBit<<1)) + last_pos;
+    }
+  }
+  return(cx);
+}
+
+__inline void xLastLevelIndInv(Int& lev, Int& last_pos, Int N, UInt cx)
+{
+  UInt uiConvBit = g_aucConvertToBit[N]+2;
+  Int N2 = 0x01<<(uiConvBit<<1);
+
+  if(cx <= N2+N)
+  {
+    if(cx && (cx&(N-1))==0)
+    {
+      lev = 1;
+      last_pos = (cx>>uiConvBit)-1;
+    }
+    else
+    {
+      lev = 0;
+      last_pos = cx - (cx>>uiConvBit);
+    }
+  }
+  else
+  {
+    lev = 1;
+    last_pos = cx - N2;
+  }
+}
+#endif
 
 
 #if CHROMA_CODEWORD_SWITCH 

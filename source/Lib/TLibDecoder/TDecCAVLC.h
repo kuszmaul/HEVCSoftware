@@ -66,8 +66,12 @@ protected:
   
   UInt  xGetBit             ();
   Int   xReadVlc            ( Int n );
+#if CAVLC_COEF_LRG_BLK
+  Void  xParseCoeff         ( TCoeff* scoeff, Int iTableNumber, Int blSize);
+#else
   Void  xParseCoeff4x4      ( TCoeff* scoeff, Int iTableNumber );
   Void  xParseCoeff8x8      ( TCoeff* scoeff, Int iTableNumber );
+#endif
 #if QC_MOD_LCEC
   Void  xRunLevelIndInv     (LastCoeffStruct *combo, Int maxrun, UInt lrg1Pos, UInt cn);
 #if RUNLEVEL_TABLE_CUT
@@ -83,7 +87,9 @@ private:
   Bool m_bAlfCtrl;
   UInt m_uiMaxAlfCtrlDepth;
   UInt                      m_uiLPTableD4[3][32];
+#if !CAVLC_COEF_LRG_BLK
   UInt                      m_uiLPTableD8[10][128];
+#endif
   UInt                      m_uiLastPosVlcIndex[10];
   
 #if LCEC_INTRA_MODE

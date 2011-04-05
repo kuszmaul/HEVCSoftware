@@ -111,7 +111,11 @@
 #define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding 
 #if QC_MOD_LCEC
 #define RUNLEVEL_TABLE_CUT                1           // JCTVC-E384: Run-Level table size reduction
+#if RUNLEVEL_TABLE_CUT
+#define CAVLC_COEF_LRG_BLK                1           // JCTVC-E383: enable large block coeff. coding
 #endif
+#endif
+
 
 #define ENABLE_FORCECOEFF0  0
 
