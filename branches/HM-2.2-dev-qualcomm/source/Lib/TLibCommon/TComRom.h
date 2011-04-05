@@ -154,7 +154,11 @@ extern const UInt    g_auiLPTableE4[3][32];
 extern const UInt    g_auiLPTableD4[3][32];
 extern const UInt    g_auiLastPosVlcIndex[10];
 extern const UInt    g_auiLastPosVlcNum[10][17];
+#if RUNLEVEL_TABLE_CUT
+extern const UInt    g_auiLumaRun8x8[28][29];
+#else
 extern const UInt    g_auiLumaRun8x8[29][2][64];
+#endif
 
 #if LCEC_INTRA_MODE
 extern const UInt    g_auiIntraModeTableD17[16];
@@ -169,7 +173,11 @@ extern const UInt    g_auiVlcTable8x8Intra[29];
 #else
 extern const UInt    g_auiVlcTable8x8[28];
 #endif
+#if RUNLEVEL_TABLE_CUT 
+extern const UInt    g_acstructLumaRun8x8[28][29];
+#else
 extern const LastCoeffStruct g_acstructLumaRun8x8[29][127];
+#endif
 
 #if LCEC_INTRA_MODE
 extern const UInt huff17_2[2][17];
@@ -277,7 +285,48 @@ __inline UInt xRunLevelInd(Int lev, Int run, Int maxrun, UInt lrg1Pos)
   }
   return(cn);
 }
+
+#if RUNLEVEL_TABLE_CUT
+/** Function for deriving codeword index in CAVLC run-level coding 
+ * \param lev a value indicating coefficient level greater than one or not
+ * \param run length of run
+ * \param maxrun maximum length of run for a given coefficient location
+ * \returns the codeword index
+ * This function derives codeword index in CAVLC run-level coding .
+*/
+__inline UInt xRunLevelIndInter(Int lev, Int run, Int maxrun)
+{
+  UInt cn;
+  
+  if (maxrun < 28)
+  {
+    if (lev == 0)
+    {
+      cn = g_auiLumaRun8x8[maxrun][run];
+    }
+    else
+    {
+      cn = maxrun + g_auiLumaRun8x8[maxrun][run] + 1;  
+    }
+  }
+  else
+  {
+    if (lev == 0)
+    {
+      cn = run;
+    }
+    else
+    {
+      cn = maxrun + run + 2;
+    }
+  }
+
+  return(cn);
+}
 #endif
+#endif
+
+
 #if QC_MOD_LCEC_RDOQ
 __inline UInt xLeadingZeros(UInt uiCode)
 {
@@ -298,6 +347,7 @@ __inline UInt xLeadingZeros(UInt uiCode)
 #endif
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
+
 
 #if CHROMA_CODEWORD_SWITCH 
 extern const UChar ChromaMapping[2][5];

@@ -1987,7 +1987,11 @@ Void TEncCavlc::xCodeCoeff4x4(TCoeff* scoeff, Int n )
             cn = xRunLevelInd(lev, run, maxrun, g_auiLumaRunTr14x4[tr1][maxrun]);
           }
           else{
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(lev, run, maxrun);
+#else
             cn = g_auiLumaRun8x8[maxrun][lev][run];
+#endif
           }
 #else
           if (maxrun > 27)
@@ -2032,7 +2036,11 @@ Void TEncCavlc::xCodeCoeff4x4(TCoeff* scoeff, Int n )
               cn=xRunLevelInd(0, run, maxrun, g_auiLumaRunTr14x4[tr1][maxrun]);
             }
             else{
+#if RUNLEVEL_TABLE_CUT
+              cn = xRunLevelIndInter(0, run, maxrun);
+#else
               cn = g_auiLumaRun8x8[maxrun][0][run];
+#endif
             }
 #else
             if (maxrun > 27)
@@ -2198,7 +2206,11 @@ Void TEncCavlc::xCodeCoeff8x8( TCoeff* scoeff, Int n )
           if(n == 2 || n == 5)
             cn = xRunLevelInd(lev, run, maxrun, g_auiLumaRunTr18x8[tr1][min(maxrun,28)]);
           else
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(lev, run, maxrun);
+#else
             cn = g_auiLumaRun8x8[min(maxrun,28)][lev][run];
+#endif
 #else
           if (maxrun > 27)
           {
@@ -2249,7 +2261,11 @@ Void TEncCavlc::xCodeCoeff8x8( TCoeff* scoeff, Int n )
             if(n == 2 || n == 5)
               cn=xRunLevelInd(0, run, maxrun, g_auiLumaRunTr18x8[tr1][min(maxrun,28)]);
             else
+#if RUNLEVEL_TABLE_CUT
+              cn = xRunLevelIndInter(0, run, maxrun);
+#else
               cn = g_auiLumaRun8x8[min(maxrun,28)][0][run];
+#endif
 #else
             if (maxrun > 27)
             {
