@@ -1129,7 +1129,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
             cn = xRunLevelInd(lev, run, maxrun, g_auiLumaRunTr14x4[uiTr1][maxrun]);
           }
           else{
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(lev, run, maxrun);
+#else
             cn = g_auiLumaRun8x8[maxrun][lev][run];
+#endif
           }
           vlc = uiVlcTableTemp[maxrun];
         }
@@ -1141,7 +1145,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
           }
           else
           {
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(lev, run, maxrun);
+#else
             cn = g_auiLumaRun8x8[Min(maxrun,28)][lev][run];
+#endif
           }
           vlc = uiVlcTableTemp[Min(maxrun,28)];
         }
@@ -1174,7 +1182,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
             cn = xRunLevelInd(0, run + 1, maxrun, g_auiLumaRunTr14x4[uiTr1][maxrun]);
           }
           else{
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(0, run+1, maxrun);
+#else
             cn = g_auiLumaRun8x8[maxrun][0][run + 1];
+#endif
           }
         }
         else{
@@ -1184,7 +1196,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
             cn = xRunLevelInd(0, run + 1, maxrun, g_auiLumaRunTr18x8[uiTr1][Min(maxrun, 28)]);
           }
           else{
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(0, run+1, maxrun);
+#else
             cn = g_auiLumaRun8x8[Min(maxrun, 28)][0][run + 1];
+#endif
           }
         }
         bits=xCountVlcBits( vlc, cn );
@@ -1206,7 +1222,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
                 cn = xRunLevelInd(0, run + 1, maxrun, g_auiLumaRunTr14x4[uiTr1][maxrun]);
               }
               else{
+#if RUNLEVEL_TABLE_CUT
+                cn = xRunLevelIndInter(0, run+1, maxrun);
+#else
                 cn = g_auiLumaRun8x8[maxrun][0][run + 1];
+#endif
               }
             }
             else{
@@ -1216,7 +1236,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
                 cn = xRunLevelInd(0, run + 1, maxrun, g_auiLumaRunTr18x8[uiTr1][Min(maxrun, 28)]);
               }
               else{
+#if RUNLEVEL_TABLE_CUT
+                cn = xRunLevelIndInter(0, run+1, maxrun);
+#else
                 cn = g_auiLumaRun8x8[Min(maxrun,28)][0][run + 1];
+#endif
               }
             }
           }
@@ -1273,7 +1297,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
                 cn = xRunLevelInd(0, 0, maxrunTemp, g_auiLumaRunTr14x4[uiTr1Temp][maxrunTemp]);
               }
               else{
+#if RUNLEVEL_TABLE_CUT
+                cn = xRunLevelIndInter(0, 0, maxrunTemp);
+#else
                 cn = g_auiLumaRun8x8[maxrunTemp][0][0];
+#endif
               }
             }
             else{
@@ -1283,7 +1311,11 @@ Int TComTrQuant::bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,In
                 cn = xRunLevelInd(0, 0, maxrunTemp, g_auiLumaRunTr18x8[uiTr1Temp][Min(maxrunTemp,28)]);
               }
               else{
+#if RUNLEVEL_TABLE_CUT
+                cn = xRunLevelIndInter(0, 0, maxrunTemp);
+#else
                 cn = g_auiLumaRun8x8[Min(maxrunTemp,28)][0][0];
+#endif
               }
             }
             bits -= xCountVlcBits( vlc, cn );
@@ -1455,7 +1487,11 @@ Int TComTrQuant::xCodeCoeffCountBitsLast(TCoeff* scoeff, levelDataStruct* levelD
           }
           else{
             vlc = g_auiVlcTable8x8Inter[maxrun];           
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(quantCoeffInfo[i].nextLev, run, maxrun);
+#else
             cn = g_auiLumaRun8x8[maxrun][quantCoeffInfo[i].nextLev][run];
+#endif
           }
           bitsRun[i] += xCountVlcBits( vlc, cn );
         }
@@ -1467,7 +1503,11 @@ Int TComTrQuant::xCodeCoeffCountBitsLast(TCoeff* scoeff, levelDataStruct* levelD
           }
           else{
             vlc = g_auiVlcTable8x8Inter[Min(maxrun,28)];           
+#if RUNLEVEL_TABLE_CUT
+            cn = xRunLevelIndInter(quantCoeffInfo[i].nextLev, run, maxrun); 
+#else
             cn = g_auiLumaRun8x8[min(maxrun,28)][quantCoeffInfo[i].nextLev][run];
+#endif
           }
           bitsRun[i] += xCountVlcBits( vlc, cn );
         }

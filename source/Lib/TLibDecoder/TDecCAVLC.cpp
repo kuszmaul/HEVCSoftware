@@ -2163,7 +2163,11 @@ Void TDecCavlc::xParseCoeff4x4( TCoeff* scoeff, Int n )
       else
 #endif
       {
+#if RUNLEVEL_TABLE_CUT
+        xRunLevelIndInterInv(&combo, maxrun, cn);
+#else
         combo = g_acstructLumaRun8x8[maxrun][cn];
+#endif
       }
       i += combo.last_pos;
       /* No sign for last zeroes */
@@ -2268,6 +2272,45 @@ Void TDecCavlc::xRunLevelIndInv(LastCoeffStruct *combo, Int maxrun, UInt lrg1Pos
   combo->level = lev;
   combo->last_pos = run;
 }
+
+#if RUNLEVEL_TABLE_CUT
+/** Function for deriving run and level value in CAVLC run-level coding 
+ * \param combo pointer to a struct of run and level
+ * \param maxrun maximum length of run for a given coefficient location
+ * \param cn codeword index
+ * \returns
+ * This function derives run and level value in CAVLC run-level coding based on codeword index and maximum run value.  
+ */
+Void TDecCavlc::xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn)
+{
+  if (maxrun<28)
+  {
+    if(cn > maxrun+1)
+    {
+      combo->level = 1;
+      combo->last_pos = g_acstructLumaRun8x8[maxrun][cn-maxrun-1];
+    }
+    else
+    {
+      combo->level = 0;
+      combo->last_pos = g_acstructLumaRun8x8[maxrun][cn];
+    }
+  }
+  else
+  {
+    if(cn<maxrun+2)
+    {
+      combo->level = 0;
+      combo->last_pos = cn;
+    }
+    else
+    {
+      combo->level = 1;
+      combo->last_pos = cn-maxrun-2;
+    }
+  }
+}
+#endif
 #endif
 
 
@@ -2380,7 +2423,11 @@ Void TDecCavlc::xParseCoeff8x8(TCoeff* scoeff, int n)
       if (n == 2 || n == 5)
         xRunLevelIndInv(&combo, maxrun, g_auiLumaRunTr18x8[tr1][min(maxrun,28)], cn);
       else
+#if RUNLEVEL_TABLE_CUT
+        xRunLevelIndInterInv(&combo, maxrun, cn);
+#else
         combo = g_acstructLumaRun8x8[Min(maxrun,28)][cn];
+#endif
 #else
       combo = g_acstructLumaRun8x8[maxrun][cn];
 #endif
