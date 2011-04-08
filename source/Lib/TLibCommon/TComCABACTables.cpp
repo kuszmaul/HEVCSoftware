@@ -31,11 +31,31 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     TComCABACTables.cpp
- *  \brief    static class for CABAC tables
- */
+/** \file     TEncPIPETables.cpp
+    \brief    PIPE encoding tables
+*/
 
 #include "TComCABACTables.h"
+
+
+const UChar TComCABACTables::sm_State2Idx[64] =
+{
+  0,   0,   1,   2,       2,   3,   3,   4,
+  4,   4,   5,   5,       5,   6,   6,   6,
+  6,   7,   7,   7,       7,   8,   8,   8,
+  8,   8,   8,   8,       8,   9,   9,   9,
+  9,   9,   9,   9,       9,   9,   9,   9,
+  10,  10,  10,  10,      10,  10,  10,  10,
+  10,  10,  10,  10,      10,  10,  10,  10,
+  11,  11,  11,  11,      11,  11,  11,  11
+};
+
+const UChar TComCABACTables::sm_Idx2State[12] =
+{
+  0,  2,  3,  4,  
+  7,  9, 13, 17, 
+  21, 34, 48, 61
+};
 
 const UChar TComCABACTables::sm_aucLPSTable[64][4] =
 {

@@ -127,9 +127,7 @@ protected:
   
   UInt  xPatternRefinement( TComPattern* pcPatternKey, Pel* piRef, Int iRefStride, Int iIntStep, Int iFrac, TComMv& rcMvFrac );
   
-#if (!REFERENCE_SAMPLE_PADDING)
   Bool predIntraLumaDirAvailable( UInt uiMode, UInt uiWidthBit, Bool bAboveAvail, Bool bLeftAvail);
-#endif
   
   typedef struct
   {
