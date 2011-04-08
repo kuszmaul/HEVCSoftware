@@ -118,7 +118,7 @@ private:
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
-  UChar*        m_apuhNeighbourCandIdx[ MRG_MAX_NUM_CANDS ];///< array of motion vector predictor candidates indices
+  UChar*        m_apuhNeighbourCandIdx[ HHI_NUM_MRG_CAND ];///< array of motion vector predictor candidates indices
   UChar*        m_puhLumaIntraDir;    ///< array of intra directions (luma)
   UChar*        m_puhChromaIntraDir;  ///< array of intra directions (chroma)
   UChar*        m_puhInterDir;        ///< array of inter directions
@@ -142,14 +142,6 @@ protected:
   
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
-#if MTK_AMVP_SMVP_DERIVATION
-  Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
-#endif  
-
-#if MTK_TMVP_H_MRG || MTK_TMVP_H_AMVP
-  Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
-  Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
-#endif
   
   /// remove redundant candidates
   Void          xUniqueMVPCand        ( AMVPInfo* pInfo );
@@ -165,7 +157,7 @@ protected:
   /// calculate all CBF's from coefficients
   Void          xCalcCuCbf            ( UChar* puhCbf, UInt uiTrDepth, UInt uiCbfDepth, UInt uiCuDepth );
   
-#if FT_TCTR_AMVP || FT_TCTR_MRG
+#if FT_TCTR
   Void xDeriveCenterIdx( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxCenter );
   Bool xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, int iRefIdx, TComMv *pcMv );
 #endif
@@ -268,9 +260,6 @@ public:
   
   Void          setCbfSubParts        ( UInt uiCbfY, UInt uiCbfU, UInt uiCbfV, UInt uiAbsPartIdx, UInt uiDepth          );
   Void          setCbfSubParts        ( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiDepth                    );
-#if HHI_MRG_SKIP
-  Void          setCbfSubParts        ( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth    );
-#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for coding tool information
@@ -372,10 +361,11 @@ public:
   
   TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
+
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
-  TComDataCU*   getPUBelowLeft              ( UInt& uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
 
+  TComDataCU*   getPUBelowLeft              ( UInt& uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
 #if CONSTRAINED_INTRA_PRED
   TComDataCU*   getPUAboveRightAdi          ( UInt&  uiARPartUnitIdx, UInt uiPuWidth, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUBelowLeftAdi           ( UInt& uiBLPartUnitIdx, UInt uiPuHeight, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
@@ -403,6 +393,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Bool          isIntra   ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
+  Bool          isSkip    ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_SKIP;  } ///< SKIP+DIRECT
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -436,7 +427,6 @@ public:
   UInt          getCtxAlfCtrlFlag               ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxIntraDirChroma            ( UInt   uiAbsPartIdx                                 );
-  UInt          getCtxMergeFlag                 ( UInt uiAbsPartIdx                                   );
   
   Void          setSliceStartCU  ( UInt uiStartCU )    { m_uiSliceStartCU = uiStartCU;    }  
   UInt          getSliceStartCU  ()                    { return m_uiSliceStartCU;         }
