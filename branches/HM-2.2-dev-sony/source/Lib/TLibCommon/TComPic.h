@@ -58,9 +58,6 @@ private:
   
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
-#if PANASONIC_SONY_PARA_DEBLK
-  TComPicYuv*           m_pcPicYuvDeblkBuf;
-#endif
   Bool                  m_bReconstructed;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
   
@@ -113,10 +110,6 @@ public:
   Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
   
-#if PANASONIC_SONY_PARA_DEBLK
-  TComPicYuv*   getPicYuvDeblkBuf()      { return  m_pcPicYuvDeblkBuf; }
-#endif
-
 };// END CLASS DEFINITION TComPic
 
 
