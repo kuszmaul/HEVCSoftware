@@ -272,7 +272,8 @@
 /////////////////////////////////
 
 #define MVD_CTX            1           // JCTVC-E324: Modified context selection for MVD
-#define PANASONIC_PARALLEL_DEBLOCKING_DECISIONS 1
+#define PANASONIC_PARA_DEBLK      0 // JCTC-E224: Parallel decisions
+#define PANASONIC_SONY_PARA_DEBLK 1 // JCTC-E224, JCTVC-E181: Parallel decisions + Parallel filtering
 #define REFERENCE_SAMPLE_PADDING                1   // JCTVC-E488 (Ericsson, HiSilicon, NEC, Panasonic): padding of unavailable reference samples for intra prediction
 
 // ====================================================================================================================
