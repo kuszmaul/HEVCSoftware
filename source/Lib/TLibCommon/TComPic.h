@@ -58,7 +58,7 @@ private:
   
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
-#if PANASONIC_SONY_PARA_DEBLK
+#if PARALLEL_MERGED_DEBLK
   TComPicYuv*           m_pcPicYuvDeblkBuf;
 #endif
   Bool                  m_bReconstructed;
@@ -113,7 +113,7 @@ public:
   Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
   
-#if PANASONIC_SONY_PARA_DEBLK
+#if PARALLEL_MERGED_DEBLK
   TComPicYuv*   getPicYuvDeblkBuf()      { return  m_pcPicYuvDeblkBuf; }
 #endif
 
