@@ -508,7 +508,14 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 {
   const UInt uiSubdiv = pcCU->getTransformIdx( uiAbsPartIdx ) + pcCU->getDepth( uiAbsPartIdx ) > uiDepth;
   const UInt uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()]+2 - uiDepth;
-  
+#if CAVLC_RQT_CBP
+  if(pcCU->getSlice()->getSymbolMode() == 0)
+  {
+    m_pcEntropyCoderIf->codeCbfTrdiv( pcCU, uiAbsPartIdx, uiDepth );
+  }
+  else
+  {//CABAC
+#endif
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
   {
     assert( uiSubdiv );
@@ -552,6 +559,9 @@ Void TEncEntropy::xEncodeTransformSubdiv( TComDataCU* pcCU, UInt uiAbsPartIdx, U
       m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, uiDepth );
 #endif
     }
+#if CAVLC_RQT_CBP
+  }
+#endif
   
   if(pcCU->getSlice()->getSymbolMode() == 0)
   {
@@ -1404,6 +1414,7 @@ Void TEncEntropy::xEncodeCoeff( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPar
       UInt uiQPartNum = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
       UInt uiIdx      = uiAbsPartIdx;
       
+#if !CAVLC_RQT_CBP
       if(pcCU->getSlice()->getSymbolMode() == 0)
       {
         UInt uiLog2TrSize = g_aucConvertToBit[ pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth ] + 2;
@@ -1416,11 +1427,14 @@ Void TEncEntropy::xEncodeCoeff( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPar
       }
       else
       {
+#endif
         xEncodeCoeff( pcCU, pcCoeff, uiIdx, uiDepth, uiWidth, uiHeight, uiTrIdx, uiCurrTrIdx, eType, bRD ); pcCoeff += uiSize; uiIdx += uiQPartNum;
         xEncodeCoeff( pcCU, pcCoeff, uiIdx, uiDepth, uiWidth, uiHeight, uiTrIdx, uiCurrTrIdx, eType, bRD ); pcCoeff += uiSize; uiIdx += uiQPartNum;
         xEncodeCoeff( pcCU, pcCoeff, uiIdx, uiDepth, uiWidth, uiHeight, uiTrIdx, uiCurrTrIdx, eType, bRD ); pcCoeff += uiSize; uiIdx += uiQPartNum;
         xEncodeCoeff( pcCU, pcCoeff, uiIdx, uiDepth, uiWidth, uiHeight, uiTrIdx, uiCurrTrIdx, eType, bRD );
+#if !CAVLC_RQT_CBP
       }
+#endif
       {
         DTRACE_CABAC_V( g_nSymbolCounter++ );
         DTRACE_CABAC_T( "\tgoing up\n" );
@@ -1454,6 +1468,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     UInt temp2 = 0;
     xEncodeTransformSubdiv( pcCU, uiAbsPartIdx, uiDepth, 0, temp, temp1, temp2 );
     
+#if !CAVLC_RQT_CBP
     if (pcCU->getSlice()->getSymbolMode() == 0)
     {
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
@@ -1461,15 +1476,18 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
          && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V, 0)==0)
         return;
     }
+#endif
   }
   else
   {
     if (pcCU->getSlice()->getSymbolMode()==0)
     {
+#if !CAVLC_RQT_CBP
       m_pcEntropyCoderIf->codeCbf( pcCU, uiAbsPartIdx, TEXT_ALL, 0 );
       if(pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA, 0)==0 && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U, 0)==0
          && pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V, 0)==0)
         return;
+#endif
     }
     else
     {
