@@ -49,7 +49,7 @@ TComPic::TComPic()
   m_pcPicYuvPred      = NULL;
   m_pcPicYuvResi      = NULL;
   
-#if PANASONIC_SONY_PARA_DEBLK
+#if PARALLEL_MERGED_DEBLK
   m_pcPicYuvDeblkBuf     = NULL;
 #endif
 
@@ -69,7 +69,7 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   }
   m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   
-#if PANASONIC_SONY_PARA_DEBLK
+#if PARALLEL_MERGED_DEBLK
   m_pcPicYuvDeblkBuf  = new TComPicYuv;  m_pcPicYuvDeblkBuf->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
 #endif
 
@@ -99,7 +99,7 @@ Void TComPic::destroy()
     m_apcPicYuv[1]  = NULL;
   }
   
-#if PANASONIC_SONY_PARA_DEBLK
+#if PARALLEL_MERGED_DEBLK
   if (m_pcPicYuvDeblkBuf)
   {
     m_pcPicYuvDeblkBuf->destroy();
