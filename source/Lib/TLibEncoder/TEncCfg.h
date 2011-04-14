@@ -93,6 +93,10 @@ protected:
   Int       m_iLoopFilterAlphaC0Offset;
   Int       m_iLoopFilterBetaOffset;
   
+#if MTK_SAO
+  Bool      m_bUseSAO;
+#endif
+
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -119,6 +123,10 @@ protected:
   Bool      m_bUseBQP;
   Bool      m_bUseFastEnc;
   Bool      m_bUseMRG; // SOPH:
+#if LM_CHROMA 
+  Bool      m_bUseLMChroma; 
+#endif
+
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   
@@ -280,6 +288,12 @@ public:
 #if CONSTRAINED_INTRA_PRED
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
 #endif  
+
+#if LM_CHROMA 
+  Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
+  Void setUseLMChroma                       ( Bool b ) { m_bUseLMChroma  = b;       }
+#endif
+
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 #if HHI_RMP_SWITCH
@@ -303,6 +317,10 @@ public:
 #if MTK_NONCROSS_INLOOP_FILTER
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
+#endif
+#if MTK_SAO
+  Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
+  Bool      getUseSAO                  ()              {return m_bUseSAO;}
 #endif
 
 };

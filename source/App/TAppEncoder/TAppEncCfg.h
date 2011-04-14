@@ -107,6 +107,10 @@ protected:
   UInt      m_uiBitIncrement;                                 ///< bit-depth increment
   UInt      m_uiInternalBitDepth;                             ///< Internal bit-depth (BitDepth+BitIncrement)
   
+#if MTK_SAO
+  Bool      m_bUseSAO; 
+#endif
+
   // coding tools (loop filter)
   Bool      m_bUseALF;                                        ///< flag for using adaptive loop filter
 #ifdef MQT_ALF_NPASS
@@ -123,6 +127,10 @@ protected:
   // coding tools (inter - merge motion partitions)
   Bool      m_bUseMRG;                                        ///< SOPH: flag for using motion partition Merge Mode
   
+#if LM_CHROMA 
+  Bool      m_bUseLMChroma;                                  ///< JL: Chroma intra prediction based on luma signal
+#endif
+
 #if HHI_RMP_SWITCH
   Bool      m_bUseRMP;
 #endif

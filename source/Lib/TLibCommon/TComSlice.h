@@ -73,6 +73,10 @@ private:
   Bool        m_bUsePAD;
   Bool        m_bUseMRG; // SOPH:
 
+#if LM_CHROMA 
+  Bool        m_bUseLMChroma; // JL:
+#endif
+
 #if DCM_COMB_LIST
   Bool        m_bUseLComb;
   Bool        m_bLCMod;
@@ -93,6 +97,9 @@ private:
 
 #if MTK_NONCROSS_INLOOP_FILTER
   Bool        m_bLFCrossSliceBoundaryFlag;
+#endif
+#if MTK_SAO
+  Bool        m_bUseSAO; 
 #endif
 
 public:
@@ -159,6 +166,11 @@ public:
   Void setUseRMP     ( Bool b ) { m_bUseRMP = b;    }
 #endif
   
+#if LM_CHROMA 
+  Bool getUseLMChroma ()         { return m_bUseLMChroma;        }
+  Void setUseLMChroma ( Bool b ) { m_bUseLMChroma  = b;          }
+#endif
+
   // AMVP mode (for each depth)
   AMVP_MODE getAMVPMode ( UInt uiDepth ) { assert(uiDepth < g_uiMaxCUDepth);  return m_aeAMVPMode[uiDepth]; }
   Void      setAMVPMode ( UInt uiDepth, AMVP_MODE eMode) { assert(uiDepth < g_uiMaxCUDepth);  m_aeAMVPMode[uiDepth] = eMode; }
@@ -172,6 +184,11 @@ public:
 #if MTK_NONCROSS_INLOOP_FILTER
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   } 
+#endif
+
+#if MTK_SAO
+  Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
+  Bool getUseSAO                  ()           {return m_bUseSAO;}
 #endif
 
 };
