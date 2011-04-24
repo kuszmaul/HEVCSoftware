@@ -2217,10 +2217,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     }
   }
   
-  UInt uiBestSAD = MAX_UINT;
-  UInt uiBestBitCost = MAX_UINT;
-  UInt uiBestBits = MAX_UINT;
-
   ruiCost = MAX_UINT;
   ruiBits = MAX_UINT;
 
@@ -2274,10 +2270,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
           UChar uhNeighCand = uiNeighbourCandIdx[ui]; 
           puhNeighCands[ui] = uhNeighCand;
         }
-
-        uiBestSAD = uiCostCand;
-        uiBestBitCost = m_pcRdCost->getCost( uiBitsCand );
-        uiBestBits = uiBitsCand;
       }
     }
   }
@@ -2375,7 +2367,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     
 #if PART_MRG
     Bool bTestNormalMC = true;
-    if (pcCU->getWidth( 0 ) > 8 && iNumPart == 2 && iPartIdx == 0)
+    if (pcCU->getSlice()->getSPS()->getUseMRG() && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 && iPartIdx == 0)
       bTestNormalMC = false;
     if (bTestNormalMC)
     {
@@ -3849,17 +3841,21 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->resetBits();
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
 #if HHI_MRG_SKIP
-    m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
-#else    
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
     {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, 0, REF_PIC_LIST_0);
-    }
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
-    {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, 0, REF_PIC_LIST_1);
-    }
+      m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
+    } 
+    else
 #endif
+    {
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          m_pcEntropyCoder->encodeMVPIdxPU( pcCU, 0, RefPicList( uiRefListIdx ));
+        }
+      }
+    }
     
     uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     pcCU->getTotalBits()       = uiBits;
@@ -3878,8 +3874,6 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   //  Residual coding.
   UInt    uiQp, uiQpBest = 0, uiQpMin, uiQpMax;
   Double  dCost, dCostBest = MAX_DOUBLE;
-  
-  UInt uiBestTrMode = 0;
   
   UInt uiTrLevel = 0;
   if( (pcCU->getWidth(0) > pcCU->getSlice()->getSPS()->getMaxTrSize()) )
@@ -4027,7 +4021,6 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   
   if ( pcCU->isSkipped(0) )
   {
-    uiBestTrMode = 0;
     pcCU->setCbfSubParts( 0, 0, 0, 0, pcCU->getDepth( 0 ) );
   }
   
@@ -4656,17 +4649,21 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     
     m_pcEntropyCoder->resetBits();
 #if HHI_MRG_SKIP
-    m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
-#else
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
     {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, 0, REF_PIC_LIST_0);
-    }
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
-    {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, 0, REF_PIC_LIST_1);
-    }
+      m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
+    } 
+    else
 #endif
+    {
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {        
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          m_pcEntropyCoder->encodeMVPIdxPU( pcCU, 0, RefPicList( uiRefListIdx ));
+        }
+      }
+    }
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }
   else

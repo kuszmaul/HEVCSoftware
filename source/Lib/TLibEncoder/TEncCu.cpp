@@ -372,7 +372,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
   
   // variables for fast encoder decision
-  TComDataCU* pcTempCU;
   Bool    bEarlySkip  = false;
   Bool    bTrySplit    = true;
   Double  fRD_Skip    = MAX_DOUBLE;
@@ -398,7 +397,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
     {
       // SKIP
-      pcTempCU = rpcTempCU;
       
       if( pcPic->getSlice(0)->getSPS()->getUseMRG() )
       {
@@ -607,17 +605,21 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
 #if HHI_MRG_SKIP
-    m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
-#else
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 ) //if ( ref. frame list0 has at least 1 entry )
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
     {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, uiAbsPartIdx, REF_PIC_LIST_0);
-    }
-    if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 ) //if ( ref. frame list1 has at least 1 entry )
-    {
-      m_pcEntropyCoder->encodeMVPIdx( pcCU, uiAbsPartIdx, REF_PIC_LIST_1);
-    }
+      m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
+    } 
+    else
 #endif
+    {
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {        
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          m_pcEntropyCoder->encodeMVPIdxPU( pcCU, uiAbsPartIdx, RefPicList( uiRefListIdx ));
+        }
+      }
+    }
     return;
   }
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
@@ -770,7 +772,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
 #if PART_MRG
-  if (rpcTempCU->getWidth(0) > 8 && !rpcTempCU->getMergeFlag(0) && (ePartSize != SIZE_2Nx2N && ePartSize != SIZE_NxN))
+  if (rpcTempCU->getSlice()->getSPS()->getUseMRG() && rpcTempCU->getWidth(0) > 8 && !rpcTempCU->getMergeFlag(0) && (ePartSize != SIZE_2Nx2N && ePartSize != SIZE_NxN))
   {
     return;
   }
@@ -827,7 +829,7 @@ Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   {
     TComYuv* pcYuv;
     UChar uhDepth = rpcBestCU->getDepth(0);
-    if( uhDepth == rpcTempCU->getDepth( 0 ) && rpcTempCU->getSlice()->getSliceType() != I_SLICE && rpcTempCU->getPartitionSize( 0 ) == SIZE_2Nx2N && !rpcTempCU->getMergeFlag( 0 ) )
+    if( rpcTempCU->getSlice()->getSPS()->getUseMRG() && uhDepth == rpcTempCU->getDepth( 0 ) && rpcTempCU->getSlice()->getSliceType() != I_SLICE && rpcTempCU->getPartitionSize( 0 ) == SIZE_2Nx2N && !rpcTempCU->getMergeFlag( 0 ) )
     {
       for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
       {
