@@ -127,6 +127,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  - non-referenced frame marking
  - QP computation based on temporal structure
  - lambda computation based on QP
+ - set temporal layer ID and the parameter sets
  .
  \param pcPic         picture class
  \param iPOCLast      POC of last picture
@@ -135,8 +136,10 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param iTimeOffset   POC offset for hierarchical structure
  \param iDepth        temporal layer depth
  \param rpcSlice      slice header class
+ \param pSPS          SPS associated with the slice
+ \param pPPS          PPS associated with the slice
  */
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iTimeOffset, Int iDepth, TComSlice*& rpcSlice )
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iTimeOffset, Int iDepth, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
 {
   Double dQP;
   Double dLambda;
@@ -317,10 +320,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
         {
           Int    iMaxDepth = 0;
           Int    iCnt = 1;
-          Int    hierarchy_layer;
           
           while ( iCnt < m_pcCfg->getRateGOPSize() ) { iCnt <<= 1; iMaxDepth++; }
-          hierarchy_layer = iMaxDepth - iDepth;
           
           dLambda *= 0.80;
           dLambda *= dLambda_scale;
@@ -372,6 +373,21 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   
   rpcSlice->setDepth            ( iDepth );
   
+  if ( pSPS->getMaxTLayers() > 1 )
+  {
+    assert( iDepth < pSPS->getMaxTLayers() );
+    pcPic->setTLayer( iDepth );
+  }
+  else 
+  {
+    pcPic->setTLayer( 0 );
+  }
+  rpcSlice->setTLayer( pcPic->getTLayer() );
+  rpcSlice->setTLayerSwitchingFlag( pPPS->getTLayerSwitchingFlag( pcPic->getTLayer() ) );
+
+  rpcSlice->setSPS( pSPS );
+  rpcSlice->setPPS( pPPS );
+
   // reference picture usage indicator for next frames
   rpcSlice->setDRBFlag          ( true );
   rpcSlice->setERBIndex         ( ERB_NONE );
@@ -424,9 +440,6 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
   
   TComSlice* pcSlice        = rpcPic->getSlice(getSliceIdx());
   Double     dPicRdCostBest = MAX_DOUBLE;
-  Double dSumCURdCostBest;
-  UInt64     uiPicDistBest;
-  UInt64     uiPicBitsBest;
   UInt       uiQpIdxBest = 0;
   
   Double dFrameLambda;
@@ -471,10 +484,6 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
     {
       uiQpIdxBest    = uiQpIdx;
       dPicRdCostBest = dPicRdCost;
-      dSumCURdCostBest = m_dPicRdCost;
-      
-      uiPicBitsBest = m_uiPicTotalBits + uiALFBits;
-      uiPicDistBest = uiPicDist;
     }
   }
   
