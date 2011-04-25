@@ -104,6 +104,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   xReadFlag ( uiCode ); pcPPS->setConstrainedIntraPred( uiCode ? true : false );
 #endif
 
+  xReadUvlc( uiCode );    // num_temporal_layer_switching_point_flags
+  pcPPS->setNumTLayerSwitchingFlags( uiCode );
+  for ( UInt i = 0; i < pcPPS->getNumTLayerSwitchingFlags(); i++ )
+  {
+    xReadFlag( uiCode );  // temporal_layer_switching_point_flag
+    pcPPS->setTLayerSwitchingFlag( i, uiCode > 0 ? true : false );
+  }
+
   return;
 }
 
@@ -112,6 +120,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   UInt  uiCode;
   
   // Structure
+  xReadCode ( 3, uiCode ); // maximum number of temporal layers minus 1
+  pcSPS->setMaxTLayers( uiCode+1 );
+
   xReadUvlc ( uiCode ); pcSPS->setWidth       ( uiCode    );
   xReadUvlc ( uiCode ); pcSPS->setHeight      ( uiCode    );
   xReadUvlc ( uiCode ); pcSPS->setPadX        ( uiCode    );
@@ -192,6 +203,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if MTK_SAO
   xReadFlag( uiCode ); pcSPS->setUseSAO       ( uiCode ? true : false );  
 #endif
+
+  xReadFlag( uiCode );  // temporal_id_nesting_flag
+  pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
 
   return;
 }
@@ -494,35 +508,40 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 #if HHI_MRG_SKIP
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
+    {
     pcCU->setMergeFlagSubParts( true , uiAbsPartIdx, 0, uiDepth );
-#else
-    TComMv cZeroMv(0,0);
-    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    
-    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
-    pcCU->setCbfSubParts  ( 0, 0, 0, uiAbsPartIdx, uiDepth );
-    
-    if ( pcCU->getSlice()->isInterP() )
-    {
-      pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
-      
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    }
+    } 
     else
+#endif // HHI_MRG_SKIP
     {
-      pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
+      TComMv cZeroMv(0,0);
+      pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
       
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
+      pcCU->setCbfSubParts  ( 0, 0, 0, uiAbsPartIdx, uiDepth );
+      
+      if ( pcCU->getSlice()->isInterP() )
+      {
+        pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
+        
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      }
+      else
+      {
+        pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
+        
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      }
     }
   }
-#endif // HHI_MRG_SKIP
 #endif // QC_LCEC_INTER_MODE
 }
 
@@ -619,27 +638,32 @@ Void TDecCavlc::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
       pcCU->setCbfSubParts  ( 0, 0, 0, uiAbsPartIdx, uiDepth );
       
 #if HHI_MRG_SKIP
+      if ( pcCU->getSlice()->getSPS()->getUseMRG() )
+      {
       pcCU->setMergeFlagSubParts( true, uiAbsPartIdx, 0, uiDepth );
-#else
-      if ( pcCU->getSlice()->isInterP() )
-      {
-        pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
-        
-        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      }
+      } 
       else
-      {
-        pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
-        
-        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      }
 #endif
+      {
+        if ( pcCU->getSlice()->isInterP() )
+        {
+          pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
+          
+          if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+            pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+          if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+            pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        }
+        else
+        {
+          pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
+          
+          if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+            pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+          if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+            pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        }
+      }
     }
     else if (uiMode==2)
     {
@@ -1676,19 +1700,6 @@ Void TDecCavlc::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPa
 Void TDecCavlc::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList )
 {
   Int iHor, iVer;
-  UInt uiAbsPartIdxL, uiAbsPartIdxA;
-  Int iHorPred, iVerPred;
-  
-  TComDataCU* pcCUL   = pcCU->getPULeft ( uiAbsPartIdxL, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
-  TComDataCU* pcCUA   = pcCU->getPUAbove( uiAbsPartIdxA, pcCU->getZorderIdxInCU() + uiAbsPartIdx );
-  
-  TComCUMvField* pcCUMvFieldL = ( pcCUL == NULL || pcCUL->isIntra( uiAbsPartIdxL ) ) ? NULL : pcCUL->getCUMvField( eRefList );
-  TComCUMvField* pcCUMvFieldA = ( pcCUA == NULL || pcCUA->isIntra( uiAbsPartIdxA ) ) ? NULL : pcCUA->getCUMvField( eRefList );
-  
-  iHorPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsHor() ) +
-  ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsHor() );
-  iVerPred = ( (pcCUMvFieldL == NULL) ? 0 : pcCUMvFieldL->getMvd( uiAbsPartIdxL ).getAbsVer() ) +
-  ( (pcCUMvFieldA == NULL) ? 0 : pcCUMvFieldA->getMvd( uiAbsPartIdxA ).getAbsVer() );
   
   TComMv cTmpMv( 0, 0 );
   pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiPartIdx, uiDepth );
@@ -2090,19 +2101,25 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   // point to coefficient
   TCoeff* piCoeff = pcCoef;
   
+#if !QC_MDCS
   // initialize scan
   const UInt*  pucScan;
+#endif
   
 #if CAVLC_COEF_LRG_BLK
   UInt maxBlSize = (eTType==TEXT_LUMA)? 32:8;
   UInt uiBlSize = Min(maxBlSize,uiWidth);
+#if !QC_MDCS
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : uiBlSize];
+#endif
   UInt uiNoCoeff = uiBlSize*uiBlSize;
 #else
   //UInt uiConvBit = g_aucConvertToBit[ Min(8,uiWidth) ];
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : Min(8,uiWidth)    ];
 #endif
+#if !QC_MDCS
   pucScan        = g_auiFrameScanXY  [ uiConvBit + 1 ];
+#endif
   
 #if QC_MDCS
   UInt uiBlkPos;
