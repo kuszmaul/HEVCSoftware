@@ -458,34 +458,39 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
     
 #if HHI_MRG_SKIP
+    if ( pcCU->getSlice()->getSPS()->getUseMRG() )
+    {
     pcCU->setMergeFlagSubParts( true , uiAbsPartIdx, 0, uiDepth );
-#else
-    TComMv cZeroMv(0,0);
-    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    
-    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
-    pcCU->setCbfSubParts  ( 0, 0, 0, uiAbsPartIdx, uiDepth );
-    
-    if ( pcCU->getSlice()->isInterP() )
-    {
-      pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
-      
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    }
+    } 
     else
-    {
-      pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
-      
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-      if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
-        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
-    }
 #endif // HHI_MRG_SKIP
+    {
+      TComMv cZeroMv(0,0);
+      pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd    ( cZeroMv, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      
+      pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
+      pcCU->setCbfSubParts  ( 0, 0, 0, uiAbsPartIdx, uiDepth );
+      
+      if ( pcCU->getSlice()->isInterP() )
+      {
+        pcCU->setInterDirSubParts( 1, uiAbsPartIdx, 0, uiDepth );
+        
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( NOT_VALID, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      }
+      else
+      {
+        pcCU->setInterDirSubParts( 3, uiAbsPartIdx, 0, uiDepth );
+        
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx(  0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+        if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_1 ) > 0 )
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( 0, SIZE_2Nx2N, uiAbsPartIdx, 0, uiDepth );
+      }
+    }
   }
 }
 
@@ -544,7 +549,6 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
   Bool bAboveInvolved = false;
   Bool bCollocatedInvolved = false;
   Bool bCornerInvolved = false;
-  Bool bCornerBLInvolved = false;
   UInt uiNumCand = 0;
   for( UInt uiIter = 0; uiIter < MRG_MAX_NUM_CANDS; ++uiIter )
   {
@@ -566,10 +570,6 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
       else if( uiIter == 3 )
       {
         bCornerInvolved = true;
-      }
-      else if( uiIter == 4 )
-      {
-        bCornerBLInvolved = true;
       }
     }
   }
@@ -650,8 +650,6 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
   DTRACE_CABAC_V( bCollocatedInvolved )
   DTRACE_CABAC_T( "\tbCornerRTInvolved= " )
   DTRACE_CABAC_V( bCornerInvolved )
-  DTRACE_CABAC_T( "\tbCornerBLInvolved= " )
-  DTRACE_CABAC_V( bCornerBLInvolved )
   DTRACE_CABAC_T( "\n" )
 }
 
