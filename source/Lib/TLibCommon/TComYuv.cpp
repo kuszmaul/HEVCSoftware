@@ -303,10 +303,29 @@ Void TComYuv::copyPartToPartYuv   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt iWid
   copyPartToPartChroma (pcYuvDst, uiPartIdx, iWidth>>1, iHeight>>1 );
 }
 
+#if HHMTU_SDIP
+Void TComYuv::copyPartToPartLuma  ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt iWidth, UInt iHeight, UInt uiSdipFlag )
+#else
 Void TComYuv::copyPartToPartLuma  ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt iWidth, UInt iHeight )
+#endif
 {
+#if HHMTU_SDIP
+  Pel* pSrc;
+  Pel* pDst;
+  if( !uiSdipFlag )
+  {
+    pSrc =           getLumaAddr(uiPartIdx);
+    pDst = pcYuvDst->getLumaAddr(uiPartIdx);
+  }
+  else
+  {
+    pSrc =           getLineLumaAddr(uiPartIdx, (iWidth > iHeight) );
+    pDst = pcYuvDst->getLineLumaAddr(uiPartIdx, (iWidth > iHeight) );
+  }
+#else
   Pel* pSrc =           getLumaAddr(uiPartIdx);
   Pel* pDst = pcYuvDst->getLumaAddr(uiPartIdx);
+#endif
   if( pSrc == pDst )
   {
     //th not a good idea
@@ -840,3 +859,9 @@ Pel* TComYuv::getCrAddr( UInt iTransUnitIdx, UInt iBlkSize )
   return m_apiBufV + (iBlkX + iBlkY * getCStride()) * iBlkSize;
 }
 
+#if HHMTU_SDIP
+Pel* TComYuv::getLineLumaAddr( UInt uiLine, UChar uiDirection)
+{
+  return m_apiBufY + ( uiDirection ? uiLine*getStride() : uiLine) ;
+}
+#endif

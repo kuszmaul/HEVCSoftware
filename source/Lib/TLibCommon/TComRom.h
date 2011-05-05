@@ -62,6 +62,9 @@ Void         initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidt
 #if QC_MDCS
 Void         initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight, Int iDepth);
 #endif //QC_MDCS
+#if HHMTU_SDIP
+Void         initNonSquareSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight);
+#endif
 
 // ====================================================================================================================
 // Data structure related table & variable
@@ -103,6 +106,9 @@ extern       UInt g_auiPUOffset[4];
 
 extern UInt g_auiQ[6];             // Q(QP%6)  
 extern UInt g_auiIQ[6];            // IQ(QP%6)
+#if HHMTU_SDIP
+extern const short g_aiT2[2][2];
+#endif
 extern const short g_aiT4[4][4];
 extern const short g_aiT8[8][8];
 extern const short g_aiT16[16][16];
@@ -128,6 +134,13 @@ extern       UInt   g_aiQuantCoef1024   [6][1024];
 extern       UInt   g_aiDeQuantCoef1024 [6][1024];
 extern       UInt   g_aiQuantCoef4096   [6];
 extern       UInt   g_aiDeQuantCoef4096 [6];
+#if HHMTU_SDIP
+extern       UInt    g_useSDIP;
+#if HHMTU_SDIP_FAST
+extern       UInt g_uiSdip2NxhNCost, g_uiSdiphNx2NCost,g_uiNxNCost, g_ui2Nx2NCost;
+extern const UChar  g_aucIntraModeNumFastSdip[7];
+#endif
+#endif
 
 // ====================================================================================================================
 // Luma QP to Chroma QP mapping
@@ -145,6 +158,10 @@ extern       UInt*  g_auiFrameScanY [ MAX_CU_DEPTH  ];    // raster index (y) fr
 extern       UInt   g_auiAntiScan8[64];                   // 2D context mapping for coefficients
 #if QC_MDCS
 extern       UInt*  g_auiSigLastScan[3][ MAX_CU_DEPTH ];  // raster index from scanning index (zigzag, hor, ver)
+#endif //QC_MDCS
+#if HHMTU_SDIP
+extern       UInt*  g_auiNonSquareSigLastScan[3][5];      // raster index from scanning index (zigzag, hor, ver)
+extern       UInt   g_auiNonSquareScanTableIdx[6][6];
 #endif //QC_MDCS
 #if PCP_SIGMAP_SIMPLE_LAST
 extern       UInt   g_uiCtxXYOffset[ MAX_CU_DEPTH ];      //!< context offset for last pos coding

@@ -61,6 +61,10 @@ TEncSbac::TEncSbac()
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         )
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             )
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             )
+#if HHMTU_SDIP
+, m_cCUSDIPFlagSCModel        ( 1,             1,               NUM_SDIP_FLAG_CTX              )
+, m_cCUSDIPDirectionSCModel   ( 1,             1,               NUM_SDIP_DIRECTION_CTX         )
+#endif
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         )
 , m_cCUIntraPredSCModel       ( 1,             1,               NUM_ADI_CTX                   )
 #if ADD_PLANAR_MODE
@@ -121,6 +125,10 @@ Void TEncSbac::resetEntropy           ()
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_MERGE_IDX_EXT);
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PRED_MODE );
+#if HHMTU_SDIP
+  m_cCUSDIPFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_SDIP_FLAG );
+  m_cCUSDIPDirectionSCModel.initBuffer   ( eSliceType, iQp, (Short*)INIT_SDIP_DIRECTION );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_INTRA_PRED_MODE );
 #if ADD_PLANAR_MODE
   m_cPlanarFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PLANARFLAG );
@@ -372,6 +380,10 @@ Void TEncSbac::xCopyFrom( TEncSbac* pSrc )
   this->m_cCUMergeIdxExtSCModel   .copyFrom( &pSrc->m_cCUMergeIdxExtSCModel);
   this->m_cCUPartSizeSCModel       .copyFrom( &pSrc->m_cCUPartSizeSCModel        );
   this->m_cCUPredModeSCModel       .copyFrom( &pSrc->m_cCUPredModeSCModel        );
+#if HHMTU_SDIP
+  this->m_cCUSDIPFlagSCModel       .copyFrom( &pSrc->m_cCUSDIPFlagSCModel       );
+  this->m_cCUSDIPDirectionSCModel  .copyFrom( &pSrc->m_cCUSDIPDirectionSCModel  );
+#endif
   this->m_cCUIntraPredSCModel      .copyFrom( &pSrc->m_cCUIntraPredSCModel       );
 #if ADD_PLANAR_MODE
   this->m_cPlanarFlagSCModel       .copyFrom( &pSrc->m_cPlanarFlagSCModel        );
@@ -407,6 +419,10 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
+#if HHMTU_SDIP
+  UInt uiWidth = pcCU->getWidth(uiAbsPartIdx);
+  Bool bSDIPEnable = (pcCU->getSlice()->getSPS()->getUseSDIP() && (uiWidth < 64) );
+#endif
   
   if ( pcCU->getSlice()->isInterB() && pcCU->isIntra( uiAbsPartIdx ) )
   {
@@ -430,6 +446,14 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       m_pcBinIf->encodeBin( (eSize == SIZE_2Nx2N? 0 : 1), m_cCUPartSizeSCModel.get( 0, 0, 4) );
     }
+#if HHMTU_SDIP
+    if( bSDIPEnable && ( uiDepth != g_uiMaxCUDepth - g_uiAddCUDepth ||  eSize != SIZE_2Nx2N ) )
+    {
+      m_pcBinIf->encodeBin( pcCU->getSDIPFlag(uiAbsPartIdx) ? 1 : 0, m_cCUSDIPFlagSCModel.get( 0, 0, pcCU->getCtxSDIPFlag(uiAbsPartIdx) ) );
+      if(pcCU->getSDIPFlag(uiAbsPartIdx))
+        m_pcBinIf->encodeBin( (eSize == SIZE_2NxhN ? 1 : 0 ), m_cCUSDIPDirectionSCModel.get( 0, 0, pcCU->getCtxSDIPDirection( uiAbsPartIdx ) ) );
+    }
+#endif
     return;
   }
   
@@ -441,6 +465,14 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       m_pcBinIf->encodeBin( eSize == SIZE_2Nx2N? 1 : 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
     }
+#if HHMTU_SDIP    
+    if( bSDIPEnable && ( uiDepth != g_uiMaxCUDepth - g_uiAddCUDepth ||  eSize != SIZE_2Nx2N ) )
+    {
+      m_pcBinIf->encodeBin( pcCU->getSDIPFlag(uiAbsPartIdx) ? 1 : 0, m_cCUSDIPFlagSCModel.get( 0, 0, pcCU->getCtxSDIPFlag(uiAbsPartIdx) ) );
+      if(pcCU->getSDIPFlag(uiAbsPartIdx))
+        m_pcBinIf->encodeBin( (eSize == SIZE_2NxhN ? 1 : 0 ), m_cCUSDIPDirectionSCModel.get( 0, 0, pcCU->getCtxSDIPDirection( uiAbsPartIdx ) ) );
+    }
+#endif
     return;
   }
   
@@ -817,6 +849,9 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
+#if HHMTU_SDIP_PLANNAR_DISABLE
+    if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#endif
     m_pcBinIf->encodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );
   }
 #endif
@@ -876,6 +911,9 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
+#if HHMTU_SDIP_PLANNAR_DISABLE
+    if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#endif
     m_pcBinIf->encodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );
   }
 #endif
@@ -886,6 +924,40 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiCtx            = pcCU->getCtxIntraDirChroma( uiAbsPartIdx );
   UInt uiIntraDirChroma = pcCU->getChromaIntraDir   ( uiAbsPartIdx );
+
+#if HHMTU_SDIP    
+  if( pcCU->getSDIPFlag(uiAbsPartIdx) )
+  {    
+    UInt uiModeList[6];
+    UInt uiMaxMode  = pcCU->getSDIPChromaModeList( uiModeList, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
+#if ADD_PLANAR_MODE
+    Int  iMax = ( uiMaxMode < 6 ) ? 3 : 4; 
+#else
+    Int  iMax = ( uiMaxMode < 5 ) ? 2 : 3;
+#endif
+   
+    for( Int i = 0; i < uiMaxMode; i++ )
+    {
+      if( uiIntraDirChroma == uiModeList[i] )
+      {
+        uiIntraDirChroma = i;    
+        break;
+      }
+    }
+
+    if ( 0 == uiIntraDirChroma )
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
+    }
+    else
+    {
+      m_pcBinIf->encodeBin( 1, m_cCUChromaPredSCModel.get( 0, 0, uiCtx ) );
+      xWriteUnaryMaxSymbol( uiIntraDirChroma - 1, m_cCUChromaPredSCModel.get( 0, 0 ) + 3, 0, iMax );
+    }
+  }
+  else
+  {
+#endif
 #if ADD_PLANAR_MODE
   UInt planarFlag       = 0;
   if (uiIntraDirChroma == PLANAR_IDX)
@@ -990,6 +1062,9 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
   {
     m_pcBinIf->encodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,1) );
+  }
+#endif
+#if HHMTU_SDIP
   }
 #endif
   return;
@@ -1289,6 +1364,20 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
   DTRACE_CABAC_T( "\tpredmode=" )
   DTRACE_CABAC_V(  pcCU->getPredictionMode( uiAbsPartIdx ) )
   DTRACE_CABAC_T( "\n" )
+
+#if HHMTU_SDIP
+  Bool NonSqureFlag = (uiWidth != uiHeight);
+  UInt uiNonSqureScanTableIdx = 0;
+  if( NonSqureFlag )
+  {
+    UInt uiWidthBit  = (uiWidth < 2)? 0 : g_aucConvertToBit[ uiWidth ] + 2;
+    UInt uiHeightBit = (uiHeight < 2)? 0 : g_aucConvertToBit[ uiHeight ] + 2;
+    uiNonSqureScanTableIdx = g_auiNonSquareScanTableIdx[uiWidthBit][uiHeightBit];
+    uiWidth  = 1 << ( ( uiWidthBit + uiHeightBit) >> 1 );
+    uiHeight = uiWidth;
+  }    
+#endif
+
   if( uiWidth > m_pcSlice->getSPS()->getMaxTrSize() )
   {
     uiWidth  = m_pcSlice->getSPS()->getMaxTrSize();
@@ -1332,9 +1421,33 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
 #endif
   const UInt   uiNum4x4Blk       = max<UInt>( 1, uiMaxNumCoeff >> 4 );
 #if QC_MDCS
+#if HHMTU_SDIP
+  const UInt uiScanIdx = ( NonSqureFlag ) ? 0 : pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#else
   const UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#endif
 #endif //QC_MDCS
   
+#if HHMTU_SDIP
+  static TCoeff orgCoeff[256];
+  if( NonSqureFlag )
+  {        
+#if HHMTU_SDIP_MDCS
+    UInt uiSdipScanIdx = pcCU->getCoefScanIdx( uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx) );
+#else
+    UInt uiSdipScanIdx = 0; 
+#endif
+        
+    memcpy( &orgCoeff[0], pcCoef, uiMaxNumCoeff*sizeof(TCoeff) );
+
+    for( UInt uiScanPos = 0; uiScanPos < uiMaxNumCoeff; uiScanPos++ )
+    {
+      UInt uiBlkPos = g_auiNonSquareSigLastScan[uiSdipScanIdx][ uiNonSqureScanTableIdx ][uiScanPos];
+      pcCoef[ g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] + 1 ][ uiScanPos ] ] = orgCoeff[uiBlkPos]; 
+    }        
+  }
+#endif
+
 #if PCP_SIGMAP_SIMPLE_LAST
     //===== code last coeff =====
     UInt uiScanPosLast = 0, uiPosLastX, uiPosLastY;
@@ -1645,6 +1758,12 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
       }
     }
   }
+
+#if HHMTU_SDIP
+  if( NonSqureFlag )
+    memcpy( pcCoef, &orgCoeff[0], uiMaxNumCoeff*sizeof(TCoeff) );
+#endif
+
   return;
 }
 

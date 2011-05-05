@@ -535,12 +535,24 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                          TComYuv*    pcPredYuv, 
                          TComYuv*    pcResiYuv )
 {
+#if HHMTU_SDIP
+  UInt    uiSdipFlag        = pcCU     ->getSDIPFlag(uiAbsPartIdx);  
+  UInt    uiSdipDir         = pcCU     ->getSDIPDirection(uiAbsPartIdx);
+  UInt    uiWidth           = pcCU     ->getWidth   ( 0 ) >> ( uiSdipFlag? (uiSdipDir ? 0 : uiTrDepth*2) : uiTrDepth );
+  UInt    uiHeight          = pcCU     ->getHeight  ( 0 ) >> ( uiSdipFlag? (uiSdipDir ? uiTrDepth*2 : 0) : uiTrDepth );
+  UInt    uiStride          = pcRecoYuv->getStride  ();
+  UInt    uiLine            = pcCU->convertNonSquareUnitToLine(uiAbsPartIdx);
+  Pel*    piReco            = uiSdipFlag ? pcRecoYuv->getLineLumaAddr( uiLine,uiSdipDir ) : pcRecoYuv->getLumaAddr( uiAbsPartIdx );
+  Pel*    piPred            = uiSdipFlag ? pcPredYuv->getLineLumaAddr( uiLine,uiSdipDir ) : pcPredYuv->getLumaAddr( uiAbsPartIdx );
+  Pel*    piResi            = uiSdipFlag ? pcResiYuv->getLineLumaAddr( uiLine,uiSdipDir ) : pcResiYuv->getLumaAddr( uiAbsPartIdx );
+#else
   UInt    uiWidth           = pcCU     ->getWidth   ( 0 ) >> uiTrDepth;
   UInt    uiHeight          = pcCU     ->getHeight  ( 0 ) >> uiTrDepth;
   UInt    uiStride          = pcRecoYuv->getStride  ();
   Pel*    piReco            = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
   Pel*    piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
   Pel*    piResi            = pcResiYuv->getLumaAddr( uiAbsPartIdx );
+#endif
   
   UInt    uiNumCoeffInc     = ( pcCU->getSlice()->getSPS()->getMaxCUWidth() * pcCU->getSlice()->getSPS()->getMaxCUHeight() ) >> ( pcCU->getSlice()->getSPS()->getMaxCUDepth() << 1 );
   TCoeff* pcCoeff           = pcCU->getCoeffY() + ( uiNumCoeffInc * uiAbsPartIdx );
@@ -548,7 +560,11 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   UInt    uiLumaPredMode    = pcCU->getLumaIntraDir     ( uiAbsPartIdx );
   
   UInt    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+#if HHMTU_SDIP
+  Pel*    piRecIPred        = uiSdipFlag ? pcCU->getPic()->getPicYuvRec()->getLineLumaAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU(), uiLine, uiSdipDir) : pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+#else
   Pel*    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+#endif
   UInt    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
   
   //===== init availability pattern =====
@@ -632,10 +648,44 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
   UInt      uiChromaPredMode  = pcCU->getChromaIntraDir( 0 );
   
 #if !LM_CHROMA
+#if HHMTU_SDIP
+  if( !pcCU->getSDIPFlag(0) && uiChromaPredMode == 4 )
+    uiChromaPredMode          = pcCU->getLumaIntraDir( 0 );
+  else if( pcCU->getSDIPFlag(0) && uiChromaPredMode >= 4 && uiChromaPredMode < 8 )
+  {
+    UInt uiLumaModeCnt[35] = {0};
+    Int numOfModes = 0;
+    UInt uiModeList[6];
+       
+    UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);      
+#if !HHMTU_SDIP_PLANNAR_DISABLE
+    UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
+#else
+    UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
+#endif
+            
+    UInt uiPartOffset = 0;
+    UInt uiQNumParts  = pcCU->getTotalNumPart() >> 2;
+    for( Int i = 0; i < 4; i++, uiPartOffset+=uiQNumParts )
+    {
+      uiLumaModeCnt[ pcCU->getLumaIntraDir( uiPartOffset ) ]++;
+    }
+
+    for( Int i = 0; i < uiMaxNumMode; i++ )
+    {
+      if( uiLumaModeCnt[i] )
+      {
+        uiModeList[numOfModes++] = i;
+      }
+    }
+    uiChromaPredMode  = uiModeList[uiChromaPredMode-4];
+  }
+#else
   if( uiChromaPredMode == 4 )
   {
     uiChromaPredMode          = pcCU->getLumaIntraDir( 0 );
   }
+#endif
 #endif
   
   UInt      uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
@@ -661,11 +711,45 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
   }
   else
   {
+#if HHMTU_SDIP
+    if( !pcCU->getSDIPFlag(0) && uiChromaPredMode == 4)
+      uiChromaPredMode          = pcCU->getLumaIntraDir( 0 );
+    else if( pcCU->getSDIPFlag(0) && uiChromaPredMode >= 4 && uiChromaPredMode < 8 )
+    {
+      UInt uiLumaModeCnt[35] = {0};
+      Int numOfModes = 0;
+      UInt uiModeList[6];
+            
+      UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);      
+#if !HHMTU_SDIP_PLANNAR_DISABLE
+      UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
+#else
+      UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
+#endif
+            
+      UInt uiPartOffset = 0;
+      UInt uiQNumParts  = pcCU->getTotalNumPart() >> 2;
+      for( Int i = 0; i < 4; i++, uiPartOffset+=uiQNumParts )
+      {
+        uiLumaModeCnt[ pcCU->getLumaIntraDir( uiPartOffset ) ]++;
+      }
+
+      for( Int i = 0; i < uiMaxNumMode; i++ )
+      {
+        if( uiLumaModeCnt[i] )
+        {
+          uiModeList[numOfModes++] = i;
+        }
+      }
+      uiChromaPredMode  = uiModeList[uiChromaPredMode-4];
+    }
+#else
     if( uiChromaPredMode == 4 )
     {
-    uiChromaPredMode          = pcCU->getLumaIntraDir( 0 );
+      uiChromaPredMode          = pcCU->getLumaIntraDir( 0 );
     }
-  m_pcPrediction->predIntraChromaAng( pcCU->getPattern(), pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, pcCU, bAboveAvail, bLeftAvail );  
+#endif
+    m_pcPrediction->predIntraChromaAng( pcCU->getPattern(), pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, pcCU, bAboveAvail, bLeftAvail );  
   }
 #else // LM_CHROMA
   m_pcPrediction->predIntraChromaAng( pcCU->getPattern(), pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, pcCU, bAboveAvail, bLeftAvail );
@@ -713,6 +797,17 @@ TDecCu::xIntraRecQT( TComDataCU* pcCU,
   if( uiTrMode == uiTrDepth )
   {
     xIntraRecLumaBlk  ( pcCU, uiTrDepth, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv );
+#if HHMTU_SDIP
+    if(pcCU->getSDIPFlag(uiAbsPartIdx))
+    {
+      if(uiAbsPartIdx == 0)
+      {
+        xIntraRecChromaBlk( pcCU, 0, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv, 0 );
+        xIntraRecChromaBlk( pcCU, 0, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv, 1 );
+      }
+      return;
+    }
+#endif
     xIntraRecChromaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv, 0 );
     xIntraRecChromaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv, 1 );
   }
@@ -738,6 +833,13 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     xIntraLumaRecQT( pcCU, uiInitTrDepth, uiPU * uiNumQParts, m_ppcYuvReco[uiDepth], m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth] );
   }  
+#if HHMTU_SDIP
+  if(pcCU->getSDIPFlag(0))
+  {
+    uiNumPart = 1;
+    uiInitTrDepth = 0;
+  }
+#endif
 
   for( UInt uiPU = 0; uiPU < uiNumPart; uiPU++ )
   {
@@ -809,6 +911,10 @@ TDecCu::xIntraChromaRecQT( TComDataCU* pcCU,
 {
   UInt uiFullDepth  = pcCU->getDepth(0) + uiTrDepth;
   UInt uiTrMode     = pcCU->getTransformIdx( uiAbsPartIdx );
+#if HHMTU_SDIP
+  if(pcCU->getSDIPFlag(uiAbsPartIdx))
+    uiTrMode = 0;
+#endif
   if( uiTrMode == uiTrDepth )
   {
     xIntraRecChromaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcRecoYuv, pcPredYuv, pcResiYuv, 0 );

@@ -474,7 +474,11 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
+#if HHMTU_SDIP
+    if( eMode != SIZE_2Nx2N)                                        // if it is not 2Nx2N size, encode 4 intra directions.
+#else
     if( eMode == SIZE_NxN )                                         // if it is NxN size, encode 4 intra directions.
+#endif
     {
       UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(uiAbsPartIdx) << 1 ) ) >> 2;
       // if it is NxN size, this size might be the smallest partition size.                                                         // if it is NxN size, this size might be the smallest partition size.
@@ -1093,6 +1097,92 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiChromaOffset = uiLumaOffset>>2;
   UInt uiLumaTrMode, uiChromaTrMode;
   
+#if HHMTU_SDIP
+  if( pcCU->getSDIPFlag(uiAbsPartIdx) )
+  {
+    UInt uiQPartNum = ( pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1) ) >> 2;
+    UInt uiPartUnitIdx = uiAbsPartIdx;
+    UInt uiSubdiv;
+    UInt uiInitTrdepth = 1;
+    UInt uiTrDepth;
+    UInt uiSize = uiWidth*uiHeight >> 2;
+    TCoeff* pCoeff = pcCU->getCoeffY()  + uiLumaOffset;
+    //Transform flag  & CBF
+    UInt uiLumaTrMode, uiChromaTrMode;  
+
+    for (UInt i=0; i < 4;i++,uiPartUnitIdx += uiQPartNum)
+    {
+      uiSubdiv = 0;
+      if(uiWidth == 16)
+        m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, uiDepth + uiInitTrdepth );
+      uiTrDepth = uiInitTrdepth + uiSubdiv;
+      if(uiSubdiv)
+        pcCU->setTrIdxSubParts( uiTrDepth, uiPartUnitIdx, uiDepth + uiInitTrdepth );
+
+      if(uiTrDepth > 1)
+      {
+        m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiPartUnitIdx,     TEXT_LUMA, uiTrDepth, uiDepth + uiTrDepth);
+        m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiPartUnitIdx + 1, TEXT_LUMA, uiTrDepth, uiDepth + uiTrDepth);
+        m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiPartUnitIdx + 2, TEXT_LUMA, uiTrDepth, uiDepth + uiTrDepth);
+        m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiPartUnitIdx + 3, TEXT_LUMA, uiTrDepth, uiDepth + uiTrDepth);
+
+        pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth, uiLumaTrMode, uiChromaTrMode );
+        UInt uiYCbf = 0;        
+        for( UInt i = 0; i < 4; i++ )
+        {        
+          uiYCbf |= pcCU->getCbf( uiPartUnitIdx + i, TEXT_LUMA, uiLumaTrMode );       
+        }   
+        pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth-1, uiLumaTrMode, uiChromaTrMode );
+        for( UInt i = 0; i < 4; i++ )
+        {        
+          pcCU->getCbf( TEXT_LUMA     )[uiPartUnitIdx + i] |= uiYCbf << uiLumaTrMode;
+        }  
+      }
+      else
+        m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiPartUnitIdx, TEXT_LUMA, uiTrDepth, uiDepth + uiTrDepth);
+    }
+
+    UInt uiYCbf = 0;
+    pcCU->convertTransIdx( uiAbsPartIdx, uiInitTrdepth, uiLumaTrMode, uiChromaTrMode );   
+    uiPartUnitIdx = uiAbsPartIdx;
+    for( UInt i = 0; i < 4; i++, uiPartUnitIdx += uiQPartNum )
+    {        
+      uiYCbf |= pcCU->getCbf( uiPartUnitIdx, TEXT_LUMA, uiLumaTrMode );       
+    }   
+    pcCU->convertTransIdx( uiAbsPartIdx, 0, uiLumaTrMode, uiChromaTrMode );
+    uiPartUnitIdx = uiAbsPartIdx;
+    for( UInt i = 0; i < (uiQPartNum<<2); i++, uiPartUnitIdx++ )
+    {        
+      pcCU->getCbf( TEXT_LUMA     )[uiPartUnitIdx] |= uiYCbf << uiLumaTrMode;
+    }  
+
+    m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0, uiDepth);
+    m_pcEntropyDecoderIf->parseQtCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_V, 0, uiDepth);
+
+
+    //coeff
+    pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx(uiAbsPartIdx), uiLumaTrMode, uiChromaTrMode );
+    uiPartUnitIdx = uiAbsPartIdx;
+    for (UInt i=0; i < 4;i++,pCoeff += uiSize,uiPartUnitIdx += uiQPartNum)
+    {
+      uiTrDepth = uiInitTrdepth + pcCU->getTransformIdx( uiPartUnitIdx ) - 1;
+      UInt uiLumaWidth  = uiWidth  >> (pcCU->getSDIPDirection(uiAbsPartIdx)? 0 : 2*uiTrDepth);
+      UInt uiLumaHeight = uiHeight >> (pcCU->getSDIPDirection(uiAbsPartIdx)? 2*uiTrDepth : 0);
+      if(uiTrDepth > 1)
+      {
+        xDecodeCoeff( pcCU, pCoeff ,       uiPartUnitIdx,     uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xDecodeCoeff( pcCU, pCoeff + 16,   uiPartUnitIdx + 1, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xDecodeCoeff( pcCU, pCoeff + 16*2, uiPartUnitIdx + 2, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xDecodeCoeff( pcCU, pCoeff + 16*3, uiPartUnitIdx + 3, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+      }
+      else
+        xDecodeCoeff( pcCU, pCoeff,        uiPartUnitIdx,     uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+    }
+    xDecodeCoeff( pcCU, pcCU->getCoeffCb() + uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth>>1, uiHeight>>1, 0, uiChromaTrMode, TEXT_CHROMA_U );
+    xDecodeCoeff( pcCU, pcCU->getCoeffCr() + uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth>>1, uiHeight>>1, 0, uiChromaTrMode, TEXT_CHROMA_V );
+    return;
+  }
+#endif
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
     decodeTransformIdx( pcCU, uiAbsPartIdx, pcCU->getDepth(uiAbsPartIdx) );

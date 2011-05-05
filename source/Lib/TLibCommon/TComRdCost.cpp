@@ -343,6 +343,11 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
   // set Block Width / Height
   rcDistParam.iCols    = uiBlkWidth;
   rcDistParam.iRows    = uiBlkHeight;
+#if HHMTU_SDIP
+  if(uiBlkWidth != uiBlkHeight)
+    rcDistParam.DistFunc = m_afpDistortFunc[eDFunc];
+  else
+#endif
   rcDistParam.DistFunc = m_afpDistortFunc[eDFunc + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   
   // initialize
@@ -448,7 +453,11 @@ UInt TComRdCost::calcHAD( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iW
     {
       for ( x=0; x<iWidth; x+= 2 )
       {
+#if HHMTU_SDIP
+        uiSum += xCalcHADs2x2( &pi0[x], &pi1[x], iStride0, iStride1, 1 );
+#else
         uiSum += xCalcHADs8x8( &pi0[x], &pi1[x], iStride0, iStride1, 1 );
+#endif
       }
       pi0 += iStride0*2;
       pi1 += iStride1*2;

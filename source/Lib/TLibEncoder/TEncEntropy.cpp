@@ -771,7 +771,11 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
+#if HHMTU_SDIP
+    if( eSize != SIZE_2Nx2N )                                       // if it is not 2Nx2N size, encode 4 intra directions.
+#else
     if( eSize == SIZE_NxN )                                         // if it is NxN size, encode 4 intra directions.
+#endif
     {
       UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(uiAbsPartIdx) << 1 ) ) >> 2;
       // if it is NxN size, this size might be the smallest partition size.
@@ -1078,6 +1082,61 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiLumaTrMode, uiChromaTrMode;
   pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx(uiAbsPartIdx), uiLumaTrMode, uiChromaTrMode );
   
+#if HHMTU_SDIP
+  if(pcCU->getSDIPFlag(uiAbsPartIdx) )
+  {
+    UInt uiQPartNum = ( pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1) ) >> 2;
+    UInt uiPartUnitIdx = uiAbsPartIdx;
+    UInt uiSubdiv;
+    UInt uiInitTrdepth = 1;
+    UInt uiTrDepth;
+    UInt uiSize = uiWidth*uiHeight >> 2;
+    TCoeff* pCoeff = pcCU->getCoeffY()  + uiLumaOffset;
+
+    //Transform flag  & CBF
+    for (UInt i=0; i < 4;i++,uiPartUnitIdx += uiQPartNum)
+    {
+      uiTrDepth = uiInitTrdepth + pcCU->getTransformIdx( uiPartUnitIdx ) - 1;
+      if(uiWidth == 16)
+      {
+        uiSubdiv = pcCU->getTransformIdx( uiPartUnitIdx ) > 1;
+        m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, uiDepth + uiInitTrdepth );
+      }
+      if(uiTrDepth > 1)
+      {
+        m_pcEntropyCoderIf->codeQtCbf(pcCU, uiPartUnitIdx, TEXT_LUMA, uiTrDepth);
+        m_pcEntropyCoderIf->codeQtCbf(pcCU, uiPartUnitIdx + 1, TEXT_LUMA, uiTrDepth);
+         m_pcEntropyCoderIf->codeQtCbf(pcCU, uiPartUnitIdx + 2, TEXT_LUMA, uiTrDepth);
+        m_pcEntropyCoderIf->codeQtCbf(pcCU, uiPartUnitIdx + 3, TEXT_LUMA, uiTrDepth);
+      }
+      else
+        m_pcEntropyCoderIf->codeQtCbf(pcCU, uiPartUnitIdx, TEXT_LUMA, uiTrDepth);
+    }
+    m_pcEntropyCoderIf->codeQtCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_U, 0);
+    m_pcEntropyCoderIf->codeQtCbf(pcCU, uiAbsPartIdx, TEXT_CHROMA_V, 0);
+
+    //coeff
+    uiPartUnitIdx = uiAbsPartIdx;
+    for (UInt i=0; i < 4;i++,pCoeff += uiSize,uiPartUnitIdx += uiQPartNum)
+    {
+      uiTrDepth = uiInitTrdepth + pcCU->getTransformIdx( uiPartUnitIdx ) - 1;
+      UInt uiLumaWidth  = uiWidth  >> (pcCU->getSDIPDirection(uiAbsPartIdx)? 0 : 2*uiTrDepth);
+      UInt uiLumaHeight = uiHeight >> (pcCU->getSDIPDirection(uiAbsPartIdx)? 2*uiTrDepth : 0);
+      if(uiTrDepth > 1)
+      {
+        xEncodeCoeff( pcCU, pCoeff ,       uiPartUnitIdx,     uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xEncodeCoeff( pcCU, pCoeff + 16,   uiPartUnitIdx + 1, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xEncodeCoeff( pcCU, pCoeff + 16*2, uiPartUnitIdx + 2, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+        xEncodeCoeff( pcCU, pCoeff + 16*3, uiPartUnitIdx + 3, uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+      }
+      else
+        xEncodeCoeff( pcCU, pCoeff,        uiPartUnitIdx,     uiDepth + uiTrDepth, uiLumaWidth, uiLumaHeight, uiTrDepth, uiLumaTrMode, TEXT_LUMA );
+    }
+    xEncodeCoeff( pcCU, pcCU->getCoeffCb() + uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth>>1, uiHeight>>1, 0, uiChromaTrMode, TEXT_CHROMA_U );
+    xEncodeCoeff( pcCU, pcCU->getCoeffCr() + uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth>>1, uiHeight>>1, 0, uiChromaTrMode, TEXT_CHROMA_V );
+    return;
+  }
+#endif
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
     DTRACE_CABAC_V( g_nSymbolCounter++ )

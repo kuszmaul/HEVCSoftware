@@ -346,6 +346,10 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUsePAD        ( m_bUsePAD           );
   
   m_cSPS.setUseMRG        ( m_bUseMRG           ); // SOPH:
+#if HHMTU_SDIP
+  m_cSPS.setUseSDIP       ( m_bUseSDIP          ); 
+  g_useSDIP = m_bUseSDIP;
+#endif
 
 #if LM_CHROMA 
   m_cSPS.setUseLMChroma   ( m_bUseLMChroma           );  

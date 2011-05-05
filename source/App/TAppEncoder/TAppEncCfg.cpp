@@ -200,6 +200,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   /* Coding tools */
   ("MRG", m_bUseMRG, true, "merging of motion partitions")
+#if HHMTU_SDIP
+  ("SDIP", m_bUseSDIP, true, "Short Distance intra prediction")
+#endif
 
 #if LM_CHROMA 
   ("LMChroma", m_bUseLMChroma, true, "intra chroma prediction based on recontructed luma")
@@ -560,6 +563,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("FEN:%d ", m_bUseFastEnc         );
   printf("RQT:%d ", 1     );
   printf("MRG:%d ", m_bUseMRG             ); // SOPH: Merge Mode
+#if HHMTU_SDIP
+  printf("SDIP:%d ", m_bUseSDIP           ); 
+#endif
 #if LM_CHROMA 
   printf("LMC:%d ", m_bUseLMChroma        ); 
 #endif

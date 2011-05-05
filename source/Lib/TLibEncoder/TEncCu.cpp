@@ -359,6 +359,9 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
     m_pcEntropyCoder->encodeSliceFinish();
   }
 }
+#if HHMTU_SDIP_FAST
+UInt g_uiSdip2NxhNCost, g_uiSdiphNx2NCost, g_uiNxNCost, g_ui2Nx2NCost;
+#endif
 
 // ====================================================================================================================
 // Protected member functions
@@ -378,6 +381,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   
   static  Double  afCost[ MAX_CU_DEPTH ];
   static  Int      aiNum [ MAX_CU_DEPTH ];
+#if HHMTU_SDIP_FAST
+  static Bool bNeedSDIPflag = false;
+  static UInt   uiBitsNxN,uiBits2Nx2N;
+  uiBitsNxN = uiBits2Nx2N  = 0;
+#endif
   
   if ( rpcBestCU->getAddr() == 0 )
   {
@@ -455,18 +463,81 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
          rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely
       {
-        xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N ); rpcTempCU->initEstData();
+#if HHMTU_SDIP_FAST
+        g_uiNxNCost = g_ui2Nx2NCost = 0;
+#endif
+        xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N ); 
+#if HHMTU_SDIP_FAST
+        uiBits2Nx2N = rpcBestCU->getTotalBits();
+#endif
+        rpcTempCU->initEstData();
 #if MTK_DISABLE_INTRA_NxN_SPLIT
         if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
 #endif
         {
           if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
           {
-            xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   ); rpcTempCU->initEstData();
+            xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   ); 
+#if HHMTU_SDIP_FAST
+            uiBitsNxN = rpcTempCU->getTotalBits();
+#endif
+            rpcTempCU->initEstData();
           }
         }
       }
     }
+#if HHMTU_SDIP
+    if ( rpcTempCU->getSlice()->getSPS()->getUseSDIP() &&  !bEarlySkip )
+    {
+      if( rpcTempCU->getWidth(0) < 64)
+      {
+#if HHMTU_SDIP_FAST
+        if(rpcTempCU->getWidth(0) == 32)
+        {
+          if(uiBits2Nx2N > (UInt)(300*(64.0/((rpcTempCU->getQP(0)<32)?rpcTempCU->getQP(0):64))))
+            bNeedSDIPflag = false;
+          else
+            bNeedSDIPflag = true;
+        }
+        else if(rpcTempCU->getWidth(0) == 16)
+        {
+                
+          if(uiBits2Nx2N < (UInt)(30*(64.0/((rpcTempCU->getQP(0)<32)?rpcTempCU->getQP(0):64))))
+            bNeedSDIPflag = false;
+          else
+            bNeedSDIPflag = true;
+        }
+        else
+        {                
+          if(uiBits2Nx2N < (UInt)(10*(64.0/((rpcTempCU->getQP(0)<=32)?rpcTempCU->getQP(0):64))))
+            bNeedSDIPflag = false;
+          else
+            bNeedSDIPflag = true;
+        }
+
+        if(bNeedSDIPflag)
+        {            
+#endif        
+#if HHMTU_SDIP_FAST
+          g_uiSdip2NxhNCost = g_uiSdiphNx2NCost = 0;
+#endif
+          rpcTempCU->setSDIPFlagSubParts( 1, 0, rpcTempCU->getDepth(0) );
+          rpcTempCU->setSDIPDirectionSubParts( 1, 0, rpcTempCU->getDepth(0) );
+
+          xCheckRDCostIntra(rpcBestCU, rpcTempCU, SIZE_2NxhN ); 
+          rpcTempCU->initEstData();
+        
+          rpcTempCU->setSDIPFlagSubParts( 1, 0, rpcTempCU->getDepth(0) );
+          rpcTempCU->setSDIPDirectionSubParts( 0, 0, rpcTempCU->getDepth(0) );
+
+          xCheckRDCostIntra(rpcBestCU, rpcTempCU, SIZE_hNx2N ); 
+          rpcTempCU->initEstData();/**/
+#if HHMTU_SDIP_FAST
+        }
+#endif         
+      }
+    }
+#endif
     
     m_pcEntropyCoder->resetBits();
     m_pcEntropyCoder->encodeSplitFlag( rpcBestCU, 0, uiDepth, true );
@@ -631,6 +702,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // Encode Coefficients
   m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, pcCU->getWidth (uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx) );
+
 }
 
 Void TEncCu::xCheckRDCostSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bSkipRes )
@@ -798,6 +870,41 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
   }
   m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma );
+#if HHMTU_SDIP_FAST
+  if(rpcTempCU->getSDIPFlag(0)) 
+  {
+    if(rpcTempCU->getPartitionSize(0) == SIZE_2NxhN)
+    {
+      if(g_uiNxNCost)
+      {
+        if ((g_uiSdip2NxhNCost > g_ui2Nx2NCost) || (g_uiSdip2NxhNCost > g_uiNxNCost))
+          return;
+      }
+      else
+      {
+        if (g_uiSdip2NxhNCost > g_ui2Nx2NCost)
+          return;
+      }          
+    }
+    else
+    {
+      if(g_uiNxNCost)
+      {
+        if ((g_uiSdiphNx2NCost > g_ui2Nx2NCost) || (g_uiSdiphNx2NCost > g_uiNxNCost))
+          return;
+        if(g_uiSdiphNx2NCost > g_uiSdip2NxhNCost)
+          return;
+      }
+      else
+      {
+        if (g_uiSdiphNx2NCost > g_ui2Nx2NCost)
+          return;
+        if(g_uiSdiphNx2NCost > g_uiSdip2NxhNCost)
+          return;
+      }    
+    }
+  }
+#endif
 
 #if LM_CHROMA
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );

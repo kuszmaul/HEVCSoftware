@@ -162,7 +162,25 @@ Pel*  TComPicYuv::getLumaAddr( Int iCuAddr, Int uiAbsZorderIdx )
   
   return (m_piPicOrgY + iOffsetCu + iOffsetBase);
 }
+#if HHMTU_SDIP
+Pel*  TComPicYuv::getLineLumaAddr( Int iCuAddr, Int uiAbsZorderIdx, UInt uiLine , UInt uiDirection)
+{
+  Int iCuX           = iCuAddr % m_iNumCuInWidth;
+  Int iCuY           = iCuAddr / m_iNumCuInWidth;
+  Int iOffsetCu      = iCuY*m_iCuHeight*getStride() + iCuX*m_iCuWidth;
 
+  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
+  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
+  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
+  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
+  Int iOffsetBase    = iBaseY*m_iBaseUnitHeight*getStride() + iBaseX*m_iBaseUnitWidth;
+
+  Int iOffsetLine    = uiDirection ? uiLine*getStride() : uiLine;
+
+  return (m_piPicOrgY + iOffsetCu + iOffsetBase + iOffsetLine);
+
+}
+#endif
 Pel*  TComPicYuv::getCbAddr( int iCuAddr )
 {
   Int iCuX = iCuAddr % m_iNumCuInWidth;

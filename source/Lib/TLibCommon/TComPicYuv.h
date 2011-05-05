@@ -136,6 +136,10 @@ public:
   Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
   Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
   
+#if HHMTU_SDIP
+  //  Access starting position of original picture for specific Non-square partition unit (PU)
+  Pel*  getLineLumaAddr( Int iCuAddr, Int uiAbsZorderIdx, UInt uiLine , UInt uiDirection);
+#endif
   // ------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------

@@ -183,7 +183,11 @@ private:
 
 #if REFERENCE_SAMPLE_PADDING
   /// padding of unavailable reference samples for intra prediction
+#if HHMTU_SDIP
+  Void  fillReferenceSamples        ( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, UInt uiAboveWidth = 0, UInt uiAboveRightWidth = 0, UInt uiLeftHeight = 0, UInt uiLeftBelowHeight = 0);
+#else
   Void  fillReferenceSamples        ( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride);
+#endif
 #endif
 #if CONSTRAINED_INTRA_PRED
   /// constrained intra prediction

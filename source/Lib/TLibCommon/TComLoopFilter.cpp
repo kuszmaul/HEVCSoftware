@@ -220,7 +220,11 @@ Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiD
   }
   
   xSetLoopfilterParam( pcCU, uiAbsZorderIdx );
-  
+
+#if HHMTU_SDIP
+  //SDIP CU only needs to set edgefilter for PU
+  if( !pcCU->getSDIPFlag(uiAbsZorderIdx) )
+#endif
   xSetEdgefilterTU   ( pcCU, uiAbsZorderIdx, uiDepth );
   xSetEdgefilterPU   ( pcCU, uiAbsZorderIdx );
   
@@ -318,7 +322,10 @@ Void TComLoopFilter::xSetEdgefilterPU( TComDataCU* pcCU, UInt uiAbsZorderIdx )
   const UInt uiHeightInBaseUnits = pcCU->getPic()->getNumPartInHeight() >> uiDepth;
   const UInt uiHWidthInBaseUnits  = uiWidthInBaseUnits  >> 1;
   const UInt uiHHeightInBaseUnits = uiHeightInBaseUnits >> 1;
-  
+#if HHMTU_SDIP_LF
+  const UInt uiQWidthInBaseUnits  = uiWidthInBaseUnits  >> 2;
+  const UInt uiQHeightInBaseUnits = uiHeightInBaseUnits >> 2;
+#endif
   xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_VER, 0, m_stLFCUParam.bLeftEdge );
   xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_HOR, 0, m_stLFCUParam.bTopEdge );
   
@@ -344,6 +351,39 @@ Void TComLoopFilter::xSetEdgefilterPU( TComDataCU* pcCU, UInt uiAbsZorderIdx )
       xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_HOR, uiHHeightInBaseUnits, m_stLFCUParam.bInternalEdge );
       break;
     }
+#if HHMTU_SDIP
+#if HHMTU_SDIP_LF
+    case SIZE_2NxhN:
+    {
+      xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_HOR, uiHHeightInBaseUnits, m_stLFCUParam.bInternalEdge );
+      if(uiQHeightInBaseUnits != 0)
+      {
+        xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_HOR, uiQHeightInBaseUnits, m_stLFCUParam.bInternalEdge );
+        xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_HOR, uiHHeightInBaseUnits + uiQHeightInBaseUnits, m_stLFCUParam.bInternalEdge );
+      }
+      break;
+    }
+    case SIZE_hNx2N:
+    {
+      xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_VER, uiHWidthInBaseUnits, m_stLFCUParam.bInternalEdge );
+      if(uiQWidthInBaseUnits != 0)
+      {
+        xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_VER, uiQWidthInBaseUnits, m_stLFCUParam.bInternalEdge );
+        xSetEdgefilterMultiple( pcCU, uiAbsZorderIdx, uiDepth, EDGE_VER, uiHWidthInBaseUnits + uiQWidthInBaseUnits, m_stLFCUParam.bInternalEdge );
+      }
+      break;
+    }
+#else
+    case SIZE_2NxhN:
+    {
+      break;
+    }
+    case SIZE_hNx2N:
+    {
+      break;
+    }
+#endif
+#endif
     default:
     {
       assert(0);
@@ -372,7 +412,11 @@ Void TComLoopFilter::xSetLoopfilterParam( TComDataCU* pcCU, UInt uiAbsZorderIdx 
 #if MTK_NONCROSS_INLOOP_FILTER
   if ( m_stLFCUParam.bLeftEdge )
   {
+#if HHMTU_SDIP
+    pcTempCU = pcCU->getPULeft( uiTempPartIdx, uiAbsZorderIdx, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false, true );
+#else
     pcTempCU = pcCU->getPULeft( uiTempPartIdx, uiAbsZorderIdx, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false );
+#endif
     if ( pcTempCU )
       m_stLFCUParam.bLeftEdge = true;
     else
@@ -387,7 +431,11 @@ Void TComLoopFilter::xSetLoopfilterParam( TComDataCU* pcCU, UInt uiAbsZorderIdx 
 #if MTK_NONCROSS_INLOOP_FILTER
   if ( m_stLFCUParam.bTopEdge )
   {
+#if HHMTU_SDIP
+    pcTempCU = pcCU->getPUAbove( uiTempPartIdx, uiAbsZorderIdx, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false, true );
+#else
     pcTempCU = pcCU->getPUAbove( uiTempPartIdx, uiAbsZorderIdx, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false );
+#endif
     if ( pcTempCU )
       m_stLFCUParam.bTopEdge = true;
     else
@@ -417,21 +465,37 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   //-- Calculate Block Index
   if (iDir == EDGE_VER)
   {
+#if HHMTU_SDIP
+    pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false, true);
+#else
     pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false);
+#endif
   }
   else  // (iDir == EDGE_HOR)
   {
+#if HHMTU_SDIP
+    pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false, true);
+#else
     pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, !pcCU->getSlice()->getSPS()->getLFCrossSliceBoundaryFlag(), false);
+#endif
   }
 #else
   //-- Calculate Block Index
   if (iDir == EDGE_VER)
   {
+#if HHMTU_SDIP
+    pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, false, false, true);
+#else
     pcCUP = pcCUQ->getPULeft(uiPartP, uiPartQ, false, false);
+#endif
   }
   else  // (iDir == EDGE_HOR)
   {
+#if HHMTU_SDIP
+    pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, false, false, true);
+#else
     pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, false, false);
+#endif
   }
 #endif
   
@@ -521,7 +585,11 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   }   // enf of "if( not Intra )"
   
   m_aapucBS[iDir][0][uiAbsPartIdx] = uiBs;
+#if HHMTU_SDIP_LF
+  if ( bAtCUBoundary || ( !pcCU->getSDIPFlag(uiAbsZorderIdx) && bAtCUHalf) )
+#else
   if ( bAtCUBoundary || bAtCUHalf )
+#endif
   {
     m_aapucBS[iDir][1][uiAbsPartIdx] = uiBs;
     m_aapucBS[iDir][2][uiAbsPartIdx] = uiBs;

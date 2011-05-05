@@ -111,6 +111,9 @@ protected:
   UInt      m_uiBitIncrement;                                 ///< bit-depth increment
 #endif
   UInt      m_uiInternalBitDepth;                             ///< Internal bit-depth (BitDepth+BitIncrement)
+#if HHMTU_SDIP
+  Bool            m_bUseSDIP;                                    ///< Short Distance intra prediction
+#endif
   
 #if MTK_SAO
   Bool      m_bUseSAO; 
