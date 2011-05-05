@@ -98,6 +98,10 @@ protected:
   Pel*            m_pTempPel;
   UInt*           m_puiDFilter;
   Int             m_iMaxDeltaQP;
+#if HHMTU_SDIP_FAST
+  UInt           m_uiSdipRD;
+  Bool           m_bSdipFullFlag;
+#endif
   
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];

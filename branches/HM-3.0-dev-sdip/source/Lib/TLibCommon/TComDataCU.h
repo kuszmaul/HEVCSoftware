@@ -118,6 +118,10 @@ private:
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
+#if HHMTU_SDIP
+  UChar*        m_pSDIPFlag;           ///< array of SDIP flags
+  UChar*        m_pSDIPDirection;      ///< array of SDIP directions      
+#endif
   UChar*        m_apuhNeighbourCandIdx[ MRG_MAX_NUM_CANDS ];///< array of motion vector predictor candidates indices
   UChar*        m_puhLumaIntraDir;    ///< array of intra directions (luma)
   UChar*        m_puhChromaIntraDir;  ///< array of intra directions (chroma)
@@ -286,6 +290,17 @@ public:
   Void          setMergeIndex         ( UInt uiIdx, UInt uiMergeIndex ) { m_puhMergeIndex[uiIdx] = uiMergeIndex;  }
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
+#if HHMTU_SDIP
+  UChar*        getSDIPFlag            ()                        { return m_pSDIPFlag;                  }
+  UChar         getSDIPFlag            ( UInt uiIdx )            { return m_pSDIPFlag[uiIdx];           }
+  Void          setSDIPFlag            ( UInt uiIdx, UChar  uh ) { m_pSDIPFlag[uiIdx] = uh;             }
+  Void          setSDIPFlagSubParts    ( UChar SDIPFlag, UInt uiAbsPartIdx, UInt uiDepth );
+
+  UChar*        getSDIPDirection            ()                        { return m_pSDIPDirection;                  }
+  UChar         getSDIPDirection            ( UInt uiIdx )            { return m_pSDIPDirection[uiIdx];           }
+  Void          setSDIPDirection            ( UInt uiIdx, UChar  uh ) { m_pSDIPDirection[uiIdx] = uh;             }
+  Void          setSDIPDirectionSubParts    ( UChar Direction, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   UChar*        getNeighbourCandIdx         ( UInt uiCandIdx )            { return m_apuhNeighbourCandIdx[uiCandIdx];           }
   UChar         getNeighbourCandIdx         ( UInt uiCandIdx, UInt uiIdx ){ return m_apuhNeighbourCandIdx[uiCandIdx][uiIdx];           }
   Void          setNeighbourCandIdx         ( UInt uiCandIdx, UInt uiIdx, UChar uhNeighCands ) { m_apuhNeighbourCandIdx[uiCandIdx][uiIdx] = uhNeighCands;}
@@ -369,10 +384,16 @@ public:
   TComDataCU*   getCUAboveLeft              () { return m_pcCUAboveLeft;  }
   TComDataCU*   getCUAboveRight             () { return m_pcCUAboveRight; }
   TComDataCU*   getCUColocated              ( RefPicList eRefPicList ) { return m_apcCUColocated[eRefPicList]; }
-  
+
+#if HHMTU_SDIP
+  TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true, Bool bEnforceSquareUnit=false );
+  TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true, Bool bEnforceSquareUnit=false );
+  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true, Bool bEnforceSquareUnit=false );
+#else
   TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx , UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
+#endif
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
   TComDataCU*   getPUBelowLeft              ( UInt& uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceEntropySliceRestriction=true );
 
@@ -396,7 +417,11 @@ public:
   Void          deriveLeftRightTopIdxGeneral  ( PartSize eCUMode, UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( PartSize eCUMode, UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, TComMvField cMFieldNeighbours[4], UChar uhInterDirNeighbours[2], UInt& uiNeighbourInfos );
-  
+ 
+#if HHMTU_SDIP
+  UInt          convertNonSquareUnitToLine  ( UInt uiAbsPartIdx );
+  UInt          convertLineToNonSquareUnit  ( UInt uiAbsPartIdx, UInt uiLine );
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for modes
@@ -426,7 +451,10 @@ public:
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   Bool          isSuroundingRefIdxException     ( UInt   uiAbsPartIdx );
 #endif
-  
+
+#if HHMTU_SDIP
+  UInt          getSDIPChromaModeList           ( UInt uiModeList[], UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for SBAC context
   // -------------------------------------------------------------------------------------------------------------------
@@ -441,6 +469,10 @@ public:
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxIntraDirChroma            ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxMergeFlag                 ( UInt uiAbsPartIdx                                   );
+#if HHMTU_SDIP    
+  UInt          getCtxSDIPFlag                  ( UInt   uiAbsPartIdx                                 );
+  UInt          getCtxSDIPDirection             ( UInt   uiAbsPartIdx                                 );
+#endif
   
   Void          setSliceStartCU  ( UInt uiStartCU )    { m_uiSliceStartCU = uiStartCU;    }  
   UInt          getSliceStartCU  ()                    { return m_uiSliceStartCU;         }

@@ -130,6 +130,9 @@ protected:
   Bool      m_bUseBQP;
   Bool      m_bUseFastEnc;
   Bool      m_bUseMRG; // SOPH:
+#if HHMTU_SDIP
+  Bool        m_bUseSDIP;
+#endif
 #if LM_CHROMA 
   Bool      m_bUseLMChroma; 
 #endif
@@ -277,6 +280,9 @@ public:
   Void      setUseBQP                       ( Bool  b )     { m_bUseBQP     = b; }
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseMRG                       ( Bool  b )     { m_bUseMRG     = b; } // SOPH:
+#if HHMTU_SDIP
+  Void      setUseSDIP                      ( Bool  b )     { m_bUseSDIP    = b; } 
+#endif
 #if CONSTRAINED_INTRA_PRED
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
 #endif

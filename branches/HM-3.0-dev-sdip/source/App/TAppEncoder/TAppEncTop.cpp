@@ -126,6 +126,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseFastEnc                   ( m_bUseFastEnc  );
   m_cTEncTop.setUseMRG                       ( m_bUseMRG      ); // SOPH:
 
+#if HHMTU_SDIP
+  m_cTEncTop.setUseSDIP                       ( m_bUseSDIP      );
+#endif
 #if LM_CHROMA 
   m_cTEncTop.setUseLMChroma                  ( m_bUseLMChroma );
 #endif

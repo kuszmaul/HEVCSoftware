@@ -222,10 +222,24 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
 {
   Pel*  piRoiOrigin;
   Int*  piAdiTemp;
+#if HHMTU_SDIP
+  UChar uiSdipFlag = pcCU->getSDIPFlag(uiZorderIdxInPart);
+  UChar uiSdipDir = pcCU->getSDIPDirection(uiZorderIdxInPart);
+  UInt  uiCuWidth   = pcCU->getWidth(0) >> (uiSdipFlag? (uiSdipDir? 0 : 2*uiPartDepth) :uiPartDepth);
+  UInt  uiCuHeight  = pcCU->getHeight(0)>> (uiSdipFlag? (uiSdipDir? 2*uiPartDepth : 0) :uiPartDepth);
+  UInt  uiCuWidth2  = uiCuWidth + uiCuHeight;
+  UInt  uiCuHeight2 = uiCuWidth + uiCuHeight;
+  UInt  uiLine      = pcCU->convertNonSquareUnitToLine(uiZorderIdxInPart);
+  UInt  uiAboveWidth = 0;
+  UInt  uiLeftHeight = 0;
+  UInt  uiAboveRightWidth = 0;
+  UInt  uiBelowLeftHeight = 0;
+#else
   UInt  uiCuWidth   = pcCU->getWidth(0) >> uiPartDepth;
   UInt  uiCuHeight  = pcCU->getHeight(0)>> uiPartDepth;
   UInt  uiCuWidth2  = uiCuWidth<<1;
   UInt  uiCuHeight2 = uiCuHeight<<1;
+#endif
   UInt  uiWidth;
   UInt  uiHeight;
   Int   iPicStride = pcCU->getPic()->getStride();
@@ -247,8 +261,41 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   
   UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB, uiPartDum;
   
+#if HHMTU_SDIP
+  UInt uiBlkposx, uiBlkposy;
+  if( uiSdipFlag)
+  {
+    if( uiSdipDir == 1)
+    {
+      uiAboveWidth = uiCuWidth;
+      uiAboveRightWidth = uiCuHeight;
+      uiLeftHeight = uiCuWidth - uiLine;
+      uiBelowLeftHeight = uiCuHeight + uiLine;
+      uiBlkposx = 0;
+      uiBlkposy = uiLine;
+    }
+    else
+    {
+      uiAboveWidth = uiCuHeight - uiLine;
+      uiAboveRightWidth = uiCuWidth + uiLine;
+      uiLeftHeight = uiCuHeight;
+      uiBelowLeftHeight = uiCuWidth;
+      uiBlkposx = uiLine;
+      uiBlkposy = 0;
+    }
+    pcCU->deriveLeftRightTopIdxAdi( uiPartIdxLT, uiPartIdxRT, 0, 0 );
+    pcCU->deriveLeftBottomIdxAdi  ( uiPartIdxLB,              0, 0 );
+    uiPartIdxLT = uiZorderIdxInPart + pcCU->getZorderIdxInCU();
+  }
+  else
+  {
+    pcCU->deriveLeftRightTopIdxAdi( uiPartIdxLT, uiPartIdxRT, uiZorderIdxInPart, uiPartDepth );
+    pcCU->deriveLeftBottomIdxAdi  ( uiPartIdxLB,              uiZorderIdxInPart, uiPartDepth );
+  }
+#else
   pcCU->deriveLeftRightTopIdxAdi( uiPartIdxLT, uiPartIdxRT, uiZorderIdxInPart, uiPartDepth );
   pcCU->deriveLeftBottomIdxAdi  ( uiPartIdxLB,              uiZorderIdxInPart, uiPartDepth );
+#endif
   
 #if CONSTRAINED_INTRA_PRED
   if ( pcCU->getSlice()->getPPS()->getConstrainedIntraPred() )
@@ -282,21 +329,73 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     bNeighborFlags = new Bool[iTotalUnits];
 
     ::memset(bNeighborFlags, false, sizeof(Bool)*iTotalUnits);
+#if HHMTU_SDIP
+    if( uiSdipFlag)
+    {
+      iUnitSize = Max(uiCuWidth, uiCuHeight);
+      UInt iMinUnitSize = g_uiMaxCUWidth >> g_uiMaxCUDepth;
+
+      if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[3] = true; iNumIntraNeighbor++; }
+      if( uiBlkposy == 0 && pcCU->getPUAboveRightAdi( uiPartDum, iMinUnitSize - 1 + uiAboveRightWidth,  uiPartIdxRT, 1, true, false ) ) { bNeighborFlags[4] = true; iNumIntraNeighbor++; }
+      if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[1] = true; iNumIntraNeighbor++; }    
+      if( uiBlkposx == 0 && pcCU->getPUBelowLeftAdi ( uiPartDum, iMinUnitSize - 1 + uiBelowLeftHeight, uiPartIdxLB, 1, true, false ) ) { bNeighborFlags[0] = true; iNumIntraNeighbor++; }
+        
+      if(uiLine % iMinUnitSize)
+      {
+        if( (uiSdipDir == 1 && bNeighborFlags[1] == true) || (uiSdipDir == 0 && bNeighborFlags[3] == true) )
+        { bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+      }
+      else
+      {
+        if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+      }        
+    }
+    else
+    {
+#endif
     if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[3] = true; iNumIntraNeighbor++; }
     if( pcCU->getPUAboveRightAdi( uiPartDum, uiCuWidth,  uiPartIdxRT, 1, true, false ) ) { bNeighborFlags[4] = true; iNumIntraNeighbor++; }
     if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[1] = true; iNumIntraNeighbor++; }
     if( pcCU->getPUBelowLeftAdi ( uiPartDum, uiCuHeight, uiPartIdxLB, 1, true, false ) ) { bNeighborFlags[0] = true; iNumIntraNeighbor++; }
     if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+#if HHMTU_SDIP
+    }
+#endif
 #if MN_DC_PRED_FILTER
     m_bAboveFlagForDCFilt = bNeighborFlags[3];
     m_bLeftFlagForDCFilt  = bNeighborFlags[1];
 #endif
 #else // REFERENCE_SAMPLE_PADDING
+#if HHMTU_SDIP
+    if( uiSdipFlag)
+    {
+      UInt iMinUnitSize = g_uiMaxCUWidth >> g_uiMaxCUDepth;
+
+      if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveFlag      = true;
+      if( uiBlkposy == 0 && pcCU->getPUAboveRightAdi( uiPartDum, iMinUnitSize - 1 + uiAboveRightWidth,  uiPartIdxRT, 1, true, false ) ) bAboveRightFlag = true;
+      if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) bLeftFlag       = true;
+      if( uiBlkposx == 0 && pcCU->getPUBelowLeftAdi ( uiPartDum, iMinUnitSize - 1 + uiBelowLeftHeight, uiPartIdxLB, 1, true, false ) ) bBelowLeftFlag  = true;
+
+      if(uiLine % iMinUnitSize)
+      {
+        if( (uiSdipDir == 1 && bLeftFlag == true) || (uiSdipDir == 0 && bAboveFlag == true) )bAboveLeftFlag       = true;
+      }
+      else
+      {
+        if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveLeftFlag       = true;
+      }
+    }
+    else
+    {
+#endif
     if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveFlag      = true;
     if( pcCU->getPUAboveRightAdi( uiPartDum, uiCuWidth,  uiPartIdxRT, 1, true, false ) ) bAboveRightFlag = true;
     if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) bLeftFlag       = true;
     if( pcCU->getPUBelowLeftAdi ( uiPartDum, uiCuHeight, uiPartIdxLB, 1, true, false ) ) bBelowLeftFlag  = true;
     if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveLeftFlag  = true;
+#if HHMTU_SDIP
+      }
+#endif
 #if MN_DC_PRED_FILTER
     m_bAboveFlagForDCFilt = bAboveFlag;
     m_bLeftFlagForDCFilt  = bLeftFlag;
@@ -311,21 +410,72 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   bNeighborFlags = new Bool[iTotalUnits];
 
   ::memset(bNeighborFlags, false, sizeof(Bool)*iTotalUnits);
+#if HHMTU_SDIP
+  if( uiSdipFlag)
+  {
+    iUnitSize = Max(uiCuWidth, uiCuHeight);
+    UInt iMinUnitSize = g_uiMaxCUWidth >> g_uiMaxCUDepth;
+
+    if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[3] = true; iNumIntraNeighbor++; }
+    if( uiBlkposy == 0 && pcCU->getPUAboveRightAdi( uiPartDum, iMinUnitSize - 1 + uiAboveRightWidth,  uiPartIdxRT, 1, true, false ) ) { bNeighborFlags[4] = true; iNumIntraNeighbor++; }
+    if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) { bNeighborFlags[1] = true; iNumIntraNeighbor++; }    
+    if( uiBlkposx == 0 && pcCU->getPUBelowLeftAdi ( uiPartDum, iMinUnitSize - 1 + uiBelowLeftHeight, uiPartIdxLB, 1, true, false ) ) { bNeighborFlags[0] = true; iNumIntraNeighbor++; }
+        
+    if(uiLine % iMinUnitSize)
+    {
+      if( (uiSdipDir == 1 && bNeighborFlags[1] == true) || (uiSdipDir == 0 && bNeighborFlags[3] == true) ){ bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+    }
+    else
+    {
+      if( pcCU->getPUAboveLeft( uiPartDum, uiPartIdxLT, true, false ) ) { bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+    }        
+  }
+  else
+  {
+#endif
   if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT, true, false ) ) { bNeighborFlags[3] = true; iNumIntraNeighbor++; }
   if( pcCU->getPUAboveRightAdi( uiPartDum, uiCuWidth,  uiPartIdxRT, true, false ) ) { bNeighborFlags[4] = true; iNumIntraNeighbor++; }
   if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT, true, false ) ) { bNeighborFlags[1] = true; iNumIntraNeighbor++; }
   if( pcCU->getPUBelowLeftAdi ( uiPartDum, uiCuHeight, uiPartIdxLB, true, false ) ) { bNeighborFlags[0] = true; iNumIntraNeighbor++; }
   if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT, true, false ) ) { bNeighborFlags[2] = true; iNumIntraNeighbor++; }
+#if HHMTU_SDIP
+  }
+#endif
 #if MN_DC_PRED_FILTER
   m_bAboveFlagForDCFilt = bNeighborFlags[3];
   m_bLeftFlagForDCFilt  = bNeighborFlags[1];
 #endif
 #else // REFERENCE_SAMPLE_PADDING
+#if HHMTU_SDIP
+  if( uiSdipFlag)
+  {
+    UInt iMinUnitSize = g_uiMaxCUWidth >> g_uiMaxCUDepth;
+
+    if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveFlag      = true;
+    if( uiBlkposy == 0 && pcCU->getPUAboveRightAdi( uiPartDum, iMinUnitSize - 1 + uiAboveRightWidth,  uiPartIdxRT, 1, true, false ) ) bAboveRightFlag = true;
+    if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT,    true, false ) ) bLeftFlag       = true;
+    if( uiBlkposx == 0 && pcCU->getPUBelowLeftAdi ( uiPartDum, iMinUnitSize - 1 + uiBelowLeftHeight, uiPartIdxLB, 1, true, false ) ) bBelowLeftFlag  = true;
+
+    if(uiLine % iMinUnitSize)
+    {
+      if( (uiSdipDir == 1 && bLeftFlag == true) || (uiSdipDir == 0 && bAboveFlag == true) ) bAboveLeftFlag       = true;
+    }
+    else
+    {
+      if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT,    true, false ) ) bAboveLeftFlag       = true;
+    }
+  }
+  else
+  {
+#endif
   if( pcCU->getPUAbove        ( uiPartDum,             uiPartIdxLT, true, false ) ) bAboveFlag      = true;
   if( pcCU->getPUAboveRightAdi( uiPartDum, uiCuWidth,  uiPartIdxRT, true, false ) ) bAboveRightFlag = true;
   if( pcCU->getPULeft         ( uiPartDum,             uiPartIdxLT, true, false ) ) bLeftFlag       = true;
   if( pcCU->getPUBelowLeftAdi ( uiPartDum, uiCuHeight, uiPartIdxLB, true, false ) ) bBelowLeftFlag  = true;
   if( pcCU->getPUAboveLeft    ( uiPartDum,             uiPartIdxLT, true, false ) ) bAboveLeftFlag  = true;
+#if HHMTU_SDIP
+  }
+#endif
 #if MN_DC_PRED_FILTER
   m_bAboveFlagForDCFilt = bAboveFlag;
   m_bLeftFlagForDCFilt  = bLeftFlag;
@@ -353,11 +503,21 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   if (((uiWidth<<2)>iOrgBufStride)||((uiHeight<<2)>iOrgBufHeight))
     return;
   
+#if HHMTU_SDIP
+  if( uiSdipFlag)
+    piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getLineLumaAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU() ,uiLine, uiSdipDir);
+  else
+#endif
   piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
   piAdiTemp   = piAdiBuf;
 
 #if REFERENCE_SAMPLE_PADDING
+#if HHMTU_SDIP
+  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride
+                        , uiAboveWidth, uiAboveRightWidth, uiLeftHeight, uiBelowLeftHeight);
+#else
   fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride);
+#endif  
   delete [] bNeighborFlags;
   bNeighborFlags = NULL;
 #else // REFERENCE_SAMPLE_PADDING
@@ -379,13 +539,21 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     if (bAboveRightFlag)
     {
       piRoiTemp=piRoiOrigin-iPicStride+uiCuWidth;
+#if HHMTU_SDIP
+      for (i=0;i<uiCuHeight;i++)
+#else
       for (i=0;i<uiCuWidth;i++)
+#endif
         piAdiTemp[1+uiCuWidth+i]=piRoiTemp[i];
     }
     // BB: fill top right border with last sample from top
     else
     {
+#if HHMTU_SDIP
+      for (i=0;i<uiCuHeight;i++)
+#else
       for (i=0;i<uiCuWidth;i++)
+#endif
         piAdiTemp[1+uiCuWidth+i]=piAdiTemp[uiCuWidth];
     }
   }
@@ -408,7 +576,11 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     // BB: fill below left border with rec. samples
     if (bBelowLeftFlag)
     {
+#if HHMTU_SDIP
+      for (i=0;i<uiCuWidth;i++)
+#else
       for (i=0;i<uiCuHeight;i++)
+#endif
       {
         piAdiTemp[(1+uiCuHeight+i)*uiWidth]=piRoiTemp[0];
         piRoiTemp+=iPicStride;
@@ -417,7 +589,11 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     // BB: fill below left border with last sample from left
     else
     {
+#if HHMTU_SDIP
+      for (i=0;i<uiCuWidth;i++)
+#else
       for (i=0;i<uiCuHeight;i++)
+#endif
         piAdiTemp[(1+uiCuHeight+i)*uiWidth]=piAdiTemp[(uiCuHeight)*uiWidth];
     }
   }
@@ -721,7 +897,11 @@ Void TComPattern::initAdiPatternChroma( TComDataCU* pcCU, UInt uiZorderIdxInPart
 }
 
 #if REFERENCE_SAMPLE_PADDING
+#if HHMTU_SDIP
+Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, UInt uiAboveWidth , UInt uiAboveRightWidth , UInt uiLeftHeight , UInt uiBelowLeftHeight )
+#else
 Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride)
+#endif
 {
   Pel* piRoiTemp;
   Int  i, j;
@@ -750,7 +930,11 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
     }
 
     // Fill below left border with rec. samples
+#if HHMTU_SDIP
+    for (i=0; i<uiCuWidth; i++)
+#else
     for (i=0; i<uiCuHeight; i++)
+#endif
     {
       piAdiTemp[(1+uiCuHeight+i)*uiWidth] = piRoiTemp[0];
       piRoiTemp += iPicStride;
@@ -763,7 +947,11 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
 
     // Fill top right border with rec. samples
     piRoiTemp = piRoiOrigin - iPicStride + uiCuWidth;
+#if HHMTU_SDIP
+    for (i=0; i<uiCuHeight; i++)
+#else
     for (i=0; i<uiCuWidth; i++)
+#endif
       piAdiTemp[1+uiCuWidth+i] = piRoiTemp[i];
   }
   else // reference samples are partially available
@@ -790,7 +978,66 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
       for (i=1; i<iUnitSize; i++)
         piAdiLineTemp[i] = piAdiLineTemp[0];
     }
+#if HHMTU_SDIP
+    UInt iFirstUnitSizeLeft = (uiLeftHeight % iUnitSize) ? (uiLeftHeight % iUnitSize) : iUnitSize;
+    UInt iLastUnitSizeLeft = (uiBelowLeftHeight % iUnitSize) ? (uiBelowLeftHeight % iUnitSize) : iUnitSize;
+    UInt iFirstUnitSizeAbove = (uiAboveWidth % iUnitSize) ? (uiAboveWidth % iUnitSize) : iUnitSize;
+    UInt iLastUnitSizeAbove = (uiAboveRightWidth % iUnitSize) ? (uiAboveRightWidth % iUnitSize) : iUnitSize;
+    if( uiCuWidth != uiCuHeight)
+    {
+      // Fill left & below-left samples
+      piRoiTemp += iPicStride;
+      piAdiLineTemp--;
+      pbNeighborFlags--;
+      for (j=0; j<iNumUnits2; j++)
+      {
+        UInt iSize = iUnitSize;
+        if( j == 0 )iSize = iFirstUnitSizeLeft;
+        if( j == iNumUnits2 - 1)iSize = iLastUnitSizeLeft;
+            
+        if (*pbNeighborFlags)
+        {
+          for (i=0; i<iSize; i++)
+          piAdiLineTemp[-i] = piRoiTemp[i*iPicStride];
+          if( iSize < iUnitSize)
+          {
+            for ( i = iSize; i < iUnitSize; i++)
+              piAdiLineTemp[-i] = piAdiLineTemp[1-(Int)iSize];
+          }
+        }
+        piRoiTemp += iSize*iPicStride;
+        piAdiLineTemp -= iUnitSize;
+        pbNeighborFlags--;
+      }
 
+      // Fill above & above-right samples
+      piRoiTemp = piRoiOrigin - iPicStride;
+      piAdiLineTemp = piAdiLine + ((iNumUnits2+1)*iUnitSize);
+      pbNeighborFlags = bNeighborFlags + iNumUnits2 + 1;
+      for (j=0; j<iNumUnits2; j++)
+      {
+        UInt iSize = iUnitSize;
+        if( j == 0 )iSize = iFirstUnitSizeAbove;
+        if( j == iNumUnits2 - 1)iSize = iLastUnitSizeAbove;
+
+        if (*pbNeighborFlags)
+        {
+          for (i=0; i<iSize; i++)
+            piAdiLineTemp[i] = piRoiTemp[i];
+          if( iSize < iUnitSize)
+          {
+            for ( i = iSize; i < iUnitSize; i++)
+              piAdiLineTemp[i] = piAdiLineTemp[(Int)iSize-1];
+          }
+        }
+        piRoiTemp += iSize;
+        piAdiLineTemp += iUnitSize;
+        pbNeighborFlags++;
+      }
+    }
+    else
+    {
+#endif
     // Fill left & below-left samples
     piRoiTemp += iPicStride;
     piAdiLineTemp--;
@@ -822,6 +1069,9 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
       piAdiLineTemp += iUnitSize;
       pbNeighborFlags++;
     }
+#if HHMTU_SDIP
+    }
+#endif
 
     // Pad reference samples when necessary
     iPrev = -1;
@@ -866,7 +1116,36 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
         iNext++;
       }
     }
+#if HHMTU_SDIP
+    if( uiCuWidth != uiCuHeight)
+    {
+      // Copy processed samples
 
+      piAdiTemp[0] = piAdiLine[iNumUnits2 * iUnitSize];
+
+      piAdiLineTemp = piAdiLine + (iNumUnits2 + 1) * iUnitSize - 1;
+
+      for (i=1; i<iFirstUnitSizeAbove; i++)
+        piAdiTemp[i] = piAdiLineTemp[i];
+
+      piAdiLineTemp += (iUnitSize - iFirstUnitSizeAbove); 
+
+      for (i=iFirstUnitSizeAbove; i<uiWidth; i++)
+        piAdiTemp[i] = piAdiLineTemp[i];
+
+      piAdiLineTemp = piAdiLine + iNumUnits2 * iUnitSize ;
+
+      for (i=1; i<iFirstUnitSizeLeft; i++)
+        piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
+
+      piAdiLineTemp -= (iUnitSize - iFirstUnitSizeLeft);
+
+      for (i=iFirstUnitSizeLeft; i<uiHeight; i++)
+        piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
+    }
+    else
+    {
+#endif
     // Copy processed samples
     piAdiLineTemp = piAdiLine + uiHeight + iUnitSize - 2;
     for (i=0; i<uiWidth; i++)
@@ -874,6 +1153,9 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
     piAdiLineTemp = piAdiLine + uiHeight - 1;
     for (i=1; i<uiHeight; i++)
       piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
+#if HHMTU_SDIP
+    }
+#endif
 
     delete [] piAdiLine;
     piAdiLine = NULL;
@@ -927,7 +1209,11 @@ Int* TComPattern::getPredictorPtr ( UInt uiDirMode, UInt uiWidthBits, Int iCuWid
 #if ADD_PLANAR_MODE
   mapPlanartoDC( uiDirMode );
 #endif
+#if !HHMTU_SDIP_MDIS
+  UChar ucFiltIdx = (iCuWidth == iCuHeight)? g_aucIntraFilter[uiWidthBits][uiDirMode] : 0;
+#else
   UChar ucFiltIdx = g_aucIntraFilter[uiWidthBits][uiDirMode];
+#endif
 
 #if MN_MDIS_SIMPLIFICATION
   assert( ucFiltIdx <= 1 );
@@ -940,9 +1226,17 @@ Int* TComPattern::getPredictorPtr ( UInt uiDirMode, UInt uiWidthBits, Int iCuWid
   if ( ucFiltIdx )
   {
 #if MN_MDIS_SIMPLIFICATION
+#if HHMTU_SDIP
+    piSrc += (iCuWidth  + iCuHeight + 1) * (iCuWidth  + iCuHeight + 1);
+#else
     piSrc += ((iCuWidth << 1) + 1) * ((iCuHeight << 1) + 1);
+#endif
+#else
+#if HHMTU_SDIP
+    piSrc += ((iCuWidth  + iCuHeight + 1) * (iCuWidth  + iCuHeight + 1) << (ucFiltIdx - 1));
 #else
     piSrc += (((iCuWidth << 1) + 1) * ((iCuHeight << 1) + 1) << (ucFiltIdx - 1));
+#endif
 #endif
   }
 

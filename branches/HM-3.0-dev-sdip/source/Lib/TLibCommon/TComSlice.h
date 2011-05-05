@@ -74,6 +74,9 @@ private:
   Bool        m_bUseLDC;
   Bool        m_bUsePAD;
   Bool        m_bUseMRG; // SOPH:
+#if HHMTU_SDIP
+  Bool        m_bUseSDIP;
+#endif
 
 #if LM_CHROMA 
   Bool        m_bUseLMChroma; // JL:
@@ -158,6 +161,10 @@ public:
   Void setUsePAD      ( Bool b ) { m_bUsePAD   = b;         }
   Void setUseMRG      ( Bool b ) { m_bUseMRG  = b;          } // SOPH:
   
+#if HHMTU_SDIP
+  Bool getUseSDIP     ()         { return m_bUseSDIP;       }    
+  Void setUseSDIP     ( Bool b ) { m_bUseSDIP   = b;        }
+#endif
 #if DCM_COMB_LIST
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
   Bool getUseLComb    ()         { return m_bUseLComb;      }

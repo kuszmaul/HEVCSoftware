@@ -50,6 +50,9 @@ Void initROM()
   
   // g_aucConvertToBit[ x ]: log2(x/4), if x=4 -> 0, x=8 -> 1, x=16 -> 2, ...
   ::memset( g_aucConvertToBit,   -1, sizeof( g_aucConvertToBit ) );
+#if HHMTU_SDIP
+  g_aucConvertToBit[ 1 ] = -2;
+#endif
   c=0;
   for ( i=4; i<MAX_CU_SIZE; i*=2 )
   {
@@ -75,6 +78,19 @@ Void initROM()
 
     c <<= 1;
   }  
+#if HHMTU_SDIP
+  Int iwidth[5] = {16, 8, 16, 32, 32};
+  Int iheight[5] = {1, 2, 4, 2, 8};
+  for ( i=0; i < 5; i++ )
+  {
+    Int w = iwidth[i];
+    Int h = iheight[i];
+    g_auiNonSquareSigLastScan[0][i] = new UInt[ w*h ];
+    g_auiNonSquareSigLastScan[1][i] = new UInt[ w*h ];
+    g_auiNonSquareSigLastScan[2][i] = new UInt[ w*h ];
+    initNonSquareSigLastScan( g_auiNonSquareSigLastScan[0][i], g_auiNonSquareSigLastScan[1][i], g_auiNonSquareSigLastScan[2][i], w, h);
+  }
+#endif
 }
 
 Void destroyROM()
@@ -235,9 +251,18 @@ void Idx2LevelRowCol(int idx, int *level, int *row, int *col)
 }
 #endif
 
+#if HHMTU_SDIP
+UInt g_useSDIP = 0;
+#endif
 #if E243_CORE_TRANSFORMS
   UInt g_auiQ[6] = {26214,23302,20560,18396,16384,14564};    
   UInt g_auiIQ[6] = {40,45,51,57,64,72};
+#if HHMTU_SDIP
+  const short g_aiT2[2][2] = {
+    { 1, 1},
+    { 1,-1}
+  };
+#endif
 
   const short g_aiT4[4][4] = {
     { 64, 64, 64, 64},
@@ -2445,6 +2470,44 @@ const UChar g_aucIntraModeNumFast[7] =
 #endif
 #endif // FAST_UDI_USE_MPM
 
+#if HHMTU_SDIP_FAST
+#if FAST_UDI_USE_MPM
+const UChar g_aucIntraModeNumFastSdip[7] =
+{
+  3,  //   2x2
+  2,  //   4x4
+  2,  //   8x8
+  2,  //  16x16   
+  2,  //  32x32   
+  3,  //  64x64   
+  3   // 128x128  
+};
+#else // FAST_UDI_USE_MPM
+#if SAMSUNG_FAST_UDI_MODESET==0
+const UChar g_aucIntraModeNumFastSdip[7] =
+{
+  3,  //   2x2
+  9,  //   4x4
+  9,  //   8x8
+  4,  //  16x16   33
+  4,  //  32x32   33
+  5,  //  64x64   33
+  4   // 128x128  33
+};
+#else
+const UChar g_aucIntraModeNumFastSdip[7] =
+{
+  3,  //   2x2
+  9,  //   4x4
+  9,  //   8x8
+  9,  //  16x16   33
+  9,  //  32x32   33
+  5,  //  64x64   33
+  4   // 128x128  33
+};
+#endif
+#endif // FAST_UDI_USE_MPM
+#endif
 // chroma
 
 const UChar g_aucConvertTxtTypeToIdx[4] = { 0, 1, 1, 2 };
@@ -2564,6 +2627,18 @@ UInt* g_auiFrameScanY [ MAX_CU_DEPTH  ];
 #if QC_MDCS
 UInt* g_auiSigLastScan[3][ MAX_CU_DEPTH ];
 #endif //QC_MDCS
+#if HHMTU_SDIP
+UInt* g_auiNonSquareSigLastScan[3][5];
+UInt  g_auiNonSquareScanTableIdx[6][6] = 
+{
+  { 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 1, 0, 3 },
+  { 0, 0, 0, 0, 2, 0 },
+  { 0, 1, 0, 0, 0, 4 },
+  { 0, 0, 2, 0, 0, 0 },
+  { 0, 3, 0, 4, 0, 0 }
+};
+#endif
 
 #if PCP_SIGMAP_SIMPLE_LAST
 UInt g_uiCtxXYOffset[ MAX_CU_DEPTH ] =
@@ -2700,3 +2775,75 @@ const UChar ChromaMapping[2][5] =
 };
 #endif
 
+#if HHMTU_SDIP
+Void initNonSquareSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
+{
+
+  Int x, y, c = 0;
+
+  // starting point
+  pBuffZ[ c++ ] = 0;
+
+  if( iHeight == 1 )
+  {
+    for(Int iX=0; iX < iWidth; iX++)
+    {
+      pBuffZ[ iX ] = iX;
+      pBuffH[ iX ] = iX;
+      pBuffV[ iX ] = iX;
+    }
+    return;
+  }
+        
+
+  // loop
+  x=0; y=1;
+  while (1)
+  {
+    // increase loop
+    while ( y>=0 )
+    {
+      if ( x >= 0 && x < iWidth && y >= 0 && y < iHeight )
+      {
+        pBuffZ[ c++ ] = x+y*iWidth;
+      }
+      x++; y--;
+    }
+    y=0;
+
+    // decrease loop
+    while ( x>=0 )
+    {
+      if ( x >= 0 && x < iWidth && y >= 0 && y < iHeight )
+      {
+        pBuffZ[ c++ ] = x+y*iWidth;
+      }
+      x--; y++;
+    }
+    x=0;
+
+    // termination condition
+    if ( c >= iWidth*iHeight ) break;
+  }
+
+  UInt uiCnt = 0;
+  for(Int iY=0; iY < iHeight; iY++)
+  {
+    for(Int iX=0; iX < iWidth; iX++)
+    {
+      pBuffH[uiCnt] = iY*iWidth + iX;
+      uiCnt ++;
+    }
+  }
+
+  uiCnt = 0;
+  for(Int iX=0; iX < iWidth; iX++)
+  {
+    for(Int iY=0; iY < iHeight; iY++)
+    {
+      pBuffV[uiCnt] = iY*iWidth + iX;
+      uiCnt ++;
+    }
+  }
+}
+#endif

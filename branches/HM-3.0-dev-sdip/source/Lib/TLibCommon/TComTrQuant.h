@@ -247,9 +247,17 @@ protected:
 private:
   // forward Transform
 #if INTRA_DST_TYPE_7
+#if HHMTU_SDIP
+  Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, Long* plCoeff, Int iWidth, Int iHeight );
+#else
   Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, Long* plCoeff, Int iSize );
+#endif
+#else
+#if HHMTU_SDIP
+  Void xT   ( Pel* pResidual, UInt uiStride, Long* plCoeff, Int iWidth, Int iHeight );
 #else
   Void xT   ( Pel* pResidual, UInt uiStride, Long* plCoeff, Int iSize );
+#endif
 #endif
   Void xT2  ( Pel* pResidual, UInt uiStride, Long* plCoeff );
   Void xT4  ( Pel* pResidual, UInt uiStride, Long* plCoeff );
@@ -358,9 +366,17 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
   
   // inverse transform
 #if INTRA_DST_TYPE_7
+#if HHMTU_SDIP
+  Void xIT    ( UInt uiMode, Long* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
+#else
   Void xIT    ( UInt uiMode, Long* plCoef, Pel* pResidual, UInt uiStride, Int iSize );
+#endif
+#else
+#if HHMTU_SDIP
+  Void xIT    ( Long* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 #else
   Void xIT    ( Long* plCoef, Pel* pResidual, UInt uiStride, Int iSize );
+#endif
 #endif
   Void xIT2   ( Long* plCoef, Pel* pResidual, UInt uiStride );
   Void xIT4   ( Long* plCoef, Pel* pResidual, UInt uiStride );

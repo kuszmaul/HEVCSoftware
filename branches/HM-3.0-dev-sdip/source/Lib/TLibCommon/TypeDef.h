@@ -251,7 +251,30 @@
 #endif
 #endif
 
-
+///////////////////////////////
+// HISILICON,MICROSOFT,HUAWEI,TSINGHUA,USTC defines section start
+///////////////////////////////
+#define HHMTU_SDIP 1
+#if HHMTU_SDIP
+#if QC_MDCS
+#define HHMTU_SDIP_MDCS                 1        //MDCS in SDIP
+#endif
+#if ADD_PLANAR_MODE
+#define HHMTU_SDIP_PLANNAR_DISABLE      1        //Disable plannar in SDIP, for further harmonization
+#endif
+#if QC_MDIS
+#define HHMTU_SDIP_MDIS                 0        //MDIS in SDIP
+#endif
+#define HHMTU_SDIP_FAST                 1        //fast SDIP
+#define HHMTU_SDIP_LF                   0       //deblocking filter for SDIP
+//transform
+#if !E243_CORE_TRANSFORMS                        // E243_CORE_TRANSFORMS should be ON when SDIP is used
+#error "E243_CORE_TRANSFORMS should be ON"
+#endif
+#endif
+///////////////////////////////
+// HISILICON,MICROSOFT,HUAWEI,TSINGHUA,USTC defines section end
+///////////////////////////////
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================
@@ -468,6 +491,10 @@ enum PartSize
   SIZE_2NxN,            ///< symmetric motion partition,  2Nx N
   SIZE_Nx2N,            ///< symmetric motion partition,   Nx2N
   SIZE_NxN,             ///< symmetric motion partition,   Nx N
+#if HHMTU_SDIP
+  SIZE_2NxhN,
+  SIZE_hNx2N,
+#endif
   
   SIZE_NONE = 15
 };

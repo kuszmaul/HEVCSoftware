@@ -122,6 +122,7 @@ private:
   
   Void  xCheckCoeff( TCoeff* pcCoef, UInt uiSize, UInt uiDepth, UInt& uiNumofCoeff, UInt& uiPart );
 
+
 #if MVD_CTX
   Void  xWriteMvd            ( Int iMvd, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx );
 #else
@@ -198,6 +199,10 @@ private:
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
+#if HHMTU_SDIP
+  ContextModel3DBuffer m_cCUSDIPFlagSCModel;
+  ContextModel3DBuffer m_cCUSDIPDirectionSCModel; 
+#endif
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
 #if ADD_PLANAR_MODE

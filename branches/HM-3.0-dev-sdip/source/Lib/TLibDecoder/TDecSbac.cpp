@@ -54,6 +54,10 @@ TDecSbac::TDecSbac()
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         )
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             )
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             )
+#if HHMTU_SDIP
+, m_cCUSDIPFlagSCModel        ( 1,             1,               NUM_SDIP_FLAG_CTX             )
+, m_cCUSDIPDirectionSCModel   ( 1,             1,               NUM_SDIP_DIRECTION_CTX        )
+#endif
 , m_cCUIntraPredSCModel       ( 1,             1,               NUM_ADI_CTX                   )
 #if ADD_PLANAR_MODE
 , m_cPlanarFlagSCModel        ( 1,             1,               NUM_PLANARFLAG_CTX            )
@@ -111,6 +115,10 @@ Void TDecSbac::resetEntropy          (TComSlice* pcSlice)
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PRED_MODE );
+#if HHMTU_SDIP
+  m_cCUSDIPFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_SDIP_FLAG );
+  m_cCUSDIPDirectionSCModel.initBuffer   ( eSliceType, iQp, (Short*)INIT_SDIP_DIRECTION );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_INTRA_PRED_MODE );
 #if ADD_PLANAR_MODE
   m_cPlanarFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PLANARFLAG );
@@ -688,6 +696,10 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 {
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
+#if HHMTU_SDIP
+  UInt uiCurrDepthWidth = g_uiMaxCUWidth >> uiDepth;
+  Bool bSDIPEnable = (pcCU->getSlice()->getSPS()->getUseSDIP() && (uiCurrDepthWidth < 64) );
+#endif
   
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
@@ -699,6 +711,17 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
     }
     eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
+#if HHMTU_SDIP
+    if ( bSDIPEnable && ( uiDepth != g_uiMaxCUDepth - g_uiAddCUDepth ||  eMode == SIZE_NxN ) )
+    {
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSDIPFlagSCModel.get( 0, 0, pcCU->getCtxSDIPFlag(uiAbsPartIdx)) );
+      if(uiSymbol)
+      {
+        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSDIPDirectionSCModel.get( 0, 0, pcCU->getCtxSDIPDirection( uiAbsPartIdx ) ) );
+        eMode = uiSymbol ? SIZE_2NxhN : SIZE_hNx2N;
+      }
+    }
+#endif
   }
   else
   {
@@ -748,12 +771,27 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
         }
         if (uiSymbol == 0)
           eMode = SIZE_2Nx2N;
+#if HHMTU_SDIP
+        if ( bSDIPEnable && ( uiDepth != g_uiMaxCUDepth - g_uiAddCUDepth ||  eMode == SIZE_NxN ) )
+        {
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSDIPFlagSCModel.get( 0, 0, pcCU->getCtxSDIPFlag(uiAbsPartIdx)) );
+          if(uiSymbol)
+          {
+            m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSDIPDirectionSCModel.get( 0, 0, pcCU->getCtxSDIPDirection( uiAbsPartIdx ) ) );
+            eMode = uiSymbol ? SIZE_2NxhN : SIZE_hNx2N;
+          }
+        }
+#endif
       }
     }
   }
   
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+#if HHMTU_SDIP
+  pcCU->setSDIPFlagSubParts( ( eMode == SIZE_2NxhN || eMode == SIZE_hNx2N ), uiAbsPartIdx, uiDepth );
+  pcCU->setSDIPDirectionSubParts( ( eMode == SIZE_2NxhN ) , uiAbsPartIdx, uiDepth );
+#endif
   
   UInt uiTrLevel = 0;
   
@@ -763,7 +801,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA )
   {
+#if HHMTU_SDIP
+    if( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N )
+#else
     if( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN )
+#endif
     {
       pcCU->setTrIdxSubParts( 1+uiTrLevel, uiAbsPartIdx, uiDepth );
     }
@@ -856,7 +898,11 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     }
   }
 #if ADD_PLANAR_MODE
+#if HHMTU_SDIP_PLANNAR_DISABLE
+  if (uiIPredMode == 2 && pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#else
   if (uiIPredMode == 2)
+#endif
   {
     UInt planarFlag;
     m_pcTDecBinIf->decodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );
@@ -910,7 +956,11 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   }
   
 #if ADD_PLANAR_MODE
+#if HHMTU_SDIP_PLANNAR_DISABLE
+  if (uiIPredMode == 2 && pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#else
   if (uiIPredMode == 2)
+#endif
   {
     UInt planarFlag;
     m_pcTDecBinIf->decodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );
@@ -926,7 +976,30 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
+#if HHMTU_SDIP    
+  if( pcCU->getSDIPFlag(uiAbsPartIdx) )
+  {    
+    UInt uiModeList[6];
+    UInt uiMaxMode  = pcCU->getSDIPChromaModeList( uiModeList, uiAbsPartIdx, uiDepth );
+#if ADD_PLANAR_MODE
+    Int  iMax = ( uiMaxMode < 6 ) ? 3 : 4; 
+#else
+    Int  iMax = ( uiMaxMode < 5 ) ? 2 : 3;
+#endif
+
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUChromaPredSCModel.get( 0, 0, pcCU->getCtxIntraDirChroma( uiAbsPartIdx ) ) );
   
+    if ( uiSymbol )
+    {
+      xReadUnaryMaxSymbol( uiSymbol, m_cCUChromaPredSCModel.get( 0, 0 ) + 3, 0, iMax );
+      uiSymbol++;
+    }    
+
+    uiSymbol = uiModeList[ uiSymbol ];
+  }
+  else
+  {
+#endif
 #if CHROMA_CODEWORD
   UInt uiMode = pcCU->getLumaIntraDir(uiAbsPartIdx);
 #if ADD_PLANAR_MODE
@@ -1031,6 +1104,9 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
         uiSymbol = PLANAR_IDX;
       }
     }
+  }
+#endif
+#if HHMTU_SDIP    
   }
 #endif
   pcCU->setChromIntraDirSubParts( uiSymbol, uiAbsPartIdx, uiDepth );
@@ -1305,7 +1381,20 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   DTRACE_CABAC_T( "\tpredmode=" )
   DTRACE_CABAC_V(  pcCU->getPredictionMode( uiAbsPartIdx ) )
   DTRACE_CABAC_T( "\n" )
-  
+
+#if HHMTU_SDIP
+  Bool NonSqureFlag = (uiWidth != uiHeight);
+  UInt uiNonSqureScanTableIdx = 0;
+  if( NonSqureFlag )
+  {
+    UInt uiWidthBit  = (uiWidth < 2)? 0 : g_aucConvertToBit[ uiWidth ] + 2;
+    UInt uiHeightBit = (uiHeight < 2)? 0 : g_aucConvertToBit[ uiHeight ] + 2;
+    uiNonSqureScanTableIdx = g_auiNonSquareScanTableIdx[uiWidthBit][uiHeightBit];
+    uiWidth  = 1 << ( ( uiWidthBit + uiHeightBit) >> 1 );
+    uiHeight = uiWidth;
+  }    
+#endif
+
   if( uiWidth > pcCU->getSlice()->getSPS()->getMaxTrSize() )
   {
     uiWidth  = pcCU->getSlice()->getSPS()->getMaxTrSize();
@@ -1336,7 +1425,11 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   bool        bLastReceived     = false;
 #endif
 #if QC_MDCS
+#if HHMTU_SDIP
+  const UInt uiScanIdx = ( NonSqureFlag ) ? 0 : pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#else
   const UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#endif
 #endif //QC_MDCS
   
 #if PCP_SIGMAP_SIMPLE_LAST
@@ -1646,6 +1739,26 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
     }
   }
   
+#if HHMTU_SDIP
+  static TCoeff  orgCoeff[256];
+  if( NonSqureFlag )
+  {
+#if HHMTU_SDIP_MDCS
+    UInt uiSdipScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiHeight, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
+#else
+    UInt uiSdipScanIdx = 0; 
+#endif
+
+    memcpy( &orgCoeff[0], pcCoef, uiMaxNumCoeff*sizeof(TCoeff) );    
+
+    for( UInt uiScanPos = 0; uiScanPos < uiMaxNumCoeff; uiScanPos++ )
+    {
+      UInt uiBlkPos = g_auiNonSquareSigLastScan[uiSdipScanIdx][ uiNonSqureScanTableIdx ][uiScanPos];
+      pcCoef[uiBlkPos] = orgCoeff[ g_auiFrameScanXY[ (int)g_aucConvertToBit[ uiWidth ] + 1 ][ uiScanPos ] ];
+    }            
+  }
+#endif
+
   return;
 }
 

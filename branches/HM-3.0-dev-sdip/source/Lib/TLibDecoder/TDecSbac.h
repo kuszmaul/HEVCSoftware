@@ -166,6 +166,10 @@ private:
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
+#if HHMTU_SDIP
+  ContextModel3DBuffer m_cCUSDIPFlagSCModel;
+  ContextModel3DBuffer m_cCUSDIPDirectionSCModel; 
+#endif
   
   ContextModel3DBuffer m_cCUIntraPredSCModel;
 #if ADD_PLANAR_MODE

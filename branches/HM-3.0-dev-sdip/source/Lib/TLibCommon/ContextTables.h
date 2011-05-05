@@ -95,6 +95,14 @@
 #define NUM_AO_SVLC_CTX              3       ///< number of context models for AO SVLC (filter coeff.)
 #endif
 
+#if HHMTU_SDIP
+#define NUM_SDIP_FLAG_CTX              3       ///< number of context models for SDIP flag
+#define NUM_SDIP_DIRECTION_CTX         3       ///< number of context models for SDIP direction
+#define NUM_SDIP_SIG_FLAG_CTX              16      ///< number of context models for sig flag
+#define NUM_SDIP_LAST_FLAG_CTX             16      ///< number of context models for last flag
+#define NUM_SDIP_ABS_GREATER_ONE_CTX        5      ///< number of context models for greater than one
+#define NUM_SDIP_COEFF_LEVEL_MINUS_ONE_CTX  5      ///< number of context models for magnitude
+#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -231,6 +239,36 @@ INIT_PRED_MODE[3][NUM_PRED_MODE_CTX][2] =
   }
 };
 
+#if HHMTU_SDIP
+// initial probability for Short distance intra prediction flag
+static const Short
+INIT_SDIP_FLAG[3][NUM_SDIP_FLAG_CTX][2] = 
+{
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {   13,   29 }, {    9,   43 }, {   11,   53 }
+  },
+  {
+    {   14,   28 }, {   10,   46 }, {   10,   58 }
+  }
+};
+// initial probability for Short distance intra prediction direction
+static const Short
+INIT_SDIP_DIRECTION[3][NUM_SDIP_DIRECTION_CTX][2] =
+{
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {   -1,   63 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {   -3,   65 }, {    0,   64 }, {    0,   64 }
+  }
+};
+#endif
 // initial probability for intra direction of luma
 #if MTK_DCM_MPM
 static const Short

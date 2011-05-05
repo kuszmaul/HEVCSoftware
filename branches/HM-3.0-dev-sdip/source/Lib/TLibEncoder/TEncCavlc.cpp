@@ -292,6 +292,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   xWriteFlag  ( (pcSPS->getUseDQP ()) ? 1 : 0 );
   xWriteFlag  ( (pcSPS->getUseLDC ()) ? 1 : 0 );
   xWriteFlag  ( (pcSPS->getUseMRG ()) ? 1 : 0 ); // SOPH:
+#if HHMTU_SDIP
+  xWriteFlag  ( (pcSPS->getUseSDIP()) ? 1 : 0 ); 
+#endif
   
 #if LM_CHROMA
   xWriteFlag  ( (pcSPS->getUseLMChroma ()) ? 1 : 0 ); 
@@ -453,12 +456,23 @@ Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRe
 #if QC_LCEC_INTER_MODE
 Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if HHMTU_SDIP
+  Bool bSDIPEnable = ( pcCU->getSlice()->getSPS()->getUseSDIP() && (g_uiMaxCUHeight>>uiDepth) < 64 );
+#endif
   if ( pcCU->getSlice()->isIntra() && pcCU->isIntra( uiAbsPartIdx ) )
   {
 #if MTK_DISABLE_INTRA_NxN_SPLIT
     if( uiDepth == (g_uiMaxCUDepth - g_uiAddCUDepth))
 #endif
       xWriteFlag( pcCU->getPartitionSize(uiAbsPartIdx ) == SIZE_2Nx2N? 1 : 0 );
+#if HHMTU_SDIP
+    if( bSDIPEnable && ( uiDepth != (g_uiMaxCUDepth - g_uiAddCUDepth) || pcCU->getPartitionSize(uiAbsPartIdx ) != SIZE_2Nx2N) )
+    {
+      xWriteFlag( pcCU->getSDIPFlag(uiAbsPartIdx)? 0 : 1 );
+      if(pcCU->getSDIPFlag(uiAbsPartIdx))
+        xWriteFlag( pcCU->getPartitionSize(uiAbsPartIdx ) == SIZE_2NxhN? 1 : 0 );
+    }
+#endif
     return;
   }
 
@@ -483,11 +497,28 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
         if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
 #endif
         xWriteFlag( uiIntraFlag? 1 : 0 );
+#if HHMTU_SDIP
+        if( bSDIPEnable && uiIntraFlag)
+        {
+          xWriteFlag( pcCU->getSDIPFlag(uiAbsPartIdx)? 0 : 1 );
+          if(pcCU->getSDIPFlag(uiAbsPartIdx))
+            xWriteFlag( pcCU->getPartitionSize(uiAbsPartIdx ) == SIZE_2NxhN? 1 : 0 );
+        }
+#endif
       }
 
       return;
     }
   }
+#if HHMTU_SDIP
+  else  if ( bSDIPEnable && pcCU->isIntra( uiAbsPartIdx ) )
+  {
+      xWriteFlag( pcCU->getSDIPFlag(uiAbsPartIdx)? 0 : 1 );
+      if(pcCU->getSDIPFlag(uiAbsPartIdx))
+          xWriteFlag( pcCU->getPartitionSize(uiAbsPartIdx ) == SIZE_2NxhN? 1 : 0 );
+      return;
+  }
+#endif
 }
 #else
 Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
@@ -729,7 +760,7 @@ Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
       {
         if(pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N)
           uiMode=pcCU->getMergeFlag(uiAbsPartIdx) ? 2 : 3;
-        else 
+        else
           uiMode=3+(UInt)pcCU->getPartitionSize(uiAbsPartIdx);
       }
     }
@@ -933,6 +964,9 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   iDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (iDir == PLANAR_IDX) || (iDir == 2) )
   {
+#if HHMTU_SDIP_PLANNAR_DISABLE
+    if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#endif
     xWriteFlag( planarFlag );
   }
 #endif
@@ -1041,6 +1075,9 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   iDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (iDir == PLANAR_IDX) || (iDir == 2) )
   {
+#if HHMTU_SDIP_PLANNAR_DISABLE
+    if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#endif
     xWriteFlag( planarFlag );
   }
 #endif
@@ -1104,6 +1141,9 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
+#if HHMTU_SDIP_PLANNAR_DISABLE
+    if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
+#endif
     xWriteFlag( planarFlag );
   }
 #endif
@@ -1114,6 +1154,31 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiIntraDirChroma = pcCU->getChromaIntraDir   ( uiAbsPartIdx );
+#if HHMTU_SDIP    
+  if( pcCU->getSDIPFlag(uiAbsPartIdx) )
+  {    
+    UInt uiModeList[6];
+    UInt uiMaxMode  = pcCU->getSDIPChromaModeList( uiModeList, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
+#if ADD_PLANAR_MODE
+    Int  iMax = ( uiMaxMode < 6 ) ? 4 : 5; 
+#else
+    Int  iMax = ( uiMaxMode < 5 ) ? 3 : 4;
+#endif
+
+    for( Int i = 0; i < uiMaxMode; i++ )
+    {
+      if( uiIntraDirChroma == uiModeList[i] )
+      {
+        uiIntraDirChroma = i;    
+        break;
+      }        
+    }
+
+    xWriteUnaryMaxSymbol( uiIntraDirChroma, iMax );
+  }
+  else
+  {
+#endif
 #if ADD_PLANAR_MODE
   UInt planarFlag       = 0;
   if (uiIntraDirChroma == PLANAR_IDX)
@@ -1211,6 +1276,9 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
   {
     xWriteFlag( planarFlag );
+  }
+#endif
+#if HHMTU_SDIP    
   }
 #endif
   return;
@@ -2009,6 +2077,18 @@ Void TEncCavlc::codeBlockCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTyp
 
 Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType, Bool bRD )
 {
+#if HHMTU_SDIP
+  Bool NonSqureFlag = (uiWidth != uiHeight);
+  UInt uiNonSqureScanTableIdx = 0;
+  if( NonSqureFlag )
+  {
+    UInt uiWidthBit  = (uiWidth < 2)? 0 : g_aucConvertToBit[ uiWidth ] + 2;
+    UInt uiHeightBit = (uiHeight < 2)? 0 : g_aucConvertToBit[ uiHeight ] + 2;
+    uiNonSqureScanTableIdx = g_auiNonSquareScanTableIdx[uiWidthBit][uiHeightBit];
+    uiWidth  = 1 << ( ( uiWidthBit + uiHeightBit) >> 1 );
+    uiHeight = uiWidth;
+  }    
+#endif
   if ( uiWidth > m_pcSlice->getSPS()->getMaxTrSize() )
   {
     uiWidth  = m_pcSlice->getSPS()->getMaxTrSize();
@@ -2024,7 +2104,7 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   // compute number of significant coefficients
   UInt  uiPart = 0;
   xCheckCoeff(piCoeff, uiWidth, 0, uiNumSig, uiPart );
-  
+
   if ( bRD )
   {
     UInt uiTempDepth = uiDepth - pcCU->getDepth( uiAbsPartIdx );
@@ -2124,6 +2204,22 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   }
   else if ( uiSize == 4*4 )
   {
+#if HHMTU_SDIP
+    if( NonSqureFlag )// 2x8/8x2 1x16/16x1
+    {
+      for (uiScanning=0; uiScanning< 16; uiScanning++)
+      {
+#if HHMTU_SDIP_MDCS
+        uiBlkPos =  g_auiNonSquareSigLastScan[uiScanIdx][ uiNonSqureScanTableIdx ][uiScanning];
+        scoeff[15-uiScanning] = piCoeff[ uiBlkPos];
+#else
+        scoeff[15-uiScanning] = piCoeff[ g_auiNonSquareSigLastScan[ 0 ][ uiNonSqureScanTableIdx ][uiScanning]];
+#endif
+
+        }    
+    }
+    else  // 4x4
+#endif
     for (uiScanning=0; uiScanning<16; uiScanning++)
     {
 #if QC_MDCS
@@ -2150,6 +2246,21 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
   }
   else if ( uiSize == 8*8 )
   {
+#if HHMTU_SDIP
+    if( NonSqureFlag )  //4x16 16x4
+    {
+      for (uiScanning=0; uiScanning< 64; uiScanning++)
+      {
+#if HHMTU_SDIP_MDCS
+        uiBlkPos =  g_auiNonSquareSigLastScan[uiScanIdx][ uiNonSqureScanTableIdx ][uiScanning];
+        scoeff[63-uiScanning] = piCoeff[ uiBlkPos];
+#else
+        scoeff[63-uiScanning] = piCoeff[ g_auiNonSquareSigLastScan[ 0 ][ uiNonSqureScanTableIdx ][uiScanning]];
+#endif
+      }    
+    }
+    else  // 8x8
+#endif
     for (uiScanning=0; uiScanning<64; uiScanning++)
     {
 #if QC_MDCS
@@ -2210,6 +2321,21 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
     if(pcCU->isIntra( uiAbsPartIdx ))
     {
 #if CAVLC_COEF_LRG_BLK
+#if HHMTU_SDIP
+      if( NonSqureFlag )  //8x32  32x8
+      {
+        for (uiScanning=0; uiScanning< uiNoCoeff; uiScanning++)
+        {
+#if HHMTU_SDIP_MDCS
+          uiBlkPos =  g_auiNonSquareSigLastScan[uiScanIdx][ uiNonSqureScanTableIdx ][uiScanning];
+          scoeff[uiNoCoeff-uiScanning-1] = piCoeff[ uiBlkPos];
+#else
+          scoeff[uiNoCoeff-uiScanning-1] = piCoeff[ g_auiNonSquareSigLastScan[ 0 ][ uiNonSqureScanTableIdx ][uiScanning]];
+#endif
+        }    
+      }
+      else  
+#endif
       for (uiScanning=0; uiScanning<uiNoCoeff; uiScanning++)
       {
 #if QC_MDCS
@@ -2220,6 +2346,21 @@ Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPa
 #endif
       }
 #else
+#if HHMTU_SDIP
+      if( NonSqureFlag )  //8x32 32x8
+      {
+        for (uiScanning=0; uiScanning< 64; uiScanning++)
+        {
+#if HHMTU_SDIP_MDCS
+            uiBlkPos =  g_auiNonSquareSigLastScan[uiScanIdx][ uiNonSqureScanTableIdx ][uiScanning];
+          scoeff[63-uiScanning] = piCoeff[ uiBlkPos];
+#else
+            scoeff[63-uiScanning] = piCoeff[ g_auiNonSquareSigLastScan[ 0 ][ uiNonSqureScanTableIdx ][uiScanning]];
+#endif
+        }    
+      }
+      else  
+#endif
       for (uiScanning=0; uiScanning<64; uiScanning++)
       {
 #if QC_MDCS

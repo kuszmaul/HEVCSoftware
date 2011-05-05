@@ -108,7 +108,11 @@ public:
   
   //  Copy YUV partition buffer to other YUV partition buffer
   Void    copyPartToPartYuv     ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+#if HHMTU_SDIP
+  Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSdipFlag = 0 );
+#else
   Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+#endif
   Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   
   // ------------------------------------------------------------------------------------------------------------------
@@ -153,6 +157,10 @@ public:
   Pel*    getLumaAddr       ( UInt iTransUnitIdx, UInt iBlkSize );
   Pel*    getCbAddr         ( UInt iTransUnitIdx, UInt iBlkSize );
   Pel*    getCrAddr         ( UInt iTransUnitIdx, UInt iBlkSize );
+#if HHMTU_SDIP
+  //  Access starting position of Y Non-square transform unit buffer
+  Pel*    getLineLumaAddr   ( UInt uiline, UChar uiDirection);
+#endif
   
   //  Get stride value of YUV buffer
   UInt    getStride   ()    { return  m_iWidth;   }
