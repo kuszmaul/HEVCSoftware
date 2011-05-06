@@ -1103,7 +1103,7 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
     }
   }
 #if ADD_PLANAR_MODE
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
   if (uiIPredMode == 2 && pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #else
   if (uiIPredMode == 2)
@@ -1226,7 +1226,7 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   }
   
 #if ADD_PLANAR_MODE
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
   if (uiIPredMode == 2 && pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #else
   if (uiIPredMode == 2)
@@ -1284,7 +1284,7 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   }
   
 #if ADD_PLANAR_MODE
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
   if (uiIPredMode == 2 && pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #else
   if (uiIPredMode == 2)

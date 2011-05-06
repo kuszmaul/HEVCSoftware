@@ -1484,7 +1484,7 @@ UInt TComDataCU::getSDIPChromaModeList( UInt uiModeList[], UInt uiAbsPartIdx, UI
   UInt uiLumaModeCnt[35] = {0};
   UInt uiMaxMode         = 0;
   UInt uiWidthBit        = getIntraSizeIdx(uiAbsPartIdx);  
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
   UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
   UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
@@ -4233,7 +4233,7 @@ UInt TComDataCU::getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, B
            Int  numOfModes = 0;
            UInt uiModeList[6];
            UInt uiWidthBit        = getIntraSizeIdx(uiAbsPartIdx);  
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
            UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
            UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];

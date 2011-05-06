@@ -658,7 +658,7 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     UInt uiModeList[6];
        
     UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);      
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
     UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
     UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
@@ -721,7 +721,7 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
       UInt uiModeList[6];
             
       UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);      
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
       UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
       UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];

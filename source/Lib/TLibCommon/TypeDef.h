@@ -252,7 +252,7 @@
 #endif
 
 ///////////////////////////////
-// HISILICON,MICROSOFT,HUAWEI,TSINGHUA,USTC defines section start
+// JCTVC-E278 section start
 ///////////////////////////////
 #define HHMTU_SDIP 1
 #if HHMTU_SDIP
@@ -260,20 +260,24 @@
 #define HHMTU_SDIP_MDCS                 1        //MDCS in SDIP
 #endif
 #if ADD_PLANAR_MODE
-#define HHMTU_SDIP_PLANNAR_DISABLE      1        //Disable plannar in SDIP, for further harmonization
+#define HHMTU_SDIP_PLANAR_DISABLE       1        //Disable planar in SDIP, for further harmonization
 #endif
 #if QC_MDIS
 #define HHMTU_SDIP_MDIS                 0        //MDIS in SDIP
 #endif
 #define HHMTU_SDIP_FAST                 1        //fast SDIP
-#define HHMTU_SDIP_LF                   0       //deblocking filter for SDIP
+#if HHMTU_SDIP_FAST
+#define HHMTU_SDIP_EARLYSKIP            1        //SDIP earlyskip
+#define HHMTU_SDIP_FASTRD               1        //SDIP fast RD
+#endif
+#define HHMTU_SDIP_LF                   0        //deblocking filter for SDIP
 //transform
 #if !E243_CORE_TRANSFORMS                        // E243_CORE_TRANSFORMS should be ON when SDIP is used
 #error "E243_CORE_TRANSFORMS should be ON"
 #endif
 #endif
 ///////////////////////////////
-// HISILICON,MICROSOFT,HUAWEI,TSINGHUA,USTC defines section end
+// JCTVC-E278 section end
 ///////////////////////////////
 // ====================================================================================================================
 // Basic type redefinition
