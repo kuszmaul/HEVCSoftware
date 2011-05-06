@@ -98,7 +98,7 @@ protected:
   Pel*            m_pTempPel;
   UInt*           m_puiDFilter;
   Int             m_iMaxDeltaQP;
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
   UInt           m_uiSdipRD;
   Bool           m_bSdipFullFlag;
 #endif

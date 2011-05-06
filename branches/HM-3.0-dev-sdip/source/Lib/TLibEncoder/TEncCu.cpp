@@ -381,7 +381,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   
   static  Double  afCost[ MAX_CU_DEPTH ];
   static  Int      aiNum [ MAX_CU_DEPTH ];
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
   static Bool bNeedSDIPflag = false;
   static UInt   uiBitsNxN,uiBits2Nx2N;
   uiBitsNxN = uiBits2Nx2N  = 0;
@@ -463,11 +463,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
          rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely
       {
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
         g_uiNxNCost = g_ui2Nx2NCost = 0;
 #endif
         xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N ); 
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
         uiBits2Nx2N = rpcBestCU->getTotalBits();
 #endif
         rpcTempCU->initEstData();
@@ -478,7 +478,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   ); 
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
             uiBitsNxN = rpcTempCU->getTotalBits();
 #endif
             rpcTempCU->initEstData();
@@ -491,7 +491,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     {
       if( rpcTempCU->getWidth(0) < 64)
       {
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
         if(rpcTempCU->getWidth(0) == 32)
         {
           if(uiBits2Nx2N > (UInt)(300*(64.0/((rpcTempCU->getQP(0)<32)?rpcTempCU->getQP(0):64))))
@@ -518,7 +518,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         if(bNeedSDIPflag)
         {            
 #endif        
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
           g_uiSdip2NxhNCost = g_uiSdiphNx2NCost = 0;
 #endif
           rpcTempCU->setSDIPFlagSubParts( 1, 0, rpcTempCU->getDepth(0) );
@@ -532,7 +532,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
           xCheckRDCostIntra(rpcBestCU, rpcTempCU, SIZE_hNx2N ); 
           rpcTempCU->initEstData();/**/
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
         }
 #endif         
       }
@@ -870,7 +870,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
   }
   m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma );
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
   if(rpcTempCU->getSDIPFlag(0)) 
   {
     if(rpcTempCU->getPartitionSize(0) == SIZE_2NxhN)

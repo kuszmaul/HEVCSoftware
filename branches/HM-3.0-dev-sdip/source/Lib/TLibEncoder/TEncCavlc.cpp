@@ -964,7 +964,7 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   iDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (iDir == PLANAR_IDX) || (iDir == 2) )
   {
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #endif
     xWriteFlag( planarFlag );
@@ -1075,7 +1075,7 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   iDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (iDir == PLANAR_IDX) || (iDir == 2) )
   {
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #endif
     xWriteFlag( planarFlag );
@@ -1141,7 +1141,7 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #endif
     xWriteFlag( planarFlag );

@@ -849,7 +849,7 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #endif
     m_pcBinIf->encodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );
@@ -911,7 +911,7 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
   uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
   if ( (uiDir == PLANAR_IDX) || (uiDir == 2) )
   {
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if ( pcCU->getSDIPFlag(uiAbsPartIdx) == 0)
 #endif
     m_pcBinIf->encodeBin( planarFlag, m_cPlanarFlagSCModel.get(0,0,0) );

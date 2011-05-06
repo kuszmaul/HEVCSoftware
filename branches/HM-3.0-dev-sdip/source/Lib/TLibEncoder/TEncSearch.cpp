@@ -1167,7 +1167,7 @@ TEncSearch::xIntraCodingChromaBlk( TComDataCU* pcCU,
     UInt uiModeList[6];
         
     UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);  
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
     UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
     UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
@@ -1222,7 +1222,7 @@ TEncSearch::xIntraCodingChromaBlk( TComDataCU* pcCU,
       UInt uiModeList[6];
             
       UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);      
-#if !HHMTU_SDIP_PLANNAR_DISABLE
+#if !HHMTU_SDIP_PLANAR_DISABLE
       UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
       UInt uiMaxNumMode     = g_aucIntraModeNumAng[uiWidthBit];
@@ -1374,7 +1374,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   UInt    uiSingleCbfY  = 0;
   UInt    uiSingleCbfU  = 0;
   UInt    uiSingleCbfV  = 0;
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
   if(pcCU->getSDIPFlag(0) && pcCU->getWidth(0)==16)
   {
     bCheckFull = m_bSdipFullFlag;
@@ -1439,7 +1439,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 
     for( UInt uiPart = 0; uiPart < 4; uiPart++, uiAbsPartIdxSub += uiQPartsDiv )
     {
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
       if(pcCU->getSDIPFlag(0) && pcCU->getWidth(0)==16)
       {
         m_bSdipFullFlag = true;
@@ -1821,7 +1821,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
   UInt    CandModeList[ FAST_UDI_MAX_RDMODE_NUM ];
   Double  CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
   UInt    uiFastCandNum=g_aucIntraModeNumFast[ uiWidthBit ];
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_FASTRD
   if(uiSdipFlag)
     uiFastCandNum = g_aucIntraModeNumFastSdip[ uiWidthBit ];
 #endif
@@ -1846,7 +1846,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiMaxMode     = g_aucIntraModeNumAng[uiWidthBit];
 #endif
     UInt uiMaxModeFast = g_aucIntraModeNumFast[ uiWidthBit ];
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_FASTRD
     if(uiSdipFlag)
       uiFastCandNum = g_aucIntraModeNumFastSdip[ uiWidthBit ];
 #endif
@@ -1854,9 +1854,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiLine        = pcCU->convertNonSquareUnitToLine(uiPartOffset);
     Pel* piOrg         = (uiSdipFlag)? pcOrgYuv ->getLineLumaAddr( uiLine,uiSdipDir ) : pcOrgYuv ->getLumaAddr( uiPU, uiWidth );
     Pel* piPred        = (uiSdipFlag)? pcPredYuv ->getLineLumaAddr( uiLine,uiSdipDir ) : pcPredYuv->getLumaAddr( uiPU, uiWidth );
-#if HHMTU_SDIP_FAST
     m_bSdipFullFlag = true;
-#endif
 #else
     Pel* piOrg         = pcOrgYuv ->getLumaAddr( uiPU, uiWidth );
     Pel* piPred        = pcPredYuv->getLumaAddr( uiPU, uiWidth );
@@ -1874,7 +1872,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiHdModeList[NUM_INTRA_MODE];
     uiHdModeList[0] = PLANAR_IDX;
     for( Int i=1; i < uiMaxMode; i++) uiHdModeList[i] = i-1;
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
     if( uiSdipFlag && uiMaxModeFast == 0)uiMaxModeFast = 1;
 #endif
 
@@ -1921,7 +1919,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         Bool mostProbableModeIncluded = false;
         Int mostProbableMode = uiPreds[j];
 #if ADD_PLANAR_MODE
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
         if (mostProbableMode == 2 && !uiSdipFlag)
 #else
         if (mostProbableMode == 2)
@@ -1942,7 +1940,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #else
       Int mostProbableMode = pcCU->getMostProbableIntraDirLuma( uiPartOffset );
 #if ADD_PLANAR_MODE
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
       if (mostProbableMode == 2 && !uiSdipFlag)
 #else
       if (mostProbableMode == 2)
@@ -1969,7 +1967,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if ADD_PLANAR_MODE
       uiRdModeList[0] = PLANAR_IDX;
       for( Int i=1; i < uiNewMaxMode; i++) uiRdModeList[i] = i-1;
-#if HHMTU_SDIP_PLANNAR_DISABLE
+#if HHMTU_SDIP_PLANAR_DISABLE
       uiMinMode = 1;
 #endif
 #else
@@ -2064,7 +2062,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       if ( !predIntraLumaDirAvailable( uiOrgMode, uiWidthBit, bAboveAvail, bLeftAvail ) )
         continue;
 #endif
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
     if((pcCU->getSDIPFlag(0) && pcCU->getWidth(0)==16) || pcCU->getSDIPFlag(0)==0)
     {
 #endif
@@ -2075,7 +2073,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       {
         m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
       }
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
       if(pcCU->getSDIPFlag(0) && pcCU->getWidth(0)==16)
       {
         m_uiSdipRD = (UInt)dBestPUCost;
@@ -2106,12 +2104,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         ::memcpy( m_puhQTTempCbf[2], pcCU->getCbf( TEXT_CHROMA_V ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         
       }
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP
     }
 #endif
     } // Mode loop
 #endif
-#if HHMTU_SDIP_FAST
+#if HHMTU_SDIP_EARLYSKIP
     if(pcCU->getSDIPFlag(0))
     {
       if(pcCU->getPartitionSize(0) == SIZE_2NxhN)
