@@ -1127,12 +1127,12 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
         pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth, uiLumaTrMode, uiChromaTrMode );
         UInt uiYCbf = 0;        
-        for( UInt j = 0; j < 4; i++ )
+        for( UInt j = 0; j < 4; j++ )
         {        
           uiYCbf |= pcCU->getCbf( uiPartUnitIdx + j, TEXT_LUMA, uiLumaTrMode );       
         }   
         pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth-1, uiLumaTrMode, uiChromaTrMode );
-        for( UInt j = 0; j < 4; i++ )
+        for( UInt j = 0; j < 4; j++ )
         {        
           pcCU->getCbf( TEXT_LUMA     )[uiPartUnitIdx + j] |= uiYCbf << uiLumaTrMode;
         }  
