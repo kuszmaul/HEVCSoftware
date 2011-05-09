@@ -1107,9 +1107,8 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     UInt uiTrDepth;
     UInt uiSize = uiWidth*uiHeight >> 2;
     TCoeff* pCoeff = pcCU->getCoeffY()  + uiLumaOffset;
-    //Transform flag  & CBF
-    UInt uiLumaTrMode, uiChromaTrMode;  
 
+    //Transform flag  & CBF
     for (UInt i=0; i < 4;i++,uiPartUnitIdx += uiQPartNum)
     {
       uiSubdiv = 0;
@@ -1128,14 +1127,14 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
         pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth, uiLumaTrMode, uiChromaTrMode );
         UInt uiYCbf = 0;        
-        for( UInt i = 0; i < 4; i++ )
+        for( UInt j = 0; j < 4; i++ )
         {        
-          uiYCbf |= pcCU->getCbf( uiPartUnitIdx + i, TEXT_LUMA, uiLumaTrMode );       
+          uiYCbf |= pcCU->getCbf( uiPartUnitIdx + j, TEXT_LUMA, uiLumaTrMode );       
         }   
         pcCU->convertTransIdx( uiPartUnitIdx, uiTrDepth-1, uiLumaTrMode, uiChromaTrMode );
-        for( UInt i = 0; i < 4; i++ )
+        for( UInt j = 0; j < 4; i++ )
         {        
-          pcCU->getCbf( TEXT_LUMA     )[uiPartUnitIdx + i] |= uiYCbf << uiLumaTrMode;
+          pcCU->getCbf( TEXT_LUMA     )[uiPartUnitIdx + j] |= uiYCbf << uiLumaTrMode;
         }  
       }
       else

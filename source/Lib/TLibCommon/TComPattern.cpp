@@ -262,7 +262,8 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB, uiPartDum;
   
 #if HHMTU_SDIP
-  UInt uiBlkposx, uiBlkposy;
+  UInt uiBlkposx = 0;
+  UInt uiBlkposy = 0;
   if( uiSdipFlag)
   {
     if( uiSdipDir == 1)
