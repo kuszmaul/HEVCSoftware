@@ -45,6 +45,56 @@
 // Tables
 // ====================================================================================================================
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+//Shape0
+Int TComAdaptiveLoopFilter::patternShape0Sym[23] = 
+{
+          0, 1, 2, 
+       3, 4, 5, 6, 7, 
+    8, 9,10,11,10, 9, 8, 
+       7, 6, 5, 4, 3, 
+          2, 1, 0
+};
+
+Int TComAdaptiveLoopFilter::weightsShape0Sym[13] = 
+{
+          2, 2, 2,    
+       2, 2, 2, 2, 2,        
+    2, 2, 2, 1, 1
+};
+
+Int TComAdaptiveLoopFilter::patternShape0Sym_Quart[49] = 
+{    
+    0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  4,  5,  6,  7,  8,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  9, 10, 11, 12, 13
+};
+//Shape1
+Int TComAdaptiveLoopFilter::patternShape1Sym[23] = 
+{
+                               0,
+                               1,                                               
+    2, 3, 4, 5, 6, 7, 8, 9,10,11,10, 9, 8, 7, 6, 5, 4, 3, 2,                      
+                               1,
+                               0
+};
+
+Int TComAdaptiveLoopFilter::weightsShape1Sym[13] = 
+{                      
+                               2,
+                               2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1
+
+};
+
+Int TComAdaptiveLoopFilter::patternShape1Sym_Quart[49] = 
+{
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13
+};
+#endif
+
 #if TI_ALF_MAX_VSIZE_7
 Int TComAdaptiveLoopFilter::m_pattern9x9Sym[39] = 
 #else
@@ -196,6 +246,56 @@ Int TComAdaptiveLoopFilter::m_pattern9x9Sym_5[13] =
           22,  
  };
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+// Shape0
+Int TComAdaptiveLoopFilter::pattern19x5Sym_Shape0[23] = 
+{
+           8, 9,10,
+       26,27,28,29,30,
+    44,45,46,47,46,45,44,
+       30,29,28,27,26,
+          10, 9, 8
+};
+// Shape1
+Int TComAdaptiveLoopFilter::pattern19x5Sym_Shape1[23] = 
+{
+                                9,
+                               28,
+    38,39,40,41,42,43,44,45,46,47,46,45,44,43,42,41,40,39,38,
+                               28,
+                                9
+};
+
+Int TComAdaptiveLoopFilter::pattern19x5Sym_19x5[95] =
+{
+     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18, 
+    19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,
+    38,39,40,41,42,43,44,45,46,47,46,45,44,43,42,41,40,39,38,
+    37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19, 
+    18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+};
+
+Int* TComAdaptiveLoopFilter::patternTab_filt_shapes[NO_TEST_FILT] =
+{
+    pattern19x5Sym_Shape0, pattern19x5Sym_Shape1
+}; 
+
+Int* TComAdaptiveLoopFilter::patternTab_shapes[NO_TEST_FILT] =
+{
+    patternShape0Sym, patternShape1Sym, pattern19x5Sym_19x5
+}; 
+
+Int* TComAdaptiveLoopFilter::patternMapTab_shapes[NO_TEST_FILT] =
+{
+    patternShape0Sym_Quart, patternShape1Sym_Quart
+};
+
+Int* TComAdaptiveLoopFilter::weightsTab_shapes[NO_TEST_FILT] =
+{
+    weightsShape0Sym, weightsShape1Sym
+};
+#endif
+
 Int* TComAdaptiveLoopFilter::m_patternTab_filt[NO_TEST_FILT] =
 {
   m_pattern9x9Sym_9, m_pattern9x9Sym_7, m_pattern9x9Sym_5
@@ -226,6 +326,23 @@ Int TComAdaptiveLoopFilter::m_sqrFiltLengthTab[NO_TEST_FILT] =
   SQR_FILT_LENGTH_9SYM, SQR_FILT_LENGTH_7SYM, SQR_FILT_LENGTH_5SYM
 };
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+// Shape0
+Int depthIntShape0Sym[13] = 
+{
+          4, 5, 4,
+       4, 5, 6, 5, 4,
+    4, 5, 6, 7, 7                 
+};
+// Shape1
+Int depthIntShape1Sym[13] = 
+{
+                               17,
+                               18,
+    10,11,12,13,14,15,16,17,18,19,19                        
+};
+#endif
+
 #if TI_ALF_MAX_VSIZE_7
 Int depthInt9x9Sym[21] = 
 #else
@@ -255,6 +372,13 @@ Int depthInt5x5Sym[8] =
      3, 4, 3,
   3, 4, 5, 5  
 };
+
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+Int* pDepthIntTab_shapes[NO_TEST_FILT] =
+{ 
+    depthIntShape0Sym, depthIntShape1Sym
+};
+#endif
 
 Int* pDepthIntTab[NO_TEST_FILT] =
 {
@@ -654,9 +778,11 @@ Void TComAdaptiveLoopFilter::copyALFParam(ALFParam* pDesAlfParam, ALFParam* pSrc
   pDesAlfParam->alf_flag = pSrcAlfParam->alf_flag;
   pDesAlfParam->cu_control_flag = pSrcAlfParam->cu_control_flag;
   pDesAlfParam->chroma_idc = pSrcAlfParam->chroma_idc;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   pDesAlfParam->tap = pSrcAlfParam->tap;
 #if TI_ALF_MAX_VSIZE_7
   pDesAlfParam->tapV = pSrcAlfParam->tapV;
+#endif
 #endif
   pDesAlfParam->num_coeff = pSrcAlfParam->num_coeff;
   pDesAlfParam->tap_chroma = pSrcAlfParam->tap_chroma;
@@ -697,6 +823,11 @@ Void TComAdaptiveLoopFilter::copyALFParam(ALFParam* pDesAlfParam, ALFParam* pSrc
 
 Void TComAdaptiveLoopFilter::predictALFCoeff( ALFParam* pAlfParam)
 {
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Int i, sum, pred, N;
+  const Int* pFiltMag = weightsTab_shapes[pAlfParam->realfiltNo];
+  N = pAlfParam->num_coeff - 1;
+#else
   Int i, sum, pred, tap, N;
   const Int* pFiltMag = NULL;
   
@@ -728,6 +859,7 @@ Void TComAdaptiveLoopFilter::predictALFCoeff( ALFParam* pAlfParam)
   N = (tap * tapV + 1) >> 1;
 #else
   N = (tap * tap + 1) >> 1;
+#endif
 #endif
   sum=0;
   for(i=0; i<N-1;i++)
@@ -932,13 +1064,19 @@ Void TComAdaptiveLoopFilter::getCurrentFilter(int **filterCoeffSym,ALFParam* pcA
 { 
   int i,  k, varInd;
   int *patternMap;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   int *patternMapTab[3]={m_pattern9x9Sym_Quart, m_pattern7x7Sym_Quart, m_pattern5x5Sym_Quart};
+#endif
   {
     for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
     {
       memset(m_filterCoeffPrevSelected[varInd],0,sizeof(int)*MAX_SQR_FILT_LENGTH);
     }
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+    patternMap = patternMapTab_shapes[pcAlfParam->realfiltNo];
+#else
     patternMap=patternMapTab[pcAlfParam->realfiltNo];
+#endif
     for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
     {
       k=0;
@@ -1318,12 +1456,95 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgYRecPost, imgpel *imgYRec, i
   Int i, j, pixelInt;
   imgpel *pImgYVar,*pImgYPad;
   Int maxVal=g_uiIBDI_MAX;
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  imgpel *pImgYPad1,*pImgYPad2,*pImgYPad3,*pImgYPad4;
+#else
   imgpel *pImgYPad1,*pImgYPad2,*pImgYPad3,*pImgYPad4,*pImgYPad5,*pImgYPad6;
+#endif
   Int lastCoef= MAX_SQR_FILT_LENGTH-1;
   Int *coef = m_filterCoeffPrevSelected[0];
   Int numBitsMinus1= NUM_BITS-1;
   Int offset = (1<<(NUM_BITS-2));
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  switch(filtNo)
+  {
+  case 0:
+    for (i = 0; i < m_img_height; i++)
+    {
+      pImgYVar = m_imgY_var[i>>shiftHeight];
+      pImgYPad = imgYRec + i*stride;
+      {
+        pImgYPad1 = imgYRec + (i+1)*stride;
+        pImgYPad2 = imgYRec + (i-1)*stride;
+        pImgYPad3 = imgYRec + (i+2)*stride;
+        pImgYPad4 = imgYRec + (i-2)*stride;
+      }
+
+      for (j = 0; j < m_img_width; j++)
+      {
+        if (j%varStepSizeWidth==0) coef = m_filterCoeffPrevSelected[*(pImgYVar++)];
+        pixelInt=coef[lastCoef];
+
+        pixelInt += coef[8]* (pImgYPad3[j+1]+pImgYPad4[j-1]);
+        pixelInt += coef[9]* (pImgYPad3[j]+pImgYPad4[j]);
+        pixelInt += coef[10]* (pImgYPad3[j-1]+pImgYPad4[j+1]);
+
+        pixelInt += coef[26]* (pImgYPad1[j+2]+pImgYPad2[j-2]);
+        pixelInt += coef[27]* (pImgYPad1[j+1]+pImgYPad2[j-1]);
+        pixelInt += coef[28]* (pImgYPad1[j]+pImgYPad2[j]);
+        pixelInt += coef[29]* (pImgYPad1[j-1]+pImgYPad2[j+1]);
+        pixelInt += coef[30]* (pImgYPad1[j-2]+pImgYPad2[j+2]);
+
+        pixelInt += coef[44]* (pImgYPad[j+3]+pImgYPad[j-3]);
+        pixelInt += coef[45]* (pImgYPad[j+2]+pImgYPad[j-2]);
+        pixelInt += coef[46]* (pImgYPad[j+1]+pImgYPad[j-1]);
+        pixelInt += coef[47]* (pImgYPad[j]);
+
+        pixelInt=(Int)((pixelInt+offset) >> (numBitsMinus1));
+        imgYRecPost[i*stride + j]=max(0, min(pixelInt,maxVal));
+      }
+    } 
+    break;
+
+  case 1:
+    for (i = 0; i < m_img_height; i++)
+    {
+      pImgYVar = m_imgY_var[i>>shiftHeight];
+      pImgYPad = imgYRec + i*stride;
+      {
+        pImgYPad1 = imgYRec + (i+1)*stride;
+        pImgYPad2 = imgYRec + (i-1)*stride;
+        pImgYPad3 = imgYRec + (i+2)*stride;
+        pImgYPad4 = imgYRec + (i-2)*stride;
+      }
+
+      for (j = 0; j < m_img_width; j++)
+      {
+        if (j%varStepSizeWidth==0) coef = m_filterCoeffPrevSelected[*(pImgYVar++)];
+        pixelInt=coef[lastCoef];
+       
+        pixelInt += coef[9]* (pImgYPad3[j]+pImgYPad4[j]);
+        pixelInt += coef[28]* (pImgYPad1[j]+pImgYPad2[j]);
+       
+        pixelInt += coef[38]* (pImgYPad[j+9]+pImgYPad[j-9]);
+        pixelInt += coef[39]* (pImgYPad[j+8]+pImgYPad[j-8]);
+        pixelInt += coef[40]* (pImgYPad[j+7]+pImgYPad[j-7]);
+        pixelInt += coef[41]* (pImgYPad[j+6]+pImgYPad[j-6]);
+        pixelInt += coef[42]* (pImgYPad[j+5]+pImgYPad[j-5]);
+        pixelInt += coef[43]* (pImgYPad[j+4]+pImgYPad[j-4]);
+        pixelInt += coef[44]* (pImgYPad[j+3]+pImgYPad[j-3]);
+        pixelInt += coef[45]* (pImgYPad[j+2]+pImgYPad[j-2]);
+        pixelInt += coef[46]* (pImgYPad[j+1]+pImgYPad[j-1]);
+        pixelInt += coef[47]* (pImgYPad[j]);
+
+        pixelInt=(Int)((pixelInt+offset) >> (numBitsMinus1));
+        imgYRecPost[i*stride + j]=max(0, min(pixelInt,maxVal));
+      }
+    } 
+    break;
+  }
+#else
   switch(filtNo)
   {
   case 2:
@@ -1455,6 +1676,7 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgYRecPost, imgpel *imgYRec, i
     }
     break;
   }
+#endif
 }
 
 Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgYRecPost, imgpel *imgYRec, int filtNo, int startHeight, int endHeight, int startWidth, int endWidth, int stride)
@@ -1465,13 +1687,95 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgYRecPost, imgpel *imgYRec
   Int shiftWidth = (Int)(log((double)varStepSizeWidth)/log(2.0));
   Int i, j, pixelInt;
   imgpel *pImgYVar,*pImgYPad;
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  imgpel *pImgYPad1,*pImgYPad2,*pImgYPad3,*pImgYPad4;
+#else
   imgpel *pImgYPad1,*pImgYPad2,*pImgYPad3,*pImgYPad4,*pImgYPad5,*pImgYPad6;
+#endif
   Int maxVal=g_uiIBDI_MAX;
   Int lastCoef= MAX_SQR_FILT_LENGTH-1;
   Int *coef = m_filterCoeffPrevSelected[0];
   Int numBitsMinus1= NUM_BITS-1;
   Int offset = (1<<(NUM_BITS-2));
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  switch(filtNo)
+  {
+  case 0:
+    for (i =  startHeight; i < endHeight; i++)
+    {
+      pImgYVar = m_imgY_var[i>>shiftHeight] + (startWidth>>shiftWidth);
+      pImgYPad = imgYRec + i*stride;
+      {
+        pImgYPad1 = imgYRec + (i+1)*stride;
+        pImgYPad2 = imgYRec + (i-1)*stride;
+        pImgYPad3 = imgYRec + (i+2)*stride;
+        pImgYPad4 = imgYRec + (i-2)*stride;
+      }
+
+      for (j = startWidth; j < endWidth; j++)
+      {
+        if (j%varStepSizeWidth==0) coef = m_filterCoeffPrevSelected[*(pImgYVar++)];
+        pixelInt=coef[lastCoef];
+
+        pixelInt += coef[8]* (pImgYPad3[j+1]+pImgYPad4[j-1]);
+        pixelInt += coef[9]* (pImgYPad3[j]+pImgYPad4[j]);
+        pixelInt += coef[10]* (pImgYPad3[j-1]+pImgYPad4[j+1]);
+
+        pixelInt += coef[26]* (pImgYPad1[j+2]+pImgYPad2[j-2]);
+        pixelInt += coef[27]* (pImgYPad1[j+1]+pImgYPad2[j-1]);
+        pixelInt += coef[28]* (pImgYPad1[j]+pImgYPad2[j]);
+        pixelInt += coef[29]* (pImgYPad1[j-1]+pImgYPad2[j+1]);
+        pixelInt += coef[30]* (pImgYPad1[j-2]+pImgYPad2[j+2]);
+
+        pixelInt += coef[44]* (pImgYPad[j+3]+pImgYPad[j-3]);
+        pixelInt += coef[45]* (pImgYPad[j+2]+pImgYPad[j-2]);
+        pixelInt += coef[46]* (pImgYPad[j+1]+pImgYPad[j-1]);
+        pixelInt += coef[47]* (pImgYPad[j]);
+
+        pixelInt=(Int)((pixelInt+offset) >> (numBitsMinus1));
+        imgYRecPost[i*stride + j]=max(0, min(pixelInt,maxVal));
+      }
+    }
+    break;
+  case 1:
+    for (i =  startHeight; i < endHeight; i++)
+    {
+      pImgYVar = m_imgY_var[i>>shiftHeight] + (startWidth>>shiftWidth);
+      pImgYPad = imgYRec + i*stride;
+      {
+        pImgYPad1 = imgYRec + (i+1)*stride;
+        pImgYPad2 = imgYRec + (i-1)*stride;
+        pImgYPad3 = imgYRec + (i+2)*stride;
+        pImgYPad4 = imgYRec + (i-2)*stride;
+      }
+
+      for (j = startWidth; j < endWidth; j++)
+      {
+        if (j%varStepSizeWidth==0) coef = m_filterCoeffPrevSelected[*(pImgYVar++)];
+        pixelInt=coef[lastCoef];
+
+        pixelInt += coef[9]* (pImgYPad3[j]+pImgYPad4[j]);
+        pixelInt += coef[28]* (pImgYPad1[j]+pImgYPad2[j]);
+       
+        pixelInt += coef[38]* (pImgYPad[j+9]+pImgYPad[j-9]);
+        pixelInt += coef[39]* (pImgYPad[j+8]+pImgYPad[j-8]);
+        pixelInt += coef[40]* (pImgYPad[j+7]+pImgYPad[j-7]);
+        pixelInt += coef[41]* (pImgYPad[j+6]+pImgYPad[j-6]);
+        pixelInt += coef[42]* (pImgYPad[j+5]+pImgYPad[j-5]);
+        pixelInt += coef[43]* (pImgYPad[j+4]+pImgYPad[j-4]);
+        pixelInt += coef[44]* (pImgYPad[j+3]+pImgYPad[j-3]);
+        pixelInt += coef[45]* (pImgYPad[j+2]+pImgYPad[j-2]);
+        pixelInt += coef[46]* (pImgYPad[j+1]+pImgYPad[j-1]);
+        pixelInt += coef[47]* (pImgYPad[j]);
+
+        pixelInt=(Int)((pixelInt+offset) >> (numBitsMinus1));
+        imgYRecPost[i*stride + j]=max(0, min(pixelInt,maxVal));
+      }
+    }
+    break;
+  }
+#else
   switch(filtNo)
   {
   case 2:
@@ -1603,6 +1907,7 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgYRecPost, imgpel *imgYRec
     }
     break;
   }
+#endif
 }
 #else
 
@@ -1613,18 +1918,104 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec
   int max_val=g_uiIBDI_MAX;
   int fl=FILTER_LENGTH/2;
   int *pattern=m_pattern9x9Sym;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   int fl_temp;
+#endif
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Int fl_temp_h = 0;// horizontal_tap / 2
+  Int fl_temp_v = 0;// vertical_tap / 2
+  int *pattern_fix = patternTab_filt_shapes[filtNo]; 
+  if (filtNo == 0)
+  {
+      // TI's Diamond7x7
+      fl_temp_h = 3;
+      fl_temp_v = 2;    
+  }
+  else //if (filtNo == 1)
+  {
+      // Cross19x5
+      fl_temp_h = 9;
+      fl_temp_v = 2;    
+  }
+#else
   int *pattern_fix=m_patternTab_filt[filtNo];
   fl_temp=m_flTab[filtNo];
 #if TI_ALF_MAX_VSIZE_7
   Int fl_tempV = ALFFlHToFlV(fl_temp);
 #endif
-  
+#endif 
+
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  if (filtNo == 0)
+  {
+      // Filter using TI's Diamond7x7
+      for (i = fl; i < m_img_height+fl; i++)
+      {
+          p_imgY_var = m_imgY_var[i-fl];
+          p_imgY_pad = imgY_rec + (i-fl)*Stride;
+          for (j = fl; j < m_img_width+fl; j++)
+          {
+              coef = m_filterCoeffPrevSelected[*(p_imgY_var++)];
+              pixelInt=coef[last_coef];
+              pattern=pattern_fix;
+
+              for (ii=-fl_temp_v; ii<0; ii++)
+              {
+                  m = (ii == -fl_temp_v)? 1: 2;
+                  im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
+                  im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
+                  for (jj=-m; jj<=m; jj++)
+                      pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+              }
+              
+              im1= &(p_imgY_pad[(j-fl)-fl_temp_h]);
+              im2= &(p_imgY_pad[(j-fl)+fl_temp_h]);
+              for (jj=0; jj<fl_temp_h; jj++)
+                  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+              
+              pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+              pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+              imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+          }
+      }
+  }
+  else //if (filtNo == 1)
+  {
+      // Filter using Cross19x5
+      for (i = fl; i < m_img_height+fl; i++)
+      {
+          p_imgY_var = m_imgY_var[i-fl];
+          p_imgY_pad = imgY_rec + (i-fl)*Stride;
+          for (j = fl; j < m_img_width+fl; j++)
+          {
+              coef = m_filterCoeffPrevSelected[*(p_imgY_var++)];
+              pixelInt=coef[last_coef];
+              pattern=pattern_fix;
+
+              for (ii=-fl_temp_v; ii<0; ii++)
+              {
+                  im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl]);
+                  im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl]);
+                  pixelInt+=((*(im1)+ *(im2))*coef[*(pattern++)]);
+              }
+
+              im1= &(p_imgY_pad[(j-fl)-fl_temp_h]);
+              im2= &(p_imgY_pad[(j-fl)+fl_temp_h]);    
+              for (jj=0; jj<fl_temp_h; jj++)
+                  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+              
+              pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+              pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+              imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+          }
+      }
+  }
+#else
   // Filter
   for (i = fl; i < m_img_height+fl; i++)
   {
@@ -1658,6 +2049,7 @@ Void TComAdaptiveLoopFilter::filterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec
       imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
     }
   }
+#endif
 }
 
 Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_rec, int filtNo, int start_height, int end_height, int start_width, int end_width, int Stride)
@@ -1667,18 +2059,104 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_
   int max_val=g_uiIBDI_MAX;
   int fl=FILTER_LENGTH/2;
   int *pattern=m_pattern9x9Sym;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   int fl_temp;
+#endif
   int last_coef= MAX_SQR_FILT_LENGTH-1;
   imgpel *im1,*im2;
   int *coef;
   int num_bits_minus_1= NUM_BITS-1;
   int offset = (1<<(NUM_BITS-2));
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Int fl_temp_h = 0;// horizontal_tap / 2
+  Int fl_temp_v = 0;// vertical_tap / 2
+  int *pattern_fix = patternTab_filt_shapes[filtNo]; 
+  if (filtNo == 0)
+  {
+      // TI's Diamond7x7
+      fl_temp_h = 3;
+      fl_temp_v = 2;    
+  }
+  else //if (filtNo == 1)
+  {
+      // Cross19x5
+      fl_temp_h = 9;
+      fl_temp_v = 2;    
+  }
+#else
   int *pattern_fix=m_patternTab_filt[filtNo];
   fl_temp=m_flTab[filtNo];
 #if TI_ALF_MAX_VSIZE_7
   Int fl_tempV = ALFFlHToFlV(fl_temp);
 #endif
-  
+#endif
+
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  if (filtNo == 0)
+  {
+      // Filter using TI's Diamond7x7
+      for (i = fl + start_height; i < end_height+fl; i++)
+      {
+          p_imgY_var = m_imgY_var[i-fl] + start_width;
+          p_imgY_pad = imgY_rec + (i-fl)*Stride;
+          for (j = fl + start_width; j < end_width+fl; j++)
+          {
+              coef = m_filterCoeffPrevSelected[*(p_imgY_var++)];
+              pixelInt=coef[last_coef];
+              pattern=pattern_fix;
+
+              for (ii=-fl_temp_v; ii<0; ii++)
+              {
+                  m = (ii == -fl_temp_v)? 1: 2;
+                  im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl-m]);
+                  im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl+m]);
+                  for (jj=-m; jj<=m; jj++)
+                      pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+              }
+
+              im1= &(p_imgY_pad[(j-fl)-fl_temp_h]);
+              im2= &(p_imgY_pad[(j-fl)+fl_temp_h]);    
+              for (jj=0; jj<fl_temp_h; jj++)
+                  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+              
+              pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+              pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+              imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+          }
+      }
+  }
+  else //if (filtNo == 1)
+  {
+      // Filter using Cross19x5
+      for (i = fl + start_height; i < end_height+fl; i++)
+      {
+          p_imgY_var = m_imgY_var[i-fl] + start_width;
+          p_imgY_pad = imgY_rec + (i-fl)*Stride;
+          for (j = fl + start_width; j < end_width+fl; j++)
+          {
+              coef = m_filterCoeffPrevSelected[*(p_imgY_var++)];
+              pixelInt=coef[last_coef];
+              pattern=pattern_fix;
+
+              for (ii=-fl_temp_v; ii<0; ii++)
+              {
+                  im1= &(imgY_rec[(i-fl+ii)*Stride + j-fl]);
+                  im2= &(imgY_rec[(i-fl-ii)*Stride + j-fl]);
+                  pixelInt+=((*(im1)+ *(im2))*coef[*(pattern++)]);
+              }
+
+              im1= &(p_imgY_pad[(j-fl)-fl_temp_h]);
+              im2= &(p_imgY_pad[(j-fl)+fl_temp_h]);
+              for (jj=0; jj<fl_temp_h; jj++)
+                  pixelInt+=((*(im1++)+ *(im2--))*coef[*(pattern++)]);
+
+              pixelInt+=(p_imgY_pad[j-fl]*coef[*(pattern++)]);
+              pixelInt=(int)((pixelInt+offset) >> (num_bits_minus_1));
+              imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
+          }
+      }
+  }
+#else
   // Filter
   for (i = fl + start_height; i < end_height+fl; i++)
   {
@@ -1712,6 +2190,7 @@ Void TComAdaptiveLoopFilter::subfilterFrame(imgpel *imgY_rec_post, imgpel *imgY_
       imgY_rec_post[(i-fl)*Stride + j-fl]=max(0, min(pixelInt,max_val));
     }
   }
+#endif
 }
 
 #endif
