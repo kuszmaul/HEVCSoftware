@@ -47,8 +47,10 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
 Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
 {
   UInt uiSymbol;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   Int sqrFiltLengthTab[3] = {SQR_FILT_LENGTH_9SYM, SQR_FILT_LENGTH_7SYM, SQR_FILT_LENGTH_5SYM};
   Int FiltTab[3] = {9, 7, 5};
+#endif
   
   pAlfParam->filters_per_group = 0;
   
@@ -67,6 +69,11 @@ Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
 #endif
 
   m_pcEntropyDecoderIf->parseAlfUvlc(uiSymbol);
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  pAlfParam->realfiltNo = uiSymbol;
+  // the number of coefficients is equal to 13 for both shapes
+  pAlfParam->num_coeff = 13;
+#else
   Int TabIdx = uiSymbol;
   pAlfParam->realfiltNo = 2-TabIdx;
   pAlfParam->tap = FiltTab[pAlfParam->realfiltNo];
@@ -74,7 +81,7 @@ Void TDecEntropy::decodeAux(ALFParam* pAlfParam)
   pAlfParam->tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(pAlfParam->tap);
 #endif
   pAlfParam->num_coeff = sqrFiltLengthTab[pAlfParam->realfiltNo];
-  
+#endif 
   if (pAlfParam->filtNo>=0)
   {
     if(pAlfParam->realfiltNo >= 0)
@@ -128,6 +135,11 @@ Void TDecEntropy::readFilterCodingParams(ALFParam* pAlfParam)
   int kMin;
   int maxScanVal;
   int *pDepthInt;
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  // Determine maxScanVal
+  maxScanVal = 0;
+  pDepthInt = pDepthIntTab_shapes[pAlfParam->realfiltNo];
+#else
   int fl;
   
   // Determine fl
@@ -141,6 +153,7 @@ Void TDecEntropy::readFilterCodingParams(ALFParam* pAlfParam)
   // Determine maxScanVal
   maxScanVal = 0;
   pDepthInt = pDepthIntTab[fl - 2];
+#endif
   for(ind = 0; ind < pAlfParam->num_coeff; ind++)
     maxScanVal = max(maxScanVal, pDepthInt[ind]);
   
@@ -196,6 +209,9 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
 {
   int ind, scanPos, i;
   int *pDepthInt;
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  pDepthInt = pDepthIntTab_shapes[pAlfParam->realfiltNo];
+#else
   int fl;
   
   if(pAlfParam->num_coeff == SQR_FILT_LENGTH_9SYM)
@@ -206,7 +222,8 @@ Void TDecEntropy::readFilterCoeffs(ALFParam* pAlfParam)
     fl = 2;
   
   pDepthInt = pDepthIntTab[fl - 2];
-  
+#endif
+
   for(ind = 0; ind < pAlfParam->filters_per_group_diff; ++ind)
   {
     for(i = 0; i < pAlfParam->num_coeff; i++)
