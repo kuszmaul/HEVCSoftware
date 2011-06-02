@@ -229,6 +229,8 @@
 #define NO_VAR_BIN          16
 #endif
 
+#define EBRISK_ALF_NEW_FILTER_SHAPES 1  // JCTVC-E342: Adaptive Loop Filtering Using Multiple Filter Shapes
+
 #if QC_MDIS
 #define MN_MDIS_SIMPLIFICATION       1       ///< JCTVC-E069: simplification of MDIS
 #endif
@@ -389,11 +391,13 @@ struct _AlfParam
   Int alf_flag;                           ///< indicates use of ALF
   Int cu_control_flag;                    ///< coding unit based control flag
   Int chroma_idc;                         ///< indicates use of ALF for chroma
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
 #if TI_ALF_MAX_VSIZE_7
   Int tap;                                ///< number of filter taps - horizontal
   Int tapV;                               ///< number of filter taps - vertical
 #else
   Int tap;                                ///< number of filter taps
+#endif
 #endif
   Int num_coeff;                          ///< number of filter coefficients
   Int *coeff;                             ///< filter coefficient array
