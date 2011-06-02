@@ -66,9 +66,20 @@
 #define VAR_SIZE               3
 #endif
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+// max tap = max_horizontal_tap = 19
+#define FILTER_LENGTH         19
+#else
 #define FILTER_LENGTH          9
+#endif
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+// ((max_horizontal_tap * max_vertical_tap) / 2 + 2) = ((19 * 5) / 2 + 2)
+#define MAX_SQR_FILT_LENGTH   49
+#else
 #define MAX_SQR_FILT_LENGTH   ((FILTER_LENGTH*FILTER_LENGTH) / 2 + 2)
+#endif
+
 #if TI_ALF_MAX_VSIZE_7
 #define SQR_FILT_LENGTH_9SYM  ((9*9) / 4 + 2 - 1) 
 #else
@@ -76,11 +87,21 @@
 #endif
 #define SQR_FILT_LENGTH_7SYM  ((7*7) / 4 + 2) 
 #define SQR_FILT_LENGTH_5SYM  ((5*5) / 4 + 2) 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+// max_tap + 2 = 19 + 2 
+#define MAX_SCAN_VAL    21
+#else
 #define MAX_SCAN_VAL    11
+#endif
 #define MAX_EXP_GOLOMB  16
 
 #define imgpel  unsigned short
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+extern Int depthIntShape0Sym[13];
+extern Int depthIntShape1Sym[13];
+extern Int *pDepthIntTab_shapes[NO_TEST_FILT];
+#endif
 #if TI_ALF_MAX_VSIZE_7
 extern Int depthInt9x9Sym[21];
 #else
@@ -308,6 +329,18 @@ protected:
   // ------------------------------------------------------------------------------------------------------------------
   // For luma component
   // ------------------------------------------------------------------------------------------------------------------
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  static Int patternShape0Sym[23];
+  static Int weightsShape0Sym[13];
+  static Int patternShape0Sym_Quart[49];
+  static Int patternShape1Sym[23];
+  static Int weightsShape1Sym[13];
+  static Int patternShape1Sym_Quart[49];
+  static Int *patternTab_filt_shapes[NO_TEST_FILT];
+  static Int *patternTab_shapes[NO_TEST_FILT]; 
+  static Int *patternMapTab_shapes[NO_TEST_FILT];
+  static Int *weightsTab_shapes[NO_TEST_FILT];
+#endif
 #if TI_ALF_MAX_VSIZE_7
   static Int m_pattern9x9Sym[39];
   static Int m_weights9x9Sym[21];
@@ -322,6 +355,11 @@ protected:
   static Int m_pattern5x5Sym[13];
   static Int m_weights5x5Sym[8];
   static Int m_pattern5x5Sym_Quart[45];
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  static Int pattern19x5Sym_Shape0[23];
+  static Int pattern19x5Sym_Shape1[23];
+  static Int pattern19x5Sym_19x5[95];
+#endif
 #if TI_ALF_MAX_VSIZE_7
   static Int m_pattern9x9Sym_9[39];
 #else
