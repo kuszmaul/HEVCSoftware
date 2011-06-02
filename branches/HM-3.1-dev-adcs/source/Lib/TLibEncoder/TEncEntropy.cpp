@@ -118,16 +118,22 @@ Void TEncEntropy::codeAux(ALFParam* pAlfParam)
   if (pAlfParam->filtNo>=0) m_pcEntropyCoderIf->codeAlfFlag(1);
   else m_pcEntropyCoderIf->codeAlfFlag(0);
 #endif
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   Int FiltTab[3] = {9, 7, 5};
   Int Tab = FiltTab[pAlfParam->realfiltNo];
+#endif
   //  m_pcEntropyCoderIf->codeAlfUvlc(pAlfParam->realfiltNo); 
 
 #if MQT_BA_RA  
   m_pcEntropyCoderIf->codeAlfFlag(pAlfParam->alf_pcr_region_flag);
 #endif
 
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  m_pcEntropyCoderIf->codeAlfUvlc(pAlfParam->realfiltNo); 
+#else
   m_pcEntropyCoderIf->codeAlfUvlc((Tab-5)/2); 
-  
+#endif
+
   if (pAlfParam->filtNo>=0)
   {
     if(pAlfParam->realfiltNo >= 0)
@@ -162,14 +168,20 @@ Int TEncEntropy::codeFilterCoeff(ALFParam* ALFp)
   int filters_per_group = ALFp->filters_per_group_diff;
   int sqrFiltLength = ALFp->num_coeff;
   int filtNo = ALFp->realfiltNo;
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
   int flTab[]={9/2, 7/2, 5/2};
   int fl = flTab[filtNo];
+#endif
   int i, k, kMin, kStart, minBits, ind, scanPos, maxScanVal, coeffVal, len = 0,
   *pDepthInt=NULL, kMinTab[MAX_SQR_FILT_LENGTH], bitsCoeffScan[MAX_SCAN_VAL][MAX_EXP_GOLOMB],
   minKStart, minBitsKStart, bitsKStart;
   
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  pDepthInt = pDepthIntTab_shapes[filtNo];
+#else 
   pDepthInt = pDepthIntTab[fl-2];
-  
+#endif
+
   maxScanVal = 0;
   for(i = 0; i < sqrFiltLength; i++)
     maxScanVal = max(maxScanVal, pDepthInt[i]);
