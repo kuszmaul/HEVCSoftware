@@ -115,6 +115,13 @@ private:
   TComPicYuv* m_pcPicYuvBest;
   TComPicYuv* m_pcPicYuvTmp;
   
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  ALFParam* pcAlfParam_Shape0;
+  ALFParam* pcAlfParam_Shape1;
+  TComPicYuv* pcPicYuvRec_Shape0;
+  TComPicYuv* pcPicYuvRec_Shape1;
+#endif
+
   UInt m_uiNumSCUInCU;
   
   Int m_varIndTab[NO_VAR_BINS];
@@ -148,8 +155,15 @@ private:
 #if MQT_BA_RA
   Int***   m_aiFilterCoeffSavedMethods[NUM_ALF_CLASS_METHOD];  //!< time-delayed filter set buffer
   Int***   m_aiFilterCoeffSaved;                               //!< the current accessing time-delayed filter buffer pointer
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Int*    m_iPreviousFilterShapeMethods[NUM_ALF_CLASS_METHOD];
+  Int*    m_iPreviousFilterShape;
+#endif
 #else
   Int  m_aiFilterCoeffSaved[9][NO_VAR_BINS][MAX_SQR_FILT_LENGTH];
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Int  m_iPreviousFilterShape[2];
+#endif
 #endif
   Int  m_iGOPSize;                //!< GOP size
   Int  m_iCurrentPOC;             //!< POC
@@ -165,6 +179,13 @@ private:
   static Int  m_aiTapPos7x7_In9x9Sym[14]; //!< for N-pass encoding- filter tap relative position in 9x9 footprint
   static Int  m_aiTapPos5x5_In9x9Sym[8];  //!< for N-pass encoding- filter tap relative position in 9x9 footprint
   static Int* m_iTapPosTabIn9x9Sym[NO_TEST_FILT];
+#endif
+
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  static Int  m_aiFilterPosShape0_In19x5Sym[13]; //!< for N-pass encoding- filter shape relative position in 19x5 footprint
+  static Int  m_aiFilterPosShape1_In19x5Sym[13]; //!< for N-pass encoding- filter shape relative position in 19x5 footprint
+  static Int  m_aiFilterPos19x5_In19x5Sym[49];    //!< for N-pass encoding- filter shape relative position in 19x5 footprint
+  static Int* m_iFilterTabIn19x5Sym[NO_TEST_FILT];
 #endif
 
 #if MTK_NONCROSS_INLOOP_FILTER
@@ -226,8 +247,11 @@ private:
 
 #if MQT_BA_RA
   /// save filter coefficients to buffer
+#if EBRISK_ALF_NEW_FILTER_SHAPES
+  Void  saveFilterCoeffToBuffer(Int **filterCoeffPrevSelected,Int filtNo);
+#else
   Void  saveFilterCoeffToBuffer(Int **filterCoeffPrevSelected);
-
+#endif
   /// set initial m_maskImg with previous (time-delayed) filters
   Void  setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec);
 
