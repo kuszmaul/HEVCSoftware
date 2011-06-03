@@ -487,11 +487,40 @@ Void TEncEntropy::encodeAlfCtrlFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
   m_pcEntropyCoderIf->codeAlfCtrlFlag( pcCU, uiAbsPartIdx );
 }
 
+
+#if MTK_NONCROSS_INLOOP_FILTER
+/** Encode ALF CU control flag
+ * \param uiFlag ALF CU control flag: 0 or 1
+ */
+Void TEncEntropy::encodeAlfCtrlFlag(UInt uiFlag)
+{
+  assert(uiFlag == 0 || uiFlag == 1);
+  m_pcEntropyCoderIf->codeAlfCtrlFlag( uiFlag );
+}
+#endif
+
+
 #if TSB_ALF_HEADER
+/** Encode ALF CU control flag parameters
+ * \param pAlfParam ALF parameters
+ */
 Void TEncEntropy::encodeAlfCtrlParam( ALFParam* pAlfParam )
 {
+
+#if MTK_NONCROSS_INLOOP_FILTER
+  Int  iDepth         = m_pcEntropyCoderIf->getMaxAlfCtrlDepth();
+#if FINE_GRANULARITY_SLICES
+  Int  iGranularity   = m_pcEntropyCoderIf->getSliceGranularity();
+  if(iGranularity > iDepth)
+  {
+    iDepth = iGranularity;
+  }
+#endif
+  m_pcEntropyCoderIf->codeAlfFlagNum( pAlfParam->num_alf_cu_flag, pAlfParam->num_cus_in_frame, iDepth);
+#else
   m_pcEntropyCoderIf->codeAlfFlagNum( pAlfParam->num_alf_cu_flag, pAlfParam->num_cus_in_frame );
-  
+#endif
+
   for(UInt i=0; i<pAlfParam->num_alf_cu_flag; i++)
   {
     m_pcEntropyCoderIf->codeAlfCtrlFlag( pAlfParam->alf_cu_flag[i] );
@@ -1274,6 +1303,16 @@ Void TEncEntropy::encodeSaoParam(SAOParam* pSaoParam)
 
 }
 
-
+Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
+{
+  Int count = 0;
+  
+  for ( Int i = 0; i < uiSize * uiSize; i++ )
+  {
+    count += pcCoef[i] != 0;
+  }
+  
+  return count;
+}
 
 #endif

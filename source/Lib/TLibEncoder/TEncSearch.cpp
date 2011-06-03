@@ -118,6 +118,8 @@ TEncSearch::~TEncSearch()
   delete[] m_puhQTTempCbf[1];
   delete[] m_puhQTTempCbf[2];
   delete[] m_pcQTTempTComYuv;
+  
+  m_tmpYuvPred.destroy();
 }
 
 void TEncSearch::init(TEncCfg*      pcEncCfg,
@@ -195,6 +197,8 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
     m_ppcQTTempCoeffCr[ui] = new TCoeff[g_uiMaxCUWidth*g_uiMaxCUHeight>>2];
     m_pcQTTempTComYuv[ui].create( g_uiMaxCUWidth, g_uiMaxCUHeight );
   }
+  
+  m_tmpYuvPred.create(MAX_CU_SIZE, MAX_CU_SIZE);
 }
 
 #if FASTME_SMOOTHER_MV
@@ -1137,7 +1141,7 @@ TEncSearch::xIntraCodingChromaBlk( TComDataCU* pcCU,
   Bool  bLeftAvail  = false;
   pcCU->getPattern()->initPattern         ( pcCU, uiTrDepth, uiAbsPartIdx );
 
-  #if LM_CHROMA_TICKET156
+#if LM_CHROMA
   if( pcCU->getSlice()->getSPS()->getUseLMChroma() && uiChromaPredMode == 3 && uiChromaId == 0 )
   {
     pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, uiTrDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail, 2 );
@@ -1145,7 +1149,7 @@ TEncSearch::xIntraCodingChromaBlk( TComDataCU* pcCU,
     getLumaRecPixels( pcCU->getPattern(), uiWidth, uiHeight );
   }
 #endif
-
+  
   pcCU->getPattern()->initAdiPatternChroma( pcCU, uiAbsPartIdx, uiTrDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
   Int*  pPatChroma  = ( uiChromaId > 0 ? pcCU->getPattern()->getAdiCrBuf( uiWidth, uiHeight, m_piYuvExt ) : pcCU->getPattern()->getAdiCbBuf( uiWidth, uiHeight, m_piYuvExt ) );
   
@@ -1388,10 +1392,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     {
       m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_TEST ] );
     }
-  }
-  
-  if( bCheckSplit )
-  {
+    
     //--- set transform index and Cbf values ---
     pcCU->setTrIdxSubParts( uiTrDepth, uiAbsPartIdx, uiFullDepth );
     pcCU->setCbfSubParts  ( uiSingleCbfY << uiTrDepth, TEXT_LUMA, uiAbsPartIdx, uiFullDepth );
@@ -1667,9 +1668,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
   UInt    uiOverallDistY = 0;
   UInt    uiOverallDistC = 0;
   UInt    CandNum;
-  UInt    CandModeList[ FAST_UDI_MAX_RDMODE_NUM ];
   Double  CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
-  UInt    uiFastCandNum=g_aucIntraModeNumFast[ uiWidthBit ];
   
   //===== set QP and clear Cbf =====
 #if SUB_LCU_DQP
@@ -1697,113 +1696,95 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     
     //===== determine set of modes to be tested (using prediction signal only) =====
 #if ADD_PLANAR_MODE
-    UInt uiMaxMode     = g_aucIntraModeNumAng[uiWidthBit] + 1;
+    Int numModesAvailable     = g_aucIntraModeNumAng[uiWidthBit] + 1;
 #else
-    UInt uiMaxMode     = g_aucIntraModeNumAng[uiWidthBit];
+    Int numModesAvailable     = g_aucIntraModeNumAng[uiWidthBit];
 #endif
-    UInt uiMaxModeFast = g_aucIntraModeNumFast[ uiWidthBit ];
     Pel* piOrg         = pcOrgYuv ->getLumaAddr( uiPU, uiWidth );
     Pel* piPred        = pcPredYuv->getLumaAddr( uiPU, uiWidth );
     UInt uiStride      = pcPredYuv->getStride();
-    
-    if ( uiFastCandNum != uiMaxMode ) uiMaxModeFast = 0;
-    for( Int i=0; i < uiFastCandNum; i++ ) 
-    {
-      CandCostList[ i ] = MAX_DOUBLE;
-    }
-    CandNum = 0;
-    
-#if ADD_PLANAR_MODE
-    UInt uiHdModeList[NUM_INTRA_MODE];
-    uiHdModeList[0] = PLANAR_IDX;
-    for( Int i=1; i < uiMaxMode; i++) uiHdModeList[i] = i-1;
-
-    for( Int iMode = Int(uiMaxModeFast); iMode < Int(uiMaxMode); iMode++ )
-    {
-      UInt uiMode = uiHdModeList[iMode];
-#else
-    for( UInt uiMode = uiMaxModeFast; uiMode < uiMaxMode; uiMode++ )
-    {
-#endif
-#if (!REFERENCE_SAMPLE_PADDING)
-      if ( !predIntraLumaDirAvailable( uiMode, uiWidthBit, bAboveAvail, bLeftAvail ) )
-        continue;
-#endif
-
-      predIntraLumaAng( pcCU->getPattern(), uiMode, piPred, uiStride, uiWidth, uiHeight, pcCU, bAboveAvail, bLeftAvail );
-      
-      // use hadamard transform here
-      UInt uiSad = m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
-      
-      UInt   iModeBits = xModeBitsIntra( pcCU, uiMode, uiPU, uiPartOffset, uiDepth, uiInitTrDepth );
-      Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
-      
-      CandNum += xUpdateCandList( uiMode, cost, uiFastCandNum, CandModeList, CandCostList );
-    }
     UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
-    UInt uiNewMaxMode;
-    UInt uiMinMode = 0;
+    Int numModesForFullRD = g_aucIntraModeNumFast[ uiWidthBit ];
     
-    if(uiFastCandNum!=uiMaxMode)
+    Bool doFastSearch = (numModesForFullRD != numModesAvailable);
+    if (doFastSearch)
     {
-      uiNewMaxMode = min( uiFastCandNum, CandNum );
-      for( Int i = 0; i < uiNewMaxMode; i++)
+      assert(numModesForFullRD < numModesAvailable);
+
+      for( Int i=0; i < numModesForFullRD; i++ ) 
       {
-        uiRdModeList[i] = CandModeList[i];
+        CandCostList[ i ] = MAX_DOUBLE;
       }
+      CandNum = 0;
+      
+      for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
+      {
+#if ADD_PLANAR_MODE
+        UInt uiMode = (modeIdx == 0) ? PLANAR_IDX : modeIdx - 1;
+#else
+        UInt uiMode = modeIdx;
+#endif
+#if !REFERENCE_SAMPLE_PADDING
+        if ( !predIntraLumaDirAvailable( uiMode, uiWidthBit, bAboveAvail, bLeftAvail ) )
+          continue;
+#endif
+
+        predIntraLumaAng( pcCU->getPattern(), uiMode, piPred, uiStride, uiWidth, uiHeight, pcCU, bAboveAvail, bLeftAvail );
+        
+        // use hadamard transform here
+        UInt uiSad = m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
+        
+        UInt   iModeBits = xModeBitsIntra( pcCU, uiMode, uiPU, uiPartOffset, uiDepth, uiInitTrDepth );
+        Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
+        
+        CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
+      }
+    
+#if !REFERENCE_SAMPLE_PADDING
+      // Number of modes might be less than desired if too few are actually available
+      numModesForFullRD = min<Int>( numModesForFullRD, CandNum );
+#endif
 #if FAST_UDI_USE_MPM
 #if MTK_DCM_MPM
       Int uiPreds[2] = {-1, -1};
       Int numCand = pcCU->getIntraDirLumaPredictor(uiPartOffset, uiPreds);  
-
       for( Int j=0; j < numCand; j++)
+#endif
       {
         Bool mostProbableModeIncluded = false;
+#if MTK_DCM_MPM
         Int mostProbableMode = uiPreds[j];
-#if ADD_PLANAR_MODE
-      if (mostProbableMode == 2)
-      {
-        mostProbableMode = PLANAR_IDX;
-      }
+#else
+        Int mostProbableMode = pcCU->getMostProbableIntraDirLuma( uiPartOffset );
 #endif
-        for( Int i=0; i < uiNewMaxMode; i++)
+        
+#if ADD_PLANAR_MODE
+        if (mostProbableMode == 2)
+        {
+          mostProbableMode = PLANAR_IDX;
+        }
+#endif
+        for( Int i=0; i < numModesForFullRD; i++)
         {
           mostProbableModeIncluded |= (mostProbableMode == uiRdModeList[i]);
         }
         if (!mostProbableModeIncluded)
         {
-          uiRdModeList[uiNewMaxMode++] = mostProbableMode;
+          uiRdModeList[numModesForFullRD++] = mostProbableMode;
         }
       }
-#else
-      Int mostProbableMode = pcCU->getMostProbableIntraDirLuma( uiPartOffset );
-#if ADD_PLANAR_MODE
-      if (mostProbableMode == 2)
-      {
-        mostProbableMode = PLANAR_IDX;
-      }
-#endif
-      Bool mostProbableModeIncluded = false;
-      for( Int i=0; i < uiNewMaxMode; i++)
-      {
-        mostProbableModeIncluded |= (mostProbableMode == uiRdModeList[i]);
-      }
-      if (!mostProbableModeIncluded)
-      {
-        uiRdModeList[uiNewMaxMode++] = mostProbableMode;
-      } 
-#endif
-#endif
+#endif // FAST_UDI_USE_MPM
     }
     else
     {
-      uiNewMaxMode = uiMaxMode;
+      for( Int i=0; i < numModesForFullRD; i++)
+      {
 #if ADD_PLANAR_MODE
-      uiRdModeList[0] = PLANAR_IDX;
-      for( Int i=1; i < uiNewMaxMode; i++) uiRdModeList[i] = i-1;
+        uiRdModeList[i] = (i == 0) ? PLANAR_IDX : i-1; 
 #else
-      for( Int i=0; i < uiNewMaxMode; i++) uiRdModeList[i] = i;
+        uiRdModeList[i] = i;
 #endif
+      }
     }
     
     //===== check modes (using r-d costs) =====
@@ -1816,7 +1797,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt    uiBestPUDistY = 0;
     UInt    uiBestPUDistC = 0;
     Double  dBestPUCost   = MAX_DOUBLE;
-    for( UInt uiMode = uiMinMode; uiMode < uiNewMaxMode; uiMode++ )
+    for( UInt uiMode = 0; uiMode < numModesForFullRD; uiMode++ )
     {
       // set luma prediction mode
       UInt uiOrgMode = uiRdModeList[uiMode];
@@ -2370,10 +2351,7 @@ Bool TEncSearch::predIntraLumaDirAvailable( UInt uiMode, UInt uiWidthBit, Bool b
 
 Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, UInt& ruiErr, Bool bHadamard )
 {
-  TComYuv cYuvPred;
-  cYuvPred.create( pcYuvOrg->getWidth(), pcYuvOrg->getHeight() );
-
-  motionCompensation( pcCU, &cYuvPred, REF_PIC_LIST_X, iPartIdx );
+  motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
 
   UInt uiAbsPartIdx = 0;
   Int iWidth = 0;
@@ -2383,11 +2361,9 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
   DistParam cDistParam;
   m_pcRdCost->setDistParam( cDistParam, 
                             pcYuvOrg->getLumaAddr( uiAbsPartIdx ), pcYuvOrg->getStride(), 
-                            cYuvPred .getLumaAddr( uiAbsPartIdx ), cYuvPred .getStride(), 
+                            m_tmpYuvPred .getLumaAddr( uiAbsPartIdx ), m_tmpYuvPred .getStride(), 
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() );
   ruiErr = cDistParam.DistFunc( &cDistParam );
-
-  cYuvPred.destroy();
 }
 
 /** estimation of best merge coding
@@ -2574,6 +2550,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if DCM_COMB_LIST
     UInt          uiCostTempL0[MAX_NUM_REF];
     for (Int iNumRef=0; iNumRef < MAX_NUM_REF; iNumRef++) uiCostTempL0[iNumRef] = MAX_UINT;
+    UInt          uiBitsTempL0[MAX_NUM_REF];
 #endif    
 
     xGetBlkBits( ePartSize, pcCU->getSlice()->isInterP(), iPartIdx, uiLastMode, uiMbBits);
@@ -2647,14 +2624,6 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif
             {
 #if DCM_COMB_LIST
-              if (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && !pcCU->getSlice()->getNoBackPredFlag())
-              {
-                uiCostTemp = uiCostTempL0[pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(iRefIdxTemp)];
-              }
-              else
-              {
-                uiCostTemp = MAX_UINT;
-              }
 #else
               uiCostTemp = MAX_UINT;
 #endif
@@ -2672,6 +2641,14 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
                 cMvTemp[1][iRefIdxTemp] = cMvTemp[0][pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(iRefIdxTemp)]; 
               }
 #endif
+              uiCostTemp = uiCostTempL0[pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(iRefIdxTemp)];
+              /*first subtract the bit-rate part of the cost of the other list*/
+              uiCostTemp -= m_pcRdCost->getCost( uiBitsTempL0[pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(iRefIdxTemp)] );
+              /*correct the bit-rate part of the current ref*/
+              m_pcRdCost->setPredictor  ( cMvPred[iRefList][iRefIdxTemp] );
+              uiBitsTemp += m_pcRdCost->getBits( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
+              /*calculate the correct cost*/
+              uiCostTemp += m_pcRdCost->getCost( uiBitsTemp );
             }
             else
             {
@@ -2705,6 +2682,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           if(iRefList==REF_PIC_LIST_0)
           {
             uiCostTempL0[iRefIdxTemp] = uiCostTemp;
+            uiBitsTempL0[iRefIdxTemp] = uiBitsTemp;
             if(pcCU->getSlice()->getRefIdxOfLC(REF_PIC_LIST_0, iRefIdxTemp)<0)
             {
               uiCostTemp = MAX_UINT;
@@ -3358,6 +3336,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
   
   m_pcRdCost->setPredictor( rcMvPred );
   Int iOrgMvBits  = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+  iOrgMvBits += m_auiMVPIdxCost[riMVPIdx][pcAMVPInfo->iN];
   Int iBestMvBits = iOrgMvBits;
   
   for (Int iMVPIdx = 0; iMVPIdx < pcAMVPInfo->iN; iMVPIdx++)
@@ -3367,6 +3346,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
     m_pcRdCost->setPredictor( pcAMVPInfo->m_acMvCand[iMVPIdx] );
     
     Int iMvBits = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+    iMvBits += m_auiMVPIdxCost[iMVPIdx][pcAMVPInfo->iN];
     
     if (iMvBits < iBestMvBits)
     {
@@ -3378,9 +3358,6 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
   if (iBestMVPIdx != riMVPIdx)  //if changed
   {
     rcMvPred = pcAMVPInfo->m_acMvCand[iBestMVPIdx];
-    
-    iOrgMvBits  += m_auiMVPIdxCost[riMVPIdx][pcAMVPInfo->iN];
-    iBestMvBits += m_auiMVPIdxCost[iBestMVPIdx][pcAMVPInfo->iN];
     
     riMVPIdx = iBestMVPIdx;
     UInt uiOrgBits = ruiBits;
@@ -4699,7 +4676,7 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   if( !bSubdiv )
   {
     const UInt uiNumCoeffPerAbsPartIdxIncrement = pcCU->getSlice()->getSPS()->getMaxCUWidth() * pcCU->getSlice()->getSPS()->getMaxCUHeight() >> ( pcCU->getSlice()->getSPS()->getMaxCUDepth() << 1 );
-    assert( 16 == uiNumCoeffPerAbsPartIdxIncrement ); // check
+    //assert( 16 == uiNumCoeffPerAbsPartIdxIncrement ); // check
     const UInt uiQTTempAccessLayer = pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() - uiLog2TrSize;
     TCoeff *pcCoeffCurrY = m_ppcQTTempCoeffY [uiQTTempAccessLayer] +  uiNumCoeffPerAbsPartIdxIncrement * uiAbsPartIdx;
     TCoeff *pcCoeffCurrU = m_ppcQTTempCoeffCb[uiQTTempAccessLayer] + (uiNumCoeffPerAbsPartIdxIncrement * uiAbsPartIdx>>2);
@@ -4825,8 +4802,10 @@ UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt 
 {
   if( m_bUseSBACRD )
   {
-    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+    // Reload only contexts required for coding intra mode information
+    m_pcRDGoOnSbacCoder->loadIntraDirModeLuma( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
   }
+  
   pcCU->setLumaIntraDirSubParts ( uiMode, uiPartOffset, uiDepth + uiInitTrDepth );
   
   m_pcEntropyCoder->resetBits();
