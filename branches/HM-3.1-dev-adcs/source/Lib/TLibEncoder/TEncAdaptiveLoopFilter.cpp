@@ -198,9 +198,11 @@ TEncAdaptiveLoopFilter::TEncAdaptiveLoopFilter()
 #if MTK_NONCROSS_INLOOP_FILTER
   m_pcSliceYuvTmp = NULL;
 #endif
-#if MQT_BA_RA && MQT_ALF_NPASS
+#if MQT_BA_RA && MQT_ALF_NPASS 
   m_aiFilterCoeffSaved = NULL;
+#if EBRISK_ALF_NEW_FILTER_SHAPES
   m_iPreviousFilterShape= NULL;
+#endif
 #endif
 }
 
@@ -2870,8 +2872,10 @@ Void TEncAdaptiveLoopFilter::xfilterFrame_en(imgpel* ImgDec, imgpel* ImgRest,int
 #endif
 #endif
       int *coef = m_filterCoeffPrevSelected[varInd];
-#if !MQT_BA_RA || !EBRISK_ALF_NEW_FILTER_SHAPES
+#if !MQT_BA_RA
+#if !EBRISK_ALF_NEW_FILTER_SHAPES
       pattern=m_patternTab_filt[filtNo];
+#endif
 #endif
       pixelInt= m_filterCoeffPrevSelected[varInd][sqrFiltLength-1]; 
 
