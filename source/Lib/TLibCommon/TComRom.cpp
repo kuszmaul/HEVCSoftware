@@ -1676,7 +1676,6 @@ UInt* g_auiFrameScanY [ MAX_CU_DEPTH  ];
 UInt* g_auiSigLastScan[3][ MAX_CU_DEPTH ];
 #endif //QC_MDCS
 
-#if PCP_SIGMAP_SIMPLE_LAST
 UInt g_uiCtxXYOffset[ MAX_CU_DEPTH ] =
 {
   15, 15, 15, 8, 3, 0, 0
@@ -1686,12 +1685,10 @@ UInt g_uiCtxXY[ 31 ] =
 {
   0, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10
 };
-#endif
 
 // scanning order to 8x8 context model mapping table
 UInt  g_auiAntiScan8  [64];
 
-#if E253
 // Rice parameters for absolute transform levels
 const UInt g_auiGoRiceRange[4] =
 {
@@ -1718,7 +1715,6 @@ const UInt g_aauiGoRiceUpdate[4][16] =
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
   }
 };
-#endif
 
 // initialize g_auiFrameScanXY
 Void initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidth, Int iHeight )
@@ -1801,9 +1797,11 @@ Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int i
 }
 #endif //QC_MDCS
 
+#if CHROMA_CODEWORD_SWITCH
 const UChar ChromaMapping[2][5] = 
 {
   {0, 1, 3, 2, 4},
   {0, 1, 2, 4, 3}
 };
+#endif
 
