@@ -43,7 +43,6 @@
 // JCT-VC E start
 ////////////////////////////
 
-#define E253                              1
 #define MOT_TUPU_MAXDEPTH1                1           ///< E364, "Implicit TU" derivation when there is no TU tree (i.e., "max depth = 1"), the transform blocks should not cross PU boundaries
 ////////////////////////////
 // JCT-VC E end
@@ -52,7 +51,7 @@
 #define HHI_RQT_INTRA_SPEEDUP             1           ///< tests one best mode with full rqt
 #define HHI_RQT_INTRA_SPEEDUP_MOD         0           ///< tests two best modes with full rqt
 
-#define PART_MRG                          1            // If the number of partitions is two and size > 8, only merging mode is enabled for the first partition & do not code merge_flag for the first partition
+#define PART_MRG                          0            // If the number of partitions is two and size > 8, only merging mode is enabled for the first partition & do not code merge_flag for the first partition
 #define HHI_MRG_SKIP                      1            // (JCTVC-E481 - merge skip) replaces the AMVP based skip by merge based skip (E481 - MERGE skip)
 
 #if HHI_RQT_INTRA_SPEEDUP_MOD && !HHI_RQT_INTRA_SPEEDUP
@@ -89,9 +88,6 @@
 // E494 (E227/E338/E344/E489/E494): PCP SIGMAP + REDUCED CONTEXTS
 ////////////////
 
-#define PCP_SIGMAP_SIMPLE_LAST            1
-#define SIMPLE_CONTEXT_SIG                1
-
 #define QC_MDIS                           1           // JCTVC-D282: enable mode dependent intra smoothing
 #define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding 
 #define RUNLEVEL_TABLE_CUT                1           // JCTVC-E384: Run-Level table size reduction
@@ -112,6 +108,7 @@
 
 #define MTK_AMVP_SMVP_DERIVATION          1              ///< (JCTVC-E481 - D125 2.3) amvp spatial candidate derivation
 #define TI_AMVP_SMVP_SIMPLIFIED           1              ///< (JCTVC-E481 - F)amvp spatial candidate simplified scanning
+#define MV_SCALE_ROUNDING_F142            1           ///< Modified rounding when scaling motion vectors (JCTVC-F142)
 
 #define ADD_PLANAR_MODE                   1           ///< enable/disable Planar mode for intra prediction (JCTVC-E321)
 
@@ -119,7 +116,9 @@
 #define NUM_INTRA_MODE 36
 #define PLANAR_IDX     34
 #define LM_CHROMA_IDX  35
+#define PLANAR_F483 1 ///< Modify samples used for planar prediction as per JCTVC-F483
 #endif
+#define CHROMA_CODEWORD_SWITCH 0 ///< Enable chroma codeword switch (disabled as per JCTVC-F465)
 
 #define IBDI_DISTORTION                0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
 #define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used  
