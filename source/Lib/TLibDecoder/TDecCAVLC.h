@@ -79,14 +79,22 @@ protected:
   UInt  xGetBit             ();
   Int   xReadVlc            ( Int n );
 #if CAVLC_COEF_LRG_BLK
-  Void  xParseCoeff         ( TCoeff* scoeff, Int iTableNumber, Int blSize);
+  Void  xParseCoeff         ( TCoeff* scoeff, Int iTableNumber, Int blSize
+#if CAVLC_RUNLEVEL_TABLE_REM
+                            , Int isIntra
+#endif
+                            );
 #else
   Void  xParseCoeff4x4      ( TCoeff* scoeff, Int iTableNumber );
   Void  xParseCoeff8x8      ( TCoeff* scoeff, Int iTableNumber );
 #endif
   Void  xRunLevelIndInv     (LastCoeffStruct *combo, Int maxrun, UInt lrg1Pos, UInt cn);
 #if RUNLEVEL_TABLE_CUT
+#if CAVLC_RUNLEVEL_TABLE_REM
+  Void  xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn, UInt scale);
+#else
   Void  xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn);
+#endif
 #endif
   
 private:
@@ -105,7 +113,10 @@ private:
 #endif
   UInt                      m_uiLastPosVlcIndex[10];
   
-#if MTK_DCM_MPM
+#if FIXED_MPM
+  UInt                      m_uiIntraModeTableD17[17];
+  UInt                      m_uiIntraModeTableD34[34];
+#elif MTK_DCM_MPM
   UInt                      m_uiIntraModeTableD17[2][16];
   UInt                      m_uiIntraModeTableD34[2][33];
 #else
