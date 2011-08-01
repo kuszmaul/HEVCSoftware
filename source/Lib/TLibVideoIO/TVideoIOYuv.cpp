@@ -270,9 +270,9 @@ static bool readPlane(Pel* dst, istream& fd, bool is16bit,
   }
   for (int y = height; y < height + pad_y; y++)
   {
-    for (int x = width; x < width + pad_x; x++)
+    for (int x = 0; x < width + pad_x; x++)
     {
-      dst[x] = dst[x - stride];
+      dst[x] = (dst - stride)[x];
     }
     dst += stride;
   }
