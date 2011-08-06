@@ -152,7 +152,12 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 #define MAX_TR1                           4
 
 // AMVP: advanced motion vector prediction
+#if MRG_AMVP_FIXED_IDX_F470
+#define AMVP_MAX_NUM_CANDS          2           ///< max number of final candidates
+#define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
+#else
 #define AMVP_MAX_NUM_CANDS          5           ///< max number of final candidates
+#endif
 // MERGE
 #define MRG_MAX_NUM_CANDS           5
 
@@ -182,15 +187,6 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 
 // Early-skip threshold (encoder)
 #define EARLY_SKIP_THRES            1.50        ///< if RD < thres*avg[BestSkipRD]
-
-#ifdef TRANS_PRECISION_EXT
-const int g_iShift8x8    = 2;
-const int g_iShift16x16  = 2;
-const int g_iShift32x32  = 2;
-const int g_iShift64x64  = 2;
-#endif
-
-/* End of Rounding control */
 
 enum NalRefIdc
 {

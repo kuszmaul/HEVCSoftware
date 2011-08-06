@@ -42,7 +42,9 @@
 #include "../TLibCommon/TComYuv.h"
 #include "../TLibCommon/TComMotionInfo.h"
 #include "../TLibCommon/TComPattern.h"
+#if !GENERIC_IF
 #include "../TLibCommon/TComPredFilter.h"
+#endif
 #include "../TLibCommon/TComPrediction.h"
 #include "../TLibCommon/TComTrQuant.h"
 #include "../TLibCommon/TComPic.h"
@@ -122,7 +124,13 @@ public:
 protected:
   
   /// sub-function for motion vector refinement used in fractional-pel accuracy
-  UInt  xPatternRefinement( TComPattern* pcPatternKey, Pel* piRef, Int iRefStride, Int iIntStep, Int iFrac, TComMv& rcMvFrac );
+  UInt  xPatternRefinement( TComPattern* pcPatternKey,
+#if GENERIC_IF
+                           TComMv baseRefMv,
+#else
+                           Pel* piRef, Int iRefStride, Int iIntStep,
+#endif
+                           Int iFrac, TComMv& rcMvFrac );
   
 #if (!REFERENCE_SAMPLE_PADDING)
   Bool predIntraLumaDirAvailable( UInt uiMode, UInt uiWidthBit, Bool bAboveAvail, Bool bLeftAvail);
@@ -173,8 +181,12 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
-                                  Bool        bUseRes = false );
-  
+                                  Bool        bUseRes = false
+#if AMP_MRG
+                                 ,Bool        bUseMRG = false
+#endif
+                                );
+
   /// encoder estimation - intra prediction (skip)
   Void predInterSkipSearch      ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -384,8 +396,15 @@ protected:
                                     TComMv&       rcMvHalf,
                                     TComMv&       rcMvQter,
                                     UInt&         ruiCost 
+#if GENERIC_IF
+                                   ,Bool biPred
+#endif
                                    );
   
+#if GENERIC_IF
+  Void xExtDIFUpSamplingH( TComPattern* pcPattern, bool biPred  );
+  Void xExtDIFUpSamplingQ( TComPattern* pcPatternKey, TComMv halfPelRef, bool biPred );
+#else
   Void xExtDIFUpSamplingH         ( TComPattern*  pcPattern, TComYuv* pcYuvExt  );
   
   Void xExtDIFUpSamplingQ         ( TComPattern* pcPatternKey,
@@ -396,7 +415,7 @@ protected:
                                     Int*          piSrc,
                                     Int           iSrcStride,
                                     UInt          uiFilter  );
-  
+#endif  
   
   // -------------------------------------------------------------------------------------------------------------------
   // T & Q & Q-1 & T-1
@@ -408,7 +427,11 @@ protected:
 #else
   Void xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, UInt &ruiDist, UInt *puiZeroDist );
 #endif
+#if NSQT
+  Void xSetResidualQTData( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, TComYuv* pcResi, UInt uiDepth, Bool bSpatial );
+#else
   Void xSetResidualQTData( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcResi, UInt uiDepth, Bool bSpatial );
+#endif
   
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth );
   UInt  xUpdateCandList( UInt uiMode, Double uiCost, UInt uiFastCandNum, UInt * CandModeList, Double * CandCostList );

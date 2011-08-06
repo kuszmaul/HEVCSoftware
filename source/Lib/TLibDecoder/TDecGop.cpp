@@ -119,9 +119,11 @@ Void TDecGop::copySharedAlfParamFromPPS(ALFParam* pAlfDst, ALFParam* pAlfSrc)
   pAlfDst->filters_per_group  = pAlfSrc->filters_per_group;
   pAlfDst->filtNo             = pAlfSrc->filtNo;
   pAlfDst->realfiltNo         = pAlfSrc->realfiltNo;
+#if !STAR_CROSS_SHAPES_LUMA
   pAlfDst->tap                = pAlfSrc->tap;
 #if TI_ALF_MAX_VSIZE_7
   pAlfDst->tapV               = pAlfSrc->tapV;
+#endif
 #endif
   pAlfDst->num_coeff          = pAlfSrc->num_coeff;
   pAlfDst->noFilters          = pAlfSrc->noFilters;
@@ -146,7 +148,11 @@ Void TDecGop::copySharedAlfParamFromPPS(ALFParam* pAlfDst, ALFParam* pAlfSrc)
   pAlfDst->chroma_idc         = pAlfSrc->chroma_idc;
   if(pAlfDst->chroma_idc)
   {
+#if ALF_CHROMA_NEW_SHAPES
+    pAlfDst->realfiltNo_chroma = pAlfSrc->realfiltNo_chroma;
+#else
     pAlfDst->tap_chroma       = pAlfSrc->tap_chroma;
+#endif
     pAlfDst->num_coeff_chroma = pAlfSrc->num_coeff_chroma;
     ::memcpy(pAlfDst->coeff_chroma, pAlfSrc->coeff_chroma, sizeof(Int)*pAlfDst->num_coeff_chroma);
   }
@@ -373,7 +379,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
       printf ("[L%d ", iRefList);
       for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(RefPicList(iRefList)); iRefIndex++)
       {
-        printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
+        printf ("%d ", pcSlice->getRefPic(RefPicList(iRefList), iRefIndex)->getPOC());
       }
       printf ("] ");
     }
@@ -382,7 +388,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
       printf ("[LC ");
       for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(REF_PIC_LIST_C); iRefIndex++)
       {
-        printf ("%d ", pcSlice->getRefPOC((RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex)));
+        printf ("%d ", pcSlice->getRefPic((RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex))->getPOC());
       }
       printf ("] ");
     }

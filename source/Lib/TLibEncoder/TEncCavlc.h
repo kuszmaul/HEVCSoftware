@@ -83,7 +83,13 @@ protected:
 #endif
   UInt          m_uiLastPosVlcIndex[10];
   
-#if MTK_DCM_MPM
+#if FIXED_MPM
+  UInt          m_uiIntraModeTableD17[17];
+  UInt          m_uiIntraModeTableE17[17];
+
+  UInt          m_uiIntraModeTableD34[34];
+  UInt          m_uiIntraModeTableE34[34];
+#elif MTK_DCM_MPM
   UInt          m_uiIntraModeTableD17[2][16];
   UInt          m_uiIntraModeTableE17[2][16];
 
@@ -122,8 +128,13 @@ protected:
   UInt          m_uiMI2TableD[15];
   
   UInt          m_uiMITableVlcIdx;
+#if AMP
+  UInt          m_uiSplitTableE[4][11];
+  UInt          m_uiSplitTableD[4][11];
+#else
   UInt          m_uiSplitTableE[4][7];
   UInt          m_uiSplitTableD[4][7];
+#endif
 
 #if CAVLC_COUNTER_ADAPT
 #if CAVLC_RQT_CBP
@@ -168,7 +179,11 @@ protected:
   Void  xWriteVlc             ( UInt uiTableNumber, UInt uiCodeNumber );
 
 #if CAVLC_COEF_LRG_BLK
-  Void  xCodeCoeff             ( TCoeff* scoeff, Int n, Int blSize);
+  Void  xCodeCoeff             ( TCoeff* scoeff, Int n, Int blSize
+#if CAVLC_RUNLEVEL_TABLE_REM
+                               , Int isIntra
+#endif
+                               );
 #else
   Void  xCodeCoeff4x4          ( TCoeff* scoeff, Int iTableNumber );
   Void  xCodeCoeff8x8          ( TCoeff* scoeff, Int iTableNumber );

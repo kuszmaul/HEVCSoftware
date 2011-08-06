@@ -185,6 +185,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iTimeOffset, iDepth, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
       pcSlice->setSliceIdx(0);
 
+#if DISABLE_4x4_INTER
+      m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
+#endif 
+
       // Set the nal unit type
       pcSlice->setNalUnitType(getNalUnitType(uiPOCCurr));
       // Do decoding refresh marking if any 
@@ -251,13 +255,33 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       if (pcSlice->getSliceType() == B_SLICE)
       {
         pcSlice->setColDir(uiColDir);
+#if TMVP_ONE_LIST_CHECK
+        Bool bLowDelay = true;
+        Int  iCurrPOC  = pcSlice->getPOC();
+        Int iRefIdx = 0;
+
+        for (iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(REF_PIC_LIST_0) && bLowDelay; iRefIdx++)
+        {
+          if ( pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx)->getPOC() > iCurrPOC )
+          {
+            bLowDelay = false;
+          }
+        }
+        for (iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(REF_PIC_LIST_1) && bLowDelay; iRefIdx++)
+        {
+          if ( pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx)->getPOC() > iCurrPOC )
+          {
+            bLowDelay = false;
+          }
+        }
+
+        pcSlice->setCheckLDC(bLowDelay);  
+#endif
       }
       
       uiColDir = 1-uiColDir;
       
       //-------------------------------------------------------------
-      pcSlice->setRefPOCList();
-      
       pcSlice->setNoBackPredFlag( false );
       if ( pcSlice->getSliceType() == B_SLICE && !pcSlice->getRefPicListCombinationFlag())
       {
@@ -267,7 +291,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           int i;
           for ( i=0; i < pcSlice->getNumRefIdx(RefPicList( 1 ) ); i++ )
           {
-            if ( pcSlice->getRefPOC(RefPicList(1), i) != pcSlice->getRefPOC(RefPicList(0), i) ) 
+            if ( pcSlice->getRefPic(RefPicList(1), i)->getPOC() != pcSlice->getRefPic(RefPicList(0), i)->getPOC() ) 
             {
               pcSlice->setNoBackPredFlag( false );
               break;
@@ -1299,7 +1323,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     printf(" [L%d ", iRefList);
     for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(RefPicList(iRefList)); iRefIndex++)
     {
-      printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
+      printf ("%d ", pcSlice->getRefPic(RefPicList(iRefList), iRefIndex)->getPOC());
     }
     printf("]");
   }
@@ -1308,7 +1332,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     printf(" [LC ");
     for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(REF_PIC_LIST_C); iRefIndex++)
     {
-      printf ("%d ", pcSlice->getRefPOC((RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex)));
+      printf ("%d ", pcSlice->getRefPic((RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex))->getPOC());
     }
     printf("]");
   }

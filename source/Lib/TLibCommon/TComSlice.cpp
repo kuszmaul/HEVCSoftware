@@ -51,6 +51,9 @@ TComSlice::TComSlice()
 , m_eERBIndex                     ( ERB_NONE )
 , m_bRefPicListModificationFlagLC ( false )
 , m_bRefPicListCombinationFlag    ( false )
+#if TMVP_ONE_LIST_CHECK
+, m_bCheckLDC                     ( false )
+#endif
 , m_iSliceQpDelta                 ( 0 )
 , m_iDepth                        ( 0 )
 , m_bRefenced                     ( false )
@@ -97,8 +100,6 @@ TComSlice::TComSlice()
   {
     m_apcRefPicList [0][iNumCount] = NULL;
     m_apcRefPicList [1][iNumCount] = NULL;
-    m_aiRefPOCList  [0][iNumCount] = 0;
-    m_aiRefPOCList  [1][iNumCount] = 0;
   }
 }
 
@@ -122,6 +123,9 @@ Void TComSlice::initSlice()
   m_bRefIdxCombineCoding = false;
   m_bRefPicListCombinationFlag = false;
   m_bRefPicListModificationFlagLC = false;
+#if TMVP_ONE_LIST_CHECK
+  m_bCheckLDC = false;
+#endif
 
   m_aiNumRefIdx[REF_PIC_LIST_C]      = 0;
 
@@ -322,18 +326,6 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
   }
   
   return  pcRefPic;
-}
-
-Void TComSlice::setRefPOCList       ()
-{
-  for (Int iDir = 0; iDir < 2; iDir++)
-  {
-    for (Int iNumRefIdx = 0; iNumRefIdx < m_aiNumRefIdx[iDir]; iNumRefIdx++)
-    {
-      m_aiRefPOCList[iDir][iNumRefIdx] = m_apcRefPicList[iDir][iNumRefIdx]->getPOC();
-    }
-  }
-
 }
 
 Void TComSlice::generateCombinedList()
@@ -624,14 +616,15 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   }
   m_bRefPicListModificationFlagLC = pSrc->m_bRefPicListModificationFlagLC;
   m_bRefPicListCombinationFlag    = pSrc->m_bRefPicListCombinationFlag;
-
+#if TMVP_ONE_LIST_CHECK
+  m_bCheckLDC             = pSrc->m_bCheckLDC;
+#endif
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
   for (i = 0; i < 2; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)
     {
       m_apcRefPicList[i][j]  = pSrc->m_apcRefPicList[i][j];
-      m_aiRefPOCList[i][j]   = pSrc->m_aiRefPOCList[i][j];
     }
   }  
   m_iDepth               = pSrc->m_iDepth;
@@ -803,6 +796,9 @@ TComSPS::TComSPS()
 #if E057_INTRA_PCM
 , m_uiPCMLog2MinSize          (  7)
 #endif
+#if DISABLE_4x4_INTER
+, m_bDisInter4x4              (  1)
+#endif    
 , m_bUseALF                   (false)
 , m_bUseDQP                   (false)
 , m_bUseLDC                   (false)
@@ -841,6 +837,7 @@ TComSPS::~TComSPS()
 
 TComPPS::TComPPS()
 : m_PPSId                       (0)
+, m_SPSId                       (0)
 , m_bConstrainedIntraPred       (false)
 #if SUB_LCU_DQP
 , m_pcSPS                       (NULL)

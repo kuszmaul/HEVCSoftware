@@ -227,6 +227,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_CODE( 4, uiCode, "pcm_bit_depth_luma_minus1" );           pcSPS->setPCMBitDepthLuma   ( 1 + uiCode );
   READ_CODE( 4, uiCode, "pcm_bit_depth_chroma_minus1" );         pcSPS->setPCMBitDepthChroma ( 1 + uiCode );
 #endif
+#if DISABLE_4x4_INTER
+  xReadFlag( uiCode ); pcSPS->setDisInter4x4( uiCode ? true : false );
+#endif
   // log2_max_frame_num_minus4
   // pic_order_cnt_type
   // if( pic_order_cnt_type  = =  0 )
@@ -547,7 +550,10 @@ Void TDecCavlc::resetEntropy          (TComSlice* pcSlice)
   }
 #endif
   
-#if MTK_DCM_MPM
+#if FIXED_MPM
+  ::memcpy(m_uiIntraModeTableD17, g_auiIntraModeTableD17, 17*sizeof(UInt));
+  ::memcpy(m_uiIntraModeTableD34, g_auiIntraModeTableD34, 34*sizeof(UInt));
+#elif MTK_DCM_MPM
   ::memcpy(m_uiIntraModeTableD17[0], g_auiIntraModeTableD17[0], 16*sizeof(UInt));
   ::memcpy(m_uiIntraModeTableD34[0], g_auiIntraModeTableD34[0], 33*sizeof(UInt));
   ::memcpy(m_uiIntraModeTableD17[1], g_auiIntraModeTableD17[1], 16*sizeof(UInt));
@@ -556,7 +562,11 @@ Void TDecCavlc::resetEntropy          (TComSlice* pcSlice)
   ::memcpy(m_uiIntraModeTableD17, g_auiIntraModeTableD17, 16*sizeof(UInt));
   ::memcpy(m_uiIntraModeTableD34, g_auiIntraModeTableD34, 33*sizeof(UInt));
 #endif
+#if AMP
+  ::memcpy(m_uiSplitTableD, g_auiInterModeTableD, 4*11*sizeof(UInt));
+#else
   ::memcpy(m_uiSplitTableD, g_auiInterModeTableD, 4*7*sizeof(UInt));
+#endif
   m_uiMITableVlcIdx = 0;
 
 #if CAVLC_COUNTER_ADAPT
@@ -647,7 +657,11 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 Void TDecCavlc::parseMVPIdx( TComDataCU* pcCU, Int& riMVPIdx, Int iMVPNum, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList )
 {
   UInt uiSymbol;
+#if MRG_AMVP_FIXED_IDX_F470
+  xReadUnaryMaxSymbol(uiSymbol, AMVP_MAX_NUM_CANDS-1);
+#else
   xReadUnaryMaxSymbol(uiSymbol, iMVPNum-1);
+#endif
   riMVPIdx = uiSymbol;
 }
 
@@ -678,7 +692,11 @@ Void TDecCavlc::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   UInt cx=0;
   UInt uiMode ;
   {
+#if AMP
+    UInt iMaxLen= (uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth)? 9:10;
+#else
     UInt iMaxLen= (uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth)? 5:6;
+#endif
 
     while (tmp==0 && cx<iMaxLen)
     {
@@ -828,8 +846,19 @@ Void TDecCavlc::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
     else
     {
+#if DISABLE_4x4_INTER
+      if(pcCU->getSlice()->getSPS()->getDisInter4x4() && ( (g_uiMaxCUWidth>>uiDepth)==8) && ( (g_uiMaxCUHeight>>uiDepth)==8) )
+      {
+        uiMode = 2;
+      }
+      else
+      {
+#endif
       xReadFlag( uiSymbol );
       uiMode = uiSymbol ? 2 : 0;
+#if DISABLE_4x4_INTER
+      }
+#endif
     }
   }
   PartSize ePartSize;
@@ -994,6 +1023,10 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
      xReadFlag( uiSymbol );
      if ( uiSymbol )
      {
+#if FIXED_MPM
+       xReadFlag( uiSymbol );
+       uiIPredMode = uiPreds[uiSymbol];
+#else
        if(uiPredNum == 1)
        {
         uiIPredMode = uiPreds[0];
@@ -1003,6 +1036,7 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
         xReadFlag( uiSymbol );
         uiIPredMode = uiPreds[uiSymbol];
        }
+#endif
      }
      else
      {
@@ -1014,18 +1048,78 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
       {
         if(uiIPredMode >= uiPreds[i]) { uiIPredMode ++;}
       }
-   
     }
   }
   else 
   {
-  Int  iDir, iDirLarger, iRankIntraMode, iRankIntraModeLarger;
+    Int  iDir, iDirLarger, iRankIntraMode, iRankIntraModeLarger;
 
-  const UInt *huff;
-  const UInt *lengthHuff;
-  UInt  totMode;
-  UInt  *m_uiIntraModeTableD;
+    const UInt *huff;
+    const UInt *lengthHuff;
+    UInt  totMode;
+    UInt  *m_uiIntraModeTableD;
 
+#if FIXED_MPM
+    if ( g_aucIntraModeBitsAng[iIntraIdx] == 5 )
+    {
+      totMode = 17;
+      huff = huff17_2;
+      lengthHuff = lengthHuff17_2;
+      m_uiIntraModeTableD = m_uiIntraModeTableD17;
+    }
+    else
+    {
+      totMode = 34;
+      huff = huff34_2;
+      lengthHuff = lengthHuff34_2;
+      m_uiIntraModeTableD = m_uiIntraModeTableD34;
+    }
+
+    UInt uiCode;
+    UInt uiLength = lengthHuff[totMode - 1];  
+
+    m_pcBitstream->pseudoRead( uiLength, uiCode );
+
+    if ( ( uiCode >> ( uiLength - lengthHuff[0] ) ) == huff[0] )
+    {
+      m_pcBitstream->read( lengthHuff[0], uiCode );
+
+      UInt uiPredIdx= 0;
+      xReadFlag( uiPredIdx );
+      uiIPredMode = uiPreds[ uiPredIdx ];
+    }
+    else
+    {
+      iRankIntraMode = 0;
+
+      for(Int i = 1; i < totMode; i++) 
+      {  
+        if( (uiCode >> ( uiLength - lengthHuff[i]) ) == huff[i] )
+        {
+          m_pcBitstream->read( lengthHuff[i], uiCode );
+          iRankIntraMode = i;
+          break;
+        }
+      }
+
+      iRankIntraMode --;
+      iDir = m_uiIntraModeTableD[ iRankIntraMode ];
+      iRankIntraModeLarger = max( 0, iRankIntraMode - 1 );
+      iDirLarger = m_uiIntraModeTableD[ iRankIntraModeLarger ];
+      m_uiIntraModeTableD[ iRankIntraModeLarger ] = iDir;
+      m_uiIntraModeTableD[ iRankIntraMode ] = iDirLarger;
+
+      for(UInt i = 0; i < uiPredNum; i++)
+      {
+        if(iDir >= uiPreds[i]) 
+        {
+          iDir ++;
+        }
+      }
+
+      uiIPredMode = iDir;
+    }
+#else
   if ( g_aucIntraModeBitsAng[iIntraIdx] == 5 )
   {
   totMode = (uiPredNum == 1)? 17: 16;
@@ -1045,6 +1139,7 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   UInt uiLength = lengthHuff[totMode - 1];  
 
   m_pcBitstream->pseudoRead(uiLength,uiCode);
+
   if ((uiCode>>(uiLength- lengthHuff[0])) == huff[0])
   {
       m_pcBitstream->read(lengthHuff[0],uiCode);
@@ -1059,7 +1154,6 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
         xReadFlag( uiPredIdx );
         uiIPredMode = uiPreds[uiPredIdx];
      }
-
   }
   else
   {
@@ -1094,8 +1188,9 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
       
 
     }
+#endif
   }
-#if ADD_PLANAR_MODE
+#if ADD_PLANAR_MODE && !FIXED_MPM
   if (uiIPredMode == 2)
   {
     UInt planarFlag;
@@ -1231,6 +1326,43 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
 
 Void TDecCavlc::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if FIXED_MPM
+  UInt uiSymbol;
+  xReadFlag( uiSymbol );
+
+  if( uiSymbol == 0 )
+  {
+    uiSymbol = DM_CHROMA_IDX;
+  } 
+  else 
+  {
+    if( pcCU->getSlice()->getSPS()->getUseLMChroma() )
+    {
+      xReadFlag( uiSymbol );
+    }
+    else
+    {
+      uiSymbol = 1;
+    }
+
+    if( uiSymbol == 0 )
+    {
+      uiSymbol = LM_CHROMA_IDX;
+    } 
+    else
+    {
+      xReadUnaryMaxSymbol( uiSymbol, 3 );
+#if CHROMA_CODEWORD_SWITCH 
+      uiSymbol = ChromaMapping[uiSymbol];
+#endif
+      UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
+      pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
+      uiSymbol = uiAllowedChromaDir[ uiSymbol ];
+    }
+  }
+  pcCU->setChromIntraDirSubParts( uiSymbol, uiAbsPartIdx, uiDepth );
+  return;
+#else
   UInt uiSymbol;
   UInt uiMode = pcCU->getLumaIntraDir(uiAbsPartIdx);
 #if ADD_PLANAR_MODE
@@ -1257,8 +1389,10 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   }
   else
   {
+#if CHROMA_CODEWORD_SWITCH
     uiSymbol = ChromaMapping[iMax-3][uiSymbol];
-
+#endif
+    
     if (pcCU->getSlice()->getSPS()->getUseLMChroma())
        uiSymbol --;
 
@@ -1278,7 +1412,9 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   }
   else
   {
+#if CHROMA_CODEWORD_SWITCH
     uiSymbol = ChromaMapping[iMax-3][uiSymbol];
+#endif
     if (uiSymbol <= uiMode)
     {
       uiSymbol --;
@@ -1310,6 +1446,7 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   pcCU->setChromIntraDirSubParts( uiSymbol, uiAbsPartIdx, uiDepth );
   
   return ;
+#endif
 }
 
 Void TDecCavlc::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth )
@@ -1347,6 +1484,21 @@ Void TDecCavlc::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPa
       uiMaxVal = uiValNumRefIdxOfL0 + uiValNumRefIdxOfL1 + uiValNumRefIdxOfL0*uiValNumRefIdxOfL1;
     }
 
+#if CAVLC_UNIFY_INTER_TABLE_FIX
+    Bool bCodeException = false;
+    if ( pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 4 ||
+         pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_0) > 2 ||
+         pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_1) > 2 )
+    {
+      bCodeException = true;
+    }
+    else
+    {
+      bCodeException = false;
+      uiMaxVal--;
+    }
+#endif
+
     xReadUnaryMaxSymbol( tmp, uiMaxVal );
 
     x = m_uiMITableD[tmp];
@@ -1365,7 +1517,11 @@ Void TDecCavlc::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPa
     m_uiMITableVlcIdx += cx == m_uiMITableVlcIdx ? 0 : (cx < m_uiMITableVlcIdx ? -1 : 1);
 #endif
     
+#if CAVLC_UNIFY_INTER_TABLE_FIX
+    if (uiIndex < uiMaxVal || !bCodeException )
+#else
     if (uiIndex < uiMaxVal)
+#endif
     {
       if (uiNumRefIdxOfLC > 0)
       {
@@ -1628,14 +1784,22 @@ Void TDecCavlc::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, U
   Int iHor, iVer;
   
   TComMv cTmpMv( 0, 0 );
+#if AMP
+  pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+#else
   pcCU->getCUMvField( eRefList )->setAllMv( cTmpMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth );
+#endif  
   
   xReadSvlc( iHor );
   xReadSvlc( iVer );
   
   // set mvd
   TComMv cMv( iHor, iVer );
+#if AMP
+  pcCU->getCUMvField( eRefList )->setAllMvd( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+#else
   pcCU->getCUMvField( eRefList )->setAllMvd( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth );
+#endif  
   
   return;
 }
@@ -2040,7 +2204,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
 #endif
   
 #if CAVLC_COEF_LRG_BLK
+#if CAVLC_COEF_LRG_BLK_CHROMA
+  UInt maxBlSize = 32;
+#else
   UInt maxBlSize = (eTType==TEXT_LUMA)? 32:8;
+#endif
   UInt uiBlSize = min(maxBlSize,uiWidth);
 #if !QC_MDCS
   UInt uiConvBit = g_aucConvertToBit[ pcCU->isIntra( uiAbsPartIdx ) ? uiWidth : uiBlSize];
@@ -2064,6 +2232,8 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
   const UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
 #endif //QC_MDCS
   
+
+#if !REMOVE_DIRECT_INTRA_DC_CODING
   UInt uiDecodeDCCoeff = 0;
   Int dcCoeff = 0;
   if (pcCU->isIntra(uiAbsPartIdx))
@@ -2086,6 +2256,7 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       }
     }
   }
+#endif
   
   UInt uiScanning;
   
@@ -2104,7 +2275,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       iBlockType = 2 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
 
 #if CAVLC_COEF_LRG_BLK
-    xParseCoeff( scoeff, iBlockType, 4 );
+    xParseCoeff( scoeff, iBlockType, 4
+#if CAVLC_RUNLEVEL_TABLE_REM
+               , pcCU->isIntra(uiAbsPartIdx)
+#endif
+               );
 #else
     xParseCoeff4x4( scoeff, iBlockType );
 #endif
@@ -2126,7 +2301,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
     else
       iBlockType = 2 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
 #if CAVLC_COEF_LRG_BLK
-    xParseCoeff( scoeff, iBlockType, 4 );
+    xParseCoeff( scoeff, iBlockType, 4
+#if CAVLC_RUNLEVEL_TABLE_REM
+               , pcCU->isIntra(uiAbsPartIdx)
+#endif
+               );
 #else
     xParseCoeff4x4( scoeff, iBlockType );
 #endif
@@ -2148,7 +2327,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
     else
       iBlockType = 2 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
 #if CAVLC_COEF_LRG_BLK
-    xParseCoeff( scoeff, iBlockType, 8 );
+    xParseCoeff( scoeff, iBlockType, 8
+#if CAVLC_RUNLEVEL_TABLE_REM
+               , pcCU->isIntra(uiAbsPartIdx)
+#endif
+               );
 #else
     xParseCoeff8x8( scoeff, iBlockType );
 #endif
@@ -2174,7 +2357,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
       else
         iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
 #if CAVLC_COEF_LRG_BLK 
-      xParseCoeff( scoeff, iBlockType, uiBlSize );
+      xParseCoeff( scoeff, iBlockType, uiBlSize
+#if CAVLC_RUNLEVEL_TABLE_REM
+                 , pcCU->isIntra(uiAbsPartIdx)
+#endif
+                 );
 #else
       xParseCoeff8x8( scoeff, iBlockType );
 #endif
@@ -2215,7 +2402,11 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
         iBlockType = 5 + ( pcCU->isIntra(uiAbsPartIdx) ? 0 : pcCU->getSlice()->getSliceType() );
 
 #if CAVLC_COEF_LRG_BLK
-      xParseCoeff( scoeff, iBlockType, uiBlSize );
+      xParseCoeff( scoeff, iBlockType, uiBlSize
+#if CAVLC_RUNLEVEL_TABLE_REM
+                 , pcCU->isIntra(uiAbsPartIdx)
+#endif
+                 );
       for (uiScanning=0; uiScanning<uiNoCoeff; uiScanning++)
       {
 #if QC_MDCS
@@ -2241,10 +2432,12 @@ Void TDecCavlc::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartI
     }
   }
   
+#if !REMOVE_DIRECT_INTRA_DC_CODING
   if (uiDecodeDCCoeff == 1)
   {
     piCoeff[0] = dcCoeff;
   }
+#endif
   
   return ;
 }
@@ -2350,6 +2543,9 @@ Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
  */
 Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if MRG_AMVP_FIXED_IDX_F470
+  UInt uiNumCand = MRG_MAX_NUM_CANDS;
+#else
   Bool bLeftInvolved = false;
   Bool bAboveInvolved = false;
   Bool bCollocatedInvolved = false;
@@ -2378,6 +2574,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
       }
     }
   }
+#endif
   assert( uiNumCand > 1 );
   UInt uiUnaryIdx = 0;
   for( ; uiUnaryIdx < uiNumCand - 1; ++uiUnaryIdx )
@@ -2389,6 +2586,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
       break;
     }
   }
+#if !(MRG_AMVP_FIXED_IDX_F470)
   if( !bLeftInvolved )
   {
     ++uiUnaryIdx;
@@ -2406,6 +2604,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
   {
     ++uiUnaryIdx;
   }
+#endif
   ruiMergeIndex = uiUnaryIdx;
 }
 
@@ -3027,8 +3226,14 @@ Void TDecCavlc::xRunLevelIndInv(LastCoeffStruct *combo, Int maxrun, UInt lrg1Pos
  * \returns
  * This function derives run and level value in CAVLC run-level coding based on codeword index and maximum run value.  
  */
+#if CAVLC_RUNLEVEL_TABLE_REM
+Void TDecCavlc::xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn, UInt scale)
+#else
 Void TDecCavlc::xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn)
+#endif
 {
+
+#if !CAVLC_RUNLEVEL_TABLE_REM
   if (maxrun<28)
   {
     if(cn > maxrun+1)
@@ -3043,11 +3248,19 @@ Void TDecCavlc::xRunLevelIndInterInv(LastCoeffStruct *combo, Int maxrun, UInt cn
     }
   }
   else
+#endif
   {
     if(cn<maxrun+2)
     {
       combo->level = 0;
       combo->last_pos = cn;
+#if CAVLC_RUNLEVEL_TABLE_REM
+      {
+        int thr = (maxrun + 1) >> scale;
+        if (combo->last_pos >= thr)
+          combo->last_pos = (combo->last_pos == thr) ? (maxrun+1) : (combo->last_pos-1);
+      }
+#endif
     }
     else
     {
@@ -3231,18 +3444,33 @@ Void TDecCavlc::xParseCoeff8x8(TCoeff* scoeff, int n)
  * \returns 
  * This function performs parsing for a block of transform coefficient in CAVLC. 
  */
-Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
+Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize
+#if CAVLC_RUNLEVEL_TABLE_REM
+                            , Int isIntra
+#endif
+                            )
 {
   static const Int switch_thr[10] = {49,49,0,49,49,0,49,49,49,49};
+#if MOD_INTRA_TABLE
+  static const int aiTableTr1[2][5] = {{0, 1, 1, 1, 0},{0, 1, 2, 3, 4}};
+#endif
   Int i, noCoeff=blSize*blSize;;
   UInt sign;
   LastCoeffStruct combo;
   Int cn, maxrun, tmprun;
+#if TBL_RUN_ADAPT
+   Int vlc_adaptive = 0;
+#else
   Int atable[5] = {4,6,14,28,0xfffffff};
+#endif
   Int done, tr1, tmp;
   Int sum_big_coef = 0;
 
   memset(scoeff,0,sizeof(TCoeff)*noCoeff);
+
+#if CAVLC_RUNLEVEL_TABLE_REM
+  Int scale = (isIntra && n < 2) ? 0 : 3;
+#endif
 
   /* Get the last nonzero coeff */
   if(blSize >=8 )
@@ -3254,7 +3482,11 @@ Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
     xLastLevelIndInv(combo.level, combo.last_pos, blSize, cn);
 
     /* Adapt LP table */
+#if CAVLC_COEF_LRG_BLK_CHROMA
+    cn = (blSize==8 || n<2)?cn:(cn>>2);
+#else
     cn = (blSize==8)?cn:(cn>>2);
+#endif
     // ADAPT_VLC_NUM
     m_uiLastPosVlcIndex[n] += cn == m_uiLastPosVlcIndex[n] ? 0 : (cn < m_uiLastPosVlcIndex[n] ? -1 : 1);
   }
@@ -3295,24 +3527,52 @@ Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
   scoeff[i++] = sign? -tmp:tmp;
 
   done = 0;
+
+#if MOD_INTRA_TABLE
+  const UInt *vlcTable = (n == 2||n == 5)?  g_auiVlcTable8x8Intra:
+    ((blSize<=8)? g_auiVlcTable8x8Inter:g_auiVlcTable16x16Inter);
+
+  const UInt **pLumaRunTr1 = (blSize==4)? g_pLumaRunTr14x4: ((blSize==8)? g_pLumaRunTr18x8: g_pLumaRunTr116x16);
+#else
   const UInt *vlcTable = (n == 2||n == 5)? ((blSize<=8)? g_auiVlcTable8x8Intra:g_auiVlcTable16x16Intra):
     ((blSize<=8)? g_auiVlcTable8x8Inter:g_auiVlcTable16x16Inter);
   const UInt **pLumaRunTr1 = (blSize==4)? g_pLumaRunTr14x4:g_pLumaRunTr18x8;
+#endif
   while (!done && i < noCoeff)
   {
     maxrun = noCoeff - 1 -i;
     tmprun = min(maxrun,28);
+#if MOD_INTRA_TABLE 
+    if (tmprun < 28 || blSize<=8 || (n!=2&&n!=5))
+    {
+      tmp = vlcTable[tmprun];
+    }
+    else
+    {
+      tmp = 2;
+    }
+#else
     tmp = vlcTable[tmprun];
+#endif
+
 
     /* Go into run mode */
     cn = xReadVlc( tmp );
     if (n == 2 || n == 5)
     {
+#if MOD_INTRA_TABLE
+      xRunLevelIndInv(&combo, maxrun, pLumaRunTr1[aiTableTr1[(blSize&4)>>2][tr1]][tmprun], cn);
+#else
       xRunLevelIndInv(&combo, maxrun, pLumaRunTr1[tr1][tmprun], cn);
+#endif
     }
     else
     {
+#if CAVLC_RUNLEVEL_TABLE_REM
+      xRunLevelIndInterInv(&combo, maxrun, cn, scale);
+#else
       xRunLevelIndInterInv(&combo, maxrun, cn);
+#endif
     }
 
     i += combo.last_pos;
@@ -3327,6 +3587,13 @@ Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
         sum_big_coef += tmp;
         if (blSize==4 ||i > switch_thr[n] || sum_big_coef > 2)
         {
+#if TBL_RUN_ADAPT
+        if (tmp > atable[vlc_adaptive])
+        {
+           vlc_adaptive++;
+        }
+
+#endif          
           done = 1;
         }
       }
@@ -3351,7 +3618,9 @@ Void TDecCavlc::xParseCoeff(TCoeff* scoeff, int n, Int blSize)
   if (i < noCoeff)
   {
     /* Get the rest in level mode */
+#if !TBL_RUN_ADAPT
     Int vlc_adaptive = 0;
+#endif 
     while (i < noCoeff)
     {
       tmp = xReadVlc( vlc_adaptive );
