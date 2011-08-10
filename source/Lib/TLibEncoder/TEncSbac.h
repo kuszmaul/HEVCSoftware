@@ -117,19 +117,17 @@ private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
-#if E253
   Void  xWriteGoRiceExGolomb ( UInt uiSymbol, UInt &ruiGoRiceParam );
-#else
-  Void  xWriteExGolombLevel  ( UInt uiSymbol, ContextModel& rcSCModel  );
-#endif
   Void  xWriteTerminatingBit ( UInt uiBit );
   
+#if !MODIFIED_MVD_CODING
 #if MVD_CTX
   Void  xWriteMvd            ( Int iMvd, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx );
 #else
   Void  xWriteMvd            ( Int iMvd, UInt uiAbsSum, UInt uiCtx );
 #endif
   Void  xWriteExGolombMvd    ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
+#endif
   Void  xCopyFrom            ( TEncSbac* pSrc );
   
 protected:
@@ -188,9 +186,7 @@ public:
   Void codeCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) {}
   UInt xGetFlagPattern   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) { return 0; }
 #endif
-#if PCP_SIGMAP_SIMPLE_LAST
   __inline Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx );
-#endif
   Void codeCoeffNxN            ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -215,7 +211,7 @@ private:
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
-#if ADD_PLANAR_MODE
+#if ADD_PLANAR_MODE && !FIXED_MPM
   ContextModel3DBuffer m_cPlanarFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUChromaPredSCModel;
@@ -228,12 +224,8 @@ private:
   ContextModel3DBuffer m_cCUQtRootCbfSCModel;
   
   ContextModel3DBuffer m_cCUSigSCModel;
-#if PCP_SIGMAP_SIMPLE_LAST
   ContextModel3DBuffer m_cCuCtxLastX;
   ContextModel3DBuffer m_cCuCtxLastY;
-#else
-  ContextModel3DBuffer m_cCULastSCModel;
-#endif
   ContextModel3DBuffer m_cCUOneSCModel;
   ContextModel3DBuffer m_cCUAbsSCModel;
   
@@ -242,6 +234,10 @@ private:
   ContextModel3DBuffer m_cALFFlagSCModel;
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
+#if AMP
+  ContextModel3DBuffer m_cCUXPosiSCModel;
+  ContextModel3DBuffer m_cCUYPosiSCModel;
+#endif
 #if MTK_SAO
   ContextModel3DBuffer m_cAOFlagSCModel;
   ContextModel3DBuffer m_cAOUvlcSCModel;

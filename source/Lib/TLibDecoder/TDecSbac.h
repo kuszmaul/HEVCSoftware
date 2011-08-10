@@ -92,12 +92,9 @@ private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
-#if E253
   Void  xReadGoRiceExGolomb ( UInt &ruiSymbol, UInt &ruiGoRiceParam );
-#else
-  Void  xReadExGolombLevel  ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-#endif
   
+#if !MODIFIED_MVD_CODING
 #if MVD_CTX
   Void  xReadMvd            ( Int& riMvdComp, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx );
 #else
@@ -105,6 +102,7 @@ private:
 #endif
 
   Void  xReadExGolombMvd    ( UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
+#endif
   
 private:
   TComInputBitstream* m_pcBitstream;
@@ -161,9 +159,7 @@ public:
   Void parseCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiTrDepth, UInt uiDepth, UInt& uiSubdiv ) {}
 #endif
 
-#if PCP_SIGMAP_SIMPLE_LAST
   __inline Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx );
-#endif
   Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
   
 private:
@@ -179,7 +175,7 @@ private:
   ContextModel3DBuffer m_cCUPredModeSCModel;
   
   ContextModel3DBuffer m_cCUIntraPredSCModel;
-#if ADD_PLANAR_MODE
+#if ADD_PLANAR_MODE && !FIXED_MPM
   ContextModel3DBuffer m_cPlanarFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUChromaPredSCModel;
@@ -194,12 +190,8 @@ private:
   ContextModel3DBuffer m_cCUQtCbfSCModel;
   
   ContextModel3DBuffer m_cCUSigSCModel;
-#if PCP_SIGMAP_SIMPLE_LAST
   ContextModel3DBuffer m_cCuCtxLastX;
   ContextModel3DBuffer m_cCuCtxLastY;
-#else  
-  ContextModel3DBuffer m_cCULastSCModel;
-#endif
   ContextModel3DBuffer m_cCUOneSCModel;
   ContextModel3DBuffer m_cCUAbsSCModel;
   
@@ -208,6 +200,10 @@ private:
   ContextModel3DBuffer m_cALFFlagSCModel;
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
+#if AMP
+  ContextModel3DBuffer m_cCUXPosiSCModel;
+  ContextModel3DBuffer m_cCUYPosiSCModel;
+#endif
 #if MTK_SAO
   ContextModel3DBuffer m_cAOFlagSCModel;
   ContextModel3DBuffer m_cAOUvlcSCModel;

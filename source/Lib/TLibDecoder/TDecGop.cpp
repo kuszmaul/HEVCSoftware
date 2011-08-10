@@ -119,9 +119,11 @@ Void TDecGop::copySharedAlfParamFromPPS(ALFParam* pAlfDst, ALFParam* pAlfSrc)
   pAlfDst->filters_per_group  = pAlfSrc->filters_per_group;
   pAlfDst->filtNo             = pAlfSrc->filtNo;
   pAlfDst->realfiltNo         = pAlfSrc->realfiltNo;
+#if !STAR_CROSS_SHAPES_LUMA
   pAlfDst->tap                = pAlfSrc->tap;
 #if TI_ALF_MAX_VSIZE_7
   pAlfDst->tapV               = pAlfSrc->tapV;
+#endif
 #endif
   pAlfDst->num_coeff          = pAlfSrc->num_coeff;
   pAlfDst->noFilters          = pAlfSrc->noFilters;
@@ -146,7 +148,11 @@ Void TDecGop::copySharedAlfParamFromPPS(ALFParam* pAlfDst, ALFParam* pAlfSrc)
   pAlfDst->chroma_idc         = pAlfSrc->chroma_idc;
   if(pAlfDst->chroma_idc)
   {
+#if ALF_CHROMA_NEW_SHAPES
+    pAlfDst->realfiltNo_chroma = pAlfSrc->realfiltNo_chroma;
+#else
     pAlfDst->tap_chroma       = pAlfSrc->tap_chroma;
+#endif
     pAlfDst->num_coeff_chroma = pAlfSrc->num_coeff_chroma;
     ::memcpy(pAlfDst->coeff_chroma, pAlfSrc->coeff_chroma, sizeof(Int)*pAlfDst->num_coeff_chroma);
   }
@@ -157,8 +163,11 @@ Void TDecGop::copySharedAlfParamFromPPS(ALFParam* pAlfDst, ALFParam* pAlfSrc)
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
-
+#if REF_SETTING_FOR_LD
+Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool bExecuteDeblockAndAlf, TComList<TComPic*>& rcListPic )
+#else
 Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool bExecuteDeblockAndAlf)
+#endif
 {
   TComSlice*  pcSlice = rpcPic->getSlice(rpcPic->getCurrSliceIdx());
 
@@ -397,6 +406,16 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
 #endif
 
     rpcPic->setReconMark(true);
+
+#if REF_SETTING_FOR_LD
+      if ( rpcPic->getSlice(0)->getSPS()->getUseNewRefSetting() )
+      {
+        if ( rpcPic->getSlice(0)->isReferenced() )
+        {
+          rpcPic->getSlice(0)->decodingRefMarkingForLD( rcListPic, rpcPic->getSlice(0)->getSPS()->getMaxNumRefFrames(), rpcPic->getSlice(0)->getPOC() );
+        }
+      }
+#endif
 
 #if MTK_NONCROSS_INLOOP_FILTER
     uiILSliceCount = 0;
