@@ -168,6 +168,72 @@ Void TEncSbac::resetEntropy           ()
   return;
 }
 
+#if TILES
+/** The function does the followng: Write out terminate bit. Flush CABAC. Intialize CABAC states. Start CABAC.
+ */
+Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecuteFinish )
+{
+  m_pcBinIf->encodeBinTrm(1);
+  if (bExecuteFinish) m_pcBinIf->finish();
+
+  m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_SPLIT_FLAG );
+  
+  m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_SKIP_FLAG );
+  m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_ALF_CTRL_FLAG );
+  m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (Short*)INIT_MERGE_FLAG_EXT);
+  m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_MERGE_IDX_EXT);
+  m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PART_SIZE );
+#if AMP
+  m_cCUXPosiSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_CU_X_POS );
+  m_cCUYPosiSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_CU_Y_POS );
+#endif
+  m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PRED_MODE );
+  m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_INTRA_PRED_MODE );
+#if ADD_PLANAR_MODE && !FIXED_MPM
+  m_cPlanarFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_PLANARFLAG );
+#endif
+  m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (Short*)INIT_CHROMA_PRED_MODE );
+  m_cCUInterDirSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_INTER_DIR );
+  m_cCUMvdSCModel.initBuffer             ( eSliceType, iQp, (Short*)INIT_MVD );
+  m_cCURefPicSCModel.initBuffer          ( eSliceType, iQp, (Short*)INIT_REF_PIC );
+  m_cCUDeltaQpSCModel.initBuffer         ( eSliceType, iQp, (Short*)INIT_DQP );
+  m_cCUQtCbfSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_QT_CBF );
+  m_cCUQtRootCbfSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_QT_ROOT_CBF );
+  m_cCUSigSCModel.initBuffer             ( eSliceType, iQp, (Short*)INIT_SIG_FLAG );
+#if MODIFIED_LAST_CODING
+  m_cCuCtxLastX.initBuffer               ( eSliceType, iQp, (Short*)INIT_LAST );
+  m_cCuCtxLastY.initBuffer               ( eSliceType, iQp, (Short*)INIT_LAST );
+#else
+  m_cCuCtxLastX.initBuffer               ( eSliceType, iQp, (Short*)INIT_LAST_X );
+  m_cCuCtxLastY.initBuffer               ( eSliceType, iQp, (Short*)INIT_LAST_Y );
+#endif
+  m_cCUOneSCModel.initBuffer             ( eSliceType, iQp, (Short*)INIT_ONE_FLAG );
+  m_cCUAbsSCModel.initBuffer             ( eSliceType, iQp, (Short*)INIT_ABS_FLAG );
+  m_cMVPIdxSCModel.initBuffer            ( eSliceType, iQp, (Short*)INIT_MVP_IDX );
+  m_cALFFlagSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_ALF_FLAG );
+  m_cALFUvlcSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_ALF_UVLC );
+  m_cALFSvlcSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_ALF_SVLC );
+  m_cCUTransSubdivFlagSCModel.initBuffer ( eSliceType, iQp, (Short*)INIT_TRANS_SUBDIV_FLAG );
+#if MTK_SAO
+  m_cAOFlagSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_AO_FLAG );
+  m_cAOUvlcSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_AO_UVLC );
+  m_cAOSvlcSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_AO_SVLC );
+#endif
+
+  m_pcBinIf->start();
+}
+
+#if TILES_DECODER
+Void TEncSbac::writeTileMarker( UInt uiTileIdx, UInt uiBitsUsed )
+{
+  for (Int iShift=uiBitsUsed-1; iShift>=0; iShift--)
+  {
+    m_pcBinIf->encodeBinEP ( uiTileIdx & (1 << iShift) );
+  }
+}
+#endif
+#endif
+
 void TEncSbac::codeSEI(const SEI&)
 {
   assert(0);
@@ -191,6 +257,13 @@ Void TEncSbac::codeSliceHeader( TComSlice* pcSlice )
   return;
 }
 
+#if OL_USE_WPP
+Void TEncSbac::codeSliceHeaderSubstreamTable( TComSlice* pcSlice )
+{
+  assert (0);
+}
+#endif
+
 Void TEncSbac::codeTerminatingBit( UInt uilsLast )
 {
   m_pcBinIf->encodeBinTrm( uilsLast );
@@ -201,7 +274,17 @@ Void TEncSbac::codeSliceFinish()
   m_pcBinIf->finish();
 }
 
+#if OL_FLUSH
+Void TEncSbac::codeFlush()
+{
+  m_pcBinIf->flush();
+}
 
+Void TEncSbac::encodeStart()
+{
+  m_pcBinIf->start();
+}
+#endif
 
 Void TEncSbac::xWriteUnarySymbol( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset )
 {
@@ -611,6 +694,7 @@ Void TEncSbac::codeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_V( pcCU->getAddr() );
   DTRACE_CABAC_T( "\tuiAbsPartIdx: " );
   DTRACE_CABAC_V( uiAbsPartIdx );
+#if !(DNB_MERGE_FLAG)
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     DTRACE_CABAC_T( "\tNumMrgCand: " );
@@ -618,6 +702,7 @@ Void TEncSbac::codeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
     DTRACE_CABAC_T( "\t==\t" );
     DTRACE_CABAC_V( UInt( pcCU->getNeighbourCandIdx( ui, uiAbsPartIdx ) ) );
   }
+#endif
   DTRACE_CABAC_T( "\n" );
 }
 
@@ -726,6 +811,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_T( "\tparseMergeIndex()" );
   DTRACE_CABAC_T( "\tuiMRGIdx= " );
   DTRACE_CABAC_V( pcCU->getMergeIndex( uiAbsPartIdx ) );
+#if !(MRG_AMVP_FIXED_IDX_F470)
   DTRACE_CABAC_T( "\tuiNumCand= " );
   DTRACE_CABAC_V( uiNumCand );
   DTRACE_CABAC_T( "\tbLeftInvolved= " );
@@ -736,6 +822,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_V( bCollocatedInvolved );
   DTRACE_CABAC_T( "\tbCornerRTInvolved= " );
   DTRACE_CABAC_V( bCornerInvolved );
+#endif
   DTRACE_CABAC_T( "\n" );
 }
 
@@ -1399,7 +1486,11 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx)
 Void TEncSbac::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiCbf = pcCU->getQtRootCbf( uiAbsPartIdx );
+#if DNB_QT_ROOT_CBF
+  UInt uiCtx = 0;
+#else
   UInt uiCtx = pcCU->getCtxQtRootCbf( uiAbsPartIdx );
+#endif
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtRootCbfSCModel.get( 0, 0, uiCtx ) );
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseQtRootCbf()" )
@@ -2342,4 +2433,64 @@ Void TEncSbac::estSignificantCoefficientsBit( estBitsSbacStruct* pcEstBitsSbac, 
     pcEstBitsSbac->m_levelAbsBits[ ctxIdx ][ 1 ] = ctxAbs[ ctxIdx ].getEntropyBits( 1 );    
   }
 }
+
+#if OL_USE_WPP
+/**
+ - Initialize our context information from the nominated source.
+ .
+ \param pSrc From where to copy context information.
+ */
+Void TEncSbac::xCopyContextsFrom( TEncSbac* pSrc )
+{  
+  m_cCUSplitFlagSCModel       .copyFrom( &pSrc->m_cCUSplitFlagSCModel       );
+  m_cCUSkipFlagSCModel        .copyFrom( &pSrc->m_cCUSkipFlagSCModel        );
+  m_cCUMergeFlagExtSCModel    .copyFrom( &pSrc->m_cCUMergeFlagExtSCModel    );
+  m_cCUMergeIdxExtSCModel     .copyFrom( &pSrc->m_cCUMergeIdxExtSCModel     );
+  m_cCUAlfCtrlFlagSCModel     .copyFrom( &pSrc->m_cCUAlfCtrlFlagSCModel     );
+  m_cCUPartSizeSCModel        .copyFrom( &pSrc->m_cCUPartSizeSCModel        );
+#if AMP
+  m_cCUXPosiSCModel           .copyFrom( &pSrc->m_cCUXPosiSCModel           );
+  m_cCUYPosiSCModel           .copyFrom( &pSrc->m_cCUYPosiSCModel           );
+#endif
+  m_cCUPredModeSCModel        .copyFrom( &pSrc->m_cCUPredModeSCModel        );
+  m_cCUIntraPredSCModel       .copyFrom( &pSrc->m_cCUIntraPredSCModel       );
+#if ADD_PLANAR_MODE && !FIXED_MPM
+  m_cPlanarFlagSCModel        .copyFrom( &pSrc->m_cPlanarFlagSCModel        );
+#endif
+  m_cCUChromaPredSCModel      .copyFrom( &pSrc->m_cCUChromaPredSCModel      );
+  m_cCUInterDirSCModel        .copyFrom( &pSrc->m_cCUInterDirSCModel        );
+  m_cCUMvdSCModel             .copyFrom( &pSrc->m_cCUMvdSCModel             );
+  m_cCURefPicSCModel          .copyFrom( &pSrc->m_cCURefPicSCModel          );
+  m_cCUDeltaQpSCModel         .copyFrom( &pSrc->m_cCUDeltaQpSCModel         );
+
+  m_cCUQtCbfSCModel           .copyFrom( &pSrc->m_cCUQtCbfSCModel           );
+  m_cCUQtRootCbfSCModel       .copyFrom( &pSrc->m_cCUQtRootCbfSCModel       );
+  m_cCUSigSCModel             .copyFrom( &pSrc->m_cCUSigSCModel             );
+#if MODIFIED_LAST_CODING
+  m_cCuCtxLastX               .copyFrom( &pSrc->m_cCuCtxLastX               );
+  m_cCuCtxLastY               .copyFrom( &pSrc->m_cCuCtxLastY               );
+#else
+  m_cCuCtxLastX               .copyFrom( &pSrc->m_cCuCtxLastX               );
+  m_cCuCtxLastY               .copyFrom( &pSrc->m_cCuCtxLastY               );
+#endif
+  m_cCUOneSCModel             .copyFrom( &pSrc->m_cCUOneSCModel             );
+  m_cCUAbsSCModel             .copyFrom( &pSrc->m_cCUAbsSCModel             );
+  m_cMVPIdxSCModel            .copyFrom( &pSrc->m_cMVPIdxSCModel            );
+  m_cALFFlagSCModel           .copyFrom( &pSrc->m_cALFFlagSCModel           );
+  m_cALFUvlcSCModel           .copyFrom( &pSrc->m_cALFUvlcSCModel           );
+  m_cALFSvlcSCModel           .copyFrom( &pSrc->m_cALFSvlcSCModel           );
+#if MTK_SAO
+  m_cAOFlagSCModel            .copyFrom( &pSrc->m_cAOFlagSCModel            );
+  m_cAOUvlcSCModel            .copyFrom( &pSrc->m_cAOUvlcSCModel            );
+  m_cAOSvlcSCModel            .copyFrom( &pSrc->m_cAOSvlcSCModel            );
+#endif
+  m_cCUTransSubdivFlagSCModel .copyFrom( &pSrc->m_cCUTransSubdivFlagSCModel );
+}
+
+Void  TEncSbac::loadContexts ( TEncSbac* pScr)
+{
+  this->xCopyContextsFrom(pScr);
+}
+
+#endif
 //! \}
