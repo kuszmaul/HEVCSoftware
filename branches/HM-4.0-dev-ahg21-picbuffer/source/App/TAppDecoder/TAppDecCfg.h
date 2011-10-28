@@ -59,6 +59,7 @@ protected:
   char*         m_pchReconFile;                       ///< output reconstruction file name
   Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
   UInt          m_outputBitDepth;                     ///< bit depth used for writing output
+  Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
 
   bool m_pictureDigestEnabled; ///< enable(1)/disable(0) acting on SEI picture_digest message
   

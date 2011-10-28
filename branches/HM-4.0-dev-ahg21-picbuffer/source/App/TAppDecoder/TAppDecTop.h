@@ -81,6 +81,7 @@ protected:
   Void  xInitDecLib       (); ///< initialize decoder class
   
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic ); ///< write YUV to file
+  Void  xFlushOutput      ( TComList<TComPic*>* pcListPic ); ///< flush all remaining decoded pictures to file
 };
 
 //! \}

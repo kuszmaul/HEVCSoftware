@@ -88,6 +88,7 @@ private:
 #else
   TComPPS                 m_cPPS;
 #endif
+  TComBDS                 m_cRPSList;
   TComSlice*              m_apcSlicePilot;
   
   SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
@@ -135,8 +136,9 @@ public:
   Void executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame,  Int& iPOCLastDisplay);
 
 protected:
-  Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
-  Void  xUpdateGopSize    (TComSlice* pcSlice);
+  Void  xGetNewPicBuffer   (TComSlice* pcSlice, TComPic*& rpcPic);
+  Void  xUpdateGopSize     (TComSlice* pcSlice);
+  Void  xCreateLostPicture (Int iLostPOC);
 
 #if E045_SLICE_COMMON_INFO_SHARING
   /// create PPS buffer
