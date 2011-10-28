@@ -39,7 +39,8 @@
 #define __TAPPENCCFG__
 
 #include "TLibCommon/CommonDef.h"
-
+#include "TLibEncoder/TEncCfg.h"
+#include <sstream>
 //! \ingroup TAppEncoder
 //! \{
 
@@ -69,14 +70,10 @@ protected:
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
   Int       m_iDecodingRefreshType;                           ///< random access type
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
-  Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
-  Int       m_iNumOfReference;                                ///< total number of reference frames in P-slice
-  Int       m_iNumOfReferenceB_L0;                            ///< total number of reference frames for reference list L0 in B-slice
-  Int       m_iNumOfReferenceB_L1;                            ///< total number of reference frames for reference list L1 in B-slice
-  Bool      m_bHierarchicalCoding;                            ///< flag for specifying hierarchical B structure
-  Bool      m_bUseLDC;                                        ///< flag for using low-delay coding mode
-  Bool      m_bUseNRF;                                        ///< flag for using non-referenced frame in hierarchical structure
-  Bool      m_bUseGPB;                                        ///< flag for using generalized P & B structure
+  Int       m_iExtraRPSs;
+  GOPEntry  m_pcGOPList[MAX_GOP];
+  UInt      m_uiMaxNumberOfReorderPictures;                   ///< total number of reference pictures needed for decoding
+  UInt      m_uiMaxNumberOfReferencePictures;                  ///< total number of reorder pictures
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
   Bool      m_bLCMod;                                         ///< flag for specifying whether the combined reference list for uni-prediction in B-slices is uploaded explicitly
 #if DISABLE_4x4_INTER
@@ -161,7 +158,7 @@ protected:
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_bUseRDOQ;                                       ///< flag for using RD optimized quantization
-  Bool      m_bUseBQP;                                        ///< flag for using B-slice based QP assignment in low-delay hier. structure
+
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
@@ -187,9 +184,6 @@ protected:
   
   bool m_pictureDigestEnabled; ///< enable(1)/disable(0) md5 computation and SEI signalling
 
-#if REF_SETTING_FOR_LD
-  Bool      m_bUseNewRefSetting;
-#endif
 
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
