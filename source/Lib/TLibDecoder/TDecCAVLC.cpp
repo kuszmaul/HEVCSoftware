@@ -140,15 +140,55 @@ void TDecCavlc::parseSEI(SEImessages& seis)
   } while (0x80 != m_pcBitstream->peekBits(8));
   assert(m_pcBitstream->getNumBitsLeft() == 8); /* rsbp_trailing_bits */
 }
-
+#if AHG_21_RPS
+void TDecCavlc::xReadRPS( TComPPS* pcPPS, TComReferencePictureSet* pcRPS )
+{
+  UInt uiCode;
+  pcRPS->create(pcPPS->getSPS()->getMaxNumberOfReferencePictures());
+  xReadUvlc(uiCode);
+  pcRPS->setNumberOfNegativePictures(uiCode);
+  Int prev = 0;
+  Int poc;
+  for(Int j=0 ; j < pcRPS->getNumberOfNegativePictures(); j++)
+  {
+    xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
+    poc = prev-uiCode-1;
+    prev = poc;
+    pcRPS->setDeltaPOC(j,poc);
+    xReadCode(1, uiCode); // temporal_id
+    pcRPS->setUsed(j,uiCode);
+  }
+  if(pcPPS->getReorderPicturesAllowedFlag())
+  {
+    xReadUvlc(uiCode);        
+    pcRPS->setNumberOfPositivePictures(uiCode);
+    prev = 0;
+    for(Int j=pcRPS->getNumberOfNegativePictures(); j < pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures(); j++)
+    {
+      xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
+      poc = prev+uiCode+1;
+      prev = poc;
+      pcRPS->setDeltaPOC(j,poc);
+      xReadCode(1, uiCode); // temporal_id
+      pcRPS->setUsed(j,uiCode);
+    }
+  }
+  else
+  {         
+    pcRPS->setNumberOfPositivePictures(0);
+  }
+  pcRPS->setNumberOfPictures(pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures());
+}
+#endif
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 {
 #if ENC_DEC_TRACE  
   xTracePPSHeader (pcPPS);
 #endif
   UInt  uiCode;
+#if AHG_21_RPS
   TComBDS* pcRPSList = pcPPS->getRPSList();
-
+#endif
   READ_UVLC( uiCode, "pic_parameter_set_id");                      pcPPS->setPPSId (uiCode);
   READ_UVLC( uiCode, "seq_parameter_set_id");                      pcPPS->setSPSId (uiCode);
   // entropy_coding_mode_flag
@@ -168,12 +208,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #if E045_SLICE_COMMON_INFO_SHARING
   READ_FLAG( uiCode, "shared_pps_info_enabled_flag" );             pcPPS->setSharedPPSInfoEnabled( uiCode ? true : false);
 #endif
-
-  UInt i,j,offset;
-  Int prev;
+#if AHG_21_RPS
+  UInt i;
   UInt nrOfRPSs;
-  Int poc;
-  UInt uiUsed;
 
   TComReferencePictureSet*      pcRPS;
 
@@ -184,40 +221,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   for(i=0; i< nrOfRPSs; i++)
   {
     pcRPS = pcRPSList->getReferencePictureSet(i);
-    pcRPS->create(pcPPS->getSPS()->getMaxNumberOfReferencePictures());
-    xReadUvlc(uiCode);
-    pcRPS->setNumberOfNegativePictures(uiCode);
-    prev = 0;
-    for(j=0 ; j < pcRPS->getNumberOfNegativePictures(); j++)
-    {
-      xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
-      poc = prev-uiCode-1;
-      prev = poc;
-      pcRPS->setDeltaPOC(j,poc);
-      xReadCode(1, uiUsed); // temporal_id
-      pcRPS->setUsed(j,uiUsed);
-    }
-    if(pcPPS->getReorderPicturesAllowedFlag())
-    {
-      xReadUvlc(uiCode);        
-      pcRPS->setNumberOfPositivePictures(uiCode);
-      offset = pcRPS->getNumberOfNegativePictures();
-      prev = 0;
-      for(j=offset; j < offset+pcRPS->getNumberOfPositivePictures(); j++)
-      {
-        xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
-        poc = prev+uiCode+1;
-        prev = poc;
-        pcRPS->setDeltaPOC(j,poc);
-        xReadCode(1, uiUsed); // temporal_id
-        pcRPS->setUsed(j,uiUsed);
-      }
-    }
-    else
-    {         
-      pcRPS->setNumberOfPositivePictures(0);
-    }
-    pcRPS->setNumberOfPictures(pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures());
+    xReadRPS(pcPPS,pcRPS);
   }
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );
   pcPPS->setLongTermRefsPresent(uiCode);
@@ -226,7 +230,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     READ_UVLC( uiCode, "delta_poc_lt_len_minus4" );
     pcPPS->setBitsForLongTermRefs(uiCode+4);
   }
-
+#endif
   // alf_param() ?
 
 #if SUB_LCU_DQP
@@ -290,7 +294,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_CODE( 4, uiCode, "pcm_bit_depth_luma_minus1" );           pcSPS->setPCMBitDepthLuma   ( 1 + uiCode );
   READ_CODE( 4, uiCode, "pcm_bit_depth_chroma_minus1" );         pcSPS->setPCMBitDepthChroma ( 1 + uiCode );
 #endif
+#if AHG_21_RPS
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
+#endif
 #if DISABLE_4x4_INTER
   xReadFlag( uiCode ); pcSPS->setDisInter4x4( uiCode ? true : false );
 #endif
@@ -348,12 +354,15 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   xReadUvlc ( uiCode ); pcSPS->setPadX        ( uiCode    );
   xReadUvlc ( uiCode ); pcSPS->setPadY        ( uiCode    );
 
-
+#if AHG_21_RPS
   
    xReadUvlc( uiCode );
    pcSPS->setMaxNumberOfReferencePictures(uiCode);
    xReadUvlc( uiCode );
    pcSPS->setMaxNumberOfReorderPictures(uiCode);
+#else
+  xReadFlag( uiCode ); pcSPS->setUseLDC ( uiCode ? true : false );
+#endif
 
   xReadFlag( uiCode ); pcSPS->setUseMRG ( uiCode ? true : false );
   
@@ -363,7 +372,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     xReadFlag( uiCode );
     pcSPS->setAMVPMode( i, (AMVP_MODE)uiCode );
   }
-
+#if !AHG_21_RPS
+#if REF_SETTING_FOR_LD
+  // these syntax elements should not be sent at SPS when the full reference frame management is supported
+  xReadFlag( uiCode ); pcSPS->setUseNewRefSetting( uiCode>0 ? true : false );
+  if ( pcSPS->getUseNewRefSetting() )
+  {
+    xReadUvlc( uiCode );
+    pcSPS->setMaxNumRefFrames( uiCode );
+  }
+#endif
+#endif
 
   return;
 }
@@ -383,9 +402,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
   Bool bEntropySlice = uiCode ? true : false;
 
   
+  // if( !lightweight_slice_flag ) {
   if (!bEntropySlice)
   {
-
+#if AHG_21_RPS
     //xReadUvlc (   uiCode);  rpcSlice->setSliceType        ((SliceType)uiCode);
 
     if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) //should check for idr
@@ -425,67 +445,45 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
       }
       else // use Reference Picture Set explicitly signalled in slice header
       {
-        int j;
-        Int poc,offset,prev;
-        UInt uiUsed;
-
         TComReferencePictureSet* pcRPS = rpcSlice->getLocalRPS();
-        pcRPS->create(rpcSlice->getPPS()->getSPS()->getMaxNumberOfReferencePictures());
-        pcRPS->setNumberOfNegativePictures(0);
-        pcRPS->setNumberOfPositivePictures(0);
-
-        offset=0;
-
-        xReadUvlc(uiCode); 
-        pcRPS->setNumberOfNegativePictures(uiCode);
-        prev = 0;
-        for(j=offset ; j < offset+pcRPS->getNumberOfNegativePictures(); j++)
-        {
-          xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
-          poc = prev-uiCode-1;
-          prev = poc;
-          pcRPS->setDeltaPOC(j,poc);
-          xReadCode(1, uiUsed); // temporal_id
-
-          pcRPS->setUsed(j,uiUsed);
-        }
-        offset += pcRPS->getNumberOfNegativePictures();
-        if(rpcSlice->getPPS()->getReorderPicturesAllowedFlag())
-        {
-
-          xReadUvlc(uiCode);        
-          pcRPS->setNumberOfPositivePictures(uiCode);
-          prev = 0;
-          for(j=offset; j < offset+pcRPS->getNumberOfPositivePictures(); j++)
-          {
-            xReadUvlc(uiCode);  // n_absolute_delta_poc_minus_one
-            poc = prev+uiCode+1;
-            prev = poc;
-            pcRPS->setDeltaPOC(j,poc);
-            xReadCode(1, uiUsed); // temporal_id
-
-            pcRPS->setUsed(j,uiUsed);
-          }
-        }
+        xReadRPS(rpcSlice->getPPS(),pcRPS);
+        
+        Int offset = pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures();
         xReadUvlc(uiCode); 
         pcRPS->setNumberOfLongtermPictures(uiCode);
-        for(j=offset ; j < pcRPS->getNumberOfLongtermPictures()+offset; j++)
+        for(Int j=offset ; j < pcRPS->getNumberOfLongtermPictures()+offset; j++)
         {
           xReadCode(rpcSlice->getPPS()->getBitsForLongTermRefs(), uiCode);  // long_term_poc
           pcRPS->setPOC(j,uiCode);          
           pcRPS->setDeltaPOC(j,uiCode-rpcSlice->getPOC());
-          xReadCode(1, uiUsed); 
-          pcRPS->setUsed(j,uiUsed);
+          xReadCode(1, uiCode); 
+          pcRPS->setUsed(j,uiCode);
         }
         offset = pcRPS->getNumberOfLongtermPictures();
         pcRPS->setNumberOfPictures(pcRPS->getNumberOfLongtermPictures()+pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures());
         rpcSlice->setRPS(pcRPS);
       }
     }
+#endif
     //   slice_type
     READ_UVLC (    uiCode, "slice_type" );            rpcSlice->setSliceType((SliceType)uiCode);
     READ_UVLC (    uiCode, "pic_parameter_set_id" );  rpcSlice->setPPSId(uiCode);
+#if !AHG_21_RPS
 
+    //   frame_num
+    //   if( IdrPicFlag )
+    //     idr_pic_id
+    //   if( pic_order_cnt_type  = =  0 )
+    //     pic_order_cnt_lsb  
+    READ_CODE (10, uiCode, "pic_order_cnt_lsb" );     rpcSlice->setPOC(uiCode);             // 9 == SPS->Log2MaxFrameNum()
+    //   if( slice_type  = =  P  | |  slice_type  = =  B ) {
+    //     num_ref_idx_active_override_flag
+    //   if( num_ref_idx_active_override_flag ) {
+    //     num_ref_idx_l0_active_minus1
+    //     if( slice_type  = =  B )
+    //       num_ref_idx_l1_active_minus1
+    //   }
+#endif
     if (!rpcSlice->isIntra())
     {
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
@@ -507,6 +505,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
         rpcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
       }
     }
+    // }
   }
   // ref_pic_list_modification( )
   // ref_pic_list_combination( )

@@ -73,10 +73,16 @@ class TEncGOP
 {
 private:
   //  Data
-  Int                     m_iGopSize;
+#if AHG_21_RPS
+  Bool                    m_bLongtermTestPictureHasBeenCoded;
+#else
+  Int                     m_iHrchDepth;
+
+  Int                     m_iRateGopSize;
+#endif
   Int                     m_iNumPicCoded;
   Bool                    m_bFirst;
-  Bool                    m_bLongtermTestPictureHasBeenCoded;
+  Int                     m_iGopSize;
   
   //  Access channel
   TEncTop*                m_pcEncTop;
@@ -128,6 +134,11 @@ public:
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
   
   Int   getGOPSize()          { return  m_iGopSize;  }
+#if !AHG_21_RPS
+  Int   getRateGOPSize()      { return  m_iRateGopSize;  }
+  Int   isHierarchicalB()     { return  m_pcCfg->getHierarchicalCoding();  }
+  Int   getHrchDepth()        { return  m_iHrchDepth; }
+#endif
   
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   

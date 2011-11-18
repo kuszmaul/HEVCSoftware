@@ -60,6 +60,9 @@ using namespace std;
 
 TEncGOP::TEncGOP()
 {
+#if !AHG_21_RPS
+  m_iHrchDepth          = 0;
+#endif
   m_iGopSize            = 0;
   m_iNumPicCoded        = 0; //Niko
   m_bFirst              = true;
@@ -100,7 +103,9 @@ Void  TEncGOP::create( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHei
   m_uiStoredStartCUAddrForEncodingSlice = new UInt [uiNumCUsInFrame+1];
   m_uiStoredStartCUAddrForEncodingEntropySlice = new UInt [uiNumCUsInFrame+1];
 #endif
+#if AHG_21_RPS
   m_bLongtermTestPictureHasBeenCoded = 0;
+#endif
 }
 
 Void  TEncGOP::destroy()
@@ -146,14 +151,34 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   
   m_iNumPicCoded = 0;
 
- 
+#if AHG_21_RPS
   
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
+#else
+  for ( Int iDepth = 0; iDepth < m_iHrchDepth; iDepth++ )
   {
+    Int iTimeOffset = ( 1 << (m_iHrchDepth - 1 - iDepth) );
+    Int iStep       = iTimeOffset << 1;
+    
+    // generalized B info.
+    if ( (m_pcCfg->getHierarchicalCoding() == false) && (iDepth != 0) )
+    {
+      iTimeOffset   = 1;
+      iStep         = 1;
+    }
+    
     UInt uiColDir = 1;
+    
+    for ( ; iTimeOffset <= iNumPicRcvd; iTimeOffset += iStep )
+#endif
+  {
+#if AHG_21_RPS
+    UInt uiColDir = 1;
+#endif
     //-- For time output for each slice
     long iBeforeTime = clock();
     
+#if AHG_21_RPS
     //select uiColDir
     Int iCloseLeft=1, iCloseRight=-1;
     for(Int i = 0; i<m_pcCfg->getGOPEntry(iGOPid).m_iNumRefPics; i++) 
@@ -206,6 +231,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       iTimeOffset = 1;
     }
       
+#else
+      // generalized B info.
+      if ( (m_pcCfg->getHierarchicalCoding() == false) && (iDepth != 0) && (iTimeOffset == m_iGopSize) && (iPOCLast != 0) )
+      {
+        continue;
+      }
+      
+      /////////////////////////////////////////////////////////////////////////////////////////////////// Initial to start encoding
+      UInt  uiPOCCurr = iPOCLast - (iNumPicRcvd - iTimeOffset);
+      
+#endif
     /* start a new access unit: create an entry in the list of output
      * access units */
     accessUnitsInGOP.push_back(AccessUnit());
@@ -217,25 +253,33 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     assert(pcPic->getNumAllocatedSlice() == 1);
     m_pcSliceEncoder->setSliceIdx(0);
     pcPic->setCurrSliceIdx(0);
-
+#if AHG_21_RPS
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#else
+      m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iTimeOffset, iDepth, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#endif
     pcSlice->setSliceIdx(0);
 
 #if DISABLE_4x4_INTER
     m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
 #endif 
-
+#if AHG_21_RPS
     if(pcSlice->getSliceType()==B_SLICE&&m_pcCfg->getGOPEntry(iGOPid).m_iSliceType=='P')
     {
       pcSlice->setSliceType(P_SLICE);
     }
-
+#endif
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(uiPOCCurr));
     // Do decoding refresh marking if any 
     pcSlice->decodingRefreshMarking(m_uiPOCCDR, m_bRefreshPending, rcListPic);
-
-
+#if !AHG_21_RPS
+      // TODO: We need a common sliding mechanism used by both the encoder and decoder
+      // Below is a temporay solution to mark pictures that will be taken off the decoder's ref pic buffer (due to limit on the buffer size) as unused
+      Int iMaxRefPicNum = m_pcCfg->getMaxRefPicNum();
+      pcSlice->decodingMarking( rcListPic, m_pcCfg->getGOPSize(), iMaxRefPicNum ); 
+      m_pcCfg->setMaxRefPicNum( iMaxRefPicNum );
+#else
     m_pcEncTop->selectReferencePictureSet(pcSlice, uiPOCCurr, iGOPid,rcListPic);
     
     if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
@@ -243,7 +287,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
        pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS());
     }
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
-
+#endif
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
     
@@ -254,8 +298,38 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setDRBFlag   ( true );
     }
     
+#if !AHG_21_RPS
     // Generalized B
+      if ( m_pcCfg->getUseGPB() )
+      {
+        if (pcSlice->getSliceType() == P_SLICE)
+        {
+          pcSlice->setSliceType( B_SLICE ); // Change slice type by force
+          
+          if(pcSlice->getSPS()->getUseLComb() && (m_pcCfg->getNumOfReferenceB_L1() < m_pcCfg->getNumOfReferenceB_L0()) && (pcSlice->getNumRefIdx(REF_PIC_LIST_0)>1))
+          {
+            pcSlice->setNumRefIdx( REF_PIC_LIST_1, m_pcCfg->getNumOfReferenceB_L1() );
 
+            for (Int iRefIdx = 0; iRefIdx < m_pcCfg->getNumOfReferenceB_L1(); iRefIdx++)
+            {
+              pcSlice->setRefPic(pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx), REF_PIC_LIST_1, iRefIdx);
+            }
+          }
+          else
+          {
+            Int iNumRefIdx = pcSlice->getNumRefIdx(REF_PIC_LIST_0);
+            pcSlice->setNumRefIdx( REF_PIC_LIST_1, iNumRefIdx );
+            
+            for (Int iRefIdx = 0; iRefIdx < iNumRefIdx; iRefIdx++)
+            {
+              pcSlice->setRefPic(pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx), REF_PIC_LIST_1, iRefIdx);
+            }
+          }
+        }
+      }
+
+
+#endif
     if (pcSlice->getSliceType() != B_SLICE || !pcSlice->getSPS()->getUseLComb())
     {
       pcSlice->setNumRefIdx(REF_PIC_LIST_C, 0);
@@ -610,9 +684,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         uiStartCUAddrEntropySliceIdx++;
       }
-
+#if AHG_21_RPS
       pcSlice->setRPS(pcPic->getSlice(0)->getRPS());
       pcSlice->setRPSidx(pcPic->getSlice(0)->getRPSidx());
+#endif
 #if FINE_GRANULARITY_SLICES
       UInt uiDummyStartCUAddr;
       UInt uiDummyBoundingCUAddr;
@@ -996,7 +1071,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
     
     pcPic->setReconMark   ( true );
-
+#if !AHG_21_RPS
+#if REF_SETTING_FOR_LD
+      if ( pcPic->getSlice(0)->getSPS()->getUseNewRefSetting() )
+      {
+        if ( pcPic->getSlice(0)->isReferenced() )
+        {
+          pcPic->getSlice(0)->decodingRefMarkingForLD( rcListPic, pcPic->getSlice(0)->getSPS()->getMaxNumRefFrames(), pcPic->getSlice(0)->getPOC() );
+        }
+      }
+#endif
+#endif
     
     m_bFirst = false;
     m_iNumPicCoded++;
@@ -1004,7 +1089,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     /* logging: insert a newline at end of picture period */
     printf("\n");
     fflush(stdout);
-  
+#if !AHG_21_RPS
+    }
+    
+    // generalized B info.
+    if ( m_pcCfg->getHierarchicalCoding() == false && iDepth != 0 )
+      break;
+#endif
   }
   
   assert ( m_iNumPicCoded == iNumPicRcvd );
@@ -1103,14 +1194,34 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut )
 {
   assert( iNumPicRcvd > 0 );
+#if !AHG_21_RPS
+  Int i;
   
+  //  Set hierarchical B info.
+  m_iGopSize    = m_pcCfg->getGOPSize();
+  for( i=1 ; ; i++)
+  {
+    m_iHrchDepth = i;
+    if((m_iGopSize >> i)==0)
+    {
+      break;
+    }
+  }
+  
+  
+#endif
   //  Exception for the first frame
   if ( iPOCLast == 0 )
   {
     m_iGopSize    = 1;
+#if !AHG_21_RPS
+    m_iHrchDepth  = 1;
+#endif
   }
+#if AHG_21_RPS
   else
     m_iGopSize    = m_pcCfg->getGOPSize();
+#endif
   
   assert (m_iGopSize > 0); 
 

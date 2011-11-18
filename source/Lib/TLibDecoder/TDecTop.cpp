@@ -91,7 +91,9 @@ Void TDecTop::destroy()
   m_apcSlicePilot = NULL;
   
   m_cSliceDecoder.destroy();
+#if AHG_21_RPS
   m_cRPSList.destroy();
+#endif
 }
 
 Void TDecTop::init()
@@ -148,9 +150,11 @@ Void TDecTop::xUpdateGopSize (TComSlice* pcSlice)
 Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 {
   xUpdateGopSize(pcSlice);
-  
+#if AHG_21_RPS
   m_iMaxRefPicNum = pcSlice->getSPS()->getMaxNumberOfReferencePictures()+pcSlice->getSPS()->getMaxNumberOfReorderPictures() + 1; // +1 to have space for the picture currently being decoded
-  
+#else
+  m_iMaxRefPicNum = max(m_iMaxRefPicNum, max(max(2, pcSlice->getNumRefIdx(REF_PIC_LIST_0)+1), m_iGopSize/2 + 2 + pcSlice->getNumRefIdx(REF_PIC_LIST_0)));
+#endif
   if (m_cListPic.size() < (UInt)m_iMaxRefPicNum)
   {
     rpcPic = new TComPic();
@@ -202,7 +206,16 @@ Void TDecTop::executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic
   TComPic*&   pcPic         = m_pcPic;
 
   // Execute Deblock and ALF only + Cleanup
+
+#if AHG_21_RPS
   m_cGopDecoder.decompressGop(NULL, pcPic, true);
+#else
+#if REF_SETTING_FOR_LD
+  m_cGopDecoder.decompressGop(NULL, pcPic, true, m_cListPic );
+#else
+  m_cGopDecoder.decompressGop(NULL, pcPic, true);
+#endif
+#endif
 
   // Apply decoder picture marking at the end of coding
   pcPic->getSlice( 0 )->decodingTLayerSwitchingMarking( m_cListPic );
@@ -215,7 +228,7 @@ Void TDecTop::executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic
 
   return;
 }
-
+#if AHG_21_RPS
 Void TDecTop::xCreateLostPicture(Int iLostPoc) 
 {
   printf("\ninserting lost poc : %d\n",iLostPoc);
@@ -264,7 +277,7 @@ Void TDecTop::xCreateLostPicture(Int iLostPoc)
     m_uiPOCRA = iLostPoc;
   }
 }
-
+#endif
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 {
   TComPic*&   pcPic         = m_pcPic;
@@ -317,7 +330,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       pcNewPPS = getNewPPSBuffer();
 #if SUB_LCU_DQP
       pcNewPPS->setSPS(&m_cSPS);
+#if AHG_21_RPS
       pcNewPPS->setRPSList(&m_cRPSList);
+#endif
 #endif
       m_cEntropyDecoder.decodePPS( pcNewPPS );
       if(pcNewPPS->getSharedPPSInfoEnabled())
@@ -331,7 +346,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 #else
 #if SUB_LCU_DQP
       m_cPPS.setSPS(&m_cSPS);
+#if AHG_21_RPS
       m_cPPS.setRPSList(&m_cRPSList);
+#endif
 #endif
       m_cEntropyDecoder.decodePPS( &m_cPPS );
 #endif
@@ -379,7 +396,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
       m_apcSlicePilot->setNalUnitType(nalu.m_UnitType);
       m_apcSlicePilot->setReferenced(nalu.m_RefIDC != NAL_REF_IDC_PRIORITY_LOWEST);
+#if AHG_21_RPS
       m_apcSlicePilot->setTLayerInfo(nalu.m_TemporalID);
+#endif
       m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot);
 
       if ( m_apcSlicePilot->getSymbolMode() )
@@ -392,12 +411,15 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
           assert( bitsForByteAlignment == ( ( 1 << numBitsForByteAlignment ) - 1 ) );
         }
       }
-      
+#if AHG_21_RPS
       //detect lost reference picture and insert copy of earlier frame.
       while(m_apcSlicePilot->checkThatAllRefPicsAreAvailable(m_cListPic, m_apcSlicePilot->getRPS(), true) > 0)
       {
         xCreateLostPicture(m_apcSlicePilot->checkThatAllRefPicsAreAvailable(m_cListPic, m_apcSlicePilot->getRPS(), false)-1);
       }
+#else
+      m_apcSlicePilot->setTLayerInfo(nalu.m_TemporalID);
+#endif
       if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_uiPrevPOC && !m_bFirstSliceInSequence)
       {
         m_uiPrevPOC = m_apcSlicePilot->getPOC();
@@ -419,9 +441,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       {
         // Buffer initialize for prediction.
         m_cPrediction.initTempBuff();
-
+#if AHG_21_RPS
         m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
-
+#endif
         //  Get a new picture buffer
         xGetNewPicBuffer (m_apcSlicePilot, pcPic);
         
@@ -555,8 +577,15 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       pcPic->setCurrSliceIdx(m_uiSliceIdx);
 
       //  Decode a picture
+#if AHG_21_RPS
       m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
-
+#else
+#if REF_SETTING_FOR_LD
+      m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false, m_cListPic );
+#else
+      m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
+#endif
+#endif
       m_bFirstSliceInPicture = false;
       m_uiSliceIdx++;
     }

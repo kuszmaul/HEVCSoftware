@@ -111,7 +111,9 @@ TComSlice::TComSlice()
     m_aiRefPOCList  [0][iNumCount] = 0;
     m_aiRefPOCList  [1][iNumCount] = 0;
   }
+#if  AHG_21_RPS
   m_bCombineWithReferenceFlag = 0;
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -697,9 +699,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_bNextSlice                    = pSrc->m_bNextSlice;
   m_bNextEntropySlice             = pSrc->m_bNextEntropySlice;
 }
-
+#if  AHG_21_RPS
 int TComSlice::m_iPrevPOC = 0;
-
+#endif
 /** Function for setting the slice's temporal layer ID and corresponding temporal_layer_switching_point_flag.
  * \param uiTLayer Temporal layer ID of the current slice
  * The decoder calls this function to set temporal_layer_switching_point_flag for each temporal layer based on 
@@ -729,6 +731,7 @@ Void TComSlice::setTLayerInfo( UInt uiTLayer )
   m_bTLayerSwitchingFlag = m_pcPPS->getTLayerSwitchingFlag( uiTLayer );
 }
 
+#if  AHG_21_RPS
 /** Function for applying picture marking based on the Reference Picture Set in pReferencePictureSet.
 */
 Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet)
@@ -867,7 +870,57 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   this->setRPSidx(-1);
 }
 
+#else
+/** Function for mimicking decoder's reference picture buffer management.
+ * \param rcListPic List of picture buffers
+ * \param iGOPSIze Current GOP size
+ * \param iMaxRefPicNum Maximum number of reference pictures allowed
+ * The encoder calls this function to mimic the picture buffer management of the decoder in the function xGetNewPicBuffer.
+ * This will ensure in the encoder that the pictures that does not exist in the decoder will not be used as reference.
+ * TODO: This assumes that the new pics are added at the end of the list.
+ *       This needs to be changed for the general case including for the long-term ref pics.
+ *       In the future, we should create a single common function for both the encoder and decoder.
+ */
+Void TComSlice::decodingMarking( TComList<TComPic*>& rcListPic, Int iGOPSIze, Int& iMaxRefPicNum )
+{
+  Int iActualNumOfReference = 0;
 
+  TComList<TComPic*>::iterator iterPic = rcListPic.begin();
+  while ( iterPic != rcListPic.end() )
+  {
+    TComPic* rpcPic = *(iterPic);
+    if ( rpcPic->getSlice( 0 )->isReferenced() && rpcPic->getReconMark() ) 
+    {
+      if ( rpcPic != getPic() )
+      {
+        iActualNumOfReference++;
+      }
+    }
+    iterPic++;
+  }
+
+  // TODO: This assumes that the new pics are added at the end of the list
+  // This needs to be changed for the general case including for the long-term ref pics
+  iMaxRefPicNum = max(iMaxRefPicNum, max(max(2, getNumRefIdx(REF_PIC_LIST_0)+1), iGOPSIze/2 + 2 + getNumRefIdx(REF_PIC_LIST_0)));
+  if ( iActualNumOfReference >= iMaxRefPicNum )
+  {
+    Int iNumToBeReset = iActualNumOfReference - iMaxRefPicNum + 1;
+
+    iterPic = rcListPic.begin();
+    while ( iterPic != rcListPic.end() && iNumToBeReset > 0 )
+    {
+      TComPic* rpcPic = *(iterPic);
+      if ( rpcPic->getSlice( 0 )->isReferenced() ) 
+      {
+        rpcPic->getSlice( 0 )->setReferenced( false );
+        iNumToBeReset--;
+      }
+      iterPic++;
+    }
+  }
+}
+
+#endif
 /** Function for marking reference pictures with higher temporal layer IDs as not used if the current picture is a temporal layer switching point.
  * \param rcListPic List of picture buffers
  * Both the encoder and decoder call this function to mark reference pictures with temporal layer ID higher than current picture's temporal layer ID as not used.
@@ -891,8 +944,60 @@ Void TComSlice::decodingTLayerSwitchingMarking( TComList<TComPic*>& rcListPic )
   }
 }
 
+#if  !AHG_21_RPS
+#if REF_SETTING_FOR_LD
+Int TComSlice::getActualRefNumber( TComList<TComPic*>& rcListPic )
+{
+  Int iActualNumOfReference = 0;
 
+  TComList<TComPic*>::iterator iterPic = rcListPic.begin();
+  while ( iterPic != rcListPic.end() )
+  {
+    TComPic* rpcPic = *(iterPic);
+    if ( rpcPic->getSlice( 0 )->isReferenced() && rpcPic->getReconMark() ) 
+    {
+      iActualNumOfReference++;
+    }
+    iterPic++;
+  }
 
+  return iActualNumOfReference;
+}
+
+Void TComSlice::decodingRefMarkingForLD( TComList<TComPic*>& rcListPic, Int iMaxNumRefFrames, Int iCurrentPOC )
+{
+  assert( iMaxNumRefFrames >= 1 );
+  while( getActualRefNumber( rcListPic ) > iMaxNumRefFrames )
+  {
+    sortPicList( rcListPic );
+    TComList<TComPic*>::iterator it = rcListPic.begin();
+    while( it != rcListPic.end() )
+    {
+      if ( (*it)->getSlice(0)->isReferenced() && (*it)->getSlice(0)->getPOC() != iCurrentPOC && (*it)->getSlice(0)->getPOC() % 4 != 0 )
+      {
+        (*it)->getSlice(0)->setReferenced( false );   // mark POC%4!=0 as unused for reference
+        break;
+      }
+      it++;
+    }
+    if ( it == rcListPic.end() )  // all the reference frames POC%4== 0, mark the first reference frame as unused for reference
+    {
+      it = rcListPic.begin();
+      while( it != rcListPic.end() )
+      {
+        if ( (*it)->getSlice(0)->isReferenced() )
+        {
+          (*it)->getSlice(0)->setReferenced( false );
+          break;
+        }
+        it++;
+      }
+    }
+  }
+}
+#endif
+
+#endif
 // ------------------------------------------------------------------------------------------------
 // Sequence parameter set (SPS)
 // ------------------------------------------------------------------------------------------------
@@ -940,7 +1045,9 @@ TComSPS::TComSPS()
 #if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
 , m_bPCMFilterDisableFlag     (false)
 #endif
+#if  AHG_21_RPS
 , m_uiBitsForPOC              (  8)
+#endif
 , m_uiMaxTrSize               ( 32)
 #if MTK_NONCROSS_INLOOP_FILTER
 , m_bLFCrossSliceBoundaryFlag (false)
@@ -949,7 +1056,12 @@ TComSPS::TComSPS()
 , m_bUseSAO                   (false) 
 #endif
 , m_bTemporalIdNestingFlag    (false)
-
+#if  !AHG_21_RPS
+#if REF_SETTING_FOR_LD
+, m_bUseNewRefSetting         (false)
+, m_uiMaxNumRefFrames         (  0)
+#endif
+#endif
 {
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );
@@ -968,8 +1080,10 @@ TComPPS::TComPPS()
 , m_uiMaxCuDQPDepth             (0)
 , m_uiMinCuDQPSize              (0)
 #endif
+#if AHG_21_RPS
 , m_bLongTermRefsPresent        (false)
 , m_uiBitsForLongTermRefs       (0)
+#endif
 , m_uiNumTlayerSwitchingFlags   (0)
 #if FINE_GRANULARITY_SLICES
 , m_iSliceGranularity           (0)
@@ -987,7 +1101,7 @@ TComPPS::TComPPS()
 TComPPS::~TComPPS()
 {
 }
-
+#if AHG_21_RPS
 
 TComReferencePictureSet::TComReferencePictureSet()
 {
@@ -1096,7 +1210,7 @@ UInt TComBDS::getNumberOfReferencePictureSets()
 
 Void TComBDS::setNumberOfReferencePictureSets(UInt uiNumberOfReferencePictureSets)
 {
-   m_uiNumberOfReferencePictureSets = m_uiNumberOfReferencePictureSets;
+   m_uiNumberOfReferencePictureSets = uiNumberOfReferencePictureSets;
 }
-
+#endif
 //! \}
