@@ -34,8 +34,9 @@
 /** \file     TEncCavlc.cpp
     \brief    CAVLC encoder class
 */
-
+#if AHG_21_RPS
 #include "../TLibCommon/CommonDef.h"
+#endif
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
 
@@ -296,14 +297,38 @@ void TEncCavlc::codeSEI(const SEI& sei)
 {
   writeSEImessage(*m_pcBitIf, sei);
 }
-
+#if AHG_21_RPS
+Void TEncCavlc::xWriteRPS( TComPPS* pcPPS, TComReferencePictureSet* pcRPS )
+{
+  xWriteUvlc(pcRPS->getNumberOfNegativePictures()); // number of negative pictures in Reference Picture Set
+  Int prev = 0;
+  for(Int j=0 ; j < pcRPS->getNumberOfNegativePictures(); j++)
+  {
+    xWriteUvlc(prev-pcRPS->getDeltaPOC(j)-1); // n_absolute_delta_poc_minus_one
+    prev = pcRPS->getDeltaPOC(j);
+    xWriteCode(pcRPS->getUsed(j), 1); //n_temporal_id
+  }      
+  if(pcPPS->getReorderPicturesAllowedFlag())
+  {
+    xWriteUvlc(pcRPS->getNumberOfPositivePictures()); // number of negative pictures in Reference Picture Set
+    prev = 0;
+    for(Int j=pcRPS->getNumberOfNegativePictures(); j < pcRPS->getNumberOfNegativePictures()+pcRPS->getNumberOfPositivePictures(); j++)
+    {
+      xWriteUvlc(pcRPS->getDeltaPOC(j)-prev-1); // p_absolute_delta_poc_minus_one
+      prev = pcRPS->getDeltaPOC(j);
+      xWriteCode(pcRPS->getUsed(j), 1); //p_temporal_id
+    }
+  }
+}
+#endif
 Void TEncCavlc::codePPS( TComPPS* pcPPS )
 {
 #if ENC_DEC_TRACE  
   xTracePPSHeader (pcPPS);
 #endif
+#if AHG_21_RPS
    TComBDS* pcRPSList = pcPPS->getRPSList();
-
+#endif
   
   WRITE_UVLC( pcPPS->getPPSId(),                             "pic_parameter_set_id" );
   WRITE_UVLC( pcPPS->getSPSId(),                             "seq_parameter_set_id" );
@@ -328,8 +353,8 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   //       alf_param( )
   //   if( cu_qp_delta_enabled_flag )
   //     max_cu_qp_delta_depth
-  UInt i,j,offset;
-  Int prev;
+#if AHG_21_RPS
+  UInt i;
   TComReferencePictureSet*      pcRPS;
 
   UInt num_of_entries = pcRPSList->getNumberOfReferencePictureSets();
@@ -339,32 +364,14 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   for(i=0; i < num_of_entries; i++)
   {
     pcRPS = pcRPSList->getReferencePictureSet(i);
-    xWriteUvlc(pcRPS->getNumberOfNegativePictures()); // number of negative pictures in Reference Picture Set
-    prev = 0;
-    for(j=0 ; j < pcRPS->getNumberOfNegativePictures(); j++)
-    {
-      xWriteUvlc(prev-pcRPS->getDeltaPOC(j)-1); // n_absolute_delta_poc_minus_one
-      prev = pcRPS->getDeltaPOC(j);
-      xWriteCode(pcRPS->getUsed(j), 1); //n_temporal_id
-    }      
-    if(pcPPS->getReorderPicturesAllowedFlag())
-    {
-      xWriteUvlc(pcRPS->getNumberOfPositivePictures()); // number of negative pictures in Reference Picture Set
-      offset = pcRPS->getNumberOfNegativePictures();
-      prev = 0;
-      for(j=offset; j < offset+pcRPS->getNumberOfPositivePictures(); j++)
-      {
-        xWriteUvlc(pcRPS->getDeltaPOC(j)-prev-1); // p_absolute_delta_poc_minus_one
-        prev = pcRPS->getDeltaPOC(j);
-        xWriteCode(pcRPS->getUsed(j), 1); //p_temporal_id
-      }
-    }
+    xWriteRPS(pcPPS,pcRPS);
   }
   WRITE_FLAG( pcPPS->getLongTermRefsPresent() , "long_term_ref_pics_present_flag");
   if(pcPPS->getLongTermRefsPresent())
   {
     WRITE_UVLC( pcPPS->getBitsForLongTermRefs()-4 , "delta_poc_lt_len_minus4" );
   }
+#endif
 #if SUB_LCU_DQP
   if( pcPPS->getSPS()->getUseDQP() )
   {
@@ -403,7 +410,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_CODE( pcSPS->getPCMBitDepthLuma() - 1, 4,   "pcm_bit_depth_luma_minus1" );
   WRITE_CODE( pcSPS->getPCMBitDepthChroma() - 1, 4, "pcm_bit_depth_chroma_minus1" );
 #endif
+#if AHG_21_RPS
   WRITE_UVLC( pcSPS->getBitsForPOC()-4,             "log2_max_pic_order_cnt_lsb_minus4" );
+#endif
 #if DISABLE_4x4_INTER
   xWriteFlag  ( (pcSPS->getDisInter4x4()) ? 1 : 0 );
 #endif  
@@ -461,11 +470,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   
   xWriteUvlc  ( pcSPS->getPad (0) );
   xWriteUvlc  ( pcSPS->getPad (1) );
-
+#if AHG_21_RPS
   xWriteUvlc( pcSPS->getMaxNumberOfReferencePictures()); 
   xWriteUvlc( pcSPS->getMaxNumberOfReorderPictures()); 
   // Tools
-  
+#else
+  xWriteFlag  ( (pcSPS->getUseLDC ()) ? 1 : 0 );
+#endif
   xWriteFlag  ( (pcSPS->getUseMRG ()) ? 1 : 0 ); // SOPH:
   
   // AMVP mode for each depth
@@ -473,7 +484,16 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
     xWriteFlag( pcSPS->getAMVPMode(i) ? 1 : 0);
   }
-
+#if !AHG_21_RPS
+#if REF_SETTING_FOR_LD
+  // these syntax elements should not be sent at SPS when the full reference frame management is supported
+  xWriteFlag( pcSPS->getUseNewRefSetting() ? 1 : 0 );
+  if ( pcSPS->getUseNewRefSetting() )
+  {
+    xWriteUvlc( pcSPS->getMaxNumRefFrames() );
+  }
+#endif
+#endif
 }
 
 Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
@@ -481,12 +501,17 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #if ENC_DEC_TRACE  
   xTraceSliceHeader (pcSlice);
 #endif
+  
   Bool bEntropySlice = (!pcSlice->isNextSlice());
+#if AHG_21_RPS
   WRITE_FLAG( bEntropySlice ? 1 : 0, "entropy_slice_flag" );
-
+#else
+  WRITE_FLAG( bEntropySlice ? 1 : 0, "lightweight_slice_flag" );
+#endif
+  
   if (!bEntropySlice)
   {
-
+#if AHG_21_RPS
     //xWriteUvlc  (pcSlice->getSliceType() );
     if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) //should check for IDR
     {
@@ -506,33 +531,9 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       {
         xWriteCode  (0, 1 );   //  explict Reference Picture Set
 
-        Int i,j;
-        UInt prev;
-        Int offset;
+        Int i;
         TComReferencePictureSet* pcRPS = pcSlice->getRPS();
-
-        offset = 0; //pcRPS->getNumberOfLongtermPictures();
-
-        xWriteUvlc(pcRPS->getNumberOfNegativePictures()); // number of negative pictures in Reference Picture Set
-        prev = 0;
-        for(j=offset ; j < offset+pcRPS->getNumberOfNegativePictures(); j++)
-        {
-          xWriteUvlc(prev-pcRPS->getDeltaPOC(j)-1); // n_absolute_delta_poc_minus_one
-          prev = pcRPS->getDeltaPOC(j);
-          xWriteCode(pcRPS->getUsed(j), 1); //n_temporal_id
-        }      
-        offset += pcRPS->getNumberOfNegativePictures();
-        if(pcSlice->getPPS()->getReorderPicturesAllowedFlag())
-        {
-          xWriteUvlc(pcRPS->getNumberOfPositivePictures()); // number of negative pictures in Reference Picture Set
-          prev = 0;
-          for(j=offset; j < offset+pcRPS->getNumberOfPositivePictures(); j++)
-          {
-            xWriteUvlc(pcRPS->getDeltaPOC(j)-prev-1); // p_absolute_delta_poc_minus_one
-            prev = pcRPS->getDeltaPOC(j);
-            xWriteCode(pcRPS->getUsed(j), 1); //p_temporal_id
-          }
-        }
+        xWriteRPS(pcSlice->getPPS(), pcRPS);
         xWriteUvlc(pcRPS->getNumberOfLongtermPictures()); // number of longterm pictures
         for(i=pcRPS->getNumberOfPictures()-1 ; i > pcRPS->getNumberOfPictures()-1-pcRPS->getNumberOfLongtermPictures(); i--)
         {
@@ -541,9 +542,26 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         }
       }
     }
+#endif
     WRITE_UVLC( pcSlice->getSliceType(),       "slice_type" );
     WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "pic_parameter_set_id" );
-
+#if !AHG_21_RPS
+    // frame_num
+    // if( IdrPicFlag )
+    //   idr_pic_id
+    // if( pic_order_cnt_type  = =  0 )
+    //   pic_order_cnt_lsb  
+    WRITE_CODE( pcSlice->getPOC(), 10, "pic_order_cnt_lsb" );   //  9 == SPS->Log2MaxFrameNum
+    // if( slice_type  = =  P  | |  slice_type  = =  B ) {
+    //   num_ref_idx_active_override_flag
+    //   if( num_ref_idx_active_override_flag ) {
+    //     num_ref_idx_l0_active_minus1
+    //     if( slice_type  = =  B )
+    //       num_ref_idx_l1_active_minus1
+    //   }
+    // }
+    
+#endif
     // we always set num_ref_idx_active_override_flag equal to one. this might be done in a more intelligent way 
     if (!pcSlice->isIntra())
     {

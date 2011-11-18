@@ -125,10 +125,12 @@ Void TAppDecTop::decode()
     {
       InputNALUnit nalu;
       read(nalu, nalUnit);
+#if AHG_21_RPS
       if(m_iMaxTemporalLayer>=0&&nalu.m_TemporalID>m_iMaxTemporalLayer)
       {
         continue;
       }
+#endif
       bNewPicture = m_cTDecTop.decode(nalu, m_iSkipFrame, m_iPOCLastDisplay);
       if (bNewPicture)
       {
@@ -161,8 +163,9 @@ Void TAppDecTop::decode()
     }
   }
   
+#if AHG_21_RPS
   xFlushOutput( pcListPic );
-  
+#endif
   // delete buffers
   m_cTDecTop.deletePicBuffer();
   
@@ -204,7 +207,7 @@ Void TAppDecTop::xInitDecLib()
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic )
 {
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
-
+#if AHG_21_RPS
   Int not_displayed = 0;
 
   while (iterPic != pcListPic->end())
@@ -215,18 +218,24 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic )
     iterPic++;
   }
   iterPic   = pcListPic->begin();
+#endif
   
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
-
+#if AHG_21_RPS
     if ( pcPic->getReconMark() && not_displayed >  m_cTDecTop.getSPS()->getMaxNumberOfReorderPictures() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
       // write to file
        not_displayed--;
        
       if ( m_pchReconFile )
+#else
+    if ( pcPic->getReconMark() && pcPic->getPOC() == (m_iPOCLastDisplay + 1) )
+#endif
       {
+#if AHG_21_RPS
+
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
       }
       
@@ -272,8 +281,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 
     if ( pcPic->getReconMark() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
+#endif
       // write to file
-       
       if ( m_pchReconFile )
       {
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );

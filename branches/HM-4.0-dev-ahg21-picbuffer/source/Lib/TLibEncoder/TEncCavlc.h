@@ -181,6 +181,9 @@ protected:
   Void  xWriteUnaryMaxSymbol  ( UInt uiSymbol, UInt uiMaxSymbol );
   Void  xWriteVlc             ( UInt uiTableNumber, UInt uiCodeNumber );
 
+#if AHG_21_RPS
+  Void xWriteRPS              ( TComPPS* pcPPS, TComReferencePictureSet* pcRPS );
+#endif
 #if CAVLC_COEF_LRG_BLK
   Void  xCodeCoeff             ( TCoeff* scoeff, Int blockType, Int blSize
 #if CAVLC_RUNLEVEL_TABLE_REM
