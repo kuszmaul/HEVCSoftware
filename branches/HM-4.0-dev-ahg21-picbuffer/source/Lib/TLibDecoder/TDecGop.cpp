@@ -427,6 +427,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
         }
       }
 #endif
+#endif
 #if MTK_NONCROSS_INLOOP_FILTER
     uiILSliceCount = 0;
 #endif
