@@ -81,9 +81,7 @@ typedef struct
   Int levelQ;
   Bool lowerInt;
   UInt quantInd;
-#if CAVLC_RDOQ_MOD
   Int iNextRun;
-#endif
 } levelDataStruct;
 
 typedef struct
@@ -158,11 +156,7 @@ public:
   // transform & inverse transform functions
   Void transformNxN         ( TComDataCU* pcCU, Pel*   pcResidual, UInt uiStride, TCoeff* rpcCoeff, UInt uiWidth, UInt uiHeight,
                              UInt& uiAbsSum, TextType eTType, UInt uiAbsPartIdx );
-#if INTRA_DST_TYPE_7
   Void invtransformNxN      (TextType eText, UInt uiMode,Pel* rpcResidual, UInt uiStride, TCoeff*   pcCoeff, UInt uiWidth, UInt uiHeight);
-#else
-  Void invtransformNxN      ( Pel* rpcResidual, UInt uiStride, TCoeff*   pcCoeff, UInt uiWidth, UInt uiHeight );
-#endif
   Void invRecurTransformNxN ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTxt, Pel* rpcResidual, UInt uiAddr,   UInt uiStride, UInt uiWidth, UInt uiHeight,
                              UInt uiMaxTrMode,  UInt uiTrMode, TCoeff* rpcCoeff );
   
@@ -199,84 +193,32 @@ protected:
   
   UInt     *m_uiLPTableE8;
   UInt     *m_uiLPTableE4;
+#if !DISABLE_CAVLC 
   Int      m_iSymbolMode;
+#endif
   UInt     *m_uiLastPosVlcIndex;
   
 private:
   // forward Transform
-#if INTRA_DST_TYPE_7
 #if NSQT
   Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, Int* plCoeff, Int iWidth, Int iHeight );
 #else
   Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, Int* plCoeff, Int iSize );
-#endif
-#else
-#if NSQT
-  Void xT   ( Pel* pResidual, UInt uiStride, Int* plCoeff, Int iWidth, Int iHeight );
-#else
-  Void xT   ( Pel* pResidual, UInt uiStride, Int* plCoeff, Int iSize );
-#endif
 #endif
   
   // quantization
   Void xQuant( TComDataCU* pcCU, Int* pSrc, TCoeff* pDes, Int iWidth, Int iHeight, UInt& uiAcSum, TextType eTType, UInt uiAbsPartIdx );
 
   // RDOQ functions
-#if CAVLC_RDOQ_MOD
   Int            xCodeCoeffCountBitsLast(TCoeff* scoeff, levelDataStruct* levelData, Int nTab, UInt uiNoCoeff, Int iStartLast
-#if CAVLC_RUNLEVEL_TABLE_REM
                                         , Int isIntra
-#endif
                                         );
-#else
-  Int            xCodeCoeffCountBitsLast(TCoeff* scoeff, levelDataStruct* levelData, Int nTab, UInt uiNoCoeff
-#if CAVLC_RUNLEVEL_TABLE_REM
-                                        , Int isIntra
-#endif
-                                        );
-#endif
   UInt           xCountVlcBits(UInt uiTableNumber, UInt uiCodeNumber);
-#if CAVLC_COEF_LRG_BLK
-#if CAVLC_RDOQ_MOD
-#if TBL_RUN_ADAPT
   Int            bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,Int levelMode,Int run, Int maxrun, Int* vlc_adaptive, Int N, 
                               UInt uiTr1, Int iSum_big_coef, Int iBlockType, TComDataCU* pcCU, const UInt **pLumaRunTr1, Int iNextRun
-#if CAVLC_RUNLEVEL_TABLE_REM
                               , Int isIntra
-#endif
                               );
-#else
-  Int            bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,Int levelMode,Int run, Int maxrun, Int vlc_adaptive, Int N, 
-                              UInt uiTr1, Int iSum_big_coef, Int iBlockType, TComDataCU* pcCU, const UInt **pLumaRunTr1, Int iNextRun
-#if CAVLC_RUNLEVEL_TABLE_REM
-                              , Int isIntra
-#endif
-                              );
-#endif
-#else
-#if TBL_RUN_ADAPT
-  Int            bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,Int levelMode,Int run, Int maxrun, Int *vlc_adaptive, Int N, 
-                              UInt uiTr1, Int iSum_big_coef, Int iBlockType, TComDataCU* pcCU, const UInt **pLumaRunTr1
-#if CAVLC_RUNLEVEL_TABLE_REM
-                              , Int isIntra
-#endif
-                              );
-#else
-  Int            bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,Int levelMode,Int run, Int maxrun, Int vlc_adaptive, Int N, 
-                              UInt uiTr1, Int iSum_big_coef, Int iBlockType, TComDataCU* pcCU, const UInt **pLumaRunTr1
-#if CAVLC_RUNLEVEL_TABLE_REM
-                              , Int isIntra
-#endif
-                              );
-#endif
-#endif
-#else
-  Int            bitCountRDOQ(Int coeff, Int pos, Int nTab, Int lastCoeffFlag,Int levelMode,Int run, Int maxrun, Int vlc_adaptive, Int N, 
-                              UInt uiTr1, Int iSum_big_coef, Int iBlockType, TComDataCU* pcCU);
-#endif
-#if QC_MDCS
 UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
-#endif
   Void           xRateDistOptQuant_LCEC ( TComDataCU*                     pcCU,
                                           Int*                            plSrcCoeff,
                                           TCoeff*                         piDstCoeff,
@@ -294,7 +236,6 @@ UInt             getCurrLineNum(UInt uiScanIdx, UInt uiPosX, UInt uiPosY);
                                      UInt&                           uiAbsSum,
                                      TextType                        eTType,
                                      UInt                            uiAbsPartIdx );
-#if UNIFIED_SCAN
 __inline UInt              xGetCodedLevel  ( Double&                         rd64CodedCost,
                                              Double&                         rd64CodedCost0,
                                              Double&                         rd64CodedCostSig,
@@ -307,33 +248,13 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                              Int                             iQBits,
                                              Double                          dTemp,
                                              Bool                            bLast        ) const;
-#else
-  __inline UInt  xGetCodedLevel    ( Double&                         rd64UncodedCost,
-                                     Double&                         rd64CodedCost,
-                                     Double&                         rd64CodedLastCost,
-                                     UInt&                           ruiBestNonZeroLevel,
-                                     Int                             lLevelDouble,
-                                     UInt                            uiMaxAbsLevel,
-                                     UShort                          ui16CtxNumSig,
-                                     UShort                          ui16CtxNumOne,
-                                     UShort                          ui16CtxNumAbs,
-                                     UShort                          ui16AbsGoRice,
-                                     Int                             iQBits,
-                                     Double                          dTemp
-                                    ) const;
-#endif
   __inline Double xGetICRateCost   ( UInt                            uiAbsLevel,
                                      UShort                          ui16CtxNumOne,
                                      UShort                          ui16CtxNumAbs,
                                      UShort                          ui16AbsGoRice ) const;
-#if MODIFIED_LAST_CODING
   __inline Double xGetRateLast     ( const UInt                      uiPosX,
                                      const UInt                      uiPosY,
                                      const UInt                      uiBlkWdth     ) const;
-#else
-  __inline Double xGetRateLast     ( UInt                            uiPosX,
-                                     UInt                            uiPosY        ) const;
-#endif
   __inline Double xGetRateSigCoef (  UShort                          uiSignificance,
                                      UShort                          ui16CtxNumSig ) const;
   __inline Double xGetICost        ( Double                          dRate         ) const; 
@@ -344,18 +265,10 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
   Void xDeQuant( const TCoeff* pSrc,     Int* pDes,       Int iWidth, Int iHeight );
   
   // inverse transform
-#if INTRA_DST_TYPE_7
 #if NSQT
   Void xIT    ( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 #else
   Void xIT    ( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, Int iSize );
-#endif
-#else
-#if NSQT
-  Void xIT    ( Int* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
-#else
-  Void xIT    ( Int* plCoef, Pel* pResidual, UInt uiStride, Int iSize );
-#endif
 #endif
   
 };// END CLASS DEFINITION TComTrQuant
