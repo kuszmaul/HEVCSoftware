@@ -44,10 +44,8 @@
 #include "TLibCommon/ContextModel.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComTrQuant.h"
-#if E045_SLICE_COMMON_INFO_SHARING
 #include "TLibCommon/TComAdaptiveLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
-#endif
 
 class TEncSbac;
 class TEncCavlc;
@@ -102,9 +100,7 @@ public:
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   
-#if E057_INTRA_PCM
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
 
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
   virtual Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
@@ -118,16 +114,14 @@ public:
   virtual Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
   virtual Void codeBlockCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD = false) = 0;
-#if CAVLC_RQT_CBP
   virtual Void codeCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual UInt xGetFlagPattern   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
   virtual Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType ) = 0;
   
   virtual Void codeAlfFlag          ( UInt uiCode ) = 0;
   virtual Void codeAlfUvlc          ( UInt uiCode ) = 0;
   virtual Void codeAlfSvlc          ( Int   iCode ) = 0;
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
+#if FINE_GRANULARITY_SLICES
   /// set slice granularity
   virtual Void setSliceGranularity(Int iSliceGranularity) = 0;
 
@@ -135,12 +129,8 @@ public:
   virtual Int  getSliceGranularity()                      = 0;
 #endif
 
-#if MTK_NONCROSS_INLOOP_FILTER
   /// Code number of ALF CU control flags
   virtual Void codeAlfFlagNum       ( UInt uiCode, UInt minValue, Int iDepth) = 0;
-#else
-  virtual Void codeAlfFlagNum       ( UInt uiCode, UInt minValue ) = 0;
-#endif
   virtual Void codeAlfCtrlFlag      ( UInt uiSymbol ) = 0;
 #if SAO
   virtual Void codeSaoFlag          ( UInt uiCode ) = 0;
@@ -212,14 +202,9 @@ public:
   Void encodeMvdPU        ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
-#if HHI_MRG_SKIP
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
-#else
-  Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
-#endif
   Void encodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 
-#if MTK_NONCROSS_INLOOP_FILTER
 #if FINE_GRANULARITY_SLICES
   /// set slice granularity
   Void setSliceGranularity (Int iSliceGranularity) {m_pcEntropyCoderIf->setSliceGranularity(iSliceGranularity);}
@@ -227,24 +212,17 @@ public:
 
   /// encode ALF CU control flag
   Void encodeAlfCtrlFlag(UInt uiFlag);
-#endif
 
 #if F747_APS
   Void encodeAlfCtrlParam(AlfCUCtrlInfo& cAlfParam, Int iNumCUsInPic);
 #else
-#if E045_SLICE_COMMON_INFO_SHARING
   /// encode ALF CU control flags
   Void encodeAlfCtrlParam      ( ALFParam *pAlfParam, UInt uiNumSlices= 1, CAlfSlice* pcAlfSlice= NULL);
-#else
-  Void encodeAlfCtrlParam      ( ALFParam *pAlfParam );
-#endif
 #endif
 
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
-#if E057_INTRA_PCM
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
   Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   

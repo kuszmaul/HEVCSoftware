@@ -48,15 +48,15 @@ TComSlice::TComSlice()
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR )
 , m_eSliceType                    ( I_SLICE )
 , m_iSliceQp                      ( 0 )
+#if !DISABLE_CAVLC
 , m_iSymbolMode                   ( 1 )
+#endif
 , m_bLoopFilterDisable            ( false )
 , m_bDRBFlag                      ( true )
 , m_eERBIndex                     ( ERB_NONE )
 , m_bRefPicListModificationFlagLC ( false )
 , m_bRefPicListCombinationFlag    ( false )
-#if TMVP_ONE_LIST_CHECK
 , m_bCheckLDC                     ( false )
-#endif
 , m_iSliceQpDelta                 ( 0 )
 , m_iDepth                        ( 0 )
 , m_bRefenced                     ( false )
@@ -157,9 +157,7 @@ Void TComSlice::initSlice()
   m_bRefIdxCombineCoding = false;
   m_bRefPicListCombinationFlag = false;
   m_bRefPicListModificationFlagLC = false;
-#if TMVP_ONE_LIST_CHECK
   m_bCheckLDC = false;
-#endif
 
   m_aiNumRefIdx[REF_PIC_LIST_C]      = 0;
 
@@ -660,7 +658,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_eNalUnitType         = pSrc->m_eNalUnitType;
   m_eSliceType           = pSrc->m_eSliceType;
   m_iSliceQp             = pSrc->m_iSliceQp;
+#if !DISABLE_CAVLC
   m_iSymbolMode          = pSrc->m_iSymbolMode;
+#endif
   m_bLoopFilterDisable   = pSrc->m_bLoopFilterDisable;
   m_bDRBFlag             = pSrc->m_bDRBFlag;
   m_eERBIndex            = pSrc->m_eERBIndex;
@@ -686,9 +686,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   }
   m_bRefPicListModificationFlagLC = pSrc->m_bRefPicListModificationFlagLC;
   m_bRefPicListCombinationFlag    = pSrc->m_bRefPicListCombinationFlag;
-#if TMVP_ONE_LIST_CHECK
   m_bCheckLDC             = pSrc->m_bCheckLDC;
-#endif
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
   for (i = 0; i < 2; i++)
   {
@@ -1025,9 +1023,7 @@ TComSPS::TComSPS()
 , m_uiQuadtreeTUMaxDepthInter (  0)
 , m_uiQuadtreeTUMaxDepthIntra (  0)
 // Tool list
-#if E057_INTRA_PCM
 , m_uiPCMLog2MinSize          (  7)
-#endif
 #if DISABLE_4x4_INTER
 , m_bDisInter4x4              (  1)
 #endif    
@@ -1036,24 +1032,20 @@ TComSPS::TComSPS()
 , m_bUseLDC                   (false)
 , m_bUsePAD                   (false)
 , m_bUseMRG                   (false)
-#if LM_CHROMA 
 , m_bUseLMChroma              (false)
-#endif
 , m_bUseLComb                 (false)
 , m_bLCMod                    (false)
 , m_uiBitDepth                (  8)
 , m_uiBitIncrement            (  0)
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
 , m_uiPCMBitDepthLuma         (  8)
 , m_uiPCMBitDepthChroma       (  8)
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
 , m_bPCMFilterDisableFlag     (false)
 #endif
 , m_uiMaxTrSize               ( 32)
-#if MTK_NONCROSS_INLOOP_FILTER
 , m_bLFCrossSliceBoundaryFlag (false)
-#endif
 #if SAO
 , m_bUseSAO                   (false) 
 #endif
@@ -1087,19 +1079,15 @@ TComPPS::TComPPS()
 : m_PPSId                       (0)
 , m_SPSId                       (0)
 , m_bConstrainedIntraPred       (false)
-#if SUB_LCU_DQP
 , m_pcSPS                       (NULL)
 , m_uiMaxCuDQPDepth             (0)
 , m_uiMinCuDQPSize              (0)
-#endif
 , m_uiNumTlayerSwitchingFlags   (0)
 #if FINE_GRANULARITY_SLICES
 , m_iSliceGranularity           (0)
 #endif
 #if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
 , m_bSharedPPSInfoEnabled       (false)
-#endif
 #endif
 #if TILES
 , m_iColumnRowInfoPresent        (0)

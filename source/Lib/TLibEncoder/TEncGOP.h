@@ -109,12 +109,6 @@ private:
   UInt*                   m_uiStoredStartCUAddrForEncodingSlice;
   UInt*                   m_uiStoredStartCUAddrForEncodingEntropySlice;
 
-// #if MTK_NONCROSS_INLOOP_FILTER
-//   UInt                    m_uiILSliceCount;
-//   UInt*                   m_puiILSliceStartLCU;
-//   UInt*                   m_puiILSliceEndLCU;
-// #endif
-
 #if RVM_VCEGAM10
   std::vector<Int> m_vRVM_RP;
 #endif
@@ -172,7 +166,6 @@ protected:
 // ====================================================================================================================
 // Enumeration
 // ====================================================================================================================
-#if E045_SLICE_COMMON_INFO_SHARING
 enum PROCESSING_STATE
 {
   EXECUTE_INLOOPFILTER,
@@ -183,7 +176,6 @@ enum PROCESSING_STATE
 #endif
   ENCODE_SLICE
 };
-#endif
 
 //! \}
 
