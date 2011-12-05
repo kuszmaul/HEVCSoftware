@@ -60,14 +60,6 @@ private:
   Bool*     m_aapbEdgeFilter[2][3];
   LFCUParam m_stLFCUParam;                  ///< status structure
   
-#if (PARALLEL_DEBLK_DECISION && !PARALLEL_MERGED_DEBLK)
-  UInt m_decisions_D     [MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK][MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK];
-  UInt m_decisions_Sample[MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK][MAX_CU_SIZE];
-#if F118_LUMA_DEBLOCK
-  UInt m_decisions_DP     [MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK][MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK];
-  UInt m_decisions_DQ     [MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK][MAX_CU_SIZE/DEBLOCK_SMALLEST_BLOCK];
-#endif
-#endif
 #if PARALLEL_MERGED_DEBLK
   TComPicYuv m_preDeblockPic;
 #endif
@@ -122,75 +114,29 @@ protected:
   Void xSetEdgefilterMultiple( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdgeIdx, Bool bValue );
 #endif
   
-#if (PARALLEL_DEBLK_DECISION && !PARALLEL_MERGED_DEBLK)
-  Void xEdgeFilterLuma            ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdge, Int iDecideExecute);
-#else
   Void xEdgeFilterLuma            ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdge );
-#endif
   Void xEdgeFilterChroma          ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdge );
   
-#if (PARALLEL_DEBLK_DECISION && !PARALLEL_MERGED_DEBLK)
-  __inline Void xPelFilterLumaStrong    ( Pel* piSrc, Int iOffset, Pel m0, Pel m1, Pel m2, Pel m3, Pel m4, Pel m5, Pel m6, Pel m7);
-#if F118_LUMA_DEBLOCK
-  __inline Void xPelFilterLumaWeak      ( Pel* piSrc, Int iOffset, Int tc, Pel m1, Pel m2, Pel m3, Pel m4, Pel m5, Pel m6, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
-#else
-  __inline Void xPelFilterLumaWeak      ( Pel* piSrc, Int iOffset, Int tc, Pel m1, Pel m2, Pel m3, Pel m4, Pel m5, Pel m6);
-#endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
-#if F118_LUMA_DEBLOCK
-  __inline Void xPelFilterLumaExecution ( Pel* piSrc, Int iOffset, Int tc, Int strongFilter, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
-#else
-  __inline Void xPelFilterLumaExecution ( Pel* piSrc, Int iOffset, Int tc, Int strongFilter, Bool bPartPNoFilter, Bool bPartQNoFilter);
-#endif
-#else
-#if F118_LUMA_DEBLOCK
-  __inline Void xPelFilterLumaExecution ( Pel* piSrc, Int iOffset, Int tc, Int strongFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
-#else
-  __inline Void xPelFilterLumaExecution ( Pel* piSrc, Int iOffset, Int tc, Int strongFilter);
-#endif
-#endif
-  __inline Int  xPelFilterLumaDecision  ( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc);
-#endif
 #if PARALLEL_MERGED_DEBLK
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
-#if F118_LUMA_DEBLOCK
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
   __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Pel* piSrcJudge, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
 #else
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Pel* piSrcJudge, Bool bPartPNoFilter, Bool bPartQNoFilter);
-#endif
-#else
-#if F118_LUMA_DEBLOCK
   __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Pel* piSrcJudge, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
-#else
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Pel* piSrcJudge);
-#endif
 #endif
 #else
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
-#if F118_LUMA_DEBLOCK
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
   __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
 #else
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter);
-#endif
-#else
-#if F118_LUMA_DEBLOCK
   __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ );
-#else
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc );
 #endif
 #endif
-#endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
   __inline Void xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter);
 #else
   __inline Void xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc );
 #endif
-#if F118_LUMA_DEBLOCK
   __inline Int xCalcDP( Pel* piSrc, Int iOffset);
   __inline Int xCalcDQ( Pel* piSrc, Int iOffset);
-#else
-  __inline Int xCalcD( Pel* piSrc, Int iOffset);
-#endif
   
 public:
   TComLoopFilter();

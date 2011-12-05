@@ -112,12 +112,8 @@ public:
   Void  codeAlfSvlc       ( Int  uiCode );
   Void  codeAlfCtrlDepth  ();
 
-#if MTK_NONCROSS_INLOOP_FILTER
   /// Code number of ALF CU control flags
   Void codeAlfFlagNum        ( UInt uiCode, UInt minValue, Int iDepth);
-#else
-  Void codeAlfFlagNum        ( UInt uiCode, UInt minValue );
-#endif
 
   Void codeAlfCtrlFlag       ( UInt uiSymbol );
 #if SAO
@@ -133,14 +129,6 @@ private:
   Void  xWriteGoRiceExGolomb ( UInt uiSymbol, UInt &ruiGoRiceParam );
   Void  xWriteTerminatingBit ( UInt uiBit );
   
-#if !MODIFIED_MVD_CODING
-#if MVD_CTX
-  Void  xWriteMvd            ( Int iMvd, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx );
-#else
-  Void  xWriteMvd            ( Int iMvd, UInt uiAbsSum, UInt uiCtx );
-#endif
-  Void  xWriteExGolombMvd    ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
-#endif
   Void  xCopyFrom            ( TEncSbac* pSrc );
 #if OL_USE_WPP
   Void  xCopyContextsFrom    ( TEncSbac* pSrc );  
@@ -162,14 +150,14 @@ protected:
   
   // Adaptive loop filter
   UInt          m_uiMaxAlfCtrlDepth;
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
+#if FINE_GRANULARITY_SLICES
   Int           m_iSliceGranularity; //!< slice granularity
 #endif
   //--Adaptive loop filter
   
 public:
 
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
+#if FINE_GRANULARITY_SLICES
   /// set slice granularity
   Void setSliceGranularity(Int iSliceGranularity)  {m_iSliceGranularity = iSliceGranularity;}
 
@@ -185,9 +173,7 @@ public:
   
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if E057_INTRA_PCM
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf               ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -203,11 +189,9 @@ public:
   Void codeCbf                 ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) {}
   Void codeBlockCbf            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD = false ) {}
   
-#if CAVLC_RQT_CBP
   Void codeCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) {}
   UInt xGetFlagPattern   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) { return 0; }
-#endif
-  __inline Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx );
+  Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, TextType eTType, UInt uiCTXIdx, UInt uiScanIdx );
   Void codeCoeffNxN            ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -243,9 +227,6 @@ private:
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
-#if ADD_PLANAR_MODE && !FIXED_MPM
-  ContextModel3DBuffer m_cPlanarFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUChromaPredSCModel;
   ContextModel3DBuffer m_cCUDeltaQpSCModel;
   ContextModel3DBuffer m_cCUInterDirSCModel;

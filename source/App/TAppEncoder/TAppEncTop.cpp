@@ -93,11 +93,21 @@ Void TAppEncTop::xInitLibCfg()
 #if DISABLE_4x4_INTER
   m_cTEncTop.setDisInter4x4                  ( m_bDisInter4x4);
 #endif
+  
+#if NSQT
+  m_cTEncTop.setUseNSQT( m_enableNSQT );
+#endif
+#if AMP
+  m_cTEncTop.setUseAMP( m_enableAMP );
+#endif
+  
   //===== Slice ========
   m_cTEncTop.setHierarchicalCoding           ( m_bHierarchicalCoding );
   
+#if !DISABLE_CAVLC
   //====== Entropy Coding ========
   m_cTEncTop.setSymbolMode                   ( m_iSymbolMode );
+#endif
   
   //====== Loop/Deblock Filter ========
   m_cTEncTop.setLoopFilterDisable            ( m_bLoopFilterDisable       );
@@ -111,9 +121,7 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                   ( m_iMaxDeltaQP  );
-#if SUB_LCU_DQP
   m_cTEncTop.setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
-#endif
 #if QP_ADAPTATION
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
@@ -125,9 +133,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
   m_cTEncTop.setUseALF                       ( m_bUseALF      );
-#if MQT_ALF_NPASS
   m_cTEncTop.setALFEncodePassReduction       ( m_iALFEncodePassReduction );
-#endif
   m_cTEncTop.setUseGPB                       ( m_bUseGPB      );
   m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
   m_cTEncTop.setLCMod                        ( m_bLCMod         );
@@ -150,13 +156,9 @@ Void TAppEncTop::xInitLibCfg()
 #endif
   m_cTEncTop.setUseMRG                       ( m_bUseMRG      ); // SOPH:
 
-#if LM_CHROMA 
   m_cTEncTop.setUseLMChroma                  ( m_bUseLMChroma );
-#endif
   m_cTEncTop.setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
-#if E057_INTRA_PCM
   m_cTEncTop.setPCMLog2MinSize          ( m_uiPCMLog2MinSize);
-#endif
 #if WEIGHT_PRED
   //====== Weighted Prediction ========
   m_cTEncTop.setUseWP                   ( m_bUseWeightPred      );
@@ -182,20 +184,18 @@ Void TAppEncTop::xInitLibCfg()
   
   m_cTEncTop.setSliceGranularity        ( m_iSliceGranularity         );
 #endif
-#if MTK_NONCROSS_INLOOP_FILTER
   if(m_iSliceMode == 0 )
   {
     m_bLFCrossSliceBoundaryFlag = true;
   }
   m_cTEncTop.setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
-#endif
 #if SAO
   m_cTEncTop.setUseSAO ( m_bUseSAO );
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 #endif
 

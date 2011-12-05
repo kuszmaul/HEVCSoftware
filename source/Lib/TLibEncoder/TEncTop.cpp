@@ -106,13 +106,11 @@ Void TEncTop::create ()
   m_cLoopFilter.        create( g_uiMaxCUDepth );
 #endif
   
-#if MQT_BA_RA && MQT_ALF_NPASS
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.setGOPSize( getGOPSize() );
     m_cAdaptiveLoopFilter.createAlfGlobalBuffers(m_iALFEncodePassReduction);
   }
-#endif
 
 #if F747_APS
   if(m_bUseSAO || m_bUseALF)
@@ -194,12 +192,10 @@ Void TEncTop::createWPPCoders(Int iNumSubstreams)
 
 Void TEncTop::destroy ()
 {
-#if MQT_BA_RA && MQT_ALF_NPASS
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.destroyAlfGlobalBuffers();
   }
-#endif
 
 #if F747_APS
   for(Int i=0; i< m_vAPS.size(); i++)
@@ -292,9 +288,7 @@ Void TEncTop::init()
   xInitSPS();
   
   // initialize PPS
-#if SUB_LCU_DQP
   m_cPPS.setSPS(&m_cSPS);
-#endif
   xInitPPS();
 
 #if TILES
@@ -308,24 +302,25 @@ Void TEncTop::init()
   
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
-#if !CAVLC_COEF_LRG_BLK
-  aTable8 = m_pcCavlcCoder->GetLP8Table();
-#endif
   aTable4 = m_pcCavlcCoder->GetLP4Table();
   aTableLastPosVlcIndex=m_pcCavlcCoder->GetLastPosVlcIndexTable();
   
-  m_cTrQuant.init( g_uiMaxCUWidth, g_uiMaxCUHeight, 1 << m_uiQuadtreeTULog2MaxSize, m_iSymbolMode, aTable4, aTable8, 
-    aTableLastPosVlcIndex, m_bUseRDOQ, true );
+  m_cTrQuant.init( g_uiMaxCUWidth, g_uiMaxCUHeight, 1 << m_uiQuadtreeTULog2MaxSize,
+#if DISABLE_CAVLC
+                  0,
+#else
+                  m_iSymbolMode,
+#endif
+                  aTable4, aTable8, 
+                  aTableLastPosVlcIndex, m_bUseRDOQ, true );
   
   // initialize encoder search class
   m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
 
-#if MQT_ALF_NPASS
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.setALFEncodePassReduction( m_iALFEncodePassReduction );
   }
-#endif
 
   m_iMaxRefPicNum = 0;
 }
@@ -527,9 +522,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMinTrDepth    ( 0                   );
   m_cSPS.setMaxTrDepth    ( 1                   );
   
-#if E057_INTRA_PCM
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
-#endif
 
   m_cSPS.setUseALF        ( m_bUseALF           );
   
@@ -548,15 +541,16 @@ Void TEncTop::xInitSPS()
   
   m_cSPS.setUseMRG        ( m_bUseMRG           ); // SOPH:
 
-#if LM_CHROMA 
   m_cSPS.setUseLMChroma   ( m_bUseLMChroma           );  
-#endif
   
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
   
   m_cSPS.setUseLComb    ( m_bUseLComb           );
   m_cSPS.setLCMod       ( m_bLCMod   );
-
+#if NSQT
+  m_cSPS.setUseNSQT( m_useNSQT );
+#endif
+  
   Int i;
 #if HHI_AMVP_OFF
   for ( i = 0; i < g_uiMaxCUDepth; i++ )
@@ -573,11 +567,11 @@ Void TEncTop::xInitSPS()
 #if AMP
   for (i = 0; i < g_uiMaxCUDepth-1; i++ )
   {
-    // m_cSPS.setAMPAcc( i, m_bUseAMP );
-    m_cSPS.setAMPAcc( i, 1 );
+    m_cSPS.setAMPAcc( i, m_useAMP );
+    //m_cSPS.setAMPAcc( i, 1 );
   }
 
-  // m_cSPS.setUseAMP ( m_bUseAMP );
+  m_cSPS.setUseAMP ( m_useAMP );
 
   for (i = g_uiMaxCUDepth-1; i < g_uiMaxCUDepth; i++ )
   {
@@ -588,9 +582,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setBitDepth    ( g_uiBitDepth        );
   m_cSPS.setBitIncrement( g_uiBitIncrement    );
 
-#if MTK_NONCROSS_INLOOP_FILTER
   m_cSPS.setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
-#endif
 #if SAO
   m_cSPS.setUseSAO( m_bUseSAO );
 #endif
@@ -626,11 +618,11 @@ Void TEncTop::xInitSPS()
     m_cSPS.setMaxTLayers( 1 );
     m_cSPS.setTemporalIdNestingFlag( false );
   }
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   m_cSPS.setPCMBitDepthLuma (g_uiPCMBitDepthLuma);
   m_cSPS.setPCMBitDepthChroma (g_uiPCMBitDepthChroma);
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   m_cSPS.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag );
 #endif
 
@@ -678,7 +670,6 @@ Void TEncTop::xInitPPS()
     }
   }   
 
-#if SUB_LCU_DQP
   if( m_cPPS.getSPS()->getUseDQP() )
   {
     m_cPPS.setMaxCuDQPDepth( m_iMaxCuDQPDepth );
@@ -689,9 +680,12 @@ Void TEncTop::xInitPPS()
     m_cPPS.setMaxCuDQPDepth( 0 );
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
-#endif
 #if OL_USE_WPP
+#if DISABLE_CAVLC
+  m_cPPS.setEntropyCodingMode( 1 ); // In the PPS now, but also remains in slice header!
+#else
   m_cPPS.setEntropyCodingMode(getSymbolMode()); // In the PPS now, but also remains in slice header!
+#endif
   m_cPPS.setEntropyCodingSynchro(m_iWaveFrontSynchro);
   m_cPPS.setCabacIstateReset(m_iWaveFrontFlush != 0);
   m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams);
