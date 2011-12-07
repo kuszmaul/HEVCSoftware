@@ -86,17 +86,26 @@ protected:
 #if DISABLE_4x4_INTER
   Bool      m_bDisInter4x4;
 #endif
+#if AMP
+  Bool m_useAMP;
+#endif
   //======= Transform =============
   UInt      m_uiQuadtreeTULog2MaxSize;
   UInt      m_uiQuadtreeTULog2MinSize;
   UInt      m_uiQuadtreeTUMaxDepthInter;
   UInt      m_uiQuadtreeTUMaxDepthIntra;
   
+#if NSQT
+  Bool      m_useNSQT;
+#endif
+  
   //====== B Slice ========
   Bool      m_bHierarchicalCoding;              //  hierarchical-B coding
   
+#if !DISABLE_CAVLC
   //====== Entropy Coding ========
   Int       m_iSymbolMode;                      //  (CAVLC, CABAC)
+#endif
   
   //====== Loop/Deblock Filter ========
   Bool      m_bLoopFilterDisable;
@@ -114,9 +123,7 @@ protected:
 
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
-#if SUB_LCU_DQP
   Int       m_iMaxCuDQPDepth;                   //  Max. depth for a minimum CuDQP (0:default)
-#endif
 #if QP_ADAPTATION
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -125,9 +132,7 @@ protected:
   //====== Tool list ========
   Bool      m_bUseSBACRD;
   Bool      m_bUseALF;
-#if MQT_ALF_NPASS
   Int       m_iALFEncodePassReduction;
-#endif
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
   Bool      m_bUseGPB;
@@ -146,17 +151,13 @@ protected:
   Bool      m_bUseCbfFastMode;
 #endif
   Bool      m_bUseMRG; // SOPH:
-#if LM_CHROMA 
   Bool      m_bUseLMChroma; 
-#endif
 
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   
   Bool      m_bUseConstrainedIntraPred;
-#if E057_INTRA_PCM
   UInt      m_uiPCMLog2MinSize;
-#endif
   //====== Slice ========
   Int       m_iSliceMode;
   Int       m_iSliceArgument; 
@@ -166,15 +167,13 @@ protected:
 #if FINE_GRANULARITY_SLICES
   Int       m_iSliceGranularity;
 #endif
-#if MTK_NONCROSS_INLOOP_FILTER
   Bool      m_bLFCrossSliceBoundaryFlag;
-#endif
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   Bool      m_bPCMInputBitDepthFlag;
   UInt      m_uiPCMBitDepthLuma;
   UInt      m_uiPCMBitDepthChroma;
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX 
   Bool      m_bPCMFilterDisableFlag;
 #endif
 #if TILES
@@ -274,11 +273,20 @@ public:
   Void      setQuadtreeTUMaxDepthInter      ( UInt  u )      { m_uiQuadtreeTUMaxDepthInter = u; }
   Void      setQuadtreeTUMaxDepthIntra      ( UInt  u )      { m_uiQuadtreeTUMaxDepthIntra = u; }
   
+#if NSQT
+  Void setUseNSQT( Bool b ) { m_useNSQT = b; }
+#endif
+#if AMP
+  Void setUseAMP( Bool b ) { m_useAMP = b; }
+#endif
+  
   //====== b; Slice ========
   Void      setHierarchicalCoding           ( Bool  b )      { m_bHierarchicalCoding = b; }
   
+#if !DISABLE_CAVLC
   //====== Entropy Coding ========
   Void      setSymbolMode                   ( Int   i )      { m_iSymbolMode = i; }
+#endif
   
   //====== Loop/Deblock Filter ========
   Void      setLoopFilterDisable            ( Bool  b )      { m_bLoopFilterDisable       = b; }
@@ -292,9 +300,7 @@ public:
 
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
-#if SUB_LCU_DQP
   Void      setMaxCuDQPDepth                ( Int   i )      { m_iMaxCuDQPDepth = i; }
-#endif
 #if QP_ADAPTATION
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
@@ -330,8 +336,10 @@ public:
   //==== b; Slice ========
   Bool      getHierarchicalCoding           ()      { return  m_bHierarchicalCoding; }
   
+#if !DISABLE_CAVLC
   //==== Entropy Coding ========
   Int       getSymbolMode                   ()      { return  m_iSymbolMode; }
+#endif
   
   //==== Loop/Deblock Filter ========
   Bool      getLoopFilterDisable            ()      { return  m_bLoopFilterDisable;       }
@@ -344,9 +352,7 @@ public:
 
   //==== Quality control ========
   Int       getMaxDeltaQP                   ()      { return  m_iMaxDeltaQP; }
-#if SUB_LCU_DQP
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
-#endif
 #if QP_ADAPTATION
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
@@ -374,25 +380,21 @@ public:
 #endif
   Void      setUseMRG                       ( Bool  b )     { m_bUseMRG     = b; } // SOPH:
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   Void      setPCMInputBitDepthFlag         ( Bool  b )     { m_bPCMInputBitDepthFlag = b; }
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Void      setPCMFilterDisableFlag         ( Bool  b )     {  m_bPCMFilterDisableFlag = b; }
 #endif
-#if E057_INTRA_PCM
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
-#endif
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseALF                       ()      { return m_bUseALF;     }
-#if MQT_ALF_NPASS
   Void      setALFEncodePassReduction       (Int i)  { m_iALFEncodePassReduction = i; }
   Int       getALFEncodePassReduction       ()       { return m_iALFEncodePassReduction; }
-#endif
   Bool      getUseGPB                       ()      { return m_bUseGPB;     }
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
   Bool      getLCMod                        ()      { return m_bLCMod; }
@@ -410,20 +412,16 @@ public:
 #endif
   Bool      getUseMRG                       ()      { return m_bUseMRG;     } // SOPH:
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   } 
 #endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   } 
 #endif
-#if E057_INTRA_PCM
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
-#endif
 
-#if LM_CHROMA 
   Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
   Void setUseLMChroma                       ( Bool b ) { m_bUseLMChroma  = b;       }
-#endif
 
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
@@ -442,10 +440,8 @@ public:
   Void  setSliceGranularity            ( Int  i )      { m_iSliceGranularity = i;       }
   Int   getSliceGranularity            ()              { return m_iSliceGranularity;    }
 #endif
-#if MTK_NONCROSS_INLOOP_FILTER
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
-#endif
 #if SAO
   Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
   Bool      getUseSAO                  ()              {return m_bUseSAO;}

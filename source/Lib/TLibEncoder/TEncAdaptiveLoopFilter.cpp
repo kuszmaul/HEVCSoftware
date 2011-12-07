@@ -86,7 +86,6 @@ const Int TEncAdaptiveLoopFilter::m_aiSymmetricArray5x5[25] =
   4,  3,  2,  1,  0,
 };
 
-#if TI_ALF_MAX_VSIZE_7
 const Int TEncAdaptiveLoopFilter::m_aiSymmetricArray9x7[63] =
 {
    0,  1,  2,  3,  4,  5,  6,  7,  8,
@@ -97,59 +96,30 @@ const Int TEncAdaptiveLoopFilter::m_aiSymmetricArray9x7[63] =
   17, 16, 15, 14, 13, 12, 11, 10,  9,
    8,  7,  6,  5,  4,  3,  2,  1,  0
 };
-#endif
 
-#if MQT_ALF_NPASS
-#if TI_ALF_MAX_VSIZE_7
 Int TEncAdaptiveLoopFilter::m_aiTapPos9x9_In9x9Sym[21] =
-#else
-Int TEncAdaptiveLoopFilter::m_aiTapPos9x9_In9x9Sym[22] =
-#endif
 {
-#if TI_ALF_MAX_VSIZE_7
                   0,  1,  2,
               3,  4,  5,  6,  7,
           8,  9, 10, 11, 12, 13, 14,
      15, 16, 17, 18, 19, 20
-#else
-                   0,
-               1,  2,  3,
-           4,  5,  6,  7,  8,
-       9, 10, 11, 12, 13, 14, 15,
-  16, 17, 18, 19, 20, 21
-#endif
 };
 
 Int TEncAdaptiveLoopFilter::m_aiTapPos7x7_In9x9Sym[14] =
 {                 
-#if TI_ALF_MAX_VSIZE_7
                   1,    
               4,  5,  6,    
           9, 10, 11, 12, 13,    
      16, 17, 18, 19, 20
 
-#else
-
-               2,
-           5,  6,  7,
-      10, 11, 12, 13, 14,
-  17, 18, 19, 20, 21
-#endif
 };
 
 Int TEncAdaptiveLoopFilter::m_aiTapPos5x5_In9x9Sym[8]  =
 {
 
-#if TI_ALF_MAX_VSIZE_7
             5,
        10, 11, 12, 
    17, 18, 19, 20
-#else
-           6,
-      11, 12, 13,
-  18, 19, 20, 21
-
-#endif
 
 };
 
@@ -157,9 +127,7 @@ Int* TEncAdaptiveLoopFilter::m_iTapPosTabIn9x9Sym[NO_TEST_FILT] =
 {
   m_aiTapPos9x9_In9x9Sym, m_aiTapPos7x7_In9x9Sym, m_aiTapPos5x5_In9x9Sym
 };
-#endif
 
-#if STAR_CROSS_SHAPES_LUMA
 Int TEncAdaptiveLoopFilter::m_aiFilterPosShape0In11x5Sym[10] =
 {
    3,    5,    7,
@@ -177,7 +145,6 @@ Int* TEncAdaptiveLoopFilter::m_iFilterTabIn11x5Sym[NO_TEST_FILT] =
 {
   m_aiFilterPosShape0In11x5Sym, m_aiFilterPosShape1In11x5Sym
 };
-#endif
 // ====================================================================================================================
 // Constructor / destructor
 // ====================================================================================================================
@@ -185,10 +152,8 @@ Int* TEncAdaptiveLoopFilter::m_iFilterTabIn11x5Sym[NO_TEST_FILT] =
 TEncAdaptiveLoopFilter::TEncAdaptiveLoopFilter()
 {
   m_ppdAlfCorr = NULL;
-#if ALF_CHROMA_NEW_SHAPES
   m_ppdAlfCorrCb = NULL;
   m_ppdAlfCorrCr = NULL;
-#endif
   m_pdDoubleAlfCoeff = NULL;
   m_pcPic = NULL;
   m_pcEntropyCoder = NULL;
@@ -196,26 +161,16 @@ TEncAdaptiveLoopFilter::TEncAdaptiveLoopFilter()
   m_pcTempAlfParam = NULL;
   m_pcPicYuvBest = NULL;
   m_pcPicYuvTmp = NULL;
-#if STAR_CROSS_SHAPES_LUMA
   pcAlfParamShape0 = NULL;
   pcAlfParamShape1 = NULL;
   pcPicYuvRecShape0 = NULL;
   pcPicYuvRecShape1 = NULL;
-#endif
-#if MTK_NONCROSS_INLOOP_FILTER
   m_pcSliceYuvTmp = NULL;
-#endif
-#if MQT_BA_RA && MQT_ALF_NPASS
   m_aiFilterCoeffSaved = NULL;
-#if STAR_CROSS_SHAPES_LUMA
   m_iPreviousFilterShape= NULL;
-#endif
-#endif
 
 #if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
   m_bSharedPPSAlfParamEnabled = false;
-#endif
 #endif
 
 #if F747_APS
@@ -228,7 +183,6 @@ TEncAdaptiveLoopFilter::TEncAdaptiveLoopFilter()
 // Public member functions
 // ====================================================================================================================
 
-#if MQT_BA_RA && MQT_ALF_NPASS
 /** create ALF global buffers
  * \param iALFEncodePassReduction 0: 16-pass encoding, 1: 1-pass encoding, 2: 2-pass encoding
  * This function is used to create the filter buffers to perform time-delay filtering.
@@ -250,9 +204,7 @@ Void TEncAdaptiveLoopFilter::createAlfGlobalBuffers(Int iALFEncodePassReduction)
           m_aiFilterCoeffSavedMethods[i][j][k] = new Int[MAX_SQR_FILT_LENGTH];
         }
       }
-#if STAR_CROSS_SHAPES_LUMA
       m_iPreviousFilterShapeMethods[i] = new Int[iNumOfBuffer];
-#endif
     }
 
   }
@@ -276,15 +228,12 @@ Void TEncAdaptiveLoopFilter::destroyAlfGlobalBuffers()
         delete[] m_aiFilterCoeffSavedMethods[i][j];
       }
       delete[] m_aiFilterCoeffSavedMethods[i];
-#if STAR_CROSS_SHAPES_LUMA
       delete[] m_iPreviousFilterShapeMethods[i];
-#endif
     }
 
   }
 
 }
-#endif
 
 /**
  \param pcPic           picture (TComPic) pointer
@@ -314,7 +263,6 @@ Void TEncAdaptiveLoopFilter::startALFEnc( TComPic* pcPic, TEncEntropy* pcEntropy
   m_pcTempAlfParam = new ALFParam;
   allocALFParam(m_pcBestAlfParam);
   allocALFParam(m_pcTempAlfParam);
-#if STAR_CROSS_SHAPES_LUMA
   pcPicYuvRecShape0 = new TComPicYuv();
   pcPicYuvRecShape0->createLuma(iWidth, iHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
  
@@ -326,7 +274,6 @@ Void TEncAdaptiveLoopFilter::startALFEnc( TComPic* pcPic, TEncEntropy* pcEntropy
 
   allocALFParam(pcAlfParamShape0);  
   allocALFParam(pcAlfParamShape1);
-#endif
   m_im_width = iWidth;
   m_im_height = iHeight;
   
@@ -336,9 +283,6 @@ Void TEncAdaptiveLoopFilter::startALFEnc( TComPic* pcPic, TEncEntropy* pcEntropy
   initMatrix_int(&m_filterCoeffSymQuant, NO_VAR_BINS, MAX_SQR_FILT_LENGTH); 
   
   m_pixAcc = (double *) calloc(NO_VAR_BINS, sizeof(double));
-#if !MQT_BA_RA
-  get_mem2Dpel(&m_varImg, m_im_height, m_im_width);
-#endif
   get_mem2Dpel(&m_maskImg, m_im_height, m_im_width);
   
   initMatrix_double(&m_E_temp, MAX_SQR_FILT_LENGTH, MAX_SQR_FILT_LENGTH);//
@@ -357,14 +301,11 @@ Void TEncAdaptiveLoopFilter::startALFEnc( TComPic* pcPic, TEncEntropy* pcEntropy
   allocALFParam(m_tempALFp);
   m_pcDummyEntropyCoder = m_pcEntropyCoder;
 
-#if MTK_NONCROSS_INLOOP_FILTER
   if( m_bUseNonCrossALF )
   {
     m_pcSliceYuvTmp = new TComPicYuv();
     m_pcSliceYuvTmp->create(iWidth, iHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
-#endif
-
 
 }
 
@@ -383,7 +324,6 @@ Void TEncAdaptiveLoopFilter::endALFEnc()
   freeALFParam(m_pcTempAlfParam);
   delete m_pcBestAlfParam;
   delete m_pcTempAlfParam;
-#if STAR_CROSS_SHAPES_LUMA
   pcPicYuvRecShape0->destroyLuma();
   delete pcPicYuvRecShape0;
   pcPicYuvRecShape0 = NULL;
@@ -397,16 +337,12 @@ Void TEncAdaptiveLoopFilter::endALFEnc()
 
   delete pcAlfParamShape0;
   delete pcAlfParamShape1;
-#endif
   // delete qc filters
   destroyMatrix4D_double(m_EGlobalSym, NO_TEST_FILT,  NO_VAR_BINS);
   destroyMatrix3D_double(m_yGlobalSym, NO_TEST_FILT);
   destroyMatrix_int(m_filterCoeffSymQuant);
   
   free(m_pixAcc);
-#if !MQT_BA_RA
-  free_mem2Dpel(m_varImg);
-#endif
   free_mem2Dpel(m_maskImg);
   
   destroyMatrix3D_double(m_E_merged, NO_VAR_BINS);
@@ -425,15 +361,12 @@ Void TEncAdaptiveLoopFilter::endALFEnc()
   freeALFParam(m_tempALFp);
   delete m_tempALFp;
 
-#if MTK_NONCROSS_INLOOP_FILTER
   if(m_bUseNonCrossALF)
   {
     m_pcSliceYuvTmp->destroy();
     delete m_pcSliceYuvTmp;
     m_pcSliceYuvTmp = NULL;
   }
-#endif
-
 }
 
 #if ALF_CHROMA_LAMBDA  
@@ -468,19 +401,6 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
 
 #endif
 {
-#if !STAR_CROSS_SHAPES_LUMA
-  Int tap, num_coef;
-  
-  // set global variables
-  tap         = ALF_MAX_NUM_TAP;
-#if TI_ALF_MAX_VSIZE_7
-  Int tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(tap);
-  num_coef = (tap * tapV + 1) >> 1;
-#else
-  num_coef    = (tap*tap+1)>>1;
-#endif
-  num_coef    = num_coef + 1; // DC offset
-#endif
   
   // set lambda
 #if ALF_CHROMA_LAMBDA  
@@ -498,15 +418,11 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
   TComPicYuv* pcPicYuvExtRec = m_pcTempPicYuv;
   
   pcPicYuvRec->copyToPic(pcPicYuvExtRec);
-#if MTK_NONCROSS_INLOOP_FILTER
   if(!m_bUseNonCrossALF)
   {
-#endif  
   pcPicYuvExtRec->setBorderExtension( false );
   pcPicYuvExtRec->extendPicBorder   ();
-#if MTK_NONCROSS_INLOOP_FILTER
   }
-#endif  
  
   // set min cost
   UInt64 uiMinRate = MAX_INT;
@@ -525,13 +441,6 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
 #endif  
   // initialize temp_alfps
   m_pcTempAlfParam->alf_flag        = 1;
-#if !STAR_CROSS_SHAPES_LUMA
-  m_pcTempAlfParam->tap             = tap;
-#if TI_ALF_MAX_VSIZE_7
-  m_pcTempAlfParam->tapV            = tapV;
-#endif
-  m_pcTempAlfParam->num_coeff       = num_coef;
-#endif
   m_pcTempAlfParam->chroma_idc      = 0;
 #if !F747_APS
   m_pcTempAlfParam->cu_control_flag = 0;
@@ -551,9 +460,7 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
   }
 #endif
 
-#if MQT_ALF_NPASS
   setALFEncodingParam(m_pcPic);
-#endif
 
   // adaptive in-loop wiener filtering
   xEncALFLuma_qc( pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, uiMinRate, uiMinDist, dMinCost );
@@ -561,14 +468,6 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
   // cu-based filter on/off control
   xCUAdaptiveControl_qc( pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, uiMinRate, uiMinDist, dMinCost );
   
-#if !STAR_CROSS_SHAPES_LUMA
-  // adaptive tap-length
-  xFilterTapDecision_qc( pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, uiMinRate, uiMinDist, dMinCost );
-  
-  // compute RD cost
-  xCalcRDCost( pcPicOrg, pcPicYuvRec, m_pcBestAlfParam, uiMinRate, uiMinDist, dMinCost );
-#endif  
-
   // compare RD cost to non-ALF case
   if( dMinCost < dOrigCost )
   {
@@ -607,11 +506,7 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
     predictALFCoeff( m_pcBestAlfParam );
     
     // do additional ALF process for chroma
-#if ALF_CHROMA_NEW_SHAPES
     xFilterTapDecisionChroma( uiMinRate, pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, ruiDist, ruiBits );
-#else
-    xEncALFChroma( uiMinRate, pcPicOrg, pcPicYuvExtRec, pcPicYuvRec, ruiDist, ruiBits );
-#endif
   }
   
   // copy to best storage
@@ -630,7 +525,7 @@ Void TEncAdaptiveLoopFilter::ALFProcess( ALFParam* pcAlfParam, Double dLambda, U
 
 }
 
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
 /** PCM LF disable process.
  * \param pcPic picture (TComPic) pointer
  * \returns Void
@@ -646,98 +541,6 @@ Void TEncAdaptiveLoopFilter::PCMLFDisableProcess (TComPic* pcPic)
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
-
-#if !ALF_CHROMA_NEW_SHAPES
-Void TEncAdaptiveLoopFilter::xEncALFChroma( UInt64 uiLumaRate, TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, UInt64& ruiDist, UInt64& ruiBits )
-{
-  // restriction for non-referenced B-slice
-  if (m_eSliceType == B_SLICE && m_iPicNalReferenceIdc == 0)
-  {
-    return;
-  }
-  
-  Int tap, num_coef;
-  
-  // set global variables
-  tap         = ALF_MAX_NUM_TAP_C;
-  num_coef    = (tap*tap+1)>>1;
-  num_coef    = num_coef + 1; // DC offset
-  
-  // set min cost
-  UInt64 uiMinRate = uiLumaRate;
-  UInt64 uiMinDist = MAX_INT;
-  Double dMinCost  = MAX_DOUBLE;
-  
-  // calc original cost
-  copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-  xCalcRDCostChroma(pcPicOrg, pcPicRest, m_pcTempAlfParam, uiMinRate, uiMinDist, dMinCost);
-  
-  // initialize temp_alfps
-  m_pcTempAlfParam->chroma_idc = 3;
-  m_pcTempAlfParam->tap_chroma       = tap;
-  m_pcTempAlfParam->num_coeff_chroma = num_coef;
-  
-  // Adaptive in-loop wiener filtering for chroma
-  xFilteringFrameChroma(pcPicOrg, pcPicDec, pcPicRest);
-  
-  // filter on/off decision for chroma
-  Int iCWidth = (pcPicOrg->getWidth()>>1);
-  Int iCHeight = (pcPicOrg->getHeight()>>1);
-  Int iCStride = pcPicOrg->getCStride();
-  UInt64 uiFiltDistCb = xCalcSSD(pcPicOrg->getCbAddr(), pcPicRest->getCbAddr(), iCWidth, iCHeight, iCStride);
-  UInt64 uiFiltDistCr = xCalcSSD(pcPicOrg->getCrAddr(), pcPicRest->getCrAddr(), iCWidth, iCHeight, iCStride);
-  UInt64 uiOrgDistCb = xCalcSSD(pcPicOrg->getCbAddr(), pcPicDec->getCbAddr(), iCWidth, iCHeight, iCStride);
-  UInt64 uiOrgDistCr = xCalcSSD(pcPicOrg->getCrAddr(), pcPicDec->getCrAddr(), iCWidth, iCHeight, iCStride);
-  m_pcTempAlfParam->chroma_idc = 0;
-  if(uiOrgDistCb > uiFiltDistCb)
-    m_pcTempAlfParam->chroma_idc += 2;
-  if(uiOrgDistCr  > uiFiltDistCr )
-    m_pcTempAlfParam->chroma_idc += 1;
-
-  if(m_pcTempAlfParam->chroma_idc)
-  {
-    if(m_pcTempAlfParam->chroma_idc!=3)
-    {
-      // chroma filter re-design
-      xFilteringFrameChroma(pcPicOrg, pcPicDec, pcPicRest);
-    }
-    
-    UInt64 uiRate, uiDist;
-    Double dCost;
-    xCalcRDCostChroma(pcPicOrg, pcPicRest, m_pcTempAlfParam, uiRate, uiDist, dCost);
-    if( dCost < dMinCost )
-    {
-      copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
-      predictALFCoeffChroma(m_pcBestAlfParam);
-      
-      ruiBits += uiRate;
-      ruiDist += uiDist;
-    }
-    else
-    {
-      m_pcBestAlfParam->chroma_idc = 0;
-      
-      if((m_pcTempAlfParam->chroma_idc>>1)&0x01)
-        pcPicDec->copyToPicCb(pcPicRest);
-      if(m_pcTempAlfParam->chroma_idc&0x01)
-        pcPicDec->copyToPicCr(pcPicRest);
-      
-      ruiBits += uiMinRate;
-      ruiDist += uiMinDist;
-    }
-  }
-  else
-  {
-    m_pcBestAlfParam->chroma_idc = 0;
-    
-    ruiBits += uiMinRate;
-    ruiDist += uiMinDist;
-    
-    pcPicDec->copyToPicCb(pcPicRest);
-    pcPicDec->copyToPicCr(pcPicRest);
-  }
-}
-#endif
 
 // ====================================================================================================================
 // Private member functions
@@ -785,7 +588,6 @@ Void TEncAdaptiveLoopFilter::xInitParam()
       m_pdDoubleAlfCoeff[i] = 0;
     }
   }
-#if ALF_CHROMA_NEW_SHAPES
   if (m_ppdAlfCorrCb != NULL)
   {
     for (i = 0; i < ALF_MAX_NUM_COEF; i++)
@@ -831,7 +633,6 @@ Void TEncAdaptiveLoopFilter::xInitParam()
       }
     }
   }
-#endif
 }
 
 Void TEncAdaptiveLoopFilter::xUninitParam()
@@ -854,7 +655,6 @@ Void TEncAdaptiveLoopFilter::xUninitParam()
     delete[] m_pdDoubleAlfCoeff;
     m_pdDoubleAlfCoeff = NULL;
   }
-#if ALF_CHROMA_NEW_SHAPES
   if (m_ppdAlfCorrCb != NULL)
   {
     for (i = 0; i < ALF_MAX_NUM_COEF; i++)
@@ -876,7 +676,6 @@ Void TEncAdaptiveLoopFilter::xUninitParam()
     delete[] m_ppdAlfCorrCr;
     m_ppdAlfCorrCr = NULL;
   }
-#endif
 }
 
 Void TEncAdaptiveLoopFilter::xCreateTmpAlfCtrlFlags()
@@ -919,7 +718,6 @@ Void TEncAdaptiveLoopFilter::xCopyTmpAlfCtrlFlagsFrom()
  */
 Void TEncAdaptiveLoopFilter::xEncodeCUAlfCtrlFlags()
 {
-#if MTK_NONCROSS_INLOOP_FILTER
   if(m_uiNumSlicesInPic > 1)
   {
     for(UInt s=0; s< m_uiNumSlicesInPic; s++)
@@ -939,7 +737,6 @@ Void TEncAdaptiveLoopFilter::xEncodeCUAlfCtrlFlags()
     }
     return;
   }
-#endif
 
   for( UInt uiCUAddr = 0; uiCUAddr < m_pcPic->getNumCUsInFrame() ; uiCUAddr++ )
   {
@@ -985,29 +782,13 @@ Void TEncAdaptiveLoopFilter::xEncodeCUAlfCtrlFlag(TComDataCU* pcCU, UInt uiAbsPa
   
   m_pcEntropyCoder->encodeAlfCtrlFlag(pcCU, uiAbsPartIdx);
 }
-#if MTK_NONCROSS_INLOOP_FILTER
 Void TEncAdaptiveLoopFilter::xCalcCorrelationFunc(Int ypos, Int xpos, Pel* pOrg, Pel* pCmp, Int iTap, Int iWidth, Int iHeight, Int iOrgStride, Int iCmpStride, Bool bSymmCopyBlockMatrix)
-#else
-Void TEncAdaptiveLoopFilter::xCalcCorrelationFunc(Pel* pOrg, Pel* pCmp, Int iTap, Int iWidth, Int iHeight, Int iOrgStride, Int iCmpStride)
-#endif
 {
   //Patch should be extended before this point................
   //ext_offset  = tap>>1;
   
-#if !ALF_CHROMA_NEW_SHAPES
-#if TI_ALF_MAX_VSIZE_7
-  Int iTapV   = TComAdaptiveLoopFilter::ALFTapHToTapV(iTap);
-  Int N       = (iTap * iTapV + 1) >> 1;
-  Int offsetV = iTapV >> 1;
-#else
-  Int N      = (iTap*iTap+1)>>1;
-#endif
-  Int offset = iTap>>1;
-#endif
-  
   const Int* pFiltPos;
   
-#if ALF_CHROMA_NEW_SHAPES
   Int flH, flV, ii, jj, m, N;
   N = m_sqrFiltLengthTab[iTap] - 1;
   pFiltPos = patternTabShapes[iTap];
@@ -1023,50 +804,16 @@ Void TEncAdaptiveLoopFilter::xCalcCorrelationFunc(Pel* pOrg, Pel* pCmp, Int iTap
       flH   = 5;
       flV   = 2;
   }
-#else
-  switch(iTap)
-  {
-    case 5:
-      pFiltPos = m_aiSymmetricArray5x5;
-      break;
-    case 7:
-      pFiltPos = m_aiSymmetricArray7x7;
-      break;
-    case 9:
-#if TI_ALF_MAX_VSIZE_7
-      pFiltPos = m_aiSymmetricArray9x7;
-#else
-      pFiltPos = m_aiSymmetricArray9x9;
-#endif
-      break;
-    default:
-#if TI_ALF_MAX_VSIZE_7
-      pFiltPos = m_aiSymmetricArray9x7;
-#else
-      pFiltPos = m_aiSymmetricArray9x9;
-#endif
-      assert(0);
-      break;
-  }
-#endif
   
   Pel* pTerm = new Pel[N];
   
   Int i, j;
-#if MTK_NONCROSS_INLOOP_FILTER
   for (Int y = ypos; y < ypos + iHeight; y++)
   {
     for (Int x = xpos; x < xpos + iWidth; x++)
     {
-#else    
-  for (Int y = 0; y < iHeight; y++)
-  {
-    for (Int x = 0; x < iWidth; x++)
-    {
-#endif
       i = 0;
       ::memset(pTerm, 0, sizeof(Pel)*N);
-#if ALF_CHROMA_NEW_SHAPES
       if(iTap == 0)
       {
         for (ii=-flV; ii<0; ii++)
@@ -1098,20 +845,6 @@ Void TEncAdaptiveLoopFilter::xCalcCorrelationFunc(Pel* pOrg, Pel* pCmp, Int iTap
         }
         pTerm[pFiltPos[i++]] += pCmp[y*iCmpStride + x];
       }
-#else
-#if TI_ALF_MAX_VSIZE_7
-      for (Int yy = y - offsetV; yy <= y + offsetV; yy++)
-#else
-      for(Int yy=y-offset; yy<=y+offset; yy++)
-#endif
-      {
-        for(Int xx=x-offset; xx<=x+offset; xx++)
-        {
-          pTerm[pFiltPos[i]] += pCmp[xx + yy*iCmpStride];
-          i++;
-        }
-      }
-#endif
       
       for(j=0; j<N; j++)
       {
@@ -1130,18 +863,14 @@ Void TEncAdaptiveLoopFilter::xCalcCorrelationFunc(Pel* pOrg, Pel* pCmp, Int iTap
       m_ppdAlfCorr[N][N+1] += pOrg[x+y*iOrgStride];
     }
   }
-#if MTK_NONCROSS_INLOOP_FILTER
   if(bSymmCopyBlockMatrix)
   {
-#endif
   for(j=0; j<N-1; j++)
   {
     for(i=j+1; i<N; i++)
       m_ppdAlfCorr[i][j] = m_ppdAlfCorr[j][i];
   }
-#if MTK_NONCROSS_INLOOP_FILTER
   }
-#endif
 
   delete[] pTerm;
   pTerm = NULL;
@@ -1264,7 +993,6 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
   Int    *nc;
   const Int    *pFiltMag;
   
-#if ALF_CHROMA_NEW_SHAPES
   N = m_sqrFiltLengthTab[tap] - 1;
   // star shape
   if(tap == 0)
@@ -1276,39 +1004,6 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
   {
     pFiltMag = weightsShape1Sym;
   }
-#else
-  switch(tap)
-  {
-    case 5:
-      pFiltMag = m_aiSymmetricMag5x5;
-      break;
-    case 7:
-      pFiltMag = m_aiSymmetricMag7x7;
-      break;
-    case 9:
-#if TI_ALF_MAX_VSIZE_7
-      pFiltMag = m_aiSymmetricMag9x7;
-#else
-      pFiltMag = m_aiSymmetricMag9x9;
-#endif
-      break;
-    default:
-#if TI_ALF_MAX_VSIZE_7
-      pFiltMag = m_aiSymmetricMag9x7;
-#else
-      pFiltMag = m_aiSymmetricMag9x9;
-#endif
-      assert(0);
-      break;
-  }
-  
-#if TI_ALF_MAX_VSIZE_7
-  Int tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(tap);
-  N = (tap * tapV + 1) >> 1;
-#else
-  N = (tap*tap+1)>>1;
-#endif
-#endif
   
   dh = new Double[N];
   nc = new Int[N];
@@ -1431,9 +1126,7 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(ALFParam* pAlfParam, UInt64& ruiRate, U
   if(pAlfParam != NULL)
   {
 #if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
     ruiRate = 0;
-#endif
 #endif
     Int* piTmpCoef;
     piTmpCoef = new Int[ALF_MAX_NUM_COEF];
@@ -1469,7 +1162,6 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(ALFParam* pAlfParam, UInt64& ruiRate, U
     }
 #else
 
-#if E045_SLICE_COMMON_INFO_SHARING
     if(m_uiNumSlicesInPic ==1)
     {
       if(m_bSharedPPSAlfParamEnabled)
@@ -1495,17 +1187,6 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(ALFParam* pAlfParam, UInt64& ruiRate, U
         ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
       }
     }
-#else
-    if(pAlfParam->cu_control_flag)
-    {
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
-      m_pcEntropyCoder->setSliceGranularity(m_iSGDepth);
-#endif
-
-      m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam);
-    }
-    ruiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-#endif
 #endif
     memcpy(pAlfParam->coeff, piTmpCoef, sizeof(int)*pAlfParam->num_coeff);
     delete[] piTmpCoef;
@@ -1537,9 +1218,7 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(TComPicYuv* pcPicOrg, TComPicYuv* pcPic
   if(pAlfParam != NULL)
   {
 #if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
     ruiRate = 0;
-#endif
 #endif
     Int* piTmpCoef;
     piTmpCoef = new Int[ALF_MAX_NUM_COEF];
@@ -1577,7 +1256,6 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(TComPicYuv* pcPicOrg, TComPicYuv* pcPic
 
 #else
 
-#if E045_SLICE_COMMON_INFO_SHARING
     if(m_uiNumSlicesInPic ==1)
     {
       if(m_bSharedPPSAlfParamEnabled)
@@ -1603,17 +1281,6 @@ Void TEncAdaptiveLoopFilter::xCalcRDCost(TComPicYuv* pcPicOrg, TComPicYuv* pcPic
         ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
       }
     }
-#else
-    if(pAlfParam->cu_control_flag)
-    {
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
-      m_pcEntropyCoder->setSliceGranularity(m_iSGDepth);
-#endif
-
-      m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam);
-    }
-    ruiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-#endif
 #endif
     memcpy(pAlfParam->coeff, piTmpCoef, sizeof(int)*pAlfParam->num_coeff);
     delete[] piTmpCoef;
@@ -1640,93 +1307,7 @@ Void TEncAdaptiveLoopFilter::xCalcRDCostChroma(TComPicYuv* pcPicOrg, TComPicYuv*
 {
   if(pAlfParam->chroma_idc)
   {
-#if ALF_CHROMA_NEW_SHAPES
     ruiRate = xCalcRateChroma(pAlfParam);
-#else
-
-#if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
-    ruiRate = 0;
-#endif
-#endif
-
-    Int* piTmpCoef;
-    piTmpCoef = new Int[ALF_MAX_NUM_COEF_C];
-    
-    memcpy(piTmpCoef, pAlfParam->coeff_chroma, sizeof(Int)*pAlfParam->num_coeff_chroma);
-    
-    predictALFCoeffChroma(pAlfParam);
-    
-    m_pcEntropyCoder->resetEntropy();
-    m_pcEntropyCoder->resetBits();
-    m_pcEntropyCoder->encodeAlfParam(pAlfParam);
-    
-#if F747_APS
-    ruiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-    if (m_vBestAlfCUCtrlParam.size() != 0)
-    {
-      for(UInt s=0; s< m_uiNumSlicesInPic; s++)
-      {
-        if( m_uiNumSlicesInPic > 1)
-        {
-          if(!m_pSlice[s].isValidSlice())
-            continue;
-        }
-        m_pcEntropyCoder->resetEntropy();
-        m_pcEntropyCoder->resetBits();
-        m_pcEntropyCoder->encodeAlfCtrlParam( m_vBestAlfCUCtrlParam[s], m_uiNumCUsInFrame);
-        ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
-      }
-    }
-    else
-    {
-      ruiRate += m_uiNumSlicesInPic;
-    }
-
-#else
-#if E045_SLICE_COMMON_INFO_SHARING
-    if(m_uiNumSlicesInPic ==1)
-    {
-      if(m_bSharedPPSAlfParamEnabled)
-      {
-        ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
-        m_pcEntropyCoder->resetEntropy();
-        m_pcEntropyCoder->resetBits();
-      }
-
-      m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam);
-      ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
-    }
-    else
-    {
-      ruiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-      for(UInt s=0; s< m_uiNumSlicesInPic; s++)
-      {
-        if(!m_pSlice[s].isValidSlice()) continue;
-
-        m_pcEntropyCoder->resetEntropy();
-        m_pcEntropyCoder->resetBits();
-        m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam, m_uiNumSlicesInPic, &(m_pSlice[s]));
-        ruiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
-      }
-    }
-#else
-    if(pAlfParam->cu_control_flag)
-    {
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
-      m_pcEntropyCoder->setSliceGranularity(m_iSGDepth);
-#endif
-
-      m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam);
-    }
-    ruiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-#endif
-#endif
-
-    memcpy(pAlfParam->coeff_chroma, piTmpCoef, sizeof(int)*pAlfParam->num_coeff_chroma);
-    delete[] piTmpCoef;
-    piTmpCoef = NULL;
-#endif
   }
   ruiDist = 0;
   ruiDist += xCalcSSD(pcPicOrg->getCbAddr(), pcPicCmp->getCbAddr(), (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride());
@@ -1736,89 +1317,26 @@ Void TEncAdaptiveLoopFilter::xCalcRDCostChroma(TComPicYuv* pcPicOrg, TComPicYuv*
 
 Void TEncAdaptiveLoopFilter::xFilteringFrameChroma(TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest)
 {
-#if ALF_CHROMA_NEW_SHAPES
   Int  tap;
   Int* qh;
 
   tap = m_pcTempAlfParam->realfiltNo_chroma;
-#else
-  Int    i, tap, N, err_code;
-  Int* qh;
-  
-  tap  = m_pcTempAlfParam->tap_chroma;
-  N    = m_pcTempAlfParam->num_coeff_chroma;
-#endif
   qh   = m_pcTempAlfParam->coeff_chroma;
 
-#if !ALF_CHROMA_NEW_SHAPES
-  // initialize correlation
-  for(i=0; i<N; i++)
-    memset(m_ppdAlfCorr[i], 0, sizeof(Double)*(N+1));
   
   if ((m_pcTempAlfParam->chroma_idc>>1)&0x01)
   {
-    Pel* pOrg = pcPicOrg->getCbAddr();
-    Pel* pCmp = pcPicDec->getCbAddr();
-#if MTK_NONCROSS_INLOOP_FILTER
-    if(!m_bUseNonCrossALF)
-      xCalcCorrelationFunc(0, 0, pOrg, pCmp, tap, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride(), true);
-    else
-      xCalcCorrelationFuncforChromaSlices(ALF_Cb, pOrg, pCmp, tap, pcPicOrg->getCStride(), pcPicDec->getCStride());
-#else        
-    xCalcCorrelationFunc(pOrg, pCmp, tap, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride());
-#endif
-  }
-  if ((m_pcTempAlfParam->chroma_idc)&0x01)
-  {
-    Pel* pOrg = pcPicOrg->getCrAddr();
-    Pel* pCmp = pcPicDec->getCrAddr();
-#if MTK_NONCROSS_INLOOP_FILTER
-    if(!m_bUseNonCrossALF)
-      xCalcCorrelationFunc(0, 0, pOrg, pCmp, tap, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride(), true);
-    else
-      xCalcCorrelationFuncforChromaSlices(ALF_Cr, pOrg, pCmp, tap, pcPicOrg->getCStride(), pcPicDec->getCStride());
-#else
-    xCalcCorrelationFunc(pOrg, pCmp, tap, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride());
-#endif
-  }
-  
-  err_code = xGauss(m_ppdAlfCorr, N);
-  
-  if(err_code)
-  {
-    xClearFilterCoefInt(qh, N);
-  }
-  else
-  {
-    for(i=0; i<N; i++)
-      m_pdDoubleAlfCoeff[i] = m_ppdAlfCorr[i][N];
-    
-    xQuantFilterCoef(m_pdDoubleAlfCoeff, qh, tap, g_uiBitDepth + g_uiBitIncrement);
-  }
-#endif
-  
-  
-  if ((m_pcTempAlfParam->chroma_idc>>1)&0x01)
-  {
-#if MTK_NONCROSS_INLOOP_FILTER
     if(! m_bUseNonCrossALF)
       xFrameChroma(0, 0, (pcPicRest->getHeight() >> 1), (pcPicRest->getWidth() >>1), pcPicDec, pcPicRest, qh, tap, 0);
     else
       xFrameChromaforSlices(ALF_Cb, pcPicDec, pcPicRest, qh, tap);
-#else
-    xFrameChroma(pcPicDec, pcPicRest, qh, tap, 0);
-#endif
   }
   if ((m_pcTempAlfParam->chroma_idc)&0x01)
   {
-#if MTK_NONCROSS_INLOOP_FILTER
     if(! m_bUseNonCrossALF)
       xFrameChroma(0, 0, (pcPicRest->getHeight() >> 1), (pcPicRest->getWidth() >>1), pcPicDec, pcPicRest, qh, tap, 1);
     else
       xFrameChromaforSlices(ALF_Cr, pcPicDec, pcPicRest, qh, tap);
-#else
-    xFrameChroma(pcPicDec, pcPicRest, qh, tap, 1);
-#endif
   }
   
   if(m_pcTempAlfParam->chroma_idc<3)
@@ -1842,7 +1360,6 @@ Void TEncAdaptiveLoopFilter::xFilteringFrameChroma(TComPicYuv* pcPicOrg, TComPic
 Void TEncAdaptiveLoopFilter::xCopyDecToRestCUs(TComPicYuv* pcPicDec, TComPicYuv* pcPicRest)
 {
 
-#if MTK_NONCROSS_INLOOP_FILTER
   if(m_uiNumSlicesInPic > 1)
   {
     Pel* pPicDecLuma          = pcPicDec->getLumaAddr();
@@ -1940,7 +1457,6 @@ Void TEncAdaptiveLoopFilter::xCopyDecToRestCUs(TComPicYuv* pcPicDec, TComPicYuv*
     }
     return;
   }
-#endif
 
   for( UInt uiCUAddr = 0; uiCUAddr < m_pcPic->getNumCUsInFrame() ; uiCUAddr++ )
   {
@@ -2008,11 +1524,7 @@ Void TEncAdaptiveLoopFilter::xcollectStatCodeFilterCoeffForce0(int **pDiffQFilte
   *pDepthInt=NULL, kMinTab[MAX_SQR_FILT_LENGTH], bitsCoeffScan[MAX_SCAN_VAL][MAX_EXP_GOLOMB],
   minKStart, minBitsKStart, bitsKStart;
   
-#if STAR_CROSS_SHAPES_LUMA
   pDepthInt = pDepthIntTabShapes[fl];
-#else
-  pDepthInt=pDepthIntTab[fl-2];
-#endif
   
   maxScanVal=0;
   for (i=0; i<sqrFiltLength; i++)
@@ -2095,17 +1607,9 @@ Void TEncAdaptiveLoopFilter::xdecideCoeffForce0(int codedVarBins[NO_VAR_BINS], d
   for(filtNo=0; filtNo<filters_per_fr; filtNo++)
   {
     // No coeffcient prediction bits used
-#if ENABLE_FORCECOEFF0
-    double lagrangianDiff;
-    lagrangianDiff=errorForce0CoeffTab[filtNo][0]-(errorForce0CoeffTab[filtNo][1]+lambda*bitsVarBin[filtNo]);
-    codedVarBins[filtNo]=(lagrangianDiff>0)? 1 : 0;
-    errorForce0Coeff[0]+=errorForce0CoeffTab[filtNo][codedVarBins[filtNo]];
-    errorForce0Coeff[1]+=errorForce0CoeffTab[filtNo][1];
-#else
     codedVarBins[filtNo]= 1;
     errorForce0Coeff[0]+=errorForce0CoeffTab[filtNo][codedVarBins[filtNo]];
     errorForce0Coeff[1]+=errorForce0CoeffTab[filtNo][1];
-#endif
   }   
 }
 
@@ -2189,16 +1693,7 @@ Int TEncAdaptiveLoopFilter::xsendAllFiltersPPPred(int **FilterCoeffQuant, int fl
   ALFp->filters_per_group = filters_per_group;
   ALFp->predMethod = predMethod;
   ALFp->num_coeff = sqrFiltLength;
-#if STAR_CROSS_SHAPES_LUMA
   ALFp->realfiltNo = fl;
-#else
-  if (ALFp->num_coeff == SQR_FILT_LENGTH_5SYM)
-    ALFp->realfiltNo=2;
-  else if (ALFp->num_coeff == SQR_FILT_LENGTH_7SYM)
-    ALFp->realfiltNo=1;
-  else
-    ALFp->realfiltNo=0;
-#endif
   
   for(ind = 0; ind < filters_per_group; ++ind)
   {
@@ -2273,16 +1768,7 @@ Int TEncAdaptiveLoopFilter::xsendAllFiltersPPPredForce0(int **FilterCoeffQuant, 
   ALFp->filters_per_group_diff = filters_per_group_diff;
   ALFp->filters_per_group = filters_per_group;
   ALFp->num_coeff = sqrFiltLength;
-#if STAR_CROSS_SHAPES_LUMA
   ALFp->realfiltNo = fl;
-#else
-  if (ALFp->num_coeff == SQR_FILT_LENGTH_5SYM)
-    ALFp->realfiltNo=2;
-  else if (ALFp->num_coeff == SQR_FILT_LENGTH_7SYM)
-    ALFp->realfiltNo=1;
-  else
-    ALFp->realfiltNo=0;
-#endif
   
   for(ind = 0; ind < filters_per_group; ++ind)
   {
@@ -2349,11 +1835,7 @@ Int   TEncAdaptiveLoopFilter::xcodeFilterCoeff(int **pDiffQFilterCoeffIntPP, int
   *pDepthInt=NULL, kMinTab[MAX_SQR_FILT_LENGTH], bitsCoeffScan[MAX_SCAN_VAL][MAX_EXP_GOLOMB],
   minKStart, minBitsKStart, bitsKStart;
   
-#if STAR_CROSS_SHAPES_LUMA
   pDepthInt = pDepthIntTabShapes[fl];
-#else
-  pDepthInt = pDepthIntTab[fl-2];
-#endif
   
   maxScanVal = 0;
   for(i = 0; i < sqrFiltLength; i++)
@@ -2477,30 +1959,11 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
   UInt64  uiRate;
   UInt64  uiDist;
   Double dCost;
-#if !MQT_ALF_NPASS
-  Int    Height = pcPicOrg->getHeight();
-  Int    Width = pcPicOrg->getWidth();
-#endif
   Int    LumaStride = pcPicOrg->getStride();
   imgpel* pOrg = (imgpel*) pcPicOrg->getLumaAddr();
   imgpel* pRest = (imgpel*) pcPicRest->getLumaAddr();
   imgpel* pDec = (imgpel*) pcPicDec->getLumaAddr();
 
-#if !STAR_CROSS_SHAPES_LUMA
-  Int tap               = ALF_MIN_NUM_TAP;
-  m_pcTempAlfParam->tap = tap;
-#if TI_ALF_MAX_VSIZE_7
-  m_pcTempAlfParam->tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(m_pcTempAlfParam->tap);
-  m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(m_pcTempAlfParam->tap);
-#else
-  m_pcTempAlfParam->num_coeff = (Int)tap*tap/4 + 2; 
-#endif
-#endif
-
-#if MQT_BA_RA
-
-
-#if MQT_ALF_NPASS
   static Bool   bFirst = true;
   static Int*   bestVarIndTab;
   if(bFirst)
@@ -2511,7 +1974,6 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
     }
     bFirst = false;
   }
-#endif
 
   Double    dMinMethodCost  = MAX_DOUBLE;
   UInt64    uiMinMethodDist = MAX_UINT;
@@ -2530,16 +1992,6 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
     pcAlfParam->chroma_idc      = 0;
 #if !F747_APS
     pcAlfParam->cu_control_flag = 0;
-#endif
-
-#if !STAR_CROSS_SHAPES_LUMA
-    pcAlfParam->tap = tap;
-#if TI_ALF_MAX_VSIZE_7
-    pcAlfParam->tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(pcAlfParam->tap);
-    pcAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(pcAlfParam->tap);
-#else
-    pcAlfParam->num_coeff = (Int)tap*tap/4 + 2; 
-#endif
 #endif
 
     switch(i)
@@ -2573,39 +2025,16 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
   
     pcAlfParam->alf_pcr_region_flag = m_uiVarGenMethod;
 
-#if MQT_ALF_NPASS
     if(m_iALFEncodePassReduction)
     {
       m_aiFilterCoeffSaved = m_aiFilterCoeffSavedMethods[m_uiVarGenMethod];
-#if STAR_CROSS_SHAPES_LUMA
       m_iPreviousFilterShape = m_iPreviousFilterShapeMethods[m_uiVarGenMethod];
-#endif
     }
 
     setInitialMask(pcPicOrg, pcPicDec);
-#else
-    for (Int y=0; y<Height; y++)
-    {
-      for (Int x=0; x<Width; x++)
-      {
-        m_maskImg[y][x] = 1;
-      }
-    }
-#if MTK_NONCROSS_INLOOP_FILTER
-    if(!m_bUseNonCrossALF)
-      calcVar(0, 0, m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-    else
-      calcVarforSlices(m_varImg, pDec, 9/2, VAR_SIZE, LumaStride);
-#else
-    calcVar(m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-#endif
-#endif
 
-#if MQT_ALF_NPASS
     if(m_iALFEncodePassReduction == 0)
     {
-#endif
-#if STAR_CROSS_SHAPES_LUMA
       static Int best_filter_shape = 0;
       if (m_uiVarGenMethod == 0)
       {
@@ -2669,17 +2098,11 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
         xFirstFilteringFrameLuma(pOrg, pDec, (imgpel*)m_pcPicYuvTmp->getLumaAddr(), pcAlfParam, pcAlfParam->realfiltNo, LumaStride);
         xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, pcAlfParam, uiRate, uiDist, dCost);
       }
-#else
-      xFirstFilteringFrameLuma(pOrg, pDec, (imgpel*)m_pcPicYuvTmp->getLumaAddr(), pcAlfParam, pcAlfParam->tap, LumaStride); 
-      xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, pcAlfParam, uiRate, uiDist, dCost); 
-#endif      
-#if MQT_ALF_NPASS
     }
     else
     {
       xFirstEstimateFilteringFrameLumaAllTap(pOrg, pDec, LumaStride, pcAlfParam, uiRate, uiDist, dCost);
     }
-#endif
 
     dCost -= adExtraCostReduction[m_uiVarGenMethod];
 
@@ -2690,19 +2113,14 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
       uiMinMethodRate= uiRate;
       uiMinMethodDist = uiDist;
 
-#if MQT_ALF_NPASS
       if(m_iALFEncodePassReduction == 0)
       {
-#endif
         m_pcPicYuvTmp->copyToPicLuma(pcPicRest);
-#if MQT_ALF_NPASS
       }
       else
       {
         ::memcpy(bestVarIndTab, m_varIndTab, sizeof(Int)*NO_VAR_BINS);
       }
-#endif
-
     }  
   }
 
@@ -2716,12 +2134,9 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
   allocALFParam(&cAlfParamWithBestMethod);  
 
 
-#if MQT_ALF_NPASS
   if(m_iALFEncodePassReduction ==0)
   {
-#endif
     copyALFParam(&cAlfParamWithBestMethod, pcAlfParam); 
-#if MQT_ALF_NPASS
   }
   else
   {
@@ -2734,26 +2149,14 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
 #endif
     cAlfParamWithBestMethod.chroma_idc = 0;
     cAlfParamWithBestMethod.alf_pcr_region_flag = m_uiVarGenMethod;
-#if STAR_CROSS_SHAPES_LUMA
     cAlfParamWithBestMethod.realfiltNo= pcAlfParam->realfiltNo;
     cAlfParamWithBestMethod.num_coeff = m_sqrFiltLengthTab[cAlfParamWithBestMethod.realfiltNo]; 
-#else
-    cAlfParamWithBestMethod.tap = pcAlfParam->tap;
-    cAlfParamWithBestMethod.num_coeff = pcAlfParam->num_coeff;
-#if TI_ALF_MAX_VSIZE_7
-    cAlfParamWithBestMethod.tapV = pcAlfParam->tapV;
-#endif
-#endif
     reconstructFilterCoeffs( pcAlfParam, m_filterCoeffSym, NUM_BITS);
     xcalcPredFilterCoeff(pcAlfParam->realfiltNo);
-#if MTK_NONCROSS_INLOOP_FILTER
     if(!m_bUseNonCrossALF)
       xfilterFrame_en(0, 0, m_im_height, m_im_width, pDec, pRest, pcAlfParam->realfiltNo, LumaStride);
     else
       xfilterSlices_en(pDec, pRest, pcAlfParam->realfiltNo, LumaStride);
-#else
-    xfilterFrame_en(pDec, pRest, pcAlfParam->realfiltNo, LumaStride);
-#endif
 
     xcodeFiltCoeff(m_filterCoeffSym, pcAlfParam->realfiltNo, m_varIndTab, pcAlfParam->filters_per_group,0, &cAlfParamWithBestMethod);
 
@@ -2761,7 +2164,6 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
     xCalcRDCost(pcPicOrg, pcPicRest, &cAlfParamWithBestMethod, uiMinMethodRate, uiMinMethodDist, dMinMethodCost);
 
   }
-#endif
 
   if(dMinMethodCost < rdMinCost )
   {
@@ -2776,184 +2178,38 @@ Void   TEncAdaptiveLoopFilter::xEncALFLuma_qc ( TComPicYuv* pcPicOrg, TComPicYuv
   {
     freeALFParam(&cFrmAlfParam[i]);
   }
-
-
-
-
-#else  
-
-#if MQT_ALF_NPASS
-  setInitialMask(pcPicOrg, pcPicDec);
-#else
-  for (Int i=0; i<Height; i++)
-  {
-    for (Int j=0; j<Width; j++)
-    {
-      m_maskImg[i][j] = 1;
-    }
-  }
-#if STAR_CROSS_SHAPES_LUMA
-#if MTK_NONCROSS_INLOOP_FILTER
-  if(!m_bUseNonCrossALF)
-  {
-    calcVar(0, 0, m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, Height, Width, LumaStride);
-  }
-  else
-  {
-    calcVarforSlices(m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, LumaStride);
-  }
-#else
-  calcVar(m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, Height, Width, LumaStride);
-#endif
-#else
-#if MTK_NONCROSS_INLOOP_FILTER
-  if(!m_bUseNonCrossALF)
-    calcVar(0, 0, m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-  else
-    calcVarforSlices(m_varImg, pDec, 9/2, VAR_SIZE, LumaStride);
-#else
-  calcVar(m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-#endif
-#endif
-#endif
-
-#if STAR_CROSS_SHAPES_LUMA
-  if(m_iALFEncodePassReduction == 0)
-  {
-    UInt64 MinRate_Shape0 = MAX_INT;
-    UInt64 MinDist_Shape0 = MAX_INT;
-    Double MinCost_Shape0 = MAX_DOUBLE;
-
-    UInt64 MinRate_Shape1 = MAX_INT;
-    UInt64 MinDist_Shape1 = MAX_INT;
-    Double dMinCost_Shape1 = MAX_DOUBLE;
-
-    for (Int filter_shape = 0; filter_shape < 2 ;filter_shape ++)
-    {
-      m_pcTempAlfParam->realfiltNo = filter_shape;
-      m_pcTempAlfParam->num_coeff = m_sqrFiltLengthTab[filter_shape];  
-      xFirstFilteringFrameLuma(pOrg, pDec, pRest, m_pcTempAlfParam, m_pcTempAlfParam->realfiltNo, LumaStride); 
-      xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, m_pcTempAlfParam, uiRate, uiDist, dCost); 
-      if (filter_shape == 0)
-      {    
-        // copy Shape0
-        MinRate_Shape0 = uiRate;
-        MinDist_Shape0 = uiDist;
-        MinCost_Shape0 = dCost;
-        m_pcPicYuvTmp->copyToPicLuma(pcPicYuvRecShape0);
-        copyALFParam(pcAlfParamShape0, m_pcTempAlfParam);
-      }
-      else //if (filter_shape == 1) 
-      {
-        // copy Shape1
-        MinRate_Shape1 = uiRate;
-        MinDist_Shape1 = uiDist;
-        MinCost_Shape1 = dCost;
-        m_pcPicYuvTmp->copyToPicLuma(pcPicYuvRecShape1);
-        copyALFParam(pcAlfParamShape1, m_pcTempAlfParam);
-      }
-    }
-    if (MinCost_Shape0 <= MinCost_Shape1)
-    {
-      pcPicYuvRecShape0->copyToPicLuma(m_pcPicYuvTmp);
-      copyALFParam(m_pcTempAlfParam, pcAlfParamShape0);
-      uiRate = MinRate_Shape0;
-      uiDist = MinDist_Shape0;
-      dCost = MinCost_Shape0;
-    }
-    else //if (MinCost_Shape1 < MinCost_Shape0)
-    {
-      pcPicYuvRecShape1->copyToPicLuma(m_pcPicYuvTmp);
-      copyALFParam(m_pcTempAlfParam, pcAlfParamShape1);
-      uiRate = MinRate_Shape1;
-      uiDist = MinDist_Shape1;
-      dCost = MinCost_Shape1;
-    }
-  }
-  else
-  {
-    xFirstFilteringFrameLumaAllTap(pOrg, pDec, pRest, LumaStride);
-    xCalcRDCost(pcPicOrg, pcPicRest, m_pcTempAlfParam, uiRate, uiDist, dCost); // change this function final coding 
-  }
-#else
-#if MQT_ALF_NPASS
-  if(m_iALFEncodePassReduction)
-  {
-    xFirstFilteringFrameLumaAllTap(pOrg, pDec, pRest, LumaStride);
-  }
-  else
-#endif
-    xFirstFilteringFrameLuma(pOrg, pDec, pRest, m_pcTempAlfParam, m_pcTempAlfParam->tap, LumaStride); 
-
-  xCalcRDCost(pcPicOrg, pcPicRest, m_pcTempAlfParam, uiRate, uiDist, dCost); // change this function final coding 
-#endif
-  
-  if( dCost < rdMinCost)
-  {
-    ruiMinRate = uiRate;
-    ruiMinDist = uiDist;
-    rdMinCost = dCost;
-    copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam); 
-  } 
-
-#endif
 }
+
 
 Void   TEncAdaptiveLoopFilter::xFirstFilteringFrameLuma(imgpel* ImgOrg, imgpel* ImgDec, imgpel* ImgRest, ALFParam* ALFp, Int tap, Int Stride)
 {
-#if MTK_NONCROSS_INLOOP_FILTER
   if(!m_bUseNonCrossALF)
     xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, ImgOrg, ImgDec, tap, Stride);
   else
     xstoreInBlockMatrixforSlices(ImgOrg, ImgDec, tap, Stride);
-#else
-  xstoreInBlockMatrix(ImgOrg, ImgDec, tap, Stride);
-#endif
 
 
   xFilteringFrameLuma_qc(ImgOrg, ImgDec, ImgRest, ALFp, tap, Stride);
 }
 
 
-#if MTK_NONCROSS_INLOOP_FILTER
 Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(Int ypos, Int xpos, Int iheight, Int iwidth, Bool bResetBlockMatrix, Bool bSymmCopyBlockMatrix, imgpel* ImgOrg, imgpel* ImgDec, Int tap, Int Stride)
-#else
-Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDec, Int tap, Int Stride)
-#endif
 {
-#if MQT_BA_RA
   Int var_step_size_w = VAR_SIZE_W;
   Int var_step_size_h = VAR_SIZE_H;
-#endif
 
   Int i,j,k,l,varInd,ii,jj;
-#if STAR_CROSS_SHAPES_LUMA
   Int sqrFiltLength = m_pcTempAlfParam->num_coeff;
   Int fl2 = FILTER_LENGTH/2; //extended size at each side of the frame
   Int flH = 0;// horizontal_tap / 2
   Int flV = 0;// vertical_tap / 2
   Int m = 0;
-#else
-  Int fl =tap/2;
-#if TI_ALF_MAX_VSIZE_7
-  Int flV = TComAdaptiveLoopFilter::ALFFlHToFlV(fl);
-  Int sqrFiltLength = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(tap);
-#else
-  Int sqrFiltLength=(((tap*tap)/4 + 1) + 1);
-#endif
-  Int fl2=9/2; //extended size at each side of the frame
-#endif
   Int ELocal[MAX_SQR_FILT_LENGTH];
   Int yLocal;
   Int *p_pattern;
   Int filtNo =2; 
   double **E,*yy;
-#if MTK_NONCROSS_INLOOP_FILTER
   static Int count_valid;
-#else
-  Int count_valid=0;
-#endif
-#if STAR_CROSS_SHAPES_LUMA
   filtNo=tap;
   if (tap == 0)
   {
@@ -2965,28 +2221,14 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
     flH   = 5;
     flV   = 2;
   }
-#else
-  if (tap==9)
-    filtNo =0;
-  else if (tap==7)
-    filtNo =1;
-#endif
   
-#if MQT_ALF_NPASS && MQT_BA_RA
   imgpel regionOfInterested = (m_iDesignCurrentFilter ==1)?(1):(0);
-#endif
 
-#if STAR_CROSS_SHAPES_LUMA
   p_pattern= patternTabShapes[filtNo];
-#else
-  p_pattern= m_patternTab[filtNo];
-#endif
   
-#if MTK_NONCROSS_INLOOP_FILTER
   if(bResetBlockMatrix)
   {
     count_valid = 0;
-#endif
   memset( m_pixAcc, 0,sizeof(double)*NO_VAR_BINS);
   for (varInd=0; varInd<NO_VAR_BINS; varInd++)
   {
@@ -3000,63 +2242,27 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
   {
     for (j = fl2; j < m_im_width+fl2; j++)
     {
-#if MQT_ALF_NPASS && MQT_BA_RA
       if (m_maskImg[i-fl2][j-fl2] == regionOfInterested)
-#else
-      if (m_maskImg[i-fl2][j-fl2] == 1)
-#endif
       {
         count_valid++;
       }
     }
   }
-#if MTK_NONCROSS_INLOOP_FILTER
   }
-#endif
 
-#if STAR_CROSS_SHAPES_LUMA
   if (tap == 0)
   {
-#if MTK_NONCROSS_INLOOP_FILTER
     for (i= ypos; i< ypos + iheight; i++)
     {
       for (j= xpos; j< xpos + iwidth; j++)
       {
-#else
-    for (i=0; i<m_im_height; i++)
-    {
-      for (j=0; j<m_im_width; j++)
-      {
-#endif
-#if MQT_ALF_NPASS
-#if MQT_BA_RA
         if (m_maskImg[i][j] != regionOfInterested && count_valid > 0)
         {
 
         }
         else
         {
-#else
-        Int condition = (m_maskImg[i][j] == 1);
-        if (m_iDesignCurrentFilter)
-        {
-          condition = (m_maskImg[i][j] == 0 && count_valid > 0);
-        }
-        if(!condition)
-        {
-#endif
-#else
-        if (m_maskImg[i][j] == 0 && count_valid > 0)
-        { 
-        }
-        else
-        {
-#endif
-#if MQT_BA_RA
           varInd = m_varImg[i/var_step_size_h][j/var_step_size_w];
-#else
-          varInd=min(m_varImg[i][j], NO_VAR_BINS-1);
-#endif
           k=0; 
           memset(ELocal, 0, sqrFiltLength*sizeof(int));
           
@@ -3095,48 +2301,17 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
   }
   else if (tap == 1)
   {
-#if MTK_NONCROSS_INLOOP_FILTER
     for (i= ypos; i< ypos + iheight; i++)
     {
       for (j= xpos; j< xpos + iwidth; j++)
       {
-#else
-    for (i=0; i<m_im_height; i++)
-    {
-      for (j=0; j<m_im_width; j++)
-      {
-#endif
-#if MQT_ALF_NPASS
-#if MQT_BA_RA
         if (m_maskImg[i][j] != regionOfInterested && count_valid > 0)
         {
 
         }
         else
         {
-
-#else
-        Int condition = (m_maskImg[i][j] == 1);
-        if (m_iDesignCurrentFilter)
-        {
-          condition = (m_maskImg[i][j] == 0 && count_valid > 0);
-        }
-        if(!condition)
-        {
-#endif
-#else
-        if (m_maskImg[i][j] == 0 && count_valid > 0)
-        {
-
-        }
-        else
-        {
-#endif
-#if MQT_BA_RA
           varInd = m_varImg[i/var_step_size_h][j/var_step_size_w];
-#else
-          varInd= min(m_varImg[i][j], NO_VAR_BINS-1);
-#endif
           k=0; 
           memset(ELocal, 0, sqrFiltLength*sizeof(int));
           
@@ -3166,48 +2341,17 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
   }
   else //if (tap == 2)
   {
-#if MTK_NONCROSS_INLOOP_FILTER
     for (i= ypos; i< ypos + iheight; i++)
     {
       for (j= xpos; j< xpos + iwidth; j++)
       {
-#else
-    for (i=0; i<m_im_height; i++)
-    {
-      for (j=0; j<m_im_width; j++)
-      {
-#endif
-#if MQT_ALF_NPASS
-#if MQT_BA_RA
         if (m_maskImg[i][j] != regionOfInterested && count_valid > 0)
         {
 
         }
         else
         {
-
-#else
-        Int condition = (m_maskImg[i][j] == 1);
-        if (m_iDesignCurrentFilter)
-        {
-          condition = (m_maskImg[i][j] == 0 && count_valid > 0);
-        }
-        if(!condition)
-        {
-#endif
-#else
-        if (m_maskImg[i][j] == 0 && count_valid > 0)
-        {
-
-        }
-        else
-        {
-#endif
-#if MQT_BA_RA
           varInd = m_varImg[i/var_step_size_h][j/var_step_size_w];
-#else
-          varInd= min(m_varImg[i][j], NO_VAR_BINS-1);
-#endif
           k=0; 
           memset(ELocal, 0, sqrFiltLength*sizeof(int));
           
@@ -3237,90 +2381,9 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
       }
     }
   }
-#else
-  {
-#if MTK_NONCROSS_INLOOP_FILTER
-    for (i= ypos; i< ypos + iheight; i++)
-    {
-      for (j= xpos; j< xpos + iwidth; j++)
-      {
-#else
-    for (i=0; i<m_im_height; i++)
-    {
-      for (j=0; j<m_im_width; j++)
-      {
-#endif
-#if MQT_ALF_NPASS
-#if MQT_BA_RA
-        if (m_maskImg[i][j] != regionOfInterested && count_valid > 0)
-        {
 
-        }
-        else
-        {
-
-#else
-        Int condition = (m_maskImg[i][j] == 1);
-        if (m_iDesignCurrentFilter)
-        {
-          condition = (m_maskImg[i][j] == 0 && count_valid > 0);
-        }
-        if(!condition)
-        {
-#endif
-
-#else
-        if (m_maskImg[i][j] == 0 && count_valid > 0)
-        {
-
-        }
-        else
-        {
-#endif
-#if MQT_BA_RA
-          varInd = m_varImg[i/var_step_size_h][j/var_step_size_w];
-#else
-          varInd=min(m_varImg[i][j], NO_VAR_BINS-1);
-#endif
-          k=0; 
-          memset(ELocal, 0, sqrFiltLength*sizeof(int));
-#if TI_ALF_MAX_VSIZE_7
-          for (ii = -flV; ii < 0; ii++)
-#else
-          for (ii=-fl; ii<0; ii++)
-#endif
-          {
-            for (jj=-fl-ii; jj<=fl+ii; jj++)
-            {  
-              ELocal[p_pattern[k++]]+=(ImgDec[(i+ii)*Stride + (j+jj)]+ImgDec[(i-ii)*Stride + (j-jj)]);
-            }
-          }
-          for (jj=-fl; jj<0; jj++)
-            ELocal[p_pattern[k++]]+=(ImgDec[(i)*Stride + (j+jj)]+ImgDec[(i)*Stride + (j-jj)]);
-          ELocal[p_pattern[k++]]+=ImgDec[(i)*Stride + (j)];
-          ELocal[sqrFiltLength-1]=1;
-          yLocal=ImgOrg[(i)*Stride + (j)];
-
-          m_pixAcc[varInd]+=(yLocal*yLocal);
-          E= m_EGlobalSym[filtNo][varInd];
-          yy= m_yGlobalSym[filtNo][varInd];
-
-          for (k=0; k<sqrFiltLength; k++)
-          {
-            for (l=k; l<sqrFiltLength; l++)
-              E[k][l]+=(double)(ELocal[k]*ELocal[l]);
-            yy[k]+=(double)(ELocal[k]*yLocal);
-          }
-        }
-      }
-    }
-  }
-#endif
-
-#if MTK_NONCROSS_INLOOP_FILTER
   if(bSymmCopyBlockMatrix)
   {
-#endif
 
   // Matrix EGlobalSeq is symmetric, only part of it is calculated
   for (varInd=0; varInd<NO_VAR_BINS; varInd++)
@@ -3334,9 +2397,7 @@ Void   TEncAdaptiveLoopFilter::xstoreInBlockMatrix(imgpel* ImgOrg, imgpel* ImgDe
       }
     }
   }
-#if MTK_NONCROSS_INLOOP_FILTER
   }
-#endif
 
 }
 
@@ -3346,7 +2407,6 @@ Void   TEncAdaptiveLoopFilter::xFilteringFrameLuma_qc(imgpel* ImgOrg, imgpel* im
   static double **ySym, ***ESym;
   int lambda_val = (Int) m_dLambdaLuma;
   lambda_val = lambda_val * (1<<(2*g_uiBitIncrement));
-#if STAR_CROSS_SHAPES_LUMA
   if (ALFp->realfiltNo == 0)
   {
     filtNo = 0;
@@ -3355,14 +2415,6 @@ Void   TEncAdaptiveLoopFilter::xFilteringFrameLuma_qc(imgpel* ImgOrg, imgpel* im
   {
     filtNo = 1;
   }
-#else
-  if (tap==9)
-    filtNo =0;
-  else if (tap==7)
-    filtNo =1;
-  else
-    filtNo=2;
-#endif
   
   ESym=m_EGlobalSym[filtNo];  
   ySym=m_yGlobalSym[filtNo];
@@ -3374,98 +2426,35 @@ Void   TEncAdaptiveLoopFilter::xFilteringFrameLuma_qc(imgpel* ImgOrg, imgpel* im
   xcalcPredFilterCoeff(filtNo);
   
   //filter the frame with g_filterCoeffPrevSelected
-#if MTK_NONCROSS_INLOOP_FILTER
   if(!m_bUseNonCrossALF)
     xfilterFrame_en(0, 0, m_im_height, m_im_width, imgY_pad, ImgFilt, filtNo, Stride);
   else
     xfilterSlices_en(imgY_pad, ImgFilt, filtNo, Stride);
-#else
-  xfilterFrame_en(imgY_pad, ImgFilt, filtNo, Stride);
-#endif
 
   xcodeFiltCoeff(m_filterCoeffSymQuant, filtNo, m_varIndTab, filters_per_fr,0, ALFp);
 }
 
-#if MTK_NONCROSS_INLOOP_FILTER
 Void TEncAdaptiveLoopFilter::xfilterFrame_en(int ypos, int xpos, int iheight, int iwidth, imgpel* ImgDec, imgpel* ImgRest,int filtNo, int Stride)
-#else
-Void TEncAdaptiveLoopFilter::xfilterFrame_en(imgpel* ImgDec, imgpel* ImgRest,int filtNo, int Stride)
-#endif
 {
-#if MQT_BA_RA
   imgpel *imgY_rec = ImgDec;
   imgpel *p_imgY_pad, *p_imgY_pad0;
   int var_step_size_w = VAR_SIZE_W;
   int var_step_size_h = VAR_SIZE_H;
   int i,j,y,x;
   int fl, sqrFiltLength;
-#else
-  int i,j,ii,jj,y,x;
-  int  *pattern; 
-#if STAR_CROSS_SHAPES_LUMA
-  int fl, sqrFiltLength;
-#else
-  int fl, fl_temp, sqrFiltLength;
-#endif
-#endif
   int pixelInt;
   int offset = (1<<(NUM_BITS - 2));
   
-#if !MQT_BA_RA
-#if STAR_CROSS_SHAPES_LUMA
-  Int flH = 0;// horizontal_tap / 2
-  Int flV = 0;// vertical_tap / 2
-  Int m = 0;
-  pattern = patternTabFiltShapes[filtNo];
-  if (filtNo == 0)
-  {
-    flH = 2;
-    flV = 2;    
-  }
-  else //if (filtNo == 1)
-  {
-    flH = 5;
-    flV = 2;    
-  }
-#else 
-  pattern=m_patternTab_filt[filtNo];
-  fl_temp=m_flTab[filtNo];
-#if TI_ALF_MAX_VSIZE_7
-  Int fl_tempV = TComAdaptiveLoopFilter::ALFFlHToFlV(fl_temp);
-#endif
-#endif
-#endif
   sqrFiltLength=MAX_SQR_FILT_LENGTH;  fl=FILTER_LENGTH/2;
   
-#if MTK_NONCROSS_INLOOP_FILTER
   for (y= ypos, i = fl+ ypos; i < ypos+ iheight+ fl; i++, y++)
   {
     for (x= xpos, j = fl+ xpos; j < xpos+ iwidth+ fl; j++, x++)
     {
-#else
-  for (y=0, i = fl; i < m_im_height+fl; i++, y++)
-  {
-    for (x=0, j = fl; j < m_im_width+fl; j++, x++)
-    {
-#endif
-#if MQT_BA_RA
       int varInd=m_varImg[y/var_step_size_h][x/var_step_size_w];
-#else
-      int varInd=m_varImg[i-fl][j-fl];
-#if !STAR_CROSS_SHAPES_LUMA
-      imgpel *im1,*im2;
-#endif
-#endif
       int *coef = m_filterCoeffPrevSelected[varInd];
-#if !MQT_BA_RA
-#if !STAR_CROSS_SHAPES_LUMA
-      pattern=m_patternTab_filt[filtNo];
-#endif
-#endif
       pixelInt= m_filterCoeffPrevSelected[varInd][sqrFiltLength-1]; 
 
-#if MQT_BA_RA
-#if STAR_CROSS_SHAPES_LUMA
       if (filtNo == 0)
       {
         p_imgY_pad = imgY_rec + (i-fl+2)*Stride;
@@ -3504,164 +2493,6 @@ Void TEncAdaptiveLoopFilter::xfilterFrame_en(imgpel* ImgDec, imgpel* ImgRest,int
         pixelInt += coef[26]* (p_imgY_pad[j-fl+1]+p_imgY_pad[j-fl-1]);
         pixelInt += coef[27]* (p_imgY_pad[j-fl]);
       }
-#else
-      if (filtNo == 2) //5x5
-      {
-        pixelInt += coef[22]* (imgY_rec[(i-fl+2)*Stride + j-fl]+imgY_rec[(i-fl-2)*Stride + j-fl]);
-
-        pixelInt += coef[30]* (imgY_rec[(i-fl+1)*Stride + j-fl+1]+imgY_rec[(i-fl-1)*Stride + j-fl-1]);
-        pixelInt += coef[31]* (imgY_rec[(i-fl+1)*Stride + j-fl]  +imgY_rec[(i-fl-1)*Stride + j-fl]);
-        pixelInt += coef[32]* (imgY_rec[(i-fl+1)*Stride + j-fl-1]+imgY_rec[(i-fl-1)*Stride + j-fl+1]);
-
-        pixelInt += coef[38]* (imgY_rec[(i-fl)*Stride + j-fl-2]+imgY_rec[(i-fl)*Stride + j-fl+2]);
-        pixelInt += coef[39]* (imgY_rec[(i-fl)*Stride + j-fl-1]+imgY_rec[(i-fl)*Stride + j-fl+1]);
-        pixelInt += coef[40]* (imgY_rec[(i-fl)*Stride + j-fl]);
-      }
-      else if (filtNo == 1) //7x7
-      {
-        pixelInt += coef[13]* (imgY_rec[(i-fl+3)*Stride + j-fl]+imgY_rec[(i-fl-3)*Stride + j-fl]);
-
-        p_imgY_pad = imgY_rec + (i-fl+2)*Stride;
-        p_imgY_pad0 = imgY_rec + (i-fl-2)*Stride;
-        pixelInt += coef[21]* (p_imgY_pad[j-fl+1]+p_imgY_pad0[j-fl-1]);
-        pixelInt += coef[22]* (p_imgY_pad[j-fl]+p_imgY_pad0[j-fl]);
-        pixelInt += coef[23]* (p_imgY_pad[j-fl-1]+p_imgY_pad0[j-fl+1]);
-
-        p_imgY_pad = imgY_rec + (i-fl+1)*Stride;
-        p_imgY_pad0 = imgY_rec + (i-fl-1)*Stride;
-        pixelInt += coef[29]* (p_imgY_pad[j-fl+2]+p_imgY_pad0[j-fl-2]);
-        pixelInt += coef[30]* (p_imgY_pad[j-fl+1]+p_imgY_pad0[j-fl-1]);
-        pixelInt += coef[31]* (p_imgY_pad[j-fl]+p_imgY_pad0[j-fl]);
-        pixelInt += coef[32]* (p_imgY_pad[j-fl-1]+p_imgY_pad0[j-fl+1]);
-        pixelInt += coef[33]* (p_imgY_pad[j-fl-2]+p_imgY_pad0[j-fl+2]);
-
-        p_imgY_pad = imgY_rec + (i-fl)*Stride;
-        pixelInt += coef[37]* (p_imgY_pad[j-fl+3]+p_imgY_pad[j-fl-3]);
-        pixelInt += coef[38]* (p_imgY_pad[j-fl+2]+p_imgY_pad[j-fl-2]);
-        pixelInt += coef[39]* (p_imgY_pad[j-fl+1]+p_imgY_pad[j-fl-1]);
-        pixelInt += coef[40]* (p_imgY_pad[j-fl]);
-
-      }
-      else
-      {
-#if !TI_ALF_MAX_VSIZE_7
-        pixelInt += coef[4]* (imgY_rec[(i-fl+4)*Stride + j-fl]+imgY_rec[(i-fl-4)*Stride + j-fl]);
-#endif          
-        p_imgY_pad = imgY_rec + (i-fl+3)*Stride;
-        p_imgY_pad0 = imgY_rec + (i-fl-3)*Stride;
-        pixelInt += coef[12]* (p_imgY_pad[j-fl+1]+p_imgY_pad0[j-fl-1]);
-        pixelInt += coef[13]* (p_imgY_pad[j-fl]+p_imgY_pad0[j-fl]);
-        pixelInt += coef[14]* (p_imgY_pad[j-fl-1]+p_imgY_pad0[j-fl+1]);
-
-        p_imgY_pad = imgY_rec + (i-fl+2)*Stride;
-        p_imgY_pad0 = imgY_rec + (i-fl-2)*Stride;
-        pixelInt += coef[20]* (p_imgY_pad[j-fl+2]+p_imgY_pad0[j-fl-2]);
-        pixelInt += coef[21]* (p_imgY_pad[j-fl+1]+p_imgY_pad0[j-fl-1]);
-        pixelInt += coef[22]* (p_imgY_pad[j-fl]+p_imgY_pad0[j-fl]);
-        pixelInt += coef[23]* (p_imgY_pad[j-fl-1]+p_imgY_pad0[j-fl+1]);
-        pixelInt += coef[24]* (p_imgY_pad[j-fl-2]+p_imgY_pad0[j-fl+2]);
-
-        p_imgY_pad = imgY_rec + (i-fl+1)*Stride;
-        p_imgY_pad0 = imgY_rec + (i-fl-1)*Stride;
-        pixelInt += coef[28]* (p_imgY_pad[j-fl+3]+p_imgY_pad0[j-fl-3]);
-        pixelInt += coef[29]* (p_imgY_pad[j-fl+2]+p_imgY_pad0[j-fl-2]);
-        pixelInt += coef[30]* (p_imgY_pad[j-fl+1]+p_imgY_pad0[j-fl-1]);
-        pixelInt += coef[31]* (p_imgY_pad[j-fl]+p_imgY_pad0[j-fl]);
-        pixelInt += coef[32]* (p_imgY_pad[j-fl-1]+p_imgY_pad0[j-fl+1]);
-        pixelInt += coef[33]* (p_imgY_pad[j-fl-2]+p_imgY_pad0[j-fl+2]);
-        pixelInt += coef[34]* (p_imgY_pad[j-fl-3]+p_imgY_pad0[j-fl+3]);
-
-        p_imgY_pad = imgY_rec + (i-fl)*Stride;
-        pixelInt += coef[36]* (p_imgY_pad[j-fl+4]+p_imgY_pad[j-fl-4]);
-        pixelInt += coef[37]* (p_imgY_pad[j-fl+3]+p_imgY_pad[j-fl-3]);
-        pixelInt += coef[38]* (p_imgY_pad[j-fl+2]+p_imgY_pad[j-fl-2]);
-        pixelInt += coef[39]* (p_imgY_pad[j-fl+1]+p_imgY_pad[j-fl-1]);
-        pixelInt += coef[40]* (p_imgY_pad[j-fl]);
-
-      }
-#endif
-#else
-#if STAR_CROSS_SHAPES_LUMA
-  if (filtNo == 0)
-  {
-    for (y=0, i = fl; i < m_im_height+fl; i++, y++)
-    {
-      for (x=0, j = fl; j < m_im_width+fl; j++, x++)
-      {
-        int varInd=m_varImg[i-fl][j-fl];
-        imgpel *im1,*im2;
-        int *coef = m_filterCoeffPrevSelected[varInd];
-        pattern = patternTabFiltShapes[filtNo];
-        pixelInt= m_filterCoeffPrevSelected[varInd][sqrFiltLength-1]; 
-        for (ii=-flV; ii<0; ii++)
-        {
-           m = (ii == -flV)? 2: 1;
-           im1= &(ImgDec[(y+ii)*Stride + x-m]);
-           im2= &(ImgDec[(y-ii)*Stride + x+m]);
-           for (jj=-m; jj<=m; jj++,im1++,im2--)
-             if ((m == 1) || (m == 2 && jj%2 == 0))
-             {
-               pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-             }
-        }
-        im1= &(ImgDec[y*Stride + x-flH]);
-        im2= &(ImgDec[y*Stride + x+flH]);    
-        for (jj=-flH; jj<0; jj++,im1++,im2--)
-          pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-        pixelInt+=(ImgDec[y*Stride + x]*coef[*(pattern++)]);
-
-        pixelInt=(int)((pixelInt+offset) >> (NUM_BITS - 1));
-        ImgRest[y*Stride + x] = Clip3(0, g_uiIBDI_MAX, pixelInt);
-      }
-    }
-  }
-  else //if (filtNo == 1)
-  {
-    for (y=0, i = fl; i < m_im_height+fl; i++, y++)
-    {
-      for (x=0, j = fl; j < m_im_width+fl; j++, x++)
-      {
-        int varInd=m_varImg[i-fl][j-fl];
-        imgpel *im1,*im2;
-        int *coef = m_filterCoeffPrevSelected[varInd];
-        pattern = patternTabFiltShapes[filtNo];
-        pixelInt= m_filterCoeffPrevSelected[varInd][sqrFiltLength-1];
-        for (ii=-flV; ii<0; ii++)
-        {
-          im1= &(ImgDec[(y+ii)*Stride + x]);
-          im2= &(ImgDec[(y-ii)*Stride + x]);
-          pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-        }
-        im1= &(ImgDec[y*Stride + x-flH]);
-        im2= &(ImgDec[y*Stride + x+flH]);    
-        for (jj=-flH; jj<0; jj++,im1++,im2--)
-          pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-        pixelInt+=(ImgDec[y*Stride + x]*coef[*(pattern++)]);
-
-        pixelInt=(int)((pixelInt+offset) >> (NUM_BITS - 1));
-        ImgRest[y*Stride + x] = Clip3(0, g_uiIBDI_MAX, pixelInt);
-      }
-    }
-  }
-#else
-#if TI_ALF_MAX_VSIZE_7
-      for (ii = -fl_tempV; ii < 0; ii++)
-#else
-      for (ii=-fl_temp; ii<0; ii++)
-#endif
-      {
-        im1= &(ImgDec[(y+ii)*Stride + x-fl_temp-ii]);
-        im2= &(ImgDec[(y-ii)*Stride + x+fl_temp+ii]);
-        for (jj=-fl_temp-ii; jj<=fl_temp+ii; jj++,im1++,im2--)
-          pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-      }
-      im1= &(ImgDec[y*Stride + x-fl_temp]);
-      im2= &(ImgDec[y*Stride + x+fl_temp]);
-      for (jj=-fl_temp; jj<0; jj++,im1++,im2--)
-        pixelInt+=((*im1+ *im2)*coef[*(pattern++)]);
-      pixelInt+=(ImgDec[y*Stride + x]*coef[*(pattern++)]);
-#endif  
-#endif
       pixelInt=(int)((pixelInt+offset) >> (NUM_BITS - 1));
       ImgRest[y*Stride + x] = Clip( pixelInt );
     }
@@ -3696,16 +2527,10 @@ Void TEncAdaptiveLoopFilter::xfindBestFilterVarPred(double **ySym, double ***ESy
     first=1;
   }
   
-#if STAR_CROSS_SHAPES_LUMA
   sqrFiltLength= m_sqrFiltLengthTab[filtNo] ;
   // in HM-3.x fl specifies the filter tap - in our proposal fl specifies the filter number (0: Cross5x5 - 1: Cross11x5)
   Int fl = filtNo;
   weights = weightsTabShapes[filtNo];               
-#else   
-  sqrFiltLength=m_sqrFiltLengthTab[filtNo];   
-  Int fl = m_flTab[filtNo];
-  weights=m_weightsTab[filtNo];               
-#endif
   
   memcpy(pixAcc_temp,pixAcc,sizeof(double)*NO_VAR_BINS);
   for (varInd=0; varInd<NO_VAR_BINS; varInd++)
@@ -3797,25 +2622,7 @@ Void TEncAdaptiveLoopFilter::xfindBestFilterVarPred(double **ySym, double ***ESy
 Void TEncAdaptiveLoopFilter::xcalcPredFilterCoeff(Int filtNo)
 {
   int *patternMap, varInd, i, k;
-#if STAR_CROSS_SHAPES_LUMA
   patternMap = patternMapTabShapes[filtNo];
-#if MQT_ALF_NPASS && !MQT_BA_RA
-  if (m_iALFEncodePassReduction && (!m_iUsePreviousFilter || !m_iDesignCurrentFilter))
-  {
-    if((m_iCurrentPOC%m_iGOPSize) == 0)
-    {
-      m_iPreviousFilterShape[0]= m_iPreviousFilterShape[m_iGOPSize]; 
-      m_iPreviousFilterShape[m_iGOPSize]= filtNo; 
-    }
-    else
-    {
-      m_iPreviousFilterShape[m_iCurrentPOC%m_iGOPSize] = filtNo;
-    }
-  }
-#endif
-#else
-  patternMap=m_patternMapTab[filtNo];
-#endif
   for(varInd=0; varInd<NO_VAR_BINS; ++varInd)
   {
     k=0;
@@ -3830,26 +2637,10 @@ Void TEncAdaptiveLoopFilter::xcalcPredFilterCoeff(Int filtNo)
       {
         m_filterCoeffPrevSelected[varInd][i]=0;
       }
-#if MQT_ALF_NPASS && !MQT_BA_RA
-      if (m_iALFEncodePassReduction && (!m_iUsePreviousFilter || !m_iDesignCurrentFilter))
-      {
-        if((m_iCurrentPOC%m_iGOPSize) == 0)
-        {
-          m_aiFilterCoeffSaved[0][varInd][i] = m_aiFilterCoeffSaved[m_iGOPSize][varInd][i]; 
-          m_aiFilterCoeffSaved[m_iGOPSize][varInd][i] = m_filterCoeffPrevSelected[varInd][i]; 
-        }
-        else
-        {
-          m_aiFilterCoeffSaved[m_iCurrentPOC%m_iGOPSize][varInd][i] = m_filterCoeffPrevSelected[varInd][i];
-        }
-      }
-#endif
-
     }
   }
 }
 
-#if MQT_ALF_NPASS
 /** code filter coefficients
  * \param filterCoeffSymQuant filter coefficients buffer
  * \param filtNo filter No.
@@ -3861,19 +2652,11 @@ Void TEncAdaptiveLoopFilter::xcalcPredFilterCoeff(Int filtNo)
  */
 
 UInt TEncAdaptiveLoopFilter::xcodeFiltCoeff(Int **filterCoeffSymQuant, Int filtNo, Int varIndTab[], Int filters_per_fr_best, Int frNo, ALFParam* ALFp)
-#else
-Void TEncAdaptiveLoopFilter::xcodeFiltCoeff(Int **filterCoeffSymQuant, Int filtNo, Int varIndTab[], Int filters_per_fr_best, Int frNo, ALFParam* ALFp)
-#endif
 {
-#if STAR_CROSS_SHAPES_LUMA
   Int varInd, forceCoeff0, codedVarBins[NO_VAR_BINS], coeffBits, createBistream;   
   Int sqrFiltLength = m_sqrFiltLengthTab[filtNo] ; 
   // in HM-3.x fl specifies the filter tap - in our proposal fl specifies the filter number (0: Cross5x5 - 1: Cross11x5)
   Int fl = filtNo;
-#else
-  int varInd, forceCoeff0, codedVarBins[NO_VAR_BINS], coeffBits, createBistream,   sqrFiltLength=m_sqrFiltLengthTab[filtNo], 
-  fl=m_flTab[filtNo];
-#endif 
   
   ALFp->filters_per_group_diff = filters_per_fr_best;
   ALFp->filters_per_group = filters_per_fr_best;
@@ -3923,9 +2706,7 @@ Void TEncAdaptiveLoopFilter::xcodeFiltCoeff(Int **filterCoeffSymQuant, Int filtN
                                              filters_per_fr_best, codedVarBins, createBistream=1, ALFp);
   }
 
-#if MQT_ALF_NPASS
   return (UInt)coeffBits;
-#endif
 }
 
 
@@ -3958,7 +2739,7 @@ Void TEncAdaptiveLoopFilter::xSetCUAlfCtrlFlags_qc(UInt uiAlfCtrlDepth, TComPicY
       xSetCUAlfCtrlFlag_qc(pcCU, 0, 0, uiAlfCtrlDepth, pcPicOrg, pcPicDec, pcPicRest, ruiDist, cAlfCUCtrlParam.alf_cu_flag);
     }
 
-    cAlfCUCtrlParam.num_alf_cu_flag = cAlfCUCtrlParam.alf_cu_flag.size();
+    cAlfCUCtrlParam.num_alf_cu_flag = (UInt)cAlfCUCtrlParam.alf_cu_flag.size();
   }
   else
   {
@@ -3988,13 +2769,11 @@ Void TEncAdaptiveLoopFilter::xSetCUAlfCtrlFlags_qc(UInt uiAlfCtrlDepth, TComPicY
     xSetCUAlfCtrlFlag_qc(pcCU, 0, 0, uiAlfCtrlDepth, pcPicOrg, pcPicDec, pcPicRest, ruiDist, pAlfParam);
   }
 
-#if MTK_NONCROSS_INLOOP_FILTER
   if(m_uiNumSlicesInPic > 1)
   {
     getCtrlFlagsForSlices(true, (Int)uiAlfCtrlDepth);
     transferCtrlFlagsToAlfParam(pAlfParam->num_alf_cu_flag, pAlfParam->alf_cu_flag);
   }
-#endif
 
 }
 #endif
@@ -4123,34 +2902,22 @@ Void TEncAdaptiveLoopFilter::xSetCUAlfCtrlFlag_qc(TComDataCU* pcCU, UInt uiAbsPa
 
 Void TEncAdaptiveLoopFilter::xReDesignFilterCoeff_qc(TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, Bool bReadCorr)
 {
-#if STAR_CROSS_SHAPES_LUMA
   Int tap = m_pcTempAlfParam->realfiltNo;
-#else  
-  Int tap = m_pcTempAlfParam->tap;
-#endif
   Int    LumaStride = pcPicOrg->getStride();
   imgpel* pOrg = (imgpel*)pcPicOrg->getLumaAddr();
   imgpel* pDec = (imgpel*)pcPicDec->getLumaAddr();
   imgpel* pRest = (imgpel*)pcPicRest->getLumaAddr();
   xFirstFilteringFrameLuma(pOrg, pDec, pRest, m_pcTempAlfParam, tap, LumaStride); 
   
-#if MQT_ALF_NPASS && MQT_BA_RA
   if (m_iALFEncodePassReduction)
   {
     if(!m_iUsePreviousFilter)
     {
-#if STAR_CROSS_SHAPES_LUMA
       saveFilterCoeffToBuffer(m_filterCoeffPrevSelected, m_pcTempAlfParam->realfiltNo);
-#else
-      saveFilterCoeffToBuffer(m_filterCoeffPrevSelected);
-#endif
     }
   }
-#endif
-
-
-
 }
+
 Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, UInt64& ruiMinRate, UInt64& ruiMinDist, Double& rdMinCost)
 {
 #if F747_APS
@@ -4159,14 +2926,12 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
   std::vector<AlfCUCtrlInfo> vAlfCUCtrlParamTemp(m_vBestAlfCUCtrlParam);
 #endif
 
-#if MQT_ALF_NPASS
   imgpel** maskImgTemp;
 
   if(m_iALFEncodePassReduction == 2)
   {
     get_mem2Dpel(&maskImgTemp, m_im_height, m_im_width);
   }
-#endif
 
   m_pcEntropyCoder->setAlfCtrl(true);
   
@@ -4185,11 +2950,7 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
     m_pcTempAlfParam->cu_control_flag = 1;
 #endif
 
-#if MQT_ALF_NPASS
     for (UInt uiRD = 0; uiRD <= m_iALFNumOfRedesign; uiRD++)
-#else
-    for (UInt uiRD = 0; uiRD <= ALF_NUM_OF_REDESIGN; uiRD++)
-#endif
     {
       if (uiRD)
       {
@@ -4222,12 +2983,10 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
         copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
         //save maskImg
         xCopyTmpAlfCtrlFlagsFrom();
-#if MQT_ALF_NPASS
         if(m_iALFEncodePassReduction == 2)
         {
           ::memcpy(maskImgTemp[0], m_maskImg[0], sizeof(imgpel)*m_im_height* m_im_width);
         }
-#endif
       }
     }
   }
@@ -4238,7 +2997,6 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
   if (m_pcBestAlfParam->cu_control_flag)
 #endif
   {
-#if MQT_ALF_NPASS
     if(m_iALFEncodePassReduction == 2)
     {
       UInt uiDepth = uiBestDepth;
@@ -4276,13 +3034,11 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
 #endif
       }
     }
-#endif
 
     m_pcEntropyCoder->setAlfCtrl(true);
     m_pcEntropyCoder->setMaxAlfCtrlDepth(uiBestDepth);
     xCopyTmpAlfCtrlFlagsTo();
 
-#if MTK_NONCROSS_INLOOP_FILTER
     if(m_uiNumSlicesInPic > 1)
     {
       getCtrlFlagsForSlices(true, (Int)uiBestDepth);
@@ -4290,7 +3046,6 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
       transferCtrlFlagsToAlfParam(m_pcBestAlfParam->num_alf_cu_flag, m_pcBestAlfParam->alf_cu_flag);
 #endif
     }
-#endif
 
     m_pcPicYuvBest->copyToPicLuma(pcPicRest);//copy m_pcPicYuvBest to pcPicRest
     xCopyDecToRestCUs(pcPicDec, pcPicRest); //pcPicRest = pcPicDec
@@ -4299,166 +3054,18 @@ Void TEncAdaptiveLoopFilter::xCUAdaptiveControl_qc(TComPicYuv* pcPicOrg, TComPic
   {
     m_pcEntropyCoder->setAlfCtrl(false);
     m_pcEntropyCoder->setMaxAlfCtrlDepth(0);
-#if MTK_NONCROSS_INLOOP_FILTER
     if(m_uiNumSlicesInPic > 1)
     {
       getCtrlFlagsForSlices(false, 0);
     }
-#endif
-
   }
   freeALFParam(&cFrmAlfParam);
 
-#if MQT_ALF_NPASS
   if(m_iALFEncodePassReduction == 2)
   {
     free_mem2Dpel(maskImgTemp);
   }
-#endif
 }
-
-#if !STAR_CROSS_SHAPES_LUMA
-Void TEncAdaptiveLoopFilter::xFilterTapDecision_qc(TComPicYuv* pcPicOrg, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, UInt64& ruiMinRate, UInt64& ruiMinDist, Double& rdMinCost)
-{
-#if MQT_ALF_NPASS
-  if(m_iALFEncodePassReduction)
-  {
-    return;  // filter tap has been decided in xEncALFLuma_qc
-  }
-#endif
-
-  // restriction for non-referenced B-slice
-  if (m_eSliceType == B_SLICE && m_iPicNalReferenceIdc == 0)
-  {
-    return;
-  }
-  
-  UInt64 uiRate, uiDist;
-  Double dCost;
-  
-#if F747_APS
-  std::vector<AlfCUCtrlInfo> vAlfCUCtrlParamTemp;
-  UInt                       uiBestDepth;
-
-  Bool bAlfCUCtrlUsed = false;
-  for(Int s=0; s< m_uiNumSlicesInPic; s++)
-  {
-    if(m_vBestAlfCUCtrlParam[s].cu_control_flag == 1)
-      bAlfCUCtrlUsed = true;
-  }
-
-  if(bAlfCUCtrlUsed)
-  {
-    uiBestDepth         = m_vBestAlfCUCtrlParam[0].alf_max_depth;
-    vAlfCUCtrlParamTemp = m_vBestAlfCUCtrlParam;
-#else
-  if (m_pcBestAlfParam->cu_control_flag)
-  {
-#endif
-    xCopyTmpAlfCtrlFlagsFrom();
-  }
-  
-  Bool bChanged = false;
-  for (Int iTap = ALF_MIN_NUM_TAP; iTap <= ALF_MAX_NUM_TAP; iTap += 2)
-  {
-    copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-    m_pcTempAlfParam->tap = iTap;
-#if TI_ALF_MAX_VSIZE_7
-    m_pcTempAlfParam->tapV = TComAdaptiveLoopFilter::ALFTapHToTapV(m_pcTempAlfParam->tap);
-    m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(m_pcTempAlfParam->tap); 
-#else
-    m_pcTempAlfParam->num_coeff = (Int)(iTap*iTap/4) + 2; 
-#endif
-    
-#if F747_APS
-    if(bAlfCUCtrlUsed)
-#else
-    if (m_pcTempAlfParam->cu_control_flag)
-#endif
-    {
-      xReDesignFilterCoeff_qc(pcPicOrg, pcPicDec, m_pcPicYuvTmp, false);
-#if F747_APS
-      xSetCUAlfCtrlFlags_qc(uiBestDepth, pcPicOrg, pcPicDec, m_pcPicYuvTmp, uiDist, vAlfCUCtrlParamTemp); 
-      xCalcRDCost(m_pcTempAlfParam, uiRate, uiDist, dCost, &vAlfCUCtrlParamTemp);
-#else
-      xSetCUAlfCtrlFlags_qc(m_pcEntropyCoder->getMaxAlfCtrlDepth(), pcPicOrg, pcPicDec, m_pcPicYuvTmp, uiDist, m_pcTempAlfParam);
-      xCalcRDCost(m_pcTempAlfParam, uiRate, uiDist, dCost);
-#endif
-    }
-
-    else
-    {
-      Int    Height = pcPicOrg->getHeight();
-      Int    Width = pcPicOrg->getWidth();
-      for (Int i=0; i<Height; i++)
-      {
-        for (Int j=0; j<Width; j++)
-        {
-          m_maskImg[i][j] = 1;
-        }
-      }
-      xReDesignFilterCoeff_qc(pcPicOrg, pcPicDec, m_pcPicYuvTmp, false);
-
-      xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, m_pcTempAlfParam, uiRate, uiDist, dCost);
-    }
-
-    if (dCost < rdMinCost)
-    {
-      rdMinCost = dCost;
-      ruiMinDist = uiDist;
-      ruiMinRate = uiRate;
-      m_pcPicYuvTmp->copyToPicLuma(m_pcPicYuvBest);
-      copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
-      bChanged = true;
-
-#if F747_APS
-      if (bAlfCUCtrlUsed)
-      {
-        m_vBestAlfCUCtrlParam = vAlfCUCtrlParamTemp;
-#else
-      if (m_pcTempAlfParam->cu_control_flag)
-      {
-#endif
-        xCopyTmpAlfCtrlFlagsFrom();
-      }
-
-    }
-  }
-  
-#if F747_APS
-  if(bAlfCUCtrlUsed)
-#else
-  if (m_pcBestAlfParam->cu_control_flag)
-#endif
-  {
-    xCopyTmpAlfCtrlFlagsTo();
-#if MTK_NONCROSS_INLOOP_FILTER
-    if(m_uiNumSlicesInPic > 1)
-    {
-#if F747_APS
-      getCtrlFlagsForSlices(true, (Int)uiBestDepth);
-#else
-      getCtrlFlagsForSlices(true, (Int)m_pcEntropyCoder->getMaxAlfCtrlDepth());
-      transferCtrlFlagsToAlfParam(m_pcBestAlfParam->num_alf_cu_flag, m_pcBestAlfParam->alf_cu_flag);
-#endif
-    }
-#endif
-
-    if (bChanged)
-    {
-      m_pcPicYuvBest->copyToPicLuma(pcPicRest);
-      xCopyDecToRestCUs(pcPicDec, pcPicRest);
-    }
-  }
-  else if (m_pcBestAlfParam->tap > ALF_MIN_NUM_TAP)
-  {
-    m_pcPicYuvBest->copyToPicLuma(pcPicRest);
-  }
-  
-  copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-
-}
-#endif
 
 #define ROUND(a)  (((a) < 0)? (int)((a) - 0.5) : (int)((a) + 0.5))
 #define REG              0.0001
@@ -4986,18 +3593,10 @@ Double TEncAdaptiveLoopFilter::findFilterCoeff(double ***EGlobalSeq, double **yG
   return(error);
 }
 
-#if MQT_ALF_NPASS
-
-#if MQT_BA_RA
-
 /** Save redesigned filter set to buffer
  * \param filterCoeffPrevSelected filter set buffer
  */
-#if STAR_CROSS_SHAPES_LUMA
 Void TEncAdaptiveLoopFilter::saveFilterCoeffToBuffer(Int **filterCoeffPrevSelected,Int filtNo)
-#else
-Void TEncAdaptiveLoopFilter::saveFilterCoeffToBuffer(Int **filterCoeffPrevSelected)
-#endif
 {
   Int iBufferIndex = m_iCurrentPOC%m_iGOPSize;
 
@@ -5021,9 +3620,7 @@ Void TEncAdaptiveLoopFilter::saveFilterCoeffToBuffer(Int **filterCoeffPrevSelect
       {
         ::memcpy(m_aiFilterCoeffSaved[m_iGOPSize][varInd],filterCoeffPrevSelected[varInd], sizeof(Int)*MAX_SQR_FILT_LENGTH );
       }
-#if STAR_CROSS_SHAPES_LUMA
       m_iPreviousFilterShape[m_iGOPSize]= filtNo; 
-#endif
       pbFirstAccess[m_uiVarGenMethod] = false;
     }
 
@@ -5033,10 +3630,8 @@ Void TEncAdaptiveLoopFilter::saveFilterCoeffToBuffer(Int **filterCoeffPrevSelect
       ::memcpy(m_aiFilterCoeffSaved[m_iGOPSize][varInd],filterCoeffPrevSelected[varInd], sizeof(Int)*MAX_SQR_FILT_LENGTH );
 
     }
-#if STAR_CROSS_SHAPES_LUMA
     m_iPreviousFilterShape[0]= m_iPreviousFilterShape[m_iGOPSize]; 
     m_iPreviousFilterShape[m_iGOPSize]= filtNo; 
-#endif
   }
   else
   {
@@ -5044,9 +3639,7 @@ Void TEncAdaptiveLoopFilter::saveFilterCoeffToBuffer(Int **filterCoeffPrevSelect
     {
       ::memcpy(m_aiFilterCoeffSaved[iBufferIndex][varInd],filterCoeffPrevSelected[varInd], sizeof(Int)*MAX_SQR_FILT_LENGTH );
     }
-#if STAR_CROSS_SHAPES_LUMA
     m_iPreviousFilterShape[iBufferIndex]= filtNo; 
-#endif
 
   }
 }
@@ -5084,57 +3677,30 @@ Void TEncAdaptiveLoopFilter::setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg,
   cAlfParam.chroma_idc      = 0;
 
   //filter frame with the previous time-delayed filters
-#if STAR_CROSS_SHAPES_LUMA
   Int filtNo;
   m_pcTempAlfParam->alf_flag = 1;
-#if MQT_BA_RA
   m_pcTempAlfParam->alf_pcr_region_flag = m_uiVarGenMethod;
-#endif
 
 #if !F747_APS
   m_pcTempAlfParam->cu_control_flag = 0;
-#endif
-#else
-  Int iTap = 9;
-  Int filtNo = 0;
-  m_pcTempAlfParam->alf_flag = 1;
-#if MQT_BA_RA
-  m_pcTempAlfParam->alf_pcr_region_flag = m_uiVarGenMethod;
-#endif
-#if !F747_APS
-  m_pcTempAlfParam->cu_control_flag = 0;
-#endif
-  m_pcTempAlfParam->tap = iTap;
-#if TI_ALF_MAX_VSIZE_7
-  m_pcTempAlfParam->tapV      = TComAdaptiveLoopFilter::ALFTapHToTapV(iTap);
-  m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(iTap);
-#else
-  m_pcTempAlfParam->num_coeff = iTap*iTap/4 + 2;
-#endif
 #endif
 
   for (Int index=0; index<2; index++)
   {
     setFilterIdx(index);
 
-#if STAR_CROSS_SHAPES_LUMA
     filtNo = m_pcTempAlfParam->realfiltNo = m_iPreviousFilterShape[m_iFilterIdx];
     if (filtNo != 0 && filtNo != 1) 
     {
       continue;
     }
     m_pcTempAlfParam->num_coeff = m_sqrFiltLengthTab[filtNo] ; 
-#endif
 
     xcalcPredFilterCoeffPrev(filtNo);
-#if MTK_NONCROSS_INLOOP_FILTER
     if(!m_bUseNonCrossALF)
       xfilterFrame_en(0, 0, m_im_height, m_im_width, pDec, pRest, filtNo, LumaStride);
     else
       xfilterSlices_en(pDec, pRest, filtNo, LumaStride);
-#else
-    xfilterFrame_en(pDec, pRest, filtNo, LumaStride);
-#endif
     xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, NULL, uiRate, uiDist, dCost);
     if (dCost < dMinCost)
     {
@@ -5143,10 +3709,8 @@ Void TEncAdaptiveLoopFilter::setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg,
       copyALFParam(&cAlfParam, m_pcTempAlfParam);
     }
   }
-#if STAR_CROSS_SHAPES_LUMA
   filtNo = cAlfParam.realfiltNo;
   copyALFParam(m_pcTempAlfParam, &cAlfParam);
-#endif
   //decided the best CU control depth
   m_pcPicYuvBest->copyToPicLuma(m_pcPicYuvTmp);
   m_pcEntropyCoder->setAlfCtrl(true);
@@ -5223,8 +3787,6 @@ Void TEncAdaptiveLoopFilter::setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg,
 
   lambda_val = lambda_val * (1<<(2*g_uiBitIncrement));
 
-#if STAR_CROSS_SHAPES_LUMA
-#if MTK_NONCROSS_INLOOP_FILTER
   if(!m_bUseNonCrossALF)
   {
     xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, pOrg, pDec, cAlfParam.realfiltNo, LumaStride);
@@ -5233,21 +3795,6 @@ Void TEncAdaptiveLoopFilter::setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg,
   { 
     xstoreInBlockMatrixforSlices(pOrg, pDec, cAlfParam.realfiltNo, LumaStride);
   }
-#else
-  xstoreInBlockMatrix(pOrg, pDec, cAlfParam.realfiltNo, LumaStride);
-#endif
-#else
-#if MTK_NONCROSS_INLOOP_FILTER
-  if(!m_bUseNonCrossALF)
-    xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, pOrg, pDec, cAlfParam.tap, LumaStride);
-  else
-    xstoreInBlockMatrixforSlices(pOrg, pDec, cAlfParam.tap, LumaStride);
-#else
-  xstoreInBlockMatrix(pOrg, pDec, cAlfParam.tap, LumaStride);
-#endif
-
-  assert(filtNo == 0);
-#endif
   xfindBestFilterVarPred(m_yGlobalSym[filtNo], m_EGlobalSym[filtNo], m_pixAcc, 
     m_filterCoeffSym, m_filterCoeffSymQuant, 
     filtNo, &filters_per_fr, 
@@ -5255,21 +3802,12 @@ Void TEncAdaptiveLoopFilter::setMaskWithTimeDelayedResults(TComPicYuv* pcPicOrg,
 
   xcalcPredFilterCoeff(filtNo);
 
-#if STAR_CROSS_SHAPES_LUMA
   saveFilterCoeffToBuffer(m_filterCoeffPrevSelected,filtNo);
-#else
-  saveFilterCoeffToBuffer(m_filterCoeffPrevSelected);
-#endif
   m_iDesignCurrentFilter = 1;
 
   freeALFParam(&cAlfParam);
 
 }
-
-
-
-
-#endif
 
 
 /** set ALF encoding parameters
@@ -5381,8 +3919,6 @@ Void TEncAdaptiveLoopFilter::setInitialMask(TComPicYuv* pcPicOrg, TComPicYuv* pc
   Int LumaStride = pcPicOrg->getStride();
   imgpel* pDec = (imgpel*)pcPicDec->getLumaAddr();
 
-#if STAR_CROSS_SHAPES_LUMA
-#if MTK_NONCROSS_INLOOP_FILTER
   if(!m_bUseNonCrossALF)
   {
     calcVar(0, 0, m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, Height, Width, LumaStride);
@@ -5391,19 +3927,6 @@ Void TEncAdaptiveLoopFilter::setInitialMask(TComPicYuv* pcPicOrg, TComPicYuv* pc
   {
     calcVarforSlices(m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, LumaStride);
   }
-#else
-  calcVar(m_varImg, pDec, FILTER_LENGTH/2, VAR_SIZE, Height, Width, LumaStride);
-#endif
-#else
-#if MTK_NONCROSS_INLOOP_FILTER
-  if(!m_bUseNonCrossALF)
-    calcVar(0, 0, m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-  else
-    calcVarforSlices(m_varImg, pDec, 9/2, VAR_SIZE, LumaStride);
-#else
-  calcVar(m_varImg, pDec, 9/2, VAR_SIZE, Height, Width, LumaStride);
-#endif
-#endif
 
   if(!m_iALFEncodePassReduction || !m_iUsePreviousFilter)
   {
@@ -5417,116 +3940,11 @@ Void TEncAdaptiveLoopFilter::setInitialMask(TComPicYuv* pcPicOrg, TComPicYuv* pc
   }
   else
   {
-#if MQT_BA_RA
     setMaskWithTimeDelayedResults(pcPicOrg, pcPicDec);
-#else
-    Int uiBestDepth=0;
-    UInt64 uiRate, uiDist;
-    Double dCost, dMinCost = MAX_DOUBLE;
-    //imgpel* pOrg = (imgpel*)pcPicOrg->getLumaAddr();
-    imgpel* pRest = (imgpel*)m_pcPicYuvTmp->getLumaAddr();
-
-#if STAR_CROSS_SHAPES_LUMA
-    m_pcTempAlfParam->cu_control_flag = 0;
-#else
-    Int iTap = 9;
-    Int filtNo = 0;
-    m_pcTempAlfParam->cu_control_flag = 0;
-    m_pcTempAlfParam->tap = iTap;
-#if TI_ALF_MAX_VSIZE_7
-    m_pcTempAlfParam->tapV      = TComAdaptiveLoopFilter::ALFTapHToTapV(iTap);
-    m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(iTap);
-#else
-    m_pcTempAlfParam->num_coeff = iTap*iTap/4 + 2;
-#endif
-#endif
-
-    for (Int index=0; index<2; index++)
-    {
-      setFilterIdx(index);
-#if STAR_CROSS_SHAPES_LUMA
-      Int filtNo = m_pcTempAlfParam->realfiltNo = m_iPreviousFilterShape[m_iFilterIdx];
-      if (filtNo != 0 && filtNo != 1) 
-      {
-        continue; 
-      }
-      m_pcTempAlfParam->num_coeff = m_sqrFiltLengthTab[filtNo] ; 
-#endif
-      xcalcPredFilterCoeffPrev(filtNo);
-#if MTK_NONCROSS_INLOOP_FILTER
-      if(!m_bUseNonCrossALF)
-        xfilterFrame_en(0, 0, Height, Width, pDec, pRest, filtNo, LumaStride);
-      else
-        xfilterSlices_en(pDec, pRest, filtNo, LumaStride);
-#else
-      xfilterFrame_en(pDec, pRest, filtNo, LumaStride);
-#endif
-      xCalcRDCost(pcPicOrg, m_pcPicYuvTmp, NULL, uiRate, uiDist, dCost);
-      if (dCost < dMinCost)
-      {
-        dMinCost  = dCost;
-        m_pcPicYuvTmp->copyToPicLuma(m_pcPicYuvBest);
-        copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
-      }
-    }
-    m_pcPicYuvBest->copyToPicLuma(m_pcPicYuvTmp);
-
-    m_pcEntropyCoder->setAlfCtrl(true);
-    Int maxDepth = g_uiMaxCUDepth;
-    if (pcPicOrg->getWidth() < 1000) maxDepth = 2;
-    for (UInt uiDepth = 0; uiDepth < maxDepth; uiDepth++)
-    {
-      m_pcEntropyCoder->setMaxAlfCtrlDepth(uiDepth);
-      copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-      m_pcTempAlfParam->cu_control_flag = 1;
-
-      xSetCUAlfCtrlFlags_qc(uiDepth, pcPicOrg, pcPicDec, m_pcPicYuvTmp, uiDist, m_pcTempAlfParam); //set up varImg here
-      m_pcEntropyCoder->resetEntropy();
-      m_pcEntropyCoder->resetBits();
-      xEncodeCUAlfCtrlFlags();
-      uiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-      dCost  = (Double)(uiRate) * m_dLambdaLuma + (Double)(uiDist);
-
-      if (dCost < dMinCost)
-      {
-        uiBestDepth = uiDepth;
-        dMinCost    = dCost;
-        copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam);
-        //save maskImg
-        xCopyTmpAlfCtrlFlagsFrom();
-      }
-    }
-
-    copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-    m_iDesignCurrentFilter = 0; // design filter for subsequent slices
-    xReDesignFilterCoeff_qc(pcPicOrg, pcPicDec, m_pcPicYuvTmp, true);
-    m_iDesignCurrentFilter = 1;
-
-    if (m_pcBestAlfParam->cu_control_flag)
-    {
-      m_pcEntropyCoder->setAlfCtrl(true);
-      m_pcEntropyCoder->setMaxAlfCtrlDepth(uiBestDepth);
-      xCopyTmpAlfCtrlFlagsTo();
-    }
-    else
-    {
-      m_pcEntropyCoder->setAlfCtrl(false);
-      m_pcEntropyCoder->setMaxAlfCtrlDepth(0);
-      for(Int y=0; y<Height; y++)
-      {
-        for(Int x=0; x<Width; x++)
-        {
-          m_maskImg[y][x] = 1;
-        }
-      }
-    }
-#endif
   }
 }
 
 
-
-#if MQT_BA_RA
 
 /** Estimate RD cost of all filter size & store the best one
  * \param ImgOrg original picture
@@ -5560,15 +3978,9 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
   Int64  iEstimatedDist;
   UInt64 uiRate;
   Double dEstimatedCost, dEstimatedMinCost = MAX_DOUBLE;;
-#if !STAR_CROSS_SHAPES_LUMA
-  Bool   bMatrixBaseReady  = false;
-#endif
   
   UInt   uiBitShift = (g_uiBitIncrement<<1);
 
-#if !STAR_CROSS_SHAPES_LUMA
-  m_iMatrixBaseFiltNo = 0;
-#endif
   m_pcTempAlfParam->alf_flag = 1;
 #if !F747_APS
   m_pcTempAlfParam->cu_control_flag = 0;
@@ -5576,12 +3988,10 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
   m_pcTempAlfParam->chroma_idc = 0;
   m_pcTempAlfParam->alf_pcr_region_flag = m_uiVarGenMethod;
 
-#if STAR_CROSS_SHAPES_LUMA
   //prepare the 11x5 MatrixBase - correlation -  
   ESym     = m_EGlobalSym     [2];//Square11x5
   ySym     = m_yGlobalSym     [2];//Square11x5
   m_pcTempAlfParam->num_coeff = MAX_SQR_FILT_LENGTH;
-#if MTK_NONCROSS_INLOOP_FILTER
   {
     if(!m_bUseNonCrossALF)
     {
@@ -5592,9 +4002,6 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
       xstoreInBlockMatrixforSlices(ImgOrg, ImgDec, 2, Stride);
     }
   }
-#else
-  xstoreInBlockMatrix(ImgOrg, ImgDec, 2, Stride);
-#endif
   for (int filter_shape = 0; filter_shape < 2 ;filter_shape ++)
   {
     m_pcTempAlfParam->realfiltNo = filtNo = filter_shape;
@@ -5606,57 +4013,6 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
     xretriveBlockMatrix(m_pcTempAlfParam->num_coeff, m_iFilterTabIn11x5Sym[filtNo], 
                         m_EGlobalSym[2], ESym, 
                         m_yGlobalSym[2], ySym);
-#else
-  for(Int iTap = ALF_MAX_NUM_TAP; iTap>=ALF_MIN_NUM_TAP; iTap -= 2)
-  {
-    m_pcTempAlfParam->tap = iTap;
-#if TI_ALF_MAX_VSIZE_7
-    m_pcTempAlfParam->tapV      = TComAdaptiveLoopFilter::ALFTapHToTapV(iTap);
-    m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(iTap);
-#else
-    m_pcTempAlfParam->num_coeff = iTap*iTap/4 + 2;
-#endif
-
-    if (iTap==9)
-    {
-      filtNo = 0;
-    }
-    else if (iTap==7)
-    {
-      filtNo = 1;
-    }
-    else
-    {
-      filtNo = 2;
-    }
-
-    ESym     = m_EGlobalSym     [filtNo];
-    ySym     = m_yGlobalSym     [filtNo];
-
-    if( bMatrixBaseReady )
-    {
-      xretriveBlockMatrix(m_pcTempAlfParam->num_coeff, m_iTapPosTabIn9x9Sym[filtNo], 
-        m_EGlobalSym[m_iMatrixBaseFiltNo], ESym, 
-        m_yGlobalSym[m_iMatrixBaseFiltNo], ySym);
-
-    }
-    else
-#if MTK_NONCROSS_INLOOP_FILTER
-    {
-      if(!m_bUseNonCrossALF)
-        xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, ImgOrg, ImgDec, iTap, Stride);
-      else
-        xstoreInBlockMatrixforSlices(ImgOrg, ImgDec, iTap, Stride);
-    }
-#else
-      xstoreInBlockMatrix(ImgOrg, ImgDec, iTap, Stride);
-#endif
-
-    if(filtNo == m_iMatrixBaseFiltNo)
-    {
-      bMatrixBaseReady = true;
-    }
-#endif
 
     xfindBestFilterVarPred(ySym, ESym, m_pixAcc, m_filterCoeffSym, m_filterCoeffSymQuant, filtNo, &filters_per_fr, 
       m_varIndTab, NULL, m_varImg, m_maskImg, NULL, lambda_val);
@@ -5703,11 +4059,7 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
 
   if (!m_iUsePreviousFilter)
   {
-#if STAR_CROSS_SHAPES_LUMA
     saveFilterCoeffToBuffer(m_filterCoeffPrevSelected,filtNo);
-#else
-    saveFilterCoeffToBuffer(m_filterCoeffPrevSelected);
-#endif
   }
 
   if( m_iUsePreviousFilter )
@@ -5737,163 +4089,6 @@ Void  TEncAdaptiveLoopFilter::xFirstEstimateFilteringFrameLumaAllTap(imgpel* Img
 
 
 }
-
-#else
-Void   TEncAdaptiveLoopFilter::xFirstFilteringFrameLumaAllTap(imgpel* ImgOrg, imgpel* ImgDec, imgpel* ImgRest, Int Stride)
-{
-  static Bool bFirst = true;
-  static Int  aiVarIndTabBest[NO_VAR_BINS];
-  static Double **ySym, ***ESym;
-  static Int**  ppiBestCoeffSet;
-
-  if(bFirst)
-  {
-    initMatrix_int(&ppiBestCoeffSet, NO_VAR_BINS, MAX_SQR_FILT_LENGTH);
-    bFirst = false;
-  }
-
-  Int    lambda_val = ((Int) m_dLambdaLuma) * (1<<(2*g_uiBitIncrement));
-  Int    filtNo, ibestfiltNo=0, filters_per_fr, ibestfilters_per_fr=0;
-  Int64  iEstimatedDist;
-  UInt64 uiRate;
-  Double dEstimatedCost, dEstimatedMinCost = MAX_DOUBLE;;
-#if STAR_CROSS_SHAPES_LUMA
-  //prepare the 11x5 MatrixBase - correlation -  
-  ESym     = m_EGlobalSym     [2];//Square11x5
-  ySym     = m_yGlobalSym     [2];//Square11x5
-  m_pcTempAlfParam->num_coeff = MAX_SQR_FILT_LENGTH;
-#if MTK_NONCROSS_INLOOP_FILTER
-  {
-    if(!m_bUseNonCrossALF)
-    {
-      xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, ImgOrg, ImgDec, 2, Stride);
-    }
-    else
-    {
-      xstoreInBlockMatrixforSlices(ImgOrg, ImgDec, 2, Stride);
-    }
-  }
-#else
-  xstoreInBlockMatrix(ImgOrg, ImgDec, 2, Stride);
-#endif
-  for (int filter_shape = 0; filter_shape < 2 ;filter_shape ++)
-  {
-    m_pcTempAlfParam->realfiltNo = filtNo = filter_shape;
-    m_pcTempAlfParam->num_coeff = = m_sqrFiltLengthTab[filtNo];  
-
-    ESym     = m_EGlobalSym     [filtNo];
-    ySym     = m_yGlobalSym     [filtNo];
-
-    xretriveBlockMatrix(m_pcTempAlfParam->num_coeff, m_iFilterTabIn11x5Sym[filtNo], 
-                        m_EGlobalSym[2], ESym, 
-                        m_yGlobalSym[2], ySym);
-#else
-  Bool   bMatrixBaseReady  = false;
-  m_iMatrixBaseFiltNo = 0; 
-  for(Int iTap = ALF_MAX_NUM_TAP; iTap>=ALF_MIN_NUM_TAP; iTap -= 2)
-  {
-    m_pcTempAlfParam->tap = iTap;
-#if TI_ALF_MAX_VSIZE_7
-    m_pcTempAlfParam->tapV      = TComAdaptiveLoopFilter::ALFTapHToTapV(iTap);
-    m_pcTempAlfParam->num_coeff = TComAdaptiveLoopFilter::ALFTapHToNumCoeff(iTap);
-#else
-    m_pcTempAlfParam->num_coeff = iTap*iTap/4 + 2;
-#endif
-    if (iTap==9)
-    {
-      filtNo = 0;
-    }
-    else if (iTap==7)
-    {
-      filtNo = 1;
-    }
-    else
-    {
-      filtNo = 2;
-    }
-
-    ESym     = m_EGlobalSym     [filtNo];
-    ySym     = m_yGlobalSym     [filtNo];
-
-    if( bMatrixBaseReady )
-    {
-      xretriveBlockMatrix(m_pcTempAlfParam->num_coeff, m_iTapPosTabIn9x9Sym[filtNo], 
-        m_EGlobalSym[m_iMatrixBaseFiltNo], ESym, 
-        m_yGlobalSym[m_iMatrixBaseFiltNo], ySym);
-
-    }
-    else
-#if MTK_NONCROSS_INLOOP_FILTER
-    {
-      if(!m_bUseNonCrossALF)
-        xstoreInBlockMatrix(0, 0, m_im_height, m_im_width, true, true, ImgOrg, ImgDec, iTap, Stride);
-      else
-        xstoreInBlockMatrixforSlices(ImgOrg, ImgDec, iTap, Stride);
-    }
-#else
-      xstoreInBlockMatrix(ImgOrg, ImgDec, iTap, Stride);
-#endif
-    if(filtNo == m_iMatrixBaseFiltNo)
-    {
-      bMatrixBaseReady = true;
-    }
-#endif
-
-    xfindBestFilterVarPred(ySym, ESym, m_pixAcc, m_filterCoeffSym, m_filterCoeffSymQuant, filtNo, &filters_per_fr, 
-      m_varIndTab, NULL, m_varImg, m_maskImg, NULL, lambda_val);
-
-    uiRate         = xcodeFiltCoeff(m_filterCoeffSymQuant, filtNo, m_varIndTab, filters_per_fr,0, m_pcTempAlfParam);
-    iEstimatedDist = xEstimateFiltDist(filters_per_fr, m_varIndTab, ESym, ySym, m_filterCoeffSym, m_pcTempAlfParam->num_coeff);
-    dEstimatedCost = (Double)(uiRate) * m_dLambdaLuma + (Double)(iEstimatedDist);
-
-    if(dEstimatedCost < dEstimatedMinCost)
-    {
-      dEstimatedMinCost   = dEstimatedCost;
-      ibestfiltNo         = filtNo;
-      ibestfilters_per_fr = filters_per_fr;
-      copyALFParam(m_pcBestAlfParam, m_pcTempAlfParam); 
-      ::memcpy(aiVarIndTabBest, m_varIndTab, sizeof(Int)*NO_VAR_BINS);
-      for(Int i=0; i< ibestfilters_per_fr; i++ )
-      {
-        ::memcpy( ppiBestCoeffSet[i], m_filterCoeffSym[i], sizeof(Int) * m_pcTempAlfParam->num_coeff);
-      }
-    }
-  }
-
-  filtNo         = ibestfiltNo;
-  filters_per_fr = ibestfilters_per_fr;
-  ::memcpy(m_varIndTab, aiVarIndTabBest, sizeof(Int)*NO_VAR_BINS);
-  for(Int i=0; i< filters_per_fr; i++ )
-  {
-    ::memcpy(m_filterCoeffSym[i], ppiBestCoeffSet[i], sizeof(Int) * m_pcTempAlfParam->num_coeff);
-  }
-
-  xcalcPredFilterCoeff(filtNo);
-
-
-  filtNo         = ibestfiltNo;
-  filters_per_fr = ibestfilters_per_fr;
-  copyALFParam(m_pcTempAlfParam, m_pcBestAlfParam);
-  ::memcpy(m_varIndTab, aiVarIndTabBest, sizeof(Int)*NO_VAR_BINS);
-  for(Int i=0; i< filters_per_fr; i++ )
-  {
-    ::memcpy(m_filterCoeffSym[i], ppiBestCoeffSet[i], sizeof(Int) * m_pcTempAlfParam->num_coeff);
-  }
-
-  xcalcPredFilterCoeff(filtNo);
-#if MTK_NONCROSS_INLOOP_FILTER
-  if(!m_bUseNonCrossALF)
-    xfilterFrame_en(0, 0, m_im_height, m_im_width, ImgDec, ImgRest, filtNo, Stride);
-  else
-    xfilterSlices_en(ImgDec, ImgRest, filtNo, Stride);
-#else
-  xfilterFrame_en(ImgDec, ImgRest, filtNo, Stride);
-#endif
-
-}
-
-
-#endif
 
 
 /** Retrieve correlations from other correlation matrix
@@ -6037,9 +4232,7 @@ Int64 TEncAdaptiveLoopFilter::xEstimateFiltDist(Int filters_per_fr, Int* VarIndT
       //clean m_y_merged
       m_y_merged[f][j] = 0;
     }
-#if MQT_BA_RA
     m_pixAcc_merged[f] = 0;
-#endif
   }
 
 
@@ -6059,9 +4252,7 @@ Int64 TEncAdaptiveLoopFilter::xEstimateFiltDist(Int filters_per_fr, Int* VarIndT
 
       pdDsty[j] += pdSrcy[j];
     }
-#if MQT_BA_RA
     m_pixAcc_merged[ VarIndTab[varInd]  ] += m_pixAcc[varInd];
-#endif
 
   }
 
@@ -6080,9 +4271,6 @@ Int64 TEncAdaptiveLoopFilter::xEstimateFiltDist(Int filters_per_fr, Int* VarIndT
   return iDist;
 
 }
-#endif
-
-#if MTK_NONCROSS_INLOOP_FILTER
 
 /** Calculate ALF grouping indices for ALF slices
  * \param varmap grouping indices buffer
@@ -6093,12 +4281,10 @@ Int64 TEncAdaptiveLoopFilter::xEstimateFiltDist(Int filters_per_fr, Int* VarIndT
  */
 Void TEncAdaptiveLoopFilter::calcVarforSlices(imgpel **varmap, imgpel *imgY_Dec, Int pad_size, Int fl, Int img_stride)
 {
-#if MQT_BA_RA
   if(m_uiVarGenMethod == ALF_RA)
   {
     return;
   }
-#endif
 
   Pel* pPicSrc   = (Pel *)imgY_Dec;
   Pel* pPicSlice = m_pcSliceYuvTmp->getLumaAddr();
@@ -6404,7 +4590,7 @@ Void TEncAdaptiveLoopFilter::transferCtrlFlagsToAlfParam(std::vector<AlfCUCtrlIn
         }
       }
     }
-    cSliceCUCtrlParam.num_alf_cu_flag = cSliceCUCtrlParam.alf_cu_flag.size();
+    cSliceCUCtrlParam.num_alf_cu_flag = (UInt)cSliceCUCtrlParam.alf_cu_flag.size();
   }
 }
 
@@ -6444,9 +4630,6 @@ Void TEncAdaptiveLoopFilter::transferCtrlFlagsToAlfParam(UInt& ruiNumFlags, UInt
 #endif
 
 
-#endif
-
-#if ALF_CHROMA_NEW_SHAPES
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
@@ -6486,14 +4669,10 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecisionChroma( UInt64 uiLumaRate, TComPi
     }
     Pel *pOrg = pcPicOrg->getCbAddr();
     Pel *pCmp = pcPicDec->getCbAddr();
-#if MTK_NONCROSS_INLOOP_FILTER
     if(!m_bUseNonCrossALF)
       xCalcCorrelationFunc(0, 0, pOrg, pCmp, iShape, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride(), true);
     else
       xCalcCorrelationFuncforChromaSlices(ALF_Cb, pOrg, pCmp, iShape, pcPicOrg->getCStride(), pcPicDec->getCStride());
-#else        
-    xCalcCorrelationFunc(pOrg, pCmp, iShape, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride());
-#endif
 
     // calc Cr matrix
     m_pcTempAlfParam->chroma_idc = 1;
@@ -6504,14 +4683,10 @@ Void TEncAdaptiveLoopFilter::xFilterTapDecisionChroma( UInt64 uiLumaRate, TComPi
     }
     pOrg = pcPicOrg->getCrAddr();
     pCmp = pcPicDec->getCrAddr();
-#if MTK_NONCROSS_INLOOP_FILTER
     if(!m_bUseNonCrossALF)
       xCalcCorrelationFunc(0, 0, pOrg, pCmp, iShape, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride(), true);
     else
       xCalcCorrelationFuncforChromaSlices(ALF_Cr, pOrg, pCmp, iShape, pcPicOrg->getCStride(), pcPicDec->getCStride());
-#else        
-    xCalcCorrelationFunc(pOrg, pCmp, iShape, (pcPicOrg->getWidth()>>1), (pcPicOrg->getHeight()>>1), pcPicOrg->getCStride(), pcPicDec->getCStride());
-#endif
 
     // restore original corr pointer
     m_ppdAlfCorr = ppdTmpCorr;
@@ -6711,9 +4886,7 @@ UInt64 TEncAdaptiveLoopFilter::xCalcRateChroma(ALFParam* pAlfParam)
 {
   UInt64 uiRate;
 #if !F747_APS
-#if E045_SLICE_COMMON_INFO_SHARING
   uiRate = 0;
-#endif
 #endif
   Int* piTmpCoef;
   piTmpCoef = new Int[ALF_MAX_NUM_COEF_C];
@@ -6749,7 +4922,6 @@ UInt64 TEncAdaptiveLoopFilter::xCalcRateChroma(ALFParam* pAlfParam)
 
 #else
 
-#if E045_SLICE_COMMON_INFO_SHARING
   if(m_uiNumSlicesInPic ==1)
   {
     if(m_bSharedPPSAlfParamEnabled)
@@ -6775,17 +4947,6 @@ UInt64 TEncAdaptiveLoopFilter::xCalcRateChroma(ALFParam* pAlfParam)
       uiRate += m_pcEntropyCoder->getNumberOfWrittenBits();
     }
   }
-#else
-  if(pAlfParam->cu_control_flag)
-  {
-#if FINE_GRANULARITY_SLICES && MTK_NONCROSS_INLOOP_FILTER
-    m_pcEntropyCoder->setSliceGranularity(m_iSGDepth);
-#endif
-
-    m_pcEntropyCoder->encodeAlfCtrlParam(pAlfParam);
-  }
-  uiRate = m_pcEntropyCoder->getNumberOfWrittenBits();
-#endif
 #endif
   memcpy(pAlfParam->coeff_chroma, piTmpCoef, sizeof(int)*pAlfParam->num_coeff_chroma);
   delete[] piTmpCoef;
@@ -6793,6 +4954,5 @@ UInt64 TEncAdaptiveLoopFilter::xCalcRateChroma(ALFParam* pAlfParam)
 
   return uiRate;
 }
-#endif
 
 //! \}

@@ -82,6 +82,12 @@ protected:
 #if DISABLE_4x4_INTER
   Bool      m_bDisInter4x4;
 #endif
+#if NSQT
+  Bool      m_enableNSQT;                                     ///< flag for enabling NSQT
+#endif
+#if AMP
+  Bool      m_enableAMP;
+#endif
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
@@ -90,9 +96,7 @@ protected:
   Int*      m_aidQP;                                          ///< array of slice QP values
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
-#if SUB_LCU_DQP
   Int       m_iMaxCuDQPDepth;                                 ///< Max. depth for a minimum CuDQPSize (0:default)
-#endif
 #if QP_ADAPTATION
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
@@ -119,7 +123,7 @@ protected:
   UInt      m_uiInternalBitDepth;                             ///< Internal bit-depth (BitDepth+BitIncrement)
 
   // coding tools (PCM bit-depth)
-#if E057_INTRA_PCM && E192_SPS_PCM_BIT_DEPTH_SYNTAX
+#if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   Bool      m_bPCMInputBitDepthFlag;                          ///< 0: PCM bit-depth is internal bit-depth. 1: PCM bit-depth is input bit-depth.
   UInt      m_uiPCMBitDepthLuma;                              ///< PCM bit-depth for luma
 #endif
@@ -130,29 +134,25 @@ protected:
 
   // coding tools (loop filter)
   Bool      m_bUseALF;                                        ///< flag for using adaptive loop filter
-#ifdef MQT_ALF_NPASS
   Int       m_iALFEncodePassReduction;                        //!< ALF encoding pass, 0 = original 16-pass, 1 = 1-pass, 2 = 2-pass
-#endif
   
   Bool      m_bLoopFilterDisable;                             ///< flag for using deblocking filter
   Int       m_iLoopFilterAlphaC0Offset;                       ///< alpha offset for deblocking filter
   Int       m_iLoopFilterBetaOffset;                          ///< beta offset for deblocking filter
   
+#if !DISABLE_CAVLC
   // coding tools (entropy coder)
   Int       m_iSymbolMode;                                    ///< entropy coder mode, 0 = VLC, 1 = CABAC
+#endif
   
   // coding tools (inter - merge motion partitions)
   Bool      m_bUseMRG;                                        ///< SOPH: flag for using motion partition Merge Mode
   
-#if LM_CHROMA 
   Bool      m_bUseLMChroma;                                  ///< JL: Chroma intra prediction based on luma signal
-#endif
 
   // coding tools (PCM)
-#if E057_INTRA_PCM
   UInt      m_uiPCMLog2MinSize;                               ///< log2 of minimum PCM block size
-#endif
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
 #endif
 
@@ -180,9 +180,7 @@ protected:
 #if FINE_GRANULARITY_SLICES
   Int       m_iSliceGranularity;///< 0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.
 #endif
-#if MTK_NONCROSS_INLOOP_FILTER
   Bool m_bLFCrossSliceBoundaryFlag;  ///< 0: Cross-slice-boundary in-loop filtering 1: non-cross-slice-boundary in-loop filtering
-#endif
 #if TILES
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;

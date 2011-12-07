@@ -63,60 +63,33 @@
 #define NO_VAR_BINS           16 
 #define NO_FILTERS            16
 
-#if MQT_BA_RA 
-#define VAR_SIZE               1 // JCTVC-E323+E046
-#else
-#define VAR_SIZE               3
-#endif
+#define VAR_SIZE               1
 
-#if STAR_CROSS_SHAPES_LUMA
 // max tap = max_horizontal_tap = 11
 #define FILTER_LENGTH         11
-#else
-#define FILTER_LENGTH          9
-#endif
 
-#if STAR_CROSS_SHAPES_LUMA
 // ((max_horizontal_tap * max_vertical_tap) / 2 + 2) = ((11 * 5) / 2 + 2)
 #define MAX_SQR_FILT_LENGTH   29
-#else
-#define MAX_SQR_FILT_LENGTH   ((FILTER_LENGTH*FILTER_LENGTH) / 2 + 2)
-#endif
 
-#if TI_ALF_MAX_VSIZE_7
 #define SQR_FILT_LENGTH_9SYM  ((9*9) / 4 + 2 - 1) 
-#else
-#define SQR_FILT_LENGTH_9SYM  ((9*9) / 4 + 2) 
-#endif
 #define SQR_FILT_LENGTH_7SYM  ((7*7) / 4 + 2) 
 #define SQR_FILT_LENGTH_5SYM  ((5*5) / 4 + 2) 
-#if STAR_CROSS_SHAPES_LUMA
 // max_tap + 2 = 11 + 2 
 #define MAX_SCAN_VAL    13
-#else
-#define MAX_SCAN_VAL    11
-#endif
 #define MAX_EXP_GOLOMB  16
 
 #define imgpel  unsigned short
 
-#if STAR_CROSS_SHAPES_LUMA
 extern Int depthIntShape0Sym[10];
 extern Int depthIntShape1Sym[9];
 extern Int *pDepthIntTabShapes[NO_TEST_FILT];
-#endif
-#if TI_ALF_MAX_VSIZE_7
 extern Int depthInt9x9Sym[21];
-#else
-extern Int depthInt9x9Sym[22];
-#endif
 extern Int depthInt7x7Sym[14];
 extern Int depthInt5x5Sym[8];
 extern Int *pDepthIntTab[NO_TEST_FILT];
 void destroyMatrix_int(int **m2D);
 void initMatrix_int(int ***m2D, int d1, int d2);
 
-#if MTK_NONCROSS_INLOOP_FILTER
 
 /// border direction ID of slice granularity unit 
 enum SGUBorderID
@@ -137,16 +110,13 @@ enum AlfChromaID
   ALF_Cb = 0,
   ALF_Cr = 1
 };
-#endif
 
-#if MQT_BA_RA
 enum ALFClassficationMethod
 {
   ALF_BA =0,
   ALF_RA,
   NUM_ALF_CLASS_METHOD
 };
-#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -166,9 +136,6 @@ struct AlfCUCtrlInfo
 };
 #endif
 
-
-
-#if MTK_NONCROSS_INLOOP_FILTER
 
 /// slice granularity unit information
 struct AlfSGUInfo
@@ -361,10 +328,6 @@ public:
 };
 
 
-
-#endif 
-
-
 /// adaptive loop filter class
 class TComAdaptiveLoopFilter
 {
@@ -373,9 +336,7 @@ protected:
   static const  Int m_aiSymmetricMag9x9[41];             ///< quantization scaling factor for 9x9 filter
   static const  Int m_aiSymmetricMag7x7[25];             ///< quantization scaling factor for 7x7 filter
   static const  Int m_aiSymmetricMag5x5[13];             ///< quantization scaling factor for 5x5 filter
-#if TI_ALF_MAX_VSIZE_7
   static const  Int m_aiSymmetricMag9x7[32];             ///< quantization scaling factor for 9x7 filter
-#endif
   
   // temporary picture buffer
   TComPicYuv*   m_pcTempPicYuv;                          ///< temporary picture buffer for ALF processing
@@ -383,7 +344,6 @@ protected:
   // ------------------------------------------------------------------------------------------------------------------
   // For luma component
   // ------------------------------------------------------------------------------------------------------------------
-#if STAR_CROSS_SHAPES_LUMA
   static Int patternShape0Sym[17];
   static Int weightsShape0Sym[10];
   static Int patternShape0Sym_Quart[29];
@@ -394,14 +354,8 @@ protected:
   static Int *patternTabShapes[NO_TEST_FILT]; 
   static Int *patternMapTabShapes[NO_TEST_FILT];
   static Int *weightsTabShapes[NO_TEST_FILT];
-#endif
-#if TI_ALF_MAX_VSIZE_7
   static Int m_pattern9x9Sym[39];
   static Int m_weights9x9Sym[21];
-#else
-  static Int m_pattern9x9Sym[41];
-  static Int m_weights9x9Sym[22];
-#endif
   static Int m_pattern9x9Sym_Quart[42];
   static Int m_pattern7x7Sym[25];
   static Int m_weights7x7Sym[14];
@@ -409,16 +363,10 @@ protected:
   static Int m_pattern5x5Sym[13];
   static Int m_weights5x5Sym[8];
   static Int m_pattern5x5Sym_Quart[45];
-#if STAR_CROSS_SHAPES_LUMA
   static Int pattern11x5SymShape0[17];
   static Int pattern11x5SymShape1[15];
   static Int pattern11x5Sym11x5[55];
-#endif
-#if TI_ALF_MAX_VSIZE_7
   static Int m_pattern9x9Sym_9[39];
-#else
-  static Int m_pattern9x9Sym_9[41];
-#endif
   static Int m_pattern9x9Sym_7[25];
   static Int m_pattern9x9Sym_5[13];
   
@@ -435,12 +383,10 @@ protected:
   imgpel **m_imgY_var;
   Int    **m_imgY_temp;
   
-#if MQT_BA_RA
   Int**    m_imgY_ver;
   Int**    m_imgY_hor;
   UInt     m_uiVarGenMethod;
   imgpel** m_varImgMethods[NUM_ALF_CLASS_METHOD];
-#endif 
 
   Int **m_filterCoeffSym;
   Int **m_filterCoeffPrevSelected;
@@ -448,7 +394,6 @@ protected:
   Int **m_filterCoeffSymTmp;
   
 
-#if MTK_NONCROSS_INLOOP_FILTER
   Bool        m_bUseNonCrossALF;       //!< true for performing non-cross slice boundary ALF
 
   UInt        m_uiNumSlicesInPic;      //!< number of slices in picture
@@ -465,11 +410,8 @@ protected:
 
   /// Perform ALF for one chroma slice
   Void xFrameChromaforOneSlice    (CAlfSlice* pSlice, Int ComponentID, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, Int *qh, Int iTap);
-#endif
 
-#if MQT_BA_RA
   Void createRegionIndexMap(imgpel **imgY_var, Int img_width, Int img_height);
-#endif
 
   /// ALF for luma component
 #if F747_APS
@@ -495,11 +437,7 @@ protected:
   Void get_mem2Dpel(imgpel ***array2D, int rows, int columns);
   Void no_mem_exit(const char *where);
   Void xError(const char *text, int code);
-#if MTK_NONCROSS_INLOOP_FILTER
   Void calcVar(int ypos, int xpos, imgpel **imgY_var, imgpel *imgY_pad, int pad_size, int fl, int img_height, int img_width, int img_stride);
-#else
-  Void calcVar(imgpel **imgY_var, imgpel *imgY_pad, int pad_size, int fl, int img_height, int img_width, int img_stride);
-#endif
   Void DecFilter_qc(imgpel* imgY_rec,ALFParam* pcAlfParam, int Stride);
   Void xSubCUAdaptive_qc(TComDataCU* pcCU, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, UInt uiAbsPartIdx, UInt uiDepth, Int Stride);
   Void xCUAdaptive_qc(TComPic* pcPic, ALFParam* pcAlfParam, imgpel *imgY_rec_post, imgpel *imgY_rec, Int Stride);
@@ -512,7 +450,7 @@ protected:
   Void  setAlfCtrlFlags (ALFParam *pAlfParam, TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &idx);
 #endif
 
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Void xPCMRestoration        (TComPic* pcPic);
   Void xPCMCURestoration      (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth);
   Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
@@ -526,11 +464,7 @@ protected:
   Void xALFChroma   ( ALFParam* pcAlfParam, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest );
   
   /// sub function: non-adaptive ALF process for chroma
-#if MTK_NONCROSS_INLOOP_FILTER
   Void xFrameChroma ( Int ypos, Int xpos, Int iHeight, Int iWidth, TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, Int *qh, Int iTap, Int iColor );
-#else
-  Void xFrameChroma ( TComPicYuv* pcPicDec, TComPicYuv* pcPicRest, Int *qh, Int iTap, Int iColor );
-#endif
 
 public:
   TComAdaptiveLoopFilter();
@@ -544,9 +478,6 @@ public:
   Void allocALFParam  ( ALFParam* pAlfParam );
   Void freeALFParam   ( ALFParam* pAlfParam );
   Void copyALFParam   ( ALFParam* pDesAlfParam, ALFParam* pSrcAlfParam );
-#if (!E045_SLICE_COMMON_INFO_SHARING)
-  Void  setNumCUsInFrame        (TComPic *pcPic);
-#endif
   
   // predict filter coefficients
   Void predictALFCoeff        ( ALFParam* pAlfParam );                  ///< prediction of luma ALF coefficients
@@ -559,15 +490,13 @@ public:
   Void ALFProcess             ( TComPic* pcPic, ALFParam* pcAlfParam ); ///< interface function for ALF process
 #endif
 
-#if E057_INTRA_PCM && E192_SPS_PCM_FILTER_DISABLE_SYNTAX
+#if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process 
 #endif
 
-#if TI_ALF_MAX_VSIZE_7
   static Int ALFTapHToTapV(Int tapH);
   static Int ALFTapHToNumCoeff(Int tapH);
   static Int ALFFlHToFlV(Int flH);
-#endif
 
 #if F747_APS
 public:
@@ -575,7 +504,6 @@ public:
   Int  getNumCUsInPic()  {return m_uiNumCUsInFrame;}
 #endif
 
-#if MTK_NONCROSS_INLOOP_FILTER
 public:
 
 #if F747_APS
@@ -623,8 +551,6 @@ public:
     assert(i < m_uiNumSlicesInPic);
     return m_pSlice[i];
   }
-#endif
-
 
 };
 
