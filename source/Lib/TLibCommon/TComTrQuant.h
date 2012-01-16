@@ -125,7 +125,7 @@ public:
 #if FULL_NBIT
     m_iPer += g_uiBitDepth - 8;
 #endif
-    m_iRem  = (iQP + 6*g_uiBitIncrement)%6;
+    m_iRem  = iQP % 6;
     
     m_iBits = QP_BITS + m_iPer;
   }
@@ -159,12 +159,20 @@ public:
   // transform & inverse transform functions
   Void transformNxN         ( TComDataCU* pcCU, Pel*   pcResidual, UInt uiStride, TCoeff* rpcCoeff, UInt uiWidth, UInt uiHeight,
                              UInt& uiAbsSum, TextType eTType, UInt uiAbsPartIdx );
+#if SCALING_LIST
+  Void invtransformNxN      (TextType eText, UInt uiMode,Pel*& rpcResidual, UInt uiStride, TCoeff*   pcCoeff, UInt uiWidth, UInt uiHeight, Int scalingListType);
+#else
   Void invtransformNxN      (TextType eText, UInt uiMode,Pel* rpcResidual, UInt uiStride, TCoeff*   pcCoeff, UInt uiWidth, UInt uiHeight);
+#endif
   Void invRecurTransformNxN ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTxt, Pel* rpcResidual, UInt uiAddr,   UInt uiStride, UInt uiWidth, UInt uiHeight,
                              UInt uiMaxTrMode,  UInt uiTrMode, TCoeff* rpcCoeff );
   
   // Misc functions
+#if G509_CHROMA_QP_OFFSET
+  Void setQPforQuant( Int iQP, Bool bLowpass, SliceType eSliceType, TextType eTxtType, Int Shift);
+#else
   Void setQPforQuant( Int iQP, Bool bLowpass, SliceType eSliceType, TextType eTxtType);
+#endif
 #if RDOQ_CHROMA_LAMBDA 
   Void setLambda(Double dLambdaLuma, Double dLambdaChroma) { m_dLambdaLuma = dLambdaLuma; m_dLambdaChroma = dLambdaChroma; }
   Void selectLambda(TextType eTType) { m_dLambda = (eTType == TEXT_LUMA) ? m_dLambdaLuma : m_dLambdaChroma; }
@@ -175,24 +183,18 @@ public:
   
   estBitsSbacStruct* m_pcEstBitsSbac;
   
-  static UInt     getSigCtxInc     ( TCoeff*                         pcCoeff,
-                                     const UInt                      uiPosX,
-                                     const UInt                      uiPosY,
-                                     const UInt                      uiLog2BlkSize,
+  static Int      getSigCtxInc     ( TCoeff*                         pcCoeff,
+                                     Int                             posX,
+                                     Int                             posY,
+                                     Int                             blockType,
+                                     Int                             width
 #if NSQT_DIAG_SCAN
+                                    ,Int                             height
+#endif
 #if SIGMAP_CTX_RED
-                                    Int uiStride, Int height, Int eTType );
-#else
-                                    Int uiStride, Int height );
+                                    ,TextType                        textureType
 #endif
-#else
-#if SIGMAP_CTX_RED
-                                     const UInt                       uiStride,
-                                     const UInt                       eTType );
-#else
-                                     const UInt                      uiStride );
-#endif
-#endif
+                                    );
 #if MULTI_LEVEL_SIGNIFICANCE
 #if NSQT_DIAG_SCAN
   static UInt getSigCoeffGroupCtxInc  ( const UInt*                   uiSigCoeffGroupFlag,
@@ -216,6 +218,22 @@ public:
                                      const UInt                       uiLog2BlockSize);
 #endif
 #endif
+#if SCALING_LIST
+  Void initScalingList                      ();
+  Void destroyScalingList                   ();
+  Void setErrScaleCoeff    ( UInt list, UInt size, UInt qp, UInt dir);
+  double* getErrScaleCoeff ( UInt list, UInt size, UInt qp, UInt dir);
+  Int* getQuantCoeff       ( UInt list, UInt qp, UInt size, UInt dir);
+  Int* getDequantCoeff     ( UInt list, UInt qp, UInt size, UInt dir);
+  Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
+  Bool getUseScalingList   (){ return m_scalingListEnabledFlag; };
+  Void setFlatScalingList  ();
+  Void xsetFlatScalingList ( UInt list, UInt size, UInt qp);
+  Void xSetScalingListEnc  ( Int *scalingList, UInt list, UInt size, UInt qp);
+  Void xSetScalingListDec  ( Int *scalingList, UInt list, UInt size, UInt qp);
+  Void setScalingList      ( TComScalingList *scalingList);
+  Void setScalingListDec   ( TComScalingList *scalingList);
+#endif
 protected:
   Int*    m_plTempCoeff;
   
@@ -236,7 +254,21 @@ protected:
   Int      m_iSymbolMode;
   UInt     *m_uiLastPosVlcIndex;
 #endif
-  
+#if SCALING_LIST
+  Bool     m_scalingListEnabledFlag;
+  Int      *m_quantCoef      [SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of quantization matrix coefficient 4x4
+  Int      *m_dequantCoef    [SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of dequantization matrix coefficient 4x4
+  Int      *m_quantCoef64    [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of quantization matrix coefficient 8x8
+  Int      *m_dequantCoef64  [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of dequantization matrix coefficient 8x8
+  Int      *m_quantCoef256   [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of quantization matrix coefficient 16x16
+  Int      *m_dequantCoef256 [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of dequantization matrix coefficient 16x16
+  Int      *m_quantCoef1024  [SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of quantization matrix coefficient 32x32
+  Int      *m_dequantCoef1024[SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of dequantization matrix coefficient 32x32
+  double   *m_errScale       [SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of quantization matrix coefficient 4x4
+  double   *m_errScale64     [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of quantization matrix coefficient 8x8
+  double   *m_errScale256    [SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM]; ///< array of quantization matrix coefficient 16x16
+  double   *m_errScale1024   [SCALING_LIST_NUM][SCALING_LIST_REM_NUM];             ///< array of quantization matrix coefficient 32x32
+#endif  
 private:
   // forward Transform
 #if NSQT
@@ -306,7 +338,11 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
   
   
   // dequantization
+#if SCALING_LIST
+  Void xDeQuant( const TCoeff* pSrc, Int* pDes, Int iWidth, Int iHeight, Int scalingListType );
+#else
   Void xDeQuant( const TCoeff* pSrc,     Int* pDes,       Int iWidth, Int iHeight );
+#endif
   
   // inverse transform
 #if NSQT

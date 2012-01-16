@@ -579,6 +579,10 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxNumberOfReorderPictures(m_uiMaxNumberOfReorderPictures);
 #endif
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
+#if MAX_PCM_SIZE
+  m_cSPS.setUsePCM        ( m_usePCM           );
+  m_cSPS.setPCMLog2MaxSize( m_pcmLog2MaxSize  );
+#endif
 
   m_cSPS.setUseALF        ( m_bUseALF           );
   
@@ -587,10 +591,12 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthInter( m_uiQuadtreeTUMaxDepthInter    );
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
   
+#if !G507_QP_ISSUE_FIX
 #if QP_ADAPTATION
   m_cSPS.setUseDQP        ( m_iMaxDeltaQP != 0 || m_bUseAdaptiveQP );
 #else
   m_cSPS.setUseDQP        ( m_iMaxDeltaQP != 0  );
+#endif
 #endif
 #if !G1002_RPS
   m_cSPS.setUseLDC        ( m_bUseLDC           );
@@ -709,6 +715,9 @@ Void TEncTop::xInitSPS()
     m_cSPS.setRowHeight( m_puiRowHeight );
   }
 #endif
+#if SCALING_LIST
+  m_cSPS.setScalingListFlag ( (m_useScalingListId == 0) ? 0 : 1 );
+#endif
 }
 
 Void TEncTop::xInitPPS()
@@ -745,6 +754,34 @@ Void TEncTop::xInitPPS()
      m_cPPS.setBitsForTemporalId(0);
 
 #endif
+#if G507_QP_ISSUE_FIX
+  Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
+
+  if(bUseDQP == false)
+  {
+#if QP_ADAPTATION
+    if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
+#else
+    if( getMaxDeltaQP() != 0)
+#endif
+    {
+      bUseDQP = true;
+    }
+  }
+
+  if(bUseDQP)
+  {
+    m_cPPS.setUseDQP(true);
+    m_cPPS.setMaxCuDQPDepth( m_iMaxCuDQPDepth );
+    m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
+  }
+  else
+  {
+    m_cPPS.setUseDQP(false);
+    m_cPPS.setMaxCuDQPDepth( 0 );
+    m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
+  }
+#else
   if( m_cPPS.getSPS()->getUseDQP() )
   {
     m_cPPS.setMaxCuDQPDepth( m_iMaxCuDQPDepth );
@@ -755,6 +792,13 @@ Void TEncTop::xInitPPS()
     m_cPPS.setMaxCuDQPDepth( 0 );
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
+#endif
+
+#if G509_CHROMA_QP_OFFSET
+  m_cPPS.setChromaQpOffset   ( m_iChromaQpOffset    );
+  m_cPPS.setChromaQpOffset2nd( m_iChromaQpOffset2nd );
+#endif
+
 #if OL_USE_WPP
 #if DISABLE_CAVLC
   m_cPPS.setEntropyCodingMode( 1 ); // In the PPS now, but also remains in slice header!
@@ -768,6 +812,9 @@ Void TEncTop::xInitPPS()
 #if WEIGHT_PRED
   m_cPPS.setUseWP( m_bUseWeightPred );
   m_cPPS.setWPBiPredIdc( m_uiBiPredIdc );
+#endif
+#if NO_TMVP_MARKING
+  m_cPPS.setEnableTMVPFlag( m_bEnableTMVP );
 #endif
 }
 
@@ -792,10 +839,9 @@ Void TEncTop::xInitRPS()
   {
     GOPEntry pGE = getGOPEntry(i);
     pcRPS = m_cRPSList.getReferencePictureSet(i);
+    pcRPS->setNumberOfPictures(pGE.m_iNumRefPics);
 #if INTER_RPS_PREDICTION
-    pcRPS->create(pGE.m_iNumRefPics, pGE.m_iNumRefIdc);
-#else
-    pcRPS->create(pGE.m_iNumRefPics);
+    pcRPS->setNumRefIdc(pGE.m_iNumRefIdc);
 #endif
     int iNumNeg = 0;
     int iNumPos = 0;

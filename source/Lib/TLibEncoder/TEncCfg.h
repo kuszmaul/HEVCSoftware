@@ -46,7 +46,8 @@
 #include <assert.h>
 
 #if G1002_RPS
-struct GOPEntry {
+struct GOPEntry
+{
   Int m_iPOC;
   Int m_iQPOffset;
   Double m_iQPFactor;
@@ -73,14 +74,18 @@ struct GOPEntry {
   , m_iRefBufSize()
   , m_iSliceType()
   , m_iNumRefPics()
+#if INTER_RPS_PREDICTION
   , m_bInterRPSPrediction()
   , m_iDeltaRIdxMinus1()
   , m_iDeltaRPS()
   , m_iNumRefIdc()
+#endif
   {
     ::memset( m_aiReferencePics, 0, sizeof(m_aiReferencePics) );
     ::memset( m_aiUsedByCurrPic, 0, sizeof(m_aiUsedByCurrPic) );
+#if INTER_RPS_PREDICTION
     ::memset( m_aiRefIdc,        0, sizeof(m_aiRefIdc) );
+#endif
   }
 };
 
@@ -174,6 +179,12 @@ protected:
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
   Int       m_iMaxCuDQPDepth;                   //  Max. depth for a minimum CuDQP (0:default)
+
+#if G509_CHROMA_QP_OFFSET
+  Int       m_iChromaQpOffset  ;                //  ChromaQpOffset    (0:default)
+  Int       m_iChromaQpOffset2nd;               //  ChromaQpOffset2nd (0:default)
+#endif
+
 #if QP_ADAPTATION
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -218,6 +229,10 @@ protected:
   UInt      m_uiDeltaQpRD;
   
   Bool      m_bUseConstrainedIntraPred;
+#if MAX_PCM_SIZE
+  Bool      m_usePCM;
+  UInt      m_pcmLog2MaxSize;
+#endif
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
   Int       m_iSliceMode;
@@ -273,10 +288,19 @@ protected:
   Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)
   UInt      m_uiBiPredIdc;          //< Use of Bi-Directional Weighting Prediction (B_SLICE)
 #endif
+#if SCALING_LIST
+  Int       m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
+  char*     m_scalingListFile;          ///< quantization matrix file name
+#endif
+
+#if NO_TMVP_MARKING
+  Bool      m_bEnableTMVP;
+#endif
 
 public:
   TEncCfg()          {}
-  virtual ~TEncCfg() {
+  virtual ~TEncCfg()
+  {
 #if TILES
     if( m_iUniformSpacingIdr == 0 )
     {
@@ -374,6 +398,12 @@ public:
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
   Void      setMaxCuDQPDepth                ( Int   i )      { m_iMaxCuDQPDepth = i; }
+
+#if G509_CHROMA_QP_OFFSET
+  Void      setChromaQpOffset               ( Int   i ) { m_iChromaQpOffset    = i; }
+  Void      setChromaQpOffset2nd            ( Int   i ) { m_iChromaQpOffset2nd = i; }
+#endif
+
 #if QP_ADAPTATION
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
@@ -472,6 +502,10 @@ public:
 #if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Void      setPCMFilterDisableFlag         ( Bool  b )     {  m_bPCMFilterDisableFlag = b; }
 #endif
+#if MAX_PCM_SIZE
+  Void      setUsePCM                       ( Bool  b )     {  m_usePCM = b;               }
+  Void      setPCMLog2MaxSize               ( UInt u )      { m_pcmLog2MaxSize = u;      }
+#endif
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
@@ -518,6 +552,10 @@ public:
 #endif
 #if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   } 
+#endif
+#if MAX_PCM_SIZE
+  Bool      getUsePCM                       ()      { return m_usePCM;                 }
+  UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
 #endif
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
 
@@ -656,7 +694,17 @@ public:
   Bool      getUseWP               ()            { return m_bUseWeightPred;    }
   UInt      getWPBiPredIdc         ()            { return m_uiBiPredIdc;       }
 #endif
+#if SCALING_LIST
+  Void      setUseScalingListId    ( Int  u )    { m_useScalingListId       = u;   }
+  Int       getUseScalingListId    ()            { return m_useScalingListId;      }
+  Void      setScalingListFile     ( char*  pch ){ m_scalingListFile     = pch; }
+  char*     getScalingListFile     ()            { return m_scalingListFile;    }
+#endif
 
+#if NO_TMVP_MARKING
+  Void      setEnableTMVP ( Bool b ) { m_bEnableTMVP = b;    }
+  Bool      getEnableTMVP ()         { return m_bEnableTMVP; }
+#endif
 };
 
 //! \}

@@ -213,9 +213,6 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 #endif
 
-  /// Code number of ALF CU control flags
-  Void codeAlfFlagNum    ( UInt uiCode, UInt minValue, Int iDepth);
-
   Void codeAlfCtrlFlag   ( UInt uiSymbol );
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -253,7 +250,7 @@ public:
   Bool getAdaptFlag      ()          { return m_bAdaptFlag; }
   Void setAdaptFlag      ( Bool b )  { m_bAdaptFlag = b;     }
 #if WEIGHT_PRED
-  Void codeWeightPredTable           ( TComSlice* pcSlice );
+  Void xCodePredWeightTable          ( TComSlice* pcSlice );
 #endif
 #if TILES
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }
@@ -266,6 +263,11 @@ public:
 #if F747_APS
   Void  codeAPSInitInfo(TComAPS* pcAPS);  //!< code APS flags before encoding SAO and ALF parameters
   Void  codeFinish(Bool bEnd) { /*do nothing*/}
+#endif
+#if SCALING_LIST
+  Void  codeScalingList            ( TComScalingList* scalingList );
+  Void  xCodeDPCMScalingListMatrix ( TComScalingList* scalingList, Int* data, UInt sizeId);
+  Void  xWriteResidualCode         ( UInt size, Int *data);
 #endif
 
 

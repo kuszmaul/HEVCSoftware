@@ -76,8 +76,8 @@ protected:
 #if G1002_RPS
   Int       m_iExtraRPSs;
   GOPEntry  m_pcGOPList[MAX_GOP];
-  UInt      m_uiMaxNumberOfReorderPictures;                   ///< total number of reference pictures needed for decoding
-  UInt      m_uiMaxNumberOfReferencePictures;                 ///< total number of reorder pictures
+  UInt      m_uiMaxNumberOfReorderPictures;                   ///< total number of reorder pictures
+  UInt      m_uiMaxNumberOfReferencePictures;                 ///< total number of reference pictures needed for decoding
 #else
   Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
   Int       m_iNumOfReference;                                ///< total number of reference frames in P-slice
@@ -108,6 +108,12 @@ protected:
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
   Int       m_iMaxCuDQPDepth;                                 ///< Max. depth for a minimum CuDQPSize (0:default)
+
+#if G509_CHROMA_QP_OFFSET
+  Int       m_iChromaQpOffset;                                 ///< ChromaQpOffset    (0:default) 
+  Int       m_iChromaQpOffset2nd;                              ///< ChromaQpOffset2nd (0:default)
+#endif
+
 #if QP_ADAPTATION
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
@@ -166,6 +172,10 @@ protected:
   Bool      m_bUseLMChroma;                                  ///< JL: Chroma intra prediction based on luma signal
 
   // coding tools (PCM)
+#if MAX_PCM_SIZE
+  Bool      m_usePCM;                                         ///< flag for using IPCM
+  UInt      m_pcmLog2MaxSize;                                 ///< log2 of maximum PCM block size
+#endif
   UInt      m_uiPCMLog2MinSize;                               ///< log2 of minimum PCM block size
 #if E192_SPS_PCM_FILTER_DISABLE_SYNTAX
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
@@ -236,6 +246,14 @@ protected:
   UInt      m_uiBiPredIdc;                                    ///< Use of Bi-Directional Weighting Prediction (B_SLICE): explicit(1) or implicit(2)
 #endif
 
+#if NO_TMVP_MARKING
+  Bool      m_enableTMVP;
+#endif
+
+#if SCALING_LIST
+  Int       m_useScalingListId;                               ///< using quantization matrix
+  char*     m_scalingListFile;                                ///< quantization matrix file name
+#endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
   Void  xCheckParameter ();                                   ///< check validity of configuration values

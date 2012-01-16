@@ -131,6 +131,12 @@ Void TAppEncTop::xInitLibCfg()
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                   ( m_iMaxDeltaQP  );
   m_cTEncTop.setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
+
+#if G509_CHROMA_QP_OFFSET
+  m_cTEncTop.setChromaQpOffset               ( m_iChromaQpOffset     );
+  m_cTEncTop.setChromaQpOffset2nd            ( m_iChromaQpOffset2nd  );
+#endif
+
 #if QP_ADAPTATION
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
@@ -179,6 +185,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseLMChroma                  ( m_bUseLMChroma );
   m_cTEncTop.setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setPCMLog2MinSize          ( m_uiPCMLog2MinSize);
+#if MAX_PCM_SIZE
+  m_cTEncTop.setUsePCM                       ( m_usePCM );
+  m_cTEncTop.setPCMLog2MaxSize               ( m_pcmLog2MaxSize);
+#endif
+
 #if WEIGHT_PRED
   //====== Weighted Prediction ========
   m_cTEncTop.setUseWP                   ( m_bUseWeightPred      );
@@ -252,6 +263,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setWaveFrontSynchro           ( m_iWaveFrontSynchro );
   m_cTEncTop.setWaveFrontFlush             ( m_iWaveFrontFlush );
   m_cTEncTop.setWaveFrontSubstreams        ( m_iWaveFrontSubstreams );
+#endif
+#if NO_TMVP_MARKING
+  m_cTEncTop.setEnableTMVP ( m_enableTMVP );
+#endif
+#if SCALING_LIST
+  m_cTEncTop.setUseScalingListId           ( m_useScalingListId  );
+  m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
 #endif
 }
 

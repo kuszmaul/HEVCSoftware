@@ -120,14 +120,14 @@ public:
   Void  codeAlfSvlc       ( Int  uiCode );
   Void  codeAlfCtrlDepth  ();
 
-  /// Code number of ALF CU control flags
-  Void codeAlfFlagNum        ( UInt uiCode, UInt minValue, Int iDepth);
-
   Void codeAlfCtrlFlag       ( UInt uiSymbol );
 #if SAO
   Void  codeSaoFlag       ( UInt uiCode );
   Void  codeSaoUvlc       ( UInt uiCode );
   Void  codeSaoSvlc       ( Int  uiCode );
+#endif
+#if SCALING_LIST
+  Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
 #endif
 
 private:
