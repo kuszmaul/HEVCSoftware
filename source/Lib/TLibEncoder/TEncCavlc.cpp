@@ -765,15 +765,28 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
       if(pcSlice->getPPS()->getLongTermRefsPresent())
       {
+#if PRINT_RPS_INFO
+        Int lastBits = getNumberOfWrittenBits();
+#endif
         WRITE_UVLC( pcRPS->getNumberOfLongtermPictures(), "num_long_term_pics");
         Int maxPocLsb = 1<<pcSlice->getSPS()->getBitsForPOC();
         Int prev = 0;
+#if PRINT_RPS_INFO
+        printf("LT DeltaPOC = {");
+#endif
         for(Int i=pcRPS->getNumberOfPictures()-1 ; i > pcRPS->getNumberOfPictures()-pcRPS->getNumberOfLongtermPictures()-1; i--)
         {
           WRITE_UVLC((maxPocLsb-pcRPS->getDeltaPOC(i)+prev-1)%maxPocLsb, "delta_poc_lsb_lt_minus1");
+#if PRINT_RPS_INFO
+          printf (" %d [%d]",pcRPS->getDeltaPOC(i), (maxPocLsb-pcRPS->getDeltaPOC(i)+prev-1)%maxPocLsb);
+#endif
           prev = pcRPS->getDeltaPOC(i);
           WRITE_FLAG( pcRPS->getUsed(i), "used_by_curr_pic_lt_flag"); 
         }
+#if PRINT_RPS_INFO
+        printf(" ");
+        printf("} (%2d bits)\n", getNumberOfWrittenBits() - lastBits);
+#endif
       }
     }
 #endif
