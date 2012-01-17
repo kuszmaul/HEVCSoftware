@@ -51,6 +51,9 @@ TComSlice::TComSlice()
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR )
 , m_eSliceType                    ( I_SLICE )
 , m_iSliceQp                      ( 0 )
+#if ADAPTIVE_QP_SELECTION
+, m_iSliceQpBase                  ( 0 )
+#endif
 #if !DISABLE_CAVLC
 , m_iSymbolMode                   ( 1 )
 #endif
@@ -880,6 +883,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_eNalUnitType         = pSrc->m_eNalUnitType;
   m_eSliceType           = pSrc->m_eSliceType;
   m_iSliceQp             = pSrc->m_iSliceQp;
+#if ADAPTIVE_QP_SELECTION
+  m_iSliceQpBase         = pSrc->m_iSliceQpBase;
+#endif
 #if !DISABLE_CAVLC
   m_iSymbolMode          = pSrc->m_iSymbolMode;
 #endif
@@ -1598,6 +1604,9 @@ TComSPS::TComSPS()
 , m_uiMaxCUDepth              (  3)
 , m_uiMinTrDepth              (  0)
 , m_uiMaxTrDepth              (  1)
+#if G1002_RPS
+, m_numReorderFrames          (  0)
+#endif
 , m_uiQuadtreeTULog2MaxSize   (  0)
 , m_uiQuadtreeTULog2MinSize   (  0)
 , m_uiQuadtreeTUMaxDepthInter (  0)
@@ -1650,7 +1659,6 @@ TComSPS::TComSPS()
 #endif
 #if MAX_DPB_AND_LATENCY 
 , m_uiMaxDecFrameBuffering    (  0)
-, m_uiNumReorderFrames        (  0)
 , m_uiMaxLatencyIncrease      (  0)
 #endif
 {
@@ -1701,6 +1709,10 @@ TComPPS::TComPPS()
 , m_bSharedPPSInfoEnabled       (false)
 #endif
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+, m_iTileBehaviorControlPresentFlag (0)
+, m_bLFCrossTileBoundaryFlag     (true)
+#endif
 , m_iColumnRowInfoPresent        (0)
 , m_iUniformSpacingIdr           (0)
 , m_iTileBoundaryIndependenceIdr (0)

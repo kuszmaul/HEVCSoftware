@@ -47,7 +47,7 @@
 //! \{
 
 class TComPic;
-
+class TComTrQuant;
 
 // ====================================================================================================================
 // Constants
@@ -86,7 +86,7 @@ private:
   UInt        m_uiMaxTrDepth;
 #if G1002_RPS
   UInt        m_uiMaxNumberOfReferencePictures;
-  UInt        m_uiMaxNumberOfReorderPictures;
+  Int         m_numReorderFrames;
 #endif
   
   // Tool list
@@ -148,6 +148,9 @@ private:
 #endif
 
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Bool     m_bLFCrossTileBoundaryFlag;
+#endif
   Int      m_iUniformSpacingIdr;
   Int      m_iTileBoundaryIndependenceIdr;
   Int      m_iNumColumnsMinus1;
@@ -169,7 +172,6 @@ private:
 #endif
 #if MAX_DPB_AND_LATENCY // These could be used later when encoder wants to set their values
   UInt        m_uiMaxDecFrameBuffering; 
-  UInt        m_uiNumReorderFrames;
   UInt        m_uiMaxLatencyIncrease;
 #endif
 
@@ -236,8 +238,8 @@ public:
 #if G1002_RPS
   Void setMaxNumberOfReferencePictures( UInt u ) { m_uiMaxNumberOfReferencePictures = u;    }
   UInt getMaxNumberOfReferencePictures()         { return m_uiMaxNumberOfReferencePictures; }
-  Void setMaxNumberOfReorderPictures( UInt u )   { m_uiMaxNumberOfReorderPictures = u;    }
-  UInt getMaxNumberOfReorderPictures()           { return m_uiMaxNumberOfReorderPictures; }
+  Void setNumReorderFrames( Int i )              { m_numReorderFrames = i;    }
+  Int  getNumReorderFrames()                     { return m_numReorderFrames; }
 #endif
   Void setPadX        ( Int  u ) { m_aiPad[0] = u; }
   Void setPadY        ( Int  u ) { m_aiPad[1] = u; }
@@ -329,6 +331,10 @@ public:
 #endif
 #endif
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Void    setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
+  Bool    getLFCrossTileBoundaryFlag               ()                    { return m_bLFCrossTileBoundaryFlag;   }
+#endif
   Void     setUniformSpacingIdr             ( Int i )           { m_iUniformSpacingIdr = i; }
   Int      getUniformSpacingIdr             ()                  { return m_iUniformSpacingIdr; }
   Void     setTileBoundaryIndependenceIdr   ( Int i )           { m_iTileBoundaryIndependenceIdr = i; }
@@ -371,8 +377,6 @@ public:
 #if MAX_DPB_AND_LATENCY
   UInt getMaxDecFrameBuffering  ()            { return m_uiMaxDecFrameBuffering; }
   Void setMaxDecFrameBuffering  ( UInt ui )   { m_uiMaxDecFrameBuffering = ui;   }
-  UInt getNumReorderFrames      ()            { return m_uiNumReorderFrames;     }
-  Void setNumReorderFrames      ( UInt ui )   { m_uiNumReorderFrames = ui;       }
   UInt getMaxLatencyIncrease    ()            { return m_uiMaxLatencyIncrease;   }
   Void setMaxLatencyIncrease    ( UInt ui )   { m_uiMaxLatencyIncrease= ui;      }
 #endif
@@ -544,6 +548,10 @@ private:
 #endif
 
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Int      m_iTileBehaviorControlPresentFlag;
+  Bool     m_bLFCrossTileBoundaryFlag;
+#endif
   Int      m_iColumnRowInfoPresent;
   Int      m_iUniformSpacingIdr;
   Int      m_iTileBoundaryIndependenceIdr;
@@ -638,6 +646,12 @@ public:
 #endif
 
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Void    setTileBehaviorControlPresentFlag        ( Int i )             { m_iTileBehaviorControlPresentFlag = i;    }
+  Int     getTileBehaviorControlPresentFlag        ()                    { return m_iTileBehaviorControlPresentFlag; }
+  Void    setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
+  Bool    getLFCrossTileBoundaryFlag               ()                    { return m_bLFCrossTileBoundaryFlag;   }
+#endif
   Void     setColumnRowInfoPresent          ( Int i )           { m_iColumnRowInfoPresent = i; }
   Int      getColumnRowInfoPresent          ()                  { return m_iColumnRowInfoPresent; }
   Void     setUniformSpacingIdr             ( Int i )           { m_iUniformSpacingIdr = i; }
@@ -852,6 +866,9 @@ private:
   NalUnitType m_eNalUnitType;         ///< Nal unit type for the slice
   SliceType   m_eSliceType;
   Int         m_iSliceQp;
+#if ADAPTIVE_QP_SELECTION
+  Int         m_iSliceQpBase;
+#endif
 #if !DISABLE_CAVLC
   Int         m_iSymbolMode;
 #endif
@@ -889,6 +906,9 @@ private:
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
   TComPic*    m_pcPic;
+#if ADAPTIVE_QP_SELECTION
+  TComTrQuant* m_pcTrQuant;
+#endif  
 #if F747_APS
   TComAPS*    m_pcAPS;  //!< pointer to APS parameter object
 #endif
@@ -964,6 +984,11 @@ public:
   Void      setPPS          ( TComPPS* pcPPS )         { assert(pcPPS!=NULL); m_pcPPS = pcPPS; m_iPPSId = pcPPS->getPPSId(); }
   TComPPS*  getPPS          () { return m_pcPPS; }
 
+#if ADAPTIVE_QP_SELECTION
+  Void          setTrQuant          ( TComTrQuant* pcTrQuant ) { m_pcTrQuant = pcTrQuant; }
+  TComTrQuant*  getTrQuant          () { return m_pcTrQuant; }
+#endif
+
   Void      setPPSId        ( Int PPSId )         { m_iPPSId = PPSId; }
   Int       getPPSId        () { return m_iPPSId; }
 #if F747_APS
@@ -1000,6 +1025,9 @@ public:
   SliceType getSliceType    ()                          { return  m_eSliceType;         }
   Int       getPOC          ()                          { return  m_iPOC;           }
   Int       getSliceQp      ()                          { return  m_iSliceQp;           }
+#if ADAPTIVE_QP_SELECTION
+  Int       getSliceQpBase  ()                          { return  m_iSliceQpBase;       }
+#endif
   Int       getSliceQpDelta ()                          { return  m_iSliceQpDelta;      }
   Bool      getDRBFlag      ()                          { return  m_bDRBFlag;           }
   ERBIndex  getERBIndex     ()                          { return  m_eERBIndex;          }
@@ -1044,6 +1072,9 @@ public:
   Void      decodingRefreshMarking(UInt& uiPOCCDR, Bool& bRefreshPending, TComList<TComPic*>& rcListPic);
   Void      setSliceType        ( SliceType e )                 { m_eSliceType        = e;      }
   Void      setSliceQp          ( Int i )                       { m_iSliceQp          = i;      }
+#if ADAPTIVE_QP_SELECTION
+  Void      setSliceQpBase      ( Int i )                       { m_iSliceQpBase      = i;      }
+#endif
   Void      setSliceQpDelta     ( Int i )                       { m_iSliceQpDelta     = i;      }
   Void      setDRBFlag          ( Bool b )                      { m_bDRBFlag = b;               }
   Void      setERBIndex         ( ERBIndex e )                  { m_eERBIndex = e;              }

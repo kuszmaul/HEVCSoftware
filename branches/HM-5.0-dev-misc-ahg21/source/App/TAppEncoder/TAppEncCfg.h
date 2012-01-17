@@ -59,7 +59,9 @@ protected:
   char*     m_pchInputFile;                                   ///< source file name
   char*     m_pchBitstreamFile;                               ///< output bitstream file
   char*     m_pchReconFile;                                   ///< output reconstruction file
-  
+#if G678_LAMBDA_ADJUSTMENT  
+  Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
+#endif
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
   unsigned int m_FrameSkip;                                   ///< number of skipped frames from the beginning
@@ -76,7 +78,7 @@ protected:
 #if G1002_RPS
   Int       m_iExtraRPSs;
   GOPEntry  m_pcGOPList[MAX_GOP];
-  UInt      m_uiMaxNumberOfReorderPictures;                   ///< total number of reorder pictures
+  Int       m_numReorderFrames;                               ///< total number of reorder pictures
   UInt      m_uiMaxNumberOfReferencePictures;                 ///< total number of reference pictures needed for decoding
 #else
   Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
@@ -209,6 +211,10 @@ protected:
 #endif
   Bool m_bLFCrossSliceBoundaryFlag;  ///< 0: Cross-slice-boundary in-loop filtering 1: non-cross-slice-boundary in-loop filtering
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Int  m_iTileBehaviorControlPresentFlag; //!< 1: tile behavior control parameters are in PPS 0: tile behavior control parameters are not in PPS
+  Bool m_bLFCrossTileBoundaryFlag;  //!< 1: Cross-tile-boundary in-loop filtering 0: non-cross-tile-boundary in-loop filtering
+#endif
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
   Int       m_iTileBoundaryIndependenceIdr;

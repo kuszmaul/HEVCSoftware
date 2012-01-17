@@ -400,12 +400,18 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #if TILES
   READ_FLAG ( uiCode, "tile_info_present_flag" );
   pcPPS->setColumnRowInfoPresent(uiCode);
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  READ_FLAG ( uiCode, "tile_control_present_flag" );
+  pcPPS->setTileBehaviorControlPresentFlag(uiCode);
+#endif
   if( pcPPS->getColumnRowInfoPresent() == 1 )
   {
     READ_FLAG ( uiCode, "uniform_spacing_flag" );  
     pcPPS->setUniformSpacingIdr( uiCode );
+#if !NONCROSS_TILE_IN_LOOP_FILTERING
     READ_FLAG ( uiCode, "tile_boundary_independence_flag" );  
     pcPPS->setTileBoundaryIndependenceIdr( uiCode );
+#endif
 
     READ_UVLC ( uiCode, "num_tile_columns_minus1" );   
     pcPPS->setNumColumnsMinus1( uiCode );  
@@ -433,6 +439,31 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
       free(rowHeight);  
     }
   }
+
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  if(pcPPS->getTileBehaviorControlPresentFlag() == 1)
+  {
+    Int iNumColTilesMinus1 = (pcPPS->getColumnRowInfoPresent() == 1)?(pcPPS->getNumColumnsMinus1()):(pcPPS->getSPS()->getNumColumnsMinus1());
+    Int iNumRowTilesMinus1 = (pcPPS->getColumnRowInfoPresent() == 1)?(pcPPS->getNumColumnsMinus1()):(pcPPS->getSPS()->getNumRowsMinus1());
+
+    pcPPS->setTileBoundaryIndependenceIdr( 1 ); //default
+    pcPPS->setLFCrossTileBoundaryFlag(true); //default
+
+    if(iNumColTilesMinus1 !=0 || iNumRowTilesMinus1 !=0)
+    {
+      READ_FLAG ( uiCode, "tile_boundary_independence_flag" );  
+      pcPPS->setTileBoundaryIndependenceIdr( uiCode );
+
+      if(pcPPS->getTileBoundaryIndependenceIdr() == 1)
+      {
+        READ_FLAG ( uiCode, "loop_filter_across_tile_flag" );  
+        pcPPS->setLFCrossTileBoundaryFlag( (uiCode == 1)?true:false );
+      }
+
+    }
+  }
+#endif
+
 #endif
   return;
 }
@@ -500,7 +531,13 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if G1002_RPS
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   READ_UVLC( uiCode,    "max_num_ref_pics" );                    pcSPS->setMaxNumberOfReferencePictures(uiCode);
-  READ_UVLC( uiCode,    "max_num_reorder_pics" );                pcSPS->setMaxNumberOfReorderPictures(uiCode);
+  READ_UVLC( uiCode,    "num_reorder_frames" );                  pcSPS->setNumReorderFrames(uiCode);
+#endif
+#if MAX_DPB_AND_LATENCY
+  READ_UVLC ( uiCode, "max_dec_frame_buffering");
+  pcSPS->setMaxDecFrameBuffering( uiCode );
+  READ_UVLC ( uiCode, "max_latency_increase");
+  pcSPS->setMaxLatencyIncrease( uiCode );
 #endif
 #if !G507_COND_4X4_ENABLE_FLAG
 #if DISABLE_4x4_INTER
@@ -614,9 +651,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if TILES
   READ_FLAG ( uiCode, "uniform_spacing_flag" ); 
   pcSPS->setUniformSpacingIdr( uiCode );
+#if !NONCROSS_TILE_IN_LOOP_FILTERING
   READ_FLAG ( uiCode, "tile_boundary_independence_flag" );  
   pcSPS->setTileBoundaryIndependenceIdr( uiCode );
- 
+#endif 
   READ_UVLC ( uiCode, "num_tile_columns_minus1" );
   pcSPS->setNumColumnsMinus1( uiCode );  
   READ_UVLC ( uiCode, "num_tile_rows_minus1" ); 
@@ -641,15 +679,22 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     pcSPS->setRowHeight(rowHeight);
     free(rowHeight);  
   }
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  pcSPS->setTileBoundaryIndependenceIdr( 1 ); //default
+  pcSPS->setLFCrossTileBoundaryFlag(true); //default
+
+  if( pcSPS->getNumColumnsMinus1() !=0 || pcSPS->getNumRowsMinus1() != 0)
+  {
+    READ_FLAG ( uiCode, "tile_boundary_independence_flag" );  
+    pcSPS->setTileBoundaryIndependenceIdr( uiCode );
+    if(pcSPS->getTileBoundaryIndependenceIdr() == 1)
+    {
+      READ_FLAG ( uiCode, "loop_filter_across_tile_flag" );  
+      pcSPS->setLFCrossTileBoundaryFlag( (uiCode==1)?true:false);
+    }
+  }
 #endif
 
-#if MAX_DPB_AND_LATENCY
-  READ_UVLC ( uiCode, "max_dec_frame_buffering");
-  pcSPS->setMaxDecFrameBuffering( uiCode );
-  READ_UVLC ( uiCode, "num_reorder_frames");
-  pcSPS->setNumReorderFrames( uiCode );
-  READ_UVLC ( uiCode, "max_latency_increase");
-  pcSPS->setMaxLatencyIncrease( uiCode );
 #endif
 
   // Software-only flags
