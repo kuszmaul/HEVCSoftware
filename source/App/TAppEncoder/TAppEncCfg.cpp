@@ -154,7 +154,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputFile,i",     cfg_InputFile,     string(""), "original YUV input file name")
   ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream output file name")
   ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name")
-  
+#if G678_LAMBDA_ADJUSTMENT
+  ("LambdaModifier0,-LM0", m_adLambdaModifier[ 0 ], ( double )1.0, "Lambda modifier for temporal layer 0")
+  ("LambdaModifier1,-LM1", m_adLambdaModifier[ 1 ], ( double )1.0, "Lambda modifier for temporal layer 1")
+  ("LambdaModifier2,-LM2", m_adLambdaModifier[ 2 ], ( double )1.0, "Lambda modifier for temporal layer 2")
+  ("LambdaModifier3,-LM3", m_adLambdaModifier[ 3 ], ( double )1.0, "Lambda modifier for temporal layer 3")
+#endif
   ("SourceWidth,-wdt",      m_iSourceWidth,  0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight, 0, "Source picture height")
   ("InputBitDepth",         m_uiInputBitDepth, 8u, "bit-depth of input file")
@@ -188,8 +193,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DecodingRefreshType,-dr",m_iDecodingRefreshType, 0, "intra refresh, (0:none 1:CDR 2:IDR)")
   ("GOPSize,g",      m_iGOPSize,      1, "GOP size of temporal structure")
 #if G1002_RPS
-  ("MaxNumberOfReorderPictures",   m_uiMaxNumberOfReorderPictures,   4u, "Max number of reorder pictures")
-  ("MaxNumberOfReferencePictures", m_uiMaxNumberOfReferencePictures, 6u, "Max number of reference pictures")
+  ("MaxNumberOfReorderPictures",   m_numReorderFrames,               -1, "Max. number of reorder pictures: -1: encoder determines value, >=0: set explicitly")
+  ("MaxNumberOfReferencePictures", m_uiMaxNumberOfReferencePictures, 6u, "Max. number of reference pictures")
 #else
   ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment (-1: implies inherit GOPSize value)")
   ("NumOfReference,r",       m_iNumOfReference,     1, "Number of reference (P)")
@@ -285,6 +290,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("SliceGranularity",     m_iSliceGranularity,    0, "0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.")
 #endif
     ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
+
     ("ConstrainedIntraPred", m_bUseConstrainedIntraPred, false, "Constrained Intra Prediction")
 #if MAX_PCM_SIZE
     ("PCMEnabledFlag", m_usePCM         , false)
@@ -321,6 +327,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("TileMarkerFlag",              m_iTileMarkerFlag,              0,       "If TileBoundaryIndependenceIdc==1, 0: Disable transmission of lightweight tile marker. 1: Transmit light weight tile marker.")
 #endif
     ("MaxTileMarkerEntryPoints",    m_iMaxTileMarkerEntryPoints,    4,       "Maximum number of uniformly-spaced tile entry points (using light weigh tile markers). Default=4. If number of tiles < MaxTileMarkerEntryPoints then all tiles have entry points.")
+#endif
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+    ("TileControlPresentFlag",       m_iTileBehaviorControlPresentFlag,         1,          "0: tiles behavior control parameters are NOT present in the PPS. 1: tiles behavior control parameters are present in the PPS")
+    ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
 #endif
 #endif
 #if OL_USE_WPP
@@ -649,7 +659,7 @@ Void TAppEncCfg::xCheckParameter()
     bIsOK[i]=false;
   }
   Int iNumOK=0;
-  m_uiMaxNumberOfReorderPictures=0;
+  Int numReorderFramesRequired=0;
   m_uiMaxNumberOfReferencePictures=0;
   Int iLastDisp = -1;
   m_iExtraRPSs=0;
@@ -835,17 +845,24 @@ Void TAppEncCfg::xCheckParameter()
         if(aRefList[i]>iLastDisp)
           iNonDisplayed++;
       }
-      if(iNonDisplayed>m_uiMaxNumberOfReorderPictures)
-        m_uiMaxNumberOfReorderPictures=iNonDisplayed;
+      if(iNonDisplayed>numReorderFramesRequired)
+      {
+        numReorderFramesRequired=iNonDisplayed;
+      }
     }
     iCheckGOP++;
+  }
+  if (m_numReorderFrames == -1)
+  {
+    m_numReorderFrames = numReorderFramesRequired;
   }
   xConfirmPara(bError_GOP,"Invalid GOP structure given");
   for(Int i=0; i<m_iGOPSize; i++) 
   {
     xConfirmPara(m_pcGOPList[i].m_iSliceType!='B'&&m_pcGOPList[i].m_iSliceType!='P', "Slice type must be equal to B or P");
   }
-  xConfirmPara( m_bUseLComb==false && m_uiMaxNumberOfReorderPictures!=0, "ListCombination can only be 0 in low delay coding (more precisely when L0 and L1 are identical)" );  // Note however this is not the full necessary condition as ref_pic_list_combination_flag can only be 0 if L0 == L1.
+  xConfirmPara( m_bUseLComb==false && m_numReorderFrames!=0, "ListCombination can only be 0 in low delay coding (more precisely when L0 and L1 are identical)" );  // Note however this is not the full necessary condition as ref_pic_list_combination_flag can only be 0 if L0 == L1.
+  xConfirmPara( m_numReorderFrames < numReorderFramesRequired, "For the used GOP the encoder requires more pictures for reordering than specified in MaxNumberOfReorderPictures" );
 #else
 #if REF_SETTING_FOR_LD
   xConfirmPara( m_bUseNewRefSetting && m_iGOPSize>1, "New reference frame setting was only designed for LD setting" );

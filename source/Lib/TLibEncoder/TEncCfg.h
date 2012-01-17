@@ -108,7 +108,10 @@ protected:
   Int       m_iSourceWidth;
   Int       m_iSourceHeight;
   Int       m_iFrameToBeEncoded;
-  
+#if G678_LAMBDA_ADJUSTMENT  
+  Double    m_adLambdaModifier[ MAX_TLAYER ];
+#endif
+
   //====== Coding Structure ========
   UInt      m_uiIntraPeriod;
   UInt      m_uiDecodingRefreshType;            ///< the type of decoding refresh employed for the random access.
@@ -117,7 +120,7 @@ protected:
   GOPEntry  m_pcGOPList[MAX_GOP];
   Int       m_iExtraRPSs;
   UInt      m_uiMaxNumberOfReferencePictures;
-  UInt      m_uiMaxNumberOfReorderPictures;
+  Int       m_numReorderFrames;
 #else
   Int       m_iRateGOPSize;
   Int       m_iNumOfReference;
@@ -244,6 +247,7 @@ protected:
   Int       m_iSliceGranularity;
 #endif
   Bool      m_bLFCrossSliceBoundaryFlag;
+
 #if E192_SPS_PCM_BIT_DEPTH_SYNTAX
   Bool      m_bPCMInputBitDepthFlag;
   UInt      m_uiPCMBitDepthLuma;
@@ -253,6 +257,10 @@ protected:
   Bool      m_bPCMFilterDisableFlag;
 #endif
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Int       m_iTileBehaviorControlPresentFlag;
+  Bool      m_bLFCrossTileBoundaryFlag;
+#endif
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
   Int       m_iTileBoundaryIndependenceIdr;
@@ -337,7 +345,7 @@ public:
   Void      setExtraRPSs                    ( Int   i )      { m_iExtraRPSs = i; }
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_pcGOPList[i]; }
   Void      setMaxNumberOfReferencePictures ( UInt u )       { m_uiMaxNumberOfReferencePictures = u;    }
-  Void      setMaxNumberOfReorderPictures   ( UInt u )       { m_uiMaxNumberOfReorderPictures = u;    }
+  Void      setNumReorderFrames             ( Int  i )       { m_numReorderFrames = i;    }
 #else
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
   Void      setNumOfReference               ( Int   i )      { m_iNumOfReference = i; }
@@ -415,7 +423,11 @@ public:
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
   Int       getFrameToBeEncoded             ()      { return  m_iFrameToBeEncoded; }
-  
+#if G678_LAMBDA_ADJUSTMENT  
+  void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
+  Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
+#endif
+
   //==== Coding Structure ========
   UInt      getIntraPeriod                  ()      { return  m_uiIntraPeriod; }
   UInt      getDecodingRefreshType          ()      { return  m_uiDecodingRefreshType; }
@@ -428,7 +440,7 @@ public:
   
 #else
   UInt      getMaxNumberOfReferencePictures ()      { return m_uiMaxNumberOfReferencePictures; }
-  UInt      getMaxNumberOfReorderPictures   ()      { return m_uiMaxNumberOfReorderPictures; }
+  Int       geNumReorderFrames              ()      { return m_numReorderFrames; }
 #endif
   Int       getQP                           ()      { return  m_iQP; }
   
@@ -581,11 +593,18 @@ public:
 #endif
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
+
 #if SAO
   Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
   Bool      getUseSAO                  ()              {return m_bUseSAO;}
 #endif
 #if TILES
+#if NONCROSS_TILE_IN_LOOP_FILTERING
+  Void  setTileBehaviorControlPresentFlag        ( Int i )             { m_iTileBehaviorControlPresentFlag = i;    }
+  Int   getTileBehaviorControlPresentFlag        ()                    { return m_iTileBehaviorControlPresentFlag; }
+  Void  setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
+  Bool  getLFCrossTileBoundaryFlag               ()                    { return m_bLFCrossTileBoundaryFlag;   }
+#endif
   Void  setColumnRowInfoPresent        ( Int i )           { m_iColumnRowInfoPresent = i; }
   Int   getColumnRowInfoPresent        ()                  { return m_iColumnRowInfoPresent; }
   Void  setUniformSpacingIdr           ( Int i )           { m_iUniformSpacingIdr = i; }
