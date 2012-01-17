@@ -80,6 +80,10 @@ protected:
   GOPEntry  m_pcGOPList[MAX_GOP];
   Int       m_numReorderFrames;                               ///< total number of reorder pictures
   UInt      m_uiMaxNumberOfReferencePictures;                 ///< total number of reference pictures needed for decoding
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Double    m_fHardCodedStructureAHG21;
+  Int       m_iRTT;
+#endif
 #else
   Int       m_iRateGOPSize;                                   ///< GOP size for QP variance
   Int       m_iNumOfReference;                                ///< total number of reference frames in P-slice

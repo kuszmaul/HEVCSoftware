@@ -82,6 +82,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setExtraRPSs                     ( m_iExtraRPSs );
   m_cTEncTop.setNumReorderFrames             ( m_numReorderFrames );
   m_cTEncTop.setMaxNumberOfReferencePictures ( m_uiMaxNumberOfReferencePictures );
+#if AHG21_HARDCODED_PIC_STRUCTS
+  m_cTEncTop.setHardCodedStructureAHG21      ( m_fHardCodedStructureAHG21 );
+  m_cTEncTop.setRTT                          ( m_iRTT );
+#endif
 #else
   m_cTEncTop.setRateGOPSize                  ( m_iRateGOPSize );
   m_cTEncTop.setNumOfReference               ( m_iNumOfReference );

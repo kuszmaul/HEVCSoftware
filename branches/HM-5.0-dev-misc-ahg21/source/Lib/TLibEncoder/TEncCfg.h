@@ -121,6 +121,10 @@ protected:
   Int       m_iExtraRPSs;
   UInt      m_uiMaxNumberOfReferencePictures;
   Int       m_numReorderFrames;
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Double    m_fHardCodedStructureAHG21;
+  Int       m_iRTT;
+#endif
 #else
   Int       m_iRateGOPSize;
   Int       m_iNumOfReference;
@@ -346,6 +350,10 @@ public:
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_pcGOPList[i]; }
   Void      setMaxNumberOfReferencePictures ( UInt u )       { m_uiMaxNumberOfReferencePictures = u;    }
   Void      setNumReorderFrames             ( Int  i )       { m_numReorderFrames = i;    }
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Void      setHardCodedStructureAHG21      ( Double f )     { m_fHardCodedStructureAHG21 = f;    }
+  Void      setRTT                          ( Int r )        { m_iRTT = r;    }
+#endif
 #else
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
   Void      setNumOfReference               ( Int   i )      { m_iNumOfReference = i; }
@@ -441,6 +449,10 @@ public:
 #else
   UInt      getMaxNumberOfReferencePictures ()      { return m_uiMaxNumberOfReferencePictures; }
   Int       geNumReorderFrames              ()      { return m_numReorderFrames; }
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Double    getHardCodedStructureAHG21      ()      { return m_fHardCodedStructureAHG21;    }
+  Int       getRTT                          ()      { return  m_iRTT; }
+#endif
 #endif
   Int       getQP                           ()      { return  m_iQP; }
   

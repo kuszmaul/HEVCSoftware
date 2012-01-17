@@ -231,7 +231,9 @@
 #define  G1002_RPS                           1
 #if  !G1002_RPS
 #define REF_SETTING_FOR_LD              1           // reference frame setting for low delay setting (JCTVC-F701)
+#define AHG21_HARDCODED_PIC_STRUCTS     0
 #else
+#define AHG21_HARDCODED_PIC_STRUCTS     1
 #define G1002_CRA_CHECK                 1
 #define G1002_IDR_POC_ZERO_BUGFIX       1
 #define INTER_RPS_PREDICTION            1           // remove this once tested.

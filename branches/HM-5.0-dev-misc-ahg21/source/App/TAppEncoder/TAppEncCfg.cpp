@@ -195,6 +195,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if G1002_RPS
   ("MaxNumberOfReorderPictures",   m_numReorderFrames,               -1, "Max. number of reorder pictures: -1: encoder determines value, >=0: set explicitly")
   ("MaxNumberOfReferencePictures", m_uiMaxNumberOfReferencePictures, 6u, "Max. number of reference pictures")
+#if AHG21_HARDCODED_PIC_STRUCTS
+  ("HardCodedStructureAHG21",      m_fHardCodedStructureAHG21,      0.0, "Hard-coded reference picture structure for AHG21")
+  ("RTT",                          m_iRTT,                            0, "RTT")
+#endif
 #else
   ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment (-1: implies inherit GOPSize value)")
   ("NumOfReference,r",       m_iNumOfReference,     1, "Number of reference (P)")
@@ -660,7 +664,16 @@ Void TAppEncCfg::xCheckParameter()
   }
   Int iNumOK=0;
   Int numReorderFramesRequired=0;
-  m_uiMaxNumberOfReferencePictures=0;
+
+#if AHG21_HARDCODED_PIC_STRUCTS
+  if(m_fHardCodedStructureAHG21 == 0.0)
+  {
+#endif
+    m_uiMaxNumberOfReferencePictures=0;
+#if AHG21_HARDCODED_PIC_STRUCTS
+  }
+#endif
+
   Int iLastDisp = -1;
   m_iExtraRPSs=0;
   while(!bVerified_GOP&&!bError_GOP) 
