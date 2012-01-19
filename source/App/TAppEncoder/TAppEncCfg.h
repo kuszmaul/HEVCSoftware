@@ -83,6 +83,8 @@ protected:
 #if AHG21_HARDCODED_PIC_STRUCTS
   Double    m_fHardCodedStructureAHG21;
   Int       m_iRTT;
+  Int       m_iFirstSceneInterval;
+  Int       m_iSecondSceneInterval;
 #endif
 #else
   Int       m_iRateGOPSize;                                   ///< GOP size for QP variance

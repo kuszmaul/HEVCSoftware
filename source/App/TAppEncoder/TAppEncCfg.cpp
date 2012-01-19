@@ -198,6 +198,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if AHG21_HARDCODED_PIC_STRUCTS
   ("HardCodedStructureAHG21",      m_fHardCodedStructureAHG21,      0.0, "Hard-coded reference picture structure for AHG21")
   ("RTT",                          m_iRTT,                            0, "RTT")
+  ("FirstSceneInterval",           m_iFirstSceneInterval,             0, "First Scene Interval")
+  ("SecondSceneInterval",          m_iSecondSceneInterval,            0, "Second Scene Interval")
 #endif
 #else
   ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment (-1: implies inherit GOPSize value)")
