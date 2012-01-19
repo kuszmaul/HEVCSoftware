@@ -472,6 +472,97 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           pcSlice->getRPS()->setNumberOfPictures(num_of_pics+1);
         }      
       }
+      if(m_pcEncTop->getHardCodedStructureAHG21() == 2.6)
+      {
+        Int firstScenePicInterval = m_pcEncTop->getFrameRate() * m_pcEncTop->getFirstSceneInterval();
+        Int secondScenePicInterval = m_pcEncTop->getFrameRate() * m_pcEncTop->getSecondSceneInterval();
+
+        UInt numberOfPics = pcSlice->getRPS()->getNumberOfPictures();
+
+        //first check where the position of current pic in output order
+        bool isCurrPicInFirstInterval = 
+          (uiPOCCurr % (firstScenePicInterval + secondScenePicInterval) < firstScenePicInterval) ?
+          true : false;
+
+        //exception,if uiPOCCurr == 0, always set to the first scene and automatically chosen as LTRP
+        if (uiPOCCurr == 0) 
+        {
+          m_pcEncTop->setIsInFirstScene (true);
+          m_pcEncTop->setFirstLongTermRefPicPOC(uiPOCCurr);
+          m_pcEncTop->setFirstLongTermRefPicTL(pcSlice->getTLayer());
+        }
+
+        Int tempLTRefPOC = (isCurrPicInFirstInterval) ? m_pcEncTop->getFirstLongTermRefPicPOC () : m_pcEncTop->getSecondLongTermRefPicPOC ();
+        UInt tempLTRefTL = (isCurrPicInFirstInterval) ? m_pcEncTop->getFirstLongTermRefPicTL () : m_pcEncTop->getSecondLongTermRefPicTL ();
+        Int tempScenePicInterval = (isCurrPicInFirstInterval) ? firstScenePicInterval : secondScenePicInterval;
+
+        //if current pic is used for reference, consider this to be used as LTRP by others later
+        if (pcSlice->isReferenced())
+        {
+          //Assigned curr pic as LTRP
+          if ((uiPOCCurr < tempLTRefPOC || uiPOCCurr - tempLTRefPOC > tempScenePicInterval) && 
+            pcSlice->getTLayer() <= tempLTRefTL) 
+          {
+            tempLTRefPOC = uiPOCCurr;
+            tempLTRefTL = pcSlice->getTLayer();
+            if (isCurrPicInFirstInterval) 
+            {
+              m_pcEncTop->setFirstLongTermRefPicPOC(tempLTRefPOC);
+              m_pcEncTop->setFirstLongTermRefPicTL(tempLTRefTL);
+            }
+            else 
+            {
+              m_pcEncTop->setSecondLongTermRefPicPOC(tempLTRefPOC);
+              m_pcEncTop->setSecondLongTermRefPicTL(tempLTRefTL);
+            }
+          }
+        }
+
+        //Now check if current LTRP is included in RPS, if it is not, then add as LT, if yes, the no need, we just considered it as ST
+        bool isExistAsShortTerm = false;
+        UInt ii = 0; 
+        while (!isExistAsShortTerm && ii < numberOfPics)
+        {
+          //set isExistAsShortTerm is already included RPS as short term
+          if ((pcSlice->getRPS()->getDeltaPOC(ii) + uiPOCCurr) == tempLTRefPOC) isExistAsShortTerm = true;
+          ii++;
+        }
+
+        if (!isExistAsShortTerm && tempLTRefPOC != uiPOCCurr)
+        {
+          pcSlice->getRPS()->setPOC(numberOfPics, tempLTRefPOC);
+          pcSlice->getRPS()->setDeltaPOC(numberOfPics, tempLTRefPOC - uiPOCCurr);
+          pcSlice->getRPS()->setUsed(numberOfPics,(pcSlice->getSliceType() != I_SLICE) ? 1 : 0);
+          pcSlice->getRPS()->setNumberOfLongtermPictures(1);
+          pcSlice->getRPS()->setNumberOfPictures(numberOfPics + 1);
+          //printf("\nCurrent picture: %d -- LTRP: (%d - %d)\n", uiPOCCurr, tempLTRefPOC, tempLTRefTL);
+        } 
+        else 
+        {
+          //we need to set of of STRP unused in order to make this STRP-LTRP be selected
+          UInt jj = 0;
+          UInt index = 0;
+          UInt largestDelta = 0;
+          if (uiPOCCurr % m_pcEncTop->getGOPSize() != 0)
+          {
+            while (jj < numberOfPics)
+            {
+              if (pcSlice->getRPS()->getUsed(jj) && 
+                abs(pcSlice->getRPS()->getDeltaPOC(jj)) > largestDelta && 
+                ii - 1 != jj) 
+              {
+                index = jj;
+                largestDelta = abs(pcSlice->getRPS()->getDeltaPOC(jj));
+              }
+              jj++;
+            }
+            pcSlice->getRPS()->setUsed(index, 0);
+          }
+          pcSlice->getRPS()->setUsed(ii - 1, 1);
+          pcSlice->getRPS()->setNumberOfLongtermPictures(0);
+          //printf("\nCurrent picture: %d -- No LTRP\n", uiPOCCurr);
+        }
+      }
 #endif
       if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
       {

@@ -85,6 +85,11 @@ Void TAppEncTop::xInitLibCfg()
 #if AHG21_HARDCODED_PIC_STRUCTS
   m_cTEncTop.setHardCodedStructureAHG21      ( m_fHardCodedStructureAHG21 );
   m_cTEncTop.setRTT                          ( m_iRTT );
+  m_cTEncTop.setFirstSceneInterval           ( m_iFirstSceneInterval );
+  m_cTEncTop.setSecondSceneInterval          ( m_iSecondSceneInterval );
+  m_cTEncTop.setIsInFirstScene               ( true );
+  m_cTEncTop.setSecondLongTermRefPicPOC      (INT_MAX);
+  m_cTEncTop.setSecondLongTermRefPicPOC      (UINT_MAX);
 #endif
 #else
   m_cTEncTop.setRateGOPSize                  ( m_iRateGOPSize );

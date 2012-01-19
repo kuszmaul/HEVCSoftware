@@ -124,6 +124,14 @@ protected:
 #if AHG21_HARDCODED_PIC_STRUCTS
   Double    m_fHardCodedStructureAHG21;
   Int       m_iRTT;
+  //used for case 2.6
+  Int       m_iFirstSceneInterval;
+  Int       m_iSecondSceneInterval;
+  bool      m_bInFirstScene;
+  Int       m_iFirstLongTermRefPicPOC;
+  UInt      m_uiFirstLongTermRefPicTL;
+  Int       m_iSecondLongTermRefPicPOC;
+  UInt      m_uiSecondLongTermRefPicTL;
 #endif
 #else
   Int       m_iRateGOPSize;
@@ -353,6 +361,13 @@ public:
 #if AHG21_HARDCODED_PIC_STRUCTS
   Void      setHardCodedStructureAHG21      ( Double f )     { m_fHardCodedStructureAHG21 = f;    }
   Void      setRTT                          ( Int r )        { m_iRTT = r;    }
+  Void      setFirstSceneInterval           ( Int r )        { m_iFirstSceneInterval = r;    }
+  Void      setSecondSceneInterval          ( Int r )        { m_iSecondSceneInterval = r;    }
+  Void      setIsInFirstScene               ( bool r )       { m_bInFirstScene = r;    }
+  Void      setFirstLongTermRefPicPOC       ( Int r )        { m_iFirstLongTermRefPicPOC = r;    }
+  Void      setFirstLongTermRefPicTL        ( UInt r )       { m_uiFirstLongTermRefPicTL = r;    }
+  Void      setSecondLongTermRefPicPOC      ( Int r )        { m_iSecondLongTermRefPicPOC = r;    }
+  Void      setSecondLongTermRefPicTL       ( UInt r )       { m_uiSecondLongTermRefPicTL = r;    }
 #endif
 #else
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
@@ -451,7 +466,14 @@ public:
   Int       geNumReorderFrames              ()      { return m_numReorderFrames; }
 #if AHG21_HARDCODED_PIC_STRUCTS
   Double    getHardCodedStructureAHG21      ()      { return m_fHardCodedStructureAHG21;    }
-  Int       getRTT                          ()      { return  m_iRTT; }
+  Int       getRTT                          ()      { return m_iRTT; }
+  Int       getFirstSceneInterval           ()      { return m_iFirstSceneInterval;    }
+  Int       getSecondSceneInterval          ()      { return m_iSecondSceneInterval;    }
+  bool      isInFirstSceneInterval          ()      { return m_bInFirstScene;    }
+  Int       getFirstLongTermRefPicPOC       ()      { return m_iFirstLongTermRefPicPOC;    }
+  UInt      getFirstLongTermRefPicTL        ()      { return m_uiFirstLongTermRefPicTL;    }
+  Int       getSecondLongTermRefPicPOC      ()      { return m_iSecondLongTermRefPicPOC;    }
+  UInt      getSecondLongTermRefPicTL       ()      { return m_uiSecondLongTermRefPicTL;    }
 #endif
 #endif
   Int       getQP                           ()      { return  m_iQP; }
