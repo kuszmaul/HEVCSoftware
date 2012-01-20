@@ -1192,7 +1192,11 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   TComReferencePictureSet* pcRPS = this->getLocalRPS();
 
   // loop through all pictures in the Reference Picture Set
+#if AHG21_HARDCODED_PIC_STRUCTS
+  for(i=0;i<pReferencePictureSet->getNumberOfPictures()-pReferencePictureSet->getNumberOfLongtermPictures();i++)
+#else
   for(i=0;i<pReferencePictureSet->getNumberOfPictures();i++)
+#endif
   {
     j = 0;
     // loop through all pictures in the reference picture buffer
@@ -1263,6 +1267,24 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   }
 #endif      
 
+#if AHG21_HARDCODED_PIC_STRUCTS
+  if (pReferencePictureSet->getNumberOfLongtermPictures())
+  {
+    UInt numPics = pcRPS->getNumberOfPictures();
+    UInt longTermPos = pReferencePictureSet->getNumberOfPictures() - pReferencePictureSet->getNumberOfLongtermPictures();
+    while (longTermPos < pReferencePictureSet->getNumberOfPictures())
+    {
+      pcRPS->setDeltaPOC(numPics, pReferencePictureSet->getDeltaPOC(longTermPos));
+      pcRPS->setPOC(numPics, pReferencePictureSet->getPOC(longTermPos));
+      pcRPS->setRefIdc(numPics, pReferencePictureSet->getRefIdc(longTermPos));
+      pcRPS->setUsed(numPics, true);
+      longTermPos++;
+      numPics++;
+    }
+    pcRPS->setNumberOfPictures(numPics);
+    pcRPS->setNumberOfLongtermPictures(pReferencePictureSet->getNumberOfLongtermPictures());
+  }
+#endif
   this->setRPS(pcRPS);
   this->setRPSidx(-1);
 }
@@ -1894,6 +1916,17 @@ Void TComReferencePictureSet::printDeltaPOC()
 #endif
   printf("}\n");
 }
+#if AHG21_HARDCODED_PIC_STRUCTS
+Void TComReferencePictureSet::printRefPOC(UInt uiCurrentPoc)
+{
+  printf("RefPOC = { ");
+  for(Int j=0; j < getNumberOfPictures(); j++)
+  {
+    printf("%d%s ", uiCurrentPoc + getDeltaPOC(j), (getUsed(j)==1)?"*":"");
+  } 
+  printf("}\n");
+}
+#endif
 
 TComRPS::TComRPS()
 {

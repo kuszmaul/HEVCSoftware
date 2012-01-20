@@ -438,6 +438,9 @@ public:
   Void sortDeltaPOC();
 #endif
   Void printDeltaPOC();
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Void printRefPOC(UInt uiCurrentPoc);
+#endif
 };
 
 /// Reference Picture Set set class

@@ -127,11 +127,6 @@ protected:
   //used for case 2.6
   Int       m_iFirstSceneInterval;
   Int       m_iSecondSceneInterval;
-  bool      m_bInFirstScene;
-  Int       m_iFirstLongTermRefPicPOC;
-  UInt      m_uiFirstLongTermRefPicTL;
-  Int       m_iSecondLongTermRefPicPOC;
-  UInt      m_uiSecondLongTermRefPicTL;
 #endif
 #else
   Int       m_iRateGOPSize;
@@ -363,11 +358,6 @@ public:
   Void      setRTT                          ( Int r )        { m_iRTT = r;    }
   Void      setFirstSceneInterval           ( Int r )        { m_iFirstSceneInterval = r;    }
   Void      setSecondSceneInterval          ( Int r )        { m_iSecondSceneInterval = r;    }
-  Void      setIsInFirstScene               ( bool r )       { m_bInFirstScene = r;    }
-  Void      setFirstLongTermRefPicPOC       ( Int r )        { m_iFirstLongTermRefPicPOC = r;    }
-  Void      setFirstLongTermRefPicTL        ( UInt r )       { m_uiFirstLongTermRefPicTL = r;    }
-  Void      setSecondLongTermRefPicPOC      ( Int r )        { m_iSecondLongTermRefPicPOC = r;    }
-  Void      setSecondLongTermRefPicTL       ( UInt r )       { m_uiSecondLongTermRefPicTL = r;    }
 #endif
 #else
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
@@ -469,11 +459,6 @@ public:
   Int       getRTT                          ()      { return m_iRTT; }
   Int       getFirstSceneInterval           ()      { return m_iFirstSceneInterval;    }
   Int       getSecondSceneInterval          ()      { return m_iSecondSceneInterval;    }
-  bool      isInFirstSceneInterval          ()      { return m_bInFirstScene;    }
-  Int       getFirstLongTermRefPicPOC       ()      { return m_iFirstLongTermRefPicPOC;    }
-  UInt      getFirstLongTermRefPicTL        ()      { return m_uiFirstLongTermRefPicTL;    }
-  Int       getSecondLongTermRefPicPOC      ()      { return m_iSecondLongTermRefPicPOC;    }
-  UInt      getSecondLongTermRefPicTL       ()      { return m_uiSecondLongTermRefPicTL;    }
 #endif
 #endif
   Int       getQP                           ()      { return  m_iQP; }
