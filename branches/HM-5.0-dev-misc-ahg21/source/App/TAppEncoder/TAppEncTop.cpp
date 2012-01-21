@@ -41,6 +41,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
+#if AHG21_HARDCODED_PIC_STRUCTS
+#include <limits.h>
+#endif
 
 #include "TAppEncTop.h"
 #include "TLibEncoder/AnnexBwrite.h"
