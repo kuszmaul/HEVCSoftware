@@ -549,7 +549,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           Int secondScenePicInterval = m_pcEncTop->getFrameRate() * m_pcEncTop->getSecondSceneInterval();
 
           Int cycleSize = (firstScenePicInterval + secondScenePicInterval);
-          UInt numberOfPics = pcSlice->getRPS()->getNumberOfPictures();
 
           Int cycleNum        = uiPOCCurr / cycleSize;
 
