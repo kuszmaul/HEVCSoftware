@@ -107,7 +107,7 @@
 
 #define MAX_GOP                     64          ///< max. value of hierarchical GOP size
 
-#define MAX_NUM_REF                 4           ///< max. value of multiple reference frames
+#define MAX_NUM_REF                 5           ///< max. value of multiple reference frames
 #define MAX_NUM_REF_LC              8           ///< max. value of combined reference frames
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
@@ -164,7 +164,7 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
 // Explicit temporal layer QP offset
-#define MAX_TLAYER                  4           ///< max number of temporal layer
+#define MAX_TLAYER                  7           ///< max number of temporal layer
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode
