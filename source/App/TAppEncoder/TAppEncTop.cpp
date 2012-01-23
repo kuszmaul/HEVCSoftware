@@ -41,6 +41,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
+#if AHG21_HARDCODED_PIC_STRUCTS
+#include <limits.h>
+#endif
 
 #include "TAppEncTop.h"
 #include "TLibEncoder/AnnexBwrite.h"
@@ -82,6 +85,12 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setExtraRPSs                     ( m_iExtraRPSs );
   m_cTEncTop.setNumReorderFrames             ( m_numReorderFrames );
   m_cTEncTop.setMaxNumberOfReferencePictures ( m_uiMaxNumberOfReferencePictures );
+#if AHG21_HARDCODED_PIC_STRUCTS
+  m_cTEncTop.setHardCodedStructureAHG21      ( m_fHardCodedStructureAHG21 );
+  m_cTEncTop.setRTT                          ( m_iRTT );
+  m_cTEncTop.setFirstSceneInterval           ( m_iFirstSceneInterval );
+  m_cTEncTop.setSecondSceneInterval          ( m_iSecondSceneInterval );
+#endif
 #else
   m_cTEncTop.setRateGOPSize                  ( m_iRateGOPSize );
   m_cTEncTop.setNumOfReference               ( m_iNumOfReference );

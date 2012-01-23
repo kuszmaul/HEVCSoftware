@@ -72,11 +72,24 @@ class TEncTop;
 /// GOP encoder class
 class TEncGOP
 {
+#if AHG21_HARDCODED_PIC_STRUCTS
+  struct LTKeep
+  {
+    UInt ltPoc;
+    UInt keepUntilPoc;
+  };
+#endif
 private:
   //  Data
 #if G1002_RPS
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Int                     m_AHG21_reference_pics[5];
+  long                    m_randx;
+  Double                  m_z; 
+  std::list<LTKeep>       m_ltPictures;
+#endif
 #if G1002_IDR_POC_ZERO_BUGFIX
   Int                     m_iLastIDR;
 #endif
@@ -161,7 +174,11 @@ protected:
   Void encodeAPS   (TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* pcSlice);            //!< encode APS syntax elements
   Void assignNewAPS(TComAPS& cAPS, Int apsID, std::vector<TComAPS>& vAPS, TComSlice* pcSlice);  //!< Assign APS object into APS container
 #endif
-  
+
+#if AHG21_HARDCODED_PIC_STRUCTS
+  long rand(long L, long H);
+  static Int comp(const Void * a, const Void * b);
+#endif
 
 protected:
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
@@ -169,6 +186,12 @@ protected:
   
 #if !G1002_RPS || !G1002_IDR_POC_ZERO_BUGFIX
   NalUnitType getNalUnitType( UInt uiPOCCurr );
+#endif
+#if AHG21_HARDCODED_PIC_STRUCTS
+  Void storeLongTermPicUntil(UInt ltPoc, UInt keepUntilPoc);
+  Void discardAgedLongTermPics (UInt currentPoc);
+  Bool rpsContainsShortTermReference(TComReferencePictureSet *pRPS, UInt currentPoc, UInt testPoc);
+  Void addLongTermReferences(TComReferencePictureSet *pRPS, UInt uiCurrentPoc);
 #endif
 
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
