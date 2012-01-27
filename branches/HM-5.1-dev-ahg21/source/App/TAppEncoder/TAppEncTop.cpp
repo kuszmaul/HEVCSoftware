@@ -373,7 +373,11 @@ Void TAppEncTop::encode()
     xGetBuffer(pcPicYuvRec);
 
     // read input YUV file
+#if AHG21_HARDCODED_PIC_STRUCTS
+    m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad, (m_cTEncTop.getHardCodedStructureAHG21()==2.6) );
+#else
     m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad );
+#endif
     
     // increase number of received frames
     m_iFrameRcvd++;
