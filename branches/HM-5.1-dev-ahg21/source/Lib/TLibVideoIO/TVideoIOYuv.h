@@ -68,7 +68,7 @@ public:
   void skipFrames(unsigned int numFrames, unsigned int width, unsigned int height);
   
 #if AHG21_HARDCODED_PIC_STRUCTS
-  bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], Bool loopFile );     ///< read  one YUV frame with padding parameter
+  bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], Bool loopFile = false );     ///< read  one YUV frame with padding parameter
 #else
   bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< read  one YUV frame with padding parameter
 #endif
