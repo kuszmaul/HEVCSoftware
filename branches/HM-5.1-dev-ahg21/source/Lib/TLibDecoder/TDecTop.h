@@ -141,6 +141,9 @@ public:
   
   TComSPS *getSPS() { return (m_uiValidPS & 1) ? &m_cSPS : NULL; }
   
+#if RPS_COUNTER
+  TComPPS *getPPS() { return (m_uiValidPS & 1) ? &m_cPPS : NULL; }
+#endif
   Void  deletePicBuffer();
 
   Void executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame,  Int& iPOCLastDisplay);

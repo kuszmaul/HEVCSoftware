@@ -136,6 +136,9 @@ private:
 
 #if G1002_RPS
   UInt        m_uiBitsForPOC;
+#if RPS_COUNTER
+  UInt        m_uiBitsForSPS;
+#endif
 #endif
   // Max physical transform size
   UInt        m_uiMaxTrSize;
@@ -244,6 +247,10 @@ public:
   UInt getMaxNumberOfReferencePictures()         { return m_uiMaxNumberOfReferencePictures; }
   Void setNumReorderFrames( Int i )              { m_numReorderFrames = i;    }
   Int  getNumReorderFrames()                     { return m_numReorderFrames; }
+#if RPS_COUNTER
+  UInt getBitsForSPS()                { return m_uiBitsForSPS;         }
+  Void setBitsForSPS(UInt ui)         { m_uiBitsForSPS = ui;           }
+#endif
 #endif
   Void setPadX        ( Int  u ) { m_aiPad[0] = u; }
   Void setPadY        ( Int  u ) { m_aiPad[1] = u; }
@@ -542,6 +549,12 @@ private:
 
   UInt        m_uiBitsForTemporalId;
 #endif
+
+#if RPS_COUNTER
+  UInt        m_uiBitsForPPS;
+  UInt        m_uiBitsForSliceHeader;
+#endif
+
   UInt        m_uiNumTlayerSwitchingFlags;            // num_temporal_layer_switching_point_flags
   Bool        m_abTLayerSwitchingFlag[ MAX_TLAYER ];  // temporal_layer_switching_point_flag
 
@@ -621,6 +634,13 @@ public:
   Void      setLongTermRefsPresent(Bool b)   { m_bLongTermRefsPresent=b;      }
   UInt      getBitsForLongTermRefs()         { return m_uiBitsForLongTermRefs;}
   Void      setBitsForLongTermRefs(UInt ui)  { m_uiBitsForLongTermRefs=ui;    }
+
+#if RPS_COUNTER
+  UInt        getBitsForPPS()                { return m_uiBitsForPPS;         }
+  Void        setBitsForPPS(UInt ui)         { m_uiBitsForPPS = ui;           }
+  UInt        getBitsForSliceHeader()        { return m_uiBitsForSliceHeader; }
+  Void        setBitsForSliceHeader(UInt ui) { m_uiBitsForSliceHeader = ui;   }
+#endif
 #endif
   Void      setSPS              ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }
   TComSPS*  getSPS              ()         { return m_pcSPS;          }
