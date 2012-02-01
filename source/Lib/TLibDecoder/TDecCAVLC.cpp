@@ -304,6 +304,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   // since entropy_coding_mode_flag will probably be removed from the WD
   TComReferencePictureSet*      pcRPS;
 
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
   pcRPSList->create(uiCode);
 
@@ -317,6 +320,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #endif
   }
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcPPS->setLongTermRefsPresent(uiCode);
+#if RPS_COUNTER
+  pcPPS->setBitsForPPS(pcPPS->getBitsForPPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
   // entropy_coding_mode_flag
 #if OL_USE_WPP
@@ -533,9 +539,15 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   }
 #if G1002_RPS
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   READ_UVLC( uiCode,    "max_num_ref_pics" );                    pcSPS->setMaxNumberOfReferencePictures(uiCode);
   READ_UVLC( uiCode,    "num_reorder_frames" );                  pcSPS->setNumReorderFrames(uiCode);
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
 #if MAX_DPB_AND_LATENCY
   READ_UVLC ( uiCode, "max_dec_frame_buffering");
@@ -823,6 +835,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
 #endif
     READ_UVLC (    uiCode, "pic_parameter_set_id" );  rpcSlice->setPPSId(uiCode);
 #if G1002_RPS
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) 
     { 
       READ_UVLC( uiCode, "idr_pic_id" );  //ignored
@@ -885,6 +900,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
         pcRPS->setNumberOfPictures(offset);        
       }  
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
 #if F747_APS
 #if SCALING_LIST
@@ -950,6 +968,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
     }
     // }
 #if G1002_RPS
+#if RPS_COUNTER
+    bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     TComRefPicListModification* refPicListModification = rpcSlice->getRefPicListModification();
     if(!rpcSlice->isIntra())
     {
@@ -1008,10 +1029,16 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
       refPicListModification->setRefPicListModificationFlagL1(0);
       refPicListModification->setNumberOfRefPicListModificationsL1(0);
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
   }
 #if !G1002_RPS
   // ref_pic_list_modification( )
+#endif
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
 #endif
   // ref_pic_list_combination( )
   if (rpcSlice->isInterB())
@@ -1045,6 +1072,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
     rpcSlice->setRefPicListCombinationFlag(false);      
   }
   
+#if RPS_COUNTER
+  rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #if INC_CABACINITIDC_SLICETYPE
   if(rpcSlice->getPPS()->getEntropyCodingMode() && !rpcSlice->isIntra())
   {

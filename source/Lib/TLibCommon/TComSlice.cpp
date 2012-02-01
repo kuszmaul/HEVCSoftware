@@ -1673,6 +1673,9 @@ TComSPS::TComSPS()
 #endif
 #if  G1002_RPS
 , m_uiBitsForPOC              (  8)
+#if RPS_COUNTER
+, m_uiBitsForSPS                (0)
+#endif
 #endif
 , m_uiMaxTrSize               ( 32)
 , m_bLFCrossSliceBoundaryFlag (false)
@@ -1732,6 +1735,10 @@ TComPPS::TComPPS()
 #if G1002_RPS
 , m_bLongTermRefsPresent        (false)
 , m_uiBitsForLongTermRefs       (0)
+#if RPS_COUNTER
+, m_uiBitsForPPS                (0)
+, m_uiBitsForSliceHeader        (0)
+#endif
 #endif
 , m_uiNumTlayerSwitchingFlags   (0)
 #if FINE_GRANULARITY_SLICES
