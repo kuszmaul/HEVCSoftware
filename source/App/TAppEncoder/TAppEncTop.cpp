@@ -41,6 +41,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+#include <limits.h>
+#endif
 
 #include "TAppEncTop.h"
 #include "TLibEncoder/AnnexBwrite.h"
@@ -95,6 +98,12 @@ Void TAppEncTop::xInitLibCfg()
 #else
   m_cTEncTop.setNumReorderFrames             ( m_numReorderFrames );
   m_cTEncTop.setMaxNumberOfReferencePictures ( m_maxNumberOfReferencePictures );
+#endif
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  m_cTEncTop.setHardCodedStructureAHG21      ( m_hardCodedStructureAHGRefPic );
+  m_cTEncTop.setRTT                          ( m_roundTripTime );
+  m_cTEncTop.setFirstSceneInterval           ( m_firstSceneInterval );
+  m_cTEncTop.setSecondSceneInterval          ( m_secondSceneInterval );
 #endif
   for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
   {
@@ -363,7 +372,11 @@ Void TAppEncTop::encode()
     xGetBuffer(pcPicYuvRec);
 
     // read input YUV file
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+    m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad, (m_cTEncTop.getHardCodedStructureAHG21()==2.6) );
+#else
     m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad );
+#endif
     
     // increase number of received frames
     m_iFrameRcvd++;

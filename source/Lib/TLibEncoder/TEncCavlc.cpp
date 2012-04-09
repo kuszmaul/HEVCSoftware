@@ -667,9 +667,15 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if(pcSlice->getPPS()->getLongTermRefsPresent())
 #endif
       {
-        WRITE_UVLC( rps->getNumberOfLongtermPictures(), "num_long_term_pics");
+ #if PRINT_RPS_INFO
+        Int lastBits = getNumberOfWrittenBits();
+#endif
+       WRITE_UVLC( rps->getNumberOfLongtermPictures(), "num_long_term_pics");
         Int maxPocLsb = 1<<pcSlice->getSPS()->getBitsForPOC();
         Int prev = 0;
+#if PRINT_RPS_INFO
+        printf("LT DeltaPOC = {");
+#endif
 #if LTRP_MULT
         Int prevDeltaPocLt=0;
         Int currDeltaPocLt=0;
@@ -677,7 +683,9 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         for(Int i=rps->getNumberOfPictures()-1 ; i > rps->getNumberOfPictures()-rps->getNumberOfLongtermPictures()-1; i--)
         {
           WRITE_UVLC((maxPocLsb-rps->getDeltaPOC(i)+prev)%maxPocLsb, "delta_poc_lsb_lt");
-          
+#if PRINT_RPS_INFO
+          printf (" %d [%d]",rps->getDeltaPOC(i), (maxPocLsb-rps->getDeltaPOC(i)+prev-1)%maxPocLsb);
+#endif
 #if LTRP_MULT
           currDeltaPocLt=((maxPocLsb-rps->getDeltaPOC(i)+prev)%maxPocLsb)+prevDeltaPocLt;
 
@@ -713,6 +721,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           prev = rps->getDeltaPOC(i);
           WRITE_FLAG( rps->getUsed(i), "used_by_curr_pic_lt_flag"); 
         }
+#if PRINT_RPS_INFO
+        printf(" ");
+        printf("} (%2d bits)\n", getNumberOfWrittenBits() - lastBits);
+#endif
       }
     }
     if(pcSlice->getSPS()->getUseSAO() || pcSlice->getSPS()->getUseALF()|| pcSlice->getSPS()->getScalingListFlag() || pcSlice->getSPS()->getUseDF())

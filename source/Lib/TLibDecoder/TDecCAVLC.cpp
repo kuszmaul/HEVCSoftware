@@ -1145,10 +1145,12 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode,   "cabac_init_present_flag" );            pcPPS->setCabacInitPresentFlag( uiCode ? true : false );
 #endif
 #if !RPS_IN_SPS
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   // RPS is put before entropy_coding_mode_flag
   // since entropy_coding_mode_flag will probably be removed from the WD
   TComReferencePictureSet*      pcRPS;
-
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
   rpsList->create(uiCode);
 
@@ -1158,6 +1160,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     parseShortTermRefPicSet(pcPPS,pcRPS,i);
   }
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcPPS->setLongTermRefsPresent(uiCode);
+#if RPS_COUNTER
+  pcPPS->setBitsForPPS(pcPPS->getBitsForPPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
   // entropy_coding_mode_flag
   // We code the entropy_coding_mode_flag, it's needed for tests.
@@ -1383,6 +1388,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if LOSSLESS_CODING
   READ_FLAG( uiCode, "qpprime_y_zero_transquant_bypass_flag" );    pcSPS->setUseLossless ( uiCode ? true : false );
 #endif
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
 
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
 #if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
@@ -1402,6 +1410,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setMaxDecFrameBuffering( uiCode );
   READ_UVLC ( uiCode, "max_latency_increase");
   pcSPS->setMaxLatencyIncrease( uiCode );
+#endif
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
 #endif
 
 #if H0412_REF_PIC_LIST_RESTRICTION
@@ -1476,6 +1487,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if RPS_IN_SPS
   TComRPSList* rpsList = pcSPS->getRPSList();
   TComReferencePictureSet* rps;
+#if RPS_COUNTER
+  bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
 
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
   rpsList->create(uiCode);
@@ -1486,6 +1500,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseShortTermRefPicSet(pcSPS,rps,i);
   }
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcSPS->setLongTermRefsPresent(uiCode);
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
 #if !PIC_CROPPING
   //!!!KS: Syntax not in WD !!!
@@ -1655,6 +1672,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
 #endif
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) 
     { 
       READ_UVLC( uiCode, "idr_pic_id" );  //ignored
@@ -1763,6 +1783,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rps->setNumberOfPictures(offset);        
       }  
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
+
     if(sps->getUseSAO() || sps->getUseALF() || sps->getScalingListFlag() || sps->getUseDF())
     {
       //!!!KS: order is different in WD5! 
@@ -1814,6 +1838,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
     // }
+#if RPS_COUNTER
+    bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
+
     TComRefPicListModification* refPicListModification = rpcSlice->getRefPicListModification();
     if(!rpcSlice->isIntra())
     {
@@ -1956,6 +1984,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       refPicListModification->setNumberOfRefPicListModificationsL1(0);
 #endif
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
   }
   else
   {
@@ -1963,6 +1994,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     pps = rpcSlice->getPPS();
     sps = rpcSlice->getSPS();
   }
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   // ref_pic_list_combination( )
   //!!!KS: ref_pic_list_combination() should be conditioned on entropy_slice_flag
   if (rpcSlice->isInterB())
@@ -2017,7 +2051,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   {
     rpcSlice->setRefPicListCombinationFlag(false);      
   }
-  
+  #if RPS_COUNTER
+  rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
+
 #if H0111_MVD_L1_ZERO
   if (rpcSlice->isInterB())
   {

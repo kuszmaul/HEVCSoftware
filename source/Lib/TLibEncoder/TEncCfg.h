@@ -115,6 +115,13 @@ protected:
   Int       m_iGOPSize;
   GOPEntry  m_GOPList[MAX_GOP];
   Int       m_extraRPSs;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Double    m_hardCodedStructureAHGRefPic;
+  Int       m_roundTripTime;
+  //used for case 2.6
+  Int       m_firstSceneInterval;
+  Int       m_secondSceneInterval;
+#endif
 #if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
@@ -306,6 +313,12 @@ public:
   Void      setGopList                      ( GOPEntry*  GOPList ) {  for ( Int i = 0; i < MAX_GOP; i++ ) m_GOPList[i] = GOPList[i]; }
   Void      setExtraRPSs                    ( Int   i )      { m_extraRPSs = i; }
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void      setHardCodedStructureAHG21      ( Double f )     { m_hardCodedStructureAHGRefPic = f;    }
+  Void      setRTT                          ( Int r )        { m_roundTripTime = r;    }
+  Void      setFirstSceneInterval           ( Int r )        { m_firstSceneInterval = r;    }
+  Void      setSecondSceneInterval          ( Int r )        { m_secondSceneInterval = r;    }
+#endif
 #if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
@@ -396,6 +409,12 @@ public:
   UInt      getIntraPeriod                  ()      { return  m_uiIntraPeriod; }
   UInt      getDecodingRefreshType          ()      { return  m_uiDecodingRefreshType; }
   Int       getGOPSize                      ()      { return  m_iGOPSize; }
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Double    getHardCodedStructureAHG21      ()      { return m_hardCodedStructureAHGRefPic;    }
+  Int       getRTT                          ()      { return m_roundTripTime; }
+  Int       getFirstSceneInterval           ()      { return m_firstSceneInterval;    }
+  Int       getSecondSceneInterval          ()      { return m_secondSceneInterval;    }
+#endif
 #if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       getMaxDecPicBuffering           (UInt tlayer) { return m_maxDecPicBuffering[tlayer]; }
   Int       getNumReorderPics               (UInt tlayer) { return m_numReorderPics[tlayer]; }

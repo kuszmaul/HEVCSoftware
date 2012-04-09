@@ -198,6 +198,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxNumberOfReorderPictures",   m_numReorderFrames,               -1, "Max. number of reorder pictures: -1: encoder determines value, >=0: set explicitly")
   ("MaxNumberOfReferencePictures", m_maxNumberOfReferencePictures, 6, "Max. number of reference pictures")
 #endif
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  ("HardCodedStructureAHG21",      m_hardCodedStructureAHGRefPic,  0.0, "Hard-coded reference picture structure for AHG21")
+  ("RTT",                          m_roundTripTime,                  0, "RTT")
+  ("FirstSceneInterval",           m_firstSceneInterval,             0, "First Scene Interval")
+  ("SecondSceneInterval",          m_secondSceneInterval,            0, "Second Scene Interval")
+#endif
   ("ListCombination,-lc", m_bUseLComb, true, "combined reference list flag for uni-prediction in B-slices")
   ("LCModification", m_bLCMod, false, "enables signalling of combined reference list derivation")
   ("DisableInter4x4", m_bDisInter4x4, true, "Disable Inter 4x4")
