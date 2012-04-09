@@ -70,10 +70,23 @@ class TEncTop;
 /// GOP encoder class
 class TEncGOP
 {
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  struct LTKeep
+  {
+    Int ltPoc;
+    Int keepUntilPoc;
+  };
+#endif
 private:
   //  Data
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Int                     m_AHG21_reference_pics[5];
+  long                    m_randx;
+  Double                  m_z; 
+  std::list<LTKeep>       m_ltPictures;
+#endif
   Int                     m_iLastIDR;
   Int                     m_iGopSize;
   Int                     m_iNumPicCoded;
@@ -136,11 +149,23 @@ protected:
   Void assignNewAPS(TComAPS& cAPS, Int apsID, std::vector<TComAPS>& vAPS, TComSlice* pcSlice);  //!< Assign APS object into APS container
   
 
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  long rand(long L, long H);
+  static Int comp(const Void * a, const Void * b);
+#endif
+
 protected:
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, UInt uiPOCCurr );
   
-  Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
+ #if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void storeLongTermPicUntil   (Int ltPoc, Int keepUntilPoc);
+  Void discardAgedLongTermPics (Int currentPoc);
+  Bool rpsContainsShortTermReference(TComReferencePictureSet *pRPS, Int currentPoc, Int testPoc);
+  Void addLongTermReferences(TComReferencePictureSet *pRPS, Int currentPoc);
+#endif
+
+ Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
   
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 

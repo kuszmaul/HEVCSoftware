@@ -114,6 +114,9 @@ public:
 
   Void sortDeltaPOC();
   Void printDeltaPOC();
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void printRefPOC(Int currentPoc);
+#endif
 };
 
 /// Reference Picture Set set class
@@ -221,6 +224,9 @@ private:
   Bool        m_bPCMFilterDisableFlag;
 
   UInt        m_uiBitsForPOC;
+#if RPS_COUNTER
+  UInt        m_bitsForSPS;
+#endif
   // Max physical transform size
   UInt        m_uiMaxTrSize;
   
@@ -329,6 +335,10 @@ public:
   Int  getMaxNumberOfReferencePictures()         { return m_maxNumberOfReferencePictures; }
   Void setNumReorderFrames( Int i )              { m_numReorderFrames = i;    }
   Int  getNumReorderFrames()                     { return m_numReorderFrames; }
+#endif
+#if RPS_COUNTER
+  UInt getBitsForSPS()                { return m_bitsForSPS;         }
+  Void setBitsForSPS(UInt ui)         { m_bitsForSPS = ui;           }
 #endif
 #if RPS_IN_SPS
   Void      setRPSList( TComRPSList* RPSList )   { m_RPSList = RPSList;       }
@@ -534,6 +544,9 @@ public:
 
   Void sortDeltaPOC();
   Void printDeltaPOC();
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void printRefPOC(Int currentPoc);
+#endif
 };
 
 /// Reference Picture Set set class
@@ -633,6 +646,11 @@ private:
   Bool        m_abTLayerSwitchingFlag[ MAX_TLAYER ];  // temporal_layer_switching_point_flag
 #endif
 
+#if RPS_COUNTER
+  UInt        m_bitsForPPS;
+  UInt        m_bitsForSliceHeader;
+#endif
+
   Int         m_iSliceGranularity;
 
   Bool        m_bUseWeightPred;           // Use of Weighting Prediction (P_SLICE)
@@ -702,6 +720,13 @@ public:
 
   Bool      getTLayerSwitchingFlag( UInt uiTLayer )                       { assert( uiTLayer < MAX_TLAYER ); return m_abTLayerSwitchingFlag[ uiTLayer ]; }
   Void      setTLayerSwitchingFlag( UInt uiTLayer, Bool bValue )          { m_abTLayerSwitchingFlag[ uiTLayer ] = bValue; }
+#endif
+
+#if RPS_COUNTER
+  UInt        getBitsForPPS()                { return m_bitsForPPS;         }
+  Void        setBitsForPPS(UInt ui)         { m_bitsForPPS = ui;           }
+  UInt        getBitsForSliceHeader()        { return m_bitsForSliceHeader; }
+  Void        setBitsForSliceHeader(UInt ui) { m_bitsForSliceHeader = ui;   }
 #endif
 
 #if !RPS_IN_SPS
