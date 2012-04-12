@@ -1189,9 +1189,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     READ_FLAG( uiCode, "temporal_layer_switching_point_flag" );    pcPPS->setTLayerSwitchingFlag( i, uiCode > 0 ? true : false );
   }
 #endif
-  
-  // num_ref_idx_l0_default_active_minus1
-  // num_ref_idx_l1_default_active_minus1
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
+  READ_CODE(3,uiCode, "num_ref_idx_l0_default_active_minus1");     pcPPS->setNumRefIdxL0DefaultActive(uiCode+1);
+  READ_CODE(3,uiCode, "num_ref_idx_l1_default_active_minus1");     pcPPS->setNumRefIdxL1DefaultActive(uiCode+1);
+#if RPS_COUNTER
+  pcPPS->setBitsForPPS(pcPPS->getBitsForPPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
   READ_SVLC(iCode, "pic_init_qp_minus26" );                        pcPPS->setPicInitQPMinus26(iCode);
   READ_FLAG( uiCode, "constrained_intra_pred_flag" );              pcPPS->setConstrainedIntraPred( uiCode ? true : false );
   READ_FLAG( uiCode, "enable_temporal_mvp_flag" );                 pcPPS->setEnableTMVPFlag( uiCode ? true : false );
@@ -1816,6 +1821,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
     }
+#if RPS_COUNTER
+    bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     if (!rpcSlice->isIntra())
     {
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
@@ -1833,14 +1841,18 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       else
       {
-        rpcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
-        rpcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
+        rpcSlice->setNumRefIdx(REF_PIC_LIST_0, rpcSlice->getPPS()->getNumRefIdxL0DefaultActive());
+        if (rpcSlice->isInterB())
+        {
+          rpcSlice->setNumRefIdx(REF_PIC_LIST_1, rpcSlice->getPPS()->getNumRefIdxL1DefaultActive());
+      }
+        else
+        {
+          rpcSlice->setNumRefIdx(REF_PIC_LIST_1,0);
+    }
       }
     }
     // }
-#if RPS_COUNTER
-    bitsBefore = m_pcBitstream->getNumBitsLeft();
-#endif
 
     TComRefPicListModification* refPicListModification = rpcSlice->getRefPicListModification();
     if(!rpcSlice->isIntra())

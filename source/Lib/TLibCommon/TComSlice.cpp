@@ -1482,6 +1482,8 @@ TComPPS::TComPPS()
 , m_uiMinCuDQPSize              (0)
 , m_iChromaQpOffset             (0)
 , m_iChromaQpOffset2nd          (0)
+, m_uiNumRefIdxL0DefaultActive  (1)
+, m_uiNumRefIdxL1DefaultActive  (1)
 #if !RPS_IN_SPS
 , m_bLongTermRefsPresent        (false)
 #endif
