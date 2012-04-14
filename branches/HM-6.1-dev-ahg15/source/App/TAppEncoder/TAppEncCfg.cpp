@@ -199,6 +199,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxNumberOfReferencePictures", m_maxNumberOfReferencePictures, 6, "Max. number of reference pictures")
 #endif
 #if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  ("MaxNumberOfReferencePictures", m_maxNumberOfReferencePictures, 6, "Max. number of reference pictures")
   ("HardCodedStructureAHG21",      m_hardCodedStructureAHGRefPic,  0.0, "Hard-coded reference picture structure for AHG21")
   ("RTT",                          m_roundTripTime,                  0, "RTT")
   ("FirstSceneInterval",           m_firstSceneInterval,             0, "First Scene Interval")
@@ -876,7 +877,11 @@ Void TAppEncCfg::xCheckParameter()
   for(Int i=0; i<MAX_TLAYER; i++)
   {
     m_numReorderPics[i] = 0;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+    m_maxDecPicBuffering[i] = m_maxNumberOfReferencePictures;
+#else
     m_maxDecPicBuffering[i] = 0;
+#endif
   }
   for(Int i=0; i<m_iGOPSize; i++) 
   {
