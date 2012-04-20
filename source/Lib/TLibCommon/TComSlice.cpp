@@ -1421,13 +1421,8 @@ TComSPS::TComSPS()
 , m_bUseLComb                 (false)
 , m_bLCMod                    (false)
 #if H0412_REF_PIC_LIST_RESTRICTION
-#if !REF_PIC_LIST_REORDER
 , m_restrictedRefPicListsFlag   (  1)
 , m_listsModificationPresentFlag(  0)
-#else
-, m_restrictedRefPicListsFlag   (  0)
-, m_listsModificationPresentFlag(  1)
-#endif
 #endif
 , m_uiBitDepth                (  8)
 , m_uiBitIncrement            (  0)
