@@ -547,10 +547,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
       pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
       pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
-
 #if ADAPTIVE_QP_SELECTION
       pcSlice->setTrQuant( m_pcEncTop->getTrQuant() );
 #endif      
+
+#if REF_PIC_LIST_REORDER
+    reorderRefPicList(pcSlice);
+#endif 
       //  Set reference list
       pcSlice->setRefPicList ( rcListPic );
       
@@ -627,6 +630,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       pcSlice->generateCombinedList();
       
+#if REF_PIC_LIST_REORDER
+    reorderCombinedList(pcSlice);
+#endif
       /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
       //  Slice compression
       if (m_pcCfg->getUseASR())
@@ -2056,6 +2062,47 @@ static const char* nalUnitTypeToString(NalUnitType type)
 }
 #endif
 
+#if REF_PIC_LIST_REORDER
+Void TEncGOP::reorderRefPicList( TComSlice* pcSlice )
+{
+  if (pcSlice->getSliceType() != I_SLICE)
+  {
+    Int rpsIdx = pcSlice->getRPSidx();
+    if ( (rpsIdx >=0) && (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0 || m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1))
+    {
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL0(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL0(i, m_pcCfg->getGOPEntry(rpsIdx).m_list0Index[i]);
+        }
+      }
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL1(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL1(i, m_pcCfg->getGOPEntry(rpsIdx).m_list1Index[i]);
+        }
+      }
+    }
+  }
+}
+
+Void TEncGOP::reorderCombinedList( TComSlice* pcSlice )
+{
+  if (pcSlice->getSliceType() != I_SLICE)
+  {
+    Int rpsIdx = pcSlice->getRPSidx();
+    if ( (rpsIdx >= 0) && (m_pcCfg->getGOPEntry(rpsIdx).m_reorderLC))
+    {
+      pcSlice->setRefPicListModificationFlagLC(1);
+      pcSlice->generateModifiedCombinedList(m_pcCfg->getGOPEntry(rpsIdx).m_lc_pic_from_list0_flag, m_pcCfg->getGOPEntry(rpsIdx).m_lc_idx);
+    }
+  }
+}
+#endif
 Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime )
 {
   Int     x, y;

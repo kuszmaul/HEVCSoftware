@@ -1186,6 +1186,9 @@ public:
 #if H0137_0138_LIST_MODIFICATION
   Int       getNumRpsCurrTempList();
 #endif
+#if REF_PIC_LIST_REORDER
+  Void      generateModifiedCombinedList (Int *pic_from_list0_flag, Int *ref_idx_list_curr);
+#endif
   Int       getRefIdxOfLC       (RefPicList e, Int iRefIdx)     { return m_iRefIdxOfLC[e][iRefIdx];           }
   Int       getListIdFromIdxOfLC(Int iRefIdx)                   { return m_eListIdFromIdxOfLC[iRefIdx];       }
   Int       getRefIdxFromIdxOfLC(Int iRefIdx)                   { return m_iRefIdxFromIdxOfLC[iRefIdx];       }

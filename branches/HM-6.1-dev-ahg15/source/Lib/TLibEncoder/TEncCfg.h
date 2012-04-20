@@ -62,6 +62,16 @@ struct GOPEntry
   Int m_deltaRPS;
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
+#if REF_PIC_LIST_REORDER
+  Bool m_reorderList0;
+  Bool m_reorderList1;
+  Int m_list0Index[MAX_NUM_REF];
+  Int m_list1Index[MAX_NUM_REF];
+  Bool m_reorderLC;
+  Int m_numRefPicsOfLC;
+  Int m_lc_pic_from_list0_flag[MAX_NUM_REF_LC];
+  Int m_lc_idx[MAX_NUM_REF_LC];
+#endif
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset()
@@ -75,10 +85,22 @@ struct GOPEntry
   , m_deltaRIdxMinus1()
   , m_deltaRPS()
   , m_numRefIdc()
+#if REF_PIC_LIST_REORDER
+  , m_reorderList0(0)
+  , m_reorderList1(0)
+  , m_reorderLC(0)
+  , m_numRefPicsOfLC(0)
+#endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
     ::memset( m_refIdc,        0, sizeof(m_refIdc) );
+#if REF_PIC_LIST_REORDER
+    ::memset( m_list0Index, 0, sizeof(m_list0Index) );
+    ::memset( m_list1Index, 0, sizeof(m_list1Index) );
+    ::memset( m_lc_pic_from_list0_flag, 0, sizeof(m_lc_pic_from_list0_flag) );
+    ::memset( m_lc_idx, 0, sizeof(m_lc_idx) );
+#endif
   }
 };
 

@@ -572,6 +572,22 @@ Int TComSlice::getNumRpsCurrTempList()
 }
 #endif
 
+#if REF_PIC_LIST_REORDER
+Void TComSlice::generateModifiedCombinedList(Int *pic_from_list0_flag, Int *ref_idx_list_curr)
+{
+  for ( UInt i = 0; i < m_aiNumRefIdx[REF_PIC_LIST_C]; i++ )
+  {
+    m_eListIdFromIdxOfLC[i] = pic_from_list0_flag[i]^1; //  Remove XOR when HM #306 is fixed
+    m_iRefIdxFromIdxOfLC[i] = ref_idx_list_curr[i];
+    if (pic_from_list0_flag[i])
+      m_iRefIdxOfLC[0][ref_idx_list_curr[i]] = i;
+    else
+      m_iRefIdxOfLC[1][ref_idx_list_curr[i]] = i;
+  }
+}
+
+
+#endif
 Void TComSlice::initEqualRef()
 {
   for (Int iDir = 0; iDir < 2; iDir++)
@@ -1405,8 +1421,13 @@ TComSPS::TComSPS()
 , m_bUseLComb                 (false)
 , m_bLCMod                    (false)
 #if H0412_REF_PIC_LIST_RESTRICTION
+#if !REF_PIC_LIST_REORDER
 , m_restrictedRefPicListsFlag   (  1)
 , m_listsModificationPresentFlag(  0)
+#else
+, m_restrictedRefPicListsFlag   (  0)
+, m_listsModificationPresentFlag(  1)
+#endif
 #endif
 , m_uiBitDepth                (  8)
 , m_uiBitIncrement            (  0)
