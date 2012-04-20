@@ -616,6 +616,18 @@ Void TEncTop::xInitSPS()
   }
   m_cSPS.setScalingListFlag ( (m_useScalingListId == 0) ? 0 : 1 );
   m_cSPS.setUseDF( m_loopFilterOffsetInAPS );
+#if REF_PIC_LIST_REORDER  
+  Bool modificationsPresent = false;
+  for( i = 0; i < getGOPSize(); i++) 
+  {
+    if(getGOPEntry(i).m_reorderLC||getGOPEntry(i).m_reorderList0||getGOPEntry(i).m_reorderList1)
+    {
+      modificationsPresent=true;
+    }
+  }
+  m_cSPS.setRestrictedRefPicListsFlag(modificationsPresent==false);
+  m_cSPS.setListsModificationPresentFlag(modificationsPresent);
+#endif
 }
 
 Void TEncTop::xInitPPS()
