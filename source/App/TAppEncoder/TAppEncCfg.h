@@ -87,7 +87,6 @@ protected:
   Int       m_roundTripTime;
   Int       m_firstSceneInterval;
   Int       m_secondSceneInterval;
-  Int       m_maxNumberOfReferencePictures;                   ///< total number of reference pictures needed for decoding
 #endif
 #if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
