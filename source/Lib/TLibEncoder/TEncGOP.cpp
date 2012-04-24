@@ -552,7 +552,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif      
 
 #if REF_PIC_LIST_REORDER
-    reorderRefPicList(pcSlice);
+      reorderRefPicList(pcSlice);
 #endif 
       //  Set reference list
       pcSlice->setRefPicList ( rcListPic );
@@ -631,7 +631,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->generateCombinedList();
       
 #if REF_PIC_LIST_REORDER
-    reorderCombinedList(pcSlice);
+      reorderCombinedList(pcSlice);
 #endif
       /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
       //  Slice compression
