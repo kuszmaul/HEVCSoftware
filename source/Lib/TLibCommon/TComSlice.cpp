@@ -751,6 +751,15 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     m_iRefIdxOfL1FromRefIdxOfL0[i] = pSrc->m_iRefIdxOfL1FromRefIdxOfL0[i];
     m_iRefIdxOfL0FromRefIdxOfL1[i] = pSrc->m_iRefIdxOfL0FromRefIdxOfL1[i];
   }
+
+  getRefPicListModification()->setRefPicListModificationFlagL0(pSrc->getRefPicListModification()->getRefPicListModificationFlagL0());
+  getRefPicListModification()->setRefPicListModificationFlagL1(pSrc->getRefPicListModification()->getRefPicListModificationFlagL1());
+  for(i=0 ; i<32 ; i++)
+  {
+    getRefPicListModification()->setRefPicSetIdxL0(i, pSrc->getRefPicListModification()->getRefPicSetIdxL0(i));
+    getRefPicListModification()->setRefPicSetIdxL1(i, pSrc->getRefPicListModification()->getRefPicSetIdxL1(i));
+  }
+
   m_bRefPicListModificationFlagLC = pSrc->m_bRefPicListModificationFlagLC;
   m_bRefPicListCombinationFlag    = pSrc->m_bRefPicListCombinationFlag;
   m_bCheckLDC             = pSrc->m_bCheckLDC;
