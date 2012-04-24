@@ -86,9 +86,9 @@ struct GOPEntry
   , m_deltaRPS(0)
   , m_numRefIdc(0)
 #if REF_PIC_LIST_REORDER
-  , m_reorderList0(0)
-  , m_reorderList1(0)
-  , m_reorderLC(0)
+  , m_reorderList0(false)
+  , m_reorderList1(false)
+  , m_reorderLC(false)
   , m_numRefPicsOfLC(0)
 #endif
   {
