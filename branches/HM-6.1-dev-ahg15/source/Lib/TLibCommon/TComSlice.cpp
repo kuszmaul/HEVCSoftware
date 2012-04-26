@@ -751,7 +751,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     m_iRefIdxOfL1FromRefIdxOfL0[i] = pSrc->m_iRefIdxOfL1FromRefIdxOfL0[i];
     m_iRefIdxOfL0FromRefIdxOfL1[i] = pSrc->m_iRefIdxOfL0FromRefIdxOfL1[i];
   }
-
+#if !REF_PIC_LIST_REORDER_FIRST_SLICE_ONLY // all slices in the same picture would share the same modified refernce picture list if the following code is enabled
   getRefPicListModification()->setRefPicListModificationFlagL0(pSrc->getRefPicListModification()->getRefPicListModificationFlagL0());
   getRefPicListModification()->setRefPicListModificationFlagL1(pSrc->getRefPicListModification()->getRefPicListModificationFlagL1());
   for(i=0 ; i<32 ; i++)
@@ -759,11 +759,16 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     getRefPicListModification()->setRefPicSetIdxL0(i, pSrc->getRefPicListModification()->getRefPicSetIdxL0(i));
     getRefPicListModification()->setRefPicSetIdxL1(i, pSrc->getRefPicListModification()->getRefPicSetIdxL1(i));
   }
+#endif
 
+#if !REF_PIC_LIST_REORDER_FIRST_SLICE_ONLY
   m_bRefPicListModificationFlagLC = pSrc->m_bRefPicListModificationFlagLC;
+#endif
   m_bRefPicListCombinationFlag    = pSrc->m_bRefPicListCombinationFlag;
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
+
+#if !REF_PIC_LIST_REORDER_FIRST_SLICE_ONLY
   for (i = 0; i < 2; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)
@@ -772,6 +777,51 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       m_aiRefPOCList[i][j]   = pSrc->m_aiRefPOCList[i][j];
     }
   }  
+#else
+  if (pSrc->getRefPicListModification()->getRefPicListModificationFlagL0() == false)
+  {
+    for (j = 0; j < MAX_NUM_REF; j++)
+    {
+      m_apcRefPicList[0][j]  = pSrc->m_apcRefPicList[0][j];
+      m_aiRefPOCList[0][j]   = pSrc->m_aiRefPOCList[0][j];
+    }
+  }
+  else
+  {
+    for (j = 0; j < getNumRefIdx(REF_PIC_LIST_0); j++)
+    {
+      m_apcRefPicList[0][pSrc->getRefPicListModification()->getRefPicSetIdxL0(j)] = pSrc->m_apcRefPicList[0][j];
+      m_aiRefPOCList[0][pSrc->getRefPicListModification()->getRefPicSetIdxL0(j)]   = pSrc->m_aiRefPOCList[0][j];
+    }
+    for (j = getNumRefIdx(REF_PIC_LIST_0); j < MAX_NUM_REF; j++)
+    {
+      m_apcRefPicList[0][j]  = pSrc->m_apcRefPicList[0][j];
+      m_aiRefPOCList[0][j]   = pSrc->m_aiRefPOCList[0][j];
+    }
+  }
+
+  if (pSrc->getRefPicListModification()->getRefPicListModificationFlagL1() == false)
+  {
+    for (j = 0; j < MAX_NUM_REF; j++)
+    {
+      m_apcRefPicList[1][j]  = pSrc->m_apcRefPicList[1][j];
+      m_aiRefPOCList[1][j]   = pSrc->m_aiRefPOCList[1][j];
+    }
+  }
+  else
+  {
+    for (j = 0; j < getNumRefIdx(REF_PIC_LIST_1); j++)
+    {
+      m_apcRefPicList[1][pSrc->getRefPicListModification()->getRefPicSetIdxL1(j)] = pSrc->m_apcRefPicList[1][j];
+      m_aiRefPOCList[1][pSrc->getRefPicListModification()->getRefPicSetIdxL1(j)]   = pSrc->m_aiRefPOCList[1][j];
+    }
+    for (j = getNumRefIdx(REF_PIC_LIST_1); j < MAX_NUM_REF; j++)
+    {
+      m_apcRefPicList[1][j]  = pSrc->m_apcRefPicList[1][j];
+      m_aiRefPOCList[1][j]   = pSrc->m_aiRefPOCList[1][j];
+    }
+  }
+#endif
   m_iDepth               = pSrc->m_iDepth;
 
   // referenced slice
@@ -789,7 +839,32 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_uiColDir             = pSrc->m_uiColDir;
 #if COLLOCATED_REF_IDX
+#if !REF_PIC_LIST_REORDER_FIRST_SLICE_ONLY
   m_colRefIdx            = pSrc->m_colRefIdx;
+#else
+  if (m_uiColDir == REF_PIC_LIST_0) 
+  {
+    if (pSrc->getRefPicListModification()->getRefPicListModificationFlagL0() == false)
+    {
+      m_colRefIdx            = pSrc->m_colRefIdx;
+    }
+    else
+    {
+      m_colRefIdx            = pSrc->getRefPicListModification()->getRefPicSetIdxL0(pSrc->m_colRefIdx);
+    }
+  }
+  else if (m_uiColDir == REF_PIC_LIST_1) 
+  {
+    if (pSrc->getRefPicListModification()->getRefPicListModificationFlagL1() == false)
+    {
+      m_colRefIdx            = pSrc->m_colRefIdx;
+    }
+    else
+    {
+      m_colRefIdx            = pSrc->getRefPicListModification()->getRefPicSetIdxL1(pSrc->m_colRefIdx);
+    }
+  }
+#endif
 #endif
 #if ALF_CHROMA_LAMBDA || SAO_CHROMA_LAMBDA 
   m_dLambdaLuma          = pSrc->m_dLambdaLuma;
