@@ -1772,6 +1772,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
             Int decMaxPocLsb = 1<<rpcSlice->getSPS()->getBitsForPOC();
             rps->setPOC(j,rpcSlice->getPOC()-prev-(prevMsb)*decMaxPocLsb); 
             rps->setDeltaPOC(j,-(Int)(prev+(prevMsb)*decMaxPocLsb));
+            rps->setCheckLTMSBPresent(j,true);  
           }
           else
           {
@@ -1779,6 +1780,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
             rps->setPOC(j,rpcSlice->getPOC()-prev);          
             rps->setDeltaPOC(j,-(Int)prev);
 #if LTRP_MULT
+            rps->setCheckLTMSBPresent(j,false);
           }
           prevDeltaPocLt=prev;
 #endif
