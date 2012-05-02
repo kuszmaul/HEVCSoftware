@@ -3779,6 +3779,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     return;
   }
   
+  PredMode  ePredMode    = pcCU->getPredictionMode( 0 );
   Bool      bHighPass    = pcCU->getSlice()->getDepth() ? true : false;
   UInt      uiBits       = 0, uiBitsBest = 0;
   UInt      uiDistortion = 0, uiDistortionBest = 0;
@@ -3787,7 +3788,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   UInt      uiHeight     = pcCU->getHeight( 0 );
   
   //  No residual coding : SKIP mode
-  if ( bSkipRes )
+  if ( ePredMode == MODE_SKIP && bSkipRes )
   {
     rpcYuvResi->clear();
     
@@ -4833,6 +4834,10 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
   {
     m_pcEntropyCoder->resetBits();
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
+    if (pcCU->getPredictionMode(0) == MODE_SKIP)
+    {
+      pcCU->setPredModeSubParts( MODE_INTER, 0, pcCU->getDepth(0) );
+    }
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );

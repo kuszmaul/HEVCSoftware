@@ -50,7 +50,6 @@ OBJS          	= \
 			$(OBJ_DIR)/TEncPic.o \
 			$(OBJ_DIR)/TEncPreanalyzer.o \
 			$(OBJ_DIR)/WeightPredAnalysis.o \
-			$(OBJ_DIR)/TEncRateCtrl.o \
 
 LIBS				= -lpthread
 
