@@ -81,6 +81,13 @@ TAppEncCfg::~TAppEncCfg()
   {
     delete[] m_aidQP;
   }
+  free(m_pchInputFile);
+  free(m_pchBitstreamFile);
+  free(m_pchReconFile);
+  free(m_pchdQPFile);
+  free(m_pchColumnWidth);
+  free(m_pchRowHeight);
+  free(m_scalingListFile);
 }
 
 Void TAppEncCfg::create()
