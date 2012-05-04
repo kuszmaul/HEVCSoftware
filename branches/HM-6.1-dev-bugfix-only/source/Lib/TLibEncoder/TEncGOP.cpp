@@ -1392,9 +1392,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       /* logging: insert a newline at end of picture period */
       printf("\n");
       fflush(stdout);
+
+      delete[] pcSubstreamsOut;
   }
-  
-  delete[] pcSubstreamsOut;
+
   delete pcBitstreamRedirect;
 
   assert ( m_iNumPicCoded == iNumPicRcvd );
