@@ -72,10 +72,13 @@ Void ContextModel3DBuffer::initBuffer( SliceType sliceType, Int qp, UChar* ctxMo
   for ( Int n = 0; n < m_sizeXYZ; n++ )
   {
     m_contextModel[ n ].init( qp, ctxModel[ n ] );
+#if CABAC_INIT_FLAG
     m_contextModel[ n ].setBinsCoded( 0 );
+#endif
   }
 }
 
+#if CABAC_INIT_FLAG
 /**
  * Calculate the cost of choosing a probability table based on the current probability of CABAC at encoder
  *
@@ -117,4 +120,5 @@ UInt ContextModel3DBuffer::calcCost( SliceType sliceType, Int qp, UChar* ctxMode
 
   return cost;
 }
+#endif
 //! \}

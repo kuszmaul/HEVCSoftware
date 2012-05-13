@@ -48,7 +48,7 @@
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
-#include "TEncRateCtrl.h"
+
 //! \ingroup TLibEncoder
 //! \{
 
@@ -80,7 +80,9 @@ private:
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
+#if BURST_IPCM
   Bool                    m_checkBurstIPCMFlag;
+#endif
 
   //  Access channel
   TEncCfg*                m_pcEncCfg;
@@ -99,7 +101,7 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
-  TEncRateCtrl*           m_pcRateCtrl;
+  
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -129,8 +131,7 @@ protected:
   Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
   
-  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode = false);
-
+  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                  );
 #if AMP_MRG
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
 #else
@@ -148,11 +149,13 @@ protected:
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
+#if BURST_IPCM
   Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
   Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
 
   Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
   Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions

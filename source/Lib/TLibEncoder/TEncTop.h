@@ -56,7 +56,7 @@
 #include "TEncAdaptiveLoopFilter.h"
 #include "TEncSampleAdaptiveOffset.h"
 #include "TEncPreanalyzer.h"
-#include "TEncRateCtrl.h"
+
 //! \ingroup TLibEncoder
 //! \{
 
@@ -124,7 +124,6 @@ private:
   TEncPreanalyzer         m_cPreanalyzer;                 ///< image characteristics analyzer for TM5-step3-like adaptive QP
 
   TComScalingList         m_scalingList;                 ///< quantization matrix information
-  TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -173,7 +172,7 @@ public:
   TComRdCost*             getRdCosts            () { return  m_pcRdCosts;             }
   TEncSbac****            getRDSbacCoders       () { return  m_ppppcRDSbacCoders;     }
   TEncSbac*               getRDGoOnSbacCoders   () { return  m_pcRDGoOnSbacCoders;   }
-  TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
+  
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   std::vector<TComAPS>&   getAPS                () { return m_vAPS; }

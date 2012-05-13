@@ -45,7 +45,6 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TEncCu.h"
 #include "WeightPredAnalysis.h"
-#include "TEncRateCtrl.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -99,7 +98,7 @@ private:
   TEncSbac*               m_pcBufferSbacCoders;                 ///< line to store temporary contexts
   TEncBinCABAC*           m_pcBufferLowLatBinCoderCABACs;       ///< dependent tiles: line of bin coder CABAC
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
-  TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
+  
   UInt                    m_uiSliceIdx;
 public:
   TEncSlice();
@@ -112,7 +111,7 @@ public:
   /// preparation of slice encoding (reference marking, QP and lambda)
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd,
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
-  Void    xLamdaRecalculation ( Int changeQP, Int idGOP, Int depth, SliceType eSliceType, TComSPS* pcSPS, TComSlice* pcSlice);
+
   // compress and encode slice
   Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
