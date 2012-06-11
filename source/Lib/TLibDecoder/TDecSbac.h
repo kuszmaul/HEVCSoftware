@@ -79,7 +79,11 @@ public:
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}
+#if !TILES_OR_ENTROPY_FIX
   Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet         ) {}
+#else
+  Void  parsePPS                  ( TComPPS* pcPPS         ) {}
+#endif
   Void  parseAPS                  ( TComAPS* pAPS          ) {}
   void parseSEI(SEImessages&) {}
 
@@ -135,6 +139,9 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
@@ -163,7 +170,9 @@ public:
   Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType);
 #endif
 
+#if !REMOVE_TILE_MARKERS
   Void readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed );
+#endif
   Void updateContextTables( SliceType eSliceType, Int iQp );
 
   Void  parseScalingList ( TComScalingList* scalingList ) {}
@@ -214,6 +223,9 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
 #if INTRA_TRANSFORMSKIP
   ContextModel3DBuffer m_cTransformSkipSCModel;
+#endif
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
 #endif
 };
 

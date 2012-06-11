@@ -87,6 +87,9 @@ TDecSbac::TDecSbac()
 #if INTRA_TRANSFORMSKIP
 , m_cTransformSkipSCModel     ( 1,             2,               NUM_TRANSFORMSKIP_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if CU_LEVEL_TRANSQUANT_BYPASS
+, m_CUTransquantBypassFlagSCModel( 1,          1,               NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
   m_iSliceGranularity = 0;
@@ -159,6 +162,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 #if INTRA_TRANSFORMSKIP
   m_cTransformSkipSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
 #endif
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  m_CUTransquantBypassFlagSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#endif
   m_uiLastDQpNonZero  = 0;
   
   // new structure
@@ -226,9 +232,13 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 #if INTRA_TRANSFORMSKIP
   m_cTransformSkipSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
 #endif
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#endif
   m_pcTDecBinIf->start();
 }
 
+#if !REMOVE_TILE_MARKERS
 Void TDecSbac::readTileMarker( UInt& uiTileIdx, UInt uiBitsUsed )
 {
   UInt uiSymbol;
@@ -242,6 +252,7 @@ Void TDecSbac::readTileMarker( UInt& uiTileIdx, UInt uiBitsUsed )
     }
   }
 }
+#endif
 
 Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 {
@@ -513,6 +524,15 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 }
 
+#if CU_LEVEL_TRANSQUANT_BYPASS
+Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiSymbol;
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_CUTransquantBypassFlagSCModel.get( 0, 0, 0 ) );
+  pcCU->setCUTransquantBypassSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
+}
+#endif
+
 /** parse skip flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -661,7 +681,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   else
   {
     UInt uiMaxNumBits = 2;
+#if REMOVE_INTER_4X4
+    if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
+#else
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getSlice()->getSPS()->getDisInter4x4() && (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
+#endif
     {
       uiMaxNumBits ++;
     }
@@ -1046,10 +1070,15 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
     qp = (((Int) pcCU->getRefQP( uiAbsPartIdx ) + iDQp + 52 + 2*qpBdOffsetY )%(52+qpBdOffsetY)) - qpBdOffsetY;
   }
-  
+#if PRED_QP_DERIVATION
+  pcCU->setQPSubParts(qp, uiAbsPartIdx, uiDepth);  
+  pcCU->setCodedQP(qp);
+
+#else
   UInt uiAbsQpCUPartIdx = (uiAbsPartIdx>>((g_uiMaxCUDepth - pcCU->getSlice()->getPPS()->getMaxCuDQPDepth())<<1))<<((g_uiMaxCUDepth - pcCU->getSlice()->getPPS()->getMaxCuDQPDepth())<<1) ;
   UInt uiQpCUDepth =   min(uiDepth,pcCU->getSlice()->getPPS()->getMaxCuDQPDepth()) ;
   pcCU->setQPSubParts( qp, uiAbsQpCUPartIdx, uiQpCUDepth );
+#endif
 }
 
 Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth )
@@ -1076,6 +1105,12 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
 #if INTRA_TRANSFORMSKIP
 void TDecSbac::parseTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType)
 {
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
+  {
+    return;
+  }
+#endif
   if(!pcCU->isIntra(uiAbsPartIdx))
   {
     return;
@@ -1303,9 +1338,13 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
 #if !FIXED_SBH_THRESHOLD
   UInt const tsig = pcCU->getSlice()->getPPS()->getTSIG();
 #endif
-#if LOSSLESS_CODING
+#if LOSSLESS_CODING || CU_LEVEL_TRANSQUANT_BYPASS
   Bool beValid; 
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
+#else // LOSSLESS_CODING
   if (pcCU->isLosslessCoded(uiAbsPartIdx))
+#endif
   {
     beValid = false;
   }

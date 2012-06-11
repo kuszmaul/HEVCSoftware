@@ -749,11 +749,11 @@ Void TComAdaptiveLoopFilter::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCU
 
   for(Int i = 0; i < m_img_height; i=i+4)
   {
-    yIndex = Clip_post( 3, i / yInterval);
+    yIndex = (yInterval == 0)?(3):(Clip_post( 3, i / yInterval));
     yIndexOffset = yIndex * 4 ;
     for(Int j = 0; j < m_img_width; j=j+4)
     {
-      xIndex = Clip_post( 3, j / xInterval);
+      xIndex = (xInterval==0)?(3):(Clip_post( 3, j / xInterval));
       m_varImg[i>>shiftH][j>>shiftW] = regionTable[yIndexOffset + xIndex];
     }
   }
@@ -2323,7 +2323,11 @@ Void TComAdaptiveLoopFilter::xPCMRestoration(TComPic* pcPic)
   Bool  bPCMFilter = (pcPic->getSlice(0)->getSPS()->getUsePCM() && pcPic->getSlice(0)->getSPS()->getPCMFilterDisableFlag())? true : false;
 
 #if LOSSLESS_CODING
+#if CU_LEVEL_TRANSQUANT_BYPASS
+  if(bPCMFilter || pcPic->getSlice(0)->getPPS()->getTransquantBypassEnableFlag())
+#else
   if(bPCMFilter || pcPic->getSlice(0)->getSPS()->getUseLossless())
+#endif
 #else
   if(bPCMFilter)
 #endif
