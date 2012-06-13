@@ -1010,10 +1010,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #endif
 
   READ_FLAG( uiCode,   "cabac_init_present_flag" );            pcPPS->setCabacInitPresentFlag( uiCode ? true : false );
-
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_CODE(3,uiCode, "num_ref_idx_l0_default_active_minus1");     pcPPS->setNumRefIdxL0DefaultActive(uiCode+1);
   READ_CODE(3,uiCode, "num_ref_idx_l1_default_active_minus1");     pcPPS->setNumRefIdxL1DefaultActive(uiCode+1);
-
+#if RPS_COUNTER
+  pcPPS->setBitsForPPS(pcPPS->getBitsForPPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
   READ_SVLC(iCode, "pic_init_qp_minus26" );                        pcPPS->setPicInitQPMinus26(iCode);
   READ_FLAG( uiCode, "constrained_intra_pred_flag" );              pcPPS->setConstrainedIntraPred( uiCode ? true : false );
 #if !SLICE_TMVP_ENABLE
@@ -1267,7 +1271,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_FLAG( uiCode, "qpprime_y_zero_transquant_bypass_flag" );    pcSPS->setUseLossless ( uiCode ? true : false );
 #endif
 #endif
-
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
@@ -1290,6 +1296,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   {
     pcSPS->setListsModificationPresentFlag(true);
   }
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
+
   READ_UVLC( uiCode, "log2_min_coding_block_size_minus3" );
   UInt log2MinCUSize = uiCode + 3;
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
@@ -1362,7 +1372,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   TComRPSList* rpsList = pcSPS->getRPSList();
   TComReferencePictureSet* rps;
-
+#if RPS_COUNTER
+  bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
   rpsList->create(uiCode);
 
@@ -1372,6 +1384,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseShortTermRefPicSet(pcSPS,rps,i);
   }
   READ_FLAG( uiCode, "long_term_ref_pics_present_flag" );          pcSPS->setLongTermRefsPresent(uiCode);
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #if SLICE_TMVP_ENABLE
   READ_FLAG( uiCode, "sps_temporal_mvp_enable_flag" );            pcSPS->setTMVPFlagsPresent(uiCode);
 #endif
@@ -1582,6 +1597,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       rpcSlice->setPicOutputFlag( true );
     }
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
 #if CRA_BLA_TFD_MODIFICATIONS
     if(   rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR
       || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLANT
@@ -1718,6 +1736,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
 #endif
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #if DBL_HL_SYNTAX
     if(sps->getUseSAO() || sps->getUseALF())
 #else
@@ -1759,6 +1780,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
     }
+#if RPS_COUNTER
+      bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     if (!rpcSlice->isIntra())
     {
 #if SLICE_TMVP_ENABLE
@@ -1771,6 +1795,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       {
         rpcSlice->setEnableTMVPFlag(false);
       }
+#endif
+#if RPS_COUNTER
+      bitsBefore = m_pcBitstream->getNumBitsLeft();
 #endif
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
       if (uiCode)
@@ -1885,6 +1912,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       refPicListModification->setRefPicListModificationFlagL1(0);
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
   }
   else
   {

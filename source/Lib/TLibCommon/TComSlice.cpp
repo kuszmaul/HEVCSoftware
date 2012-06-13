@@ -1071,7 +1071,11 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   TComReferencePictureSet* pcRPS = this->getLocalRPS();
 
   // loop through all pictures in the Reference Picture Set
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  for(i=0;i<pReferencePictureSet->getNumberOfPictures()-pReferencePictureSet->getNumberOfLongtermPictures();i++)
+#else
   for(i=0;i<pReferencePictureSet->getNumberOfPictures();i++)
+#endif
   {
     j = 0;
     // loop through all pictures in the reference picture buffer
@@ -1139,7 +1143,24 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
     pcRPS->setDeltaRPS(deltaRPS); 
     pcRPS->setDeltaRIdxMinus1(pReferencePictureSet->getDeltaRIdxMinus1() + this->getSPS()->getRPSList()->getNumberOfReferencePictureSets() - this->getRPSidx());
   }
-
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  if (pReferencePictureSet->getNumberOfLongtermPictures())
+  {
+    UInt numPics = pcRPS->getNumberOfPictures();
+    UInt longTermPos = pReferencePictureSet->getNumberOfPictures() - pReferencePictureSet->getNumberOfLongtermPictures();
+    while (longTermPos < pReferencePictureSet->getNumberOfPictures())
+    {
+      pcRPS->setDeltaPOC(numPics, pReferencePictureSet->getDeltaPOC(longTermPos));
+      pcRPS->setPOC(numPics, pReferencePictureSet->getPOC(longTermPos));
+      pcRPS->setRefIdc(numPics, pReferencePictureSet->getRefIdc(longTermPos));
+      pcRPS->setUsed(numPics, true);
+      longTermPos++;
+      numPics++;
+    }
+    pcRPS->setNumberOfPictures(numPics);
+    pcRPS->setNumberOfLongtermPictures(pReferencePictureSet->getNumberOfLongtermPictures());
+  }
+#endif
   this->setRPS(pcRPS);
   this->setRPSidx(-1);
 }
@@ -1389,6 +1410,9 @@ TComSPS::TComSPS()
 , m_uiPCMBitDepthChroma       (  8)
 , m_bPCMFilterDisableFlag     (false)
 , m_uiBitsForPOC              (  8)
+#if RPS_COUNTER
+, m_bitsForSPS                (0)
+#endif
 , m_uiMaxTrSize               ( 32)
 , m_bLFCrossSliceBoundaryFlag (false)
 , m_bUseSAO                   (false) 
@@ -1456,6 +1480,10 @@ TComPPS::TComPPS()
 , m_chromaCrQpOffset            (0)
 , m_numRefIdxL0DefaultActive    (1)
 , m_numRefIdxL1DefaultActive    (1)
+#if RPS_COUNTER
+, m_bitsForPPS                (0)
+, m_bitsForSliceHeader        (0)
+#endif
 , m_iSliceGranularity           (0)
 #if CU_LEVEL_TRANSQUANT_BYPASS
 , m_TransquantBypassEnableFlag  (false)
@@ -1643,6 +1671,18 @@ Void TComReferencePictureSet::printDeltaPOC()
   }
   printf("}\n");
 }
+
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+Void TComReferencePictureSet::printRefPOC(Int currentPoc)
+{
+  printf("RefPOC = { ");
+  for(Int j=0; j < getNumberOfPictures(); j++)
+  {
+    printf("%d%s ", currentPoc + getDeltaPOC(j), (getUsed(j)==1)?"*":"");
+  } 
+  printf("}\n");
+}
+#endif
 
 TComRPSList::TComRPSList()
 {

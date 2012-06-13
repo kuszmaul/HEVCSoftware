@@ -66,8 +66,12 @@ public:
   Void  close ();                                           ///< close file
 
   void skipFrames(unsigned int numFrames, unsigned int width, unsigned int height);
-  
+
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], Bool loopFile = false );     ///< read  one YUV frame with padding parameter
+#else
   bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< read  one YUV frame with padding parameter
+#endif
   Bool  write( TComPicYuv*    pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0 );
   
   bool  isEof ();                                           ///< check for end-of-file

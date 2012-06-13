@@ -143,6 +143,11 @@ protected:
   Void      xDecodeSEI();
 
   Void      allocAPS (TComAPS* pAPS); //!< memory allocation for APS
+#if RPS_COUNTER
+public:
+  TComSPS* getSPS() { return m_parameterSetManagerDecoder.getSPS(0); };
+  TComPPS* getPPS() { return m_parameterSetManagerDecoder.getPPS(0); };
+#endif
 };// END CLASS DEFINITION TDecTop
 
 
