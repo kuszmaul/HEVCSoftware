@@ -121,6 +121,9 @@ public:
 
   Void sortDeltaPOC();
   Void printDeltaPOC();
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void printRefPOC(Int currentPoc);
+#endif
 };
 
 /// Reference Picture Set set class
@@ -258,6 +261,9 @@ private:
   Bool        m_bPCMFilterDisableFlag;
 
   UInt        m_uiBitsForPOC;
+#if RPS_COUNTER
+  UInt        m_bitsForSPS;
+#endif
   // Max physical transform size
   UInt        m_uiMaxTrSize;
   
@@ -364,6 +370,10 @@ public:
   UInt getQuadtreeTUMaxDepthIntra()         { return m_uiQuadtreeTUMaxDepthIntra; }
   Void setNumReorderPics(Int i, UInt tlayer)              { m_numReorderPics[tlayer] = i;    }
   Int  getNumReorderPics(UInt tlayer)                     { return m_numReorderPics[tlayer]; }
+#if RPS_COUNTER
+  UInt getBitsForSPS()                { return m_bitsForSPS;         }
+  Void setBitsForSPS(UInt ui)         { m_bitsForSPS = ui;           }
+#endif
   Void      setRPSList( TComRPSList* RPSList )   { m_RPSList = RPSList;       }
   TComRPSList* getRPSList()                      { return m_RPSList;          }
   Bool      getLongTermRefsPresent()         { return m_bLongTermRefsPresent; }
@@ -555,6 +565,11 @@ private:
   UInt        m_numRefIdxL0DefaultActive;
   UInt        m_numRefIdxL1DefaultActive;
 
+#if RPS_COUNTER
+  UInt        m_bitsForPPS;
+  UInt        m_bitsForSliceHeader;
+#endif
+
   Int         m_iSliceGranularity;
 
   Bool        m_bUseWeightPred;           // Use of Weighting Prediction (P_SLICE)
@@ -630,6 +645,13 @@ public:
   Void      setUseDQP ( Bool b )           { m_useDQP   = b;         }
   Bool      getConstrainedIntraPred ()         { return  m_bConstrainedIntraPred; }
   Void      setConstrainedIntraPred ( Bool b ) { m_bConstrainedIntraPred = b;     }
+
+#if RPS_COUNTER
+  UInt        getBitsForPPS()                { return m_bitsForPPS;         }
+  Void        setBitsForPPS(UInt ui)         { m_bitsForPPS = ui;           }
+  UInt        getBitsForSliceHeader()        { return m_bitsForSliceHeader; }
+  Void        setBitsForSliceHeader(UInt ui) { m_bitsForSliceHeader = ui;   }
+#endif
 
   Void      setSPS              ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }
   TComSPS*  getSPS              ()         { return m_pcSPS;          }

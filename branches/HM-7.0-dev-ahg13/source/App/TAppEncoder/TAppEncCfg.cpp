@@ -214,6 +214,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  ("HardCodedStructureAHG21",      m_hardCodedStructureAHGRefPic,  0.0, "Hard-coded reference picture structure for AHG21")
+  ("RTT",                          m_roundTripTime,                  0, "RTT")
+  ("FirstSceneInterval",           m_firstSceneInterval,             0, "First Scene Interval")
+  ("SecondSceneInterval",          m_secondSceneInterval,            0, "Second Scene Interval")
+#endif
 #if REMOVE_LC
   ("ListCombination,-lc",     m_bUseLComb,               true, "Combined reference list for uni-prediction estimation in B-slices")
 #else
@@ -883,7 +889,22 @@ Void TAppEncCfg::xCheckParameter()
   for(Int i=0; i<MAX_TLAYER; i++)
   {
     m_numReorderPics[i] = 0;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+    if (m_hardCodedStructureAHGRefPic == 3.3)
+    {
+      m_maxDecPicBuffering[i] = 3;
+    }
+    else if (m_hardCodedStructureAHGRefPic == 3.4)
+    {
+      m_maxDecPicBuffering[i] = 5;
+    }
+    else
+    {
+      m_maxDecPicBuffering[i] = 0;
+    }
+#else
     m_maxDecPicBuffering[i] = 0;
+#endif
   }
   for(Int i=0; i<m_iGOPSize; i++) 
   {
