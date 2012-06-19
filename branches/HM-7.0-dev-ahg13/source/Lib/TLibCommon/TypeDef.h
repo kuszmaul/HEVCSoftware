@@ -197,6 +197,9 @@
 #define AHG_REFPIC_HARDCODED_PIC_STRUCTS     1
 #define RPS_COUNTER                          1
 
+#define REF_PIC_LIST_REORDER            1
+#define REF_PIC_LIST_REORDER_FIRST_SLICE_ONLY 1
+
 #define WRITE_BACK                      1           ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
 #define AUTO_INTER_RPS                  1           ///< Enable/disable the automatic generation of refIdc from the deltaPOC and Used by current from the config file.
 #define PRINT_RPS_INFO                  0           ///< Enable/disable the printing of bits used to send the RPS.

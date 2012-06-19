@@ -148,6 +148,18 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     }
   }
 #endif
+#if REF_PIC_LIST_REORDER
+  in>>entry.m_reorderList0;
+  in>>entry.m_reorderList1;
+  for( Int i = 0; i < entry.m_numRefPicsActive; i++ )
+  {
+    in>>entry.m_list0Index[i];
+  }
+  for( Int i = 0; i < entry.m_numRefPicsActive; i++ )
+  {
+    in>>entry.m_list1Index[i];
+  }
+#endif
   return in;
 }
 
@@ -858,6 +870,13 @@ Void TAppEncCfg::xCheckParameter()
           m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRPS = refPOC - m_GOPList[m_iGOPSize+m_extraRPSs].m_POC; 
           m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRIdxMinus1 = 0; 
         }
+#if REF_PIC_LIST_REORDER
+        if (m_extraRPSs >= 0)  // extra RPS reordering not enabled since it is not configurable, can be hardcoded if required
+        {
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_reorderList0 = 0;
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_reorderList1 = 0;
+        }
+#endif
         curGOP=m_iGOPSize+m_extraRPSs;
         m_extraRPSs++;
       }

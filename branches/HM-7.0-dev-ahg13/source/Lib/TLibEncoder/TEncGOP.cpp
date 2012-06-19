@@ -552,6 +552,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if ADAPTIVE_QP_SELECTION
       pcSlice->setTrQuant( m_pcEncTop->getTrQuant() );
 #endif      
+#if REF_PIC_LIST_REORDER
+      reorderRefPicList(pcSlice);
+#endif 
       //  Set reference list
       pcSlice->setRefPicList ( rcListPic );
       
@@ -2058,6 +2061,35 @@ static const char* nalUnitTypeToString(NalUnitType type)
   case NAL_UNIT_FILLER_DATA: return "FILLER";
   default: return "UNK";
 #endif
+  }
+}
+#endif
+
+#if REF_PIC_LIST_REORDER
+Void TEncGOP::reorderRefPicList( TComSlice* pcSlice )
+{
+  if (pcSlice->getSliceType() != I_SLICE)
+  {
+    Int rpsIdx = pcSlice->getRPSidx();
+    if ( (rpsIdx >=0) && (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0 || m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1))
+    {
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL0(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL0(i, m_pcCfg->getGOPEntry(rpsIdx).m_list0Index[i]);
+        }
+      }
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL1(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL1(i, m_pcCfg->getGOPEntry(rpsIdx).m_list1Index[i]);
+        }
+      }
+    }
   }
 }
 #endif
