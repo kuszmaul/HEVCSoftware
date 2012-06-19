@@ -163,7 +163,9 @@ protected:
   Bool rpsContainsShortTermReference(TComReferencePictureSet *pRPS, Int currentPoc, Int testPoc);
   Void addLongTermReferences(TComReferencePictureSet *pRPS, Int currentPoc);
 #endif
-
+#if REF_PIC_LIST_REORDER
+  Void reorderRefPicList( TComSlice* pcSlice );
+#endif
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
   
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
