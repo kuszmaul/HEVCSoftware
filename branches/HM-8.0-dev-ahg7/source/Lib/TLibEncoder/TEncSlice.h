@@ -105,7 +105,7 @@ public:
   TEncSlice();
   virtual ~TEncSlice();
   
-  Void    create              ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
+  Void    create              ( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
   Void    destroy             ();
   Void    init                ( TEncTop* pcEncTop );
   

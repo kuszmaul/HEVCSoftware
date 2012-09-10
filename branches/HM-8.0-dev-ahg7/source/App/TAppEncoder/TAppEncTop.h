@@ -68,6 +68,7 @@ private:
   
   unsigned m_essentialBytes;
   unsigned m_totalBytes;
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -85,6 +86,7 @@ protected:
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
   void rateStatsAccum(const AccessUnit& au, const std::vector<unsigned>& stats);
   void printRateSummary();
+  void printChromaFormat();
   
 public:
   TAppEncTop();
@@ -92,6 +94,7 @@ public:
   
   Void        encode      ();                               ///< main encoding function
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
+  
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}

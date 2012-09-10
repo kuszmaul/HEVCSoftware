@@ -241,6 +241,8 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getPPSId(),                             "pic_parameter_set_id" );
   WRITE_UVLC( pcPPS->getSPSId(),                             "seq_parameter_set_id" );
 
+  const UInt numberValidComponents = getNumberValidComponents(pcPPS->getSPS()->getChromaFormatIdc());
+
   WRITE_FLAG( pcPPS->getSignHideFlag(), "sign_data_hiding_flag" );
   WRITE_FLAG( pcPPS->getCabacInitPresentFlag() ? 1 : 0,   "cabac_init_present_flag" );
   WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive()-1,     "num_ref_idx_l0_default_active_minus1");
@@ -271,8 +273,11 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getMaxCuDQPDepth() - pcPPS->getSliceGranularity() + pcPPS->getUseDQP(),                   "diff_cu_qp_delta_depth" );
 #endif
 #endif
-  WRITE_SVLC( pcPPS->getChromaCbQpOffset(),                   "cb_qp_offset" );
-  WRITE_SVLC( pcPPS->getChromaCrQpOffset(),                   "cr_qp_offset" );
+  for (UInt component = COMPONENT_Cb; component < numberValidComponents; component++)
+  {
+    WRITE_SVLC( pcPPS->getQpOffset(ComponentID(component)), "cb-cr_qp_offset" );
+  }
+
 #if CHROMA_QP_EXTENSION
   WRITE_FLAG( pcPPS->getSliceChromaQpFlag() ? 1 : 0,          "slicelevel_chroma_qp_flag" );
 #endif
@@ -338,7 +343,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   }
 #endif
 #if MOVE_LOOP_FILTER_SLICES_FLAG
-  WRITE_FLAG( pcPPS->getLFCrossSliceBoundaryFlag()?1 : 0,                            "seq_loop_filter_across_slices_enabled_flag");
+  WRITE_FLAG( pcPPS->getLFCrossSliceBoundaryFlag()?1 : 0,                            "loop_filter_across_slice_flag");
 #endif
   WRITE_FLAG( pcPPS->getDeblockingFilterControlPresent()?1 : 0, "deblocking_filter_control_present_flag");
   if(pcPPS->getDeblockingFilterControlPresent())
@@ -381,7 +386,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_CODE( pcSPS->getProfileCompat (), 32,       "profile_compatibility" );
   WRITE_UVLC( pcSPS->getSPSId (),                   "seq_parameter_set_id" );
   WRITE_UVLC( pcSPS->getVPSId (),                   "video_parameter_set_id" );
-  WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
+  WRITE_UVLC( Int(pcSPS->getChromaFormatIdc ()),    "chroma_format_idc" );
   WRITE_CODE( pcSPS->getMaxTLayers() - 1,  3,       "max_temporal_layers_minus1" );
   WRITE_UVLC( pcSPS->getPicWidthInLumaSamples (),   "pic_width_in_luma_samples" );
   WRITE_UVLC( pcSPS->getPicHeightInLumaSamples(),   "pic_height_in_luma_samples" );
@@ -394,23 +399,33 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_UVLC( pcSPS->getPicCropBottomOffset() / TComSPS::getCropUnitY(pcSPS->getChromaFormatIdc() ), "pic_crop_bottom_offset" );
   }
 
+  const ChromaFormat format                = pcSPS->getChromaFormatIdc();
+  const Bool         chromaEnabled         = isChromaEnabled(format);
+
 #if FULL_NBIT
   WRITE_UVLC( pcSPS->getBitDepth() - 8,             "bit_depth_luma_minus8" );
 #else
   WRITE_UVLC( pcSPS->getBitIncrement(),             "bit_depth_luma_minus8" );
 #endif
+
+  if (chromaEnabled)
+  {
 #if FULL_NBIT
-  WRITE_UVLC( pcSPS->getBitDepth() - 8,             "bit_depth_chroma_minus8" );
+    WRITE_UVLC( pcSPS->getBitDepth() - 8,             "bit_depth_chroma_minus8" );
 #else
-  WRITE_UVLC( pcSPS->getBitIncrement(),             "bit_depth_chroma_minus8" );
+    WRITE_UVLC( pcSPS->getBitIncrement(),             "bit_depth_chroma_minus8" );
 #endif
+  }
 
   WRITE_FLAG( pcSPS->getUsePCM() ? 1 : 0,                   "pcm_enabled_flag");
 
   if( pcSPS->getUsePCM() )
   {
-  WRITE_CODE( pcSPS->getPCMBitDepthLuma() - 1, 4,   "pcm_bit_depth_luma_minus1" );
-  WRITE_CODE( pcSPS->getPCMBitDepthChroma() - 1, 4, "pcm_bit_depth_chroma_minus1" );
+    WRITE_CODE( pcSPS->getPCMBitDepth(CHANNEL_TYPE_LUMA) - 1, 4,   "pcm_bit_depth_luma_minus1" );
+    if (chromaEnabled)
+    {
+      WRITE_CODE( pcSPS->getPCMBitDepth(CHANNEL_TYPE_CHROMA) - 1, 4, "pcm_bit_depth_chroma_minus1" );
+    }
   }
 
   WRITE_UVLC( pcSPS->getBitsForPOC()-4,                 "log2_max_pic_order_cnt_lsb_minus4" );
@@ -465,7 +480,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_FLAG( pcSPS->getUseTransformSkip () ? 1 : 0,                                 "transform_skip_enabled_flag" );
 #endif
 #if !MOVE_LOOP_FILTER_SLICES_FLAG
-  WRITE_FLAG( pcSPS->getLFCrossSliceBoundaryFlag()?1 : 0,                            "seq_loop_filter_across_slices_enabled_flag");
+  WRITE_FLAG( pcSPS->getLFCrossSliceBoundaryFlag()?1 : 0,                            "loop_filter_across_slice_flag");
 #endif
   WRITE_FLAG( pcSPS->getUseAMP(),                                                    "asymmetric_motion_partitions_enabled_flag" );
 #if !REMOVE_NSQT
@@ -543,6 +558,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 {
 #if ENC_DEC_TRACE  
   xTraceSliceHeader (pcSlice);
+#endif
+
+  const ChromaFormat format                = pcSlice->getSPS()->getChromaFormatIdc();
+#if ((SAO_TYPE_SHARING == 0) || (CHROMA_QP_EXTENSION == 1) || (REMOVE_ALF == 0))
+  const UInt         numberValidComponents = getNumberValidComponents(format);
+#endif
+#if ((SAO_TYPE_SHARING == 1) || (CHROMA_QP_EXTENSION == 1) || (SAO_LUM_CHROMA_ONOFF_FLAGS == 1))
+  const Bool         chromaEnabled         = isChromaEnabled(format);
 #endif
 
   //calculate number of bits required for slice address
@@ -752,7 +775,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       if (pcSlice->getSPS()->getUseSAO())
       {
-         WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "SAO on/off flag in slice header" );
+         WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sample_adaptive_offset_flag" );
 #if !SAO_LUM_CHROMA_ONOFF_FLAGS
          if (pcSlice->getSaoEnabledFlag() )
 #endif
@@ -763,10 +786,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
            SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
 #endif
 #if SAO_TYPE_SHARING 
-          WRITE_FLAG( saoParam->bSaoFlag[1], "SAO on/off flag for Cb&Cr in slice header" );
+           if (chromaEnabled) WRITE_FLAG( saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA], "sao_chroma_enable_flag" );
 #else
-          WRITE_FLAG( saoParam->bSaoFlag[1], "SAO on/off flag for Cb in slice header" );
-          WRITE_FLAG( saoParam->bSaoFlag[2], "SAO on/off flag for Cr in slice header" );
+           if (numberValidComponents > COMPONENT_Cb) WRITE_FLAG( saoParam->bSaoFlag[COMPONENT_Cb], "sao_cb_enable_flag" );
+           if (numberValidComponents > COMPONENT_Cr) WRITE_FLAG( saoParam->bSaoFlag[COMPONENT_Cr], "sao_cr_enable_flag" );
 #endif
          }
       }
@@ -875,10 +898,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #if CHROMA_QP_EXTENSION
     if (pcSlice->getPPS()->getSliceChromaQpFlag())
     {
-      iCode = pcSlice->getSliceQpDeltaCb();
-      WRITE_SVLC( iCode, "slice_qp_delta_cb" );
-      iCode = pcSlice->getSliceQpDeltaCr();
-      WRITE_SVLC( iCode, "slice_qp_delta_cr" );
+      if (numberValidComponents > COMPONENT_Cb) WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb), "slice_qp_delta_cb" );
+      if (numberValidComponents > COMPONENT_Cr) WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr), "slice_qp_delta_cr" );
     }
 #endif
     if (pcSlice->getPPS()->getDeblockingFilterControlPresent())
@@ -929,10 +950,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (pcSlice->getSPS()->getUseALF())
     {
       char syntaxString[50];
-      for(Int compIdx=0; compIdx< 3; compIdx++)
+      for(UInt compIdx = 0; compIdx < numberValidComponents; compIdx++)
       {
         sprintf(syntaxString, "alf_slice_filter_flag[%d]", compIdx);
-        WRITE_FLAG( pcSlice->getAlfEnabledFlag(compIdx)?1:0, syntaxString );
+        WRITE_FLAG( pcSlice->getAlfEnabledFlag(ComponentID(compIdx))?1:0, syntaxString );
       }
     }
   }
@@ -940,12 +961,17 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   if(!bDependentSlice)
   {
 #if !REMOVE_ALF
-    Bool isAlfEnabled = (!pcSlice->getSPS()->getUseALF())?(false):(pcSlice->getAlfEnabledFlag(0)||pcSlice->getAlfEnabledFlag(1)||pcSlice->getAlfEnabledFlag(2));
+    Bool isAlfEnabled = false;
+    if (pcSlice->getSPS()->getUseALF())
+    {
+      for (UInt component = 0; component < numberValidComponents; component++)
+        isAlfEnabled = isAlfEnabled || pcSlice->getAlfEnabledFlag(ComponentID(component));
+    }
 #endif
 #if !SAO_LUM_CHROMA_ONOFF_FLAGS
     Bool isSAOEnabled = (!pcSlice->getSPS()->getUseSAO())?(false):(pcSlice->getSaoEnabledFlag());
 #else
-    Bool isSAOEnabled = (!pcSlice->getSPS()->getUseSAO())?(false):(pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma());
+    Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag() || (chromaEnabled && pcSlice->getSaoEnabledFlagChroma()));
 #endif
     Bool isDBFEnabled = (!pcSlice->getLoopFilterDisable());
 
@@ -956,7 +982,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if(pcSlice->getSPS()->getLFCrossSliceBoundaryFlag() && ( isSAOEnabled || isDBFEnabled ))
 #endif
 #else
+#if MOVE_LOOP_FILTER_SLICES_FLAG
+    if(pcSlice->getPPS()->getLFCrossSliceBoundaryFlag() && ( isAlfEnabled || isSAOEnabled || isDBFEnabled ))
+#else
     if(pcSlice->getSPS()->getLFCrossSliceBoundaryFlag() && ( isAlfEnabled || isSAOEnabled || isDBFEnabled ))
+#endif
 #endif
     {
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
@@ -1122,7 +1152,7 @@ Void TEncCavlc::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   assert(0);
 }
 
-Void TEncCavlc::codeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
+Void TEncCavlc::codeQtCbf( TComTU &rTu, const ComponentID compID )
 {
   assert(0);
 }
@@ -1133,7 +1163,7 @@ Void TEncCavlc::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 #if TU_ZERO_CBF_RDO
-Void TEncCavlc::codeQtCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
+Void TEncCavlc::codeQtCbfZero(TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth)
 {
   assert(0);
 }
@@ -1143,7 +1173,7 @@ Void TEncCavlc::codeQtRootCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 #endif
 
-Void TEncCavlc::codeTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType )
+Void TEncCavlc::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
 {
   assert(0);
 }
@@ -1189,7 +1219,7 @@ Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int iDQp  = pcCU->getQP( uiAbsPartIdx ) - pcCU->getRefQP( uiAbsPartIdx );
 
-  Int qpBdOffsetY =  pcCU->getSlice()->getSPS()->getQpBDOffsetY();
+  Int qpBdOffsetY =  pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
   iDQp = (iDQp + 78 + qpBdOffsetY + (qpBdOffsetY/2)) % (52 + qpBdOffsetY) - 26 - (qpBdOffsetY/2);
 
   xWriteSvlc( iDQp );
@@ -1197,7 +1227,7 @@ Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
-Void TEncCavlc::codeCoeffNxN    ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType )
+Void TEncCavlc::codeCoeffNxN    ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID )
 {
   assert(0);
 }
@@ -1231,8 +1261,8 @@ Void TEncCavlc::codeAlfParam(ALFParam* alfParam)
   const Int numCoeff = (Int)ALF_MAX_NUM_COEF;
   switch(alfParam->componentID)
   {
-  case ALF_Cb:
-  case ALF_Cr:
+  case COMPONENT_Cb:
+  case COMPONENT_Cr:
     {
       for(Int pos=0; pos< numCoeff; pos++)
       {
@@ -1240,7 +1270,7 @@ Void TEncCavlc::codeAlfParam(ALFParam* alfParam)
       }
     }
     break;
-  case ALF_Y:
+  case COMPONENT_Y:
     {
       Int noFilters = min(alfParam->filters_per_group-1, 2);
       WRITE_UVLC(noFilters, "alf_no_filters_minus1");
@@ -1276,7 +1306,7 @@ Void TEncCavlc::codeAlfParam(ALFParam* alfParam)
 }
 #endif
 
-Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height, TextType eTType )
+Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height, ChannelType chType )
 {
   // printf("error : no VLC mode support in this version\n");
   return;
@@ -1407,11 +1437,13 @@ Void TEncCavlc::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
  */
 Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 {
-  wpScalingParam  *wp;
-  Bool            bChroma     = true; // color always present in HEVC ?
-  Int             iNbRef       = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
-  Bool            bDenomCoded  = false;
-  UInt            uiMode = 0;
+        wpScalingParam *wp;
+  const ChromaFormat    format                = pcSlice->getPic()->getChromaFormat();
+  const UInt            numberValidComponents = getNumberValidComponents(format);
+  const Bool            bChroma               = isChromaEnabled(format);
+  const Int             iNbRef                = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
+        Bool            bDenomCoded           = false;
+        UInt            uiMode                = 0;
 #if NUM_WP_LIMIT
   UInt            uiTotalSignalledWeightFlags = 0;
 #endif
@@ -1445,7 +1477,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 #if NUM_WP_LIMIT
         uiTotalSignalledWeightFlags += wp[0].bPresentFlag;
       }
-      if (bChroma) 
+      if (bChroma)
       {
         for ( Int iRefIdx=0 ; iRefIdx<pcSlice->getNumRefIdx(eRefPicList) ; iRefIdx++ ) 
         {
@@ -1473,7 +1505,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 #endif
           if ( wp[1].bPresentFlag )
           {
-            for ( Int j=1 ; j<3 ; j++ ) 
+            for ( Int j = COMPONENT_Cb ; j < numberValidComponents ; j++ )
             {
               Int iDeltaWeight = (wp[j].iWeight - (1<<wp[1].uiLog2WeightDenom));
               WRITE_SVLC( iDeltaWeight, "delta_chroma_weight_lX" );            // se(v): delta_chroma_weight_lX
@@ -1545,9 +1577,9 @@ Void TEncCavlc::xCodeScalingList(TComScalingList* scalingList, UInt sizeId, UInt
 {
   Int coefNum = min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]);
 #if REMOVE_ZIGZAG_SCAN
-  UInt* scan  = (sizeId == 0) ? g_auiSigLastScan [ SCAN_DIAG ] [ 1 ] :  g_sigLastScanCG32x32;
+  UInt* scan  = g_scanOrder[SCAN_UNGROUPED][SCAN_DIAG][sizeId==0 ? 2 : 3][sizeId==0 ? 2 : 3];
 #else
-  UInt* scan    = g_auiFrameScanXY [ (sizeId == 0)? 1 : 2];
+  UInt* scan  = g_scanOrder[SCAN_UNGROUPED][SCAN_ZIGZAG][sizeId==0 ? 2 : 3][sizeId==0 ? 2 : 3];
 #endif
   Int nextCoef = SCALING_LIST_START_VALUE;
   Int data;

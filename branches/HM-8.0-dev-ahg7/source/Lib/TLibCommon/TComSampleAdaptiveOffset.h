@@ -50,9 +50,10 @@
 
 #define SAO_MAX_DEPTH                 4
 #define SAO_BO_BITS                   5
+#define SAO_EO_TABLE_SIZE             9
 #define LUMA_GROUP_NUM                (1<<SAO_BO_BITS)
-#define MAX_NUM_SAO_OFFSETS           4
 #define MAX_NUM_SAO_CLASS             33
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -64,11 +65,10 @@ protected:
   TComPic*          m_pcPic;
 
   static UInt m_uiMaxDepth;
-  static const Int m_aiNumCulPartsLevel[5];
-  static const UInt m_auiEoTable[9];
+  static const Int m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1];
+  static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: ECF - This table appears to be larger than needed.
   Int *m_iOffsetBo;
-  Int m_iOffsetEo[LUMA_GROUP_NUM];
-
+  Int m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed. 
   Int  m_iPicWidth;
   Int  m_iPicHeight;
   UInt m_uiMaxSplitLevel;
@@ -106,6 +106,7 @@ protected:
   Bool    m_saoLcuBoundary;
 #endif
   Bool    m_saoLcuBasedOptimization;
+
 public:
   TComSampleAdaptiveOffset         ();
   virtual ~TComSampleAdaptiveOffset();
@@ -115,7 +116,7 @@ public:
 
   Int  convertLevelRowCol2Idx(int level, int row, int col);
 
-  Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, Int iYCbCr);
+  Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, ComponentID ch);
   Void allocSaoParam  (SAOParam* pcSaoParam);
   Void resetSAOParam  (SAOParam *pcSaoParam);
 #if REMOVE_APS
@@ -123,26 +124,28 @@ public:
 #else
   Void freeSaoParam   (SAOParam *pcSaoParam);
 #endif
-  
-  Void SAOProcess(TComPic* pcPic, SAOParam* pcSaoParam);
-  Void processSaoCu(Int iAddr, Int iSaoType, Int iYCbCr);
-  Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, Int iYCbCr,Int iAddr = 0);
 
-  Void processSaoCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);  //!< LCU-basd SAO process without slice granularity 
+  Void SAOProcess(TComPic* pcPic, SAOParam* pcSaoParam);
+  Void processSaoCu(Int iAddr, Int iSaoType, ComponentID ch);
+  Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, ComponentID ch,Int iAddr = 0) { return pcPicYuv->getAddr(ch, iAddr); }
+
+
+  Void processSaoCuOrg(Int iAddr, Int iPartIdx, ComponentID ch);  //!< LCU-basd SAO process without slice granularity
   Void createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic = 1);
   Void destroyPicSaoInfo();
   Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt xPos, UInt yPos, UInt width, UInt height, Bool* pbBorderAvail);
 
   Void resetLcuPart(SaoLcuParam* saoLcuParam);
-  Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, Int yCbCr);
-  Void convertOnePart2SaoUnit(SAOParam *saoParam, UInt partIdx, Int yCbCr);
-  Void processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool oneUnitFlag, Int yCbCr);
+  Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, ComponentID ch);
+  Void convertOnePart2SaoUnit(SAOParam *saoParam, UInt partIdx, ComponentID ch);
+  Void processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool oneUnitFlag, ComponentID ch);
 #if SAO_LCU_BOUNDARY
   Void setSaoLcuBoundary (Bool bVal)  {m_saoLcuBoundary = bVal;}
   Bool getSaoLcuBoundary ()           {return m_saoLcuBoundary;}
 #endif
   Void setSaoLcuBasedOptimization (Bool bVal)  {m_saoLcuBasedOptimization = bVal;}
   Bool getSaoLcuBasedOptimization ()           {return m_saoLcuBasedOptimization;}
+
   Void resetSaoUnit(SaoLcuParam* saoUnit);
 #if SAO_SINGLE_MERGE
   Void copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc );

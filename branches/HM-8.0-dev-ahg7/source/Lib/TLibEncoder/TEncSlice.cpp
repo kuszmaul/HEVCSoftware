@@ -64,20 +64,20 @@ TEncSlice::~TEncSlice()
 {
 }
 
-Void TEncSlice::create( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth )
+Void TEncSlice::create( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth )
 {
   // create prediction picture
   if ( m_apcPicYuvPred == NULL )
   {
     m_apcPicYuvPred  = new TComPicYuv;
-    m_apcPicYuvPred->create( iWidth, iHeight, iMaxCUWidth, iMaxCUHeight, uhTotalDepth );
+    m_apcPicYuvPred->create( iWidth, iHeight, chromaFormat, iMaxCUWidth, iMaxCUHeight, uhTotalDepth );
   }
   
   // create residual picture
   if( m_apcPicYuvResi == NULL )
   {
     m_apcPicYuvResi  = new TComPicYuv;
-    m_apcPicYuvResi->create( iWidth, iHeight, iMaxCUWidth, iMaxCUHeight, uhTotalDepth );
+    m_apcPicYuvResi->create( iWidth, iHeight, chromaFormat, iMaxCUWidth, iMaxCUHeight, uhTotalDepth );
   }
 }
 
@@ -233,7 +233,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   dQP = m_pcCfg->getQP();
   if(eSliceType!=I_SLICE)
   {
-    if (!(( m_pcCfg->getMaxDeltaQP() == 0 ) && (dQP == -rpcSlice->getSPS()->getQpBDOffsetY() ) && (rpcSlice->getSPS()->getUseLossless()))) 
+    if (!(( m_pcCfg->getMaxDeltaQP() == 0 ) && (dQP == -rpcSlice->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA) ) && (rpcSlice->getPPS()->getTransquantBypassEnableFlag())))
     {
       dQP += m_pcCfg->getGOPEntry(iGOPid).m_QPOffset;
     }
@@ -298,7 +298,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
       dLambda *= 0.95;
     }
     
-    iQP = max( -pSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );
+    iQP = max( -pSPS->getQpBDOffset(CHANNEL_TYPE_LUMA), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );
 
     m_pdRdPicLambda[iDQpIdx] = dLambda;
     m_pdRdPicQp    [iDQpIdx] = dQP;
@@ -323,7 +323,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Double weight = 1.0;
   if(iQP >= 0)
   {
-    weight = pow( 2.0, (iQP-g_aucChromaScale[iQP])/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
+    weight = pow( 2.0, (iQP-getScaledChromaQP(iQP, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
   }
   m_pcRdCost ->setChromaDistortionWeight( weight );     
 #endif
@@ -353,18 +353,18 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   if (m_pcCfg->getUseRecalculateQPAccordingToLambda())
   {
     dQP = xGetQPValueAccordingToLambda( dLambda );
-    iQP = max( -pSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );    
+    iQP = max( -pSPS->getQpBDOffset(CHANNEL_TYPE_LUMA), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );    
   }
 #endif
 
-  rpcSlice->setSliceQp          ( iQP );
+  rpcSlice->setSliceQp           ( iQP );
 #if ADAPTIVE_QP_SELECTION
-  rpcSlice->setSliceQpBase      ( iQP );
+  rpcSlice->setSliceQpBase       ( iQP );
 #endif
-  rpcSlice->setSliceQpDelta     ( 0 );
+  rpcSlice->setSliceQpDelta      ( 0 );
 #if CHROMA_QP_EXTENSION
-  rpcSlice->setSliceQpDeltaCb   ( 0 );
-  rpcSlice->setSliceQpDeltaCr   ( 0 );
+  rpcSlice->setSliceChromaQpDelta( COMPONENT_Cb, 0 );
+  rpcSlice->setSliceChromaQpDelta( COMPONENT_Cr, 0 );
 #endif
   rpcSlice->setNumRefIdx(REF_PIC_LIST_0,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
   rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
@@ -459,7 +459,7 @@ Void TEncSlice::xLamdaRecalculation(Int changeQP, Int idGOP, Int depth, SliceTyp
       lambda *= 0.95;
     }
 
-    qp = max( -pcSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( recalQP + 0.5 ) ) );
+    qp = max( -pcSPS->getQpBDOffset(CHANNEL_TYPE_LUMA), min( MAX_QP, (Int) floor( recalQP + 0.5 ) ) );
 
     m_pdRdPicLambda[deltqQpIdx] = lambda;
     m_pdRdPicQp    [deltqQpIdx] = recalQP;
@@ -484,7 +484,7 @@ Void TEncSlice::xLamdaRecalculation(Int changeQP, Int idGOP, Int depth, SliceTyp
   Double weight = 1.0;
   if(qp >= 0)
   {
-    weight = pow( 2.0, (qp-g_aucChromaScale[qp])/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
+    weight = pow( 2.0, (qp-getScaledChromaQP(qp, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
   }
   m_pcRdCost ->setChromaDistortionWeight( weight );     
 #endif
@@ -579,7 +579,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
     Double weight = 1.0;
     if(iQP >= 0)
     {
-      weight = pow( 2.0, (iQP-g_aucChromaScale[iQP])/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
+      weight = pow( 2.0, (iQP-getScaledChromaQP(iQP, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
     }
     m_pcRdCost    ->setChromaDistortionWeight( weight );     
 #endif
@@ -628,7 +628,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
   Double weight = 1.0;
   if(iQP >= 0)
   {
-    weight = pow( 2.0, (iQP-g_aucChromaScale[iQP])/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
+    weight = pow( 2.0, (iQP-getScaledChromaQP(iQP, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping without chroma qp Offset
   }
   m_pcRdCost ->setChromaDistortionWeight( weight );     
 #endif
@@ -1001,6 +1001,8 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
   UInt       uiStartCUAddr;
   UInt       uiBoundingCUAddr;
   TComSlice* pcSlice = rpcPic->getSlice(getSliceIdx());
+  const UInt numberValidComponents = rpcPic->getNumberValidComponents();
+  const Bool bChroma = isChromaEnabled(rpcPic->getChromaFormat());
 
   uiStartCUAddr=pcSlice->getDependentSliceCurStartCUAddr();
   uiBoundingCUAddr=pcSlice->getDependentSliceCurEndCUAddr();
@@ -1163,76 +1165,69 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
 #endif
         uiCUAddr!=rpcPic->getPicSym()->getPicSCUAddr(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCUAddr())/rpcPic->getNumPartInCU())     // cannot be first CU of slice
     {
+      // We're crossing into another tile, tiles are independent.
+      // When tiles are independent, we have "substreams per tile".  Each substream has already been terminated, and we no longer
+      // have to perform it here.
+      if (pcSlice->getPPS()->getNumSubstreams() <= 1)
       {
-        // We're crossing into another tile, tiles are independent.
-        // When tiles are independent, we have "substreams per tile".  Each substream has already been terminated, and we no longer
-        // have to perform it here.
-        if (pcSlice->getPPS()->getNumSubstreams() > 1)
+        SliceType sliceType  = pcSlice->getSliceType();
+        if (!pcSlice->isIntra() && pcSlice->getPPS()->getCabacInitPresentFlag() && pcSlice->getPPS()->getEncCABACTableIdx()!=I_SLICE)
         {
-          ; // do nothing.
+          sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
         }
-        else
-        {
-          SliceType sliceType  = pcSlice->getSliceType();
-          if (!pcSlice->isIntra() && pcSlice->getPPS()->getCabacInitPresentFlag() && pcSlice->getPPS()->getEncCABACTableIdx()!=I_SLICE)
-          {
-            sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
-          }
-          m_pcEntropyCoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
+        m_pcEntropyCoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
 #if BYTE_ALIGNMENT
-          // Byte-alignment in slice_data() when new tile
-          pcSubstreams[uiSubStrm].writeByteAlignment();
+        // Byte-alignment in slice_data() when new tile
+        pcSubstreams[uiSubStrm].writeByteAlignment();
 #else
-          pcSubstreams[uiSubStrm].write( 1, 1 );
-          pcSubstreams[uiSubStrm].writeAlignZero();
+        pcSubstreams[uiSubStrm].write( 1, 1 );
+        pcSubstreams[uiSubStrm].writeAlignZero();
 #endif
-        }
       }
+
+      UInt uiCounter = 0;
+      vector<uint8_t>& rbsp   = pcSubstreams[uiSubStrm].getFIFO();
+      for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
       {
-          UInt uiCounter = 0;
-          vector<uint8_t>& rbsp   = pcSubstreams[uiSubStrm].getFIFO();
-          for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
-          {
-            /* 1) find the next emulated 00 00 {00,01,02,03}
-             * 2a) if not found, write all remaining bytes out, stop.
-             * 2b) otherwise, write all non-emulated bytes out
-             * 3) insert emulation_prevention_three_byte
-             */
-            vector<uint8_t>::iterator found = it;
-            do
-            {
-              /* NB, end()-1, prevents finding a trailing two byte sequence */
-              found = search_n(found, rbsp.end()-1, 2, 0);
-              found++;
-              /* if not found, found == end, otherwise found = second zero byte */
-              if (found == rbsp.end())
-              {
-                break;
-              }
-              if (*(++found) <= 3)
-              {
-                break;
-              }
-            } while (true);
-            it = found;
-            if (found != rbsp.end())
-            {
-              it++;
-              uiCounter++;
-            }
-          }
-        
-        UInt uiAccumulatedSubstreamLength = 0;
-        for (Int iSubstrmIdx=0; iSubstrmIdx < iNumSubstreams; iSubstrmIdx++)
+        /* 1) find the next emulated 00 00 {00,01,02,03}
+          * 2a) if not found, write all remaining bytes out, stop.
+          * 2b) otherwise, write all non-emulated bytes out
+          * 3) insert emulation_prevention_three_byte
+          */
+        vector<uint8_t>::iterator found = it;
+        do
         {
-          uiAccumulatedSubstreamLength += pcSubstreams[iSubstrmIdx].getNumberOfWrittenBits();
+          /* NB, end()-1, prevents finding a trailing two byte sequence */
+          found = search_n(found, rbsp.end()-1, 2, 0);
+          found++;
+          /* if not found, found == end, otherwise found = second zero byte */
+          if (found == rbsp.end())
+          {
+            break;
+          }
+          if (*(++found) <= 3)
+          {
+            break;
+          }
+        } while (true);
+        it = found;
+        if (found != rbsp.end())
+        {
+          it++;
+          uiCounter++;
         }
-        UInt uiLocationCount = pcSlice->getTileLocationCount();
-        // add bits coded in previous dependent slices + bits coded so far
-        // add number of emulation prevention byte count in the tile
-        pcSlice->setTileLocation( uiLocationCount, ((pcSlice->getTileOffstForMultES() + uiAccumulatedSubstreamLength - uiBitsOriginallyInSubstreams) >> 3) + uiCounter );
-        pcSlice->setTileLocationCount( uiLocationCount + 1 );
       }
+        
+      UInt uiAccumulatedSubstreamLength = 0;
+      for (Int iSubstrmIdx=0; iSubstrmIdx < iNumSubstreams; iSubstrmIdx++)
+      {
+        uiAccumulatedSubstreamLength += pcSubstreams[iSubstrmIdx].getNumberOfWrittenBits();
+      }
+      UInt uiLocationCount = pcSlice->getTileLocationCount();
+      // add bits coded in previous dependent slices + bits coded so far
+      // add number of emulation prevention byte count in the tile
+      pcSlice->setTileLocation( uiLocationCount, ((pcSlice->getTileOffstForMultES() + uiAccumulatedSubstreamLength - uiBitsOriginallyInSubstreams) >> 3) + uiCounter );
+      pcSlice->setTileLocationCount( uiLocationCount + 1 );
     }
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
@@ -1273,9 +1268,9 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       allowMergeLeft = allowMergeLeft && (rx>0) && (iCUAddrInSlice!=0);
       allowMergeUp = allowMergeUp && (ry>0) && (iCUAddrUpInSlice>=0);
 #if SAO_TYPE_SHARING
-      if( saoParam->bSaoFlag[0] || saoParam->bSaoFlag[1] )
+      if( saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] || (bChroma && saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]) )
 #else
-      if( saoParam->bSaoFlag[0] || saoParam->bSaoFlag[1] || saoParam->bSaoFlag[2])
+      if( saoParam->bSaoFlag[COMPONENT_Y] || (numberValidComponents>COMPONENT_Cb && saoParam->bSaoFlag[COMPONENT_Cb]) || (numberValidComponents>COMPONENT_Cr && saoParam->bSaoFlag[COMPONENT_Cr]))
 #endif
       {
         Int mergeLeft = saoParam->saoLcuParam[0][addr].mergeLeftFlag;
@@ -1308,16 +1303,17 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
           }
           if(mergeUp == 0)
           {
-            for (Int compIdx=0;compIdx<3;compIdx++)
+            for (Int compIdx=0;compIdx<numberValidComponents;compIdx++)
             {
+              const ComponentID compID=ComponentID(compIdx);
 #if SAO_TYPE_SHARING
-            if( (compIdx == 0 && saoParam->bSaoFlag[0]) || (compIdx > 0 && saoParam->bSaoFlag[1]))
+            if( saoParam->bSaoFlag[toChannelType(compID)])
 #else
             if( saoParam->bSaoFlag[compIdx])
 #endif
               {
 #if SAO_TYPE_SHARING
-                m_pcEntropyCoder->encodeSaoOffset(&saoParam->saoLcuParam[compIdx][addr], compIdx);
+                m_pcEntropyCoder->encodeSaoOffset(&saoParam->saoLcuParam[compIdx][addr], compID);
 #else
                 m_pcEntropyCoder->encodeSaoOffset(&saoParam->saoLcuParam[compIdx][addr]);
 #endif
@@ -1327,9 +1323,15 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         }
       }
 #else
-      m_pcEntropyCoder->encodeSaoUnitInterleaving(0, saoParam->bSaoFlag[0], rx, ry, &(saoParam->saoLcuParam[0][addr]), iCUAddrInSlice, iCUAddrUpInSlice, allowMergeLeft, allowMergeUp);
-      m_pcEntropyCoder->encodeSaoUnitInterleaving(1, saoParam->bSaoFlag[1], rx, ry, &(saoParam->saoLcuParam[1][addr]), iCUAddrInSlice, iCUAddrUpInSlice, allowMergeLeft, allowMergeUp);
-      m_pcEntropyCoder->encodeSaoUnitInterleaving(2, saoParam->bSaoFlag[2], rx, ry, &(saoParam->saoLcuParam[2][addr]), iCUAddrInSlice, iCUAddrUpInSlice, allowMergeLeft, allowMergeUp);
+      for(UInt compIdx = 0; compIdx < numberValidComponents; compIdx++)
+      {
+        ComponentID compID = ComponentID(compIdx);
+#if SAO_TYPE_SHARING
+        m_pcEntropyCoder->encodeSaoUnitInterleaving(compID, saoParam->bSaoFlag[toChannelType(compID)], rx, ry, &(saoParam->saoLcuParam[compID][addr]), iCUAddrInSlice, iCUAddrUpInSlice, allowMergeLeft, allowMergeUp);
+#else
+        m_pcEntropyCoder->encodeSaoUnitInterleaving(compID, saoParam->bSaoFlag[compID], rx, ry, &(saoParam->saoLcuParam[compID][addr]), iCUAddrInSlice, iCUAddrUpInSlice, allowMergeLeft, allowMergeUp);
+#endif
+      }
 #endif
     }
 #if ENC_DEC_TRACE
@@ -1338,11 +1340,12 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
 #if !REMOVE_ALF
     if( pcSlice->getSPS()->getUseALF())
     {
-      for(Int compIdx=0; compIdx< 3; compIdx++)
+      for(Int compIdx=0; compIdx< numberValidComponents; compIdx++)
       {
-        if(pcSlice->getAlfEnabledFlag(compIdx))
+        const ComponentID compID = ComponentID(compIdx);
+        if(pcSlice->getAlfEnabledFlag(compID))
         {
-          m_pcEntropyCoder->encodeAlfCtrlFlag(compIdx, pcCU->getAlfLCUEnabled(compIdx)?1:0);
+          m_pcEntropyCoder->encodeAlfCtrlFlag(compID, (pcCU->getAlfLCUEnabled(compID) ? 1 : 0));
         }
       }
     }

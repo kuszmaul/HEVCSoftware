@@ -98,23 +98,24 @@ public:
   /// get slice granularity
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 #endif
-  Void  parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
-  Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
-  Void  parseQtRootCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
-  Void  parseVPS            ( TComVPS* pcVPS );
-  Void  parseSPS            ( TComSPS* pcSPS );
-  Void  parsePPS            ( TComPPS* pcPPS);
-  Void  parseSEI(SEImessages&);
+  Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
+  Void parseQtCbf          ( class TComTU &rTu, const ComponentID compID );
+  Void parseQtRootCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
+
+  Void parseVPS            ( TComVPS* pcVPS );
+  Void parseSPS            ( TComSPS* pcSPS );
+  Void parsePPS            ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSetManager );
+  Void parseSEI(SEImessages&);
 #if !REMOVE_APS
-  Void  parseAPS            ( TComAPS* pAPS );
+  Void parseAPS            ( TComAPS* pAPS );
 #endif
-  Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager);
-  Void  parseTerminatingBit ( UInt& ruiBit );
+  Void parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager);
+  Void parseTerminatingBit ( UInt& ruiBit );
+
+  Void parseMVPIdx         ( Int& riMVPIdx );
   
-  Void  parseMVPIdx         ( Int& riMVPIdx );
-  
-  Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -130,8 +131,9 @@ public:
   Void parseMvd             ( TComDataCU* pcCU, UInt uiAbsPartAddr,UInt uiPartIdx,    UInt uiDepth, RefPicList eRefList );
   
   Void parseDeltaQP         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parseCoeffNxN        ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType);
+  Void parseCoeffNxN        ( class TComTU &rTu, ComponentID compID );
+
+  Void parseTransformSkipFlags ( class TComTU &rTu, ComponentID component );
 
   Void parseIPCMInfo        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
@@ -141,6 +143,7 @@ public:
   Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList               ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
+
 protected:
 #if !REMOVE_ALF
   Void  xParseAlfParam       ( ALFParam* pAlfParam );

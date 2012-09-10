@@ -34,6 +34,7 @@
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/SEI.h"
 #include "SEIread.h"
+#include "TLibCommon/TComPicYuv.h"
 
 //! \ingroup TLibDecoder
 //! \{
@@ -79,13 +80,13 @@ void parseSEImessage(TComInputBitstream& bs, SEImessages& seis)
  */
 static void parseSEIuserDataUnregistered(TComInputBitstream& bs, SEIuserDataUnregistered &sei, unsigned payloadSize)
 {
-  assert(payloadSize >= 16);
-  for (unsigned i = 0; i < 16; i++)
+  assert(payloadSize >= ISO_IEC_11578_LEN);
+  for (unsigned i = 0; i < ISO_IEC_11578_LEN; i++)
   {
     sei.uuid_iso_iec_11578[i] = bs.read(8);
   }
 
-  sei.userDataLength = payloadSize - 16;
+  sei.userDataLength = payloadSize - ISO_IEC_11578_LEN;
   if (!sei.userDataLength)
   {
     sei.userData = 0;
@@ -105,28 +106,12 @@ static void parseSEIuserDataUnregistered(TComInputBitstream& bs, SEIuserDataUnre
  */
 static void parseSEIpictureDigest(TComInputBitstream& bs, SEIpictureDigest& sei, unsigned payloadSize)
 {
-  int numChar=0;
-
-  sei.method = static_cast<SEIpictureDigest::Method>(bs.read(8));
-  if(SEIpictureDigest::MD5 == sei.method)
+  UInt bytesRead=0;
+  sei.method = static_cast<SEIpictureDigest::Method>(bs.read(8)); bytesRead++;
+  sei.m_digest.hash.clear();
+  for(;bytesRead < payloadSize; bytesRead++)
   {
-    numChar = 16;
-  }
-  else if(SEIpictureDigest::CRC == sei.method)
-  {
-    numChar = 2;
-  }
-  else if(SEIpictureDigest::CHECKSUM == sei.method)
-  {
-    numChar = 4;
-  }
-
-  for(int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
-  {
-    for (unsigned i = 0; i < numChar; i++)
-    {
-      sei.digest[yuvIdx][i] = bs.read(8);
-    }
+    sei.m_digest.hash.push_back((unsigned char)bs.read(8));
   }
 }
 

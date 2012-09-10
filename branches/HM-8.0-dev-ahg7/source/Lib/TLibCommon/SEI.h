@@ -33,6 +33,9 @@
 
 #pragma once
 
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
+
 //! \ingroup TLibCommon
 //! \{
 
@@ -54,6 +57,8 @@ public:
   virtual PayloadType payloadType() const = 0;
 };
 
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: ECF - new definition
+
 class SEIuserDataUnregistered : public SEI
 {
 public:
@@ -68,7 +73,7 @@ public:
     delete userData;
   }
 
-  unsigned char uuid_iso_iec_11578[16];
+  unsigned char uuid_iso_iec_11578[ISO_IEC_11578_LEN];
   unsigned userDataLength;
   unsigned char *userData;
 };
@@ -89,7 +94,7 @@ public:
     RESERVED,
   } method;
 
-  unsigned char digest[3][16];
+  TComDigest m_digest;
 };
 
 /**

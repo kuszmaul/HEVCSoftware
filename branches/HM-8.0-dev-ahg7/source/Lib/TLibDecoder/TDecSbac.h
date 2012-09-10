@@ -79,7 +79,7 @@ public:
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   Void  parseVPS                  ( TComVPS* pcVPS )  {}
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}
-  Void  parsePPS                  ( TComPPS* pcPPS         ) {}
+  Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSetManager ) {}
 #if !REMOVE_APS
   Void  parseAPS                  ( TComAPS* pAPS          ) {}
 #endif
@@ -149,16 +149,16 @@ public:
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
   
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
-  Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
+  Void parseQtCbf         ( TComTU &rTu, const ComponentID compID );
   Void parseQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
   
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void parseIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
-  Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, TextType eTType, UInt uiScanIdx );
-  Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType);
+  Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, ComponentID component, UInt uiScanIdx );
+  Void parseCoeffNxN      ( class TComTU &rTu, ComponentID compID  );
+  Void parseTransformSkipFlags ( class TComTU &rTu, ComponentID component );
 
   Void updateContextTables( SliceType eSliceType, Int iQp );
 

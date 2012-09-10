@@ -160,9 +160,9 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
 #if !REMOVE_ALF
     if(pcSlice->getSPS()->getUseALF())
     {
-      for(Int compIdx=0; compIdx < 3; compIdx++)
+      for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
       {
-        m_sliceAlfEnabled[compIdx].push_back(  pcSlice->getAlfEnabledFlag(compIdx) );
+        m_sliceAlfEnabled[compIdx].push_back(  pcSlice->getAlfEnabledFlag(ComponentID(compIdx)) );
       }
     }
 #endif
@@ -253,12 +253,13 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 #else
       SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
 #endif
-      saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
 #if SAO_TYPE_SHARING
-      saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
+      saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] = pcSlice->getSaoEnabledFlag();
+      saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA] = pcSlice->getSaoEnabledFlagChroma();
 #else
-      saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagCb();
-      saoParam->bSaoFlag[2] = pcSlice->getSaoEnabledFlagCr();
+      saoParam->bSaoFlag[COMPONENT_Y]  = pcSlice->getSaoEnabledFlag();
+      saoParam->bSaoFlag[COMPONENT_Cb] = pcSlice->getSaoEnabledFlagCb();
+      saoParam->bSaoFlag[COMPONENT_Cr] = pcSlice->getSaoEnabledFlagCr();
 #endif
       m_pcSAO->setSaoLcuBasedOptimization(1);
       m_pcSAO->createPicSaoInfo(rpcPic, (Int) m_sliceStartCUAddress.size() - 1);
@@ -295,10 +296,10 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   if (!pcSlice->isReferenced()) c += 32;
 
   //-- For time output for each slice
-  printf("\nPOC %4d TId: %1d ( %c-SLICE, QP%3d ) ", pcSlice->getPOC(),
-                                                    pcSlice->getTLayer(),
-                                                    c,
-                                                    pcSlice->getSliceQp() );
+  printf("POC %4d TId: %1d ( %c-SLICE, QP%3d ) ", pcSlice->getPOC(),
+                                                  pcSlice->getTLayer(),
+                                                  c,
+                                                  pcSlice->getSliceQp() );
 
   m_dDecTime += (double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
   printf ("[DT %6.3f] ", m_dDecTime );
@@ -318,6 +319,8 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), rpcPic->getSEIs());
   }
 
+  printf("\n");
+
 #if FIXED_ROUNDING_FRAME_MEMORY
   rpcPic->getPicYuvRec()->xFixedRoundingPic();
 #endif
@@ -326,7 +329,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   rpcPic->setReconMark(true);
   m_sliceStartCUAddress.clear();
 #if !REMOVE_ALF
-  for(Int compIdx=0; compIdx < 3; compIdx++)
+  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     m_sliceAlfEnabled[compIdx].clear();
   }
@@ -348,27 +351,24 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
 {
   /* calculate MD5sum for entire reconstructed picture */
-  unsigned char recon_digest[3][16];
+  TComDigest recon_digest;
   int numChar=0;
   const char* hashType;
 
   if(seis && seis->picture_digest->method == SEIpictureDigest::MD5)
   {
     hashType = "MD5";
-    calcMD5(pic, recon_digest);
-    numChar = 16;    
+    numChar = calcMD5(pic, recon_digest);
   }
   else if(seis && seis->picture_digest->method == SEIpictureDigest::CRC)
   {
     hashType = "CRC";
-    calcCRC(pic, recon_digest);
-    numChar = 2;
+    numChar = calcCRC(pic, recon_digest);
   }
   else if(seis && seis->picture_digest->method == SEIpictureDigest::CHECKSUM)
   {
     hashType = "Checksum";
-    calcChecksum(pic, recon_digest);
-    numChar = 4;
+    numChar = calcChecksum(pic, recon_digest);
   }
   else
   {
@@ -382,25 +382,19 @@ static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
   if (seis && seis->picture_digest)
   {
     ok = "(OK)";
-    for(int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
+    if (recon_digest != seis->picture_digest->m_digest)
     {
-      for (unsigned i = 0; i < numChar; i++)
-      {
-        if (recon_digest[yuvIdx][i] != seis->picture_digest->digest[yuvIdx][i])
-        {
-          ok = "(***ERROR***)";
-          mismatch = true;
-        }
-      }
+      ok = "(***ERROR***)";
+      mismatch = true;
     }
   }
 
-  printf("[%s:%s,%s] ", hashType, digestToString(recon_digest, numChar), ok);
+  printf("[%s:%s,%s] ", hashType, digestToString(recon_digest, numChar).c_str(), ok);
 
   if (mismatch)
   {
     g_md5_mismatch = true;
-    printf("[rx%s:%s] ", hashType, digestToString(seis->picture_digest->digest, numChar));
+    printf("[rx%s:%s] ", hashType, digestToString(seis->picture_digest->m_digest, numChar).c_str());
   }
 }
 //! \}

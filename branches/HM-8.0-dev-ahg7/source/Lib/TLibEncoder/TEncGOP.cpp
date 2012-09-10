@@ -49,6 +49,11 @@
 #include <math.h>
 
 using namespace std;
+
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+Bool g_bFinalEncode = false;
+#endif
+
 //! \ingroup TLibEncoder
 //! \{
 
@@ -250,7 +255,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
       if(m_pcEncTop->getUseScalingListId() == SCALING_LIST_OFF)
       {
-        m_pcEncTop->getTrQuant()->setFlatScalingList();
+        m_pcEncTop->getTrQuant()->setFlatScalingList(pcSlice->getSPS()->getChromaFormatIdc());
         m_pcEncTop->getTrQuant()->setUseScalingList(false);
         m_pcEncTop->getSPS()->setScalingListPresentFlag(false);
         m_pcEncTop->getPPS()->setScalingListPresentFlag(false);
@@ -260,7 +265,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->setDefaultScalingList ();
         m_pcEncTop->getSPS()->setScalingListPresentFlag(false);
         m_pcEncTop->getPPS()->setScalingListPresentFlag(false);
-        m_pcEncTop->getTrQuant()->setScalingList(pcSlice->getScalingList());
+        m_pcEncTop->getTrQuant()->setScalingList(pcSlice->getScalingList(), pcSlice->getSPS()->getChromaFormatIdc());
         m_pcEncTop->getTrQuant()->setUseScalingList(true);
       }
       else if(m_pcEncTop->getUseScalingListId() == SCALING_LIST_FILE_READ)
@@ -272,7 +277,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->getScalingList()->checkDcOfMatrix();
         m_pcEncTop->getSPS()->setScalingListPresentFlag(pcSlice->checkDefaultScalingList());
         m_pcEncTop->getPPS()->setScalingListPresentFlag(false);
-        m_pcEncTop->getTrQuant()->setScalingList(pcSlice->getScalingList());
+        m_pcEncTop->getTrQuant()->setScalingList(pcSlice->getScalingList(), pcSlice->getSPS()->getChromaFormatIdc());
         m_pcEncTop->getTrQuant()->setUseScalingList(true);
       }
       else
@@ -713,6 +718,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if (m_bSeqFirst)
         {
           pcSlice->getSPS()->setNumLongTermRefPicSPS(m_numLongTermRefPicSPS);
+          assert (m_numLongTermRefPicSPS <= MAX_NUM_LONG_TERM_REF_PICS);
           for (Int k = 0; k < m_numLongTermRefPicSPS; k++)
           {
              pcSlice->getSPS()->setLtRefPicPocLsbSps(k, m_ltRefPicPocLsbSps[k]);
@@ -916,6 +922,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           m_pcSbacCoder->load( &pcSbacCoders[0] );
 
         pcSlice->setTileOffstForMultES( uiOneBitstreamPerSliceLength );
+
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+            g_bFinalEncode = true;
+#endif
         if (!bDependentSlice)
         {
           pcSlice->setTileLocationCount ( 0 );
@@ -925,7 +935,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           m_pcSliceEncoder->encodeSlice(pcPic, &nalu.m_Bitstream, pcSubstreamsOut); // nalu.m_Bitstream is only used for CAVLC tile position info.
         }
-
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+            g_bFinalEncode = false;
+#endif
         {
           // Construct the final bitstream by flushing and concatenating substreams.
           // The final bitstream is either nalu.m_Bitstream or pcBitstreamRedirect;
@@ -1095,18 +1107,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if !REMOVE_ALF
               if (pcSlice->getSPS()->getUseALF())
               {
-                for(Int compIdx =0; compIdx< 3; compIdx++)
+                for(Int compIdx =0; compIdx< MAX_NUM_COMPONENT; compIdx++)
                 {
-                  pcPic->getSlice(s)->setAlfEnabledFlag( cAPS.getAlfEnabled(compIdx), compIdx);
+                  const ComponentID compID=ComponentID(compIdx);
+                  pcPic->getSlice(s)->setAlfEnabledFlag( cAPS.getAlfEnabled(compID), compID);
                 }
               }
 #endif
               if (pcSlice->getSPS()->getUseSAO())
               {
 #if REMOVE_APS
-                pcPic->getSlice(s)->setSaoEnabledFlag((pcSlice->getPic()->getPicSym()->getSaoParam()->bSaoFlag[0]==1)?true:false);
+                pcPic->getSlice(s)->setSaoEnabledFlag((pcSlice->getPic()->getPicSym()->getSaoParam()->bSaoFlag[CHANNEL_TYPE_LUMA]==1)?true:false);
 #else
-                pcPic->getSlice(s)->setSaoEnabledFlag((cAPS.getSaoParam()->bSaoFlag[0]==1)?true:false);
+                pcPic->getSlice(s)->setSaoEnabledFlag((cAPS.getSaoParam()->bSaoFlag[CHANNEL_TYPE_LUMA]==1)?true:false);
 #endif
               }
 #if !REMOVE_APS
@@ -1170,7 +1183,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       //-- For time output for each slice
       Double dEncTime = (double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
 
-      const char* digestStr = NULL;
+      std::string digestStr;
       if (m_pcCfg->getPictureDigestEnabled())
       {
         /* calculate MD5sum for entire reconstructed picture */
@@ -1178,20 +1191,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if(m_pcCfg->getPictureDigestEnabled() == 1)
         {
           sei_recon_picture_digest.method = SEIpictureDigest::MD5;
-          calcMD5(*pcPic->getPicYuvRec(), sei_recon_picture_digest.digest);
-          digestStr = digestToString(sei_recon_picture_digest.digest, 16);
+          UInt numChar=calcMD5(*pcPic->getPicYuvRec(), sei_recon_picture_digest.m_digest);
+          digestStr = digestToString(sei_recon_picture_digest.m_digest, numChar);
         }
         else if(m_pcCfg->getPictureDigestEnabled() == 2)
         {
           sei_recon_picture_digest.method = SEIpictureDigest::CRC;
-          calcCRC(*pcPic->getPicYuvRec(), sei_recon_picture_digest.digest);
-          digestStr = digestToString(sei_recon_picture_digest.digest, 2);
+          UInt numChar=calcCRC(*pcPic->getPicYuvRec(), sei_recon_picture_digest.m_digest);
+          digestStr = digestToString(sei_recon_picture_digest.m_digest, numChar);
         }
         else if(m_pcCfg->getPictureDigestEnabled() == 3)
         {
           sei_recon_picture_digest.method = SEIpictureDigest::CHECKSUM;
-          calcChecksum(*pcPic->getPicYuvRec(), sei_recon_picture_digest.digest);
-          digestStr = digestToString(sei_recon_picture_digest.digest, 4);
+          UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), sei_recon_picture_digest.m_digest);
+          digestStr = digestToString(sei_recon_picture_digest.m_digest, numChar);
         }
 #if REMOVE_NAL_REF_FLAG
         OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
@@ -1212,19 +1225,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime );
 
-      if (digestStr)
+      if (!digestStr.empty())
       {
         if(m_pcCfg->getPictureDigestEnabled() == 1)
         {
-          printf(" [MD5:%s]", digestStr);
+          printf(" [MD5:%s]", digestStr.c_str());
         }
         else if(m_pcCfg->getPictureDigestEnabled() == 2)
         {
-          printf(" [CRC:%s]", digestStr);
+          printf(" [CRC:%s]", digestStr.c_str());
         }
         else if(m_pcCfg->getPictureDigestEnabled() == 3)
         {
-          printf(" [Checksum:%s]", digestStr);
+          printf(" [Checksum:%s]", digestStr.c_str());
         }
       }
       if(m_pcCfg->getUseRateCtrl())
@@ -1331,7 +1344,8 @@ Void TEncGOP::encodeAPS(TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* p
 
   m_pcEntropyCoder->encodeAPSInitInfo(pcAPS);
 #if !REMOVE_ALF
-  for(Int compIdx=0; compIdx < 3; compIdx++)
+  const UInt numberValidComponents = pcSlice->getPic()->getNumberValidComponents();
+  for(Int compIdx=0; compIdx < numberValidComponents; compIdx++)
   {
     m_pcEntropyCoder->encodeAlfParam( (pcAPS->getAlfParam())[compIdx]);
   }
@@ -1352,27 +1366,29 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded)
   m_gcAnalyzeI.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeP.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeB.setFrmRate( m_pcCfg->getFrameRate() );
-  
+  const ChromaFormat chFmt = m_pcCfg->getChromaFormatIdc();
+  const unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
+
   //-- all
-  printf( "\n\nSUMMARY --------------------------------------------------------\n" );
-  m_gcAnalyzeAll.printOut('a');
+  printf( "\n\nSUMMARY ------------------------------------------------------------------\n" );
+  m_gcAnalyzeAll.printOut('a', chFmt, maxval);
   
-  printf( "\n\nI Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeI.printOut('i');
+  printf( "\n\nI Slices------------------------------------------------------------------\n" );
+  m_gcAnalyzeI.printOut('i', chFmt, maxval);
   
-  printf( "\n\nP Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeP.printOut('p');
+  printf( "\n\nP Slices------------------------------------------------------------------\n" );
+  m_gcAnalyzeP.printOut('p', chFmt, maxval);
   
-  printf( "\n\nB Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeB.printOut('b');
+  printf( "\n\nB Slices------------------------------------------------------------------\n" );
+  m_gcAnalyzeB.printOut('b', chFmt, maxval);
   
 #if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummaryOut();
+  m_gcAnalyzeAll.printSummary(chFmt, maxval);
 #endif
 #if _SUMMARY_PIC_
-  m_gcAnalyzeI.printSummary('I');
-  m_gcAnalyzeP.printSummary('P');
-  m_gcAnalyzeB.printSummary('B');
+  m_gcAnalyzeI.printSummary(chFmt, maxval, 'I');
+  m_gcAnalyzeP.printSummary(chFmt, maxval, 'P');
+  m_gcAnalyzeB.printSummary(chFmt, maxval, 'B');
 #endif
 
   printf("\nRVM: %.3lf\n" , xCalculateRVM());
@@ -1408,10 +1424,10 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
   {
     m_pcAdaptiveLoopFilter->createPicAlfInfo(pcPic);
 
-    ALFParam* alfPicParam[3];
-    for(Int compIdx=0; compIdx < 3; compIdx++)
+    ALFParam* alfPicParam[MAX_NUM_COMPONENT];
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
-      alfPicParam[compIdx] = new ALFParam(compIdx);
+      alfPicParam[compIdx] = new ALFParam(ComponentID(compIdx));
     }
 
 #if ALF_CHROMA_LAMBDA 
@@ -1423,7 +1439,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
     m_pcAdaptiveLoopFilter->ALFProcess(alfPicParam, pcPic->getSlice(0)->getLambda());
 #endif
 #endif
-    for(Int compIdx=0; compIdx < 3; compIdx++)
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
       delete alfPicParam[compIdx]; alfPicParam[compIdx] = NULL;
     }
@@ -1505,73 +1521,40 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&       rcListPic,
 
 UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
 {
-  Int     x, y;
-  Pel*  pSrc0   = pcPic0 ->getLumaAddr();
-  Pel*  pSrc1   = pcPic1 ->getLumaAddr();
-#if IBDI_DISTORTION
-  Int  iShift = g_uiBitIncrement;
-  Int  iOffset = 1<<(g_uiBitIncrement-1);
-#else
-  UInt  uiShift = g_uiBitIncrement<<1;
-#endif
-  Int   iTemp;
-  
-  Int   iStride = pcPic0->getStride();
-  Int   iWidth  = pcPic0->getWidth();
-  Int   iHeight = pcPic0->getHeight();
   
   UInt64  uiTotalDiff = 0;
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
 #if IBDI_DISTORTION
-      iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift); uiTotalDiff += iTemp * iTemp;
+  const Int  iShift = g_uiBitIncrement;
+  const Int  iOffset = 1<<(g_uiBitIncrement-1);
 #else
-      iTemp = pSrc0[x] - pSrc1[x]; uiTotalDiff += (iTemp*iTemp) >> uiShift;
+  const UInt  uiShift = g_uiBitIncrement<<1;
 #endif
-    }
-    pSrc0 += iStride;
-    pSrc1 += iStride;
-  }
-  
-  iHeight >>= 1;
-  iWidth  >>= 1;
-  iStride >>= 1;
-  
-  pSrc0  = pcPic0->getCbAddr();
-  pSrc1  = pcPic1->getCbAddr();
-  
-  for( y = 0; y < iHeight; y++ )
+
+  for(Int chan=0; chan<pcPic0 ->getNumberValidComponents(); chan++)
   {
-    for( x = 0; x < iWidth; x++ )
-    {
-#if IBDI_DISTORTION
-      iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift); uiTotalDiff += iTemp * iTemp;
-#else
-      iTemp = pSrc0[x] - pSrc1[x]; uiTotalDiff += (iTemp*iTemp) >> uiShift;
-#endif
-    }
-    pSrc0 += iStride;
-    pSrc1 += iStride;
-  }
+    const ComponentID ch=ComponentID(chan);
+    Pel*  pSrc0   = pcPic0 ->getAddr(ch);
+    Pel*  pSrc1   = pcPic1 ->getAddr(ch);
   
-  pSrc0  = pcPic0->getCrAddr();
-  pSrc1  = pcPic1->getCrAddr();
+    const Int   iStride = pcPic0->getStride(ch);
+    const Int   iWidth  = pcPic0->getWidth(ch);
+    const Int   iHeight = pcPic0->getHeight(ch);
   
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
+    for(Int y = 0; y < iHeight; y++ )
     {
+      for(Int x = 0; x < iWidth; x++ )
+      {
 #if IBDI_DISTORTION
-      iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift); uiTotalDiff += iTemp * iTemp;
+        Int iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift);
+        uiTotalDiff += iTemp * iTemp;
 #else
-      iTemp = pSrc0[x] - pSrc1[x]; uiTotalDiff += (iTemp*iTemp) >> uiShift;
+        Int iTemp = pSrc0[x] - pSrc1[x];
+        uiTotalDiff += (iTemp*iTemp) >> uiShift;
 #endif
+      }
+      pSrc0 += iStride;
+      pSrc1 += iStride;
     }
-    pSrc0 += iStride;
-    pSrc1 += iStride;
   }
   
   return uiTotalDiff;
@@ -1604,76 +1587,45 @@ static const char* nalUnitTypeToString(NalUnitType type)
 
 Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime )
 {
-  Int     x, y;
-  UInt64 uiSSDY  = 0;
-  UInt64 uiSSDU  = 0;
-  UInt64 uiSSDV  = 0;
-  
-  Double  dYPSNR  = 0.0;
-  Double  dUPSNR  = 0.0;
-  Double  dVPSNR  = 0.0;
+  Double  dPSNR[MAX_NUM_COMPONENT];
+
+  for(Int i=0; i<MAX_NUM_COMPONENT; i++)
+  {
+    dPSNR[i]=0.0;
+  }
   
   //===== calculate PSNR =====
-  Pel*  pOrg    = pcPic ->getPicYuvOrg()->getLumaAddr();
-  Pel*  pRec    = pcPicD->getLumaAddr();
-  Int   iStride = pcPicD->getStride();
-  
-  Int   iWidth;
-  Int   iHeight;
-  
-  iWidth  = pcPicD->getWidth () - m_pcEncTop->getPad(0);
-  iHeight = pcPicD->getHeight() - m_pcEncTop->getPad(1);
-  
-  Int   iSize   = iWidth*iHeight;
-  
-  for( y = 0; y < iHeight; y++ )
+  const unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
+  Double MSEyuvframe[MAX_NUM_COMPONENT] = {0, 0, 0};
+
+  for(Int chan=0; chan<pcPicD->getNumberValidComponents(); chan++)
   {
-    for( x = 0; x < iWidth; x++ )
+    const ComponentID ch=ComponentID(chan);
+    const Pel*  pOrg    = pcPic ->getPicYuvOrg()->getAddr(ch);
+          Pel*  pRec    = pcPicD->getAddr(ch);
+    const Int   iStride = pcPicD->getStride(ch);
+  
+    const Int   iWidth  = pcPicD->getWidth (ch) - (m_pcEncTop->getPad(0) >> pcPic->getComponentScaleX(ch));
+    const Int   iHeight = pcPicD->getHeight(ch) - (m_pcEncTop->getPad(1) >> pcPic->getComponentScaleY(ch));
+  
+    Int   iSize   = iWidth*iHeight;
+  
+    UInt64 uiSSDtemp=0;
+    for(Int y = 0; y < iHeight; y++ )
     {
-      Int iDiff = (Int)( pOrg[x] - pRec[x] );
-      uiSSDY   += iDiff * iDiff;
+      for(Int x = 0; x < iWidth; x++ )
+      {
+        Int iDiff = (Int)( pOrg[x] - pRec[x] );
+        uiSSDtemp   += iDiff * iDiff;
+      }
+      pOrg += iStride;
+      pRec += iStride;
     }
-    pOrg += iStride;
-    pRec += iStride;
+    const Double fRefValue = (double) maxval * maxval * iSize;
+    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 99.99 );
+    MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize);
   }
-  
-  iHeight >>= 1;
-  iWidth  >>= 1;
-  iStride >>= 1;
-  pOrg  = pcPic ->getPicYuvOrg()->getCbAddr();
-  pRec  = pcPicD->getCbAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      Int iDiff = (Int)( pOrg[x] - pRec[x] );
-      uiSSDU   += iDiff * iDiff;
-    }
-    pOrg += iStride;
-    pRec += iStride;
-  }
-  
-  pOrg  = pcPic ->getPicYuvOrg()->getCrAddr();
-  pRec  = pcPicD->getCrAddr();
-  
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      Int iDiff = (Int)( pOrg[x] - pRec[x] );
-      uiSSDV   += iDiff * iDiff;
-    }
-    pOrg += iStride;
-    pRec += iStride;
-  }
-  
-  unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
-  Double fRefValueY = (double) maxval * maxval * iSize;
-  Double fRefValueC = fRefValueY / 4.0;
-  dYPSNR            = ( uiSSDY ? 10.0 * log10( fRefValueY / (Double)uiSSDY ) : 99.99 );
-  dUPSNR            = ( uiSSDU ? 10.0 * log10( fRefValueC / (Double)uiSSDU ) : 99.99 );
-  dVPSNR            = ( uiSSDV ? 10.0 * log10( fRefValueC / (Double)uiSSDV ) : 99.99 );
+
 
   /* calculate the size of the access unit, excluding:
    *  - any AnnexB contributions (start_code_prefix, zero_byte, etc.,)
@@ -1694,19 +1646,19 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   m_vRVM_RP.push_back( uibits );
 
   //===== add PSNR =====
-  m_gcAnalyzeAll.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
+  m_gcAnalyzeAll.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   TComSlice*  pcSlice = pcPic->getSlice(0);
   if (pcSlice->isIntra())
   {
-    m_gcAnalyzeI.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
+    m_gcAnalyzeI.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   }
   if (pcSlice->isInterP())
   {
-    m_gcAnalyzeP.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
+    m_gcAnalyzeP.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   }
   if (pcSlice->isInterB())
   {
-    m_gcAnalyzeB.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
+    m_gcAnalyzeB.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   }
 
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
@@ -1729,7 +1681,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
          uibits );
 #endif
 
-  printf(" [Y %6.4lf dB    U %6.4lf dB    V %6.4lf dB]", dYPSNR, dUPSNR, dVPSNR );
+  printf(" [Y %6.4lf dB    U %6.4lf dB    V %6.4lf dB]", dPSNR[COMPONENT_Y], dPSNR[COMPONENT_Cb], dPSNR[COMPONENT_Cr] );
   printf(" [ET %5.0f ]", dEncTime );
   
   for (Int iRefList = 0; iRefList < 2; iRefList++)

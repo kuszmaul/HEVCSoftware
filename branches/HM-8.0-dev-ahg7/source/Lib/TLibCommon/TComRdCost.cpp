@@ -176,6 +176,7 @@ Void TComRdCost::setLambda( Double dLambda )
 // Initalize Function Pointer by [eDFunc]
 Void TComRdCost::init()
 {
+  assert(28<NUM_DIST_FUNC);
   m_afpDistortFunc[0]  = NULL;                  // for DF_DEFAULT
   
   m_afpDistortFunc[1]  = TComRdCost::xGetSSE;
@@ -203,7 +204,8 @@ Void TComRdCost::init()
   m_afpDistortFunc[21] = TComRdCost::xGetSAD16N;
   
 #if AMP_SAD
-  m_afpDistortFunc[43] = TComRdCost::xGetSAD12;
+  assert(48<NUM_DIST_FUNC);
+  m_afpDistortFunc[43] = TComRdCost::xGetSAD12; // NOTE: ECF - magic numbers
   m_afpDistortFunc[44] = TComRdCost::xGetSAD24;
   m_afpDistortFunc[45] = TComRdCost::xGetSAD48;
 
@@ -312,15 +314,15 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 #if AMP_SAD
   if (rcDistParam.iCols == 12)
   {
-    rcDistParam.DistFunc = m_afpDistortFunc[43 ];
+    rcDistParam.DistFunc = m_afpDistortFunc[43 ]; // NOTE: ECF - magic number
   }
   else if (rcDistParam.iCols == 24)
   {
-    rcDistParam.DistFunc = m_afpDistortFunc[44 ];
+    rcDistParam.DistFunc = m_afpDistortFunc[44 ]; // NOTE: ECF - magic number
   }
   else if (rcDistParam.iCols == 48)
   {
-    rcDistParam.DistFunc = m_afpDistortFunc[45 ];
+    rcDistParam.DistFunc = m_afpDistortFunc[45 ]; // NOTE: ECF - magic number
   }
 #endif
 
@@ -359,15 +361,15 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 #if AMP_SAD
     if (rcDistParam.iCols == 12)
     {
-      rcDistParam.DistFunc = m_afpDistortFunc[46 ];
+      rcDistParam.DistFunc = m_afpDistortFunc[46 ]; // NOTE: ECF - magic number
     }
     else if (rcDistParam.iCols == 24)
     {
-      rcDistParam.DistFunc = m_afpDistortFunc[47 ];
+      rcDistParam.DistFunc = m_afpDistortFunc[47 ]; // NOTE: ECF - magic number
     }
     else if (rcDistParam.iCols == 48)
     {
-      rcDistParam.DistFunc = m_afpDistortFunc[48 ];
+      rcDistParam.DistFunc = m_afpDistortFunc[48 ]; // NOTE: ECF - magic number
     }
 #endif
   }
@@ -436,7 +438,7 @@ UInt TComRdCost::calcHAD( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iW
     {
       for ( x=0; x<iWidth; x+= 2 )
       {
-        uiSum += xCalcHADs8x8( &pi0[x], &pi1[x], iStride0, iStride1, 1 );
+        uiSum += xCalcHADs2x2( &pi0[x], &pi1[x], iStride0, iStride1, 1 );
       }
       pi0 += iStride0*2;
       pi1 += iStride1*2;
@@ -461,7 +463,7 @@ UInt TComRdCost::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgS
   cDtParam.iStep      = 1;
 
   cDtParam.bApplyWeight = false;
-  cDtParam.uiComp       = 255;    // just for assert: to be sure it was set before use, since only values 0,1 or 2 are allowed.
+  cDtParam.compIdx      = MAX_NUM_COMPONENT; // just for assert: to be sure it was set before use
 
 #if WEIGHTED_CHROMA_DISTORTION
   if (bWeighted)
@@ -493,8 +495,8 @@ UInt TComRdCost::xGetSAD( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -521,8 +523,8 @@ UInt TComRdCost::xGetSAD4( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -552,8 +554,8 @@ UInt TComRdCost::xGetSAD8( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg      = pcDtParam->pOrg;
-  Pel* piCur      = pcDtParam->pCur;
+  const Pel* piOrg      = pcDtParam->pOrg;
+  const Pel* piCur      = pcDtParam->pCur;
   Int  iRows      = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -587,8 +589,8 @@ UInt TComRdCost::xGetSAD16( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -631,8 +633,8 @@ UInt TComRdCost::xGetSAD12( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -667,8 +669,8 @@ UInt TComRdCost::xGetSAD12( DistParam* pcDtParam )
 
 UInt TComRdCost::xGetSAD16N( DistParam* pcDtParam )
 {
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iSubShift  = pcDtParam->iSubShift;
@@ -713,8 +715,8 @@ UInt TComRdCost::xGetSAD32( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -773,8 +775,8 @@ UInt TComRdCost::xGetSAD24( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -826,8 +828,8 @@ UInt TComRdCost::xGetSAD64( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -918,8 +920,8 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iSubShift  = pcDtParam->iSubShift;
   Int  iSubStep   = ( 1 << iSubShift );
@@ -1317,8 +1319,8 @@ UInt TComRdCost::xGetSSE( DistParam* pcDtParam )
   {
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
@@ -1350,8 +1352,8 @@ UInt TComRdCost::xGetSSE4( DistParam* pcDtParam )
     assert( pcDtParam->iCols == 4 );
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -1383,8 +1385,8 @@ UInt TComRdCost::xGetSSE8( DistParam* pcDtParam )
     assert( pcDtParam->iCols == 8 );
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -1419,8 +1421,8 @@ UInt TComRdCost::xGetSSE16( DistParam* pcDtParam )
     assert( pcDtParam->iCols == 16 );
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -1463,8 +1465,8 @@ UInt TComRdCost::xGetSSE16N( DistParam* pcDtParam )
   {
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
@@ -1511,8 +1513,8 @@ UInt TComRdCost::xGetSSE32( DistParam* pcDtParam )
     assert( pcDtParam->iCols == 32 );
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -1571,8 +1573,8 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
     assert( pcDtParam->iCols == 64 );
     return xGetSSEw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
   Int  iStrideCur = pcDtParam->iStrideCur;

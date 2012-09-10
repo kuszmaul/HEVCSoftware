@@ -43,6 +43,7 @@
 #if !REMOVE_ALF
 //! \ingroup TLibEncoder
 //! \{
+
 // ====================================================================================================================
 // Constructor / destructor
 // ====================================================================================================================
@@ -50,18 +51,18 @@
 ///AlfCorrData
 AlfCorrData::AlfCorrData()
 {
-  this->componentID = -1;
+  this->componentID = MAX_NUM_COMPONENT;
   this->ECorr  = NULL;
   this->yCorr  = NULL;
   this->pixAcc = NULL;
 }
 
-AlfCorrData::AlfCorrData(Int cIdx)
+AlfCorrData::AlfCorrData(const ComponentID cIdx)
 {
   const Int numCoef = ALF_MAX_NUM_COEF;
   const Int maxNumGroups = NO_VAR_BINS;
 
-  Int numGroups = (cIdx == ALF_Y)?(maxNumGroups):(1);
+  Int numGroups = (cIdx == COMPONENT_Y)?(maxNumGroups):(1);
 
   this->componentID = cIdx;
 
@@ -96,7 +97,7 @@ AlfCorrData::~AlfCorrData()
     const Int numCoef = ALF_MAX_NUM_COEF;
     const Int maxNumGroups = NO_VAR_BINS;
 
-    Int numGroups = (this->componentID == ALF_Y)?(maxNumGroups):(1);
+    Int numGroups = (this->componentID == COMPONENT_Y)?(maxNumGroups):(1);
 
     for(Int g= 0; g< numGroups; g++)
     {
@@ -121,7 +122,7 @@ AlfCorrData& AlfCorrData::operator += (const AlfCorrData& src)
     const Int numCoef = ALF_MAX_NUM_COEF;
     const Int maxNumGroups = NO_VAR_BINS;
 
-    Int numGroups = (this->componentID == ALF_Y)?(maxNumGroups):(1);
+    Int numGroups = (this->componentID == COMPONENT_Y)?(maxNumGroups):(1);
     for(Int g=0; g< numGroups; g++)
     {
       this->pixAcc[g] += src.pixAcc[g];
@@ -148,7 +149,7 @@ Void AlfCorrData::reset()
     const Int numCoef = ALF_MAX_NUM_COEF;
     const Int maxNumGroups = NO_VAR_BINS;
 
-    Int numGroups = (this->componentID == ALF_Y)?(maxNumGroups):(1);
+    Int numGroups = (this->componentID == COMPONENT_Y)?(maxNumGroups):(1);
     for(Int g=0; g< numGroups; g++)
     {
       this->pixAcc[g] = 0;
@@ -181,61 +182,61 @@ Void AlfCorrData::mergeFrom(const AlfCorrData& src, Int* mergeTable, Bool doPixA
 
   switch(componentID)
   {
-  case ALF_Cb:
-  case ALF_Cr:
-    {
-      srcE = src.ECorr  [0];
-      dstE = this->ECorr[0];
-
-      srcy  = src.yCorr[0];
-      dsty  = this->yCorr[0];
-
-      for(Int j=0; j< numCoef; j++)
+    case COMPONENT_Cb:
+    case COMPONENT_Cr:
       {
-        for(Int i=0; i< numCoef; i++)
-        {
-          dstE[j][i] += srcE[j][i];
-        }
+        srcE = src.ECorr  [0];
+        dstE = this->ECorr[0];
 
-        dsty[j] += srcy[j];
-      }
-      if(doPixAccMerge)
-      {
-        this->pixAcc[0] = src.pixAcc[0];
-      }
-    }
-    break;
-  case ALF_Y:
-    {
-      Int maxFilterSetSize = (Int)NO_VAR_BINS;
-      for (Int varInd=0; varInd< maxFilterSetSize; varInd++)
-      {
-        Int filtIdx = (mergeTable == NULL)?(0):(mergeTable[varInd]);
-        srcE = src.ECorr  [varInd];
-        dstE = this->ECorr[ filtIdx ];
-        srcy  = src.yCorr[varInd];
-        dsty  = this->yCorr[ filtIdx ];
+        srcy  = src.yCorr[0];
+        dsty  = this->yCorr[0];
+
         for(Int j=0; j< numCoef; j++)
         {
           for(Int i=0; i< numCoef; i++)
           {
             dstE[j][i] += srcE[j][i];
           }
+
           dsty[j] += srcy[j];
         }
         if(doPixAccMerge)
         {
-          this->pixAcc[filtIdx] += src.pixAcc[varInd];
+          this->pixAcc[0] = src.pixAcc[0];
         }
       }
-    }
-    break;
-  default:
-    {
-      printf("not a legal component ID\n");
-      assert(0);
-      exit(-1);
-    }
+      break;
+    case COMPONENT_Y:
+      {
+        Int maxFilterSetSize = (Int)NO_VAR_BINS;
+        for (Int varInd=0; varInd< maxFilterSetSize; varInd++)
+        {
+          Int filtIdx = (mergeTable == NULL)?(0):(mergeTable[varInd]);
+          srcE = src.ECorr  [varInd];
+          dstE = this->ECorr[ filtIdx ];
+          srcy  = src.yCorr[varInd];
+          dsty  = this->yCorr[ filtIdx ];
+          for(Int j=0; j< numCoef; j++)
+          {
+            for(Int i=0; i< numCoef; i++)
+            {
+              dstE[j][i] += srcE[j][i];
+            }
+            dsty[j] += srcy[j];
+          }
+          if(doPixAccMerge)
+          {
+            this->pixAcc[filtIdx] += src.pixAcc[varInd];
+          }
+        }
+      }
+      break;
+    default:
+      {
+        printf("not a legal component ID\n");
+        assert(0);
+        exit(-1);
+      }
   }
 }
 
@@ -246,23 +247,27 @@ TEncAdaptiveLoopFilter::TEncAdaptiveLoopFilter()
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
+
 /** create global buffers for ALF encoding
  */
 Void TEncAdaptiveLoopFilter::createAlfGlobalBuffers()
 {
-  for(Int compIdx =0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
-    m_alfNonSkippedCorr[compIdx] = new AlfCorrData*[m_uiNumCUsInFrame];
-    m_alfCorr[compIdx] = new AlfCorrData*[m_uiNumCUsInFrame];
+    const ComponentID cid=ComponentID(compIdx);
+
+    m_alfNonSkippedCorr[cid] = new AlfCorrData*[m_uiNumCUsInFrame];
+
+    m_alfCorr[cid] = new AlfCorrData*[m_uiNumCUsInFrame];
     for(Int n=0; n< m_uiNumCUsInFrame; n++)
     {
-      m_alfCorr[compIdx][n]= new AlfCorrData(compIdx);
-      m_alfCorr[compIdx][n]->reset();
-      m_alfNonSkippedCorr[compIdx][n] = new AlfCorrData(compIdx);
-      m_alfNonSkippedCorr[compIdx][n]->reset();
+      m_alfCorr[cid][n]= new AlfCorrData(cid);
+      m_alfCorr[cid][n]->reset();
+      m_alfNonSkippedCorr[cid][n] = new AlfCorrData(cid);
+      m_alfNonSkippedCorr[cid][n]->reset();
     }
 
-    m_alfCorrMerged[compIdx] = new AlfCorrData(compIdx);
+    m_alfCorrMerged[cid] = new AlfCorrData(cid);
 
   }
 
@@ -290,10 +295,11 @@ Void TEncAdaptiveLoopFilter::createAlfGlobalBuffers()
   m_alfPictureParam = new ALFParam**[ maxNumTemporalLayer ];
   for(Int t=0; t< maxNumTemporalLayer; t++)
   {
-    m_alfPictureParam[t] = new ALFParam*[NUM_ALF_COMPONENT];
-    for(Int compIdx=0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+    m_alfPictureParam[t] = new ALFParam*[MAX_NUM_COMPONENT];
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
-      m_alfPictureParam[t][compIdx] = new ALFParam(compIdx);
+      const ComponentID cid=ComponentID(compIdx);
+      m_alfPictureParam[t][cid] = new ALFParam(cid);
     }
   }
 
@@ -304,6 +310,7 @@ Void TEncAdaptiveLoopFilter::createAlfGlobalBuffers()
     ::memset(&(m_coeffNoFilter[i][0]), 0, sizeof(Int)*numCoef);
     m_coeffNoFilter[i][numCoef-1] = (1 << ALF_NUM_BIT_SHIFT);
   }
+
   m_numSlicesDataInOneLCU = new Int[m_uiNumCUsInFrame];
 
 }
@@ -313,7 +320,7 @@ Void TEncAdaptiveLoopFilter::createAlfGlobalBuffers()
  */
 Void TEncAdaptiveLoopFilter::destroyAlfGlobalBuffers()
 {
-  for(Int compIdx =0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     for(Int n=0; n< m_uiNumCUsInFrame; n++)
     {
@@ -328,6 +335,7 @@ Void TEncAdaptiveLoopFilter::destroyAlfGlobalBuffers()
     m_alfNonSkippedCorr[compIdx] = NULL;
     delete m_alfCorrMerged[compIdx];
   }
+
   const Int numCoef = (Int)ALF_MAX_NUM_COEF;
 
   // temporary buffer for filter merge
@@ -349,13 +357,14 @@ Void TEncAdaptiveLoopFilter::destroyAlfGlobalBuffers()
   Int maxNumTemporalLayer =   (Int)(logf((float)(m_gopSize))/logf(2.0) + 1);
   for(Int t=0; t< maxNumTemporalLayer; t++)
   {
-    for(Int compIdx=0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
       delete m_alfPictureParam[t][compIdx];
     }
     delete[] m_alfPictureParam[t];
   }
   delete[] m_alfPictureParam; m_alfPictureParam = NULL;
+
   //const Int numCoef = (Int)ALF_MAX_NUM_COEF;
 
   for(Int i=0; i< (Int)NO_VAR_BINS; i++)
@@ -381,6 +390,7 @@ Void TEncAdaptiveLoopFilter::initALFEncoderParam()
       m_lastSliceIdx = s;
     }
   }
+
   //get number slices in each LCU
   if(m_uiNumSlicesInPic == 1 || m_iSGDepth == 0)
   {
@@ -444,6 +454,7 @@ Void TEncAdaptiveLoopFilter::ALFProcess(ALFParam** alfPictureParam,  Double lamb
 
   //initialize encoder parameters
   initALFEncoderParam();
+
   //get LCU statistics
   getStatistics(yuvOrg, yuvExtRec);
 
@@ -463,14 +474,14 @@ Void TEncAdaptiveLoopFilter::ALFProcess(ALFParam** alfPictureParam,  Double lamb
  * \param [int] partIdx partition index
  * \param [int] partLevel partition level
  */
-Void TEncAdaptiveLoopFilter::deriveFilterInfo(Int compIdx, AlfCorrData* alfCorr, ALFParam* alfFiltParam, Int maxNumFilters, Double lambda)
+Void TEncAdaptiveLoopFilter::deriveFilterInfo(const ComponentID compId, AlfCorrData* alfCorr, ALFParam* alfFiltParam, Int maxNumFilters, Double lambda)
 {
   const Int filtNo = 0; 
   const Int numCoeff = ALF_MAX_NUM_COEF;
 
-  switch(compIdx)
+  switch(compId)
   {
-  case ALF_Y:
+  case COMPONENT_Y:
     {
       Int lambdaForMerge = ((Int) lambda) * (1<<(2*g_uiBitIncrement));
       Int numFilters;
@@ -480,8 +491,8 @@ Void TEncAdaptiveLoopFilter::deriveFilterInfo(Int compIdx, AlfCorrData* alfCorr,
       xcodeFiltCoeff(m_filterCoeffSym,  m_varIndTab, numFilters, alfFiltParam);
     }
     break;
-  case ALF_Cb:
-  case ALF_Cr:
+  case COMPONENT_Cb:
+  case COMPONENT_Cr:
     {
       static Double coef[ALF_MAX_NUM_COEF];
 
@@ -502,18 +513,19 @@ Void TEncAdaptiveLoopFilter::deriveFilterInfo(Int compIdx, AlfCorrData* alfCorr,
   }
 }
 
+
 /** Estimate filtering distortion
- * \param [in] compIdx luma/chroma component index
+ * \param [in] compId luma/chroma component index
  * \param [in] alfCorr correlations
  * \param [in] coeffSet filter coefficients
  * \param [in] filterSetSize number of filter set
  * \param [in] mergeTable merge table of filter set (only for luma BA)
  * \param [in] doPixAccMerge calculate pixel squared value (true) or not (false)
  */
-Int64 TEncAdaptiveLoopFilter::estimateFilterDistortion(Int compIdx, AlfCorrData* alfCorr, Int** coeffSet, Int filterSetSize, Int* mergeTable, Bool doPixAccMerge)
+Int64 TEncAdaptiveLoopFilter::estimateFilterDistortion(const ComponentID compId, AlfCorrData* alfCorr, Int** coeffSet, Int filterSetSize, Int* mergeTable, Bool doPixAccMerge)
 {
   const Int numCoeff = (Int)ALF_MAX_NUM_COEF;
-  AlfCorrData* alfMerged = m_alfCorrMerged[compIdx];
+  AlfCorrData* alfMerged = m_alfCorrMerged[compId];
 
   alfMerged->mergeFrom(*alfCorr, mergeTable, doPixAccMerge);
 
@@ -526,9 +538,10 @@ Int64 TEncAdaptiveLoopFilter::estimateFilterDistortion(Int compIdx, AlfCorrData*
   return iDist;
 }
 
+
 /** Calculate distortion for ALF LCU
  * \param [in] skipLCUBottomLines true for considering skipping bottom LCU lines
- * \param [in] compIdx luma/chroma component index
+ * \param [in] compId luma/chroma component index
  * \param [in] alfLCUInfo ALF LCU information
  * \param [in] picSrc source picture buffer
  * \param [in] picCmp to-be-compared picture buffer
@@ -536,7 +549,7 @@ Int64 TEncAdaptiveLoopFilter::estimateFilterDistortion(Int compIdx, AlfCorrData*
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  * \return the distortion
  */
-Int64 TEncAdaptiveLoopFilter::calcAlfLCUDist(Bool skipLCUBottomLines, Int compIdx, AlfLCUInfo& alfLCUInfo, Pel* picSrc, Pel* picCmp, Int stride, Int formatShift)
+Int64 TEncAdaptiveLoopFilter::calcAlfLCUDist(Bool skipLCUBottomLines, const ComponentID compId, AlfLCUInfo& alfLCUInfo, Pel* picSrc, Pel* picCmp, Int stride, Int formatShiftX, Int formatShiftY)
 {
   Int64 dist = 0;  
   Int  posOffset, ypos, xpos, height, width;
@@ -566,17 +579,17 @@ Int64 TEncAdaptiveLoopFilter::calcAlfLCUDist(Bool skipLCUBottomLines, Int compId
   }
 #endif
 
-  switch(compIdx)
+  switch(compId)
   {
-  case ALF_Cb:
-  case ALF_Cr:
+  case COMPONENT_Cb:
+  case COMPONENT_Cr:
     {
       for(Int n=0; n< alfLCUInfo.numSGU; n++)
       {
-        ypos    = (Int)(alfLCUInfo[n].posY   >> formatShift);
-        xpos    = (Int)(alfLCUInfo[n].posX   >> formatShift);
-        height  = (Int)(alfLCUInfo[n].height >> formatShift);
-        width   = (Int)(alfLCUInfo[n].width  >> formatShift);
+        ypos    = (Int)(alfLCUInfo[n].posY   >> formatShiftY);
+        xpos    = (Int)(alfLCUInfo[n].posX   >> formatShiftX);
+        height  = (Int)(alfLCUInfo[n].height >> formatShiftY);
+        width   = (Int)(alfLCUInfo[n].width  >> formatShiftX);
 
 #if LCUALF_AVOID_USING_BOTTOM_LINES_ENCODER
         if(!notSkipLinesBelowVB )
@@ -606,7 +619,7 @@ Int64 TEncAdaptiveLoopFilter::calcAlfLCUDist(Bool skipLCUBottomLines, Int compId
 
     }
     break;
-  case ALF_Y:
+  case COMPONENT_Y:
     {
       for(Int n=0; n< alfLCUInfo.numSGU; n++)
       {
@@ -660,7 +673,7 @@ Int64 TEncAdaptiveLoopFilter::calcAlfLCUDist(Bool skipLCUBottomLines, Int compId
  * \param [in] stride buffer stride size for 1-D pictrue memory
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  */
-Void TEncAdaptiveLoopFilter::copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, Pel* picSrc, Int stride, Int formatShift)
+Void TEncAdaptiveLoopFilter::copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, Pel* picSrc, Int stride, Int formatShiftX, Int formatShiftY)
 {
   Int posOffset, ypos, xpos, height, width;
   Pel* pelDst;
@@ -668,10 +681,10 @@ Void TEncAdaptiveLoopFilter::copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, 
 
   for(Int n=0; n< alfLCUInfo.numSGU; n++)
   {
-    ypos    = (Int)(alfLCUInfo[n].posY   >> formatShift);
-    xpos    = (Int)(alfLCUInfo[n].posX   >> formatShift);
-    height  = (Int)(alfLCUInfo[n].height >> formatShift);
-    width   = (Int)(alfLCUInfo[n].width  >> formatShift);
+    ypos    = (Int)(alfLCUInfo[n].posY   >> formatShiftY);
+    xpos    = (Int)(alfLCUInfo[n].posX   >> formatShiftX);
+    height  = (Int)(alfLCUInfo[n].height >> formatShiftY);
+    width   = (Int)(alfLCUInfo[n].width  >> formatShiftX);
 
     posOffset  = ( ypos * stride)+ xpos;
     pelDst   = picDst  + posOffset;    
@@ -696,7 +709,7 @@ Void TEncAdaptiveLoopFilter::copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, 
  * \param [in] stride buffer stride size for 1-D pictrue memory
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  */
-Void TEncAdaptiveLoopFilter::reconstructOneAlfLCU(Int compIdx, AlfLCUInfo& alfLCUInfo, Bool alfEnabled, ALFParam* alfParam, Pel* picDec, Pel* picRest, Int stride, Int formatShift)
+Void TEncAdaptiveLoopFilter::reconstructOneAlfLCU(ComponentID compId, AlfLCUInfo& alfLCUInfo, Bool alfEnabled, ALFParam* alfParam, Pel* picDec, Pel* picRest, Int stride, Int formatShiftX, Int formatShiftY)
 {
   Int ypos, xpos, height, width;
 
@@ -705,22 +718,22 @@ Void TEncAdaptiveLoopFilter::reconstructOneAlfLCU(Int compIdx, AlfLCUInfo& alfLC
     assert(alfParam->alf_flag == 1);
 
     //reconstruct ALF coefficients & related parameters 
-    reconstructCoefInfo(compIdx, alfParam, m_filterCoeffSym, m_varIndTab);
+    reconstructCoefInfo(compId, alfParam, m_filterCoeffSym, m_varIndTab);
 
     //filtering process
     for(Int n=0; n< alfLCUInfo.numSGU; n++)
     {
-      ypos    = (Int)(alfLCUInfo[n].posY   >> formatShift);
-      xpos    = (Int)(alfLCUInfo[n].posX   >> formatShift);
-      height  = (Int)(alfLCUInfo[n].height >> formatShift);
-      width   = (Int)(alfLCUInfo[n].width  >> formatShift);
+      ypos    = (Int)(alfLCUInfo[n].posY   >> formatShiftY);
+      xpos    = (Int)(alfLCUInfo[n].posX   >> formatShiftX);
+      height  = (Int)(alfLCUInfo[n].height >> formatShiftY);
+      width   = (Int)(alfLCUInfo[n].width  >> formatShiftX);
 
-      filterOneCompRegion(picRest, picDec, stride, (compIdx!=ALF_Y), ypos, ypos+height, xpos, xpos+width, m_filterCoeffSym, m_varIndTab, m_varImg);
+      filterOneCompRegion(picRest, picDec, stride, (compId != COMPONENT_Y), ypos, ypos+height, xpos, xpos+width, m_filterCoeffSym, m_varIndTab, m_varImg);
     }
   }
   else
   {
-    copyOneAlfLCU(alfLCUInfo, picRest, picDec, stride, formatShift);
+    copyOneAlfLCU(alfLCUInfo, picRest, picDec, stride, formatShiftX, formatShiftY);
   }
 }
 
@@ -734,9 +747,9 @@ Void TEncAdaptiveLoopFilter::reconstructOneAlfLCU(Int compIdx, AlfLCUInfo& alfLC
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  * \param [in] alfCorrLCUs correlations for LCUs
  */
-Void TEncAdaptiveLoopFilter::executeLCUOnOffDecision(Int compIdx, ALFParam* alfParam, Pel* pOrg, Pel* pDec, Pel* pRest, Int stride, Int formatShift,AlfCorrData** alfCorrLCUs)
+Void TEncAdaptiveLoopFilter::executeLCUOnOffDecision(const ComponentID compId, ALFParam* alfParam, Pel* pOrg, Pel* pDec, Pel* pRest, Int stride, Int formatShiftX, Int formatShiftY, AlfCorrData** alfCorrLCUs)
 {
-  Double lambda = (compIdx == ALF_Y)?(m_dLambdaLuma):(m_dLambdaChroma);
+  Double lambda = (compId == COMPONENT_Y)?(m_dLambdaLuma):(m_dLambdaChroma);
   static Int* isProcessed = NULL;
 
   Int64  distEnc, distOff;
@@ -748,14 +761,16 @@ Void TEncAdaptiveLoopFilter::executeLCUOnOffDecision(Int compIdx, ALFParam* alfP
   //reset LCU enabled flags
   for(Int i=0; i< m_uiNumCUsInFrame; i++)
   {
-    m_pcPic->getCU(i)->setAlfLCUEnabled(false, compIdx);
+    m_pcPic->getCU(i)->setAlfLCUEnabled(false, compId);
   }
+
   for(Int s=0; s<= m_lastSliceIdx; s++)
   {
     if(!m_pcPic->getValidSlice(s))
     {
       continue;
     }
+
     Int numTilesInSlice = (Int)m_pvpSliceTileAlfLCU[s].size();
     for(Int t=0; t< numTilesInSlice; t++)
     {
@@ -764,9 +779,9 @@ Void TEncAdaptiveLoopFilter::executeLCUOnOffDecision(Int compIdx, ALFParam* alfP
 
       if(m_bUseNonCrossALF)
       {
-        pSrc = getPicBuf(m_pcSliceYuvTmp, compIdx);
-        copyRegion(vpAlfLCU, pSrc, pDec, stride, formatShift);
-        extendRegionBorder(vpAlfLCU, pSrc, stride, formatShift);
+        pSrc = getPicBuf(m_pcSliceYuvTmp, compId);
+        copyRegion(vpAlfLCU, pSrc, pDec, stride, formatShiftX, formatShiftY);
+        extendRegionBorder(vpAlfLCU, pSrc, stride, formatShiftX, formatShiftY);
       }
 
       Int numLCUs = (Int)vpAlfLCU.size();
@@ -775,42 +790,41 @@ Void TEncAdaptiveLoopFilter::executeLCUOnOffDecision(Int compIdx, ALFParam* alfP
         AlfLCUInfo*   alfLCU       = vpAlfLCU[n];                  //ALF LCU information
         TComDataCU*   pcCU         = alfLCU->pcCU;
         Int           addr         = pcCU->getAddr();              //real LCU addr
+
         if(isProcessed[addr] == 0)
         {
           Bool lcuAlfDisabled = true;
           if(alfParam->alf_flag == 1)
           {
             //ALF on
-            reconstructOneAlfLCU(compIdx, *alfLCU, true, alfParam, pSrc, pRest, stride, formatShift);
-            distEnc = calcAlfLCUDist(m_alfLowLatencyEncoding, compIdx, *alfLCU, pOrg, pRest, stride, formatShift);
+            reconstructOneAlfLCU(compId, *alfLCU, true, alfParam, pSrc, pRest, stride, formatShiftX, formatShiftY);
+            distEnc = calcAlfLCUDist(m_alfLowLatencyEncoding, compId, *alfLCU, pOrg, pRest, stride, formatShiftX, formatShiftY);
             rateEnc = 1;
             costEnc = (Double)distEnc + lambda*((Double)rateEnc);
             costEnc += ((lambda* 1.5)*1.0);  //RDCO
 
             //ALF off
-            distOff = calcAlfLCUDist(m_alfLowLatencyEncoding, compIdx, *alfLCU, pOrg, pSrc, stride, formatShift);
+            distOff = calcAlfLCUDist(m_alfLowLatencyEncoding, compId, *alfLCU, pOrg, pSrc, stride, formatShiftX, formatShiftY);
             rateOff = 1;
             costOff = (Double)distOff + lambda*((Double)rateOff);
 
             lcuAlfDisabled = (costOff < costEnc);
 
-            pcCU->setAlfLCUEnabled( (lcuAlfDisabled?0:1) , compIdx);
+            pcCU->setAlfLCUEnabled( (lcuAlfDisabled?0:1) , compId);
           }
 
           if(lcuAlfDisabled)
           {
-            copyOneAlfLCU(*alfLCU, pRest, pSrc, stride, formatShift);
+            copyOneAlfLCU(*alfLCU, pRest, pSrc, stride, formatShiftX, formatShiftY);
           }
         }
         else
         {
-          reconstructOneAlfLCU(compIdx, *alfLCU, pcCU->getAlfLCUEnabled(compIdx), alfParam, pSrc, pRest, stride, formatShift);
+          reconstructOneAlfLCU(compId, *alfLCU, pcCU->getAlfLCUEnabled(compId), alfParam, pSrc, pRest, stride, formatShiftX, formatShiftY);
         }
       } //LCU
     } //tile
-
   } //slice
-
 
   delete[] isProcessed;
   isProcessed = NULL;
@@ -836,7 +850,7 @@ Void TEncAdaptiveLoopFilter::setCurAlfParam(ALFParam** alfPictureParam)
   if(m_alfLowLatencyEncoding)
   {
     Int temporalLayer = getTemporalLayerNo(m_pcPic->getPOC(), m_gopSize);
-    for(Int compIdx=0; compIdx< 3; compIdx++)
+    for(Int compIdx=0; compIdx< MAX_NUM_COMPONENT; compIdx++)
     {
       *(alfPictureParam[compIdx]) = *(m_alfPictureParam[temporalLayer][compIdx]);
     }
@@ -852,18 +866,21 @@ Void TEncAdaptiveLoopFilter::setCurAlfParam(ALFParam** alfPictureParam)
 Void TEncAdaptiveLoopFilter::decideAlfPictureParam(ALFParam** alfPictureParam, Bool useAllLCUs)
 {
   AlfCorrData*** lcuCorr = (m_alfLowLatencyEncoding?m_alfNonSkippedCorr:m_alfCorr);
-  for(Int compIdx =0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+
+  const UInt numberValidComponents = m_pcPic->getNumberValidComponents();
+  for(Int compIdx = 0; compIdx < numberValidComponents; compIdx++)
   {
-    Double      lambda   = ((compIdx == ALF_Y)?m_dLambdaLuma:m_dLambdaChroma)*1.5;
-    ALFParam *alfParam   = alfPictureParam[compIdx];
-    AlfCorrData* picCorr = new AlfCorrData(compIdx);
+    const ComponentID compId = ComponentID(compIdx);
+    Double      lambda   = ((compId == COMPONENT_Y) ? m_dLambdaLuma : m_dLambdaChroma)*1.5;
+    ALFParam *alfParam   = alfPictureParam[compId];
+    AlfCorrData* picCorr = new AlfCorrData(compId);
 
     if(!useAllLCUs)
     {
       Int numStatLCU =0;
       for(Int addr=0; addr < m_uiNumCUsInFrame; addr++)
       {
-        if(m_pcPic->getCU(addr)->getAlfLCUEnabled(compIdx))
+        if(m_pcPic->getCU(addr)->getAlfLCUEnabled(compId))
         {
           numStatLCU++;
           break;
@@ -877,16 +894,16 @@ Void TEncAdaptiveLoopFilter::decideAlfPictureParam(ALFParam** alfPictureParam, B
 
     for(Int addr=0; addr< (Int)m_uiNumCUsInFrame; addr++)
     {
-      if(useAllLCUs || (m_pcPic->getCU(addr)->getAlfLCUEnabled(compIdx)) )
+      if(useAllLCUs || (m_pcPic->getCU(addr)->getAlfLCUEnabled(compId)) )
       {
-        *picCorr += *(lcuCorr[compIdx][addr]);
+        *picCorr += *(lcuCorr[compId][addr]);
       }
     }
 
-    Int64 offDist = estimateFilterDistortion(compIdx, picCorr);
+    Int64 offDist = estimateFilterDistortion(compId, picCorr);
     alfParam->alf_flag = 1;
-    deriveFilterInfo(compIdx, picCorr, alfParam, NO_VAR_BINS, lambda);
-    Int64 dist = estimateFilterDistortion(compIdx, picCorr, m_filterCoeffSym, alfParam->filters_per_group, m_varIndTab, false);
+    deriveFilterInfo(compId, picCorr, alfParam, NO_VAR_BINS, lambda);
+    Int64 dist = estimateFilterDistortion(compId, picCorr, m_filterCoeffSym, alfParam->filters_per_group, m_varIndTab, false);
     UInt rate = ALFParamBitrateEstimate(alfParam);
     Double cost = dist - offDist + lambda * rate;
     if(cost >= 0)
@@ -899,20 +916,24 @@ Void TEncAdaptiveLoopFilter::decideAlfPictureParam(ALFParam** alfPictureParam, B
 
 Void TEncAdaptiveLoopFilter::estimateLcuControl(ALFParam** alfPictureParam)
 {
-  for(Int compIdx = 0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+  const UInt numberValidComponents = m_pcPic->getNumberValidComponents();
+  for(Int compIdx = 0; compIdx < numberValidComponents; compIdx++)
   {
-    if(alfPictureParam[compIdx]->alf_flag == 1)
+    const ComponentID compId = ComponentID(compIdx);
+
+    if(alfPictureParam[compId]->alf_flag == 1)
     {
-      reconstructCoefInfo(compIdx, alfPictureParam[compIdx], m_filterCoeffSym, m_varIndTab);
+      reconstructCoefInfo(compId, alfPictureParam[compId], m_filterCoeffSym, m_varIndTab);
       for(Int addr = 0; addr < m_uiNumCUsInFrame; addr++)
       {
-        Int64 offDist = estimateFilterDistortion(compIdx, m_alfCorr[compIdx][addr]);
-        Int64 dist    = estimateFilterDistortion(compIdx, m_alfCorr[compIdx][addr], m_filterCoeffSym, alfPictureParam[compIdx]->filters_per_group, m_varIndTab, false);
-        m_pcPic->getCU(addr)->setAlfLCUEnabled( ((offDist <= dist)?0:1) , compIdx);
+        Int64 offDist = estimateFilterDistortion(compId, m_alfCorr[compId][addr]);
+        Int64 dist    = estimateFilterDistortion(compId, m_alfCorr[compId][addr], m_filterCoeffSym, alfPictureParam[compId]->filters_per_group, m_varIndTab, false);
+        m_pcPic->getCU(addr)->setAlfLCUEnabled( ((offDist <= dist)?0:1) , compId);
       }
     }
   }
 }
+
 
 /** Decide ALF parameter set for luma/chroma components (top function) 
  * \param [in] pPicOrg picture buffer for original picture
@@ -923,25 +944,21 @@ Void TEncAdaptiveLoopFilter::estimateLcuControl(ALFParam** alfPictureParam)
  */
 Void TEncAdaptiveLoopFilter::decideParameters(ALFParam** alfPictureParam, TComPicYuv* pPicOrg, TComPicYuv* pPicDec, TComPicYuv* pPicRest)
 {
-  static Int lumaStride        = pPicOrg->getStride();
-  static Int chromaStride      = pPicOrg->getCStride();
-
-  Pel *pOrg, *pDec, *pRest;
-  Int stride, formatShift;
-
   setCurAlfParam(alfPictureParam);
-  for(Int compIdx = 0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+
+  for(Int compIdx = 0; compIdx <  pPicOrg->getNumberValidComponents(); compIdx++)
   {
-    pOrg        = getPicBuf(pPicOrg, compIdx);
-    pDec        = getPicBuf(pPicDec, compIdx);
-    pRest       = getPicBuf(pPicRest, compIdx);
-    stride      = (compIdx == ALF_Y)?(lumaStride):(chromaStride);
-    formatShift = (compIdx == ALF_Y)?(0):(1);
+    const ComponentID compId = ComponentID(compIdx);
+    Pel *pOrg                = getPicBuf(pPicOrg, compId);
+    Pel *pDec                = getPicBuf(pPicDec, compId);
+    Pel *pRest               = getPicBuf(pPicRest, compId);
+    const Int stride         = pPicOrg->getStride(compId);
+    const Int formatShiftX   = pPicOrg->getComponentScaleX(compId);
+    const Int formatShiftY   = pPicOrg->getComponentScaleY(compId);
 
-    AlfCorrData** alfCorrComp     = m_alfCorr[compIdx];
-    executeLCUOnOffDecision(compIdx, alfPictureParam[compIdx], pOrg, pDec, pRest, stride, formatShift, alfCorrComp);
+    AlfCorrData** alfCorrComp     = m_alfCorr[compId];
+    executeLCUOnOffDecision(compId, alfPictureParam[compId], pOrg, pDec, pRest, stride, formatShiftX, formatShiftY, alfCorrComp);
   } //component
-
 }
 
 /** Gather correlations for all LCUs in picture
@@ -950,17 +967,18 @@ Void TEncAdaptiveLoopFilter::decideParameters(ALFParam** alfPictureParam, TComPi
  */
 Void TEncAdaptiveLoopFilter::getStatistics(TComPicYuv* pPicOrg, TComPicYuv* pPicDec)
 {
-  Int lumaStride   = pPicOrg->getStride();
-  Int chromaStride = pPicOrg->getCStride();
-  const  Int chromaFormatShift = 1;
-  for(Int compIdx = 0; compIdx < NUM_ALF_COMPONENT; compIdx++)
+  for(Int compIdx_ = 0; compIdx_ < pPicOrg->getNumberValidComponents(); compIdx_++)
   {
-    AlfCorrData** alfCorrComp = m_alfCorr[compIdx];
-    Int          formatShift = (compIdx == ALF_Y)?(0):(chromaFormatShift);
-    Int          stride      = (compIdx == ALF_Y)?(lumaStride):(chromaStride);
-    getOneCompStatistics(alfCorrComp, compIdx, getPicBuf(pPicOrg, compIdx), getPicBuf(pPicDec, compIdx), stride, formatShift);
+    const ComponentID compId=ComponentID (compIdx_);
+    AlfCorrData** alfCorrComp = m_alfCorr[compId];
+    const Int stride      = pPicOrg->getStride(compId);
+    const Int formatShiftX = pPicOrg->getComponentScaleX(compId);
+    const Int formatShiftY = pPicOrg->getComponentScaleY(compId);
+
+    getOneCompStatistics(alfCorrComp, compId, getPicBuf(pPicOrg, compId), getPicBuf(pPicDec, compId), stride, formatShiftX, formatShiftY);
   } 
 }
+
 
 /** Gather correlations for all LCUs of one luma/chroma component in picture
  * \param [out] alfCorrComp correlations for LCUs
@@ -971,7 +989,7 @@ Void TEncAdaptiveLoopFilter::getStatistics(TComPicYuv* pPicOrg, TComPicYuv* pPic
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  * \param [in] isRedesignPhase at re-design filter stage (true) or not (false)
  */
-Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, Int compIdx, Pel* imgOrg, Pel* imgDec, Int stride, Int formatShift)
+Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, const ComponentID compId, Pel* imgOrg, Pel* imgDec, Int stride, Int formatShiftX, Int formatShiftY)
 {
 
   // initialize to zero
@@ -980,7 +998,7 @@ Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, Int
     alfCorrComp[n]->reset();
     if(m_alfLowLatencyEncoding)
     {
-      m_alfNonSkippedCorr[compIdx][n]->reset();
+      m_alfNonSkippedCorr[compId][n]->reset();
     }
   }
 
@@ -998,9 +1016,9 @@ Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, Int
 
       if(m_bUseNonCrossALF)
       {
-        pSrc = getPicBuf(m_pcSliceYuvTmp, compIdx);
-        copyRegion(vpAlfLCU, pSrc, imgDec, stride, formatShift);
-        extendRegionBorder(vpAlfLCU, pSrc, stride, formatShift);
+        pSrc = getPicBuf(m_pcSliceYuvTmp, compId);
+        copyRegion(vpAlfLCU, pSrc, imgDec, stride, formatShiftX, formatShiftY);
+        extendRegionBorder(vpAlfLCU, pSrc, stride, formatShiftX, formatShiftY);
       }
 
       Int numLCUs = (Int)vpAlfLCU.size();
@@ -1008,15 +1026,14 @@ Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, Int
       {
         AlfLCUInfo* alfLCU = vpAlfLCU[n];
         Int addr = alfLCU->pcCU->getAddr();
-        getStatisticsOneLCU(m_alfLowLatencyEncoding, compIdx, alfLCU, alfCorrComp[addr], imgOrg, pSrc, stride, formatShift);
+        getStatisticsOneLCU(m_alfLowLatencyEncoding, compId, alfLCU, alfCorrComp[addr], imgOrg, pSrc, stride, formatShiftX, formatShiftY);
         if(m_alfLowLatencyEncoding)
         {
-          getStatisticsOneLCU( false, compIdx, alfLCU, m_alfNonSkippedCorr[compIdx][addr], imgOrg, pSrc, stride, formatShift);
+          getStatisticsOneLCU( false, compId, alfLCU, m_alfNonSkippedCorr[compId][addr], imgOrg, pSrc, stride, formatShiftX, formatShiftY);
         }
       } //LCU
     } //tile
   } //slice
-
 }
 
 /** Gather correlations for one LCU
@@ -1028,7 +1045,7 @@ Void TEncAdaptiveLoopFilter::getOneCompStatistics(AlfCorrData** alfCorrComp, Int
  * \param [in] formatShift 0 for luma and 1 for chroma (4:2:0)
  * \param [in] isRedesignPhase at re-design filter stage (true) or not (false)
  */
-Void TEncAdaptiveLoopFilter::getStatisticsOneLCU(Bool skipLCUBottomLines, Int compIdx, AlfLCUInfo* alfLCU, AlfCorrData* alfCorr, Pel* pPicOrg, Pel* pPicSrc, Int stride, Int formatShift)
+Void TEncAdaptiveLoopFilter::getStatisticsOneLCU(Bool skipLCUBottomLines, const ComponentID compId, AlfLCUInfo* alfLCU, AlfCorrData* alfCorr, Pel* pPicOrg, Pel* pPicSrc, Int stride, Int formatShiftX, Int formatShiftY)
 {
   Int numBlocks = alfLCU->numSGU;
 #if LCUALF_AVOID_USING_BOTTOM_LINES_ENCODER || LCUALF_AVOID_USING_RIGHT_LINES_ENCODER
@@ -1061,20 +1078,20 @@ Void TEncAdaptiveLoopFilter::getStatisticsOneLCU(Bool skipLCUBottomLines, Int co
     }
   }
 #endif
-  switch(compIdx)
+  switch(compId)
   {
-  case ALF_Cb:
-  case ALF_Cr:
+  case COMPONENT_Cb:
+  case COMPONENT_Cr:
     {
       for(Int n=0; n< numBlocks; n++)
       {
         isLastBlock = (n== numBlocks-1);
         NDBFBlockInfo& AlfSGU = (*alfLCU)[n];
 
-        ypos   = (Int)(AlfSGU.posY  >> formatShift);
-        xpos   = (Int)(AlfSGU.posX  >> formatShift);
-        height = (Int)(AlfSGU.height>> formatShift);
-        width  = (Int)(AlfSGU.width >> formatShift);
+        ypos   = (Int)(AlfSGU.posY  >> formatShiftY);
+        xpos   = (Int)(AlfSGU.posX  >> formatShiftX);
+        height = (Int)(AlfSGU.height>> formatShiftY);
+        width  = (Int)(AlfSGU.width >> formatShiftX);
 
 #if LCUALF_AVOID_USING_BOTTOM_LINES_ENCODER
         if(!notSkipLinesBelowVB )
@@ -1098,7 +1115,7 @@ Void TEncAdaptiveLoopFilter::getStatisticsOneLCU(Bool skipLCUBottomLines, Int co
       }
     }
     break;
-  case ALF_Y:
+  case COMPONENT_Y:
     {
       for(Int n=0; n< numBlocks; n++)
       {
@@ -1128,6 +1145,7 @@ Void TEncAdaptiveLoopFilter::getStatisticsOneLCU(Bool skipLCUBottomLines, Int co
           width = (xEndLineInLCU >= iLineVBPos) ? (width - 9) : width ; 
         }
 #endif
+
         calcCorrOneCompRegionLuma(pPicOrg, pPicSrc, stride, ypos, xpos, height, width, alfCorr->ECorr, alfCorr->yCorr, alfCorr->pixAcc, isLastBlock);
       }
     }
@@ -1163,7 +1181,7 @@ Void TEncAdaptiveLoopFilter::calcCorrOneCompRegionChma(Pel* imgOrg, Pel* imgPad,
   Int xPosEnd = xPos + width;
   Int N = ALF_MAX_NUM_COEF; //m_sqrFiltLengthTab[0];
 
-  Int imgHeightChroma = m_img_height>>1;
+  Int imgHeightChroma = m_img_height >> (m_pcPic->getComponentScaleY(COMPONENT_Cb));
 
   Int yLineInLCU, paddingLine;
   Int ELocal[ALF_MAX_NUM_COEF];
@@ -1283,7 +1301,6 @@ Void TEncAdaptiveLoopFilter::calcCorrOneCompRegionLuma(Pel* imgOrg, Pel* imgPad,
                                                       ,Double ***eCorr, Double **yCorr, Double *pixAcc
                                                       ,Bool isSymmCopyBlockMatrix
                                                       )
-
 {
   Int yPosEnd = yPos + height;
   Int xPosEnd = xPos + width;
@@ -1336,35 +1353,35 @@ Void TEncAdaptiveLoopFilter::calcCorrOneCompRegionLuma(Pel* imgOrg, Pel* imgPad,
 
     for (j= xPos; j< xPosEnd; j++)
     {
-        varInd = m_varImg[i/VAR_SIZE_H][j/VAR_SIZE_W];
-        memset(ELocal, 0, N*sizeof(Int));
+      varInd = m_varImg[i/VAR_SIZE_H][j/VAR_SIZE_W];
+      memset(ELocal, 0, N*sizeof(Int));
 
-        ELocal[0] = (imgPad5[j] + imgPad6[j]);
-        ELocal[1] = (imgPad3[j] + imgPad4[j]);
+      ELocal[0] = (imgPad5[j] + imgPad6[j]);
+      ELocal[1] = (imgPad3[j] + imgPad4[j]);
 
-        ELocal[2] = (imgPad1[j+1] + imgPad2[j-1]);
-        ELocal[3] = (imgPad1[j  ] + imgPad2[j  ]);
-        ELocal[4] = (imgPad1[j-1] + imgPad2[j+1]);
+      ELocal[2] = (imgPad1[j+1] + imgPad2[j-1]);
+      ELocal[3] = (imgPad1[j  ] + imgPad2[j  ]);
+      ELocal[4] = (imgPad1[j-1] + imgPad2[j+1]);
 
-        ELocal[5] = (imgPad[j+4] + imgPad[j-4]);
-        ELocal[6] = (imgPad[j+3] + imgPad[j-3]);
-        ELocal[7] = (imgPad[j+2] + imgPad[j-2]);
-        ELocal[8] = (imgPad[j+1] + imgPad[j-1]);
-        ELocal[9] = (imgPad[j  ]);
+      ELocal[5] = (imgPad[j+4] + imgPad[j-4]);
+      ELocal[6] = (imgPad[j+3] + imgPad[j-3]);
+      ELocal[7] = (imgPad[j+2] + imgPad[j-2]);
+      ELocal[8] = (imgPad[j+1] + imgPad[j-1]);
+      ELocal[9] = (imgPad[j  ]);
 
-        yLocal= imgOrg[j];
-        pixAcc[varInd] += (yLocal*yLocal);
-        E  = eCorr[varInd];
-        yy = yCorr[varInd];
+      yLocal= imgOrg[j];
+      pixAcc[varInd] += (yLocal*yLocal);
+      E  = eCorr[varInd];
+      yy = yCorr[varInd];
 
-        for (k=0; k<N; k++)
+      for (k=0; k<N; k++)
+      {
+        for (l=k; l<N; l++)
         {
-          for (l=k; l<N; l++)
-          {
-            E[k][l]+=(double)(ELocal[k]*ELocal[l]);
-          }
-          yy[k]+=(double)(ELocal[k]*yLocal);
+          E[k][l]+=(double)(ELocal[k]*ELocal[l]);
         }
+        yy[k]+=(double)(ELocal[k]*yLocal);
+      }
     }
     imgPad += stride;
     imgOrg += stride;
@@ -1426,7 +1443,7 @@ UInt64 TEncAdaptiveLoopFilter::xCalcSSD(Pel* pOrg, Pel* pCmp, Int iWidth, Int iH
     pCmp += iStride;
   }
 
-  return uiSSD;;
+  return uiSSD;
 }
 #else
 UInt64 TEncAdaptiveLoopFilter::xCalcSSD(Pel* pOrg, Pel* pCmp, Int iWidth, Int iHeight, Int iStride )
@@ -1447,7 +1464,7 @@ UInt64 TEncAdaptiveLoopFilter::xCalcSSD(Pel* pOrg, Pel* pCmp, Int iWidth, Int iH
     pCmp += iStride;
   }
   
-  return uiSSD;;
+  return uiSSD;
 }
 #endif
 
@@ -1532,13 +1549,16 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
   Double *dh;
   Int    *nc;
   const Int    *pFiltMag;
+
   N = (Int)ALF_MAX_NUM_COEF;
+
   pFiltMag = weightsShape1Sym;
 
   dh = new Double[N];
   nc = new Int[N];
   max_value =   (1<<(1+ALF_NUM_BIT_SHIFT))-1;
   min_value = 0-(1<<(1+ALF_NUM_BIT_SHIFT));
+
   dbl_total_gain=0.0;
   q_total_gain=0;
   for(i=0; i<N; i++)
@@ -1551,6 +1571,7 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
     {
       qh[i] = -(Int)(-h[i]*(1<<ALF_NUM_BIT_SHIFT)+0.5);
     }
+
     dh[i] = (Double)qh[i]/(Double)(1<<ALF_NUM_BIT_SHIFT) - h[i];
     dh[i]*=pFiltMag[i];
     dbl_total_gain += h[i]*pFiltMag[i];
@@ -1560,6 +1581,7 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
   
   // modification of quantized filter coefficients
   total_gain = (Int)(dbl_total_gain*(1<<ALF_NUM_BIT_SHIFT)+0.5);
+
   if( q_total_gain != total_gain )
   {
     xFilterCoefQuickSort(dh, nc, 0, N-1);
@@ -1628,12 +1650,12 @@ Void TEncAdaptiveLoopFilter::xQuantFilterCoef(Double* h, Int* qh, Int tap, int b
   nc = NULL;
 }
 
-
 double TEncAdaptiveLoopFilter::xfindBestCoeffCodMethod(int **filterCoeffSymQuant, int filter_shape, int sqrFiltLength, int filters_per_fr, double errorForce0CoeffTab[NO_VAR_BINS][2], 
   double lambda)
 {
   Int coeffBits, i;
   Double error=0, lagrangian;
+
   static Bool  isFirst = true;
   static Int** coeffmulti = NULL;
   if(isFirst)
@@ -1658,8 +1680,9 @@ double TEncAdaptiveLoopFilter::xfindBestCoeffCodMethod(int **filterCoeffSymQuant
   coeffBits = 0;
   for(Int g=0; g< filters_per_fr; g++)
   {
-    coeffBits += filterCoeffBitrateEstimate(ALF_Y, coeffmulti[g]);
+    coeffBits += filterCoeffBitrateEstimate(COMPONENT_Y, coeffmulti[g]);
   }
+
   for(i=0;i<filters_per_fr;i++)
   {
     error += errorForce0CoeffTab[i][1];
@@ -1667,6 +1690,7 @@ double TEncAdaptiveLoopFilter::xfindBestCoeffCodMethod(int **filterCoeffSymQuant
   lagrangian = error + lambda * coeffBits;
   return (lagrangian);
 }
+
 
 Void TEncAdaptiveLoopFilter::predictALFCoeff(Int** coeff, Int numCoef, Int numFilters)
 {
@@ -1683,6 +1707,7 @@ Void TEncAdaptiveLoopFilter::predictALFCoeff(Int** coeff, Int numCoef, Int numFi
   }
 }
 
+
 Void TEncAdaptiveLoopFilter::xfindBestFilterVarPred(double **ySym, double ***ESym, double *pixAcc, Int **filterCoeffSym, Int *filters_per_fr_best, Int varIndTab[], double lambda_val, Int numMaxFilters)
 {
   static Bool isFirst = true;
@@ -1695,16 +1720,19 @@ Void TEncAdaptiveLoopFilter::xfindBestFilterVarPred(double **ySym, double ***ESy
     }
     isFirst = false;
   }
+
   Int filter_shape = 0;
   Int filters_per_fr, firstFilt, interval[NO_VAR_BINS][2], intervalBest[NO_VAR_BINS][2];
   int i;
   double  lagrangian, lagrangianMin;
   int sqrFiltLength;
   int *weights;
+
   double errorForce0CoeffTab[NO_VAR_BINS][2];
   
   sqrFiltLength= (Int)ALF_MAX_NUM_COEF;
   weights = weightsShape1Sym;
+
   // zero all variables 
   memset(varIndTab,0,sizeof(int)*NO_VAR_BINS);
 
@@ -1787,6 +1815,7 @@ Void TEncAdaptiveLoopFilter::xcodeFiltCoeff(Int **filterCoeff, Int* varIndTab, I
   predictALFCoeff(alfParam->coeffmulti, alfParam->num_coeff, alfParam->filters_per_group);
 }
 
+
 #define ROUND(a)  (((a) < 0)? (int)((a) - 0.5) : (int)((a) + 0.5))
 #define REG              0.0001
 #define REG_SQR          0.0000001
@@ -1854,6 +1883,8 @@ Void TEncAdaptiveLoopFilter::gnsTransposeBacksubstitution(Double U[ALF_MAX_NUM_C
     x[i] = (rhs[i] - sum) / U[i][i];       /* i'th component of solution vect.  */
   }
 }
+
+
 Void  TEncAdaptiveLoopFilter::gnsBacksubstitution(Double R[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF], Double z[ALF_MAX_NUM_COEF], Int R_size, Double A[ALF_MAX_NUM_COEF])
 {
   Int i, j;
@@ -2266,6 +2297,8 @@ Double TEncAdaptiveLoopFilter::QuantizeIntegerFilterPP(Double *filterCoeff, Int 
   error=calculateErrorCoeffProvided(E, y, filterCoeff, sqrFiltLength);
   return(error);
 }
+
+
 Double TEncAdaptiveLoopFilter::findFilterCoeff(double ***EGlobalSeq, double **yGlobalSeq, double *pixAccGlobalSeq, int **filterCoeffSeq, int **filterCoeffQuantSeq, int intervalBest[NO_VAR_BINS][2], int varIndTab[NO_VAR_BINS], int sqrFiltLength, int filters_per_fr, int *weights, double errorTabForce0Coeff[NO_VAR_BINS][2])
 {
   static double pixAcc_temp;
@@ -2278,6 +2311,7 @@ Double TEncAdaptiveLoopFilter::findFilterCoeff(double ***EGlobalSeq, double **yG
     filterCoeff = new Double[ALF_MAX_NUM_COEF];
     isFirst = false;
   }
+
   double error;
   int k, filtNo;
   
@@ -2397,12 +2431,12 @@ UInt TEncAdaptiveLoopFilter::golombBitrateEstimate(Int coeff, Int k)
   return bitcnt;
 }
 
-UInt TEncAdaptiveLoopFilter::filterCoeffBitrateEstimate(Int compIdx, Int* coeff)
+UInt TEncAdaptiveLoopFilter::filterCoeffBitrateEstimate(ComponentID compId, Int* coeff)
 {
   UInt bitrate =0;
   for(Int i=0; i< (Int)ALF_MAX_NUM_COEF; i++)
   {
-    bitrate += (compIdx == ALF_Y)?(golombBitrateEstimate(coeff[i], kTableTabShapes[ALF_CROSS9x7_SQUARE3x3][i])):(svlcBitrateEsitmate(coeff[i]));
+    bitrate += (compId == COMPONENT_Y)?(golombBitrateEstimate(coeff[i], kTableTabShapes[ALF_CROSS9x7_SQUARE3x3][i])):(svlcBitrateEsitmate(coeff[i]));
   }
   return bitrate;
 }
@@ -2412,7 +2446,7 @@ UInt TEncAdaptiveLoopFilter::ALFParamBitrateEstimate(ALFParam* alfParam)
   UInt bitrate = 1; //alf enabled flag
   if(alfParam->alf_flag == 1)
   {
-    if(alfParam->componentID == ALF_Y)
+    if(alfParam->componentID == COMPONENT_Y)
     {
       Int noFilters = min(alfParam->filters_per_group-1, 2);
       bitrate += uvlcBitrateEstimate(noFilters);

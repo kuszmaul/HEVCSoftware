@@ -155,7 +155,7 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 #endif
   
-  Void codeAlfCtrlFlag   ( Int compIdx, UInt code ) {printf("Not supported\n"); assert(0);}
+  Void codeAlfCtrlFlag   ( ComponentID component, UInt code ) {printf("Not supported\n"); assert(0);}
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -165,10 +165,10 @@ public:
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag);
 
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbf         ( TComTU &rTu, const ComponentID compID );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if TU_ZERO_CBF_RDO
-  Void codeQtCbfZero     ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
   Void codeQtRootCbfZero ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
@@ -179,10 +179,10 @@ public:
   
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType );
+  Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
+  Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
-  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
+  Void estBit            ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   
   Void xCodePredWeightTable          ( TComSlice* pcSlice );
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }

@@ -144,6 +144,20 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   return in;
 }
 
+Bool confirmPara(Bool bflag, const char* message);
+
+static inline ChromaFormat numberToChromaFormat(const Int val)
+{
+  switch (val)
+  {
+    case 400: return CHROMA_400; break;
+    case 420: return CHROMA_420; break;
+    case 422: return CHROMA_422; break;
+    case 444: return CHROMA_444; break;
+    default:  return NUM_CHROMA_FORMAT;
+  }
+}
+
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -163,6 +177,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
+
+  Int tmpChromaFormat;
+  Int tmpInputChromaFormat;
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -178,6 +196,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("BitDepth",              m_uiInputBitDepth,    8u, "Deprecated alias of InputBitDepth")
   ("OutputBitDepth",        m_uiOutputBitDepth,   0u, "Bit-depth of output file")
   ("InternalBitDepth",      m_uiInternalBitDepth, 0u, "Internal bit-depth (BitDepth+BitIncrement)")
+  ("InputChromaFormat",     tmpInputChromaFormat, 420, "InputChromaFormatIDC")
+  ("ChromaFormatIDC,-cf",   tmpChromaFormat,       0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("CroppingMode",          m_croppingMode,        0, "Cropping mode (0: no cropping, 1:automatic padding, 2: padding, 3:cropping")
   ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for cropping mode 2")
   ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for cropping mode 2")
@@ -276,38 +296,40 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ALFLowLatencyEncode", m_alfLowLatencyEncoding, false, "Low-latency ALF encoding, 0: picture latency (trained from current frame), 1: LCU latency(trained from previous frame)")
 #endif
   ("SliceMode",            m_iSliceMode,           0, "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes")
-    ("SliceArgument",        m_iSliceArgument,       0, "if SliceMode==1 SliceArgument represents max # of LCUs. if SliceMode==2 SliceArgument represents max # of bytes.")
-    ("DependentSliceMode",     m_iDependentSliceMode,    0, "0: Disable all dependent slice limits, 1: Enforce max # of LCUs, 2: Enforce constraint based dependent slices")
-    ("DependentSliceArgument", m_iDependentSliceArgument,0, "if DependentSliceMode==1 SliceArgument represents max # of LCUs. if DependentSliceMode==2 DependentSliceArgument represents max # of bins.")
+  ("SliceArgument",        m_iSliceArgument,       0, "if SliceMode==1 SliceArgument represents max # of LCUs. if SliceMode==2 SliceArgument represents max # of bytes.")
+  ("DependentSliceMode",     m_iDependentSliceMode,    0, "0: Disable all dependent slice limits, 1: Enforce max # of LCUs, 2: Enforce constraint based dependent slices")
+  ("DependentSliceArgument", m_iDependentSliceArgument,0, "if DependentSliceMode==1 SliceArgument represents max # of LCUs. if DependentSliceMode==2 DependentSliceArgument represents max # of bins.")
 #if DEPENDENT_SLICES
-    ("CabacIndependentFlag", m_bCabacIndependentFlag, false)
+  ("CabacIndependentFlag", m_bCabacIndependentFlag, false)
 #endif
 #if !REMOVE_FGS
-    ("SliceGranularity",     m_iSliceGranularity,    0, "0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.")
+  ("SliceGranularity",     m_iSliceGranularity,    0, "0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.")
 #endif
-    ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
+  ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
 
-    ("ConstrainedIntraPred", m_bUseConstrainedIntraPred, false, "Constrained Intra Prediction")
-    ("PCMEnabledFlag", m_usePCM         , false)
-    ("PCMLog2MaxSize", m_pcmLog2MaxSize, 5u)
-    ("PCMLog2MinSize", m_uiPCMLog2MinSize, 3u)
+  ("ConstrainedIntraPred", m_bUseConstrainedIntraPred, false, "Constrained Intra Prediction")
+  ("PCMEnabledFlag", m_usePCM         , false)
+  ("PCMLog2MaxSize", m_pcmLog2MaxSize, 5u)
+  ("PCMLog2MinSize", m_uiPCMLog2MinSize, 3u)
 
-    ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
-    ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
-    ("LosslessCuEnabled", m_useLossless, false)
-    ("weighted_pred_flag,-wpP",     m_bUseWeightPred, false, "weighted prediction flag (P-Slices)")
-    ("weighted_bipred_flag,-wpB",   m_useWeightedBiPred,    false,    "weighted bipred flag (B-Slices)")
-    ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
-    ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
-    ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
-    ("ColumnWidthArray",            cfg_ColumnWidth,                 string(""), "Array containing ColumnWidth values in units of LCU")
-    ("NumTileRowsMinus1",           m_iNumRowsMinus1,                0,          "Number of rows in a picture minus 1")
-    ("RowHeightArray",              cfg_RowHeight,                   string(""), "Array containing RowHeight values in units of LCU")
-    ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
-    ("WaveFrontSynchro",            m_iWaveFrontSynchro,             0,          "0: no synchro; 1 synchro with TR; 2 TRR etc")
-    ("ScalingList",                 m_useScalingListId,              0,          "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
-    ("ScalingListFile",             cfg_ScalingListFile,             string(""), "Scaling list file name")
-    ("SignHideFlag,-SBH",                m_signHideFlag, 1)
+  ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
+  ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
+#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+  ("LosslessCuEnabled", m_useLossless, false)
+#endif
+  ("weighted_pred_flag,-wpP",     m_bUseWeightPred, false, "weighted prediction flag (P-Slices)")
+  ("weighted_bipred_flag,-wpB",   m_useWeightedBiPred,    false,    "weighted bipred flag (B-Slices)")
+  ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
+  ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
+  ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
+  ("ColumnWidthArray",            cfg_ColumnWidth,                 string(""), "Array containing ColumnWidth values in units of LCU")
+  ("NumTileRowsMinus1",           m_iNumRowsMinus1,                0,          "Number of rows in a picture minus 1")
+  ("RowHeightArray",              cfg_RowHeight,                   string(""), "Array containing RowHeight values in units of LCU")
+  ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
+  ("WaveFrontSynchro",            m_iWaveFrontSynchro,             0,          "0: no synchro; 1 synchro with TR; 2 TRR etc")
+  ("ScalingList",                 m_useScalingListId,              0,          "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
+  ("ScalingListFile",             cfg_ScalingListFile,             string(""), "Scaling list file name")
+  ("SignHideFlag,-SBH",                m_signHideFlag, 1)
   /* Misc. */
   ("SEIpictureDigest", m_pictureDigestEnabled, 0, "Control generation of picture_digest SEI messages\n"
                                               "\t3: checksum\n"
@@ -325,7 +347,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
+#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
+#else
+  ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
+#endif
 #if RECALCULATE_QP_ACCORDING_LAMBDA
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
 #endif
@@ -364,7 +390,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
   
-  // TODO:ChromaFmt assumes 4:2:0 below
+  m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
+  m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
+
   switch (m_croppingMode)
   {
   case 0:
@@ -388,12 +416,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
         m_aiPad[1] = m_cropBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
         m_iSourceHeight += m_cropBottom;
       }
-      if (m_aiPad[0] % TComSPS::getCropUnitX(CHROMA_420) != 0)
+      if (m_aiPad[0] % TComSPS::getCropUnitX(m_chromaFormatIDC) != 0)
       {
         fprintf(stderr, "Error: picture width is not an integer multiple of the specified chroma subsampling\n");
         exit(EXIT_FAILURE);
       }
-      if (m_aiPad[1] % TComSPS::getCropUnitY(CHROMA_420) != 0)
+      if (m_aiPad[1] % TComSPS::getCropUnitY(m_chromaFormatIDC) != 0)
       {
         fprintf(stderr, "Error: picture height is not an integer multiple of the specified chroma subsampling\n");
         exit(EXIT_FAILURE);
@@ -483,8 +511,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 // Private member functions
 // ====================================================================================================================
 
-Bool confirmPara(Bool bflag, const char* message);
-
 Void TAppEncCfg::xCheckParameter()
 {
   if (!m_pictureDigestEnabled)
@@ -500,6 +526,8 @@ Void TAppEncCfg::xCheckParameter()
 #define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
   // check range of parameters
   xConfirmPara( m_uiInputBitDepth < 8,                                                      "InputBitDepth must be at least 8" );
+  xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
+  xConfirmPara( m_InputChromaFormatIDC >= NUM_CHROMA_FORMAT,                                "InputChromaFormatIDC must be either 400, 420, 422 or 444" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
   xConfirmPara( m_iFrameToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
@@ -586,22 +614,20 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
 #if !DEPENDENT_SLICES
   xConfirmPara( m_iWaveFrontSynchro && m_iDependentSliceMode, "Wavefront and Dependent Slice can not be applied together");
-#endif
-#if DEPENDENT_SLICES
+#else
   xConfirmPara( m_iWaveFrontSynchro && m_bCabacIndependentFlag, "Wavefront and CabacIndependentFlag can not be applied together");
 #endif
 
-  //TODO:ChromaFmt assumes 4:2:0 below
-  xConfirmPara( m_iSourceWidth  % TComSPS::getCropUnitX(CHROMA_420) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_iSourceHeight % TComSPS::getCropUnitY(CHROMA_420) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_iSourceWidth  % TComSPS::getCropUnitX(m_chromaFormatIDC) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_iSourceHeight % TComSPS::getCropUnitY(m_chromaFormatIDC) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_aiPad[0] % TComSPS::getCropUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_aiPad[1] % TComSPS::getCropUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_aiPad[0] % TComSPS::getCropUnitX(m_chromaFormatIDC) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_aiPad[1] % TComSPS::getCropUnitY(m_chromaFormatIDC) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_cropLeft   % TComSPS::getCropUnitX(CHROMA_420) != 0, "Left cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropRight  % TComSPS::getCropUnitX(CHROMA_420) != 0, "Right cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropTop    % TComSPS::getCropUnitY(CHROMA_420) != 0, "Top cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropBottom % TComSPS::getCropUnitY(CHROMA_420) != 0, "Bottom cropping must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_cropLeft   % TComSPS::getCropUnitX(m_chromaFormatIDC) != 0, "Left cropping must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_cropRight  % TComSPS::getCropUnitX(m_chromaFormatIDC) != 0, "Right cropping must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_cropTop    % TComSPS::getCropUnitY(m_chromaFormatIDC) != 0, "Top cropping must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_cropBottom % TComSPS::getCropUnitY(m_chromaFormatIDC) != 0, "Bottom cropping must be an integer multiple of the specified chroma subsampling");
 
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
@@ -916,7 +942,11 @@ Void TAppEncCfg::xCheckParameter()
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
   }
 
+#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
+#else
+  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce, "CUTransquantBypassFlagForce cannot be 1 when TransquantBypassEnableFlag is 0");
+#endif
 
   xConfirmPara(m_log2ParallelMergeLevel < 2, "Log2ParallelMergeLevel should be larger than or equal to 2");
 
@@ -1046,7 +1076,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
 
+#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
+#else
+  if (m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce)
+    printf("TransQuantBypassEnabled: =1");
+  else
+    printf("TransQuantBypassEnabled:%d ", (m_TransquantBypassEnableFlag)? 1:0 );
+#endif
   printf("WPP:%d ", (Int)m_bUseWeightPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);
   printf("PME:%d ", m_log2ParallelMergeLevel);

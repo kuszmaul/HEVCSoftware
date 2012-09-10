@@ -55,24 +55,26 @@ class TVideoIOYuv
 {
 private:
   fstream   m_cHandle;                                      ///< file handle
-  unsigned int m_fileBitdepth; ///< bitdepth of input/output video file
-  int m_bitdepthShift;  ///< number of bits to increase or decrease image by before/after write/read
+  UInt      m_fileBitdepth; ///< bitdepth of input/output video file
+  Int       m_bitdepthShift;  ///< number of bits to increase or decrease image by before/after write/read
   
 public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
   
-  Void  open  ( char* pchFile, Bool bWriteMode, unsigned int fileBitDepth, unsigned int internalBitDepth ); ///< open or create file
+  Void  open  ( Char* pchFile, Bool bWriteMode, UInt fileBitDepth, UInt internalBitDepth ); ///< open or create file
   Void  close ();                                           ///< close file
 
-  void skipFrames(unsigned int numFrames, unsigned int width, unsigned int height);
+  Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);
   
-  bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< read  one YUV frame with padding parameter
-  Bool  write( TComPicYuv*    pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0 );
+  // if fileFormat<NUM_CHROMA_FORMAT, the format of the file is that format specified, else it is the format of the TComPicYuv.
+
+  Bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< read  one YUV frame with padding parameter
+
+  Bool  write ( TComPicYuv*   pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< write one YUV frame with padding parameter
   
-  bool  isEof ();                                           ///< check for end-of-file
-  bool  isFail();                                           ///< check for failure
-  
+  Bool  isEof ();                                           ///< check for end-of-file
+  Bool  isFail();                                           ///< check for failure
 };
 
 #endif // __TVIDEOIOYUV__

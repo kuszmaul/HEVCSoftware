@@ -41,6 +41,7 @@
 #include "TComTrQuant.h"
 #include "TComPic.h"
 #include "ContextTables.h"
+#include "TComTU.h"
 
 typedef struct
 {
@@ -80,8 +81,6 @@ QpParam::QpParam()
 
 TComTrQuant::TComTrQuant()
 {
-  m_cQP.clear();
-  
   // allocate temporary buffers
   m_plTempCoeff  = new Int[ MAX_CU_SIZE*MAX_CU_SIZE ];
   
@@ -179,47 +178,6 @@ Void TComTrQuant::clearSliceARLCnt()
 #endif
 
 
-/** Set qP for Quantization.
- * \param qpy QPy
- * \param bLowpass
- * \param eSliceType
- * \param eTxtType
- * \param qpBdOffset
- * \param chromaQPOffset
- *
- * return void  
- */
-Void TComTrQuant::setQPforQuant( Int qpy, TextType eTxtType, Int qpBdOffset, Int chromaQPOffset)
-{
-  Int qpScaled;
-
-  if(eTxtType == TEXT_LUMA)
-  {
-    qpScaled = qpy + qpBdOffset;
-  }
-  else
-  {
-#if CHROMA_QP_EXTENSION
-    qpScaled = Clip3( -qpBdOffset, 57, qpy + chromaQPOffset );
-#else
-    qpScaled = Clip3( -qpBdOffset, 51, qpy + chromaQPOffset );
-#endif
-
-    if(qpScaled < 0)
-    {
-      qpScaled = qpScaled + qpBdOffset;
-    }
-    else
-    {
-#if CHROMA_QP_EXTENSION
-      qpScaled = g_aucChromaScale[ qpScaled ] + qpBdOffset;
-#else
-      qpScaled = g_aucChromaScale[ Clip3(0, 51, qpScaled) ] + qpBdOffset;
-#endif
-    }
-  }
-  m_cQP.setQpParam( qpScaled );
-}
 
 #if MATRIX_MULT
 /** NxN forward transform (2D) using brute force matrix multiplication (3 nested loops)
@@ -271,7 +229,7 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
 
   if (uiTrSize==4)
   {
-    if (uiMode != REG_DCT && g_aucDCTDSTMode_Hor[uiMode])
+    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))
     {
       iT  =  g_as_DST_MAT_4[0];
     }
@@ -292,7 +250,7 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
   /* Vertical transform */
   if (uiTrSize==4)
   {
-    if (uiMode != REG_DCT && g_aucDCTDSTMode_Vert[uiMode])
+    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34)))
     {
       iT  =  g_as_DST_MAT_4[0];
     }
@@ -359,7 +317,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
   int add_2nd = 1<<(shift_2nd-1);
   if (uiTrSize==4)
   {
-    if (uiMode != REG_DCT && g_aucDCTDSTMode_Vert[uiMode] ) // Check for DCT or DST
+    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34))) // Check for DCT or DST
     {
       iT  =  g_as_DST_MAT_4[0];
     }
@@ -381,7 +339,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
   
   if (uiTrSize==4)
   {
-    if (uiMode != REG_DCT && g_aucDCTDSTMode_Hor[uiMode] )   // Check for DCT or DST
+    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))   // Check for DCT or DST
     {
       iT  =  g_as_DST_MAT_4[0];
     }
@@ -406,14 +364,14 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
   }
 }
 
-#else //MATRIX_MULT
+#endif //MATRIX_MULT
+
 
 /** 4x4 forward transform implemented using partial butterfly structure (1D)
  *  \param src   input data (residual)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-
 void partialButterfly4(short *src,short *dst,int shift, int line)
 {
   int j;  
@@ -478,6 +436,11 @@ void fastInverseDst(short *tmp,short *block,int shift)  // input tmp, output blo
   }
 }
 
+/** 4x4 inverse transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (transform coefficients)
+ *  \param dst   output data (residual)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterflyInverse4(short *src,short *dst,int shift, int line)
 {
   int j;    
@@ -503,7 +466,11 @@ void partialButterflyInverse4(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 8x8 forward transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (residual)
+ *  \param dst   output data (transform coefficients)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterfly8(short *src,short *dst,int shift, int line)
 {
   int j,k;  
@@ -540,7 +507,11 @@ void partialButterfly8(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 8x8 inverse transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (transform coefficients)
+ *  \param dst   output data (residual)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterflyInverse8(short *src,short *dst,int shift, int line)
 {
   int j,k;    
@@ -576,7 +547,11 @@ void partialButterflyInverse8(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 16x16 forward transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (residual)
+ *  \param dst   output data (transform coefficients)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterfly16(short *src,short *dst,int shift, int line)
 {
   int j,k;
@@ -627,7 +602,11 @@ void partialButterfly16(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 16x16 inverse transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (transform coefficients)
+ *  \param dst   output data (residual)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterflyInverse16(short *src,short *dst,int shift, int line)
 {
   int j,k;  
@@ -674,7 +653,11 @@ void partialButterflyInverse16(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 32x32 forward transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (residual)
+ *  \param dst   output data (transform coefficients)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterfly32(short *src,short *dst,int shift, int line)
 {
   int j,k;
@@ -735,7 +718,11 @@ void partialButterfly32(short *src,short *dst,int shift, int line)
   }
 }
 
-
+/** 32x32 inverse transform implemented using partial butterfly structure (1D)
+ *  \param src   input data (transform coefficients)
+ *  \param dst   output data (residual)
+ *  \param shift specifies right shift after 1D transform
+ */
 void partialButterflyInverse32(short *src,short *dst,int shift, int line)
 {
   int j,k;  
@@ -811,78 +798,54 @@ void xTrMxN(short *block,short *coeff, int iWidth, int iHeight, UInt uiMode)
 
   short tmp[ 64 * 64 ];
 
-#if !REMOVE_NSQT
-  if( iWidth == 16 && iHeight == 4)
+  switch (iWidth)
   {
-    partialButterfly16( block, tmp, shift_1st, iHeight );
-    partialButterfly4( tmp, coeff, shift_2nd, iWidth );
-  }
-  else if( iWidth == 32 && iHeight == 8 )
-  {
-    partialButterfly32( block, tmp, shift_1st, iHeight );
-    partialButterfly8( tmp, coeff, shift_2nd, iWidth );
-  }
-  else if( iWidth == 4 && iHeight == 16)
-  {
-    partialButterfly4( block, tmp, shift_1st, iHeight );
-    partialButterfly16( tmp, coeff, shift_2nd, iWidth );
-  }
-  else if( iWidth == 8 && iHeight == 32 )
-  {
-    partialButterfly8( block, tmp, shift_1st, iHeight );
-    partialButterfly32( tmp, coeff, shift_2nd, iWidth );
-  }
-  else
-#endif
-  if( iWidth == 4 && iHeight == 4)
-  {
+    case 4:
+      {
 #if INTRA_TRANS_SIMP
-    if (uiMode != REG_DCT)
-    {
-      fastForwardDst(block,tmp,shift_1st); // Forward DST BY FAST ALGORITHM, block input, tmp output
-      fastForwardDst(tmp,coeff,shift_2nd); // Forward DST BY FAST ALGORITHM, tmp input, coeff output
-    }
-    else
-    {
-      partialButterfly4(block, tmp, shift_1st, iHeight);
-      partialButterfly4(tmp, coeff, shift_2nd, iWidth);
-    }
-
+        if ((iHeight == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
 #else
-    if (uiMode != REG_DCT && (!uiMode || (uiMode>=2 && uiMode <= 25)))    // Check for DCT or DST
-    {
-      fastForwardDst(block,tmp,shift_1st); // Forward DST BY FAST ALGORITHM, block input, tmp output
-    }
-    else  
-    {
-      partialButterfly4(block, tmp, shift_1st, iHeight);
-    }
-    if (uiMode != REG_DCT && (!uiMode || (uiMode>=11 && uiMode <= 34)))    // Check for DCT or DST
-    {
-      fastForwardDst(tmp,coeff,shift_2nd); // Forward DST BY FAST ALGORITHM, tmp input, coeff output
-    }
-    else  
-    {
-      partialButterfly4(tmp, coeff, shift_2nd, iWidth);
-    }
+        if ((iHeight == 4) && (uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))    // Check for DCT or DST
 #endif
+        {
+           fastForwardDst( block, tmp, shift_1st );
+        }
+        else partialButterfly4 ( block, tmp, shift_1st, iHeight );
+      }
+      break;
+
+    case 8:     partialButterfly8 ( block, tmp, shift_1st, iHeight );  break;
+    case 16:    partialButterfly16( block, tmp, shift_1st, iHeight );  break;
+    case 32:    partialButterfly32( block, tmp, shift_1st, iHeight );  break;
+    default:
+      assert(0); exit (1); break;
   }
-  else if( iWidth == 8 && iHeight == 8)
+
+  switch (iHeight)
   {
-    partialButterfly8( block, tmp, shift_1st, iHeight );
-    partialButterfly8( tmp, coeff, shift_2nd, iWidth );
-  }
-  else if( iWidth == 16 && iHeight == 16)
-  {
-    partialButterfly16( block, tmp, shift_1st, iHeight );
-    partialButterfly16( tmp, coeff, shift_2nd, iWidth );
-  }
-  else if( iWidth == 32 && iHeight == 32)
-  {
-    partialButterfly32( block, tmp, shift_1st, iHeight );
-    partialButterfly32( tmp, coeff, shift_2nd, iWidth );
+    case 4:
+      {
+#if INTRA_TRANS_SIMP
+        if ((iWidth == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+#else
+        if ((iWidth == 4) && (uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34)))    // Check for DCT or DST
+#endif
+        {
+          fastForwardDst( tmp, coeff, shift_2nd );
+        }
+        else partialButterfly4 ( tmp, coeff, shift_2nd, iWidth );
+      }
+      break;
+
+    case 8:     partialButterfly8 ( tmp, coeff, shift_2nd, iWidth );    break;
+    case 16:    partialButterfly16( tmp, coeff, shift_2nd, iWidth );    break;
+    case 32:    partialButterfly32( tmp, coeff, shift_2nd, iWidth );    break;
+    default:
+      assert(0); exit (1); break;
   }
 }
+
+
 /** MxN inverse transform (2D)
 *  \param coeff input data (transform coefficients)
 *  \param block output data (residual)
@@ -898,106 +861,86 @@ void xITrMxN(short *coeff,short *block, int iWidth, int iHeight, UInt uiMode)
   int shift_2nd = SHIFT_INV_2ND - g_uiBitIncrement;
 #endif
 
-  short tmp[ 64*64];
-#if !REMOVE_NSQT
-  if( iWidth == 16 && iHeight == 4)
+  short tmp[64*64];
+
+  switch (iHeight)
   {
-    partialButterflyInverse4(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse16(tmp,block,shift_2nd,iHeight);
-  }
-  else if( iWidth == 32 && iHeight == 8)
-  {
-    partialButterflyInverse8(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse32(tmp,block,shift_2nd,iHeight);
-  }
-  else if( iWidth == 4 && iHeight == 16)
-  {
-    partialButterflyInverse16(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse4(tmp,block,shift_2nd,iHeight);
-  }
-  else if( iWidth == 8 && iHeight == 32)
-  {
-    partialButterflyInverse32(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse8(tmp,block,shift_2nd,iHeight);
-  }
-  else
-#endif
-  if( iWidth == 4 && iHeight == 4)
-  {
+    case 4:
+      {
 #if INTRA_TRANS_SIMP
-    if (uiMode != REG_DCT)
-    {
-      fastInverseDst(coeff,tmp,shift_1st);    // Inverse DST by FAST Algorithm, coeff input, tmp output
-      fastInverseDst(tmp,block,shift_2nd); // Inverse DST by FAST Algorithm, tmp input, coeff output
-    }
-    else
-    {
-      partialButterflyInverse4(coeff,tmp,shift_1st,iWidth);
-      partialButterflyInverse4(tmp,block,shift_2nd,iHeight);
-    }
+        if ((iWidth == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
 #else
-    if (uiMode != REG_DCT && (!uiMode || (uiMode>=11 && uiMode <= 34)))    // Check for DCT or DST
-    {
-      fastInverseDst(coeff,tmp,shift_1st);    // Inverse DST by FAST Algorithm, coeff input, tmp output
-    }
-    else
-    {
-      partialButterflyInverse4(coeff,tmp,shift_1st,iWidth);    
-    } 
-    if (uiMode != REG_DCT && (!uiMode || (uiMode>=2 && uiMode <= 25)))    // Check for DCT or DST
-    {
-      fastInverseDst(tmp,block,shift_2nd); // Inverse DST by FAST Algorithm, tmp input, coeff output
-    }
-    else
-    {
-      partialButterflyInverse4(tmp,block,shift_2nd,iHeight);
-    } 
+        if ((iWidth == 4) && (uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34)))    // Check for DCT or DST
 #endif
+        {
+          fastInverseDst( coeff, tmp, shift_1st);
+        }
+        else partialButterflyInverse4 ( coeff, tmp, shift_1st, iWidth);
+      }
+      break;
+
+    case  8: partialButterflyInverse8 ( coeff, tmp, shift_1st, iWidth); break;
+    case 16: partialButterflyInverse16( coeff, tmp, shift_1st, iWidth); break;
+    case 32: partialButterflyInverse32( coeff, tmp, shift_1st, iWidth); break;
+    default:
+      assert(0); exit (1); break;
   }
-  else if( iWidth == 8 && iHeight == 8)
+
+  switch (iWidth)
   {
-    partialButterflyInverse8(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse8(tmp,block,shift_2nd,iHeight);
-  }
-  else if( iWidth == 16 && iHeight == 16)
-  {
-    partialButterflyInverse16(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse16(tmp,block,shift_2nd,iHeight);
-  }
-  else if( iWidth == 32 && iHeight == 32)
-  {
-    partialButterflyInverse32(coeff,tmp,shift_1st,iWidth);
-    partialButterflyInverse32(tmp,block,shift_2nd,iHeight);
+    case 4:
+      {
+#if INTRA_TRANS_SIMP
+        if ((iHeight == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+#else
+        if ((iHeight == 4) && (uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))    // Check for DCT or DST
+#endif
+        {
+          fastInverseDst( tmp, block, shift_2nd );
+        }
+        else partialButterflyInverse4 ( tmp, block, shift_2nd, iHeight);
+      }
+      break;
+
+    case  8: partialButterflyInverse8 ( tmp, block, shift_2nd, iHeight); break;
+    case 16: partialButterflyInverse16( tmp, block, shift_2nd, iHeight); break;
+    case 32: partialButterflyInverse32( tmp, block, shift_2nd, iHeight); break;
+    default:
+      assert(0); exit (1); break;
   }
 }
 
-#endif //MATRIX_MULT
 
 // To minimize the distortion only. No rate is considered. 
-Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, UInt const *scan, Int* deltaU, Int width, Int height )
+Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
 {
+  const UInt width         = codingParameters.widthInGroups  << codingParameters.log2GroupWidth;
+  const UInt height        = codingParameters.heightInGroups << codingParameters.log2GroupHeight;
+  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
+  const UInt groupSize     = 1 << log2GroupSize;
+
   Int lastCG = -1;
   Int absSum = 0 ;
   Int n ;
 
-  for( Int subSet = (width*height-1) >> LOG2_SCAN_SET_SIZE; subSet >= 0; subSet-- )
+  for( Int subSet = (width*height-1) >> log2GroupSize; subSet >= 0; subSet-- )
   {
-    Int  subPos     = subSet << LOG2_SCAN_SET_SIZE;
-    Int  firstNZPosInCG=SCAN_SET_SIZE , lastNZPosInCG=-1 ;
+    Int  subPos = subSet << log2GroupSize;
+    Int  firstNZPosInCG=groupSize , lastNZPosInCG=-1 ;
     absSum = 0 ;
 
-    for(n = SCAN_SET_SIZE-1; n >= 0; --n )
+    for(n = groupSize-1; n >= 0; --n )
     {
-      if( pQCoef[ scan[ n + subPos ]] )
+      if( pQCoef[ codingParameters.scan[ n + subPos ]] )
       {
         lastNZPosInCG = n;
         break;
       }
     }
 
-    for(n = 0; n <SCAN_SET_SIZE; n++ )
+    for(n = 0; n <groupSize; n++ )
     {
-      if( pQCoef[ scan[ n + subPos ]] )
+      if( pQCoef[ codingParameters.scan[ n + subPos ]] )
       {
         firstNZPosInCG = n;
         break;
@@ -1006,24 +949,24 @@ Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pC
 
     for(n = firstNZPosInCG; n <=lastNZPosInCG; n++ )
     {
-      absSum += pQCoef[ scan[ n + subPos ]];
+      absSum += pQCoef[ codingParameters.scan[ n + subPos ]];
     }
 
     if(lastNZPosInCG>=0 && lastCG==-1) 
     {
       lastCG = 1 ; 
     }
-
+    
     if( lastNZPosInCG-firstNZPosInCG>=SBH_THRESHOLD )
     {
-      UInt signbit = (pQCoef[scan[subPos+firstNZPosInCG]]>0?0:1) ;
+      UInt signbit = (pQCoef[codingParameters.scan[subPos+firstNZPosInCG]]>0?0:1) ;
       if( signbit!=(absSum&0x1) )  //compare signbit with sum_parity
       {
         Int minCostInc = MAX_INT,  minPos =-1, finalChange=0, curCost=MAX_INT, curChange=0;
         
-        for( n = (lastCG==1?lastNZPosInCG:SCAN_SET_SIZE-1) ; n >= 0; --n )
+        for( n = (lastCG==1?lastNZPosInCG:groupSize-1) ; n >= 0; --n )
         {
-          UInt blkPos   = scan[ n+subPos ];
+          UInt blkPos   = codingParameters.scan[ n+subPos ];
           if(pQCoef[ blkPos ] != 0 )
           {
             if(deltaU[blkPos]>0)
@@ -1099,260 +1042,297 @@ Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pC
   return;
 }
 
-Void TComTrQuant::xQuant( TComDataCU* pcCU, 
-                          Int*        pSrc, 
-                          TCoeff*     pDes, 
+
+Void TComTrQuant::xQuant(       TComTU       &rTu,
+                                Int         * pSrc,
+                                TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
-                          Int*&       pArlDes,
+                                Int         *&pArlDes,
 #endif
-                          Int         iWidth, 
-                          Int         iHeight, 
-                          UInt&       uiAcSum, 
-                          TextType    eTType, 
-                          UInt        uiAbsPartIdx )
+                                UInt         &uiAcSum,
+                          const ComponentID   compID,
+                          const QpParam      &cQP )
 {
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth        = rect.width;
+  const UInt uiHeight       = rect.height;
+  TComDataCU* pcCU          = rTu.getCU();
+  const UInt uiAbsPartIdx   = rTu.GetAbsPartIdxTU();
+
   Int*   piCoef    = pSrc;
   TCoeff* piQCoef   = pDes;
 #if ADAPTIVE_QP_SELECTION
   Int*   piArlCCoef = pArlDes;
 #endif
-  Int   iAdd = 0;
- 
-  Bool useRDOQForTransformSkip = !(m_useTansformSkipFast && pcCU->getTransformSkip(uiAbsPartIdx,eTType));
-  if ( m_bUseRDOQ && (eTType == TEXT_LUMA || RDOQ_CHROMA) && useRDOQForTransformSkip)
+  const ChromaFormat chFmt = pcCU->getPic()->getChromaFormat();
+
+  const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
+  Bool useRDOQForTransformSkip = !(m_useTransformSkipFast && useTransformSkip);
+  if ( m_bUseRDOQ && (isLuma(compID) || RDOQ_CHROMA) && useRDOQForTransformSkip )
   {
 #if ADAPTIVE_QP_SELECTION
-    xRateDistOptQuant( pcCU, piCoef, pDes, pArlDes, iWidth, iHeight, uiAcSum, eTType, uiAbsPartIdx );
+    xRateDistOptQuant( rTu, piCoef, pDes, pArlDes, uiAcSum, compID, cQP );
 #else
-    xRateDistOptQuant( pcCU, piCoef, pDes, iWidth, iHeight, uiAcSum, eTType, uiAbsPartIdx );
+    xRateDistOptQuant( rTu, piCoef, pDes, uiAcSum, compID, cQP );
 #endif
   }
   else
   {
-    const UInt   log2BlockSize   = g_aucConvertToBit[ iWidth ] + 2;
+    TUEntropyCodingParameters codingParameters;
+    getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, chFmt);
 
-    UInt scanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, iWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
-    if (scanIdx == SCAN_ZIGZAG)
-    {
-      scanIdx = SCAN_DIAG;
-    }
+    UInt additionalMultiplier;
+    UInt additionalShift;
+    getAdditionalQuantiserMultiplyAndShift(additionalMultiplier, additionalShift, compID, chFmt, useTransformSkip);
 
-#if REMOVE_NSQT
-    const UInt *scan = g_auiSigLastScan[ scanIdx ][ log2BlockSize - 1 ];
-#else
-    if (iWidth != iHeight)
-    {
-      scanIdx = SCAN_DIAG;
-    }
-    
-    const UInt * scan;
-    if (iWidth == iHeight)
-    {
-      scan = g_auiSigLastScan[ scanIdx ][ log2BlockSize - 1 ];
-    }
-    else
-    {
-      scan = g_sigScanNSQT[ log2BlockSize - 2 ];
-    }
-#endif
-    
     Int deltaU[32*32] ;
 
-#if ADAPTIVE_QP_SELECTION
-    QpParam cQpBase;
-    Int iQpBase = pcCU->getSlice()->getSliceQpBase();
-
-    Int qpScaled;
-    Int qpBDOffset = (eTType == TEXT_LUMA)? pcCU->getSlice()->getSPS()->getQpBDOffsetY() : pcCU->getSlice()->getSPS()->getQpBDOffsetC();
-
-    if(eTType == TEXT_LUMA)
-    {
-      qpScaled = iQpBase + qpBDOffset;
-    }
-    else
-    {
-#if CHROMA_QP_EXTENSION
-      qpScaled = Clip3( -qpBDOffset, 57, iQpBase);
-#else
-      qpScaled = Clip3( -qpBDOffset, 51, iQpBase);
-#endif
-
-      if(qpScaled < 0)
-      {
-        qpScaled = qpScaled +  qpBDOffset;
-      }
-      else
-      {
-#if CHROMA_QP_EXTENSION
-        qpScaled = g_aucChromaScale[ qpScaled ] + qpBDOffset;
-#else
-        qpScaled = g_aucChromaScale[ Clip3(0, 51, qpScaled) ] + qpBDOffset;
-#endif
-      }
-    }
-    cQpBase.setQpParam(qpScaled);
-#endif
-
-#if !REMOVE_NSQT
-    Bool bNonSqureFlag = ( iWidth != iHeight );
-#endif
-    UInt dir           = SCALING_LIST_SQT;
-#if !REMOVE_NSQT
-    if( bNonSqureFlag )
-    {
-      dir = ( iWidth < iHeight )?  SCALING_LIST_VER: SCALING_LIST_HOR;
-      UInt uiWidthBit  = g_aucConvertToBit[ iWidth ] + 2;
-      UInt uiHeightBit = g_aucConvertToBit[ iHeight ] + 2;
-      iWidth  = 1 << ( ( uiWidthBit + uiHeightBit) >> 1 );
-      iHeight = iWidth;
-    }    
-#endif
+#if ADAPTIVE_QP_SELECTION && ECF__BACKWARDS_COMPATIBILITY_HM
+    const Int qpBDOffset   = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
+    const Int iQpBase      = pcCU->getSlice()->getSliceQpBase();
+    const Int chromaOffset = 0; // NOTE ECF - with RDOQ disabled, the original code does not use chroma offset. If chroma offsets are non-zero, the resulting reconstructed image will contain additional noise.
     
-    UInt uiLog2TrSize = g_aucConvertToBit[ iWidth ] + 2;
-    Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eTType];
-    assert(scalingListType < 6);
+    QpParam cQpBase;
+    cQpBase.setQPforQuant(iQpBase, toChannelType(compID), qpBDOffset, chromaOffset, chFmt, pcCU->getTransformSkip(uiAbsPartIdx,compID));
+#endif
+
+#if !REMOVE_NSQT
+    const ScalingListDIR dir=getScalingListDIR(uiWidth, uiHeight, pcCU->getPic()->getChromaFormat(), compID);
+#endif
+    const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+    assert(compID<MAX_NUM_COMPONENT);
+
+#if REMOVE_NSQT
+    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+    assert(scalingListType < SCALING_LIST_NUM);
     Int *piQuantCoeff = 0;
-    piQuantCoeff = getQuantCoeff(scalingListType,m_cQP.m_iRem,uiLog2TrSize-2, dir);
-
-#if FULL_NBIT
-    UInt uiBitDepth = g_uiBitDepth;
+    piQuantCoeff = getQuantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2);
 #else
-    UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
+    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID, dir);
+    assert(scalingListType < SCALING_LIST_NUM);
+    Int *piQuantCoeff = 0;
+    piQuantCoeff = getQuantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2, dir);
 #endif
-    Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize;  // Represents scaling through forward transform
 
-    Int iQBits = QUANT_SHIFT + m_cQP.m_iPer + iTransformShift;                // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
 
-    iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
+    /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+     * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+     * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+     * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+     */
 
+    // Represents scaling through forward transform
+    Int iTransformShift = getTransformShift(uiLog2TrSize, compID, chFmt, useTransformSkip);
+    Int iQBits  = MAX_INT;
 #if ADAPTIVE_QP_SELECTION
-    iQBits = QUANT_SHIFT + cQpBase.m_iPer + iTransformShift;
-    iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
-    Int iQBitsC = QUANT_SHIFT + cQpBase.m_iPer + iTransformShift - ARL_C_PRECISION;  
-    Int iAddC   = 1 << (iQBitsC-1);
+    Int iQBitsC = MAX_INT;
+    Int iAddC   = MAX_INT;
+
+#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+    iQBits  = QUANT_SHIFT + cQpBase.m_iPer + iTransformShift;
+    iQBitsC = QUANT_SHIFT + cQpBase.m_iPer + iTransformShift - ARL_C_PRECISION;
+    iAddC   = 1 << (iQBitsC-1);
+#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
+    //NOTE: ECF - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
+    iQBits = QUANT_SHIFT + cQP.m_iPer + iTransformShift;
+
+    if (m_bUseAdaptQpSelect)
+    {
+      iQBitsC = iQBits - ARL_C_PRECISION;
+      iAddC   = 1 << (iQBitsC-1);
+    }
 #endif
+#else
+    iQBits = QUANT_SHIFT + cQP.m_iPer + iTransformShift;                // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
+#endif
+
+    Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
 
     Int qBits8 = iQBits-8;
-    for( Int n = 0; n < iWidth*iHeight; n++ )
+
+    for( Int uiBlockPos = 0; uiBlockPos < uiWidth*uiHeight; uiBlockPos++ )
     {
       Int iLevel;
       Int  iSign;
-      UInt uiBlockPos = n;
       iLevel  = piCoef[uiBlockPos];
-      iSign   = (iLevel < 0 ? -1: 1);      
+      iSign   = (iLevel < 0 ? -1: 1);
+            
+
+      const UInt scalingListCoeffIdx = getScalingListCoeffIdx(chFmt, compID, uiBlockPos, uiWidth, uiHeight);
+      Int64 tmpLevel = (Int64)abs(iLevel) * piQuantCoeff[scalingListCoeffIdx];
 
 #if ADAPTIVE_QP_SELECTION
-      Int64 tmpLevel = (Int64)abs(iLevel) * piQuantCoeff[uiBlockPos];
       if( m_bUseAdaptQpSelect )
       {
         piArlCCoef[uiBlockPos] = (Int)((tmpLevel + iAddC ) >> iQBitsC);
       }
+#endif
+
+      if ((additionalMultiplier != 1) || (additionalShift != 0))
+        tmpLevel = ((tmpLevel * additionalMultiplier) + ((1 << additionalShift) - 1)) >> additionalShift;
+
       iLevel = (Int)((tmpLevel + iAdd ) >> iQBits);
       deltaU[uiBlockPos] = (Int)((tmpLevel - (iLevel<<iQBits) )>> qBits8);
-#else
-      iLevel = ((Int64)abs(iLevel) * piQuantCoeff[uiBlockPos] + iAdd ) >> iQBits;
-      deltaU[uiBlockPos] = (Int)( ((Int64)abs(iLevel) * piQuantCoeff[uiBlockPos] - (iLevel<<iQBits) )>> qBits8 );
-#endif
+
       uiAcSum += iLevel;
       iLevel *= iSign;        
       piQCoef[uiBlockPos] = Clip3( -32768, 32767, iLevel );
     } // for n
+
     if( pcCU->getSlice()->getPPS()->getSignHideFlag() )
     {
       if(uiAcSum>=2)
       {
-        signBitHidingHDQ( pcCU, piQCoef, piCoef, scan, deltaU, iWidth, iHeight ) ;
+        signBitHidingHDQ( pcCU, piQCoef, piCoef, deltaU, codingParameters ) ;
       }
     }
   } //if RDOQ
   //return;
-
 }
 
-Void TComTrQuant::xDeQuant( const TCoeff* pSrc, Int* pDes, Int iWidth, Int iHeight, Int scalingListType )
+Void TComTrQuant::xDeQuant(       TComTU        &rTu,
+                            const TCoeff       * pSrc,
+                                  Int          * pDes,
+                            const ComponentID    compID,
+                            const QpParam       &cQP )
 {
+  TComDataCU* pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth = rect.width;
+  const UInt uiHeight = rect.height;
   
   const TCoeff* piQCoef   = pSrc;
   Int*   piCoef    = pDes;
-  UInt dir          = SCALING_LIST_SQT;
+  const ChromaFormat fmt=rTu.GetChromaFormat();
 #if !REMOVE_NSQT
-  if( iWidth != iHeight )
-  {
-    dir          = ( iWidth < iHeight )? SCALING_LIST_VER: SCALING_LIST_HOR;
-    UInt uiWidthBit  = g_aucConvertToBit[ iWidth ]  + 2;
-    UInt uiHeightBit = g_aucConvertToBit[ iHeight ] + 2;
-    iWidth  = 1 << ( ( uiWidthBit + uiHeightBit) >> 1 );
-    iHeight = iWidth;
-  }    
+  const ScalingListDIR dir=getScalingListDIR(uiWidth, uiHeight, fmt, compID);
 #endif
-  
-  if ( iWidth > (Int)m_uiMaxTrSize )
-  {
-    iWidth  = m_uiMaxTrSize;
-    iHeight = m_uiMaxTrSize;
-  }
+  const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+  const UInt numSamplesInBlock=uiWidth*uiHeight;
+  assert(compID<MAX_NUM_COMPONENT);
+
+  const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
+
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID
+#if !REMOVE_NSQT
+      , dir
+#endif
+      );
+  assert(scalingListType < SCALING_LIST_NUM);
+
+  assert ( uiWidth <= m_uiMaxTrSize );
   
   Int iShift,iAdd,iCoeffQ;
-  UInt uiLog2TrSize = g_aucConvertToBit[ iWidth ] + 2;
 
-#if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
-#else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
-#endif
-  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize; 
+  /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+   * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+   * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+   * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+   */
 
-  iShift = QUANT_IQUANT_SHIFT - QUANT_SHIFT - iTransformShift;
+  // Represents scaling through forward transform
+  Int iTransformShift = getTransformShift(uiLog2TrSize, compID, fmt, useTransformSkip);
+
+  UInt additionalMultiplier;
+  UInt additionalShift;
+  getAdditionalInverseQuantiserMultiplyAndShift(additionalMultiplier, additionalShift, compID, fmt, useTransformSkip);
+
+  iShift = (QUANT_IQUANT_SHIFT - QUANT_SHIFT - iTransformShift) + additionalShift;
 
   TCoeff clipQCoef;
-  const Int bitRange = min( 15, ( Int )( 12 + uiLog2TrSize + uiBitDepth - m_cQP.m_iPer) );
+  const Int bitRange = min( 15, ( Int )( (MAX_TR_DYNAMIC_RANGE + 12) - (iTransformShift + cQP.m_iPer)) );
   const Int levelLimit = 1 << bitRange;
 
   if(getUseScalingList())
   {
     iShift += 4;
-    if(iShift > m_cQP.m_iPer)
-    {
-      iAdd = 1 << (iShift - m_cQP.m_iPer - 1);
-    }
-    else
-    {
-      iAdd = 0;
-    }
-    Int *piDequantCoef = getDequantCoeff(scalingListType,m_cQP.m_iRem,uiLog2TrSize-2,dir);
 
-    if(iShift > m_cQP.m_iPer)
+#if REMOVE_NSQT
+    Int *piDequantCoef = getDequantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2);
+#else
+    Int *piDequantCoef = getDequantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2,dir);
+#endif
+
+    if(iShift > cQP.m_iPer)
     {
-      for( Int n = 0; n < iWidth*iHeight; n++ )
+      iAdd = 1 << (iShift - cQP.m_iPer - 1);
+
+      if (additionalMultiplier != 1)
       {
-        clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
-        iCoeffQ = ((clipQCoef * piDequantCoef[n]) + iAdd ) >> (iShift -  m_cQP.m_iPer);
-        piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        for( Int n = 0; n < numSamplesInBlock; n++ )
+        {
+          const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+
+          clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
+          iCoeffQ   = Int(((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) + iAdd ) >> (iShift -  cQP.m_iPer));
+          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        }
+      }
+      else
+      {
+        for( Int n = 0; n < numSamplesInBlock; n++ )
+        {
+          const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+
+          clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
+          iCoeffQ   = ((clipQCoef * piDequantCoef[deQuantIdx]) + iAdd ) >> (iShift -  cQP.m_iPer);
+          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        }
       }
     }
     else
     {
-      for( Int n = 0; n < iWidth*iHeight; n++ )
+      iAdd = 0;
+
+      if (additionalMultiplier != 1)
       {
-        clipQCoef = Clip3( -levelLimit, levelLimit - 1, piQCoef[n] );
-        iCoeffQ = (clipQCoef * piDequantCoef[n]) << (m_cQP.m_iPer - iShift);
-        piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        for( Int n = 0; n < numSamplesInBlock; n++ )
+        {
+          const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+
+          clipQCoef = Clip3( -levelLimit, levelLimit - 1, piQCoef[n] );
+          iCoeffQ   = (clipQCoef * piDequantCoef[deQuantIdx] * additionalMultiplier) << (cQP.m_iPer - iShift);
+          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        }
+      }
+      else
+      {
+        for( Int n = 0; n < numSamplesInBlock; n++ )
+        {
+          const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+
+          clipQCoef = Clip3( -levelLimit, levelLimit - 1, piQCoef[n] );
+          iCoeffQ   = (clipQCoef * piDequantCoef[deQuantIdx]) << (cQP.m_iPer - iShift);
+          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+        }
       }
     }
   }
   else
   {
-    iAdd = 1 << (iShift-1);
-    Int scale = g_invQuantScales[m_cQP.m_iRem] << m_cQP.m_iPer;
+    Int scale;
+    if (additionalMultiplier == 1)
+    {
+      scale = (getInverseQuantScaling(cQP.m_iRem, fmt) << cQP.m_iPer);
+    }
+    else
+    {
+      scale = (getInverseQuantScaling(cQP.m_iRem, fmt)) * additionalMultiplier;
+      iShift -= cQP.m_iPer;
+    }
 
-    for( Int n = 0; n < iWidth*iHeight; n++ )
+    iAdd = 1 << (iShift-1);
+
+    for( Int n = 0; n < numSamplesInBlock; n++ )
     {
       clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
-      iCoeffQ = ( clipQCoef * scale + iAdd ) >> iShift;
+      iCoeffQ   = ( clipQCoef * scale + iAdd ) >> iShift;
       piCoef[n] = Clip3(-32768,32767,iCoeffQ);
     }
   }
 }
+
 
 Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int iSymbolMode, UInt *aTableLP4, UInt *aTableLP8, UInt *aTableLastPosVlcIndex,
                        Bool bUseRDOQ,  Bool bEnc, Bool useTransformSkipFast
@@ -1367,25 +1347,29 @@ Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int
 #if ADAPTIVE_QP_SELECTION
   m_bUseAdaptQpSelect = bUseAdaptQpSelect;
 #endif
-  m_useTansformSkipFast = useTransformSkipFast;
+  m_useTransformSkipFast = useTransformSkipFast;
 }
 
-Void TComTrQuant::transformNxN( TComDataCU* pcCU, 
-                               Pel*        pcResidual, 
-                               UInt        uiStride, 
-                               TCoeff*     rpcCoeff, 
+
+Void TComTrQuant::transformNxN(       TComTU        & rTu,
+                                const ComponentID     compID,
+                                      Pel          *  pcResidual,
+                                const UInt            uiStride,
+                                      TCoeff       *  rpcCoeff,
 #if ADAPTIVE_QP_SELECTION
-                               Int*&       rpcArlCoeff, 
+                                      Int          *& rpcArlCoeff,
 #endif
-                               UInt        uiWidth, 
-                               UInt        uiHeight, 
-                               UInt&       uiAbsSum, 
-                               TextType    eTType, 
-                               UInt        uiAbsPartIdx,
-                               Bool        useTransformSkip
-                               )
+                                      UInt          & uiAbsSum,
+                                const QpParam       & cQP
+                              )
 {
-  if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth        = rect.width;
+  const UInt uiHeight       = rect.height;
+  TComDataCU* pcCU          = rTu.getCU();
+  const UInt uiAbsPartIdx   = rTu.GetAbsPartIdxTU();
+
+  if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
     uiAbsSum=0;
     for (UInt k = 0; k<uiHeight; k++)
@@ -1398,36 +1382,56 @@ Void TComTrQuant::transformNxN( TComDataCU* pcCU,
     }
     return;
   }
-  UInt uiMode;  //luma intra pred
-  if(eTType == TEXT_LUMA && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA )
-  {
-    uiMode = pcCU->getLumaIntraDir( uiAbsPartIdx );
-  }
-  else
-  {
-    uiMode = REG_DCT;
-  }
-  
+
+  const UInt uiMode=getMDDTmode(compID, pcCU, uiAbsPartIdx);  //luma intra pred
+
   uiAbsSum = 0;
   assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
-  if(useTransformSkip)
+
+  if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)
   {
-    xTransformSkip( pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+    xTransformSkip( pcResidual, uiStride, m_plTempCoeff, rTu, compID );
   }
   else
   {
     xT( uiMode, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
   }
-  xQuant( pcCU, m_plTempCoeff, rpcCoeff,
+
+  xQuant( rTu, m_plTempCoeff, rpcCoeff,
+
 #if ADAPTIVE_QP_SELECTION
        rpcArlCoeff,
 #endif
-       uiWidth, uiHeight, uiAbsSum, eTType, uiAbsPartIdx );
+       uiAbsSum, compID, cQP );
+
 }
 
-Void TComTrQuant::invtransformNxN( Bool transQuantBypass, TextType eText, UInt uiMode,Pel* rpcResidual, UInt uiStride, TCoeff*   pcCoeff, UInt uiWidth, UInt uiHeight,  Int scalingListType, Bool useTransformSkip )
+
+Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
+                                  const ComponentID    compID,
+                                        Pel          *&rpcResidual,
+                                  const UInt           uiStride,
+                                        TCoeff       * pcCoeff,
+                                  const QpParam       &cQP
+                                        DEBUG_STRING_FN_DECLAREP(psDebug))
 {
-  if(transQuantBypass)
+  TComDataCU* pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth = rect.width;
+  const UInt uiHeight = rect.height;
+
+
+#if defined DEBUG_STRING
+  if (psDebug)
+  {
+    std::stringstream ss(stringstream::out);
+    printBlockToStream(ss, (compID==0)?"###InvTran ip Ch0: " : ((compID==1)?"###InvTran ip Ch1: ":"###InvTran ip Ch2: "), pcCoeff, uiWidth, uiHeight, uiWidth);
+    DEBUG_STRING_APPEND((*psDebug), ss.str())
+  }
+#endif
+
+  if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
     for (UInt k = 0; k<uiHeight; k++)
     {
@@ -1435,96 +1439,106 @@ Void TComTrQuant::invtransformNxN( Bool transQuantBypass, TextType eText, UInt u
       {
         rpcResidual[k*uiStride+j] = pcCoeff[k*uiWidth+j];
       }
-    } 
+    }
     return;
   }
-  xDeQuant( pcCoeff, m_plTempCoeff, uiWidth, uiHeight, scalingListType);
-  if(useTransformSkip == true)
+  
+  const UInt uiMode=getMDDTmode(compID, pcCU, uiAbsPartIdx);
+
+  xDeQuant( rTu, pcCoeff, m_plTempCoeff, compID, cQP);
+
+#if defined DEBUG_STRING
+  if (psDebug)
   {
-    xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+    std::stringstream ss(stringstream::out);
+    printBlockToStream(ss, "###InvTran deq: ", m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+    (*psDebug)+=ss.str();
+  }
+#endif
+
+  if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
+  {
+    xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, rTu, compID );
+
+#if defined DEBUG_STRING
+    if (psDebug)
+    {
+      Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(compID), compID, rTu.GetChromaFormat(), true);
+      std::stringstream ss(stringstream::out);
+      printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
+      ss << "TransShift=" << iTransformShift << "\n";
+      (*psDebug)+=ss.str();
+      (*psDebug)+="(TS)\n";
+    }
+#endif
   }
   else
   {
     xIT( uiMode, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+
+#if defined DEBUG_STRING
+    if (psDebug)
+    {
+      std::stringstream ss(stringstream::out);
+      printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
+      (*psDebug)+=ss.str();
+      (*psDebug)+="(Non TS)\n";
+    }
+#endif
   }
 }
 
-Void TComTrQuant::invRecurTransformNxN( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTxt, Pel* rpcResidual, UInt uiAddr, UInt uiStride, UInt uiWidth, UInt uiHeight, UInt uiMaxTrMode, UInt uiTrMode, TCoeff* rpcCoeff )
+Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
+                                        Pel* rpcResidual,
+                                        UInt uiStride,
+                                        TComTU &rTu)
 {
-  if( !pcCU->getCbf(uiAbsPartIdx, eTxt, uiTrMode) )
+  if (!rTu.ProcessComponentSection(compID)) return;
+
+  TComDataCU* pcCU = rTu.getCU();
+  UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
+  UInt uiTrMode=rTu.GetTransformDepthRel();
+  if( !pcCU->getCbf(absPartIdxTU, compID, uiTrMode) )
   {
     return;
   }
-  
-  UInt uiLumaTrMode, uiChromaTrMode;
-  pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx( uiAbsPartIdx ), uiLumaTrMode, uiChromaTrMode );
-  const UInt uiStopTrMode = eTxt == TEXT_LUMA ? uiLumaTrMode : uiChromaTrMode;
-  
-  if( uiTrMode == uiStopTrMode )
-  {
-    UInt uiDepth      = pcCU->getDepth( uiAbsPartIdx ) + uiTrMode;
-    UInt uiLog2TrSize = g_aucConvertToBit[ pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth ] + 2;
-    if( eTxt != TEXT_LUMA && uiLog2TrSize == 2 )
-    {
-      UInt uiQPDiv = pcCU->getPic()->getNumPartInCU() >> ( ( uiDepth - 1 ) << 1 );
-      if( ( uiAbsPartIdx % uiQPDiv ) != 0 )
-      {
-        return;
-      }
-      uiWidth  <<= 1;
-      uiHeight <<= 1;
-    }
-    Pel* pResi = rpcResidual + uiAddr;
-#if !REMOVE_NSQT
-    if( pcCU->useNonSquareTrans( uiTrMode, uiAbsPartIdx ) )
-    {
-      Int trWidth  = uiWidth;
-      Int trHeight = uiHeight;
-      pcCU->getNSQTSize( uiTrMode, uiAbsPartIdx, trWidth, trHeight );
 
-      uiWidth  = trWidth;
-      uiHeight = trHeight;
-    }
-#endif
-    Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eTxt];
-    assert(scalingListType < 6);
-#if INTER_TRANSFORMSKIP
-    invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), eTxt, REG_DCT, pResi, uiStride, rpcCoeff, uiWidth, uiHeight, scalingListType, pcCU->getTransformSkip(uiAbsPartIdx, eTxt) );
+  if( uiTrMode == pcCU->getTransformIdx( absPartIdxTU ) )
+  {
+    const TComRectangle &tuRect=rTu.getRect(compID);
+    UInt uiAddr =  (tuRect.x0 + uiStride*tuRect.y0);
+    Pel* pResi = rpcResidual + uiAddr;
+    TCoeff* rpcCoeff = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
+
+    QpParam cQP; // NOTE ECF - set QP is now possibly dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
+    cQP.setQPforQuant( pcCU->getQP( 0 ),
+                                toChannelType(compID),
+                                pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
+#if CHROMA_QP_EXTENSION
+                                (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
 #else
-    invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), eTxt, REG_DCT, pResi, uiStride, rpcCoeff, uiWidth, uiHeight, scalingListType );
+                                pcCU->getSlice()->getPPS()->getQpOffset(compID),
 #endif
+                                pcCU->getPic()->getChromaFormat(),
+                                (pcCU->getTransformSkip(absPartIdxTU, compID)));
+
+#if defined DEBUG_STRING && DEBUG_INTER_CODING_INV_TRAN
+    std::string sTemp;
+    invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(&sTemp) );
+    std::cout << sTemp;
+#else
+    invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(0) );
+#endif
+
   }
   else
   {
-    uiTrMode++;
-    uiWidth  >>= 1;
-    uiHeight >>= 1;
-    Int trWidth = uiWidth, trHeight = uiHeight;
-#if !REMOVE_NSQT
-    Int trLastWidth = uiWidth << 1, trLastHeight = uiHeight << 1;
-    pcCU->getNSQTSize ( uiTrMode, uiAbsPartIdx, trWidth, trHeight );
-    pcCU->getNSQTSize ( uiTrMode - 1, uiAbsPartIdx, trLastWidth, trLastHeight );
-#endif
-    UInt uiAddrOffset = trHeight * uiStride;
-    UInt uiCoefOffset = trWidth * trHeight;
-    UInt uiPartOffset = pcCU->getTotalNumPart() >> ( uiTrMode << 1 );
-#if !REMOVE_NSQT
-    UInt uiInterTUSplitDirection = pcCU->getInterTUSplitDirection ( trWidth, trHeight, trLastWidth, trLastHeight );
-    if( uiInterTUSplitDirection != 2 )
+    TComTURecurse tuRecurseChild(rTu, false);
+    do
     {
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr                                                                                            , uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr +     trWidth * uiInterTUSplitDirection +     uiAddrOffset * ( 1 - uiInterTUSplitDirection), uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr + 2 * trWidth * uiInterTUSplitDirection + 2 * uiAddrOffset * ( 1 - uiInterTUSplitDirection), uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr + 3 * trWidth * uiInterTUSplitDirection + 3 * uiAddrOffset * ( 1 - uiInterTUSplitDirection), uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff );
+      invRecurTransformNxN( compID, rpcResidual, uiStride, tuRecurseChild );
     }
-    else
-#endif
-    {
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr                         , uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr + trWidth               , uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr + uiAddrOffset          , uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff ); rpcCoeff += uiCoefOffset; uiAbsPartIdx += uiPartOffset;
-      invRecurTransformNxN( pcCU, uiAbsPartIdx, eTxt, rpcResidual, uiAddr + uiAddrOffset + trWidth, uiStride, uiWidth, uiHeight, uiMaxTrMode, uiTrMode, rpcCoeff );
-    }
+    while (tuRecurseChild.nextSection(rTu));
   }
 }
 
@@ -1541,37 +1555,31 @@ Void TComTrQuant::invRecurTransformNxN( TComDataCU* pcCU, UInt uiAbsPartIdx, Tex
  */
 Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, Int* psCoeff, Int iWidth, Int iHeight )
 {
-#if MATRIX_MULT  
-  Int iSize = iWidth;
-#if !REMOVE_NSQT
-  if( iWidth != iHeight)
+#if MATRIX_MULT
+  if( iWidth == iHeight)
   {
-    xTrMxN( piBlkResi, psCoeff, uiStride, (UInt)iWidth, (UInt)iHeight );
+    xTr(piBlkResi,psCoeff,uiStride,(UInt)iWidth,uiMode);
     return;
   }
 #endif
-  xTr(piBlkResi,psCoeff,uiStride,(UInt)iSize,uiMode);
-#else
-  Int j;
-  {
-    short block[ 64 * 64 ];
-    short coeff[ 64 * 64 ];
-    {
-      for (j = 0; j < iHeight; j++)
-      {    
-        memcpy( block + j * iWidth, piBlkResi + j * uiStride, iWidth * sizeof( short ) );      
-      }
-    }
-    xTrMxN( block, coeff, iWidth, iHeight, uiMode );
-    for ( j = 0; j < iHeight * iWidth; j++ )
-    {    
-      psCoeff[ j ] = coeff[ j ];
-    }
-    return ;
-  }
-#endif  
-}
 
+  Int j;
+
+  short block[ 64 * 64 ];
+  short coeff[ 64 * 64 ];
+
+  for (j = 0; j < iHeight; j++)
+  {    
+    memcpy( block + j * iWidth, piBlkResi + j * uiStride, iWidth * sizeof( short ) );      
+  }
+
+  xTrMxN( block, coeff, iWidth, iHeight, uiMode );
+
+  for ( j = 0; j < iHeight * iWidth; j++ )
+  {    
+    psCoeff[ j ] = coeff[ j ];
+  }
+}
 
 /** Wrapper function between HM interface and core NxN inverse transform (2D) 
  *  \param plCoef input data (transform coefficients)
@@ -1582,77 +1590,66 @@ Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, Int* psCoeff, 
  */
 Void TComTrQuant::xIT( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
 {
-#if MATRIX_MULT  
-  Int iSize = iWidth;
-#if !REMOVE_NSQT
-  if( iWidth != iHeight )
+#if MATRIX_MULT
+  if( iWidth == iHeight )
   {
-    xITrMxN( plCoef, pResidual, uiStride, (UInt)iWidth, (UInt)iHeight );
+    xITr(plCoef,pResidual,uiStride,(UInt)iWidth,uiMode);
     return;
   }
-#endif
-  xITr(plCoef,pResidual,uiStride,(UInt)iSize,uiMode);
-#else
-  Int j;
-  {
-    short block[ 64 * 64 ];
-    short coeff[ 64 * 64 ];
-    for ( j = 0; j < iHeight * iWidth; j++ )
-    {    
-      coeff[j] = (short)plCoef[j];
-    }
-    xITrMxN( coeff, block, iWidth, iHeight, uiMode );
-    {
-      for ( j = 0; j < iHeight; j++ )
-      {    
-        memcpy( pResidual + j * uiStride, block + j * iWidth, iWidth * sizeof(short) );      
-      }
-    }
-    return ;
-  }
 #endif  
-}
  
+  Int j;
+
+  short block[ 64 * 64 ];
+  short coeff[ 64 * 64 ];
+
+  for ( j = 0; j < iHeight * iWidth; j++ )
+  {    
+    coeff[j] = (short)plCoef[j];
+  }
+  
+  xITrMxN( coeff, block, iWidth, iHeight, uiMode );
+
+  for ( j = 0; j < iHeight; j++ )
+  {    
+    memcpy( pResidual + j * uiStride, block + j * iWidth, iWidth * sizeof(short) );      
+  }
+}
+
 /** Wrapper function between HM interface and core 4x4 transform skipping
  *  \param piBlkResi input data (residual)
  *  \param psCoeff output data (transform coefficients)
  *  \param uiStride stride of input residual data
  *  \param iSize transform size (iSize x iSize)
  */
-Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, Int* psCoeff, Int width, Int height )
+Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, Int* psCoeff, TComTU &rTu, const ComponentID component )
 {
-  assert( width == height );
-  UInt uiLog2TrSize = g_aucConvertToBit[ width ] + 2;
-#if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
-#else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
-#endif
-  Int  shift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize;
-  UInt transformSkipShift;
-  Int  j,k;
-  if(shift >= 0)
+  const TComRectangle &rect = rTu.getRect(component);
+  const Int width = rect.width;
+  const Int height = rect.height;
+
+  Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(component), component, rTu.GetChromaFormat(), true);
+
+  if (iTransformShift >= 0)
   {
-    transformSkipShift = shift;
-    for (j = 0; j < height; j++)
+    for (Int y = 0; y < height; y++)
     {    
-      for(k = 0; k < width; k ++)
+      for(Int x = 0; x < width; x++)
       {
-        psCoeff[j*height + k] = piBlkResi[j * uiStride + k] << transformSkipShift;      
+        psCoeff[(y * width) + x] = piBlkResi[(y * uiStride) + x] << iTransformShift;
       }
     }
   }
-  else
+  else //for very high bit depths
   {
-    //The case when uiBitDepth > 13
-    Int offset;
-    transformSkipShift = -shift;
-    offset = (1 << (transformSkipShift - 1));
-    for (j = 0; j < height; j++)
+    iTransformShift = -iTransformShift;
+    const Int offset = 1 << (iTransformShift - 1);
+   
+    for (Int y = 0; y < height; y++)
     {    
-      for(k = 0; k < width; k ++)
+      for(Int x = 0; x < width; x++)
       {
-        psCoeff[j*height + k] = (piBlkResi[j * uiStride + k] + offset) >> transformSkipShift;      
+        psCoeff[(y * width) + x] = (piBlkResi[(y * uiStride) + x] + offset) >> iTransformShift;
       }
     }
   }
@@ -1664,45 +1661,40 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, Int* psCoeff, I
  *  \param uiStride stride of input residual data
  *  \param iSize transform size (iSize x iSize)
  */
-Void TComTrQuant::xITransformSkip( Int* plCoef, Pel* pResidual, UInt uiStride, Int width, Int height )
+Void TComTrQuant::xITransformSkip( Int* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component )
 {
-  assert( width == height );
-  UInt uiLog2TrSize = g_aucConvertToBit[ width ] + 2;
-#if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
-#else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
-#endif
-  Int  shift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize; 
-  UInt transformSkipShift; 
-  Int  j,k;
-  if(shift > 0)
+  const TComRectangle &rect = rTu.getRect(component);
+  const Int width = rect.width;
+  const Int height = rect.height;
+
+  Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(component), component, rTu.GetChromaFormat(), true);
+
+  if (iTransformShift >= 0)
   {
-    Int offset;
-    transformSkipShift = shift;
-    offset = (1 << (transformSkipShift -1));
-    for ( j = 0; j < height; j++ )
+    const Int offset = 1 << (iTransformShift - 1);
+
+    for (Int y = 0; y < height; y++)
     {    
-      for(k = 0; k < width; k ++)
+      for(Int x = 0; x < width; x++)
       {
-        pResidual[j * uiStride + k] =  (plCoef[j*width+k] + offset) >> transformSkipShift;
-      } 
+        pResidual[(y * uiStride) + x] =  (plCoef[(y * width) + x] + offset) >> iTransformShift;
+      }
     }
   }
-  else
+  else //for very high bit depths
   {
-    //The case when uiBitDepth >= 13
-    transformSkipShift = - shift;
-    for ( j = 0; j < height; j++ )
+    iTransformShift = -iTransformShift;
+
+    for (Int y = 0; y < height; y++)
     {    
-      for(k = 0; k < width; k ++)
+      for(Int x = 0; x < width; x++)
       {
-        pResidual[j * uiStride + k] =  plCoef[j*width+k] << transformSkipShift;
+        pResidual[(y * uiStride) + x] = plCoef[(y * width) + x] << iTransformShift;
       }
     }
   }
 }
-
+ 
 /** RDOQ with CABAC
  * \param pcCU pointer to coding unit structure
  * \param plSrcCoeff pointer to input buffer
@@ -1716,114 +1708,106 @@ Void TComTrQuant::xITransformSkip( Int* plCoef, Pel* pResidual, UInt uiStride, I
  * Rate distortion optimized quantization for entropy
  * coding engines using probability models like CABAC
  */
-Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*                     pcCU,
-                                                      Int*                            plSrcCoeff,
-                                                      TCoeff*                         piDstCoeff,
+Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
+                                                            Int         * plSrcCoeff,
+                                                            TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
-                                                      Int*&                           piArlDstCoeff,
+                                                            Int         *&piArlDstCoeff,
 #endif
-                                                      UInt                            uiWidth,
-                                                      UInt                            uiHeight,
-                                                      UInt&                           uiAbsSum,
-                                                      TextType                        eTType,
-                                                      UInt                            uiAbsPartIdx )
+                                                            UInt         &uiAbsSum,
+                                                      const ComponentID   compID,
+                                                      const QpParam      &cQP  )
 {
-  Int    iQBits      = m_cQP.m_iBits;
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth        = rect.width;
+  const UInt uiHeight       = rect.height;
+  TComDataCU* pcCU          = rTu.getCU();
+  const UInt uiAbsPartIdx   = rTu.GetAbsPartIdxTU();
+
+  const ChromaFormat format = rTu.GetChromaFormat();
+
+  const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
+
+  Int    iQBits      = cQP.m_iBits;
   Double dTemp       = 0;
-  UInt dir         = SCALING_LIST_SQT;
-  UInt uiLog2TrSize = g_aucConvertToBit[ uiWidth ] + 2;
-  Int uiQ = g_quantScales[m_cQP.rem()];
+  Int    uiQ         = getQuantScaling(cQP.rem(), format);
+
 #if !REMOVE_NSQT
-  if (uiWidth != uiHeight)
-  {
-    uiLog2TrSize += (uiWidth > uiHeight) ? -1 : 1;
-    dir            = ( uiWidth < uiHeight )?  SCALING_LIST_VER: SCALING_LIST_HOR;
-  }
+  const ScalingListDIR dir = getScalingListDIR(uiWidth, uiHeight, format, compID);
 #endif
-  
-#if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
-#else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;  
-#endif
-  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize;  // Represents scaling through forward transform
+  const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+
+  /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+   * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+   * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+   * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+   */
+
+  // Represents scaling through forward transform
+  const Int iTransformShift      = getTransformShift(uiLog2TrSize, compID, format, useTransformSkip);
+
   UInt       uiGoRiceParam       = 0;
   Double     d64BlockUncodedCost = 0;
-  const UInt uiLog2BlkSize       = g_aucConvertToBit[ uiWidth ] + 2;
+  const UInt uiLog2BlockWidth    = g_aucConvertToBit[ uiWidth  ] + 2;
+  const UInt uiLog2BlockHeight   = g_aucConvertToBit[ uiHeight ] + 2;
   const UInt uiMaxNumCoeff       = uiWidth * uiHeight;
-  Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eTType];
-  assert(scalingListType < 6);
-  
-  iQBits = QUANT_SHIFT + m_cQP.m_iPer + iTransformShift;                   // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
+  assert(compID<MAX_NUM_COMPONENT);
+#if REMOVE_NSQT
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+#else
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID, dir);
+#endif
+  assert(scalingListType < SCALING_LIST_NUM);
+ 
+#if ADAPTIVE_QP_SELECTION
+  memset(piArlDstCoeff, 0, sizeof(Int) *  uiMaxNumCoeff);
+#endif
+
+  Double pdCostCoeff [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  Double pdCostSig   [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  Double pdCostCoeff0[ MAX_TU_SIZE * MAX_TU_SIZE ];
+  memset( pdCostCoeff, 0, sizeof(Double) *  uiMaxNumCoeff );
+  memset( pdCostSig,   0, sizeof(Double) *  uiMaxNumCoeff );
+  Int rateIncUp   [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  Int rateIncDown [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  Int sigRateDelta[ MAX_TU_SIZE * MAX_TU_SIZE ];
+  Int deltaU      [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  memset( rateIncUp,    0, sizeof(Int) *  uiMaxNumCoeff );
+  memset( rateIncDown,  0, sizeof(Int) *  uiMaxNumCoeff );
+  memset( sigRateDelta, 0, sizeof(Int) *  uiMaxNumCoeff );
+  memset( deltaU,       0, sizeof(Int) *  uiMaxNumCoeff );
+
+  const TransformShiftSizeOffset transformShiftSizeOffset = getTransformShiftSizeOffset(compID, format, useTransformSkip);
+
+  iQBits = QUANT_SHIFT + cQP.m_iPer + iTransformShift;                   // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
   double dErrScale   = 0;
-  double *pdErrScaleOrg = getErrScaleCoeff(scalingListType,uiLog2TrSize-2,m_cQP.m_iRem,dir);
-  Int *piQCoefOrg = getQuantCoeff(scalingListType,m_cQP.m_iRem,uiLog2TrSize-2,dir);
+#if REMOVE_NSQT
+  double *pdErrScaleOrg = getErrScaleCoeff(scalingListType,uiLog2TrSize-2,cQP.m_iRem,transformShiftSizeOffset);
+  Int *piQCoefOrg = getQuantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2);
+#else
+  double *pdErrScaleOrg = getErrScaleCoeff(scalingListType,uiLog2TrSize-2,cQP.m_iRem,dir,transformShiftSizeOffset);
+  Int *piQCoefOrg = getQuantCoeff(scalingListType,cQP.m_iRem,uiLog2TrSize-2,dir);
+#endif
   Int *piQCoef = piQCoefOrg;
   double *pdErrScale = pdErrScaleOrg;
 #if ADAPTIVE_QP_SELECTION
   Int iQBitsC = iQBits - ARL_C_PRECISION;
   Int iAddC =  1 << (iQBitsC-1);
 #endif
-  UInt uiScanIdx = pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, eTType==TEXT_LUMA, pcCU->isIntra(uiAbsPartIdx));
-  if (uiScanIdx == SCAN_ZIGZAG)
-  {
-    // Map value zigzag to diagonal scan
-    uiScanIdx = SCAN_DIAG;
-  }
-  Int blockType = uiLog2BlkSize;
-#if !REMOVE_NSQT
-  if (uiWidth != uiHeight)
-  {
-    uiScanIdx = SCAN_DIAG;
-    blockType = 4;
-  }
-#endif
-  
-#if ADAPTIVE_QP_SELECTION
-  memset(piArlDstCoeff, 0, sizeof(Int) *  uiMaxNumCoeff);
-#endif
-  
-  Double pdCostCoeff [ 32 * 32 ];
-  Double pdCostSig   [ 32 * 32 ];
-  Double pdCostCoeff0[ 32 * 32 ];
-  ::memset( pdCostCoeff, 0, sizeof(Double) *  uiMaxNumCoeff );
-  ::memset( pdCostSig,   0, sizeof(Double) *  uiMaxNumCoeff );
-  Int rateIncUp   [ 32 * 32 ];
-  Int rateIncDown [ 32 * 32 ];
-  Int sigRateDelta[ 32 * 32 ];
-  Int deltaU      [ 32 * 32 ];
-  ::memset( rateIncUp,    0, sizeof(Int) *  uiMaxNumCoeff );
-  ::memset( rateIncDown,  0, sizeof(Int) *  uiMaxNumCoeff );
-  ::memset( sigRateDelta, 0, sizeof(Int) *  uiMaxNumCoeff );
-  ::memset( deltaU,       0, sizeof(Int) *  uiMaxNumCoeff );
-  
-  const UInt * scanCG;
-#if !REMOVE_NSQT
-  if (uiWidth == uiHeight)
-#endif
-  {
-    scanCG = g_auiSigLastScan[ uiScanIdx ][ uiLog2BlkSize > 3 ? uiLog2BlkSize-2-1 : 0  ];
-    if( uiLog2BlkSize == 3 )
-    {
-      scanCG = g_sigLastScan8x8[ uiScanIdx ];
-    }
-    else if( uiLog2BlkSize == 5 )
-    {
-      scanCG = g_sigLastScanCG32x32;
-    }
-  }
-#if !REMOVE_NSQT
-  else
-  {
-    scanCG = g_sigCGScanNSQT[ uiLog2BlkSize - 2 ];
-  }
-#endif
-  const UInt uiCGSize = (1 << MLS_CG_SIZE);         // 16
+
+  TUEntropyCodingParameters codingParameters;
+  getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, format);
+  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
+  const UInt uiCGSize = (1 << log2GroupSize);
+
+  UInt additionalMultiplier;
+  UInt additionalShift;
+  getAdditionalQuantiserMultiplyAndShift(additionalMultiplier, additionalShift, compID, format, useTransformSkip);
+
   Double pdCostCoeffGroupSig[ MLS_GRP_NUM ];
   UInt uiSigCoeffGroupFlag[ MLS_GRP_NUM ];
-  UInt uiNumBlkSide = uiWidth / MLS_CG_SIZE;
   Int iCGLastScanPos = -1;
-  
+
   UInt    uiCtxSet            = 0;
   Int     c1                  = 1;
   Int     c2                  = 0;
@@ -1833,57 +1817,50 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   Double  d64BaseCost         = 0;
   Int     iLastScanPos        = -1;
   dTemp                       = dErrScale;
-  
+
   UInt    c1Idx     = 0;
   UInt    c2Idx     = 0;
   Int     baseLevel;
-  
-#if REMOVE_NSQT
-  const UInt *scan = g_auiSigLastScan[ uiScanIdx ][ uiLog2BlkSize - 1 ];
-#else
-  const UInt * scan;
-  if (uiWidth == uiHeight)
-  {
-    scan = g_auiSigLastScan[ uiScanIdx ][ uiLog2BlkSize - 1 ];    
-  }
-  else
-  {
-    scan = g_sigScanNSQT[ uiLog2BlkSize - 2 ];
-  }
-#endif
-  
-  ::memset( pdCostCoeffGroupSig,   0, sizeof(Double) * MLS_GRP_NUM );
-  ::memset( uiSigCoeffGroupFlag,   0, sizeof(UInt) * MLS_GRP_NUM );
-  
-  UInt uiCGNum = uiWidth * uiHeight >> MLS_CG_SIZE;
+
+  memset( pdCostCoeffGroupSig,   0, sizeof(Double) * MLS_GRP_NUM );
+  memset( uiSigCoeffGroupFlag,   0, sizeof(UInt) * MLS_GRP_NUM );
+
+  UInt uiCGNum = uiWidth * uiHeight >> log2GroupSize;
   Int iScanPos;
-  coeffGroupRDStats rdStats;     
-  
+  coeffGroupRDStats rdStats;
+
+  const UInt significanceMapContextOffset = getSignificanceMapContextOffset(compID);
+
   for (Int iCGScanPos = uiCGNum-1; iCGScanPos >= 0; iCGScanPos--)
   {
-    UInt uiCGBlkPos = scanCG[ iCGScanPos ];
-    UInt uiCGPosY   = uiCGBlkPos / uiNumBlkSide;
-    UInt uiCGPosX   = uiCGBlkPos - (uiCGPosY * uiNumBlkSide);
-#if !REMOVAL_8x2_2x8_CG
-    if( uiWidth == 8 && uiHeight == 8 && (uiScanIdx == SCAN_HOR || uiScanIdx == SCAN_VER) )
+    UInt uiCGBlkPos = codingParameters.scanCG[ iCGScanPos ];
+    UInt uiCGPosY   = uiCGBlkPos / codingParameters.widthInGroups;
+    UInt uiCGPosX   = uiCGBlkPos - (uiCGPosY * codingParameters.widthInGroups);
+
+    memset( &rdStats, 0, sizeof (coeffGroupRDStats));
+
+    Int patternSigCtx = 0;
+    if (!codingParameters.useFixedGridSignificanceMapContext)
     {
-      uiCGPosY = (uiScanIdx == SCAN_HOR ? uiCGBlkPos : 0);
-      uiCGPosX = (uiScanIdx == SCAN_VER ? uiCGBlkPos : 0);
+      patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
     }
-#endif
-    ::memset( &rdStats, 0, sizeof (coeffGroupRDStats));
-    
-    const Int patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiWidth, uiHeight);
+        
     for (Int iScanPosinCG = uiCGSize-1; iScanPosinCG >= 0; iScanPosinCG--)
     {
       iScanPos = iCGScanPos*uiCGSize + iScanPosinCG;
       //===== quantization =====
-      UInt    uiBlkPos          = scan[iScanPos];
+      UInt    uiBlkPos          = codingParameters.scan[iScanPos];
       // set coeff
-      uiQ  = piQCoef[uiBlkPos];
-      dTemp = pdErrScale[uiBlkPos];
-      Int lLevelDouble          = plSrcCoeff[ uiBlkPos ];
-      lLevelDouble              = (Int)min<Int64>((Int64)abs((Int)lLevelDouble) * uiQ , MAX_INT - (1 << (iQBits - 1)));
+      const UInt scalingListCoeffIdx = getScalingListCoeffIdx(format, compID, uiBlkPos, uiWidth, uiHeight);
+      uiQ  = piQCoef[scalingListCoeffIdx];
+      dTemp = pdErrScale[scalingListCoeffIdx];
+      
+      Int64 tmpLevel = ((Int64)abs(plSrcCoeff[ uiBlkPos ])) * uiQ;
+      if ((additionalMultiplier != 1) || (additionalShift != 0))
+        tmpLevel = ((tmpLevel * additionalMultiplier) + ((1 << additionalShift) - 1)) >> additionalShift;
+
+      Int lLevelDouble              = (Int)min<Int64>(tmpLevel, MAX_INT - (1 << (iQBits - 1)));
+
 #if ADAPTIVE_QP_SELECTION
       if( m_bUseAdaptQpSelect )
       {
@@ -1891,47 +1868,45 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       }
 #endif
       UInt uiMaxAbsLevel        = (lLevelDouble + (1 << (iQBits - 1))) >> iQBits;
-      
+
       Double dErr               = Double( lLevelDouble );
       pdCostCoeff0[ iScanPos ]  = dErr * dErr * dTemp;
       d64BlockUncodedCost      += pdCostCoeff0[ iScanPos ];
       piDstCoeff[ uiBlkPos ]    = uiMaxAbsLevel;
-      
+
       if ( uiMaxAbsLevel > 0 && iLastScanPos < 0 )
       {
         iLastScanPos            = iScanPos;
-        uiCtxSet                = (iScanPos < SCAN_SET_SIZE || eTType!=TEXT_LUMA) ? 0 : 2;
+        uiCtxSet                = getContextSetIndex(compID, (iScanPos >> log2GroupSize), 0);
         iCGLastScanPos          = iCGScanPos;
       }
-      
+
       if ( iLastScanPos >= 0 )
       {
         //===== coefficient level estimation =====
         UInt  uiLevel;
-        UInt  uiOneCtx         = 4 * uiCtxSet + c1;
-        UInt  uiAbsCtx         = uiCtxSet + c2;
-        
+        UInt  uiOneCtx         = (NUM_ONE_FLAG_CTX_PER_SET * uiCtxSet) + c1;
+        UInt  uiAbsCtx         = (NUM_ABS_FLAG_CTX_PER_SET * uiCtxSet) + c2;
+
         if( iScanPos == iLastScanPos )
         {
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ], 
-                                                lLevelDouble, uiMaxAbsLevel, 0, uiOneCtx, uiAbsCtx, uiGoRiceParam, 
-                                                c1Idx, c2Idx, iQBits, dTemp, 1 );
+                                                  lLevelDouble, uiMaxAbsLevel, significanceMapContextOffset, uiOneCtx, uiAbsCtx, uiGoRiceParam, 
+                                                  c1Idx, c2Idx, iQBits, dTemp, 1 );
         }
         else
         {
-          UInt   uiPosY        = uiBlkPos >> uiLog2BlkSize;
-          UInt   uiPosX        = uiBlkPos - ( uiPosY << uiLog2BlkSize );
-#if REMOVAL_8x2_2x8_CG
-          UShort uiCtxSig      = getSigCtxInc( patternSigCtx, uiScanIdx, uiPosX, uiPosY, blockType, uiWidth, uiHeight, eTType );
-#else
-          UShort uiCtxSig      = getSigCtxInc( patternSigCtx, uiPosX, uiPosY, blockType, uiWidth, uiHeight, eTType );
-#endif
+          UShort uiCtxSig      = significanceMapContextOffset + getSigCtxInc( patternSigCtx, codingParameters, iScanPos, uiLog2BlockWidth, uiLog2BlockHeight, toChannelType(compID) );
+
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ],
-                                                lLevelDouble, uiMaxAbsLevel, uiCtxSig, uiOneCtx, uiAbsCtx, uiGoRiceParam, 
-                                                c1Idx, c2Idx, iQBits, dTemp, 0 );
+                                                  lLevelDouble, uiMaxAbsLevel, uiCtxSig, uiOneCtx, uiAbsCtx, uiGoRiceParam, 
+                                                  c1Idx, c2Idx, iQBits, dTemp, 0 );
+
           sigRateDelta[ uiBlkPos ] = m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 1 ] - m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 0 ];
         }
+
         deltaU[ uiBlkPos ]        = (lLevelDouble - ((Int)uiLevel << iQBits)) >> (iQBits-8);
+         
         if( uiLevel > 0 )
         {
           Int rateNow = xGetICRate( uiLevel, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx );
@@ -1944,21 +1919,20 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
         }
         piDstCoeff[ uiBlkPos ] = uiLevel;
         d64BaseCost           += pdCostCoeff [ iScanPos ];
-        
-        
+
         baseLevel = (c1Idx < C1FLAG_NUMBER) ? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
         if( uiLevel >= baseLevel )
         {
-          if(uiLevel  > 3*(1<<uiGoRiceParam))
+          if(uiLevel > 3*(1<<uiGoRiceParam))
           {
-            uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);
+            uiGoRiceParam = min<UInt>((uiGoRiceParam+1), 4);
           }
         }
         if ( uiLevel >= 1)
         {
           c1Idx ++;
         }
-        
+
         //===== update bin model =====
         if( uiLevel > 1 )
         {
@@ -1973,31 +1947,22 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
         {
           c1++;
         }
-        
+
         //===== context set update =====
-        if( ( iScanPos % SCAN_SET_SIZE == 0 ) && ( iScanPos > 0 ) )
+        if( ( iScanPos % uiCGSize == 0 ) && ( iScanPos > 0 ) )
         {
-#if !REMOVE_NUM_GREATER1
-          c1                = 1;
+#if REMOVE_NUM_GREATER1
+          uiCtxSet          = getContextSetIndex(compID, ((iScanPos - 1) >> log2GroupSize), (c1 == 0)); //(iScanPos - 1) because we do this **before** entering the final group
+#else
+          uiCtxSet          = getContextSetIndex(compID, ((iScanPos - 1) >> log2GroupSize), (uiNumOne > 0)); //(iScanPos - 1) because we do this **before** entering the final group
 #endif
+          c1                = 1;
           c2                = 0;
           uiGoRiceParam     = 0;
-          
-          c1Idx   = 0;
-          c2Idx   = 0; 
-          uiCtxSet          = (iScanPos == SCAN_SET_SIZE || eTType!=TEXT_LUMA) ? 0 : 2;
-#if REMOVE_NUM_GREATER1
-          if( c1 == 0 )
-#else
-          if( uiNumOne > 0 )
-#endif
-          {
-            uiCtxSet++;
-          }
-#if REMOVE_NUM_GREATER1
-          c1 = 1;
-#else
-          uiNumOne    >>= 1;
+          c1Idx             = 0;
+          c2Idx             = 0; 
+#if !REMOVE_NUM_GREATER1
+          uiNumOne        >>= 1;
 #endif
         }
       }
@@ -2021,14 +1986,14 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
         }
       }
     } //end for (iScanPosinCG)
-    
+
     if (iCGLastScanPos >= 0) 
     {
       if( iCGScanPos )
       {
         if (uiSigCoeffGroupFlag[ uiCGBlkPos ] == 0)
         {
-          UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiScanIdx, uiWidth, uiHeight);
+          UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups );
           d64BaseCost += xGetRateSigCoeffGroup(0, uiCtxSig) - rdStats.d64SigCost;;  
           pdCostCoeffGroupSig[ iCGScanPos ] = xGetRateSigCoeffGroup(0, uiCtxSig);  
         } 
@@ -2043,21 +2008,22 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
             }
             // rd-cost if SigCoeffGroupFlag = 0, initialization
             Double d64CostZeroCG = d64BaseCost;
-            
+
             // add SigCoeffGroupFlag cost to total cost
-            UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiScanIdx, uiWidth, uiHeight);
+            UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups );
+
             if (iCGScanPos < iCGLastScanPos)
             {
               d64BaseCost  += xGetRateSigCoeffGroup(1, uiCtxSig); 
               d64CostZeroCG += xGetRateSigCoeffGroup(0, uiCtxSig);  
               pdCostCoeffGroupSig[ iCGScanPos ] = xGetRateSigCoeffGroup(1, uiCtxSig); 
             }
-            
+
             // try to convert the current coeff group from non-zero to all-zero
             d64CostZeroCG += rdStats.d64UncodedDist;  // distortion for resetting non-zero levels to zero levels
             d64CostZeroCG -= rdStats.d64CodedLevelandDist;   // distortion and level cost for keeping all non-zero levels
             d64CostZeroCG -= rdStats.d64SigCost;     // sig cost for all coeffs, including zero levels and non-zerl levels
-            
+
             // if we can save cost, change this block to all-zero block
             if ( d64CostZeroCG < d64BaseCost )      
             {
@@ -2071,8 +2037,8 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
               for (Int iScanPosinCG = uiCGSize-1; iScanPosinCG >= 0; iScanPosinCG--)
               {
                 iScanPos      = iCGScanPos*uiCGSize + iScanPosinCG;
-                UInt uiBlkPos = scan[ iScanPos ];
-                
+                UInt uiBlkPos = codingParameters.scan[ iScanPos ];
+
                 if (piDstCoeff[ uiBlkPos ])
                 {
                   piDstCoeff [ uiBlkPos ] = 0;
@@ -2090,17 +2056,17 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       }
     }
   } //end for (iCGScanPos)
-  
+
   //===== estimate last position =====
   if ( iLastScanPos < 0 )
   {
     return;
   }
-  
+
   Double  d64BestCost         = 0;
   Int     ui16CtxCbf          = 0;
   Int     iBestLastIdxP1      = 0;
-  if( !pcCU->isIntra( uiAbsPartIdx ) && eTType == TEXT_LUMA && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
+  if( !pcCU->isIntra( uiAbsPartIdx ) && isLuma(compID) && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
   {
     ui16CtxCbf   = 0;
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockRootCbpBits[ ui16CtxCbf ][ 0 ] );
@@ -2108,34 +2074,36 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   }
   else
   {
-    ui16CtxCbf   = pcCU->getCtxQtCbf( uiAbsPartIdx, eTType, pcCU->getTransformIdx( uiAbsPartIdx ) );
-    ui16CtxCbf   = ( eTType ? TEXT_CHROMA : eTType ) * NUM_QT_CBF_CTX + ui16CtxCbf;
+    ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+    ui16CtxCbf  += getCBFContextOffset(compID);
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 0 ] );
     d64BaseCost += xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 1 ] );
   }
-  
+
+
   Bool bFoundLast = false;
   for (Int iCGScanPos = iCGLastScanPos; iCGScanPos >= 0; iCGScanPos--)
   {
-    UInt uiCGBlkPos = scanCG[ iCGScanPos ];
-    
+    UInt uiCGBlkPos = codingParameters.scanCG[ iCGScanPos ];
+
     d64BaseCost -= pdCostCoeffGroupSig [ iCGScanPos ]; 
     if (uiSigCoeffGroupFlag[ uiCGBlkPos ])
     {     
       for (Int iScanPosinCG = uiCGSize-1; iScanPosinCG >= 0; iScanPosinCG--)
       {
         iScanPos = iCGScanPos*uiCGSize + iScanPosinCG;
+
         if (iScanPos > iLastScanPos) continue;
-        UInt   uiBlkPos     = scan[iScanPos];
-        
+        UInt   uiBlkPos     = codingParameters.scan[iScanPos];
+
         if( piDstCoeff[ uiBlkPos ] )
         {
-          UInt   uiPosY       = uiBlkPos >> uiLog2BlkSize;
-          UInt   uiPosX       = uiBlkPos - ( uiPosY << uiLog2BlkSize );
-          
-          Double d64CostLast= uiScanIdx == SCAN_VER ? xGetRateLast( uiPosY, uiPosX, uiWidth ) : xGetRateLast( uiPosX, uiPosY, uiWidth );
+          UInt   uiPosY       = uiBlkPos >> uiLog2BlockWidth;
+          UInt   uiPosX       = uiBlkPos - ( uiPosY << uiLog2BlockWidth );
+
+          Double d64CostLast= codingParameters.scanType == SCAN_VER ? xGetRateLast( uiPosY, uiPosX, uiWidth, compID ) : xGetRateLast( uiPosX, uiPosY, uiWidth, compID );
           Double totalCost = d64BaseCost + d64CostLast - pdCostSig[ iScanPos ];
-          
+
           if( totalCost < d64BestCost )
           {
             iBestLastIdxP1  = iScanPos + 1;
@@ -2160,10 +2128,11 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       }
     } // end if (uiSigCoeffGroupFlag[ uiCGBlkPos ])
   } // end for 
-  
+
+
   for ( Int scanPos = 0; scanPos < iBestLastIdxP1; scanPos++ )
   {
-    Int blkPos = scan[ scanPos ];
+    Int blkPos = codingParameters.scan[ scanPos ];
     Int level  = piDstCoeff[ blkPos ];
     uiAbsSum += level;
     piDstCoeff[ blkPos ] = ( plSrcCoeff[ blkPos ] < 0 ) ? -level : level;
@@ -2172,88 +2141,91 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   //===== clean uncoded coefficients =====
   for ( Int scanPos = iBestLastIdxP1; scanPos <= iLastScanPos; scanPos++ )
   {
-    piDstCoeff[ scan[ scanPos ] ] = 0;
+    piDstCoeff[ codingParameters.scan[ scanPos ] ] = 0;
   }
-  
+
+
   if( pcCU->getSlice()->getPPS()->getSignHideFlag() && uiAbsSum>=2)
   {
-    Int64 rdFactor = (Int64)((Double)(g_invQuantScales[m_cQP.rem()])*(Double)(g_invQuantScales[m_cQP.rem()])*(Double)(1<<(2*m_cQP.m_iPer))/m_dLambda/16/(Double)(1<<(2*g_uiBitIncrement)) + 0.5);
+    const Double inverseQuantScale = Double(getInverseQuantScaling(cQP.rem(), format));
+    Int64 rdFactor = (Int64)(inverseQuantScale * inverseQuantScale * Double(1 << (2 * cQP.m_iPer)) / m_dLambda / 16 / Double(1 << (2 * g_uiBitIncrement)) + 0.5);
+
     Int lastCG = -1;
     Int absSum = 0 ;
     Int n ;
-    
-    for( Int subSet = (uiWidth*uiHeight-1) >> LOG2_SCAN_SET_SIZE; subSet >= 0; subSet-- )
+
+    for( Int subSet = (uiWidth*uiHeight-1) >> log2GroupSize; subSet >= 0; subSet-- )
     {
-      Int  subPos     = subSet << LOG2_SCAN_SET_SIZE;
-      Int  firstNZPosInCG=SCAN_SET_SIZE , lastNZPosInCG=-1 ;
+      Int  subPos     = subSet << log2GroupSize;
+      Int  firstNZPosInCG=uiCGSize , lastNZPosInCG=-1 ;
       absSum = 0 ;
-      
-      for(n = SCAN_SET_SIZE-1; n >= 0; --n )
+
+      for(n = uiCGSize-1; n >= 0; --n )
       {
-        if( piDstCoeff[ scan[ n + subPos ]] )
+        if( piDstCoeff[ codingParameters.scan[ n + subPos ]] )
         {
           lastNZPosInCG = n;
           break;
         }
       }
-      
-      for(n = 0; n <SCAN_SET_SIZE; n++ )
+
+      for(n = 0; n <uiCGSize; n++ )
       {
-        if( piDstCoeff[ scan[ n + subPos ]] )
+        if( piDstCoeff[ codingParameters.scan[ n + subPos ]] )
         {
           firstNZPosInCG = n;
           break;
         }
       }
-      
+
       for(n = firstNZPosInCG; n <=lastNZPosInCG; n++ )
       {
-        absSum += piDstCoeff[ scan[ n + subPos ]];
+        absSum += piDstCoeff[ codingParameters.scan[ n + subPos ]];
       }
-      
+
       if(lastNZPosInCG>=0 && lastCG==-1)
       {
-        lastCG = 1; 
-      } 
+        lastCG = 1;
+      }
       
       if( lastNZPosInCG-firstNZPosInCG>=SBH_THRESHOLD )
       {
-        UInt signbit = (piDstCoeff[scan[subPos+firstNZPosInCG]]>0?0:1);
+        UInt signbit = (piDstCoeff[codingParameters.scan[subPos+firstNZPosInCG]]>0?0:1);
         if( signbit!=(absSum&0x1) )  // hide but need tune
         {
           // calculate the cost 
-          Int64 minCostInc = MAX_INT64, curCost=MAX_INT64;
-          Int minPos =-1, finalChange=0, curChange=0;
-          
-          for( n = (lastCG==1?lastNZPosInCG:SCAN_SET_SIZE-1) ; n >= 0; --n )
+          Int64 minCostInc = MAX_INT64, curCost = MAX_INT64;
+          Int minPos = -1, finalChange = 0, curChange = 0;
+
+          for( n = (lastCG==1?lastNZPosInCG:uiCGSize-1) ; n >= 0; --n )
           {
-            UInt uiBlkPos   = scan[ n + subPos ];
+            UInt uiBlkPos   = codingParameters.scan[ n + subPos ];
             if(piDstCoeff[ uiBlkPos ] != 0 )
             {
-              Int64 costUp   = rdFactor * ( - deltaU[uiBlkPos] ) + rateIncUp[uiBlkPos] ;
+              Int64 costUp   = rdFactor * ( - deltaU[uiBlkPos] ) + rateIncUp[uiBlkPos];
               Int64 costDown = rdFactor * (   deltaU[uiBlkPos] ) + rateIncDown[uiBlkPos] 
-              -   ( abs(piDstCoeff[uiBlkPos])==1?((1<<15)+sigRateDelta[uiBlkPos]):0 );
-              
+                               -   ( abs(piDstCoeff[uiBlkPos])==1?((1<<15)+sigRateDelta[uiBlkPos]):0 );
+
               if(lastCG==1 && lastNZPosInCG==n && abs(piDstCoeff[uiBlkPos])==1)
               {
-                costDown -= (4<<15) ;
+                costDown -= (4<<15);
               }
-              
+
               if(costUp<costDown)
               {  
                 curCost = costUp;
-                curChange =  1 ;
+                curChange =  1;
               }
               else               
               {
-                curChange = -1 ;
+                curChange = -1;
                 if(n==firstNZPosInCG && abs(piDstCoeff[uiBlkPos])==1)
                 {
-                  curCost = MAX_INT64 ;
+                  curCost = MAX_INT64;
                 }
                 else
                 {
-                  curCost = costDown ; 
+                  curCost = costDown; 
                 }
               }
             }
@@ -2261,7 +2233,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
             {
               curCost = rdFactor * ( - (abs(deltaU[uiBlkPos])) ) + (1<<15) + rateIncUp[uiBlkPos] + sigRateDelta[uiBlkPos] ; 
               curChange = 1 ;
-              
+
               if(n<firstNZPosInCG)
               {
                 UInt thissignbit = (plSrcCoeff[uiBlkPos]>=0?0:1);
@@ -2271,20 +2243,20 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
                 }
               }
             }
-            
+
             if( curCost<minCostInc)
             {
-              minCostInc = curCost ;
-              finalChange = curChange ;
-              minPos = uiBlkPos ;
+              minCostInc = curCost;
+              finalChange = curChange;
+              minPos = uiBlkPos;
             }
           }
-          
-          if(piQCoef[minPos] == 32767 || piQCoef[minPos] == -32768)
+          const Int scaledCoeffIdx = minPos<0 ? minPos : (Int)(getScalingListCoeffIdx(format, compID, minPos, uiWidth, uiHeight));
+          if(piQCoef[scaledCoeffIdx] == 32767 || piQCoef[scaledCoeffIdx] == -32768)
           {
             finalChange = -1;
           }
-          
+
           if(plSrcCoeff[minPos]>=0)
           {
             piDstCoeff[minPos] += finalChange ;
@@ -2295,7 +2267,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
           }          
         }
       }
-      
+
       if(lastCG==1)
       {
         lastCG=0 ;  
@@ -2304,128 +2276,179 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
   }
 }
 
+
 /** Pattern decision for context derivation process of significant_coeff_flag
  * \param sigCoeffGroupFlag pointer to prior coded significant coeff group
- * \param posXCG column of current coefficient group
- * \param posYCG row of current coefficient group
+ * \param uiCGPosX column of current coefficient group
+ * \param uiCGPosY row of current coefficient group
  * \param width width of the block
  * \param height height of the block
  * \returns pattern for current coefficient group
  */
-Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt posXCG, UInt posYCG, Int width, Int height )
+Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPosX, UInt uiCGPosY, UInt widthInGroups, UInt heightInGroups )
 {
-#if REMOVAL_8x2_2x8_CG
-  if( width == 4 && height == 4 ) return -1;
-#else
-  if( width == height && width <= 8 ) return -1;
-#endif
+  const Bool rightAvailable = uiCGPosX < (widthInGroups  - 1);
+  const Bool belowAvailable = uiCGPosY < (heightInGroups - 1);
 
   UInt sigRight = 0;
   UInt sigLower = 0;
 
-  width >>= 2;
-  height >>= 2;
-  if( posXCG < width - 1 )
+  if (rightAvailable) sigRight = ((sigCoeffGroupFlag[ (uiCGPosY * widthInGroups) + uiCGPosX + 1 ] != 0) ? 1 : 0);
+  if (belowAvailable) sigLower = ((sigCoeffGroupFlag[ (uiCGPosY + 1) * widthInGroups + uiCGPosX ] != 0) ? 1 : 0);
+
+
+  if (patternSigCtxCopyMissingGroupFromAvailableGroup())
   {
-    sigRight = (sigCoeffGroupFlag[ posYCG * width + posXCG + 1 ] != 0);
+    if (!rightAvailable) sigRight = sigLower;
+    if (!belowAvailable) sigLower = sigRight;
   }
-  if (posYCG < height - 1 )
-  {
-    sigLower = (sigCoeffGroupFlag[ (posYCG  + 1 ) * width + posXCG ] != 0);
-  }
-  return sigRight + (sigLower<<1);
+
+  return sigRight + (sigLower << 1);
 }
 
+
 /** Context derivation process of coeff_abs_significant_flag
- * \param patternSigCtx pattern for current coefficient group
+ * \param pcCoeff pointer to prior coded transform coefficients
  * \param posX column of current scan position
  * \param posY row of current scan position
  * \param blockType log2 value of block size if square block, or 4 otherwise
  * \param width width of the block
  * \param height height of the block
- * \param textureType texture type (TEXT_LUMA...)
+ * \param ChannelType channel type (CHANNEL_TYPE_LUMA/CHROMA)
  * \returns ctxInc for current scan position
  */
-Int TComTrQuant::getSigCtxInc    (
-                                   Int                             patternSigCtx,
-#if REMOVAL_8x2_2x8_CG
-                                   UInt                            scanIdx,
-#endif
-                                   Int                             posX,
-                                   Int                             posY,
-                                   Int                             blockType,
-                                   Int                             width
-                                  ,Int                             height
-                                  ,TextType                        textureType
-                                  )
+Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCtx,
+                                   const TUEntropyCodingParameters &codingParameters,
+                                   const Int                        scanPosition,
+                                   const Int                        log2BlockWidth,
+                                   const Int                        log2BlockHeight,
+                                   const ChannelType                chanType)
 {
-  const Int ctxIndMap[16] =
-  {
-    0, 1, 4, 5,
-    2, 3, 4, 5,
-    6, 6, 8, 8,
-    7, 7, 8, 8
-  };
+  const UInt rasterPosition = codingParameters.scan[scanPosition];
+  const UInt posY           = rasterPosition >> log2BlockWidth;
+  const UInt posX           = rasterPosition - (posY << log2BlockWidth);
 
-  if( posX + posY == 0 )
-  {
-    return 0;
-  }
+  if ((posX + posY) == 0) return 0; //special case for the DC context variable
 
-  if ( blockType == 2 )
-  {
-    return ctxIndMap[ 4 * posY + posX ];
-  }
+  Int offset = MAX_INT;
 
-#if !REMOVAL_8x2_2x8_CG
-  if ( blockType == 3 )
+  if (codingParameters.useFixedGridSignificanceMapContext)
   {
-    return 9 + ctxIndMap[ 4 * (posY >> 1) + (posX >> 1) ];
-  }
+    const TUEntropyCodingParameters::FixedGridContextParameters &gridParameters = codingParameters.fixedGridContextParameters;
 
-  Int offset = 18;
-#else
-  Int offset = blockType == 3 ? (scanIdx==SCAN_DIAG ? 9 : 15) : (textureType == TEXT_LUMA ? 21 : 12);
-#endif
-
-  Int posXinSubset = posX-((posX>>2)<<2);
-  Int posYinSubset = posY-((posY>>2)<<2);
-  Int cnt = 0;
-  if(patternSigCtx==0)
-  {
-#if REMOVAL_8x2_2x8_CG
-    cnt = posXinSubset+posYinSubset<=2 ? (posXinSubset+posYinSubset==0 ? 2 : 1) : 0;
-#else
-    cnt = posXinSubset+posYinSubset<=2 ? 1 : 0;
-#endif
-  }
-  else if(patternSigCtx==1)
-  {
-#if REMOVAL_8x2_2x8_CG
-    cnt = posYinSubset<=1 ? (posYinSubset==0 ? 2 : 1) : 0;
-#else
-    cnt = posYinSubset<=1 ? 1 : 0;
-#endif
-  }
-  else if(patternSigCtx==2)
-  {
-#if REMOVAL_8x2_2x8_CG
-    cnt = posXinSubset<=1 ? (posXinSubset==0 ? 2 : 1) : 0;
-#else
-    cnt = posXinSubset<=1 ? 1 : 0;
-#endif
+    offset = gridParameters.grid[ (gridParameters.stride * (posY >> gridParameters.heightScale)) + (posX >> gridParameters.widthScale) ];
   }
   else
   {
+    Int cnt = 0;
+
+    switch (patternSigCtx)
+    {
+      //------------------
+
+      case 0: //neither neighbouring group is significant
+        {
 #if REMOVAL_8x2_2x8_CG
-    cnt = 2;
+          const Int posXinSubset     = posX & ((1 << codingParameters.log2GroupWidth) - 1);
+          const Int posYinSubset     = posY & ((1 << codingParameters.log2GroupHeight) - 1);
+          const Int posTotalInSubset = posXinSubset + posYinSubset;
+
+          //first N coefficients in scan order use 2; the next few use 1; the rest use 0.
+#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+          const UInt context1Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context1Threshold;
+          const UInt context2Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context2Threshold;
 #else
-    cnt = posXinSubset+posYinSubset<=4 ? 2 : 1;
+          const UInt context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x4;
+          const UInt context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x4;
 #endif
+
+          cnt = (posTotalInSubset >= context1Threshold) ? 0 : ((posTotalInSubset >= context2Threshold) ? 1 : 2);
+#else
+          const Int log2GroupSize   = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
+          const Int posScanInSubset = scanPosition & ((1 << log2GroupSize) - 1);
+
+          //first N coefficients in scan order use 1; the rest use 0.
+#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+          const UInt contextThreshold = codingParameters.neighbourhoodContextParameters.pattern00ContextThreshold;
+#else
+          const UInt contextThreshold = NEIGHBOURHOOD_00_CONTEXT_THRESHOLD_4x4;
+#endif
+
+          cnt = (posScanInSubset >= contextThreshold) ? 0 : 1;
+#endif
+        }
+        break;
+
+      //------------------
+
+      case 1: //right group is significant, below is not
+        {
+          const Int posYinSubset = posY & ((1 << codingParameters.log2GroupHeight) - 1);
+          const Int groupHeight  = 1 << codingParameters.log2GroupHeight;
+
+#if REMOVAL_8x2_2x8_CG
+          cnt = (posYinSubset >= (groupHeight >> 1)) ? 0 : ((posYinSubset >= (groupHeight >> 2)) ? 1 : 2); //top quarter uses 2; second-from-top quarter uses 1; bottom half uses 0
+#else
+          cnt = (posYinSubset >= (groupHeight >> 1)) ? 0 : 1; //top half uses 1; bottom half uses 0
+#endif
+        }
+        break;
+
+      //------------------
+
+      case 2: //below group is significant, right is not
+        {
+          const Int posXinSubset = posX & ((1 << codingParameters.log2GroupWidth) - 1);
+          const Int groupWidth   = 1 << codingParameters.log2GroupWidth;
+
+#if REMOVAL_8x2_2x8_CG
+          cnt = (posXinSubset >= (groupWidth >> 1)) ? 0 : ((posXinSubset >= (groupWidth >> 2)) ? 1 : 2); //left quarter uses 2; second-from-left quarter uses 1; right half uses 0
+#else
+          cnt = (posXinSubset >= (groupWidth >> 1)) ? 0 : 1; //left half uses 1; right half uses 0
+#endif
+        }
+        break;
+
+      //------------------
+
+      case 3: //both neighbouring groups are significant
+        {
+#if REMOVAL_8x2_2x8_CG
+          cnt = 2;
+#else
+          const Int log2GroupSize   = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
+          const Int posScanInSubset = scanPosition & ((1 << log2GroupSize) - 1);
+
+          //first N coefficients in scan order use 2; the rest use 1.
+#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+          const UInt contextThreshold = codingParameters.neighbourhoodContextParameters.pattern11ContextThreshold;
+#else
+          const UInt contextThreshold = NEIGHBOURHOOD_11_CONTEXT_THRESHOLD_4x4;
+#endif
+
+          cnt = (posScanInSubset >= contextThreshold) ? 1 : 2;
+#endif
+        }
+        break;
+
+      //------------------
+
+      default:
+        std::cerr << "ERROR: Invalid patternSigCtx \"" << (int)patternSigCtx << "\" in getSigCtxInc" << std::endl;
+        exit(1);
+        break;
+    }
+
+    //------------------------------------------------
+
+    const Bool notFirstGroup = ((posX >> codingParameters.log2GroupWidth) + (posY >> codingParameters.log2GroupHeight)) > 0;
+
+    offset = (notFirstGroup ? notFirstGroupNeighbourhoodContextOffset[chanType] : 0) + cnt;
   }
 
-  return (( textureType == TEXT_LUMA && ((posX>>2) + (posY>>2)) > 0 ) ? 3 : 0) + offset + cnt;
+  return codingParameters.firstSignificanceMapContext + offset;
 }
+
 
 /** Get the best level in RD sense
  * \param rd64CodedCost reference to coded cost
@@ -2508,16 +2531,17 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&                         rd64
 __inline Double TComTrQuant::xGetICRateCost  ( UInt                            uiAbsLevel,
                                                UShort                          ui16CtxNumOne,
                                                UShort                          ui16CtxNumAbs,
-                                               UShort                          ui16AbsGoRice
-                                            ,  UInt                            c1Idx,
+                                               UShort                          ui16AbsGoRice,
+                                               UInt                            c1Idx,
                                                UInt                            c2Idx
                                                ) const
 {
   Double iRate = xGetIEPRate();
+
   UInt baseLevel  =  (c1Idx < C1FLAG_NUMBER)? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
 
   if ( uiAbsLevel >= baseLevel )
-  {    
+  {
     UInt symbol     = uiAbsLevel - baseLevel;
     UInt length;
 #if COEF_REMAIN_BIN_REDUCTION
@@ -2536,7 +2560,7 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
       symbol  = symbol - ( COEF_REMAIN_BIN_REDUCTION << ui16AbsGoRice); 
 #else
       symbol  = symbol - ( 8 << ui16AbsGoRice);    
-#endif
+#endif 
       while (symbol >= (1<<length))
       {
         symbol -=  (1<<(length++));    
@@ -2547,6 +2571,7 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
       iRate += (8+length+1-ui16AbsGoRice+length)<< 15;
 #endif
     }
+
     if (c1Idx < C1FLAG_NUMBER)
     {
       iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 1 ];
@@ -2558,6 +2583,7 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
     }
   }
   else
+
   if( uiAbsLevel == 1 )
   {
     iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 0 ];
@@ -2574,15 +2600,17 @@ __inline Double TComTrQuant::xGetICRateCost  ( UInt                            u
   return xGetICost( iRate );
 }
 
+
 __inline Int TComTrQuant::xGetICRate  ( UInt                            uiAbsLevel,
                                        UShort                          ui16CtxNumOne,
                                        UShort                          ui16CtxNumAbs,
-                                       UShort                          ui16AbsGoRice
-                                     , UInt                            c1Idx,
+                                       UShort                          ui16AbsGoRice,
+                                       UInt                            c1Idx,
                                        UInt                            c2Idx
                                        ) const
 {
   Int iRate = 0;
+
   UInt baseLevel  =  (c1Idx < C1FLAG_NUMBER)? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
 
   if ( uiAbsLevel >= baseLevel )
@@ -2615,6 +2643,7 @@ __inline Int TComTrQuant::xGetICRate  ( UInt                            uiAbsLev
     }
   }
   else
+
   if( uiAbsLevel == 0 )
   {
     return 0;
@@ -2651,11 +2680,20 @@ __inline Double TComTrQuant::xGetRateSigCoeffGroup  ( UShort                    
 */
 __inline Double TComTrQuant::xGetRateLast   ( const UInt                      uiPosX,
                                               const UInt                      uiPosY,
-                                              const UInt                      uiBlkWdth     ) const
+                                              const UInt                      uiBlkWdth,
+                                              const ComponentID               component  ) const
 {
   UInt uiCtxX   = g_uiGroupIdx[uiPosX];
   UInt uiCtxY   = g_uiGroupIdx[uiPosY];
+
+#if   (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
+  Double uiCost = m_pcEstBitsSbac->lastXBits[component][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[component][ uiCtxY ];
+#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
+  Double uiCost = m_pcEstBitsSbac->lastXBits[toChannelType(component)][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[toChannelType(component)][ uiCtxY ];
+#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
   Double uiCost = m_pcEstBitsSbac->lastXBits[ uiCtxX ] + m_pcEstBitsSbac->lastYBits[ uiCtxY ];
+#endif
+  
   if( uiCtxX > 3 )
   {
     uiCost += xGetIEPRate() * ((uiCtxX-2)>>1);
@@ -2704,47 +2742,26 @@ __inline Double TComTrQuant::xGetIEPRate      (                                 
  * \param uiLog2BlkSize log2 value of block size
  * \returns ctxInc for current scan position
  */
-UInt TComTrQuant::getSigCoeffGroupCtxInc  ( const UInt*               uiSigCoeffGroupFlag,
-                                           const UInt                      uiCGPosX,
-                                           const UInt                      uiCGPosY,
-                                           const UInt                      scanIdx,
-                                           Int width, Int height)
+UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
+                                           const UInt   uiCGPosX,
+                                           const UInt   uiCGPosY,
+                                           const UInt   widthInGroups,
+                                           const UInt   heightInGroups)
 {
-  UInt uiRight = 0;
-  UInt uiLower = 0;
+  UInt sigRight = 0;
+  UInt sigLower = 0;
 
-  width >>= 2;
-  height >>= 2;
-#if !REMOVAL_8x2_2x8_CG
-  if( width == 2 && height == 2 ) // 8x8
-  {
-    if( scanIdx == SCAN_HOR )  
-    {
-      width = 1;
-      height = 4;
-    }
-    else if( scanIdx == SCAN_VER )
-    {
-      width = 4;
-      height = 1;
-    }
-  }
-#endif
-  if( uiCGPosX < width - 1 )
-  {
-    uiRight = (uiSigCoeffGroupFlag[ uiCGPosY * width + uiCGPosX + 1 ] != 0);
-  }
-  if (uiCGPosY < height - 1 )
-  {
-    uiLower = (uiSigCoeffGroupFlag[ (uiCGPosY  + 1 ) * width + uiCGPosX ] != 0);
-  }
-  return (uiRight || uiLower);
+  if (uiCGPosX < (widthInGroups  - 1)) sigRight = ((uiSigCoeffGroupFlag[ (uiCGPosY * widthInGroups) + uiCGPosX + 1 ] != 0) ? 1 : 0);
+  if (uiCGPosY < (heightInGroups - 1)) sigLower = ((uiSigCoeffGroupFlag[ (uiCGPosY + 1) * widthInGroups + uiCGPosX ] != 0) ? 1 : 0);
 
+  return ((sigRight + sigLower) != 0) ? 1 : 0;
 }
+
+
 /** set quantized matrix coefficient for encode
  * \param scalingList quantaized matrix address
  */
-Void TComTrQuant::setScalingList(TComScalingList *scalingList)
+Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaFormat format)
 {
   UInt size,list;
   UInt qp;
@@ -2755,13 +2772,21 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList)
     {
       for(qp=0;qp<SCALING_LIST_REM_NUM;qp++)
       {
-        xSetScalingListEnc(scalingList,list,size,qp);
-        xSetScalingListDec(scalingList,list,size,qp);
-        setErrScaleCoeff(list,size,qp,SCALING_LIST_SQT);
-        if(size == SCALING_LIST_32x32 || size == SCALING_LIST_16x16)
+        xSetScalingListEnc(scalingList,list,size,qp,format);
+        xSetScalingListDec(scalingList,list,size,qp,format);
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
         {
-          setErrScaleCoeff(list,size-1,qp,SCALING_LIST_HOR);
-          setErrScaleCoeff(list,size-1,qp,SCALING_LIST_VER);
+#if REMOVE_NSQT
+          setErrScaleCoeff(list,size,qp,TransformShiftSizeOffset(transformShiftSizeOffsetId));
+#else
+          setErrScaleCoeff(list,size,qp,SCALING_LIST_SQT,TransformShiftSizeOffset(transformShiftSizeOffsetId));
+          if(size == SCALING_LIST_32x32 || size == SCALING_LIST_16x16)
+          {
+            setErrScaleCoeff(list,size-1,qp,SCALING_LIST_HOR,TransformShiftSizeOffset(transformShiftSizeOffsetId));
+            setErrScaleCoeff(list,size-1,qp,SCALING_LIST_VER,TransformShiftSizeOffset(transformShiftSizeOffsetId));
+          }
+#endif
         }
       }
     }
@@ -2770,7 +2795,7 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList)
 /** set quantized matrix coefficient for decode
  * \param scalingList quantaized matrix address
  */
-Void TComTrQuant::setScalingListDec(TComScalingList *scalingList)
+Void TComTrQuant::setScalingListDec(TComScalingList *scalingList, const ChromaFormat format)
 {
   UInt size,list;
   UInt qp;
@@ -2781,7 +2806,7 @@ Void TComTrQuant::setScalingListDec(TComScalingList *scalingList)
     {
       for(qp=0;qp<SCALING_LIST_REM_NUM;qp++)
       {
-        xSetScalingListDec(scalingList,list,size,qp);
+        xSetScalingListDec(scalingList,list,size,qp,format);
       }
     }
   }
@@ -2791,9 +2816,12 @@ Void TComTrQuant::setScalingListDec(TComScalingList *scalingList)
  * \param uiSize Size
  * \param uiQP Quantization parameter
  */
-Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, UInt qp, UInt dir)
+#if REMOVE_NSQT
+Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, UInt qp, TransformShiftSizeOffset transformShiftSizeOffset)
+#else
+Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, UInt qp, ScalingListDIR dir, TransformShiftSizeOffset transformShiftSizeOffset)
+#endif
 {
-
   UInt uiLog2TrSize = g_aucConvertToBit[ g_scalingListSizeX[size] ] + 2;
 #if FULL_NBIT
   UInt uiBitDepth = g_uiBitDepth;
@@ -2801,16 +2829,22 @@ Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, UInt qp, UInt dir)
   UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;  
 #endif
 
-  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize;  // Represents scaling through forward transform
+  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize - UInt(transformShiftSizeOffset);  // Represents scaling through forward transform
 
   UInt i,uiMaxNumCoeff = g_scalingListSize[size];
   Int *piQuantcoeff;
   double *pdErrScale;
+#if REMOVE_NSQT
+  piQuantcoeff   = getQuantCoeff(list, qp,size);
+  pdErrScale     = getErrScaleCoeff(list, size, qp, transformShiftSizeOffset);
+#else
   piQuantcoeff   = getQuantCoeff(list, qp,size,dir);
-  pdErrScale     = getErrScaleCoeff(list, size, qp,dir);
+  pdErrScale     = getErrScaleCoeff(list, size, qp, dir, transformShiftSizeOffset);
+#endif
 
   double dErrScale = (double)(1<<SCALE_BITS);                              // Compensate for scaling of bitcount in Lagrange cost function
   dErrScale = dErrScale*pow(2.0,-2.0*iTransformShift);                     // Compensate for scaling through forward transform
+
   for(i=0;i<uiMaxNumCoeff;i++)
   {
     pdErrScale[i] =  dErrScale/(double)piQuantcoeff[i]/(double)piQuantcoeff[i]/(double)(1<<(2*g_uiBitIncrement));
@@ -2823,25 +2857,33 @@ Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, UInt qp, UInt dir)
  * \param sizeId size index
  * \param uiQP Quantization parameter
  */
-Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, UInt qp)
+Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, UInt qp, const ChromaFormat format)
 {
-  UInt width = g_scalingListSizeX[sizeId];
+  UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
-  UInt ratio = g_scalingListSizeX[sizeId]/min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]);
+  UInt ratio  = g_scalingListSizeX[sizeId]/min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]);
   Int *quantcoeff;
-  Int *coeff = scalingList->getScalingListAddress(sizeId,listId);
-  quantcoeff   = getQuantCoeff(listId, qp, sizeId, SCALING_LIST_SQT);
+  Int *coeff  = scalingList->getScalingListAddress(sizeId,listId);
+#if REMOVE_NSQT
+  quantcoeff  = getQuantCoeff(listId, qp, sizeId);
+#else
+  quantcoeff  = getQuantCoeff(listId, qp, sizeId, SCALING_LIST_SQT);
+#endif
 
-  processScalingListEnc(coeff,quantcoeff,g_quantScales[qp]<<4,height,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+  Int quantScales = getQuantScaling(qp, format);
 
+  processScalingListEnc(coeff,quantcoeff,quantScales<<4,height,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+
+#if !REMOVE_NSQT
   if(sizeId == SCALING_LIST_32x32 || sizeId == SCALING_LIST_16x16) //for NSQT
   {
     quantcoeff   = getQuantCoeff(listId, qp, sizeId-1,SCALING_LIST_VER);
-    processScalingListEnc(coeff,quantcoeff,g_quantScales[qp]<<4,height,width>>2,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+    processScalingListEnc(coeff,quantcoeff,quantScales<<4,height,width>>2,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
 
     quantcoeff   = getQuantCoeff(listId, qp, sizeId-1,SCALING_LIST_HOR);
-    processScalingListEnc(coeff,quantcoeff,g_quantScales[qp]<<4,height>>2,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+    processScalingListEnc(coeff,quantcoeff,quantScales<<4,height>>2,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
   }
+#endif
 }
 /** set quantized matrix coefficient for decode
  * \param scalingList quantaized matrix address
@@ -2849,31 +2891,40 @@ Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, 
  * \param size size index
  * \param uiQP Quantization parameter
  */
-Void TComTrQuant::xSetScalingListDec(TComScalingList *scalingList, UInt listId, UInt sizeId, UInt qp)
+Void TComTrQuant::xSetScalingListDec(TComScalingList *scalingList, UInt listId, UInt sizeId, UInt qp, const ChromaFormat format)
 {
-  UInt width = g_scalingListSizeX[sizeId];
+  UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
-  UInt ratio = g_scalingListSizeX[sizeId]/min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]);
+  UInt ratio  = g_scalingListSizeX[sizeId]/min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]);
   Int *dequantcoeff;
-  Int *coeff = scalingList->getScalingListAddress(sizeId,listId);
+  Int *coeff  = scalingList->getScalingListAddress(sizeId,listId);
 
+#if REMOVE_NSQT
+  dequantcoeff = getDequantCoeff(listId, qp, sizeId);
+#else
   dequantcoeff = getDequantCoeff(listId, qp, sizeId,SCALING_LIST_SQT);
-  processScalingListDec(coeff,dequantcoeff,g_invQuantScales[qp],height,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+#endif
+  
+  Int invQuantScale = getInverseQuantScaling(qp, format);
 
+  processScalingListDec(coeff,dequantcoeff,invQuantScale,height,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+
+
+#if !REMOVE_NSQT
   if(sizeId == SCALING_LIST_32x32 || sizeId == SCALING_LIST_16x16)
   {
     dequantcoeff   = getDequantCoeff(listId, qp, sizeId-1,SCALING_LIST_VER);
-    processScalingListDec(coeff,dequantcoeff,g_invQuantScales[qp],height,width>>2,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+    processScalingListDec(coeff,dequantcoeff,invQuantScale,height,width>>2,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
 
     dequantcoeff   = getDequantCoeff(listId, qp, sizeId-1,SCALING_LIST_HOR);
-
-    processScalingListDec(coeff,dequantcoeff,g_invQuantScales[qp],height>>2,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
+    processScalingListDec(coeff,dequantcoeff,invQuantScale,height>>2,width,ratio,min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]),scalingList->getScalingListDC(sizeId,listId));
   }
+#endif
 }
 
 /** set flat matrix value to quantized coefficient
  */
-Void TComTrQuant::setFlatScalingList()
+Void TComTrQuant::setFlatScalingList(const ChromaFormat format)
 {
   UInt size,list;
   UInt qp;
@@ -2884,12 +2935,20 @@ Void TComTrQuant::setFlatScalingList()
     {
       for(qp=0;qp<SCALING_LIST_REM_NUM;qp++)
       {
-        xsetFlatScalingList(list,size,qp);
-        setErrScaleCoeff(list,size,qp,SCALING_LIST_SQT);
-        if(size == SCALING_LIST_32x32 || size == SCALING_LIST_16x16)
+        xsetFlatScalingList(list,size,qp,format);
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
         {
-          setErrScaleCoeff(list,size-1,qp,SCALING_LIST_HOR);
-          setErrScaleCoeff(list,size-1,qp,SCALING_LIST_VER);
+#if REMOVE_NSQT
+          setErrScaleCoeff(list,size,qp, TransformShiftSizeOffset(transformShiftSizeOffsetId));
+#else
+          setErrScaleCoeff(list,size,qp,SCALING_LIST_SQT, TransformShiftSizeOffset(transformShiftSizeOffsetId));
+          if(size == SCALING_LIST_32x32 || size == SCALING_LIST_16x16)
+          {
+            setErrScaleCoeff(list,size-1,qp,SCALING_LIST_HOR, TransformShiftSizeOffset(transformShiftSizeOffsetId));
+            setErrScaleCoeff(list,size-1,qp,SCALING_LIST_VER, TransformShiftSizeOffset(transformShiftSizeOffsetId));
+          }
+#endif
         }
       }
     }
@@ -2901,17 +2960,22 @@ Void TComTrQuant::setFlatScalingList()
  * \param uiQP Quantization parameter
  * \param uiSize Size
  */
-Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, UInt qp)
+Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, UInt qp, const ChromaFormat format)
 {
   UInt i,num = g_scalingListSize[size];
-  UInt numDiv4 = num>>2;
   Int *quantcoeff;
   Int *dequantcoeff;
-  Int quantScales = g_quantScales[qp];
-  Int invQuantScales = g_invQuantScales[qp]<<4;
 
+  Int quantScales    = getQuantScaling       (qp, format);
+  Int invQuantScales = getInverseQuantScaling(qp, format) << 4;
+
+#if REMOVE_NSQT
+  quantcoeff   = getQuantCoeff(list, qp, size);
+  dequantcoeff = getDequantCoeff(list, qp, size);
+#else
   quantcoeff   = getQuantCoeff(list, qp, size,SCALING_LIST_SQT);
   dequantcoeff = getDequantCoeff(list, qp, size,SCALING_LIST_SQT);
+#endif
 
   for(i=0;i<num;i++)
   { 
@@ -2919,6 +2983,8 @@ Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, UInt qp)
     *dequantcoeff++ = invQuantScales;
   }
 
+#if !REMOVE_NSQT
+  const UInt numDiv4 = num>>2;
   if(size == SCALING_LIST_32x32 || size == SCALING_LIST_16x16)
   {
     quantcoeff   = getQuantCoeff(list, qp, size-1, SCALING_LIST_HOR);
@@ -2938,6 +3004,7 @@ Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, UInt qp)
       *dequantcoeff++ = invQuantScales;
     }
   }
+#endif
 }
 
 /** set quantized matrix coefficient for encode
@@ -2952,15 +3019,22 @@ Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, UInt qp)
  */
 Void TComTrQuant::processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc)
 {
+#if !REMOVE_NSQT
   Int nsqth = (height < width) ? 4: 1; //height ratio for NSQT
   Int nsqtw = (width < height) ? 4: 1; //width ratio for NSQT
+#endif
   for(UInt j=0;j<height;j++)
   {
     for(UInt i=0;i<width;i++)
     {
+#if REMOVE_NSQT
+      quantcoeff[j*width + i] = quantScales / coeff[sizuNum * (j / ratio) + i / ratio];
+#else
       quantcoeff[j*width + i] = quantScales / coeff[sizuNum * (j * nsqth / ratio) + i * nsqtw /ratio];
+#endif
     }
   }
+
   if(ratio > 1)
   {
     quantcoeff[0] = quantScales / dc;
@@ -2993,6 +3067,7 @@ Void TComTrQuant::processScalingListDec( Int *coeff, Int *dequantcoeff, Int invQ
 #endif
     }
   }
+
   if(ratio > 1)
   {
     dequantcoeff[0] = invQuantScales * dc;
@@ -3005,39 +3080,88 @@ Void TComTrQuant::initScalingList()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-    for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
+    const UInt lastSourceEntry = g_scalingListNum[sizeId]-1;
+
+    for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
     {
-      for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
+      for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
       {
+#if REMOVE_NSQT
+        m_quantCoef   [sizeId][listId][qp] = new Int [g_scalingListSize[sizeId]];
+        m_dequantCoef [sizeId][listId][qp] = new Int [g_scalingListSize[sizeId]];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          m_errScale[sizeId][listId][qp][transformShiftSizeOffsetId] = new double [g_scalingListSize[sizeId]];
+#else
         m_quantCoef   [sizeId][listId][qp][SCALING_LIST_SQT] = new Int [g_scalingListSize[sizeId]];
         m_dequantCoef [sizeId][listId][qp][SCALING_LIST_SQT] = new Int [g_scalingListSize[sizeId]];
-        m_errScale    [sizeId][listId][qp][SCALING_LIST_SQT] = new double [g_scalingListSize[sizeId]];
+  
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          m_errScale[sizeId][listId][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId] = new double [g_scalingListSize[sizeId]];
         
+#if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA != 1
         if(sizeId == SCALING_LIST_8x8 || (sizeId == SCALING_LIST_16x16 && listId < 2))
+#else
+        if(sizeId == SCALING_LIST_8x8 || (sizeId == SCALING_LIST_16x16 ))
+#endif
         {
+          // considering only SCALING_LIST_8x8   --> NSQT VER/HOR 16x4 / 4x16 Y, Cb, Cr Inter & Intra (!)
+          // and              SCALING_LIST_16x16 --> NSQT VER/HOR 8x32 / 32x8 Y, Inter & Intra (!)  - reassigned later!
           for(UInt dir = SCALING_LIST_VER; dir < SCALING_LIST_DIR_NUM; dir++)
           {
             m_quantCoef   [sizeId][listId][qp][dir] = new Int [g_scalingListSize[sizeId]];
             m_dequantCoef [sizeId][listId][qp][dir] = new Int [g_scalingListSize[sizeId]];
-            m_errScale    [sizeId][listId][qp][dir] = new double [g_scalingListSize[sizeId]];
+
+            for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+              m_errScale[sizeId][listId][qp][dir][transformShiftSizeOffsetId] = new double [g_scalingListSize[sizeId]];
           }
         }
+#endif
+      } // listID loop
+      if (g_scalingListNum[sizeId] < 2*MAX_NUM_COMPONENT)
+      {
+        // make the first entry for inter be the second intra entry...
+#if REMOVE_NSQT
+        m_quantCoef   [sizeId][MAX_NUM_COMPONENT][qp] = m_quantCoef   [sizeId][lastSourceEntry][qp];
+        m_dequantCoef [sizeId][MAX_NUM_COMPONENT][qp] = m_dequantCoef [sizeId][lastSourceEntry][qp];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          m_errScale[sizeId][MAX_NUM_COMPONENT][qp][transformShiftSizeOffsetId] = m_errScale    [sizeId][lastSourceEntry][qp][transformShiftSizeOffsetId];
+#else
+        m_quantCoef   [sizeId][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT] = m_quantCoef   [sizeId][lastSourceEntry][qp][SCALING_LIST_SQT];
+        m_dequantCoef [sizeId][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT] = m_dequantCoef [sizeId][lastSourceEntry][qp][SCALING_LIST_SQT];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          m_errScale[sizeId][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId] = m_errScale    [sizeId][lastSourceEntry][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId];
+#endif
       }
     }
   }
-  //copy for NSQT
-  for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
+#if !REMOVE_NSQT
+#if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA != 1
   {
-    for(UInt dir = SCALING_LIST_VER; dir < SCALING_LIST_DIR_NUM; dir++)
+    UInt lastSourceEntry=1;
+    // Duplicate pointers for the cases where there is no chroma scaling list.
+    for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
     {
-      m_quantCoef   [SCALING_LIST_16x16][3][qp][dir] = m_quantCoef   [SCALING_LIST_16x16][1][qp][dir];
-      m_dequantCoef [SCALING_LIST_16x16][3][qp][dir] = m_dequantCoef [SCALING_LIST_16x16][1][qp][dir];
-      m_errScale    [SCALING_LIST_16x16][3][qp][dir] = m_errScale    [SCALING_LIST_16x16][1][qp][dir];
+      // Reassigned luma for SCALING_LIST_16x16 --> NSQT VER/HOR 8x32 / 32x8 Y, Inter & Intra (!)
+      for(UInt dir = SCALING_LIST_VER; dir < SCALING_LIST_DIR_NUM; dir++)
+      {
+        m_quantCoef   [SCALING_LIST_16x16][MAX_NUM_COMPONENT][qp][dir] = m_quantCoef   [SCALING_LIST_16x16][lastSourceEntry][qp][dir];
+        m_dequantCoef [SCALING_LIST_16x16][MAX_NUM_COMPONENT][qp][dir] = m_dequantCoef [SCALING_LIST_16x16][lastSourceEntry][qp][dir];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          m_errScale[SCALING_LIST_16x16][MAX_NUM_COMPONENT][qp][dir][transformShiftSizeOffsetId] = m_errScale    [SCALING_LIST_16x16][lastSourceEntry][qp][dir][transformShiftSizeOffsetId];
+      }
+      m_quantCoef   [SCALING_LIST_32x32][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT] = m_quantCoef   [SCALING_LIST_32x32][lastSourceEntry][qp][SCALING_LIST_SQT];
+      m_dequantCoef [SCALING_LIST_32x32][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT] = m_dequantCoef [SCALING_LIST_32x32][lastSourceEntry][qp][SCALING_LIST_SQT];
+
+      for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+        m_errScale[SCALING_LIST_32x32][MAX_NUM_COMPONENT][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId] = m_errScale    [SCALING_LIST_32x32][lastSourceEntry][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId];
     }
-    m_quantCoef   [SCALING_LIST_32x32][3][qp][SCALING_LIST_SQT] = m_quantCoef   [SCALING_LIST_32x32][1][qp][SCALING_LIST_SQT];
-    m_dequantCoef [SCALING_LIST_32x32][3][qp][SCALING_LIST_SQT] = m_dequantCoef [SCALING_LIST_32x32][1][qp][SCALING_LIST_SQT];
-    m_errScale    [SCALING_LIST_32x32][3][qp][SCALING_LIST_SQT] = m_errScale    [SCALING_LIST_32x32][1][qp][SCALING_LIST_SQT];
   }
+#endif
+#endif
 }
 /** destroy quantization matrix array
  */
@@ -3049,18 +3173,35 @@ Void TComTrQuant::destroyScalingList()
     {
       for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
       {
+#if REMOVE_NSQT
+        if(m_quantCoef   [sizeId][listId][qp]) delete [] m_quantCoef   [sizeId][listId][qp];
+        if(m_dequantCoef [sizeId][listId][qp]) delete [] m_dequantCoef [sizeId][listId][qp];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          if(m_errScale[sizeId][listId][qp][transformShiftSizeOffsetId]) delete [] m_errScale[sizeId][listId][qp][transformShiftSizeOffsetId];
+#else
         if(m_quantCoef   [sizeId][listId][qp][SCALING_LIST_SQT]) delete [] m_quantCoef   [sizeId][listId][qp][SCALING_LIST_SQT];
         if(m_dequantCoef [sizeId][listId][qp][SCALING_LIST_SQT]) delete [] m_dequantCoef [sizeId][listId][qp][SCALING_LIST_SQT];
-        if(m_errScale    [sizeId][listId][qp][SCALING_LIST_SQT]) delete [] m_errScale    [sizeId][listId][qp][SCALING_LIST_SQT];
+
+        for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+          if(m_errScale[sizeId][listId][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId]) delete [] m_errScale[sizeId][listId][qp][SCALING_LIST_SQT][transformShiftSizeOffsetId];
+
+#if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA != 1
         if(sizeId == SCALING_LIST_8x8 || (sizeId == SCALING_LIST_16x16 && listId < 2))
+#else
+        if(sizeId == SCALING_LIST_8x8 || (sizeId == SCALING_LIST_16x16 ))
+#endif
         {
           for(UInt dir = SCALING_LIST_VER; dir < SCALING_LIST_DIR_NUM; dir++)
           {
             if(m_quantCoef   [sizeId][listId][qp][dir]) delete [] m_quantCoef   [sizeId][listId][qp][dir];
             if(m_dequantCoef [sizeId][listId][qp][dir]) delete [] m_dequantCoef [sizeId][listId][qp][dir];
-            if(m_errScale    [sizeId][listId][qp][dir]) delete [] m_errScale    [sizeId][listId][qp][dir];
+
+            for (UInt transformShiftSizeOffsetId = 0; transformShiftSizeOffsetId < NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS; transformShiftSizeOffsetId++)
+              if(m_errScale[sizeId][listId][qp][dir][transformShiftSizeOffsetId]) delete [] m_errScale[sizeId][listId][qp][dir][transformShiftSizeOffsetId];
           }
         }
+#endif
       }
     }
   }

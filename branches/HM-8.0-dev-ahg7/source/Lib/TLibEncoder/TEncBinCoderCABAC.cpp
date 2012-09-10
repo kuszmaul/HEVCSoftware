@@ -38,6 +38,9 @@
 #include "TEncBinCoderCABAC.h"
 #include "TLibCommon/TComRom.h"
 
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#include "TLibCommon/Debug.h"
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -207,6 +210,7 @@ UInt TEncBinCABAC::getNumWrittenBits()
  */
 Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
+  if (false)
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tstate=" )
@@ -227,12 +231,12 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
     m_uiLow     = ( m_uiLow + m_uiRange ) << numBits;
     m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
-    
     m_bitsLeft -= numBits;
   }
   else
   {
     rcCtxModel.updateMPS();
+
     if ( m_uiRange >= 256 )
     {
       return;
@@ -253,6 +257,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
  */
 Void TEncBinCABAC::encodeBinEP( UInt binValue )
 {
+  if (false)
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
@@ -280,12 +285,15 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
 {
   m_uiBinsCoded += numBins & -m_binCountIncrement;
   
+  if (false)
+  {
   for ( Int i = 0; i < numBins; i++ )
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
     DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
     DTRACE_CABAC_T( "\n" )
+  }
   }
   
   while ( numBins > 8 )

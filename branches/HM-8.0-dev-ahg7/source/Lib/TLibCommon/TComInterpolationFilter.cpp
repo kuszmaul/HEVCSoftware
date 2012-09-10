@@ -44,6 +44,8 @@
 #include "TComInterpolationFilter.h"
 #include <assert.h>
 
+#include "TComChromaFormat.h"
+
 
 //! \ingroup TLibCommon
 //! \{
@@ -52,7 +54,7 @@
 // Tables
 // ====================================================================================================================
 
-const Short TComInterpolationFilter::m_lumaFilter[4][NTAPS_LUMA] =
+const Short TComInterpolationFilter::m_lumaFilter[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_LUMA] =
 {
   {  0, 0,   0, 64,  0,   0, 0,  0 },
   { -1, 4, -10, 58, 17,  -5, 1,  0 },
@@ -60,7 +62,7 @@ const Short TComInterpolationFilter::m_lumaFilter[4][NTAPS_LUMA] =
   {  0, 1,  -5, 17, 58, -10, 4, -1 }
 };
 
-const Short TComInterpolationFilter::m_chromaFilter[8][NTAPS_CHROMA] =
+const Short TComInterpolationFilter::m_chromaFilter[CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_CHROMA] =
 {
   {  0, 64,  0,  0 },
   { -2, 58, 10, -2 },
@@ -124,8 +126,7 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Short *d
   else
   {
     Int shift = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
-    Short offset = IF_INTERNAL_OFFS;
-    offset += shift?(1 << (shift - 1)):0;
+    Short offset = IF_INTERNAL_OFFS + ((shift != 0) ? (1 << (shift - 1)) : 0);
     Short maxVal = g_uiIBDI_MAX;
     Short minVal = 0;
     for (row = 0; row < height; row++)
@@ -309,7 +310,7 @@ Void TComInterpolationFilter::filterVer(Pel *src, Int srcStride, Short *dst, Int
 // ====================================================================================================================
 
 /**
- * \brief Filter a block of luma samples (horizontal)
+ * \brief Filter a block of Luma/Chroma samples (horizontal)
  *
  * \param  src        Pointer to source samples
  * \param  srcStride  Stride of source samples
@@ -320,22 +321,28 @@ Void TComInterpolationFilter::filterVer(Pel *src, Int srcStride, Short *dst, Int
  * \param  frac       Fractional sample offset
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast )
+Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast, const ChromaFormat fmt )
 {
-  assert(frac >= 0 && frac < 4);
-  
   if ( frac == 0 )
   {
     filterCopy( src, srcStride, dst, dstStride, width, height, true, isLast );
   }
-  else
+  else if (useLumaInterpFilter(compID, fmt, 0))
   {
+    assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
     filterHor<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
   }
+  else
+  {
+    const UInt csx = getComponentScaleX(compID, fmt);
+    assert(frac >=0 && csx<2 && (frac<<(1-csx)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
+    filterHor<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac<<(1-csx)]);
+  }
 }
 
+
 /**
- * \brief Filter a block of luma samples (vertical)
+ * \brief Filter a block of Luma/Chroma samples (vertical)
  *
  * \param  src        Pointer to source samples
  * \param  srcStride  Stride of source samples
@@ -347,70 +354,22 @@ Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst,
  * \param  isFirst    Flag indicating whether it is the first filtering operation
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterVerLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast )
+Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt )
 {
-  assert(frac >= 0 && frac < 4);
-  
   if ( frac == 0 )
   {
     filterCopy( src, srcStride, dst, dstStride, width, height, isFirst, isLast );
   }
-  else
+  else if (useLumaInterpFilter(compID, fmt, 1))
   {
-    filterVer<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);    
-  }
-}
-
-/**
- * \brief Filter a block of chroma samples (horizontal)
- *
- * \param  src        Pointer to source samples
- * \param  srcStride  Stride of source samples
- * \param  dst        Pointer to destination samples
- * \param  dstStride  Stride of destination samples
- * \param  width      Width of block
- * \param  height     Height of block
- * \param  frac       Fractional sample offset
- * \param  isLast     Flag indicating whether it is the last filtering operation
- */
-Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast )
-{
-  assert(frac >= 0 && frac < 8);
-  
-  if ( frac == 0 )
-  {
-    filterCopy( src, srcStride, dst, dstStride, width, height, true, isLast );
+    assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
+    filterVer<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);
   }
   else
   {
-    filterHor<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac]);
-  }
-}
-
-/**
- * \brief Filter a block of chroma samples (vertical)
- *
- * \param  src        Pointer to source samples
- * \param  srcStride  Stride of source samples
- * \param  dst        Pointer to destination samples
- * \param  dstStride  Stride of destination samples
- * \param  width      Width of block
- * \param  height     Height of block
- * \param  frac       Fractional sample offset
- * \param  isFirst    Flag indicating whether it is the first filtering operation
- * \param  isLast     Flag indicating whether it is the last filtering operation
- */
-Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast )
-{
-  assert(frac >= 0 && frac < 8);
-  
-  if ( frac == 0 )
-  {
-    filterCopy( src, srcStride, dst, dstStride, width, height, isFirst, isLast );
-  }
-  else
-  {
-    filterVer<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac]);    
+    const UInt csy = getComponentScaleY(compID, fmt);
+    assert(frac >=0 && csy<2 && (frac<<(1-csy)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
+    filterVer<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac<<(1-csy)]);
   }
 }
 

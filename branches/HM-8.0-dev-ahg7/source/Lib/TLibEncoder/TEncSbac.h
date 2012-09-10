@@ -68,7 +68,7 @@ class TEncSbac : public TEncEntropyIf
 public:
   TEncSbac();
   virtual ~TEncSbac();
-  
+
   Void  init                   ( TEncBinIf* p )  { m_pcBinIf = p; }
   Void  uninit                 ()                { m_pcBinIf = 0; }
 
@@ -77,12 +77,13 @@ public:
   Void  determineCabacInitIdx  ();
   Void  setBitstream           ( TComBitIf* p )  { m_pcBitIf = p; m_pcBinIf->init( p ); }
   Void  setSlice               ( TComSlice* p )  { m_pcSlice = p;                       }
+
   // SBAC RD
   Void  resetCoeffCost         ()                { m_uiCoeffCost = 0;  }
   UInt  getCoeffCost           ()                { return  m_uiCoeffCost;  }
   
   Void  load                   ( TEncSbac* pScr  );
-  Void  loadIntraDirModeLuma   ( TEncSbac* pScr  );
+  Void  loadIntraDirMode       ( TEncSbac* pScr, const ChannelType chType  );
   Void  store                  ( TEncSbac* pDest );
   Void  loadContexts           ( TEncSbac* pScr  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
@@ -101,9 +102,10 @@ public:
   Void  encodeStart             ();
 #if !REMOVE_ALF
   Void codeAlfParam(ALFParam* alfParam){printf("Not supported\n"); assert(0); exit(1);}
-  Void codeAlfCtrlFlag( Int compIdx, UInt code );
+  Void codeAlfCtrlFlag( ComponentID component, UInt code );
 #endif
   Void  codeApsExtensionFlag () { assert (0); return; };
+
   Void  codeSaoMaxUvlc    ( UInt code, UInt maxSymbol );
 #if SAO_MERGE_ONE_CTX
   Void  codeSaoMerge  ( UInt  uiCode );
@@ -141,6 +143,7 @@ protected:
   TComBitIf*    m_pcBitIf;
   TComSlice*    m_pcSlice;
   TEncBinIf*    m_pcBinIf;
+
   //SBAC RD
   UInt          m_uiCoeffCost;
 
@@ -168,10 +171,10 @@ public:
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag);
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf               ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbf               ( TComTU & rTU, const ComponentID compID );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if TU_ZERO_CBF_RDO
-  Void codeQtCbfZero           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
   Void codeQtRootCbfZero       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
@@ -183,22 +186,24 @@ public:
   
   Void codeDeltaQP             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-  Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, TextType eTType, UInt uiScanIdx );
-  Void codeCoeffNxN            ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType );
+  Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
+  Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
+  Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
   // -------------------------------------------------------------------------------------------------------------------
   
-  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
-  Void estCBFBit                     ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType );
-  Void estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType );
-  Void estSignificantMapBit          ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType );
-  Void estSignificantCoefficientsBit ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType );
+  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType);
+  Void estCBFBit                     ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
+  Void estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
+  Void estSignificantMapBit          ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
+  Void estLastSignificantPositionBit ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
+  Void estSignificantCoefficientsBit ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
   
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true  );
   Void updateContextTables           ( SliceType eSliceType, Int iQp  ) { this->updateContextTables( eSliceType, iQp, true); };
+
   
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:

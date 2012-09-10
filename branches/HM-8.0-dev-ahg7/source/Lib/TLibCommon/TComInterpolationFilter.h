@@ -55,8 +55,8 @@
  */
 class TComInterpolationFilter
 {
-  static const Short m_lumaFilter[4][NTAPS_LUMA];     ///< Luma filter taps
-  static const Short m_chromaFilter[8][NTAPS_CHROMA]; ///< Chroma filter taps
+  static const Short m_lumaFilter[LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_LUMA];     ///< Luma filter taps
+  static const Short m_chromaFilter[CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS][NTAPS_CHROMA]; ///< Chroma filter taps
   
   static Void filterCopy(const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
   
@@ -72,10 +72,8 @@ public:
   TComInterpolationFilter() {}
   ~TComInterpolationFilter() {}
 
-  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast );
-  Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast );
-  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast );
-  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast );
+  Void filterHor(const ComponentID compID, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast, const ChromaFormat fmt );
+  Void filterVer(const ComponentID compID, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast, const ChromaFormat fmt );
 };
 
 //! \}

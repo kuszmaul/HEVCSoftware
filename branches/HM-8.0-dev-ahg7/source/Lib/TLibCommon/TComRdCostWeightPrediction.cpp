@@ -69,16 +69,16 @@ TComRdCostWeightPrediction::~TComRdCostWeightPrediction()
 UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
 {
   Pel  pred;
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iStrideCur = pcDtParam->iStrideCur;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
 
-  UInt            uiComp    = pcDtParam->uiComp;
-  assert(uiComp<3);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
+  const ComponentID compIdx = pcDtParam->compIdx;
+  assert(compIdx<MAX_NUM_COMPONENT);
+  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
   Int   w0      = wpCur->w,
         offset  = wpCur->offset,
         shift   = wpCur->shift,
@@ -98,7 +98,7 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
     piCur += iStrideCur;
   }
   
-  pcDtParam->uiComp = 255;  // reset for DEBUG (assert test)
+  pcDtParam->compIdx = MAX_NUM_COMPONENT;  // reset for DEBUG (assert test)
 
   return ( uiSum >> g_uiBitIncrement );
 }
@@ -112,8 +112,8 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
  */
 UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
 {
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Pel  pred;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
@@ -122,9 +122,9 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
 
   assert( pcDtParam->iSubShift == 0 );
 
-  UInt            uiComp    = pcDtParam->uiComp;
-  assert(uiComp<3);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
+  const ComponentID compIdx = pcDtParam->compIdx;
+  assert(compIdx<MAX_NUM_COMPONENT);
+  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
   Int   w0      = wpCur->w,
         offset  = wpCur->offset,
         shift   = wpCur->shift,
@@ -148,7 +148,7 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
     piCur += iStrideCur;
   }
   
-  pcDtParam->uiComp = 255;  // reset for DEBUG (assert test)
+  pcDtParam->compIdx = MAX_NUM_COMPONENT; // reset for DEBUG (assert test)
 
   return ( uiSum );
 }
@@ -164,7 +164,7 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
  * \param iStep
  * \returns UInt
  */
-UInt TComRdCostWeightPrediction::xCalcHADs2x2w( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+UInt TComRdCostWeightPrediction::xCalcHADs2x2w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int satd = 0, diff[4], m[4];
   
@@ -201,7 +201,7 @@ UInt TComRdCostWeightPrediction::xCalcHADs2x2w( Pel *piOrg, Pel *piCur, Int iStr
  * \param iStep
  * \returns UInt
  */
-UInt TComRdCostWeightPrediction::xCalcHADs4x4w( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+UInt TComRdCostWeightPrediction::xCalcHADs4x4w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k, satd = 0, diff[16], m[16], d[16];
   
@@ -309,7 +309,7 @@ UInt TComRdCostWeightPrediction::xCalcHADs4x4w( Pel *piOrg, Pel *piCur, Int iStr
  * \param iStep
  * \returns UInt
  */
-UInt TComRdCostWeightPrediction::xCalcHADs8x8w( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+UInt TComRdCostWeightPrediction::xCalcHADs8x8w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k, i, j, jj, sad=0;
   Int diff[64], m1[8][8], m2[8][8], m3[8][8];
@@ -428,8 +428,8 @@ UInt TComRdCostWeightPrediction::xCalcHADs8x8w( Pel *piOrg, Pel *piCur, Int iStr
  */
 UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
 {
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideCur = pcDtParam->iStrideCur;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
@@ -456,8 +456,8 @@ UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
  */
 UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
 {
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iStrideCur = pcDtParam->iStrideCur;
   Int  iStrideOrg = pcDtParam->iStrideOrg;
@@ -492,8 +492,8 @@ UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
  */
 UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
 {
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
   Int  iCols   = pcDtParam->iCols;
   Int  iStrideCur = pcDtParam->iStrideCur;
@@ -502,9 +502,9 @@ UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
   
   Int  x, y;
   
-  UInt            uiComp    = pcDtParam->uiComp;
-  assert(uiComp<3);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
+  const ComponentID compIdx = pcDtParam->compIdx;
+  assert(compIdx<MAX_NUM_COMPONENT);
+  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
   Int   w0      = wpCur->w,
         offset  = wpCur->offset,
         shift   = wpCur->shift,
