@@ -41,6 +41,8 @@
 //! \ingroup TAppEncoder
 //! \{
 
+#include "../Lib/TLibCommon/Debug.h"
+
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
-  fprintf( stdout, "\n" );
+  fprintf( stdout, "\n\n" );
 
   // create application encoder class
   cTAppEncTop.create();
@@ -64,8 +66,17 @@ int main(int argc, char* argv[])
   if(!cTAppEncTop.parseCfg( argc, argv ))
   {
     cTAppEncTop.destroy();
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+    EnvVar::printEnvVar();
+#endif
     return 1;
   }
+
+  //printECFMacroSettings();
+
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  EnvVar::printEnvVarInUse();
+#endif
 
   // starting time
   double dResult;

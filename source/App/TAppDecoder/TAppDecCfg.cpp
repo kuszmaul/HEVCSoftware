@@ -79,6 +79,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t1: MD5\n"
                                               "\t0: ignore")
   ;
+
   po::setDefaults(opts);
   const list<const char*>& argv_unhandled = po::scanArgv(opts, argc, (const char**) argv);
 

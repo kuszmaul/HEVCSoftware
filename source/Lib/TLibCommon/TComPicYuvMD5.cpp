@@ -83,7 +83,8 @@ static void md5_plane(MD5& md5, const Pel* plane, unsigned width, unsigned heigh
   }
 }
 
-void compCRC(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, unsigned char digest[16])
+
+UInt compCRC(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
 {
   unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
   unsigned int dataMsbIdx = bitdepth - 1;
@@ -109,27 +110,25 @@ void compCRC(const Pel* plane, unsigned int width, unsigned int height, unsigned
     crcVal = ((crcVal << 1) & 0xffff) ^ (crcMsb * 0x1021);
   }
 
-  digest[0] = (crcVal>>8)  & 0xff;
-  digest[1] =  crcVal      & 0xff;
+  digest.hash.push_back((crcVal>>8)  & 0xff);
+  digest.hash.push_back( crcVal      & 0xff);
+  return 2;
 }
 
-void calcCRC(TComPicYuv& pic, unsigned char digest[3][16])
+UInt calcCRC(const TComPicYuv& pic, TComDigest &digest)
 {
-  unsigned width = pic.getWidth();
-  unsigned height = pic.getHeight();
-  unsigned stride = pic.getStride();
-
-  compCRC(pic.getLumaAddr(), width, height, stride, digest[0]);
-
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  compCRC(pic.getCbAddr(), width, height, stride, digest[1]);
-  compCRC(pic.getCrAddr(), width, height, stride, digest[2]);
+  UInt digestLen=0;
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
+  {
+    const ComponentID compID=ComponentID(chan);
+    digestLen=compCRC(pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID), digest);
+  }
+  return digestLen;
 }
 
-void compChecksum(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, unsigned char digest[16])
+UInt compChecksum(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
 {
   unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
 
@@ -150,26 +149,24 @@ void compChecksum(const Pel* plane, unsigned int width, unsigned int height, uns
     }
   }
 
-  digest[0] = (checksum>>24) & 0xff;
-  digest[1] = (checksum>>16) & 0xff;
-  digest[2] = (checksum>>8)  & 0xff;
-  digest[3] =  checksum      & 0xff;
+  digest.hash.push_back((checksum>>24) & 0xff);
+  digest.hash.push_back((checksum>>16) & 0xff);
+  digest.hash.push_back((checksum>>8)  & 0xff);
+  digest.hash.push_back( checksum      & 0xff);
+  return 4;
 }
 
-void calcChecksum(TComPicYuv& pic, unsigned char digest[3][16])
+UInt calcChecksum(const TComPicYuv& pic, TComDigest &digest)
 {
-  unsigned width = pic.getWidth();
-  unsigned height = pic.getHeight();
-  unsigned stride = pic.getStride();
-
-  compChecksum(pic.getLumaAddr(), width, height, stride, digest[0]);
-
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  compChecksum(pic.getCbAddr(), width, height, stride, digest[1]);
-  compChecksum(pic.getCrAddr(), width, height, stride, digest[2]);
+  UInt digestLen=0;
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
+  {
+    const ComponentID compID=ComponentID(chan);
+    digestLen=compChecksum(pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID), digest);
+  }
+  return digestLen;
 }
 /**
  * Calculate the MD5sum of pic, storing the result in digest.
@@ -178,7 +175,7 @@ void calcChecksum(TComPicYuv& pic, unsigned char digest[3][16])
  * using sufficient bytes to represent the picture bitdepth.  Eg, 10bit data
  * uses little-endian two byte words; 8bit data uses single byte words.
  */
-void calcMD5(TComPicYuv& pic, unsigned char digest[3][16])
+UInt calcMD5(const TComPicYuv& pic, TComDigest &digest)
 {
   unsigned bitdepth = g_uiBitDepth + g_uiBitIncrement;
   /* choose an md5_plane packing function based on the system bitdepth */
@@ -186,22 +183,37 @@ void calcMD5(TComPicYuv& pic, unsigned char digest[3][16])
   MD5PlaneFunc md5_plane_func;
   md5_plane_func = bitdepth <= 8 ? (MD5PlaneFunc)md5_plane<1> : (MD5PlaneFunc)md5_plane<2>;
 
-  MD5 md5Y, md5U, md5V;
-  unsigned width = pic.getWidth();
-  unsigned height = pic.getHeight();
-  unsigned stride = pic.getStride();
+  MD5 md5[MAX_NUM_COMPONENT];
 
-  md5_plane_func(md5Y, pic.getLumaAddr(), width, height, stride);
-  md5Y.finalize(digest[0]);
-
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  md5_plane_func(md5U, pic.getCbAddr(), width, height, stride);
-  md5U.finalize(digest[1]);
-
-  md5_plane_func(md5V, pic.getCrAddr(), width, height, stride);
-  md5V.finalize(digest[2]);
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
+  {
+    unsigned char tmp_digest[MD5_DIGEST_STRING_LENGTH];
+    const ComponentID compID=ComponentID(chan);
+    md5_plane_func(md5[compID], pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID));
+    md5[compID].finalize(tmp_digest);
+    for(UInt i=0; i<MD5_DIGEST_STRING_LENGTH; i++)
+    {
+      digest.hash.push_back(tmp_digest[i]);
+    }
+  }
+  return 16;
 }
+
+std::string digestToString(TComDigest &digest, int numChar)
+{
+  const char* hex = "0123456789abcdef";
+  std::string result;
+
+  for(Int pos=0; pos<Int(digest.hash.size()); pos++)
+  {
+    if ((pos % numChar) == 0 && pos!=0 ) result += ',';
+    result += hex[digest.hash[pos] >> 4];
+    result += hex[digest.hash[pos] & 0xf];
+  }
+
+  return result;
+}
+
 //! \}

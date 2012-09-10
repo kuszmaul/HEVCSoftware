@@ -296,6 +296,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
             break;
           default     :           // should not occur
             assert(0);
+            break;
           }
         }
         m_pcEntropyDecoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
@@ -317,14 +318,18 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
 #else
       SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
 #endif
-      saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
+#if SAO_TYPE_SHARING
+      saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] = pcSlice->getSaoEnabledFlag();
+#else
+      saoParam->bSaoFlag[COMPONENT_Y] = pcSlice->getSaoEnabledFlag();
+#endif
       if (iCUAddr == iStartCUAddr)
       {
 #if SAO_TYPE_SHARING
-        saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
+        saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA] = pcSlice->getSaoEnabledFlagChroma();
 #else
-        saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagCb();
-        saoParam->bSaoFlag[2] = pcSlice->getSaoEnabledFlagCr();
+        saoParam->bSaoFlag[COMPONENT_Cb] = pcSlice->getSaoEnabledFlagCb();
+        saoParam->bSaoFlag[COMPONENT_Cr] = pcSlice->getSaoEnabledFlagCr();
 #endif
       }
       Int numCuInWidth     = saoParam->numCuInWidth;
@@ -353,15 +358,16 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
 #if !REMOVE_ALF
     if(pcSlice->getSPS()->getUseALF())
     {
+      const UInt numValidComp=getNumberValidComponents(pcSlice->getSPS()->getChromaFormatIdc());
       UInt alfEnabledFlag;
-      for(Int compIdx=0; compIdx< 3; compIdx++)
+      for(Int compIdx=0; compIdx<numValidComp; compIdx++)
       {
         alfEnabledFlag = 0;
-        if(pcSlice->getAlfEnabledFlag(compIdx))
+        if(pcSlice->getAlfEnabledFlag(ComponentID(compIdx)))
         {
           pcSbacDecoder->parseAlfCtrlFlag(compIdx, alfEnabledFlag);
         }
-        pcCU->setAlfLCUEnabled((alfEnabledFlag==1)?true:false, compIdx);
+        pcCU->setAlfLCUEnabled((alfEnabledFlag==1)?true:false, ComponentID(compIdx));
       }
     }
 #endif

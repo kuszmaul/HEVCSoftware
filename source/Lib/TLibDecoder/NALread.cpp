@@ -95,6 +95,7 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   convertPayloadToRBSP(nalUnitBuf, pcBitstream);
 
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
+
   delete pcBitstream;
 #if NAL_UNIT_HEADER
   readNalUnitHeader(nalu);

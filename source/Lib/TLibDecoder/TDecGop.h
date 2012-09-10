@@ -92,7 +92,7 @@ private:
   std::vector<Int> m_sliceStartCUAddress;
   std::vector<Bool> m_LFCrossSliceBoundaryFlag;
 #if !REMOVE_ALF
-  std::vector<Bool> m_sliceAlfEnabled[3];
+  std::vector<Bool> m_sliceAlfEnabled[MAX_NUM_COMPONENT];
 #endif
 
 public:
@@ -112,7 +112,7 @@ public:
                  );
   Void  create  ();
   Void  destroy ();
-//  Void  decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool bExecuteDeblockAndAlf );
+
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
   Void  setGopSize( Int i) { m_iGopSize = i; }

@@ -58,16 +58,6 @@
 #define MAX_SCAN_VAL          13
 #define MAX_EXP_GOLOMB        16
 
-
-
-/// Luma/Chroma component ID
-enum ALFComponentID
-{
-  ALF_Y = 0,
-  ALF_Cb,
-  ALF_Cr,
-  NUM_ALF_COMPONENT
-};
 ///
 /// Filter shape
 ///
@@ -133,11 +123,12 @@ protected: //protected member variables
   UInt  m_uiNumSlicesInPic;      //!< number of slices in picture
   Int   m_iSGDepth;              //!< slice granularity depth
   UInt  m_uiNumCUsInFrame;
-  Int m_lcuWidth;
-  Int m_lcuWidthChroma;
+
   Int m_lcuHeight;
   Int m_lineIdxPadBot;
   Int m_lineIdxPadTop;
+  Int m_lcuWidth;
+  Int m_lcuWidthChroma;
 
   Int m_lcuHeightChroma;
   Int m_lineIdxPadBotChroma;
@@ -154,28 +145,28 @@ private: //private member variables
 
 
 protected: //protected methods
-  Pel* getPicBuf(TComPicYuv* pPicYuv, Int compIdx);
-  Void recALF(Int compIdx, std::vector<Bool>& sliceAlfEnabled, ALFParam* alfParam, Pel* pDec, Pel* pRest, Int stride, Int formatShift);
-  Void reconstructCoefInfo(Int compIdx, ALFParam* alfLCUParam, Int** filterCoeff, Int* varIndTab= NULL);
+  Pel* getPicBuf(TComPicYuv* pPicYuv, const ComponentID compIdx) { return pPicYuv->getAddr(compIdx); }
+  Void recALF(const ComponentID cid, std::vector<Bool>& sliceAlfEnabled, ALFParam* alfParam, Pel* pDec, Pel* pRest, Int stride, Int formatShiftX, Int formatShiftY);
+  Void reconstructCoefInfo(const ComponentID cid, ALFParam* alfLCUParam, Int** filterCoeff, Int* varIndTab= NULL);
   Void reconstructCoefficients(ALFParam* alfLCUParam, Int** filterCoeff);
-  Void filterRegion(Int compIdx, Bool isSingleFilter, std::vector<AlfLCUInfo*>& regionLCUInfo, Pel* pDec, Pel* pRest, Int stride, Int formatShift);
+  Void filterRegion(const ComponentID cid, Bool isSingleFilter, std::vector<AlfLCUInfo*>& regionLCUInfo, Pel* pDec, Pel* pRest, Int stride, Int formatShiftX, Int formatShiftY);
   Void filterOneCompRegion(Pel *imgRes, Pel *imgPad, Int stride, Bool isChroma, Int yPos, Int yPosEnd, Int xPos, Int xPosEnd, Int** filterSet, Int* mergeTable, Pel** varImg);  
 
   Void InitAlfLCUInfo(AlfLCUInfo& rAlfLCU, Int sliceID, Int tileID, TComDataCU* pcCU, UInt maxNumSUInLCU);
   Void checkFilterCoeffValue( Int *filter, Int filterLength, Bool isChroma );
   Void extendBorderCoreFunction(Pel* pPel, Int stride, Bool* pbAvail, UInt width, UInt height, UInt extSize); //!< Extend slice boundary border  
-  Void copyRegion(std::vector<AlfLCUInfo*> &vpAlfLCU, Pel* pPicDst, Pel* pPicSrc, Int stride, Int formatShift = 0);
-  Void extendRegionBorder(std::vector<AlfLCUInfo*> &vpAlfLCU, Pel* pPelSrc, Int stride, Int formatShift = 0);
+  Void copyRegion(std::vector<AlfLCUInfo*> &vpAlfLCU, Pel* pPicDst, Pel* pPicSrc, Int stride, Int formatShiftX /*= 0*/, Int formatShiftY /*= 0*/);
+  Void extendRegionBorder(std::vector<AlfLCUInfo*> &vpAlfLCU, Pel* pPelSrc, Int stride, Int formatShiftX /*= 0*/, Int formatShiftY /*= 0*/);
   Void xPCMRestoration        (TComPic* pcPic);
   Void xPCMCURestoration      (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth);
-  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
+  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID comp);
 
 public: //public methods, interface functions
 
   TComAdaptiveLoopFilter();
   virtual ~TComAdaptiveLoopFilter() {}
 
-  Void create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth );
+  Void create  ( Int iPicWidth, Int iPicHeight, ChromaFormat chromaFormatIDC, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth );
   Void destroy ();
 
   Void ALFProcess          (TComPic* pcPic, ALFParam** alfParam, std::vector<Bool>* sliceAlfEnabled);

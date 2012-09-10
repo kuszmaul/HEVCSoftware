@@ -80,7 +80,7 @@ public:
 
   Bool            bApplyWeight;     // whether weithed prediction is used or not
   wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
-  UInt            uiComp;           // uiComp = 0 (luma Y), 1 (chroma U), 2 (chroma V)
+  ComponentID     compIdx;
 
 #if NS_HAD
   Bool            bUseNSHAD;
@@ -107,6 +107,12 @@ public:
   }
 };
 
+#if AMP_SAD
+static const UInt NUM_DIST_FUNC=64; // NOTE: ECF - new definition
+#else
+static const UInt NUM_DIST_FUNC=33; // NOTE: ECF - new definition
+#endif
+
 /// RD cost computation class
 class TComRdCost
   : public TComRdCostWeightPrediction
@@ -116,11 +122,7 @@ private:
   Int                     m_iBlkWidth;
   Int                     m_iBlkHeight;
   
-#if AMP_SAD
-  FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]
-#else  
-  FpDistFunc              m_afpDistortFunc[33]; // [eDFunc]
-#endif  
+  FpDistFunc              m_afpDistortFunc[NUM_DIST_FUNC]; // [eDFunc]
   
 #if WEIGHTED_CHROMA_DISTORTION
   Double                  m_chromaDistortionWeight;   

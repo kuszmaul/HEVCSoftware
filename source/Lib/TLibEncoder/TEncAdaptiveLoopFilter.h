@@ -50,6 +50,7 @@
 //! \{
 #define LCUALF_AVOID_USING_BOTTOM_LINES_ENCODER 1 //!< avoid using LCU bottom lines when lcu-based encoder RDO is used
 #define LCUALF_AVOID_USING_RIGHT_LINES_ENCODER 1  //!< Avoid using right-most lines per LCU during encoder LCU on/off decision
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -60,11 +61,11 @@ struct AlfCorrData
   Double*** ECorr; //!< auto-correlation matrix
   Double**  yCorr; //!< cross-correlation
   Double*   pixAcc;
-  Int componentID;
+  ComponentID componentID;
 
   //constructor & operator
   AlfCorrData();
-  AlfCorrData(Int cIdx);
+  AlfCorrData(ComponentID cIdx);
   ~AlfCorrData();
   Void reset();
   Void mergeFrom(const AlfCorrData& src, Int* mergeTable, Bool doPixAccMerge);
@@ -82,39 +83,47 @@ private:
   Double** m_E_merged[NO_VAR_BINS];
   Double   m_pixAcc_merged[NO_VAR_BINS];
   Double   m_y_temp[ALF_MAX_NUM_COEF];
+
   double **m_E_temp;
+
   Int    m_lastSliceIdx;
-  Bool   m_alfLowLatencyEncoding;  
+  Bool   m_alfLowLatencyEncoding;
+
   Int*   m_numSlicesDataInOneLCU;
   Int*   m_coeffNoFilter[NO_VAR_BINS]; //!< used for RDO
-  AlfCorrData** m_alfCorr[NUM_ALF_COMPONENT];
-  AlfCorrData*  m_alfCorrMerged[NUM_ALF_COMPONENT]; //!< used for RDO
-  AlfCorrData** m_alfNonSkippedCorr[NUM_ALF_COMPONENT];
+
+  AlfCorrData** m_alfCorr[MAX_NUM_COMPONENT];
+  AlfCorrData*  m_alfCorrMerged[MAX_NUM_COMPONENT]; //!< used for RDO
+  AlfCorrData** m_alfNonSkippedCorr[MAX_NUM_COMPONENT];
   ALFParam*** m_alfPictureParam;
-  Int         m_gopSize;                
+  Int         m_gopSize;
   Double      m_dLambdaLuma;
   Double      m_dLambdaChroma;
+
 private:
 
   Void initALFEncoderParam();
   Void getStatistics(TComPicYuv* pPicOrg, TComPicYuv* pPicDec);
-  Void getOneCompStatistics(AlfCorrData** alfCorrComp, Int compIdx, Pel* imgOrg, Pel* imgDec, Int stride, Int formatShift);
-  Void getStatisticsOneLCU(Bool skipLCUBottomLines, Int compIdx, AlfLCUInfo* alfLCU, AlfCorrData* alfCorr, Pel* pPicOrg, Pel* pPicSrc, Int stride, Int formatShift);
+  Void getOneCompStatistics(AlfCorrData** alfCorrComp, ComponentID compId, Pel* imgOrg, Pel* imgDec, Int stride, Int formatShiftX, Int formatShiftY);
+  Void getStatisticsOneLCU(Bool skipLCUBottomLines, ComponentID compId, AlfLCUInfo* alfLCU, AlfCorrData* alfCorr, Pel* pPicOrg, Pel* pPicSrc, Int stride, Int formatShiftX, Int formatShiftY);
   Void decideParameters(ALFParam** alfPictureParam, TComPicYuv* pPicOrg, TComPicYuv* pPicDec, TComPicYuv* pPicRest);
   Void setCurAlfParam(ALFParam** alfPictureParam);
   Int  getTemporalLayerNo(Int poc, Int gopSize);
   Void decideAlfPictureParam(ALFParam** alfPictureParam, Bool useAllLCUs);
   Void estimateLcuControl(ALFParam** alfPictureParam);
-  Void deriveFilterInfo(Int compIdx, AlfCorrData* alfCorr, ALFParam* alfFiltParam, Int maxNumFilters, Double lambda);
+  Void deriveFilterInfo(ComponentID compId, AlfCorrData* alfCorr, ALFParam* alfFiltParam, Int maxNumFilters, Double lambda);
   Void calcCorrOneCompRegionChma(Pel* imgOrg, Pel* imgPad, Int stride, Int yPos, Int xPos, Int height, Int width, Double **eCorr, Double *yCorr, Bool isSymmCopyBlockMatrix); //!< Calculate correlations for chroma                                        
   Void calcCorrOneCompRegionLuma(Pel* imgOrg, Pel* imgPad, Int stride, Int yPos, Int xPos, Int height, Int width, Double ***eCorr, Double **yCorr, Double *pixAcc, Bool isSymmCopyBlockMatrix);
 
   //LCU-based mode decision
-  Void  executeLCUOnOffDecision(Int compIdx, ALFParam* alfParam, Pel* pOrg, Pel* pDec, Pel* pRest, Int stride, Int formatShift, AlfCorrData** alfCorrLCUs);
-  Int64 estimateFilterDistortion(Int compIdx, AlfCorrData* alfCorr, Int** coeff = NULL, Int filterSetSize = 1, Int* mergeTable = NULL, Bool doPixAccMerge = false);
-  Int64 calcAlfLCUDist(Bool skipLCUBottomLines, Int compIdx, AlfLCUInfo& alfLCUInfo, Pel* picSrc, Pel* picCmp, Int stride, Int formatShift);
-  Void  reconstructOneAlfLCU(Int compIdx, AlfLCUInfo& alfLCUInfo, Bool alfEnabled, ALFParam* alfParam, Pel* picDec, Pel* picRest, Int stride, Int formatShift);
-  Void  copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, Pel* picSrc, Int stride, Int formatShift);
+  Void  executeLCUOnOffDecision(ComponentID compId, ALFParam* alfParam, Pel* pOrg, Pel* pDec, Pel* pRest, Int stride, Int formatShiftX, Int formatShiftY, AlfCorrData** alfCorrLCUs);
+  Int64 estimateFilterDistortion(ComponentID compId, AlfCorrData* alfCorr, Int** coeff = NULL, Int filterSetSize = 1, Int* mergeTable = NULL, Bool doPixAccMerge = false);
+
+  Int64 calcAlfLCUDist(Bool skipLCUBottomLines, ComponentID compId, AlfLCUInfo& alfLCUInfo, Pel* picSrc, Pel* picCmp, Int stride, Int formatShiftX, Int formatShiftY);
+  Void  reconstructOneAlfLCU(ComponentID compId, AlfLCUInfo& alfLCUInfo, Bool alfEnabled, ALFParam* alfParam, Pel* picDec, Pel* picRest, Int stride, Int formatShiftX, Int formatShiftY);
+
+  Void  copyOneAlfLCU(AlfLCUInfo& alfLCUInfo, Pel* picDst, Pel* picSrc, Int stride, Int formatShiftX, Int formatShiftY);
+
   // functions related to filtering
   Void xFilterCoefQuickSort   ( Double *coef_data, Int *coef_num, Int upper, Int lower );
   Void xQuantFilterCoef       ( Double* h, Int* qh, Int tap, int bit_depth );
@@ -125,13 +134,16 @@ private:
   /// code filter coefficients
   Void xcodeFiltCoeff(Int **filterCoeff, Int* varIndTab, Int numFilters, ALFParam* alfParam);
   Void xfindBestFilterVarPred(double **ySym, double ***ESym, double *pixAcc, Int **filterCoeffSym, Int *filters_per_fr_best, Int varIndTab[], double lambda_val, Int numMaxFilters);
+
   double xfindBestCoeffCodMethod(int **filterCoeffSymQuant, int filter_shape, int sqrFiltLength, int filters_per_fr, double errorForce0CoeffTab[NO_VAR_BINS][2], double lambda);
+
   UInt uvlcBitrateEstimate(Int val);
   UInt svlcBitrateEsitmate(Int val) {  return uvlcBitrateEstimate (( val <= 0) ? (-val<<1) : ((val<<1)-1));}
   UInt golombBitrateEstimate(Int coeff, Int k);
   UInt ALFParamBitrateEstimate(ALFParam* alfParam);
-  UInt filterCoeffBitrateEstimate(Int compIdx, Int* coeff);
+  UInt filterCoeffBitrateEstimate(ComponentID compId, Int* coeff);
   Void predictALFCoeff(Int** coeff, Int numCoef, Int numFilters);
+
   //cholesky related
   Int   xGauss( Double **a, Int N );
   Double findFilterCoeff(double ***EGlobalSeq, double **yGlobalSeq, double *pixAccGlobalSeq, int **filterCoeffSeq,int **filterCoeffQuantSeq, int intervalBest[NO_VAR_BINS][2], int varIndTab[NO_VAR_BINS], int sqrFiltLength, int filters_per_fr, int *weights, double errorTabForce0Coeff[NO_VAR_BINS][2]);
@@ -150,6 +162,7 @@ private:
 public:
   TEncAdaptiveLoopFilter          ();
   virtual ~TEncAdaptiveLoopFilter () {}
+
   Void setALFLowLatencyEncoding(Bool b) {m_alfLowLatencyEncoding = b;}
 #if ALF_CHROMA_LAMBDA
   Void ALFProcess(ALFParam** alfPictureParam, Double lambdaLuma, Double lambdaChroma);
@@ -157,7 +170,9 @@ public:
   Void ALFProcess(ALFParam** alfPictureParam, Double lambda);
 #endif
   Void setGOPSize(Int val) { m_gopSize = val; } //!< set GOP size
+
   Void createAlfGlobalBuffers(); //!< create ALF global buffers
+
   Void destroyAlfGlobalBuffers(); //!< destroy ALF global buffers
   Void PCMLFDisableProcess (TComPic* pcPic);
 };

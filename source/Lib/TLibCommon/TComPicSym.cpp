@@ -47,7 +47,7 @@
 // Constructor / destructor / create / destroy
 // ====================================================================================================================
 
-Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
 {
   UInt i;
 
@@ -83,7 +83,7 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
   for ( i=0; i<m_uiNumCUsInFrame ; i++ )
   {
     m_apcTComDataCU[i] = new TComDataCU;
-    m_apcTComDataCU[i]->create( m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
+    m_apcTComDataCU[i]->create( chromaFormatIDC, m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
 #if ADAPTIVE_QP_SELECTION
       , true
 #endif     
@@ -251,7 +251,6 @@ Void TComPicSym::xInitTiles()
     }
     m_puiTileIdxMap[i] = uiRowIdx * (m_iNumColumnsMinus1 + 1) + uiColumnIdx;
   }
-
 }
 
 UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )

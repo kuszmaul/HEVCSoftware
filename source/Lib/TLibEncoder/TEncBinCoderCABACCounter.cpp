@@ -37,6 +37,8 @@
 
 #include "TEncBinCoderCABACCounter.h"
 #include "TLibCommon/TComRom.h"
+#include "TLibCommon/Debug.h"
+
 
 #if FAST_BIT_EST
 
@@ -72,7 +74,6 @@ UInt TEncBinCABACCounter::getNumWrittenBits()
 Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
   m_uiBinsCoded += m_binCountIncrement;
-  
   m_fracBits += rcCtxModel.getEntropyBits( binValue );
   rcCtxModel.update( binValue );
 }

@@ -52,40 +52,41 @@
 /// weighting prediction class
 class TComWeightPrediction
 {
-  wpScalingParam  m_wp0[3], m_wp1[3];
   Int             m_ibdi;
 
 public:
   TComWeightPrediction();
 
-  Void  getWpScaling( TComDataCU* pcCU, Int iRefIdx0, Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1 , Int ibdi=(g_uiBitDepth+g_uiBitIncrement));
+  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1 , const Int ibdi=(g_uiBitDepth+g_uiBitIncrement));
 
-  Void  addWeightBi( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, wpScalingParam *wp1, TComYuv* rpcYuvDst, Bool bRound=true );
-  Void  addWeightUni( TComYuv* pcYuvSrc0, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, TComYuv* rpcYuvDst );
+  Void  addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const wpScalingParam *wp0, const wpScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma=true );
+  Void  addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const  wpScalingParam *wp0, TComYuv* rpcYuvDst );
 
-  Void  xWeightedPredictionUni( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Int iRefIdx=-1 );
-  Void  xWeightedPredictionBi( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* rpcYuvDst );
+  Void  xWeightedPredictionUni( TComDataCU* pcCU, const TComYuv* pcYuvSrc, const UInt uiPartAddr, const Int iWidth, const Int iHeight,
+                                const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iPartIdx, const Int iRefIdx=-1 );
+  Void  xWeightedPredictionBi( TComDataCU* pcCU, const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const Int iRefIdx0, const Int iRefIdx1,
+                                const UInt uiPartIdx, const Int iWidth, const Int iHeight, TComYuv* rpcYuvDst );
 
-  __inline  Pel   xClip  ( Int x );
-  __inline  Pel   weightBidir( Int w0, Pel P0, Int w1, Pel P1, Int round, Int shift, Int offset);
-  __inline  Pel   weightUnidir( Int w0, Pel P0, Int round, Int shift, Int offset);
+  static __inline  Pel   xClip       ( const Int x );
+  static __inline  Pel   weightBidir( const Int w0, const Pel P0, const Int w1, const  Pel P1, const Int round, const Int shift, const  Int offset);
+  static __inline  Pel   weightUnidir( const Int w0, const Pel P0, const Int round, const Int shift, const  Int offset);
 
 };
 
-inline  Pel TComWeightPrediction::xClip( Int x )
+inline  Pel TComWeightPrediction::xClip( const Int x ) // static member
 { 
-  Int max = (Int)g_uiIBDI_MAX;
-  Pel pel = (Pel)( (x < 0) ? 0 : (x > max) ? max : x );
+  const Int max = (Int)g_uiIBDI_MAX;
+  const Pel pel = (Pel)( (x < 0) ? 0 : (x > max) ? max : x );
   return( pel );
 }
 
-inline  Pel TComWeightPrediction::weightBidir( Int w0, Pel P0, Int w1, Pel P1, Int round, Int shift, Int offset)
+inline  Pel TComWeightPrediction::weightBidir( const Int w0, const Pel P0, Int w1, const Pel P1, const Int round, const Int shift, const Int offset) // static member
 {
   return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS) + round + (offset << (shift-1))) >> shift ) );
 }
-inline  Pel TComWeightPrediction::weightUnidir( Int w0, Pel P0, Int round, Int shift, Int offset) 
+inline  Pel TComWeightPrediction::weightUnidir( const Int w0, const Pel P0, const Int round, const Int shift, const Int offset)
 {
-  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset );
+  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset ); // static member
 }
 
 #endif 

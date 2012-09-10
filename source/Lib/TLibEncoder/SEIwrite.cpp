@@ -34,6 +34,7 @@
 #include "TLibCommon/TComBitCounter.h"
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/SEI.h"
+#include "TLibCommon/TComPicYuv.h"
 #include "SEIwrite.h"
 
 //! \ingroup TLibEncoder
@@ -54,6 +55,7 @@ void writeSEIpayloadData(TComBitIf& bs, const SEI& sei)
     break;
   default:
     assert(!"Unhandled SEI message");
+    break;
   }
 }
 
@@ -95,7 +97,7 @@ void writeSEImessage(TComBitIf& bs, const SEI& sei)
  */
 static void writeSEIuserDataUnregistered(TComBitIf& bs, const SEIuserDataUnregistered &sei)
 {
-  for (unsigned i = 0; i < 16; i++)
+  for (unsigned i = 0; i < ISO_IEC_11578_LEN; i++)
   {
     bs.write(sei.uuid_iso_iec_11578[i], 8);
   }
@@ -112,26 +114,10 @@ static void writeSEIuserDataUnregistered(TComBitIf& bs, const SEIuserDataUnregis
  */
 static void writeSEIpictureDigest(TComBitIf& bs, const SEIpictureDigest& sei)
 {
-  int numChar=0;
   bs.write(sei.method, 8);
-  if(sei.method == SEIpictureDigest::MD5)
+  for(UInt i=0; i<UInt(sei.m_digest.hash.size()); i++)
   {
-    numChar = 16;
-  }
-  else if(sei.method == SEIpictureDigest::CRC)
-  {
-    numChar = 2;
-  }
-  else if(sei.method == SEIpictureDigest::CHECKSUM)
-  {
-    numChar = 4;
-  }
-  for(int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
-  {
-    for (unsigned i = 0; i < numChar; i++)
-    {
-      bs.write(sei.digest[yuvIdx][i], 8);
-    }
+    bs.write(sei.m_digest.hash[i], 8);
   }
 }
 //! \}

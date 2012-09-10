@@ -43,6 +43,7 @@
 #include "CommonDef.h"
 #include "TComRom.h"
 #include "TComList.h"
+#include "TComChromaFormat.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -61,6 +62,10 @@ class TComTrQuant;
 
 /// max number of supported APS in software
 #define MAX_NUM_SUPPORTED_APS 1
+static const UInt REF_PIC_LIST_NUM_IDX=32; // NOTE: ECF - new definition
+#if LTRP_IN_SPS
+static const UInt MAX_NUM_SPS_PLUS_1=33; // NOTE: ECF - new definition
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -235,14 +240,14 @@ public:
 class TComSPS
 {
 private:
-  Int         m_SPSId;
-  Int         m_ProfileSpace;
-  Int         m_ProfileIdc;
-  Int         m_ReservedIndicatorFlags;
-  Int         m_LevelIdc;
-  UInt        m_ProfileCompatibility;
-  Int         m_VPSId;
-  Int         m_chromaFormatIdc;
+  Int          m_SPSId;
+  Int          m_ProfileSpace;
+  Int          m_ProfileIdc;
+  Int          m_ReservedIndicatorFlags;
+  Int          m_LevelIdc;
+  UInt         m_ProfileCompatibility;
+  Int          m_VPSId;
+  ChromaFormat m_chromaFormatIdc;
 
   UInt        m_uiMaxTLayers;           // maximum number of temporal layers
 
@@ -309,8 +314,8 @@ private:
   UInt        m_uiBitsForPOC;
 #if LTRP_IN_SPS
   UInt        m_numLongTermRefPicSPS;
-  UInt        m_ltRefPicPocLsbSps[33];
-  Bool        m_usedByCurrPicLtSPSFlag[33];
+  UInt        m_ltRefPicPocLsbSps[MAX_NUM_SPS_PLUS_1];
+  Bool        m_usedByCurrPicLtSPSFlag[MAX_NUM_SPS_PLUS_1];
 #endif
   // Max physical transform size
   UInt        m_uiMaxTrSize;
@@ -353,11 +358,11 @@ public:
   UInt getProfileCompat ()       { return m_ProfileCompatibility;       }
   Void setProfileCompat (UInt i) { m_ProfileCompatibility = i; if (m_ProfileIdc != 0 && m_ProfileSpace == 0) m_ProfileCompatibility |= (1 << (m_ProfileIdc - 1));          }
 
-  Int  getChromaFormatIdc ()         { return m_chromaFormatIdc;       }
-  Void setChromaFormatIdc (Int i)    { m_chromaFormatIdc = i;          }
+  ChromaFormat  getChromaFormatIdc ()         { return m_chromaFormatIdc;       }
+  Void setChromaFormatIdc (ChromaFormat i)    { m_chromaFormatIdc = i;          }
 
-  static Int getCropUnitX (Int chromaFormatIdc) { assert (chromaFormatIdc > 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_cropUnitX[chromaFormatIdc];      }
-  static Int getCropUnitY (Int chromaFormatIdc) { assert (chromaFormatIdc > 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_cropUnitY[chromaFormatIdc];      }
+  static Int getCropUnitX (Int chromaFormatIdc) { assert (chromaFormatIdc >= 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_cropUnitX[chromaFormatIdc];      }
+  static Int getCropUnitY (Int chromaFormatIdc) { assert (chromaFormatIdc >= 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_cropUnitY[chromaFormatIdc];      }
   
   // structure
   Void setPicWidthInLumaSamples       ( UInt u ) { m_picWidthInLumaSamples = u;        }
@@ -379,11 +384,11 @@ public:
   UInt  getNumLongTermRefPicSPS()             { return m_numLongTermRefPicSPS; }
   Void  setNumLongTermRefPicSPS(UInt val)     { m_numLongTermRefPicSPS = val; }
 
-  UInt  getLtRefPicPocLsbSps(UInt index)             { return m_ltRefPicPocLsbSps[index]; }
-  Void  setLtRefPicPocLsbSps(UInt index, UInt val)     { m_ltRefPicPocLsbSps[index] = val; }
+  UInt  getLtRefPicPocLsbSps(UInt index)             { assert(index<MAX_NUM_SPS_PLUS_1); return m_ltRefPicPocLsbSps[index]; }
+  Void  setLtRefPicPocLsbSps(UInt index, UInt val)   { assert(index<MAX_NUM_SPS_PLUS_1); m_ltRefPicPocLsbSps[index] = val; }
 
-  Bool getUsedByCurrPicLtSPSFlag(Int i)        {return m_usedByCurrPicLtSPSFlag[i];}
-  Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { m_usedByCurrPicLtSPSFlag[i] = x;}
+  Bool getUsedByCurrPicLtSPSFlag(Int i)              {assert(i<MAX_NUM_SPS_PLUS_1); return m_usedByCurrPicLtSPSFlag[i];}
+  Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { assert(i<MAX_NUM_SPS_PLUS_1); m_usedByCurrPicLtSPSFlag[i] = x;}
 #endif
   Void setMaxCUWidth  ( UInt u ) { m_uiMaxCUWidth = u;      }
   UInt getMaxCUWidth  ()         { return  m_uiMaxCUWidth;  }
@@ -444,8 +449,10 @@ public:
   Void setUseTransformSkipFast   ( Bool b ) { m_useTansformSkipFast  = b;   }
 #endif
 
+#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool getUseLossless ()         { return m_useLossless; }
   Void setUseLossless ( Bool b ) { m_useLossless  = b; }
+#endif
 #if !REMOVE_NSQT
   Bool getUseNSQT() { return m_useNSQT; }
   Void setUseNSQT( Bool b ) { m_useNSQT = b; }
@@ -469,10 +476,8 @@ public:
   Void      setBitDepth     ( UInt u ) { m_uiBitDepth = u;        }
   UInt      getBitIncrement ()         { return m_uiBitIncrement; }
   Void      setBitIncrement ( UInt u ) { m_uiBitIncrement = u;    }
-  Int       getQpBDOffsetY  ()             { return m_qpBDOffsetY;   }
-  Void      setQpBDOffsetY  ( Int value  ) { m_qpBDOffsetY = value;  }
-  Int       getQpBDOffsetC  ()             { return m_qpBDOffsetC;   }
-  Void      setQpBDOffsetC  ( Int value  ) { m_qpBDOffsetC = value;  }
+  Int       getQpBDOffset   (ChannelType type) const { return isLuma(type) ? m_qpBDOffsetY : m_qpBDOffsetC; }
+  Void      setQpBDOffset   (ChannelType type, Int i) { if (isLuma(type)) m_qpBDOffsetY=i; else m_qpBDOffsetC=i; }
 #if !MOVE_LOOP_FILTER_SLICES_FLAG
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   } 
@@ -485,10 +490,8 @@ public:
 
   Bool      getTemporalIdNestingFlag()                { return m_bTemporalIdNestingFlag; }
   Void      setTemporalIdNestingFlag( Bool bValue )   { m_bTemporalIdNestingFlag = bValue; }
-  UInt      getPCMBitDepthLuma     ()         { return m_uiPCMBitDepthLuma;     }
-  Void      setPCMBitDepthLuma     ( UInt u ) { m_uiPCMBitDepthLuma = u;        }
-  UInt      getPCMBitDepthChroma   ()         { return m_uiPCMBitDepthChroma;   }
-  Void      setPCMBitDepthChroma   ( UInt u ) { m_uiPCMBitDepthChroma = u;      }
+  UInt      getPCMBitDepth         (ChannelType type) const { return isLuma(type) ? m_uiPCMBitDepthLuma : m_uiPCMBitDepthChroma; }
+  Void      setPCMBitDepth         (ChannelType type, UInt u) { if (isLuma(type)) m_uiPCMBitDepthLuma = u; else m_uiPCMBitDepthChroma = u; }
   Void      setPCMFilterDisableFlag     ( Bool   bValue  )    { m_bPCMFilterDisableFlag = bValue; }
   Bool      getPCMFilterDisableFlag     ()                    { return m_bPCMFilterDisableFlag;   } 
 
@@ -505,13 +508,14 @@ public:
 };
 
 /// Reference Picture Lists class
+
 class TComRefPicListModification
 {
 private:
   UInt      m_bRefPicListModificationFlagL0;  
   UInt      m_bRefPicListModificationFlagL1;  
-  UInt      m_RefPicSetIdxL0[32];
-  UInt      m_RefPicSetIdxL1[32];
+  UInt      m_RefPicSetIdxL0[REF_PIC_LIST_NUM_IDX];
+  UInt      m_RefPicSetIdxL1[REF_PIC_LIST_NUM_IDX];
     
 public:
   TComRefPicListModification();
@@ -524,10 +528,10 @@ public:
   Void       setRefPicListModificationFlagL0(Bool flag) { m_bRefPicListModificationFlagL0 = flag; }
   Bool       getRefPicListModificationFlagL1() { return m_bRefPicListModificationFlagL1; }
   Void       setRefPicListModificationFlagL1(Bool flag) { m_bRefPicListModificationFlagL1 = flag; }
-  Void       setRefPicSetIdxL0(UInt idx, UInt refPicSetIdx) { m_RefPicSetIdxL0[idx] = refPicSetIdx; }
-  UInt       getRefPicSetIdxL0(UInt idx) { return m_RefPicSetIdxL0[idx]; }
-  Void       setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { m_RefPicSetIdxL1[idx] = refPicSetIdx; }
-  UInt       getRefPicSetIdxL1(UInt idx) { return m_RefPicSetIdxL1[idx]; }
+  Void       setRefPicSetIdxL0(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL0[idx] = refPicSetIdx; }
+  UInt       getRefPicSetIdxL0(UInt idx) { assert(idx<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL0[idx]; }
+  Void       setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL1[idx] = refPicSetIdx; }
+  UInt       getRefPicSetIdxL1(UInt idx) { assert(idx<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL1[idx]; }
 };
 
 /// PPS class
@@ -630,10 +634,8 @@ public:
   Void      setMinCuDQPSize     ( UInt u ) { m_uiMinCuDQPSize = u;    }
   UInt      getMinCuDQPSize     ()         { return m_uiMinCuDQPSize; }
 
-  Void      setChromaCbQpOffset( Int i ) { m_chromaCbQpOffset = i;    }
-  Int       getChromaCbQpOffset()        { return m_chromaCbQpOffset; }
-  Void      setChromaCrQpOffset( Int i ) { m_chromaCrQpOffset = i;    }
-  Int       getChromaCrQpOffset()        { return m_chromaCrQpOffset; }
+  Void      setQpOffset(ComponentID compID, Int i ) { if (compID==COMPONENT_Cb) m_chromaCbQpOffset = i; else if (compID==COMPONENT_Cr) m_chromaCrQpOffset = i; else assert(0); }
+  Int       getQpOffset(ComponentID compID) { return (compID==COMPONENT_Y) ? 0 : (compID==COMPONENT_Cb ? m_chromaCbQpOffset : m_chromaCrQpOffset ); }
 
   Void      setNumRefIdxL0DefaultActive(UInt ui)    { m_numRefIdxL0DefaultActive=ui;     }
   UInt      getNumRefIdxL0DefaultActive()           { return m_numRefIdxL0DefaultActive; }
@@ -760,7 +762,7 @@ private:
   Int         m_apsID;        //!< APS ID
   SAOParam*   m_pSaoParam;    //!< SAO parameter object pointer
 #if !REMOVE_ALF
-  ALFParam*   m_alfParam[3];
+  ALFParam*   m_alfParam[MAX_NUM_COMPONENT];
 #endif
 public:
   TComAPS& operator= (const TComAPS& src);  //!< "=" operator for APS object
@@ -794,7 +796,7 @@ private:
   Int         m_iAPSId; //!< APS ID in slice header
 #endif
 #if !REMOVE_ALF
-  Bool       m_alfEnabledFlag[3];
+  Bool       m_alfEnabledFlag[MAX_NUM_COMPONENT];
 #endif
   bool       m_saoEnabledFlag;
 #if SAO_TYPE_SHARING
@@ -829,10 +831,9 @@ private:
   Bool        m_inheritDblParamFromPPS;      //< offsets for deblocking filter inherit from PPS
   Int         m_loopFilterBetaOffsetDiv2;    //< beta offset for deblocking filter
   Int         m_loopFilterTcOffsetDiv2;      //< tc offset for deblocking filter
-  
-  Int         m_aiNumRefIdx   [3];    //  for multiple reference of current slice
+  Int         m_aiNumRefIdx   [NUM_REF_PIC_LIST_01C];    //  for multiple reference of current slice
 
-  Int         m_iRefIdxOfLC[2][MAX_NUM_REF_LC];
+  Int         m_iRefIdxOfLC[NUM_REF_PIC_LIST_01][MAX_NUM_REF_LC];
   Int         m_eListIdFromIdxOfLC[MAX_NUM_REF_LC];
   Int         m_iRefIdxFromIdxOfLC[MAX_NUM_REF_LC];
   Int         m_iRefIdxOfL1FromRefIdxOfL0[MAX_NUM_REF_LC];
@@ -845,11 +846,11 @@ private:
   //  Data
   Int         m_iSliceQpDelta;
 #if CHROMA_QP_EXTENSION
-  Int         m_iSliceQpDeltaCb;
-  Int         m_iSliceQpDeltaCr;
+  Int         m_iSliceChromaQpDelta[MAX_NUM_COMPONENT];
 #endif
-  TComPic*    m_apcRefPicList [2][MAX_NUM_REF+1];
-  Int         m_aiRefPOCList  [2][MAX_NUM_REF+1];
+
+  TComPic*    m_apcRefPicList [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
+  Int         m_aiRefPOCList  [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int         m_iDepth;
   
   // referenced slice?
@@ -877,7 +878,7 @@ private:
   Double      m_dLambda;
 #endif
 
-  Bool        m_abEqualRef  [2][MAX_NUM_REF][MAX_NUM_REF];
+  Bool        m_abEqualRef  [NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_REF];
   
   Bool        m_bNoBackPredFlag;
   UInt        m_uiTLayer;
@@ -898,9 +899,8 @@ private:
   UInt        m_uiDependentSliceCounter;
   Bool        m_bFinalized;
 
-  wpScalingParam  m_weightPredTable[2][MAX_NUM_REF][3]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
-  wpACDCParam    m_weightACDCParam[3];                 // [0:Y, 1:U, 2:V]
-  wpScalingParam  m_weightPredTableLC[2*MAX_NUM_REF][3]; // [refIdxLC][0:Y, 1:U, 2:V]
+  wpScalingParam  m_weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
+  wpACDCParam    m_weightACDCParam[MAX_NUM_COMPONENT];
 
   UInt        *m_uiTileByteLocation;
   UInt        m_uiTileCount;
@@ -952,8 +952,8 @@ public:
   Void      setPicOutputFlag( Bool b )         { m_PicOutputFlag = b;    }
   Bool      getPicOutputFlag()                 { return m_PicOutputFlag; }
 #if !REMOVE_ALF
-  Void      setAlfEnabledFlag(Bool b, Int compIdx) { m_alfEnabledFlag[compIdx] = b;    }
-  Bool      getAlfEnabledFlag(Int compIdx)         { return m_alfEnabledFlag[compIdx]; }
+  Void      setAlfEnabledFlag(Bool b, ComponentID compIdx) { m_alfEnabledFlag[compIdx] = b;    }
+  Bool      getAlfEnabledFlag(ComponentID compIdx)         { return m_alfEnabledFlag[compIdx]; }
 #endif
   Void      setSaoEnabledFlag(Bool s) {m_saoEnabledFlag =s; }
   Bool      getSaoEnabledFlag() { return m_saoEnabledFlag; }
@@ -992,8 +992,7 @@ public:
 #endif
   Int       getSliceQpDelta ()                          { return  m_iSliceQpDelta;      }
 #if CHROMA_QP_EXTENSION
-  Int       getSliceQpDeltaCb ()                          { return  m_iSliceQpDeltaCb;      }
-  Int       getSliceQpDeltaCr ()                          { return  m_iSliceQpDeltaCr;      }
+  Int       getSliceChromaQpDelta (ComponentID compID)  { return  isLuma(compID) ? 0 : m_iSliceChromaQpDelta[compID]; }
 #endif
   Bool      getLoopFilterDisable()                      { return  m_bLoopFilterDisable; }
   Bool      getLoopFilterOffsetInPPS()                  { return  m_loopFilterOffsetInPPS;}
@@ -1049,8 +1048,7 @@ public:
 #endif
   Void      setSliceQpDelta     ( Int i )                       { m_iSliceQpDelta     = i;      }
 #if CHROMA_QP_EXTENSION
-  Void      setSliceQpDeltaCb   ( Int i )                       { m_iSliceQpDeltaCb   = i;      }
-  Void      setSliceQpDeltaCr   ( Int i )                       { m_iSliceQpDeltaCr   = i;      }
+  Void      setSliceChromaQpDelta( ComponentID compID, Int i )  { m_iSliceChromaQpDelta[compID] = isLuma(compID) ? 0 : i;  }
 #endif
   Void      setLoopFilterDisable( Bool b )                      { m_bLoopFilterDisable= b;      }
   Void      setLoopFilterOffsetInPPS( Bool b )                  { m_loopFilterOffsetInPPS = b;}
@@ -1087,12 +1085,14 @@ public:
   Void      initEqualRef();
   Bool      isEqualRef  ( RefPicList e, Int iRefIdx1, Int iRefIdx2 )
   {
+    assert(e<NUM_REF_PIC_LIST_01);
     if (iRefIdx1 < 0 || iRefIdx2 < 0) return false;
     return m_abEqualRef[e][iRefIdx1][iRefIdx2];
   }
   
   Void setEqualRef( RefPicList e, Int iRefIdx1, Int iRefIdx2, Bool b)
   {
+    assert(e<NUM_REF_PIC_LIST_01);
     m_abEqualRef[e][iRefIdx1][iRefIdx2] = m_abEqualRef[e][iRefIdx2][iRefIdx1] = b;
   }
   
@@ -1145,15 +1145,15 @@ public:
   UInt getDependentSliceCounter           ()                  { return m_uiDependentSliceCounter;             }
   Void setFinalized                     ( Bool uiVal )      { m_bFinalized = uiVal;                       }
   Bool getFinalized                     ()                  { return m_bFinalized;                        }
-  Void  setWpScaling    ( wpScalingParam  wp[2][MAX_NUM_REF][3] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*2*MAX_NUM_REF*3); }
+  Void  setWpScaling    ( wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*NUM_REF_PIC_LIST_01*MAX_NUM_REF*MAX_NUM_COMPONENT); }
   Void  getWpScaling    ( RefPicList e, Int iRefIdx, wpScalingParam *&wp);
 
-  Void  resetWpScaling  (wpScalingParam  wp[2][MAX_NUM_REF][3]);
-  Void  initWpScaling    (wpScalingParam  wp[2][MAX_NUM_REF][3]);
+  Void  resetWpScaling  (wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]);
+  Void  initWpScaling   (wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]);
   Void  initWpScaling   ();
   inline Bool applyWP   () { return( (m_eSliceType==P_SLICE && m_pcPPS->getUseWP()) || (m_eSliceType==B_SLICE && m_pcPPS->getWPBiPred()) ); }
 
-  Void  setWpAcDcParam  ( wpACDCParam wp[3] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*3); }
+  Void  setWpAcDcParam  ( wpACDCParam wp[MAX_NUM_COMPONENT] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*MAX_NUM_COMPONENT); }
   Void  getWpAcDcParam  ( wpACDCParam *&wp );
   Void  initWpAcDcParam ();
   Void setTileLocationCount             ( UInt uiCount )      { m_uiTileCount = uiCount;                  }

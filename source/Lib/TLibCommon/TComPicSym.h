@@ -113,7 +113,7 @@ private:
   SAOParam *m_saoParam;
 #endif
 public:
-  Void        create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void        create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
   Void        destroy ();
 
   TComPicSym  ()                        { m_uiNumAllocatedSlice = 0;            }

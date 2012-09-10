@@ -68,6 +68,10 @@ class TEncTop;
 // ====================================================================================================================
 
 /// GOP encoder class
+#if LTRP_IN_SPS
+static const UInt MAX_NUM_LONG_TERM_REF_PICS=33;
+#endif
+
 class TEncGOP
 {
 private:
@@ -75,9 +79,9 @@ private:
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
 #if LTRP_IN_SPS
-  UInt            m_numLongTermRefPicSPS;
-  UInt            m_ltRefPicPocLsbSps[33];
-  Bool            m_ltRefPicUsedByCurrPicFlag[33];
+  UInt                    m_numLongTermRefPicSPS;
+  UInt                    m_ltRefPicPocLsbSps[MAX_NUM_LONG_TERM_REF_PICS];
+  Bool                    m_ltRefPicUsedByCurrPicFlag[MAX_NUM_LONG_TERM_REF_PICS];
 #endif
   Int                     m_iLastIDR;
   Int                     m_iGopSize;
@@ -141,6 +145,7 @@ public:
   Void allocAPS    (TComAPS* pAPS, TComSPS* pSPS);
 #endif
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
+
 protected:
 #if !REMOVE_APS
   Void encodeAPS   (TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* pcSlice);            //!< encode APS syntax elements

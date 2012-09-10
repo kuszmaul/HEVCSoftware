@@ -63,10 +63,6 @@ TComSlice::TComSlice()
 , m_bRefPicListCombinationFlag    ( false )
 , m_bCheckLDC                     ( false )
 , m_iSliceQpDelta                 ( 0 )
-#if CHROMA_QP_EXTENSION
-, m_iSliceQpDeltaCb               ( 0 )
-, m_iSliceQpDeltaCr               ( 0 )
-#endif
 , m_iDepth                        ( 0 )
 , m_bRefenced                     ( false )
 , m_pcSPS                         ( NULL )
@@ -108,7 +104,14 @@ TComSlice::TComSlice()
 #endif
 , m_enableTMVPFlag                ( true )
 {
-  m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
+  for(UInt i=0; i<NUM_REF_PIC_LIST_01C; i++)
+  {
+    m_aiNumRefIdx[i] = 0;
+  }
+
+#if CHROMA_QP_EXTENSION
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = 0;
+#endif
   
   initEqualRef();
   
@@ -123,17 +126,21 @@ TComSlice::TComSlice()
   }    
   for(Int iNumCount = 0; iNumCount < MAX_NUM_REF; iNumCount++)
   {
-    m_apcRefPicList [0][iNumCount] = NULL;
-    m_apcRefPicList [1][iNumCount] = NULL;
-    m_aiRefPOCList  [0][iNumCount] = 0;
-    m_aiRefPOCList  [1][iNumCount] = 0;
+    for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
+    {
+      m_apcRefPicList [i][iNumCount] = NULL;
+      m_aiRefPOCList  [i][iNumCount] = 0;
+    }
   }
   m_bCombineWithReferenceFlag = 0;
   resetWpScaling(m_weightPredTable);
   initWpAcDcParam();
   m_saoEnabledFlag = false;
 #if !REMOVE_ALF
-  m_alfEnabledFlag[0] = m_alfEnabledFlag[1] = m_alfEnabledFlag[2] = false;
+  for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  {
+    m_alfEnabledFlag[comp] = false;
+  }
 #endif
 }
 
@@ -183,9 +190,10 @@ Void TComSlice::initCTXMem_dec(  UInt i )
 
 Void TComSlice::initSlice()
 {
-  m_aiNumRefIdx[0]      = 0;
-  m_aiNumRefIdx[1]      = 0;
-  
+  for(UInt i=0; i<NUM_REF_PIC_LIST_01C; i++)
+  {
+    m_aiNumRefIdx[i]      = 0;
+  }
   m_uiColDir = 0;
   
   m_colRefIdx = 0;
@@ -195,11 +203,8 @@ Void TComSlice::initSlice()
   m_bRefPicListModificationFlagLC = false;
   m_bCheckLDC = false;
 #if CHROMA_QP_EXTENSION
-  m_iSliceQpDeltaCb = 0;
-  m_iSliceQpDeltaCr = 0;
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = 0;
 #endif
-
-  m_aiNumRefIdx[REF_PIC_LIST_C]      = 0;
 
   m_uiMaxNumMergeCand = MRG_MAX_NUM_CANDS_SIGNALED;
 
@@ -325,7 +330,7 @@ TComPic* TComSlice::xGetLongTermRefPic (TComList<TComPic*>& rcListPic,
 
 Void TComSlice::setRefPOCList       ()
 {
-  for (Int iDir = 0; iDir < 2; iDir++)
+  for (Int iDir = 0; iDir < NUM_REF_PIC_LIST_01; iDir++)
   {
     for (Int iNumRefIdx = 0; iNumRefIdx < m_aiNumRefIdx[iDir]; iNumRefIdx++)
     {
@@ -408,13 +413,14 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     return;
   }
   
-  m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
-  m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
+  m_aiNumRefIdx[REF_PIC_LIST_0] = getNumRefIdx(REF_PIC_LIST_0);
+  m_aiNumRefIdx[REF_PIC_LIST_1] = getNumRefIdx(REF_PIC_LIST_1);
 
   TComPic*  pcRefPic= NULL;
-  TComPic*  RefPicSetStCurr0[16];
-  TComPic*  RefPicSetStCurr1[16];
-  TComPic*  RefPicSetLtCurr[16];
+  static const UInt MAX_NUM_NEGATIVE_PICTURES=16; // NOTE: ECF - new definition
+  TComPic*  RefPicSetStCurr0[MAX_NUM_NEGATIVE_PICTURES];
+  TComPic*  RefPicSetStCurr1[MAX_NUM_NEGATIVE_PICTURES];
+  TComPic*  RefPicSetLtCurr[MAX_NUM_NEGATIVE_PICTURES];
   UInt NumPocStCurr0 = 0;
   UInt NumPocStCurr1 = 0;
   UInt NumPocLtCurr = 0;
@@ -466,8 +472,8 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
 
   // ref_pic_list_init
   UInt cIdx = 0;
-  UInt num_ref_idx_l0_active_minus1 = m_aiNumRefIdx[0] - 1;
-  UInt num_ref_idx_l1_active_minus1 = m_aiNumRefIdx[1] - 1;
+  UInt num_ref_idx_l0_active_minus1 = m_aiNumRefIdx[REF_PIC_LIST_0] - 1;
+  UInt num_ref_idx_l1_active_minus1 = m_aiNumRefIdx[REF_PIC_LIST_1] - 1;
   TComPic*  refPicListTemp0[MAX_NUM_REF+1];
   TComPic*  refPicListTemp1[MAX_NUM_REF+1];
   Int  numRpsCurrTempList0, numRpsCurrTempList1;
@@ -517,18 +523,18 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
 
   for (cIdx = 0; cIdx <= num_ref_idx_l0_active_minus1; cIdx ++)
   {
-    m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
+    m_apcRefPicList[REF_PIC_LIST_0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
   }
   if ( m_eSliceType == P_SLICE )
   {
-    m_aiNumRefIdx[1] = 0;
-    ::memset( m_apcRefPicList[1], 0, sizeof(m_apcRefPicList[1]));
+    m_aiNumRefIdx[REF_PIC_LIST_1] = 0;
+    ::memset( m_apcRefPicList[REF_PIC_LIST_1], 0, sizeof(m_apcRefPicList[REF_PIC_LIST_1]));
   }
   else
   {
     for (cIdx = 0; cIdx <= num_ref_idx_l1_active_minus1; cIdx ++)
     {
-      m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
+      m_apcRefPicList[REF_PIC_LIST_1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
     }
   }
 }
@@ -553,7 +559,7 @@ Int TComSlice::getNumRpsCurrTempList()
 
 Void TComSlice::initEqualRef()
 {
-  for (Int iDir = 0; iDir < 2; iDir++)
+  for (Int iDir = 0; iDir < NUM_REF_PIC_LIST_01; iDir++)
   {
     for (Int iRefIdx1 = 0; iRefIdx1 < MAX_NUM_REF; iRefIdx1++)
     {
@@ -701,12 +707,12 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_loopFilterBetaOffsetDiv2 = pSrc->m_loopFilterBetaOffsetDiv2;
   m_loopFilterTcOffsetDiv2 = pSrc->m_loopFilterTcOffsetDiv2;
   
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < NUM_REF_PIC_LIST_01C; i++)
   {
     m_aiNumRefIdx[i]     = pSrc->m_aiNumRefIdx[i];
   }
 
-  for (i = 0; i < 2; i++)
+  for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {
     for (j = 0; j < MAX_NUM_REF_LC; j++)
     {
@@ -725,10 +731,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
 #if CHROMA_QP_EXTENSION
-  m_iSliceQpDeltaCb      = pSrc->m_iSliceQpDeltaCb;
-  m_iSliceQpDeltaCr      = pSrc->m_iSliceQpDeltaCr;
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = pSrc->m_iSliceChromaQpDelta[component];
 #endif
-  for (i = 0; i < 2; i++)
+  for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)
     {
@@ -761,7 +766,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 #else
   m_dLambda              = pSrc->m_dLambda;
 #endif
-  for (i = 0; i < 2; i++)
+  for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)
     {
@@ -787,11 +792,11 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_uiDependentSliceCurEndCUAddr    = pSrc->m_uiDependentSliceCurEndCUAddr;
   m_bNextSlice                    = pSrc->m_bNextSlice;
   m_bNextDependentSlice             = pSrc->m_bNextDependentSlice;
-  for ( int e=0 ; e<2 ; e++ )
+  for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
-    for ( int n=0 ; n<MAX_NUM_REF ; n++ )
+    for ( UInt n=0 ; n<MAX_NUM_REF ; n++ )
     {
-      memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*3 );
+      memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*MAX_NUM_COMPONENT );
     }
   }
   m_saoEnabledFlag = pSrc->m_saoEnabledFlag; 
@@ -806,7 +811,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
 #if !REMOVE_ALF
-  for(Int compIdx=0; compIdx < 3; compIdx++)
+  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     m_alfEnabledFlag[compIdx] = pSrc->m_alfEnabledFlag[compIdx];
   }
@@ -1148,7 +1153,7 @@ Void  TComSlice::getWpAcDcParam(wpACDCParam *&wp)
  */
 Void  TComSlice::initWpAcDcParam()
 {
-  for(Int iComp = 0; iComp < 3; iComp++ )
+  for(Int iComp = 0; iComp < MAX_NUM_COMPONENT; iComp++ )
   {
     m_weightACDCParam[iComp].iAC = 0;
     m_weightACDCParam[iComp].iDC = 0;
@@ -1163,6 +1168,7 @@ Void  TComSlice::initWpAcDcParam()
  */
 Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, wpScalingParam *&wp )
 {
+  assert (e<NUM_REF_PIC_LIST_01);
   wp = m_weightPredTable[e][iRefIdx];
 }
 
@@ -1170,13 +1176,13 @@ Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, wpScalingParam *&wp )
  * \param wpScalingParam
  * \returns Void
  */
-Void  TComSlice::resetWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
+Void  TComSlice::resetWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT])
 {
-  for ( int e=0 ; e<2 ; e++ ) 
+  for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( int i=0 ; i<MAX_NUM_REF ; i++ )
     {
-      for ( int yuv=0 ; yuv<3 ; yuv++ ) 
+      for ( int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
         wpScalingParam  *pwp = &(wp[e][i][yuv]);
         pwp->bPresentFlag      = false;
@@ -1201,13 +1207,13 @@ Void  TComSlice::initWpScaling()
  * \param wpScalingParam
  * \returns Void
  */
-Void  TComSlice::initWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
+Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT])
 {
-  for ( int e=0 ; e<2 ; e++ ) 
+  for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( int i=0 ; i<MAX_NUM_REF ; i++ )
     {
-      for ( int yuv=0 ; yuv<3 ; yuv++ ) 
+      for ( int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
         wpScalingParam  *pwp = &(wp[e][i][yuv]);
         if ( !pwp->bPresentFlag ) {
@@ -1615,7 +1621,10 @@ TComAPS::TComAPS()
   m_apsID = 0;
   m_pSaoParam = NULL;
 #if !REMOVE_ALF
-  m_alfParam[0] = m_alfParam[1] = m_alfParam[2] = NULL;
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  {
+    m_alfParam[compIdx] = NULL;
+  }
 #endif
 }
 
@@ -1623,7 +1632,7 @@ TComAPS::~TComAPS()
 {
   delete m_pSaoParam;
 #if !REMOVE_ALF
-  for(Int compIdx =0; compIdx < 3; compIdx++)
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     delete m_alfParam[compIdx];
     m_alfParam[compIdx] = NULL;
@@ -1636,7 +1645,7 @@ TComAPS& TComAPS::operator= (const TComAPS& src)
   m_apsID       = src.m_apsID;
   m_pSaoParam   = src.m_pSaoParam;
 #if !REMOVE_ALF
-  for(Int compIdx =0; compIdx < 3; compIdx++)
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     m_alfParam[compIdx] = src.m_alfParam[compIdx];
   }
@@ -1661,15 +1670,15 @@ Void TComAPS::destroySaoParam()
 #if !REMOVE_ALF
 Void TComAPS::createAlfParam()
 {
-  for(Int compIdx =0; compIdx < 3; compIdx++)
+  for(Int compIdx =0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
-    m_alfParam[compIdx] = new ALFParam(compIdx);
+    m_alfParam[compIdx] = new ALFParam(ComponentID(compIdx));
     m_alfParam[compIdx]->alf_flag = 0;
   }
 }
 Void TComAPS::destroyAlfParam()
 {
-  for(Int compIdx=0; compIdx < 3; compIdx++)
+  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     if(m_alfParam[compIdx] != NULL)
     {
@@ -1740,8 +1749,9 @@ Void TComScalingList::processRefMatrix( UInt sizeId, UInt listId , UInt refListI
  */
 Bool TComScalingList::xParseScalingList(char* pchFile)
 {
+  static const Int LINE_SIZE=1024;
   FILE *fp;
-  Char line[1024];
+  Char line[LINE_SIZE];
   UInt sizeIdc,listIdc;
   UInt i,size = 0;
   Int *src=0,data;
@@ -1764,7 +1774,7 @@ Bool TComScalingList::xParseScalingList(char* pchFile)
       fseek(fp,0,0);
       do 
       {
-        ret = fgets(line, 1024, fp);
+        ret = fgets(line, LINE_SIZE, fp);
         if ((ret==NULL)||(strstr(line, MatrixType[sizeIdc][listIdc])==NULL && feof(fp)))
         {
           printf("Error: can't read Matrix :: set Default Matrix\n");
@@ -1790,7 +1800,7 @@ Bool TComScalingList::xParseScalingList(char* pchFile)
         fseek(fp,0,0);
         do 
         {
-          ret = fgets(line, 1024, fp);
+          ret = fgets(line, LINE_SIZE, fp);
           if ((ret==NULL)||(strstr(line, MatrixType_DC[sizeIdc][listIdc])==NULL && feof(fp)))
           {
             printf("Error: can't read DC :: set Default Matrix\n");
@@ -1823,8 +1833,9 @@ Void TComScalingList::init()
     {
       m_scalingListCoef[sizeId][listId] = new Int [min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId])];
     }
+    if (g_scalingListNum[sizeId] < 2*MAX_NUM_COMPONENT)
+      m_scalingListCoef[SCALING_LIST_32x32][MAX_NUM_COMPONENT] = m_scalingListCoef[SCALING_LIST_32x32][g_scalingListNum[sizeId] - 1]; // copy address
   }
-  m_scalingListCoef[SCALING_LIST_32x32][3] = m_scalingListCoef[SCALING_LIST_32x32][1]; // copy address for 32x32
 }
 /** destroy quantization matrix array
  */
@@ -1856,20 +1867,16 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
       }
       else
       {
-        src = (listId<3) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
+        src = (listId < (g_scalingListNum[sizeId]/2) ) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
       }
 #else
-      src = (listId<3) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
+      src = (listId < (g_scalingListNum[sizeId]/2) ) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
 #endif
       break;
     case SCALING_LIST_8x8:
-      src = (listId<3) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
-      break;
     case SCALING_LIST_16x16:
-      src = (listId<3) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
-      break;
     case SCALING_LIST_32x32:
-      src = (listId<1) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
+      src = (listId < (g_scalingListNum[sizeId]/2) ) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
       break;
     default:
       assert(0);
