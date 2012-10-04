@@ -241,13 +241,25 @@ void TVideoIOYuv::skipFrames(unsigned int numFrames, unsigned int width, unsigne
 static bool readPlane(Pel* dst, istream& fd, bool is16bit,
                       unsigned int stride,
                       unsigned int width, unsigned int height,
-                      unsigned int pad_x, unsigned int pad_y)
+                      unsigned int pad_x, unsigned int pad_y
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+                      ,bool loopFile
+#endif
+                      )
 {
   int read_len = width * (is16bit ? 2 : 1);
   unsigned char *buf = new unsigned char[read_len];
   for (int y = 0; y < height; y++)
   {
     fd.read(reinterpret_cast<char*>(buf), read_len);
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+    if (loopFile && fd.eof())
+    {
+      fd.clear();
+      fd.seekg(0, ios::beg);
+      fd.read(reinterpret_cast<char*>(buf), read_len);
+    }
+#endif
     if (fd.eof() || fd.fail() )
     {
       delete[] buf;
@@ -347,7 +359,11 @@ static bool writePlane(ostream& fd, Pel* src, bool is16bit,
  * @param aiPad        source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], Bool loopFile )
+#else
 bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2] )
+#endif
 {
   // check end-of-file
   if ( isEof() ) return false;
@@ -375,7 +391,11 @@ bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2] )
   }
 #endif
   
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  if (! readPlane(pPicYuv->getLumaAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v, loopFile))
+#else
   if (! readPlane(pPicYuv->getLumaAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v))
+#endif
     return false;
   scalePlane(pPicYuv->getLumaAddr(), iStride, width_full, height_full, m_bitdepthShift, minval, maxval);
 
@@ -387,11 +407,19 @@ bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2] )
   pad_h >>= 1;
   pad_v >>= 1;
 
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  if (! readPlane(pPicYuv->getCbAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v, loopFile))
+#else
   if (! readPlane(pPicYuv->getCbAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v))
+#endif
     return false;
   scalePlane(pPicYuv->getCbAddr(), iStride, width_full, height_full, m_bitdepthShift, minval, maxval);
 
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  if (! readPlane(pPicYuv->getCrAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v, loopFile))
+#else
   if (! readPlane(pPicYuv->getCrAddr(), m_cHandle, is16bit, iStride, width, height, pad_h, pad_v))
+#endif
     return false;
   scalePlane(pPicYuv->getCrAddr(), iStride, width_full, height_full, m_bitdepthShift, minval, maxval);
 

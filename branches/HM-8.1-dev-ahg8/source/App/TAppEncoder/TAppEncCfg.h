@@ -77,6 +77,13 @@ protected:
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
   Int       m_extraRPSs;                                      ///< extra RPSs added to handle CRA
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Int       m_maximizeRefPicUsage;                            ///< Additional pictures around CRA or not
+  Double    m_hardCodedStructureAHGRefPic;
+  Int       m_roundTripTime;
+  Int       m_firstSceneInterval;
+  Int       m_secondSceneInterval;
+#endif
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of reference pictures needed for decoding
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)

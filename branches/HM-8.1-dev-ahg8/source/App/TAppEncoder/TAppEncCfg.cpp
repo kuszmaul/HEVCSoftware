@@ -143,6 +143,18 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     }
   }
 #endif
+#if REF_PIC_LIST_REORDER
+  in>>entry.m_reorderList0;
+  in>>entry.m_reorderList1;
+  for( Int i = 0; i < entry.m_numRefPicsActive; i++ )
+  {
+    in>>entry.m_list0Index[i];
+  }
+  for( Int i = 0; i < entry.m_numRefPicsActive; i++ )
+  {
+    in>>entry.m_list1Index[i];
+  }
+#endif
   return in;
 }
 
@@ -209,6 +221,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  ("MaximizeRefPicUsage",          m_maximizeRefPicUsage,            1, "Additional pictures around CRA or not")
+  ("HardCodedStructureAHG21",      m_hardCodedStructureAHGRefPic,  0.0, "Hard-coded reference picture structure for AHG21")
+  ("RTT",                          m_roundTripTime,                  0, "RTT")
+  ("FirstSceneInterval",           m_firstSceneInterval,             0, "First Scene Interval")
+  ("SecondSceneInterval",          m_secondSceneInterval,            0, "Second Scene Interval")
+#endif
   ("ListCombination,-lc",     m_bUseLComb,               true, "Combined reference list for uni-prediction estimation in B-slices")
   // motion options
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
@@ -544,6 +563,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_uiInputBitDepth < 8,                                                      "InputBitDepth must be at least 8" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
   xConfirmPara( m_iFrameToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  xConfirmPara( m_maximizeRefPicUsage < 0 || m_maximizeRefPicUsage > 1,                     "MaximizeRefPicUsage must be 0 or 1");
+#endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
@@ -774,69 +796,76 @@ Void TAppEncCfg::xCheckParameter()
         }
         Int numPrefRefs = m_GOPList[curGOP].m_numRefPicsActive;
         
-        for(Int offset = -1; offset>-checkGOP; offset--)
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+        if(m_maximizeRefPicUsage) // Only add extra available pictures if the config file says so
         {
-          //step backwards in coding order and include any extra available pictures we might find useful to replace the ones with POC < 0.
-          Int offGOP = (checkGOP-1+offset)%m_iGOPSize;
-          Int offPOC = ((checkGOP-1+offset)/m_iGOPSize)*m_iGOPSize + m_GOPList[offGOP].m_POC;
-#if TEMPORAL_LAYER_NON_REFERENCE
-          if(offPOC>=0&&m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId)
-#else
-          if(offPOC>=0&&m_GOPList[offGOP].m_refPic&&m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId) 
 #endif
+          for(Int offset = -1; offset>-checkGOP; offset--)
           {
-            Bool newRef=false;
-            for(Int i=0; i<numRefs; i++)
-            {
-              if(refList[i]==offPOC)
-              {
-                newRef=true;
-              }
-            }
-            for(Int i=0; i<newRefs; i++) 
-            {
-              if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[i]==offPOC-curPOC)
-              {
-                newRef=false;
-              }
-            }
-            if(newRef) 
-            {
-              Int insertPoint=newRefs;
-              //this picture can be added, find appropriate place in list and insert it.
+            //step backwards in coding order and include any extra available pictures we might find useful to replace the ones with POC < 0.
+            Int offGOP = (checkGOP-1+offset)%m_iGOPSize;
+            Int offPOC = ((checkGOP-1+offset)/m_iGOPSize)*m_iGOPSize + m_GOPList[offGOP].m_POC;
 #if TEMPORAL_LAYER_NON_REFERENCE
-              if(m_GOPList[offGOP].m_temporalId==m_GOPList[curGOP].m_temporalId)
-              {
-                m_GOPList[offGOP].m_refPic = true;
-              }
+            if(offPOC>=0&&m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId)
+#else
+            if(offPOC>=0&&m_GOPList[offGOP].m_refPic&&m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId) 
 #endif
-              for(Int j=0; j<newRefs; j++)
+            {
+              Bool newRef=false;
+              for(Int i=0; i<numRefs; i++)
               {
-                if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]<offPOC-curPOC||m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]>0)
+                if(refList[i]==offPOC)
                 {
-                  insertPoint = j;
-                  break;
+                  newRef=true;
                 }
               }
-              Int prev = offPOC-curPOC;
-              Int prevUsed = m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId;
-              for(Int j=insertPoint; j<newRefs+1; j++)
+              for(Int i=0; i<newRefs; i++) 
               {
-                Int newPrev = m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j];
-                Int newUsed = m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j];
-                m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]=prev;
-                m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j]=prevUsed;
-                prevUsed=newUsed;
-                prev=newPrev;
+                if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[i]==offPOC-curPOC)
+                {
+                  newRef=false;
+                }
               }
-              newRefs++;
+              if(newRef) 
+              {
+                Int insertPoint=newRefs;
+                //this picture can be added, find appropriate place in list and insert it.
+#if TEMPORAL_LAYER_NON_REFERENCE
+                if(m_GOPList[offGOP].m_temporalId==m_GOPList[curGOP].m_temporalId)
+                {
+                  m_GOPList[offGOP].m_refPic = true;
+                }
+#endif
+                for(Int j=0; j<newRefs; j++)
+                {
+                  if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]<offPOC-curPOC||m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]>0)
+                  {
+                    insertPoint = j;
+                    break;
+                  }
+                }
+                Int prev = offPOC-curPOC;
+                Int prevUsed = m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId;
+                for(Int j=insertPoint; j<newRefs+1; j++)
+                {
+                  Int newPrev = m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j];
+                  Int newUsed = m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j];
+                  m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]=prev;
+                  m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j]=prevUsed;
+                  prevUsed=newUsed;
+                  prev=newPrev;
+                }
+                newRefs++;
+              }
+            }
+            if(newRefs>=numPrefRefs)
+            {
+              break;
             }
           }
-          if(newRefs>=numPrefRefs)
-          {
-            break;
-          }
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
         }
+#endif
         m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefPics=newRefs;
         m_GOPList[m_iGOPSize+m_extraRPSs].m_POC = curPOC;
         if (m_extraRPSs == 0)
@@ -879,6 +908,13 @@ Void TAppEncCfg::xCheckParameter()
           m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRIdxMinus1 = 0; 
 #endif
         }
+#if REF_PIC_LIST_REORDER
+        if (m_extraRPSs >= 0)  // extra RPS reordering not enabled since it is not configurable, can be hardcoded if required
+        {
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_reorderList0 = 0;
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_reorderList1 = 0;
+        }
+#endif
         curGOP=m_iGOPSize+m_extraRPSs;
         m_extraRPSs++;
       }
@@ -910,7 +946,22 @@ Void TAppEncCfg::xCheckParameter()
   for(Int i=0; i<MAX_TLAYER; i++)
   {
     m_numReorderPics[i] = 0;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+    if (m_hardCodedStructureAHGRefPic == 3.3)
+    {
+      m_maxDecPicBuffering[i] = 3;
+    }
+    else if (m_hardCodedStructureAHGRefPic == 3.4)
+    {
+      m_maxDecPicBuffering[i] = 5;
+    }
+    else
+    {
+      m_maxDecPicBuffering[i] = 0;
+    }
+#else
     m_maxDecPicBuffering[i] = 0;
+#endif
   }
   for(Int i=0; i<m_iGOPSize; i++) 
   {

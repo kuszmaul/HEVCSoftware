@@ -596,6 +596,18 @@ Void TEncTop::xInitSPS()
       pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
 #endif
+#if REF_PIC_LIST_REORDER  
+  Bool modificationsPresent = false;
+  for( i = 0; i < getGOPSize(); i++) 
+  {
+    if(getGOPEntry(i).m_reorderList0||getGOPEntry(i).m_reorderList1)
+    {
+      modificationsPresent=true;
+    }
+  }
+  m_cSPS.setRestrictedRefPicListsFlag(modificationsPresent==false);
+  m_cSPS.setListsModificationPresentFlag(modificationsPresent);
+#endif
 }
 
 Void TEncTop::xInitPPS()
