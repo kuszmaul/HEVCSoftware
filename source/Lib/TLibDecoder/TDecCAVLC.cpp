@@ -357,10 +357,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG ( uiCode, "sign_data_hiding_flag" ); pcPPS->setSignHideFlag( uiCode );
 
   READ_FLAG( uiCode,   "cabac_init_present_flag" );            pcPPS->setCabacInitPresentFlag( uiCode ? true : false );
-
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC(uiCode, "num_ref_idx_l0_default_active_minus1");       pcPPS->setNumRefIdxL0DefaultActive(uiCode+1);
   READ_UVLC(uiCode, "num_ref_idx_l1_default_active_minus1");       pcPPS->setNumRefIdxL1DefaultActive(uiCode+1);
-
+#if RPS_COUNTER
+  pcPPS->setBitsForPPS(pcPPS->getBitsForPPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
   READ_SVLC(iCode, "pic_init_qp_minus26" );                        pcPPS->setPicInitQPMinus26(iCode);
   READ_FLAG( uiCode, "constrained_intra_pred_flag" );              pcPPS->setConstrainedIntraPred( uiCode ? true : false );
 #if PPS_TS_FLAG  
@@ -732,7 +736,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_CODE( 4, uiCode, "pcm_bit_depth_luma_minus1" );           pcSPS->setPCMBitDepthLuma   ( 1 + uiCode );
     READ_CODE( 4, uiCode, "pcm_bit_depth_chroma_minus1" );         pcSPS->setPCMBitDepthChroma ( 1 + uiCode );
   }
-
+#if RPS_COUNTER
+  UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
@@ -755,6 +761,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   {
     pcSPS->setListsModificationPresentFlag(true);
   }
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
+
   READ_UVLC( uiCode, "log2_min_coding_block_size_minus3" );
   UInt log2MinCUSize = uiCode + 3;
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
@@ -815,7 +825,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_FLAG( uiCode, "temporal_id_nesting_flag" );               pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
-
+#if RPS_COUNTER
+  bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
   pcSPS->createRPSList(uiCode);
 
@@ -841,6 +853,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUsedByCurrPicLtSPSFlag(k, uiCode?1:0);
     }
   }
+#endif
+#if RPS_COUNTER
+  pcSPS->setBitsForSPS(pcSPS->getBitsForSPS()+bitsBefore-m_pcBitstream->getNumBitsLeft());
 #endif
   READ_FLAG( uiCode, "sps_temporal_mvp_enable_flag" );            pcSPS->setTMVPFlagsPresent(uiCode);
 #if SUPPORT_FOR_VUI
@@ -1052,6 +1067,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 
+#if RPS_COUNTER
+    UInt bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
+
 #if !SPLICING_FRIENDLY_PARAMS
     if(   rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR
 #if SUPPORT_FOR_RAP_N_LP
@@ -1243,6 +1262,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rpcSlice->setRPS(rps);
       }
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #if REMOVE_ALF
     if(sps->getUseSAO())
 #else
@@ -1279,6 +1301,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
 #endif
     }
+#if RPS_COUNTER
+      bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
     if (!rpcSlice->isIntra())
     {
       if (rpcSlice->getSPS()->getTMVPFlagsPresent())
@@ -1290,6 +1315,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       {
         rpcSlice->setEnableTMVPFlag(false);
       }
+#if RPS_COUNTER
+      bitsBefore = m_pcBitstream->getNumBitsLeft();
+#endif
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
       if (uiCode)
       {
@@ -1403,6 +1431,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       refPicListModification->setRefPicListModificationFlagL1(0);
     }
+#if RPS_COUNTER
+    rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #if !SLICEHEADER_SYNTAX_FIX
   }
   else

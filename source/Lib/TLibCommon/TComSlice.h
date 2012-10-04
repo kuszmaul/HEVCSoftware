@@ -125,6 +125,9 @@ public:
 
   Void sortDeltaPOC();
   Void printDeltaPOC();
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void printRefPOC(Int currentPoc);
+#endif
 };
 
 /// Reference Picture Set set class
@@ -608,6 +611,9 @@ private:
   Bool        m_bPCMFilterDisableFlag;
 
   UInt        m_uiBitsForPOC;
+#if RPS_COUNTER
+  UInt        m_bitsForSPS;
+#endif
 #if LTRP_IN_SPS
   UInt        m_numLongTermRefPicSPS;
   UInt        m_ltRefPicPocLsbSps[33];
@@ -724,6 +730,10 @@ public:
   UInt getQuadtreeTUMaxDepthIntra()         { return m_uiQuadtreeTUMaxDepthIntra; }
   Void setNumReorderPics(Int i, UInt tlayer)              { m_numReorderPics[tlayer] = i;    }
   Int  getNumReorderPics(UInt tlayer)                     { return m_numReorderPics[tlayer]; }
+#if RPS_COUNTER
+  UInt getBitsForSPS()                { return m_bitsForSPS;         }
+  Void setBitsForSPS(UInt ui)         { m_bitsForSPS = ui;           }
+#endif
   Void         createRPSList( Int numRPS );
   TComRPSList* getRPSList()                      { return &m_RPSList;          }
   Bool      getLongTermRefsPresent()         { return m_bLongTermRefsPresent; }
@@ -878,6 +888,11 @@ private:
   UInt        m_numRefIdxL0DefaultActive;
   UInt        m_numRefIdxL1DefaultActive;
 
+#if RPS_COUNTER
+  UInt        m_bitsForPPS;
+  UInt        m_bitsForSliceHeader;
+#endif
+
 #if !REMOVE_FGS
   Int         m_iSliceGranularity;
 #endif
@@ -953,6 +968,13 @@ public:
 #if CHROMA_QP_EXTENSION
   Bool      getSliceChromaQpFlag ()         { return  m_bSliceChromaQpFlag; }
   Void      setSliceChromaQpFlag ( Bool b ) { m_bSliceChromaQpFlag = b;     }
+#endif
+
+#if RPS_COUNTER
+  UInt        getBitsForPPS()                { return m_bitsForPPS;         }
+  Void        setBitsForPPS(UInt ui)         { m_bitsForPPS = ui;           }
+  UInt        getBitsForSliceHeader()        { return m_bitsForSliceHeader; }
+  Void        setBitsForSliceHeader(UInt ui) { m_bitsForSliceHeader = ui;   }
 #endif
 
   Void      setSPS              ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }

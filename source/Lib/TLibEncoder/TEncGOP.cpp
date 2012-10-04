@@ -70,6 +70,15 @@ Int getLSB(Int poc, Int maxLSB)
 
 TEncGOP::TEncGOP()
 {
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  m_AHG21_reference_pics[0] = -1;
+  m_AHG21_reference_pics[1] = -2;
+  m_AHG21_reference_pics[2] = -3;
+  m_AHG21_reference_pics[3] = -4;
+  m_AHG21_reference_pics[4] = -5;
+  m_randx = 1;
+  m_z = (Double) 0x7fffffff;
+#endif
   m_iLastIDR            = 0;
   m_iGopSize            = 0;
   m_iNumPicCoded        = 0; //Niko
@@ -148,6 +157,103 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+/* H.263 annex A pseudo-random generator  */
+long TEncGOP::rand (long L, long H)
+{
+  long i,j;
+  Double x;               /* double is 64 bits */
+  m_randx = (m_randx * 1103515245) + 12345;
+  i = m_randx & 0x7ffffffe; /* keep 30 bits */
+  x = ( (Double)i ) / m_z;  /* range 0 to 0.99999 ... */
+  x *= (L+H+1);           /* range 0 to < L+H+1 */
+  j = (long)x;            /* truncate to integer */
+  return(j - L);          /* range -L to H */
+}
+
+Int TEncGOP::comp(const Void * a, const Void * b) 
+{
+  Int *aa = (Int*)a;
+  Int *bb = (Int*)b;
+
+  if (*aa==*bb)
+    return 0;
+  else
+  {
+    if (*aa > *bb)
+      return -1;
+    else
+      return 1;
+  }
+}
+
+Void TEncGOP::storeLongTermPicUntil(Int ltPoc, Int keepUntilPoc)
+{
+  LTKeep ltPic;
+  ltPic.ltPoc = ltPoc;
+  ltPic.keepUntilPoc = keepUntilPoc;
+
+  m_ltPictures.push_front(ltPic);
+}
+Void TEncGOP::discardAgedLongTermPics (Int currentPoc)
+{
+  list<LTKeep>::iterator i = m_ltPictures.begin();
+  while (i != m_ltPictures.end())
+  {
+    if (i->keepUntilPoc <= currentPoc)
+    {
+      i = m_ltPictures.erase(i);
+    }
+    if (i!= m_ltPictures.end())
+    {
+      i++;
+    }
+  }
+}
+
+Bool TEncGOP::rpsContainsShortTermReference(TComReferencePictureSet *pRPS, Int currentPoc, Int testPoc)
+{
+  for (UInt i = 0; i<pRPS->getNumberOfPictures(); i++)
+  {
+    if ((pRPS->getDeltaPOC(i)+currentPoc) == testPoc)
+    {
+      return true;
+    }
+  }
+ return false;
+}
+
+Void TEncGOP::addLongTermReferences(TComReferencePictureSet *pRPS, Int currentPoc)
+{
+  list<LTKeep>::iterator i;
+  for (i=m_ltPictures.begin(); i!= m_ltPictures.end(); i++)
+  {
+    if (i->ltPoc != currentPoc)
+    {
+      if (rpsContainsShortTermReference(pRPS, currentPoc, i->ltPoc))
+      {
+#if PRINT_RPS_INFO > 1
+        printf ("NOT adding %d\n", i->ltPoc);
+#endif
+      }
+      else
+      {
+#if PRINT_RPS_INFO > 1
+        printf (" adding %d\n", i->ltPoc);
+#endif
+        int num_of_pics = pRPS->getNumberOfPictures();
+        pRPS->setPOC(num_of_pics, i->ltPoc);
+        pRPS->setDeltaPOC(num_of_pics, i->ltPoc-currentPoc);
+        pRPS->setUsed(num_of_pics,1);
+        pRPS->setNumberOfLongtermPictures(pRPS->getNumberOfLongtermPictures()+1);
+        pRPS->setNumberOfPictures(num_of_pics+1);
+      }
+    }
+  }
+}
+#endif
+
+
 Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP)
 {
   TComPic*        pcPic;
@@ -319,9 +425,132 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_pcEncTop->selectReferencePictureSet(pcSlice, uiPOCCurr, iGOPid,rcListPic);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
 
-    if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
-    {
-      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS());
+
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+      if(m_pcEncTop->getHardCodedStructureAHG21() == 3.4)
+      {
+        Int num_ref_pics = uiPOCCurr > 5 ? 5 : uiPOCCurr;
+        Int new_poc;
+        Int i;
+        
+        if(uiPOCCurr <= 5)
+        {
+          for(i=1 ; i<num_ref_pics ; i++)
+          {
+            new_poc = uiPOCCurr-i-1;
+            pcSlice->getRPS()->setPOC(i, new_poc);
+            pcSlice->getRPS()->setDeltaPOC(i, new_poc-uiPOCCurr);
+            pcSlice->getRPS()->setUsed(i,1);
+          }
+        }
+        else
+        {
+          for(i = 1 ; i < 5 ; i++)
+          {
+            m_AHG21_reference_pics[i]--;
+          }
+          if(rand(0,99) < 95)
+          {
+            Int index = rand(0,10000) % 4; 
+            m_AHG21_reference_pics[index+1] = -2;
+          }
+          qsort(m_AHG21_reference_pics, 5, sizeof(int), &TEncGOP::comp);
+          for(i=1 ; i<5 ; i++)
+          {
+            pcSlice->getRPS()->setPOC(i, uiPOCCurr+m_AHG21_reference_pics[i]);
+            pcSlice->getRPS()->setDeltaPOC(i, m_AHG21_reference_pics[i]);
+          }
+        }
+        pcSlice->getRPS()->setNumberOfNegativePictures(num_ref_pics);
+        pcSlice->getRPS()->setNumberOfPictures(num_ref_pics);
+        pcSlice->setRPSidx( -1);
+      }
+
+      if(m_pcEncTop->getHardCodedStructureAHG21() == 3.3)
+      {
+        Int framerate = m_pcEncTop->getFrameRate();
+        Int rtt = m_pcEncTop->getRTT();
+        Int num_of_pics = pcSlice->getRPS()->getNumberOfNegativePictures();
+        Int longTermPicInterval;
+        Int longTermPicPoc;
+        Int longTermPicPoc2;
+
+        // From JCTVC-G1036d03:        
+        // The distance between “key” pictures Mi and Mi-1 should be derived as follows:
+        // M(i) - M(i-1) = Floor( RTT * fps / 1000 ) + 1
+        longTermPicInterval = (Int)floor(rtt * framerate / 1000.0) + 1;
+        pcSlice->getSPS()->setLongTermRefsPresent(1);
+
+        if(uiPOCCurr >= longTermPicInterval+2)
+        {
+          longTermPicPoc2 = uiPOCCurr - 2 - ((uiPOCCurr-2) % longTermPicInterval);
+          longTermPicPoc  = longTermPicPoc2 - longTermPicInterval;
+          pcSlice->getRPS()->setPOC(num_of_pics, longTermPicPoc);
+          pcSlice->getRPS()->setDeltaPOC(num_of_pics, longTermPicPoc-uiPOCCurr);
+          pcSlice->getRPS()->setUsed(num_of_pics,1);
+          pcSlice->getRPS()->setPOC(num_of_pics+1, longTermPicPoc2);
+          pcSlice->getRPS()->setDeltaPOC(num_of_pics+1, longTermPicPoc2-uiPOCCurr);
+          pcSlice->getRPS()->setUsed(num_of_pics+1,1);
+          pcSlice->getRPS()->setNumberOfLongtermPictures(2);
+          pcSlice->getRPS()->setNumberOfPictures(num_of_pics+2);    
+        }
+        else if(uiPOCCurr >= 2 && uiPOCCurr < longTermPicInterval+2)
+        {
+          pcSlice->getRPS()->setPOC(num_of_pics, 0);
+          pcSlice->getRPS()->setDeltaPOC(num_of_pics, 0-uiPOCCurr);
+          pcSlice->getRPS()->setUsed(num_of_pics,1);
+          pcSlice->getRPS()->setNumberOfLongtermPictures(1);
+          pcSlice->getRPS()->setNumberOfPictures(num_of_pics+1);
+        }      
+      }
+
+      if(m_pcEncTop->getHardCodedStructureAHG21() == 2.6)
+      {
+        pcSlice->getSPS()->setLongTermRefsPresent(1);
+
+        if (uiPOCCurr > 0)
+        {
+          Int firstScenePicInterval  = m_pcEncTop->getFrameRate() * m_pcEncTop->getFirstSceneInterval();
+          Int secondScenePicInterval = m_pcEncTop->getFrameRate() * m_pcEncTop->getSecondSceneInterval();
+          Int cycleSize = (firstScenePicInterval + secondScenePicInterval);
+          Int cycleNum        = uiPOCCurr / cycleSize;
+          Int lastInFirstScene  = (cycleNum * cycleSize + firstScenePicInterval -1 ) - ((cycleNum * cycleSize + firstScenePicInterval -1)%getGOPSize() ) ;
+          Int lastInSecondScene = ((cycleNum + 1) * cycleSize - 1) - (((cycleNum + 1) * cycleSize -1 )%getGOPSize() );
+#if PRINT_RPS_INFO > 1
+          printf ("lastInFirstScene:%d lastInSecondScene: %d\n", lastInFirstScene, lastInSecondScene);
+#endif
+          // if we are a the last temporal_id=0 picture of the current sequence, we want to keep the picture until we cut back
+          // end of first scene
+          if ( uiPOCCurr == lastInFirstScene)
+          {
+            UInt keepUntil =  lastInSecondScene + getGOPSize();
+            storeLongTermPicUntil(uiPOCCurr, keepUntil);
+#if PRINT_RPS_INFO > 1
+            printf ("uiPOCCurr:%d   keepUntil:%d\n", uiPOCCurr, keepUntil);
+#endif
+          }
+          // end of second scene
+          if ( uiPOCCurr == lastInSecondScene)
+          {
+            UInt keepUntil = (cycleNum + 1) * cycleSize  + firstScenePicInterval -1
+              + (getGOPSize() - (((cycleNum + 1) * cycleSize + firstScenePicInterval - 1 ) % getGOPSize()));
+            storeLongTermPicUntil(uiPOCCurr, keepUntil);
+#if PRINT_RPS_INFO > 1
+            printf ("uiPOCCurr:%d   keepUntil:%d\n", uiPOCCurr, keepUntil);
+#endif
+          }
+          pcSlice->getRPS()->printRefPOC(uiPOCCurr);
+          addLongTermReferences   (pcSlice->getRPS(), uiPOCCurr);
+          discardAgedLongTermPics (uiPOCCurr);
+          pcSlice->getRPS()->setInterRPSPrediction(false);
+        }
+      }
+#endif
+
+
+      if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
+      {
+         pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS());
     }
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
 
@@ -402,7 +631,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if ADAPTIVE_QP_SELECTION
     pcSlice->setTrQuant( m_pcEncTop->getTrQuant() );
 #endif      
-
+#if REF_PIC_LIST_REORDER
+      reorderRefPicList(pcSlice);
+#endif 
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
 
@@ -1909,6 +2140,35 @@ static const char* nalUnitTypeToString(NalUnitType type)
     case NAL_UNIT_SEI: return "SEI";
 #endif
     default: return "UNK";
+  }
+}
+#endif
+
+#if REF_PIC_LIST_REORDER
+Void TEncGOP::reorderRefPicList( TComSlice* pcSlice )
+{
+  if (pcSlice->getSliceType() != I_SLICE)
+  {
+    Int rpsIdx = pcSlice->getRPSidx();
+    if ( (rpsIdx >=0) && (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0 || m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1))
+    {
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList0)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL0(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL0(i, m_pcCfg->getGOPEntry(rpsIdx).m_list0Index[i]);
+        }
+      }
+      if (m_pcCfg->getGOPEntry(rpsIdx).m_reorderList1)
+      {
+        pcSlice->getRefPicListModification()->setRefPicListModificationFlagL1(1);
+        for (UInt i = 0; i < m_pcCfg->getGOPEntry(rpsIdx).m_numRefPicsActive; i++ )
+        {
+          pcSlice->getRefPicListModification()->setRefPicSetIdxL1(i, m_pcCfg->getGOPEntry(rpsIdx).m_list1Index[i]);
+        }
+      }
+    }
   }
 }
 #endif

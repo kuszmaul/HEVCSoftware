@@ -69,6 +69,12 @@ struct GOPEntry
   Int m_deltaRPS;
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
+#if REF_PIC_LIST_REORDER
+  Bool m_reorderList0;
+  Bool m_reorderList1;
+  Int m_list0Index[MAX_NUM_REF];
+  Int m_list1Index[MAX_NUM_REF];
+#endif
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -84,10 +90,18 @@ struct GOPEntry
 #endif
   , m_deltaRPS(0)
   , m_numRefIdc(0)
+#if REF_PIC_LIST_REORDER
+  , m_reorderList0(false)
+  , m_reorderList1(false)
+#endif  
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
     ::memset( m_refIdc,        0, sizeof(m_refIdc) );
+#if REF_PIC_LIST_REORDER
+    ::memset( m_list0Index, 0, sizeof(m_list0Index) );
+    ::memset( m_list1Index, 0, sizeof(m_list1Index) );
+#endif
   }
 };
 
@@ -122,6 +136,13 @@ protected:
   Int       m_iGOPSize;
   GOPEntry  m_GOPList[MAX_GOP];
   Int       m_extraRPSs;
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Double    m_hardCodedStructureAHGRefPic;
+  Int       m_roundTripTime;
+  //used for case 2.6
+  Int       m_firstSceneInterval;
+  Int       m_secondSceneInterval;
+#endif
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
   
@@ -324,6 +345,12 @@ public:
   Void      setGopList                      ( GOPEntry*  GOPList ) {  for ( Int i = 0; i < MAX_GOP; i++ ) m_GOPList[i] = GOPList[i]; }
   Void      setExtraRPSs                    ( Int   i )      { m_extraRPSs = i; }
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Void      setHardCodedStructureAHG21      ( Double f )     { m_hardCodedStructureAHGRefPic = f;    }
+  Void      setRTT                          ( Int r )        { m_roundTripTime = r;    }
+  Void      setFirstSceneInterval           ( Int r )        { m_firstSceneInterval = r;    }
+  Void      setSecondSceneInterval          ( Int r )        { m_secondSceneInterval = r;    }
+#endif
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
   
@@ -394,6 +421,12 @@ public:
   UInt      getIntraPeriod                  ()      { return  m_uiIntraPeriod; }
   UInt      getDecodingRefreshType          ()      { return  m_uiDecodingRefreshType; }
   Int       getGOPSize                      ()      { return  m_iGOPSize; }
+#if AHG_REFPIC_HARDCODED_PIC_STRUCTS
+  Double    getHardCodedStructureAHG21      ()      { return m_hardCodedStructureAHGRefPic;    }
+  Int       getRTT                          ()      { return m_roundTripTime; }
+  Int       getFirstSceneInterval           ()      { return m_firstSceneInterval;    }
+  Int       getSecondSceneInterval          ()      { return m_secondSceneInterval;    }
+#endif
   Int       getMaxDecPicBuffering           (UInt tlayer) { return m_maxDecPicBuffering[tlayer]; }
   Int       getNumReorderPics               (UInt tlayer) { return m_numReorderPics[tlayer]; }
   Int       getQP                           ()      { return  m_iQP; }
