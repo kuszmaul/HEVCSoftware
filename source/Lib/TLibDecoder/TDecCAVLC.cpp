@@ -1263,7 +1263,15 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 #if RPS_COUNTER
+#if RPS_COUNTER_BUGFIX
+    if(rpcSlice->getFirstRunFlag())
+    {
+      // "+ rpcSlice->getRapPicFlag()" is for counting the no_output_of_prior_pics_flag bit
+      rpcSlice->getPPS()->setBitsForSliceHeader( rpcSlice->getPPS()->getBitsForSliceHeader() + bitsBefore - m_pcBitstream->getNumBitsLeft() + rpcSlice->getRapPicFlag());
+    }
+#else
     rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
 #if REMOVE_ALF
     if(sps->getUseSAO())
@@ -1432,7 +1440,14 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       refPicListModification->setRefPicListModificationFlagL1(0);
     }
 #if RPS_COUNTER
+#if RPS_COUNTER_BUGFIX
+    if(rpcSlice->getFirstRunFlag())
+    {
+     rpcSlice->getPPS()->setBitsForSliceHeader( rpcSlice->getPPS()->getBitsForSliceHeader() + bitsBefore - m_pcBitstream->getNumBitsLeft() );
+    }
+#else
     rpcSlice->getPPS()->setBitsForSliceHeader(rpcSlice->getPPS()->getBitsForSliceHeader()+bitsBefore-m_pcBitstream->getNumBitsLeft());
+#endif
 #endif
 #if !SLICEHEADER_SYNTAX_FIX
   }

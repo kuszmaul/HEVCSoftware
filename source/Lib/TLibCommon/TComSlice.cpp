@@ -104,6 +104,9 @@ TComSlice::TComSlice()
 , m_cabacInitFlag                 ( false )
 , m_bLMvdL1Zero                   ( false )
 , m_numEntryPointOffsets          ( 0 )
+#if RPS_COUNTER_BUGFIX
+, m_firstRunFlag                  ( 0 )
+#endif
 #if TEMPORAL_LAYER_NON_REFERENCE
 , m_temporalLayerNonReferenceFlag ( false )
 #endif

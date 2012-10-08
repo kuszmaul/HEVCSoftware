@@ -1282,6 +1282,9 @@ private:
 
   Bool       m_bLMvdL1Zero;
   Int         m_numEntryPointOffsets;
+#if RPS_COUNTER_BUGFIX
+  Bool        m_firstRunFlag;
+#endif
 #if TEMPORAL_LAYER_NON_REFERENCE
   Bool       m_temporalLayerNonReferenceFlag;
 #endif
@@ -1303,6 +1306,12 @@ public:
   
   Void      setPPS          ( TComPPS* pcPPS )         { assert(pcPPS!=NULL); m_pcPPS = pcPPS; m_iPPSId = pcPPS->getPPSId(); }
   TComPPS*  getPPS          () { return m_pcPPS; }
+
+#if RPS_COUNTER_BUGFIX
+  Void        setFirstRunFlag(Bool x)       { m_firstRunFlag = x;}
+  Bool        getFirstRunFlag()             { return m_firstRunFlag;}
+  Void        flipFirstRunFlag()            { m_firstRunFlag = !m_firstRunFlag;}
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   Void          setTrQuant          ( TComTrQuant* pcTrQuant ) { m_pcTrQuant = pcTrQuant; }

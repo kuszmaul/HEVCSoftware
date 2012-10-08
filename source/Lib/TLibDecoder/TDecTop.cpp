@@ -323,7 +323,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_apcSlicePilot->copySliceInfo( pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
   }
-
+#if RPS_COUNTER_BUGFIX
+  if(m_apcSlicePilot->getSliceCurStartCUAddr() == 0)
+  {
+    m_apcSlicePilot->flipFirstRunFlag();
+  }
+  else
+  {
+    m_apcSlicePilot->setFirstRunFlag(1);
+  }
+#endif
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
 #if TEMPORAL_LAYER_NON_REFERENCE
   if((m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_N) ||
