@@ -211,7 +211,11 @@ Void TAppDecTop::decode()
 #if RPS_COUNTER
   printf("\nRPS related bits in SPS: %d\n", m_cTDecTop.getSPS()->getBitsForSPS());
   printf("RPS related bits in PPS: %d\n", m_cTDecTop.getPPS()->getBitsForPPS());
+#if RPS_COUNTER_BUGFIX
+  int shbits = m_cTDecTop.getPPS()->getBitsForSliceHeader();
+#else
   int shbits = (m_cTDecTop.getPPS()->getBitsForSliceHeader()+2)/2; //All slice headers except for the first intra picture are counted twice. The first intra costs 2 bits.
+#endif
   printf("RPS related bits in slice headers: %d\n", shbits);
   printf("RPS related bits in total: %d\n\n",m_cTDecTop.getPPS()->getBitsForPPS()+m_cTDecTop.getSPS()->getBitsForSPS()+shbits);
 #endif
