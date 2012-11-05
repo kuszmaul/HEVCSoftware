@@ -56,8 +56,6 @@ class TComTU
 #if !REMOVE_NSQT
     UInt          mPartOption; // 0=NSQT disabled (Square TUs), 1=4hx1v blocks, 2=1hx4v blocks
 #endif
-    UInt          mMaxTUDimension;
-    UInt          mMinTUDimension;
     UInt          mCuTrDepth444;
     UInt          mTrDepth444RelCU;
     UInt          mSection;

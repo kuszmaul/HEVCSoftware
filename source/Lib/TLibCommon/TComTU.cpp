@@ -33,6 +33,7 @@
 
 
 #include "TComTU.h"
+#include "TComRom.h"
 #include "TComDataCU.h"
 #include "TComPic.h"
 
@@ -44,8 +45,6 @@ TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, co
 #if !REMOVE_NSQT
     mPartOption(0),
 #endif
-    mMaxTUDimension(32),//1<<pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize()),
-    mMinTUDimension(4),//1<<pcCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize()),
     mCuTrDepth444(cuDepth),
     mTrDepth444RelCU(initTrDepth444relCU),
     mSection(0),
@@ -102,8 +101,6 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
 #if !REMOVE_NSQT
     mPartOption(parent.mPartOption),
 #endif
-    mMaxTUDimension(parent.mMaxTUDimension),
-    mMinTUDimension(parent.mMinTUDimension),
     mCuTrDepth444(parent.mCuTrDepth444),
     mTrDepth444RelCU(parent.mTrDepth444RelCU + (splitMode==DONT_SPLIT?0:1)),
     mSection(0),
@@ -154,7 +151,7 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
     mOffsets[i]=parent.mOffsets[i];
 
 #if !REMOVE_NSQT
-    if (initialPartOption && mRect[i].width < mMaxTUDimension && (i==0 || bFirstChannelChangedToNSQT))
+    if (initialPartOption && mRect[i].width < MAX_TU_SIZE && (i==0 || bFirstChannelChangedToNSQT))
     {
       bFirstChannelChangedToNSQT=true;
       if (initialPartOption==2)
@@ -171,10 +168,10 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
     }
 #endif
 
-    if ((mRect[i].width < mMinTUDimension || mRect[i].height < mMinTUDimension) && mRect[i].width!=0)
+    if ((mRect[i].width < MIN_TU_SIZE || mRect[i].height < MIN_TU_SIZE) && mRect[i].width!=0)
     {
       const UInt numPels=mRect[i].width * mRect[i].height;
-      if (numPels < mMinTUDimension*mMinTUDimension)
+      if (numPels < (MIN_TU_SIZE*MIN_TU_SIZE))
       {
         // this level doesn't have enough pixels to have 4 blocks of any relative dimension
         mRect[i].width = parent.mRect[i].width;
@@ -183,14 +180,14 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
       }
       else if (mRect[i].width < mRect[i].height)
       {
-        mRect[i].width=mMinTUDimension;
-        mRect[i].height=numPels/mMinTUDimension;
+        mRect[i].width=MIN_TU_SIZE;
+        mRect[i].height=numPels/MIN_TU_SIZE;
         mCodeAll[i]=true;
       }
       else
       {
-        mRect[i].height=mMinTUDimension;
-        mRect[i].width=numPels/mMinTUDimension;
+        mRect[i].height=MIN_TU_SIZE;
+        mRect[i].width=numPels/MIN_TU_SIZE;
         mCodeAll[i]=true;
       }
     }
@@ -201,16 +198,16 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
 
     if (allFormatsUse420TUTreeStructure())
     {
-      if (i && mChromaFormat==CHROMA_422 && mRect[i].width==(mMinTUDimension*2) && mRect[i].height==mMinTUDimension)
+      if (i && mChromaFormat==CHROMA_422 && mRect[i].width==(MIN_TU_SIZE*2) && mRect[i].height==MIN_TU_SIZE)
       {
-        mRect[i].width=mMinTUDimension;
-        mRect[i].height=mMinTUDimension*2;
+        mRect[i].width=MIN_TU_SIZE;
+        mRect[i].height=MIN_TU_SIZE*2;
       }
-      else if (i && mChromaFormat==CHROMA_444 && (mRect[i].width==mMinTUDimension || mRect[i].height==mMinTUDimension))
+      else if (i && mChromaFormat==CHROMA_444 && (mRect[i].width==MIN_TU_SIZE || mRect[i].height==MIN_TU_SIZE))
       {
         mCodeAll[i]=mRect[i].width!=mRect[i].height;
-        mRect[i].width=mMinTUDimension*2;
-        mRect[i].height=mMinTUDimension*2;
+        mRect[i].width=MIN_TU_SIZE*2;
+        mRect[i].height=MIN_TU_SIZE*2;
       }
     }
 
