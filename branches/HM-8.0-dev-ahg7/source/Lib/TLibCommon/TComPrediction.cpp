@@ -135,7 +135,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
     {
       for(UInt buf=0; buf<NUM_PRED_BUF; buf++)
       {
-        m_piYuvExt[ch][buf] = new Int[ m_iYuvExtSize ];
+        m_piYuvExt[ch][buf] = new Pel[ m_iYuvExtSize ];
       }
     }
 
@@ -173,7 +173,8 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 // ====================================================================================================================
 
 // Function for calculating DC value of the reference samples used in Intra prediction
-Pel TComPrediction::predIntraGetPredValDC( const Int* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft )
+//NOTE: Bit-Limit - 25-bit source
+Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft )
 {
   Int iInd, iSum = 0;
   Pel pDcVal;
@@ -240,8 +241,8 @@ Pel TComPrediction::predIntraGetPredValDC( const Int* pSrc, Int iSrcStride, UInt
  * the predicted value for the pixel is linearly interpolated from the reference samples. All reference samples are taken
  * from the extended main reference.
  */
-
-Void TComPrediction::xPredIntraAng( const Int* pSrc,     Int srcStride,
+//NOTE: Bit-Limit - 25-bit source
+Void TComPrediction::xPredIntraAng( const Pel* pSrc,     Int srcStride,
                                           Pel* pTrueDst, Int dstStrideTrue,
                                           UInt uiWidth, UInt uiHeight, ChannelType channelType, ChromaFormat format,
                                           UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
@@ -371,10 +372,10 @@ Void TComPrediction::xPredIntraAng( const Int* pSrc,     Int srcStride,
         {
           // Do linear filtering
           const Pel *pRM=refMain+deltaInt+1;
-          Pel lastRefMainPel=*pRM++;
+          Int lastRefMainPel=*pRM++;
           for (Int x=0;x<width;pRM++,x++)
           {
-            Pel thisRefMainPel=*pRM;
+            Int thisRefMainPel=*pRM;
             pDsty[x+0] = (Pel) ( ((32-deltaFract)*lastRefMainPel + deltaFract*thisRefMainPel +16) >> 5 );
             lastRefMainPel=thisRefMainPel;
           }
@@ -409,7 +410,7 @@ Void TComPrediction::xPredIntraAng( const Int* pSrc,     Int srcStride,
 
 #ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
 
-Void TComPrediction::xPredIntraAngChroma422( const Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
+Void TComPrediction::xPredIntraAngChroma422( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
 {
   Int k,l;
   Pel* pDst          = rpDst;
@@ -593,7 +594,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   //assert( iWidth == iHeight  );
 
         Pel *pDst = piPred;
-  const Int *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
+  const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
 
   // get starting pixel in block
   const Int sw = (nonScaledIntraChroma422(channelType, format) ? (iWidth + iHeight + 1) : (2 * iWidth + 1));
@@ -823,8 +824,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   }
   else
   {
-    Int     tmpStride = m_filteredBlockTmp[0].getStride(compID);
-    Short*  tmp      = m_filteredBlockTmp[0].getAddr(compID);
+    Int   tmpStride = m_filteredBlockTmp[0].getStride(compID);
+    Pel*  tmp       = m_filteredBlockTmp[0].getAddr(compID);
 
     const Int vFilterSize = useLumaInterpFilter(compID, chFmt, 1) ? NTAPS_LUMA : NTAPS_CHROMA;
 
@@ -878,7 +879,8 @@ Void TComPrediction::getMvPredAMVP( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPar
  *
  * This function derives the prediction samples for planar mode (intra coding).
  */
-Void TComPrediction::xPredIntraPlanar( const Int* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format )
+//NOTE: Bit-Limit - 24-bit source
+Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format )
 {
   assert(width <= height);
 
@@ -931,6 +933,8 @@ Void TComPrediction::xPredIntraPlanar( const Int* pSrc, Int srcStride, Pel* rpDs
       leftColumn[k]   <<= shift1Dver;
     }
 
+    const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
+
     // Generate prediction signal
     for (Int y=0;y<height;y++)
     {
@@ -940,8 +944,7 @@ Void TComPrediction::xPredIntraPlanar( const Int* pSrc, Int srcStride, Pel* rpDs
         horPred += rightColumn[y];
         topRow[x] += bottomRow[x];
 
-        // if width!=height, then width must be half height (i.e. 4:2:2)
-        rpDst[y*dstStride+x] = ( horPred + (topRow[x]<< ((width!=height) ? 1 : 0)) ) >> (shift1Dver+1);
+        rpDst[y*dstStride+x] = ( horPred + (topRow[x] << topRowShift) ) >> (shift1Dver+1);
       }
     }
   }
@@ -961,7 +964,7 @@ Void TComPrediction::xPredIntraPlanar( const Int* pSrc, Int srcStride, Pel* rpDs
  */
 Void TComPrediction::predLMIntraChroma( const ComponentID compID, Pel* pPred, UInt uiPredStride, UInt uiTuWidth, UInt uiTuHeight, const ChromaFormat chFmt DEBUG_STRING_FN_DECLARE(sDebug) )
 {
-  Int*  piSrc = getPredictorPtr( compID, false ) ;
+  Pel*  piSrc = getPredictorPtr( compID, false ) ;
   const UInt stride = ( nonScaledIntraChroma422(toChannelType(compID), chFmt) ? uiTuWidth + uiTuHeight : 2*uiTuWidth ) + 1;
 
   xGetLLSPrediction( piSrc+stride+1, stride, pPred, uiPredStride, uiTuWidth, uiTuHeight, 1, chFmt DEBUG_STRING_PASS_INTO(sDebug) );
@@ -999,11 +1002,11 @@ Void TComPrediction::getLumaRecPixels( TComTU &rTu )
   assert(uiWidth444==uiHeight444);  // should always be the same!
   Int iSrcStride = ( max( uiWidth444, uiHeight444 ) << 1 ) + 1;
 
-  Int*  ptrSrc = getPredictorPtr( COMPONENT_Y, false ) ;
+  Pel*  ptrSrc = getPredictorPtr( COMPONENT_Y, false ) ;
 
   // initial pointers
   Pel* pDst = pDst0 - 1 - iDstStride;
-  Int* piSrc = ptrSrc;
+  Pel* piSrc = ptrSrc;
 
   // top left corner downsampled from ADI buffer
   // don't need this point
@@ -1109,11 +1112,11 @@ Int GetFloorLog2( UInt x )
  *
  * This function derives the prediction samples for chroma LM mode (chroma intra coding)
  */
-Void TComPrediction::xGetLLSPrediction(  const Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0, const ChromaFormat chFmt DEBUG_STRING_FN_DECLARE(sDebug) )
+Void TComPrediction::xGetLLSPrediction(  const Pel* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0, const ChromaFormat chFmt DEBUG_STRING_FN_DECLARE(sDebug) )
 {
 
   Pel  *pDst, *pLuma;
-  const Int  *pSrc;
+  const Pel  *pSrc;
 
   Int  iLumaStride = m_iLumaRecStride;
   Pel* pLuma0 = m_pLumaRecBuffer + uiExt0 * iLumaStride + uiExt0;
@@ -1309,7 +1312,7 @@ Void TComPrediction::xGetLLSPrediction(  const Int* pSrc0, Int iSrcStride, Pel* 
  *
  * This function performs filtering left and top edges of the prediction samples for DC mode (intra coding).
  */
-Void TComPrediction::xDCPredFiltering( const Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType, ChromaFormat format )
+Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType, ChromaFormat format )
 {
   Pel* pDst = rpDst;
   Int x, y, iDstStride2, iSrcStride2;

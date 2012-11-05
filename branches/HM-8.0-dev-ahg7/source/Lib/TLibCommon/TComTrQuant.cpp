@@ -42,6 +42,7 @@
 #include "TComPic.h"
 #include "ContextTables.h"
 #include "TComTU.h"
+#include "Debug.h"
 
 typedef struct
 {
@@ -82,7 +83,7 @@ QpParam::QpParam()
 TComTrQuant::TComTrQuant()
 {
   // allocate temporary buffers
-  m_plTempCoeff  = new Int[ MAX_CU_SIZE*MAX_CU_SIZE ];
+  m_plTempCoeff  = new TCoeff[ MAX_CU_SIZE*MAX_CU_SIZE ];
   
   // allocate bit estimation class  (for RDOQ)
   m_pcEstBitsSbac = new estBitsSbacStruct;
@@ -191,7 +192,7 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
 {
   Int i,j,k,iSum;
   Int tmp[32*32];
-  const short *iT;
+  const TMatrixCoeff *iT;
   UInt uiLog2TrSize = g_aucConvertToBit[ uiTrSize ] + 2;
 
   if (uiTrSize==4)
@@ -284,7 +285,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
 {
   int i,j,k,iSum;
   Int tmp[32*32];
-  const short *iT;
+  const TMatrixCoeff *iT;
   
   if (uiTrSize==4)
   {
@@ -310,7 +311,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
   int shift_1st = SHIFT_INV_1ST;
   int add_1st = 1<<(shift_1st-1);  
 #if FULL_NBIT
-  int shift_2nd = SHIFT_INV_2ND - ((short)g_uiBitDepth - 8);
+  int shift_2nd = SHIFT_INV_2ND - (g_uiBitDepth - 8);
 #else
   int shift_2nd = SHIFT_INV_2ND - g_uiBitIncrement;
 #endif
@@ -333,7 +334,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
       {        
         iSum += iT[k*uiTrSize+i]*coeff[k*uiTrSize+j]; 
       }
-      tmp[i*uiTrSize+j] = Clip3(-32768, 32767, (iSum + add_1st)>>shift_1st); // Clipping is normative
+      tmp[i*uiTrSize+j] = Clip3(RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (iSum + add_1st)>>shift_1st); // Clipping is normative
     }
   }   
   
@@ -359,7 +360,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
       {        
         iSum += iT[k*uiTrSize+j]*tmp[i*uiTrSize+k];
       }
-      block[i*uiStride+j] = Clip3(-32768, 32767, (iSum + add_2nd)>>shift_2nd); // Clipping is non-normative
+      block[i*uiStride+j] = Clip3(RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (iSum + add_2nd)>>shift_2nd); // Clipping is non-normative
     }
   }
 }
@@ -372,11 +373,11 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly4(short *src,short *dst,int shift, int line)
+void partialButterfly4(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j;  
   int E[2],O[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {    
@@ -386,9 +387,9 @@ void partialButterfly4(short *src,short *dst,int shift, int line)
     E[1] = src[1] + src[2];
     O[1] = src[1] - src[2];
 
-    dst[0] = (g_aiT4[0][0]*E[0] + g_aiT4[0][1]*E[1] + add)>>shift;
+    dst[0]      = (g_aiT4[0][0]*E[0] + g_aiT4[0][1]*E[1] + add)>>shift;
     dst[2*line] = (g_aiT4[2][0]*E[0] + g_aiT4[2][1]*E[1] + add)>>shift;
-    dst[line] = (g_aiT4[1][0]*O[0] + g_aiT4[1][1]*O[1] + add)>>shift;
+    dst[line]   = (g_aiT4[1][0]*O[0] + g_aiT4[1][1]*O[1] + add)>>shift;
     dst[3*line] = (g_aiT4[3][0]*O[0] + g_aiT4[3][1]*O[1] + add)>>shift;
 
     src += 4;
@@ -398,10 +399,10 @@ void partialButterfly4(short *src,short *dst,int shift, int line)
 
 // Fast DST Algorithm. Full matrix multiplication for DST and Fast DST algorithm 
 // give identical results
-void fastForwardDst(short *block,short *coeff,int shift)  // input block, output coeff
+void fastForwardDst(TCoeff *block, TCoeff *coeff, int shift)  // input block, output coeff
 {
   int i, c[4];
-  int rnd_factor = 1<<(shift-1);
+  int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
   for (i=0; i<4; i++)
   {
     // Intermediate Variables
@@ -417,10 +418,10 @@ void fastForwardDst(short *block,short *coeff,int shift)  // input block, output
   }
 }
 
-void fastInverseDst(short *tmp,short *block,int shift)  // input tmp, output block
+void fastInverseDst(TCoeff *tmp, TCoeff *block, int shift)  // input tmp, output block
 {
   int i, c[4];
-  int rnd_factor = 1<<(shift-1);
+  int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
   for (i=0; i<4; i++)
   {  
     // Intermediate Variables
@@ -429,10 +430,10 @@ void fastInverseDst(short *tmp,short *block,int shift)  // input tmp, output blo
     c[2] = tmp[  i] - tmp[12+i];
     c[3] = 74* tmp[4+i];
 
-    block[4*i+0] = Clip3( -32768, 32767, ( 29 * c[0] + 55 * c[1]     + c[3]               + rnd_factor ) >> shift );
-    block[4*i+1] = Clip3( -32768, 32767, ( 55 * c[2] - 29 * c[1]     + c[3]               + rnd_factor ) >> shift );
-    block[4*i+2] = Clip3( -32768, 32767, ( 74 * (tmp[i] - tmp[8+i]  + tmp[12+i])      + rnd_factor ) >> shift );
-    block[4*i+3] = Clip3( -32768, 32767, ( 55 * c[0] + 29 * c[2]     - c[3]               + rnd_factor ) >> shift );
+    block[4*i+0] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, ( 29 * c[0] + 55 * c[1]     + c[3]      + rnd_factor ) >> shift );
+    block[4*i+1] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, ( 55 * c[2] - 29 * c[1]     + c[3]      + rnd_factor ) >> shift );
+    block[4*i+2] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, ( 74 * (tmp[i] - tmp[8+i]  + tmp[12+i]) + rnd_factor ) >> shift );
+    block[4*i+3] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, ( 55 * c[0] + 29 * c[2]     - c[3]      + rnd_factor ) >> shift );
   }
 }
 
@@ -441,11 +442,11 @@ void fastInverseDst(short *tmp,short *block,int shift)  // input tmp, output blo
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse4(short *src,short *dst,int shift, int line)
+void partialButterflyInverse4(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j;    
   int E[2],O[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {    
@@ -456,10 +457,10 @@ void partialButterflyInverse4(short *src,short *dst,int shift, int line)
     E[1] = g_aiT4[0][1]*src[0] + g_aiT4[2][1]*src[2*line];
 
     /* Combining even and odd terms at each hierarchy levels to calculate the final spatial domain vector */
-    dst[0] = Clip3( -32768, 32767, (E[0] + O[0] + add)>>shift );
-    dst[1] = Clip3( -32768, 32767, (E[1] + O[1] + add)>>shift );
-    dst[2] = Clip3( -32768, 32767, (E[1] - O[1] + add)>>shift );
-    dst[3] = Clip3( -32768, 32767, (E[0] - O[0] + add)>>shift );
+    dst[0] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[0] + O[0] + add)>>shift );
+    dst[1] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[1] + O[1] + add)>>shift );
+    dst[2] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[1] - O[1] + add)>>shift );
+    dst[3] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[0] - O[0] + add)>>shift );
             
     src   ++;
     dst += 4;
@@ -471,12 +472,12 @@ void partialButterflyInverse4(short *src,short *dst,int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly8(short *src,short *dst,int shift, int line)
+void partialButterfly8(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;  
   int E[4],O[4];
   int EE[2],EO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {  
@@ -492,12 +493,12 @@ void partialButterfly8(short *src,short *dst,int shift, int line)
     EE[1] = E[1] + E[2];
     EO[1] = E[1] - E[2];
 
-    dst[0] = (g_aiT8[0][0]*EE[0] + g_aiT8[0][1]*EE[1] + add)>>shift;
+    dst[0]      = (g_aiT8[0][0]*EE[0] + g_aiT8[0][1]*EE[1] + add)>>shift;
     dst[4*line] = (g_aiT8[4][0]*EE[0] + g_aiT8[4][1]*EE[1] + add)>>shift; 
     dst[2*line] = (g_aiT8[2][0]*EO[0] + g_aiT8[2][1]*EO[1] + add)>>shift;
     dst[6*line] = (g_aiT8[6][0]*EO[0] + g_aiT8[6][1]*EO[1] + add)>>shift; 
 
-    dst[line] = (g_aiT8[1][0]*O[0] + g_aiT8[1][1]*O[1] + g_aiT8[1][2]*O[2] + g_aiT8[1][3]*O[3] + add)>>shift;
+    dst[line]   = (g_aiT8[1][0]*O[0] + g_aiT8[1][1]*O[1] + g_aiT8[1][2]*O[2] + g_aiT8[1][3]*O[3] + add)>>shift;
     dst[3*line] = (g_aiT8[3][0]*O[0] + g_aiT8[3][1]*O[1] + g_aiT8[3][2]*O[2] + g_aiT8[3][3]*O[3] + add)>>shift;
     dst[5*line] = (g_aiT8[5][0]*O[0] + g_aiT8[5][1]*O[1] + g_aiT8[5][2]*O[2] + g_aiT8[5][3]*O[3] + add)>>shift;
     dst[7*line] = (g_aiT8[7][0]*O[0] + g_aiT8[7][1]*O[1] + g_aiT8[7][2]*O[2] + g_aiT8[7][3]*O[3] + add)>>shift;
@@ -512,12 +513,12 @@ void partialButterfly8(short *src,short *dst,int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse8(short *src,short *dst,int shift, int line)
+void partialButterflyInverse8(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;    
   int E[4],O[4];
   int EE[2],EO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++) 
   {    
@@ -539,8 +540,8 @@ void partialButterflyInverse8(short *src,short *dst,int shift, int line)
     E[2] = EE[1] - EO[1];
     for (k=0;k<4;k++)
     {
-      dst[ k   ] = Clip3( -32768, 32767, (E[k] + O[k] + add)>>shift );
-      dst[ k+4 ] = Clip3( -32768, 32767, (E[3-k] - O[3-k] + add)>>shift );
+      dst[ k   ] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[k] + O[k] + add)>>shift );
+      dst[ k+4 ] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[3-k] - O[3-k] + add)>>shift );
     }   
     src ++;
     dst += 8;
@@ -552,13 +553,13 @@ void partialButterflyInverse8(short *src,short *dst,int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly16(short *src,short *dst,int shift, int line)
+void partialButterfly16(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;
   int E[8],O[8];
   int EE[4],EO[4];
   int EEE[2],EEO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++) 
   {    
@@ -607,13 +608,13 @@ void partialButterfly16(short *src,short *dst,int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse16(short *src,short *dst,int shift, int line)
+void partialButterflyInverse16(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;  
   int E[8],O[8];
   int EE[4],EO[4];
   int EEE[2],EEO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {    
@@ -645,8 +646,8 @@ void partialButterflyInverse16(short *src,short *dst,int shift, int line)
     }    
     for (k=0;k<8;k++)
     {
-      dst[k]   = Clip3( -32768, 32767, (E[k] + O[k] + add)>>shift );
-      dst[k+8] = Clip3( -32768, 32767, (E[7-k] - O[7-k] + add)>>shift );
+      dst[k]   = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[k] + O[k] + add)>>shift );
+      dst[k+8] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[7-k] - O[7-k] + add)>>shift );
     }   
     src ++; 
     dst += 16;
@@ -658,14 +659,14 @@ void partialButterflyInverse16(short *src,short *dst,int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly32(short *src,short *dst,int shift, int line)
+void partialButterfly32(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;
   int E[16],O[16];
   int EE[8],EO[8];
   int EEE[4],EEO[4];
   int EEEE[2],EEEO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {    
@@ -723,14 +724,14 @@ void partialButterfly32(short *src,short *dst,int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse32(short *src,short *dst,int shift, int line)
+void partialButterflyInverse32(TCoeff *src, TCoeff *dst, int shift, int line)
 {
   int j,k;  
   int E[16],O[16];
   int EE[8],EO[8];
   int EEE[4],EEO[4];
   int EEEE[2],EEEO[2];
-  int add = 1<<(shift-1);
+  int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {    
@@ -773,8 +774,8 @@ void partialButterflyInverse32(short *src,short *dst,int shift, int line)
     }    
     for (k=0;k<16;k++)
     {
-      dst[k]    = Clip3( -32768, 32767, (E[k] + O[k] + add)>>shift );
-      dst[k+16] = Clip3( -32768, 32767, (E[15-k] - O[15-k] + add)>>shift );
+      dst[k]    = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[k] + O[k] + add)>>shift );
+      dst[k+16] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, (E[15-k] - O[15-k] + add)>>shift );
     }
     src ++;
     dst += 32;
@@ -787,16 +788,19 @@ void partialButterflyInverse32(short *src,short *dst,int shift, int line)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xTrMxN(short *block,short *coeff, int iWidth, int iHeight, UInt uiMode)
+void xTrMxN(TCoeff *block, TCoeff *coeff, int iWidth, int iHeight, UInt uiMode)
 {
 #if FULL_NBIT
-  int shift_1st = g_aucConvertToBit[iWidth]  + 1 + g_uiBitDepth - 8; // log2(iWidth) - 1 + g_uiBitDepth - 8
+  Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  g_uiBitDepth          + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
 #else
-  int shift_1st = g_aucConvertToBit[iWidth]  + 1 + g_uiBitIncrement; // log2(iWidth) - 1 + g_uiBitIncrement
+  Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) + (g_uiBitIncrement + 8) + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
 #endif
-  int shift_2nd = g_aucConvertToBit[iHeight]  + 8;                   // log2(iHeight) + 6
+  Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
 
-  short tmp[ 64 * 64 ];
+  assert(shift_1st >= 0);
+  assert(shift_2nd >= 0);
+
+  TCoeff tmp[ 64 * 64 ];
 
   switch (iWidth)
   {
@@ -852,16 +856,19 @@ void xTrMxN(short *block,short *coeff, int iWidth, int iHeight, UInt uiMode)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xITrMxN(short *coeff,short *block, int iWidth, int iHeight, UInt uiMode)
+void xITrMxN(TCoeff *coeff, TCoeff *block, int iWidth, int iHeight, UInt uiMode)
 {
-  int shift_1st = SHIFT_INV_1ST;
+  Int shift_1st = SHIFT_INV_1ST; // 7
 #if FULL_NBIT
-  int shift_2nd = SHIFT_INV_2ND - ((short)g_uiBitDepth - 8);
+  Int shift_2nd = SHIFT_INV_2ND - (g_uiBitDepth - 8); // 20 - bitDepth
 #else
-  int shift_2nd = SHIFT_INV_2ND - g_uiBitIncrement;
+  Int shift_2nd = SHIFT_INV_2ND - g_uiBitIncrement;   // 20 - bitDepth
 #endif
 
-  short tmp[64*64];
+  assert(shift_1st >= 0);
+  assert(shift_2nd >= 0);
+
+  TCoeff tmp[64*64];
 
   switch (iHeight)
   {
@@ -1018,7 +1025,7 @@ Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pC
           }
         } //CG loop
 
-        if(pQCoef[minPos] == 32767 || pQCoef[minPos] == -32768)
+        if(pQCoef[minPos] == RESIDUAL_MAXIMUM || pQCoef[minPos] == RESIDUAL_MINIMUM)
         {
           finalChange = -1;
         }
@@ -1044,7 +1051,7 @@ Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pC
 
 
 Void TComTrQuant::xQuant(       TComTU       &rTu,
-                                Int         * pSrc,
+                                TCoeff      * pSrc,
                                 TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
                                 Int         *&pArlDes,
@@ -1145,6 +1152,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #else
     iQBits = QUANT_SHIFT + cQP.m_iPer + iTransformShift;                // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
 #endif
+    //NOTE: ECF - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
     Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
 
@@ -1176,7 +1184,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
       uiAcSum += iLevel;
       iLevel *= iSign;        
-      piQCoef[uiBlockPos] = Clip3( -32768, 32767, iLevel );
+      piQCoef[uiBlockPos] = Clip3( RESIDUAL_MINIMUM, RESIDUAL_MAXIMUM, iLevel );
     } // for n
 
     if( pcCU->getSlice()->getPPS()->getSignHideFlag() )
@@ -1192,7 +1200,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
 Void TComTrQuant::xDeQuant(       TComTU        &rTu,
                             const TCoeff       * pSrc,
-                                  Int          * pDes,
+                                  TCoeff       * pDes,
                             const ComponentID    compID,
                             const QpParam       &cQP )
 {
@@ -1203,7 +1211,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const UInt uiHeight = rect.height;
   
   const TCoeff* piQCoef   = pSrc;
-  Int*   piCoef    = pDes;
+  TCoeff*       piCoef    = pDes;
   const ChromaFormat fmt=rTu.GetChromaFormat();
 #if !REMOVE_NSQT
   const ScalingListDIR dir=getScalingListDIR(uiWidth, uiHeight, fmt, compID);
@@ -1223,7 +1231,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
   assert ( uiWidth <= m_uiMaxTrSize );
   
-  Int iShift,iAdd,iCoeffQ;
+  Int              iShift;
+  Int              iAdd;
+  Intermediate_Int iCoeffQ;
 
   /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
    * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
@@ -1239,10 +1249,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   getAdditionalInverseQuantiserMultiplyAndShift(additionalMultiplier, additionalShift, compID, fmt, useTransformSkip);
 
   iShift = (QUANT_IQUANT_SHIFT - QUANT_SHIFT - iTransformShift) + additionalShift;
-
+  
   TCoeff clipQCoef;
-  const Int bitRange = min( 15, ( Int )( (MAX_TR_DYNAMIC_RANGE + 12) - (iTransformShift + cQP.m_iPer)) );
-  const Int levelLimit = 1 << bitRange;
 
   if(getUseScalingList())
   {
@@ -1264,9 +1272,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
         {
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
-          clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
-          iCoeffQ   = Int(((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) + iAdd ) >> (iShift -  cQP.m_iPer));
-          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+          clipQCoef = Clip3(IQUANT_INPUT_MINIMUM, IQUANT_INPUT_MAXIMUM, piQCoef[n]);
+          iCoeffQ   = Intermediate_Int(((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) + iAdd ) >> (iShift -  cQP.m_iPer));
+          piCoef[n] = TCoeff(Clip3<Intermediate_Int>(IQUANT_OUTPUT_MINIMUM,IQUANT_OUTPUT_MAXIMUM,iCoeffQ));
         }
       }
       else
@@ -1275,15 +1283,16 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
         {
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
-          clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
-          iCoeffQ   = ((clipQCoef * piDequantCoef[deQuantIdx]) + iAdd ) >> (iShift -  cQP.m_iPer);
-          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+          clipQCoef = Clip3(IQUANT_INPUT_MINIMUM, IQUANT_INPUT_MAXIMUM, piQCoef[n]);
+          iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> (iShift -  cQP.m_iPer);
+          piCoef[n] = TCoeff(Clip3<Intermediate_Int>(IQUANT_OUTPUT_MINIMUM,IQUANT_OUTPUT_MAXIMUM,iCoeffQ));
         }
       }
     }
     else
     {
-      iAdd = 0;
+      const Int bitRange = min( IQUANT_INPUT_BIT_DEPTH, ( Int )( (MAX_TR_DYNAMIC_RANGE + (2 * TRANSFORM_MATRIX_SHIFT)) - (iTransformShift + cQP.m_iPer)) );
+      const Int levelLimit = 1 << bitRange;
 
       if (additionalMultiplier != 1)
       {
@@ -1292,8 +1301,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
           clipQCoef = Clip3( -levelLimit, levelLimit - 1, piQCoef[n] );
-          iCoeffQ   = (clipQCoef * piDequantCoef[deQuantIdx] * additionalMultiplier) << (cQP.m_iPer - iShift);
-          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+          iCoeffQ   = Intermediate_Int((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) << (cQP.m_iPer - iShift));
+          piCoef[n] = TCoeff(Clip3<Intermediate_Int>(IQUANT_OUTPUT_MINIMUM,IQUANT_OUTPUT_MAXIMUM,iCoeffQ));
         }
       }
       else
@@ -1303,8 +1312,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
           clipQCoef = Clip3( -levelLimit, levelLimit - 1, piQCoef[n] );
-          iCoeffQ   = (clipQCoef * piDequantCoef[deQuantIdx]) << (cQP.m_iPer - iShift);
-          piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+          iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << (cQP.m_iPer - iShift);
+          piCoef[n] = TCoeff(Clip3<Intermediate_Int>(IQUANT_OUTPUT_MINIMUM,IQUANT_OUTPUT_MAXIMUM,iCoeffQ));
         }
       }
     }
@@ -1326,9 +1335,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
     for( Int n = 0; n < numSamplesInBlock; n++ )
     {
-      clipQCoef = Clip3( -32768, 32767, piQCoef[n] );
-      iCoeffQ   = ( clipQCoef * scale + iAdd ) >> iShift;
-      piCoef[n] = Clip3(-32768,32767,iCoeffQ);
+      clipQCoef = Clip3(IQUANT_INPUT_MINIMUM, IQUANT_INPUT_MAXIMUM, piQCoef[n]);
+      iCoeffQ   = (Intermediate_Int(clipQCoef) * scale + iAdd) >> iShift;
+      piCoef[n] = TCoeff(Clip3<Intermediate_Int>(IQUANT_OUTPUT_MINIMUM,IQUANT_OUTPUT_MAXIMUM,iCoeffQ));
     }
   }
 }
@@ -1403,7 +1412,6 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
        rpcArlCoeff,
 #endif
        uiAbsSum, compID, cQP );
-
 }
 
 
@@ -1553,7 +1561,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, Int* psCoeff, Int iWidth, Int iHeight )
+Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight)
@@ -1563,22 +1571,18 @@ Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, Int* psCoeff, 
   }
 #endif
 
-  Int j;
+  TCoeff block[ MAX_TU_SIZE * MAX_TU_SIZE ];
+  TCoeff coeff[ MAX_TU_SIZE * MAX_TU_SIZE ];
 
-  short block[ 64 * 64 ];
-  short coeff[ 64 * 64 ];
-
-  for (j = 0; j < iHeight; j++)
-  {    
-    memcpy( block + j * iWidth, piBlkResi + j * uiStride, iWidth * sizeof( short ) );      
-  }
+  for (Int y = 0; y < iHeight; y++)
+    for (Int x = 0; x < iWidth; x++)
+    {
+      block[(y * iWidth) + x] = piBlkResi[(y * uiStride) + x];
+    }
 
   xTrMxN( block, coeff, iWidth, iHeight, uiMode );
 
-  for ( j = 0; j < iHeight * iWidth; j++ )
-  {    
-    psCoeff[ j ] = coeff[ j ];
-  }
+  memcpy(psCoeff, coeff, (iWidth * iHeight * sizeof(TCoeff)));
 }
 
 /** Wrapper function between HM interface and core NxN inverse transform (2D) 
@@ -1588,7 +1592,7 @@ Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, Int* psCoeff, 
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xIT( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
+Void TComTrQuant::xIT( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight )
@@ -1598,22 +1602,18 @@ Void TComTrQuant::xIT( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, 
   }
 #endif  
  
-  Int j;
+  TCoeff block[ MAX_TU_SIZE * MAX_TU_SIZE ];
+  TCoeff coeff[ MAX_TU_SIZE * MAX_TU_SIZE ];
 
-  short block[ 64 * 64 ];
-  short coeff[ 64 * 64 ];
-
-  for ( j = 0; j < iHeight * iWidth; j++ )
-  {    
-    coeff[j] = (short)plCoef[j];
-  }
+  memcpy(coeff, plCoef, (iWidth * iHeight * sizeof(TCoeff)));
   
   xITrMxN( coeff, block, iWidth, iHeight, uiMode );
 
-  for ( j = 0; j < iHeight; j++ )
-  {    
-    memcpy( pResidual + j * uiStride, block + j * iWidth, iWidth * sizeof(short) );      
-  }
+  for (Int y = 0; y < iHeight; y++)
+    for (Int x = 0; x < iWidth; x++)
+    {
+      pResidual[(y * uiStride) + x] = Pel(block[(y * iWidth) + x]);
+    }
 }
 
 /** Wrapper function between HM interface and core 4x4 transform skipping
@@ -1622,7 +1622,7 @@ Void TComTrQuant::xIT( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, 
  *  \param uiStride stride of input residual data
  *  \param iSize transform size (iSize x iSize)
  */
-Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, Int* psCoeff, TComTU &rTu, const ComponentID component )
+Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component )
 {
   const TComRectangle &rect = rTu.getRect(component);
   const Int width = rect.width;
@@ -1661,7 +1661,7 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, Int* psCoeff, T
  *  \param uiStride stride of input residual data
  *  \param iSize transform size (iSize x iSize)
  */
-Void TComTrQuant::xITransformSkip( Int* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component )
+Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component )
 {
   const TComRectangle &rect = rTu.getRect(component);
   const Int width = rect.width;
@@ -1709,7 +1709,7 @@ Void TComTrQuant::xITransformSkip( Int* plCoef, Pel* pResidual, UInt uiStride, T
  * coding engines using probability models like CABAC
  */
 Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
-                                                            Int         * plSrcCoeff,
+                                                            TCoeff      * plSrcCoeff,
                                                             TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
                                                             Int         *&piArlDstCoeff,
@@ -2252,7 +2252,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
             }
           }
           const Int scaledCoeffIdx = minPos<0 ? minPos : (Int)(getScalingListCoeffIdx(format, compID, minPos, uiWidth, uiHeight));
-          if(piQCoef[scaledCoeffIdx] == 32767 || piQCoef[scaledCoeffIdx] == -32768)
+          if(piQCoef[scaledCoeffIdx] == RESIDUAL_MAXIMUM || piQCoef[scaledCoeffIdx] == RESIDUAL_MINIMUM)
           {
             finalChange = -1;
           }

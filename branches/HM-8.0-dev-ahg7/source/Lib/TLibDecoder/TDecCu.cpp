@@ -558,7 +558,13 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
                                 chFmt,
                                 useTransformSkip );
 
+#if DEBUG_INTRA_CODING_INV_TRAN
+  DEBUG_STRING_NEW(sDebug);
+  m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(&sDebug) );
+  ss << sDebug;
+#else
   m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(0) );
+#endif
 
   //===== reconstruction =====
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
@@ -593,12 +599,12 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
-      pReco    [ uiX ] = Clip( pPred[ uiX ] + pResi[ uiX ] );
-      pRecIPred[ uiX ] = pReco[ uiX ];
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
       if (DEBUG_STRING_CHANNEL_CONDITION(compID))
-        ss << pReco[ uiX ] << ", ";
+        ss << pResi[ uiX ] << ", ";
 #endif
+      pReco    [ uiX ] = Clip( pPred[ uiX ] + pResi[ uiX ] );
+      pRecIPred[ uiX ] = pReco[ uiX ];
     }
     pPred     += uiStride;
     pResi     += uiStride;

@@ -72,7 +72,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  //printECFMacroSettings();
+#if ECF__PRINT_MACRO_VALUES
+  printECFMacroSettings();
+#endif
 
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   EnvVar::printEnvVarInUse();

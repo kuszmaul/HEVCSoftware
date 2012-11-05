@@ -168,19 +168,52 @@ Void printSBACCoeffData(  const UInt          lastX,
 
 Void printCbfArray( class TComDataCU* pcCU  );
 
-
-template <typename T>
-Void printBlock( T * blkSrc, const UInt width, const UInt height, const UInt stride, const Bool onlyPrintEdges=false )
+template <typename ValueType>
+Void printBlock(const ValueType    *const source,
+                const UInt                width,
+                const UInt                height,
+                const UInt                stride,
+                const UInt                outputValueWidth = 0,         //if set to 0, the maximum output width will be calculated and used
+                const Int                 shiftLeftBy      = 0,         //set a negative value to right-shift instead
+                const Bool                onlyPrintEdges   = false,     //print only the top row and left column for printing prediction reference samples
+                      std::ostream      & stream           = std::cout)
 {
-  // set onlyPrintEdges to true when printing reference sample blocks
-  for (UInt y=0; y<height; y++)
+  //find the maximum output width
+  UInt outputWidth = 0;
+
+  if (outputWidth == 0)
   {
-    for (UInt x=0; x<width; x++)
-    {
-      std::cout << std::setw(3) << ((onlyPrintEdges && (y!=0 && x!=0)) ? 0 : blkSrc[y*stride + x]) << (((x+1)==width) ? "\n" : ", ");
-    }
+    for (UInt y = 0; y < height; y++)
+      for (UInt x = 0; x < width; x++)
+      {
+        const ValueType value                 = (onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy);
+        const ValueType absoluteValue         = std::abs(value);
+              ValueType minimumIncrementValue = 10;
+              UInt      currentWidth          = 1;
+
+        while (minimumIncrementValue <= absoluteValue) { minimumIncrementValue *= 10; currentWidth++; }
+
+        if ((value) < 0) currentWidth++; //for the minus sign
+
+        if (currentWidth > outputWidth) outputWidth = currentWidth;
+      }
+
+    outputWidth++; //so the numbers don't run into each other
   }
+
+  //------------------
+
+  for (UInt y = 0; y < height; y++)
+  {
+    for (UInt x = 0; x < width; x++)
+    {
+      stream << std::setw(outputWidth) << ((onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy));
+    }
+    stream << "\n";
+  }
+  stream << "\n";
 }
+
 
 template <typename T>
 Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, const T * blkSrc, const UInt width, const UInt height, const UInt stride, const UInt subBlockWidth=0, const UInt subBlockHeight=0, const UInt defWidth=3 )

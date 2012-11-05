@@ -251,7 +251,7 @@ protected:
   Int     m_sliceNsamples[LEVEL_RANGE+1];  
   Double  m_sliceSumC[LEVEL_RANGE+1] ;  
 #endif
-  Int*    m_plTempCoeff;
+  TCoeff* m_plTempCoeff;
   
 //  QpParam  m_cQP; - removed - placed on the stack.
 #if RDOQ_CHROMA_LAMBDA
@@ -280,16 +280,16 @@ protected:
 #endif
 private:
   // forward Transform
-  Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, Int* plCoeff, Int iWidth, Int iHeight );
+  Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
 
   // skipping Transform
-  Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, Int* psCoeff, TComTU &rTu, const ComponentID component );
+  Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
   
   Void signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
 
   // quantization
   Void xQuant(       TComTU       &rTu,
-                     Int         * pSrc,
+                     TCoeff      * pSrc,
                      TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
                      Int         *&pArlDes,
@@ -301,7 +301,7 @@ private:
   // RDOQ functions
   
   Void           xRateDistOptQuant (       TComTU       &rTu,
-                                           Int         * plSrcCoeff,
+                                           TCoeff      * plSrcCoeff,
                                            TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
                                            Int         *&piArlDstCoeff,
@@ -355,15 +355,15 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
   // dequantization
   Void xDeQuant(       TComTU       &rTu,
                  const TCoeff      * pSrc,
-                       Int         * pDes,
+                       TCoeff      * pDes,
                  const ComponentID   compID,
                  const QpParam      &cQP );
   
   // inverse transform
-  Void xIT    ( UInt uiMode, Int* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
+  Void xIT    ( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 
   // inverse skipping transform
-  Void xITransformSkip ( Int* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
+  Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
   
 };// END CLASS DEFINITION TComTrQuant
 

@@ -82,11 +82,15 @@ inline  Pel TComWeightPrediction::xClip( const Int x ) // static member
 
 inline  Pel TComWeightPrediction::weightBidir( const Int w0, const Pel P0, Int w1, const Pel P1, const Int round, const Int shift, const Int offset) // static member
 {
-  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS) + round + (offset << (shift-1))) >> shift ) );
+#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
+  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS)), shift) ) + offset );
+#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS) + leftShift(offset, (shift-1))), shift) ) );
+#endif
 }
 inline  Pel TComWeightPrediction::weightUnidir( const Int w0, const Pel P0, const Int round, const Int shift, const Int offset)
 {
-  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset ); // static member
+  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS)), shift) ) + offset ); // static member
 }
 
 #endif 

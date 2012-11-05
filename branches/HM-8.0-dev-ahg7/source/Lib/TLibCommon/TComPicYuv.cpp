@@ -170,11 +170,15 @@ Void  TComPicYuv::copyToPic (TComPicYuv*  pcPicYuvDst) const
 }
 
 
-
+//NOTE: ECF - This function is never called
 Void TComPicYuv::getMinMax(const ComponentID id, Int *pMin, Int *pMax ) const
 {
   const Pel*  piY   = getAddr(id);
+#if FULL_NBIT
   Int   iMin  = (1<<(g_uiBitDepth))-1;
+#else
+  Int   iMin  = (1<<(g_uiBitDepth + g_uiBitIncrement))-1;
+#endif
   Int   iMax  = 0;
   Int   x, y;
   const Int stride=getStride(id);
@@ -246,7 +250,7 @@ Void TComPicYuv::extendPicBorder ()
 
 
 
-
+//NOTE: ECF - This function is never called
 Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
 {
   FILE* pFile;
@@ -261,7 +265,11 @@ Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
   
   const Int  shift = g_uiBitIncrement;
   const Int  offset = (shift>0)?(1<<(shift-1)):0;
+#if FULL_NBIT
   const Pel  iMax = ((1<<(g_uiBitDepth))-1);
+#else
+  const Pel  iMax = ((1<<(g_uiBitDepth + g_uiBitIncrement))-1);
+#endif
 
   for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {

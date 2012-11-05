@@ -39,6 +39,8 @@
 #define __COMMONDEF__
 
 #include <algorithm>
+#include <iostream>
+#include <assert.h>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
@@ -129,7 +131,17 @@ extern UInt g_uiIBDI_MAX;
 template <typename T> inline T Clip(T x) { return std::min<T>(T(g_uiIBDI_MAX), std::max<T>( T(0), x)); }
 
 /** clip a, such that minVal <= a <= maxVal */
-template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T Clip3     ( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
+{
+  if ((a > maxVal) || (a < minVal))
+  {
+    std::cerr << "ERROR: Range check " << minVal << " >= " << a << " <= " << maxVal << " failed" << std::endl;
+    assert(false);
+    exit(1);
+  }
+}  ///< general min/max clip
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -146,6 +158,10 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
+template <typename ValueType> inline ValueType leftShift       (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                       << shift) : ( value                        >> -shift); }
+template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                       >> shift) : ( value                        << -shift); }
+template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                       << shift) : ((value + (1 << (-shift - 1))) >> -shift); }
+template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (1 << (shift - 1))) >> shift) : ( value                        << -shift); }
 
 // ====================================================================================================================
 // Coding tool configuration
