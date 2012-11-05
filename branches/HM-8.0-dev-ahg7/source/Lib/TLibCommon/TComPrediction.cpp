@@ -889,7 +889,6 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
 #else
   Int leftColumn[MAX_CU_SIZE+1], topRow[MAX_CU_SIZE+1], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];
 #endif
-  UInt offset2D = width;
   UInt shift1Dhor = g_aucConvertToBit[ width ] + 2;
   UInt shift1Dver = g_aucConvertToBit[ height ] + 2;
 
@@ -914,23 +913,29 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
     {
       for(Int l=0;l<height;l++)
       {
+        // NOTE: ECF - rounding point changed from 'height' to 'width'.
+        // NOTE: ECF - The intermediate shift left could be rolled into the final shift left,
+        //             thereby increasing the accuracy of the calculation
+        // eg rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft)) +
+        //                           (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )*2    ) + height) >> (shift1Dver+1);
         rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft+1)>>1) +
-                                 (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )    ) +offset2D) >> shift1Dver;
+                                 (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )    ) + width) >> (shift1Dhor+1);
       }
     }
   }
   else
   {
+    // NOTE: ECF - mistakes fixed to match above multiply-based calculation
     for(Int k=0;k<width;k++)
     {
       bottomRow[k]  = bottomLeft - topRow[k];
-      topRow[k]     <<= shift1Dhor;
+      topRow[k]     <<= shift1Dver;
     }
 
     for(Int k=0;k<height;k++)
     {
       rightColumn[k]  = topRight - leftColumn[k];
-      leftColumn[k]   <<= shift1Dver;
+      leftColumn[k]   <<= shift1Dhor;
     }
 
     const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
@@ -938,13 +943,17 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
     // Generate prediction signal
     for (Int y=0;y<height;y++)
     {
-      Int horPred = leftColumn[y] + offset2D;
+      Int horPred = leftColumn[y] + width;
       for (Int x=0;x<width;x++)
       {
         horPred += rightColumn[y];
         topRow[x] += bottomRow[x];
 
-        rpDst[y*dstStride+x] = ( horPred + (topRow[x] << topRowShift) ) >> (shift1Dver+1);
+        // NOTE: ECF - The intermediate shift left could be rolled into the final shift left,
+        //             thereby increasing the accuracy of the calculation
+        // eg  rpDst[y*dstStride+x] = ( (horPred<<topRowShift) + topRow[x] ) >> (shift1Dver+1);
+        Int vertPred = ((topRow[x] + topRowShift)>>topRowShift);
+        rpDst[y*dstStride+x] = ( horPred + vertPred ) >> (shift1Dhor+1);
       }
     }
   }
