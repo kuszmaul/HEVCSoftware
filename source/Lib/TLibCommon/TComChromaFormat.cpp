@@ -35,6 +35,7 @@
 #include "TComChromaFormat.h"
 #include "TComPic.h"
 #include "TComDataCU.h"
+#include "TComTrQuant.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -144,6 +145,99 @@ MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID comp
   //------------------
 
   return MDCS_DISABLED;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
+Void setQPforQuant(       QpParam      &result,
+                    const Int           qpy,
+                    const ChannelType   chType,
+                    const Int           qpBdOffset,
+                    const Int           chromaQPOffset,
+                    const ChromaFormat  chFmt,
+                    const Bool          useTransformSkip )
+{
+  Int baseQp      = MAX_INT;
+  Int adjustedQp  = MAX_INT;
+  Int qpRemOffset = 0;
+
+  if(isLuma(chType))
+  {
+    baseQp     = qpy + qpBdOffset;
+    adjustedQp = baseQp;
+  }
+  else
+  {
+    baseQp = Clip3( -qpBdOffset, (chromaQPMappingTableSize - 1), qpy + chromaQPOffset );
+
+    if(baseQp < 0)
+    {
+      baseQp = baseQp + qpBdOffset;
+    }
+    else
+    {
+      baseQp = getScaledChromaQP(baseQp, chFmt) + qpBdOffset;
+    }
+
+    adjustedQp = baseQp;
+
+    //------------------------------------------------
+
+    //adjustment for chroma 4:2:2
+    
+    if ((chFmt == CHROMA_422) && !useTransformSkip)
+    {
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+      switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
+      {
+        case 1: //+3 method
+          switch (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt())
+          {
+            case 1:                          adjustedQp  += 3; break; //Qp modification method
+            case 2:                          qpRemOffset += 3; break; //Table method
+            default: break;
+          }
+          break; 
+
+        case 2: //-3 method
+          switch (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt())
+          {
+            case 1: assert(adjustedQp >= 3); adjustedQp  -= 3; break; //Qp modification method
+            case 2:                          qpRemOffset -= 3; break; //Table method
+            default: break;
+          }
+          break; 
+
+        default: break;
+      }
+#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) //+3 method
+  #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
+      adjustedQp  += 3;
+  #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
+      qpRemOffset += 3;
+  #endif
+#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) //-3 method
+  #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
+      adjustedQp  -= 3;
+  #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
+      qpRemOffset -= 3;
+  #endif
+#endif
+    }
+
+    //------------------------------------------------
+  }
+
+  if ((adjustedQp == baseQp) && (qpRemOffset == 0))
+  {
+    result.setBothQps   (QpParam::QpData(baseQp,     (baseQp     / 6),  (baseQp     % 6)               ));
+  }
+  else
+  {
+    result.setBaseQp    (QpParam::QpData(baseQp,     (baseQp     / 6),  (baseQp     % 6)               ));
+    result.setAdjustedQp(QpParam::QpData(adjustedQp, (adjustedQp / 6), ((adjustedQp % 6) + qpRemOffset)));
+  }
 }
 
 

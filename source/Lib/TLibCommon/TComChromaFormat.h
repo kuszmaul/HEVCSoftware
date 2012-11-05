@@ -471,6 +471,7 @@ static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle 
 #endif
 }
 
+
 //------------------------------------------------
 
 static inline Bool singleTransformSkipFlag(const ChromaFormat format)
@@ -487,133 +488,106 @@ static inline Bool singleTransformSkipFlag(const ChromaFormat format)
 
 //------------------------------------------------
 
-static inline Void adjustChromaQPfor422(const ChromaFormat chFmt, Int &chromaQP, const Bool useTransformSkip)
+Void setQPforQuant(       class QpParam      &result,
+                    const       Int           qpy,
+                    const       ChannelType   chType,
+                    const       Int           qpBdOffset,
+                    const       Int           chromaQPOffset,
+                    const       ChromaFormat  chFmt,
+                    const       Bool          useTransformSkip );
+
+
+//------------------------------------------------
+
+//when using the table-based -3 method, the arrays are defined with indices 0->8 to represent tables with indices -3->5
+//this offset is needed to allow tables to be selected correctly
+
+static inline Int getQpRemTableIndexOffset()
 {
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-
-  if ((ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 1) && chFmt==CHROMA_422 && !useTransformSkip) //nothing done here if not using QP modification
-  {
-    switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
-    {
-      case 1:                         chromaQP += 3; break; //+3 method
-      case 2:  assert(chromaQP >= 3); chromaQP -= 3; break; //-3 method (will fail if QP < 3 or if using LosslessCuEnabled)
-      default: break;
-    }
-  }
-
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1)
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
-
-  if (chFmt==CHROMA_422 && !useTransformSkip) chromaQP += 3;
-
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
-
-  if (chFmt==CHROMA_422 && !useTransformSkip)
-  {
-    assert(chromaQP >= 3); //(will fail if QP < 3 or if using LosslessCuEnabled)
-    chromaQP -= 3;
-  }
-
-#endif
+  return ((ToolOptionList::Chroma422QuantiserAdjustment.getInt() == 2) && (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2)) ? 3 : 0;
+#elif ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) && (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2))
+  return 3;
+#else
+  return 0;
 #endif
 }
 
 
 //------------------------------------------------
 
-static inline Int getQuantScaling(const UInt qp, const ChromaFormat format)
+static inline Int getQuantScaling(const Int qp_rem, const ChromaFormat format)
 {
+  const Int tableIndex = qp_rem + getQpRemTableIndexOffset();
+
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if ((ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2) && (format == CHROMA_422))
   {
     switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
     {
-      case 1:  return g_quantScalesInc[qp]; break; //+3 method
-      case 2:  return g_quantScalesDec[qp]; break; //-3 method
+      case 1:  return g_quantScalesInc[tableIndex]; break; //+3 method
+      case 2:  return g_quantScalesDec[tableIndex]; break; //-3 method
       default: break;
     }
   }
 #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
 #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
-  if (format == CHROMA_422) return g_quantScalesInc[qp];
+  if (format == CHROMA_422) return g_quantScalesInc[tableIndex];
 #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
-  if (format == CHROMA_422) return g_quantScalesDec[qp];
+  if (format == CHROMA_422) return g_quantScalesDec[tableIndex];
 #endif
 #endif
 
-  return g_quantScales[qp];
+  return g_quantScales[tableIndex];
 }
 
 
 //------------------------------------------------
 
-static inline Int getInverseQuantScaling(const UInt qp, const ChromaFormat format)
+static inline Int getInverseQuantScaling(const Int qp_rem, const ChromaFormat format)
 {
+  const Int tableIndex = qp_rem + getQpRemTableIndexOffset();
+
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if ((ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2) && (format == CHROMA_422))
   {
     switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
     {
-      case 1:  return g_invQuantScalesInc[qp]; break; //+3 method
-      case 2:  return g_invQuantScalesDec[qp]; break; //-3 method
+      case 1:  return g_invQuantScalesInc[tableIndex]; break; //+3 method
+      case 2:  return g_invQuantScalesDec[tableIndex]; break; //-3 method
       default: break;
     }
   }
 #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
 #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
-  if (format == CHROMA_422) return g_invQuantScalesInc[qp];
+  if (format == CHROMA_422) return g_invQuantScalesInc[tableIndex];
 #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
-  if (format == CHROMA_422) return g_invQuantScalesDec[qp];
+  if (format == CHROMA_422) return g_invQuantScalesDec[tableIndex];
 #endif
 #endif
 
-  return g_invQuantScales[qp];
+  return g_invQuantScales[tableIndex];
 }
 
 
 //------------------------------------------------
 
-static inline Int getAdjustedQPMod6For422(const Int qpMod6, const ChannelType chType, const ChromaFormat chFmt, const Bool useTransformSkip)
+static inline ErrorScaleAdjustmentMode getErrorScaleAdjustmentMode(const ComponentID compID, const ChromaFormat chFmt)
 {
-  if (chFmt == CHROMA_422)
-  {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-    if (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2)
-    {
-      switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
-      {
-        case 1: return qpMod6 + ((isChroma(chType) && !useTransformSkip) ? 3 : 0); break; //+3 method
-        case 2: return qpMod6 + ((isChroma(chType) && !useTransformSkip) ? 0 : 3); break; //-3 method
-        default: break;
-      }
-    }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
-    return qpMod6 + ((isChroma(chType) && !useTransformSkip) ? 3 : 0);
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
-    return qpMod6 + ((isChroma(chType) && !useTransformSkip) ? 0 : 3);
-#endif
-#endif
-  }
-
-  return qpMod6;
+  return (isChroma(compID) && (chFmt == CHROMA_422)) ? ERROR_SCALE_ADJUSTMENT_MODE_422 : ERROR_SCALE_ADJUSTMENT_MODE_NONE;
 }
 
 
 //------------------------------------------------
 
-static inline TransformShiftSizeOffset getTransformShiftSizeOffset(const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
+static inline Bool roundTransformShiftUp(const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
 {
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip) && (ToolOptionList::Chroma422QuantiserAdjustment.getInt() == 2))
-          ? TRANSFORM_SHIFT_SIZE_OFFSET_1  // divide-by-sqrt(2) method
-          : TRANSFORM_SHIFT_SIZE_OFFSET_0;
+  return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip) && (ToolOptionList::Chroma422QuantiserAdjustment.getInt() == 2));
 #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
-  return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip))
-          ? TRANSFORM_SHIFT_SIZE_OFFSET_1  // divide-by-sqrt(2) method
-          : TRANSFORM_SHIFT_SIZE_OFFSET_0;
+  return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip));
 #elif ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) || (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 0))
-  return TRANSFORM_SHIFT_SIZE_OFFSET_0;
+  return false;
 #endif
 }
 
@@ -621,17 +595,13 @@ static inline TransformShiftSizeOffset getTransformShiftSizeOffset(const Compone
 //------------------------------------------------
 
 // NOTE: ECF - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
-static inline Int getTransformShift(const UInt uiLog2TrSize, const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
+static inline Int getTransformShift(const UInt uiLog2TrSize)
 {
 #if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
+  return MAX_TR_DYNAMIC_RANGE - g_uiBitDepth - uiLog2TrSize;
 #else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
+  return MAX_TR_DYNAMIC_RANGE - (g_uiBitDepth + g_uiBitIncrement) - uiLog2TrSize;
 #endif
-
-  const UInt log2TrSize = uiLog2TrSize - UInt(getTransformShiftSizeOffset(compID, chFmt, useTransformSkip));
-
-  return MAX_TR_DYNAMIC_RANGE - uiBitDepth - log2TrSize;
 }
 
 
@@ -666,7 +636,7 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 
 //------------------------------------------------
 
-static inline Void getAdditionalQuantiserMultiplyAndShift(UInt &multiplier, UInt &shift, const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
+static inline Void getAdditionalQuantiserMultiplyAndShift(Int &multiplier, Int &shift, const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
 {
   multiplier = 1;
   shift      = 0;
@@ -698,7 +668,7 @@ static inline Void getAdditionalQuantiserMultiplyAndShift(UInt &multiplier, UInt
 
 //------------------------------------------------
 
-static inline Void getAdditionalInverseQuantiserMultiplyAndShift(UInt &multiplier, UInt &shift, const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
+static inline Void getAdditionalInverseQuantiserMultiplyAndShift(Int &multiplier, Int &shift, const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
 {
   multiplier = 1;
   shift      = 0;

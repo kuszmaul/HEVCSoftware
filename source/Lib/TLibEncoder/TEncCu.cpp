@@ -1941,12 +1941,12 @@ Void TEncCu::xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv )
 #if ADAPTIVE_QP_SELECTION
 /** Collect ARL statistics from one block
   */
-Int TEncCu::xTuCollectARLStats(TCoeff* rpcCoeff, Int* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples )
+Int TEncCu::xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples )
 {
   for( Int n = 0; n < NumCoeffInCU; n++ )
   {
-    Int u = abs( rpcCoeff[ n ] );
-    Int absc = rpcArlCoeff[ n ];
+    TCoeff u = abs( rpcCoeff[ n ] );
+    TCoeff absc = rpcArlCoeff[ n ];
 
     if( u != 0 )
     {
@@ -1975,7 +1975,7 @@ Void TEncCu::xLcuCollectARLStats(TComDataCU* rpcCU )
   UInt numSamples[ LEVEL_RANGE + 1 ]; //: the number of coefficients corresponding to datatype and quantization output
 
   TCoeff* pCoeffY = rpcCU->getCoeff(COMPONENT_Y);
-  Int* pArlCoeffY = rpcCU->getArlCoeff(COMPONENT_Y);
+  TCoeff* pArlCoeffY = rpcCU->getArlCoeff(COMPONENT_Y);
 
   UInt uiMinCUWidth = g_uiMaxCUWidth >> g_uiMaxCUDepth;
   UInt uiMinNumCoeffInCU = 1 << uiMinCUWidth;

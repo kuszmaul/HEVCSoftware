@@ -131,29 +131,29 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
 
 #if SKIP_FLAG
-  Bool*         m_skipFlag;           ///< array of skip flags
+  Bool*          m_skipFlag;           ///< array of skip flags
 #endif
-  Char*         m_pePartSize;         ///< array of partition sizes
-  Char*         m_pePredMode;         ///< array of prediction modes
-  Bool*         m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
-  Char*         m_phQP;               ///< array of QP values
-  UChar*        m_puhTrIdx;           ///< array of transform indices
-  UChar*        m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
+  Char*          m_pePartSize;         ///< array of partition sizes
+  Char*          m_pePredMode;         ///< array of prediction modes
+  Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
+  Char*          m_phQP;               ///< array of QP values
+  UChar*         m_puhTrIdx;           ///< array of transform indices
+  UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
 #if !REMOVE_NSQT
-  UChar*        m_nsqtPartIdx;        ///< array of absPartIdx mapping table, map zigzag to NSQT
+  UChar*         m_nsqtPartIdx;        ///< array of absPartIdx mapping table, map zigzag to NSQT
 #endif
-  UChar*        m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
-  TComCUMvField m_acCUMvField[NUM_REF_PIC_LIST_01];     ///< array of motion vectors
-  TCoeff*       m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
+  UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
+  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];     ///< array of motion vectors
+  TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
-  Int*          m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
-  static Int*   m_pcGlbArlCoeff[MAX_NUM_COMPONENT]; // global ARL buffer
-  Bool          m_ArlCoeffIsAliasedAllocation;  ///< ARL coefficient buffer is an alias of the global buffer and must not be free()'d
+  TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
+  static TCoeff* m_pcGlbArlCoeff[MAX_NUM_COMPONENT]; // global ARL buffer
+  Bool           m_ArlCoeffIsAliasedAllocation;  ///< ARL coefficient buffer is an alias of the global buffer and must not be free()'d
 #endif
   
-  Pel*          m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
+  Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
 
-  Int*          m_piSliceSUMap;       ///< pointer of slice ID map
+  Int*           m_piSliceSUMap;       ///< pointer of slice ID map
   std::vector<NDBFBlockInfo> m_vNDFBlock;
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -343,7 +343,7 @@ public:
   TCoeff*&      getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
 #if ADAPTIVE_QP_SELECTION
-  Int*&         getArlCoeff           ( ComponentID component ) { return m_pcArlCoeff[component]; }
+  TCoeff*&      getArlCoeff           ( ComponentID component ) { return m_pcArlCoeff[component]; }
 #endif
   Pel*&         getPCMSample          ( ComponentID component ) { return m_pcIPCMSample[component]; }
 

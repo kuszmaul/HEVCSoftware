@@ -223,6 +223,9 @@ Void printECFMacroSettings()
   PRINT_CONSTANT(ECF__CHROMA_422_QUANTISER_ADJUSTMENT,                          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES,                      settingNameWidth, settingValueWidth);
+#endif
+  PRINT_CONSTANT(ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
+#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   PRINT_CONSTANT(ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION, settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID,                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS,    settingNameWidth, settingValueWidth);

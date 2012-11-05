@@ -86,66 +86,41 @@ typedef struct
 class QpParam
 {
 public:
-  QpParam();
-  
-  Int m_iQP;
-  Int m_iPer;
-  Int m_iRem;
+
+  struct QpData
+  {
+    Int Qp;
+    Int per;
+    Int rem;
+
+    QpData( const Int initialQp = MAX_INT, const Int initialPer = MAX_INT, const Int initialRem = MAX_INT )
+      : Qp(initialQp), per(initialPer), rem(initialRem)
+    {}
+  };
+
+private:
+
+  QpData baseQp;
+  QpData adjustedQp;
   
 public:
-  Int m_iBits;
 
-  Void setQPforQuant( const Int qpy, const ChannelType chType, const Int qpBdOffset, const Int chromaQPOffset, const ChromaFormat chFmt, const Bool useTransformSkip )
-  {
-    Int qpScaled;
+  //get accessors
 
-    if(isLuma(chType))
-    {
-      qpScaled = qpy + qpBdOffset;
-    }
-    else
-    {
-      qpScaled = Clip3( -qpBdOffset, (chromaQPMappingTableSize - 1), qpy + chromaQPOffset );
+        QpData &getBaseQp    ()       { return baseQp;     }
+  const QpData &getBaseQp    () const { return baseQp;     }
 
-      if(qpScaled < 0)
-      {
-        qpScaled = qpScaled + qpBdOffset;
-      }
-      else
-      {
-        qpScaled = getScaledChromaQP(qpScaled, chFmt) + qpBdOffset;
-      }
+        QpData &getAdjustedQp()       { return adjustedQp; }
+  const QpData &getAdjustedQp() const { return adjustedQp; }
 
-      adjustChromaQPfor422(chFmt, qpScaled, useTransformSkip);
-    }
+  //set accessors
 
-    setQpParam( qpScaled, chType, chFmt, useTransformSkip );
-  }
+  Void setBaseQp     (const QpData &values) { baseQp     = values;          }
+  Void setAdjustedQp (const QpData &values) { adjustedQp = values;          }
+  Void setBothQps    (const QpData &values) { baseQp = adjustedQp = values; }
 
-  Void setQpParam(Int qpScaled, const ChannelType chType, const ChromaFormat chFmt, const Bool useTransformSkip)
-  {
-    m_iQP   = qpScaled;
-    m_iPer  = qpScaled / 6;
-    m_iBits = QP_BITS + m_iPer;
-
-    m_iRem  = getAdjustedQPMod6For422(qpScaled % 6, chType, chFmt, useTransformSkip);
-  }
-  
-  Void clear()
-  {
-    m_iQP   = 0;
-    m_iPer  = 0;
-    m_iRem  = 0;
-    m_iBits = 0;
-  }
-  
-  
-  Int per()   const { return m_iPer; }
-  Int rem()   const { return m_iRem; }
-  Int bits()  const { return m_iBits; }
-  
-  Int qp() {return m_iQP;}
 }; // END CLASS DEFINITION QpParam
+
 
 /// transform and quantization class
 class TComTrQuant
@@ -168,7 +143,7 @@ public:
                      const UInt             uiStride,
                            TCoeff        *  rpcCoeff,
 #if ADAPTIVE_QP_SELECTION
-                           Int           *& rpcArlCoeff,
+                           TCoeff        *& rpcArlCoeff,
 #endif
                            UInt&            uiAbsSum,
                      const QpParam        & cQP );
@@ -217,22 +192,22 @@ public:
   Void initScalingList                      ();
   Void destroyScalingList                   ();
 #if REMOVE_NSQT
-  Void setErrScaleCoeff    ( UInt list, UInt size, UInt qp, TransformShiftSizeOffset transformShiftSizeOffset);
-  double* getErrScaleCoeff ( UInt list, UInt size, UInt qp, TransformShiftSizeOffset transformShiftSizeOffset ) {return m_errScale[size][list][qp][transformShiftSizeOffset];};    //!< get Error Scale Coefficent
-  Int* getQuantCoeff       ( UInt list, UInt qp, UInt size)                                                     {return m_quantCoef[size][list][qp];                         };   //!< get Quant Coefficent
-  Int* getDequantCoeff     ( UInt list, UInt qp, UInt size)                                                     {return m_dequantCoef[size][list][qp];                       }; //!< get DeQuant Coefficent
+  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
+  double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][errorScaleAdjustmentMode];};  //!< get Error Scale Coefficent
+  Int* getQuantCoeff       ( UInt list, Int qp, UInt size)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get Quant Coefficent
+  Int* getDequantCoeff     ( UInt list, Int qp, UInt size)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get DeQuant Coefficent
 #else
-  Void setErrScaleCoeff    ( UInt list, UInt size, UInt qp, ScalingListDIR dir, TransformShiftSizeOffset transformShiftSizeOffset);
-  double* getErrScaleCoeff ( UInt list, UInt size, UInt qp, ScalingListDIR dir, TransformShiftSizeOffset transformShiftSizeOffset ) {return m_errScale[size][list][qp][dir][transformShiftSizeOffset];};    //!< get Error Scale Coefficent
-  Int* getQuantCoeff       ( UInt list, UInt qp, UInt size, ScalingListDIR dir)                                                     {return m_quantCoef[size][list][qp][dir];                         };   //!< get Quant Coefficent
-  Int* getDequantCoeff     ( UInt list, UInt qp, UInt size, ScalingListDIR dir)                                                     {return m_dequantCoef[size][list][qp][dir];                       }; //!< get DeQuant Coefficent
+  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ScalingListDIR dir, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
+  double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ScalingListDIR dir, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][dir][errorScaleAdjustmentMode];}; //!< get Error Scale Coefficent
+  Int* getQuantCoeff       ( UInt list, Int qp, UInt size, ScalingListDIR dir)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()][dir];                          }; //!< get Quant Coefficent
+  Int* getDequantCoeff     ( UInt list, Int qp, UInt size, ScalingListDIR dir)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()][dir];                          }; //!< get DeQuant Coefficent
 #endif
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
   Bool getUseScalingList   (){ return m_scalingListEnabledFlag; };
   Void setFlatScalingList  (const ChromaFormat format);
-  Void xsetFlatScalingList ( UInt list, UInt size, UInt qp, const ChromaFormat format);
-  Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, UInt qp, const ChromaFormat format);
-  Void xSetScalingListDec  ( TComScalingList *scalingList, UInt list, UInt size, UInt qp, const ChromaFormat format);
+  Void xsetFlatScalingList ( UInt list, UInt size, Int qp, const ChromaFormat format);
+  Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
+  Void xSetScalingListDec  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
   Void setScalingList      ( TComScalingList *scalingList, const ChromaFormat format);
   Void setScalingListDec   ( TComScalingList *scalingList, const ChromaFormat format);
   Void processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
@@ -272,11 +247,11 @@ protected:
 #if REMOVE_NSQT
   Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of quantization matrix coefficient 4x4
   Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of dequantization matrix coefficient 4x4
-  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS]; ///< array of quantization matrix coefficient 4x4
+  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
 #else
   Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM];                                         ///< array of quantization matrix coefficient 4x4
   Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM];                                         ///< array of dequantization matrix coefficient 4x4
-  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM][NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS]; ///< array of quantization matrix coefficient 4x4
+  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
 #endif
 private:
   // forward Transform
@@ -292,7 +267,7 @@ private:
                      TCoeff      * pSrc,
                      TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
-                     Int         *&pArlDes,
+                     TCoeff      *&pArlDes,
 #endif
                      UInt         &uiAcSum,
                const ComponentID   compID,
@@ -304,7 +279,7 @@ private:
                                            TCoeff      * plSrcCoeff,
                                            TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
-                                           Int         *&piArlDstCoeff,
+                                           TCoeff      *&piArlDstCoeff,
 #endif
                                            UInt         &uiAbsSum,
                                      const ComponentID   compID,

@@ -58,6 +58,7 @@
 
 #define     MAX_CU_SIZE             (1<<(MAX_CU_DEPTH))         // maximum allowable size of CU, surely 64? (not 1<<7 = 128)
 #define     MIN_PU_SIZE              4
+#define     MIN_TU_SIZE              4
 #define     MAX_TU_SIZE             32
 #define     MAX_NUM_SPU_W           (MAX_CU_SIZE/MIN_PU_SIZE)   // maximum number of SPU in horizontal line
 
@@ -106,28 +107,21 @@ extern       UInt g_uiAddCUDepth;
 
 extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 
-#define QUANT_IQUANT_SHIFT      20 // Q(QP%6) * IQ(QP%6) = 2^20
-#define QUANT_SHIFT             14 // Q(4) = 2^14
-#define SCALE_BITS              15 // Inherited from TMuC, pressumably for fractional bit estimates in RDOQ
-#define MAX_TR_DYNAMIC_RANGE    15 // Maximum input forward transform dynamic range (excluding sign bit)
-#define IQUANT_INPUT_BIT_DEPTH  15
-#define IQUANT_OUTPUT_BIT_DEPTH 15
-#define RESIDUAL_BIT_DEPTH      15
+#define QUANT_SHIFT                14 // Q(4) = 2^14
+#define IQUANT_SHIFT                6
+#define SCALE_BITS                 15 // Inherited from TMuC, pressumably for fractional bit estimates in RDOQ
+#define MAX_TR_DYNAMIC_RANGE       15 // Maximum input forward transform dynamic range (excluding sign bit)
+#define TRANSFORM_MAXIMUM          ((1 << MAX_TR_DYNAMIC_RANGE) - 1)
+#define TRANSFORM_MINIMUM          (-(1 << MAX_TR_DYNAMIC_RANGE))
 
-#define IQUANT_INPUT_MINIMUM    (-(1<<IQUANT_INPUT_BIT_DEPTH)    )
-#define IQUANT_INPUT_MAXIMUM    ( ((1<<IQUANT_INPUT_BIT_DEPTH)-1))
-#define IQUANT_OUTPUT_MINIMUM   (-(1<<IQUANT_OUTPUT_BIT_DEPTH)    )
-#define IQUANT_OUTPUT_MAXIMUM   ( ((1<<IQUANT_OUTPUT_BIT_DEPTH)-1))
-#define RESIDUAL_MINIMUM        (-(1<<RESIDUAL_BIT_DEPTH)     )
-#define RESIDUAL_MAXIMUM        ( ((1<<RESIDUAL_BIT_DEPTH)-1) )
+#define SQRT2                      11585
+#define SQRT2_SHIFT                13
+#define INVSQRT2                   11585
+#define INVSQRT2_SHIFT             14
+#define ADDITIONAL_MULTIPLIER_BITS 14
 
-#define SQRT2                   11585
-#define SQRT2_SHIFT             13
-#define INVSQRT2                11585
-#define INVSQRT2_SHIFT          14
-
-#define SHIFT_INV_1ST            7 // Shift after first inverse transform stage
-#define SHIFT_INV_2ND           12 // Shift after second inverse transform stage
+#define SHIFT_INV_1ST               7 // Shift after first inverse transform stage
+#define SHIFT_INV_2ND              12 // Shift after second inverse transform stage
 
 extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)  
 extern Int g_invQuantScales[SCALING_LIST_REM_NUM];          // IQ(QP%6)
@@ -139,7 +133,7 @@ extern Int g_quantScalesDec[SCALING_LIST_REM_NUM];
 extern Int g_invQuantScalesDec[SCALING_LIST_REM_NUM];
 #endif
 
-#define TRANSFORM_MATRIX_SHIFT 6 //NOTE: ECF - This value does not directly affedt the transform matrices and must be adjusted in line with any change made to them
+#define TRANSFORM_MATRIX_SHIFT 6 //NOTE: ECF - This value does not directly affect the transform matrices and must be adjusted in line with any change made to them
 
 extern const TMatrixCoeff g_aiT4[4][4];
 extern const TMatrixCoeff g_aiT8[8][8];
@@ -262,6 +256,8 @@ extern UInt64 g_nSymbolCounter;
 #define SCALING_LIST_START_VALUE 8                                        ///< start value for dpcm mode
 #define MAX_MATRIX_COEF_NUM 64                                            ///< max coefficient number for quantization matrix
 #define MAX_MATRIX_SIZE_NUM 8                                             ///< max size number for quantization matrix
+#define SCALING_LIST_BITS 8                                               ///< bit depth of scaling list entries
+#define LOG2_SCALING_LIST_NEUTRAL_VALUE 4                                 ///< log2 of the value that, when used in a scaling list, has no effect on quantisation
 #define SCALING_LIST_DC 16                                                ///< default DC value
 
 extern const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
