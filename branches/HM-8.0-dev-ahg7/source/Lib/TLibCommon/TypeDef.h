@@ -323,7 +323,7 @@
 //------------------------------------------------
 
 #define ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST                              0 ///< When enabled, allows control of ECF modifications via environment variables
-#define ECF__PRINT_MACRO_VALUES                                               0 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
+#define ECF__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
 // Block Structure
@@ -731,11 +731,11 @@ enum ScalingListSize
   SCALING_LIST_SIZE_NUM
 };
 
-enum TransformShiftSizeOffset
+enum ErrorScaleAdjustmentMode
 {
-  TRANSFORM_SHIFT_SIZE_OFFSET_0          = 0,
-  TRANSFORM_SHIFT_SIZE_OFFSET_1          = 1, //NOTE: ECF - only used for 4:2:2 quantiser adjustment when using the divide-by-sqrt(2) method
-  NUMBER_OF_TRANSFORM_SHIFT_SIZE_OFFSETS = 2
+  ERROR_SCALE_ADJUSTMENT_MODE_NONE       = 0,
+  ERROR_SCALE_ADJUSTMENT_MODE_422        = 1,
+  NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES = 2
 };
 
 ///MDCS modes

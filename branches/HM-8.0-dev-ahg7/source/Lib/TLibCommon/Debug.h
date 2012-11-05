@@ -175,6 +175,7 @@ Void printBlock(const ValueType    *const source,
                 const UInt                stride,
                 const UInt                outputValueWidth = 0,         //if set to 0, the maximum output width will be calculated and used
                 const Int                 shiftLeftBy      = 0,         //set a negative value to right-shift instead
+                const Bool                printAverage     = false,     //Also print the average of the values in the block
                 const Bool                onlyPrintEdges   = false,     //print only the top row and left column for printing prediction reference samples
                       std::ostream      & stream           = std::cout)
 {
@@ -203,14 +204,27 @@ Void printBlock(const ValueType    *const source,
 
   //------------------
 
+  ValueType valueSum   = 0;
+
   for (UInt y = 0; y < height; y++)
   {
     for (UInt x = 0; x < width; x++)
     {
-      stream << std::setw(outputWidth) << ((onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy));
+      ValueType value = 0;
+
+      if (!onlyPrintEdges || (x == 0) || (y == 0))
+      {
+        value     = leftShift(source[(y * stride) + x], shiftLeftBy);
+        valueSum += value;
+      }
+
+      stream << std::setw(outputWidth) << value;
     }
     stream << "\n";
   }
+
+  const Int valueCount = onlyPrintEdges ? Int((width + height) - 1) : Int(width * height);
+  if (printAverage) stream << "Average: " << (valueSum / valueCount) << "\n";
   stream << "\n";
 }
 

@@ -71,8 +71,8 @@ private:
   TCoeff**        m_ppcQTTempCoeff[MAX_NUM_COMPONENT /* 0->Y, 1->Cb, 2->Cr*/];
   TCoeff*         m_pcQTTempCoeff[MAX_NUM_COMPONENT];
 #if ADAPTIVE_QP_SELECTION
-  Int**           m_ppcQTTempArlCoeff[MAX_NUM_COMPONENT];
-  Int*            m_pcQTTempArlCoeff[MAX_NUM_COMPONENT];
+  TCoeff**        m_ppcQTTempArlCoeff[MAX_NUM_COMPONENT];
+  TCoeff*         m_pcQTTempArlCoeff[MAX_NUM_COMPONENT];
 #endif
   UChar*          m_puhQTTempTrIdx;
   UChar*          m_puhQTTempCbf[MAX_NUM_COMPONENT];
@@ -85,7 +85,7 @@ private:
   UChar*          m_puhQTTempTransformSkipFlag[MAX_NUM_COMPONENT];
   TComYuv         m_pcQTTempTransformSkipTComYuv;
 #if ADAPTIVE_QP_SELECTION
-  Int*            m_ppcQTTempTUArlCoeff[MAX_NUM_COMPONENT];
+  TCoeff*         m_ppcQTTempTUArlCoeff[MAX_NUM_COMPONENT];
 #endif
 
 protected:

@@ -44,7 +44,7 @@
 //! \{
 
 #if ADAPTIVE_QP_SELECTION
-  Int * TComDataCU::m_pcGlbArlCoeff[MAX_NUM_COMPONENT] = { NULL, NULL, NULL };
+  TCoeff * TComDataCU::m_pcGlbArlCoeff[MAX_NUM_COMPONENT] = { NULL, NULL, NULL };
 #endif
 
 // ====================================================================================================================
@@ -496,7 +496,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
       const UInt componentShift = m_pcPic->getComponentScaleX(ComponentID(comp)) + m_pcPic->getComponentScaleY(ComponentID(comp));
       memset( m_pcTrCoeff[comp], 0, sizeof(TCoeff)* numCoeffY>>componentShift );
 #if ADAPTIVE_QP_SELECTION
-      memset( m_pcArlCoeff[comp], 0, sizeof(Int)* numCoeffY>>componentShift );
+      memset( m_pcArlCoeff[comp], 0, sizeof(TCoeff)* numCoeffY>>componentShift );
 #endif
     }
 
@@ -653,7 +653,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       const UInt numCoeff = numCoeffY >> (getPic()->getComponentScaleX(component) + getPic()->getComponentScaleY(component));
       memset( m_pcTrCoeff[comp],    0, numCoeff * sizeof( TCoeff ) );
 #if ADAPTIVE_QP_SELECTION
-      memset( m_pcArlCoeff[comp],   0, numCoeff * sizeof( Int    ) );
+      memset( m_pcArlCoeff[comp],   0, numCoeff * sizeof( TCoeff ) );
 #endif
       memset( m_pcIPCMSample[comp], 0, numCoeff * sizeof( Pel) );
     }
@@ -781,7 +781,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     const UInt componentShift = m_pcPic->getComponentScaleX(ComponentID(ch)) + m_pcPic->getComponentScaleY(ComponentID(ch));
     memset( m_pcTrCoeff[ch],  0, sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #if ADAPTIVE_QP_SELECTION
-    memset( m_pcArlCoeff[ch], 0, sizeof(Int)*   (numCoeffY>>componentShift) );
+    memset( m_pcArlCoeff[ch], 0, sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memset( m_pcIPCMSample[ch], 0, sizeof(Pel)* (numCoeffY>>componentShift) );
   }
@@ -1060,7 +1060,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     const UInt offset           = offsetY>>componentShift;
     memcpy( m_pcTrCoeff [ch] + offset, pcCU->getCoeff(component),    sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #if ADAPTIVE_QP_SELECTION
-    memcpy( m_pcArlCoeff[ch] + offset, pcCU->getArlCoeff(component), sizeof(Int)*(numCoeffY>>componentShift) );
+    memcpy( m_pcArlCoeff[ch] + offset, pcCU->getArlCoeff(component), sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( m_pcIPCMSample[ch] + offset, pcCU->getPCMSample(component), sizeof(Pel)*(numCoeffY>>componentShift) );
   }
@@ -1145,7 +1145,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     const UInt componentShift   = m_pcPic->getComponentScaleX(component) + m_pcPic->getComponentScaleY(component);
     memcpy( rpcCU->getCoeff(component)   + (offsetY>>componentShift), m_pcTrCoeff[component], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #if ADAPTIVE_QP_SELECTION
-    memcpy( rpcCU->getArlCoeff(component) + (offsetY>>componentShift), m_pcArlCoeff[component], sizeof(Int)*(numCoeffY>>componentShift) );
+    memcpy( rpcCU->getArlCoeff(component) + (offsetY>>componentShift), m_pcArlCoeff[component], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( rpcCU->getPCMSample(component) + (offsetY>>componentShift), m_pcIPCMSample[component], sizeof(Pel)*(numCoeffY>>componentShift) );
   }
@@ -1230,7 +1230,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     UInt componentShift = m_pcPic->getComponentScaleX(ComponentID(comp)) + m_pcPic->getComponentScaleY(ComponentID(comp));
     memcpy( rpcCU->getCoeff(ComponentID(comp)) + (offsetY>>componentShift), m_pcTrCoeff[comp], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #if ADAPTIVE_QP_SELECTION
-    memcpy( rpcCU->getArlCoeff(ComponentID(comp)) + (offsetY>>componentShift), m_pcArlCoeff[comp], sizeof(Int)*(numCoeffY>>componentShift) );
+    memcpy( rpcCU->getArlCoeff(ComponentID(comp)) + (offsetY>>componentShift), m_pcArlCoeff[comp], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( rpcCU->getPCMSample(ComponentID(comp)) + (offsetY>>componentShift), m_pcIPCMSample[comp], sizeof(Pel)*(numCoeffY>>componentShift) );
   }

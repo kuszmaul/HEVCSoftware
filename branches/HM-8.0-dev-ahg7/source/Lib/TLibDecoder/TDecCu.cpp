@@ -547,16 +547,17 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   TCoeff*   pcCoeff           = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);//( uiNumCoeffInc * uiAbsPartIdx );
 
   QpParam cQP;
-  cQP.setQPforQuant  ( pcCU->getQP(0),
-                                toChannelType(compID),
-                                pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
+  setQPforQuant  ( cQP,
+                   pcCU->getQP(0),
+                   toChannelType(compID),
+                   pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
 #if CHROMA_QP_EXTENSION
-                                (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
+                   (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
 #else
-                                pcCU->getSlice()->getPPS()->getQpOffset(compID),
+                   pcCU->getSlice()->getPPS()->getQpOffset(compID),
 #endif
-                                chFmt,
-                                useTransformSkip );
+                   chFmt,
+                   useTransformSkip );
 
 #if DEBUG_INTRA_CODING_INV_TRAN
   DEBUG_STRING_NEW(sDebug);
