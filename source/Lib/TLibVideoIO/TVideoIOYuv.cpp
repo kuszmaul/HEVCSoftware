@@ -105,11 +105,15 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  */
 Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, UInt fileBitDepth, UInt internalBitDepth )
 {
-  m_bitdepthShift = internalBitDepth - fileBitDepth;
-  m_fileBitdepth = fileBitDepth;
+  //NOTE: ECF - files cannot have bit depth greater than 16
+
+  m_fileBitdepth = std::min<UInt>(fileBitDepth, 16);
+  m_bitdepthShift = internalBitDepth - m_fileBitdepth;
 
   if ( bWriteMode )
   {
+    if (fileBitDepth > 16) std::cerr << "\nWARNING: Cannot write a yuv file of bit depth greater than 16 - output will be right-shifted down to 16-bit precision\n" << std::endl;
+
     m_cHandle.open( pchFile, ios::binary | ios::out );
     
     if( m_cHandle.fail() )
@@ -120,6 +124,12 @@ Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, UInt fileBitDepth, UInt 
   }
   else
   {
+    if (fileBitDepth > 16)
+    {
+      std::cerr << "\nERROR: Cannot read a yuv file of bit depth greater than 16\n" << std::endl;
+      exit(0);
+    }
+
     m_cHandle.open( pchFile, ios::binary | ios::in );
     
     if( m_cHandle.fail() )

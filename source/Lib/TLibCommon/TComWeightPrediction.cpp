@@ -80,7 +80,7 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
     const Int offset   = wp0[compID].offset;
     const Int shiftNum = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
     const Int shift    = wp0[compID].shift + shiftNum;
-    const Int round    = (enableRounding[compID] && (shift != 0)) ? (1<<(shift-1)) : 0;
+    const Int round    = (enableRounding[compID] && (shift > 0)) ? (1<<(shift-1)) : 0;
     const Int w1       = wp1[compID].w;
     const UInt sx      = pcYuvSrc0->getComponentScaleX(compID);
     const UInt sy      = pcYuvSrc0->getComponentScaleY(compID);
@@ -141,7 +141,7 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
     const Int offset   = wp0[compID].offset;
     const Int shiftNum = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
     const Int shift    = wp0[compID].shift + shiftNum;
-    const Int round    = (shift != 0) ? (1<<(shift-1)) : 0;
+    const Int round    = (shift > 0) ? (1<<(shift-1)) : 0;
     const UInt  iSrc0Stride = pcYuvSrc0->getStride(compID);
     const UInt  iDstStride  = rpcYuvDst->getStride(compID);
     const UInt sx      = pcYuvSrc0->getComponentScaleX(compID);

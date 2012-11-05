@@ -1223,7 +1223,11 @@ Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_R
         }
 
         pwp->w      = pwp->iWeight;
-        pwp->o      = pwp->iOffset * (1 << (g_uiBitDepth-8));
+#if FULL_NBIT
+        pwp->o      = pwp->iOffset * (1 << (g_uiBitDepth-8)); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
+#else
+        pwp->o      = pwp->iOffset * (1 << g_uiBitIncrement); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
+#endif
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }

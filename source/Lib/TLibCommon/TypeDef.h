@@ -47,8 +47,8 @@
 // Debugging
 // ====================================================================================================================
 
-// enable to print out final decision debug info at encoder and decoder:
-// #define DEBUG_STRING
+// #define DEBUG_STRING              // enable to print out final decision debug info at encoder and decoder:
+// #define DEBUG_ENCODER_SEARCH_BINS // enable to print out each bin as it is coded during encoder search
 
 #ifdef DEBUG_STRING
   #define DEBUG_STRING_PASS_INTO(name) , name
@@ -60,13 +60,14 @@
   #define DEBUG_STRING_APPEND(str1, str2) str1+=str2;
   #define DEBUG_STRING_SWAP(str1, str2) str1.swap(str2);
   #define DEBUG_STRING_CHANNEL_CONDITION(compID) (compID != COMPONENT_Y)
-  #define DEBUG_INTRA_REF_SAMPLES 0
-  #define DEBUG_RD_COST_INTRA 0
-  #define DEBUG_INTRA_CODING_TU 0
-  #define DEBUG_INTER_CODING_INV_TRAN 1
-  #define DEBUG_INTER_CODING_PRED 1
-  #define DEBUG_INTER_CODING_RESI 1
-  #define DEBUG_INTER_CODING_RECON 1
+  #define DEBUG_INTRA_REF_SAMPLES     0
+  #define DEBUG_RD_COST_INTRA         0
+  #define DEBUG_INTRA_CODING_TU       0
+  #define DEBUG_INTRA_CODING_INV_TRAN 0
+  #define DEBUG_INTER_CODING_INV_TRAN 0
+  #define DEBUG_INTER_CODING_PRED     0
+  #define DEBUG_INTER_CODING_RESI     0
+  #define DEBUG_INTER_CODING_RECON    0
   #include <sstream>
   #include <iomanip>
 #else
@@ -322,6 +323,7 @@
 //------------------------------------------------
 
 #define ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST                              0 ///< When enabled, allows control of ECF modifications via environment variables
+#define ECF__PRINT_MACRO_VALUES                                               0 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
 // Block Structure
@@ -600,51 +602,53 @@ static const UInt NUM_REF_PIC_LIST_01C = 3; // NOTE: ECF - new definition
 /// distortion function index
 enum DFunc
 {
-  DF_DEFAULT  = 0,
-  DF_SSE      = 1,      ///< general size SSE
-  DF_SSE4     = 2,      ///<   4xM SSE
-  DF_SSE8     = 3,      ///<   8xM SSE
-  DF_SSE16    = 4,      ///<  16xM SSE
-  DF_SSE32    = 5,      ///<  32xM SSE
-  DF_SSE64    = 6,      ///<  64xM SSE
-  DF_SSE16N   = 7,      ///< 16NxM SSE
+  DF_DEFAULT         = 0,
+  DF_SSE             = 1,      ///< general size SSE
+  DF_SSE4            = 2,      ///<   4xM SSE
+  DF_SSE8            = 3,      ///<   8xM SSE
+  DF_SSE16           = 4,      ///<  16xM SSE
+  DF_SSE32           = 5,      ///<  32xM SSE
+  DF_SSE64           = 6,      ///<  64xM SSE
+  DF_SSE16N          = 7,      ///< 16NxM SSE
   
-  DF_SAD      = 8,      ///< general size SAD
-  DF_SAD4     = 9,      ///<   4xM SAD
-  DF_SAD8     = 10,     ///<   8xM SAD
-  DF_SAD16    = 11,     ///<  16xM SAD
-  DF_SAD32    = 12,     ///<  32xM SAD
-  DF_SAD64    = 13,     ///<  64xM SAD
-  DF_SAD16N   = 14,     ///< 16NxM SAD
+  DF_SAD             = 8,      ///< general size SAD
+  DF_SAD4            = 9,      ///<   4xM SAD
+  DF_SAD8            = 10,     ///<   8xM SAD
+  DF_SAD16           = 11,     ///<  16xM SAD
+  DF_SAD32           = 12,     ///<  32xM SAD
+  DF_SAD64           = 13,     ///<  64xM SAD
+  DF_SAD16N          = 14,     ///< 16NxM SAD
   
-  DF_SADS     = 15,     ///< general size SAD with step
-  DF_SADS4    = 16,     ///<   4xM SAD with step
-  DF_SADS8    = 17,     ///<   8xM SAD with step
-  DF_SADS16   = 18,     ///<  16xM SAD with step
-  DF_SADS32   = 19,     ///<  32xM SAD with step
-  DF_SADS64   = 20,     ///<  64xM SAD with step
-  DF_SADS16N  = 21,     ///< 16NxM SAD with step
+  DF_SADS            = 15,     ///< general size SAD with step
+  DF_SADS4           = 16,     ///<   4xM SAD with step
+  DF_SADS8           = 17,     ///<   8xM SAD with step
+  DF_SADS16          = 18,     ///<  16xM SAD with step
+  DF_SADS32          = 19,     ///<  32xM SAD with step
+  DF_SADS64          = 20,     ///<  64xM SAD with step
+  DF_SADS16N         = 21,     ///< 16NxM SAD with step
   
-  DF_HADS     = 22,     ///< general size Hadamard with step
-  DF_HADS4    = 23,     ///<   4xM HAD with step
-  DF_HADS8    = 24,     ///<   8xM HAD with step
-  DF_HADS16   = 25,     ///<  16xM HAD with step
-  DF_HADS32   = 26,     ///<  32xM HAD with step
-  DF_HADS64   = 27,     ///<  64xM HAD with step
-  DF_HADS16N  = 28,     ///< 16NxM HAD with step
+  DF_HADS            = 22,     ///< general size Hadamard with step
+  DF_HADS4           = 23,     ///<   4xM HAD with step
+  DF_HADS8           = 24,     ///<   8xM HAD with step
+  DF_HADS16          = 25,     ///<  16xM HAD with step
+  DF_HADS32          = 26,     ///<  32xM HAD with step
+  DF_HADS64          = 27,     ///<  64xM HAD with step
+  DF_HADS16N         = 28,     ///< 16NxM HAD with step
   
 #if AMP_SAD
-  DF_SAD12    = 43,
-  DF_SAD24    = 44,
-  DF_SAD48    = 45,
+  DF_SAD12           = 43,
+  DF_SAD24           = 44,
+  DF_SAD48           = 45,
 
-  DF_SADS12   = 46,
-  DF_SADS24   = 47,
-  DF_SADS48   = 48,
+  DF_SADS12          = 46,
+  DF_SADS24          = 47,
+  DF_SADS48          = 48,
 
-  DF_SSE_FRAME = 50     ///< Frame-based SSE
+  DF_SSE_FRAME       = 50,     ///< Frame-based SSE
+  DF_TOTAL_FUNCTIONS = 64
 #else
-  DF_SSE_FRAME = 33     ///< Frame-based SSE
+  DF_SSE_FRAME       = 32,     ///< Frame-based SSE
+  DF_TOTAL_FUNCTIONS = 33
 #endif
 };
 
@@ -759,9 +763,12 @@ enum FilterMode
 // Type definition
 // ====================================================================================================================
 
-typedef       UChar           Pxl;        ///< 8-bit pixel type
-typedef       Short           Pel;        ///< 16-bit pixel type
-typedef       Int             TCoeff;     ///< transform coefficient
+typedef       Short           Pel;               ///< pixel type
+typedef       Int             TCoeff;            ///< transform coefficient
+typedef       Short           TMatrixCoeff;      ///< transform matrix coefficient
+typedef       Short           TFilterCoeff;      ///< filter coefficient
+typedef       Int             Intermediate_Int;  ///< used as intermediate value in calculations
+typedef       UInt            Intermediate_UInt; ///< used as intermediate value in calculations
 
 /// parameters for adaptive loop filter
 class TComPicSym;

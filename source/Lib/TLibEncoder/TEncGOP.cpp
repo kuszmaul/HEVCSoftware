@@ -1548,8 +1548,8 @@ UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
         Int iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift);
         uiTotalDiff += iTemp * iTemp;
 #else
-        Int iTemp = pSrc0[x] - pSrc1[x];
-        uiTotalDiff += (iTemp*iTemp) >> uiShift;
+        Intermediate_Int iTemp = pSrc0[x] - pSrc1[x];
+        uiTotalDiff += UInt64((iTemp*iTemp) >> uiShift);
 #endif
       }
       pSrc0 += iStride;
@@ -1615,7 +1615,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     {
       for(Int x = 0; x < iWidth; x++ )
       {
-        Int iDiff = (Int)( pOrg[x] - pRec[x] );
+        Intermediate_Int iDiff = (Intermediate_Int)( pOrg[x] - pRec[x] );
         uiSSDtemp   += iDiff * iDiff;
       }
       pOrg += iStride;

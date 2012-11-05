@@ -48,7 +48,7 @@
 // Forward declarations
 
 /// padding of unavailable reference samples for intra prediction
-Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Int* piAdiTemp, const Bool* bNeighborFlags,
+Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode );
@@ -168,7 +168,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 #endif
 
   {
-    Int *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
+    Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
     fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu,
                          iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt, getLMChromaSamplesFrom2ndLeftCol(bLMmode, chFmt));
@@ -200,10 +200,10 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       // generate filtered intra prediction samples
 
-      Int *piFilteredBuf1    = m_piYuvExt[compID][PRED_BUF_FILTERED];
+      Pel *piFilteredBuf1    = m_piYuvExt[compID][PRED_BUF_FILTERED];
       Int stride=uiROIWidth;
-            Int *piDestPtr=piFilteredBuf1+uiROIWidth*uiTuHeight2; // bottom left
-      const Int *piSrcPtr =piAdiTemp+uiROIWidth*uiTuHeight2;      // bottom left
+            Pel *piDestPtr=piFilteredBuf1+uiROIWidth*uiTuHeight2; // bottom left
+      const Pel *piSrcPtr =piAdiTemp+uiROIWidth*uiTuHeight2;      // bottom left
       *piDestPtr=*piSrcPtr; // bottom left is not filtered
       piDestPtr-=stride; piSrcPtr-=stride;
       const ChannelType chType=toChannelType(compID);
@@ -276,7 +276,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   DEBUG_STRING_APPEND(sDebug, ss.str())
 }
 
-Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Int* piAdiTemp, const Bool* bNeighborFlags,
+Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode )

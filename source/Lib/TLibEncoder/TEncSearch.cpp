@@ -1027,7 +1027,9 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 
   DEBUG_STRING_NEW(sTemp)
 
+#ifndef DEBUG_STRING
   if( default0Save1Load2 != 2 )
+#endif
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt);
 
@@ -1069,6 +1071,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       }
     }
   }
+#ifndef DEBUG_STRING
   else
   {
     // load prediction
@@ -1084,6 +1087,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       pPred += uiStride;
     }
   }
+#endif
 
   //===== get residual signal =====
   {
@@ -1143,7 +1147,14 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 
   //--- inverse transform ---
 
-  if ( uiAbsSum > 0 ) m_pcTrQuant->invTransformNxN ( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(0) );
+  if ( uiAbsSum > 0 )
+  {
+#if DEBUG_INTRA_CODING_INV_TRAN
+    m_pcTrQuant->invTransformNxN ( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(&sDebug) );
+#else
+    m_pcTrQuant->invTransformNxN ( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(0) );
+#endif
+  }
   else
   {
     Pel* pResi = piResi;
@@ -1179,10 +1190,10 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
         ss << "  --  ";
         for( UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
+          ss << pResi[ uiX ] << ", ";
           pReco    [ uiX ] = Clip( pPred[ uiX ] + pResi[ uiX ] );
           pRecQt   [ uiX ] = pReco[ uiX ];
           pRecIPred[ uiX ] = pReco[ uiX ];
-          ss << pReco[ uiX ] << ", ";
         }
         pPred     += uiStride;
         pResi     += uiStride;
@@ -1291,6 +1302,7 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
 
       for(Int modeId = firstCheckId; modeId < 2; modeId ++)
       {
+        DEBUG_STRING_NEW(sModeString)
         Int  default0Save1Load2 = 0;
         singleDistTmp[0]=singleDistTmp[1]=0;
         if(modeId == firstCheckId)
@@ -1315,7 +1327,7 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
               // which is affected by the use of transform skip.
               default0Save1Load2 = 0;
             }
-            xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistTmp[toChannelType(compID)], compID, rTu DEBUG_STRING_PASS_INTO(sDebug), default0Save1Load2 );
+            xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistTmp[toChannelType(compID)], compID, rTu DEBUG_STRING_PASS_INTO(sModeString), default0Save1Load2 );
           }
           singleCbfTmp[compID] = pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth );
         }
@@ -1332,6 +1344,7 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
         }
         if(singleCostTmp < dSingleCost)
         {
+          DEBUG_STRING_SWAP(sDebug, sModeString)
           dSingleCost   = singleCostTmp;
           uiSingleDist[CHANNEL_TYPE_LUMA] = singleDistTmp[CHANNEL_TYPE_LUMA];
           uiSingleDist[CHANNEL_TYPE_CHROMA] = singleDistTmp[CHANNEL_TYPE_CHROMA];
@@ -1797,9 +1810,11 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
 
           const ComponentID compID = ComponentID(ch);
           const UInt totalAdjustedDepthChan   = rTu.GetTransformDepthTotalAdj(compID);
+          DEBUG_STRING_NEW(sDebugBestMode)
 
           for(Int chromaModeId = firstCheckId; chromaModeId < 2; chromaModeId ++)
           {
+            DEBUG_STRING_NEW(sDebugMode)
             pcCU->setTransformSkipSubParts ( chromaModeId, compID, uiAbsPartIdx, totalAdjustedDepthChan );
             if(chromaModeId == firstCheckId)
             {
@@ -1810,7 +1825,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
               default0Save1Load2 = 2;
             }
             singleDistCTmp = 0;
-            xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistCTmp, compID, rTu DEBUG_STRING_PASS_INTO(sDebug), default0Save1Load2);
+            xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistCTmp, compID, rTu DEBUG_STRING_PASS_INTO(sDebugMode), default0Save1Load2);
             singleCbfCTmp = pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth);
 
             if(chromaModeId == 1 && singleCbfCTmp == 0)
@@ -1826,6 +1841,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
 
             if(singleCostTmp < dSingleCost)
             {
+              DEBUG_STRING_SWAP(sDebugBestMode, sDebugMode)
               dSingleCost = singleCostTmp;
               singleDistC = singleDistCTmp;
               bestModeId  = chromaModeId;
@@ -1855,6 +1871,8 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
               m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
             }
           }
+
+          DEBUG_STRING_APPEND(sDebug, sDebugBestMode)
           pcCU ->setTransformSkipSubParts( bestModeId, compID, uiAbsPartIdx, totalAdjustedDepthChan );
           ruiDist += singleDistC;
 
@@ -5330,8 +5348,8 @@ Void TEncSearch::xExtDIFUpSamplingH( TComPattern* pattern, Bool biPred )
   
   Int intStride = m_filteredBlockTmp[0].getStride(COMPONENT_Y);
   Int dstStride = m_filteredBlock[0][0].getStride(COMPONENT_Y);
-  Short *intPtr;
-  Short *dstPtr;
+  Pel *intPtr;
+  Pel *dstPtr;
   Int filterSize = NTAPS_LUMA;
   Int halfFilterSize = (filterSize>>1);
   Pel *srcPtr = pattern->getROIY() - halfFilterSize*srcStride - 1;
@@ -5378,8 +5396,8 @@ Void TEncSearch::xExtDIFUpSamplingQ( TComPattern* pattern, TComMv halfPelRef, Bo
   Pel *srcPtr;
   Int intStride = m_filteredBlockTmp[0].getStride(COMPONENT_Y);
   Int dstStride = m_filteredBlock[0][0].getStride(COMPONENT_Y);
-  Short *intPtr;
-  Short *dstPtr;
+  Pel *intPtr;
+  Pel *dstPtr;
   Int filterSize = NTAPS_LUMA;
   
   Int halfFilterSize = (filterSize>>1);

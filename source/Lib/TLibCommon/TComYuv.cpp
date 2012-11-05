@@ -337,7 +337,7 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
     const UInt  iSrc1Stride = pcYuvSrc1->getStride(ch);
     const UInt  iDstStride  = getStride(ch);
     const Int   shiftNum = IF_INTERNAL_PREC + 1 - ( g_uiBitDepth + g_uiBitIncrement );
-    const Int   offset = ( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS;
+    const Int   offset = (shiftNum > 0) ? (( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS) : 0;
 
     const Int iWidth = uiWidth  >>getComponentScaleX(ch);
     const Int iHeight= uiHeight >>getComponentScaleY(ch);
@@ -353,8 +353,8 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
       {
         for (Int x=0 ; x < iWidth; x+=2 )
         {
-          pDst[ x + 0 ] = Clip( ( pSrc0[ x + 0 ] + pSrc1[ x + 0 ] + offset ) >> shiftNum );
-          pDst[ x + 1 ] = Clip( ( pSrc0[ x + 1 ] + pSrc1[ x + 1 ] + offset ) >> shiftNum );
+          pDst[ x + 0 ] = Clip( rightShift(( pSrc0[ x + 0 ] + pSrc1[ x + 0 ] + offset ), shiftNum) );
+          pDst[ x + 1 ] = Clip( rightShift(( pSrc0[ x + 1 ] + pSrc1[ x + 1 ] + offset ), shiftNum) );
         }
         pSrc0 += iSrc0Stride;
         pSrc1 += iSrc1Stride;
@@ -367,10 +367,10 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
       {
         for (Int x=0 ; x < iWidth; x+=4 )
         {
-          pDst[ x + 0 ] = Clip( ( pSrc0[ x + 0 ] + pSrc1[ x + 0 ] + offset ) >> shiftNum );
-          pDst[ x + 1 ] = Clip( ( pSrc0[ x + 1 ] + pSrc1[ x + 1 ] + offset ) >> shiftNum );
-          pDst[ x + 2 ] = Clip( ( pSrc0[ x + 2 ] + pSrc1[ x + 2 ] + offset ) >> shiftNum );
-          pDst[ x + 3 ] = Clip( ( pSrc0[ x + 3 ] + pSrc1[ x + 3 ] + offset ) >> shiftNum );
+          pDst[ x + 0 ] = Clip( rightShift(( pSrc0[ x + 0 ] + pSrc1[ x + 0 ] + offset ), shiftNum) );
+          pDst[ x + 1 ] = Clip( rightShift(( pSrc0[ x + 1 ] + pSrc1[ x + 1 ] + offset ), shiftNum) );
+          pDst[ x + 2 ] = Clip( rightShift(( pSrc0[ x + 2 ] + pSrc1[ x + 2 ] + offset ), shiftNum) );
+          pDst[ x + 3 ] = Clip( rightShift(( pSrc0[ x + 3 ] + pSrc1[ x + 3 ] + offset ), shiftNum) );
         }
         pSrc0 += iSrc0Stride;
         pSrc1 += iSrc1Stride;

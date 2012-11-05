@@ -107,12 +107,6 @@ public:
   }
 };
 
-#if AMP_SAD
-static const UInt NUM_DIST_FUNC=64; // NOTE: ECF - new definition
-#else
-static const UInt NUM_DIST_FUNC=33; // NOTE: ECF - new definition
-#endif
-
 /// RD cost computation class
 class TComRdCost
   : public TComRdCostWeightPrediction
@@ -122,7 +116,7 @@ private:
   Int                     m_iBlkWidth;
   Int                     m_iBlkHeight;
   
-  FpDistFunc              m_afpDistortFunc[NUM_DIST_FUNC]; // [eDFunc]
+  FpDistFunc              m_afpDistortFunc[DF_TOTAL_FUNCTIONS]; // [eDFunc]
   
 #if WEIGHTED_CHROMA_DISTORTION
   Double                  m_chromaDistortionWeight;   
