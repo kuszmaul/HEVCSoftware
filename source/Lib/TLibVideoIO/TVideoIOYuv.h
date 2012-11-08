@@ -55,26 +55,26 @@ class TVideoIOYuv
 {
 private:
   fstream   m_cHandle;                                      ///< file handle
-  Int m_fileBitDepthY; ///< bitdepth of input/output video file luma component
-  Int m_fileBitDepthC; ///< bitdepth of input/output video file chroma component
-  Int m_bitDepthShiftY;  ///< number of bits to increase or decrease luma by before/after write/read
-  Int m_bitDepthShiftC;  ///< number of bits to increase or decrease chroma by before/after write/read
+  UInt      m_fileBitdepth; ///< bitdepth of input/output video file
+  Int       m_bitdepthShift;  ///< number of bits to increase or decrease image by before/after write/read
   
 public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
   
-  Void  open  ( Char* pchFile, Bool bWriteMode, Int fileBitDepthY, Int fileBitDepthC, Int internalBitDepthY, Int internalBitDepthC ); ///< open or create file
+  Void  open  ( Char* pchFile, Bool bWriteMode, UInt fileBitDepth, UInt internalBitDepth ); ///< open or create file
   Void  close ();                                           ///< close file
 
-  void skipFrames(UInt numFrames, UInt width, UInt height);
+  Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);
   
-  Bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< read  one YUV frame with padding parameter
-  Bool  write( TComPicYuv*    pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0 );
+  // if fileFormat<NUM_CHROMA_FORMAT, the format of the file is that format specified, else it is the format of the TComPicYuv.
+
+  Bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< read  one YUV frame with padding parameter
+
+  Bool  write ( TComPicYuv*   pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< write one YUV frame with padding parameter
   
   Bool  isEof ();                                           ///< check for end-of-file
   Bool  isFail();                                           ///< check for failure
-  
 };
 
 #endif // __TVIDEOIOYUV__

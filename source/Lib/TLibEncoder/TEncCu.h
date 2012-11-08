@@ -84,6 +84,7 @@ private:
 
   //  Access channel
   TEncCfg*                m_pcEncCfg;
+  TComPrediction*         m_pcPrediction;
   TEncSearch*             m_pcPredSearch;
   TComTrQuant*            m_pcTrQuant;
   TComBitCounter*         m_pcBitCounter;
@@ -104,7 +105,7 @@ public:
   Void  init                ( TEncTop* pcEncTop );
   
   /// create internal buffers
-  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight );
+  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight, ChromaFormat chromaFormat );
   
   /// destroy internal buffers
   Void  destroy             ();
@@ -119,23 +120,23 @@ public:
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 #if AMP_ENC_SPEEDUP
-  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth, PartSize eParentPartSize = SIZE_NONE );
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug), PartSize eParentPartSize = NUMBER_OF_PART_SIZES );
 #else
   Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
 #endif
   Void  xEncodeCU           ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
   
   Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
-  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
+  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest)        );
   
-  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode);
+  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode );
 
 #if AMP_MRG
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
+  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false  );
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
+  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug) );
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCheckDQP           ( TComDataCU*  pcCU );
   
@@ -147,18 +148,16 @@ protected:
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
-#if !REMOVE_BURST_IPCM
   Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
   Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
 
   Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
   Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
   Void xLcuCollectARLStats(TComDataCU* rpcCU);
-  Int  xTuCollectARLStats(TCoeff* rpcCoeff, Int* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
+  Int  xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
 #endif
 
 #if AMP_ENC_SPEEDUP 

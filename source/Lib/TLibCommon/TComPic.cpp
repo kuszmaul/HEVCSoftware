@@ -65,23 +65,28 @@ TComPic::TComPic()
 , m_bCheckLTMSB                           (false)
 , m_SEIs                                  (NULL)
 {
-  m_apcPicYuv[0]      = NULL;
-  m_apcPicYuv[1]      = NULL;
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
+  {
+    m_apcPicYuv[i]      = NULL;
+  }
+#if DEPENDENT_SLICES
+  m_uiCurrDepSliceIdx = 0;
+#endif
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Bool bIsVirtual )
+Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Bool bIsVirtual )
 {
-  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   if (!bIsVirtual)
   {
-    m_apcPicYuv[0]  = new TComPicYuv;  m_apcPicYuv[0]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+    m_apcPicYuv[PIC_YUV_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
-  m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-  
+  m_apcPicYuv[PIC_YUV_REC]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_REC]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+
   /* there are no SEI messages associated with this picture initially */
   m_SEIs = NULL;
   m_bUsedByCurr = false;
@@ -97,18 +102,14 @@ Void TComPic::destroy()
     m_apcPicSym = NULL;
   }
   
-  if (m_apcPicYuv[0])
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
   {
-    m_apcPicYuv[0]->destroy();
-    delete m_apcPicYuv[0];
-    m_apcPicYuv[0]  = NULL;
-  }
-  
-  if (m_apcPicYuv[1])
-  {
-    m_apcPicYuv[1]->destroy();
-    delete m_apcPicYuv[1];
-    m_apcPicYuv[1]  = NULL;
+    if (m_apcPicYuv[i])
+    {
+      m_apcPicYuv[i]->destroy();
+      delete m_apcPicYuv[i];
+      m_apcPicYuv[i]  = NULL;
+    }
   }
   
   delete m_SEIs;
@@ -318,9 +319,9 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
       }
 
       pcCU->setNDBFilterBlockBorderAvailability(numLCUsInPicWidth, numLCUsInPicHeight, maxNumSUInLCUWidth, maxNumSUInLCUHeight,picWidth, picHeight
-        , *LFCrossSliceBoundary
-        ,bTopTileBoundary, bDownTileBoundary, bLeftTileBoundary, bRightTileBoundary
-        ,m_bIndependentTileBoundaryForNDBFilter);
+                                                , *LFCrossSliceBoundary
+                                                ,  bTopTileBoundary, bDownTileBoundary, bLeftTileBoundary, bRightTileBoundary
+                                                ,  m_bIndependentTileBoundaryForNDBFilter);
 
     }
 
@@ -329,7 +330,7 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
   if( m_bIndependentSliceBoundaryForNDBFilter || m_bIndependentTileBoundaryForNDBFilter)
   {
     m_pNDBFilterYuvTmp = new TComPicYuv();
-    m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
+    m_pNDBFilterYuvTmp->create(picWidth, picHeight, getChromaFormat(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 
 }

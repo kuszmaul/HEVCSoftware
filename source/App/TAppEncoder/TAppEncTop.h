@@ -66,8 +66,9 @@ private:
   
   Int                        m_iFrameRcvd;                  ///< number of received frames
   
-  UInt m_essentialBytes;
-  UInt m_totalBytes;
+  unsigned m_essentialBytes;
+  unsigned m_totalBytes;
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -83,8 +84,9 @@ protected:
   
   // file I/O
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
-  void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
+  void rateStatsAccum(const AccessUnit& au, const std::vector<unsigned>& stats);
   void printRateSummary();
+  void printChromaFormat();
   
 public:
   TAppEncTop();
@@ -92,6 +94,7 @@ public:
   
   Void        encode      ();                               ///< main encoding function
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
+  
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}

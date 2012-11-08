@@ -38,6 +38,9 @@
 #include "TEncBinCoderCABAC.h"
 #include "TLibCommon/TComRom.h"
 
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#include "TLibCommon/Debug.h"
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -122,7 +125,6 @@ Void TEncBinCABAC::resetBac()
   start();
 }
 
-#if !REMOVE_BURST_IPCM
 /** Encode # of subsequent IPCM blocks.
  * \param numSubseqIPCM 
  * \returns Void
@@ -148,17 +150,12 @@ Void TEncBinCABAC::encodeNumSubseqIPCM( Int numSubseqIPCM )
     }
   }
 }
-#endif
 
 /** Encode PCM alignment zero bits.
  * \returns Void
  */
 Void TEncBinCABAC::encodePCMAlignBits()
 {
-#if REMOVE_BURST_IPCM
-  finish();
-  m_pcTComBitIf->write(1, 1);
-#endif
   m_pcTComBitIf->writeAlignZero(); // pcm align zero
 }
 
@@ -213,6 +210,7 @@ UInt TEncBinCABAC::getNumWrittenBits()
  */
 Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
+  if (false)
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tstate=" )
@@ -233,12 +231,12 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
     m_uiLow     = ( m_uiLow + m_uiRange ) << numBits;
     m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
-    
     m_bitsLeft -= numBits;
   }
   else
   {
     rcCtxModel.updateMPS();
+
     if ( m_uiRange >= 256 )
     {
       return;
@@ -259,6 +257,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
  */
 Void TEncBinCABAC::encodeBinEP( UInt binValue )
 {
+  if (false)
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
@@ -286,12 +285,15 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
 {
   m_uiBinsCoded += numBins & -m_binCountIncrement;
   
+  if (false)
+  {
   for ( Int i = 0; i < numBins; i++ )
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
     DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
     DTRACE_CABAC_T( "\n" )
+  }
   }
   
   while ( numBins > 8 )
@@ -386,6 +388,26 @@ Void TEncBinCABAC::writeOut()
       m_bufferedByte = leadByte;
     }      
   }    
+}
+
+/** flush bits when CABAC termination
+  * \param [in] bEnd true means this flushing happens at the end of RBSP. No need to encode stop bit
+  */
+Void TEncBinCABAC::encodeFlush(Bool bEnd)
+{
+  m_uiRange = 2;
+
+  m_uiLow  += 2;
+  m_uiLow <<= 7;
+  m_uiRange = 2 << 7;
+  m_bitsLeft -= 7;
+  testAndWriteOut();
+  finish();
+
+  if(!bEnd)
+  {
+    m_pcTComBitIf->write( 1, 1 ); // stop bit
+  }
 }
 
 //! \}

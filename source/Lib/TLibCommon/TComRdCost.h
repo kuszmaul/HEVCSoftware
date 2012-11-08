@@ -77,11 +77,10 @@ public:
   Int   iCols;
   Int   iStep;
   FpDistFunc DistFunc;
-  Int   bitDepth;
 
   Bool            bApplyWeight;     // whether weithed prediction is used or not
   wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
-  UInt            uiComp;           // uiComp = 0 (luma Y), 1 (chroma U), 2 (chroma V)
+  ComponentID     compIdx;
 
 #if NS_HAD
   Bool            bUseNSHAD;
@@ -102,7 +101,6 @@ public:
     iStep = 1;
     DistFunc = NULL;
     iSubShift = 0;
-    bitDepth = 0;
 #if NS_HAD
     bUseNSHAD = false;
 #endif
@@ -118,11 +116,7 @@ private:
   Int                     m_iBlkWidth;
   Int                     m_iBlkHeight;
   
-#if AMP_SAD
-  FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]
-#else  
-  FpDistFunc              m_afpDistortFunc[33]; // [eDFunc]
-#endif  
+  FpDistFunc              m_afpDistortFunc[DF_TOTAL_FUNCTIONS]; // [eDFunc]
   
 #if WEIGHTED_CHROMA_DISTORTION
   Double                  m_chromaDistortionWeight;   
@@ -170,13 +164,13 @@ public:
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
 #if NS_HAD
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false, Bool bUseNSHAD=false );
-  Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false, Bool bUseNSHAD=false );
+  Void    setDistParam( DistParam& rcDP, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false, Bool bUseNSHAD=false );
 #else
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
-  Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
+  Void    setDistParam( DistParam& rcDP, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
 #endif
   
-  UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
+  UInt    calcHAD         ( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
   
   // for motion cost
 #if !FIX203
@@ -252,9 +246,9 @@ private:
   
 public:
 #if WEIGHTED_CHROMA_DISTORTION
-  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted = false, DFunc eDFunc = DF_SSE );
+  UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted = false, DFunc eDFunc = DF_SSE );
 #else
-  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
+  UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
   
 };// END CLASS DEFINITION TComRdCost

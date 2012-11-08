@@ -31,12 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- \file     AnnexBread.cpp
- \brief    reading functions for Annex B byte streams
- */
-
-
 #include <stdint.h>
 #include <cassert>
 #include <vector>
@@ -152,13 +146,13 @@ _byteStreamNALUnit(
  * Returns false if EOF was reached (NB, nalunit data may be valid),
  *         otherwise true.
  */
-Bool
+bool
 byteStreamNALUnit(
   InputByteStream& bs,
   vector<uint8_t>& nalUnit,
   AnnexBStats& stats)
 {
-  Bool eof = false;
+  bool eof = false;
   try
   {
     _byteStreamNALUnit(bs, nalUnit, stats);
@@ -167,7 +161,7 @@ byteStreamNALUnit(
   {
     eof = true;
   }
-  stats.m_numBytesInNALUnit = UInt(nalUnit.size());
+  stats.m_numBytesInNALUnit = unsigned(nalUnit.size());
   return eof;
 }
 //! \}

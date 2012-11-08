@@ -33,9 +33,11 @@
 
 #pragma once
 
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
+
 //! \ingroup TLibCommon
 //! \{
-class TComSPS;
 
 /**
  * Abstract class representing an SEI message with lightweight RTTI.
@@ -45,12 +47,8 @@ class SEI
 public:
   enum PayloadType
   {
-    BUFFERING_PERIOD       = 0,
-    PICTURE_TIMING         = 1,
     USER_DATA_UNREGISTERED = 5,
-    RECOVERY_POINT         = 6,
-    ACTIVE_PARAMETER_SETS = 131, 
-    DECODED_PICTURE_HASH   = 256,
+    PICTURE_DIGEST = 256,
   };
   
   SEI() {}
@@ -58,6 +56,8 @@ public:
   
   virtual PayloadType payloadType() const = 0;
 };
+
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: ECF - new definition
 
 class SEIuserDataUnregistered : public SEI
 {
@@ -73,18 +73,18 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
-  UChar *userData;
+  unsigned char uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  unsigned userDataLength;
+  unsigned char *userData;
 };
 
-class SEIDecodedPictureHash : public SEI
+class SEIpictureDigest : public SEI
 {
 public:
-  PayloadType payloadType() const { return DECODED_PICTURE_HASH; }
+  PayloadType payloadType() const { return PICTURE_DIGEST; }
 
-  SEIDecodedPictureHash() {}
-  virtual ~SEIDecodedPictureHash() {}
+  SEIpictureDigest() {}
+  virtual ~SEIpictureDigest() {}
   
   enum Method
   {
@@ -94,87 +94,9 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComDigest m_digest;
 };
 
-class SEIActiveParameterSets : public SEI 
-{
-public:
-  PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
-
-  SEIActiveParameterSets() 
-    :activeSPSIdPresentFlag(1)
-    ,activeParamSetSEIExtensionFlag(0)
-  {}
-  virtual ~SEIActiveParameterSets() {}
-
-  Int activeVPSId; 
-  Int activeSPSIdPresentFlag;
-  Int activeSeqParamSetId; 
-  Int activeParamSetSEIExtensionFlag; 
-};
-
-class SEIBufferingPeriod : public SEI
-{
-public:
-  PayloadType payloadType() const { return BUFFERING_PERIOD; }
-
-  SEIBufferingPeriod()
-  :m_sps (NULL)
-  {}
-  virtual ~SEIBufferingPeriod() {}
-
-  UInt m_seqParameterSetId;
-  Bool m_altCpbParamsPresentFlag;
-  UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
-  UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
-  UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
-  UInt m_initialAltCpbRemovalDelayOffset[MAX_CPB_CNT][2];
-  TComSPS* m_sps;
-};
-class SEIPictureTiming : public SEI
-{
-public:
-  PayloadType payloadType() const { return PICTURE_TIMING; }
-
-  SEIPictureTiming()
-  : m_numNalusInDuMinus1      (NULL)
-  , m_duCpbRemovalDelayMinus1 (NULL)
-  , m_sps                     (NULL)
-  {}
-  virtual ~SEIPictureTiming()
-  {
-    if( m_numNalusInDuMinus1 != NULL )
-    {
-      delete m_numNalusInDuMinus1;
-    }
-    if( m_duCpbRemovalDelayMinus1  != NULL )
-    {
-      delete m_duCpbRemovalDelayMinus1;
-    }
-  }
-
-  UInt  m_auCpbRemovalDelay;
-  UInt  m_picDpbOutputDelay;
-  UInt  m_numDecodingUnitsMinus1;
-  Bool  m_duCommonCpbRemovalDelayFlag;
-  UInt  m_duCommonCpbRemovalDelayMinus1;
-  UInt* m_numNalusInDuMinus1;
-  UInt* m_duCpbRemovalDelayMinus1;
-  TComSPS* m_sps;
-};
-class SEIRecoveryPoint : public SEI
-{
-public:
-  PayloadType payloadType() const { return RECOVERY_POINT; }
-
-  SEIRecoveryPoint() {}
-  virtual ~SEIRecoveryPoint() {}
-
-  Int  m_recoveryPocCnt;
-  Bool m_exactMatchingFlag;
-  Bool m_brokenLinkFlag;
-};
 /**
  * A structure to collate all SEI messages.  This ought to be replaced
  * with a list of std::list<SEI*>.  However, since there is only one
@@ -184,30 +106,16 @@ class SEImessages
 public:
   SEImessages()
     : user_data_unregistered(0)
-    , active_parameter_sets(0)
     , picture_digest(0)
-    , buffering_period(0)
-    , picture_timing(0)
-    , recovery_point(0)
     {}
 
   ~SEImessages()
   {
     delete user_data_unregistered;
-    delete active_parameter_sets; 
     delete picture_digest;
-    delete buffering_period;
-    delete picture_timing;
-    delete recovery_point;
   }
 
   SEIuserDataUnregistered* user_data_unregistered;
-  SEIActiveParameterSets* active_parameter_sets; 
-  SEIDecodedPictureHash* picture_digest;
-  SEIBufferingPeriod* buffering_period;
-  SEIPictureTiming* picture_timing;
-  TComSPS* m_pSPS;
-  SEIRecoveryPoint* recovery_point;
+  SEIpictureDigest* picture_digest;
 };
-
 //! \}

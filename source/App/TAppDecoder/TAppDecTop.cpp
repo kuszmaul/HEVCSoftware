@@ -90,7 +90,7 @@ Void TAppDecTop::destroy()
  */
 Void TAppDecTop::decode()
 {
-  Int                 poc;
+  UInt                uiPOC;
   TComList<TComPic*>* pcListPic = NULL;
 
   ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
@@ -108,7 +108,7 @@ Void TAppDecTop::decode()
   m_iPOCLastDisplay += m_iSkipFrame;      // set the last displayed POC correctly for skip forward.
 
   // main decoder loop
-  Bool recon_opened = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
+  bool recon_opened = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
 
   while (!!bitstreamFile)
   {
@@ -118,14 +118,14 @@ Void TAppDecTop::decode()
      * nal unit. */
     streampos location = bitstreamFile.tellg();
     AnnexBStats stats = AnnexBStats();
-    Bool bPreviousPictureDecoded = false;
+    bool bPreviousPictureDecoded = false;
 
     vector<uint8_t> nalUnit;
     InputNALUnit nalu;
     byteStreamNALUnit(bytestream, nalUnit, stats);
 
     // call actual decoding function
-    Bool bNewPicture = false;
+    bool bNewPicture = false;
     if (nalUnit.empty())
     {
       /* this can happen if the following occur:
@@ -138,7 +138,13 @@ Void TAppDecTop::decode()
     else
     {
       read(nalu, nalUnit);
-      if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu)  )
+
+      if(nalu.m_nalUnitType == NAL_UNIT_SPS)
+      {
+        assert(nalu.m_temporalId == 0);
+      }
+
+      if(m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer)
       {
         if(bPreviousPictureDecoded)
         {
@@ -168,23 +174,24 @@ Void TAppDecTop::decode()
     }
     if (bNewPicture || !bitstreamFile)
     {
-      m_cTDecTop.executeDeblockAndAlf(poc, pcListPic, m_iSkipFrame, m_iPOCLastDisplay);
+      m_cTDecTop.executeDeblockAndAlf(uiPOC, pcListPic, m_iSkipFrame, m_iPOCLastDisplay);
     }
 
     if( pcListPic )
     {
       if ( m_pchReconFile && !recon_opened )
       {
-        if (!m_outputBitDepthY) { m_outputBitDepthY = g_bitDepthY; }
-        if (!m_outputBitDepthC) { m_outputBitDepthC = g_bitDepthC; }
+        if ( m_outputBitDepth == 0 )
+        {
+          m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
+        }
 
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
+        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement ); // write mode
         recon_opened = true;
       }
+
       if ( bNewPicture && 
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLANT
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA ) )
       {
@@ -231,7 +238,7 @@ Void TAppDecTop::xInitDecLib()
 {
   // initialize decoder class
   m_cTDecTop.init();
-  m_cTDecTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
+  m_cTDecTop.setPictureDigestEnabled(m_pictureDigestEnabled);
 }
 
 /** \param pcListPic list of pictures to be written to file
@@ -340,36 +347,20 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       }
       pcPic->setOutputMark(false);
     }
+
 #if !DYN_REF_FREE
-    if(pcPic)
+    if(pcPic != NULL)
     {
       pcPic->destroy();
       delete pcPic;
       pcPic = NULL;
     }
 #endif    
+
     iterPic++;
   }
   pcListPic->clear();
   m_iPOCLastDisplay = -MAX_INT;
-}
-
-/** \param nalu Input nalu to check whether its LayerId is within targetDecLayerIdSet
- */
-Bool TAppDecTop::isNaluWithinTargetDecLayerIdSet( InputNALUnit* nalu )
-{
-  if ( m_targetDecLayerIdSet.size() == 0 ) // By default, the set is empty, meaning all LayerIds are allowed
-  {
-    return true;
-  }
-  for (std::vector<Int>::iterator it = m_targetDecLayerIdSet.begin(); it != m_targetDecLayerIdSet.end(); it++)
-  {
-    if ( nalu->m_reservedZero6Bits == (*it) )
-    {
-      return true;
-    }
-  }
-  return false;
 }
 
 //! \}

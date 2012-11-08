@@ -78,13 +78,20 @@ typedef struct LCUData
   Double  m_costMAD;           ///<  texture complexity for a unit
 }LCUData;
 
+enum MAD_HISTORY {
+  MAD_PPPrevious = 0,
+  MAD_PPrevious  = 1,
+  MAD_Previous   = 2,
+  NUM_MAD_HISTORY= 3
+};
+
 class MADLinearModel
 {
 private:
   Bool   m_activeOn;
   Double m_paramY1;
   Double m_paramY2;
-  Double m_costMADs[3];
+  Double m_costMADs[NUM_MAD_HISTORY];
 
 public:
   MADLinearModel ()   {};
@@ -162,7 +169,7 @@ public:
   TEncRateCtrl         () {};
   virtual ~TEncRateCtrl() {};
 
-  Void          create                (Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight);
+  Void          create                (Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight, const ChromaFormat format);
   Void          destroy               ();
 
   Void          initFrameData         (Int qp = 0);

@@ -36,6 +36,7 @@
 */
 #include "TEncRateCtrl.h"
 #include "../TLibCommon/TComPic.h"
+#include "../TLibCommon/TComChromaFormat.h"
 
 #include <cmath>
 
@@ -51,18 +52,15 @@ using namespace std;
 #define MAD_PRED_Y1             1.0
 #define MAD_PRED_Y2             0.0
 
-enum MAD_HISOTRY {
-  MAD_PPPrevious = 0,
-  MAD_PPrevious  = 1,
-  MAD_Previous   = 2
-};
-
 Void    MADLinearModel::initMADLinearModel()
 {
   m_activeOn = false;
   m_paramY1  = 1.0;
   m_paramY2  = 0.0;
-  m_costMADs[0] = m_costMADs[1] = m_costMADs[2] = 0.0;
+  for(UInt i=0; i<NUM_MAD_HISTORY; i++)
+  {
+    m_costMADs[i] = 0.0;
+  }
 }
 
 Double  MADLinearModel::getMAD()
@@ -111,11 +109,19 @@ Int     PixelBaseURQQuadraticModel::getQP(Int qp, Int targetBits, Int numberOfPi
   
   if(xConvertQP2QStep(qp) >= HIGH_QSTEP_THRESHOLD)
   {
+#if J0260
     qStep = 1/( sqrt((bppPerMAD/m_paramHighX1)+((m_paramHighX2*m_paramHighX2)/(4*m_paramHighX1*m_paramHighX1))) - (m_paramHighX2/(2*m_paramHighX1)));
+#else
+    qStep = 1/( sqrt((bppPerMAD/m_paramHighX1)+((m_paramHighX2*m_paramHighX2)/(4*m_paramHighX1*m_paramHighX1*m_paramHighX1))) - (m_paramHighX2/(2*m_paramHighX1)));
+#endif
   }
   else
   {
+#if J0260
     qStep = 1/( sqrt((bppPerMAD/m_paramLowX1)+((m_paramLowX2*m_paramLowX2)/(4*m_paramLowX1*m_paramLowX1))) - (m_paramLowX2/(2*m_paramLowX1)));
+#else
+    qStep = 1/( sqrt((bppPerMAD/m_paramLowX1)+((m_paramLowX2*m_paramLowX2)/(4*m_paramLowX1*m_paramLowX1*m_paramLowX1))) - (m_paramLowX2/(2*m_paramLowX1)));
+#endif
   }
   
   return xConvertQStep2QP(qStep);
@@ -218,20 +224,20 @@ Int     PixelBaseURQQuadraticModel::xConvertQStep2QP(Double qStep )
 }
 
 
-Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight)
+Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight, const ChromaFormat format)
 {
   Int leftInHeight, leftInWidth;
 
   m_sourceWidthInLCU         = (sourceWidth  / maxCUWidth  ) + (( sourceWidth  %  maxCUWidth ) ? 1 : 0);
   m_sourceHeightInLCU        = (sourceHeight / maxCUHeight) + (( sourceHeight %  maxCUHeight) ? 1 : 0);  
   m_isLowdelay               = (sizeIntraPeriod == -1) ? true : false;
-  m_prevBitrate              = ( targetKbps << 10 );  // in units of 1,024 bps
-  m_currBitrate              = ( targetKbps << 10 );
+  m_prevBitrate              = targetKbps*1000;
+  m_currBitrate              = targetKbps*1000;
   m_frameRate                = frameRate;
   m_refFrameNum              = m_isLowdelay ? (sizeGOP) : (sizeGOP>>1);
   m_nonRefFrameNum           = sizeGOP-m_refFrameNum;
   m_sizeGOP                  = sizeGOP;
-  m_numOfPixels              = ((sourceWidth*sourceHeight*3)>>1);
+  m_numOfPixels              = getTotalSamples(sourceWidth, sourceHeight, format);
   m_indexGOP                 = 0;
   m_indexFrame               = 0;
   m_indexLCU                 = 0;
@@ -267,7 +273,7 @@ Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int 
       leftInWidth = min(leftInWidth, maxCUWidth);
       m_pcLCUData[addressUnit].m_widthInPixel = leftInWidth;
       m_pcLCUData[addressUnit].m_heightInPixel= leftInHeight;
-      m_pcLCUData[addressUnit].m_pixels       = ((leftInHeight*leftInWidth*3)>>1);
+      m_pcLCUData[addressUnit].m_pixels       = getTotalSamples(leftInWidth, leftInHeight, format);
     }
   }
 }
@@ -599,11 +605,11 @@ Void  TEncRateCtrl::updateFrameData(UInt64 actualFrameBits)
 Void  TEncRateCtrl::updateLCUData(TComDataCU* pcCU, UInt64 actualLCUBits, Int qp)
 {
   Int     x, y;
-  Double  costMAD = 0.0;
+  double  costMAD = 0.0;
 
-  Pel*  pOrg   = pcCU->getPic()->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-  Pel*  pRec   = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
-  Int   stride = pcCU->getPic()->getStride();
+  Pel*  pOrg   = pcCU->getPic()->getPicYuvOrg()->getAddr(COMPONENT_Y, pcCU->getAddr(), 0);
+  Pel*  pRec   = pcCU->getPic()->getPicYuvRec()->getAddr(COMPONENT_Y, pcCU->getAddr(), 0);
+  Int   stride = pcCU->getPic()->getStride(COMPONENT_Y);
 
   Int   width  = m_pcLCUData[m_indexLCU].m_widthInPixel;
   Int   height = m_pcLCUData[m_indexLCU].m_heightInPixel;

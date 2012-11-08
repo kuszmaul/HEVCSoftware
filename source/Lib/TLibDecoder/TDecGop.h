@@ -48,6 +48,7 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComLoopFilter.h"
+#include "TLibCommon/TComAdaptiveLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 
 #include "TDecEntropy.h"
@@ -79,13 +80,20 @@ private:
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
   
+#if !REMOVE_ALF
+  // Adaptive Loop filter
+  TComAdaptiveLoopFilter*       m_pcAdaptiveLoopFilter;
+#endif
   TComSampleAdaptiveOffset*     m_pcSAO;
   Double                m_dDecTime;
-  Int                   m_decodedPictureHashSEIEnabled;  ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
+  Int m_pictureDigestEnabled;  ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on SEI picture_digest message
 
   //! list that contains the CU address of each slice plus the end address 
   std::vector<Int> m_sliceStartCUAddress;
   std::vector<Bool> m_LFCrossSliceBoundaryFlag;
+#if !REMOVE_ALF
+  std::vector<Bool> m_sliceAlfEnabled[MAX_NUM_COMPONENT];
+#endif
 
 public:
   TDecGop();
@@ -97,16 +105,19 @@ public:
                  TDecCavlc*              pcCavlcDecoder, 
                  TDecSlice*              pcSliceDecoder, 
                  TComLoopFilter*         pcLoopFilter,
+#if !REMOVE_ALF
+                 TComAdaptiveLoopFilter* pcAdaptiveLoopFilter,
+#endif
                  TComSampleAdaptiveOffset* pcSAO
                  );
   Void  create  ();
   Void  destroy ();
-//  Void  decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool bExecuteDeblockAndAlf );
+
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
   Void  setGopSize( Int i) { m_iGopSize = i; }
 
-  void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
+  void setPictureDigestEnabled(Int enabled) { m_pictureDigestEnabled = enabled; }
 
 };
 

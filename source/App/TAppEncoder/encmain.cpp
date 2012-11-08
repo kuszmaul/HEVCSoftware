@@ -36,15 +36,12 @@
 */
 
 #include <time.h>
-#include <iostream>
 #include "TAppEncTop.h"
-#include "TAppCommon/program_options_lite.h"
-
-using namespace std;
-namespace po = df::program_options_lite;
 
 //! \ingroup TAppEncoder
 //! \{
+
+#include "../Lib/TLibCommon/Debug.h"
 
 // ====================================================================================================================
 // Main function
@@ -60,25 +57,28 @@ int main(int argc, char* argv[])
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
-  fprintf( stdout, "\n" );
+  fprintf( stdout, "\n\n" );
 
   // create application encoder class
   cTAppEncTop.create();
 
   // parse configuration
-  try
+  if(!cTAppEncTop.parseCfg( argc, argv ))
   {
-    if(!cTAppEncTop.parseCfg( argc, argv ))
-    {
-      cTAppEncTop.destroy();
-      return 1;
-    }
-  }
-  catch (po::ParseFailure& e)
-  {
-    cerr << "Error parsing option \""<< e.arg <<"\" with argument \""<< e.val <<"\"." << endl;
+    cTAppEncTop.destroy();
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+    EnvVar::printEnvVar();
+#endif
     return 1;
   }
+
+#if ECF__PRINT_MACRO_VALUES
+  printECFMacroSettings();
+#endif
+
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  EnvVar::printEnvVarInUse();
+#endif
 
   // starting time
   double dResult;

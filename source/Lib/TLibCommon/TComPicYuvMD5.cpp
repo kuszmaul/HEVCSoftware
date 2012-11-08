@@ -41,41 +41,41 @@
  * Update md5 using n samples from plane, each sample is adjusted to
  * OUTBIT_BITDEPTH_DIV8.
  */
-template<UInt OUTPUT_BITDEPTH_DIV8>
-static void md5_block(MD5& md5, const Pel* plane, UInt n)
+template<unsigned OUTPUT_BITDEPTH_DIV8>
+static void md5_block(MD5& md5, const Pel* plane, unsigned n)
 {
   /* create a 64 byte buffer for packing Pel's into */
-  UChar buf[64/OUTPUT_BITDEPTH_DIV8][OUTPUT_BITDEPTH_DIV8];
-  for (UInt i = 0; i < n; i++)
+  unsigned char buf[64/OUTPUT_BITDEPTH_DIV8][OUTPUT_BITDEPTH_DIV8];
+  for (unsigned i = 0; i < n; i++)
   {
     Pel pel = plane[i];
     /* perform bitdepth and endian conversion */
-    for (UInt d = 0; d < OUTPUT_BITDEPTH_DIV8; d++)
+    for (unsigned d = 0; d < OUTPUT_BITDEPTH_DIV8; d++)
     {
       buf[i][d] = pel >> (d*8);
     }
   }
-  md5.update((UChar*)buf, n * OUTPUT_BITDEPTH_DIV8);
+  md5.update((unsigned char*)buf, n * OUTPUT_BITDEPTH_DIV8);
 }
 
 /**
  * Update md5 with all samples in plane in raster order, each sample
  * is adjusted to OUTBIT_BITDEPTH_DIV8.
  */
-template<UInt OUTPUT_BITDEPTH_DIV8>
-static void md5_plane(MD5& md5, const Pel* plane, UInt width, UInt height, UInt stride)
+template<unsigned OUTPUT_BITDEPTH_DIV8>
+static void md5_plane(MD5& md5, const Pel* plane, unsigned width, unsigned height, unsigned stride)
 {
   /* N is the number of samples to process per md5 update.
    * All N samples must fit in buf */
-  UInt N = 32;
-  UInt width_modN = width % N;
-  UInt width_less_modN = width - width_modN;
+  unsigned N = 32;
+  unsigned width_modN = width % N;
+  unsigned width_less_modN = width - width_modN;
 
-  for (UInt y = 0; y < height; y++)
+  for (unsigned y = 0; y < height; y++)
   {
-    /* convert pel's into UInt chars in little endian byte order.
+    /* convert pel's into unsigned chars in little endian byte order.
      * NB, for 8bit data, data is truncated to 8bits. */
-    for (UInt x = 0; x < width_less_modN; x += N)
+    for (unsigned x = 0; x < width_less_modN; x += N)
       md5_block<OUTPUT_BITDEPTH_DIV8>(md5, &plane[y*stride + x], N);
 
     /* mop up any of the remaining line */
@@ -83,16 +83,18 @@ static void md5_plane(MD5& md5, const Pel* plane, UInt width, UInt height, UInt 
   }
 }
 
-static void compCRC(Int bitdepth, const Pel* plane, UInt width, UInt height, UInt stride, UChar digest[16])
+
+UInt compCRC(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
 {
-  UInt dataMsbIdx = bitdepth - 1;
-  UInt crcMsb;
-  UInt bitVal;
-  UInt crcVal = 0xffff;
-  UInt bitIdx;
-  for (UInt y = 0; y < height; y++)
+  unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
+  unsigned int dataMsbIdx = bitdepth - 1;
+  unsigned int crcMsb;
+  unsigned int bitVal;
+  unsigned int crcVal = 0xffff;
+  unsigned int bitIdx;
+  for (unsigned y = 0; y < height; y++)
   {
-    for (UInt x = 0; x < width; x++)
+    for (unsigned x = 0; x < width; x++)
     {     
       for(bitIdx=0; bitIdx<bitdepth; bitIdx++)
       {
@@ -108,34 +110,34 @@ static void compCRC(Int bitdepth, const Pel* plane, UInt width, UInt height, UIn
     crcVal = ((crcVal << 1) & 0xffff) ^ (crcMsb * 0x1021);
   }
 
-  digest[0] = (crcVal>>8)  & 0xff;
-  digest[1] =  crcVal      & 0xff;
+  digest.hash.push_back((crcVal>>8)  & 0xff);
+  digest.hash.push_back( crcVal      & 0xff);
+  return 2;
 }
 
-void calcCRC(TComPicYuv& pic, UChar digest[3][16])
+UInt calcCRC(const TComPicYuv& pic, TComDigest &digest)
 {
-  UInt width = pic.getWidth();
-  UInt height = pic.getHeight();
-  UInt stride = pic.getStride();
-
-  compCRC(g_bitDepthY, pic.getLumaAddr(), width, height, stride, digest[0]);
-
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  compCRC(g_bitDepthC, pic.getCbAddr(), width, height, stride, digest[1]);
-  compCRC(g_bitDepthC, pic.getCrAddr(), width, height, stride, digest[2]);
-}
-
-static void compChecksum(Int bitdepth, const Pel* plane, UInt width, UInt height, UInt stride, UChar digest[16])
-{
-  UInt checksum = 0;
-  UChar xor_mask;
-
-  for (UInt y = 0; y < height; y++)
+  UInt digestLen=0;
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
   {
-    for (UInt x = 0; x < width; x++)
+    const ComponentID compID=ComponentID(chan);
+    digestLen=compCRC(pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID), digest);
+  }
+  return digestLen;
+}
+
+UInt compChecksum(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
+{
+  unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
+
+  unsigned int checksum = 0;
+  unsigned char xor_mask;
+
+  for (unsigned y = 0; y < height; y++)
+  {
+    for (unsigned x = 0; x < width; x++)
     {
       xor_mask = (x & 0xff) ^ (y & 0xff) ^ (x >> 8) ^ (y >> 8);
       checksum = (checksum + ((plane[y*stride+x] & 0xff) ^ xor_mask)) & 0xffffffff;
@@ -147,26 +149,24 @@ static void compChecksum(Int bitdepth, const Pel* plane, UInt width, UInt height
     }
   }
 
-  digest[0] = (checksum>>24) & 0xff;
-  digest[1] = (checksum>>16) & 0xff;
-  digest[2] = (checksum>>8)  & 0xff;
-  digest[3] =  checksum      & 0xff;
+  digest.hash.push_back((checksum>>24) & 0xff);
+  digest.hash.push_back((checksum>>16) & 0xff);
+  digest.hash.push_back((checksum>>8)  & 0xff);
+  digest.hash.push_back( checksum      & 0xff);
+  return 4;
 }
 
-void calcChecksum(TComPicYuv& pic, UChar digest[3][16])
+UInt calcChecksum(const TComPicYuv& pic, TComDigest &digest)
 {
-  UInt width = pic.getWidth();
-  UInt height = pic.getHeight();
-  UInt stride = pic.getStride();
-
-  compChecksum(g_bitDepthY, pic.getLumaAddr(), width, height, stride, digest[0]);
-
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  compChecksum(g_bitDepthC, pic.getCbAddr(), width, height, stride, digest[1]);
-  compChecksum(g_bitDepthC, pic.getCrAddr(), width, height, stride, digest[2]);
+  UInt digestLen=0;
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
+  {
+    const ComponentID compID=ComponentID(chan);
+    digestLen=compChecksum(pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID), digest);
+  }
+  return digestLen;
 }
 /**
  * Calculate the MD5sum of pic, storing the result in digest.
@@ -175,30 +175,45 @@ void calcChecksum(TComPicYuv& pic, UChar digest[3][16])
  * using sufficient bytes to represent the picture bitdepth.  Eg, 10bit data
  * uses little-endian two byte words; 8bit data uses single byte words.
  */
-void calcMD5(TComPicYuv& pic, UChar digest[3][16])
+UInt calcMD5(const TComPicYuv& pic, TComDigest &digest)
 {
+  unsigned bitdepth = g_uiBitDepth + g_uiBitIncrement;
   /* choose an md5_plane packing function based on the system bitdepth */
-  typedef void (*MD5PlaneFunc)(MD5&, const Pel*, UInt, UInt, UInt);
+  typedef void (*MD5PlaneFunc)(MD5&, const Pel*, unsigned, unsigned, unsigned);
   MD5PlaneFunc md5_plane_func;
-  md5_plane_func = g_bitDepthY <= 8 ? (MD5PlaneFunc)md5_plane<1> : (MD5PlaneFunc)md5_plane<2>;
+  md5_plane_func = bitdepth <= 8 ? (MD5PlaneFunc)md5_plane<1> : (MD5PlaneFunc)md5_plane<2>;
 
-  MD5 md5Y, md5U, md5V;
-  UInt width = pic.getWidth();
-  UInt height = pic.getHeight();
-  UInt stride = pic.getStride();
+  MD5 md5[MAX_NUM_COMPONENT];
 
-  md5_plane_func(md5Y, pic.getLumaAddr(), width, height, stride);
-  md5Y.finalize(digest[0]);
-
-  md5_plane_func = g_bitDepthC <= 8 ? (MD5PlaneFunc)md5_plane<1> : (MD5PlaneFunc)md5_plane<2>;
-  width >>= 1;
-  height >>= 1;
-  stride >>= 1;
-
-  md5_plane_func(md5U, pic.getCbAddr(), width, height, stride);
-  md5U.finalize(digest[1]);
-
-  md5_plane_func(md5V, pic.getCrAddr(), width, height, stride);
-  md5V.finalize(digest[2]);
+  Int chan=0;
+  digest.hash.clear();
+  for(; chan<pic.getNumberValidComponents(); chan++)
+  {
+    unsigned char tmp_digest[MD5_DIGEST_STRING_LENGTH];
+    const ComponentID compID=ComponentID(chan);
+    md5_plane_func(md5[compID], pic.getAddr(compID), pic.getWidth(compID), pic.getHeight(compID), pic.getStride(compID));
+    md5[compID].finalize(tmp_digest);
+    for(UInt i=0; i<MD5_DIGEST_STRING_LENGTH; i++)
+    {
+      digest.hash.push_back(tmp_digest[i]);
+    }
+  }
+  return 16;
 }
+
+std::string digestToString(TComDigest &digest, int numChar)
+{
+  const char* hex = "0123456789abcdef";
+  std::string result;
+
+  for(Int pos=0; pos<Int(digest.hash.size()); pos++)
+  {
+    if ((pos % numChar) == 0 && pos!=0 ) result += ',';
+    result += hex[digest.hash[pos] >> 4];
+    result += hex[digest.hash[pos] & 0xf];
+  }
+
+  return result;
+}
+
 //! \}

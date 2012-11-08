@@ -44,9 +44,8 @@
 
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComBitStream.h"
-#include "TLibCommon/TComRom.h"
 #include "TEncEntropy.h"
-#include "SyntaxElementWriter.h"
+#include "TLibCommon/TComRom.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -58,27 +57,46 @@ class TEncTop;
 // ====================================================================================================================
 
 /// CAVLC encoder class
-class TEncCavlc : public SyntaxElementWriter, public TEncEntropyIf
+class TEncCavlc : public TEncEntropyIf
 {
 public:
   TEncCavlc();
   virtual ~TEncCavlc();
   
 protected:
+  TComBitIf*    m_pcBitIf;
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
-
+#if !REMOVE_FGS
+  Int           m_iSliceGranularity;  //!< slice granularity
+#endif
+  
+  Void  xWriteCode            ( UInt uiCode, UInt uiLength );
+  Void  xWriteUvlc            ( UInt uiCode );
+  Void  xWriteSvlc            ( Int  iCode   );
+  Void  xWriteFlag            ( UInt uiCode );
+#if ENC_DEC_TRACE
+  Void  xWriteCodeTr          ( UInt value, UInt  length, const Char *pSymbolName);
+  Void  xWriteUvlcTr          ( UInt value,               const Char *pSymbolName);
+  Void  xWriteSvlcTr          ( Int  value,               const Char *pSymbolName);
+  Void  xWriteFlagTr          ( UInt value,               const Char *pSymbolName);
+#endif
+  
   Void  xWritePCMAlignZero    ();
   Void  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
   Void  xWriteExGolombLevel    ( UInt uiSymbol );
   Void  xWriteUnaryMaxSymbol  ( UInt uiSymbol, UInt uiMaxSymbol );
 
-#if SPS_INTER_REF_SET_PRED
-  Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
-#else
+#if J0234_INTER_RPS_SIMPL
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader );
+#else
+  Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS );
 #endif
+#if LTRP_IN_SPS
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
+#endif  
+  
+  UInt  xConvertToUInt        ( Int iValue ) {  return ( iValue <= 0) ? -iValue<<1 : (iValue<<1)-1; }
   
 public:
   
@@ -92,46 +110,67 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   Void  codeVPS                 ( TComVPS* pcVPS );
-  Void  codeVUI                 ( TComVUI *pcVUI, TComSPS* pcSPS );
   Void  codeSPS                 ( TComSPS* pcSPS );
   Void  codePPS                 ( TComPPS* pcPPS );
+  void codeSEI(const SEI&);
   Void  codeSliceHeader         ( TComSlice* pcSlice );
-  Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
-  Void  codeProfileTier         ( ProfileTierLevel* ptl );
+
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast );
   Void  codeSliceFinish         ();
+  Void  codeFlush               () {}
   Void  encodeStart             () {}
   
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void xGolombEncode(Int coeff, Int k);
+#if !REMOVE_ALF
+  Void codeAlfParam(ALFParam* alfParam);
+#endif
   Void codeSAOSign       ( UInt code   ) { printf("Not supported\n"); assert (0); }
   Void codeSaoMaxUvlc    ( UInt   code, UInt maxSymbol ){printf("Not supported\n"); assert (0);}
+#if SAO_MERGE_ONE_CTX
   Void codeSaoMerge  ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+#else
+  Void codeSaoMergeLeft  ( UInt uiCode, UInt compIdx ){printf("Not supported\n"); assert (0);}
+  Void codeSaoMergeUp    ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+#endif
   Void codeSaoTypeIdx    ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+#if SAO_TYPE_CODING
   Void codeSaoUflc       ( UInt uiLength, UInt   uiCode ){ assert(uiCode < 32); printf("Not supported\n"); assert (0);}
+#else
+  Void codeSaoUflc       ( UInt uiCode ){ assert(uiCode < 32); printf("Not supported\n"); assert (0);}
+#endif
 
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
- 
+  Void codeApsExtensionFlag ();
+
+#if !REMOVE_FGS
+  /// set slice granularity
+  Void setSliceGranularity(Int iSliceGranularity)  {m_iSliceGranularity = iSliceGranularity;}
+
+  ///get slice granularity
+  Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
+#endif
+  
+  Void codeAlfCtrlFlag   ( ComponentID component, UInt code ) {printf("Not supported\n"); assert(0);}
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-#if !REMOVE_BURST_IPCM
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag);
-#else
-  Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbf         ( TComTU &rTu, const ComponentID compID );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeQtCbfZero     ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+#if TU_ZERO_CBF_RDO
+  Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
   Void codeQtRootCbfZero ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -140,15 +179,19 @@ public:
   
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType );
+  Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
+  Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
-  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
+  Void estBit            ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   
   Void xCodePredWeightTable          ( TComSlice* pcSlice );
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }
   Void updateContextTables           ( SliceType eSliceType, Int iQp  )                          { return;   }
 
+#if !REMOVE_APS
+  Void  codeAPSInitInfo(TComAPS* pcAPS);  //!< code APS flags before encoding SAO and ALF parameters
+#endif
+  Void  codeFinish(Bool bEnd) { /*do nothing*/}
   Void codeScalingList  ( TComScalingList* scalingList );
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );

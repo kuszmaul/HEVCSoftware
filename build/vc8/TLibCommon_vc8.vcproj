@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="TLibCommon"
 	ProjectGUID="{78018D78-F890-47E3-A0B7-09D273F0B11D}"
 	RootNamespace="TLibCommon"
@@ -288,7 +288,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\Debug.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\libmd5\libmd5.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.cpp"
 				>
 			</File>
 			<File
@@ -297,6 +305,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComCABACTables.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComChromaFormat.cpp"
 				>
 			</File>
 			<File
@@ -364,6 +376,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComTU.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp"
 				>
 			</File>
@@ -398,6 +414,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\Debug.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\libmd5\libmd5.h"
 				>
 			</File>
@@ -406,11 +426,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\NAL.h"
+				RelativePath="..\..\source\Lib\TLibCommon\SEI.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\SEI.h"
+				RelativePath="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.h"
 				>
 			</File>
 			<File
@@ -423,6 +443,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComCABACTables.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComChromaFormat.h"
 				>
 			</File>
 			<File
@@ -478,6 +502,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComRectangle.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.h"
 				>
 			</File>
@@ -491,6 +519,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComTrQuant.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComTU.h"
 				>
 			</File>
 			<File

@@ -45,7 +45,7 @@ int main(int argc, const char** argv)
   bool do_help;
   string filename_in, filename_out;
   unsigned int width, height;
-  unsigned int bitdepth_in, bitdepth_out;
+  unsigned int bitdepth_in, bitdepth_out, chromaFormatRaw;
   unsigned int num_frames;
   unsigned int num_frames_skip;
 
@@ -58,12 +58,14 @@ int main(int argc, const char** argv)
   ("SourceHeight", height, 0u, "source picture height")
   ("InputBitDepth", bitdepth_in, 8u, "bit-depth of input file")
   ("OutputBitDepth", bitdepth_out, 8u, "bit-depth of output file")
+  ("ChromaFormat", chromaFormatRaw, 420u, "chroma format. 400, 420, 422 or 444 only")
   ("NumFrames", num_frames, 0xffffffffu, "number of frames to process")
   ("FrameSkip,-fs", num_frames_skip, 0u, "Number of frames to skip at start of input YUV")
   ;
 
   po::setDefaults(opts);
   po::scanArgv(opts, argc, argv);
+
 
   if (argc == 1 || do_help)
   {
@@ -72,16 +74,28 @@ int main(int argc, const char** argv)
     return EXIT_FAILURE;
   }
 
+  ChromaFormat chromaFormatIDC=CHROMA_420;
+  switch (chromaFormatRaw)
+  {
+    case 400: chromaFormatIDC=CHROMA_400; break;
+    case 420: chromaFormatIDC=CHROMA_420; break;
+    case 422: chromaFormatIDC=CHROMA_422; break;
+    case 444: chromaFormatIDC=CHROMA_444; break;
+    default:
+      fprintf(stderr, "Bad chroma format string\n");
+      return EXIT_FAILURE;
+  }
+
   TVideoIOYuv input;
   TVideoIOYuv output;
 
-  input.open((char*)filename_in.c_str(), false, bitdepth_in, bitdepth_in, bitdepth_out, bitdepth_out);
-  output.open((char*)filename_out.c_str(), true, bitdepth_out, bitdepth_out, bitdepth_out, bitdepth_out);
+  input.open((char*)filename_in.c_str(), false, bitdepth_in, bitdepth_out);
+  output.open((char*)filename_out.c_str(), true, bitdepth_out, bitdepth_out);
 
-  input.skipFrames(num_frames_skip, width, height);
+  input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
 
   TComPicYuv frame;
-  frame.create( width, height, 1, 1, 0 );
+  frame.create( width, height, chromaFormatIDC, 1, 1, 0 );
 
   int pad[2] = {0, 0};
 
@@ -93,14 +107,14 @@ int main(int argc, const char** argv)
       break;
     }
 #if 0
-    Pel* img = frame.getLumaAddr();
+    Pel* img = frame.getAddr(COMPONENT_Y);
     for (int y = 0; y < height; y++) 
     {
       for (int x = 0; x < height; x++)
         img[x] = 0;
       img += frame.getStride();
     }
-    img = frame.getLumaAddr();
+    img = frame.getAddr(COMPONENT_Y);
     img[0] = 1;
 #endif
 
