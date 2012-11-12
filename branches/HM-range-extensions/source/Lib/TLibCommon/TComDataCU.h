@@ -94,7 +94,7 @@ struct NDBFBlockInfo
 
 class TComTU; // forward declaration
 
-static const UInt NUM_MOST_PROBABLE_MODES=3; // NOTE: ECF - new definition
+static const UInt NUM_MOST_PROBABLE_MODES=3; // NOTE: RExt - new definition
 
 // ====================================================================================================================
 // Class definition
@@ -215,7 +215,7 @@ protected:
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 
   Void xDeriveCenterIdx( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxCenter );
-  // NOTE: ECF - this function is redundant
+  // NOTE: RExt - this function is redundant
   //Bool xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv *pcMv );
 
 public:

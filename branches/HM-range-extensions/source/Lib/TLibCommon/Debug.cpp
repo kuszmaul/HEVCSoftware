@@ -101,7 +101,7 @@ Void EnvVar::printEnvVarInUse()
 {
   if (getEnvVarInUse().size()!=0)
   {
-    std::cout << "ECF Environment variables set as follows: \n" << std::endl;
+    std::cout << "RExt Environment variables set as follows: \n" << std::endl;
     for_each(getEnvVarInUse().begin(), getEnvVarInUse().end(), printVal);
   }
   std::cout << std::endl;
@@ -149,106 +149,106 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::AllChromaFormatsUseSameTUStructureAs420          ("ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420",          "0", "0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)"                                                              );
-EnvVar ToolOptionList::IntraNxNCUChromaPUSplitMode                      ("ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE",                        "1", "0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)"                                                                        );
-EnvVar ToolOptionList::DoubleHeightCoefficientGroups422                 ("ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422",                     "0", "0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2"                                                                                                                                                                                             );
-EnvVar ToolOptionList::ReducedChromaIntraModeSet                        ("ECF__REDUCED_CHROMA_INTRA_MODE_SET",                            "0", "0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)"                                                                                                                                                                           );
-EnvVar ToolOptionList::CombinedLumaChromaIntraModeSearch                ("ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH",                   "0", "0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account"                                                                                                                                                       );
-EnvVar ToolOptionList::EncoderInitialIntraModePreEstDMChroma            ("ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA",               "0", "[NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA"                                                                                                        );
-EnvVar ToolOptionList::EncoderFastIntraModeSearchOverAllComponents      ("ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS",       "0", "[NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components"                                                                                                                        );
-EnvVar ToolOptionList::EncoderFullRateDistortionSearchOverAllComponents ("ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS",  "0", "[NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes"                                                                                   );
-EnvVar ToolOptionList::AdditionalTrialEncodeChromaIntraModeSearch       ("ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH",         "1", "[NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)"                                         );
-EnvVar ToolOptionList::ChromaIntraReferenceSampleFiltering              ("ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING",                  "2", "0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4"                                                   );
-EnvVar ToolOptionList::Get444LMChromaReferenceSamplesFrom1stColumn      ("ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN",       "1", "0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead"                                                                                                                           );
-EnvVar ToolOptionList::Chroma422IntraAngleScaling                       ("ECF__CHROMA_422_INTRA_ANGLE_SCALING",                           "1", "0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)"                                   );
-EnvVar ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples         ("ECF__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES",          "0", "0 (default) = When generating a DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)"                                                                   );
-EnvVar ToolOptionList::Chroma422IntraPlanarSingleStageCalculation       ("ECF__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION",         "0", "0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation"                                                                                                                                                        );
-EnvVar ToolOptionList::SetIntraChromaEdgeFilter422                      ("ECF__SET_INTRA_CHROMA_EDGE_FILTER_422",                         "0", "0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                 );
-EnvVar ToolOptionList::SetIntraChromaDCFilter422                        ("ECF__SET_INTRA_CHROMA_DC_FILTER_422",                           "0", "0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                   );
-EnvVar ToolOptionList::SetIntraChromaEdgeFilter444                      ("ECF__SET_INTRA_CHROMA_EDGE_FILTER_444",                         "0", "0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions"                                                                                                                                                                                  );
-EnvVar ToolOptionList::SetIntraChromaDCFilter444                        ("ECF__SET_INTRA_CHROMA_DC_FILTER_444",                           "0", "0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions"                                                                                                                                                                                  );
-EnvVar ToolOptionList::UseLumaFilterForChromaQuarterSampleInterpolation ("ECF__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION",  "0", "0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)"                                                                                                                                   );
-EnvVar ToolOptionList::EnableMDDTFor444Chroma                           ("ECF__ENABLE_MDDT_FOR_444_CHROMA",                               "0", "0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs"                                                                                                                                                                                                   );
-EnvVar ToolOptionList::SingleTransformSkipFlagForAllChannels444         ("ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444",          "0", "0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value"                                                                                                         );
-EnvVar ToolOptionList::Chroma422QuantiserAdjustment                     ("ECF__CHROMA_422_QUANTISER_ADJUSTMENT",                          "1", "0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))" );
-EnvVar ToolOptionList::Chroma422QuantiserAdjustmentMethod               ("ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD",                   "1", "[NO EFFECT IF ECF__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables"                          );
-EnvVar ToolOptionList::AdditionalChromaQpMappingTables                  ("ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES",                      "1", "0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma"                                                                                                                                         );
-EnvVar ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection ("ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION", "1", "0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)"                                                                                                                       );
-EnvVar ToolOptionList::Chroma422SignificanceMapContextGrid              ("ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID",                 "0", "[AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4"                                                      );
-EnvVar ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups  ("ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS",    "0", "0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups"                                                          );
-EnvVar ToolOptionList::LumaMDCSMode                                     ("ECF__LUMA_MDCS_MODE",                                           "3", "0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                            );
-EnvVar ToolOptionList::LumaMDCSAngleLimit                               ("ECF__LUMA_MDCS_ANGLE_LIMIT",                                    "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
-EnvVar ToolOptionList::LumaMDCSMaximumWidth                             ("ECF__LUMA_MDCS_MAXIMUM_WIDTH",                                  "8", "(default 8) Luminance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                             );
-EnvVar ToolOptionList::LumaMDCSMaximumHeight                            ("ECF__LUMA_MDCS_MAXIMUM_HEIGHT",                                 "8", "(default 8) Luminance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                            );
-EnvVar ToolOptionList::ChromaMDCSMode                                   ("ECF__CHROMA_MDCS_MODE",                                         "3", "0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                          );
-EnvVar ToolOptionList::ChromaMDCSAngleLimit                             ("ECF__CHROMA_MDCS_ANGLE_LIMIT",                                  "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
-EnvVar ToolOptionList::ChromaMDCSMaximumWidth                           ("ECF__CHROMA_MDCS_MAXIMUM_WIDTH",                                "4", "(default 4) Chrominance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                           );
-EnvVar ToolOptionList::ChromaMDCSMaximumHeight                          ("ECF__CHROMA_MDCS_MAXIMUM_HEIGHT",                               "4", "(default 4) Chrominance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                          );
-EnvVar ToolOptionList::NonSubsampledChromaUseLumaMDCSSizeLimits         ("ECF__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS",          "1", "0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled"                                             );
+EnvVar ToolOptionList::AllChromaFormatsUseSameTUStructureAs420          ("RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420",          "0", "0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)"                                                              );
+EnvVar ToolOptionList::IntraNxNCUChromaPUSplitMode                      ("RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE",                        "1", "0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)"                                                                        );
+EnvVar ToolOptionList::DoubleHeightCoefficientGroups422                 ("RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422",                     "0", "0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2"                                                                                                                                                                                             );
+EnvVar ToolOptionList::ReducedChromaIntraModeSet                        ("RExt__REDUCED_CHROMA_INTRA_MODE_SET",                            "0", "0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)"                                                                                                                                                                           );
+EnvVar ToolOptionList::CombinedLumaChromaIntraModeSearch                ("RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH",                   "0", "0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account"                                                                                                                                                       );
+EnvVar ToolOptionList::EncoderInitialIntraModePreEstDMChroma            ("RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA",               "0", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA"                                                                                                       );
+EnvVar ToolOptionList::EncoderFastIntraModeSearchOverAllComponents      ("RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS",       "0", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components"                                                                                                                       );
+EnvVar ToolOptionList::EncoderFullRateDistortionSearchOverAllComponents ("RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS",  "0", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes"                                                                                  );
+EnvVar ToolOptionList::AdditionalTrialEncodeChromaIntraModeSearch       ("RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH",         "1", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)"                                        );
+EnvVar ToolOptionList::ChromaIntraReferenceSampleFiltering              ("RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING",                  "2", "0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4"                                                   );
+EnvVar ToolOptionList::Get444LMChromaReferenceSamplesFrom1stColumn      ("RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN",       "1", "0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead"                                                                                                                           );
+EnvVar ToolOptionList::Chroma422IntraAngleScaling                       ("RExt__CHROMA_422_INTRA_ANGLE_SCALING",                           "1", "0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)"                                   );
+EnvVar ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples         ("RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES",          "0", "0 (default) = When generating a DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)"                                                                   );
+EnvVar ToolOptionList::Chroma422IntraPlanarSingleStageCalculation       ("RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION",         "0", "0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation"                                                                                                                                                        );
+EnvVar ToolOptionList::SetIntraChromaEdgeFilter422                      ("RExt__SET_INTRA_CHROMA_EDGE_FILTER_422",                         "0", "0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                 );
+EnvVar ToolOptionList::SetIntraChromaDCFilter422                        ("RExt__SET_INTRA_CHROMA_DC_FILTER_422",                           "0", "0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                   );
+EnvVar ToolOptionList::SetIntraChromaEdgeFilter444                      ("RExt__SET_INTRA_CHROMA_EDGE_FILTER_444",                         "0", "0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions"                                                                                                                                                                                  );
+EnvVar ToolOptionList::SetIntraChromaDCFilter444                        ("RExt__SET_INTRA_CHROMA_DC_FILTER_444",                           "0", "0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions"                                                                                                                                                                                  );
+EnvVar ToolOptionList::UseLumaFilterForChromaQuarterSampleInterpolation ("RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION",  "0", "0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)"                                                                                                                                   );
+EnvVar ToolOptionList::EnableMDDTFor444Chroma                           ("RExt__ENABLE_MDDT_FOR_444_CHROMA",                               "0", "0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs"                                                                                                                                                                                                   );
+EnvVar ToolOptionList::SingleTransformSkipFlagForAllChannels444         ("RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444",          "0", "0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value"                                                                                                         );
+EnvVar ToolOptionList::Chroma422QuantiserAdjustment                     ("RExt__CHROMA_422_QUANTISER_ADJUSTMENT",                          "1", "0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))" );
+EnvVar ToolOptionList::Chroma422QuantiserAdjustmentMethod               ("RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD",                   "1", "[NO EFFECT IF RExt__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables"                         );
+EnvVar ToolOptionList::AdditionalChromaQpMappingTables                  ("RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES",                      "1", "0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma"                                                                                                                                         );
+EnvVar ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection ("RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION", "1", "0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)"                                                                                                                       );
+EnvVar ToolOptionList::Chroma422SignificanceMapContextGrid              ("RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID",                 "0", "[AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4"                                                      );
+EnvVar ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups  ("RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS",    "0", "0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups"                                                          );
+EnvVar ToolOptionList::LumaMDCSMode                                     ("RExt__LUMA_MDCS_MODE",                                           "3", "0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                            );
+EnvVar ToolOptionList::LumaMDCSAngleLimit                               ("RExt__LUMA_MDCS_ANGLE_LIMIT",                                    "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
+EnvVar ToolOptionList::LumaMDCSMaximumWidth                             ("RExt__LUMA_MDCS_MAXIMUM_WIDTH",                                  "8", "(default 8) Luminance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                             );
+EnvVar ToolOptionList::LumaMDCSMaximumHeight                            ("RExt__LUMA_MDCS_MAXIMUM_HEIGHT",                                 "8", "(default 8) Luminance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                            );
+EnvVar ToolOptionList::ChromaMDCSMode                                   ("RExt__CHROMA_MDCS_MODE",                                         "3", "0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                          );
+EnvVar ToolOptionList::ChromaMDCSAngleLimit                             ("RExt__CHROMA_MDCS_ANGLE_LIMIT",                                  "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
+EnvVar ToolOptionList::ChromaMDCSMaximumWidth                           ("RExt__CHROMA_MDCS_MAXIMUM_WIDTH",                                "4", "(default 4) Chrominance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                           );
+EnvVar ToolOptionList::ChromaMDCSMaximumHeight                          ("RExt__CHROMA_MDCS_MAXIMUM_HEIGHT",                               "4", "(default 4) Chrominance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                          );
+EnvVar ToolOptionList::NonSubsampledChromaUseLumaMDCSSizeLimits         ("RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS",          "1", "0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled"                                             );
 
 
 // --------------------------------------------------------------------------------------------------------------------- //
 
 //macro value printing function
 
-Void printECFMacroSettings()
+Void printRExtMacroSettings()
 {
-  std::cout << "ECF Non-environment-variable-controlled macros set as follows: \n" << std::endl;
+  std::cout << "RExt Non-environment-variable-controlled macros set as follows: \n" << std::endl;
 
   //------------------------------------------------
 
   //setting macros
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420,          settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE,                        settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422,                     settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__REDUCED_CHROMA_INTRA_MODE_SET,                            settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH,                   settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA,               settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS,       settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS,  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH,         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING,                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN,       settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_INTRA_ANGLE_SCALING,                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES,          settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION,         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__SET_INTRA_CHROMA_EDGE_FILTER_422,                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__SET_INTRA_CHROMA_DC_FILTER_422,                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__SET_INTRA_CHROMA_EDGE_FILTER_444,                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__SET_INTRA_CHROMA_DC_FILTER_444,                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION,  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ENABLE_MDDT_FOR_444_CHROMA,                               settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444,          settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_QUANTISER_ADJUSTMENT,                          settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD,                   settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES,                      settingNameWidth, settingValueWidth);
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  PRINT_CONSTANT(RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420,          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE,                        settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422,                     settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__REDUCED_CHROMA_INTRA_MODE_SET,                            settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA,               settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS,       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS,  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH,         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING,                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN,       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_INTRA_ANGLE_SCALING,                           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES,          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION,         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_EDGE_FILTER_422,                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_DC_FILTER_422,                           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_EDGE_FILTER_444,                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_DC_FILTER_444,                           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION,  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ENABLE_MDDT_FOR_444_CHROMA,                               settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444,          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_QUANTISER_ADJUSTMENT,                          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES,                      settingNameWidth, settingValueWidth);
 #endif
-  PRINT_CONSTANT(ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION, settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS,    settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  PRINT_CONSTANT(RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION, settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID,                 settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS,    settingNameWidth, settingValueWidth);
 #endif
   //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
-  PRINT_CONSTANT(ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION,              settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION,                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CBF_CONTEXT_CHANNEL_SEPARATION,                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__EXTENDED_CHROMA_LAST_POSITION_CONTEXT,                    settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__EXTENDED_CHROMA_C1_C2_CONTEXT,                            settingNameWidth, settingValueWidth);
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(ECF__LUMA_MDCS_MODE,                                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__LUMA_MDCS_ANGLE_LIMIT,                                    settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__LUMA_MDCS_MAXIMUM_WIDTH,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__LUMA_MDCS_MAXIMUM_HEIGHT,                                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_MDCS_MODE,                                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_MDCS_ANGLE_LIMIT,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_MDCS_MAXIMUM_WIDTH,                                settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__CHROMA_MDCS_MAXIMUM_HEIGHT,                               settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(ECF__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS,          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION,              settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION,                 settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION,                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CBF_CONTEXT_CHANNEL_SEPARATION,                           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT,                 settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT,                    settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_C1_C2_CONTEXT,                            settingNameWidth, settingValueWidth);
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  PRINT_CONSTANT(RExt__LUMA_MDCS_MODE,                                           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__LUMA_MDCS_ANGLE_LIMIT,                                    settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__LUMA_MDCS_MAXIMUM_WIDTH,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__LUMA_MDCS_MAXIMUM_HEIGHT,                                 settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_MDCS_MODE,                                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_MDCS_ANGLE_LIMIT,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_WIDTH,                                settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_HEIGHT,                               settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS,          settingNameWidth, settingValueWidth);
 #endif
 
   std::cout << std::endl;
@@ -257,36 +257,36 @@ Void printECFMacroSettings()
 
   //derived macros
 
-#ifdef ECF__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
-  std::cout << std::setw(settingNameWidth) << "ECF__CHROMA_NxN_PU_CAN_HAVE_4_PARTS" << " is defined" << std::endl;
+#ifdef RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
+  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
-  std::cout << std::setw(settingNameWidth) << "ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED" << " is defined" << std::endl;
+#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
+  std::cout << std::setw(settingNameWidth) << "RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__EXTENDED_QP_TABLES
-  std::cout << std::setw(settingNameWidth) << "ECF__EXTENDED_QP_TABLES" << " is defined" << std::endl;
+#ifdef RExt__EXTENDED_QP_TABLES
+  std::cout << std::setw(settingNameWidth) << "RExt__EXTENDED_QP_TABLES" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__MULTIPLE_CHROMA_QP_MAPPING_TABLES
-  std::cout << std::setw(settingNameWidth) << "ECF__MULTIPLE_CHROMA_QP_MAPPING_TABLES" << " is defined" << std::endl;
+#ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
+  std::cout << std::setw(settingNameWidth) << "RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
-  std::cout << std::setw(settingNameWidth) << "ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS" << " is defined" << std::endl;
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
+  std::cout << std::setw(settingNameWidth) << "RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "ECF__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
+#ifdef RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
+  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "ECF__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
+#ifdef RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
+  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
 #endif
 
-#ifdef ECF__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "ECF__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
+#ifdef RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
+  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
 #endif
 
   //------------------------------------------------

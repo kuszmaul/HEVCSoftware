@@ -66,9 +66,9 @@ protected:
 
   static const UInt m_uiMaxDepth;
   static const Int m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1];
-  static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: ECF - This table appears to be larger than needed.
+  static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: RExt - This table appears to be larger than needed.
   Int *m_aiOffsetBo[MAX_NUM_CHANNEL_TYPE];
-  Int  m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed.
+  Int  m_iOffsetEo[LUMA_GROUP_NUM];                  //NOTE: RExt - This table appears to be larger than needed.
   Int  m_iPicWidth;
   Int  m_iPicHeight;
   UInt m_uiMaxSplitLevel;

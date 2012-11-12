@@ -84,7 +84,7 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
         shift   = wpCur->shift,
         round   = wpCur->round;
 
-  UInt uiSum = 0; //NOTE: ECF - this function adds up to 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
+  UInt uiSum = 0; //NOTE: RExt - this function adds up to 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
 
   for( ; iRows != 0; iRows-- )
   {

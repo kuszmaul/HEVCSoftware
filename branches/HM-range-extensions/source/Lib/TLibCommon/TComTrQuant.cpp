@@ -1053,10 +1053,10 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     Int deltaU[32*32] ;
 
-#if ADAPTIVE_QP_SELECTION && ECF__BACKWARDS_COMPATIBILITY_HM
+#if ADAPTIVE_QP_SELECTION && RExt__BACKWARDS_COMPATIBILITY_HM
     const Int qpBDOffset   = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
     const Int iQpBase      = pcCU->getSlice()->getSliceQpBase();
-    const Int chromaOffset = 0; // NOTE ECF - with RDOQ disabled, the original code does not use chroma offset. If chroma offsets are non-zero, the resulting reconstructed image will contain additional noise.
+    const Int chromaOffset = 0; // NOTE RExt - with RDOQ disabled, the original code does not use chroma offset. If chroma offsets are non-zero, the resulting reconstructed image will contain additional noise.
 
     QpParam cQpBase;
     setQPforQuant(cQpBase, iQpBase, toChannelType(compID), qpBDOffset, chromaOffset, chFmt, pcCU->getTransformSkip(uiAbsPartIdx,compID));
@@ -1081,13 +1081,13 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     Int iQBitsC = MAX_INT;
     Int iAddC   = MAX_INT;
 
-#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
     const Int QP_base_per = cQpBase.getAdjustedQp().per;
     iQBits  = QUANT_SHIFT + QP_base_per + iTransformShift;
     iQBitsC = QUANT_SHIFT + QP_base_per + iTransformShift - ARL_C_PRECISION;
     iAddC   = 1 << (iQBitsC-1);
-#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
-    //NOTE: ECF - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
+#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
+    //NOTE: RExt - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
     iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
 
     if (m_bUseAdaptQpSelect)
@@ -1099,7 +1099,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #else
     iQBits = QUANT_SHIFT + cQP..getAdjustedQp().per + iTransformShift; // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
 #endif
-    //NOTE: ECF - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
+    //NOTE: RExt - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
     Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
 
@@ -1217,7 +1217,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
           clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-          //NOTE: ECF - 64-bit operation required here to accommodate additionalMultiplier
+          //NOTE: RExt - 64-bit operation required here to accommodate additionalMultiplier
           iCoeffQ   = Intermediate_Int(((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) + iAdd ) >> rightShift);
           piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
         }
@@ -1245,7 +1245,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
           const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
 
           clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-          //NOTE: ECF - 64-bit operation required here to accommodate additionalMultiplier
+          //NOTE: RExt - 64-bit operation required here to accommodate additionalMultiplier
           iCoeffQ   = Intermediate_Int((Int64(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) << leftShift);
           piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
         }
@@ -1284,7 +1284,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
         for( Int n = 0; n < numSamplesInBlock; n++ )
         {
           clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-          //NOTE: ECF - 64-bit operation required here to accommodate additionalMultiplier
+          //NOTE: RExt - 64-bit operation required here to accommodate additionalMultiplier
           iCoeffQ   = Intermediate_Int((Int64(clipQCoef) * scale + iAdd) >> rightShift);
           piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
         }
@@ -1308,7 +1308,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
         for( Int n = 0; n < numSamplesInBlock; n++ )
         {
           clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-          //NOTE: ECF - 64-bit operation required here to accommodate additionalMultiplier
+          //NOTE: RExt - 64-bit operation required here to accommodate additionalMultiplier
           iCoeffQ   = Intermediate_Int((Int64(clipQCoef) * scale) << leftShift);
           piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
         }
@@ -1519,7 +1519,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     Pel* pResi = rpcResidual + uiAddr;
     TCoeff* rpcCoeff = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
-    QpParam cQP; // NOTE ECF - set QP is now possibly dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
+    QpParam cQP; // NOTE RExt - set QP is now possibly dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
     setQPforQuant( cQP,
                    pcCU->getQP( 0 ),
                    toChannelType(compID),
@@ -2324,7 +2324,7 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
           const Int posTotalInSubset = posXinSubset + posYinSubset;
 
           //first N coefficients in scan order use 2; the next few use 1; the rest use 0.
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
           const UInt context1Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context1Threshold;
           const UInt context2Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context2Threshold;
 #else
@@ -2609,11 +2609,11 @@ __inline Double TComTrQuant::xGetRateLast   ( const UInt                      ui
   UInt uiCtxX   = g_uiGroupIdx[uiPosX];
   UInt uiCtxY   = g_uiGroupIdx[uiPosY];
 
-#if   (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
   Double uiCost = m_pcEstBitsSbac->lastXBits[component][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[component][ uiCtxY ];
-#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   Double uiCost = m_pcEstBitsSbac->lastXBits[toChannelType(component)][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[toChannelType(component)][ uiCtxY ];
-#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
   Double uiCost = m_pcEstBitsSbac->lastXBits[ uiCtxX ] + m_pcEstBitsSbac->lastYBits[ uiCtxY ];
 #endif
 

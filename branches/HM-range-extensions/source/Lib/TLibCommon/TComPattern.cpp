@@ -66,7 +66,7 @@ Int   isBelowLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdx
 // ====================================================================================================================
 
 /** \param  piTexture     pixel data
- \param  iRoiWidth     pattern widthhttp://gbdevapp08/svn/Curie_HVC/HEVC_ECF/source/Lib/TLibCommon/TComPattern.cpp
+ \param  iRoiWidth     pattern width
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
@@ -99,7 +99,7 @@ Void TComPattern::initPattern (Pel* piY,
 }
 
 
-// NOTE: ECF - this has been kept in this C++ file to allow easier tracking/comparison against HM.
+// NOTE: RExt - this has been kept in this C++ file to allow easier tracking/comparison against HM.
 Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug), Bool bLMmode)
 {
   const ComponentID regionCompID = bLMmode ? COMPONENT_Cb : compID;
@@ -207,7 +207,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       //------------------------------------------------
 
 #if STRONG_INTRA_SMOOTHING
-      //TODO: ECF - investigate the use of this for chroma (luma only for now to match HM9.0)
+      //TODO: RExt - investigate the use of this for chroma (luma only for now to match HM9.0)
       Bool useStrongIntraSmoothing = isLuma(chType) && pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing();
 
       const Pel bottomLeft = piAdiTemp[stride * uiTuHeight2];

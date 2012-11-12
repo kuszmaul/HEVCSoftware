@@ -64,7 +64,7 @@ typedef enum PRED_BUF_E
   NUM_PRED_BUF=2
 } PRED_BUF;
 
-static const UInt MAX_INTRA_FILTER_DEPTHS=5; // NOTE: ECF - new definition
+static const UInt MAX_INTRA_FILTER_DEPTHS=5; // NOTE: RExt - new definition
 
 class TComPrediction : public TComWeightPrediction
 {
@@ -85,7 +85,7 @@ protected:
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample 
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
 
-#ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
+#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
   Void xPredIntraAngChroma422   ( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
 #endif
   Void xPredIntraAng            ( Int bitDepth, const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );

@@ -41,7 +41,7 @@
 //! \ingroup TLibDecoder
 //! \{
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "../TLibCommon/Debug.h"
 #endif
 
@@ -901,11 +901,11 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
 
   const UInt uiCtx = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
 
-#if   (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
   const UInt contextSet = compID;
-#elif (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
   const UInt contextSet = toChannelType(compID);
-#elif (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
   const UInt contextSet = CHANNEL_TYPE_LUMA;
 #endif
 
@@ -983,13 +983,13 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
 {
   UInt uiLast;
 
-#if   (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
   ContextModel *pCtxX = m_cCuCtxLastX.get( 0, component );
   ContextModel *pCtxY = m_cCuCtxLastY.get( 0, component );
-#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   ContextModel *pCtxX = m_cCuCtxLastX.get( 0, toChannelType(component) );
   ContextModel *pCtxY = m_cCuCtxLastY.get( 0, toChannelType(component) );
-#elif (ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
   ContextModel *pCtxX = m_cCuCtxLastX.get( 0, CHANNEL_TYPE_LUMA );
   ContextModel *pCtxY = m_cCuCtxLastY.get( 0, CHANNEL_TYPE_LUMA );
 #endif
@@ -1077,7 +1077,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   DTRACE_CABAC_T( "\theight=" )
   DTRACE_CABAC_V( uiHeight )
   DTRACE_CABAC_T( "\tdepth=" )
-// NOTE: ECF - the following commented debug lines have been changed to make consistent with HM
+// NOTE: RExt - the following commented debug lines have been changed to make consistent with HM
 //  DTRACE_CABAC_V( rTu.GetTransformDepthTotalAdj(compID) )
   DTRACE_CABAC_V( rTu.GetTransformDepthTotal() )
   DTRACE_CABAC_T( "\tabspartidx=" )
@@ -1182,7 +1182,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << log2GroupSize;
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
     Int pos[2 << MLS_CG_SIZE];
 #else
     Int pos[1 << MLS_CG_SIZE];
@@ -1264,7 +1264,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
       ContextModel *baseCtxMod = m_cCUOneSCModel.get( 0, 0 ) + (NUM_ONE_FLAG_CTX_PER_SET * uiCtxSet);
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
       Int absCoeff[2 << MLS_CG_SIZE];
 #else
       Int absCoeff[1 << MLS_CG_SIZE];
@@ -1363,7 +1363,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     }
   }
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   printSBACCoeffData(uiPosLastX, uiPosLastY, uiWidth, uiHeight, compID, uiAbsPartIdx, codingParameters.scanType, pcCoef);
 #endif
 

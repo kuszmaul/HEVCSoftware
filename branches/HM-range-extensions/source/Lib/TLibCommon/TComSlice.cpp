@@ -361,7 +361,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   m_aiNumRefIdx[REF_PIC_LIST_1] = getNumRefIdx(REF_PIC_LIST_1);
 
   TComPic*  pcRefPic= NULL;
-  static const UInt MAX_NUM_NEGATIVE_PICTURES=16; // NOTE: ECF - new definition
+  static const UInt MAX_NUM_NEGATIVE_PICTURES=16; // NOTE: RExt - new definition
   TComPic*  RefPicSetStCurr0[MAX_NUM_NEGATIVE_PICTURES];
   TComPic*  RefPicSetStCurr1[MAX_NUM_NEGATIVE_PICTURES];
   TComPic*  RefPicSetLtCurr[MAX_NUM_NEGATIVE_PICTURES];
@@ -1245,7 +1245,7 @@ Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_R
         }
 
         pwp->w      = pwp->iWeight;
-        pwp->o      = pwp->iOffset << (g_bitDepth[toChannelType(ComponentID(yuv))]-8); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
+        pwp->o      = pwp->iOffset << (g_bitDepth[toChannelType(ComponentID(yuv))]-8); //NOTE: RExt - This value of the ".o" variable is never used - .o is set immediately before it gets used
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }

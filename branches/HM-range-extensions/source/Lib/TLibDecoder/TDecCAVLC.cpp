@@ -494,7 +494,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
   READ_UVLC(     uiCode, "seq_parameter_set_id" );               pcSPS->setSPSId( uiCode );
   READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( ChromaFormat(uiCode) );
-  //NOTE: ECF - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
+  //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
   //assert (uiCode == 1);
   if( uiCode == 3 )
   {
@@ -524,7 +524,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   {
     READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
   }
-  g_bitDepth[CHANNEL_TYPE_CHROMA] = 8 + uiCode; // NOTE: ECF - for 4:0:0, this will be setting the bit depths for chroma to that of luma
+  g_bitDepth[CHANNEL_TYPE_CHROMA] = 8 + uiCode; // NOTE: RExt - for 4:0:0, this will be setting the bit depths for chroma to that of luma
   pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, g_bitDepth[CHANNEL_TYPE_CHROMA]);
   pcSPS->setQpBDOffset( CHANNEL_TYPE_CHROMA, (Int) (6*uiCode) );
 
@@ -799,7 +799,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
     
-    //NOTE: ECF - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
+    //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
     //assert (sps->getChromaFormatIdc() == 1 );
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)

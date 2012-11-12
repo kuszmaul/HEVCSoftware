@@ -40,7 +40,7 @@
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 #include "TLibCommon/TComTU.h"
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "../TLibCommon/Debug.h"
 static const Bool bDebugPredEnabled = DebugOptionList::DebugPred.getInt()!=0;
 #endif
@@ -290,7 +290,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
   const Bool bChroma = isChromaEnabled(pcCU->getPic()->getChromaFormat());
   const UInt uiTrIdx = rTu.GetTransformDepthRel();
   const UInt uiDepth = rTu.GetTransformDepthTotal();
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
   if (bDebugRQT)
     printf("x..codeTransform: offsetLuma=%d offsetChroma=%d absPartIdx=%d, uiDepth=%d\n width=%d, height=%d, uiTrIdx=%d, uiInnerQuadIdx=%d\n",
@@ -412,7 +412,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
         const ComponentID compID=COMPONENT_Y;
         if (rTu.ProcessComponentSection(compID) && cbf[compID])
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
             if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
 #endif
             const UInt offset=rTu.getCoefficientOffset(compID);
@@ -425,7 +425,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
         const ComponentID compID=ComponentID(ch);
         if (rTu.ProcessComponentSection(compID) && cbf[compID])
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
             if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
 #endif
             const UInt offset=rTu.getCoefficientOffset(compID);
@@ -449,7 +449,7 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 {
   m_pcEntropyCoderIf->codeIntraDirChroma( pcCU, uiAbsPartIdx );
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (bDebugPredEnabled && g_bFinalEncode)
   {
     UInt cdir=pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, uiAbsPartIdx);
@@ -493,7 +493,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugPred = bDebugPredEnabled && g_bFinalEncode;
 #endif
   
@@ -508,7 +508,7 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
       encodeMergeIndex( pcCU, uiSubPartIdx, uiPartIdx );
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       if (bDebugPred)
       {
         std::cout << "Coded merge flag, CU absPartIdx: " << uiAbsPartIdx << " PU(" << uiPartIdx << ") absPartIdx: " << uiSubPartIdx;
@@ -526,7 +526,7 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
           encodeRefFrmIdxPU ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
           encodeMvdPU       ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
           encodeMVPIdxPU    ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           if (bDebugPred)
           {
             std::cout << "refListIdx: " << uiRefListIdx << std::endl;
@@ -623,7 +623,7 @@ Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
 {
-  //NOTE: ECF - In HM8.0, this function is called in multiple ways, which may not be intended.
+  //NOTE: RExt - In HM8.0, this function is called in multiple ways, which may not be intended.
   //      In xEstimateResidualQT, when coding the chroma channel, it is called with both TrDepth and TrDepthC (adjusted for step-up cases).
   //      In other places, it is called with TrDepth, but only when there is no step-up case (luma-equivalent size > 4)
   m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType, useAdjustedDepth );
@@ -660,7 +660,7 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
  */
 Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
 #endif
 
@@ -690,7 +690,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
   
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);
 #endif
 

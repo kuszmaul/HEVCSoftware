@@ -381,7 +381,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
   ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   ("LosslessCuEnabled", m_useLossless, false)
 #endif
   ("weighted_pred_flag,-wpP",     m_bUseWeightPred, false, "weighted prediction flag (P-Slices)")
@@ -415,7 +415,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
 #else
   ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
@@ -1052,7 +1052,7 @@ Void TAppEncCfg::xCheckParameter()
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
   }
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
 #else
   xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce, "CUTransquantBypassFlagForce cannot be 1 when TransquantBypassEnableFlag is 0");
@@ -1163,7 +1163,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
 #else
   if (m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce)

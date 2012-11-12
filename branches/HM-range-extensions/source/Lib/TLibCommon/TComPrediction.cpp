@@ -400,7 +400,7 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 }
 
 
-#ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
+#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
 
 Void TComPrediction::xPredIntraAngChroma422( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
 {
@@ -597,7 +597,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   }
   else
   {
-#ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
+#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
     if (nonScaledIntraChroma422(channelType, format))
     {
       // Create the prediction
@@ -875,7 +875,7 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
 {
   assert(width <= height);
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM
+#if RExt__BACKWARDS_COMPATIBILITY_HM
   Int leftColumn[MAX_CU_SIZE], topRow[MAX_CU_SIZE], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];
 #else
   Int leftColumn[MAX_CU_SIZE+1], topRow[MAX_CU_SIZE+1], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];
@@ -904,9 +904,9 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
     {
       for(Int l=0;l<height;l++)
       {
-        // NOTE: ECF - rounding point changed from 'height' to 'width'.
-        // NOTE: ECF - The intermediate shift left could be rolled into the final shift left,
-        //             thereby increasing the accuracy of the calculation
+        // NOTE: RExt - rounding point changed from 'height' to 'width'.
+        // NOTE: RExt - The intermediate shift left could be rolled into the final shift left,
+        //              thereby increasing the accuracy of the calculation
         // eg rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft)) +
         //                           (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )*2    ) + height) >> (shift1Dver+1);
         rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft+1)>>1) +
@@ -916,7 +916,7 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
   }
   else
   {
-    // NOTE: ECF - mistakes fixed to match above multiply-based calculation
+    // NOTE: RExt - mistakes fixed to match above multiply-based calculation
     for(Int k=0;k<width;k++)
     {
       bottomRow[k]  = bottomLeft - topRow[k];
@@ -940,8 +940,8 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
         horPred += rightColumn[y];
         topRow[x] += bottomRow[x];
 
-        // NOTE: ECF - The intermediate shift left could be rolled into the final shift left,
-        //             thereby increasing the accuracy of the calculation
+        // NOTE: RExt - The intermediate shift left could be rolled into the final shift left,
+        //              thereby increasing the accuracy of the calculation
         // eg  rpDst[y*dstStride+x] = ( (horPred<<topRowShift) + topRow[x] ) >> (shift1Dver+1);
         Int vertPred = ((topRow[x] + topRowShift)>>topRowShift);
         rpDst[y*dstStride+x] = ( horPred + vertPred ) >> (shift1Dhor+1);

@@ -38,7 +38,7 @@
 #include "TEncBinCoderCABAC.h"
 #include "TLibCommon/TComRom.h"
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "TLibCommon/Debug.h"
 #endif
 
