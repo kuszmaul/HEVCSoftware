@@ -286,7 +286,7 @@
 
 #if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   #define ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420                  0 ///< 0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)
-  #define ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                0 ///< 0 (default) = An intra-NxN-split CU always has only one chroma PU, 1 = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
+  #define ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                1 ///< 0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
   #define ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
 #endif
 
@@ -303,7 +303,7 @@
   #define ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS          0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes
   #define ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH                 1 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)
 
-  #define ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING                          0 ///< 0 (default) = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 = Apply filter in both directions for 4:2:2 and 4:4:4
+  #define ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING                          2 ///< 0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4
   #define ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN               1 ///< 0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead
 
   #define ECF__CHROMA_422_INTRA_ANGLE_SCALING                                   1 ///< 0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)
@@ -334,7 +334,7 @@
   #define ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444                  0 ///< 0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value
   #define ECF__CHROMA_422_QUANTISER_ADJUSTMENT                                  1 ///< 0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))
   #define ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD                           1 ///< [NO EFFECT IF ECF__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables
-  #define ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              0 ///< 0 (default) = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
+  #define ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              1 ///< 0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
 #endif
 
 //------------------
