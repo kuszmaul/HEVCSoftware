@@ -97,8 +97,6 @@
 #define CU_DQP_TU_CMAX                    5 ///< max number bins for truncated unary
 #define CU_DQP_EG_k                       0 ///< expgolomb order
 
-#define REMOVE_LMCHROMA                   1 ///< Disable LM_Chroma-related code
-
 #define SBH_THRESHOLD                     4  ///< I0156: value of the fixed SBH controlling threshold
   
 #define SEQUENCE_LEVEL_LOSSLESS           0  ///< H0530: used only for sequence or frame-level lossless coding
@@ -182,14 +180,7 @@
 #define VER_IDX                          26                    // index for intra VERTICAL   mode
 #define HOR_IDX                          10                    // index for intra HORIZONTAL mode
 #define DC_IDX                            1                    // index for intra DC mode
-#if REMOVE_LMCHROMA
 #define NUM_CHROMA_MODE                   5                    // total number of chroma modes
-#else
-#define NUM_CHROMA_MODE                   6                    // total number of chroma modes
-#endif
-#if !REMOVE_LMCHROMA
-#define LM_CHROMA_IDX                    35
-#endif
 #define DM_CHROMA_IDX                    36                    // chroma mode index for derived from luma intra mode
 #define INVALID_MODE_IDX                 (NUM_INTRA_MODE+1)    // value used to indicate an invalid intra mode
 #define STOPCHROMASEARCH_MODE_IDX        (INVALID_MODE_IDX+1)  // value used to signal the end of a chroma mode search

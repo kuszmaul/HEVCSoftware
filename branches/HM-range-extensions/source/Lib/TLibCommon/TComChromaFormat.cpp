@@ -40,9 +40,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 
 static UInt emptySearch[]={INVALID_MODE_IDX, STOPCHROMASEARCH_MODE_IDX };
-#if !REMOVE_LMCHROMA
-static UInt dm_lm_search[]={DM_CHROMA_IDX, LM_CHROMA_IDX, STOPCHROMASEARCH_MODE_IDX };
-#endif
 
 UInt *getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx, const Bool bLumaOnly, UInt searchArray[NUM_CHROMA_MODE+3])
 {
@@ -50,12 +47,7 @@ UInt *getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx,
   {
     if (reducedIntraChromaModes())
     {
-#if REMOVE_LMCHROMA
       return emptySearch;
-#else
-      if (pcCU->getSlice()->getSPS()->getUseLMChroma()) return dm_lm_search;
-      else                                              return emptySearch;
-#endif
     }
     else
     {

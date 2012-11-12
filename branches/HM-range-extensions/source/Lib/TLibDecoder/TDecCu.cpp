@@ -509,30 +509,12 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
   DEBUG_STRING_NEW(sTemp)
-
-#if !REMOVE_LMCHROMA
-  if( compID==COMPONENT_Cb && uiChFinalMode == LM_CHROMA_IDX )
-  {
-    m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sTemp), true );
-    m_pcPrediction->getLumaRecPixels( rTu );
-  }
-#endif
-
   m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
 
 
   //===== get prediction signal =====
 
-#if !REMOVE_LMCHROMA
-  if( uiChFinalMode == LM_CHROMA_IDX && !bIsLuma)
-  {
-    m_pcPrediction->predLMIntraChroma( compID, piPred, uiStride, uiWidth, uiHeight, chFmt DEBUG_STRING_PASS_INTO(sTemp) );
-  }
-  else
-#endif
-  {
-    m_pcPrediction->predIntraAng( compID,   uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-  }
+  m_pcPrediction->predIntraAng( compID,   uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
 
 #ifdef DEBUG_STRING
   ss << sTemp;

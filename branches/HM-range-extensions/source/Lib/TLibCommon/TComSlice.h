@@ -549,9 +549,6 @@ private:
   UInt        m_pcmLog2MaxSize;
   UInt        m_uiPCMLog2MinSize;
   Bool        m_useAMP;
-#if !REMOVE_LMCHROMA
-  Bool        m_bUseLMChroma; // JL:
-#endif
 
   Bool        m_bUseLComb;
   
@@ -678,10 +675,6 @@ public:
   // Tool list
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
   Bool getUseLComb    ()         { return m_bUseLComb;      }
-#if !REMOVE_LMCHROMA
-  Bool getUseLMChroma ()         { return m_bUseLMChroma;        }
-  Void setUseLMChroma ( Bool b ) { m_bUseLMChroma  = b;          }
-#endif
 
 #if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool getUseLossless ()         { return m_useLossless; }
