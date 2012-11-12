@@ -55,14 +55,14 @@ class TVideoIOYuv
 {
 private:
   fstream   m_cHandle;                                      ///< file handle
-  UInt      m_fileBitdepth; ///< bitdepth of input/output video file
-  Int       m_bitdepthShift;  ///< number of bits to increase or decrease image by before/after write/read
+  Int       m_fileBitdepth[MAX_NUM_CHANNEL_TYPE]; ///< bitdepth of input/output video file
+  Int       m_bitdepthShift[MAX_NUM_CHANNEL_TYPE];  ///< number of bits to increase or decrease image by before/after write/read
   
 public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
   
-  Void  open  ( Char* pchFile, Bool bWriteMode, UInt fileBitDepth, UInt internalBitDepth ); ///< open or create file
+  Void  open  ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
   Void  close ();                                           ///< close file
 
   Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);

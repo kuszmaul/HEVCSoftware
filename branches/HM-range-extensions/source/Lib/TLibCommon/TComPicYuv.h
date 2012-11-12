@@ -152,7 +152,7 @@ public:
   Void          extendPicBorder   ();
   
   //  Dump picture
-  Void          dump              (const char* pFileName, Bool bAdd = false) const ;
+  Void          dump              (const Char* pFileName, Bool bAdd = false) const ;
   
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
@@ -163,7 +163,7 @@ public:
 UInt calcChecksum(const TComPicYuv& pic, TComDigest &digest);
 UInt calcCRC     (const TComPicYuv& pic, TComDigest &digest);
 UInt calcMD5     (const TComPicYuv& pic, TComDigest &digest);
-std::string digestToString(TComDigest &digest, int numChar);
+std::string digestToString(TComDigest &digest, Int numChar);
 //! \}
 
 #endif // __TCOMPICYUV__

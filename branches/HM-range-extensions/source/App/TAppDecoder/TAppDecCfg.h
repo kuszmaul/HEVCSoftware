@@ -56,10 +56,10 @@
 class TAppDecCfg
 {
 protected:
-  char*         m_pchBitstreamFile;                   ///< input bitstream file name
-  char*         m_pchReconFile;                       ///< output reconstruction file name
-  Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
-  UInt          m_outputBitDepth;                     ///< bit depth used for writing output
+  Char*         m_pchBitstreamFile;                     ///< input bitstream file name
+  Char*         m_pchReconFile;                         ///< output reconstruction file name
+  Int           m_iSkipFrame;                           ///< counter for frames prior to the random access point to skip
+  Int           m_outputBitDepth[MAX_NUM_CHANNEL_TYPE]; ///< bit depth used for writing output
 
   Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message

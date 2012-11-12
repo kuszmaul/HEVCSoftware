@@ -53,7 +53,7 @@ WeightPredAnalysis::WeightPredAnalysis()
   {
     for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
     {
-      for ( int comp=0 ; comp<MAX_NUM_COMPONENT ;comp++ )
+      for ( Int comp=0 ; comp<MAX_NUM_COMPONENT ;comp++ )
       {
         wpScalingParam  *pwp   = &(m_wp[lst][iRefIdx][comp]);
         pwp->bPresentFlag      = false;
@@ -219,8 +219,6 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
 Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT], Int log2Denom)
 {
   const Int numComp = slice->getPic()->getPicYuvOrg()->getNumberValidComponents();
-  Int realLog2Denom = log2Denom + (g_bitDepth - 8);
-  Int realOffset = ((Int)1<<(realLog2Denom-1));
 
   Int numPredDir = slice->isInterP() ? 1 : 2;
   assert (numPredDir <= Int(NUM_REF_PIC_LIST_01));
@@ -235,6 +233,10 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
 
       for ( Int comp = 0; comp < numComp; comp++ )
       {
+        Int bitDepth = g_bitDepth[toChannelType(ComponentID(comp))];
+        Int realLog2Denom = log2Denom + (bitDepth - 8);
+        Int realOffset = ((Int)1<<(realLog2Denom-1));
+
         // current frame
         Int64 currDC = currWeightACDCParam[comp].iDC;
         Int64 currAC = currWeightACDCParam[comp].iAC;
@@ -250,7 +252,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
         // Chroma offset range limination
         if(comp)
         {
-          Int shift = 1 << (g_bitDepth - 1);
+          Int shift = 1 << (bitDepth - 1);
           Int pred = ( shift - ( ( shift*weight)>>(log2Denom) ) );
           Int deltaOffset = Clip3( -512, 511, (offset - pred) );    // signed 10bit
           offset = Clip3( -128, 127, (deltaOffset + pred) );        // signed 8bit
@@ -291,31 +293,32 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
     for ( Int iRefIdxTemp = 0; iRefIdxTemp < slice->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
     {
       Int64 iSADWP = 0, iSADnoWP = 0;
-      for(Int chan=0; chan<pPic->getNumberValidComponents(); chan++)
+      for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
       {
-        const ComponentID ch=ComponentID(chan);
+        const ComponentID compID=ComponentID(comp);
 
-        Pel*  pOrg    = pPic->getAddr(ch);
-        Pel*  pRef    = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getAddr(ch);
-        const Int   iOrgStride = pPic->getStride(ch);
-        const Int   iRefStride = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getStride(ch);
-        const Int iWidth  = pPic->getWidth(ch);
-        const Int iHeight = pPic->getHeight(ch);
+        Pel*  pOrg    = pPic->getAddr(compID);
+        Pel*  pRef    = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getAddr(compID);
+        const Int   iOrgStride = pPic->getStride(compID);
+        const Int   iRefStride = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getStride(compID);
+        const Int iWidth  = pPic->getWidth(compID);
+        const Int iHeight = pPic->getHeight(compID);
+        const Int bitDepth = g_bitDepth[toChannelType(compID)];
 
         // calculate SAD costs with/without wp for luma
-        iSADWP   += xCalcSADvalueWP(pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][ch].iWeight, weightPredTable[iRefList][iRefIdxTemp][ch].iOffset);
-        iSADnoWP += xCalcSADvalueWP(pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
+        iSADWP   += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][compID].iWeight, weightPredTable[iRefList][iRefIdxTemp][compID].iOffset);
+        iSADnoWP += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
       }
 
       Double dRatio = ((Double)iSADWP / (Double)iSADnoWP);
       if(dRatio >= (Double)DTHRESH)
       {
-        for(Int chan=0; chan<pPic->getNumberValidComponents(); chan++)
+        for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
         {
-          weightPredTable[iRefList][iRefIdxTemp][chan].bPresentFlag = false;
-          weightPredTable[iRefList][iRefIdxTemp][chan].iOffset = (Int)0;
-          weightPredTable[iRefList][iRefIdxTemp][chan].iWeight = (Int)iDefaultWeight;
-          weightPredTable[iRefList][iRefIdxTemp][chan].uiLog2WeightDenom = (Int)iDenom;
+          weightPredTable[iRefList][iRefIdxTemp][comp].bPresentFlag = false;
+          weightPredTable[iRefList][iRefIdxTemp][comp].iOffset = (Int)0;
+          weightPredTable[iRefList][iRefIdxTemp][comp].iWeight = (Int)iDefaultWeight;
+          weightPredTable[iRefList][iRefIdxTemp][comp].uiLog2WeightDenom = (Int)iDenom;
         }
       }
     }
@@ -336,12 +339,12 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
  * \param Int iOffset
  * \returns Int64
  */
-Int64 WeightPredAnalysis::xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset)
+Int64 WeightPredAnalysis::xCalcSADvalueWP(Int bitDepth, Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset)
 {
   Int x, y;
   Int64 iSAD = 0;
   Int64 iSize   = iWidth*iHeight;
-  Int64 iRealDenom = iDenom + (g_bitDepth - 8);
+  Int64 iRealDenom = iDenom + (bitDepth - 8);
   for( y = 0; y < iHeight; y++ )
   {
     for( x = 0; x < iWidth; x++ )

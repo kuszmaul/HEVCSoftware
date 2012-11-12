@@ -353,7 +353,7 @@ Void TEncTop::deletePicBuffer()
  \retval  rcListBitstreamOut  list of output bitstreams
  \retval  iNumEncoded         number of encoded pictures
  */
-Void TEncTop::encode( bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
+Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
 {
   if (pcPicYuvOrg != NULL)
   {
@@ -450,7 +450,7 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setTierFlag(m_levelTier);
   profileTierLevel.setProfileIdc(m_profile);
   profileTierLevel.setProfileCompatibilityFlag(m_profile, 1);
-  if (m_profile == Profile::MAIN10 && g_bitDepth == 8)
+  if ((m_profile == Profile::MAIN10) && (g_bitDepth[CHANNEL_TYPE_LUMA] == 8) && (g_bitDepth[CHANNEL_TYPE_CHROMA]))
   {
     /* The above constraint is equal to Profile::MAIN */
     profileTierLevel.setProfileCompatibilityFlag(Profile::MAIN, 1);
@@ -514,9 +514,13 @@ Void TEncTop::xInitSPS()
     m_cSPS.setAMPAcc(i, 0);
   }
 
-  m_cSPS.setBitDepth   ( g_bitDepth );
-  m_cSPS.setQpBDOffset (CHANNEL_TYPE_LUMA,   (6 * (g_bitDepth - 8)));
-  m_cSPS.setQpBDOffset (CHANNEL_TYPE_CHROMA, (6 * (g_bitDepth - 8)));
+
+  for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+  {
+    m_cSPS.setBitDepth    (ChannelType(channelType), g_bitDepth[channelType]            );
+    m_cSPS.setQpBDOffset  (ChannelType(channelType), (6 * (g_bitDepth[channelType] - 8)));
+    m_cSPS.setPCMBitDepth (ChannelType(channelType), g_PCMBitDepth[channelType]         );
+  }
 
   m_cSPS.setUseSAO( m_bUseSAO );
 
@@ -527,8 +531,7 @@ Void TEncTop::xInitSPS()
     m_cSPS.setMaxDecPicBuffering(m_maxDecPicBuffering[i], i);
     m_cSPS.setNumReorderPics(m_numReorderPics[i], i);
   }
-  m_cSPS.setPCMBitDepth (CHANNEL_TYPE_LUMA,   g_uiPCMBitDepthLuma);
-  m_cSPS.setPCMBitDepth (CHANNEL_TYPE_CHROMA, g_uiPCMBitDepthChroma);
+
   m_cSPS.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag );
 
   m_cSPS.setScalingListFlag ( (m_useScalingListId == 0) ? 0 : 1 );
@@ -671,7 +674,7 @@ Void TEncTop::xInitPPS()
   if( m_cPPS.getDependentSliceEnabledFlag()&&(!m_cPPS.getEntropySliceEnabledFlag()) )
 #endif
   {
-    int NumCtx = m_cPPS.getEntropyCodingSyncEnabledFlag()?2:1;
+    Int NumCtx = m_cPPS.getEntropyCodingSyncEnabledFlag()?2:1;
     m_cSliceEncoder.initCtxMem( NumCtx );
     for ( UInt st = 0; st < NumCtx; st++ )
     {

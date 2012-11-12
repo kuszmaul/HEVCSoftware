@@ -79,7 +79,7 @@ static inline Void printVal(const EnvVar* env)
   std::cout << std::setw(settingNameWidth) << env->getName() << " = " << std::setw(settingValueWidth) << env->getInt() << " (string = " << std::setw(15) << env->getString() << ")" << std::endl;
 }
 
-//static inline bool sameEnvName( const std::pair<std::string, std::string> &a,
+//static inline Bool sameEnvName( const std::pair<std::string, std::string> &a,
 //                                const std::pair<std::string, std::string> &b )
 //{
 //  // only check env name
@@ -124,7 +124,7 @@ EnvVar::EnvVar(const std::string &sName, const std::string &sDefault, const std:
   else m_sVal = sDefault;
 
   m_dVal = strtod(m_sVal.c_str(), 0);
-  m_iVal = int(m_dVal);
+  m_iVal = Int(m_dVal);
 
   getEnvVarList().push_back( std::pair<std::string, std::string>(m_sName, indentNewLines(lineWrap(splitOnSettings(m_sHelp), settingHelpWidth), (settingNameWidth + 4))) );
 }
@@ -317,7 +317,7 @@ Void printSBACCoeffData(  const UInt          lastX,
   if (DebugOptionList::DebugSBAC.getInt()!=0 && finalEncode)
   {
     std::cout << "Size: " << width << "x" << height << ", Last X/Y: (" << lastX << ", " << lastY << "), absPartIdx: " << absPart << ", scanIdx: " << scanIdx << ", chan: " << chan << std::endl;
-    for (int i=0; i<width*height; i++)
+    for (Int i=0; i<width*height; i++)
     {
       std::cout << std::setw(3) << pCoeff[i];// + dcVal;
       if (i%width == width-1) std::cout << std::endl;

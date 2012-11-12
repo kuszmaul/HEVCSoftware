@@ -67,8 +67,8 @@ protected:
   static const UInt m_uiMaxDepth;
   static const Int m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1];
   static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: ECF - This table appears to be larger than needed.
-  Int *m_iOffsetBo;
-  Int m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed.
+  Int *m_aiOffsetBo[MAX_NUM_CHANNEL_TYPE];
+  Int  m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed.
   Int  m_iPicWidth;
   Int  m_iPicHeight;
   UInt m_uiMaxSplitLevel;
@@ -81,12 +81,12 @@ protected:
   SliceType  m_eSliceType;
   Int        m_iPicNalReferenceIdc;
 
-  UInt m_uiSaoBitIncrease;
+  UInt m_auiSaoBitIncrease[MAX_NUM_CHANNEL_TYPE];
   UInt m_uiQP;
 
-  Pel   *m_pClipTable;
-  Pel   *m_pClipTableBase;
-  Pel   *m_lumaTableBo;
+  Pel   *m_apClipTable[MAX_NUM_CHANNEL_TYPE];
+  Pel   *m_apClipTableBase[MAX_NUM_CHANNEL_TYPE];
+  Pel   *m_aTableBo[MAX_NUM_CHANNEL_TYPE];
   Int   *m_iUpBuff1;
   Int   *m_iUpBuff2;
   Int   *m_iUpBufft;
@@ -115,7 +115,7 @@ public:
   Void create( UInt uiSourceWidth, UInt uiSourceHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth );
   Void destroy ();
 
-  Int  convertLevelRowCol2Idx(int level, int row, int col);
+  Int  convertLevelRowCol2Idx(Int level, Int row, Int col);
 
   Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, ComponentID ch);
   Void allocSaoParam  (SAOParam* pcSaoParam);
@@ -130,7 +130,7 @@ public:
   Void processSaoCuOrg(Int iAddr, Int iPartIdx, ComponentID ch);  //!< LCU-basd SAO process without slice granularity
   Void createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic = 1);
   Void destroyPicSaoInfo();
-  Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt xPos, UInt yPos, UInt width, UInt height, Bool* pbBorderAvail);
+  Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt xPos, UInt yPos, UInt width, UInt height, Bool* pbBorderAvail, ComponentID iYCbCr);
 
   Void resetLcuPart(SaoLcuParam* saoLcuParam);
   Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, ComponentID ch);

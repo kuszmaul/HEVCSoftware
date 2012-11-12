@@ -577,6 +577,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     ss << "###: " << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << std::endl;
 #endif
 
+  const Int clipbd = g_bitDepth[toChannelType(compID)];
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
@@ -601,7 +602,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
       if (DEBUG_STRING_CHANNEL_CONDITION(compID))
         ss << pResi[ uiX ] << ", ";
 #endif
-      pReco    [ uiX ] = Clip( pPred[ uiX ] + pResi[ uiX ] );
+      pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
     pPred     += uiStride;
@@ -734,7 +735,7 @@ Void TDecCu::xDecodePCMTexture( TComDataCU* pcCU, const UInt uiPartIdx, const Pe
 {
         Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartIdx);
   const UInt uiPicStride       = pcCU->getPic()->getPicYuvRec()->getStride(compID);
-  const UInt uiPcmLeftShiftBit = g_bitDepth - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
+  const UInt uiPcmLeftShiftBit = g_bitDepth[toChannelType(compID)] - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
 
   for(UInt uiY = 0; uiY < uiHeight; uiY++ )
   {

@@ -301,7 +301,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
 
 
   UInt cbf[MAX_NUM_COMPONENT]={0,0,0};
-  bool bHaveACodedBlock=false;
+  Bool bHaveACodedBlock=false;
   for(UInt ch=0; ch<numValidComponent; ch++)
   {
     cbf[ch] = pcCU->getCbf( uiAbsPartIdx, ComponentID(ch) , uiTrIdx );
@@ -730,7 +730,7 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID co
       saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
     }
 
-    Int offsetTh = 1 << min(g_bitDepth - 5,5);
+    Int offsetTh = 1 << min(g_bitDepth[toChannelType(compID)] - 5,5);
 
     if( saoLcuParam->typeIdx == SAO_BO )
     {

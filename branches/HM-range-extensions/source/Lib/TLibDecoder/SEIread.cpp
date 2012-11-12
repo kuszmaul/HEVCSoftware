@@ -192,7 +192,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
   READ_CODE (8, val, "hash_type");
   sei.method = static_cast<SEIDecodedPictureHash::Method>(val); bytesRead++;
 
-  const char *traceString="\0";
+  const Char *traceString="\0";
   switch (sei.method)
   {
     case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;

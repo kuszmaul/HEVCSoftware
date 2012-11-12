@@ -204,7 +204,7 @@ public:
   Void initScalingList                      ();
   Void destroyScalingList                   ();
   Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
-  double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][errorScaleAdjustmentMode];};  //!< get Error Scale Coefficent
+  Double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][errorScaleAdjustmentMode];};  //!< get Error Scale Coefficent
   Int* getQuantCoeff       ( UInt list, Int qp, UInt size)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get Quant Coefficent
   Int* getDequantCoeff     ( UInt list, Int qp, UInt size)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get DeQuant Coefficent
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
@@ -255,11 +255,11 @@ protected:
 
   Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of quantization matrix coefficient 4x4
   Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of dequantization matrix coefficient 4x4
-  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
+  Double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
 
 private:
   // forward Transform
-  Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
+  Void xT   (Int bitDepth, UInt uiMode, Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
 
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
@@ -339,7 +339,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                  const QpParam      &cQP );
 
   // inverse transform
-  Void xIT    ( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
+  Void xIT    ( Int bitDepth, UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );

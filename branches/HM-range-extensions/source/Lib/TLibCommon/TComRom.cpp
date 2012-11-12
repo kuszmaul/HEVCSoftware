@@ -580,11 +580,8 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 // Bit-depth
 // ====================================================================================================================
 
-Int  g_bitDepth              = 8;
-Int  g_maxLumaVal            = 255;  ///< Maximum Luma sample value
-
-UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
-UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
+Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE] = {8, 8};
+Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};    // PCM bit-depth
 
 // ====================================================================================================================
 // Misc.

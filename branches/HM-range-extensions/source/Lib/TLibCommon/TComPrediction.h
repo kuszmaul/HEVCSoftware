@@ -88,7 +88,7 @@ protected:
 #ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
   Void xPredIntraAngChroma422   ( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
 #endif
-  Void xPredIntraAng            ( const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
+  Void xPredIntraAng            ( Int bitDepth, const Pel* pSrc, Int srcStride, Pel* pDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
   Void xPredIntraPlanar         ( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format );
   
   // motion compensation functions
