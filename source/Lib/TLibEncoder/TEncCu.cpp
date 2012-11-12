@@ -412,7 +412,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Int iMinQP;
   Int iMaxQP;
   Bool isAddLowestQP = false;
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   const Int lowestQP = -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
 #else
   const Int lowestQP = -127; // illegal value!
@@ -426,7 +426,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMinQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, iBaseQP-idQP );
     iMaxQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, iBaseQP+idQP );
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     if ( (rpcTempCU->getSlice()->getSPS()->getUseLossless()) && (lowestQP < iMinQP) && rpcTempCU->getSlice()->getPPS()->getUseDQP() )
     {
       isAddLowestQP = true;
@@ -439,7 +439,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMinQP = rpcTempCU->getQP(0);
     iMaxQP = rpcTempCU->getQP(0);
   }
-#if !ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if !RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if ( (rpcTempCU->getSlice()->getPPS()->getTransquantBypassEnableFlag()) )
   {
     isAddLowestQP = true;
@@ -463,14 +463,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool bSliceEnd = (pcSlice->getDependentSliceCurEndCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getDependentSliceCurEndCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart());
   Bool bInsidePicture = ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getPicHeightInLumaSamples() );
   // We need to split, so don't try these modes.
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   const Bool bIsLosslessMode = false;
 #endif
   if(!bSliceEnd && !bSliceStart && bInsidePicture )
   {
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
-#if !ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if !RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
       const Bool bIsLosslessMode = isAddLowestQP && (iQP == iMinQP);
 #endif
       if (isAddLowestQP && (iQP == iMinQP))
@@ -546,7 +546,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     {
       for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
       {
-#if !ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if !RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
         const Bool bIsLosslessMode = isAddLowestQP && (iQP == iMinQP); // If lossless, then iQP is irrelevant for subsequent modules.
 #endif
         if (isAddLowestQP && (iQP == iMinQP))
@@ -801,7 +801,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMinQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, iBaseQP-idQP );
     iMaxQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, iBaseQP+idQP );
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     if ( (rpcTempCU->getSlice()->getSPS()->getUseLossless()) && (lowestQP < iMinQP) && rpcTempCU->getSlice()->getPPS()->getUseDQP() )
     {
       isAddLowestQP = true;
@@ -839,7 +839,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
   {
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     if (isAddLowestQP && (iQP == iMinQP))
     {
       iQP = lowestQP;
@@ -997,7 +997,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTempDebug) );                                  // RD compare current larger prediction
                                                                                        // with sub partitioned prediction.
     }
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     if (isAddLowestQP && (iQP == lowestQP))
     {
       iQP = iMinQP;
@@ -1291,7 +1291,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
   Int numValidMergeCand = 0;
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   const Bool bTransquantBypassFlag = m_pcEncCfg->getCUTransquantBypassFlagValue();
 #else
   const Bool bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
@@ -1303,7 +1303,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   }
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( bTransquantBypassFlag, 0, uhDepth );
 #endif
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
@@ -1388,7 +1388,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(bestStr) DEBUG_STRING_PASS_INTO(tmpStr));
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
           rpcTempCU->initEstData( uhDepth, orgQP, false );
 #else
           rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag );
@@ -1453,7 +1453,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts  ( m_pcEncCfg->getCUTransquantBypassFlagValue(),      0, uhDepth );
 #endif
 
@@ -1507,7 +1507,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
 #endif
 
@@ -1592,7 +1592,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
 #if !REMOVE_BURST_IPCM
-  // rpcTempCU->setCUTransquantBypassSubParts(false, 0, uiDepth); // NOTE ECF - the value of this is overwritten below
+  // rpcTempCU->setCUTransquantBypassSubParts(false, 0, uiDepth); // NOTE RExt - the value of this is overwritten below
 #endif
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
@@ -1602,7 +1602,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
 #endif
 

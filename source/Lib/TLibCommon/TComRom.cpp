@@ -415,7 +415,7 @@ Int g_invQuantScales[SCALING_LIST_REM_NUM] =
   40,45,51,57,64,72
 };
 
-#ifdef ECF__EXTENDED_QP_TABLES
+#ifdef RExt__EXTENDED_QP_TABLES
 Int g_quantScalesInc[SCALING_LIST_REM_NUM] =
 {
   26214,23302,20560,18396,16384,14564,12945,11523,10280
@@ -519,7 +519,7 @@ const UChar g_aucChromaScale[chromaQPMappingTableSize]=
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,29,30,31,32,33,33,34,34,35,35,36,36,37,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51
 };
 
-#ifdef ECF__MULTIPLE_CHROMA_QP_MAPPING_TABLES
+#ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
 
 const UChar g_aucChromaScale422[chromaQPMappingTableSize]=
 {
@@ -559,7 +559,7 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   3,  //  16x16
   3,  //  32x32
   3   //  64x64
-#if (ECF__BACKWARDS_COMPATIBILITY_HM != 0)
+#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
  ,3   // 128x128
 #endif
 };
@@ -572,7 +572,7 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   4,  //  16x16   33
   4,  //  32x32   33
   5   //  64x64   33
-#if (ECF__BACKWARDS_COMPATIBILITY_HM != 0)
+#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
  ,4   // 128x128  33
 #endif
 };
@@ -615,7 +615,7 @@ const UInt ctxIndMap4x4[4*4] =
   7, 7, 8, 8
 };
 
-#ifdef ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
+#ifdef RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
 
 const UInt ctxIndMap4x8[4*8] =
 {
@@ -755,7 +755,7 @@ Int g_quantInterDefault8x8[8*8] =
 
 UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
-#if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
+#if RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
 UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM};
 #else
 UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM, NUMBER_OF_PREDICTION_MODES};

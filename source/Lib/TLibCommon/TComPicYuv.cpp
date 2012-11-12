@@ -218,7 +218,7 @@ Void TComPicYuv::extendPicBorder ()
 
 
 
-//NOTE: ECF - This function is never called
+//NOTE: RExt - This function is never called
 Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
 {
   FILE* pFile;

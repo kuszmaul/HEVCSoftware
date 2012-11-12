@@ -491,7 +491,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
   
   m_cSPS.setTMVPFlagsPresent(false);
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   m_cSPS.setUseLossless   ( m_useLossless  );
 #endif
 
@@ -579,7 +579,7 @@ Void TEncTop::xInitPPS()
 
   const Int lowestQP = - m_cSPS.getQpBDOffset(CHANNEL_TYPE_LUMA);
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if(getUseLossless())
 #else
   if (getTransquantBypassEnableFlag())

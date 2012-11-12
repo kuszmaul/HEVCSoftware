@@ -41,7 +41,7 @@
 #include <iostream>
 #include <vector>
 #include <assert.h>
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "Debug.h"
 #endif
 
@@ -113,11 +113,11 @@ static inline UInt getTotalBits(const UInt width, const UInt height, const Chrom
 
 static inline Bool allFormatsUse420TUTreeStructure()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::AllChromaFormatsUseSameTUStructureAs420.getInt() != 0);
-#elif (ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 1)
+#elif (RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 1)
   return true;
-#elif (ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 0)
+#elif (RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 0)
   return false;
 #endif
 }
@@ -143,7 +143,7 @@ static inline Bool chromaTUCanSplitDownToMinimumLumaSize(const ChromaFormat chFm
 
 static inline Bool enable4ChromaPUsInIntraNxNCU(const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   switch (ToolOptionList::IntraNxNCUChromaPUSplitMode.getInt())
   {
     case 2: return                          chromaTUCanSplitDownToMinimumLumaSize(chFmt); break;
@@ -151,11 +151,11 @@ static inline Bool enable4ChromaPUsInIntraNxNCU(const ChromaFormat chFmt)
     default: break;
   }
   return false;
-#elif (ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 2)
+#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 2)
   return chromaTUCanSplitDownToMinimumLumaSize(chFmt);
-#elif (ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 1)
+#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 1)
   return (chFmt == CHROMA_444) && chromaTUCanSplitDownToMinimumLumaSize(chFmt);
-#elif (ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 0)
+#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 0)
   return false;
 #endif
 }
@@ -165,11 +165,11 @@ static inline Bool enable4ChromaPUsInIntraNxNCU(const ChromaFormat chFmt)
 
 static inline Bool doubleHeightCoefficientGroups(const ComponentID compID, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return isChroma(compID) && (chFmt == CHROMA_422) && (ToolOptionList::DoubleHeightCoefficientGroups422.getInt() != 0);
-#elif (ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 1)
+#elif (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 1)
   return isChroma(compID) && (chFmt == CHROMA_422);
-#elif (ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 0)
+#elif (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 0)
   return false;
 #endif
 }
@@ -181,7 +181,7 @@ static inline Bool doubleHeightCoefficientGroups(const ComponentID compID, const
 
 static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const ChromaFormat chFmt)
 {
-#ifdef ECF__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
+#ifdef RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
   return enable4ChromaPUsInIntraNxNCU(chFmt) ? lumaLCUIdx : lumaLCUIdx & (~((1<<(2*g_uiAddCUDepth))-1)); //(lumaLCUIdx/numParts)*numParts;
 #else
   return lumaLCUIdx & (~((1<<(2*g_uiAddCUDepth))-1));                                            //(lumaLCUIdx/numParts)*numParts;
@@ -195,11 +195,11 @@ static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const
 
 static inline Bool reducedIntraChromaModes()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::ReducedChromaIntraModeSet.getInt() != 0);
-#elif (ECF__REDUCED_CHROMA_INTRA_MODE_SET == 1)
+#elif (RExt__REDUCED_CHROMA_INTRA_MODE_SET == 1)
   return true;
-#elif (ECF__REDUCED_CHROMA_INTRA_MODE_SET == 0)
+#elif (RExt__REDUCED_CHROMA_INTRA_MODE_SET == 0)
   return false;
 #endif
 }
@@ -209,11 +209,11 @@ static inline Bool reducedIntraChromaModes()
 
 static inline Bool combinedLumaChromaIntraSearch()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::CombinedLumaChromaIntraModeSearch.getInt() != 0);
-#elif (ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH == 1)
+#elif (RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH == 1)
   return true;
-#elif (ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH == 0)
+#elif (RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH == 0)
   return false;
 #endif
 }
@@ -223,11 +223,11 @@ static inline Bool combinedLumaChromaIntraSearch()
 
 static inline Bool initalDMChromaPreEst()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::EncoderInitialIntraModePreEstDMChroma.getInt() != 0);
-#elif (ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 1)
+#elif (RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 1)
   return true;
-#elif (ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 0)
+#elif (RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 0)
   return false;
 #endif
 }
@@ -237,11 +237,11 @@ static inline Bool initalDMChromaPreEst()
 
 static inline Bool fastSearchOverAllComponents()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::EncoderFastIntraModeSearchOverAllComponents.getInt() != 0);
-#elif (ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 1)
+#elif (RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 1)
   return true;
-#elif (ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 0)
+#elif (RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 0)
   return false;
 #endif
 }
@@ -251,11 +251,11 @@ static inline Bool fastSearchOverAllComponents()
 
 static inline Bool fullRDSearchOverAllComponents()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::EncoderFullRateDistortionSearchOverAllComponents.getInt() != 0);
-#elif (ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 1)
+#elif (RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 1)
   return true;
-#elif (ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 0)
+#elif (RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 0)
   return false;
 #endif
 }
@@ -265,11 +265,11 @@ static inline Bool fullRDSearchOverAllComponents()
 
 static inline Bool additionalTrialEncodeChromaIntraSearch()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::AdditionalTrialEncodeChromaIntraModeSearch.getInt() != 0);
-#elif (ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 1)
+#elif (RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 1)
   return true;
-#elif (ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 0)
+#elif (RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 0)
   return false;
 #endif
 }
@@ -283,7 +283,7 @@ UInt* getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx,
 
 static inline Bool filterIntraReferenceSamples (const ChannelType chType, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   //< 0 = No reference sample filtering for chroma (in any format),
   //  1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4,
   //  2 (default) = Apply filter in both directions for 4:4:4 only,
@@ -291,11 +291,11 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
   return isLuma(chType) ||
          (chFmt==CHROMA_444 && ToolOptionList::ChromaIntraReferenceSampleFiltering.getInt()!=0) ||
          (chFmt==CHROMA_422 && (ToolOptionList::ChromaIntraReferenceSampleFiltering.getInt()&1)==1 ) ;
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1) || (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1) || (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
   return isLuma(chType) || (chFmt != CHROMA_420);
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
   return isLuma(chType) || (chFmt == CHROMA_444);
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
   return isLuma(chType);
 #endif
 }
@@ -306,7 +306,7 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 // this is modulated by the above filterIntraReferenceSamples
 static inline Bool applyFilteredIntraReferenceSamples(const ChannelType chType, const ChromaFormat chFmt, const Int where) /*0=DC, 1=VERTICAL, 2=HORIZONTAL*/
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (isLuma(chType) || chFmt==CHROMA_444)
   {
     return true;
@@ -317,13 +317,13 @@ static inline Bool applyFilteredIntraReferenceSamples(const ChannelType chType, 
     return option!=2 && (where==1 || option==3);
   }
   else return false;
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
   return isLuma(chType) || (chFmt != CHROMA_420);
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
   return isLuma(chType) || (chFmt == CHROMA_444);
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1)
   return isLuma(chType) || chFmt==CHROMA_444 || (chFmt==CHROMA_422 && (where==1));
-#elif (ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
+#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
   return isLuma(chType);
 #endif
 }
@@ -333,11 +333,11 @@ static inline Bool applyFilteredIntraReferenceSamples(const ChannelType chType, 
 
 static inline Bool nonScaledIntraChroma422(const ChannelType chType, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraAngleScaling.getInt() == 0));
-#elif (ECF__CHROMA_422_INTRA_ANGLE_SCALING == 1)
+#elif (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 1)
   return false;
-#elif (ECF__CHROMA_422_INTRA_ANGLE_SCALING == 0)
+#elif (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 0)
   return (isChroma(chType) && (chFmt == CHROMA_422));
 #endif
 }
@@ -347,11 +347,11 @@ static inline Bool nonScaledIntraChroma422(const ChannelType chType, const Chrom
 
 static inline Bool doubleWeightIntraDCAboveSamples(const ChannelType chType, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples.getInt() != 0));
-#elif (ECF__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 1)
+#elif (RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 1)
   return (isChroma(chType) && (chFmt == CHROMA_422));
-#elif (ECF__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 0)
+#elif (RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 0)
   return false;
 #endif
 }
@@ -361,11 +361,11 @@ static inline Bool doubleWeightIntraDCAboveSamples(const ChannelType chType, con
 
 static inline Bool intraPlanarSingleStageCalculation(const ChannelType chType, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraPlanarSingleStageCalculation.getInt() != 0));
-#elif (ECF__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 1)
+#elif (RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 1)
   return (isChroma(chType) && (chFmt == CHROMA_422));
-#elif (ECF__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 0)
+#elif (RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 0)
   return false;
 #endif
 }
@@ -385,28 +385,28 @@ static inline FilterMode getIntraEdgeFilterMode(const ChannelType type, const Ch
     {
       case CHROMA_444:
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           if (ToolOptionList::SetIntraChromaEdgeFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 1)
+#elif (RExt__SET_INTRA_CHROMA_EDGE_FILTER_444 == 1)
           return FILTER_BOTH_DIRECTIONS;
-#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 0 falls through to return FILTER_DISABLED
+#endif //RExt__SET_INTRA_CHROMA_EDGE_FILTER_444 == 0 falls through to return FILTER_DISABLED
         }
         break;
       
       case CHROMA_422:
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           switch (ToolOptionList::SetIntraChromaEdgeFilter422.getInt())
           {
             case 2:  return FILTER_BOTH_DIRECTIONS; break;
             case 1:  return FILTER_VERTICAL_ONLY;   break;
             default: break;
           }
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 2)
+#elif (RExt__SET_INTRA_CHROMA_EDGE_FILTER_422 == 2)
           return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 1)
+#elif (RExt__SET_INTRA_CHROMA_EDGE_FILTER_422 == 1)
           return FILTER_VERTICAL_ONLY;
-#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 0 falls through to return FILTER_DISABLED
+#endif //RExt__SET_INTRA_CHROMA_EDGE_FILTER_422 == 0 falls through to return FILTER_DISABLED
         }
         break;
 
@@ -434,28 +434,28 @@ static inline FilterMode getIntraDCFilterMode(const ChannelType type, const Chro
     {
       case CHROMA_444:
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           if (ToolOptionList::SetIntraChromaDCFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 1)
+#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_444 == 1)
           return FILTER_BOTH_DIRECTIONS;
-#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 0 falls through to return FILTER_DISABLED
+#endif //RExt__SET_INTRA_CHROMA_DC_FILTER_444 == 0 falls through to return FILTER_DISABLED
         }
         break;
       
       case CHROMA_422:
         {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           switch (ToolOptionList::SetIntraChromaDCFilter422.getInt())
           {
             case 2:  return FILTER_BOTH_DIRECTIONS; break;
             case 1:  return FILTER_VERTICAL_ONLY;   break;
             default: break;
           }
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 2)
+#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 2)
           return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 1)
+#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 1)
           return FILTER_VERTICAL_ONLY;
-#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 0 falls through to return FILTER_DISABLED
+#endif //RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 0 falls through to return FILTER_DISABLED
         }
         break;
 
@@ -473,11 +473,11 @@ static inline FilterMode getIntraDCFilterMode(const ChannelType type, const Chro
 
 static inline Bool getLMChromaSamplesFrom2ndLeftCol(const Bool LMmode, const ChromaFormat chFmt)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return LMmode && (ToolOptionList::Get444LMChromaReferenceSamplesFrom1stColumn.getInt()==0 || chFmt!=CHROMA_444);
-#elif (ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 1)
+#elif (RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 1)
   return LMmode && (chFmt != CHROMA_444);
-#elif (ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 0)
+#elif (RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 0)
   return LMmode;
 #endif
 }
@@ -491,13 +491,13 @@ static inline Bool useLumaInterpFilter(const ComponentID compID, const ChromaFor
 {
   if (isLuma(compID)) return true;
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 
   return (ToolOptionList::UseLumaFilterForChromaQuarterSampleInterpolation.getInt() != 0) && ((fmt == CHROMA_444) || ((fmt == CHROMA_422) && (dir == 1))); //quarter-sample chrominance
 
-#elif (ECF__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 1)
+#elif (RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 1)
   return (fmt == CHROMA_444) || ((fmt == CHROMA_422) && (dir == 1)); //quarter-sample chrominance
-#elif (ECF__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 0)
+#elif (RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 0)
   return false;
 #endif
 }
@@ -514,7 +514,7 @@ Int getMDDTmode (const ComponentID compID, class TComDataCU* pcCU, const UInt ui
 
 static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples)
 {
-  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE ECF - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
+  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE RExt - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
 }
 
 
@@ -522,11 +522,11 @@ static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle 
 
 static inline Bool singleTransformSkipFlag(const ChromaFormat format)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return ((format == CHROMA_444) && (ToolOptionList::SingleTransformSkipFlagForAllChannels444.getInt() != 0));
-#elif (ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 1)
+#elif (RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 1)
   return (format == CHROMA_444);
-#elif (ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 0)
+#elif (RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 0)
   return false;
 #endif
 }
@@ -550,9 +550,9 @@ Void setQPforQuant(       class QpParam      &result,
 
 static inline Int getQpRemTableIndexOffset()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return ((ToolOptionList::Chroma422QuantiserAdjustment.getInt() == 2) && (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2)) ? 3 : 0;
-#elif ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) && (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2))
+#elif ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2) && (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2))
   return 3;
 #else
   return 0;
@@ -566,7 +566,7 @@ static inline Int getQuantScaling(const Int qp_rem, const ChromaFormat format)
 {
   const Int tableIndex = qp_rem + getQpRemTableIndexOffset();
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if ((ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2) && (format == CHROMA_422))
   {
     switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
@@ -576,10 +576,10 @@ static inline Int getQuantScaling(const Int qp_rem, const ChromaFormat format)
       default: break;
     }
   }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
+#if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
   if (format == CHROMA_422) return g_quantScalesInc[tableIndex];
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
   if (format == CHROMA_422) return g_quantScalesDec[tableIndex];
 #endif
 #endif
@@ -594,7 +594,7 @@ static inline Int getInverseQuantScaling(const Int qp_rem, const ChromaFormat fo
 {
   const Int tableIndex = qp_rem + getQpRemTableIndexOffset();
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if ((ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 2) && (format == CHROMA_422))
   {
     switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
@@ -604,10 +604,10 @@ static inline Int getInverseQuantScaling(const Int qp_rem, const ChromaFormat fo
       default: break;
     }
   }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)
+#if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1)
   if (format == CHROMA_422) return g_invQuantScalesInc[tableIndex];
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
   if (format == CHROMA_422) return g_invQuantScalesDec[tableIndex];
 #endif
 #endif
@@ -628,11 +628,11 @@ static inline ErrorScaleAdjustmentMode getErrorScaleAdjustmentMode(const Compone
 
 static inline Bool roundTransformShiftUp(const ComponentID compID, const ChromaFormat chFmt, const Bool useTransformSkip)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip) && (ToolOptionList::Chroma422QuantiserAdjustment.getInt() == 2));
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2)
   return (isChroma(compID) && (chFmt == CHROMA_422) && (!useTransformSkip));
-#elif ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) || (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 0))
+#elif ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1) || (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 0))
   return false;
 #endif
 }
@@ -640,7 +640,7 @@ static inline Bool roundTransformShiftUp(const ComponentID compID, const ChromaF
 
 //------------------------------------------------
 
-// NOTE: ECF - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
+// NOTE: RExt - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
 static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrSize)
 {
   return MAX_TR_DYNAMIC_RANGE - g_bitDepth[type] - uiLog2TrSize;
@@ -653,7 +653,7 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 {
   const UInt scalingTableIndex = Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP);
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 
   if (ToolOptionList::AdditionalChromaQpMappingTables.getInt() != 0)
   {
@@ -662,13 +662,13 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
   }
   return g_aucChromaScale[ scalingTableIndex ];
 
-#elif (ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1)
+#elif (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1)
 
   if      (chFmt==CHROMA_422) return g_aucChromaScale422[ scalingTableIndex ];
   else if (chFmt==CHROMA_444) return g_aucChromaScale444[ scalingTableIndex ];
   else                        return g_aucChromaScale   [ scalingTableIndex ];
 
-#elif (ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 0)
+#elif (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 0)
 
   return g_aucChromaScale[ scalingTableIndex ];
 
@@ -685,7 +685,7 @@ static inline Void getAdditionalQuantiserMultiplyAndShift(Int &multiplier, Int &
 
   if (isChroma(compID) && (chFmt == CHROMA_422) && !useTransformSkip)
   {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
     if (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 0)
     {
       switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
@@ -695,11 +695,11 @@ static inline Void getAdditionalQuantiserMultiplyAndShift(Int &multiplier, Int &
         default: break;
       }
     }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 0) //if using constant multiplication method
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) // / sqrt(2) method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 0) //if using constant multiplication method
+#if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1) // / sqrt(2) method
     multiplier = INVSQRT2;
     shift      = INVSQRT2_SHIFT;
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) // * sqrt(2) method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2) // * sqrt(2) method
     multiplier = SQRT2;
     shift      = SQRT2_SHIFT;
 #endif
@@ -717,7 +717,7 @@ static inline Void getAdditionalInverseQuantiserMultiplyAndShift(Int &multiplier
 
   if (isChroma(compID) && (chFmt == CHROMA_422) && !useTransformSkip)
   {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
     if (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt() == 0)
     {
       switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
@@ -727,11 +727,11 @@ static inline Void getAdditionalInverseQuantiserMultiplyAndShift(Int &multiplier
         default: break;
       }
     }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 0) //if using constant multiplication method
-#if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) // / sqrt(2) method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 0) //if using constant multiplication method
+#if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1) // / sqrt(2) method
     multiplier = SQRT2;
     shift      = SQRT2_SHIFT;
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) // * sqrt(2) method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2) // * sqrt(2) method
     multiplier = INVSQRT2;
     shift      = INVSQRT2_SHIFT;
 #endif
@@ -748,7 +748,7 @@ static inline Void getAdditionalInverseQuantiserMultiplyAndShift(Int &multiplier
 // because 32x32 Cb/Cr TUs don't exist in 4:2:0
 static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, const ComponentID compID)
 {
-#if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
+#if RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
   return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
 #else
   const Int base=(isIntra ? 0 : MAX_NUM_COMPONENT);
@@ -782,10 +782,10 @@ MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID comp
 
 static inline UInt getMDCSAngleLimit(const ComponentID component)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return ((isLuma(component)) ? (ToolOptionList::LumaMDCSAngleLimit.getInt()) : (ToolOptionList::ChromaMDCSAngleLimit.getInt()));
 #else
-  return ((isLuma(component)) ? (ECF__LUMA_MDCS_ANGLE_LIMIT) : (ECF__CHROMA_MDCS_ANGLE_LIMIT));
+  return ((isLuma(component)) ? (RExt__LUMA_MDCS_ANGLE_LIMIT) : (RExt__CHROMA_MDCS_ANGLE_LIMIT));
 #endif
 }
 
@@ -796,21 +796,21 @@ static inline UInt getMDCSAngleLimit(const ComponentID component)
 
 //context variable source tables
 
-#if   (ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
 static const UInt significanceMapContextStartTable[MAX_NUM_COMPONENT]    = {FIRST_SIG_FLAG_CTX_LUMA, FIRST_SIG_FLAG_CTX_CB, FIRST_SIG_FLAG_CTX_CR};
-#elif (ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
 static const UInt significanceMapContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_SIG_FLAG_CTX_LUMA, FIRST_SIG_FLAG_CTX_CHROMA};
 #endif
 
-#if   (ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
 static const UInt contextSetStartTable[MAX_NUM_COMPONENT]    = {FIRST_CTX_SET_LUMA, FIRST_CTX_SET_CB, FIRST_CTX_SET_CR};
-#elif (ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
 static const UInt contextSetStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CTX_SET_LUMA, FIRST_CTX_SET_CHROMA};
 #endif
 
-#if   (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
 static const UInt CBFContextStartTable[MAX_NUM_COMPONENT]    = {FIRST_CBF_CTX_LUMA, FIRST_CBF_CTX_CB, FIRST_CBF_CTX_CR};
-#elif (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
 static const UInt CBFContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CBF_CTX_LUMA, FIRST_CBF_CTX_CHROMA};
 #endif
 
@@ -819,13 +819,13 @@ static const UInt CBFContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CBF_CTX_LU
 
 static inline Bool useTransformDepthForCbfCtxSelection(const ChromaFormat fmt, const ChannelType chType)
 {
-#if (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
+#if (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
   return false;
-#elif ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#elif RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (isChroma(chType) && ((fmt != CHROMA_444) || (ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection.getInt() != 0)));
-#elif (ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 1)
+#elif (RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 1)
   return isChroma(chType);
-#elif (ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 0)
+#elif (RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 0)
   return (isChroma(chType) && (fmt != CHROMA_444));
 #endif
 }
@@ -846,7 +846,7 @@ static inline Void getLastSignificantContextParameters (const ComponentID  compo
   const UInt convertedWidth  = g_aucConvertToBit[width];
   const UInt convertedHeight = g_aucConvertToBit[height];
 
-#ifdef ECF__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
+#ifdef RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
   result_offsetX = ((convertedWidth  * 3) + ((convertedWidth  + 1) >> 2));
   result_offsetY = ((convertedHeight * 3) + ((convertedHeight + 1) >> 2));
   result_shiftX  = ((convertedWidth  + 3) >> 2);
@@ -866,11 +866,11 @@ static inline Void getLastSignificantContextParameters (const ComponentID  compo
 
 static inline UInt getSignificanceMapContextOffset (const ComponentID component)
 {
-#if   (ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
   return significanceMapContextStartTable[component];
-#elif (ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
   return significanceMapContextStartTable[toChannelType(component)];
-#elif (ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
   return FIRST_SIG_FLAG_CTX_LUMA;
 #endif
 }
@@ -884,11 +884,11 @@ static inline UInt getSignificanceMapContextOffset (const ComponentID component)
 
 static inline Bool patternSigCtxCopyMissingGroupFromAvailableGroup()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups.getInt() != 0);
-#elif (ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 1)
+#elif (RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 1)
   return true;
-#elif (ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 0)
+#elif (RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 0)
   return false;
 #endif
 }
@@ -900,11 +900,11 @@ static inline Bool patternSigCtxCopyMissingGroupFromAvailableGroup()
 
 static inline Bool fixed422SignificanceMapContext()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::Chroma422SignificanceMapContextGrid.getInt() != 0);
-#elif ((ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2))
+#elif ((RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2))
   return true;
-#elif (ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0)
+#elif (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0)
   return false;
 #endif
 }
@@ -916,11 +916,11 @@ static inline Bool fixed422SignificanceMapContext()
 
 static inline Bool separateDC422SignificanceMapContext()
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return (ToolOptionList::Chroma422SignificanceMapContextGrid.getInt() > 1);
-#elif (ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2)
+#elif (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2)
   return true;
-#elif ((ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0))
+#elif ((RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0))
   return false;
 #endif
 }
@@ -936,17 +936,17 @@ static inline UInt getContextSetIndex (const ComponentID  component,
 {
   //------------------
 
-#if   (ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
   UInt contextSetIndex = contextSetStartTable[component];
-#elif (ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
   UInt contextSetIndex = contextSetStartTable[toChannelType(component)];
-#elif (ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
   UInt contextSetIndex = FIRST_CTX_SET_LUMA;
 #endif
 
   //------------------
 
-#ifdef ECF__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
+#ifdef RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
   if                       (subsetIndex > 0)  contextSetIndex += 2;
 #else
   if (isLuma(component) && (subsetIndex > 0)) contextSetIndex += 2;
@@ -964,11 +964,11 @@ static inline UInt getContextSetIndex (const ComponentID  component,
 
 static inline UInt getCBFContextOffset (const ComponentID component)
 {
-#if   (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
+#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
   return CBFContextStartTable[component];
-#elif (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
+#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
   return CBFContextStartTable[toChannelType(component)];
-#elif (ECF__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
+#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
   return FIRST_CBF_CTX_LUMA;
 #endif
 }

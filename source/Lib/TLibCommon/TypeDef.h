@@ -258,8 +258,8 @@
 
 #define CABAC_INIT_PRESENT_FLAG                           1
 
-#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4 // NOTE: ECF - new definition
-#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8 // NOTE: ECF - new definition
+#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4 // NOTE: RExt - new definition
+#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8 // NOTE: RExt - new definition
 
 
 // ====================================================================================================================
@@ -270,132 +270,132 @@
 
 
 // ====================================================================================================================
-// ECF control settings
+// RExt control settings
 // ====================================================================================================================
 
 //------------------------------------------------
 // Enable environment variables
 //------------------------------------------------
 
-#define ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST                              0 ///< When enabled, allows control of ECF modifications via environment variables
-#define ECF__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
+#define RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST                              0 ///< When enabled, allows control of RExt modifications via environment variables
+#define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
 // Block Structure
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420                  0 ///< 0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)
-  #define ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                1 ///< 0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
-  #define ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420                  0 ///< 0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)
+  #define RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                1 ///< 0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
+  #define RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
 #endif
 
 //------------------------------------------------
 // Intra Prediction
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__REDUCED_CHROMA_INTRA_MODE_SET                                    0 ///< 0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__REDUCED_CHROMA_INTRA_MODE_SET                                    0 ///< 0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)
 
-  #define ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH                           0 ///< 0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account
-  #define ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA                       0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA
-  #define ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS               0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components
-  #define ECF__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS          0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes
-  #define ECF__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH                 1 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)
+  #define RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH                           0 ///< 0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account
+  #define RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA                       0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA
+  #define RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS               0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components
+  #define RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS          0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes
+  #define RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH                 1 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)
 
-  #define ECF__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING                          2 ///< 0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4
-  #define ECF__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN               1 ///< 0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead
+  #define RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING                          2 ///< 0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4
+  #define RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN               1 ///< 0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead
 
-  #define ECF__CHROMA_422_INTRA_ANGLE_SCALING                                   1 ///< 0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)
-  #define ECF__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES                  0 ///< 0 (default) = When generating DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)
-  #define ECF__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION                 0 ///< 0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation
+  #define RExt__CHROMA_422_INTRA_ANGLE_SCALING                                   1 ///< 0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)
+  #define RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES                  0 ///< 0 (default) = When generating DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)
+  #define RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION                 0 ///< 0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation
 
-  #define ECF__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
-  #define ECF__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
+  #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
+  #define RExt__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
 
-  #define ECF__SET_INTRA_CHROMA_EDGE_FILTER_444                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
-  #define ECF__SET_INTRA_CHROMA_DC_FILTER_444                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
+  #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_444                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
+  #define RExt__SET_INTRA_CHROMA_DC_FILTER_444                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
 #endif
 
 //------------------------------------------------
 // Inter Prediction
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION          0 ///< 0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION          0 ///< 0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)
 #endif
 
 //------------------------------------------------
 // Transform and Quantisation
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__ENABLE_MDDT_FOR_444_CHROMA                                       0 ///< 0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs
-  #define ECF__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444                  0 ///< 0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value
-  #define ECF__CHROMA_422_QUANTISER_ADJUSTMENT                                  1 ///< 0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))
-  #define ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD                           1 ///< [NO EFFECT IF ECF__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables
-  #define ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              1 ///< 0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__ENABLE_MDDT_FOR_444_CHROMA                                       0 ///< 0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs
+  #define RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444                  0 ///< 0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value
+  #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT                                  1 ///< 0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))
+  #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD                           1 ///< [NO EFFECT IF RExt__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables
+  #define RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              1 ///< 0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
 #endif
 
 //------------------
 
 //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
 
-#define ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
+#define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
 
 //------------------------------------------------
 // Context Variable Selection
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION         1 ///< 0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)
-  #define ECF__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID                         0 ///< [AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4
-  #define ECF__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS            0 ///< 0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION         1 ///< 0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)
+  #define RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID                         0 ///< [AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4
+  #define RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS            0 ///< 0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups
 #endif
 
 //------------------
 
 //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
 
-#define ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION                      1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION                         1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION                                 1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define ECF__CBF_CONTEXT_CHANNEL_SEPARATION                                   1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
+#define RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION                      1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
+#define RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION                         1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
+#define RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION                                 1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
+#define RExt__CBF_CONTEXT_CHANNEL_SEPARATION                                   1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
 
-#define ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT                         0 ///< [NO EFFECT (ALWAYS ON) IF ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION IS 0]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
-#define ECF__EXTENDED_CHROMA_LAST_POSITION_CONTEXT                            0 ///< [NO EFFECT (ALWAYS ON) IF ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION IS 0   ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
-#define ECF__EXTENDED_CHROMA_C1_C2_CONTEXT                                    0 ///< [NO EFFECT (ALWAYS ON) IF ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION IS 0           ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
+#define RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT                         0 ///< [NO EFFECT (ALWAYS ON) IF RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION IS 0]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
+#define RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT                            0 ///< [NO EFFECT (ALWAYS ON) IF RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION IS 0   ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
+#define RExt__EXTENDED_CHROMA_C1_C2_CONTEXT                                    0 ///< [NO EFFECT (ALWAYS ON) IF RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION IS 0           ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
 
 //------------------------------------------------
 // MDCS
 //------------------------------------------------
 
-#if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define ECF__LUMA_MDCS_MODE                                                   3 ///< 0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
-  #define ECF__LUMA_MDCS_ANGLE_LIMIT                                            4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
-  #define ECF__LUMA_MDCS_MAXIMUM_WIDTH                                          8 ///< (default 8) Luminance TUs with width greater than this can only use diagonal scan
-  #define ECF__LUMA_MDCS_MAXIMUM_HEIGHT                                         8 ///< (default 8) Luminance TUs with height greater than this can only use diagonal scan
+#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
+  #define RExt__LUMA_MDCS_MODE                                                   3 ///< 0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
+  #define RExt__LUMA_MDCS_ANGLE_LIMIT                                            4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
+  #define RExt__LUMA_MDCS_MAXIMUM_WIDTH                                          8 ///< (default 8) Luminance TUs with width greater than this can only use diagonal scan
+  #define RExt__LUMA_MDCS_MAXIMUM_HEIGHT                                         8 ///< (default 8) Luminance TUs with height greater than this can only use diagonal scan
 
-  #define ECF__CHROMA_MDCS_MODE                                                 3 ///< 0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
-  #define ECF__CHROMA_MDCS_ANGLE_LIMIT                                          4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
-  #define ECF__CHROMA_MDCS_MAXIMUM_WIDTH                                        4 ///< (default 4) Chrominance TUs with width greater than this can only use diagonal scan
-  #define ECF__CHROMA_MDCS_MAXIMUM_HEIGHT                                       4 ///< (default 4) Chrominance TUs with height greater than this can only use diagonal scan
+  #define RExt__CHROMA_MDCS_MODE                                                 3 ///< 0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
+  #define RExt__CHROMA_MDCS_ANGLE_LIMIT                                          4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
+  #define RExt__CHROMA_MDCS_MAXIMUM_WIDTH                                        4 ///< (default 4) Chrominance TUs with width greater than this can only use diagonal scan
+  #define RExt__CHROMA_MDCS_MAXIMUM_HEIGHT                                       4 ///< (default 4) Chrominance TUs with height greater than this can only use diagonal scan
 
-  #define ECF__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS                  1 ///< 0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled
+  #define RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS                  1 ///< 0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled
 #endif
 
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
 
-#define ECF__BACKWARDS_COMPATIBILITY_HM                                       0 ///< Maintain backwards compatibility with HM for certain non-standard test configuration settings
-#define ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
+#define RExt__BACKWARDS_COMPATIBILITY_HM                                       0 ///< Maintain backwards compatibility with HM for certain non-standard test configuration settings
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
 
 //------------------------------------------------
 // Error checking
 //------------------------------------------------
 
-#if ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT < 0) || (ECF__CHROMA_422_QUANTISER_ADJUSTMENT > 2))
+#if ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT < 0) || (RExt__CHROMA_422_QUANTISER_ADJUSTMENT > 2))
 #error 4:2:2 QP mode must be 0, 1 or 2
 #endif
 
@@ -403,38 +403,38 @@
 // Derived Macros
 //------------------------------------------------
 
-#if ((ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (ECF__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE != 0))
-#define ECF__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
+#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE != 0))
+#define RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
 #endif
 
-#if ((ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (ECF__CHROMA_422_INTRA_ANGLE_SCALING == 0))
-#define ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
+#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 0))
+#define RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
 #endif
 
-#if ((ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || ((ECF__CHROMA_422_QUANTISER_ADJUSTMENT != 0) && (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)))
-#define ECF__EXTENDED_QP_TABLES
+#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT != 0) && (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)))
+#define RExt__EXTENDED_QP_TABLES
 #endif
 
-#if ((ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (ECF__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1))
-#define ECF__MULTIPLE_CHROMA_QP_MAPPING_TABLES
+#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1))
+#define RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
 #endif
 
-#if ((ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (ECF__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 != 0))
-#define ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 != 0))
+#define RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
 #endif
 
 //if using fully unified or extended context variables, always use the luminance selection methods
 
-#if ((ECF__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0) || (ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT == 1))
-#define ECF__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
+#if ((RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT == 1))
+#define RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
 #endif
 
-#if ((ECF__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0) || (ECF__EXTENDED_CHROMA_LAST_POSITION_CONTEXT == 1))
-#define ECF__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
+#if ((RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT == 1))
+#define RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
 #endif
 
-#if ((ECF__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0) || (ECF__EXTENDED_CHROMA_C1_C2_CONTEXT == 1))
-#define ECF__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
+#if ((RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_C1_C2_CONTEXT == 1))
+#define RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
 #endif
 
 
@@ -552,8 +552,8 @@ enum RefPicList
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
-static const UInt NUM_REF_PIC_LIST_01  = 2; // NOTE: ECF - new definition
-static const UInt NUM_REF_PIC_LIST_01C = 3; // NOTE: ECF - new definition
+static const UInt NUM_REF_PIC_LIST_01  = 2; // NOTE: RExt - new definition
+static const UInt NUM_REF_PIC_LIST_01C = 3; // NOTE: RExt - new definition
 
 /// distortion function index
 enum DFunc
@@ -644,7 +644,7 @@ enum COEFF_SCAN_GROUP_TYPE
 {
   SCAN_UNGROUPED   = 0,
   SCAN_GROUPED_4x4 = 1,
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
   SCAN_GROUPED_4x8 = 2,
   SCAN_NUMBER_OF_GROUP_TYPES = 3
 #else
@@ -866,7 +866,7 @@ struct TUEntropyCodingParameters
 
         //------------------
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
         struct NeighbourhoodContextParameters
         {
           UInt pattern00Context1Threshold;

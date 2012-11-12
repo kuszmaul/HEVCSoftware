@@ -58,7 +58,7 @@ class TComTrQuant;
 
 /// max number of supported APS in software
 #define MAX_NUM_SUPPORTED_APS 1
-static const UInt REF_PIC_LIST_NUM_IDX=32; // NOTE: ECF - new definition
+static const UInt REF_PIC_LIST_NUM_IDX=32; // NOTE: RExt - new definition
 
 // ====================================================================================================================
 // Class definition
@@ -213,8 +213,8 @@ public:
 
 class TComPTL{
   ProfileTierLevel m_generalPTL;
-  ProfileTierLevel m_subLayerPTL[6];      // max. value of max_sub_layers_minus1 is 6
-  Bool m_subLayerProfilePresentFlag[6]; //TODO: ECF - magic number
+  ProfileTierLevel m_subLayerPTL[6];    // max. value of max_sub_layers_minus1 is 6
+  Bool m_subLayerProfilePresentFlag[6]; //TODO: RExt - magic number
   Bool m_subLayerLevelPresentFlag[6];
 
 public:
@@ -277,7 +277,7 @@ struct HrdSubLayerInfo
   Bool lowDelayHrdFlag;
   UInt cpbCntMinus1;
   UInt bitRateValueMinus1[MAX_CPB_CNT][2];
-  UInt cpbSizeValue      [MAX_CPB_CNT][2]; //TODO: ECF - magic number
+  UInt cpbSizeValue      [MAX_CPB_CNT][2]; //TODO: RExt - magic number
   UInt cbrFlag           [MAX_CPB_CNT][2];
 };
 
@@ -327,7 +327,7 @@ private:
   HrdSubLayerInfo m_HRD[MAX_TLAYER];
 public:
   TComVUI()
-    :m_aspectRatioInfoPresentFlag(false) //TODO: ECF - This initialiser list contains magic numbers
+    :m_aspectRatioInfoPresentFlag(false) //TODO: RExt - This initialiser list contains magic numbers
     ,m_aspectRatioIdc(0)
     ,m_sarWidth(0)
     ,m_sarHeight(0)
@@ -676,7 +676,7 @@ public:
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
   Bool getUseLComb    ()         { return m_bUseLComb;      }
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool getUseLossless ()         { return m_useLossless; }
   Void setUseLossless ( Bool b ) { m_useLossless  = b; }
 #endif

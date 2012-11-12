@@ -67,12 +67,12 @@ UInt *getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx,
 
 Int getMDDTmode(const ComponentID compID, class TComDataCU* pcCU, const UInt uiAbsPartIdx)
 {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   return ((compID==COMPONENT_Y || (pcCU->getPic()->getChromaFormat()==CHROMA_444 && ToolOptionList::EnableMDDTFor444Chroma.getInt()!=0))
           && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA)
           ? pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx )
           : REG_DCT;
-#elif (ECF__ENABLE_MDDT_FOR_444_CHROMA == 1)
+#elif (RExt__ENABLE_MDDT_FOR_444_CHROMA == 1)
   return ((compID==COMPONENT_Y || pcCU->getPic()->getChromaFormat()==CHROMA_444) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA)
           ? pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx )
           : REG_DCT;
@@ -95,7 +95,7 @@ MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID comp
   UInt maximumWidth  = 0;
   UInt maximumHeight = 0;
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (ToolOptionList::NonSubsampledChromaUseLumaMDCSSizeLimits.getInt() != 0)
   {
     maximumWidth  = ((getComponentScaleX(component, format) == 0) ? (ToolOptionList::LumaMDCSMaximumWidth .getInt()) : (ToolOptionList::ChromaMDCSMaximumWidth .getInt()));
@@ -106,12 +106,12 @@ MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID comp
     maximumWidth  = ((isLuma(component))                          ? (ToolOptionList::LumaMDCSMaximumWidth .getInt()) : (ToolOptionList::ChromaMDCSMaximumWidth .getInt()));
     maximumHeight = ((isLuma(component))                          ? (ToolOptionList::LumaMDCSMaximumHeight.getInt()) : (ToolOptionList::ChromaMDCSMaximumHeight.getInt()));
   }
-#elif (ECF__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 1)
-  maximumWidth  = ((getComponentScaleX(component, format) == 0) ? (ECF__LUMA_MDCS_MAXIMUM_WIDTH ) : (ECF__CHROMA_MDCS_MAXIMUM_WIDTH ));
-  maximumHeight = ((getComponentScaleY(component, format) == 0) ? (ECF__LUMA_MDCS_MAXIMUM_HEIGHT) : (ECF__CHROMA_MDCS_MAXIMUM_HEIGHT));
-#elif (ECF__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 0)
-  maximumWidth  = ((isLuma(component))                          ? (ECF__LUMA_MDCS_MAXIMUM_WIDTH ) : (ECF__CHROMA_MDCS_MAXIMUM_WIDTH ));
-  maximumHeight = ((isLuma(component))                          ? (ECF__LUMA_MDCS_MAXIMUM_HEIGHT) : (ECF__CHROMA_MDCS_MAXIMUM_HEIGHT));
+#elif (RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 1)
+  maximumWidth  = ((getComponentScaleX(component, format) == 0) ? (RExt__LUMA_MDCS_MAXIMUM_WIDTH ) : (RExt__CHROMA_MDCS_MAXIMUM_WIDTH ));
+  maximumHeight = ((getComponentScaleY(component, format) == 0) ? (RExt__LUMA_MDCS_MAXIMUM_HEIGHT) : (RExt__CHROMA_MDCS_MAXIMUM_HEIGHT));
+#elif (RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 0)
+  maximumWidth  = ((isLuma(component))                          ? (RExt__LUMA_MDCS_MAXIMUM_WIDTH ) : (RExt__CHROMA_MDCS_MAXIMUM_WIDTH ));
+  maximumHeight = ((isLuma(component))                          ? (RExt__LUMA_MDCS_MAXIMUM_HEIGHT) : (RExt__CHROMA_MDCS_MAXIMUM_HEIGHT));
 #endif
 
   if ((width > maximumWidth) || (height > maximumHeight)) return MDCS_DISABLED;
@@ -120,10 +120,10 @@ MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID comp
 
   //return the appropriate mode setting
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const UInt MDCSModeIndex = ((isLuma(component)) ? (ToolOptionList::LumaMDCSMode.getInt()) : (ToolOptionList::ChromaMDCSMode.getInt()));
 #else
-  const UInt MDCSModeIndex = ((isLuma(component)) ? (ECF__LUMA_MDCS_MODE                  ) : (ECF__CHROMA_MDCS_MODE                  ));
+  const UInt MDCSModeIndex = ((isLuma(component)) ? (RExt__LUMA_MDCS_MODE                 ) : (RExt__CHROMA_MDCS_MODE                 ));
 #endif
 
   switch (MDCSModeIndex)
@@ -180,7 +180,7 @@ Void setQPforQuant(       QpParam      &result,
     
     if ((chFmt == CHROMA_422) && !useTransformSkip)
     {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
       {
         case 1: //+3 method
@@ -203,16 +203,16 @@ Void setQPforQuant(       QpParam      &result,
 
         default: break;
       }
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 1) //+3 method
-  #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1) //+3 method
+  #if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
       adjustedQp  += 3;
-  #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
+  #elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
       qpRemOffset += 3;
   #endif
-#elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT == 2) //-3 method
-  #if   (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
+#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2) //-3 method
+  #if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
       adjustedQp  -= 3;
-  #elif (ECF__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
+  #elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
       qpRemOffset -= 3;
   #endif
 #endif
@@ -270,7 +270,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const UInt log2WidthInGroups  = g_aucConvertToBit[result.widthInGroups  * 4];
   const UInt log2HeightInGroups = g_aucConvertToBit[result.heightInGroups * 4];
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
   const UInt groupType          = doubleGroupHeight ? SCAN_GROUPED_4x8 : SCAN_GROUPED_4x4;
 #else
   const UInt groupType          = SCAN_GROUPED_4x4;
@@ -310,7 +310,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   //set the neighbourhood context thresholds
 
-#ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
+#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
   if (!result.useFixedGridSignificanceMapContext)
   {
     //we must check all these conditions - doubleGroupHeight may not result in actual double-size groups

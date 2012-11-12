@@ -1252,7 +1252,7 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
   Int     bestModeId[MAX_NUM_COMPONENT] = { 0, 0, 0};
   checkTransformSkip           &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y));
   checkTransformSkip           &= (!pcCU->getCUTransquantBypass(0));
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   checkTransformSkip           &= (!((pcCU->getQP( 0 ) == 0) && (pcCU->getSlice()->getSPS()->getUseLossless())));
 #endif
 
@@ -2155,7 +2155,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt    uiBestPUDistC = 0;
     Double  dBestPUCost   = MAX_DOUBLE;
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
     UInt max=numModesForFullRD;
 
     if (DebugOptionList::ForceLumaMode.isSet()) max=0;  // we are forcing a direction, so don't bother with mode check
@@ -2251,7 +2251,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiOrgMode = uiBestPUMode;
 #endif
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       if (DebugOptionList::ForceLumaMode.isSet())
         uiOrgMode = DebugOptionList::ForceLumaMode.getInt();
 #endif
@@ -2439,7 +2439,7 @@ TEncSearch::estIntraPredChromaQT( TComDataCU* pcCU,
           uiMinMode=4;
           uiMaxMode=NUM_CHROMA_MODE;
         }
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
         else if (DebugOptionList::ForceChromaMode.isSet())
         {
           uiMinMode=DebugOptionList::ForceChromaMode.getInt();
@@ -4550,9 +4550,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
           pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 );
 
           QpParam cQP;
-#if ECF__BACKWARDS_COMPATIBILITY_HM
+#if RExt__BACKWARDS_COMPATIBILITY_HM
           {
-            //NOTE: ECF - This relationship with 'uiAbsSumU' affecting Cr's Qp offset causes a decoder mismatch in HM when Cb Qp offset != Cr Qp offset
+            //NOTE: RExt - This relationship with 'uiAbsSumU' affecting Cr's Qp offset causes a decoder mismatch in HM when Cb Qp offset != Cr Qp offset
             const Int chromaOffsetModified = (compID!=COMPONENT_Cr || uiAbsSum[COMPONENT_Cb]!=0) ? chromaOffset : pcCU->getSlice()->getPPS()->getQpOffset(COMPONENT_Cb);
             setQPforQuant( cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffsetModified, pcCU->getPic()->getChromaFormat(), false );
           }

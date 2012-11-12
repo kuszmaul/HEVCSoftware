@@ -714,7 +714,7 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
     const ComponentID compID=ComponentID(ch);
     Pel*    pResi = m_ppcYuvResi[uiDepth]->getAddr(compID);
 
-    // NOTE ECF - setQPForQuant was called here, but it has now been placed at the lowest level of decoding.
+    // NOTE RExt - setQPForQuant was called here, but it has now been placed at the lowest level of decoding.
 
     m_pcTrQuant->invRecurTransformNxN ( compID, pResi, m_ppcYuvResi[uiDepth]->getStride(compID), tuRecur );
   }

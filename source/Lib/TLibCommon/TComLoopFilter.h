@@ -60,7 +60,7 @@ private:
 
   UInt      m_uiNumPartitions;
   UChar*    m_aapucBS[NUM_EDGE_DIR];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
-  Bool*     m_aapbEdgeFilter[NUM_EDGE_DIR][MAX_NUM_COMPONENT]; // NOTE: ECF - all 'MAX_NUM_COMPONENT' are assigned the same value, and only COMPONENT_Y is used anyway!
+  Bool*     m_aapbEdgeFilter[NUM_EDGE_DIR][MAX_NUM_COMPONENT]; // NOTE: RExt - all 'MAX_NUM_COMPONENT' are assigned the same value, and only COMPONENT_Y is used anyway!
   LFCUParam m_stLFCUParam;                  ///< status structure
   
   Bool      m_bLFCrossTileBoundary;

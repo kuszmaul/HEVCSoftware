@@ -105,7 +105,7 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  */
 Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
 {
-  //NOTE: ECF - files cannot have bit depth greater than 16
+  //NOTE: RExt - files cannot have bit depth greater than 16
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_fileBitdepth[ch] = std::min<UInt>(fileBitDepth[ch], 16);
@@ -517,7 +517,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], ChromaFormat format
   
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
     UInt chModulated = (comp == 0) ? 0 : ((getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? (MAX_NUM_COMPONENT - comp) : comp); // 0 1 2 or if swapping, 0 2 1
     const ComponentID compID=ComponentID(chModulated);
 #else
@@ -544,7 +544,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], ChromaFormat format
       const UInt csx=getComponentScaleX(compID, pPicYuv->getChromaFormat());
       const UInt csy=getComponentScaleY(compID, pPicYuv->getChromaFormat());
       scalePlane(pPicYuv->getAddr(compID), stride444>>csx, width_full444>>csx, height_full444>>csy, m_bitdepthShift[chType], minval, maxval);
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       if (getenv("COPY_LUMA_TO_CHROMA_444") && pPicYuv->getChromaFormat()==CHROMA_444 && isChroma(compID))
       {
         // copy all the luma data to this plane.

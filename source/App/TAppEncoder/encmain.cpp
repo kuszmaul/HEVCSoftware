@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     if(!cTAppEncTop.parseCfg( argc, argv ))
     {
       cTAppEncTop.destroy();
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       EnvVar::printEnvVar();
 #endif
       return 1;
@@ -82,11 +82,11 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-#if ECF__PRINT_MACRO_VALUES
-  printECFMacroSettings();
+#if RExt__PRINT_MACRO_VALUES
+  printRExtMacroSettings();
 #endif
 
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   EnvVar::printEnvVarInUse();
 #endif
 

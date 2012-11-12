@@ -2913,7 +2913,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 
   if ( getSlice()->isInterB() )
   {
-    static const UInt NUM_PRIORITY_LIST=12; // NOTE: ECF - new definition
+    static const UInt NUM_PRIORITY_LIST=12; // NOTE: RExt - new definition
     static const UInt uiPriorityList0[NUM_PRIORITY_LIST] = {0 , 1, 0, 2, 1, 2, 0, 3, 1, 3, 2, 3};
     static const UInt uiPriorityList1[NUM_PRIORITY_LIST] = {1 , 0, 2, 0, 2, 1, 3, 0, 3, 1, 3, 2};
 

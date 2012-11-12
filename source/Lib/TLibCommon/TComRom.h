@@ -50,7 +50,7 @@
 // Macros
 // ====================================================================================================================
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM
+#if RExt__BACKWARDS_COMPATIBILITY_HM
 #define     MAX_CU_DEPTH             7                           // log2(LCUSize)
 #else
 #define     MAX_CU_DEPTH             6                           // log2(LCUSize)
@@ -62,7 +62,7 @@
 #define     MAX_TU_SIZE             32
 #define     MAX_NUM_SPU_W           (MAX_CU_SIZE/MIN_PU_SIZE)   // maximum number of SPU in horizontal line
 
-#ifdef ECF__EXTENDED_QP_TABLES
+#ifdef RExt__EXTENDED_QP_TABLES
 #define SCALING_LIST_REM_NUM 9     ///< remainder of QP/6
 #else
 #define SCALING_LIST_REM_NUM 6
@@ -130,14 +130,14 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)  
 extern Int g_invQuantScales[SCALING_LIST_REM_NUM];          // IQ(QP%6)
 
-#ifdef ECF__EXTENDED_QP_TABLES
+#ifdef RExt__EXTENDED_QP_TABLES
 extern Int g_quantScalesInc[SCALING_LIST_REM_NUM];
 extern Int g_invQuantScalesInc[SCALING_LIST_REM_NUM];
 extern Int g_quantScalesDec[SCALING_LIST_REM_NUM];
 extern Int g_invQuantScalesDec[SCALING_LIST_REM_NUM];
 #endif
 
-#define TRANSFORM_MATRIX_SHIFT 6 //NOTE: ECF - This value does not directly affect the transform matrices and must be adjusted in line with any change made to them
+#define TRANSFORM_MATRIX_SHIFT 6 //NOTE: RExt - This value does not directly affect the transform matrices and must be adjusted in line with any change made to them
 
 extern const TMatrixCoeff g_aiT4[4][4];
 extern const TMatrixCoeff g_aiT8[8][8];
@@ -152,7 +152,7 @@ static const Int chromaQPMappingTableSize = 58;
 
 extern const UChar  g_aucChromaScale      [chromaQPMappingTableSize];
 
-#ifdef ECF__MULTIPLE_CHROMA_QP_MAPPING_TABLES
+#ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
 extern const UChar  g_aucChromaScale422   [chromaQPMappingTableSize];
 extern const UChar  g_aucChromaScale444   [chromaQPMappingTableSize];
 #endif
@@ -170,7 +170,7 @@ extern const UChar  g_aucChromaScale444   [chromaQPMappingTableSize];
 // ====================================================================================================================
 
 extern const UInt   ctxIndMap4x4[4*4];
-#ifdef ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
+#ifdef RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
 extern const UInt   ctxIndMap4x8[4*8];
 extern const UInt   ctxIndMap8x4[8*4];
 #endif

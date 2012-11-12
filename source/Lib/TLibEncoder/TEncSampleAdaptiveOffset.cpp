@@ -1004,10 +1004,10 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
   Pel* pOrg;
   Pel* pRec;
   Int iStride;
-#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
   Int iLcuWidth  = pTmpSPS->getMaxCUHeight();
   Int iLcuHeight = pTmpSPS->getMaxCUWidth();
-#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
+#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
   Int iLcuWidth  = pTmpSPS->getMaxCUWidth();
   Int iLcuHeight = pTmpSPS->getMaxCUHeight();
 #endif
@@ -1029,7 +1029,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
   const UInt csx = m_pcPic->getComponentScaleX(iYCbCr);
   const UInt csy = m_pcPic->getComponentScaleY(iYCbCr);
 
-  Int numSkipLine = 4-(2*csy); // NOTE: ECF - numSkipLine is format dependent
+  Int numSkipLine = 4-(2*csy); // NOTE: RExt - numSkipLine is format dependent
 
   if (m_saoLcuBasedOptimization == 0)
   {
@@ -1037,8 +1037,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
   }
 
 #if SAO_SKIP_RIGHT
-  Int numSkipLineRight = 5-(2*csx); // NOTE: ECF - numSkipLineRight is format dependent
-  //NOTE: ECF - numSkipLineRight is dependent on SAO_SKIP_RIGHT here but not elsewhere (in new HM8.0 code)
+  Int numSkipLineRight = 5-(2*csx); // NOTE: RExt - numSkipLineRight is format dependent
+  //NOTE: RExt - numSkipLineRight is dependent on SAO_SKIP_RIGHT here but not elsewhere (in new HM8.0 code)
   if (m_saoLcuBasedOptimization == 0)
   {
     numSkipLineRight = 0;
@@ -1310,10 +1310,10 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
   Pel* pOrg;
   Pel* pRec;
   Int stride;
-#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
   Int lcuWidth  = pTmpSPS->getMaxCUHeight();
   Int lcuHeight = pTmpSPS->getMaxCUWidth();
-#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
+#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
   Int lcuWidth  = pTmpSPS->getMaxCUWidth();
   Int lcuHeight = pTmpSPS->getMaxCUHeight();
 #endif
@@ -1368,10 +1368,10 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
 
         picWidthTmp  = m_iPicWidth               >> csx;
         picHeightTmp = m_iPicHeight              >> csy;
-#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
+#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
         lcuWidth     = pTmpSPS->getMaxCUHeight() >> csx;
         lcuHeight    = pTmpSPS->getMaxCUWidth()  >> csy;
-#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
+#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
         lcuWidth     = pTmpSPS->getMaxCUWidth()  >> csx;
         lcuHeight    = pTmpSPS->getMaxCUHeight() >> csy;
 #endif
@@ -2191,9 +2191,9 @@ inline Int64 TEncSampleAdaptiveOffset::estSaoTypeDist(Int compPartIdx, Int typeI
 {
   Int64 estDist = 0;
   Int classIdx;
-  Int bitDepth =       g_bitDepth[compPartIdx==0?0:1];          // TODO - ECF - compPartIdx is not always a component!
-  Int saoBitIncrease = m_auiSaoBitIncrease[compPartIdx==0?0:1]; // TODO - ECF - compPartIdx is not always a component!
-  Int saoOffsetTh =    m_iOffsetTh[compPartIdx==0?0:1];         // TODO - ECF - compPartIdx is not always a component!
+  Int bitDepth =       g_bitDepth[compPartIdx==0?0:1];          // TODO - RExt - compPartIdx is not always a component!
+  Int saoBitIncrease = m_auiSaoBitIncrease[compPartIdx==0?0:1]; // TODO - RExt - compPartIdx is not always a component!
+  Int saoOffsetTh =    m_iOffsetTh[compPartIdx==0?0:1];         // TODO - RExt - compPartIdx is not always a component!
 
   for(classIdx=1; classIdx < ( (typeIdx < SAO_BO) ?  m_iNumClass[typeIdx]+1 : SAO_MAX_BO_CLASSES+1); classIdx++)
   {
@@ -2469,7 +2469,7 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
     if( typeIdx == SAO_BO )
     {
       // Estimate Best Position
-      for(Int compIdx = 0; compIdx < 2; compIdx++) //NOTE: ECF - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+      for(Int compIdx = 0; compIdx < 2; compIdx++) //NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
       {
         Double currentRDCost = 0.0;
         bestRDCostTableBo = MAX_DOUBLE;
@@ -2507,7 +2507,7 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_TEMP_BEST]);
     m_pcRDGoOnSbacCoder->resetBits();
 
-    for(Int compIdx = 0; compIdx < 2; compIdx++) // NOTE: ECF - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+    for(Int compIdx = 0; compIdx < 2; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
     {
       resetSaoUnit(&saoLcuParamRdo[compIdx]);
       saoLcuParamRdo[compIdx].length = m_iNumClass[typeIdx];
@@ -2544,7 +2544,7 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
 
   for (Int idxNeighbor=0;idxNeighbor<2;idxNeighbor++) 
   {
-    for(Int compIdx = 0; compIdx < 2; compIdx++) // NOTE: ECF - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+    for(Int compIdx = 0; compIdx < 2; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
     {
       saoLcuParamNeighbor[compIdx] = NULL;
       if (allowMergeLeft && addrLeft>=0 && idxNeighbor ==0)

@@ -378,7 +378,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_UVLC( pcSPS->getSPSId (),                   "seq_parameter_set_id" );
   WRITE_UVLC( Int(pcSPS->getChromaFormatIdc ()),    "chroma_format_idc" );
   //assert(pcSPS->getChromaFormatIdc () == 1);
-  //NOTE: ECF - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
+  //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
   if( pcSPS->getChromaFormatIdc () == 3 )
   {
     WRITE_FLAG( 0,                                  "separate_colour_plane_flag");
@@ -608,7 +608,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getPicOutputFlag() ? 1 : 0, "pic_output_flag" );
     }
 
-    //NOTE: ECF - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
+    //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
     //assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
@@ -1248,7 +1248,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
   }
   if(uiMode == 1)
   {
-    //NOTE: ECF - though the model uses one set of weighted prediction parameters per component, only two sets (luma and chroma)
+    //NOTE: RExt - though the model uses one set of weighted prediction parameters per component, only two sets (luma and chroma)
     //are actually encoded. Hence the chroma parameters are taken from the Cb channel set.
 
     for ( Int iNumRef=0 ; iNumRef<iNbRef ; iNumRef++ )

@@ -62,7 +62,7 @@ public:
   virtual PayloadType payloadType() const = 0;
 };
 
-static const UInt ISO_IEC_11578_LEN=16; // NOTE: ECF - new definition
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: RExt - new definition
 
 class SEIuserDataUnregistered : public SEI
 {

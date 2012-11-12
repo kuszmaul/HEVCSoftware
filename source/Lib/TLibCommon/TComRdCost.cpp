@@ -836,7 +836,7 @@ UInt TComRdCost::xGetSAD64( DistParam* pcDtParam )
   Int  iStrideCur = pcDtParam->iStrideCur*iSubStep;
   Int  iStrideOrg = pcDtParam->iStrideOrg*iSubStep;
   
-  UInt uiSum = 0; //NOTE: ECF - this function adds 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
+  UInt uiSum = 0; //NOTE: RExt - this function adds 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
   
   for( ; iRows != 0; iRows-=iSubStep )
   {
@@ -1884,7 +1884,7 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   
   Int  x, y;
   
-  UInt uiSum = 0; //NOTE: ECF - this function adds up to 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
+  UInt uiSum = 0; //NOTE: RExt - this function adds up to 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
   
 #if NS_HAD
   if( ( ( iRows % 8 == 0) && (iCols % 8 == 0) && ( iRows == iCols ) ) || ( ( iRows % 8 == 0 ) && (iCols % 8 == 0) && !pcDtParam->bUseNSHAD ) )

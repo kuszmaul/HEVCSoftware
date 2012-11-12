@@ -94,7 +94,7 @@ const Int TComSampleAdaptiveOffset::m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1] =
   341, //level 4
 };
 
-const UInt TComSampleAdaptiveOffset::m_auiEoTable[SAO_EO_TABLE_SIZE] = //NOTE: ECF - This table appears to be larger than needed.
+const UInt TComSampleAdaptiveOffset::m_auiEoTable[SAO_EO_TABLE_SIZE] = //NOTE: RExt - This table appears to be larger than needed.
 {
   1, //0
   2, //1

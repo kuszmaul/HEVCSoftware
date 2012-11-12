@@ -145,7 +145,7 @@ Void TAppEncTop::xInitLibCfg()
   Int lowestQP;
   lowestQP =  - 6*(g_bitDepth[CHANNEL_TYPE_LUMA] - 8); // XXX: check
 
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
   {
     m_bUseAdaptiveQP = false;
@@ -159,7 +159,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   m_cTEncTop.setUseLossless                  ( m_useLossless );
 #endif
   m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
@@ -259,7 +259,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTargetBitrate   ( m_targetBitrate);
   m_cTEncTop.setNumLCUInUnit    ( m_numLCUInUnit);
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
-#if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
 #else
   m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
