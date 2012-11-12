@@ -107,7 +107,7 @@ Void TComTrQuant::storeSliceQpNext(TComSlice* pcSlice)
     cnt += m_sliceNsamples[u] ;
   }
 
-  if( !m_bUseRDOQ )
+  if( !m_useRDOQ )
   {
     sliceQpused = qpBase;
     alpha = 0.5;
@@ -202,11 +202,7 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
     assert(0);
   }
 
-#if FULL_NBIT
-  int shift_1st = uiLog2TrSize - 1 + g_uiBitDepth - 8; // log2(N) - 1 + g_uiBitDepth - 8
-#else
-  int shift_1st = uiLog2TrSize - 1 + g_uiBitIncrement; // log2(N) - 1 + g_uiBitIncrement
-#endif
+  int shift_1st = uiLog2TrSize - 1 + g_bitDepth-8; // log2(N) - 1 + g_bitDepth-8
 
   int add_1st = 1<<(shift_1st-1);
   int shift_2nd = uiLog2TrSize + 6;
@@ -296,11 +292,7 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
 
   int shift_1st = SHIFT_INV_1ST;
   int add_1st = 1<<(shift_1st-1);
-#if FULL_NBIT
-  int shift_2nd = SHIFT_INV_2ND - (g_uiBitDepth - 8);
-#else
-  int shift_2nd = SHIFT_INV_2ND - g_uiBitIncrement;
-#endif
+  int shift_2nd = SHIFT_INV_2ND - g_bitDepth-8;
   int add_2nd = 1<<(shift_2nd-1);
   if (uiTrSize==4)
   {
@@ -776,12 +768,8 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, int shift, int line)
 */
 void xTrMxN(TCoeff *block, TCoeff *coeff, int iWidth, int iHeight, UInt uiMode)
 {
-#if FULL_NBIT
-  Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  g_uiBitDepth          + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
-#else
-  Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) + (g_uiBitIncrement + 8) + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
-#endif
-  Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
+  const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  g_bitDepth            + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
+  const Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
 
   assert(shift_1st >= 0);
   assert(shift_2nd >= 0);
@@ -837,11 +825,7 @@ void xTrMxN(TCoeff *block, TCoeff *coeff, int iWidth, int iHeight, UInt uiMode)
 void xITrMxN(TCoeff *coeff, TCoeff *block, int iWidth, int iHeight, UInt uiMode)
 {
   Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
-#if FULL_NBIT
-  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - (g_uiBitDepth);
-#else
-  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - (g_uiBitIncrement + 8);
-#endif
+  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - g_bitDepth;
 
   assert(shift_1st >= 0);
   assert(shift_2nd >= 0);
@@ -1044,8 +1028,13 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
   const ChromaFormat chFmt = pcCU->getPic()->getChromaFormat();
 
   const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
+#if RDOQ_TRANSFORMSKIP
+  Bool useRDOQ = useTransformSkip ? m_useRDOQTS : m_useRDOQ;
+  if ( useRDOQ && (isLuma(compID) || RDOQ_CHROMA) )
+#else
   Bool useRDOQForTransformSkip = !(m_useTransformSkipFast && useTransformSkip);
-  if ( m_bUseRDOQ && (isLuma(compID) || RDOQ_CHROMA) && useRDOQForTransformSkip )
+  if ( m_useRDOQ && (isLuma(compID) || RDOQ_CHROMA) && useRDOQForTransformSkip )
+#endif
   {
 #if ADAPTIVE_QP_SELECTION
     xRateDistOptQuant( rTu, piCoef, pDes, pArlDes, uiAcSum, compID, cQP );
@@ -1077,8 +1066,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
     assert(scalingListType < SCALING_LIST_NUM);
-    Int *piQuantCoeff = 0;
-    piQuantCoeff = getQuantCoeff(scalingListType,cQP.getAdjustedQp().rem,uiLog2TrSize-2);
+    Int *piQuantCoeff = getQuantCoeff(scalingListType,cQP.getAdjustedQp().rem,uiLog2TrSize-2);
 
     /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
      * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
@@ -1339,16 +1327,30 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 }
 
 
-Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int iSymbolMode, UInt *aTableLP4, UInt *aTableLP8, UInt *aTableLastPosVlcIndex,
-                       Bool bUseRDOQ,  Bool bEnc, Bool useTransformSkipFast
+Void TComTrQuant::init(   UInt  uiMaxWidth,
+                          UInt  uiMaxHeight,
+                          UInt  uiMaxTrSize,
+                          Int   iSymbolMode,
+                          UInt *aTableLP4,
+                          UInt *aTableLP8,
+                          UInt *aTableLastPosVlcIndex,
+                          Bool  bUseRDOQ,
+#if RDOQ_TRANSFORMSKIP
+                          Bool bUseRDOQTS,  
+#endif
+                          Bool  bEnc,
+                          Bool  useTransformSkipFast
 #if ADAPTIVE_QP_SELECTION
-                       , Bool bUseAdaptQpSelect
+                        , Bool bUseAdaptQpSelect
 #endif
                        )
 {
   m_uiMaxTrSize  = uiMaxTrSize;
   m_bEnc         = bEnc;
-  m_bUseRDOQ     = bUseRDOQ;
+  m_useRDOQ      = bUseRDOQ;
+#if RDOQ_TRANSFORMSKIP
+  m_useRDOQTS    = bUseRDOQTS;
+#endif
 #if ADAPTIVE_QP_SELECTION
   m_bUseAdaptQpSelect = bUseAdaptQpSelect;
 #endif
@@ -1761,8 +1763,8 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   memset( deltaU,       0, sizeof(Int) *  uiMaxNumCoeff );
 
   const Int iQBits = QUANT_SHIFT + cQP.getBaseQp().per + iTransformShift;                   // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
-  const double *const pdErrScale = getErrScaleCoeff(scalingListType,uiLog2TrSize-2,cQP.getBaseQp().rem,getErrorScaleAdjustmentMode(compID, format));
-  const Int    *const piQCoef    = getQuantCoeff(scalingListType,cQP.getAdjustedQp().rem,uiLog2TrSize-2);
+  const double *const pdErrScale = getErrScaleCoeff(scalingListType, (uiLog2TrSize-2), cQP.getBaseQp().rem, getErrorScaleAdjustmentMode(compID, format));
+  const Int    *const piQCoef    = getQuantCoeff(scalingListType, cQP.getAdjustedQp().rem, (uiLog2TrSize-2));
 
 #if ADAPTIVE_QP_SELECTION
   Int iQBitsC = iQBits - ARL_C_PRECISION;
@@ -2112,7 +2114,9 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   if( pcCU->getSlice()->getPPS()->getSignHideFlag() && uiAbsSum>=2)
   {
     const Double inverseQuantScale = Double(getInverseQuantScaling(cQP.getBaseQp().rem, format));
-    Int64 rdFactor = (Int64)(inverseQuantScale * inverseQuantScale * Double(1 << (2 * cQP.getBaseQp().per)) / m_dLambda / 16 / Double(1 << (2 * g_uiBitIncrement)) + 0.5);
+    Int64 rdFactor = (Int64)(inverseQuantScale * inverseQuantScale * (1 << (2 * cQP.getBaseQp().per))
+                             / m_dLambda / 16 / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth - 8)))
+                             + 0.5);
 
     Int lastCG = -1;
     Int absSum = 0 ;
@@ -2726,13 +2730,8 @@ Void TComTrQuant::setScalingListDec(TComScalingList *scalingList, const ChromaFo
 Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode)
 {
   UInt uiLog2TrSize = g_aucConvertToBit[ g_scalingListSizeX[size] ] + 2;
-#if FULL_NBIT
-  UInt uiBitDepth = g_uiBitDepth;
-#else
-  UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
-#endif
 
-  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - uiBitDepth - uiLog2TrSize;  // Represents scaling through forward transform
+  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - g_bitDepth - uiLog2TrSize;  // Represents scaling through forward transform
 
   UInt i,uiMaxNumCoeff = g_scalingListSize[size];
   Int *piQuantcoeff;
@@ -2747,7 +2746,7 @@ Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, Int qp, ErrorScaleAdjust
 
   for(i=0;i<uiMaxNumCoeff;i++)
   {
-    pdErrScale[i] =  dErrScale/(double)piQuantcoeff[i]/(double)piQuantcoeff[i]/(double)(1<<(2*g_uiBitIncrement));
+    pdErrScale[i] =  dErrScale / piQuantcoeff[i] / piQuantcoeff[i] / (1 << DISTORTION_PRECISION_ADJUSTMENT(2 * (g_bitDepth - 8)));
   }
 }
 

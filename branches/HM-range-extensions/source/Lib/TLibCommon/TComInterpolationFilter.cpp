@@ -109,7 +109,7 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
   }
   else if ( isFirst )
   {
-    Int shift = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
+    Int shift = IF_INTERNAL_PREC - g_bitDepth;
 
     for (row = 0; row < height; row++)
     {
@@ -125,9 +125,9 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
   }
   else
   {
-    Int shift = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
+    Int shift = IF_INTERNAL_PREC - g_bitDepth;
 
-    Pel maxVal = g_uiIBDI_MAX;
+    Pel maxVal = g_maxLumaVal;
     Pel minVal = 0;
     for (row = 0; row < height; row++)
     {
@@ -190,7 +190,7 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
 
   Int offset;
   Pel maxVal;
-  Int headRoom = IF_INTERNAL_PREC - (g_uiBitDepth + g_uiBitIncrement);
+  Int headRoom = IF_INTERNAL_PREC - g_bitDepth;
   Int shift = IF_FILTER_PREC;
   //NOTE: ECF - with the current settings (IF_INTERNAL_PREC = 14 and IF_FILTER_PREC = 6), though headroom can be
   //            negative for bit depths greater than 14, shift will remain non-negative for bit depths of 8->20
@@ -201,7 +201,7 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
     shift += (isFirst) ? 0 : headRoom;
     offset = 1 << (shift - 1);
     offset += (isFirst) ? 0 : IF_INTERNAL_OFFS << IF_FILTER_PREC;
-    maxVal = g_uiIBDI_MAX;
+    maxVal = g_maxLumaVal;
   }
   else
   {

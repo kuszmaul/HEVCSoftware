@@ -287,7 +287,9 @@ UInt g_auiZscanToRaster [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToZscan [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelX  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelY  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
-UInt g_motionRefer   [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, }; 
+#if !LINEBUF_CLEANUP
+UInt g_motionRefer   [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+#endif
 
 UInt g_auiPUOffset[NUMBER_OF_PART_SIZES] = { 0, 8, 4, 4, 2, 10, 1, 5};
 
@@ -324,6 +326,7 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 }
 
+#if !LINEBUF_CLEANUP
 /** generate motion data compression mapping table
 * \param uiMaxCUWidth, width of LCU
 * \param uiMaxCUHeight, hight of LCU
@@ -369,6 +372,7 @@ Void initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth
     }
   }
 }
+#endif
 
 Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
 {
@@ -576,10 +580,8 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 // Bit-depth
 // ====================================================================================================================
 
-UInt g_uiBitDepth     = 8;    // base bit-depth
-UInt g_uiBitIncrement = 0;    // increments
-UInt g_uiIBDI_MAX     = 255;  // max. value after  IBDI
-UInt g_uiBASE_MAX     = 255;  // max. value before IBDI
+Int  g_bitDepth              = 8;
+Int  g_maxLumaVal            = 255;  ///< Maximum Luma sample value
 
 UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
 UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
@@ -703,6 +705,7 @@ const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
   },
 };
 
+#if !FLAT_4x4_DSL
 Int g_quantIntraDefault4x4[4*4] =
 {
   16,16,17,21,
@@ -717,6 +720,7 @@ Int g_quantInterDefault4x4[4*4] =
   17,21,24,36,
   21,24,36,57
 };
+#endif
 Int g_quantTSDefault4x4[4*4] =
 {
   16,16,16,16,

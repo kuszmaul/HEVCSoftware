@@ -36,7 +36,9 @@
 */
 
 #include <time.h>
+#include <iostream>
 #include "TAppEncTop.h"
+#include "TAppCommon/program_options_lite.h"
 
 //! \ingroup TAppEncoder
 //! \{
@@ -63,12 +65,20 @@ int main(int argc, char* argv[])
   cTAppEncTop.create();
 
   // parse configuration
-  if(!cTAppEncTop.parseCfg( argc, argv ))
+  try
   {
-    cTAppEncTop.destroy();
+    if(!cTAppEncTop.parseCfg( argc, argv ))
+    {
+      cTAppEncTop.destroy();
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-    EnvVar::printEnvVar();
+      EnvVar::printEnvVar();
 #endif
+      return 1;
+    }
+  }
+  catch (df::program_options_lite::ParseFailure &e)
+  {
+    std::cerr << "Error parsing option \""<< e.arg <<"\" with argument \""<< e.val <<"\"." << std::endl;
     return 1;
   }
 

@@ -320,25 +320,33 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
 Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
+#if !REMOVE_BURST_IPCM
   Int numSubseqIPCM = 0;
+#endif
   Bool readPCMSampleFlag = false;
 
+#if !REMOVE_BURST_IPCM
   if(pcCU->getNumSucIPCM() > 0) 
   {
     readPCMSampleFlag = true;
   }
   else
   {
+#endif
     m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
     if (uiSymbol)
     {
       readPCMSampleFlag = true;
+#if !REMOVE_BURST_IPCM
       m_pcTDecBinIf->decodeNumSubseqIPCM(numSubseqIPCM);
       pcCU->setNumSucIPCM(numSubseqIPCM + 1);
+#endif
       m_pcTDecBinIf->decodePCMAlignBits();
     }
+#if !REMOVE_BURST_IPCM
   }
+#endif
 
   if (readPCMSampleFlag == true)
   {
@@ -371,11 +379,15 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
     }
 
+#if !REMOVE_BURST_IPCM
     pcCU->setNumSucIPCM( pcCU->getNumSucIPCM() - 1);
     if(pcCU->getNumSucIPCM() == 0)
     {
+#endif
       m_pcTDecBinIf->resetBac();
+#if !REMOVE_BURST_IPCM
     }
+#endif
   }
 }
 
@@ -1477,12 +1489,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
   if (uiSymbol)
   {
     psSaoLcuParam->length = iTypeLength[psSaoLcuParam->typeIdx];
-
-#if FULL_NBIT
-    Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + (g_uiBitDepth-8)-5),5) );
-#else
-    Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + g_uiBitIncrement-5),5) );
-#endif
+    Int offsetTh = 1 << min(g_bitDepth - 5,5);
 
     if( psSaoLcuParam->typeIdx == SAO_BO )
     {

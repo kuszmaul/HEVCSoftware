@@ -119,8 +119,6 @@ public:
   Int           getMarginX        (const ComponentID id) const { return m_iMarginX >> getComponentScaleX(id);  }
   Int           getMarginY        (const ComponentID id) const { return m_iMarginY >> getComponentScaleY(id);  }
   
-  Void          getMinMax         (const ComponentID id, Int* pMin, Int* pMax ) const;
-  
   // ------------------------------------------------------------------------------------------------
   //  Access function for picture buffer
   // ------------------------------------------------------------------------------------------------
@@ -158,9 +156,6 @@ public:
   
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
-#if FIXED_ROUNDING_FRAME_MEMORY
-  Void  xFixedRoundingPic();
-#endif  
 };// END CLASS DEFINITION TComPicYuv
 
 

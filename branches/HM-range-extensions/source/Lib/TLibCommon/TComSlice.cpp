@@ -415,6 +415,61 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   }
 
   // ref_pic_list_init
+#if RPL_INIT_FIX
+  TComPic*  rpsCurrList0[MAX_NUM_REF+1];
+  TComPic*  rpsCurrList1[MAX_NUM_REF+1];
+  Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr;
+
+  {
+    Int cIdx = 0;
+    for ( i=0; i<NumPocStCurr0; i++, cIdx++)
+    {
+      rpsCurrList0[cIdx] = RefPicSetStCurr0[i];
+    }
+    for ( i=0; i<NumPocStCurr1; i++, cIdx++)
+    {
+      rpsCurrList0[cIdx] = RefPicSetStCurr1[i];
+    }
+    for ( i=0; i<NumPocLtCurr;  i++, cIdx++)
+    {
+      rpsCurrList0[cIdx] = RefPicSetLtCurr[i];
+    }
+  }
+
+  if (m_eSliceType==B_SLICE)
+  {
+    Int cIdx = 0;
+    for ( i=0; i<NumPocStCurr1; i++, cIdx++)
+    {
+      rpsCurrList1[cIdx] = RefPicSetStCurr1[i];
+    }
+    for ( i=0; i<NumPocStCurr0; i++, cIdx++)
+    {
+      rpsCurrList1[cIdx] = RefPicSetStCurr0[i];
+    }
+    for ( i=0; i<NumPocLtCurr;  i++, cIdx++)
+    {
+      rpsCurrList1[cIdx] = RefPicSetLtCurr[i];
+    }
+  }
+
+  for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[0]-1); rIdx ++)
+  {
+    m_apcRefPicList[0][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? rpsCurrList0[ m_RefPicListModification.getRefPicSetIdxL0(rIdx) ] : rpsCurrList0[rIdx % numPocTotalCurr];
+  }
+  if ( m_eSliceType == P_SLICE )
+  {
+    m_aiNumRefIdx[1] = 0;
+    ::memset( m_apcRefPicList[1], 0, sizeof(m_apcRefPicList[1]));
+  }
+  else
+  {
+    for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[1]-1); rIdx ++)
+    {
+      m_apcRefPicList[1][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? rpsCurrList1[ m_RefPicListModification.getRefPicSetIdxL1(rIdx) ] : rpsCurrList1[rIdx % numPocTotalCurr];
+    }
+  }
+#else
   UInt cIdx = 0;
   UInt num_ref_idx_l0_active_minus1 = m_aiNumRefIdx[REF_PIC_LIST_0] - 1;
   UInt num_ref_idx_l1_active_minus1 = m_aiNumRefIdx[REF_PIC_LIST_1] - 1;
@@ -481,6 +536,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
       m_apcRefPicList[REF_PIC_LIST_1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
     }
   }
+#endif
 }
 
 Int TComSlice::getNumRpsCurrTempList()
@@ -1189,11 +1245,7 @@ Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_R
         }
 
         pwp->w      = pwp->iWeight;
-#if FULL_NBIT
-        pwp->o      = pwp->iOffset * (1 << (g_uiBitDepth-8)); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
-#else
-        pwp->o      = pwp->iOffset * (1 << g_uiBitIncrement); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
-#endif
+        pwp->o      = pwp->iOffset << (g_bitDepth-8); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }
@@ -1260,7 +1312,6 @@ TComSPS::TComSPS()
 , m_restrictedRefPicListsFlag   (  1)
 , m_listsModificationPresentFlag(  0)
 , m_uiBitDepth                (  8)
-, m_uiBitIncrement            (  0)
 , m_qpBDOffsetY               (  0)
 , m_qpBDOffsetC               (  0)
 , m_useLossless               (false)
@@ -1273,6 +1324,9 @@ TComSPS::TComSPS()
 , m_bUseSAO                   (false) 
 , m_bTemporalIdNestingFlag    (false)
 , m_scalingListEnabledFlag    (false)
+#if STRONG_INTRA_SMOOTHING
+, m_useStrongIntraSmoothing   (false) 
+#endif
 , m_vuiParametersPresentFlag  (false)
 , m_vuiParameters             ()
 {
@@ -1408,7 +1462,9 @@ TComPPS::TComPPS()
 , m_dependentSliceEnabledFlag        (false)
 , m_tilesEnabledFlag                 (false)
 , m_entropyCodingSyncEnabledFlag     (false)
+#if !REMOVE_ENTROPY_SLICES
 , m_entropySliceEnabledFlag          (false)
+#endif
 , m_loopFilterAcrossTilesEnabledFlag (true)
 , m_uniformSpacingFlag               (0)
 , m_iNumColumnsMinus1                (0)
@@ -1807,6 +1863,9 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
   switch(sizeId)
   {
     case SCALING_LIST_4x4:
+#if FLAT_4x4_DSL
+      src = g_quantTSDefault4x4;
+#else
       if( m_useTransformSkip )
       {
         src = g_quantTSDefault4x4;
@@ -1815,6 +1874,7 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
       {
         src = (listId < (g_scalingListNum[sizeId]/2) ) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
       }
+#endif
       break;
     case SCALING_LIST_8x8:
     case SCALING_LIST_16x16:

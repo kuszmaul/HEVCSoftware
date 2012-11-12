@@ -197,21 +197,61 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
     if (bFilterRefSamples)
     {
-
       // generate filtered intra prediction samples
 
-      Pel *piFilteredBuf1    = m_piYuvExt[compID][PRED_BUF_FILTERED];
-      Int stride=uiROIWidth;
-            Pel *piDestPtr=piFilteredBuf1+uiROIWidth*uiTuHeight2; // bottom left
-      const Pel *piSrcPtr =piAdiTemp+uiROIWidth*uiTuHeight2;      // bottom left
-      *piDestPtr=*piSrcPtr; // bottom left is not filtered
-      piDestPtr-=stride; piSrcPtr-=stride;
-      const ChannelType chType=toChannelType(compID);
+            Int          stride    = uiROIWidth;
+      const Pel         *piSrcPtr  = piAdiTemp                             + (stride * uiTuHeight2); // bottom left
+            Pel         *piDestPtr = m_piYuvExt[compID][PRED_BUF_FILTERED] + (stride * uiTuHeight2); // bottom left
+      const ChannelType  chType    = toChannelType(compID);
+      
+      //------------------------------------------------
+
+#if STRONG_INTRA_SMOOTHING
+      //TODO: ECF - investigate the use of this for chroma (luma only for now to match HM9.0)
+      Bool useStrongIntraSmoothing = isLuma(chType) && pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing();
+
+      const Pel bottomLeft = piAdiTemp[stride * uiTuHeight2];
+      const Pel topLeft    = piAdiTemp[0];
+      const Pel topRight   = piAdiTemp[uiTuWidth2];
+
+      if (useStrongIntraSmoothing)
+      {
+        const Int  threshold     = 1 << (g_bitDepth - 5);
+        const Bool bilinearLeft  = abs((bottomLeft + topLeft ) - (2 * piAdiTemp[stride * uiTuHeight])) < threshold; //difference between the
+        const Bool bilinearAbove = abs((topLeft    + topRight) - (2 * piAdiTemp[         uiTuWidth ])) < threshold; //ends and the middle
+        if ((uiTuWidth < 32) || (!bilinearLeft) || (!bilinearAbove))
+          useStrongIntraSmoothing = false;
+      }
+#endif
+
+      *piDestPtr = *piSrcPtr; // bottom left is not filtered
+      piDestPtr -= stride;
+      piSrcPtr  -= stride;
+
+      //------------------------------------------------
+
+      //left column (bottom to top)
       if (applyFilteredIntraReferenceSamples(chType, chFmt, 1))
       {
-        for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride, piSrcPtr-=stride)
+#if STRONG_INTRA_SMOOTHING
+        if (useStrongIntraSmoothing)
         {
-          *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[-stride] + 2 ) >> 2;
+          const Int shift = g_aucConvertToBit[uiTuHeight] + 3; //log2(uiTuHeight2)
+
+          for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride)
+          {
+            *piDestPtr = (((uiTuHeight2 - i) * bottomLeft) + (i * topLeft) + uiTuHeight) >> shift;
+          }
+
+          piSrcPtr -= stride * (uiTuHeight2 - 1);
+        }
+        else
+#endif
+        {
+          for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride, piSrcPtr-=stride)
+          {
+            *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[-stride] + 2 ) >> 2;
+          }
         }
       }
       else
@@ -221,8 +261,15 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
           *piDestPtr = piSrcPtr[0];
         }
       }
-      // now looking at the 0 case
+
+      //------------------------------------------------
+      
+      //top-left
+#if STRONG_INTRA_SMOOTHING
+      if ((!useStrongIntraSmoothing) && applyFilteredIntraReferenceSamples(chType, chFmt, 0))
+#else
       if (applyFilteredIntraReferenceSamples(chType, chFmt, 0))
+#endif
       {
         *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[1] + 2 ) >> 2;
       }
@@ -230,13 +277,33 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       {
         *piDestPtr = piSrcPtr[0];
       }
-      piDestPtr+=1; piSrcPtr+=1;
-      // now the top row
+      piDestPtr += 1;
+      piSrcPtr  += 1;
+
+      //------------------------------------------------
+
+      //top row (left-to-right)
       if (applyFilteredIntraReferenceSamples(chType, chFmt, 2))
       {
-        for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++, piSrcPtr++)
+#if STRONG_INTRA_SMOOTHING
+        if (useStrongIntraSmoothing)
         {
-          *piDestPtr = ( piSrcPtr[1] + 2*piSrcPtr[0] + piSrcPtr[-1] + 2 ) >> 2;
+          const Int shift = g_aucConvertToBit[uiTuWidth] + 3; //log2(uiTuWidth2)
+
+          for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++)
+          {
+            *piDestPtr = (((uiTuWidth2 - i) * topLeft) + (i * topRight) + uiTuWidth) >> shift;
+          }
+
+          piSrcPtr += uiTuWidth2 - 1;
+        }
+        else
+#endif
+        {
+          for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++, piSrcPtr++)
+          {
+            *piDestPtr = ( piSrcPtr[1] + 2*piSrcPtr[0] + piSrcPtr[-1] + 2 ) >> 2;
+          }
         }
       }
       else
@@ -246,6 +313,8 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
           *piDestPtr = piSrcPtr[0];
         }
       }
+
+      //------------------------------------------------
 
       *piDestPtr=*piSrcPtr; // far right is not filtered
 
@@ -262,7 +331,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
         for (UInt x=0; x<uiROIWidth; x++)
         {
           if (x==0 || y==0)
-            ss << piFilteredBuf1[y*uiROIWidth + x] << ", ";
+            ss << m_piYuvExt[compID][PRED_BUF_FILTERED][y*uiROIWidth + x] << ", ";
 //          if (x%16==15) ss << "\nPart size: ~ ";
         }
         ss << "\n";
@@ -283,7 +352,7 @@ Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiT
 {
   const Pel* piRoiTemp;
   Int  i, j;
-  Int  iDCValue = ( 1<<( g_uiBitDepth + g_uiBitIncrement - 1) );
+  Int  iDCValue = 1 << (g_bitDepth - 1);
 
   if (iNumIntraNeighbor == 0)
   {

@@ -336,7 +336,7 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
     const UInt  iSrc0Stride = pcYuvSrc0->getStride(ch);
     const UInt  iSrc1Stride = pcYuvSrc1->getStride(ch);
     const UInt  iDstStride  = getStride(ch);
-    const Int   shiftNum = IF_INTERNAL_PREC + 1 - ( g_uiBitDepth + g_uiBitIncrement );
+    const Int   shiftNum = IF_INTERNAL_PREC + 1 - g_bitDepth;
     const Int   offset = (shiftNum > 0) ? (( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS) : 0;
 
     const Int iWidth = uiWidth  >>getComponentScaleX(ch);

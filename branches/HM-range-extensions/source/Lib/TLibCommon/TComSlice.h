@@ -557,7 +557,6 @@ private:
 
   // Parameter
   UInt        m_uiBitDepth;
-  UInt        m_uiBitIncrement;
   Int         m_qpBDOffsetY;
   Int         m_qpBDOffsetC;
 
@@ -586,6 +585,9 @@ private:
   UInt        m_uiMaxLatencyIncrease[MAX_TLAYER];
 
   Bool        m_useDF;
+#if STRONG_INTRA_SMOOTHING
+  Bool        m_useStrongIntraSmoothing; 
+#endif
 
   Bool        m_vuiParametersPresentFlag;
   TComVUI     m_vuiParameters;
@@ -693,8 +695,6 @@ public:
   // Bit-depth
   UInt      getBitDepth     ()         { return m_uiBitDepth;     }
   Void      setBitDepth     ( UInt u ) { m_uiBitDepth = u;        }
-  UInt      getBitIncrement ()         { return m_uiBitIncrement; }
-  Void      setBitIncrement ( UInt u ) { m_uiBitIncrement = u;    }
   Int       getQpBDOffset   (ChannelType type) const { return isLuma(type) ? m_qpBDOffsetY : m_qpBDOffsetC; }
   Void      setQpBDOffset   (ChannelType type, Int i) { if (isLuma(type)) m_qpBDOffsetY=i; else m_qpBDOffsetC=i; }
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
@@ -720,6 +720,11 @@ public:
   Void setMaxDecPicBuffering  ( UInt ui, UInt tlayer ) { m_uiMaxDecPicBuffering[tlayer] = ui;   }
   UInt getMaxLatencyIncrease  (UInt tlayer)            { return m_uiMaxLatencyIncrease[tlayer];   }
   Void setMaxLatencyIncrease  ( UInt ui , UInt tlayer) { m_uiMaxLatencyIncrease[tlayer] = ui;      }
+
+#if STRONG_INTRA_SMOOTHING
+  Void setUseStrongIntraSmoothing (Bool bVal)  {m_useStrongIntraSmoothing = bVal;}
+  Bool getUseStrongIntraSmoothing ()           {return m_useStrongIntraSmoothing;}
+#endif
 
   Bool getVuiParametersPresentFlag() { return m_vuiParametersPresentFlag; }
   Void setVuiParametersPresentFlag(Bool b) { m_vuiParametersPresentFlag = b; }
@@ -787,7 +792,9 @@ private:
   Bool        m_dependentSliceEnabledFlag;     //!< Indicates the presence of dependent slices
   Bool        m_tilesEnabledFlag;              //!< Indicates the presence of tiles
   Bool        m_entropyCodingSyncEnabledFlag;  //!< Indicates the presence of wavefronts
+#if !REMOVE_ENTROPY_SLICES
   Bool        m_entropySliceEnabledFlag;       //!< Indicates the presence of entropy slices
+#endif
 
   Bool     m_loopFilterAcrossTilesEnabledFlag;
   Int      m_uniformSpacingFlag;
@@ -866,8 +873,10 @@ public:
   Void    setTilesEnabledFlag(Bool val)                    { m_tilesEnabledFlag = val; }
   Bool    getEntropyCodingSyncEnabledFlag() const          { return m_entropyCodingSyncEnabledFlag; }
   Void    setEntropyCodingSyncEnabledFlag(Bool val)        { m_entropyCodingSyncEnabledFlag = val; }
+#if !REMOVE_ENTROPY_SLICES
   Bool    getEntropySliceEnabledFlag() const               { return m_entropySliceEnabledFlag; }
   Void    setEntropySliceEnabledFlag(Bool val)             { m_entropySliceEnabledFlag = val; }
+#endif
   Void     setUniformSpacingFlag            ( Bool b )          { m_uniformSpacingFlag = b; }
   Bool     getUniformSpacingFlag            ()                  { return m_uniformSpacingFlag; }
   Void     setNumColumnsMinus1              ( Int i )           { m_iNumColumnsMinus1 = i; }

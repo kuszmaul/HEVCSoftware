@@ -76,16 +76,16 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
           Pel* pDst    = rpcYuvDst->getAddr( compID,  iPartUnitIdx );
 
     // Luma : --------------------------------------------
-    const Int w0       = wp0[compID].w;
-    const Int offset   = wp0[compID].offset;
-    const Int shiftNum = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
-    const Int shift    = wp0[compID].shift + shiftNum;
-    const Int round    = (enableRounding[compID] && (shift > 0)) ? (1<<(shift-1)) : 0;
-    const Int w1       = wp1[compID].w;
-    const UInt sx      = pcYuvSrc0->getComponentScaleX(compID);
-    const UInt sy      = pcYuvSrc0->getComponentScaleY(compID);
-    const Int iHeight(uiHeight>>sx);
-    const Int iWidth(uiWidth>>sy);
+    const Int  w0       = wp0[compID].w;
+    const Int  offset   = wp0[compID].offset;
+    const Int  shiftNum = IF_INTERNAL_PREC - g_bitDepth;
+    const Int  shift    = wp0[compID].shift + shiftNum;
+    const Int  round    = (enableRounding[compID] && (shift > 0)) ? (1<<(shift-1)) : 0;
+    const Int  w1       = wp1[compID].w;
+    const UInt csx      = pcYuvSrc0->getComponentScaleX(compID);
+    const UInt csy      = pcYuvSrc0->getComponentScaleY(compID);
+    const Int  iHeight  = uiHeight>>csx;
+    const Int  iWidth   = uiWidth>>csy;
 
     const UInt  iSrc0Stride = pcYuvSrc0->getStride(compID);
     const UInt  iSrc1Stride = pcYuvSrc1->getStride(compID);
@@ -137,17 +137,17 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
           Pel* pDst    = rpcYuvDst->getAddr( compID,  iPartUnitIdx );
 
     // Luma : --------------------------------------------
-    const Int w0       = wp0[compID].w;
-    const Int offset   = wp0[compID].offset;
-    const Int shiftNum = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
-    const Int shift    = wp0[compID].shift + shiftNum;
-    const Int round    = (shift > 0) ? (1<<(shift-1)) : 0;
-    const UInt  iSrc0Stride = pcYuvSrc0->getStride(compID);
-    const UInt  iDstStride  = rpcYuvDst->getStride(compID);
-    const UInt sx      = pcYuvSrc0->getComponentScaleX(compID);
-    const UInt sy      = pcYuvSrc0->getComponentScaleY(compID);
-    const Int iHeight(uiHeight>>sx);
-    const Int iWidth(uiWidth>>sy);
+    const Int  w0          = wp0[compID].w;
+    const Int  offset      = wp0[compID].offset;
+    const Int  shiftNum    = IF_INTERNAL_PREC - g_bitDepth;
+    const Int  shift       = wp0[compID].shift + shiftNum;
+    const Int  round       = (shift > 0) ? (1<<(shift-1)) : 0;
+    const UInt iSrc0Stride = pcYuvSrc0->getStride(compID);
+    const UInt iDstStride  = rpcYuvDst->getStride(compID);
+    const UInt csx         = pcYuvSrc0->getComponentScaleX(compID);
+    const UInt csy         = pcYuvSrc0->getComponentScaleY(compID);
+    const Int  iHeight     = uiHeight>>csx;
+    const Int  iWidth      = uiWidth>>csy;
   
     for (Int y = iHeight-1; y >= 0; y-- )
     {
@@ -185,15 +185,13 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
  * \param ibdi
  * \returns Void
  */
-Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const  Int iRefIdx1, wpScalingParam *&wp0, wpScalingParam *&wp1, const Int ibdi)
+Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const  Int iRefIdx1, wpScalingParam *&wp0, wpScalingParam *&wp1, const Int bitDepth)
 {
   TComSlice*            pcSlice       = pcCU->getSlice();
         TComPPS*        pps           = pcCU->getSlice()->getPPS();
   const Bool            wpBiPred      = pps->getWPBiPred();
   const Bool            bBiDir        = (iRefIdx0>=0 && iRefIdx1>=0);
   const Bool            bUniDir       = !bBiDir;
-
-  m_ibdi = ibdi;
 
   if ( bUniDir || wpBiPred )
   { // explicit --------------------
@@ -227,9 +225,9 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
     for ( int yuv=0 ; yuv<numValidComponent ; yuv++ )
     {
       wp0[yuv].w      = wp0[yuv].iWeight;
-      wp0[yuv].o      = wp0[yuv].iOffset * (1 << (m_ibdi-8));
+      wp0[yuv].o      = wp0[yuv].iOffset * (1 << (bitDepth-8));
       wp1[yuv].w      = wp1[yuv].iWeight;
-      wp1[yuv].o      = wp1[yuv].iOffset * (1 << (m_ibdi-8));
+      wp1[yuv].o      = wp1[yuv].iOffset * (1 << (bitDepth-8));
       wp0[yuv].offset = wp0[yuv].o + wp1[yuv].o;
       wp0[yuv].shift  = wp0[yuv].uiLog2WeightDenom + 1;
       wp0[yuv].round  = (1 << wp0[yuv].uiLog2WeightDenom);
@@ -245,7 +243,7 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
     for ( int yuv=0 ; yuv<numValidComponent ; yuv++ )
     {
       pwp[yuv].w      = pwp[yuv].iWeight;
-      pwp[yuv].offset = pwp[yuv].iOffset * (1 << (m_ibdi-8));
+      pwp[yuv].offset = pwp[yuv].iOffset * (1 << (bitDepth-8));
       pwp[yuv].shift  = pwp[yuv].uiLog2WeightDenom;
       pwp[yuv].round  = (pwp[yuv].uiLog2WeightDenom>=1) ? (1 << (pwp[yuv].uiLog2WeightDenom-1)) : (0);
     }
@@ -272,8 +270,7 @@ Void TComWeightPrediction::xWeightedPredictionBi( TComDataCU* pcCU, const TComYu
 
   assert(pps->getWPBiPred());
 
-  Int ibdi = (g_uiBitDepth+g_uiBitIncrement);
-  getWpScaling(pcCU, iRefIdx0, iRefIdx1, pwp0, pwp1, ibdi);
+  getWpScaling(pcCU, iRefIdx0, iRefIdx1, pwp0, pwp1, g_bitDepth);
 
   if( iRefIdx0 >= 0 && iRefIdx1 >= 0 )
   {
@@ -317,15 +314,13 @@ Void TComWeightPrediction::xWeightedPredictionUni( TComDataCU* pcCU, const TComY
   }
   assert (iRefIdx >= 0);
 
-  Int ibdi = (g_uiBitDepth+g_uiBitIncrement);
-
   if ( eRefPicList == REF_PIC_LIST_0 )
   {
-    getWpScaling(pcCU, iRefIdx, -1, pwp, pwpTmp, ibdi);
+    getWpScaling(pcCU, iRefIdx, -1, pwp, pwpTmp, g_bitDepth);
   }
   else
   {
-    getWpScaling(pcCU, -1, iRefIdx, pwpTmp, pwp, ibdi);
+    getWpScaling(pcCU, -1, iRefIdx, pwpTmp, pwp, g_bitDepth);
   }
   addWeightUni( pcYuvSrc, uiPartAddr, iWidth, iHeight, pwp, rpcYuvPred );
 }
