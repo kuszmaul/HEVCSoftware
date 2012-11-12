@@ -1321,12 +1321,14 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
           {
             const UInt totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
             pcCU->setTransformSkipSubParts ( modeId, compID, uiAbsPartIdx, totalAdjustedDepthChan );
+#if !REMOVE_LMCHROMA
             if (pcCU->getIntraDir(toChannelType(compID), uiAbsPartIdx ) == LM_CHROMA_IDX)
             {
               // Cannot save/restore LM_CHROMA prediction values, as they are dependent on the luma reconstruction values
               // which is affected by the use of transform skip.
               default0Save1Load2 = 0;
             }
+#endif
             xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistTmp[toChannelType(compID)], compID, rTu DEBUG_STRING_PASS_INTO(sModeString), default0Save1Load2 );
           }
           singleCbfTmp[compID] = pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth );
