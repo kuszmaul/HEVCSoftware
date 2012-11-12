@@ -159,11 +159,7 @@ Bool TDecCu::xDecodeSliceEnd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth)
   UInt uiCurNumParts    = pcPic->getNumPartInCU() >> (uiDepth<<1);
   UInt uiWidth = pcSlice->getSPS()->getPicWidthInLumaSamples();
   UInt uiHeight = pcSlice->getSPS()->getPicHeightInLumaSamples();
-#if REMOVE_FGS
   UInt uiGranularityWidth = g_uiMaxCUWidth;
-#else
-  UInt uiGranularityWidth = g_uiMaxCUWidth>>(pcSlice->getPPS()->getSliceGranularity());
-#endif
   UInt uiPosX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiPosY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
@@ -551,11 +547,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
                    pcCU->getQP(0),
                    toChannelType(compID),
                    pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
-#if CHROMA_QP_EXTENSION
                    (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
-#else
-                   pcCU->getSlice()->getPPS()->getQpOffset(compID),
-#endif
                    chFmt,
                    useTransformSkip );
 

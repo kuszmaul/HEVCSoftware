@@ -191,17 +191,10 @@ public:
 
   Void initScalingList                      ();
   Void destroyScalingList                   ();
-#if REMOVE_NSQT
   Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
   double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][errorScaleAdjustmentMode];};  //!< get Error Scale Coefficent
   Int* getQuantCoeff       ( UInt list, Int qp, UInt size)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get Quant Coefficent
   Int* getDequantCoeff     ( UInt list, Int qp, UInt size)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get DeQuant Coefficent
-#else
-  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ScalingListDIR dir, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
-  double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ScalingListDIR dir, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][dir][errorScaleAdjustmentMode];}; //!< get Error Scale Coefficent
-  Int* getQuantCoeff       ( UInt list, Int qp, UInt size, ScalingListDIR dir)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()][dir];                          }; //!< get Quant Coefficent
-  Int* getDequantCoeff     ( UInt list, Int qp, UInt size, ScalingListDIR dir)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()][dir];                          }; //!< get DeQuant Coefficent
-#endif
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
   Bool getUseScalingList   (){ return m_scalingListEnabledFlag; };
   Void setFlatScalingList  (const ChromaFormat format);
@@ -244,15 +237,11 @@ protected:
   Bool     m_useTransformSkipFast;
 
   Bool     m_scalingListEnabledFlag;
-#if REMOVE_NSQT
+
   Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of quantization matrix coefficient 4x4
   Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of dequantization matrix coefficient 4x4
   double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
-#else
-  Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM];                                         ///< array of quantization matrix coefficient 4x4
-  Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM];                                         ///< array of dequantization matrix coefficient 4x4
-  double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][SCALING_LIST_DIR_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
-#endif
+
 private:
   // forward Transform
   Void xT   ( UInt uiMode,Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );

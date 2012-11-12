@@ -42,9 +42,6 @@
 TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, const UInt initTrDepth444relCU)
   : mChromaFormat(pcCU->getSlice()->getSPS()->getChromaFormatIdc()),
     mbProcessLastOfLevel(true), // does not matter. the top level is not 4 quadrants.
-#if !REMOVE_NSQT
-    mPartOption(0),
-#endif
     mCuTrDepth444(cuDepth),
     mTrDepth444RelCU(initTrDepth444relCU),
     mSection(0),
@@ -58,18 +55,6 @@ TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, co
 {
   TComSPS *pSPS=pcCU->getSlice()->getSPS();
   mLog2TrLumaSize = g_aucConvertToBit[pSPS->getMaxCUWidth() >> (mCuTrDepth444+mTrDepth444RelCU)]+2;
-
-#if !REMOVE_NSQT
-  if (pSPS->getUseNSQT())
-  {
-    PartSize ePartSize(pcCU->getPartitionSize(absPartIdxCU));
-
-    if (ePartSize==SIZE_Nx2N || ePartSize==SIZE_nLx2N || ePartSize==SIZE_nRx2N)
-      mPartOption=2;
-    else if (ePartSize != SIZE_2Nx2N && ePartSize != SIZE_NxN)
-      mPartOption=1;
-  }
-#endif
 
   const UInt baseOffset444=pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight()*absPartIdxCU;
 
@@ -98,9 +83,6 @@ TComTURecurse::TComTURecurse(      TComDataCU *pcCU,
 TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MODE splitMode)
   : mChromaFormat(parent.mChromaFormat),
     mbProcessLastOfLevel(bProcessLastOfLevel),
-#if !REMOVE_NSQT
-    mPartOption(parent.mPartOption),
-#endif
     mCuTrDepth444(parent.mCuTrDepth444),
     mTrDepth444RelCU(parent.mTrDepth444RelCU + (splitMode==DONT_SPLIT?0:1)),
     mSection(0),
@@ -138,10 +120,6 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
     return;
   }
 
-#if !REMOVE_NSQT
-  const UInt initialPartOption=mPartOption;
-  Bool bFirstChannelChangedToNSQT=false;
-#endif
   for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
   {
     mRect[i].width = (parent.mRect[i].width >> 1);
@@ -149,24 +127,6 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
     mRect[i].x0=parent.mRect[i].x0;
     mRect[i].y0=parent.mRect[i].y0;
     mOffsets[i]=parent.mOffsets[i];
-
-#if !REMOVE_NSQT
-    if (initialPartOption && mRect[i].width < MAX_TU_SIZE && (i==0 || bFirstChannelChangedToNSQT))
-    {
-      bFirstChannelChangedToNSQT=true;
-      if (initialPartOption==2)
-      {
-        mRect[i].width >>= 1;
-        mRect[i].height<<= 1;
-      }
-      else
-      {
-        mRect[i].width <<= 1;
-        mRect[i].height>>= 1;
-      }
-      mPartOption=0;
-    }
-#endif
 
     if ((mRect[i].width < MIN_TU_SIZE || mRect[i].height < MIN_TU_SIZE) && mRect[i].width!=0)
     {
@@ -256,17 +216,5 @@ Bool TComTURecurse::nextSection(const TComTU &parent)
 
 UInt TComTU::GetEquivalentLog2TrSize(const ComponentID compID)     const
 {
-  const TComRectangle &rect = getRect(compID);
-  const UInt height=rect.height;
-#if REMOVE_NSQT
-  return g_aucConvertToBit[ height ] + 2;
-#else
-  const UInt width=rect.width;
-  const UInt csx=getComponentScaleX(compID, mChromaFormat);
-  const UInt csy=getComponentScaleY(compID, mChromaFormat);
-
-       if ((width<<csx) == (height<<csy))    return g_aucConvertToBit[ height ] + 2;
-  else if ((width<<csx) <  (height<<csy))    return g_aucConvertToBit[ height ] + 2 - 1;
-  else                                       return g_aucConvertToBit[ height ] + 2 + 1;
-#endif
+  return g_aucConvertToBit[ getRect(compID).height ] + 2;
 }

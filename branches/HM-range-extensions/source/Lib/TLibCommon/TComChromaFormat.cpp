@@ -266,24 +266,8 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   //set the group layout
 
-#if !REMOVAL_8x2_2x8_CG
-  if( result.scanType == SCAN_HOR )  
-  {
-    result.log2GroupWidth  = std::min<UInt>(log2BlockWidth,   log2GroupSize);
-    result.log2GroupHeight = std::min<UInt>(log2BlockHeight, (log2GroupSize - result.log2GroupWidth));
-  }
-  else if( result.scanType == SCAN_VER )
-  {
-    result.log2GroupHeight = std::min<UInt>(log2BlockHeight,  log2GroupSize);
-    result.log2GroupWidth  = std::min<UInt>(log2BlockWidth,  (log2GroupSize - result.log2GroupHeight));
-  }
-  else
-#endif
-  {
-    result.log2GroupWidth  = std::min<UInt>(log2BlockWidth,  ( log2GroupSize      >> 1));   //width rounds down and height rounds up so that, when using non-square
-    result.log2GroupHeight = std::min<UInt>(log2BlockHeight, ((log2GroupSize + 1) >> 1));   //coefficient groups, the groups will be double-high rather than double-wide
-  }
-
+  result.log2GroupWidth  = std::min<UInt>(log2BlockWidth,  ( log2GroupSize      >> 1));   //width rounds down and height rounds up so that, when using non-square
+  result.log2GroupHeight = std::min<UInt>(log2BlockHeight, ((log2GroupSize + 1) >> 1));   //coefficient groups, the groups will be double-high rather than double-wide
   result.widthInGroups  = width  >> result.log2GroupWidth;
   result.heightInGroups = height >> result.log2GroupHeight;
 
@@ -295,17 +279,9 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const UInt log2HeightInGroups = g_aucConvertToBit[result.heightInGroups * 4];
 
 #ifdef ECF__EXTENDED_SIZE_COEFFICIENT_GROUPS
-#if REMOVAL_8x2_2x8_CG
   const UInt groupType          = doubleGroupHeight ? SCAN_GROUPED_4x8 : SCAN_GROUPED_4x4;
 #else
-  const UInt groupType          = ((result.scanType == SCAN_HOR) || (result.scanType == SCAN_VER)) ? SCAN_UNGROUPED : (doubleGroupHeight ? SCAN_GROUPED_4x8 : SCAN_GROUPED_4x4);
-#endif
-#else
-#if REMOVAL_8x2_2x8_CG
   const UInt groupType          = SCAN_GROUPED_4x4;
-#else
-  const UInt groupType          = ((result.scanType == SCAN_HOR) || (result.scanType == SCAN_VER)) ? SCAN_UNGROUPED : SCAN_GROUPED_4x4;
-#endif
 #endif
 
   result.scan   = g_scanOrder[ groupType      ][ result.scanType ][ log2BlockWidth    ][ log2BlockHeight    ];
@@ -329,18 +305,8 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   else if (((width == 8) && (height == 8)) || (fixed422SignificanceMapContext() && (((width == 8) && (height == 16)) || ((width == 16) && (height == 8)))))
   {
     result.firstSignificanceMapContext        = significanceMapContextSetStart[channelType][CONTEXT_TYPE_8x8];
-#if REMOVAL_8x2_2x8_CG
     result.useFixedGridSignificanceMapContext = false;
     if (result.scanType != SCAN_DIAG) result.firstSignificanceMapContext += nonDiagonalScan8x8ContextOffset[channelType];
-#else
-    result.useFixedGridSignificanceMapContext = true;
-    if ((width != height) && separateDC422SignificanceMapContext())
-    {
-      if      (height == 16) result.fixedGridContextParameters.initialise(ctxIndMap4x8, 2, 3, log2BlockWidth, log2BlockHeight);
-      else if (width  == 16) result.fixedGridContextParameters.initialise(ctxIndMap8x4, 3, 2, log2BlockWidth, log2BlockHeight);
-    }
-    else result.fixedGridContextParameters.initialise(ctxIndMap4x4, 2, 2, log2BlockWidth, log2BlockHeight);
-#endif
   }
   else
   {
@@ -359,23 +325,13 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
     //due to clipping and doubleGroupHeight is also not the only way to get non-square groups because of MDCS
     if (doubleGroupHeight && (result.log2GroupWidth != result.log2GroupHeight))
     {
-#if REMOVAL_8x2_2x8_CG
       result.neighbourhoodContextParameters.pattern00Context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x8;
       result.neighbourhoodContextParameters.pattern00Context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x8;
-#else
-      result.neighbourhoodContextParameters.pattern00ContextThreshold = NEIGHBOURHOOD_00_CONTEXT_THRESHOLD_4x8;
-      result.neighbourhoodContextParameters.pattern11ContextThreshold = NEIGHBOURHOOD_11_CONTEXT_THRESHOLD_4x8;
-#endif
     }
     else
     {
-#if REMOVAL_8x2_2x8_CG
       result.neighbourhoodContextParameters.pattern00Context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x4;
       result.neighbourhoodContextParameters.pattern00Context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x4;
-#else
-      result.neighbourhoodContextParameters.pattern00ContextThreshold = NEIGHBOURHOOD_00_CONTEXT_THRESHOLD_4x4;
-      result.neighbourhoodContextParameters.pattern11ContextThreshold = NEIGHBOURHOOD_11_CONTEXT_THRESHOLD_4x4;
-#endif
     }
   }
 #endif

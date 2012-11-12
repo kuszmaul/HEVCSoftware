@@ -53,9 +53,6 @@ class TComTU
   protected:
     ChromaFormat  mChromaFormat;
     Bool          mbProcessLastOfLevel; // if true, then if size n/2 x n/2 is invalid, the nxn block for a channel is processed only for the last block, not the first.
-#if !REMOVE_NSQT
-    UInt          mPartOption; // 0=NSQT disabled (Square TUs), 1=4hx1v blocks, 2=1hx4v blocks
-#endif
     UInt          mCuTrDepth444;
     UInt          mTrDepth444RelCU;
     UInt          mSection;

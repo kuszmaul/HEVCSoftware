@@ -37,7 +37,6 @@
 
 #include "TEncEntropy.h"
 #include "TLibCommon/TypeDef.h"
-#include "TLibCommon/TComAdaptiveLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 #include "TLibCommon/TComTU.h"
 
@@ -59,38 +58,9 @@ Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
 {
   if (pcSlice->getSPS()->getUseSAO())
   {
-#if REMOVE_APS
     SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-#else
-    SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
-#endif
-#if SAO_TYPE_SHARING
-    pcSlice->setSaoEnabledFlag     (saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]);
-#else
-    pcSlice->setSaoEnabledFlag     (saoParam->bSaoFlag[COMPONENT_Y]);
-#endif
-#if !SAO_LUM_CHROMA_ONOFF_FLAGS
-    if (pcSlice->getSaoEnabledFlag())
-#endif
-    {
-#if SAO_TYPE_SHARING
-      pcSlice->setSaoEnabledFlagChroma   (saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]);
-#else
-      pcSlice->setSaoEnabledFlagCb   (saoParam->bSaoFlag[COMPONENT_Cb]);
-      pcSlice->setSaoEnabledFlagCr   (saoParam->bSaoFlag[COMPONENT_Cr]);
-#endif
-    }
-#if !SAO_LUM_CHROMA_ONOFF_FLAGS
-    else
-    {
-#if SAO_TYPE_SHARING
-      pcSlice->setSaoEnabledFlagChroma (0);
-#else
-      pcSlice->setSaoEnabledFlagCb   (0);
-      pcSlice->setSaoEnabledFlagCr   (0);
-#endif
-    }
-#endif
+    pcSlice->setSaoEnabledFlag       (saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]);
+    pcSlice->setSaoEnabledFlagChroma (saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]);
   }
 
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
@@ -114,10 +84,6 @@ Void TEncEntropy::encodeSliceFinish()
   m_pcEntropyCoderIf->codeSliceFinish();
 }
 
-Void TEncEntropy::encodeFlush()
-{
-  m_pcEntropyCoderIf->codeFlush();
-}
 Void TEncEntropy::encodeStart()
 {
   m_pcEntropyCoderIf->encodeStart();
@@ -369,11 +335,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
   else
   {
     assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
-#if TRANS_SPLIT_FLAG_CTX_REDUCTION
     m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, 5 - uiLog2TrafoSize );
-#else
-    m_pcEntropyCoderIf->codeTransformSubdivFlag( uiSubdiv, uiDepth );
-#endif
   }
 
   const UInt uiTrDepthCurr = uiDepth - pcCU->getDepth( uiAbsPartIdx );
@@ -416,14 +378,10 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       DTRACE_CABAC_V( pcCU->getTransformIdx( uiAbsPartIdx ) );
       DTRACE_CABAC_T( "\n" );
     }
+
     UInt uiLumaTrMode, uiChromaTrMode;
     pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx( uiAbsPartIdx ), uiLumaTrMode, uiChromaTrMode );
-#if !REMOVE_NSQT
-    if(pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_INTER && pcCU->useNonSquarePU( uiAbsPartIdx ) )
-    {
-      pcCU->setNSQTIdxSubParts( uiLog2TrafoSize, rTu, uiLumaTrMode );
-    }
-#endif
+
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
     {
       assert( pcCU->getCbf( uiAbsPartIdx, COMPONENT_Y, 0 ) );
@@ -637,11 +595,7 @@ Void TEncEntropy::encodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList e
 
 Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
-#if !SPS_AMVP_CLEANUP
-  if ( (pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
-#else
   if ( (pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList )) )
-#endif
   {
     m_pcEntropyCoderIf->codeMVPIdx( pcCU, uiAbsPartIdx, eRefList );
   }
@@ -664,7 +618,6 @@ Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcEntropyCoderIf->codeQtRootCbf( pcCU, uiAbsPartIdx );
 }
 
-#if TU_ZERO_CBF_RDO
 Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
 {
   //NOTE: ECF - In HM8.0, this function is called in multiple ways, which may not be intended.
@@ -677,7 +630,6 @@ Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codeQtRootCbfZero( pcCU, uiAbsPartIdx );
 }
-#endif
 
 // dQP
 Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
@@ -730,9 +682,6 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
     if ( !pcCU->getQtRootCbf( uiAbsPartIdx ) )
     {
-#if !REMOVE_NSQT
-      pcCU->setNSQTIdxSubParts( uiAbsPartIdx, uiDepth );
-#endif
       return;
     }
   }
@@ -759,36 +708,24 @@ Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int 
 /** Encode SAO Offset
  * \param  saoLcuParam SAO LCU paramters
  */
-#if SAO_TYPE_SHARING 
 Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID compID )
-#else
-Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam)
-#endif
 {
   UInt uiSymbol;
   Int i;
 
   uiSymbol = saoLcuParam->typeIdx + 1;
-#if SAO_TYPE_SHARING
+
   if (compID != COMPONENT_Cr)
   {
     m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
   }
-#else
-  m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
-#endif
+
   if (uiSymbol)
   {
-#if SAO_TYPE_CODING
-#if SAO_TYPE_SHARING
     if (saoLcuParam->typeIdx < 4 && compID != COMPONENT_Cr)
-#else
-    if (saoLcuParam->typeIdx < 4)
-#endif
     {
       saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
     }
-#endif
 #if FULL_NBIT
     Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + (g_uiBitDepth-8)-5),5) );
 #else
@@ -796,11 +733,6 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam)
 #endif
     if( saoLcuParam->typeIdx == SAO_BO )
     {
-#if !SAO_TYPE_CODING
-      // Code Left Band Index
-      uiSymbol = (UInt) (saoLcuParam->bandPosition);
-      m_pcEntropyCoderIf->codeSaoUflc(uiSymbol);
-#endif
       for( i=0; i< saoLcuParam->length; i++)
       {
         UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
@@ -814,10 +746,8 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam)
           m_pcEntropyCoderIf->codeSAOSign(sign);
         }
       }
-#if SAO_TYPE_CODING
       uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
       m_pcEntropyCoderIf->codeSaoUflc(5, uiSymbol);
-#endif
     }
     else if( saoLcuParam->typeIdx < 4 )
     {
@@ -825,18 +755,12 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam)
       m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[1], offsetTh-1);
       m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[2], offsetTh-1);
       m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[3], offsetTh-1);
-#if SAO_TYPE_CODING
-#if SAO_TYPE_SHARING
+
       if (compID != COMPONENT_Cr)
       {
         uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
         m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
       }
-#else
-     uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
-     m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
-#endif
-#endif
     }
   }
 }
@@ -858,11 +782,7 @@ Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, In
   {
     if (rx>0 && cuAddrInSlice!=0 && allowMergeLeft)
     {
-#if SAO_MERGE_ONE_CTX
       m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeLeftFlag);
-#else
-      m_pcEntropyCoderIf->codeSaoMergeLeft(saoLcuParam->mergeLeftFlag,compID);
-#endif
     }
     else
     {
@@ -872,11 +792,7 @@ Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, In
     {
       if ( (ry > 0) && (cuAddrUpInSlice>=0) && allowMergeUp )
       {
-#if SAO_MERGE_ONE_CTX
         m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeUpFlag);
-#else
-        m_pcEntropyCoderIf->codeSaoMergeUp(saoLcuParam->mergeUpFlag);
-#endif
       }
       else
       {
@@ -884,11 +800,7 @@ Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, In
       }
       if (!saoLcuParam->mergeUpFlag)
       {
-#if SAO_TYPE_SHARING 
         encodeSaoOffset(saoLcuParam, compID);
-#else
-        encodeSaoOffset(saoLcuParam);
-#endif
       }
     }
   }

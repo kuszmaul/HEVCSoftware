@@ -53,7 +53,6 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
   m_pcEntropyDecoderIf = p;
 }
 
-#include "TLibCommon/TComAdaptiveLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 
 Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
@@ -352,11 +351,7 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   iRefIdx = pcSubCUMvField->getRefIdx(uiPartAddr);
   cMv = cZeroMv;
 
-#if !SPS_AMVP_CLEANUP
-  if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
-#else
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) )
-#endif
   {
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
   }
@@ -417,11 +412,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
   else
   {
     assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
-#if TRANS_SPLIT_FLAG_CTX_REDUCTION
     m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, 5 - uiLog2TrafoSize );
-#else
-    m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, uiDepth );
-#endif
   }
   
   for(Int chan=COMPONENT_Cb; chan<numValidComponent; chan++)
@@ -495,12 +486,6 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
     
     UInt uiLumaTrMode, uiChromaTrMode;
     pcCU->convertTransIdx( uiAbsPartIdx, uiTrDepth, uiLumaTrMode, uiChromaTrMode );
-#if !REMOVE_NSQT
-    if(pcCU->getPredictionMode( uiAbsPartIdx ) == MODE_INTER && pcCU->useNonSquarePU( uiAbsPartIdx ) )
-    {
-      pcCU->setNSQTIdxSubParts( uiLog2TrafoSize, rTu, uiLumaTrMode );
-    }
-#endif
     pcCU->setCbfSubParts ( 0, COMPONENT_Y, uiAbsPartIdx, uiDepth );
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && ((!bChroma) || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 )) ))
     {
@@ -594,9 +579,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setCbfSubParts( cbfZero, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
-#if !REMOVE_NSQT
-      pcCU->setNSQTIdxSubParts( uiAbsPartIdx, uiDepth );
-#endif
       return;
     }
     

@@ -123,7 +123,7 @@ public:
   Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples );
   
   Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft );
- 
+
 #if !REMOVE_LMCHROMA
   Void predLMIntraChroma( const ComponentID compID, Pel* pPred, UInt uiPredStride, UInt uiCWidth, UInt uiCHeight, const ChromaFormat chFmt  DEBUG_STRING_FN_DECLARE(sDebug)  );
   Void getLumaRecPixels  ( TComTU &rTu );

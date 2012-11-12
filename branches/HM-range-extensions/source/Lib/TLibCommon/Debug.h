@@ -197,20 +197,12 @@ Void printBlock(const ValueType    *const source,
         else if (value > maximumValue) maximumValue = value;
       }
 
-    ValueType value = minimumValue;
-    for (Int pass = 0; pass < 2; pass++, value = maximumValue)
-    {
-      const UInt currentWidth = getDecimalWidth(Double(value));
-
-      if (currentWidth > outputWidth) outputWidth = currentWidth;
-    }
-
-    outputWidth++; //so the numbers don't run into each other
+    outputWidth = std::max<UInt>(getDecimalWidth(Double(minimumValue)), getDecimalWidth(Double(maximumValue))) + 1; //+1 so the numbers don't run into each other
   }
 
   //------------------
 
-  ValueType valueSum   = 0;
+  ValueType valueSum = 0;
 
   for (UInt y = 0; y < height; y++)
   {
