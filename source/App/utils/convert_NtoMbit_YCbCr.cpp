@@ -40,14 +40,14 @@
 using namespace std;
 namespace po = df::program_options_lite;
 
-int main(int argc, const char** argv)
+Int main(Int argc, const char** argv)
 {
-  bool do_help;
+  Bool do_help;
   string filename_in, filename_out;
-  unsigned int width, height;
-  unsigned int bitdepth_in, bitdepth_out, chromaFormatRaw;
-  unsigned int num_frames;
-  unsigned int num_frames_skip;
+  UInt width, height;
+  UInt bitdepth_in, bitdepth_out, chromaFormatRaw;
+  UInt num_frames;
+  UInt num_frames_skip;
 
   po::Options opts;
   opts.addOptions()
@@ -89,17 +89,26 @@ int main(int argc, const char** argv)
   TVideoIOYuv input;
   TVideoIOYuv output;
 
-  input.open((char*)filename_in.c_str(), false, bitdepth_in, bitdepth_out);
-  output.open((char*)filename_out.c_str(), true, bitdepth_out, bitdepth_out);
+  Int inputBitDepths [MAX_NUM_CHANNEL_TYPE];
+  Int outputBitDepths[MAX_NUM_CHANNEL_TYPE];
+
+  for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+  {
+    inputBitDepths [channelTypeIndex] = bitdepth_in;
+    outputBitDepths[channelTypeIndex] = bitdepth_out;
+  }
+
+  input.open((char*)filename_in.c_str(), false, inputBitDepths, outputBitDepths);
+  output.open((char*)filename_out.c_str(), true, outputBitDepths, outputBitDepths);
 
   input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
 
   TComPicYuv frame;
   frame.create( width, height, chromaFormatIDC, 1, 1, 0 );
 
-  int pad[2] = {0, 0};
+  Int pad[2] = {0, 0};
 
-  unsigned int num_frames_processed = 0;
+  UInt num_frames_processed = 0;
   while (!input.isEof()) 
   {
     if (! input.read(&frame, pad))
@@ -108,9 +117,9 @@ int main(int argc, const char** argv)
     }
 #if 0
     Pel* img = frame.getAddr(COMPONENT_Y);
-    for (int y = 0; y < height; y++) 
+    for (Int y = 0; y < height; y++) 
     {
-      for (int x = 0; x < height; x++)
+      for (Int x = 0; x < height; x++)
         img[x] = 0;
       img += frame.getStride();
     }

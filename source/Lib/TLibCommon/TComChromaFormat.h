@@ -87,6 +87,27 @@ static inline UInt getTotalSamples(const UInt width, const UInt height, const Ch
   return MAX_UINT;
 }
 
+//------------------------------------------------
+
+static inline UInt getTotalBits(const UInt width, const UInt height, const ChromaFormat format, const Int bitDepths[MAX_NUM_CHANNEL_TYPE])
+{
+  const UInt samplesPerChannel = width * height;
+
+  switch (format)
+  {
+    case CHROMA_400: return  samplesPerChannel *  bitDepths[CHANNEL_TYPE_LUMA];                                              break;
+    case CHROMA_420: return (samplesPerChannel * (bitDepths[CHANNEL_TYPE_LUMA]*2 +   bitDepths[CHANNEL_TYPE_CHROMA]) ) >> 1; break;
+    case CHROMA_422: return  samplesPerChannel * (bitDepths[CHANNEL_TYPE_LUMA]   +   bitDepths[CHANNEL_TYPE_CHROMA]);        break;
+    case CHROMA_444: return  samplesPerChannel * (bitDepths[CHANNEL_TYPE_LUMA]   + 2*bitDepths[CHANNEL_TYPE_CHROMA]);        break;
+    default:
+      std::cerr << "ERROR: Unrecognised chroma format in getTotalSamples()" << std::endl;
+      exit(1);
+      break;
+  }
+
+  return MAX_UINT;
+}
+
 
 //------------------------------------------------
 
@@ -601,9 +622,9 @@ static inline Bool roundTransformShiftUp(const ComponentID compID, const ChromaF
 //------------------------------------------------
 
 // NOTE: ECF - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
-static inline Int getTransformShift(const UInt uiLog2TrSize)
+static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrSize)
 {
-  return MAX_TR_DYNAMIC_RANGE - g_bitDepth - uiLog2TrSize;
+  return MAX_TR_DYNAMIC_RANGE - g_bitDepth[type] - uiLog2TrSize;
 }
 
 

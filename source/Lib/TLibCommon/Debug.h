@@ -62,9 +62,9 @@ private:
   std::string m_sName;
   std::string m_sHelp;
   std::string m_sVal;
-  double      m_dVal;
-  int         m_iVal;
-  bool        m_bSet;
+  Double      m_dVal;
+  Int         m_iVal;
+  Bool        m_bSet;
 
 public:
 
@@ -75,11 +75,11 @@ public:
 
   EnvVar(const std::string &sName, const std::string &sDefault, const std::string &sHelp);
 
-  double              getDouble()   const       { return m_dVal;    }
-  int                 getInt()      const       { return m_iVal;    }
+  Double              getDouble()   const       { return m_dVal;    }
+  Int                 getInt()      const       { return m_iVal;    }
   const std::string  &getString()   const       { return m_sVal;    }
-  bool                isSet()       const       { return m_bSet;    }
-  bool                isTrue()      const       { return m_iVal!=0; }
+  Bool                isSet()       const       { return m_bSet;    }
+  Bool                isTrue()      const       { return m_iVal!=0; }
   const std::string  &getName()     const       { return m_sName;   }
 
 };

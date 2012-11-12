@@ -1463,7 +1463,7 @@ inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
   }
 }
 
-Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
+Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, const ComponentID compIdx)
 {
   UInt uiSymbol;
 
@@ -1489,7 +1489,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
   if (uiSymbol)
   {
     psSaoLcuParam->length = iTypeLength[psSaoLcuParam->typeIdx];
-    Int offsetTh = 1 << min(g_bitDepth - 5,5);
+    Int offsetTh = 1 << min(g_bitDepth[toChannelType(compIdx)] - 5,5);
 
     if( psSaoLcuParam->typeIdx == SAO_BO )
     {
@@ -1520,7 +1520,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
       parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[2] = -(Int)uiSymbol;
       parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[3] = -(Int)uiSymbol;
 
-      if (compIdx != 2)
+      if (compIdx != COMPONENT_Cr)
       {
         parseSaoUflc(2, uiSymbol );
         psSaoLcuParam->subTypeIdx = uiSymbol;
@@ -1596,7 +1596,7 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
         if (!pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag)
         {
           pSaoParam->saoLcuParam[2][iAddr].typeIdx = pSaoParam->saoLcuParam[1][iAddr].typeIdx;
-          parseSaoOffset(&(pSaoParam->saoLcuParam[iCompIdx][iAddr]), iCompIdx);
+          parseSaoOffset(&(pSaoParam->saoLcuParam[iCompIdx][iAddr]), ComponentID(iCompIdx));
         }
         else
         {

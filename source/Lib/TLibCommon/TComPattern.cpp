@@ -48,7 +48,7 @@
 // Forward declarations
 
 /// padding of unavailable reference samples for intra prediction
-Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
+Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode );
@@ -102,7 +102,8 @@ Void TComPattern::initPattern (Pel* piY,
 // NOTE: ECF - this has been kept in this C++ file to allow easier tracking/comparison against HM.
 Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug), Bool bLMmode)
 {
-  const ComponentID regionCompID=bLMmode ? COMPONENT_Cb : compID;
+  const ComponentID regionCompID = bLMmode ? COMPONENT_Cb : compID;
+  const ChannelType chType       = toChannelType(compID);
 
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiZorderIdxInPart=rTu.GetAbsPartIdxTU();
@@ -170,8 +171,8 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   {
     Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
-    fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu,
-                         iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt, getLMChromaSamplesFrom2ndLeftCol(bLMmode, chFmt));
+    fillReferenceSamples (g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu,
+                          iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt, getLMChromaSamplesFrom2ndLeftCol(bLMmode, chFmt));
 
 
 #ifdef DEBUG_STRING
@@ -202,7 +203,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
             Int          stride    = uiROIWidth;
       const Pel         *piSrcPtr  = piAdiTemp                             + (stride * uiTuHeight2); // bottom left
             Pel         *piDestPtr = m_piYuvExt[compID][PRED_BUF_FILTERED] + (stride * uiTuHeight2); // bottom left
-      const ChannelType  chType    = toChannelType(compID);
       
       //------------------------------------------------
 
@@ -216,7 +216,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       if (useStrongIntraSmoothing)
       {
-        const Int  threshold     = 1 << (g_bitDepth - 5);
+        const Int  threshold     = 1 << (g_bitDepth[chType] - 5);
         const Bool bilinearLeft  = abs((bottomLeft + topLeft ) - (2 * piAdiTemp[stride * uiTuHeight])) < threshold; //difference between the
         const Bool bilinearAbove = abs((topLeft    + topRight) - (2 * piAdiTemp[         uiTuWidth ])) < threshold; //ends and the middle
         if ((uiTuWidth < 32) || (!bilinearLeft) || (!bilinearAbove))
@@ -345,14 +345,14 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   DEBUG_STRING_APPEND(sDebug, ss.str())
 }
 
-Void fillReferenceSamples( TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
+Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode )
 {
   const Pel* piRoiTemp;
   Int  i, j;
-  Int  iDCValue = 1 << (g_bitDepth - 1);
+  Int  iDCValue = 1 << (bitDepth - 1);
 
   if (iNumIntraNeighbor == 0)
   {

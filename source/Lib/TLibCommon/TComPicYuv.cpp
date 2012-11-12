@@ -219,7 +219,7 @@ Void TComPicYuv::extendPicBorder ()
 
 
 //NOTE: ECF - This function is never called
-Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
+Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
 {
   FILE* pFile;
   if (!bAdd)
@@ -231,16 +231,16 @@ Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
     pFile = fopen (pFileName, "ab");
   }
   
-  const Int  shift = g_bitDepth - 8;
-  const Int  offset = (shift>0)?(1<<(shift-1)):0;
 
-  for(Int chan=0; chan<getNumberValidComponents(); chan++)
+  for(Int chan = 0; chan < getNumberValidComponents(); chan++)
   {
-    const ComponentID ch=ComponentID(chan);
-    const Pel*  pi   = getAddr(ch);
-    const Int  stride=getStride(ch);
-    const Int  height=getHeight(ch);
-    const Int  width= getWidth(ch);
+    const ComponentID  ch     = ComponentID(chan);
+    const Int          shift  = g_bitDepth[toChannelType(ch)] - 8;
+    const Int          offset = (shift>0)?(1<<(shift-1)):0;
+    const Pel         *pi     = getAddr(ch);
+    const Int          stride = getStride(ch);
+    const Int          height = getHeight(ch);
+    const Int          width  = getWidth(ch);
 
     for (Int y = 0; y < height; y++ )
     {

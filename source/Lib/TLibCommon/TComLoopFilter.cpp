@@ -167,7 +167,7 @@ Void TComLoopFilter::loopFilterPic( TComPic* pcPic )
     ::memset( m_aapucBS       [EDGE_VER], 0, sizeof( UChar ) * m_uiNumPartitions );
     for( Int iPlane = 0; iPlane < MAX_NUM_COMPONENT; iPlane++ )
     {
-      ::memset( m_aapbEdgeFilter[EDGE_VER][iPlane], 0, sizeof( bool  ) * m_uiNumPartitions );
+      ::memset( m_aapbEdgeFilter[EDGE_VER][iPlane], 0, sizeof( Bool  ) * m_uiNumPartitions );
     }
 
     // CU-based deblocking
@@ -182,7 +182,7 @@ Void TComLoopFilter::loopFilterPic( TComPic* pcPic )
       ::memset( m_aapucBS       [EDGE_HOR], 0, sizeof( UChar ) * m_uiNumPartitions );
     for( Int iPlane = 0; iPlane < MAX_NUM_COMPONENT; iPlane++ )
     {
-      ::memset( m_aapbEdgeFilter[EDGE_HOR][iPlane], 0, sizeof( bool  ) * m_uiNumPartitions );
+      ::memset( m_aapbEdgeFilter[EDGE_HOR][iPlane], 0, sizeof( Bool  ) * m_uiNumPartitions );
     }
 
     // CU-based deblocking
@@ -635,7 +635,7 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
 
       iQP_P = pcCUP->getQP(uiPartPIdx);
       iQP = (iQP_P + iQP_Q + 1) >> 1;
-      Int iBitdepthScale = 1 << (g_bitDepth-8);
+      Int iBitdepthScale = 1 << (g_bitDepth[CHANNEL_TYPE_LUMA]-8);
 
       Int iIndexTC = Clip3(0, MAX_QP+DEFAULT_INTRA_TC_OFFSET, Int(iQP + DEFAULT_INTRA_TC_OFFSET*(uiBs-1) + (m_tcOffsetDiv2 << 1)));
       Int iIndexB = Clip3(0, MAX_QP, iQP + (m_betaOffsetDiv2 << 1));
@@ -813,7 +813,7 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         if      (iQP >= chromaQPMappingTableSize) iQP -=6;
         else if (iQP >= 0                       ) iQP = getScaledChromaQP(iQP, pcPicYuvRec->getChromaFormat());
 
-        Int iBitdepthScale = 1 << (g_bitDepth-8);
+        Int iBitdepthScale = 1 << (g_bitDepth[CHANNEL_TYPE_CHROMA]-8);
 
         Int iIndexTC = Clip3(0, MAX_QP+DEFAULT_INTRA_TC_OFFSET, iQP + DEFAULT_INTRA_TC_OFFSET*(ucBs - 1) + (m_tcOffsetDiv2 << 1));
         Int iTc =  tctable_8x8[iIndexTC]*iBitdepthScale;
@@ -879,19 +879,19 @@ __inline Void TComLoopFilter::xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, In
     if ( abs(delta) < iThrCut )
     {
       delta = Clip3(-tc, tc, delta);
-      piSrc[-iOffset] = Clip((m3+delta));
-      piSrc[0] = Clip((m4-delta));
+      piSrc[-iOffset] = Clip((m3+delta), CHANNEL_TYPE_LUMA);
+      piSrc[0] = Clip((m4-delta), CHANNEL_TYPE_LUMA);
 
       Int tc2 = tc>>1;
       if(bFilterSecondP)
       {
         Int delta1 = Clip3(-tc2, tc2, (( ((m1+m3+1)>>1)- m2+delta)>>1));
-        piSrc[-iOffset*2] = Clip((m2+delta1));
+        piSrc[-iOffset*2] = Clip((m2+delta1), CHANNEL_TYPE_LUMA);
       }
       if(bFilterSecondQ)
       {
         Int delta2 = Clip3(-tc2, tc2, (( ((m6+m4+1)>>1)- m5-delta)>>1));
-        piSrc[ iOffset] = Clip((m5+delta2));
+        piSrc[ iOffset] = Clip((m5+delta2), CHANNEL_TYPE_LUMA);
       }
     }
   }
@@ -921,7 +921,7 @@ __inline Void TComLoopFilter::xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, In
  */
 __inline Void TComLoopFilter::xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter)
 {
-  int delta;
+  Int delta;
 
   Pel m4  = piSrc[0];
   Pel m3  = piSrc[-iOffset];
@@ -929,8 +929,8 @@ __inline Void TComLoopFilter::xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc,
   Pel m2  = piSrc[-iOffset*2];
 
   delta = Clip3(-tc,tc, (((( m4 - m3 ) << 2 ) + m2 - m5 + 4 ) >> 3) );
-  piSrc[-iOffset] = Clip(m3+delta);
-  piSrc[0] = Clip(m4-delta);
+  piSrc[-iOffset] = Clip((m3+delta), CHANNEL_TYPE_CHROMA);
+  piSrc[0] = Clip((m4-delta), CHANNEL_TYPE_CHROMA);
 
   if(bPartPNoFilter)
   {

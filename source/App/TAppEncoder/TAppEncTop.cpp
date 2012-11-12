@@ -143,7 +143,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 
   Int lowestQP;
-  lowestQP =  - 6*(g_bitDepth - 8);
+  lowestQP =  - 6*(g_bitDepth[CHANNEL_TYPE_LUMA] - 8); // XXX: check
 
 #if ECF__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
@@ -203,7 +203,7 @@ Void TAppEncTop::xInitLibCfg()
 #if DEPENDENT_SLICES && !REMOVE_ENTROPY_SLICES
   m_cTEncTop.setEntropySliceEnabledFlag   ( m_entropySliceEnabledFlag );
 #endif
-  int iNumPartInCU = 1<<(m_uiMaxCUDepth<<1);
+  Int iNumPartInCU = 1<<(m_uiMaxCUDepth<<1);
   if(m_iDependentSliceMode==SHARP_FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE)
   {
     m_cTEncTop.setDependentSliceArgument ( m_iDependentSliceArgument * iNumPartInCU );
@@ -298,11 +298,11 @@ Void TAppEncTop::xInitLibCfg()
 Void TAppEncTop::xCreateLib()
 {
   // Video I/O
-  m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
+  m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false, m_inputBitDepth, m_internalBitDepth );  // read  mode
   m_cTVideoIOYuvInputFile.skipFrames(m_FrameSkip, m_iSourceWidth - m_aiPad[0], m_iSourceHeight - m_aiPad[1], m_InputChromaFormatIDC);
 
   if (m_pchReconFile)
-    m_cTVideoIOYuvReconFile.open(m_pchReconFile, true, m_uiOutputBitDepth, m_uiInternalBitDepth);  // write mode
+    m_cTVideoIOYuvReconFile.open(m_pchReconFile, true, m_outputBitDepth, m_internalBitDepth);  // write mode
   
   // Neo Decoder
   m_cTEncTop.create();
@@ -376,7 +376,7 @@ Void TAppEncTop::encode()
     
     bEos = (m_iFrameRcvd == m_iFrameToBeEncoded);
 
-    bool flush = 0;
+    Bool flush = 0;
     // if end of file (which is only detected on a read failure) flush the encoder of any queued pictures
     if (m_cTVideoIOYuvInputFile.isEof())
     {
@@ -484,7 +484,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     }
 
     const AccessUnit& au = *(iterBitstream++);
-    const vector<unsigned>& stats = writeAnnexB(bitstreamFile, au);
+    const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
     rateStatsAccum(au, stats);
   }
 }
@@ -492,10 +492,10 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 /**
  *
  */
-void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned>& annexBsizes)
+void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& annexBsizes)
 {
   AccessUnit::const_iterator it_au = au.begin();
-  vector<unsigned>::const_iterator it_stats = annexBsizes.begin();
+  vector<UInt>::const_iterator it_stats = annexBsizes.begin();
 
   for (; it_au != au.end(); it_au++, it_stats++)
   {
@@ -530,7 +530,7 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned
 
 void TAppEncTop::printRateSummary()
 {
-  double time = (double) m_iFrameRcvd / m_iFrameRate;
+  Double time = (Double) m_iFrameRcvd / m_iFrameRate;
   printf("Bytes written to file: %u (%.3f kbps)\n", m_totalBytes, 0.008 * m_totalBytes / time);
 #if VERBOSE_RATE
   printf("Bytes for SPS/PPS/Slice (Incl. Annex B): %u (%.3f kbps)\n", m_essentialBytes, 0.008 * m_essentialBytes / time);

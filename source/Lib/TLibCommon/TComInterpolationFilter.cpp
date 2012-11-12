@@ -81,6 +81,7 @@ const TFilterCoeff TComInterpolationFilter::m_chromaFilter[CHROMA_INTERPOLATION_
 /**
  * \brief Apply unit FIR filter to a block of samples
  *
+ * \param bitDepth   bitDepth of samples
  * \param src        Pointer to source samples
  * \param srcStride  Stride of source samples
  * \param dst        Pointer to destination samples
@@ -90,7 +91,7 @@ const TFilterCoeff TComInterpolationFilter::m_chromaFilter[CHROMA_INTERPOLATION_
  * \param isFirst    Flag indicating whether it is the first filtering operation
  * \param isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast)
+Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast)
 {
   Int row, col;
   
@@ -109,7 +110,7 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
   }
   else if ( isFirst )
   {
-    Int shift = IF_INTERNAL_PREC - g_bitDepth;
+    Int shift = IF_INTERNAL_PREC - bitDepth;
 
     for (row = 0; row < height; row++)
     {
@@ -125,9 +126,9 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
   }
   else
   {
-    Int shift = IF_INTERNAL_PREC - g_bitDepth;
+    Int shift = IF_INTERNAL_PREC - bitDepth;
 
-    Pel maxVal = g_maxLumaVal;
+    Pel maxVal = (1 << bitDepth) - 1;
     Pel minVal = 0;
     for (row = 0; row < height; row++)
     {
@@ -153,6 +154,7 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
  * \tparam isVertical Flag indicating filtering along vertical direction
  * \tparam isFirst    Flag indicating whether it is the first filtering operation
  * \tparam isLast     Flag indicating whether it is the last filtering operation
+ * \param  bitDepth   Bit depth of samples
  * \param  src        Pointer to source samples
  * \param  srcStride  Stride of source samples
  * \param  dst        Pointer to destination samples
@@ -161,8 +163,8 @@ Void TComInterpolationFilter::filterCopy(const Pel *src, Int srcStride, Pel *dst
  * \param  height     Height of block
  * \param  coeff      Pointer to filter taps
  */
-template<int N, bool isVertical, bool isFirst, bool isLast>
-Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, TFilterCoeff const *coeff)
+template<Int N, Bool isVertical, Bool isFirst, Bool isLast>
+Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, TFilterCoeff const *coeff)
 {
   Int row, col;
   
@@ -190,7 +192,7 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
 
   Int offset;
   Pel maxVal;
-  Int headRoom = IF_INTERNAL_PREC - g_bitDepth;
+  Int headRoom = IF_INTERNAL_PREC - bitDepth;
   Int shift = IF_FILTER_PREC;
   //NOTE: ECF - with the current settings (IF_INTERNAL_PREC = 14 and IF_FILTER_PREC = 6), though headroom can be
   //            negative for bit depths greater than 14, shift will remain non-negative for bit depths of 8->20
@@ -201,7 +203,7 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
     shift += (isFirst) ? 0 : headRoom;
     offset = 1 << (shift - 1);
     offset += (isFirst) ? 0 : IF_INTERNAL_OFFS << IF_FILTER_PREC;
-    maxVal = g_maxLumaVal;
+    maxVal = (1 << bitDepth) - 1;
   }
   else
   {
@@ -252,6 +254,7 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
  * \brief Filter a block of samples (horizontal)
  *
  * \tparam N          Number of taps
+ * \param  bitDepth   Bit depth of samples
  * \param  src        Pointer to source samples
  * \param  srcStride  Stride of source samples
  * \param  dst        Pointer to destination samples
@@ -261,16 +264,16 @@ Void TComInterpolationFilter::filter(Pel const *src, Int srcStride, Pel *dst, In
  * \param  isLast     Flag indicating whether it is the last filtering operation
  * \param  coeff      Pointer to filter taps
  */
-template<int N>
-Void TComInterpolationFilter::filterHor(Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isLast, TFilterCoeff const *coeff)
+template<Int N>
+Void TComInterpolationFilter::filterHor(Int bitDepth, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isLast, TFilterCoeff const *coeff)
 {
   if ( isLast )
   {
-    filter<N, false, true, true>(src, srcStride, dst, dstStride, width, height, coeff);
+    filter<N, false, true, true>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
   }
   else
   {
-    filter<N, false, true, false>(src, srcStride, dst, dstStride, width, height, coeff);
+    filter<N, false, true, false>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
   }
 }
 
@@ -288,24 +291,24 @@ Void TComInterpolationFilter::filterHor(Pel *src, Int srcStride, Pel *dst, Int d
  * \param  isLast     Flag indicating whether it is the last filtering operation
  * \param  coeff      Pointer to filter taps
  */
-template<int N>
-Void TComInterpolationFilter::filterVer(Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, TFilterCoeff const *coeff)
+template<Int N>
+Void TComInterpolationFilter::filterVer(Int bitDepth, Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, TFilterCoeff const *coeff)
 {
   if ( isFirst && isLast )
   {
-    filter<N, true, true, true>(src, srcStride, dst, dstStride, width, height, coeff);
+    filter<N, true, true, true>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
   }
   else if ( isFirst && !isLast )
   {
-    filter<N, true, true, false>(src, srcStride, dst, dstStride, width, height, coeff);
+    filter<N, true, true, false>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
   }
   else if ( !isFirst && isLast )
   {
-    filter<N, true, false, true>(src, srcStride, dst, dstStride, width, height, coeff);
+    filter<N, true, false, true>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
   }
   else
   {
-    filter<N, true, false, false>(src, srcStride, dst, dstStride, width, height, coeff);    
+    filter<N, true, false, false>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);    
   }      
 }
 
@@ -329,18 +332,18 @@ Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int 
 {
   if ( frac == 0 )
   {
-    filterCopy( src, srcStride, dst, dstStride, width, height, true, isLast );
+    filterCopy(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, true, isLast );
   }
   else if (useLumaInterpFilter(compID, fmt, 0))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-    filterHor<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
+    filterHor<NTAPS_LUMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
   }
   else
   {
     const UInt csx = getComponentScaleX(compID, fmt);
     assert(frac >=0 && csx<2 && (frac<<(1-csx)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-    filterHor<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac<<(1-csx)]);
+    filterHor<NTAPS_CHROMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac<<(1-csx)]);
   }
 }
 
@@ -362,18 +365,18 @@ Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int 
 {
   if ( frac == 0 )
   {
-    filterCopy( src, srcStride, dst, dstStride, width, height, isFirst, isLast );
+    filterCopy(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isFirst, isLast );
   }
   else if (useLumaInterpFilter(compID, fmt, 1))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-    filterVer<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);
+    filterVer<NTAPS_LUMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);
   }
   else
   {
     const UInt csy = getComponentScaleY(compID, fmt);
     assert(frac >=0 && csy<2 && (frac<<(1-csy)) < CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
-    filterVer<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac<<(1-csy)]);
+    filterVer<NTAPS_CHROMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac<<(1-csy)]);
   }
 }
 

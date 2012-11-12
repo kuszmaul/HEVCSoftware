@@ -99,19 +99,31 @@ public:
   }
 
 
-  Double calculateCombinedSNR(const ChromaFormat chFmt, const UInt maxval)
+  Double calculateCombinedSNR(const ChromaFormat chFmt)
   {
-    Double MSEyuv=0;
-    Int scale=0;
+    Double MSEyuv = 0;
+    Int    scale  = 0;
+
+    Int maximumBitDepth = g_bitDepth[0];
+    for (UInt channelTypeIndex = 1; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+      if (g_bitDepth[channelTypeIndex] > maximumBitDepth)
+        maximumBitDepth = g_bitDepth[channelTypeIndex];
+    
+    const UInt maxval                = 255 << (maximumBitDepth - 8);
     const UInt numberValidComponents = getNumberValidComponents(chFmt);
+
     for (UInt comp=0; comp<numberValidComponents; comp++)
     {
-      const ComponentID compID = ComponentID(comp);
-      const UInt csx = getComponentScaleX(compID, chFmt);
-      const UInt csy = getComponentScaleY(compID, chFmt);
-      Int scaleChan  = (4>>(csx+csy));
-      scale         += scaleChan;
-      MSEyuv        += scaleChan * (m_MSEyuvframe[compID]/Double(getNumPic()));
+      const ComponentID compID        = ComponentID(comp);
+      const UInt        csx           = getComponentScaleX(compID, chFmt);
+      const UInt        csy           = getComponentScaleY(compID, chFmt);
+      const Int         scaleChan     = (4>>(csx+csy));
+      const UInt        bitDepthShift = 2 * (maximumBitDepth - g_bitDepth[toChannelType(compID)]); //*2 because this is a squared number
+
+      const Double      channelMSE    = (m_MSEyuvframe[compID] * Double(1 << bitDepthShift)) / Double(getNumPic());
+
+      scale  += scaleChan;
+      MSEyuv += scaleChan * channelMSE;
     }
 
     MSEyuv /= Double(scale);  // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
@@ -120,7 +132,7 @@ public:
   }
 
 
-  Void    printOut ( Char cDelim, const ChromaFormat chFmt, const UInt maxval )
+  Void    printOut ( Char cDelim, const ChromaFormat chFmt )
   {
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
@@ -139,7 +151,7 @@ public:
       case CHROMA_422:
       case CHROMA_444:
         {
-          Double PSNRyuv = calculateCombinedSNR(chFmt, maxval);
+          Double PSNRyuv = calculateCombinedSNR(chFmt);
           printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
           //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
           printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
@@ -159,7 +171,7 @@ public:
   }
   
 
-  Void    printSummary(const ChromaFormat chFmt, const UInt maxval, Char ch='T')
+  Void    printSummary(const ChromaFormat chFmt, Char ch='T')
   {
     FILE* pFile = NULL;
     
@@ -196,7 +208,7 @@ public:
       case CHROMA_422:
       case CHROMA_444:
         {
-          Double PSNRyuv = calculateCombinedSNR(chFmt, maxval);
+          Double PSNRyuv = calculateCombinedSNR(chFmt);
           fprintf(pFile, "%f\t %f\t %f\t %f\t %f\n",
               getBits() * dScale,
               getPsnr(COMPONENT_Y) / (Double)getNumPic(),

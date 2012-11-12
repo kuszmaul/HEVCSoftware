@@ -192,10 +192,8 @@ extern const UChar  g_aucIntraModeNumFast[MAX_CU_DEPTH];
 // Bit-depth
 // ====================================================================================================================
 
-extern        Int g_bitDepth;
-extern        Int g_maxLumaVal;
-extern       UInt g_uiPCMBitDepthLuma;
-extern       UInt g_uiPCMBitDepthChroma;
+extern        Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE];
+extern        Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
 
 // ====================================================================================================================
 // Mode-Dependent DST Matrices

@@ -114,7 +114,7 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei)
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = true;
 #endif
-  unsigned payload_data_num_bits = bs_count.getNumberOfWrittenBits();
+  UInt payload_data_num_bits = bs_count.getNumberOfWrittenBits();
   assert(0 == payload_data_num_bits % 8);
 
   setBitstream(&bs);
@@ -168,7 +168,7 @@ Void SEIWriter::xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei
  */
 Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 {
-  const char *traceString="\0";
+  const Char *traceString="\0";
   switch (sei.method)
   {
     case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
@@ -196,7 +196,7 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 
   WRITE_CODE(sei.activeParamSetSEIExtensionFlag, 1, "active_param_set_sei_extension_flag");
 
-  unsigned uiBits = m_pcBitIf->getNumberOfWrittenBits();
+  UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
   UInt uiAlignedBits = ( 8 - (uiBits&7) ) % 8;
   if(uiAlignedBits)
   {

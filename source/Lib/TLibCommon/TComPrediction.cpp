@@ -233,7 +233,8 @@ Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt
  * from the extended main reference.
  */
 //NOTE: Bit-Limit - 25-bit source
-Void TComPrediction::xPredIntraAng( const Pel* pSrc,     Int srcStride,
+Void TComPrediction::xPredIntraAng(       Int bitDepth,
+                                    const Pel* pSrc,     Int srcStride,
                                           Pel* pTrueDst, Int dstStrideTrue,
                                           UInt uiWidth, UInt uiHeight, ChannelType channelType, ChromaFormat format,
                                           UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
@@ -346,7 +347,7 @@ Void TComPrediction::xPredIntraAng( const Pel* pSrc,     Int srcStride,
       {
         for (Int y=0;y<height;y++)
         {
-          pDst[y*dstStride] = Clip ( pDst[y*dstStride] + (( refSide[y+1] - refSide[0] ) >> 1) );
+          pDst[y*dstStride] = Clip3 (0, ((1 << bitDepth) - 1), pDst[y*dstStride] + (( refSide[y+1] - refSide[0] ) >> 1) );
         }
       }
     }
@@ -606,7 +607,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 #endif
     {
       // Create the prediction
-      xPredIntraAng( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
+      xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
     }
 
     if(( uiDirMode == DC_IDX ) && bAbove && bLeft )

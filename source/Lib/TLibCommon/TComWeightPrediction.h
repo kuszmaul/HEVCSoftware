@@ -55,7 +55,7 @@ class TComWeightPrediction
 public:
   TComWeightPrediction();
 
-  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1 , const Int bitDepth = g_bitDepth);
+  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1);
 
   Void  addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const wpScalingParam *wp0, const wpScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma=true );
   Void  addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const  wpScalingParam *wp0, TComYuv* rpcYuvDst );
@@ -64,31 +64,6 @@ public:
                                 const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iPartIdx, const Int iRefIdx=-1 );
   Void  xWeightedPredictionBi( TComDataCU* pcCU, const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const Int iRefIdx0, const Int iRefIdx1,
                                 const UInt uiPartIdx, const Int iWidth, const Int iHeight, TComYuv* rpcYuvDst );
-
-  static __inline  Pel   xClip       ( const Int x );
-  static __inline  Pel   weightBidir( const Int w0, const Pel P0, const Int w1, const  Pel P1, const Int round, const Int shift, const  Int offset);
-  static __inline  Pel   weightUnidir( const Int w0, const Pel P0, const Int round, const Int shift, const  Int offset);
-
 };
-
-inline  Pel TComWeightPrediction::xClip( const Int x ) // static member
-{ 
-  const Int max = g_maxLumaVal;
-  const Pel pel = (Pel)( (x < 0) ? 0 : (x > max) ? max : x );
-  return( pel );
-}
-
-inline  Pel TComWeightPrediction::weightBidir( const Int w0, const Pel P0, Int w1, const Pel P1, const Int round, const Int shift, const Int offset) // static member
-{
-#if   (ECF__BACKWARDS_COMPATIBILITY_HM == 0)
-  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS)), shift) ) + offset );
-#elif (ECF__BACKWARDS_COMPATIBILITY_HM == 1)
-  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS) + leftShift(offset, (shift-1))), shift) ) );
-#endif
-}
-inline  Pel TComWeightPrediction::weightUnidir( const Int w0, const Pel P0, const Int round, const Int shift, const Int offset)
-{
-  return xClip( ( rightShift_round((w0*(P0 + IF_INTERNAL_OFFS)), shift) ) + offset ); // static member
-}
 
 #endif 

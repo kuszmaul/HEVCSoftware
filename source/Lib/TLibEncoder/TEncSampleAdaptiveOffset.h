@@ -84,7 +84,7 @@ private:
   Double *m_dCostPartBest; //[MAX_NUM_SAO_PART]; 
   Int64  *m_iDistOrg;      //[MAX_NUM_SAO_PART]; 
   Int    *m_iTypePartBest; //[MAX_NUM_SAO_PART]; 
-  Int     m_iOffsetTh;
+  Int     m_iOffsetTh[MAX_NUM_CHANNEL_TYPE];
   Bool    m_bUseSBACRD;
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
@@ -117,7 +117,7 @@ public:
   Void disablePartTree(SAOQTPart *psQTPart, Int iPartIdx);
   Void getSaoStats(SAOQTPart *psQTPart, ComponentID iYCbCr);
   Void calcSaoStatsCu(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
-  Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail);
+  Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail, ComponentID iYCbCr);
   Void calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
   Void calcSaoStatsCu_BeforeDblk( TComPic* pcPic );
   Void destroyEncBuffer();
@@ -132,7 +132,7 @@ public:
   Void saoComponentParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, ComponentID yCbCr, Double lambda, SaoLcuParam *compSaoParam, Double *distortion);
   Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion);
   inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 offsetOrg, Int shift);
-  inline Int64 estIterOffset(Int typeIdx, Int classIdx, double lambda, Int64 offsetInput, Int64 count, Int64 offsetOrg, Int shift, Int bitIncrease, Int *currentDistortionTableBo, Double *currentRdCostTableBo );
+  inline Int64 estIterOffset(Int typeIdx, Int classIdx, Double lambda, Int64 offsetInput, Int64 count, Int64 offsetOrg, Int shift, Int bitIncrease, Int *currentDistortionTableBo, Double *currentRdCostTableBo, Int offsetTh );
   inline Int64 estSaoTypeDist(Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
   Void setMaxNumOffsetsPerPic(Int iVal) {m_maxNumOffsetsPerPic = iVal; }
   Int  getMaxNumOffsetsPerPic() {return m_maxNumOffsetsPerPic; }

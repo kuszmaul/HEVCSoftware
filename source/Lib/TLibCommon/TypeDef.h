@@ -452,6 +452,7 @@ typedef       unsigned short      UShort;
 typedef       int                 Int;
 typedef       unsigned int        UInt;
 typedef       double              Double;
+typedef       float               Float;
 
 
 // ====================================================================================================================
@@ -880,9 +881,9 @@ struct TUEntropyCodingParameters
 
 struct TComDigest
 {
-  std::vector<unsigned char> hash;
+  std::vector<UChar> hash;
 
-  bool operator==(const TComDigest &other) const
+  Bool operator==(const TComDigest &other) const
   {
     if (other.hash.size() != hash.size()) return false;
     for(UInt i=0; i<UInt(hash.size()); i++)
@@ -890,7 +891,7 @@ struct TComDigest
     return true;
   }
 
-  bool operator!=(const TComDigest &other) const
+  Bool operator!=(const TComDigest &other) const
   {
     return !(*this == other);
   }

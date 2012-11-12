@@ -102,7 +102,7 @@ Void TComTrQuant::storeSliceQpNext(TComSlice* pcSlice)
   Double alpha = qpBase < 17 ? 0.5 : 1;
 
   Int cnt=0;
-  for(int u=1; u<=LEVEL_RANGE; u++)
+  for(Int u=1; u<=LEVEL_RANGE; u++)
   {
     cnt += m_sliceNsamples[u] ;
   }
@@ -174,7 +174,7 @@ Void TComTrQuant::clearSliceARLCnt()
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
+void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
 {
   Int i,j,k,iSum;
   Int tmp[32*32];
@@ -202,11 +202,11 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
     assert(0);
   }
 
-  int shift_1st = uiLog2TrSize - 1 + g_bitDepth-8; // log2(N) - 1 + g_bitDepth-8
+  Int shift_1st = uiLog2TrSize - 1 + bitDepth-8; // log2(N) - 1 + g_bitDepth-8
 
-  int add_1st = 1<<(shift_1st-1);
-  int shift_2nd = uiLog2TrSize + 6;
-  int add_2nd = 1<<(shift_2nd-1);
+  Int add_1st = 1<<(shift_1st-1);
+  Int shift_2nd = uiLog2TrSize + 6;
+  Int add_2nd = 1<<(shift_2nd-1);
 
   /* Horizontal transform */
 
@@ -265,7 +265,7 @@ void xTr(Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
  */
 void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
 {
-  int i,j,k,iSum;
+  Int i,j,k,iSum;
   Int tmp[32*32];
   const TMatrixCoeff *iT;
 
@@ -290,10 +290,10 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
     assert(0);
   }
 
-  int shift_1st = SHIFT_INV_1ST;
-  int add_1st = 1<<(shift_1st-1);
-  int shift_2nd = SHIFT_INV_2ND - g_bitDepth-8;
-  int add_2nd = 1<<(shift_2nd-1);
+  Int shift_1st = SHIFT_INV_1ST;
+  Int add_1st = 1<<(shift_1st-1);
+  Int shift_2nd = SHIFT_INV_2ND - g_bitDepth-8;
+  Int add_2nd = 1<<(shift_2nd-1);
   if (uiTrSize==4)
   {
     if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34))) // Check for DCT or DST
@@ -351,11 +351,11 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly4(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j;
-  int E[2],O[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j;
+  Int E[2],O[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -377,10 +377,10 @@ void partialButterfly4(TCoeff *src, TCoeff *dst, int shift, int line)
 
 // Fast DST Algorithm. Full matrix multiplication for DST and Fast DST algorithm
 // give identical results
-void fastForwardDst(TCoeff *block, TCoeff *coeff, int shift)  // input block, output coeff
+void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, output coeff
 {
-  int i, c[4];
-  int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int i, c[4];
+  Int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
   for (i=0; i<4; i++)
   {
     // Intermediate Variables
@@ -396,10 +396,10 @@ void fastForwardDst(TCoeff *block, TCoeff *coeff, int shift)  // input block, ou
   }
 }
 
-void fastInverseDst(TCoeff *tmp, TCoeff *block, int shift)  // input tmp, output block
+void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output block
 {
-  int i, c[4];
-  int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int i, c[4];
+  Int rnd_factor = (shift > 0) ? (1<<(shift-1)) : 0;
   for (i=0; i<4; i++)
   {
     // Intermediate Variables
@@ -420,11 +420,11 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, int shift)  // input tmp, output
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse4(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j;
-  int E[2],O[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j;
+  Int E[2],O[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -450,12 +450,12 @@ void partialButterflyInverse4(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly8(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[4],O[4];
-  int EE[2],EO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[4],O[4];
+  Int EE[2],EO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -491,12 +491,12 @@ void partialButterfly8(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse8(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[4],O[4];
-  int EE[2],EO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[4],O[4];
+  Int EE[2],EO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -531,13 +531,13 @@ void partialButterflyInverse8(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly16(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[8],O[8];
-  int EE[4],EO[4];
-  int EEE[2],EEO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[8],O[8];
+  Int EE[4],EO[4];
+  Int EEE[2],EEO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -586,13 +586,13 @@ void partialButterfly16(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse16(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[8],O[8];
-  int EE[4],EO[4];
-  int EEE[2],EEO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[8],O[8];
+  Int EE[4],EO[4];
+  Int EEE[2],EEO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -637,14 +637,14 @@ void partialButterflyInverse16(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly32(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[16],O[16];
-  int EE[8],EO[8];
-  int EEE[4],EEO[4];
-  int EEEE[2],EEEO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[16],O[16];
+  Int EE[8],EO[8];
+  Int EEE[4],EEO[4];
+  Int EEEE[2],EEEO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -702,14 +702,14 @@ void partialButterfly32(TCoeff *src, TCoeff *dst, int shift, int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse32(TCoeff *src, TCoeff *dst, int shift, int line)
+void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
-  int j,k;
-  int E[16],O[16];
-  int EE[8],EO[8];
-  int EEE[4],EEO[4];
-  int EEEE[2],EEEO[2];
-  int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  Int j,k;
+  Int E[16],O[16];
+  Int EE[8],EO[8];
+  Int EEE[4],EEO[4];
+  Int EEEE[2],EEEO[2];
+  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -766,9 +766,9 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, int shift, int line)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xTrMxN(TCoeff *block, TCoeff *coeff, int iWidth, int iHeight, UInt uiMode)
+void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, UInt uiMode)
 {
-  const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  g_bitDepth            + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
+  const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  bitDepth + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
   const Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
 
   assert(shift_1st >= 0);
@@ -822,10 +822,10 @@ void xTrMxN(TCoeff *block, TCoeff *coeff, int iWidth, int iHeight, UInt uiMode)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xITrMxN(TCoeff *coeff, TCoeff *block, int iWidth, int iHeight, UInt uiMode)
+void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, UInt uiMode)
 {
   Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
-  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - g_bitDepth;
+  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - bitDepth;
 
   assert(shift_1st >= 0);
   assert(shift_2nd >= 0);
@@ -1075,7 +1075,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
      */
 
     // Represents scaling through forward transform
-    Int iTransformShift = getTransformShift(uiLog2TrSize) + (roundTransformShiftUp(compID, chFmt, useTransformSkip) ? 1 : 0);
+    Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize) + (roundTransformShiftUp(compID, chFmt, useTransformSkip) ? 1 : 0);
     Int iQBits  = MAX_INT;
 #if ADAPTIVE_QP_SELECTION
     Int iQBitsC = MAX_INT;
@@ -1179,7 +1179,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
    */
 
   // Represents scaling through forward transform
-  Int iTransformShift = getTransformShift(uiLog2TrSize) + (roundTransformShiftUp(compID, fmt, useTransformSkip) ? 1 : 0);
+  Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize) + (roundTransformShiftUp(compID, fmt, useTransformSkip) ? 1 : 0);
 
   Int additionalMultiplier;
   Int additionalShift;
@@ -1401,7 +1401,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   }
   else
   {
-    xT( uiMode, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+    xT( g_bitDepth[toChannelType(compID)], uiMode, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
   }
 
   xQuant( rTu, m_plTempCoeff, rpcCoeff,
@@ -1451,7 +1451,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
   const UInt uiMode=getMDDTmode(compID, pcCU, uiAbsPartIdx);
 
-  xDeQuant( rTu, pcCoeff, m_plTempCoeff, compID, cQP);
+  xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
 #if defined DEBUG_STRING
   if (psDebug)
@@ -1480,7 +1480,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   }
   else
   {
-    xIT( uiMode, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+    xIT( g_bitDepth[toChannelType(compID)], uiMode, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
 
 #if defined DEBUG_STRING
     if (psDebug)
@@ -1559,12 +1559,12 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
+Void TComTrQuant::xT( Int bitDepth, UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight)
   {
-    xTr(piBlkResi,psCoeff,uiStride,(UInt)iWidth,uiMode);
+    xTr(bitDepth, piBlkResi, psCoeff, uiStride, (UInt)iWidth, uiMode);
     return;
   }
 #endif
@@ -1578,7 +1578,7 @@ Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoef
       block[(y * iWidth) + x] = piBlkResi[(y * uiStride) + x];
     }
 
-  xTrMxN( block, coeff, iWidth, iHeight, uiMode );
+  xTrMxN( bitDepth, block, coeff, iWidth, iHeight, uiMode );
 
   memcpy(psCoeff, coeff, (iWidth * iHeight * sizeof(TCoeff)));
 }
@@ -1590,12 +1590,12 @@ Void TComTrQuant::xT( UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoef
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xIT( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
+Void TComTrQuant::xIT( Int bitDepth, UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight )
   {
-    xITr(plCoef,pResidual,uiStride,(UInt)iWidth,uiMode);
+    xITr(bitDepth, plCoef, pResidual, uiStride, (UInt)iWidth, uiMode);
     return;
   }
 #endif
@@ -1605,7 +1605,7 @@ Void TComTrQuant::xIT( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStrid
 
   memcpy(coeff, plCoef, (iWidth * iHeight * sizeof(TCoeff)));
 
-  xITrMxN( coeff, block, iWidth, iHeight, uiMode );
+  xITrMxN( bitDepth, coeff, block, iWidth, iHeight, uiMode );
 
   for (Int y = 0; y < iHeight; y++)
     for (Int x = 0; x < iWidth; x++)
@@ -1626,7 +1626,8 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   const Int width = rect.width;
   const Int height = rect.height;
 
-  Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(component)) + (roundTransformShiftUp(component, rTu.GetChromaFormat(), true) ? 1 : 0);
+  Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component))
+                        + (roundTransformShiftUp(component, rTu.GetChromaFormat(), true) ? 1 : 0);
 
   if (iTransformShift >= 0)
   {
@@ -1665,7 +1666,8 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
   const Int width = rect.width;
   const Int height = rect.height;
 
-  Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(component)) + (roundTransformShiftUp(component, rTu.GetChromaFormat(), true) ? 1 : 0);
+  Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component))
+                        + (roundTransformShiftUp(component, rTu.GetChromaFormat(), true) ? 1 : 0);
 
   if (iTransformShift >= 0)
   {
@@ -1722,6 +1724,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         TComDataCU    *  pcCU             = rTu.getCU();
   const UInt             uiAbsPartIdx     = rTu.GetAbsPartIdxTU();
   const ChromaFormat     format           = rTu.GetChromaFormat();
+  const ChannelType      channelType      = toChannelType(compID);
   const Bool             useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
   const UInt             uiLog2TrSize     = rTu.GetEquivalentLog2TrSize(compID);
 
@@ -1732,7 +1735,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
    */
 
   // Represents scaling through forward transform
-  const Int iTransformShift      = getTransformShift(uiLog2TrSize);
+  const Int iTransformShift      = getTransformShift(channelType, uiLog2TrSize);
 
   UInt       uiGoRiceParam       = 0;
   Double     d64BlockUncodedCost = 0;
@@ -1763,7 +1766,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   memset( deltaU,       0, sizeof(Int) *  uiMaxNumCoeff );
 
   const Int iQBits = QUANT_SHIFT + cQP.getBaseQp().per + iTransformShift;                   // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
-  const double *const pdErrScale = getErrScaleCoeff(scalingListType, (uiLog2TrSize-2), cQP.getBaseQp().rem, getErrorScaleAdjustmentMode(compID, format));
+  const Double *const pdErrScale = getErrScaleCoeff(scalingListType, (uiLog2TrSize-2), cQP.getBaseQp().rem, getErrorScaleAdjustmentMode(compID, format));
   const Int    *const piQCoef    = getQuantCoeff(scalingListType, cQP.getAdjustedQp().rem, (uiLog2TrSize-2));
 
 #if ADAPTIVE_QP_SELECTION
@@ -1872,7 +1875,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         }
         else
         {
-          UShort uiCtxSig      = significanceMapContextOffset + getSigCtxInc( patternSigCtx, codingParameters, iScanPos, uiLog2BlockWidth, uiLog2BlockHeight, toChannelType(compID) );
+          UShort uiCtxSig      = significanceMapContextOffset + getSigCtxInc( patternSigCtx, codingParameters, iScanPos, uiLog2BlockWidth, uiLog2BlockHeight, channelType );
 
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ],
                                                   lLevelDouble, uiMaxAbsLevel, uiCtxSig, uiOneCtx, uiAbsCtx, uiGoRiceParam,
@@ -2040,7 +2043,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   }
   else
   {
-    ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+    ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, channelType, false );
     ui16CtxCbf  += getCBFContextOffset(compID);
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 0 ] );
     d64BaseCost += xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 1 ] );
@@ -2115,7 +2118,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   {
     const Double inverseQuantScale = Double(getInverseQuantScaling(cQP.getBaseQp().rem, format));
     Int64 rdFactor = (Int64)(inverseQuantScale * inverseQuantScale * (1 << (2 * cQP.getBaseQp().per))
-                             / m_dLambda / 16 / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth - 8)))
+                             / m_dLambda / 16 / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[channelType] - 8)))
                              + 0.5);
 
     Int lastCG = -1;
@@ -2366,7 +2369,7 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
       //------------------
 
       default:
-        std::cerr << "ERROR: Invalid patternSigCtx \"" << (int)patternSigCtx << "\" in getSigCtxInc" << std::endl;
+        std::cerr << "ERROR: Invalid patternSigCtx \"" << Int(patternSigCtx) << "\" in getSigCtxInc" << std::endl;
         exit(1);
         break;
     }
@@ -2542,7 +2545,7 @@ __inline Int TComTrQuant::xGetICRate  ( UInt                            uiAbsLev
     if( bExpGolomb )
     {
       uiAbsLevel  = uiSymbol - uiMaxVlc;
-      int iEGS    = 1;  for( UInt uiMax = 2; uiAbsLevel >= uiMax; uiMax <<= 1, iEGS += 2 );
+      Int iEGS    = 1;  for( UInt uiMax = 2; uiAbsLevel >= uiMax; uiMax <<= 1, iEGS += 2 );
       iRate      += iEGS << 15;
       uiSymbol    = min<UInt>( uiSymbol, ( uiMaxVlc + 1 ) );
     }
@@ -2727,26 +2730,27 @@ Void TComTrQuant::setScalingListDec(TComScalingList *scalingList, const ChromaFo
  * \param uiSize Size
  * \param uiQP Quantization parameter
  */
-Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode)
+Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode)
 {
-  UInt uiLog2TrSize = g_aucConvertToBit[ g_scalingListSizeX[size] ] + 2;
+  const UInt uiLog2TrSize = g_aucConvertToBit[ g_scalingListSizeX[size] ] + 2;
+  const ChannelType channelType = ((list == 0) || (list == MAX_NUM_COMPONENT)) ? CHANNEL_TYPE_LUMA : CHANNEL_TYPE_CHROMA;
 
-  Int iTransformShift = MAX_TR_DYNAMIC_RANGE - g_bitDepth - uiLog2TrSize;  // Represents scaling through forward transform
+  const Int iTransformShift = getTransformShift(channelType, uiLog2TrSize);  // Represents scaling through forward transform
 
   UInt i,uiMaxNumCoeff = g_scalingListSize[size];
   Int *piQuantcoeff;
-  double *pdErrScale;
+  Double *pdErrScale;
   piQuantcoeff   = getQuantCoeff(list, qp,size);
   pdErrScale     = getErrScaleCoeff(list, size, qp, errorScaleAdjustmentMode);
 
-  double dOffset = iTransformShift;
+  const Double dOffset = iTransformShift;
 
-  double dErrScale = (double)(1<<SCALE_BITS);                              // Compensate for scaling of bitcount in Lagrange cost function
+  Double dErrScale = (Double)(1<<SCALE_BITS);                              // Compensate for scaling of bitcount in Lagrange cost function
   dErrScale = dErrScale*pow(2.0,(-2.0*dOffset));                     // Compensate for scaling through forward transform
 
   for(i=0;i<uiMaxNumCoeff;i++)
   {
-    pdErrScale[i] =  dErrScale / piQuantcoeff[i] / piQuantcoeff[i] / (1 << DISTORTION_PRECISION_ADJUSTMENT(2 * (g_bitDepth - 8)));
+    pdErrScale[i] =  dErrScale / piQuantcoeff[i] / piQuantcoeff[i] / (1 << DISTORTION_PRECISION_ADJUSTMENT(2 * (g_bitDepth[channelType] - 8)));
   }
 }
 
@@ -2907,7 +2911,7 @@ Void TComTrQuant::initScalingList()
         m_dequantCoef [sizeId][listId][qp] = new Int [g_scalingListSize[sizeId]];
 
         for (UInt errorScaleAdjustmentModeID = 0; errorScaleAdjustmentModeID < NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES; errorScaleAdjustmentModeID++)
-          m_errScale[sizeId][listId][qp][errorScaleAdjustmentModeID] = new double [g_scalingListSize[sizeId]];
+          m_errScale[sizeId][listId][qp][errorScaleAdjustmentModeID] = new Double [g_scalingListSize[sizeId]];
       } // listID loop
       if (g_scalingListNum[sizeId] < 2*MAX_NUM_COMPONENT)
       {

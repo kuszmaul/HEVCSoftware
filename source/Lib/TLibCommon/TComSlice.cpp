@@ -1200,11 +1200,11 @@ Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, wpScalingParam *&wp )
  */
 Void  TComSlice::resetWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT])
 {
-  for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
+  for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
-    for ( int i=0 ; i<MAX_NUM_REF ; i++ )
+    for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
     {
-      for ( int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
+      for ( Int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
         wpScalingParam  *pwp = &(wp[e][i][yuv]);
         pwp->bPresentFlag      = false;
@@ -1231,11 +1231,11 @@ Void  TComSlice::initWpScaling()
  */
 Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT])
 {
-  for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
+  for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
-    for ( int i=0 ; i<MAX_NUM_REF ; i++ )
+    for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
     {
-      for ( int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
+      for ( Int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
         wpScalingParam  *pwp = &(wp[e][i][yuv]);
         if ( !pwp->bPresentFlag ) {
@@ -1245,7 +1245,7 @@ Void  TComSlice::initWpScaling(wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_R
         }
 
         pwp->w      = pwp->iWeight;
-        pwp->o      = pwp->iOffset << (g_bitDepth-8); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
+        pwp->o      = pwp->iOffset << (g_bitDepth[toChannelType(ComponentID(yuv))]-8); //NOTE: ECF - This value of the ".o" variable is never used - .o is set immediately before it gets used
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }
@@ -1311,12 +1311,7 @@ TComSPS::TComSPS()
 , m_bUseLComb                 (false)
 , m_restrictedRefPicListsFlag   (  1)
 , m_listsModificationPresentFlag(  0)
-, m_uiBitDepth                (  8)
-, m_qpBDOffsetY               (  0)
-, m_qpBDOffsetC               (  0)
 , m_useLossless               (false)
-, m_uiPCMBitDepthLuma         (  8)
-, m_uiPCMBitDepthChroma       (  8)
 , m_bPCMFilterDisableFlag     (false)
 , m_uiBitsForPOC              (  8)
 , m_numLongTermRefPicSPS      (  0)  
@@ -1330,6 +1325,13 @@ TComSPS::TComSPS()
 , m_vuiParametersPresentFlag  (false)
 , m_vuiParameters             ()
 {
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_uiBitDepth   [ch] = 8;
+    m_uiPCMBitDepth[ch] = 8;
+    m_qpBDOffset   [ch] = 0;
+  }
+
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {
     m_uiMaxLatencyIncrease[i] = 0;
@@ -1750,7 +1752,7 @@ Void TComScalingList::processRefMatrix( UInt sizeId, UInt listId , UInt refListI
  *  \param pchFile syntax infomation
  *  \returns false if successful
  */
-Bool TComScalingList::xParseScalingList(char* pchFile)
+Bool TComScalingList::xParseScalingList(Char* pchFile)
 {
   static const Int LINE_SIZE=1024;
   FILE *fp;

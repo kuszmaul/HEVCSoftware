@@ -170,7 +170,7 @@ public:
   Int      getScalingListDC               (UInt sizeId, UInt listId)           { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
   Void     checkDcOfMatrix                ();
   Void     processRefMatrix               (UInt sizeId, UInt listId , UInt refListId );
-  Bool     xParseScalingList              (char* pchFile);
+  Bool     xParseScalingList              (Char* pchFile);
 
 private:
   Void     init                    ();
@@ -556,14 +556,12 @@ private:
   Bool        m_listsModificationPresentFlag;
 
   // Parameter
-  UInt        m_uiBitDepth;
-  Int         m_qpBDOffsetY;
-  Int         m_qpBDOffsetC;
+  Int         m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
+  Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
 
   Bool        m_useLossless;
 
-  UInt        m_uiPCMBitDepthLuma;
-  UInt        m_uiPCMBitDepthChroma;
+  UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
 
   UInt        m_uiBitsForPOC;
@@ -693,10 +691,10 @@ public:
   Void      setAMPAcc   ( UInt uiDepth, Int iAccu ) { assert( uiDepth < g_uiMaxCUDepth);  m_iAMPAcc[uiDepth] = iAccu; }
 
   // Bit-depth
-  UInt      getBitDepth     ()         { return m_uiBitDepth;     }
-  Void      setBitDepth     ( UInt u ) { m_uiBitDepth = u;        }
-  Int       getQpBDOffset   (ChannelType type) const { return isLuma(type) ? m_qpBDOffsetY : m_qpBDOffsetC; }
-  Void      setQpBDOffset   (ChannelType type, Int i) { if (isLuma(type)) m_qpBDOffsetY=i; else m_qpBDOffsetC=i; }
+  Int       getBitDepth     (ChannelType type)         { return m_uiBitDepth[type]; }
+  Void      setBitDepth     (ChannelType type, Int u ) { m_uiBitDepth[type] = u;    }
+  Int       getQpBDOffset   (ChannelType type) const   { return m_qpBDOffset[type]; }
+  Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;    }
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
   Bool getUseSAO                  ()           {return m_bUseSAO;}
 
@@ -705,8 +703,8 @@ public:
 
   Bool      getTemporalIdNestingFlag()                { return m_bTemporalIdNestingFlag; }
   Void      setTemporalIdNestingFlag( Bool bValue )   { m_bTemporalIdNestingFlag = bValue; }
-  UInt      getPCMBitDepth         (ChannelType type) const { return isLuma(type) ? m_uiPCMBitDepthLuma : m_uiPCMBitDepthChroma; }
-  Void      setPCMBitDepth         (ChannelType type, UInt u) { if (isLuma(type)) m_uiPCMBitDepthLuma = u; else m_uiPCMBitDepthChroma = u; }
+  UInt      getPCMBitDepth         (ChannelType type) const   { return m_uiPCMBitDepth[type]; }
+  Void      setPCMBitDepth         (ChannelType type, UInt u) { m_uiPCMBitDepth[type] = u;    }
   Void      setPCMFilterDisableFlag     ( Bool   bValue  )    { m_bPCMFilterDisableFlag = bValue; }
   Bool      getPCMFilterDisableFlag     ()                    { return m_bPCMFilterDisableFlag;   } 
 
@@ -964,8 +962,8 @@ class TComSlice
   
 private:
   //  Bitstream writing
-  bool       m_saoEnabledFlag;
-  bool       m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
+  Bool        m_saoEnabledFlag;
+  Bool        m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag 
   Int         m_iPOC;
