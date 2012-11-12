@@ -61,7 +61,6 @@ TDecSbac::TDecSbac()
 , m_cCUMergeIdxExtSCModel        ( 1,             1,                      NUM_MERGE_IDX_EXT_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPartSizeSCModel           ( 1,             1,                      NUM_PART_SIZE_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel           ( 1,             1,                      NUM_PRED_MODE_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCUAlfCtrlFlagSCModel        ( 1,             1,                      NUM_ALF_CTRL_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUIntraPredSCModel          ( 1,             1,                      NUM_ADI_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUChromaPredSCModel         ( 1,             1,                      NUM_CHROMA_PRED_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUDeltaQpSCModel            ( 1,             1,                      NUM_DELTA_QP_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
@@ -78,27 +77,13 @@ TDecSbac::TDecSbac()
 , m_cCUOneSCModel                ( 1,             1,                      NUM_ONE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAbsSCModel                ( 1,             1,                      NUM_ABS_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cMVPIdxSCModel               ( 1,             1,                      NUM_MVP_IDX_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cALFFlagSCModel              ( 1,             1,                      NUM_ALF_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cALFUvlcSCModel              ( 1,             1,                      NUM_ALF_UVLC_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cALFSvlcSCModel              ( 1,             1,                      NUM_ALF_SVLC_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAMPSCModel                ( 1,             1,                      NUM_CU_AMP_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SAO_ABS_BY_PASS
-, m_cSaoUvlcSCModel              ( 1,             1,                      NUM_SAO_UVLC_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
-#if SAO_MERGE_ONE_CTX
 , m_cSaoMergeSCModel             ( 1,             1,                      NUM_SAO_MERGE_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
-#else
-, m_cSaoMergeLeftSCModel         ( 1,             1,                      NUM_SAO_MERGE_LEFT_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cSaoMergeUpSCModel           ( 1,             1,                      NUM_SAO_MERGE_UP_FLAG_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_cSaoTypeIdxSCModel           ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
-#if !REMOVE_FGS
-  m_iSliceGranularity = 0;
-#endif
 }
 
 TDecSbac::~TDecSbac()
@@ -134,7 +119,6 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUSkipFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
   m_cCUMergeFlagExtSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
-  m_cCUAlfCtrlFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_PRED_MODE );
@@ -153,18 +137,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUOneSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_ONE_FLAG );
   m_cCUAbsSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_ABS_FLAG );
   m_cMVPIdxSCModel.initBuffer               ( sliceType, qp, (UChar*)INIT_MVP_IDX );
-  m_cALFFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_ALF_FLAG );
-  m_cALFUvlcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_ALF_UVLC );
-  m_cALFSvlcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_ALF_SVLC );
-#if !SAO_ABS_BY_PASS
-  m_cSaoUvlcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_SAO_UVLC );
-#endif
-#if SAO_MERGE_ONE_CTX
   m_cSaoMergeSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_SAO_MERGE_FLAG );
-#else
-  m_cSaoMergeLeftSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
-  m_cSaoMergeUpSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
-#endif
   m_cSaoTypeIdxSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cCUTransSubdivFlagSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
@@ -192,7 +165,6 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUSkipFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
   m_cCUMergeFlagExtSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
-  m_cCUAlfCtrlFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
@@ -211,18 +183,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUOneSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_ONE_FLAG );
   m_cCUAbsSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_ABS_FLAG );
   m_cMVPIdxSCModel.initBuffer               ( eSliceType, iQp, (UChar*)INIT_MVP_IDX );
-  m_cALFFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_ALF_FLAG );
-  m_cALFUvlcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_ALF_UVLC );
-  m_cALFSvlcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_ALF_SVLC );
-#if !SAO_ABS_BY_PASS
-  m_cSaoUvlcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SAO_UVLC );
-#endif
-#if SAO_MERGE_ONE_CTX
   m_cSaoMergeSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_FLAG );
-#else
-  m_cSaoMergeLeftSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
-  m_cSaoMergeUpSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
-#endif
   m_cSaoTypeIdxSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cCUTransSubdivFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
@@ -330,27 +291,20 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
     m_pcTDecBinIf->decodeBinEP( codeWord );
   }
   while( codeWord);
+
   codeWord  = 1 - codeWord;
   prefix -= codeWord;
   codeWord=0;
-#if COEF_REMAIN_BIN_REDUCTION
+
   if (prefix < COEF_REMAIN_BIN_REDUCTION )
-#else
-  if (prefix < 8 )
-#endif
   {
     m_pcTDecBinIf->decodeBinsEP(codeWord,rParam);
     rSymbol = (prefix<<rParam) + codeWord;
   }
   else
   {
-#if COEF_REMAIN_BIN_REDUCTION
     m_pcTDecBinIf->decodeBinsEP(codeWord,prefix-COEF_REMAIN_BIN_REDUCTION+rParam);
     rSymbol = (((1<<(prefix-COEF_REMAIN_BIN_REDUCTION))+COEF_REMAIN_BIN_REDUCTION-1)<<rParam)+codeWord;
-#else
-    m_pcTDecBinIf->decodeBinsEP(codeWord,prefix-8+rParam);
-    rSymbol = (((1<<(prefix-8))+8-1)<<rParam)+codeWord;
-#endif
   }
 }
 
@@ -458,9 +412,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   if( uiSymbol )
   {
-#if SKIP_FLAG
     pcCU->setSkipFlagSubParts( true,        uiAbsPartIdx, uiDepth );
-#endif
     pcCU->setPredModeSubParts( MODE_INTER,  uiAbsPartIdx, uiDepth );
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
@@ -767,15 +719,11 @@ Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPar
   const UInt uiCtx = pcCU->getCtxInterDir( uiAbsPartIdx );
   ContextModel *pCtx = m_cCUInterDirSCModel.get( 0 );
 
-#if DISALLOW_BIPRED_IN_8x4_4x8PUS
   uiSymbol = 0;
   if (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N || pcCU->getHeight(uiAbsPartIdx) != 8 )
   {
-#endif
     m_pcTDecBinIf->decodeBin( uiSymbol, *( pCtx + uiCtx ) );
-#if DISALLOW_BIPRED_IN_8x4_4x8PUS
   }
-#endif
 
   if( uiSymbol )
   {
@@ -801,30 +749,25 @@ Void TDecSbac::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPar
 
   if( uiSymbol )
   {
-#if REF_IDX_BYPASS
-      UInt uiRefNum = pcCU->getSlice()->getNumRefIdx( eRefList ) - 2;
-      pCtx++;
-      UInt ui;
-      for( ui = 0; ui < uiRefNum; ++ui )
+    UInt uiRefNum = pcCU->getSlice()->getNumRefIdx( eRefList ) - 2;
+    pCtx++;
+    UInt ui;
+    for( ui = 0; ui < uiRefNum; ++ui )
+    {
+      if( ui == 0 )
       {
-        if( ui == 0 )
-        {
-          m_pcTDecBinIf->decodeBin( uiSymbol, *pCtx );
-        }
-        else
-        {
-          m_pcTDecBinIf->decodeBinEP( uiSymbol );
-        }
-        if( uiSymbol == 0 )
-        {
-          break;
-        }
+        m_pcTDecBinIf->decodeBin( uiSymbol, *pCtx );
       }
-      uiSymbol = ui + 1;
-#else
-    xReadUnaryMaxSymbol( uiSymbol, pCtx + 1, 1, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
-    uiSymbol++;
-#endif
+      else
+      {
+        m_pcTDecBinIf->decodeBinEP( uiSymbol );
+      }
+      if( uiSymbol == 0 )
+      {
+        break;
+      }
+    }
+    uiSymbol = ui + 1;
   }
   riRefFrmIdx = uiSymbol;
 
@@ -932,7 +875,6 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiDQp;
   Int  iDQp;
   
-#if CU_DQP_TU_EG
   UInt uiSymbol;
 
   xReadUnaryMaxSymbol (uiDQp,  &m_cCUDeltaQpSCModel.get( 0, 0, 0 ), 1, CU_DQP_TU_CMAX);
@@ -960,33 +902,6 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     iDQp=0;
     qp = pcCU->getRefQP(uiAbsPartIdx);
   }
-#else
-  m_pcTDecBinIf->decodeBin( uiDQp, m_cCUDeltaQpSCModel.get( 0, 0, 0 ) );
-  
-  if ( uiDQp == 0 )
-  {
-    qp = pcCU->getRefQP(uiAbsPartIdx);
-  }
-  else
-  {
-    UInt uiSign;
-    Int qpBdOffsetY = pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
-    m_pcTDecBinIf->decodeBinEP(uiSign);
-
-    UInt uiMaxAbsDQpMinus1 = 24 + (qpBdOffsetY/2) + (uiSign);
-    UInt uiAbsDQpMinus1;
-    xReadUnaryMaxSymbol (uiAbsDQpMinus1,  &m_cCUDeltaQpSCModel.get( 0, 0, 1 ), 1, uiMaxAbsDQpMinus1);
-
-    iDQp = uiAbsDQpMinus1 + 1;
-
-    if(uiSign)
-    {
-      iDQp = -iDQp;
-    }
-
-    qp = (((Int) pcCU->getRefQP( uiAbsPartIdx ) + iDQp + 52 + 2*qpBdOffsetY )%(52+qpBdOffsetY)) - qpBdOffsetY;
-  }
-#endif
   
   pcCU->setQPSubParts(qp, uiAbsPartIdx, uiDepth);  
   pcCU->setCodedQP(qp);
@@ -1035,13 +950,6 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
   {
     return;
   }
-
-#if !INTER_TRANSFORMSKIP
-  if(!pcCU->isIntra(uiAbsPartIdx))
-  {
-    return;
-  }
-#endif
 
   if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(component)))
   {
@@ -1242,11 +1150,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   //--------------------------------------------------------------------------------------------------
 
-#if PPS_TS_FLAG
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
-#else
-  if(pcCU->getSlice()->getSPS()->getUseTransformSkip())
-#endif
   {
     parseTransformSkipFlags(rTu, compID);
   }
@@ -1275,9 +1179,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
   const Int  iLastScanSet  = uiScanPosLast >> log2GroupSize;
-#if !REMOVE_NUM_GREATER1
-  UInt uiNumOne            = 0;
-#endif
   UInt c1                  = 1;
   UInt uiGoRiceParam       = 0;
 
@@ -1371,12 +1272,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
       absSum = 0;
 
-#if REMOVE_NUM_GREATER1
       const UInt uiCtxSet = getContextSetIndex(compID, iSubSet, (c1 == 0));
-#else
-      const UInt uiCtxSet = getContextSetIndex(compID, iSubSet, (uiNumOne > 0));
-      uiNumOne >>= 1;
-#endif
       c1 = 1;
       UInt uiBin;
 
@@ -1455,9 +1351,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
           if(absCoeff[ idx ] >= 2)  
           {
             iFirstCoeff2 = 0;
-#if !REMOVE_NUM_GREATER1
-            uiNumOne++;
-#endif
           }
         }
       }
@@ -1482,12 +1375,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
         }
       }
     }
-#if !REMOVE_NUM_GREATER1
-    else
-    {
-      uiNumOne >>= 1;
-    }
-#endif
   }
 
 #if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
@@ -1507,11 +1394,7 @@ Void TDecSbac::parseSaoMaxUvlc ( UInt& val, UInt maxSymbol )
 
   UInt code;
   Int  i;
-#if SAO_ABS_BY_PASS
   m_pcTDecBinIf->decodeBinEP( code );
-#else
-  m_pcTDecBinIf->decodeBin( code, m_cSaoUvlcSCModel.get( 0, 0, 0 ) );
-#endif
   if ( code == 0 )
   {
     val = 0;
@@ -1521,11 +1404,7 @@ Void TDecSbac::parseSaoMaxUvlc ( UInt& val, UInt maxSymbol )
   i=1;
   while (1)
   {
-#if SAO_ABS_BY_PASS
     m_pcTDecBinIf->decodeBinEP( code );
-#else
-    m_pcTDecBinIf->decodeBin( code, m_cSaoUvlcSCModel.get( 0, 0, 1 ) );
-#endif
     if ( code == 0 )
     {
       break;
@@ -1540,51 +1419,21 @@ Void TDecSbac::parseSaoMaxUvlc ( UInt& val, UInt maxSymbol )
   val = i;
 }
 
-#if SAO_TYPE_CODING
 Void TDecSbac::parseSaoUflc (UInt uiLength, UInt&  riVal)
 {
   m_pcTDecBinIf->decodeBinsEP ( riVal, uiLength );
 }
-#else
-Void TDecSbac::parseSaoUflc (UInt&  riVal)
-{
-  m_pcTDecBinIf->decodeBinsEP ( riVal, 5 );
-}
-#endif
 
-#if SAO_MERGE_ONE_CTX
 Void TDecSbac::parseSaoMerge (UInt&  ruiVal)
 {
   UInt uiCode;
   m_pcTDecBinIf->decodeBin( uiCode, m_cSaoMergeSCModel.get( 0, 0, 0 ) );
   ruiVal = (Int)uiCode;
 }
-#else
-Void TDecSbac::parseSaoMergeLeft (UInt&  ruiVal, UInt uiCompIdx)
-{
-  UInt uiCode;
-
-#if SAO_SINGLE_MERGE
-  m_pcTDecBinIf->decodeBin( uiCode, m_cSaoMergeLeftSCModel.get( 0, 0, 0 ) );
-#else
-  m_pcTDecBinIf->decodeBin( uiCode, m_cSaoMergeLeftSCModel.get( 0, 0, uiCompIdx ) );
-#endif
-
-  ruiVal = (Int)uiCode;
-}
-
-Void TDecSbac::parseSaoMergeUp (UInt&  ruiVal)
-{
-  UInt uiCode;
-  m_pcTDecBinIf->decodeBin( uiCode, m_cSaoMergeUpSCModel.get( 0, 0, 0 ) );
-  ruiVal = (Int)uiCode;
-}
-#endif
 
 Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
 {
   UInt uiCode;
-#if SAO_TYPE_CODING
   m_pcTDecBinIf->decodeBin( uiCode, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
   if (uiCode == 0) 
   {
@@ -1602,23 +1451,6 @@ Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
       ruiVal = 1;
     }
   }
-#else
-  Int  i;
-  m_pcTDecBinIf->decodeBin( uiCode, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
-  if ( uiCode == 0 )
-  {
-    ruiVal = 0;
-    return;
-  }
-  i=1;
-  while (1)
-  {
-    m_pcTDecBinIf->decodeBin( uiCode, m_cSaoTypeIdxSCModel.get( 0, 0, 1 ) );
-    if ( uiCode == 0 ) break;
-    i++;
-  }
-  ruiVal = i;
-#endif
 }
 
 inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
@@ -1628,18 +1460,7 @@ inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
   psDst->typeIdx    = psSrc->typeIdx;
   if (psDst->typeIdx != -1)
   {
-#if SAO_TYPE_CODING
     psDst->subTypeIdx = psSrc->subTypeIdx ;
-#else
-    if (psDst->typeIdx == SAO_BO)
-    {
-      psDst->bandPosition = psSrc->bandPosition ;
-    }
-    else
-    {
-      psDst->bandPosition = 0;
-    }
-#endif
     psDst->length  = psSrc->length;
     for (i=0;i<psDst->length;i++)
     {
@@ -1656,11 +1477,7 @@ inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
   }
 }
 
-#if SAO_TYPE_SHARING
 Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
-#else
-Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
-#endif
 {
   UInt uiSymbol;
 
@@ -1673,8 +1490,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
     SAO_BO_LEN
   }; 
 
-#if SAO_TYPE_SHARING
-  if (compIdx==2)
+  if (compIdx==COMPONENT_Cr)
   {
     uiSymbol = (UInt)( psSaoLcuParam->typeIdx + 1);
   }
@@ -1682,9 +1498,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
   {
     parseSaoTypeIdx(uiSymbol);
   }
-#else
-  parseSaoTypeIdx(uiSymbol);
-#endif
+
   psSaoLcuParam->typeIdx = (Int)uiSymbol - 1;
   if (uiSymbol)
   {
@@ -1698,11 +1512,6 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
 
     if( psSaoLcuParam->typeIdx == SAO_BO )
     {
-#if !SAO_TYPE_CODING
-      // Parse Left Band Index
-      parseSaoUflc( uiSymbol );
-      psSaoLcuParam->bandPosition = uiSymbol;
-#endif
       for(Int i=0; i< psSaoLcuParam->length; i++)
       {
         parseSaoMaxUvlc(uiSymbol, offsetTh -1 );
@@ -1720,10 +1529,8 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
           }
         }
       }
-#if SAO_TYPE_CODING
       parseSaoUflc(5, uiSymbol );
       psSaoLcuParam->subTypeIdx = uiSymbol;
-#endif
     }
     else if( psSaoLcuParam->typeIdx < 4 )
     {
@@ -1731,20 +1538,13 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam)
       parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[1] = uiSymbol;
       parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[2] = -(Int)uiSymbol;
       parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[3] = -(Int)uiSymbol;
-#if SAO_TYPE_CODING
-#if SAO_TYPE_SHARING
+
       if (compIdx != 2)
       {
         parseSaoUflc(2, uiSymbol );
         psSaoLcuParam->subTypeIdx = uiSymbol;
         psSaoLcuParam->typeIdx += psSaoLcuParam->subTypeIdx;
       }
-#else
-      parseSaoUflc(2, uiSymbol );
-      psSaoLcuParam->subTypeIdx = uiSymbol;
-      psSaoLcuParam->typeIdx += psSaoLcuParam->subTypeIdx;
-#endif
-#endif
     }
   }
   else
@@ -1758,82 +1558,44 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
   Int iAddr = pcCU->getAddr();
   UInt uiSymbol;
   const UInt numValidComp=pcCU->getPic()->getNumberValidComponents();
-#if SAO_SINGLE_MERGE
   for (Int iCompIdx=0; iCompIdx<numValidComp; iCompIdx++)
   {
     pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag    = 0;
     pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag  = 0;
-#if SAO_TYPE_CODING
     pSaoParam->saoLcuParam[iCompIdx][iAddr].subTypeIdx     = 0;
-#else
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].bandPosition   = 0;
-#endif
     pSaoParam->saoLcuParam[iCompIdx][iAddr].typeIdx        = -1;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[0]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[1]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[2]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[3]     = 0;
-
+    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[0]      = 0;
+    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[1]      = 0;
+    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[2]      = 0;
+    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[3]      = 0;
   }
-#if SAO_TYPE_SHARING
+
   const Bool bChroma = isChromaEnabled(pcCU->getPic()->getChromaFormat());
 
   if (pSaoParam->bSaoFlag[CHANNEL_TYPE_LUMA] || (bChroma && pSaoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]) )
-#else
-  if (pSaoParam->bSaoFlag[COMPONENT_Y] || (numValidComp > COMPONENT_Cb && pSaoParam->bSaoFlag[COMPONENT_Cb]) || (numValidComp > COMPONENT_Cr && pSaoParam->bSaoFlag[COMPONENT_Cr]) )
-#endif
   {
     if (rx>0 && iCUAddrInSlice!=0 && allowMergeLeft)
     {
-#if SAO_MERGE_ONE_CTX
       parseSaoMerge(uiSymbol); 
       pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag = (Bool)uiSymbol;  
-#else
-      parseSaoMergeLeft(uiSymbol, 0); 
-      pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag = (Bool)uiSymbol;   
-#endif
     }
     if (pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag==0)
     {
       if ((ry > 0) && (iCUAddrUpInSlice>=0) && allowMergeUp)
       {
-#if SAO_MERGE_ONE_CTX
         parseSaoMerge(uiSymbol);
         pSaoParam->saoLcuParam[0][iAddr].mergeUpFlag = (Bool)uiSymbol;
-#else
-        parseSaoMergeUp(uiSymbol);
-        pSaoParam->saoLcuParam[0][iAddr].mergeUpFlag = (Bool)uiSymbol;
-#endif
       }
     }
   }
-#endif
 
   for (Int iCompIdx=0; iCompIdx<numValidComp; iCompIdx++)
   {
-#if !SAO_SINGLE_MERGE
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag    = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag  = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].bandPosition   = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].typeIdx        = -1;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[0]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[1]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[2]     = 0;
-    pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[3]     = 0;
-#endif
-#if SAO_TYPE_SHARING
     if (pSaoParam->bSaoFlag[toChannelType(ComponentID(iCompIdx))])
-#else
-    if (pSaoParam->bSaoFlag[iCompIdx])
-#endif
     {
       if (rx>0 && iCUAddrInSlice!=0 && allowMergeLeft)
       {
-#if SAO_SINGLE_MERGE
         pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag = pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag;
-#else
-        parseSaoMergeLeft(uiSymbol,iCompIdx); pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag = (Int)uiSymbol;
-#endif
       }
       else
       {
@@ -1844,11 +1606,7 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
       {
         if ((ry > 0) && (iCUAddrUpInSlice>=0) && allowMergeUp)
         {
-#if SAO_SINGLE_MERGE
           pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag = pSaoParam->saoLcuParam[0][iAddr].mergeUpFlag;
-#else
-          parseSaoMergeUp(uiSymbol);  pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag = uiSymbol;
-#endif
         }
         else
         {
@@ -1856,12 +1614,8 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
         }
         if (!pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag)
         {
-#if SAO_TYPE_SHARING
           pSaoParam->saoLcuParam[2][iAddr].typeIdx = pSaoParam->saoLcuParam[1][iAddr].typeIdx;
           parseSaoOffset(&(pSaoParam->saoLcuParam[iCompIdx][iAddr]), iCompIdx);
-#else
-          parseSaoOffset(&(pSaoParam->saoLcuParam[iCompIdx][iAddr]));
-#endif
         }
         else
         {
@@ -1876,31 +1630,10 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
     else
     {
       pSaoParam->saoLcuParam[iCompIdx][iAddr].typeIdx = -1;
-#if SAO_TYPE_CODING
       pSaoParam->saoLcuParam[iCompIdx][iAddr].subTypeIdx = 0;
-#else
-      pSaoParam->saoLcuParam[iCompIdx][iAddr].bandPosition = 0;
-#endif
     }
   }
 }
-
-#if !REMOVE_ALF
-Void TDecSbac::parseAlfCtrlFlag (Int compIdx, UInt& code)
-{
-  UInt decodedSymbol;
-  m_pcTDecBinIf->decodeBin( decodedSymbol, m_cCUAlfCtrlFlagSCModel.get( 0, 0, 0 ) );
-  code = decodedSymbol;
-
-  DTRACE_CABAC_VL( g_nSymbolCounter++ )
-  DTRACE_CABAC_T( "parseAlfCtrlFlag()" )
-  DTRACE_CABAC_T( "\tsymbol=" )
-  DTRACE_CABAC_V( decodedSymbol )
-  DTRACE_CABAC_T( "\tcompIdx=" )
-  DTRACE_CABAC_V( compIdx )
-  DTRACE_CABAC_T( "\n" )
-}
-#endif
 
 /**
  - Initialize our contexts from the nominated source.
@@ -1931,11 +1664,4 @@ Void TDecSbac::loadContexts ( TDecSbac* pScr )
   xCopyContextsFrom(pScr);
 }
 
-Void TDecSbac::decodeFlush ( )
-{
-  UInt uiBit;
-  m_pcTDecBinIf->decodeBinTrm(uiBit);
-  m_pcTDecBinIf->flush();
-
-}
 //! \}

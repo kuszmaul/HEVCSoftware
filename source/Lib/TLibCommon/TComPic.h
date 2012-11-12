@@ -155,9 +155,6 @@ public:
   Void          destroyNonDBFilterInfo();
 
   Bool          getValidSlice                                  (Int sliceID) const {return m_pbValidSlice[sliceID];}
-#if !REMOVE_FGS
-  Int           getSliceGranularityForNDBFilter                () const            {return m_sliceGranularityForNDBFilter;}
-#endif
   Bool          getIndependentSliceBoundaryForNDBFilter        () const            {return m_bIndependentSliceBoundaryForNDBFilter;}
   Bool          getIndependentTileBoundaryForNDBFilter         () const            {return m_bIndependentTileBoundaryForNDBFilter; }
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}

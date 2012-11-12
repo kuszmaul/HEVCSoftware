@@ -36,9 +36,7 @@
 */
 
 #include "TComPicSym.h"
-#if REMOVE_APS
 #include "TComSampleAdaptiveOffset.h"
-#endif
 
 //! \ingroup TLibCommon
 //! \{
@@ -124,9 +122,7 @@ Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPic
     m_puiCUOrderMap[i] = i;
     m_puiInverseCUOrderMap[i] = i;
   }
-#if REMOVE_APS
   m_saoParam = NULL;
-#endif
 }
 
 Void TComPicSym::destroy()
@@ -167,14 +163,12 @@ Void TComPicSym::destroy()
   delete [] m_puiInverseCUOrderMap;
   m_puiInverseCUOrderMap = NULL;
   
-#if REMOVE_APS
   if (m_saoParam)
   {
     TComSampleAdaptiveOffset::freeSaoParam(m_saoParam);
     delete m_saoParam;
     m_saoParam = NULL;
   }
-#endif
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -313,13 +307,11 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
   return uiNxtCUAddr;
 }
 
-#if REMOVE_APS
 Void TComPicSym::allocSaoParam(TComSampleAdaptiveOffset *sao)
 {
   m_saoParam = new SAOParam;
   sao->allocSaoParam(m_saoParam);
 }
-#endif
 
 TComTile::TComTile()
 {

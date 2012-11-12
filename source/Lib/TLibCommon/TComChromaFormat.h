@@ -460,15 +460,7 @@ Int getMDDTmode (const ComponentID compID, class TComDataCU* pcCU, const UInt ui
 
 static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples)
 {
-#if !INTER_TRANSFORMSKIP
-  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE ECF - with intra-only TS, only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
-#else
-#if REMOVE_NSQT
-  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE ECF - with NSQT disabled, only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
-#else
-  return (rectSamples.width <= MAX_TS_WIDTH && rectSamples.height<=MAX_TS_HEIGHT); // NOTE ECF - allow 4x8 (for 4:2:2) and 4x4 only
-#endif
-#endif
+  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE ECF - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
 }
 
 
@@ -702,36 +694,16 @@ static inline Void getAdditionalInverseQuantiserMultiplyAndShift(Int &multiplier
 //Scaling lists  =======================================================================================================
 //======================================================================================================================
 
-#if !REMOVE_NSQT
-static inline ScalingListDIR getScalingListDIR(const UInt width, const UInt height, const ChromaFormat fmt, const ComponentID compID)
-{
-  const UInt csx=getComponentScaleX(compID, fmt);
-  const UInt csy=getComponentScaleY(compID, fmt);
-  if ((width<<csx) == (height<<csy))      return SCALING_LIST_SQT;
-  else if ((width<<csx) < (height<<csy))  return SCALING_LIST_VER;
-  else                                    return SCALING_LIST_HOR;
-}
-#endif
-
-//------------------------------------------------
-
 // for a given TU size, there is one list per intra/inter & channel combination (i.e. 6 per TU size), apart from 32x32,
 // because 32x32 Cb/Cr TUs don't exist in 4:2:0
-static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, const ComponentID compID
-#if !REMOVE_NSQT
-    , const ScalingListDIR scalingList
-#endif
-                                     )
+static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, const ComponentID compID)
 {
 #if ECF__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
   return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
 #else
   const Int base=(isIntra ? 0 : MAX_NUM_COMPONENT);
-#if REMOVE_NSQT
   const Int numForAdjSizeID=g_scalingListNum[log2TUSize-2];
-#else
-  const Int numForAdjSizeID=g_scalingListNum[log2TUSize-2+(scalingList!=SCALING_LIST_SQT?1:0)];
-#endif
+
   return (numForAdjSizeID!=SCALING_LIST_NUM) ? base : base+compID;
 #endif
 }

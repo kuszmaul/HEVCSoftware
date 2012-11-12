@@ -322,11 +322,7 @@ Void TComSampleAdaptiveOffset::initSAOParam(SAOParam *pcSaoParam, Int iPartLevel
   pSaoPart->iBestType   = -1;
   pSaoPart->iLength     =  0;
 
-#if SAO_TYPE_CODING
   pSaoPart->subTypeIdx = 0;
-#else
-  pSaoPart->bandPosition = 0;
-#endif
 
   for (j=0;j<MAX_NUM_SAO_OFFSETS;j++)
   {
@@ -426,14 +422,10 @@ Void TComSampleAdaptiveOffset::resetSAOParam(SAOParam *pcSaoParam)
 
   for(Int c=0; c<MAX_NUM_COMPONENT; c++)
   {
-#if SAO_TYPE_SHARING
     if (c<MAX_NUM_CHANNEL_TYPE)
     {
-#endif
       pcSaoParam->bSaoFlag[c] = 0;
-#if SAO_TYPE_SHARING
     }
-#endif
 
     for(Int i=0; i< m_aiNumCulPartsLevel[m_uiMaxSplitLevel]; i++)
     {
@@ -444,11 +436,7 @@ Void TComSampleAdaptiveOffset::resetSAOParam(SAOParam *pcSaoParam)
       pcSaoParam->psSaoPart[c][i].dMinCost      = MAX_DOUBLE;
       pcSaoParam->psSaoPart[c][i].iMinDist      = MAX_INT;
       pcSaoParam->psSaoPart[c][i].iMinRate      = MAX_INT;
-#if SAO_TYPE_CODING
       pcSaoParam->psSaoPart[c][i].subTypeIdx    = 0;
-#else
-      pcSaoParam->psSaoPart[c][i].bandPosition  = 0;
-#endif
       for (Int j=0;j<MAX_NUM_SAO_OFFSETS;j++)
       {
         pcSaoParam->psSaoPart[c][i].iOffset[j] = 0;
@@ -477,11 +465,7 @@ Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic, Int numSlicesInP
 {
   m_pcPic   = pcPic;
   m_uiNumSlicesInPic = numSlicesInPic;
-#if REMOVE_FGS
   m_iSGDepth = 0;
-#else
-  m_iSGDepth         = pcPic->getSliceGranularityForNDBFilter();
-#endif
   m_bUseNIF = ( pcPic->getIndependentSliceBoundaryForNDBFilter() || pcPic->getIndependentTileBoundaryForNDBFilter() );
   if(m_bUseNIF)
   {
@@ -981,14 +965,8 @@ Void TComSampleAdaptiveOffset::processSaoCuOrg(Int iAddr, Int iSaoType, Componen
 Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pcPic, SAOParam* pcSaoParam)
 {
   const UInt numValidComp = m_pcPic->getNumberValidComponents();
-#if SAO_LUM_CHROMA_ONOFF_FLAGS && SAO_TYPE_SHARING
   const Bool bChroma = isChromaEnabled(m_pcPic->getChromaFormat());
   if (pcSaoParam->bSaoFlag[CHANNEL_TYPE_LUMA] || (bChroma && pcSaoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]))
-#elif SAO_LUM_CHROMA_ONOFF_FLAGS
-  if (pcSaoParam->bSaoFlag[COMPONENT_Y] || (numValidComp>COMPONENT_Cb && pcSaoParam->bSaoFlag[COMPONENT_Cb]) || (numValidComp>COMPONENT_Cr && pcSaoParam->bSaoFlag[COMPONENT_Cr]))
-#else
-  if (pcSaoParam->bSaoFlag[COMPONENT_Y])
-#endif
   {
 #if FULL_NBIT
     m_uiSaoBitIncrease = g_uiBitDepth + (g_uiBitDepth-8) - min((Int)(g_uiBitDepth + (g_uiBitDepth-8)), 10);
@@ -1013,13 +991,8 @@ Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pcPic, SAOParam* pcSaoParam)
     {
       const ComponentID ch=ComponentID(chan);
 
-#if SAO_TYPE_SHARING
-      const Bool processComponent = pcSaoParam->bSaoFlag[toChannelType(ch)];
-#else
-      const Bool processComponent = pcSaoParam->bSaoFlag[ch];
-#endif
-
-      if (processComponent) processSaoUnitAll( pcSaoParam->saoLcuParam[ch], pcSaoParam->oneUnitFlag[ch], ch);
+      if (pcSaoParam->bSaoFlag[toChannelType(ch)])
+        processSaoUnitAll( pcSaoParam->saoLcuParam[ch], pcSaoParam->oneUnitFlag[ch], ch);
     }
 
     m_pcPic = NULL;
@@ -1102,11 +1075,7 @@ Void TComSampleAdaptiveOffset::processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool 
             }
             for (i=0; i<saoLcuParam[addr].length; i++)
             {
-#if SAO_TYPE_CODING
               offset[ (saoLcuParam[addr].subTypeIdx +i)%SAO_MAX_BO_CLASSES  +1] = saoLcuParam[addr].offset[i] << m_uiSaoBitIncrease;
-#else
-              offset[ (saoLcuParam[addr].bandPosition +i)%SAO_MAX_BO_CLASSES  +1] = saoLcuParam[addr].offset[i] << m_uiSaoBitIncrease;
-#endif
             }
 
             ppLumaTable = m_lumaTableBo;
@@ -1171,11 +1140,7 @@ Void TComSampleAdaptiveOffset::resetLcuPart(SaoLcuParam* saoLcuParam)
     {
       saoLcuParam[i].offset[j] = 0;
     }
-#if SAO_TYPE_CODING
     saoLcuParam[i].subTypeIdx = 0;
-#else
-    saoLcuParam[i].bandPosition = 0;
-#endif
   }
 }
 
@@ -1224,11 +1189,7 @@ Void TComSampleAdaptiveOffset::convertOnePart2SaoUnit(SAOParam *saoParam, UInt p
       addr = idxY * frameWidthInCU + idxX;
       saoLcuParam[addr].partIdxTmp = (Int)partIdx;
       saoLcuParam[addr].typeIdx    = saoQTPart[partIdx].iBestType;
-#if SAO_TYPE_CODING
       saoLcuParam[addr].subTypeIdx = saoQTPart[partIdx].subTypeIdx;
-#else
-      saoLcuParam[addr].bandPosition = saoQTPart[partIdx].bandPosition;
-#endif
       if (saoLcuParam[addr].typeIdx!=-1)
       {
         saoLcuParam[addr].length    = saoQTPart[partIdx].iLength;
@@ -1240,11 +1201,7 @@ Void TComSampleAdaptiveOffset::convertOnePart2SaoUnit(SAOParam *saoParam, UInt p
       else
       {
         saoLcuParam[addr].length    = 0;
-#if SAO_TYPE_CODING
         saoLcuParam[addr].subTypeIdx = saoQTPart[partIdx].subTypeIdx;
-#else
-        saoLcuParam[addr].bandPosition = saoQTPart[partIdx].bandPosition;
-#endif
         for (j=0;j<MAX_NUM_SAO_OFFSETS;j++)
         {
           saoLcuParam[addr].offset[j] = 0;
@@ -1262,11 +1219,7 @@ Void TComSampleAdaptiveOffset::resetSaoUnit(SaoLcuParam* saoUnit)
   saoUnit->mergeUpFlag   = 0;
   saoUnit->typeIdx       = -1;
   saoUnit->length        = 0;
-#if SAO_TYPE_CODING
   saoUnit->subTypeIdx    = 0;
-#else
-  saoUnit->bandPosition  = 0;
-#endif
 
   for (Int i=0;i<4;i++)
   {
@@ -1274,27 +1227,20 @@ Void TComSampleAdaptiveOffset::resetSaoUnit(SaoLcuParam* saoUnit)
   }
 }
 
-#if SAO_SINGLE_MERGE
 Void TComSampleAdaptiveOffset::copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc )
 {
   saoUnitDst->mergeLeftFlag = saoUnitSrc->mergeLeftFlag;
   saoUnitDst->mergeUpFlag   = saoUnitSrc->mergeUpFlag;
   saoUnitDst->typeIdx       = saoUnitSrc->typeIdx;
   saoUnitDst->length        = saoUnitSrc->length;
+  saoUnitDst->subTypeIdx    = saoUnitSrc->subTypeIdx;
 
-#if SAO_TYPE_CODING
-  saoUnitDst->subTypeIdx  = saoUnitSrc->subTypeIdx;
-#else
-  saoUnitDst->bandPosition  = saoUnitSrc->bandPosition;
-#endif
   for (Int i=0;i<4;i++)
   {
     saoUnitDst->offset[i] = saoUnitSrc->offset[i];
   }
 }
-#endif
 
-#if REMOVE_ALF
 /** PCM LF disable process.
  * \param pcPic picture (TComPic) pointer
  * \returns Void
@@ -1402,6 +1348,5 @@ Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiA
     piSrc += uiStride;
   }
 }
-#endif
 
 //! \}

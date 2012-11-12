@@ -31,7 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     TEncAdaptiveLoopFilter.h
+/**
+ \file     TEncSampleAdaptiveOffset.h
  \brief    estimation part of sample adaptive offset class (header)
  */
 
@@ -75,10 +76,8 @@ private:
   Int64  ***m_iCount;      //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
   Int64  ***m_iOffset;     //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
   Int64  ***m_iOffsetOrg;  //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-#if SAO_LCU_BOUNDARY
   Int64  ****m_count_PreDblk;      //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
   Int64  ****m_offsetOrg_PreDblk;  //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-#endif
   Int64  **m_iRate;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
   Int64  **m_iDist;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
   Double **m_dCost;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
@@ -112,22 +111,15 @@ public:
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda);
 #endif
 
-#if PICTURE_SAO_RDO_FIX  
   Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, ComponentID yCbCr);
   Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda, ComponentID yCbCr);
-#else
-  Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda);
-  Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda);
-#endif
   
   Void disablePartTree(SAOQTPart *psQTPart, Int iPartIdx);
   Void getSaoStats(SAOQTPart *psQTPart, ComponentID iYCbCr);
   Void calcSaoStatsCu(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
   Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail);
   Void calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
-#if SAO_LCU_BOUNDARY
   Void calcSaoStatsCu_BeforeDblk( TComPic* pcPic );
-#endif
   Void destroyEncBuffer();
   Void createEncBuffer();
   Void assignSaoUnitSyntax(SaoLcuParam* saoLcuParam,  SAOQTPart* saoPart, Bool &oneUnitFlag);
@@ -137,14 +129,8 @@ public:
 #else
   Void rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma);
 #endif
-#if SAO_SINGLE_MERGE
   Void saoComponentParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, ComponentID yCbCr, Double lambda, SaoLcuParam *compSaoParam, Double *distortion);
-#if SAO_TYPE_SHARING
   Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion);
-#endif
-#else
-  Void rdoSaoUnit(Int rx, Int ry, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, ComponentID yCbCr, Double lambda);
-#endif
   inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 offsetOrg, Int shift);
   inline Int64 estIterOffset(Int typeIdx, Int classIdx, double lambda, Int64 offsetInput, Int64 count, Int64 offsetOrg, Int shift, Int bitIncrease, Int *currentDistortionTableBo, Double *currentRdCostTableBo );
   inline Int64 estSaoTypeDist(Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);

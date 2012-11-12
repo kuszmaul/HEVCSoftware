@@ -63,9 +63,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   bool do_help = false;
   string cfg_BitstreamFile;
   string cfg_ReconFile;
-#if TARGET_DECLAYERID_SET
   string cfg_TargetDecLayerIdSetFile;
-#endif
 
   po::Options opts;
   opts.addOptions()
@@ -81,9 +79,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t2: CRC\n"
                                               "\t1: MD5\n"
                                               "\t0: ignore")
-#if TARGET_DECLAYERID_SET
   ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
-#endif
   ;
 
   po::setDefaults(opts);
@@ -110,7 +106,6 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
     return false;
   }
 
-#if TARGET_DECLAYERID_SET
   if ( !cfg_TargetDecLayerIdSetFile.empty() )
   {
     FILE* targetDecLayerIdSetFile = fopen ( cfg_TargetDecLayerIdSetFile.c_str(), "r" );
@@ -155,7 +150,6 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
       fprintf(stderr, "File %s could not be opened. Using all LayerIds as default.\n", cfg_TargetDecLayerIdSetFile.c_str() );
     }
   }
-#endif
 
   return true;
 }

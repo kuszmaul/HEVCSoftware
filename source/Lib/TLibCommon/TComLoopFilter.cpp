@@ -474,16 +474,6 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcLCU, UInt uiAbsZ
   {
     UInt nsPartQ = uiPartQ;
     UInt nsPartP = uiPartP;
-#if !REMOVE_NSQT
-    if(pcCUQ->getPredictionMode(uiPartQ) == MODE_INTER && pcCUQ->useNonSquarePU(uiPartQ))
-    {
-      nsPartQ = pcCUQ->getNSQTPartIdx( uiAbsPartIdx4x4BlockWithinLCU );
-    }
-    if(pcCUP->getPredictionMode(uiPartP) == MODE_INTER && pcCUP->useNonSquarePU(uiPartP))
-    {
-      nsPartP = pcCUP->getNSQTPartIdx( uiPartP );
-    }
-#endif
 
     if ( m_aapucBS[edgeDir][uiAbsPartIdx4x4BlockWithinLCU] && (pcCUQ->getCbf( nsPartQ, COMPONENT_Y, pcCUQ->getTransformIdx(nsPartQ)) != 0 || pcCUP->getCbf( nsPartP, COMPONENT_Y, pcCUP->getTransformIdx(nsPartP) ) != 0) )
     {

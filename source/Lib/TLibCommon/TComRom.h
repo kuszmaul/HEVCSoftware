@@ -144,11 +144,7 @@ extern const TMatrixCoeff g_aiT32[32][32];
 // Luma QP to Chroma QP mapping
 // ====================================================================================================================
 
-#if CHROMA_QP_EXTENSION
 static const Int chromaQPMappingTableSize = 58;
-#else
-static const Int chromaQPMappingTableSize = 52;
-#endif
 
 extern const UChar  g_aucChromaScale      [chromaQPMappingTableSize];
 
@@ -168,12 +164,6 @@ extern const UChar  g_aucChromaScale444   [chromaQPMappingTableSize];
 // ====================================================================================================================
 // Scanning order & context mapping table
 // ====================================================================================================================
-
-#if !REMOVE_ZIGZAG_SCAN
-extern       UInt*  g_auiFrameScanXY[ MAX_CU_DEPTH  ];    // raster index     from scanning index
-extern       UInt*  g_auiFrameScanX [ MAX_CU_DEPTH  ];    // raster index (x) from scanning index
-extern       UInt*  g_auiFrameScanY [ MAX_CU_DEPTH  ];    // raster index (y) from scanning index
-#endif
 
 extern const UInt   ctxIndMap4x4[4*4];
 #ifdef ECF__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
@@ -266,9 +256,7 @@ extern const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 
 extern Int g_quantIntraDefault4x4[4*4];
 extern Int g_quantInterDefault4x4[4*4];
-#if TS_FLAT_QUANTIZATION_MATRIX
 extern Int g_quantTSDefault4x4[4*4];
-#endif
 extern Int g_quantIntraDefault8x8[8*8];
 extern Int g_quantInterDefault8x8[8*8];
 
