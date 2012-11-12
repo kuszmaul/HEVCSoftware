@@ -266,7 +266,7 @@
 #define ZERO_MVD_EST                      0           ///< Zero Mvd Estimation in normal mode
 
 #define NUM_INTRA_MODE                   36
-#if !REMOVE_LM_CHROMA
+#if !REMOVE_LMCHROMA
 #define LM_CHROMA_IDX                    35
 #endif
 

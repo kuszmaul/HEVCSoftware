@@ -1999,19 +1999,23 @@ Int TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_
     {
       iLeftIntraDir = pcCULeft->getIntraDir( CHANNEL_TYPE_LUMA, LeftPartIdx );
     }
+#if !REMOVE_LMCHROMA
     else if (iLeftIntraDir==LM_CHROMA_IDX)
     {
       iLeftIntraDir = PLANAR_IDX;
     }
+#endif
 
     if (iAboveIntraDir==DM_CHROMA_IDX)
     {
       iAboveIntraDir = pcCUAbove->getIntraDir( CHANNEL_TYPE_LUMA, AbovePartIdx );
     }
+#if !REMOVE_LMCHROMA
     else if (iAboveIntraDir==LM_CHROMA_IDX)
     {
       iAboveIntraDir = PLANAR_IDX;
     }
+#endif
   }
 
   assert (2<NUM_MOST_PROBABLE_MODES);
