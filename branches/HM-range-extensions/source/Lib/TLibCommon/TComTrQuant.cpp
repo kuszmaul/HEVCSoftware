@@ -2875,7 +2875,7 @@ Void TComTrQuant::setErrScaleCoeff(UInt list,UInt size, Int qp, ScalingListDIR d
   pdErrScale     = getErrScaleCoeff(list, size, qp, dir, errorScaleAdjustmentMode);
 #endif
 
-  double dOffset = iTransformShift + ((errorScaleAdjustmentMode == ERROR_SCALE_ADJUSTMENT_MODE_422) ? 0.5 : 0.0);
+  double dOffset = iTransformShift;
 
   double dErrScale = (double)(1<<SCALE_BITS);                              // Compensate for scaling of bitcount in Lagrange cost function
   dErrScale = dErrScale*pow(2.0,(-2.0*dOffset));                     // Compensate for scaling through forward transform
