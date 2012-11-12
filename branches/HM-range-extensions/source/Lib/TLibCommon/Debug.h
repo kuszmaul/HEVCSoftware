@@ -168,6 +168,8 @@ Void printSBACCoeffData(  const UInt          lastX,
 
 Void printCbfArray( class TComDataCU* pcCU  );
 
+UInt getDecimalWidth(const Double value);
+
 template <typename ValueType>
 Void printBlock(const ValueType    *const source,
                 const UInt                width,
@@ -180,24 +182,28 @@ Void printBlock(const ValueType    *const source,
                       std::ostream      & stream           = std::cout)
 {
   //find the maximum output width
-  UInt outputWidth = 0;
+  UInt outputWidth = outputValueWidth;
 
   if (outputWidth == 0)
   {
+    ValueType minimumValue = leftShift(source[0], shiftLeftBy);
+    ValueType maximumValue = minimumValue;
+
     for (UInt y = 0; y < height; y++)
       for (UInt x = 0; x < width; x++)
       {
-        const ValueType value                 = (onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy);
-        const ValueType absoluteValue         = std::abs(value);
-              ValueType minimumIncrementValue = 10;
-              UInt      currentWidth          = 1;
-
-        while (minimumIncrementValue <= absoluteValue) { minimumIncrementValue *= 10; currentWidth++; }
-
-        if ((value) < 0) currentWidth++; //for the minus sign
-
-        if (currentWidth > outputWidth) outputWidth = currentWidth;
+        const ValueType value = (onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy);
+        if      (value < minimumValue) minimumValue = value;
+        else if (value > maximumValue) maximumValue = value;
       }
+
+    ValueType value = minimumValue;
+    for (Int pass = 0; pass < 2; pass++, value = maximumValue)
+    {
+      const UInt currentWidth = getDecimalWidth(Double(value));
+
+      if (currentWidth > outputWidth) outputWidth = currentWidth;
+    }
 
     outputWidth++; //so the numbers don't run into each other
   }

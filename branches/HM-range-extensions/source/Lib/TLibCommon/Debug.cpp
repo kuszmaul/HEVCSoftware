@@ -37,6 +37,7 @@
 
 #include "Debug.h"
 #include <algorithm>
+#include <math.h>
 #include "TComDataCU.h"
 #include "TComPic.h"
 #include "TComYuv.h"
@@ -343,6 +344,13 @@ Void printCbfArray( TComDataCU* pcCU  )
     }
   }
 }
+
+UInt getDecimalWidth(const Double value)
+{
+  return (value == 0) ? 1 : (UInt(floor(log10(fabs(value)))) + ((value < 0) ? 2 : 1));
+                                                               //for the minus sign
+}
+
 
 
 // --------------------------------------------------------------------------------------------------------------------- //

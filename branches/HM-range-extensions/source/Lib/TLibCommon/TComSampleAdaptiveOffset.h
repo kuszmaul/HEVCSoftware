@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -64,11 +64,11 @@ class TComSampleAdaptiveOffset
 protected:
   TComPic*          m_pcPic;
 
-  static UInt m_uiMaxDepth;
+  static const UInt m_uiMaxDepth;
   static const Int m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1];
   static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: ECF - This table appears to be larger than needed.
   Int *m_iOffsetBo;
-  Int m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed. 
+  Int m_iOffsetEo[LUMA_GROUP_NUM];                   //NOTE: ECF - This table appears to be larger than needed.
   Int  m_iPicWidth;
   Int  m_iPicHeight;
   UInt m_uiMaxSplitLevel;
@@ -77,7 +77,7 @@ protected:
   Int  m_iNumCuInWidth;
   Int  m_iNumCuInHeight;
   Int  m_iNumTotalParts;
-  static Int m_iNumClass[MAX_NUM_SAO_TYPE];
+  static const Int m_iNumClass[MAX_NUM_SAO_TYPE];
   SliceType  m_eSliceType;
   Int        m_iPicNalReferenceIdc;
 
@@ -107,6 +107,11 @@ protected:
 #endif
   Bool    m_saoLcuBasedOptimization;
 
+#if REMOVE_ALF
+  Void xPCMRestoration        (TComPic* pcPic);
+  Void xPCMCURestoration      (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth);
+  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID);
+#endif
 public:
   TComSampleAdaptiveOffset         ();
   virtual ~TComSampleAdaptiveOffset();
@@ -149,6 +154,9 @@ public:
   Void resetSaoUnit(SaoLcuParam* saoUnit);
 #if SAO_SINGLE_MERGE
   Void copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc );
+#endif
+#if REMOVE_ALF
+  Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process
 #endif
 };
 

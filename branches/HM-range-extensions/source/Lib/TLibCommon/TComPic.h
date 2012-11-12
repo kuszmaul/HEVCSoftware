@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -67,7 +67,7 @@ private:
   Bool                  m_bIsUsedAsLongTerm;      //  long term picture is used as reference before
   TComPicSym*           m_apcPicSym;              //  Symbol
   TComPicYuv*           m_apcPicYuv[NUM_PIC_YUV];
-  
+
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
@@ -83,17 +83,14 @@ private:
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEImessages* m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
-#if DEPENDENT_SLICES
-  UInt m_uiCurrDepSliceIdx;
-#endif
 
 public:
   TComPic();
   virtual ~TComPic();
-  
+
   Void          create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Bool bIsVirtual /*= false*/ );
   virtual Void  destroy();
-  
+
   UInt          getTLayer() const               { return m_uiTLayer;   }
   Void          setTLayer( UInt uiTLayer ) { m_uiTLayer = uiTLayer; }
 
@@ -110,15 +107,15 @@ public:
   TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
   Int           getPOC() const        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
   TComDataCU*&  getCU( UInt uiCUAddr )  { return  m_apcPicSym->getCU( uiCUAddr ); }
-  
+
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
-  
+
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }
   Void          setPicYuvResi( TComPicYuv* pcPicYuv )       { m_pcPicYuvResi = pcPicYuv; }
-  
+
   UInt          getNumCUsInFrame() const     { return m_apcPicSym->getNumberOfCUsInFrame(); }
   UInt          getNumPartInWidth() const    { return m_apcPicSym->getNumPartInWidth();     }
   UInt          getNumPartInHeight() const   { return m_apcPicSym->getNumPartInHeight();    }
@@ -127,22 +124,22 @@ public:
   UInt          getFrameHeightInCU() const   { return m_apcPicSym->getFrameHeightInCU();    }
   UInt          getMinCUWidth() const        { return m_apcPicSym->getMinCUWidth();         }
   UInt          getMinCUHeight() const       { return m_apcPicSym->getMinCUHeight();        }
-  
+
   UInt          getParPelX(UChar uhPartIdx) const { return getParPelX(uhPartIdx); }
   UInt          getParPelY(UChar uhPartIdx) const { return getParPelX(uhPartIdx); }
-  
+
   Int           getStride(const ComponentID id) const          { return m_apcPicYuv[PIC_YUV_REC]->getStride(id); }
   Int           getComponentScaleX(const ComponentID id) const    { return m_apcPicYuv[PIC_YUV_REC]->getComponentScaleX(id); }
   Int           getComponentScaleY(const ComponentID id) const    { return m_apcPicYuv[PIC_YUV_REC]->getComponentScaleY(id); }
   ChromaFormat  getChromaFormat() const                           { return m_apcPicYuv[PIC_YUV_REC]->getChromaFormat(); }
   Int           getNumberValidComponents() const                  { return m_apcPicYuv[PIC_YUV_REC]->getNumberValidComponents(); }
-  
+
   Void          setReconMark (Bool b) { m_bReconstructed = b;     }
   Bool          getReconMark () const      { return m_bReconstructed;  }
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark () const      { return m_bNeededForOutput;  }
- 
-  Void          compressMotion(); 
+
+  Void          compressMotion();
   UInt          getCurrSliceIdx() const           { return m_uiCurrSliceIdx;                }
   Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
   UInt          getNumAllocatedSlice() const      {return m_apcPicSym->getNumAllocatedSlice();}
@@ -178,10 +175,6 @@ public:
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
   const SEImessages* getSEIs() const { return m_SEIs; }
-#if DEPENDENT_SLICES
-  UInt          getCurrDepSliceIdx() const        { return m_uiCurrDepSliceIdx; }
-  Void          setCurrDepSliceIdx( UInt i )      { m_uiCurrDepSliceIdx = i; }
-#endif
 };// END CLASS DEFINITION TComPic
 
 //! \}

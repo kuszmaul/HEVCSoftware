@@ -608,6 +608,7 @@ Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 FILE*  g_hTrace = stdout; // Set to NULL to open up a file. Set to stdout to use the current output
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
+Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #endif

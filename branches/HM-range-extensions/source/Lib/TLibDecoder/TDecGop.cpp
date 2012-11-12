@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -64,12 +64,12 @@ TDecGop::TDecGop()
 
 TDecGop::~TDecGop()
 {
-  
+
 }
 
 Void TDecGop::create()
 {
-  
+
 }
 
 
@@ -77,11 +77,11 @@ Void TDecGop::destroy()
 {
 }
 
-Void TDecGop::init( TDecEntropy*            pcEntropyDecoder, 
-                   TDecSbac*               pcSbacDecoder, 
+Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
+                   TDecSbac*               pcSbacDecoder,
                    TDecBinCABAC*           pcBinCABAC,
-                   TDecCavlc*              pcCavlcDecoder, 
-                   TDecSlice*              pcSliceDecoder, 
+                   TDecCavlc*              pcCavlcDecoder,
+                   TDecSlice*              pcSliceDecoder,
                    TComLoopFilter*         pcLoopFilter,
 #if !REMOVE_ALF
                    TComAdaptiveLoopFilter* pcAdaptiveLoopFilter,
@@ -118,7 +118,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
 
   //-- For time output for each slice
   long iBeforeTime = clock();
-  
+
   UInt uiStartCUAddr   = pcSlice->getDependentSliceCurStartCUAddr();
 
   UInt uiSliceStartCuAddr = pcSlice->getSliceCurStartCUAddr();
@@ -130,7 +130,11 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinCABAC );
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
-  UInt uiNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
+#if TILES_WPP_ENTROPYSLICES_FLAGS
+  UInt uiNumSubstreams = pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() ? pcSlice->getNumEntryPointOffsets()+1 : pcSlice->getPPS()->getNumSubstreams();
+#else
+  UInt uiNumSubstreams = pcSlice->getPPS()->getTilesOrEntropyCodingSyncIdc() == 2 ? pcSlice->getNumEntryPointOffsets()+1 : pcSlice->getPPS()->getNumSubstreams();
+#endif
 
   // init each couple {EntropyDecoder, Substream}
   UInt *puiSubstreamSizes = pcSlice->getSubstreamSizes();
@@ -167,20 +171,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     }
 #endif
   }
-#if DEPENDENT_SLICES
-  if( pcSlice->getPPS()->getDependentSlicesEnabledFlag() && (!pcSlice->getPPS()->getCabacIndependentFlag()) )
-  {
-    pcSlice->initCTXMem_dec( 2 );
-    for ( UInt st = 0; st < 2; st++ )
-    {
-      TDecSbac* ctx = NULL;
-      ctx = new TDecSbac;
-      ctx->init( (TDecBinIf*)m_pcBinCABAC );
-      ctx->load( m_pcSbacDecoder );
-      pcSlice->setCTXMem_dec( ctx, st );
-    }
-  }
-#endif
 
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);
   m_pcSliceDecoder->decompressSlice( pcBitstream, ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
@@ -206,20 +196,8 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   long iBeforeTime = clock();
 
   // deblocking filter
-  Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLFCrossTileBoundaryFlag();
-  if (pcSlice->getPPS()->getDeblockingFilterControlPresent())
-  {
-    if(pcSlice->getPPS()->getLoopFilterOffsetInPPS())
-    {
-      pcSlice->setLoopFilterDisable(pcSlice->getPPS()->getLoopFilterDisable());
-      if (!pcSlice->getLoopFilterDisable())
-      {
-        pcSlice->setLoopFilterBetaOffset(pcSlice->getPPS()->getLoopFilterBetaOffset());
-        pcSlice->setLoopFilterTcOffset(pcSlice->getPPS()->getLoopFilterTcOffset());
-      }
-    }
-  }
-  m_pcLoopFilter->setCfg(pcSlice->getPPS()->getDeblockingFilterControlPresent(), pcSlice->getLoopFilterDisable(), pcSlice->getLoopFilterBetaOffset(), pcSlice->getLoopFilterTcOffset(), bLFCrossTileBoundary);
+  Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
+  m_pcLoopFilter->setCfg(pcSlice->getPPS()->getDeblockingFilterControlPresentFlag(), pcSlice->getDeblockingFilterDisable(), pcSlice->getDeblockingFilterBetaOffsetDiv2(), pcSlice->getDeblockingFilterTcOffsetDiv2(), bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( rpcPic );
 
   pcSlice = rpcPic->getSlice(0);
@@ -266,6 +244,8 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
       m_pcSAO->SAOProcess(rpcPic, saoParam);
 #if !REMOVE_ALF
       m_pcAdaptiveLoopFilter->PCMLFDisableProcess(rpcPic);
+#else
+      m_pcSAO->PCMLFDisableProcess(rpcPic);
 #endif
       m_pcSAO->destroyPicSaoInfo();
     }
@@ -291,7 +271,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     rpcPic->destroyNonDBFilterInfo();
   }
 
-  rpcPic->compressMotion(); 
+  rpcPic->compressMotion();
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced()) c += 32;
 
@@ -314,7 +294,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     }
     printf ("] ");
   }
-  if (m_pictureDigestEnabled)
+  if (m_decodedPictureHashSEIEnabled)
   {
     calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), rpcPic->getSEIs());
   }
@@ -353,26 +333,36 @@ static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
   /* calculate MD5sum for entire reconstructed picture */
   TComDigest recon_digest;
   int numChar=0;
-  const char* hashType;
+  const char* hashType="\0";
 
-  if(seis && seis->picture_digest->method == SEIpictureDigest::MD5)
+  if (seis && seis->picture_digest)
   {
-    hashType = "MD5";
-    numChar = calcMD5(pic, recon_digest);
-  }
-  else if(seis && seis->picture_digest->method == SEIpictureDigest::CRC)
-  {
-    hashType = "CRC";
-    numChar = calcCRC(pic, recon_digest);
-  }
-  else if(seis && seis->picture_digest->method == SEIpictureDigest::CHECKSUM)
-  {
-    hashType = "Checksum";
-    numChar = calcChecksum(pic, recon_digest);
-  }
-  else
-  {
-    hashType = "\0";
+    switch (seis->picture_digest->method)
+    {
+      case SEIDecodedPictureHash::MD5:
+        {
+          hashType = "MD5";
+          numChar = calcMD5(pic, recon_digest);
+          break;
+        }
+      case SEIDecodedPictureHash::CRC:
+        {
+          hashType = "CRC";
+          numChar = calcCRC(pic, recon_digest);
+          break;
+        }
+      case SEIDecodedPictureHash::CHECKSUM:
+        {
+          hashType = "Checksum";
+          numChar = calcChecksum(pic, recon_digest);
+          break;
+        }
+      default:
+        {
+          assert (!"unknown hash type");
+          break;
+        }
+    }
   }
 
   /* compare digest against received version */

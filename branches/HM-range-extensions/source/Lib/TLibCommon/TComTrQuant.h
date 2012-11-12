@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -102,7 +102,7 @@ private:
 
   QpData baseQp;
   QpData adjustedQp;
-  
+
 public:
 
   //get accessors
@@ -128,14 +128,14 @@ class TComTrQuant
 public:
   TComTrQuant();
   ~TComTrQuant();
-  
+
   // initialize class
   Void init                 ( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int iSymbolMode = 0, UInt *aTable4 = NULL, UInt *aTable8 = NULL, UInt *aTableLastPosVlcIndex=NULL, Bool bUseRDOQ = false,  Bool bEnc = false, Bool useTransformSkipFast = false
 #if ADAPTIVE_QP_SELECTION
                               , Bool bUseAdaptQpSelect = false
 #endif
                               );
-  
+
   // transform & inverse transform functions
   Void transformNxN(       TComTU         & rTu,
                      const ComponentID      compID,
@@ -159,18 +159,18 @@ public:
 
 
   Void invRecurTransformNxN ( const ComponentID compID, Pel*  rpcResidual, UInt uiStride, TComTU &rTu);
-  
+
 
   // Misc functions
 
-#if RDOQ_CHROMA_LAMBDA 
+#if RDOQ_CHROMA_LAMBDA
   Void setLambda(Double dLambdaLuma, Double dLambdaChroma) { m_dLambdaLuma = dLambdaLuma; m_dLambdaChroma = dLambdaChroma; }
   Void selectLambda(ChannelType chType) { m_dLambda = isLuma(chType) ? m_dLambdaLuma : m_dLambdaChroma; }
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif
   Void setRDOQOffset( UInt uiRDOQOffset ) { m_uiRDOQOffset = uiRDOQOffset; }
-  
+
   estBitsSbacStruct* m_pcEstBitsSbac;
 
   static Int      calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPosX, UInt uiCGPosY, UInt widthInGroups, UInt heightInGroups );
@@ -216,18 +216,18 @@ public:
   Void    initSliceQpDelta() ;
   Void    storeSliceQpNext(TComSlice* pcSlice);
   Void    clearSliceARLCnt();
-  Int     getQpDelta(Int qp) { return m_qpDelta[qp]; } 
-  Int*    getSliceNSamples(){ return m_sliceNsamples ;} 
+  Int     getQpDelta(Int qp) { return m_qpDelta[qp]; }
+  Int*    getSliceNSamples(){ return m_sliceNsamples ;}
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
 protected:
 #if ADAPTIVE_QP_SELECTION
-  Int     m_qpDelta[MAX_QP+1]; 
-  Int     m_sliceNsamples[LEVEL_RANGE+1];  
-  Double  m_sliceSumC[LEVEL_RANGE+1] ;  
+  Int     m_qpDelta[MAX_QP+1];
+  Int     m_sliceNsamples[LEVEL_RANGE+1];
+  Double  m_sliceSumC[LEVEL_RANGE+1] ;
 #endif
   TCoeff* m_plTempCoeff;
-  
+
 //  QpParam  m_cQP; - removed - placed on the stack.
 #if RDOQ_CHROMA_LAMBDA
   Double   m_dLambdaLuma;
@@ -259,7 +259,7 @@ private:
 
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
-  
+
   Void signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
 
   // quantization
@@ -274,7 +274,7 @@ private:
                const QpParam      &cQP );
 
   // RDOQ functions
-  
+
   Void           xRateDistOptQuant (       TComTU       &rTu,
                                            TCoeff      * plSrcCoeff,
                                            TCoeff      * piDstCoeff,
@@ -294,15 +294,15 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                              UShort                          ui16CtxNumOne,
                                              UShort                          ui16CtxNumAbs,
                                              UShort                          ui16AbsGoRice,
-                                             UInt                            c1Idx,  
-                                             UInt                            c2Idx,  
+                                             UInt                            c1Idx,
+                                             UInt                            c2Idx,
                                              Int                             iQBits,
                                              Double                          dTemp,
                                              Bool                            bLast        ) const;
   __inline Double xGetICRateCost   ( UInt                            uiAbsLevel,
                                      UShort                          ui16CtxNumOne,
                                      UShort                          ui16CtxNumAbs,
-                                     UShort                          ui16AbsGoRice, 
+                                     UShort                          ui16AbsGoRice,
                                      UInt                            c1Idx,
                                      UInt                            c2Idx
                                      ) const;
@@ -323,23 +323,23 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                      UShort                          ui16CtxNumSig ) const;
   __inline Double xGetRateSigCoef (  UShort                          uiSignificance,
                                      UShort                          ui16CtxNumSig ) const;
-  __inline Double xGetICost        ( Double                          dRate         ) const; 
+  __inline Double xGetICost        ( Double                          dRate         ) const;
   __inline Double xGetIEPRate      (                                               ) const;
-  
-  
+
+
   // dequantization
   Void xDeQuant(       TComTU       &rTu,
                  const TCoeff      * pSrc,
                        TCoeff      * pDes,
                  const ComponentID   compID,
                  const QpParam      &cQP );
-  
+
   // inverse transform
   Void xIT    ( UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
-  
+
 };// END CLASS DEFINITION TComTrQuant
 
 //! \}
