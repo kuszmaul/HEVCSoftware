@@ -530,11 +530,7 @@ Bool TComPrediction::filteringIntraReferenceSamples(const ComponentID compID, UI
   {
     assert(uiTuChWidth>=4 && uiTuChHeight>=4 && uiTuChWidth<128 && uiTuChHeight<128);
 
-#if REMOVE_LMCHROMA
     if (uiDirMode == DC_IDX)
-#else
-    if (uiDirMode == DC_IDX || uiDirMode == LM_CHROMA_IDX)
-#endif
     {
       bFilter=false; //no smoothing for DC or LM chroma
     }

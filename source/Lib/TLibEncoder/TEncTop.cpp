@@ -467,10 +467,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseLossless   ( m_useLossless  );
 #endif
 
-#if !REMOVE_LMCHROMA
-  m_cSPS.setUseLMChroma   ( m_bUseLMChroma           );  
-#endif
-
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
   
   m_cSPS.setUseLComb    ( m_bUseLComb           );

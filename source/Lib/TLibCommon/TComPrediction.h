@@ -84,9 +84,6 @@ protected:
   
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample 
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
-#if !REMOVE_LMCHROMA
-  UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitute of division operation
-#endif
 
 #ifdef ECF__NON_SCALED_INTRA_CHROMA_422_ENABLED
   Void xPredIntraAngChroma422   ( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable );
@@ -123,11 +120,6 @@ public:
   Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples );
   
   Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft );
-
-#if !REMOVE_LMCHROMA
-  Void predLMIntraChroma( const ComponentID compID, Pel* pPred, UInt uiPredStride, UInt uiCWidth, UInt uiCHeight, const ChromaFormat chFmt  DEBUG_STRING_FN_DECLARE(sDebug)  );
-  Void getLumaRecPixels  ( TComTU &rTu );
-#endif
 
   Pel*  getPredictorPtr           ( const ComponentID compID, const Bool bUseFilteredPredictions )
   {

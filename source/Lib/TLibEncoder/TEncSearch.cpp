@@ -1026,27 +1026,10 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
   {
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt);
 
-#if !REMOVE_LMCHROMA
-    if( uiChFinalMode == LM_CHROMA_IDX && compID == COMPONENT_Cb )
-    {
-      initAdiPatternChType(rTu, bAboveAvail, bLeftAvail, COMPONENT_Y, false DEBUG_STRING_PASS_INTO(sDebug), true );
-      getLumaRecPixels( rTu );
-    }
-#endif
-
     initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions DEBUG_STRING_PASS_INTO(sDebug) );
 
     //===== get prediction signal =====
-#if !REMOVE_LMCHROMA
-    if (( uiChFinalMode == LM_CHROMA_IDX ) && compID!=COMPONENT_Y)
-    {
-      predLMIntraChroma( compID, piPred, uiStride, uiWidth, uiHeight, chFmt DEBUG_STRING_PASS_INTO(sDebug) );
-    }
-    else
-#endif
-    {
-      predIntraAng( compID, uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-    }
+    predIntraAng( compID, uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
 
     // save prediction
     if( default0Save1Load2 == 1 )
@@ -1305,14 +1288,6 @@ TEncSearch::xRecurIntraCodingQT(Bool         bLumaOnly,
           {
             const UInt totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
             pcCU->setTransformSkipSubParts ( modeId, compID, uiAbsPartIdx, totalAdjustedDepthChan );
-#if !REMOVE_LMCHROMA
-            if (pcCU->getIntraDir(toChannelType(compID), uiAbsPartIdx ) == LM_CHROMA_IDX)
-            {
-              // Cannot save/restore LM_CHROMA prediction values, as they are dependent on the luma reconstruction values
-              // which is affected by the use of transform skip.
-              default0Save1Load2 = 0;
-            }
-#endif
             xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, singleDistTmp[toChannelType(compID)], compID, rTu DEBUG_STRING_PASS_INTO(sModeString), default0Save1Load2 );
           }
           singleCbfTmp[compID] = pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth );
@@ -2192,14 +2167,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       {
         UInt uiOrgModeC = arrayChromaModeList[uiCMode];
 
-#if !REMOVE_LMCHROMA
-        if ( (uiOrgModeC == LM_CHROMA_IDX) && (!(pcCU->getSlice()->getSPS()->getUseLMChroma() && chromaTUCanSplitDownToMinimumLumaSize(chFmt))) )
-        {
-          // Since this is a combined search, if a chroma TU can cover multiple luma TUs,
-          // chroma will need reconstructed luma samples from as yet undetermined luma TUs
-          continue;
-        }
-#endif
         DEBUG_STRING_NEW(sMode)
         if (uiOrgModeC!=INVALID_MODE_IDX)
         {
@@ -2477,13 +2444,6 @@ TEncSearch::estIntraPredChromaQT( TComDataCU* pcCU,
 
         for( UInt uiMode = uiMinMode; uiMode < uiMaxMode; uiMode++ )
         {
-#if !REMOVE_LMCHROMA
-          if (uiModeList[uiMode] == LM_CHROMA_IDX  &&  !pcCU->getSlice()->getSPS()->getUseLMChroma())
-          {
-            continue;
-          }
-#endif
-
           //----- restore context models -----
           if( m_bUseSBACRD )
           {
