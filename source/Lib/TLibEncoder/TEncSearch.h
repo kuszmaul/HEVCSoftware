@@ -411,11 +411,7 @@ protected:
   
 
   Void xEncodeResidualQT( const ComponentID compID, TComTU &rTu );
-#if IBDI_DISTORTION
-  Void xEstimateResidualQT( TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, Double &rdCost, UInt &ruiBits, UInt &ruiDist, UInt *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
-#else
   Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, UInt &ruiDist, UInt *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
-#endif
   Void xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
   
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth, const ChannelType compID );

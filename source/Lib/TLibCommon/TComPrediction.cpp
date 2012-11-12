@@ -264,7 +264,7 @@ Void TComPrediction::xPredIntraAng( const Pel* pSrc,     Int srcStride,
     const Int        intraPredAngleMode = (bIsModeVer) ? (Int)dirMode - VER_IDX :  -((Int)dirMode - HOR_IDX);
     const Int        absAngMode         = abs(intraPredAngleMode);
     const Int        signAng            = intraPredAngleMode < 0 ? -1 : 1;
-    const FilterMode filterMode         = getIntraEdgeFilterMode(channelType, format);
+    const FilterMode filterMode         = getIntraEdgeFilterMode(channelType, format, uiWidth, uiHeight);
 
     // Set bitshifts and scale the angle parameter to block size
     static const Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
@@ -342,7 +342,7 @@ Void TComPrediction::xPredIntraAng( const Pel* pSrc,     Int srcStride,
         }
       }
 
-      if ((filterMode == FILTER_BOTH_DIRECTIONS) || ((bIsModeVer) ? (filterMode == FILTER_HORIZONTAL_ONLY) : (filterMode == FILTER_VERTICAL_ONLY)))
+      if ((filterMode == FILTER_BOTH_DIRECTIONS) || (filterMode == (bIsModeVer ? FILTER_HORIZONTAL_ONLY : FILTER_VERTICAL_ONLY)))
       {
         for (Int y=0;y<height;y++)
         {
@@ -963,7 +963,7 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
 {
   Pel* pDst = rpDst;
   Int x, y, iDstStride2, iSrcStride2;
-  const FilterMode mode = getIntraDCFilterMode(channelType, format);
+  const FilterMode mode = getIntraDCFilterMode(channelType, format, iWidth, iHeight);
 
   // boundary pixels processing
   if (mode != FILTER_DISABLED)

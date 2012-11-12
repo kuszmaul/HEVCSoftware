@@ -238,10 +238,6 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 
   printf("\n");
 
-#if FIXED_ROUNDING_FRAME_MEMORY
-  rpcPic->getPicYuvRec()->xFixedRoundingPic();
-#endif
-
   rpcPic->setOutputMark(true);
   rpcPic->setReconMark(true);
   m_sliceStartCUAddress.clear();

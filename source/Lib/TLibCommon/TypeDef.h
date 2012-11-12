@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -88,64 +88,96 @@
 // Tool Switches
 // ====================================================================================================================
 
-#define MAX_CPB_CNT                      32 ///< Upper bound of (cpb_cnt_minus1 + 1)
-#define MAX_NUM_LAYER_IDS                64
+#define SAVE_BITS_REFPICLIST_MOD_FLAG                     1  ///< K0224 Proposal#1: Send ref_pic_list_modification_flag_lX only when NumPocTotalCurr is greater than 1.
 
-#define COEF_REMAIN_BIN_REDUCTION         3 ///< indicates the level at which the VLC 
-                                            ///< transitions from Golomb-Rice to TU+EG(k)
+#define USE_PIC_CHROMA_QP_OFFSETS_IN_DEBLOCKING           1  ///< K0220: Use picture-based chroma QP offsets in deblocking filter.
 
-#define CU_DQP_TU_CMAX                    5 ///< max number bins for truncated unary
-#define CU_DQP_EG_k                       0 ///< expgolomb order
+#define REMOVE_BURST_IPCM                                 1  /// Ticket763
+#define REMOVE_ENTROPY_SLICES                             1
 
-#define SBH_THRESHOLD                     4  ///< I0156: value of the fixed SBH controlling threshold
-  
-#define SEQUENCE_LEVEL_LOSSLESS           0  ///< H0530: used only for sequence or frame-level lossless coding
+#define DEPENDENT_SLICE_SEGMENT_FLAGS                     1   ///< K0184: Move dependent_slice_enabled_flag after seq_parameter_set_id in PPS.
+                                                            ///< Move dependent_slice_flag between pic_parameter_set_id and slice_address.
+#define SPS_INTER_REF_SET_PRED                            1   ///< K0136: Not send inter_ref_pic_set_prediction_flag for index 0
+#define HM9_NALU_TYPES                                    1
 
-#define DISABLING_CLIP_FOR_BIPREDME       1  ///< Ticket #175
-  
-#define C1FLAG_NUMBER                     8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
-#define C2FLAG_NUMBER                     1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5 
+#define STRONG_INTRA_SMOOTHING                            1  ///< Enables Bilinear interploation of reference samples instead of 121 filter in intra prediction when reference samples are flat.
 
-#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3  1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
+#define RESTRICT_INTRA_BOUNDARY_SMOOTHING                 1  ///< K0380, K0186
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
+#define MAXIMUM_FILTERED_WIDTH                           16
+#define MAXIMUM_FILTERED_HEIGHT                          16
+#endif
 
-#define SAO_SKIP_RIGHT                    1  ///< H1101: disallow using unavailable pixel during RDO
+#define LINEBUF_CLEANUP                                   1 ///< K0101
+#define MERGE_CLEANUP_AND_K0197                           1  //<Code cleanup and K0197: removal of indirect use of A1 and B1 in merging candidate list construction.
+#define RPL_INIT_FIX                                      1 ///< K0255 2nd part (editorial)
 
-#define SAO_ENCODING_CHOICE               1  ///< I0184: picture early termination
+#define MAX_CPB_CNT                                      32 ///< Upper bound of (cpb_cnt_minus1 + 1)
+#define MAX_NUM_LAYER_IDS                                64
+
+
+#define FLAT_4x4_DSL                                      1 ///< Use flat 4x4 default scaling list (see notes on K0203)
+
+#define RDOQ_TRANSFORMSKIP                                1   // Enable RDOQ for transform skip (see noted on K0245)
+
+#define COEF_REMAIN_BIN_REDUCTION                         3 ///< indicates the level at which the VLC
+                                                            ///< transitions from Golomb-Rice to TU+EG(k)
+
+#define CU_DQP_TU_CMAX                                    5 ///< max number bins for truncated unary
+#define CU_DQP_EG_k                                       0 ///< expgolomb order
+
+#define SBH_THRESHOLD                                     4  ///< I0156: value of the fixed SBH controlling threshold
+
+#define SEQUENCE_LEVEL_LOSSLESS                           0  ///< H0530: used only for sequence or frame-level lossless coding
+
+#define DISABLING_CLIP_FOR_BIPREDME                       1  ///< Ticket #175
+
+#define C1FLAG_NUMBER                                     8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
+#define C2FLAG_NUMBER                                     1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
+
+#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3                  1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
+
+#define SAO_SKIP_RIGHT                                    1  ///< H1101: disallow using unavailable pixel during RDO
+
+#define SAO_ENCODING_CHOICE                               1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
-#define SAO_ENCODING_RATE                 0.75
-#define SAO_ENCODING_CHOICE_CHROMA        1 ///< J0044: picture early termination Luma and Chroma are handled separatenly
+#define SAO_ENCODING_RATE                                 0.75
+#define SAO_ENCODING_CHOICE_CHROMA                        1 ///< J0044: picture early termination Luma and Chroma are handled separatenly
 #if SAO_ENCODING_CHOICE_CHROMA
-#define SAO_ENCODING_RATE_CHROMA          0.5
+#define SAO_ENCODING_RATE_CHROMA                          0.5
+#define SAO_ENCODING_CHOICE_CHROMA_BF                     1 ///  K0156: Bug fix for SAO selection consistency
 #endif
 #endif
 
-#define MAX_NUM_SAO_OFFSETS               4
+#define MAX_NUM_SAO_OFFSETS                               4
 
-#define MAX_NUM_VPS                      16
-#define MAX_NUM_SPS                      16
-#define MAX_NUM_PPS                      64
+#define MAX_NUM_VPS                                      16
+#define MAX_NUM_SPS                                      16
+#define MAX_NUM_PPS                                      64
 
-#define WEIGHTED_CHROMA_DISTORTION        1   ///< F386: weighting of chroma for RDO
-#define RDOQ_CHROMA_LAMBDA                1   ///< F386: weighting of chroma for RDOQ
-#define SAO_CHROMA_LAMBDA                 1   ///< F386: weighting of chroma for SAO
+#define WEIGHTED_CHROMA_DISTORTION                        1   ///< F386: weighting of chroma for RDO
+#define RDOQ_CHROMA_LAMBDA                                1   ///< F386: weighting of chroma for RDOQ
+#define SAO_CHROMA_LAMBDA                                 1   ///< F386: weighting of chroma for SAO
 
-#define MIN_SCAN_POS_CROSS                4
+#define MIN_SCAN_POS_CROSS                                4
 
-#define FAST_BIT_EST                      1   ///< G763: Table-based bit estimation for CABAC
+#define FAST_BIT_EST                                      1   ///< G763: Table-based bit estimation for CABAC
 
-#define MLS_GRP_NUM                      64     ///< G644 : Max number of coefficient groups, max(16, 64)
-#define MLS_CG_SIZE                       4      ///< G644 : Coefficient group size of 4x4
+#define MLS_GRP_NUM                                      64     ///< G644 : Max number of coefficient groups, max(16, 64)
+#define MLS_CG_SIZE                                       4      ///< G644 : Coefficient group size of 4x4
 
-#define ADAPTIVE_QP_SELECTION             1      ///< G382: Adaptive reconstruction levels, non-normative part for adaptive QP selection
+#define ADAPTIVE_QP_SELECTION                             1      ///< G382: Adaptive reconstruction levels, non-normative part for adaptive QP selection
 #if ADAPTIVE_QP_SELECTION
-#define ARL_C_PRECISION                   7      ///< G382: 7-bit arithmetic precision
-#define LEVEL_RANGE                      30     ///< G382: max coefficient level in statistics collection
+#define ARL_C_PRECISION                                   7      ///< G382: 7-bit arithmetic precision
+#define LEVEL_RANGE                                      30     ///< G382: max coefficient level in statistics collection
 #endif
 
-#define NS_HAD                            0
+#define NS_HAD                                            0
 
-#define HHI_RQT_INTRA_SPEEDUP             1           ///< tests one best mode with full rqt
-#define HHI_RQT_INTRA_SPEEDUP_MOD         0           ///< tests two best modes with full rqt
+#define K0251                                             1           ///< explicitly signal slice_temporal_mvp_enable_flag in non-IDR I Slices
+
+#define HHI_RQT_INTRA_SPEEDUP                             1           ///< tests one best mode with full rqt
+#define HHI_RQT_INTRA_SPEEDUP_MOD                         0           ///< tests two best modes with full rqt
 
 #if HHI_RQT_INTRA_SPEEDUP_MOD && !HHI_RQT_INTRA_SPEEDUP
 #error
@@ -153,86 +185,88 @@
 
 #define VERBOSE_RATE 0 ///< Print additional rate information in encoder
 
-#define AMVP_DECIMATION_FACTOR            4
+#define AMVP_DECIMATION_FACTOR                            4
 
-#define SCAN_SET_SIZE                    16
-#define LOG2_SCAN_SET_SIZE                4
+#define SCAN_SET_SIZE                                    16
+#define LOG2_SCAN_SET_SIZE                                4
 
-#define FAST_UDI_MAX_RDMODE_NUM          35          ///< maximum number of RD comparison in fast-UDI estimation loop 
+#define FAST_UDI_MAX_RDMODE_NUM                          35          ///< maximum number of RD comparison in fast-UDI estimation loop
 
-#define ZERO_MVD_EST                      0           ///< Zero Mvd Estimation in normal mode
+#define ZERO_MVD_EST                                      0           ///< Zero Mvd Estimation in normal mode
 
-#define NUM_INTRA_MODE                   36
+#define NUM_INTRA_MODE                                   36
 
-#define IBDI_DISTORTION                   0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
-#define FIXED_ROUNDING_FRAME_MEMORY       0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used  
-
-#define WRITE_BACK                        1           ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
-#define AUTO_INTER_RPS                    1           ///< Enable/disable the automatic generation of refIdc from the deltaPOC and Used by current from the config file.
-#define PRINT_RPS_INFO                    0           ///< Enable/disable the printing of bits used to send the RPS.
-                                                    // using one nearest frame as reference frame, and the other frames are high quality (POC%4==0) frames (1+X)
-                                                    // this should be done with encoder only decision
-                                                    // but because of the absence of reference frame management, the related code was hard coded currently
+#define WRITE_BACK                                        1           ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
+#define AUTO_INTER_RPS                                    1           ///< Enable/disable the automatic generation of refIdc from the deltaPOC and Used by current from the config file.
+#define PRINT_RPS_INFO                                    0           ///< Enable/disable the printing of bits used to send the RPS.
+                                                                        // using one nearest frame as reference frame, and the other frames are high quality (POC%4==0) frames (1+X)
+                                                                        // this should be done with encoder only decision
+                                                                        // but because of the absence of reference frame management, the related code was hard coded currently
 
 #define RVM_VCEGAM10_M 4
 
-#define PLANAR_IDX                        0
-#define VER_IDX                          26                    // index for intra VERTICAL   mode
-#define HOR_IDX                          10                    // index for intra HORIZONTAL mode
-#define DC_IDX                            1                    // index for intra DC mode
-#define NUM_CHROMA_MODE                   5                    // total number of chroma modes
-#define DM_CHROMA_IDX                    36                    // chroma mode index for derived from luma intra mode
-#define INVALID_MODE_IDX                 (NUM_INTRA_MODE+1)    // value used to indicate an invalid intra mode
-#define STOPCHROMASEARCH_MODE_IDX        (INVALID_MODE_IDX+1)  // value used to signal the end of a chroma mode search
+#define PLANAR_IDX                                        0
+#define VER_IDX                                          26                    // index for intra VERTICAL   mode
+#define HOR_IDX                                          10                    // index for intra HORIZONTAL mode
+#define DC_IDX                                            1                    // index for intra DC mode
+#define NUM_CHROMA_MODE                                   5                    // total number of chroma modes
+#define DM_CHROMA_IDX                                    36                    // chroma mode index for derived from luma intra mode
+#define INVALID_MODE_IDX                                 (NUM_INTRA_MODE+1)    // value used to indicate an invalid intra mode
+#define STOPCHROMASEARCH_MODE_IDX                        (INVALID_MODE_IDX+1)  // value used to signal the end of a chroma mode search
 
 
 
 #define FAST_UDI_USE_MPM 1
 
-#define RDO_WITHOUT_DQP_BITS              0           ///< Disable counting dQP bits in RDO-based mode decision
+#define RDO_WITHOUT_DQP_BITS                              0           ///< Disable counting dQP bits in RDO-based mode decision
 
-#define FULL_NBIT 0 ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
-
-#define AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE      1          ///< OPTION IDENTIFIER. mode==1 -> Limit maximum number of largest coding tree blocks in a slice
-#define AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE    2          ///< OPTION IDENTIFIER. mode==2 -> Limit maximum number of bins/bits in a slice
-#define AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE    3
-
-#define DEPENDENT_SLICES                                1 ///< JCTVC-I0229
-// Dependent slice options
-#define SHARP_FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE    1          ///< OPTION IDENTIFIER. Limit maximum number of largest coding tree blocks in an dependent slice
-#define SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE 2          ///< OPTION IDENTIFIER. Limit maximum number of bins/bits in an dependent slice
-#if DEPENDENT_SLICES
-#define FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE        3          // JCTVC-I0229
+#define FULL_NBIT                                         0           ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
+#if FULL_NBIT
+# define DISTORTION_PRECISION_ADJUSTMENT(x)  0
+#else
+# define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-#define LOG2_MAX_NUM_COLUMNS_MINUS1       7
-#define LOG2_MAX_NUM_ROWS_MINUS1          7
-#define LOG2_MAX_COLUMN_WIDTH            13
-#define LOG2_MAX_ROW_HEIGHT              13
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE        1          ///< OPTION IDENTIFIER. mode==1 -> Limit maximum number of largest coding tree blocks in a slice
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE      2          ///< OPTION IDENTIFIER. mode==2 -> Limit maximum number of bins/bits in a slice
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE      3
 
-#define MATRIX_MULT                       0 // Brute force matrix multiplication instead of partial butterfly
+#define DEPENDENT_SLICES                                  1 ///< JCTVC-I0229
+// Dependent slice options
+#define SHARP_FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE      1          ///< OPTION IDENTIFIER. Limit maximum number of largest coding tree blocks in an dependent slice
+#define SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE   2          ///< OPTION IDENTIFIER. Limit maximum number of bins/bits in an dependent slice
+#if DEPENDENT_SLICES
+#define FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE          3          // JCTVC-I0229
+#endif
+
+#define LOG2_MAX_NUM_COLUMNS_MINUS1                       7
+#define LOG2_MAX_NUM_ROWS_MINUS1                          7
+#define LOG2_MAX_COLUMN_WIDTH                            13
+#define LOG2_MAX_ROW_HEIGHT                              13
+
+#define MATRIX_MULT                                       0 // Brute force matrix multiplication instead of partial butterfly
 
 #define REG_DCT 65535
 
-#define AMP_SAD                           1 ///< dedicated SAD functions for AMP
-#define AMP_ENC_SPEEDUP                   1 ///< encoder only speed-up by AMP mode skipping
+#define AMP_SAD                                           1 ///< dedicated SAD functions for AMP
+#define AMP_ENC_SPEEDUP                                   1 ///< encoder only speed-up by AMP mode skipping
 #if AMP_ENC_SPEEDUP
-#define AMP_MRG                           1 ///< encoder only force merge for AMP partition (no motion search for AMP)
+#define AMP_MRG                                           1 ///< encoder only force merge for AMP partition (no motion search for AMP)
 #endif
 
-#define SCALING_LIST_OUTPUT_RESULT        0 //JCTVC-G880/JCTVC-G1016 quantization matrices
-                                          
-#define CABAC_INIT_PRESENT_FLAG           1
+#define SCALING_LIST_OUTPUT_RESULT                        0 //JCTVC-G880/JCTVC-G1016 quantization matrices
 
-#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS   4 // NOTE: ECF - new definition
-#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS 8 // NOTE: ECF - new definition
+#define CABAC_INIT_PRESENT_FLAG                           1
+
+#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4 // NOTE: ECF - new definition
+#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8 // NOTE: ECF - new definition
 
 
 // ====================================================================================================================
 // VPS constants
 // ====================================================================================================================
 
-#define MAX_LAYER_NUM                    10
+#define MAX_LAYER_NUM                                               10
 
 
 // ====================================================================================================================
@@ -262,7 +296,7 @@
 
 #if (ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   #define ECF__REDUCED_CHROMA_INTRA_MODE_SET                                    0 ///< 0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)
-  
+
   #define ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH                           0 ///< 0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account
   #define ECF__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA                       0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA
   #define ECF__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS               0 ///< [NO EFFECT IF ECF__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components
@@ -278,7 +312,7 @@
 
   #define ECF__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
   #define ECF__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
-  
+
   #define ECF__SET_INTRA_CHROMA_EDGE_FILTER_444                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
   #define ECF__SET_INTRA_CHROMA_DC_FILTER_444                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
 #endif
@@ -531,7 +565,7 @@ enum DFunc
   DF_SSE32           = 5,      ///<  32xM SSE
   DF_SSE64           = 6,      ///<  64xM SSE
   DF_SSE16N          = 7,      ///< 16NxM SSE
-  
+
   DF_SAD             = 8,      ///< general size SAD
   DF_SAD4            = 9,      ///<   4xM SAD
   DF_SAD8            = 10,     ///<   8xM SAD
@@ -539,7 +573,7 @@ enum DFunc
   DF_SAD32           = 12,     ///<  32xM SAD
   DF_SAD64           = 13,     ///<  64xM SAD
   DF_SAD16N          = 14,     ///< 16NxM SAD
-  
+
   DF_SADS            = 15,     ///< general size SAD with step
   DF_SADS4           = 16,     ///<   4xM SAD with step
   DF_SADS8           = 17,     ///<   8xM SAD with step
@@ -547,7 +581,7 @@ enum DFunc
   DF_SADS32          = 19,     ///<  32xM SAD with step
   DF_SADS64          = 20,     ///<  64xM SAD with step
   DF_SADS16N         = 21,     ///< 16NxM SAD with step
-  
+
   DF_HADS            = 22,     ///< general size Hadamard with step
   DF_HADS4           = 23,     ///<   4xM HAD with step
   DF_HADS8           = 24,     ///<   8xM HAD with step
@@ -555,7 +589,7 @@ enum DFunc
   DF_HADS32          = 26,     ///<  32xM HAD with step
   DF_HADS64          = 27,     ///<  64xM HAD with step
   DF_HADS16N         = 28,     ///< 16NxM HAD with step
-  
+
 #if AMP_SAD
   DF_SAD12           = 43,
   DF_SAD24           = 44,
@@ -661,6 +695,44 @@ enum FilterMode
   FILTER_NUMBER_OF_MODES = 4
 };
 
+namespace Profile
+{
+  enum Name
+  {
+    NONE = 0,
+    MAIN = 1,
+    MAIN10 = 2,
+    MAINSTILLPICTURE = 3,
+  };
+}
+
+namespace Level
+{
+  enum Tier
+  {
+    MAIN = 0,
+    HIGH = 1,
+  };
+
+  enum Name
+  {
+    NONE     = 0,
+    LEVEL1   = 30,
+    LEVEL2   = 60,
+    LEVEL2_1 = 63,
+    LEVEL3   = 90,
+    LEVEL3_1 = 93,
+    LEVEL4   = 120,
+    LEVEL4_1 = 123,
+    LEVEL5   = 150,
+    LEVEL5_1 = 153,
+    LEVEL5_2 = 156,
+    LEVEL6   = 180,
+    LEVEL6_1 = 183,
+    LEVEL6_2 = 186,
+  };
+}
+
 
 // ====================================================================================================================
 // Type definition
@@ -680,16 +752,16 @@ class TComPicSym;
 
 enum SAOTypeLen
 {
-  SAO_EO_LEN    = 4, 
+  SAO_EO_LEN    = 4,
   SAO_BO_LEN    = 4,
   SAO_MAX_BO_CLASSES = 32
 };
 
 enum SAOType
 {
-  SAO_EO_0 = 0, 
+  SAO_EO_0 = 0,
   SAO_EO_1,
-  SAO_EO_2, 
+  SAO_EO_2,
   SAO_EO_3,
   SAO_BO,
   MAX_NUM_SAO_TYPE
@@ -773,7 +845,7 @@ struct TUEntropyCodingParameters
         Bool             useFixedGridSignificanceMapContext;
 
         //------------------
-        
+
         struct FixedGridContextParameters
         {
           const UInt *grid;

@@ -1333,10 +1333,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         accessUnit.insert(it, new NALUnitEBSP(nalu));
       }
 
-#if FIXED_ROUNDING_FRAME_MEMORY
-      /* TODO: this should happen after copyToPic(pcPicYuvRecOut) */
-      pcPic->getPicYuvRec()->xFixedRoundingPic();
-#endif
       pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
       pcPic->setReconMark   ( true );
@@ -1372,7 +1368,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded)
   m_gcAnalyzeP.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeB.setFrmRate( m_pcCfg->getFrameRate() );
   const ChromaFormat chFmt = m_pcCfg->getChromaFormatIdc();
-  const unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
+  const unsigned int maxval = 255 << (g_bitDepth - 8);
 
   //-- all
   printf( "\n\nSUMMARY ------------------------------------------------------------------\n" );
@@ -1488,12 +1484,7 @@ UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
 {
 
   UInt64  uiTotalDiff = 0;
-#if IBDI_DISTORTION
-  const Int  iShift = g_uiBitIncrement;
-  const Int  iOffset = 1<<(g_uiBitIncrement-1);
-#else
-  const UInt  uiShift = g_uiBitIncrement<<1;
-#endif
+  UInt    uiShift     = 2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth-8);
 
   for(Int chan=0; chan<pcPic0 ->getNumberValidComponents(); chan++)
   {
@@ -1509,13 +1500,8 @@ UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
     {
       for(Int x = 0; x < iWidth; x++ )
       {
-#if IBDI_DISTORTION
-        Int iTemp = ((pSrc0[x]+iOffset)>>iShift) - ((pSrc1[x]+iOffset)>>iShift);
-        uiTotalDiff += iTemp * iTemp;
-#else
         Intermediate_Int iTemp = pSrc0[x] - pSrc1[x];
         uiTotalDiff += UInt64((iTemp*iTemp) >> uiShift);
-#endif
       }
       pSrc0 += iStride;
       pSrc1 += iStride;
@@ -1567,7 +1553,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 
   //===== calculate PSNR =====
-  const unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
+  const unsigned int maxval = 255 << (g_bitDepth - 8);
   Double MSEyuvframe[MAX_NUM_COMPONENT] = {0, 0, 0};
 
   for(Int chan=0; chan<pcPicD->getNumberValidComponents(); chan++)

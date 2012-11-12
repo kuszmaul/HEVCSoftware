@@ -170,38 +170,6 @@ Void  TComPicYuv::copyToPic (TComPicYuv*  pcPicYuvDst) const
 }
 
 
-//NOTE: ECF - This function is never called
-Void TComPicYuv::getMinMax(const ComponentID id, Int *pMin, Int *pMax ) const
-{
-  const Pel*  piY   = getAddr(id);
-#if FULL_NBIT
-  Int   iMin  = (1<<(g_uiBitDepth))-1;
-#else
-  Int   iMin  = (1<<(g_uiBitDepth + g_uiBitIncrement))-1;
-#endif
-  Int   iMax  = 0;
-  Int   x, y;
-  const Int stride=getStride(id);
-  const Int height=getHeight(id);
-  const Int width=getWidth(id);
-  
-  for ( y = 0; y < height; y++ )
-  {
-    for ( x = 0; x < width; x++ )
-    {
-      if ( piY[x] < iMin ) iMin = piY[x];
-      if ( piY[x] > iMax ) iMax = piY[x];
-    }
-    piY += stride;
-  }
-  
-  *pMin = iMin;
-  *pMax = iMax;
-}
-
-
-
-
 Void TComPicYuv::extendPicBorder ()
 {
   if ( m_bIsBorderExtended ) return;
@@ -263,13 +231,8 @@ Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
     pFile = fopen (pFileName, "ab");
   }
   
-  const Int  shift = g_uiBitIncrement;
+  const Int  shift = g_bitDepth - 8;
   const Int  offset = (shift>0)?(1<<(shift-1)):0;
-#if FULL_NBIT
-  const Pel  iMax = ((1<<(g_uiBitDepth))-1);
-#else
-  const Pel  iMax = ((1<<(g_uiBitDepth + g_uiBitIncrement))-1);
-#endif
 
   for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
@@ -283,7 +246,7 @@ Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
     {
       for (Int x = 0; x < width; x++ )
       {
-        UChar uc = (UChar)Clip3<Pel>(0, iMax, (pi[x]+offset)>>shift);
+        UChar uc = (UChar)Clip3<Pel>(0, 255, (pi[x]+offset)>>shift);
         fwrite( &uc, sizeof(UChar), 1, pFile );
       }
       pi += stride;
@@ -292,47 +255,5 @@ Void TComPicYuv::dump (const char* pFileName, Bool bAdd) const
   
   fclose(pFile);
 }
-
-#if FIXED_ROUNDING_FRAME_MEMORY
-Void TComPicYuv::xFixedRoundingPic()
-{
-  const UInt numberValidComponents = getNumberValidComponents(getChromaFormat());
-#if FULL_NBIT
-  const Int  iOffset               = ((g_uiBitDepth-8)>0)?(1<<(g_uiBitDepth-8-1)):0;
-  const Int  iMask                 = (~0<<(g_uiBitDepth-8));
-#if (IBDI_NOCLIP_RANGE == 0)
-  const Int  iMaxBdi               = g_uiBASE_MAX<<(g_uiBitDepth-8);
-#endif
-#else
-  const Int  iOffset               = (g_uiBitIncrement>0)?(1<<(g_uiBitIncrement-1)):0;
-  const Int  iMask                 = (~0<<g_uiBitIncrement);
-#if (IBDI_NOCLIP_RANGE == 0)
-  const Int  iMaxBdi               = g_uiBASE_MAX<<g_uiBitIncrement;
-#endif
-
-  for (UInt component = 0; component < numberValidComponents; component++)
-  {
-    const ComponentID  compID  = ComponentID(component);
-          Pel         *pRec    = getAddr(compID);
-    const Int          iStride = getStride(compID);
-    const Int          iWidth  = getWidth(compID);
-    const Int          iHeight = getHeight(compID);
-#endif
-
-    for(Int y = 0; y < iHeight; y++ )
-    {
-      for(Int x = 0; x < iWidth; x++ )
-      {
-#if IBDI_NOCLIP_RANGE
-        pRec[x] = ( pRec[x] + iOffset ) & iMask;
-#else
-        pRec[x] = ( pRec[x]+iOffset>iMaxBdi)? iMaxBdi : ((pRec[x]+iOffset) & iMask);
-#endif
-      }
-      pRec += iStride;
-    }
-  }
-}
-#endif
 
 //! \}

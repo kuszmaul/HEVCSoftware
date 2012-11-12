@@ -82,13 +82,17 @@ Void         destroyROM();
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
+#if !LINEBUF_CLEANUP
 extern       UInt   g_motionRefer[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
+#endif
 extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
 
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
 
+#if !LINEBUF_CLEANUP
 Void          initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth );
+#endif
 
 // conversion of partition index to picture pel position
 extern       UInt   g_auiRasterToPelX[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
@@ -188,10 +192,8 @@ extern const UChar  g_aucIntraModeNumFast[MAX_CU_DEPTH];
 // Bit-depth
 // ====================================================================================================================
 
-extern       UInt g_uiBitDepth;
-extern       UInt g_uiBitIncrement;
-extern       UInt g_uiIBDI_MAX;
-extern       UInt g_uiBASE_MAX;
+extern        Int g_bitDepth;
+extern        Int g_maxLumaVal;
 extern       UInt g_uiPCMBitDepthLuma;
 extern       UInt g_uiPCMBitDepthChroma;
 
@@ -254,8 +256,10 @@ extern UInt64 g_nSymbolCounter;
 extern const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 extern const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 
+#if !FLAT_4x4_DSL
 extern Int g_quantIntraDefault4x4[4*4];
 extern Int g_quantInterDefault4x4[4*4];
+#endif
 extern Int g_quantTSDefault4x4[4*4];
 extern Int g_quantIntraDefault8x8[8*8];
 extern Int g_quantInterDefault8x8[8*8];

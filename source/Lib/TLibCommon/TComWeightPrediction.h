@@ -52,12 +52,10 @@
 /// weighting prediction class
 class TComWeightPrediction
 {
-  Int             m_ibdi;
-
 public:
   TComWeightPrediction();
 
-  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1 , const Int ibdi=(g_uiBitDepth+g_uiBitIncrement));
+  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1 , const Int bitDepth = g_bitDepth);
 
   Void  addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const wpScalingParam *wp0, const wpScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma=true );
   Void  addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const  wpScalingParam *wp0, TComYuv* rpcYuvDst );
@@ -75,7 +73,7 @@ public:
 
 inline  Pel TComWeightPrediction::xClip( const Int x ) // static member
 { 
-  const Int max = (Int)g_uiIBDI_MAX;
+  const Int max = g_maxLumaVal;
   const Pel pel = (Pel)( (x < 0) ? 0 : (x > max) ? max : x );
   return( pel );
 }

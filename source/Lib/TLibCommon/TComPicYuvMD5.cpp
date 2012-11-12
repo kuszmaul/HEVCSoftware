@@ -86,7 +86,7 @@ static void md5_plane(MD5& md5, const Pel* plane, unsigned width, unsigned heigh
 
 UInt compCRC(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
 {
-  unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
+  unsigned int bitdepth = g_bitDepth;
   unsigned int dataMsbIdx = bitdepth - 1;
   unsigned int crcMsb;
   unsigned int bitVal;
@@ -130,7 +130,7 @@ UInt calcCRC(const TComPicYuv& pic, TComDigest &digest)
 
 UInt compChecksum(const Pel* plane, unsigned int width, unsigned int height, unsigned int stride, TComDigest &digest)
 {
-  unsigned int bitdepth = g_uiBitDepth + g_uiBitIncrement;
+  unsigned int bitdepth = g_bitDepth;
 
   unsigned int checksum = 0;
   unsigned char xor_mask;
@@ -177,7 +177,7 @@ UInt calcChecksum(const TComPicYuv& pic, TComDigest &digest)
  */
 UInt calcMD5(const TComPicYuv& pic, TComDigest &digest)
 {
-  unsigned bitdepth = g_uiBitDepth + g_uiBitIncrement;
+  unsigned bitdepth = g_bitDepth;
   /* choose an md5_plane packing function based on the system bitdepth */
   typedef void (*MD5PlaneFunc)(MD5&, const Pel*, unsigned, unsigned, unsigned);
   MD5PlaneFunc md5_plane_func;

@@ -1088,7 +1088,11 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 
   //===== transform and quantization =====
   //--- init rate estimation arrays for RDOQ ---
+#if RDOQ_TRANSFORMSKIP
+  if( useTransformSkip ? m_pcEncCfg->getUseRDOQTS() : m_pcEncCfg->getUseRDOQ() )
+#else
   if(m_pcEncCfg->getUseRDOQ() && useTransformSkip == false)
+#endif
   {
     m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, uiWidth, uiHeight, chType );
   }
@@ -2566,12 +2570,11 @@ TEncSearch::estIntraPredChromaQT( TComDataCU* pcCU,
  */
 Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* pPCM, Pel* pPred, Pel* pResi, Pel* pReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID )
 {
-  const UInt uiInternalBitDepth = g_uiBitDepth + g_uiBitIncrement;
   const UInt uiReconStride = pcCU->getPic()->getPicYuvRec()->getStride(compID);
   const UInt uiPCMBitDepth = pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
   Pel* pRecoPic = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiAbsPartIdx);
 
-  const UInt pcmShiftRight=(uiInternalBitDepth - uiPCMBitDepth);
+  const UInt pcmShiftRight=(g_bitDepth - uiPCMBitDepth);
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -4243,11 +4246,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
 
     UInt uiZeroDistortion = 0;
-#if IBDI_DISTORTION
-    xEstimateResidualQT( pcYuvOrg, pcYuvPred, rpcYuvResi,  dCost, uiBits, uiDistortion, &uiZeroDistortion, tuLevel0 );
-#else
+
     xEstimateResidualQT( rpcYuvResi,  dCost, uiBits, uiDistortion, &uiZeroDistortion, tuLevel0 DEBUG_STRING_PASS_INTO(sDebug) );
-#endif
 
     // -------------------------------------------------------
     // set the coefficients in the pcCU, and also calculates the residual data.
@@ -4397,12 +4397,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
 
 
-Void TEncSearch::xEstimateResidualQT(
-#if IBDI_DISTORTION
-                                      TComYuv* pcOrg,
-                                      TComYuv* pcPred,
-#endif
-                                      TComYuv* pcResi,
+Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
                                       Double &rdCost,
                                       UInt &ruiBits,
                                       UInt &ruiDist,
@@ -4531,22 +4526,12 @@ Void TEncSearch::xEstimateResidualQT(
         const UInt totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
         const Int  bdOffset               = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
 
-#if IBDI_DISTORTION
-#if WEIGHTED_CHROMA_DISTORTION
-        UInt uiDistComp = m_pcRdCost->getDistPart( pcPred->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ), pcPred->getStride(compID), pcOrg->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                      pcOrg->getStride(compID), tuCompRect.width, tuCompRect.height, isChroma(compID));
-#else
-        UInt uiDistComp = m_pcRdCost->getDistPart( pcPred->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ), pcPred->getStride(compID), pcOrg->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                      pcOrg->getStride(compID), tuCompRect.width, tuCompRect.height);
-#endif
-#else
 #if WEIGHTED_CHROMA_DISTORTION
         UInt uiDistComp = m_pcRdCost->getDistPart( m_pTempPel, tuCompRect.width, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
                                                       pcResi->getStride(compID), tuCompRect.width, tuCompRect.height, isChroma(compID)); // initialized with zero residual destortion
 #else
         UInt uiDistComp = m_pcRdCost->getDistPart( m_pTempPel, tuCompRect.width, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
                                                       pcResi->getStride(compID), tuCompRect.width, tuCompRect.height);
-#endif
 #endif
 
         if ( puiZeroDist != NULL )
@@ -4682,7 +4667,11 @@ Void TEncSearch::xEstimateResidualQT(
 
         pcCU->setTransformSkipSubParts ( 1, compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
 
+#if RDOQ_TRANSFORMSKIP
+        if (m_pcEncCfg->getUseRDOQTS() && compID!=COMPONENT_Cr)
+#else
         if (m_pcEncCfg->getUseRDOQ() && compID!=COMPONENT_Cr)
+#endif
         {
           m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, tuCompRect.width, tuCompRect.height, chType );
         }
@@ -4818,12 +4807,9 @@ Void TEncSearch::xEstimateResidualQT(
 
     do
     {
-#if IBDI_DISTORTION
-      xEstimateResidualQT( pcOrg, pcPred, pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(sSplitString) );
-#else
       xEstimateResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(sSplitString));
-#endif
-    } while ( tuRecurseChild.nextSection(rTu) ) ;
+    }
+    while ( tuRecurseChild.nextSection(rTu) ) ;
 
     UInt uiCbfAny=0;
     for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)

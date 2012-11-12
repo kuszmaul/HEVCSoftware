@@ -333,41 +333,48 @@ static inline Bool intraPlanarSingleStageCalculation(const ChannelType chType, c
 
 //------------------------------------------------
 
-static inline FilterMode getIntraEdgeFilterMode(const ChannelType type, const ChromaFormat fmt)
+static inline FilterMode getIntraEdgeFilterMode(const ChannelType type, const ChromaFormat fmt, const UInt width, const UInt height)
 {
-  if (isLuma(type)) return FILTER_BOTH_DIRECTIONS;
-
-  switch (fmt)
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
+  if ((width <= MAXIMUM_FILTERED_WIDTH) && (height <= MAXIMUM_FILTERED_HEIGHT))
   {
-    case CHROMA_444:
-      {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-        if (ToolOptionList::SetIntraChromaEdgeFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 1)
-        return FILTER_BOTH_DIRECTIONS;
-#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 0 falls through to return FILTER_DISABLED
-      }
-      break;
-      
-    case CHROMA_422:
-      {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-        switch (ToolOptionList::SetIntraChromaEdgeFilter422.getInt())
-        {
-          case 2:  return FILTER_BOTH_DIRECTIONS; break;
-          case 1:  return FILTER_VERTICAL_ONLY;   break;
-          default: break;
-        }
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 2)
-        return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 1)
-        return FILTER_VERTICAL_ONLY;
-#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 0 falls through to return FILTER_DISABLED
-      }
-      break;
+#endif
+    if (isLuma(type)) return FILTER_BOTH_DIRECTIONS;
 
-    default: break;
+    switch (fmt)
+    {
+      case CHROMA_444:
+        {
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          if (ToolOptionList::SetIntraChromaEdgeFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
+#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 1)
+          return FILTER_BOTH_DIRECTIONS;
+#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_444 == 0 falls through to return FILTER_DISABLED
+        }
+        break;
+      
+      case CHROMA_422:
+        {
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          switch (ToolOptionList::SetIntraChromaEdgeFilter422.getInt())
+          {
+            case 2:  return FILTER_BOTH_DIRECTIONS; break;
+            case 1:  return FILTER_VERTICAL_ONLY;   break;
+            default: break;
+          }
+#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 2)
+          return FILTER_BOTH_DIRECTIONS;
+#elif (ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 1)
+          return FILTER_VERTICAL_ONLY;
+#endif //ECF__SET_INTRA_CHROMA_EDGE_FILTER_422 == 0 falls through to return FILTER_DISABLED
+        }
+        break;
+
+      default: break;
+    }
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
   }
+#endif
 
   return FILTER_DISABLED;
 }
@@ -375,41 +382,48 @@ static inline FilterMode getIntraEdgeFilterMode(const ChannelType type, const Ch
 
 //------------------------------------------------
 
-static inline FilterMode getIntraDCFilterMode(const ChannelType type, const ChromaFormat fmt)
+static inline FilterMode getIntraDCFilterMode(const ChannelType type, const ChromaFormat fmt, const UInt width, const UInt height)
 {
-  if (isLuma(type)) return FILTER_BOTH_DIRECTIONS;
-
-  switch (fmt)
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
+  if ((width <= MAXIMUM_FILTERED_WIDTH) && (height <= MAXIMUM_FILTERED_HEIGHT))
   {
-    case CHROMA_444:
-      {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-        if (ToolOptionList::SetIntraChromaDCFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 1)
-        return FILTER_BOTH_DIRECTIONS;
-#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 0 falls through to return FILTER_DISABLED
-      }
-      break;
-      
-    case CHROMA_422:
-      {
-#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-        switch (ToolOptionList::SetIntraChromaDCFilter422.getInt())
-        {
-          case 2:  return FILTER_BOTH_DIRECTIONS; break;
-          case 1:  return FILTER_VERTICAL_ONLY;   break;
-          default: break;
-        }
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 2)
-        return FILTER_BOTH_DIRECTIONS;
-#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 1)
-        return FILTER_VERTICAL_ONLY;
-#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 0 falls through to return FILTER_DISABLED
-      }
-      break;
+#endif
+    if (isLuma(type)) return FILTER_BOTH_DIRECTIONS;
 
-    default: break;
+    switch (fmt)
+    {
+      case CHROMA_444:
+        {
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          if (ToolOptionList::SetIntraChromaDCFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
+#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 1)
+          return FILTER_BOTH_DIRECTIONS;
+#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_444 == 0 falls through to return FILTER_DISABLED
+        }
+        break;
+      
+      case CHROMA_422:
+        {
+#if ECF__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          switch (ToolOptionList::SetIntraChromaDCFilter422.getInt())
+          {
+            case 2:  return FILTER_BOTH_DIRECTIONS; break;
+            case 1:  return FILTER_VERTICAL_ONLY;   break;
+            default: break;
+          }
+#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 2)
+          return FILTER_BOTH_DIRECTIONS;
+#elif (ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 1)
+          return FILTER_VERTICAL_ONLY;
+#endif //ECF__SET_INTRA_CHROMA_DC_FILTER_422 == 0 falls through to return FILTER_DISABLED
+        }
+        break;
+
+      default: break;
+    }
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
   }
+#endif
 
   return FILTER_DISABLED;
 }
@@ -589,11 +603,7 @@ static inline Bool roundTransformShiftUp(const ComponentID compID, const ChromaF
 // NOTE: ECF - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
 static inline Int getTransformShift(const UInt uiLog2TrSize)
 {
-#if FULL_NBIT
-  return MAX_TR_DYNAMIC_RANGE - g_uiBitDepth - uiLog2TrSize;
-#else
-  return MAX_TR_DYNAMIC_RANGE - (g_uiBitDepth + g_uiBitIncrement) - uiLog2TrSize;
-#endif
+  return MAX_TR_DYNAMIC_RANGE - g_bitDepth - uiLog2TrSize;
 }
 
 

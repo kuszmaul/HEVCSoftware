@@ -219,7 +219,7 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
 Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT], Int log2Denom)
 {
   const Int numComp = slice->getPic()->getPicYuvOrg()->getNumberValidComponents();
-  Int realLog2Denom = log2Denom + (g_uiBitDepth+g_uiBitIncrement-8);
+  Int realLog2Denom = log2Denom + (g_bitDepth - 8);
   Int realOffset = ((Int)1<<(realLog2Denom-1));
 
   Int numPredDir = slice->isInterP() ? 1 : 2;
@@ -250,7 +250,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
         // Chroma offset range limination
         if(comp)
         {
-          Int shift = ((1<<(g_uiBitDepth+g_uiBitIncrement-1)));
+          Int shift = 1 << (g_bitDepth - 1);
           Int pred = ( shift - ( ( shift*weight)>>(log2Denom) ) );
           Int deltaOffset = Clip3( -512, 511, (offset - pred) );    // signed 10bit
           offset = Clip3( -128, 127, (deltaOffset + pred) );        // signed 8bit
@@ -341,7 +341,7 @@ Int64 WeightPredAnalysis::xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth
   Int x, y;
   Int64 iSAD = 0;
   Int64 iSize   = iWidth*iHeight;
-  Int64 iRealDenom = iDenom + (g_uiBitDepth+g_uiBitIncrement-8);
+  Int64 iRealDenom = iDenom + (g_bitDepth - 8);
   for( y = 0; y < iHeight; y++ )
   {
     for( x = 0; x < iWidth; x++ )
