@@ -53,6 +53,7 @@
 #include "TEncEntropy.h"
 #include "TEncCavlc.h"
 #include "TEncSbac.h"
+#include "SEIwrite.h"
 
 #include "TEncAnalyze.h"
 #include "TEncRateCtrl.h"
@@ -99,6 +100,8 @@ private:
   TEncSbac*               m_pcSbacCoder;
   TEncBinCABAC*           m_pcBinCABAC;
   TComLoopFilter*         m_pcLoopFilter;
+
+  SEIWriter               m_seiWriter;
   
 #if !REMOVE_ALF
   // Adaptive Loop filter
@@ -118,7 +121,11 @@ private:
   std::vector<Int>        m_storedStartCUAddrForEncodingDependentSlice;
 
   std::vector<Int> m_vRVM_RP;
-
+#if BUFFERING_PERIOD_AND_TIMING_SEI
+  UInt                    m_lastBPSEI;
+  UInt                    m_totalCoded;
+  UInt                    m_cpbRemovalDelay;
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();

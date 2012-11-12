@@ -71,11 +71,12 @@ const UChar betatable_8x8[MAX_QP + 1] =
 // ====================================================================================================================
 
 TComLoopFilter::TComLoopFilter()
-: m_uiNumPartitions( 0 )
+: m_disableDeblockingFilterFlag(false)
+, m_betaOffsetDiv2(0)
+, m_tcOffsetDiv2(0)
+, m_uiNumPartitions(0)
+, m_bLFCrossTileBoundary(true)
 {
-  m_uiDisableDeblockingFilterIdc = 0;
-  m_bLFCrossTileBoundary = true;
-
   for( Int edgeDir = 0; edgeDir < NUM_EDGE_DIR; edgeDir++ )
   {
     m_aapucBS       [edgeDir] = NULL;
@@ -93,19 +94,19 @@ TComLoopFilter::~TComLoopFilter()
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
-Void TComLoopFilter::setCfg( Bool DeblockingFilterControlPresent, UInt uiDisableDblkIdc, Int iBetaOffset_div2, Int iTcOffset_div2, Bool bLFCrossTileBoundary)
+Void TComLoopFilter::setCfg( Bool deblockingFilterControlPresentFlag, Bool disableDeblockingFilterFlag, Int betaOffsetDiv2, Int tcOffsetDiv2, Bool bLFCrossTileBoundary )
 {
   m_bLFCrossTileBoundary = bLFCrossTileBoundary;
 
-  if (DeblockingFilterControlPresent)
+  if (deblockingFilterControlPresentFlag)
   {
-    m_uiDisableDeblockingFilterIdc  = uiDisableDblkIdc;
-    m_betaOffsetDiv2 = iBetaOffset_div2;
-    m_tcOffsetDiv2 = iTcOffset_div2;
+    m_disableDeblockingFilterFlag  = disableDeblockingFilterFlag;
+    m_betaOffsetDiv2 = betaOffsetDiv2;
+    m_tcOffsetDiv2 = tcOffsetDiv2;
   }
   else // use default values
   {
-    m_uiDisableDeblockingFilterIdc = 0;
+    m_disableDeblockingFilterFlag = false;
     m_betaOffsetDiv2 = 0;
     m_tcOffsetDiv2 = 0;
   }
@@ -153,7 +154,7 @@ Void TComLoopFilter::destroy()
  */
 Void TComLoopFilter::loopFilterPic( TComPic* pcPic )
 {
-  if (m_uiDisableDeblockingFilterIdc == 1)
+  if ( m_disableDeblockingFilterFlag )
   {
     return;
   }
@@ -393,9 +394,9 @@ Void TComLoopFilter::xSetLoopfilterParam( TComDataCU* pcCU, UInt uiAbsZorderIdx 
   TComDataCU* pcTempCU;
   UInt        uiTempPartIdx;
 
-  m_stLFCUParam.bInternalEdge = m_uiDisableDeblockingFilterIdc ? false : true ;
+  m_stLFCUParam.bInternalEdge = !m_disableDeblockingFilterFlag;
 
-  if ( (uiX == 0) || (m_uiDisableDeblockingFilterIdc == 1) )
+  if ( (uiX == 0) || m_disableDeblockingFilterFlag )
   {
     m_stLFCUParam.bLeftEdge = false;
   }
@@ -417,7 +418,7 @@ Void TComLoopFilter::xSetLoopfilterParam( TComDataCU* pcCU, UInt uiAbsZorderIdx 
     }
   }
 
-  if ( (uiY == 0 ) || (m_uiDisableDeblockingFilterIdc == 1) )
+  if ( (uiY == 0 ) || m_disableDeblockingFilterFlag )
   {
     m_stLFCUParam.bTopEdge = false;
   }
@@ -652,16 +653,16 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
         Int dq = dq0 + dq3;
         Int d =  d0 + d3;
 
-        if (bPCMFilter)
+        if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
         {
-          // Check if each of PUs is I_PCM
-          bPartPNoFilter = (pcCUP->getIPCMFlag(uiPartPIdx));
-          bPartQNoFilter = (pcCUQ->getIPCMFlag(uiPartQIdx));
-        }
+          // Check if each of PUs is I_PCM with LF disabling
+          bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
+          bPartQNoFilter = (bPCMFilter && pcCUQ->getIPCMFlag(uiPartQIdx));
 
-        // check if each of PUs is lossless coded
-        bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx) );
-        bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx) );
+          // check if each of PUs is lossless coded
+          bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx) );
+          bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx) );
+        }
 
         if (d < iBeta)
         {
@@ -778,16 +779,16 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
       Int iIndexTC = Clip3(0, MAX_QP+DEFAULT_INTRA_TC_OFFSET, iQP + DEFAULT_INTRA_TC_OFFSET*(ucBs - 1) + (m_tcOffsetDiv2 << 1));
       Int iTc =  tctable_8x8[iIndexTC]*iBitdepthScale;
 
-      if(bPCMFilter)
+      if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
       {
-        // Check if each of PUs is IPCM
-        bPartPNoFilter = (pcCUP->getIPCMFlag(uiPartPIdx));
-        bPartQNoFilter = (pcCUQ->getIPCMFlag(uiPartQIdx));
-      }
+        // Check if each of PUs is I_PCM with LF disabling
+        bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
+        bPartQNoFilter = (bPCMFilter && pcCUQ->getIPCMFlag(uiPartQIdx));
 
-      // check if each of PUs is lossless coded
-      bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx));
-      bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx));
+        // check if each of PUs is lossless coded
+        bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx));
+        bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx));
+      }
 
       for ( UInt uiStep = 0; uiStep < uiLoopLength; uiStep++ )
       {

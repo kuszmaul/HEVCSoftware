@@ -104,7 +104,7 @@ const UInt TComSampleAdaptiveOffset::m_auiEoTable[SAO_EO_TABLE_SIZE] = //NOTE: E
   0
 };
 
-Int TComSampleAdaptiveOffset::m_iNumClass[MAX_NUM_SAO_TYPE] =
+const Int TComSampleAdaptiveOffset::m_iNumClass[MAX_NUM_SAO_TYPE] =
 {
   SAO_EO_LEN,
   SAO_EO_LEN,
@@ -113,7 +113,7 @@ Int TComSampleAdaptiveOffset::m_iNumClass[MAX_NUM_SAO_TYPE] =
   SAO_BO_LEN
 };
 
-UInt TComSampleAdaptiveOffset::m_uiMaxDepth = SAO_MAX_DEPTH;
+const UInt TComSampleAdaptiveOffset::m_uiMaxDepth = SAO_MAX_DEPTH;
 
 
 /** convert Level Row Col to Idx
@@ -287,10 +287,6 @@ Void TComSampleAdaptiveOffset::allocSaoParam(SAOParam *pcSaoParam)
     const ComponentID compId=ComponentID(comp);
     pcSaoParam->psSaoPart[compId] = new SAOQTPart[ m_aiNumCulPartsLevel[pcSaoParam->iMaxSplitLevel] ];
     initSAOParam(pcSaoParam, 0, 0, 0, -1, 0, m_iNumCuInWidth-1,  0, m_iNumCuInHeight-1,compId);
-  }
-  for(Int j=0;j<MAX_NUM_SAO_TYPE;j++)
-  {
-    pcSaoParam->iNumClass[j] = m_iNumClass[j];
   }
   pcSaoParam->numCuInWidth  = m_iNumCuInWidth;
   pcSaoParam->numCuInHeight = m_iNumCuInHeight;
@@ -1294,6 +1290,116 @@ Void TComSampleAdaptiveOffset::copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam*
   for (Int i=0;i<4;i++)
   {
     saoUnitDst->offset[i] = saoUnitSrc->offset[i];
+  }
+}
+#endif
+
+#if REMOVE_ALF
+/** PCM LF disable process.
+ * \param pcPic picture (TComPic) pointer
+ * \returns Void
+ *
+ * \note Replace filtered sample values of PCM mode blocks with the transmitted and reconstructed ones.
+ */
+Void TComSampleAdaptiveOffset::PCMLFDisableProcess (TComPic* pcPic)
+{
+  xPCMRestoration(pcPic);
+}
+
+/** Picture-level PCM restoration.
+ * \param pcPic picture (TComPic) pointer
+ * \returns Void
+ */
+Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
+{
+  Bool  bPCMFilter = (pcPic->getSlice(0)->getSPS()->getUsePCM() && pcPic->getSlice(0)->getSPS()->getPCMFilterDisableFlag())? true : false;
+
+  if(bPCMFilter || pcPic->getSlice(0)->getPPS()->getTransquantBypassEnableFlag())
+  {
+    for( UInt uiCUAddr = 0; uiCUAddr < pcPic->getNumCUsInFrame() ; uiCUAddr++ )
+    {
+      TComDataCU* pcCU = pcPic->getCU(uiCUAddr);
+
+      xPCMCURestoration(pcCU, 0, 0);
+    }
+  }
+}
+
+/** PCM CU restoration.
+ * \param pcCU pointer to current CU
+ * \param uiAbsPartIdx part index
+ * \param uiDepth CU depth
+ * \returns Void
+ */
+Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth )
+{
+  TComPic* pcPic     = pcCU->getPic();
+  UInt uiCurNumParts = pcPic->getNumPartInCU() >> (uiDepth<<1);
+  UInt uiQNumParts   = uiCurNumParts>>2;
+
+  // go to sub-CU
+  if( pcCU->getDepth(uiAbsZorderIdx) > uiDepth )
+  {
+    for ( UInt uiPartIdx = 0; uiPartIdx < 4; uiPartIdx++, uiAbsZorderIdx+=uiQNumParts )
+    {
+      UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsZorderIdx] ];
+      UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsZorderIdx] ];
+      if( ( uiLPelX < pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() ) )
+        xPCMCURestoration( pcCU, uiAbsZorderIdx, uiDepth+1 );
+    }
+    return;
+  }
+
+  // restore PCM samples
+  if ((pcCU->getIPCMFlag(uiAbsZorderIdx)&& pcPic->getSlice(0)->getSPS()->getPCMFilterDisableFlag()) || pcCU->isLosslessCoded( uiAbsZorderIdx))
+  {
+    const UInt numComponents=pcPic->getNumberValidComponents();
+    for(UInt comp=0; comp<numComponents; comp++)
+    {
+      xPCMSampleRestoration (pcCU, uiAbsZorderIdx, uiDepth, ComponentID(comp));
+    }
+  }
+}
+
+/** PCM sample restoration.
+ * \param pcCU pointer to current CU
+ * \param uiAbsPartIdx part index
+ * \param uiDepth CU depth
+ * \param ttText texture component type
+ * \returns Void
+ */
+Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID)
+{
+        TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
+        UInt uiPcmLeftShiftBit;
+  const UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
+  const UInt csx=pcPicYuvRec->getComponentScaleX(compID);
+  const UInt csy=pcPicYuvRec->getComponentScaleY(compID);
+  const UInt uiOffset   = (uiMinCoeffSize*uiAbsZorderIdx)>>(csx+csy);
+
+        Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getAddr(), uiAbsZorderIdx);
+  const Pel *piPcm = pcCU->getPCMSample(compID) + uiOffset;
+  const UInt uiStride  = pcPicYuvRec->getStride(compID);
+  const UInt uiWidth  = ((g_uiMaxCUWidth >> uiDepth) >> csx);
+  const UInt uiHeight = ((g_uiMaxCUWidth >> uiDepth) >> csy);
+
+  if ( pcCU->isLosslessCoded(uiAbsZorderIdx) )
+  {
+    uiPcmLeftShiftBit = 0;
+  }
+  else
+  {
+    uiPcmLeftShiftBit = g_uiBitDepth + g_uiBitIncrement - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
+  }
+
+  for(UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for(UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      piSrc[uiX] = (piPcm[uiX] << uiPcmLeftShiftBit);
+    }
+    piPcm += uiWidth;
+    piSrc += uiStride;
   }
 }
 #endif

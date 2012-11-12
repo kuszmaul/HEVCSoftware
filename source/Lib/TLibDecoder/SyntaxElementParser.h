@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -31,47 +31,67 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SEIREAD__
-#define __SEIREAD__
+/** \file     SyntaxElementParser.h
+    \brief    Parsing functionality high level syntax
+*/
+
+#ifndef __SYNTAXELEMENTPARSER__
+#define __SYNTAXELEMENTPARSER__
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "TLibCommon/TComRom.h"
+
+#if ENC_DEC_TRACE
+
+#define READ_CODE(length, code, name)     xReadCodeTr ( length, code, name )
+#define READ_UVLC(        code, name)     xReadUvlcTr (         code, name )
+#define READ_SVLC(        code, name)     xReadSvlcTr (         code, name )
+#define READ_FLAG(        code, name)     xReadFlagTr (         code, name )
+
+#else
+
+#define READ_CODE(length, code, name)     xReadCode ( length, code )
+#define READ_UVLC(        code, name)     xReadUvlc (         code )
+#define READ_SVLC(        code, name)     xReadSvlc (         code )
+#define READ_FLAG(        code, name)     xReadFlag (         code )
+
+#endif
+
 //! \ingroup TLibDecoder
 //! \{
 
-#include "TLibCommon/SEI.h"
-class TComInputBitstream;
-class SEImessages;
+// ====================================================================================================================
+// Class definition
+// ====================================================================================================================
 
-
-class SEIReader: public SyntaxElementParser
+class SyntaxElementParser
 {
-public:
-  SEIReader() {};
-  virtual ~SEIReader() {};
-  Void parseSEImessage(TComInputBitstream* bs, SEImessages& seis);
 protected:
-  Void xReadSEImessage                (SEImessages& seis);
-  Void xParseSEIuserDataUnregistered  (SEIuserDataUnregistered &sei, UInt payloadSize);
-#if ACTIVE_PARAMETER_SETS_SEI_MESSAGE 
-  Void xParseSEIActiveParameterSets    (SEIActiveParameterSets& sei, UInt payloadSize);
-#endif
-  Void xParseSEIDecodedPictureHash    (SEIDecodedPictureHash& sei, UInt payloadSize);
-#if BUFFERING_PERIOD_AND_TIMING_SEI
-  Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize);
-  Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize);
-#endif
-#if RECOVERY_POINT_SEI
-  Void xParseSEIRecoveryPoint         (SEIRecoveryPoint& sei, UInt payloadSize);
-#endif
-#if RECOVERY_POINT_SEI || BUFFERING_PERIOD_AND_TIMING_SEI
-  Void xParseByteAlign();
-#endif
-};
+  TComInputBitstream*   m_pcBitstream;
 
+  SyntaxElementParser()
+  : m_pcBitstream (NULL)
+  {};
+  virtual ~SyntaxElementParser() {};
+
+  Void  xReadCode    ( UInt   length, UInt& val );
+  Void  xReadUvlc    ( UInt&  val );
+  Void  xReadSvlc    ( Int&   val );
+  Void  xReadFlag    ( UInt&  val );
+#if ENC_DEC_TRACE
+  Void  xReadCodeTr  (UInt  length, UInt& rValue, const Char *pSymbolName);
+  Void  xReadUvlcTr  (              UInt& rValue, const Char *pSymbolName);
+  Void  xReadSvlcTr  (               Int& rValue, const Char *pSymbolName);
+  Void  xReadFlagTr  (              UInt& rValue, const Char *pSymbolName);
+#endif
+public:
+  Void  setBitstream ( TComInputBitstream* p )   { m_pcBitstream = p; }
+};
 
 //! \}
 
-#endif
+#endif // !defined(__SYNTAXELEMENTPARSER__)
+
