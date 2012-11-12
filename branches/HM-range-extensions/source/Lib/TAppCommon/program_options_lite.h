@@ -120,7 +120,7 @@ namespace df
       {
         arg_ss >> opt_storage;
       }
-      catch (std::exception&)
+      catch (...)
       {
         throw ParseFailure(opt_string, arg);
       }
