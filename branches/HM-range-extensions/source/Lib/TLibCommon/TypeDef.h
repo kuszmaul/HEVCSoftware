@@ -285,10 +285,8 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
   #define RExt__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
 
-  #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_444                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
   #define RExt__SET_INTRA_CHROMA_DC_FILTER_444                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
 #endif
 
