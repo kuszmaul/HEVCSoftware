@@ -149,20 +149,6 @@ static inline Bool combinedLumaChromaIntraSearch()
 
 //------------------------------------------------
 
-static inline Bool fastSearchOverAllComponents()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::EncoderFastIntraModeSearchOverAllComponents.getInt() != 0);
-#elif (RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 1)
-  return true;
-#elif (RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool fullRDSearchOverAllComponents()
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

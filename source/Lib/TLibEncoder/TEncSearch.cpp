@@ -2039,16 +2039,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
     Int numModesForFullRD = g_aucIntraModeNumFast[ uiWidthBit ];
 
-    const Bool bLumaChannelSearchOnly=!fastSearchOverAllComponents() || bLumaOnly;
-    const ComponentID maxSearchComp=bLumaChannelSearchOnly? COMPONENT_Y : COMPONENT_Cr;
-    const ChannelType maxSearchChType=bLumaChannelSearchOnly ? CHANNEL_TYPE_LUMA : CHANNEL_TYPE_CHROMA;
-
-    for(UInt comp=COMPONENT_Y; comp <= maxSearchComp; comp++)
-    {
-      ComponentID compID=ComponentID(comp);
-      if (tuRecurseWithPU.ProcessComponentSection(compID))
-        initAdiPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, compID, true DEBUG_STRING_PASS_INTO(sTemp2) );
-    }
+    if (tuRecurseWithPU.ProcessComponentSection(COMPONENT_Y))
+      initAdiPatternChType( tuRecurseWithPU, bAboveAvail, bLeftAvail, COMPONENT_Y, true DEBUG_STRING_PASS_INTO(sTemp2) );
 
     Bool doFastSearch = (numModesForFullRD != numModesAvailable);
     if (doFastSearch)
@@ -2061,41 +2053,28 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
       CandNum = 0;
 
+      const TComRectangle &puRect=tuRecurseWithPU.getRect(COMPONENT_Y);
+      const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
+
+      Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
+      Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
+      UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
+
       for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
       {
         UInt uiMode = modeIdx;
         UInt uiSad = 0;
 
-        for( UInt comp=COMPONENT_Y; comp <= maxSearchComp; comp++)
-        {
-          ComponentID compID=ComponentID(comp);
-          if (tuRecurseWithPU.ProcessComponentSection(compID))
-          {
-            const TComRectangle &puRect=tuRecurseWithPU.getRect(compID);
-            const UInt uiAbsPartIdx=tuRecurseWithPU.GetAbsPartIdxTU();
+        const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt);
+        predIntraAng( COMPONENT_Y, uiMode, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
 
-            Pel* piOrg         = pcOrgYuv ->getAddr( compID, uiAbsPartIdx );
-            Pel* piPred        = pcPredYuv->getAddr( compID, uiAbsPartIdx );
-            UInt uiStride      = pcPredYuv->getStride( compID );
-
-            const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(compID, uiMode, puRect.width, puRect.height, chFmt);
-            predIntraAng( compID, uiMode, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
-
-            // use hadamard transform here
-            uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(compID)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );
-          }
-        }
+        // use hadamard transform here
+        uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );
 
         UInt   iModeBits = 0;
 
         // NB xModeBitsIntra will not affect the mode for chroma that may have already been pre-estimated.
         iModeBits+=xModeBitsIntra( pcCU, uiMode, uiPartOffset, uiDepth, uiInitTrDepth, CHANNEL_TYPE_LUMA );
-
-        for( UInt ch=CHANNEL_TYPE_CHROMA; ch <= maxSearchChType; ch++)
-        {
-          if (tuRecurseWithPU.ProcessChannelSection(ChannelType(ch)))
-            iModeBits+=xModeBitsIntra( pcCU, DM_CHROMA_IDX, uiPartOffset, uiDepth, uiInitTrDepthC, ChannelType(ch) );
-        }
 
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
 

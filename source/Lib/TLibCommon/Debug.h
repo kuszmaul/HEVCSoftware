@@ -103,7 +103,6 @@ namespace DebugOptionList
 namespace ToolOptionList
 {
   extern EnvVar CombinedLumaChromaIntraModeSearch;
-  extern EnvVar EncoderFastIntraModeSearchOverAllComponents;
   extern EnvVar EncoderFullRateDistortionSearchOverAllComponents;
   extern EnvVar AdditionalTrialEncodeChromaIntraModeSearch;
   extern EnvVar ChromaIntraReferenceSampleFiltering;
