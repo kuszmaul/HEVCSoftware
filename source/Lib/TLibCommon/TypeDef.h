@@ -216,7 +216,10 @@
 #define INVALID_MODE_IDX                                 (NUM_INTRA_MODE+1)    // value used to indicate an invalid intra mode
 #define STOPCHROMASEARCH_MODE_IDX                        (INVALID_MODE_IDX+1)  // value used to signal the end of a chroma mode search
 
-
+#define MDCS_MODE                       MDCS_BOTH_DIRECTIONS        ///< Name taken from definition of MDCSMode enumeration below
+#define MDCS_ANGLE_LIMIT                                  4         ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
+#define MDCS_MAXIMUM_WIDTH                                8         ///< (default 8) (measured in pixels) TUs with width greater than this can only use diagonal scan
+#define MDCS_MAXIMUM_HEIGHT                               8         ///< (default 8) (measured in pixels) TUs with height greater than this can only use diagonal scan
 
 #define FAST_UDI_USE_MPM 1
 
@@ -286,27 +289,7 @@
 // Transform and Quantisation
 //------------------------------------------------
 
-//These settings cannot be defined using environment variables because they are used to set the size of static const arrays
-
 #define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
-
-//------------------------------------------------
-// MDCS
-//------------------------------------------------
-
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__LUMA_MDCS_MODE                                                   3 ///< 0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
-  #define RExt__LUMA_MDCS_ANGLE_LIMIT                                            4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
-  #define RExt__LUMA_MDCS_MAXIMUM_WIDTH                                          8 ///< (default 8) Luminance TUs with width greater than this can only use diagonal scan
-  #define RExt__LUMA_MDCS_MAXIMUM_HEIGHT                                         8 ///< (default 8) Luminance TUs with height greater than this can only use diagonal scan
-
-  #define RExt__CHROMA_MDCS_MODE                                                 3 ///< 0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)
-  #define RExt__CHROMA_MDCS_ANGLE_LIMIT                                          4 ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
-  #define RExt__CHROMA_MDCS_MAXIMUM_WIDTH                                        4 ///< (default 4) Chrominance TUs with width greater than this can only use diagonal scan
-  #define RExt__CHROMA_MDCS_MAXIMUM_HEIGHT                                       4 ///< (default 4) Chrominance TUs with height greater than this can only use diagonal scan
-
-  #define RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS                  1 ///< 0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled
-#endif
 
 //------------------------------------------------
 // Backwards-compatibility

@@ -145,21 +145,6 @@ EnvVar DebugOptionList::CopyLumaToChroma444 ("COPY_LUMA_TO_CHROMA_444", "0", "If
 EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Swaps Cb and Cr channels on loading"                              );
 
 
-// Tool setting environment variables:
-
-EnvVar Tools("--     Tools","","");
-
-EnvVar ToolOptionList::LumaMDCSMode                                     ("RExt__LUMA_MDCS_MODE",                                           "3", "0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                            );
-EnvVar ToolOptionList::LumaMDCSAngleLimit                               ("RExt__LUMA_MDCS_ANGLE_LIMIT",                                    "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
-EnvVar ToolOptionList::LumaMDCSMaximumWidth                             ("RExt__LUMA_MDCS_MAXIMUM_WIDTH",                                  "8", "(default 8) Luminance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                             );
-EnvVar ToolOptionList::LumaMDCSMaximumHeight                            ("RExt__LUMA_MDCS_MAXIMUM_HEIGHT",                                 "8", "(default 8) Luminance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                            );
-EnvVar ToolOptionList::ChromaMDCSMode                                   ("RExt__CHROMA_MDCS_MODE",                                         "3", "0 = MDCS disabled for chrominance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                          );
-EnvVar ToolOptionList::ChromaMDCSAngleLimit                             ("RExt__CHROMA_MDCS_ANGLE_LIMIT",                                  "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
-EnvVar ToolOptionList::ChromaMDCSMaximumWidth                           ("RExt__CHROMA_MDCS_MAXIMUM_WIDTH",                                "4", "(default 4) Chrominance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                           );
-EnvVar ToolOptionList::ChromaMDCSMaximumHeight                          ("RExt__CHROMA_MDCS_MAXIMUM_HEIGHT",                               "4", "(default 4) Chrominance TUs with height greater than this can only use diagonal scan"                                                                                                                                                                                                                          );
-EnvVar ToolOptionList::NonSubsampledChromaUseLumaMDCSSizeLimits         ("RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS",          "1", "0 = Always use chrominance size limits when determining if a chroma TU is too large to use MDCS, 1 (default) = Non-subsampled chrominance axes (vertical for 4:2:2, both for 4:4:4) use the luminance maximum width/height to determine if MDCS should be enabled"                                             );
-
-
 // --------------------------------------------------------------------------------------------------------------------- //
 
 //macro value printing function
@@ -173,19 +158,6 @@ Void printRExtMacroSettings()
   //setting macros
 
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
-
-  //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__LUMA_MDCS_MODE,                                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__LUMA_MDCS_ANGLE_LIMIT,                                    settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__LUMA_MDCS_MAXIMUM_WIDTH,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__LUMA_MDCS_MAXIMUM_HEIGHT,                                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CHROMA_MDCS_MODE,                                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CHROMA_MDCS_ANGLE_LIMIT,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_WIDTH,                                settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_HEIGHT,                               settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS,          settingNameWidth, settingValueWidth);
-#endif
 
   //------------------------------------------------
 

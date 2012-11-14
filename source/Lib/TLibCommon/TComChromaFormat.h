@@ -41,9 +41,7 @@
 #include <iostream>
 #include <vector>
 #include <assert.h>
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "Debug.h"
-#endif
 
 //======================================================================================================================
 //Chroma format utility functions  =====================================================================================
@@ -208,24 +206,6 @@ static inline UInt getScalingListCoeffIdx(const ChromaFormat chFmt, const Compon
     return (blkPos << 1);
   else
     return ( (blkPos & (~(tuWidth-1)))<<1) + (blkPos & (tuWidth-1));
-}
-
-
-//======================================================================================================================
-//TU scanning  =========================================================================================================
-//======================================================================================================================
-
-MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID component, const ChromaFormat format);
-
-//------------------------------------------------
-
-static inline UInt getMDCSAngleLimit(const ComponentID component)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return ((isLuma(component)) ? (ToolOptionList::LumaMDCSAngleLimit.getInt()) : (ToolOptionList::ChromaMDCSAngleLimit.getInt()));
-#else
-  return ((isLuma(component)) ? (RExt__LUMA_MDCS_ANGLE_LIMIT) : (RExt__CHROMA_MDCS_ANGLE_LIMIT));
-#endif
 }
 
 
