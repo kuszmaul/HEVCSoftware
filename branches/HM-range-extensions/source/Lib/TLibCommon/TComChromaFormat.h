@@ -175,28 +175,7 @@ static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrS
 
 static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chFmt)
 {
-  const UInt scalingTableIndex = Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP);
-
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-
-  if (ToolOptionList::AdditionalChromaQpMappingTables.getInt() != 0)
-  {
-    if      (chFmt==CHROMA_422) return g_aucChromaScale422[ scalingTableIndex ];
-    else if (chFmt==CHROMA_444) return g_aucChromaScale444[ scalingTableIndex ];
-  }
-  return g_aucChromaScale[ scalingTableIndex ];
-
-#elif (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1)
-
-  if      (chFmt==CHROMA_422) return g_aucChromaScale422[ scalingTableIndex ];
-  else if (chFmt==CHROMA_444) return g_aucChromaScale444[ scalingTableIndex ];
-  else                        return g_aucChromaScale   [ scalingTableIndex ];
-
-#elif (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 0)
-
-  return g_aucChromaScale[ scalingTableIndex ];
-
-#endif
+  return g_aucChromaScale[chFmt][Clip3(0, (chromaQPMappingTableSize - 1), unscaledChromaQP)];
 }
 
 

@@ -139,12 +139,7 @@ extern const TMatrixCoeff g_aiT32[32][32];
 
 static const Int chromaQPMappingTableSize = 58;
 
-extern const UChar  g_aucChromaScale      [chromaQPMappingTableSize];
-
-#ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
-extern const UChar  g_aucChromaScale422   [chromaQPMappingTableSize];
-extern const UChar  g_aucChromaScale444   [chromaQPMappingTableSize];
-#endif
+extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize];
 
 // ====================================================================================================================
 // Entropy Coding

@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::AdditionalChromaQpMappingTables                  ("RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES",                      "1", "0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma"                                                                                                                                         );
 EnvVar ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection ("RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION", "1", "0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)"                                                                                                                       );
 EnvVar ToolOptionList::Chroma422SignificanceMapContextGrid              ("RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID",                 "0", "[AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4"                                                      );
 EnvVar ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups  ("RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS",    "0", "0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups"                                                          );
@@ -176,9 +175,6 @@ Void printRExtMacroSettings()
 
   //setting macros
 
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES,                      settingNameWidth, settingValueWidth);
-#endif
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   PRINT_CONSTANT(RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION, settingNameWidth, settingValueWidth);
@@ -210,10 +206,6 @@ Void printRExtMacroSettings()
   //------------------------------------------------
 
   //derived macros
-
-#ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
-  std::cout << std::setw(settingNameWidth) << "RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES" << " is defined" << std::endl;
-#endif
 
 #ifdef RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
   std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;

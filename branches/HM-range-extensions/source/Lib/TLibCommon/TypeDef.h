@@ -284,12 +284,6 @@
 // Transform and Quantisation
 //------------------------------------------------
 
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              1 ///< 0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
-#endif
-
-//------------------
-
 //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
 
 #define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
@@ -353,10 +347,6 @@
 //------------------------------------------------
 // Derived Macros
 //------------------------------------------------
-
-#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1))
-#define RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
-#endif
 
 //if using fully unified or extended context variables, always use the luminance selection methods
 
