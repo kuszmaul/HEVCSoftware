@@ -102,8 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar Chroma422SignificanceMapContextGrid;
-  extern EnvVar PatternSigCtxMissingGroupsSameAsAvailableGroups;
   extern EnvVar LumaMDCSMode;
   extern EnvVar LumaMDCSAngleLimit;
   extern EnvVar LumaMDCSMaximumWidth;

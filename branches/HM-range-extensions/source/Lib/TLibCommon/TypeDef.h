@@ -164,7 +164,9 @@
 #define FAST_BIT_EST                                      1   ///< G763: Table-based bit estimation for CABAC
 
 #define MLS_GRP_NUM                                      64     ///< G644 : Max number of coefficient groups, max(16, 64)
-#define MLS_CG_SIZE                                       4      ///< G644 : Coefficient group size of 4x4
+#define MLS_CG_LOG2_WIDTH                                 2
+#define MLS_CG_LOG2_HEIGHT                                2
+#define MLS_CG_SIZE                                     (MLS_CG_LOG2_WIDTH + MLS_CG_LOG2_HEIGHT)  ///< G644 : Coefficient group size of 4x4
 
 #define ADAPTIVE_QP_SELECTION                             1      ///< G382: Adaptive reconstruction levels, non-normative part for adaptive QP selection
 #if ADAPTIVE_QP_SELECTION
@@ -291,13 +293,6 @@
 //------------------------------------------------
 // Context Variable Selection
 //------------------------------------------------
-
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID                         0 ///< [AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4
-  #define RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS            0 ///< 0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups
-#endif
-
-//------------------
 
 //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
 
@@ -732,33 +727,9 @@ struct TUEntropyCodingParameters
   const UInt            *scan;
   const UInt            *scanCG;
         COEFF_SCAN_TYPE  scanType;
-        UInt             log2GroupWidth;
-        UInt             log2GroupHeight;
         UInt             widthInGroups;
         UInt             heightInGroups;
         UInt             firstSignificanceMapContext;
-        Bool             useFixedGridSignificanceMapContext;
-
-        //------------------
-
-        struct FixedGridContextParameters
-        {
-          const UInt *grid;
-                UInt  stride;
-                UInt  widthScale;
-                UInt  heightScale;
-
-          Void initialise(const UInt *gridSource, const UInt log2GridWidth, const UInt log2GridHeight, const UInt log2TUWidth, const UInt log2TUHeight)
-          {
-            grid        = gridSource;
-            stride      = 1 << log2GridWidth;
-            widthScale  = log2TUWidth  - log2GridWidth;
-            heightScale = log2TUHeight - log2GridHeight;
-          }
-        }
-        fixedGridContextParameters;
-
-        //------------------
 };
 
 

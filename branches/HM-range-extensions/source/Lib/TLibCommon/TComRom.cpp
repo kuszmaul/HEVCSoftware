@@ -207,49 +207,38 @@ Void initROM()
 
       //grouped scan orders
 
-      for (UInt groupTypeIndex = SCAN_GROUPED_4x4; groupTypeIndex < SCAN_NUMBER_OF_GROUP_TYPES; groupTypeIndex++)
+      const UInt  groupWidth           = 1           << MLS_CG_LOG2_WIDTH;
+      const UInt  groupHeight          = 1           << MLS_CG_LOG2_HEIGHT;
+      const UInt  widthInGroups        = blockWidth  >> MLS_CG_LOG2_WIDTH;
+      const UInt  heightInGroups       = blockHeight >> MLS_CG_LOG2_HEIGHT;
+
+      const UInt  groupSize            = groupWidth    * groupHeight;
+      const UInt  totalGroups          = widthInGroups * heightInGroups;
+
+      for (UInt scanTypeIndex = 0; scanTypeIndex < SCAN_NUMBER_OF_TYPES; scanTypeIndex++)
       {
-        const COEFF_SCAN_GROUP_TYPE groupType = COEFF_SCAN_GROUP_TYPE(groupTypeIndex);
+        const COEFF_SCAN_TYPE scanType = COEFF_SCAN_TYPE(scanTypeIndex);
 
-        const UInt  groupHeightScale     = groupType - 1;
-        const UInt  maximumLog2GroupSize = MLS_CG_SIZE + groupHeightScale;
+        g_scanOrder[SCAN_GROUPED_4x4][scanType][log2BlockWidth][log2BlockHeight] = new UInt[totalValues];
 
-        const UInt  log2GroupWidth       = std::min<UInt>(log2BlockWidth,  ( maximumLog2GroupSize      >> 1)); //width rounds down and height rounds up so that, when using non-square
-        const UInt  log2GroupHeight      = std::min<UInt>(log2BlockHeight, ((maximumLog2GroupSize + 1) >> 1)); //coefficient groups, the groups will be double-high rather than double-wide
+        ScanGenerator fullBlockScan(widthInGroups, heightInGroups, groupWidth, scanType);
 
-        const UInt  groupWidth           = 1 << log2GroupWidth;
-        const UInt  groupHeight          = 1 << log2GroupHeight;
-        const UInt  widthInGroups        = blockWidth  >> log2GroupWidth;
-        const UInt  heightInGroups       = blockHeight >> log2GroupHeight;
-
-        const UInt  groupSize            = groupWidth    * groupHeight;
-        const UInt  totalGroups          = widthInGroups * heightInGroups;
-
-        for (UInt scanTypeIndex = 0; scanTypeIndex < SCAN_NUMBER_OF_TYPES; scanTypeIndex++)
+        for (UInt groupIndex = 0; groupIndex < totalGroups; groupIndex++)
         {
-          const COEFF_SCAN_TYPE scanType = COEFF_SCAN_TYPE(scanTypeIndex);
+          const UInt groupPositionY  = fullBlockScan.GetCurrentY();
+          const UInt groupPositionX  = fullBlockScan.GetCurrentX();
+          const UInt groupOffsetX    = groupPositionX * groupWidth;
+          const UInt groupOffsetY    = groupPositionY * groupHeight;
+          const UInt groupOffsetScan = groupIndex     * groupSize;
 
-          g_scanOrder[groupType][scanType][log2BlockWidth][log2BlockHeight] = new UInt[totalValues];
+          ScanGenerator groupScan(groupWidth, groupHeight, blockWidth, scanType);
 
-          ScanGenerator fullBlockScan(widthInGroups, heightInGroups, groupWidth, scanType);
-
-          for (UInt groupIndex = 0; groupIndex < totalGroups; groupIndex++)
+          for (UInt scanPosition = 0; scanPosition < groupSize; scanPosition++)
           {
-            const UInt groupPositionY  = fullBlockScan.GetCurrentY();
-            const UInt groupPositionX  = fullBlockScan.GetCurrentX();
-            const UInt groupOffsetX    = groupPositionX * groupWidth;
-            const UInt groupOffsetY    = groupPositionY * groupHeight;
-            const UInt groupOffsetScan = groupIndex     * groupSize;
-
-            ScanGenerator groupScan(groupWidth, groupHeight, blockWidth, scanType);
-
-            for (UInt scanPosition = 0; scanPosition < groupSize; scanPosition++)
-            {
-              g_scanOrder[groupType][scanType][log2BlockWidth][log2BlockHeight][groupOffsetScan + scanPosition] = groupScan.GetNextIndex(groupOffsetX, groupOffsetY);
-            }
-
-            fullBlockScan.GetNextIndex(0,0);
+            g_scanOrder[SCAN_GROUPED_4x4][scanType][log2BlockWidth][log2BlockHeight][groupOffsetScan + scanPosition] = groupScan.GetNextIndex(groupOffsetX, groupOffsetY);
           }
+
+          fullBlockScan.GetNextIndex(0,0);
         }
       }
 

@@ -149,8 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::Chroma422SignificanceMapContextGrid              ("RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID",                 "0", "[AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4"                                                      );
-EnvVar ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups  ("RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS",    "0", "0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups"                                                          );
 EnvVar ToolOptionList::LumaMDCSMode                                     ("RExt__LUMA_MDCS_MODE",                                           "3", "0 = MDCS disabled for luminance, 1 = Horizontal scan only, 2 = Vertical scan only, 3 (default) = Full MDCS (horizontal and vertical scans enabled)"                                                                                                                                                            );
 EnvVar ToolOptionList::LumaMDCSAngleLimit                               ("RExt__LUMA_MDCS_ANGLE_LIMIT",                                    "4", "(default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc..."                                                                                                                                                                                                 );
 EnvVar ToolOptionList::LumaMDCSMaximumWidth                             ("RExt__LUMA_MDCS_MAXIMUM_WIDTH",                                  "8", "(default 8) Luminance TUs with width greater than this can only use diagonal scan"                                                                                                                                                                                                                             );
@@ -175,10 +173,7 @@ Void printRExtMacroSettings()
   //setting macros
 
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS,    settingNameWidth, settingValueWidth);
-#endif
+
   //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
   PRINT_CONSTANT(RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION,              settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION,                 settingNameWidth, settingValueWidth);
