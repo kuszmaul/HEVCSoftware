@@ -231,51 +231,41 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       //------------------------------------------------
 
       //left column (bottom to top)
-      if (applyFilteredIntraReferenceSamples(chType, chFmt, 1))
-      {
+
 #if STRONG_INTRA_SMOOTHING
-        if (useStrongIntraSmoothing)
-        {
-          const Int shift = g_aucConvertToBit[uiTuHeight] + 3; //log2(uiTuHeight2)
+      if (useStrongIntraSmoothing)
+      {
+        const Int shift = g_aucConvertToBit[uiTuHeight] + 3; //log2(uiTuHeight2)
 
-          for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride)
-          {
-            *piDestPtr = (((uiTuHeight2 - i) * bottomLeft) + (i * topLeft) + uiTuHeight) >> shift;
-          }
-
-          piSrcPtr -= stride * (uiTuHeight2 - 1);
-        }
-        else
-#endif
+        for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride)
         {
-          for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride, piSrcPtr-=stride)
-          {
-            *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[-stride] + 2 ) >> 2;
-          }
+          *piDestPtr = (((uiTuHeight2 - i) * bottomLeft) + (i * topLeft) + uiTuHeight) >> shift;
         }
+
+        piSrcPtr -= stride * (uiTuHeight2 - 1);
       }
       else
+#endif
       {
         for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride, piSrcPtr-=stride)
         {
-          *piDestPtr = piSrcPtr[0];
+          *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[-stride] + 2 ) >> 2;
         }
       }
 
       //------------------------------------------------
       
       //top-left
+
 #if STRONG_INTRA_SMOOTHING
-      if ((!useStrongIntraSmoothing) && applyFilteredIntraReferenceSamples(chType, chFmt, 0))
-#else
-      if (applyFilteredIntraReferenceSamples(chType, chFmt, 0))
+      if (useStrongIntraSmoothing)
+      {
+        *piDestPtr = piSrcPtr[0];
+      }
+      else
 #endif
       {
         *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[1] + 2 ) >> 2;
-      }
-      else
-      {
-        *piDestPtr = piSrcPtr[0];
       }
       piDestPtr += 1;
       piSrcPtr  += 1;
@@ -283,34 +273,25 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       //------------------------------------------------
 
       //top row (left-to-right)
-      if (applyFilteredIntraReferenceSamples(chType, chFmt, 2))
-      {
+
 #if STRONG_INTRA_SMOOTHING
-        if (useStrongIntraSmoothing)
-        {
-          const Int shift = g_aucConvertToBit[uiTuWidth] + 3; //log2(uiTuWidth2)
+      if (useStrongIntraSmoothing)
+      {
+        const Int shift = g_aucConvertToBit[uiTuWidth] + 3; //log2(uiTuWidth2)
 
-          for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++)
-          {
-            *piDestPtr = (((uiTuWidth2 - i) * topLeft) + (i * topRight) + uiTuWidth) >> shift;
-          }
-
-          piSrcPtr += uiTuWidth2 - 1;
-        }
-        else
-#endif
+        for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++)
         {
-          for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++, piSrcPtr++)
-          {
-            *piDestPtr = ( piSrcPtr[1] + 2*piSrcPtr[0] + piSrcPtr[-1] + 2 ) >> 2;
-          }
+          *piDestPtr = (((uiTuWidth2 - i) * topLeft) + (i * topRight) + uiTuWidth) >> shift;
         }
+
+        piSrcPtr += uiTuWidth2 - 1;
       }
       else
+#endif
       {
         for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++, piSrcPtr++)
         {
-          *piDestPtr = piSrcPtr[0];
+          *piDestPtr = ( piSrcPtr[1] + 2*piSrcPtr[0] + piSrcPtr[-1] + 2 ) >> 2;
         }
       }
 
