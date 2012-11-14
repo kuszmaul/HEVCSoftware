@@ -141,55 +141,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 }
 
 
-//------------------------------------------------
-
-static inline FilterMode getIntraDCFilterMode(const ChannelType type, const ChromaFormat fmt, const UInt width, const UInt height)
-{
-#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
-  if ((width <= MAXIMUM_FILTERED_WIDTH) && (height <= MAXIMUM_FILTERED_HEIGHT))
-  {
-#endif
-    if (isLuma(type)) return FILTER_BOTH_DIRECTIONS;
-
-    switch (fmt)
-    {
-      case CHROMA_444:
-        {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-          if (ToolOptionList::SetIntraChromaDCFilter444.getInt() != 0) return FILTER_BOTH_DIRECTIONS;
-#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_444 == 1)
-          return FILTER_BOTH_DIRECTIONS;
-#endif //RExt__SET_INTRA_CHROMA_DC_FILTER_444 == 0 falls through to return FILTER_DISABLED
-        }
-        break;
-      
-      case CHROMA_422:
-        {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-          switch (ToolOptionList::SetIntraChromaDCFilter422.getInt())
-          {
-            case 2:  return FILTER_BOTH_DIRECTIONS; break;
-            case 1:  return FILTER_VERTICAL_ONLY;   break;
-            default: break;
-          }
-#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 2)
-          return FILTER_BOTH_DIRECTIONS;
-#elif (RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 1)
-          return FILTER_VERTICAL_ONLY;
-#endif //RExt__SET_INTRA_CHROMA_DC_FILTER_422 == 0 falls through to return FILTER_DISABLED
-        }
-        break;
-
-      default: break;
-    }
-#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
-  }
-#endif
-
-  return FILTER_DISABLED;
-}
-
-
 //======================================================================================================================
 //Inter prediction  ====================================================================================================
 //======================================================================================================================

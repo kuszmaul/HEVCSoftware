@@ -102,8 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar SetIntraChromaDCFilter422;
-  extern EnvVar SetIntraChromaDCFilter444;
   extern EnvVar UseLumaFilterForChromaQuarterSampleInterpolation;
   extern EnvVar EnableMDDTFor444Chroma;
   extern EnvVar SingleTransformSkipFlagForAllChannels444;
