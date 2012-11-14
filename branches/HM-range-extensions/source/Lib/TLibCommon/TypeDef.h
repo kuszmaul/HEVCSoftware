@@ -291,21 +291,6 @@
 #define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
 
 //------------------------------------------------
-// Context Variable Selection
-//------------------------------------------------
-
-//These settings cannot be defined using environment variables because they are used to set the size of static const arrays
-
-#define RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION                      1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION                         1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION                                 1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-#define RExt__CBF_CONTEXT_CHANNEL_SEPARATION                                   1 ///< 0 = All channels use the same context variables (using luma selection method), 1 (default) = Luminance separate from chrominance, 2 = All channels separate from each other
-
-#define RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT                         0 ///< [NO EFFECT (ALWAYS ON) IF RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION IS 0]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
-#define RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT                            0 ///< [NO EFFECT (ALWAYS ON) IF RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION IS 0   ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
-#define RExt__EXTENDED_CHROMA_C1_C2_CONTEXT                                    0 ///< [NO EFFECT (ALWAYS ON) IF RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION IS 0           ]  0 (default) = Chrominance uses standard context variables and selection method, 1 = Chrominance uses the same number of context variables and selection method as luminance
-
-//------------------------------------------------
 // MDCS
 //------------------------------------------------
 
@@ -329,25 +314,6 @@
 
 #define RExt__BACKWARDS_COMPATIBILITY_HM                                       0 ///< Maintain backwards compatibility with HM for certain non-standard test configuration settings
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
-
-//------------------------------------------------
-// Derived Macros
-//------------------------------------------------
-
-//if using fully unified or extended context variables, always use the luminance selection methods
-
-#if ((RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT == 1))
-#define RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
-#endif
-
-#if ((RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT == 1))
-#define RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
-#endif
-
-#if ((RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0) || (RExt__EXTENDED_CHROMA_C1_C2_CONTEXT == 1))
-#define RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
-#endif
-
 
 // ====================================================================================================================
 // Basic type redefinition

@@ -568,30 +568,6 @@ const UInt ctxIndMap4x4[4*4] =
   7, 7, 8, 8
 };
 
-#ifdef RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
-
-const UInt ctxIndMap4x8[4*8] =
-{
-  0, 1, 4, 5,
-  2, 1, 4, 5,
-  2, 3, 4, 5,
-  2, 3, 4, 5,
-  6, 6, 8, 8,
-  6, 6, 8, 8,
-  7, 7, 8, 8,
-  7, 7, 8, 8
-};
-
-const UInt ctxIndMap8x4[8*4] =
-{
-  0, 1, 1, 1, 4, 4, 5, 5,
-  2, 2, 3, 3, 4, 4, 5, 5,
-  6, 6, 6, 6, 8, 8, 8, 8,
-  7, 7, 7, 7, 8, 8, 8, 8
-};
-
-#endif
-
 const UInt g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ MAX_TU_SIZE ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
 

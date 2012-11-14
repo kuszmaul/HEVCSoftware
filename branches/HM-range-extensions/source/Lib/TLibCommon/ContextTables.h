@@ -46,7 +46,7 @@
 // Constants
 // ====================================================================================================================
 
-#define MAX_NUM_CTX_MOD            1024       ///< maximum number of supported contexts
+#define MAX_NUM_CTX_MOD             512       ///< maximum number of supported contexts
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
@@ -61,9 +61,7 @@
 #define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
 
 #define NUM_CHROMA_PRED_CTX           2       ///< number of context models for intra prediction (chroma)
-
 #define NUM_INTER_DIR_CTX             5       ///< number of context models for inter prediction direction
-
 #define NUM_MV_RES_CTX                2       ///< number of context models for motion vector difference
 
 #define NUM_REF_NO_CTX                2       ///< number of context models for reference index
@@ -77,31 +75,14 @@
 
 // context size definitions for significance map
 
-#define NUM_SIG_FLAG_CTX_LUMA        27      ///< number of context models for luma sig flag
-
-//------------------
-
-#ifdef RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
-
-#define NUM_SIG_FLAG_CTX_CHROMA        NUM_SIG_FLAG_CTX_LUMA  ///< number of context models for chroma sig flag
-
-//                                                                                                           |--Luma---|  |-Chroma--|
-static const UInt significanceMapContextSetStart         [MAX_NUM_CHANNEL_TYPE][CONTEXT_NUMBER_OF_TYPES] = { {0,  9, 21}, {0,  9, 21} };
-static const UInt significanceMapContextSetSize          [MAX_NUM_CHANNEL_TYPE][CONTEXT_NUMBER_OF_TYPES] = { {9, 12,  6}, {9, 12,  6} };
-static const UInt nonDiagonalScan8x8ContextOffset        [MAX_NUM_CHANNEL_TYPE]                          = {  6,           6          };
-static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE]                          = {  3,           3          };
-
-#else
-
-#define NUM_SIG_FLAG_CTX_CHROMA        15                     ///< number of context models for chroma sig flag
+#define NUM_SIG_FLAG_CTX_LUMA        27       ///< number of context models for luma sig flag
+#define NUM_SIG_FLAG_CTX_CHROMA      15       ///< number of context models for chroma sig flag
 
 //                                                                                                           |--Luma---|  |-Chroma--|
 static const UInt significanceMapContextSetStart         [MAX_NUM_CHANNEL_TYPE][CONTEXT_NUMBER_OF_TYPES] = { {0,  9, 21}, {0,  9, 12} };
 static const UInt significanceMapContextSetSize          [MAX_NUM_CHANNEL_TYPE][CONTEXT_NUMBER_OF_TYPES] = { {9, 12,  6}, {9,  3,  3} };
 static const UInt nonDiagonalScan8x8ContextOffset        [MAX_NUM_CHANNEL_TYPE]                          = {  6,           0          };
 static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE]                          = {  3,           0          };
-
-#endif
 
 //------------------
 
@@ -111,31 +92,15 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 //------------------
 
 #define FIRST_SIG_FLAG_CTX_LUMA                   0
-
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-
-#define FIRST_SIG_FLAG_CTX_CB         (FIRST_SIG_FLAG_CTX_LUMA + NUM_SIG_FLAG_CTX_LUMA)
-#define FIRST_SIG_FLAG_CTX_CR         (FIRST_SIG_FLAG_CTX_CB + NUM_SIG_FLAG_CTX_CHROMA)
-
-#define NUM_SIG_FLAG_CTX              (NUM_SIG_FLAG_CTX_LUMA + (2 * NUM_SIG_FLAG_CTX_CHROMA)) ///< number of context models for sig flag
-
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
-
 #define FIRST_SIG_FLAG_CTX_CHROMA     (FIRST_SIG_FLAG_CTX_LUMA + NUM_SIG_FLAG_CTX_LUMA)
 
 #define NUM_SIG_FLAG_CTX              (NUM_SIG_FLAG_CTX_LUMA + NUM_SIG_FLAG_CTX_CHROMA)       ///< number of context models for sig flag
-
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-
-#define NUM_SIG_FLAG_CTX              (NUM_SIG_FLAG_CTX_LUMA)
-
-#endif
 
 //--------------------------------------------------------------------------------------------------
 
 // context size definitions for last significant coefficient position
 
-#define NUM_CTX_LAST_FLAG_SETS        (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION + 1)
+#define NUM_CTX_LAST_FLAG_SETS         2
 
 #define NUM_CTX_LAST_FLAG_XY          15      ///< number of context models for last coefficient position
 
@@ -149,11 +114,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 //------------------
 
 #define NUM_CTX_SETS_LUMA              4      ///< number of context model sets for luminance
-#ifdef RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
-#define NUM_CTX_SETS_CHROMA            4      ///< number of context model sets for combined chrominance
-#else
 #define NUM_CTX_SETS_CHROMA            2      ///< number of context model sets for combined chrominance
-#endif
 
 #define FIRST_CTX_SET_LUMA             0      ///< index of first luminance context set
 
@@ -165,51 +126,23 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_ABS_FLAG_CTX_LUMA         (NUM_ABS_FLAG_CTX_PER_SET * NUM_CTX_SETS_LUMA)           ///< number of context models for greater than 2 flag of luma
 #define NUM_ABS_FLAG_CTX_CHROMA       (NUM_ABS_FLAG_CTX_PER_SET * NUM_CTX_SETS_CHROMA)         ///< number of context models for greater than 2 flag of chroma
 
-//------------------
-
-#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
-
-#define NUM_ONE_FLAG_CTX              (NUM_ONE_FLAG_CTX_LUMA + (2 * NUM_ONE_FLAG_CTX_CHROMA))  ///< number of context models for greater than 1 flag
-#define NUM_ABS_FLAG_CTX              (NUM_ABS_FLAG_CTX_LUMA + (2 * NUM_ABS_FLAG_CTX_CHROMA))  ///< number of context models for greater than 2 flag
-
-#define FIRST_CTX_SET_CB              (FIRST_CTX_SET_LUMA + NUM_CTX_SETS_LUMA)                 ///< index of first chrominance context set
-#define FIRST_CTX_SET_CR              (FIRST_CTX_SET_CB + NUM_CTX_SETS_CHROMA)                 ///< index of first chrominance context set
-
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
-
 #define NUM_ONE_FLAG_CTX              (NUM_ONE_FLAG_CTX_LUMA + NUM_ONE_FLAG_CTX_CHROMA)        ///< number of context models for greater than 1 flag 
 #define NUM_ABS_FLAG_CTX              (NUM_ABS_FLAG_CTX_LUMA + NUM_ABS_FLAG_CTX_CHROMA)        ///< number of context models for greater than 2 flag
 
 #define FIRST_CTX_SET_CHROMA          (FIRST_CTX_SET_LUMA + NUM_CTX_SETS_LUMA)                 ///< index of first chrominance context set
 
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
-
-#define NUM_ONE_FLAG_CTX              (NUM_ONE_FLAG_CTX_LUMA)                                  ///< number of context models for greater than 1 flag 
-#define NUM_ABS_FLAG_CTX              (NUM_ABS_FLAG_CTX_LUMA)                                  ///< number of context models for greater than 2 flag
-
-#endif
-
 //--------------------------------------------------------------------------------------------------
 
 // context size definitions for CBF
 
-#define NUM_QT_CBF_CTX_SETS           (RExt__CBF_CONTEXT_CHANNEL_SEPARATION + 1)
+#define NUM_QT_CBF_CTX_SETS           2
 
 #define NUM_QT_CBF_CTX_PER_SET        5       ///< number of context models for QT CBF
 
 #define FIRST_CBF_CTX_LUMA            0       ///< index of first luminance CBF context
 
-
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-
-#define FIRST_CBF_CTX_CB              (FIRST_CBF_CTX_LUMA + NUM_QT_CBF_CTX_PER_SET)  ///< index of first Cb CBF context
-#define FIRST_CBF_CTX_CR              (FIRST_CBF_CTX_CB   + NUM_QT_CBF_CTX_PER_SET)  ///< index of first Cr CBF context
-
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
-
 #define FIRST_CBF_CTX_CHROMA          (FIRST_CBF_CTX_LUMA + NUM_QT_CBF_CTX_PER_SET)  ///< index of first chrominance CBF context
 
-#endif
 
 //--------------------------------------------------------------------------------------------------
 
@@ -219,9 +152,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_SAO_TYPE_IDX_CTX          1       ///< number of context models for SAO type index
 
 #define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping 
-
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
-
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 // ====================================================================================================================
@@ -359,19 +290,9 @@ INIT_DQP[NUMBER_OF_SLICE_TYPES][NUM_DELTA_QP_CTX] =
 static const UChar 
 INIT_QT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_CBF_CTX_SETS * NUM_QT_CBF_CTX_PER_SET] =
 {
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-  { BSLICE_LUMA_CBF_CONTEXT, BSLICE_CHROMA_CBF_CONTEXT, BSLICE_CHROMA_CBF_CONTEXT },
-  { PSLICE_LUMA_CBF_CONTEXT, PSLICE_CHROMA_CBF_CONTEXT, PSLICE_CHROMA_CBF_CONTEXT },
-  { ISLICE_LUMA_CBF_CONTEXT, ISLICE_CHROMA_CBF_CONTEXT, ISLICE_CHROMA_CBF_CONTEXT },
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
   { BSLICE_LUMA_CBF_CONTEXT, BSLICE_CHROMA_CBF_CONTEXT },
   { PSLICE_LUMA_CBF_CONTEXT, PSLICE_CHROMA_CBF_CONTEXT },
   { ISLICE_LUMA_CBF_CONTEXT, ISLICE_CHROMA_CBF_CONTEXT },
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
-  { BSLICE_LUMA_CBF_CONTEXT },
-  { PSLICE_LUMA_CBF_CONTEXT },
-  { ISLICE_LUMA_CBF_CONTEXT },
-#endif
 };
 
 
@@ -395,27 +316,17 @@ INIT_QT_ROOT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_ROOT_CBF_CTX] =
 #define PSLICE_LUMA_LAST_POSITION_CONTEXT     125, 110,  94, 110,  95,  79, 125, 111, 110,  78, 110, 111, 111,  95,  94
 #define ISLICE_LUMA_LAST_POSITION_CONTEXT     110, 110, 124, 125, 140, 153, 125, 127, 140, 109, 111, 143, 127, 111,  79
 //                                           |------------------------------Chrominance--------------------------------|
-#define BSLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123,  93, 110,  95,  94, 125, 111, 111,  79, 125, 126, 111, 111,  79
-#define PSLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123, 108, 110,  95,  79, 125, 111, 110,  78, 110, 111, 111,  95,  94
-#define ISLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123,  63, 110, 140, 153, 125, 127, 140, 109, 111, 143, 127, 111,  79
+#define BSLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123,  93, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+#define PSLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123, 108, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+#define ISLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123,  63, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
 
 
 static const UChar 
 INIT_LAST[NUMBER_OF_SLICE_TYPES][NUM_CTX_LAST_FLAG_SETS * NUM_CTX_LAST_FLAG_XY] =
 {
-#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
-  { BSLICE_LUMA_LAST_POSITION_CONTEXT, BSLICE_CHROMA_LAST_POSITION_CONTEXT, BSLICE_CHROMA_LAST_POSITION_CONTEXT },
-  { PSLICE_LUMA_LAST_POSITION_CONTEXT, PSLICE_CHROMA_LAST_POSITION_CONTEXT, PSLICE_CHROMA_LAST_POSITION_CONTEXT },
-  { ISLICE_LUMA_LAST_POSITION_CONTEXT, ISLICE_CHROMA_LAST_POSITION_CONTEXT, ISLICE_CHROMA_LAST_POSITION_CONTEXT },
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   { BSLICE_LUMA_LAST_POSITION_CONTEXT, BSLICE_CHROMA_LAST_POSITION_CONTEXT },
   { PSLICE_LUMA_LAST_POSITION_CONTEXT, PSLICE_CHROMA_LAST_POSITION_CONTEXT },
   { ISLICE_LUMA_LAST_POSITION_CONTEXT, ISLICE_CHROMA_LAST_POSITION_CONTEXT },
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
-  { BSLICE_LUMA_LAST_POSITION_CONTEXT },
-  { PSLICE_LUMA_LAST_POSITION_CONTEXT },
-  { ISLICE_LUMA_LAST_POSITION_CONTEXT },
-#endif
 };
 
 
@@ -446,37 +357,19 @@ INIT_SIG_CG_FLAG[NUMBER_OF_SLICE_TYPES][2 * NUM_SIG_CG_FLAG_CTX] =
 #define PSLICE_LUMA_SIGNIFICANCE_CONTEXT     155,    154, 139, 153, 139, 123, 123,  63, 153,   166, 183, 140,  136, 153, 154,   166, 183, 140,  136, 153, 154,   166,   183,   140,   136,   153,   154
 #define ISLICE_LUMA_SIGNIFICANCE_CONTEXT     111,    111, 125, 110, 110,  94, 124, 108, 124,   107, 125, 141,  179, 153, 125,   107, 125, 141,  179, 153, 125,   107,   125,   141,   179,   153,   125
 
-#if   (RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT == 1)
-  //                                          |-DC-|  |-----------------4x4------------------|  |------8x8 Diagonal Scan------|  |----8x8 Non-Diagonal Scan----|  |-NxN First group-|  |-NxN Other group-|
-  //                                          |    |  |                                      |  |-First Group-| |-Other Group-|  |-First Group-| |-Other Group-|  |                 |  |                 |
-  #define BSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 138, 138, 122, 121, 122, 121, 167,   151, 183, 140,  151, 183, 140,   151, 183, 140,  151, 183, 140,   151,   183,   140,   151,   183,   140
-  #define PSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 123, 123, 107, 121, 107, 121, 167,   151, 183, 140,  151, 183, 140,   151, 183, 140,  151, 183, 140,   151,   183,   140,   151,   183,   140
-  #define ISLICE_CHROMA_SIGNIFICANCE_CONTEXT   140,    139, 182, 182, 152, 136, 152, 136, 153,   136, 139, 111,  136, 139, 111,   136, 139, 111,  136, 139, 111,   136,   139,   111,   136,   139,   111
-#elif (RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT == 0)
-  //                                          |-DC-|  |-----------------4x4------------------|  |-8x8 Any group-|  |-NxN Any group-|
-  #define BSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 138, 138, 122, 121, 122, 121, 167,   151,  183,  140,   151,  183,  140
-  #define PSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 123, 123, 107, 121, 107, 121, 167,   151,  183,  140,   151,  183,  140
-  #define ISLICE_CHROMA_SIGNIFICANCE_CONTEXT   140,    139, 182, 182, 152, 136, 152, 136, 153,   136,  139,  111,   136,  139,  111
-#endif
+//                                          |-DC-|  |-----------------4x4------------------|  |-8x8 Any group-|  |-NxN Any group-|
+#define BSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 138, 138, 122, 121, 122, 121, 167,   151,  183,  140,   151,  183,  140
+#define PSLICE_CHROMA_SIGNIFICANCE_CONTEXT   170,    153, 123, 123, 107, 121, 107, 121, 167,   151,  183,  140,   151,  183,  140
+#define ISLICE_CHROMA_SIGNIFICANCE_CONTEXT   140,    139, 182, 182, 152, 136, 152, 136, 153,   136,  139,  111,   136,  139,  111
 
 //------------------------------------------------
 
 static const UChar 
 INIT_SIG_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SIG_FLAG_CTX] =
 {
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-  { BSLICE_LUMA_SIGNIFICANCE_CONTEXT, BSLICE_CHROMA_SIGNIFICANCE_CONTEXT, BSLICE_CHROMA_SIGNIFICANCE_CONTEXT },
-  { PSLICE_LUMA_SIGNIFICANCE_CONTEXT, PSLICE_CHROMA_SIGNIFICANCE_CONTEXT, PSLICE_CHROMA_SIGNIFICANCE_CONTEXT },
-  { ISLICE_LUMA_SIGNIFICANCE_CONTEXT, ISLICE_CHROMA_SIGNIFICANCE_CONTEXT, ISLICE_CHROMA_SIGNIFICANCE_CONTEXT },
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
   { BSLICE_LUMA_SIGNIFICANCE_CONTEXT, BSLICE_CHROMA_SIGNIFICANCE_CONTEXT },
   { PSLICE_LUMA_SIGNIFICANCE_CONTEXT, PSLICE_CHROMA_SIGNIFICANCE_CONTEXT },
   { ISLICE_LUMA_SIGNIFICANCE_CONTEXT, ISLICE_CHROMA_SIGNIFICANCE_CONTEXT },
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-  { BSLICE_LUMA_SIGNIFICANCE_CONTEXT },
-  { PSLICE_LUMA_SIGNIFICANCE_CONTEXT },
-  { ISLICE_LUMA_SIGNIFICANCE_CONTEXT },
-#endif
 };
 
 
@@ -493,64 +386,32 @@ INIT_SIG_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SIG_FLAG_CTX] =
 #define PSLICE_LUMA_ABS_CONTEXT     107,                 167,                  91,                 122
 #define ISLICE_LUMA_ABS_CONTEXT     138,                 153,                 136,                 167
 
-#if   (RExt__EXTENDED_CHROMA_C1_C2_CONTEXT == 1)
-  //                                 |------Set 4-------| |------Set 5-------| |------Set 6-------| |------Set 7-------|
-  #define BSLICE_CHROMA_ONE_CONTEXT   169, 208, 166, 167,  154, 152, 167, 182,  169, 208, 166, 167,  154, 152, 167, 182
-  #define PSLICE_CHROMA_ONE_CONTEXT   169, 194, 166, 167,  154, 167, 137, 182,  169, 194, 166, 167,  154, 167, 137, 182
-  #define ISLICE_CHROMA_ONE_CONTEXT   140, 179, 166, 182,  140, 227, 122, 197,  140, 179, 166, 182,  140, 227, 122, 197
+//                                 |------Set 4-------| |------Set 5-------|
+#define BSLICE_CHROMA_ONE_CONTEXT   169, 208, 166, 167,  154, 152, 167, 182
+#define PSLICE_CHROMA_ONE_CONTEXT   169, 194, 166, 167,  154, 167, 137, 182
+#define ISLICE_CHROMA_ONE_CONTEXT   140, 179, 166, 182,  140, 227, 122, 197
 
-  #define BSLICE_CHROMA_ABS_CONTEXT   107,                 167,                 107,                 167
-  #define PSLICE_CHROMA_ABS_CONTEXT   107,                 167,                 107,                 167
-  #define ISLICE_CHROMA_ABS_CONTEXT   152,                 152,                 152,                 152
+#define BSLICE_CHROMA_ABS_CONTEXT   107,                 167
+#define PSLICE_CHROMA_ABS_CONTEXT   107,                 167
+#define ISLICE_CHROMA_ABS_CONTEXT   152,                 152
 
-#elif (RExt__EXTENDED_CHROMA_C1_C2_CONTEXT == 0)
-  //                                 |------Set 4-------| |------Set 5-------|
-  #define BSLICE_CHROMA_ONE_CONTEXT   169, 208, 166, 167,  154, 152, 167, 182
-  #define PSLICE_CHROMA_ONE_CONTEXT   169, 194, 166, 167,  154, 167, 137, 182
-  #define ISLICE_CHROMA_ONE_CONTEXT   140, 179, 166, 182,  140, 227, 122, 197
-
-  #define BSLICE_CHROMA_ABS_CONTEXT   107,                 167
-  #define PSLICE_CHROMA_ABS_CONTEXT   107,                 167
-  #define ISLICE_CHROMA_ABS_CONTEXT   152,                 152
-
-#endif
 
 //------------------------------------------------
 
 static const UChar 
 INIT_ONE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ONE_FLAG_CTX] =
 {
-#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
-  { BSLICE_LUMA_ONE_CONTEXT, BSLICE_CHROMA_ONE_CONTEXT, BSLICE_CHROMA_ONE_CONTEXT },
-  { PSLICE_LUMA_ONE_CONTEXT, PSLICE_CHROMA_ONE_CONTEXT, PSLICE_CHROMA_ONE_CONTEXT },
-  { ISLICE_LUMA_ONE_CONTEXT, ISLICE_CHROMA_ONE_CONTEXT, ISLICE_CHROMA_ONE_CONTEXT },
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
   { BSLICE_LUMA_ONE_CONTEXT, BSLICE_CHROMA_ONE_CONTEXT },
   { PSLICE_LUMA_ONE_CONTEXT, PSLICE_CHROMA_ONE_CONTEXT },
   { ISLICE_LUMA_ONE_CONTEXT, ISLICE_CHROMA_ONE_CONTEXT },
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
-  { BSLICE_LUMA_ONE_CONTEXT },
-  { PSLICE_LUMA_ONE_CONTEXT },
-  { ISLICE_LUMA_ONE_CONTEXT },
-#endif
 };
 
 static const UChar 
 INIT_ABS_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ABS_FLAG_CTX] =
 {
-#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
-  { BSLICE_LUMA_ABS_CONTEXT, BSLICE_CHROMA_ABS_CONTEXT, BSLICE_CHROMA_ABS_CONTEXT },
-  { PSLICE_LUMA_ABS_CONTEXT, PSLICE_CHROMA_ABS_CONTEXT, PSLICE_CHROMA_ABS_CONTEXT },
-  { ISLICE_LUMA_ABS_CONTEXT, ISLICE_CHROMA_ABS_CONTEXT, ISLICE_CHROMA_ABS_CONTEXT },
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
   { BSLICE_LUMA_ABS_CONTEXT, BSLICE_CHROMA_ABS_CONTEXT },
   { PSLICE_LUMA_ABS_CONTEXT, PSLICE_CHROMA_ABS_CONTEXT },
   { ISLICE_LUMA_ABS_CONTEXT, ISLICE_CHROMA_ABS_CONTEXT },
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
-  { BSLICE_LUMA_ABS_CONTEXT },
-  { PSLICE_LUMA_ABS_CONTEXT },
-  { ISLICE_LUMA_ABS_CONTEXT },
-#endif
 };
 
 

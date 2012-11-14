@@ -235,23 +235,9 @@ static inline UInt getMDCSAngleLimit(const ComponentID component)
 
 //context variable source tables
 
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-static const UInt significanceMapContextStartTable[MAX_NUM_COMPONENT]    = {FIRST_SIG_FLAG_CTX_LUMA, FIRST_SIG_FLAG_CTX_CB, FIRST_SIG_FLAG_CTX_CR};
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
 static const UInt significanceMapContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_SIG_FLAG_CTX_LUMA, FIRST_SIG_FLAG_CTX_CHROMA};
-#endif
-
-#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
-static const UInt contextSetStartTable[MAX_NUM_COMPONENT]    = {FIRST_CTX_SET_LUMA, FIRST_CTX_SET_CB, FIRST_CTX_SET_CR};
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
-static const UInt contextSetStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CTX_SET_LUMA, FIRST_CTX_SET_CHROMA};
-#endif
-
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-static const UInt CBFContextStartTable[MAX_NUM_COMPONENT]    = {FIRST_CBF_CTX_LUMA, FIRST_CBF_CTX_CB, FIRST_CBF_CTX_CR};
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
-static const UInt CBFContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CBF_CTX_LUMA, FIRST_CBF_CTX_CHROMA};
-#endif
+static const UInt contextSetStartTable            [MAX_NUM_CHANNEL_TYPE] = {FIRST_CTX_SET_LUMA,      FIRST_CTX_SET_CHROMA     };
+static const UInt CBFContextStartTable            [MAX_NUM_CHANNEL_TYPE] = {FIRST_CBF_CTX_LUMA,      FIRST_CBF_CTX_CHROMA     };
 
 
 //------------------------------------------------
@@ -269,17 +255,10 @@ static inline Void getLastSignificantContextParameters (const ComponentID  compo
   const UInt convertedWidth  = g_aucConvertToBit[width];
   const UInt convertedHeight = g_aucConvertToBit[height];
 
-#ifdef RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
-  result_offsetX = ((convertedWidth  * 3) + ((convertedWidth  + 1) >> 2));
-  result_offsetY = ((convertedHeight * 3) + ((convertedHeight + 1) >> 2));
-  result_shiftX  = ((convertedWidth  + 3) >> 2);
-  result_shiftY  = ((convertedHeight + 3) >> 2);
-#else
   result_offsetX = (isChroma(component)) ? 0               : ((convertedWidth  * 3) + ((convertedWidth  + 1) >> 2));
   result_offsetY = (isChroma(component)) ? 0               : ((convertedHeight * 3) + ((convertedHeight + 1) >> 2));
   result_shiftX  = (isChroma(component)) ? convertedWidth  : ((convertedWidth  + 3) >> 2);
   result_shiftY  = (isChroma(component)) ? convertedHeight : ((convertedHeight + 3) >> 2);
-#endif
 }
 
 
@@ -289,13 +268,7 @@ static inline Void getLastSignificantContextParameters (const ComponentID  compo
 
 static inline UInt getSignificanceMapContextOffset (const ComponentID component)
 {
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-  return significanceMapContextStartTable[component];
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
   return significanceMapContextStartTable[toChannelType(component)];
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-  return FIRST_SIG_FLAG_CTX_LUMA;
-#endif
 }
 
 
@@ -307,27 +280,10 @@ static inline UInt getContextSetIndex (const ComponentID  component,
                                        const UInt         subsetIndex,
                                        const Bool         foundACoefficientGreaterThan1)
 {
-  //------------------
+  const UInt notFirstSubsetOffset     = (isLuma(component) && (subsetIndex > 0)) ? 2 : 0;
+  const UInt foundAGreaterThan1Offset = foundACoefficientGreaterThan1            ? 1 : 0;
 
-#if   (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 2)
-  UInt contextSetIndex = contextSetStartTable[component];
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 1)
-  UInt contextSetIndex = contextSetStartTable[toChannelType(component)];
-#elif (RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION == 0)
-  UInt contextSetIndex = FIRST_CTX_SET_LUMA;
-#endif
-
-  //------------------
-
-#ifdef RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
-  if                       (subsetIndex > 0)  contextSetIndex += 2;
-#else
-  if (isLuma(component) && (subsetIndex > 0)) contextSetIndex += 2;
-#endif
-
-  //------------------
-
-  return ((foundACoefficientGreaterThan1) ? (contextSetIndex + 1) : (contextSetIndex));
+  return contextSetStartTable[toChannelType(component)] + notFirstSubsetOffset + foundAGreaterThan1Offset;
 }
 
 
@@ -337,13 +293,7 @@ static inline UInt getContextSetIndex (const ComponentID  component,
 
 static inline UInt getCBFContextOffset (const ComponentID component)
 {
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-  return CBFContextStartTable[component];
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
   return CBFContextStartTable[toChannelType(component)];
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
-  return FIRST_CBF_CTX_LUMA;
-#endif
 }
 
 

@@ -2505,13 +2505,7 @@ __inline Double TComTrQuant::xGetRateLast   ( const UInt                      ui
   UInt uiCtxX   = g_uiGroupIdx[uiPosX];
   UInt uiCtxY   = g_uiGroupIdx[uiPosY];
 
-#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
-  Double uiCost = m_pcEstBitsSbac->lastXBits[component][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[component][ uiCtxY ];
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   Double uiCost = m_pcEstBitsSbac->lastXBits[toChannelType(component)][ uiCtxX ] + m_pcEstBitsSbac->lastYBits[toChannelType(component)][ uiCtxY ];
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
-  Double uiCost = m_pcEstBitsSbac->lastXBits[ uiCtxX ] + m_pcEstBitsSbac->lastYBits[ uiCtxY ];
-#endif
 
   if( uiCtxX > 3 )
   {

@@ -175,13 +175,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
 
   //These settings cannot be defined using environment variables because they are used to set the size of static const arrays
-  PRINT_CONSTANT(RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION,              settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__C1_C2_CONTEXT_CHANNEL_SEPARATION,                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CBF_CONTEXT_CHANNEL_SEPARATION,                           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_LAST_POSITION_CONTEXT,                    settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__EXTENDED_CHROMA_C1_C2_CONTEXT,                            settingNameWidth, settingValueWidth);
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   PRINT_CONSTANT(RExt__LUMA_MDCS_MODE,                                           settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__LUMA_MDCS_ANGLE_LIMIT,                                    settingNameWidth, settingValueWidth);
@@ -192,24 +185,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_WIDTH,                                settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__CHROMA_MDCS_MAXIMUM_HEIGHT,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS,          settingNameWidth, settingValueWidth);
-#endif
-
-  std::cout << std::endl;
-
-  //------------------------------------------------
-
-  //derived macros
-
-#ifdef RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_SIGNIFICANCE_MAP_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
-#endif
-
-#ifdef RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_LAST_POSITION_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
-#endif
-
-#ifdef RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA
-  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_C1_C2_CONTEXT_SAME_AS_LUMA" << " is defined" << std::endl;
 #endif
 
   //------------------------------------------------

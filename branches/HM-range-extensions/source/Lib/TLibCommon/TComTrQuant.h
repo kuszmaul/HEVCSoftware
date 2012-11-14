@@ -61,16 +61,8 @@ typedef struct
 {
   Int significantCoeffGroupBits[NUM_SIG_CG_FLAG_CTX][2 /*Flag = [0|1]*/];
   Int significantBits[NUM_SIG_FLAG_CTX][2 /*Flag = [0|1]*/];
-#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
-  Int lastXBits[MAX_NUM_COMPONENT][LAST_SIGNIFICANT_GROUPS];
-  Int lastYBits[MAX_NUM_COMPONENT][LAST_SIGNIFICANT_GROUPS];
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   Int lastXBits[MAX_NUM_CHANNEL_TYPE][LAST_SIGNIFICANT_GROUPS];
   Int lastYBits[MAX_NUM_CHANNEL_TYPE][LAST_SIGNIFICANT_GROUPS];
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
-  Int lastXBits[LAST_SIGNIFICANT_GROUPS];
-  Int lastYBits[LAST_SIGNIFICANT_GROUPS];
-#endif
   Int m_greaterOneBits[NUM_ONE_FLAG_CTX][2 /*Flag = [0|1]*/];
   Int m_levelAbsBits[NUM_ABS_FLAG_CTX][2 /*Flag = [0|1]*/];
 
