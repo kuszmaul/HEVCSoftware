@@ -151,10 +151,9 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   //set the local parameters
 
-  const UInt        log2BlockWidth    = g_aucConvertToBit[width]  + 2;
-  const UInt        log2BlockHeight   = g_aucConvertToBit[height] + 2;
-  const UInt        log2GroupSize     = MLS_CG_SIZE;
-  const ChannelType channelType       = toChannelType(component);
+  const UInt        log2BlockWidth  = g_aucConvertToBit[width]  + 2;
+  const UInt        log2BlockHeight = g_aucConvertToBit[height] + 2;
+  const ChannelType channelType     = toChannelType(component);
 
   result.scanType = ((uiScanIdx == SCAN_ZIGZAG) ? SCAN_DIAG : COEFF_SCAN_TYPE(uiScanIdx));
   
@@ -162,10 +161,8 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   //set the group layout
 
-  result.log2GroupWidth  = std::min<UInt>(log2BlockWidth,  ( log2GroupSize      >> 1));   //width rounds down and height rounds up so that, when using non-square
-  result.log2GroupHeight = std::min<UInt>(log2BlockHeight, ((log2GroupSize + 1) >> 1));   //coefficient groups, the groups will be double-high rather than double-wide
-  result.widthInGroups  = width  >> result.log2GroupWidth;
-  result.heightInGroups = height >> result.log2GroupHeight;
+  result.widthInGroups  = width  >> MLS_CG_LOG2_WIDTH;
+  result.heightInGroups = height >> MLS_CG_LOG2_HEIGHT;
 
   //------------------------------------------------
 
@@ -174,36 +171,25 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const UInt log2WidthInGroups  = g_aucConvertToBit[result.widthInGroups  * 4];
   const UInt log2HeightInGroups = g_aucConvertToBit[result.heightInGroups * 4];
 
-  const UInt groupType          = SCAN_GROUPED_4x4;
-
-  result.scan   = g_scanOrder[ groupType      ][ result.scanType ][ log2BlockWidth    ][ log2BlockHeight    ];
-  result.scanCG = g_scanOrder[ SCAN_UNGROUPED ][ result.scanType ][ log2WidthInGroups ][ log2HeightInGroups ];
+  result.scan   = g_scanOrder[ SCAN_GROUPED_4x4 ][ result.scanType ][ log2BlockWidth    ][ log2BlockHeight    ];
+  result.scanCG = g_scanOrder[ SCAN_UNGROUPED   ][ result.scanType ][ log2WidthInGroups ][ log2HeightInGroups ];
 
   //------------------------------------------------
 
   //set the significance map context selection parameters
 
-  if (((width == 4) && (height == 4)) || (fixed422SignificanceMapContext() && (((width == 4) && (height == 8)) || ((width == 8) && (height == 4)))))
+  if ((width == 4) && (height == 4))
   {
-    result.firstSignificanceMapContext        = significanceMapContextSetStart[channelType][CONTEXT_TYPE_4x4];
-    result.useFixedGridSignificanceMapContext = true;
-    if ((width != height) && separateDC422SignificanceMapContext())
-    {
-      if      (height == 8) result.fixedGridContextParameters.initialise(ctxIndMap4x8, 2, 3, log2BlockWidth, log2BlockHeight);
-      else if (width  == 8) result.fixedGridContextParameters.initialise(ctxIndMap8x4, 3, 2, log2BlockWidth, log2BlockHeight);
-    }
-    else result.fixedGridContextParameters.initialise(ctxIndMap4x4, 2, 2, log2BlockWidth, log2BlockHeight);
+    result.firstSignificanceMapContext = significanceMapContextSetStart[channelType][CONTEXT_TYPE_4x4];
   }
-  else if (((width == 8) && (height == 8)) || (fixed422SignificanceMapContext() && (((width == 8) && (height == 16)) || ((width == 16) && (height == 8)))))
+  else if ((width == 8) && (height == 8))
   {
-    result.firstSignificanceMapContext        = significanceMapContextSetStart[channelType][CONTEXT_TYPE_8x8];
-    result.useFixedGridSignificanceMapContext = false;
+    result.firstSignificanceMapContext = significanceMapContextSetStart[channelType][CONTEXT_TYPE_8x8];
     if (result.scanType != SCAN_DIAG) result.firstSignificanceMapContext += nonDiagonalScan8x8ContextOffset[channelType];
   }
   else
   {
-    result.firstSignificanceMapContext        = significanceMapContextSetStart[channelType][CONTEXT_TYPE_NxN];
-    result.useFixedGridSignificanceMapContext = false;
+    result.firstSignificanceMapContext = significanceMapContextSetStart[channelType][CONTEXT_TYPE_NxN];
   }
 
   //------------------------------------------------

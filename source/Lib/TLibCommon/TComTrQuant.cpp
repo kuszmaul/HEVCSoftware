@@ -869,18 +869,17 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 // To minimize the distortion only. No rate is considered.
 Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
 {
-  const UInt width         = codingParameters.widthInGroups  << codingParameters.log2GroupWidth;
-  const UInt height        = codingParameters.heightInGroups << codingParameters.log2GroupHeight;
-  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
-  const UInt groupSize     = 1 << log2GroupSize;
+  const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
+  const UInt height    = codingParameters.heightInGroups << MLS_CG_LOG2_HEIGHT;
+  const UInt groupSize = 1 << MLS_CG_SIZE;
 
   Int lastCG = -1;
   Int absSum = 0 ;
   Int n ;
 
-  for( Int subSet = (width*height-1) >> log2GroupSize; subSet >= 0; subSet-- )
+  for( Int subSet = (width*height-1) >> MLS_CG_SIZE; subSet >= 0; subSet-- )
   {
-    Int  subPos = subSet << log2GroupSize;
+    Int  subPos = subSet << MLS_CG_SIZE;
     Int  firstNZPosInCG=groupSize , lastNZPosInCG=-1 ;
     absSum = 0 ;
 
@@ -1697,8 +1696,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
   TUEntropyCodingParameters codingParameters;
   getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, format);
-  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
-  const UInt uiCGSize = (1 << log2GroupSize);
+  const UInt uiCGSize = (1 << MLS_CG_SIZE);
 
   const Bool applyAdditionalShift = (cQP.getAdjustedQp().per > cQP.getBaseQp().per);
 
@@ -1719,7 +1717,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   memset( pdCostCoeffGroupSig,   0, sizeof(Double) * MLS_GRP_NUM );
   memset( uiSigCoeffGroupFlag,   0, sizeof(UInt) * MLS_GRP_NUM );
 
-  UInt uiCGNum = uiWidth * uiHeight >> log2GroupSize;
+  UInt uiCGNum = uiWidth * uiHeight >> MLS_CG_SIZE;
   Int iScanPos;
   coeffGroupRDStats rdStats;
 
@@ -1733,11 +1731,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
     memset( &rdStats, 0, sizeof (coeffGroupRDStats));
 
-    Int patternSigCtx = 0;
-    if (!codingParameters.useFixedGridSignificanceMapContext)
-    {
-      patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
-    }
+    const Int patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
 
     for (Int iScanPosinCG = uiCGSize-1; iScanPosinCG >= 0; iScanPosinCG--)
     {
@@ -1770,7 +1764,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
       if ( uiMaxAbsLevel > 0 && iLastScanPos < 0 )
       {
         iLastScanPos            = iScanPos;
-        uiCtxSet                = getContextSetIndex(compID, (iScanPos >> log2GroupSize), 0);
+        uiCtxSet                = getContextSetIndex(compID, (iScanPos >> MLS_CG_SIZE), 0);
         iCGLastScanPos          = iCGScanPos;
       }
 
@@ -1841,7 +1835,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         //===== context set update =====
         if( ( iScanPos % uiCGSize == 0 ) && ( iScanPos > 0 ) )
         {
-          uiCtxSet          = getContextSetIndex(compID, ((iScanPos - 1) >> log2GroupSize), (c1 == 0)); //(iScanPos - 1) because we do this **before** entering the final group
+          uiCtxSet          = getContextSetIndex(compID, ((iScanPos - 1) >> MLS_CG_SIZE), (c1 == 0)); //(iScanPos - 1) because we do this **before** entering the final group
           c1                = 1;
           c2                = 0;
           uiGoRiceParam     = 0;
@@ -2039,9 +2033,9 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
     Int absSum = 0 ;
     Int n ;
 
-    for( Int subSet = (uiWidth*uiHeight-1) >> log2GroupSize; subSet >= 0; subSet-- )
+    for( Int subSet = (uiWidth*uiHeight-1) >> MLS_CG_SIZE; subSet >= 0; subSet-- )
     {
-      Int  subPos     = subSet << log2GroupSize;
+      Int  subPos     = subSet << MLS_CG_SIZE;
       Int  firstNZPosInCG=uiCGSize , lastNZPosInCG=-1 ;
       absSum = 0 ;
 
@@ -2172,6 +2166,8 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
  */
 Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPosX, UInt uiCGPosY, UInt widthInGroups, UInt heightInGroups )
 {
+  if ((widthInGroups <= 1) && (heightInGroups <= 1)) return 0;
+
   const Bool rightAvailable = uiCGPosX < (widthInGroups  - 1);
   const Bool belowAvailable = uiCGPosY < (heightInGroups - 1);
 
@@ -2180,13 +2176,6 @@ Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPos
 
   if (rightAvailable) sigRight = ((sigCoeffGroupFlag[ (uiCGPosY * widthInGroups) + uiCGPosX + 1 ] != 0) ? 1 : 0);
   if (belowAvailable) sigLower = ((sigCoeffGroupFlag[ (uiCGPosY + 1) * widthInGroups + uiCGPosX ] != 0) ? 1 : 0);
-
-
-  if (patternSigCtxCopyMissingGroupFromAvailableGroup())
-  {
-    if (!rightAvailable) sigRight = sigLower;
-    if (!belowAvailable) sigLower = sigRight;
-  }
 
   return sigRight + (sigLower << 1);
 }
@@ -2217,11 +2206,9 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
   Int offset = MAX_INT;
 
-  if (codingParameters.useFixedGridSignificanceMapContext)
+  if ((log2BlockWidth == 2) && (log2BlockHeight == 2)) //4x4
   {
-    const TUEntropyCodingParameters::FixedGridContextParameters &gridParameters = codingParameters.fixedGridContextParameters;
-
-    offset = gridParameters.grid[ (gridParameters.stride * (posY >> gridParameters.heightScale)) + (posX >> gridParameters.widthScale) ];
+    offset = ctxIndMap4x4[ (4 * posY) + posX ];
   }
   else
   {
@@ -2233,8 +2220,8 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
       case 0: //neither neighbouring group is significant
         {
-          const Int posXinSubset     = posX & ((1 << codingParameters.log2GroupWidth) - 1);
-          const Int posYinSubset     = posY & ((1 << codingParameters.log2GroupHeight) - 1);
+          const Int posXinSubset     = posX & ((1 << MLS_CG_LOG2_WIDTH)  - 1);
+          const Int posYinSubset     = posY & ((1 << MLS_CG_LOG2_HEIGHT) - 1);
           const Int posTotalInSubset = posXinSubset + posYinSubset;
 
           //first N coefficients in scan order use 2; the next few use 1; the rest use 0.
@@ -2249,8 +2236,8 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
       case 1: //right group is significant, below is not
         {
-          const Int posYinSubset = posY & ((1 << codingParameters.log2GroupHeight) - 1);
-          const Int groupHeight  = 1 << codingParameters.log2GroupHeight;
+          const Int posYinSubset = posY & ((1 << MLS_CG_LOG2_HEIGHT) - 1);
+          const Int groupHeight  = 1 << MLS_CG_LOG2_HEIGHT;
 
           cnt = (posYinSubset >= (groupHeight >> 1)) ? 0 : ((posYinSubset >= (groupHeight >> 2)) ? 1 : 2); //top quarter uses 2; second-from-top quarter uses 1; bottom half uses 0
         }
@@ -2260,8 +2247,8 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
       case 2: //below group is significant, right is not
         {
-          const Int posXinSubset = posX & ((1 << codingParameters.log2GroupWidth) - 1);
-          const Int groupWidth   = 1 << codingParameters.log2GroupWidth;
+          const Int posXinSubset = posX & ((1 << MLS_CG_LOG2_WIDTH)  - 1);
+          const Int groupWidth   = 1 << MLS_CG_LOG2_WIDTH;
 
           cnt = (posXinSubset >= (groupWidth >> 1)) ? 0 : ((posXinSubset >= (groupWidth >> 2)) ? 1 : 2); //left quarter uses 2; second-from-left quarter uses 1; right half uses 0
         }
@@ -2285,7 +2272,7 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
     //------------------------------------------------
 
-    const Bool notFirstGroup = ((posX >> codingParameters.log2GroupWidth) + (posY >> codingParameters.log2GroupHeight)) > 0;
+    const Bool notFirstGroup = ((posX >> MLS_CG_LOG2_WIDTH) + (posY >> MLS_CG_LOG2_HEIGHT)) > 0;
 
     offset = (notFirstGroup ? notFirstGroupNeighbourhoodContextOffset[chanType] : 0) + cnt;
   }

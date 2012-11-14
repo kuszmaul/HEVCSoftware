@@ -1208,7 +1208,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
       UInt uiPosY   = posLast >> uiLog2BlockWidth;
       UInt uiPosX   = posLast - ( uiPosY << uiLog2BlockWidth );
 
-      UInt uiBlkIdx = (codingParameters.widthInGroups * (uiPosY >> codingParameters.log2GroupHeight)) + (uiPosX >> codingParameters.log2GroupWidth);
+      UInt uiBlkIdx = (codingParameters.widthInGroups * (uiPosY >> MLS_CG_LOG2_HEIGHT)) + (uiPosX >> MLS_CG_LOG2_WIDTH);
       uiSigCoeffGroupFlag[ uiBlkIdx ] = 1;
 
       uiNumSig--;
@@ -1225,8 +1225,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   ContextModel * const baseCoeffGroupCtx = m_cCUSigCoeffGroupSCModel.get( 0, chType );
   ContextModel * const baseCtx = m_cCUSigSCModel.get( 0, 0 ) + getSignificanceMapContextOffset(compID);
 
-  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
-  const Int  iLastScanSet  = scanPosLast >> log2GroupSize;
+  const Int  iLastScanSet  = scanPosLast >> MLS_CG_SIZE;
 
   UInt c1                  = 1;
   UInt uiGoRiceParam       = 0;
@@ -1235,14 +1234,14 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   for( Int iSubSet = iLastScanSet; iSubSet >= 0; iSubSet-- )
   {
     Int numNonZero  = 0;
-    Int  iSubPos    = iSubSet << log2GroupSize;
+    Int  iSubPos    = iSubSet << MLS_CG_SIZE;
     uiGoRiceParam   = 0;
     UInt coeffSigns = 0;
 
     Int absCoeff[1 << MLS_CG_SIZE];
 
     Int lastNZPosInCG  = -1;
-    Int firstNZPosInCG = 1 << log2GroupSize;
+    Int firstNZPosInCG = 1 << MLS_CG_SIZE;
 
     if( iScanPosSig == scanPosLast )
     {
@@ -1273,11 +1272,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     // encode significant_coeff_flag
     if( uiSigCoeffGroupFlag[ iCGBlkPos ] )
     {
-      Int patternSigCtx = 0;
-      if (!codingParameters.useFixedGridSignificanceMapContext)
-      {
-        patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, iCGPosX, iCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
-      }
+      const Int patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, iCGPosX, iCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
 
       UInt uiBlkPos, uiSig, uiCtxSig;
       for( ; iScanPosSig >= iSubPos; iScanPosSig-- )
@@ -1552,12 +1547,12 @@ Void TEncSbac::estSignificantMapBit( estBitsSbacStruct* pcEstBitsSbac, Int width
   Int firstCtx = MAX_INT;
   Int numCtx   = MAX_INT;
 
-  if      (((width == 4) && (height == 4)) || (fixed422SignificanceMapContext() && (((width == 4) && (height == 8)) || ((width == 8) && (height == 4)))))
+  if      ((width == 4) && (height == 4))
   {
     firstCtx = significanceMapContextSetStart[chType][CONTEXT_TYPE_4x4];
     numCtx   = significanceMapContextSetSize [chType][CONTEXT_TYPE_4x4];
   }
-  else if (((width == 8) && (height == 8)) || (fixed422SignificanceMapContext() && (((width == 8) && (height == 16)) || ((width == 16) && (height == 8)))))
+  else if ((width == 8) && (height == 8))
   {
     firstCtx = significanceMapContextSetStart[chType][CONTEXT_TYPE_8x8];
     numCtx   = significanceMapContextSetSize [chType][CONTEXT_TYPE_8x8];

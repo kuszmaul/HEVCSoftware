@@ -1149,8 +1149,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   ContextModel * const baseCoeffGroupCtx = m_cCUSigCoeffGroupSCModel.get( 0, isChroma(chType) );
   ContextModel * const baseCtx = m_cCUSigSCModel.get( 0, 0 ) + getSignificanceMapContextOffset(compID);
 
-  const UInt log2GroupSize = codingParameters.log2GroupWidth + codingParameters.log2GroupHeight;
-  const Int  iLastScanSet  = uiScanPosLast >> log2GroupSize;
+  const Int  iLastScanSet  = uiScanPosLast >> MLS_CG_SIZE;
   UInt c1                  = 1;
   UInt uiGoRiceParam       = 0;
 
@@ -1161,12 +1160,12 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   Int  iScanPosSig             = (Int) uiScanPosLast;
   for( Int iSubSet = iLastScanSet; iSubSet >= 0; iSubSet-- )
   {
-    Int  iSubPos   = iSubSet << log2GroupSize;
+    Int  iSubPos   = iSubSet << MLS_CG_SIZE;
     uiGoRiceParam  = 0;
     Int numNonZero = 0;
     
     Int lastNZPosInCG  = -1;
-    Int firstNZPosInCG = 1 << log2GroupSize;
+    Int firstNZPosInCG = 1 << MLS_CG_SIZE;
 
     Int pos[1 << MLS_CG_SIZE];
 
@@ -1197,11 +1196,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     }
 
     // decode significant_coeff_flag
-    Int patternSigCtx = 0;
-    if (!codingParameters.useFixedGridSignificanceMapContext)
-    {
-      patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, iCGPosX, iCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
-    }
+    const Int patternSigCtx = TComTrQuant::calcPatternSigCtx(uiSigCoeffGroupFlag, iCGPosX, iCGPosY, codingParameters.widthInGroups, codingParameters.heightInGroups);
 
     UInt uiBlkPos, uiSig, uiCtxSig;
     for( ; iScanPosSig >= iSubPos; iScanPosSig-- )

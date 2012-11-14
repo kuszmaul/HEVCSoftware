@@ -301,56 +301,6 @@ static inline UInt getSignificanceMapContextOffset (const ComponentID component)
 
 //------------------------------------------------
 
-//When deriving patternSigCtx for significance map context selection, if one neighbour
-//group is available and the other is not, rather than assume 0 for the unavailable group,
-//assume the same significance as the available group
-
-static inline Bool patternSigCtxCopyMissingGroupFromAvailableGroup()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::PatternSigCtxMissingGroupsSameAsAvailableGroups.getInt() != 0);
-#elif (RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 1)
-  return true;
-#elif (RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
-//Enable fixed context variable mapping grid for 8x4, 4x8, 8x16 and 16x8
-
-static inline Bool fixed422SignificanceMapContext()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::Chroma422SignificanceMapContextGrid.getInt() != 0);
-#elif ((RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2))
-  return true;
-#elif (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
-//Enable fixed context variable mapping grid for 8x4, 4x8, 8x16 and 16x8
-
-static inline Bool separateDC422SignificanceMapContext()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::Chroma422SignificanceMapContextGrid.getInt() > 1);
-#elif (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 2)
-  return true;
-#elif ((RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 1) || (RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID == 0))
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 // Function for greater-than-one map/greater-than-two map context set selection
 
 static inline UInt getContextSetIndex (const ComponentID  component,
