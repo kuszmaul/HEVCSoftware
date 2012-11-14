@@ -145,11 +145,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 //Transform and Quantisation  ==========================================================================================
 //======================================================================================================================
 
-Int getMDDTmode (const ComponentID compID, class TComDataCU* pcCU, const UInt uiAbsPartIdx); //in TComChromaFormat.cpp
-
-
-//------------------------------------------------
-
 static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples)
 {
   return (rectSamples.width <= MAX_TS_WIDTH); // NOTE RExt - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.

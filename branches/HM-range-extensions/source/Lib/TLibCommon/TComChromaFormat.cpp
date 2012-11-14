@@ -40,27 +40,6 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
-Int getMDDTmode(const ComponentID compID, class TComDataCU* pcCU, const UInt uiAbsPartIdx)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return ((compID==COMPONENT_Y || (pcCU->getPic()->getChromaFormat()==CHROMA_444 && ToolOptionList::EnableMDDTFor444Chroma.getInt()!=0))
-          && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA)
-          ? pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx )
-          : REG_DCT;
-#elif (RExt__ENABLE_MDDT_FOR_444_CHROMA == 1)
-  return ((compID==COMPONENT_Y || pcCU->getPic()->getChromaFormat()==CHROMA_444) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA)
-          ? pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx )
-          : REG_DCT;
-#else
-  return ((compID==COMPONENT_Y) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA)
-          ? pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx )
-          : REG_DCT;
-#endif
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-
 MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID component, const ChromaFormat format)
 {
   //------------------

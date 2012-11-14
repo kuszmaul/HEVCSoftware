@@ -285,7 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__ENABLE_MDDT_FOR_444_CHROMA                                       0 ///< 0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs
   #define RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444                  0 ///< 0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value
   #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT                                  1 ///< 0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))
   #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD                           1 ///< [NO EFFECT IF RExt__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables

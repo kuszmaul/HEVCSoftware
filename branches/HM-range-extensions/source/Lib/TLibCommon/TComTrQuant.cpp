@@ -174,7 +174,7 @@ Void TComTrQuant::clearSliceARLCnt()
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UInt uiMode)
+void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, Bool useDST)
 {
   Int i,j,k,iSum;
   Int tmp[32*32];
@@ -210,12 +210,9 @@ void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UIn
 
   /* Horizontal transform */
 
-  if (uiTrSize==4)
+  if ((uiTrSize==4) && useDST)
   {
-    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))
-    {
-      iT  =  g_as_DST_MAT_4[0];
-    }
+    iT  =  g_as_DST_MAT_4[0];
   }
   for (i=0; i<uiTrSize; i++)
   {
@@ -263,7 +260,7 @@ void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, UIn
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
+void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
 {
   Int i,j,k,iSum;
   Int tmp[32*32];
@@ -294,12 +291,9 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, UInt uiMode)
   Int add_1st = 1<<(shift_1st-1);
   Int shift_2nd = SHIFT_INV_2ND - g_bitDepth-8;
   Int add_2nd = 1<<(shift_2nd-1);
-  if (uiTrSize==4)
+  if ((uiTrSize==4) && useDST)
   {
-    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34))) // Check for DCT or DST
-    {
-      iT  =  g_as_DST_MAT_4[0];
-    }
+    iT  =  g_as_DST_MAT_4[0];
   }
 
   /* Horizontal transform */
@@ -766,7 +760,7 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, UInt uiMode)
+void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST)
 {
   const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  bitDepth + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
   const Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
@@ -780,7 +774,7 @@ void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
   {
     case 4:
       {
-        if ((iHeight == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+        if ((iHeight == 4) && useDST)    // Check for DCT or DST
         {
            fastForwardDst( block, tmp, shift_1st );
         }
@@ -799,7 +793,7 @@ void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
   {
     case 4:
       {
-        if ((iWidth == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+        if ((iWidth == 4) && useDST)    // Check for DCT or DST
         {
           fastForwardDst( tmp, coeff, shift_2nd );
         }
@@ -822,7 +816,7 @@ void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, UInt uiMode)
+void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST)
 {
   Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
   Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - bitDepth;
@@ -836,7 +830,7 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
   {
     case 4:
       {
-        if ((iWidth == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+        if ((iWidth == 4) && useDST)    // Check for DCT or DST
         {
           fastInverseDst( coeff, tmp, shift_1st);
         }
@@ -855,7 +849,7 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
   {
     case 4:
       {
-        if ((iHeight == 4) && (uiMode != REG_DCT))    // Check for DCT or DST
+        if ((iHeight == 4) && useDST)    // Check for DCT or DST
         {
           fastInverseDst( tmp, block, shift_2nd );
         }
@@ -1390,7 +1384,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     return;
   }
 
-  const UInt uiMode=getMDDTmode(compID, pcCU, uiAbsPartIdx);  //luma intra pred
+  const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
 
   uiAbsSum = 0;
   assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
@@ -1401,7 +1395,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   }
   else
   {
-    xT( g_bitDepth[toChannelType(compID)], uiMode, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+    xT( g_bitDepth[toChannelType(compID)], useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
   }
 
   xQuant( rTu, m_plTempCoeff, rpcCoeff,
@@ -1449,7 +1443,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     return;
   }
 
-  const UInt uiMode=getMDDTmode(compID, pcCU, uiAbsPartIdx);
+  const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
 
   xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
@@ -1480,7 +1474,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   }
   else
   {
-    xIT( g_bitDepth[toChannelType(compID)], uiMode, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+    xIT( g_bitDepth[toChannelType(compID)], useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
 
 #if defined DEBUG_STRING
     if (psDebug)
@@ -1559,12 +1553,12 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xT( Int bitDepth, UInt uiMode, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
+Void TComTrQuant::xT( Int bitDepth, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight)
   {
-    xTr(bitDepth, piBlkResi, psCoeff, uiStride, (UInt)iWidth, uiMode);
+    xTr(bitDepth, piBlkResi, psCoeff, uiStride, (UInt)iWidth, useDST);
     return;
   }
 #endif
@@ -1578,7 +1572,7 @@ Void TComTrQuant::xT( Int bitDepth, UInt uiMode, Pel* piBlkResi, UInt uiStride, 
       block[(y * iWidth) + x] = piBlkResi[(y * uiStride) + x];
     }
 
-  xTrMxN( bitDepth, block, coeff, iWidth, iHeight, uiMode );
+  xTrMxN( bitDepth, block, coeff, iWidth, iHeight, useDST );
 
   memcpy(psCoeff, coeff, (iWidth * iHeight * sizeof(TCoeff)));
 }
@@ -1590,12 +1584,12 @@ Void TComTrQuant::xT( Int bitDepth, UInt uiMode, Pel* piBlkResi, UInt uiStride, 
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-Void TComTrQuant::xIT( Int bitDepth, UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
+Void TComTrQuant::xIT( Int bitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
 {
 #if MATRIX_MULT
   if( iWidth == iHeight )
   {
-    xITr(bitDepth, plCoef, pResidual, uiStride, (UInt)iWidth, uiMode);
+    xITr(bitDepth, plCoef, pResidual, uiStride, (UInt)iWidth, useDST);
     return;
   }
 #endif
@@ -1605,7 +1599,7 @@ Void TComTrQuant::xIT( Int bitDepth, UInt uiMode, TCoeff* plCoef, Pel* pResidual
 
   memcpy(coeff, plCoef, (iWidth * iHeight * sizeof(TCoeff)));
 
-  xITrMxN( bitDepth, coeff, block, iWidth, iHeight, uiMode );
+  xITrMxN( bitDepth, coeff, block, iWidth, iHeight, useDST );
 
   for (Int y = 0; y < iHeight; y++)
     for (Int x = 0; x < iWidth; x++)
