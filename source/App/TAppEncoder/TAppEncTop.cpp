@@ -357,6 +357,8 @@ Void TAppEncTop::encode()
   // main encoder loop
   Int   iNumEncoded = 0;
   Bool  bEos = false;
+
+  const Bool RGBChannelOrder = m_vuiParametersPresentFlag && (m_matrixCoefficients == MATRIX_COEFFICIENTS_RGB_VALUE);
   
   list<AccessUnit> outputAccessUnits; ///< list of access units to write out.  is populated by the encoding process
 
@@ -369,7 +371,7 @@ Void TAppEncTop::encode()
     xGetBuffer(pcPicYuvRec);
 
     // read input YUV file
-    m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, m_aiPad, m_InputChromaFormatIDC );
+    m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, RGBChannelOrder, m_aiPad, m_InputChromaFormatIDC );
     
     // increase number of received frames
     m_iFrameRcvd++;
@@ -469,6 +471,8 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
   
   TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
   list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
+
+  const Bool RGBChannelOrder = m_vuiParametersPresentFlag && (m_matrixCoefficients == MATRIX_COEFFICIENTS_RGB_VALUE);
   
   for ( i = 0; i < iNumEncoded; i++ )
   {
@@ -480,7 +484,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
     if (m_pchReconFile)
     {
-      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, RGBChannelOrder, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
     }
 
     const AccessUnit& au = *(iterBitstream++);

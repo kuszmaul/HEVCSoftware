@@ -259,14 +259,16 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   {
     TComPic* pcPic = *(iterPic);
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
+
+    const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
     
-    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getSlice(0)->getSPS()->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
+    if ( pcPic->getOutputMark() && (not_displayed >  sps->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
     {
       // write to file
        not_displayed--;
       if ( m_pchReconFile )
       {
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
       }
       
       // update POC of display order
@@ -313,12 +315,14 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
     TComPic* pcPic = *(iterPic);
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
 
+    const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
+
     if ( pcPic->getOutputMark() )
     {
       // write to file
       if ( m_pchReconFile )
       {
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
       }
       
       // update POC of display order

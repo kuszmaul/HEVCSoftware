@@ -60,6 +60,11 @@ class TComTrQuant;
 #define MAX_NUM_SUPPORTED_APS 1
 static const UInt REF_PIC_LIST_NUM_IDX=32; // NOTE: RExt - new definition
 
+static const Int MATRIX_COEFFICIENTS_RGB_VALUE = 255; //NOTE: RExt - Required to indicate that channels must be reordered
+                                                      //at input and output in order to support RGB video files. 255 is
+                                                      //currently a reserved value for the "matrix_coefficients" element
+                                                      //of the VUI
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================

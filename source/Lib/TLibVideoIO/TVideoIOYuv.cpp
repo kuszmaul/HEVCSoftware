@@ -48,6 +48,25 @@
 
 using namespace std;
 
+// ====================================================================================================================
+// Constants
+// ====================================================================================================================
+
+static const ComponentID CHANNEL_ORDER[2/*0 = GBR/YUV, 1 = RGB*/][2/*0 = normal, 1 = swap chroma channels*/][MAX_NUM_COMPONENT] =
+{
+  {
+    {COMPONENT_Y, COMPONENT_Cb, COMPONENT_Cr},
+    {COMPONENT_Y, COMPONENT_Cr, COMPONENT_Cb}
+  },
+  {
+    {COMPONENT_Cr, COMPONENT_Y, COMPONENT_Cb},
+    {COMPONENT_Cb, COMPONENT_Y, COMPONENT_Cr}
+  },
+};
+
+// ====================================================================================================================
+// Local Functions
+// ====================================================================================================================
 
 /**
  * Scale all pixels in img depending upon sign of shiftbits by a factor of
@@ -490,7 +509,7 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
  * @param aiPad        source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
-Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], ChromaFormat format )
+Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2], ChromaFormat format )
 {
   // check end-of-file
   if ( isEof() ) return false;
@@ -515,14 +534,15 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], ChromaFormat format
   const UInt width444       = width_full444 - pad_h444;
   const UInt height444      = height_full444 - pad_v444;
   
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
+#else
+  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
+#endif
+
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-    UInt chModulated = (comp == 0) ? 0 : ((getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? (MAX_NUM_COMPONENT - comp) : comp); // 0 1 2 or if swapping, 0 2 1
-    const ComponentID compID=ComponentID(chModulated);
-#else
-    const ComponentID compID=ComponentID(comp);
-#endif
+    const ComponentID compID = channelOrder[comp];
     const ChannelType chType=toChannelType(compID);
 
     const Int desired_bitdepth = m_fileBitdepth[chType] + m_bitdepthShift[chType];
@@ -565,7 +585,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Int aiPad[2], ChromaFormat format
  * @param aiPad       source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
-Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Int cropLeft, Int cropRight, Int cropTop, Int cropBottom, ChromaFormat format )
+Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int cropLeft, Int cropRight, Int cropTop, Int cropBottom, ChromaFormat format )
 {
   // compute actual YUV frame size excluding padding size
   const Int   iStride444 = pPicYuv->getStride(COMPONENT_Y);
@@ -610,10 +630,16 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Int cropLeft, Int cropRight, Int c
   {
     dstPicYuv = pPicYuv;
   }
+
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
+#else
+  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
+#endif
   
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
-    const ComponentID compID=ComponentID(comp);
+    const ComponentID compID = channelOrder[comp];
     const ChannelType ch=toChannelType(compID);
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
