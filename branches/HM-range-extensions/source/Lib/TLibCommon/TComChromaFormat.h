@@ -281,20 +281,6 @@ static inline FilterMode getIntraDCFilterMode(const ChannelType type, const Chro
 }
 
 
-//------------------------------------------------
-
-static inline Bool getLMChromaSamplesFrom2ndLeftCol(const Bool LMmode, const ChromaFormat chFmt)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return LMmode && (ToolOptionList::Get444LMChromaReferenceSamplesFrom1stColumn.getInt()==0 || chFmt!=CHROMA_444);
-#elif (RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 1)
-  return LMmode && (chFmt != CHROMA_444);
-#elif (RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN == 0)
-  return LMmode;
-#endif
-}
-
-
 //======================================================================================================================
 //Inter prediction  ====================================================================================================
 //======================================================================================================================
