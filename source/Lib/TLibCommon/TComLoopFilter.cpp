@@ -252,7 +252,7 @@ Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiD
 
   UInt uiSizeInPU = pcPic->getNumPartInWidth()>>(uiDepth);
   const ChromaFormat chFmt=pcCU->getPic()->getChromaFormat();
-  const Bool bAlwaysDoChroma=chFmt==CHROMA_444 && !allFormatsUse420TUTreeStructure();
+  const Bool bAlwaysDoChroma=chFmt==CHROMA_444;
   for ( Int iEdge = 0; iEdge < uiSizeInPU ; iEdge+=PartIdxIncr)
   {
     xEdgeFilterLuma     ( pcCU, uiAbsZorderIdx, uiDepth, edgeDir, iEdge );

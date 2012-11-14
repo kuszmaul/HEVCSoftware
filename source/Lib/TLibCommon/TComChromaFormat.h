@@ -111,27 +111,13 @@ static inline UInt getTotalBits(const UInt width, const UInt height, const Chrom
 
 //------------------------------------------------
 
-static inline Bool allFormatsUse420TUTreeStructure()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::AllChromaFormatsUseSameTUStructureAs420.getInt() != 0);
-#elif (RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 1)
-  return true;
-#elif (RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420 == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 //returns true if it is possible for chroma to split down to the same level as luma
 //(i.e. it will never have to "step-up" such that a chroma TU can cover multiple luma TUs)
 
 static inline Bool chromaTUCanSplitDownToMinimumLumaSize(const ChromaFormat chFmt)
 {
   //     (      this part checks if chroma can split for 4x4 luma      )    (  this checks if min luma size is 4x4  )
-  return ((chFmt == CHROMA_444) && (!allFormatsUse420TUTreeStructure())) || ((g_uiMaxCUWidth >> g_uiMaxCUDepth) >= 8);
+  return (chFmt == CHROMA_444) || ((g_uiMaxCUWidth >> g_uiMaxCUDepth) >= 8);
 }
 
 
