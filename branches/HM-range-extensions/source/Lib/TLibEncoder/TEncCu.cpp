@@ -1522,16 +1522,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
   if( bLumaChromaCombinedSearch )
   {
-    if (initalDMChromaPreEst())
-    {
-      rpcTempCU->setIntraDirSubParts  ( CHANNEL_TYPE_CHROMA, DM_CHROMA_IDX, 0, uiDepth + 0 );
-    }
-    else
-    {
-      // after this function, the direction will be PLANAR, DC, HOR or VER
-      // however, if Luma ends up being one of those, the chroma dir must be later changed to DM_CHROMA.
-      m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
-    }
+    // after this function, the direction will be PLANAR, DC, HOR or VER
+    // however, if Luma ends up being one of those, the chroma dir must be later changed to DM_CHROMA.
+    m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
   }
   m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, !bLumaChromaCombinedSearch DEBUG_STRING_PASS_INTO(sTest) );
 
