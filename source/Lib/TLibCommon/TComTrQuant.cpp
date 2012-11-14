@@ -2324,13 +2324,8 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
           const Int posTotalInSubset = posXinSubset + posYinSubset;
 
           //first N coefficients in scan order use 2; the next few use 1; the rest use 0.
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-          const UInt context1Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context1Threshold;
-          const UInt context2Threshold = codingParameters.neighbourhoodContextParameters.pattern00Context2Threshold;
-#else
           const UInt context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x4;
           const UInt context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x4;
-#endif
 
           cnt = (posTotalInSubset >= context1Threshold) ? 0 : ((posTotalInSubset >= context2Threshold) ? 1 : 2);
         }

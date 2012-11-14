@@ -1247,11 +1247,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     uiGoRiceParam   = 0;
     UInt coeffSigns = 0;
 
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-    Int absCoeff[2 << MLS_CG_SIZE];
-#else
     Int absCoeff[1 << MLS_CG_SIZE];
-#endif
 
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << log2GroupSize;

@@ -1182,11 +1182,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << log2GroupSize;
 
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-    Int pos[2 << MLS_CG_SIZE];
-#else
     Int pos[1 << MLS_CG_SIZE];
-#endif
 
     if( iScanPosSig == (Int) uiScanPosLast )
     {
@@ -1264,11 +1260,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
       ContextModel *baseCtxMod = m_cCUOneSCModel.get( 0, 0 ) + (NUM_ONE_FLAG_CTX_PER_SET * uiCtxSet);
 
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-      Int absCoeff[2 << MLS_CG_SIZE];
-#else
       Int absCoeff[1 << MLS_CG_SIZE];
-#endif
 
       for ( Int i = 0; i < numNonZero; i++) absCoeff[i] = 1;   
       Int numC1Flag = min(numNonZero, C1FLAG_NUMBER);

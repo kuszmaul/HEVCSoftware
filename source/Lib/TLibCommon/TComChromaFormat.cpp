@@ -248,8 +248,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   const UInt        log2BlockWidth    = g_aucConvertToBit[width]  + 2;
   const UInt        log2BlockHeight   = g_aucConvertToBit[height] + 2;
-  const Bool        doubleGroupHeight = doubleHeightCoefficientGroups(component, format);
-  const UInt        log2GroupSize     = (doubleGroupHeight ? (MLS_CG_SIZE + 1) : MLS_CG_SIZE);
+  const UInt        log2GroupSize     = MLS_CG_SIZE;
   const ChannelType channelType       = toChannelType(component);
 
   result.scanType = ((uiScanIdx == SCAN_ZIGZAG) ? SCAN_DIAG : COEFF_SCAN_TYPE(uiScanIdx));
@@ -270,11 +269,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const UInt log2WidthInGroups  = g_aucConvertToBit[result.widthInGroups  * 4];
   const UInt log2HeightInGroups = g_aucConvertToBit[result.heightInGroups * 4];
 
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-  const UInt groupType          = doubleGroupHeight ? SCAN_GROUPED_4x8 : SCAN_GROUPED_4x4;
-#else
   const UInt groupType          = SCAN_GROUPED_4x4;
-#endif
 
   result.scan   = g_scanOrder[ groupType      ][ result.scanType ][ log2BlockWidth    ][ log2BlockHeight    ];
   result.scanCG = g_scanOrder[ SCAN_UNGROUPED ][ result.scanType ][ log2WidthInGroups ][ log2HeightInGroups ];
@@ -305,28 +300,6 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
     result.firstSignificanceMapContext        = significanceMapContextSetStart[channelType][CONTEXT_TYPE_NxN];
     result.useFixedGridSignificanceMapContext = false;
   }
-
-  //------------------------------------------------
-
-  //set the neighbourhood context thresholds
-
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-  if (!result.useFixedGridSignificanceMapContext)
-  {
-    //we must check all these conditions - doubleGroupHeight may not result in actual double-size groups
-    //due to clipping and doubleGroupHeight is also not the only way to get non-square groups because of MDCS
-    if (doubleGroupHeight && (result.log2GroupWidth != result.log2GroupHeight))
-    {
-      result.neighbourhoodContextParameters.pattern00Context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x8;
-      result.neighbourhoodContextParameters.pattern00Context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x8;
-    }
-    else
-    {
-      result.neighbourhoodContextParameters.pattern00Context1Threshold = NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x4;
-      result.neighbourhoodContextParameters.pattern00Context2Threshold = NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x4;
-    }
-  }
-#endif
 
   //------------------------------------------------
 }
