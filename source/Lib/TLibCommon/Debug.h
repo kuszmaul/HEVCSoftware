@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar Chroma422IntraAngleScaling;
   extern EnvVar Chroma422IntraDCDoubleWeightAboveSamples;
   extern EnvVar Chroma422IntraPlanarSingleStageCalculation;
   extern EnvVar SetIntraChromaEdgeFilter422;

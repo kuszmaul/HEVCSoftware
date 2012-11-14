@@ -143,24 +143,13 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   bAbove = true;
   bLeft  = true;
 
-  const Int  uiTuWidth   = uiTuWidth_  >> csx;
-  const Int  uiTuHeight  = uiTuHeight_ >> csy;
-  const Int  uiTuWidth2  = uiTuWidth<<1;
-  const Int  uiTuHeight2 = uiTuHeight<<1;
-  const ChromaFormat chFmt = rTu.GetChromaFormat();
-
-  UInt uiROIWidth ;
-  UInt uiROIHeight;
-  if (nonScaledIntraChroma422(toChannelType(compID), chFmt))
-  {
-    uiROIWidth  = uiTuWidth+uiTuHeight+1;
-    uiROIHeight = uiTuHeight+uiTuWidth+1;
-  }
-  else
-  {
-    uiROIWidth  = uiTuWidth2+1;
-    uiROIHeight = uiTuHeight2+1;
-  }
+  const Int          uiTuWidth   = uiTuWidth_  >> csx;
+  const Int          uiTuHeight  = uiTuHeight_ >> csy;
+  const Int          uiTuWidth2  = uiTuWidth<<1;
+  const Int          uiTuHeight2 = uiTuHeight<<1;
+  const ChromaFormat chFmt       = rTu.GetChromaFormat();
+  const UInt         uiROIWidth  = uiTuWidth2+1;
+  const UInt         uiROIHeight = uiTuHeight2+1;
 
   assert(uiROIWidth*uiROIHeight <= m_iYuvExtSize);
 
@@ -352,24 +341,9 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     // Fill top-left border and top and top right with rec. samples
     piRoiTemp = piRoiOrigin - iPicStride - 1;
 
-    if (nonScaledIntraChroma422(chType, chFmt))
+    for (i=0; i<uiWidth; i++)
     {
-      const Int limitX=uiCuWidth*2;
-      for (i=0; i<=limitX; i++)
-      {
-        piAdiTemp[i] = piRoiTemp[i];
-      }
-      for (; i<uiWidth; i++)
-      {
-        piAdiTemp[i] = piRoiTemp[limitX];
-      }
-    }
-    else
-    {
-      for (i=0; i<uiWidth; i++)
-      {
-        piAdiTemp[i] = piRoiTemp[i];
-      }
+      piAdiTemp[i] = piRoiTemp[i];
     }
 
     // Fill left and below left border with rec. samples
@@ -514,39 +488,18 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     }
 
     // Copy processed samples
-    if (nonScaledIntraChroma422(chType, chFmt))
-    {
-      piAdiLineTemp = piAdiLine + uiCuHeight*2 + unitWidth - 1;
-      const Int limitX=uiCuWidth*2;
-      for (i=0; i<limitX; i++)
-      {
-        piAdiTemp[i] = piAdiLineTemp[i];
-      }
-      for (; i<uiWidth; i++)
-      {
-        piAdiTemp[i] = piAdiLineTemp[limitX];
-      }
 
-      piAdiLineTemp = piAdiLine + uiCuHeight*2;
-      for (i=1; i<uiHeight; i++)
-      {
-        piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
-      }
+    piAdiLineTemp = piAdiLine + uiHeight + unitWidth - 2;
+    // top left, top and top right samples
+    for (i=0; i<uiWidth; i++)
+    {
+      piAdiTemp[i] = piAdiLineTemp[i];
     }
-    else
-    {
-      piAdiLineTemp = piAdiLine + uiHeight + unitWidth - 2;
-      // top left, top and top right samples
-      for (i=0; i<uiWidth; i++)
-      {
-        piAdiTemp[i] = piAdiLineTemp[i];
-      }
 
-      piAdiLineTemp = piAdiLine + uiHeight - 1;
-      for (i=1; i<uiHeight; i++)
-      {
-        piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
-      }
+    piAdiLineTemp = piAdiLine + uiHeight - 1;
+    for (i=1; i<uiHeight; i++)
+    {
+      piAdiTemp[i*uiWidth] = piAdiLineTemp[-i];
     }
   }
 }
