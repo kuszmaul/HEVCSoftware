@@ -709,54 +709,34 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
   Int bottomLeft = leftColumn[height];
   Int topRight   = topRow[width];
 
-  if (intraPlanarSingleStageCalculation(channelType, format))
+  for(Int k=0;k<width;k++)
   {
-    for(Int k=0;k<width;k++)
-    {
-      for(Int l=0;l<height;l++)
-      {
-        // NOTE: RExt - rounding point changed from 'height' to 'width'.
-        // NOTE: RExt - The intermediate shift left could be rolled into the final shift left,
-        //              thereby increasing the accuracy of the calculation
-        // eg rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft)) +
-        //                           (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )*2    ) + height) >> (shift1Dver+1);
-        rpDst[l*dstStride+k] = ( (  ((height-l-1)*topRow[k]    +(l+1)*bottomLeft+1)>>1) +
-                                 (  ((width-k-1)*leftColumn[l]+(k+1)*topRight    )    ) + width) >> (shift1Dhor+1);
-      }
-    }
+    bottomRow[k]  = bottomLeft - topRow[k];
+    topRow[k]     <<= shift1Dver;
   }
-  else
+
+  for(Int k=0;k<height;k++)
   {
-    // NOTE: RExt - mistakes fixed to match above multiply-based calculation
-    for(Int k=0;k<width;k++)
+    rightColumn[k]  = topRight - leftColumn[k];
+    leftColumn[k]   <<= shift1Dhor;
+  }
+
+  const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
+
+  // Generate prediction signal
+  for (Int y=0;y<height;y++)
+  {
+    Int horPred = leftColumn[y] + width;
+    for (Int x=0;x<width;x++)
     {
-      bottomRow[k]  = bottomLeft - topRow[k];
-      topRow[k]     <<= shift1Dver;
-    }
+      horPred += rightColumn[y];
+      topRow[x] += bottomRow[x];
 
-    for(Int k=0;k<height;k++)
-    {
-      rightColumn[k]  = topRight - leftColumn[k];
-      leftColumn[k]   <<= shift1Dhor;
-    }
-
-    const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
-
-    // Generate prediction signal
-    for (Int y=0;y<height;y++)
-    {
-      Int horPred = leftColumn[y] + width;
-      for (Int x=0;x<width;x++)
-      {
-        horPred += rightColumn[y];
-        topRow[x] += bottomRow[x];
-
-        // NOTE: RExt - The intermediate shift left could be rolled into the final shift left,
-        //              thereby increasing the accuracy of the calculation
-        // eg  rpDst[y*dstStride+x] = ( (horPred<<topRowShift) + topRow[x] ) >> (shift1Dver+1);
-        Int vertPred = ((topRow[x] + topRowShift)>>topRowShift);
-        rpDst[y*dstStride+x] = ( horPred + vertPred ) >> (shift1Dhor+1);
-      }
+      // NOTE: RExt - The intermediate shift left could be rolled into the final shift left,
+      //              thereby increasing the accuracy of the calculation
+      // eg  rpDst[y*dstStride+x] = ( (horPred<<topRowShift) + topRow[x] ) >> (shift1Dver+1);
+      Int vertPred = ((topRow[x] + topRowShift)>>topRowShift);
+      rpDst[y*dstStride+x] = ( horPred + vertPred ) >> (shift1Dhor+1);
     }
   }
 }

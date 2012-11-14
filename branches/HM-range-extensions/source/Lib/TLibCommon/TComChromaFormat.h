@@ -143,20 +143,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 
 //------------------------------------------------
 
-static inline Bool intraPlanarSingleStageCalculation(const ChannelType chType, const ChromaFormat chFmt)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraPlanarSingleStageCalculation.getInt() != 0));
-#elif (RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 1)
-  return (isChroma(chType) && (chFmt == CHROMA_422));
-#elif (RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline FilterMode getIntraEdgeFilterMode(const ChannelType type, const ChromaFormat fmt, const UInt width, const UInt height)
 {
 #if RESTRICT_INTRA_BOUNDARY_SMOOTHING

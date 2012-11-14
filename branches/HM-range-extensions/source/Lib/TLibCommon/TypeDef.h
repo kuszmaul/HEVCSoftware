@@ -285,8 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION                 0 ///< 0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation
-
   #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
   #define RExt__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
 
