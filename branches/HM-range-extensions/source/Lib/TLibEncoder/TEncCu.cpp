@@ -1512,14 +1512,13 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 
   Bool bLumaChromaCombinedSearch = combinedLumaChromaIntraSearch(); // choose estimation mode
-  Bool doChroma                  = additionalTrialEncodeChromaIntraSearch() || !bLumaChromaCombinedSearch; // choose estimation mode
 
   UInt uiPreCalcDistC      = 0;
   if (rpcBestCU->getPic()->getChromaFormat()==CHROMA_400)
   {
     bLumaChromaCombinedSearch=false;
-    doChroma=false;
   }
+
   if( bLumaChromaCombinedSearch )
   {
     // after this function, the direction will be PLANAR, DC, HOR or VER
@@ -1530,7 +1529,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicComponent(COMPONENT_Y, rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
 
-  if (doChroma)
+  if (rpcBestCU->getPic()->getChromaFormat()!=CHROMA_400)
     m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC DEBUG_STRING_PASS_INTO(sTest) );
 
 #if defined DEBUG_STRING && DEBUG_RD_COST_INTRA

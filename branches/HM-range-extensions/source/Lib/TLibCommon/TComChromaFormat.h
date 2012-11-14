@@ -149,20 +149,6 @@ static inline Bool combinedLumaChromaIntraSearch()
 
 //------------------------------------------------
 
-static inline Bool additionalTrialEncodeChromaIntraSearch()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::AdditionalTrialEncodeChromaIntraModeSearch.getInt() != 0);
-#elif (RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 1)
-  return true;
-#elif (RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool filterIntraReferenceSamples (const ChannelType chType, const ChromaFormat chFmt)
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
