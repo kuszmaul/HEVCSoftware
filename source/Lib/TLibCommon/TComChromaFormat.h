@@ -149,20 +149,6 @@ static inline Bool combinedLumaChromaIntraSearch()
 
 //------------------------------------------------
 
-static inline Bool fullRDSearchOverAllComponents()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::EncoderFullRateDistortionSearchOverAllComponents.getInt() != 0);
-#elif (RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 1)
-  return true;
-#elif (RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool additionalTrialEncodeChromaIntraSearch()
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
@@ -174,10 +160,6 @@ static inline Bool additionalTrialEncodeChromaIntraSearch()
 #endif
 }
 
-
-//------------------------------------------------
-
-UInt* getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx, const Bool bLumaOnly, UInt searchArray[NUM_CHROMA_MODE+3]);
 
 //------------------------------------------------
 
