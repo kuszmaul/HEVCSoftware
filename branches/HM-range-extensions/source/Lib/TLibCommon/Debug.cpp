@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::UseLumaFilterForChromaQuarterSampleInterpolation ("RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION",  "0", "0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)"                                                                                                                                   );
 EnvVar ToolOptionList::EnableMDDTFor444Chroma                           ("RExt__ENABLE_MDDT_FOR_444_CHROMA",                               "0", "0 (default) = Use MDDT for luminance only in all formats, 1 = In 4:4:4, also allow MDDT for chrominance TUs"                                                                                                                                                                                                   );
 EnvVar ToolOptionList::SingleTransformSkipFlagForAllChannels444         ("RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444",          "0", "0 (default) = Always code a transform skip flag for each TU on each channel, 1 = In 4:4:4, code a transform skip flag only for luminance TUs, with corresponding chrominance TUs also using its value"                                                                                                         );
 EnvVar ToolOptionList::Chroma422QuantiserAdjustment                     ("RExt__CHROMA_422_QUANTISER_ADJUSTMENT",                          "1", "0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))" );
@@ -182,7 +181,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION,  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__ENABLE_MDDT_FOR_444_CHROMA,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444,          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__CHROMA_422_QUANTISER_ADJUSTMENT,                          settingNameWidth, settingValueWidth);

@@ -281,14 +281,6 @@
 #define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
-// Inter Prediction
-//------------------------------------------------
-
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION          0 ///< 0 (default) = Use chroma filter for all chroma interpolation, 1 = Use luma filter wherever quarter-sample interpolation is required (4:2:2 vertical, 4:4:4 both directions)
-#endif
-
-//------------------------------------------------
 // Transform and Quantisation
 //------------------------------------------------
 

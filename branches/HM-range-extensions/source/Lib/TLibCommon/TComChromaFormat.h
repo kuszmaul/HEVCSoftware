@@ -142,26 +142,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 
 
 //======================================================================================================================
-//Inter prediction  ====================================================================================================
-//======================================================================================================================
-
-static inline Bool useLumaInterpFilter(const ComponentID compID, const ChromaFormat fmt, const UInt dir /*0=H, 1=V*/)
-{
-  if (isLuma(compID)) return true;
-
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-
-  return (ToolOptionList::UseLumaFilterForChromaQuarterSampleInterpolation.getInt() != 0) && ((fmt == CHROMA_444) || ((fmt == CHROMA_422) && (dir == 1))); //quarter-sample chrominance
-
-#elif (RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 1)
-  return (fmt == CHROMA_444) || ((fmt == CHROMA_422) && (dir == 1)); //quarter-sample chrominance
-#elif (RExt__USE_LUMA_FILTER_FOR_CHROMA_QUARTER_SAMPLE_INTERPOLATION == 0)
-  return false;
-#endif
-}
-
-
-//======================================================================================================================
 //Transform and Quantisation  ==========================================================================================
 //======================================================================================================================
 

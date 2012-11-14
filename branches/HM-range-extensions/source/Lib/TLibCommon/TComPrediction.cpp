@@ -633,7 +633,7 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
     Int   tmpStride = m_filteredBlockTmp[0].getStride(compID);
     Pel*  tmp       = m_filteredBlockTmp[0].getAddr(compID);
 
-    const Int vFilterSize = useLumaInterpFilter(compID, chFmt, 1) ? NTAPS_LUMA : NTAPS_CHROMA;
+    const Int vFilterSize = isLuma(compID) ? NTAPS_LUMA : NTAPS_CHROMA;
 
     m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt);
     m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt);
