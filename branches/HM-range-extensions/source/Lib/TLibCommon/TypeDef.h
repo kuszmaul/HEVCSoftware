@@ -285,7 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES                  0 ///< 0 (default) = When generating DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)
   #define RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION                 0 ///< 0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation
 
   #define RExt__SET_INTRA_CHROMA_EDGE_FILTER_422                                 0 ///< 0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions

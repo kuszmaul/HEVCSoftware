@@ -143,20 +143,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 
 //------------------------------------------------
 
-static inline Bool doubleWeightIntraDCAboveSamples(const ChannelType chType, const ChromaFormat chFmt)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples.getInt() != 0));
-#elif (RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 1)
-  return (isChroma(chType) && (chFmt == CHROMA_422));
-#elif (RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool intraPlanarSingleStageCalculation(const ChannelType chType, const ChromaFormat chFmt)
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

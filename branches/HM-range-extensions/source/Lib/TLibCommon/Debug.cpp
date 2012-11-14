@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples         ("RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES",          "0", "0 (default) = When generating a DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)"                                                                   );
 EnvVar ToolOptionList::Chroma422IntraPlanarSingleStageCalculation       ("RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION",         "0", "0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation"                                                                                                                                                        );
 EnvVar ToolOptionList::SetIntraChromaEdgeFilter422                      ("RExt__SET_INTRA_CHROMA_EDGE_FILTER_422",                         "0", "0 (default) = Disable intra edge filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                 );
 EnvVar ToolOptionList::SetIntraChromaDCFilter422                        ("RExt__SET_INTRA_CHROMA_DC_FILTER_422",                           "0", "0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions"                                                                                                                                   );
@@ -188,7 +187,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES,          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION,         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_EDGE_FILTER_422,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__SET_INTRA_CHROMA_DC_FILTER_422,                           settingNameWidth, settingValueWidth);

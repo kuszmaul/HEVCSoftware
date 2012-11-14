@@ -176,12 +176,6 @@ Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt
     {
       iSum += pSrc[iInd-iSrcStride];
     }
-
-    if (doubleWeightIntraDCAboveSamples(channelType, format))
-    {
-      iSum   <<= 1;
-      iWidth <<= 1;
-    }
   }
   if (bLeft)
   {
