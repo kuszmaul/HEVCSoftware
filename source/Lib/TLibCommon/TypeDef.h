@@ -285,8 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT                                  1 ///< 0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))
-  #define RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD                           1 ///< [NO EFFECT IF RExt__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables
   #define RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES                              1 ///< 0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma
 #endif
 
@@ -355,10 +353,6 @@
 //------------------------------------------------
 // Derived Macros
 //------------------------------------------------
-
-#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT != 0) && (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)))
-#define RExt__EXTENDED_QP_TABLES
-#endif
 
 #if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1))
 #define RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
@@ -603,13 +597,6 @@ enum ScalingListSize
   SCALING_LIST_16x16,
   SCALING_LIST_32x32,
   SCALING_LIST_SIZE_NUM
-};
-
-enum ErrorScaleAdjustmentMode
-{
-  ERROR_SCALE_ADJUSTMENT_MODE_NONE       = 0,
-  ERROR_SCALE_ADJUSTMENT_MODE_422        = 1,
-  NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES = 2
 };
 
 ///MDCS modes

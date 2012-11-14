@@ -104,9 +104,10 @@ Void setQPforQuant(       QpParam      &result,
                     const ChromaFormat  chFmt,
                     const Bool          useTransformSkip )
 {
-  Int baseQp      = MAX_INT;
-  Int adjustedQp  = MAX_INT;
-  Int qpRemOffset = 0;
+  Int baseQp     = MAX_INT;
+  Int adjustedQp = MAX_INT;
+
+  //------------------------------------------------
 
   if(isLuma(chType))
   {
@@ -126,64 +127,14 @@ Void setQPforQuant(       QpParam      &result,
       baseQp = getScaledChromaQP(baseQp, chFmt) + qpBdOffset;
     }
 
-    adjustedQp = baseQp;
-
-    //------------------------------------------------
-
     //adjustment for chroma 4:2:2
-    
-    if ((chFmt == CHROMA_422) && !useTransformSkip)
-    {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-      switch (ToolOptionList::Chroma422QuantiserAdjustment.getInt())
-      {
-        case 1: //+3 method
-          switch (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt())
-          {
-            case 1:                          adjustedQp  += 3; break; //Qp modification method
-            case 2:                          qpRemOffset += 3; break; //Table method
-            default: break;
-          }
-          break; 
-
-        case 2: //-3 method
-          switch (ToolOptionList::Chroma422QuantiserAdjustmentMethod.getInt())
-          {
-            case 1: assert(adjustedQp >= 3); adjustedQp  -= 3; break; //Qp modification method
-            case 2:                          qpRemOffset -= 3; break; //Table method
-            default: break;
-          }
-          break; 
-
-        default: break;
-      }
-#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 1) //+3 method
-  #if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
-      adjustedQp  += 3;
-  #elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
-      qpRemOffset += 3;
-  #endif
-#elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT == 2) //-3 method
-  #if   (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 1) //Qp modification method
-      adjustedQp  -= 3;
-  #elif (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2) //Table method
-      qpRemOffset -= 3;
-  #endif
-#endif
-    }
-
-    //------------------------------------------------
+    adjustedQp = ((chFmt == CHROMA_422) && !useTransformSkip) ? (baseQp + 3) : baseQp;
   }
 
-  if ((adjustedQp == baseQp) && (qpRemOffset == 0))
-  {
-    result.setBothQps   (QpParam::QpData(baseQp,     (baseQp     / 6),  (baseQp     % 6)               ));
-  }
-  else
-  {
-    result.setBaseQp    (QpParam::QpData(baseQp,     (baseQp     / 6),  (baseQp     % 6)               ));
-    result.setAdjustedQp(QpParam::QpData(adjustedQp, (adjustedQp / 6), ((adjustedQp % 6) + qpRemOffset)));
-  }
+  //------------------------------------------------
+
+  result.setBaseQp    (QpParam::QpData(baseQp,     (baseQp     / 6), (baseQp     % 6)));
+  result.setAdjustedQp(QpParam::QpData(adjustedQp, (adjustedQp / 6), (adjustedQp % 6)));
 }
 
 

@@ -149,8 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::Chroma422QuantiserAdjustment                     ("RExt__CHROMA_422_QUANTISER_ADJUSTMENT",                          "1", "0 = No quantiser modification for 4:2:2 TUs (shift in transform is rounded down), 1 (default) = Use rounded-down shift in transform and introduce an additional factor of sqrt(2) into the quantisation to normalise, 2 = Use rounded-up shift in transform and additional quantisation factor of 1/(sqrt(2))" );
-EnvVar ToolOptionList::Chroma422QuantiserAdjustmentMethod               ("RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD",                   "1", "[NO EFFECT IF RExt__CHROMA_422_QUANTISER_ADJUSTMENT IS 0]  0 = Directly divide/multiply coefficients by sqrt(2), 1 (default) = Modify QP by +/- 3 to effect division/multiplication by sqrt(2), 2 = Modify QP_rem by +/- 3 and use extended 9-element quantisation coefficient tables"                         );
 EnvVar ToolOptionList::AdditionalChromaQpMappingTables                  ("RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES",                      "1", "0 = Use same g_aucChromaScale tables for mapping chroma QP as 4:2:0, 1 (default) = Use alternative tables for 4:2:2 and 4:4:4 that tend towards the behaviour of luma"                                                                                                                                         );
 EnvVar ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection ("RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION", "1", "0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)"                                                                                                                       );
 EnvVar ToolOptionList::Chroma422SignificanceMapContextGrid              ("RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID",                 "0", "[AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4"                                                      );
@@ -179,8 +177,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__CHROMA_422_QUANTISER_ADJUSTMENT,                          settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES,                      settingNameWidth, settingValueWidth);
 #endif
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
@@ -214,10 +210,6 @@ Void printRExtMacroSettings()
   //------------------------------------------------
 
   //derived macros
-
-#ifdef RExt__EXTENDED_QP_TABLES
-  std::cout << std::setw(settingNameWidth) << "RExt__EXTENDED_QP_TABLES" << " is defined" << std::endl;
-#endif
 
 #ifdef RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
   std::cout << std::setw(settingNameWidth) << "RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES" << " is defined" << std::endl;

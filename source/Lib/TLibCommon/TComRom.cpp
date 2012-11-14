@@ -415,28 +415,6 @@ Int g_invQuantScales[SCALING_LIST_REM_NUM] =
   40,45,51,57,64,72
 };
 
-#ifdef RExt__EXTENDED_QP_TABLES
-Int g_quantScalesInc[SCALING_LIST_REM_NUM] =
-{
-  26214,23302,20560,18396,16384,14564,12945,11523,10280
-};
-
-Int g_invQuantScalesInc[SCALING_LIST_REM_NUM] =
-{
-  40,45,51,57,64,72,81,91,102
-};
-
-Int g_quantScalesDec[SCALING_LIST_REM_NUM] =
-{
-  36158,32768,29127,26214,23302,20560,18396,16384,14564
-};
-
-Int g_invQuantScalesDec[SCALING_LIST_REM_NUM] =
-{
-  29,32,36,40,45,51,57,64,72
-};
-#endif
-
 const TMatrixCoeff g_aiT4[4][4] =
 {
   { 64, 64, 64, 64},

@@ -115,9 +115,8 @@ public:
 
   //set accessors
 
-  Void setBaseQp     (const QpData &values) { baseQp     = values;          }
-  Void setAdjustedQp (const QpData &values) { adjustedQp = values;          }
-  Void setBothQps    (const QpData &values) { baseQp = adjustedQp = values; }
+  Void setBaseQp     (const QpData &values) { baseQp     = values; }
+  Void setAdjustedQp (const QpData &values) { adjustedQp = values; }
 
 }; // END CLASS DEFINITION QpParam
 
@@ -203,10 +202,10 @@ public:
 
   Void initScalingList                      ();
   Void destroyScalingList                   ();
-  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode);
-  Double* getErrScaleCoeff ( UInt list, UInt size, Int qp, ErrorScaleAdjustmentMode errorScaleAdjustmentMode ) {return m_errScale   [size][list][qp + getQpRemTableIndexOffset()][errorScaleAdjustmentMode];};  //!< get Error Scale Coefficent
-  Int* getQuantCoeff       ( UInt list, Int qp, UInt size)                                                     {return m_quantCoef  [size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get Quant Coefficent
-  Int* getDequantCoeff     ( UInt list, Int qp, UInt size)                                                     {return m_dequantCoef[size][list][qp + getQpRemTableIndexOffset()];                          };  //!< get DeQuant Coefficent
+  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp );
+  Double* getErrScaleCoeff ( UInt list, UInt size, Int qp ) { return m_errScale   [size][list][qp]; };  //!< get Error Scale Coefficent
+  Int* getQuantCoeff       ( UInt list, Int qp, UInt size ) { return m_quantCoef  [size][list][qp]; };  //!< get Quant Coefficent
+  Int* getDequantCoeff     ( UInt list, Int qp, UInt size ) { return m_dequantCoef[size][list][qp]; };  //!< get DeQuant Coefficent
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
   Bool getUseScalingList   (){ return m_scalingListEnabledFlag; };
   Void setFlatScalingList  (const ChromaFormat format);
@@ -253,9 +252,9 @@ protected:
 
   Bool     m_scalingListEnabledFlag;
 
-  Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of quantization matrix coefficient 4x4
-  Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM];                                         ///< array of dequantization matrix coefficient 4x4
-  Double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM][NUMBER_OF_ERROR_SCALE_ADJUSTMENT_MODES]; ///< array of quantization matrix coefficient 4x4
+  Int      *m_quantCoef      [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
+  Int      *m_dequantCoef    [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of dequantization matrix coefficient 4x4
+  Double   *m_errScale       [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
 
 private:
   // forward Transform
