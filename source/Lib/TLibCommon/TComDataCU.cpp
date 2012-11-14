@@ -1867,7 +1867,7 @@ UInt TComDataCU::getCtxQtCbf( TComTU &rTu, const ChannelType chType, const Bool 
 {
   const UInt transformDepth = useAdjustedDepth ? rTu.GetTransformDepthRelAdj(chType) : rTu.GetTransformDepthRel();
 
-  if (useTransformDepthForCbfCtxSelection(rTu.GetChromaFormat(), chType))
+  if (isChroma(chType))
   {
     return transformDepth;
   }

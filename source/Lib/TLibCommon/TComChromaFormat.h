@@ -256,22 +256,6 @@ static const UInt CBFContextStartTable[MAX_NUM_CHANNEL_TYPE] = {FIRST_CBF_CTX_LU
 
 //------------------------------------------------
 
-static inline Bool useTransformDepthForCbfCtxSelection(const ChromaFormat fmt, const ChannelType chType)
-{
-#if (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
-  return false;
-#elif RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (isChroma(chType) && ((fmt != CHROMA_444) || (ToolOptionList::UseTransformDepthFor444ChromaCBFContextSelection.getInt() != 0)));
-#elif (RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 1)
-  return isChroma(chType);
-#elif (RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION == 0)
-  return (isChroma(chType) && (fmt != CHROMA_444));
-#endif
-}
-
-
-//------------------------------------------------
-
 //Function for last-significant-coefficient context selection parameters
 
 static inline Void getLastSignificantContextParameters (const ComponentID  component,
