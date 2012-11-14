@@ -694,30 +694,27 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiIntraDirChroma = pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx );
 
-  if (!reducedIntraChromaModes())
+  if( uiIntraDirChroma == DM_CHROMA_IDX )
   {
-    if( uiIntraDirChroma == DM_CHROMA_IDX )
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
-    }
-    else
-    {
-      m_pcBinIf->encodeBin( 1, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
+    m_pcBinIf->encodeBin( 0, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
+  }
+  else
+  {
+    m_pcBinIf->encodeBin( 1, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
 
-      UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
-      pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
+    UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
+    pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
 
-      for( Int i = 0; i < NUM_CHROMA_MODE - 1; i++ )
+    for( Int i = 0; i < NUM_CHROMA_MODE - 1; i++ )
+    {
+      if( uiIntraDirChroma == uiAllowedChromaDir[i] )
       {
-        if( uiIntraDirChroma == uiAllowedChromaDir[i] )
-        {
-          uiIntraDirChroma = i;
-          break;
-        }
+        uiIntraDirChroma = i;
+        break;
       }
-
-      m_pcBinIf->encodeBinsEP( uiIntraDirChroma, 2 );
     }
+
+    m_pcBinIf->encodeBinsEP( uiIntraDirChroma, 2 );
   }
 
   return;

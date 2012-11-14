@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar ReducedChromaIntraModeSet;
   extern EnvVar CombinedLumaChromaIntraModeSearch;
   extern EnvVar EncoderInitialIntraModePreEstDMChroma;
   extern EnvVar EncoderFastIntraModeSearchOverAllComponents;

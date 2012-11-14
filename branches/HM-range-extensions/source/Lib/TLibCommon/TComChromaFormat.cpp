@@ -45,16 +45,9 @@ UInt *getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx,
 {
   if (fullRDSearchOverAllComponents() && !bLumaOnly && (getChromasCorrespondingPULumaIdx(uiAbsPartIdx, pcCU->getPic()->getChromaFormat()) == uiAbsPartIdx))
   {
-    if (reducedIntraChromaModes())
-    {
-      return emptySearch;
-    }
-    else
-    {
-      pcCU->getAllowedChromaDir(uiAbsPartIdx, searchArray);
-      searchArray[NUM_CHROMA_MODE] = STOPCHROMASEARCH_MODE_IDX;
-      return searchArray;
-    }
+    pcCU->getAllowedChromaDir(uiAbsPartIdx, searchArray);
+    searchArray[NUM_CHROMA_MODE] = STOPCHROMASEARCH_MODE_IDX;
+    return searchArray;
   }
   else
   {

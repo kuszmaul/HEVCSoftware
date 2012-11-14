@@ -1522,7 +1522,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
   if( bLumaChromaCombinedSearch )
   {
-    if (reducedIntraChromaModes() || initalDMChromaPreEst())
+    if (initalDMChromaPreEst())
     {
       rpcTempCU->setIntraDirSubParts  ( CHANNEL_TYPE_CHROMA, DM_CHROMA_IDX, 0, uiDepth + 0 );
     }

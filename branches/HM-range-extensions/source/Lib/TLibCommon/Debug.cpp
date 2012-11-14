@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::ReducedChromaIntraModeSet                        ("RExt__REDUCED_CHROMA_INTRA_MODE_SET",                            "0", "0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)"                                                                                                                                                                           );
 EnvVar ToolOptionList::CombinedLumaChromaIntraModeSearch                ("RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH",                   "0", "0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account"                                                                                                                                                       );
 EnvVar ToolOptionList::EncoderInitialIntraModePreEstDMChroma            ("RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA",               "0", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA"                                                                                                       );
 EnvVar ToolOptionList::EncoderFastIntraModeSearchOverAllComponents      ("RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS",       "0", "[NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components"                                                                                                                       );
@@ -197,7 +196,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__REDUCED_CHROMA_INTRA_MODE_SET,                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA,               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS,       settingNameWidth, settingValueWidth);
