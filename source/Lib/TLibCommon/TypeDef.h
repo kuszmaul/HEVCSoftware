@@ -285,7 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                1 ///< 0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
   #define RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
 #endif
 
@@ -401,10 +400,6 @@
 //------------------------------------------------
 // Derived Macros
 //------------------------------------------------
-
-#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE != 0))
-#define RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
-#endif
 
 #if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 0))
 #define RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED

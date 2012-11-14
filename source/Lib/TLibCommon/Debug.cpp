@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::IntraNxNCUChromaPUSplitMode                      ("RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE",                        "1", "0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)"                                                                        );
 EnvVar ToolOptionList::DoubleHeightCoefficientGroups422                 ("RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422",                     "0", "0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2"                                                                                                                                                                                             );
 EnvVar ToolOptionList::ReducedChromaIntraModeSet                        ("RExt__REDUCED_CHROMA_INTRA_MODE_SET",                            "0", "0 (default) = Allow chroma to select a different intra prediction mode to luma, 1 = Always use DM_Chroma or LM_Chroma (when enbled)"                                                                                                                                                                           );
 EnvVar ToolOptionList::CombinedLumaChromaIntraModeSearch                ("RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH",                   "0", "0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account"                                                                                                                                                       );
@@ -199,7 +198,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422,                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__REDUCED_CHROMA_INTRA_MODE_SET,                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH,                   settingNameWidth, settingValueWidth);
@@ -254,10 +252,6 @@ Void printRExtMacroSettings()
   //------------------------------------------------
 
   //derived macros
-
-#ifdef RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
-  std::cout << std::setw(settingNameWidth) << "RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS" << " is defined" << std::endl;
-#endif
 
 #ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
   std::cout << std::setw(settingNameWidth) << "RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED" << " is defined" << std::endl;
