@@ -281,14 +281,6 @@
 #define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
-// Block Structure
-//------------------------------------------------
-
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
-#endif
-
-//------------------------------------------------
 // Intra Prediction
 //------------------------------------------------
 
@@ -411,10 +403,6 @@
 
 #if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__ADDITIONAL_CHROMA_QP_MAPPING_TABLES == 1))
 #define RExt__MULTIPLE_CHROMA_QP_MAPPING_TABLES
-#endif
-
-#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 != 0))
-#define RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
 #endif
 
 //if using fully unified or extended context variables, always use the luminance selection methods
@@ -638,12 +626,7 @@ enum COEFF_SCAN_GROUP_TYPE
 {
   SCAN_UNGROUPED   = 0,
   SCAN_GROUPED_4x4 = 1,
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-  SCAN_GROUPED_4x8 = 2,
-  SCAN_NUMBER_OF_GROUP_TYPES = 3
-#else
   SCAN_NUMBER_OF_GROUP_TYPES = 2
-#endif
 };
 
 enum SignificanceMapContextType
@@ -857,17 +840,6 @@ struct TUEntropyCodingParameters
           }
         }
         fixedGridContextParameters;
-
-        //------------------
-
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-        struct NeighbourhoodContextParameters
-        {
-          UInt pattern00Context1Threshold;
-          UInt pattern00Context2Threshold;
-        }
-        neighbourhoodContextParameters;
-#endif
 
         //------------------
 };

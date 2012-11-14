@@ -108,11 +108,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x4  3
 #define NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x4  1
 
-#ifdef RExt__EXTENDED_SIZE_COEFFICIENT_GROUPS
-#define NEIGHBOURHOOD_00_CONTEXT_1_THRESHOLD_4x8  4
-#define NEIGHBOURHOOD_00_CONTEXT_2_THRESHOLD_4x8  2
-#endif
-
 //------------------
 
 #define FIRST_SIG_FLAG_CTX_LUMA                   0

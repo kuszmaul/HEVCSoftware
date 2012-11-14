@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar DoubleHeightCoefficientGroups422;
   extern EnvVar ReducedChromaIntraModeSet;
   extern EnvVar CombinedLumaChromaIntraModeSearch;
   extern EnvVar EncoderInitialIntraModePreEstDMChroma;

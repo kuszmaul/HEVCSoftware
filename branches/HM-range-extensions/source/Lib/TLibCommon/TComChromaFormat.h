@@ -123,20 +123,6 @@ static inline Bool enable4ChromaPUsInIntraNxNCU(const ChromaFormat chFmt)
 
 //------------------------------------------------
 
-static inline Bool doubleHeightCoefficientGroups(const ComponentID compID, const ChromaFormat chFmt)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return isChroma(compID) && (chFmt == CHROMA_422) && (ToolOptionList::DoubleHeightCoefficientGroups422.getInt() != 0);
-#elif (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 1)
-  return isChroma(compID) && (chFmt == CHROMA_422);
-#elif (RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422 == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 //returns the part index of the luma region that is co-located with the specified chroma region
 
 static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const ChromaFormat chFmt)
