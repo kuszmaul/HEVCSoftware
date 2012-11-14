@@ -111,39 +111,13 @@ static inline UInt getTotalBits(const UInt width, const UInt height, const Chrom
 
 //------------------------------------------------
 
-//returns true if it is possible for chroma to split down to the same level as luma
-//(i.e. it will never have to "step-up" such that a chroma TU can cover multiple luma TUs)
-
-static inline Bool chromaTUCanSplitDownToMinimumLumaSize(const ChromaFormat chFmt)
-{
-  //     (      this part checks if chroma can split for 4x4 luma      )    (  this checks if min luma size is 4x4  )
-  return (chFmt == CHROMA_444) || ((g_uiMaxCUWidth >> g_uiMaxCUDepth) >= 8);
-}
-
-
-//------------------------------------------------
-
 // In HM, a CU only has one chroma intra prediction direction, that corresponds to the top left luma intra prediction
 // even if the NxN PU split occurs when 4 sub-TUs exist for chroma.
 // Use this function to allow NxN PU splitting for chroma.
 
 static inline Bool enable4ChromaPUsInIntraNxNCU(const ChromaFormat chFmt)
 {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  switch (ToolOptionList::IntraNxNCUChromaPUSplitMode.getInt())
-  {
-    case 2: return                          chromaTUCanSplitDownToMinimumLumaSize(chFmt); break;
-    case 1: return (chFmt == CHROMA_444) && chromaTUCanSplitDownToMinimumLumaSize(chFmt); break;
-    default: break;
-  }
-  return false;
-#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 2)
-  return chromaTUCanSplitDownToMinimumLumaSize(chFmt);
-#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 1)
-  return (chFmt == CHROMA_444) && chromaTUCanSplitDownToMinimumLumaSize(chFmt);
-#elif (RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE == 0)
-  return false;
-#endif
+  return (chFmt == CHROMA_444);
 }
 
 
@@ -167,11 +141,7 @@ static inline Bool doubleHeightCoefficientGroups(const ComponentID compID, const
 
 static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const ChromaFormat chFmt)
 {
-#ifdef RExt__CHROMA_NxN_PU_CAN_HAVE_4_PARTS
   return enable4ChromaPUsInIntraNxNCU(chFmt) ? lumaLCUIdx : lumaLCUIdx & (~((1<<(2*g_uiAddCUDepth))-1)); //(lumaLCUIdx/numParts)*numParts;
-#else
-  return lumaLCUIdx & (~((1<<(2*g_uiAddCUDepth))-1));                                            //(lumaLCUIdx/numParts)*numParts;
-#endif
 }
 
 

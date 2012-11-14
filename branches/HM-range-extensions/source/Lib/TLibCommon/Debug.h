@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar IntraNxNCUChromaPUSplitMode;
   extern EnvVar DoubleHeightCoefficientGroups422;
   extern EnvVar ReducedChromaIntraModeSet;
   extern EnvVar CombinedLumaChromaIntraModeSearch;
