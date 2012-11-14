@@ -51,7 +51,7 @@
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
-                           const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode );
+                           const ChannelType chType, const ChromaFormat chFmt );
 
 /// constrained intra prediction
 Bool  isAboveLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT );
@@ -172,7 +172,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
     Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
     fillReferenceSamples (g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu,
-                          iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt, getLMChromaSamplesFrom2ndLeftCol(bLMmode, chFmt));
+                          iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt);
 
 
 #ifdef DEBUG_STRING
@@ -329,7 +329,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
                            const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
-                           const ChannelType chType, const ChromaFormat chFmt, Bool bLMmode )
+                           const ChannelType chType, const ChromaFormat chFmt )
 {
   const Pel* piRoiTemp;
   Int  i, j;
@@ -375,11 +375,6 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     // Fill left and below left border with rec. samples
     piRoiTemp = piRoiOrigin - 1;
 
-    if (bLMmode)
-    {
-      piRoiTemp --; // move to the second left column
-    }
-
     for (i=1; i<uiHeight; i++)
     {
       piAdiTemp[i*uiWidth] = *(piRoiTemp);
@@ -418,10 +413,6 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
 
     // Fill left & below-left samples
     piRoiTemp += iPicStride;
-    if (bLMmode)
-    {
-      piRoiTemp --; // move the second left column
-    }
     piAdiLineTemp--;
     pbNeighborFlags--;
 
