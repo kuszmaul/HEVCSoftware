@@ -69,9 +69,9 @@ public:
   
   // if fileFormat<NUM_CHROMA_FORMAT, the format of the file is that format specified, else it is the format of the TComPicYuv.
 
-  Bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< read  one YUV frame with padding parameter
+  Bool  read  ( TComPicYuv*   pPicYuv, Bool RGBChannelOrder, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< read  one YUV frame with padding parameter
 
-  Bool  write ( TComPicYuv*   pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< write one YUV frame with padding parameter
+  Bool  write ( TComPicYuv*   pPicYuv, Bool RGBChannelOrder, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< write one YUV frame with padding parameter
   
   Bool  isEof ();                                           ///< check for end-of-file
   Bool  isFail();                                           ///< check for failure

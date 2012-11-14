@@ -111,7 +111,7 @@ Int main(Int argc, const char** argv)
   UInt num_frames_processed = 0;
   while (!input.isEof()) 
   {
-    if (! input.read(&frame, pad))
+    if (! input.read(&frame, false, pad))
     {
       break;
     }
@@ -127,7 +127,7 @@ Int main(Int argc, const char** argv)
     img[0] = 1;
 #endif
 
-    output.write(&frame);
+    output.write(&frame, false);
     num_frames_processed++;
     if (num_frames_processed == num_frames)
       break;
