@@ -102,8 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar Chroma422QuantiserAdjustment;
-  extern EnvVar Chroma422QuantiserAdjustmentMethod;
   extern EnvVar UseTransformDepthFor444ChromaCBFContextSelection;
   extern EnvVar AdditionalChromaQpMappingTables;
   extern EnvVar Chroma422SignificanceMapContextGrid;

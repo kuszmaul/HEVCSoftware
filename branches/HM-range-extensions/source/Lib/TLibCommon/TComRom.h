@@ -62,11 +62,7 @@
 #define     MAX_TU_SIZE             32
 #define     MAX_NUM_SPU_W           (MAX_CU_SIZE/MIN_PU_SIZE)   // maximum number of SPU in horizontal line
 
-#ifdef RExt__EXTENDED_QP_TABLES
-#define SCALING_LIST_REM_NUM 9     ///< remainder of QP/6
-#else
-#define SCALING_LIST_REM_NUM 6
-#endif
+#define     SCALING_LIST_REM_NUM     6
 
 // ====================================================================================================================
 // Initialize / destroy functions
@@ -129,13 +125,6 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 
 extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)  
 extern Int g_invQuantScales[SCALING_LIST_REM_NUM];          // IQ(QP%6)
-
-#ifdef RExt__EXTENDED_QP_TABLES
-extern Int g_quantScalesInc[SCALING_LIST_REM_NUM];
-extern Int g_invQuantScalesInc[SCALING_LIST_REM_NUM];
-extern Int g_quantScalesDec[SCALING_LIST_REM_NUM];
-extern Int g_invQuantScalesDec[SCALING_LIST_REM_NUM];
-#endif
 
 #define TRANSFORM_MATRIX_SHIFT 6 //NOTE: RExt - This value does not directly affect the transform matrices and must be adjusted in line with any change made to them
 
