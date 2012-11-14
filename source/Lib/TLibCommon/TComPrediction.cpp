@@ -259,7 +259,11 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
     const Int        intraPredAngleMode = (bIsModeVer) ? (Int)dirMode - VER_IDX :  -((Int)dirMode - HOR_IDX);
     const Int        absAngMode         = abs(intraPredAngleMode);
     const Int        signAng            = intraPredAngleMode < 0 ? -1 : 1;
-    const FilterMode filterMode         = getIntraEdgeFilterMode(channelType, format, uiWidth, uiHeight);
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
+    const Bool       edgeFilter         = isLuma(channelType) && (width <= MAXIMUM_FILTERED_WIDTH) && (height <= MAXIMUM_FILTERED_HEIGHT);
+#else
+    const Bool       edgeFilter         = isLuma(channelType);
+#endif
 
     // Set bitshifts and scale the angle parameter to block size
     static const Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
@@ -337,7 +341,7 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
         }
       }
 
-      if ((filterMode == FILTER_BOTH_DIRECTIONS) || (filterMode == (bIsModeVer ? FILTER_HORIZONTAL_ONLY : FILTER_VERTICAL_ONLY)))
+      if (edgeFilter)
       {
         for (Int y=0;y<height;y++)
         {
