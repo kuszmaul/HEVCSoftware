@@ -2008,7 +2008,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         UInt         uiOverallDistC        = 0;
         UInt         CandNum;
         Double       CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
-        UInt         arrayChromaModeListStorage[NUM_CHROMA_MODE+3];
 
   //===== set QP and clear Cbf =====
   if ( pcCU->getSlice()->getPPS()->getUseDQP() == true)
@@ -2129,7 +2128,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     DEBUG_STRING_NEW(sPU)
     UInt    uiBestPUMode  = 0;
-    UInt    uiBestPUModeC = INVALID_MODE_IDX;
     UInt    uiBestPUDistY = 0;
     UInt    uiBestPUDistC = 0;
     Double  dBestPUCost   = MAX_DOUBLE;
@@ -2148,71 +2146,59 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
       pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
 
-      const UInt *arrayChromaModeList=getCombinedSearchChromaModeList(pcCU, uiPartOffset, bLumaOnly, arrayChromaModeListStorage);
-
-      for (UInt uiCMode =0 ; arrayChromaModeList[uiCMode] != STOPCHROMASEARCH_MODE_IDX; uiCMode++)
+      DEBUG_STRING_NEW(sMode)
+      // set context models
+      if( m_bUseSBACRD )
       {
-        UInt uiOrgModeC = arrayChromaModeList[uiCMode];
+        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+      }
 
-        DEBUG_STRING_NEW(sMode)
-        if (uiOrgModeC!=INVALID_MODE_IDX)
-        {
-          pcCU->setIntraDirSubParts  (CHANNEL_TYPE_CHROMA, uiOrgModeC, getChromasCorrespondingPULumaIdx(uiPartOffset, chFmt), uiDepth + uiInitTrDepthC );
-        }
-        // set context models
-        if( m_bUseSBACRD )
-        {
-          m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
-        }
-
-        // determine residual for partition
-        UInt   uiPUDistY = 0;
-        UInt   uiPUDistC = 0;
-        Double dPUCost   = 0.0;
+      // determine residual for partition
+      UInt   uiPUDistY = 0;
+      UInt   uiPUDistC = 0;
+      Double dPUCost   = 0.0;
 #if HHI_RQT_INTRA_SPEEDUP
-        xRecurIntraCodingQT( bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost, tuRecurseWithPU DEBUG_STRING_PASS_INTO(sMode) );
+      xRecurIntraCodingQT( bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost, tuRecurseWithPU DEBUG_STRING_PASS_INTO(sMode) );
 #else
-        xRecurIntraCodingQT( bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost, tuRecurseWithPU );
+      xRecurIntraCodingQT( bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost, tuRecurseWithPU );
 #endif
 
 #ifdef DEBUG_INTRA_SEARCH_COSTS
-        std::cout << "2nd pass [luma,chroma] mode [" << Int(pcCU->getIntraDir(CHANNEL_TYPE_LUMA, uiPartOffset)) << "," << Int(pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, uiPartOffset)) << "] cost = " << dPUCost << "\n";
+      std::cout << "2nd pass [luma,chroma] mode [" << Int(pcCU->getIntraDir(CHANNEL_TYPE_LUMA, uiPartOffset)) << "," << Int(pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, uiPartOffset)) << "] cost = " << dPUCost << "\n";
 #endif
 
-        // check r-d cost
-        if( dPUCost < dBestPUCost )
-        {
-          DEBUG_STRING_SWAP(sPU, sMode)
+      // check r-d cost
+      if( dPUCost < dBestPUCost )
+      {
+        DEBUG_STRING_SWAP(sPU, sMode)
 #if HHI_RQT_INTRA_SPEEDUP_MOD
-          uiSecondBestMode  = uiBestPUMode;
-          dSecondBestPUCost = dBestPUCost;
+        uiSecondBestMode  = uiBestPUMode;
+        dSecondBestPUCost = dBestPUCost;
 #endif
-          uiBestPUMode  = uiOrgMode;
-          uiBestPUDistY = uiPUDistY;
-          uiBestPUDistC = uiPUDistC;
-          dBestPUCost   = dPUCost;
-          uiBestPUModeC = uiOrgModeC; // only valid when bChromaTestUpdateIntraDir is true
+        uiBestPUMode  = uiOrgMode;
+        uiBestPUDistY = uiPUDistY;
+        uiBestPUDistC = uiPUDistC;
+        dBestPUCost   = dPUCost;
 
-          xSetIntraResultQT( bLumaOnly, pcRecoYuv, tuRecurseWithPU );
+        xSetIntraResultQT( bLumaOnly, pcRecoYuv, tuRecurseWithPU );
 
-          UInt uiQPartNum = tuRecurseWithPU.GetAbsPartIdxNumParts();
+        UInt uiQPartNum = tuRecurseWithPU.GetAbsPartIdxNumParts();
 
-          ::memcpy( m_puhQTTempTrIdx,  pcCU->getTransformIdx()       + uiPartOffset, uiQPartNum * sizeof( UChar ) );
-          for (UInt component = 0; component < numberValidComponents; component++)
-          {
-            const ComponentID compID = ComponentID(component);
-            ::memcpy( m_puhQTTempCbf[compID], pcCU->getCbf( compID  ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
-            ::memcpy( m_puhQTTempTransformSkipFlag[compID],  pcCU->getTransformSkip(compID)  + uiPartOffset, uiQPartNum * sizeof( UChar ) );
-          }
-        }
-#if HHI_RQT_INTRA_SPEEDUP_MOD
-        else if( dPUCost < dSecondBestPUCost )
+        ::memcpy( m_puhQTTempTrIdx,  pcCU->getTransformIdx()       + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+        for (UInt component = 0; component < numberValidComponents; component++)
         {
-          uiSecondBestMode  = uiOrgMode;
-          dSecondBestPUCost = dPUCost;
+          const ComponentID compID = ComponentID(component);
+          ::memcpy( m_puhQTTempCbf[compID], pcCU->getCbf( compID  ) + uiPartOffset, uiQPartNum * sizeof( UChar ) );
+          ::memcpy( m_puhQTTempTransformSkipFlag[compID],  pcCU->getTransformSkip(compID)  + uiPartOffset, uiQPartNum * sizeof( UChar ) );
         }
-#endif
       }
+#if HHI_RQT_INTRA_SPEEDUP_MOD
+      else if( dPUCost < dSecondBestPUCost )
+      {
+        uiSecondBestMode  = uiOrgMode;
+        dSecondBestPUCost = dPUCost;
+      }
+#endif
     } // Mode loop
 
 #if HHI_RQT_INTRA_SPEEDUP
@@ -2237,10 +2223,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
       pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
       DEBUG_STRING_NEW(sModeTree)
-      if (uiBestPUModeC!=INVALID_MODE_IDX)
-      {
-        pcCU->setIntraDirSubParts  ( CHANNEL_TYPE_CHROMA, uiBestPUModeC, getChromasCorrespondingPULumaIdx(uiPartOffset, chFmt), uiDepth + uiInitTrDepthC );
-      }
 
       // set context models
       if( m_bUseSBACRD )

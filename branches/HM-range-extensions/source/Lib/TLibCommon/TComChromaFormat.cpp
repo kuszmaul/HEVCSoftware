@@ -37,24 +37,6 @@
 #include "TComDataCU.h"
 #include "TComTrQuant.h"
 
-//----------------------------------------------------------------------------------------------------------------------
-
-static UInt emptySearch[]={INVALID_MODE_IDX, STOPCHROMASEARCH_MODE_IDX };
-
-UInt *getCombinedSearchChromaModeList(TComDataCU *pcCU, const UInt uiAbsPartIdx, const Bool bLumaOnly, UInt searchArray[NUM_CHROMA_MODE+3])
-{
-  if (fullRDSearchOverAllComponents() && !bLumaOnly && (getChromasCorrespondingPULumaIdx(uiAbsPartIdx, pcCU->getPic()->getChromaFormat()) == uiAbsPartIdx))
-  {
-    pcCU->getAllowedChromaDir(uiAbsPartIdx, searchArray);
-    searchArray[NUM_CHROMA_MODE] = STOPCHROMASEARCH_MODE_IDX;
-    return searchArray;
-  }
-  else
-  {
-    return emptySearch;
-  }
-}
-
 
 //----------------------------------------------------------------------------------------------------------------------
 
