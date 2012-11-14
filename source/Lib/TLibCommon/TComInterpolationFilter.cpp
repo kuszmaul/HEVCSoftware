@@ -334,7 +334,7 @@ Void TComInterpolationFilter::filterHor(const ComponentID compID, Pel *src, Int 
   {
     filterCopy(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, true, isLast );
   }
-  else if (useLumaInterpFilter(compID, fmt, 0))
+  else if (isLuma(compID))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
     filterHor<NTAPS_LUMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
@@ -367,7 +367,7 @@ Void TComInterpolationFilter::filterVer(const ComponentID compID, Pel *src, Int 
   {
     filterCopy(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isFirst, isLast );
   }
-  else if (useLumaInterpFilter(compID, fmt, 1))
+  else if (isLuma(compID))
   {
     assert(frac >= 0 && frac < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS);
     filterVer<NTAPS_LUMA>(g_bitDepth[toChannelType(compID)], src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);
