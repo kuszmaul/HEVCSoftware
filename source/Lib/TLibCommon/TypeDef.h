@@ -286,7 +286,6 @@
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
   #define RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH                           0 ///< 0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account
-  #define RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA                       0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Use pre-est to estimate initial chroma intra prediction mode, 1 = Set initial chroma intra prediciton mode to DM_CHROMA
   #define RExt__ENCODER_FAST_INTRA_MODE_SEARCH_OVER_ALL_COMPONENTS               0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Fast encoder intra mode search using luma only, 1 = Fast encoder intra mode search using all components
   #define RExt__ENCODER_FULL_RATE_DISTORTION_SEARCH_OVER_ALL_COMPONENTS          0 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 (default) = Full rate-distortion intra mode search using luma only, 1 = Full rate-distortion intra mode search also tests all allowed chroma intra modes
   #define RExt__ADDITIONAL_TRIAL_ENCODE_CHROMA_INTRA_MODE_SEARCH                 1 ///< [NO EFFECT IF RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH IS 0]  0 = When using combined luma & chroma intra search, skip the trial-encode to define the final chroma intra mode, 1 (default) = Enable trial-encode (overwriting the pre-estimated chroma intra mode)

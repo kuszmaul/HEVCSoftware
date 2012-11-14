@@ -149,20 +149,6 @@ static inline Bool combinedLumaChromaIntraSearch()
 
 //------------------------------------------------
 
-static inline Bool initalDMChromaPreEst()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::EncoderInitialIntraModePreEstDMChroma.getInt() != 0);
-#elif (RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 1)
-  return true;
-#elif (RExt__ENCODER_INITIAL_INTRA_MODE_PREEST_DMCHROMA == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool fastSearchOverAllComponents()
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
