@@ -1699,7 +1699,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
 
     const UInt uiFullDepth = rTu.GetTransformDepthTotal();
 
-    Bool checkTransformSkip = pcCU->getSlice()->getPPS()->getUseTransformSkip() && !singleTransformSkipFlag(format);
+    Bool checkTransformSkip = pcCU->getSlice()->getPPS()->getUseTransformSkip();
 
     checkTransformSkip &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Cb));
 
@@ -1820,9 +1820,9 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*     pcOrgYuv,
     {
       for (UInt ch=COMPONENT_Cb; ch<numberValidComponents; ch++)
       {
-        const ComponentID compID = ComponentID(ch);
-        const UInt totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
-        const UInt transformSkipFlag = ((singleTransformSkipFlag(format)) ? (pcCU->getTransformSkip(uiAbsPartIdx, COMPONENT_Y)) : 0);
+        const ComponentID compID                 = ComponentID(ch);
+        const UInt        totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
+        const UInt        transformSkipFlag      = 0;
 
         pcCU ->setTransformSkipSubParts( transformSkipFlag, compID, uiAbsPartIdx, totalAdjustedDepthChan );
         xIntraCodingTUBlock( pcOrgYuv, pcPredYuv, pcResiYuv, ruiDist, compID, rTu DEBUG_STRING_PASS_INTO(sDebug) );

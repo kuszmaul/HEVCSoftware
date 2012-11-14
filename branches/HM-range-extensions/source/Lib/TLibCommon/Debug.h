@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar SingleTransformSkipFlagForAllChannels444;
   extern EnvVar Chroma422QuantiserAdjustment;
   extern EnvVar Chroma422QuantiserAdjustmentMethod;
   extern EnvVar UseTransformDepthFor444ChromaCBFContextSelection;
