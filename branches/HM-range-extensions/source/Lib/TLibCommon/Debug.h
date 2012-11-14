@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar UseTransformDepthFor444ChromaCBFContextSelection;
   extern EnvVar Chroma422SignificanceMapContextGrid;
   extern EnvVar PatternSigCtxMissingGroupsSameAsAvailableGroups;
   extern EnvVar LumaMDCSMode;

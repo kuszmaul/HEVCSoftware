@@ -293,7 +293,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__USE_TRANSFORM_DEPTH_FOR_444_CHROMA_CBF_CONTEXT_SELECTION         1 ///< 0 = 4:4:4 Chrominance CBFs use same method as luminance to select context variables, 1 (default) = 4:4:4 Chrominance CBFs use transform depth to select context variables (as in 4:2:0)
   #define RExt__CHROMA_422_SIGNIFICANCE_MAP_CONTEXT_GRID                         0 ///< [AFFECTS 4x8, 8x4, 8x16 and 16x8 TUs] 0 (default) = Use neighbourhood method for significance map context selection, 1 = Use position-repeated versions of the 4x4/8x8 context grids, 2 = As 1, but without re-using the DC context variable for 4x8/8x4
   #define RExt__PATTERNSIGCTX_MISSING_GROUPS_SAME_AS_AVAILABLE_GROUPS            0 ///< 0 (default) = When deriving patternSigCtx for significance map context selection, assume 0 for unavailable groups, 1 = If one neighbour group is available and the other is not, assume the same significance as the available group for both groups
 #endif
@@ -335,14 +334,6 @@
 
 #define RExt__BACKWARDS_COMPATIBILITY_HM                                       0 ///< Maintain backwards compatibility with HM for certain non-standard test configuration settings
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
-
-//------------------------------------------------
-// Error checking
-//------------------------------------------------
-
-#if ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT < 0) || (RExt__CHROMA_422_QUANTISER_ADJUSTMENT > 2))
-#error 4:2:2 QP mode must be 0, 1 or 2
-#endif
 
 //------------------------------------------------
 // Derived Macros
