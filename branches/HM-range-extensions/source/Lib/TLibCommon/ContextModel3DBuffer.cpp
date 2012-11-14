@@ -37,10 +37,6 @@
 
 #include "ContextModel3DBuffer.h"
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-#include "Debug.h"
-#endif
-
 //! \ingroup TLibCommon
 //! \{
 

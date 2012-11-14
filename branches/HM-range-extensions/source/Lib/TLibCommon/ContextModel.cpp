@@ -39,10 +39,6 @@
 
 #include "ContextModel.h"
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-#include "Debug.h"
-#endif
-
 using namespace std;
 //! \ingroup TLibCommon
 //! \{
