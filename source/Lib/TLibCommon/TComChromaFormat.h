@@ -137,49 +137,7 @@ static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const
 
 static inline Bool filterIntraReferenceSamples (const ChannelType chType, const ChromaFormat chFmt)
 {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  //< 0 = No reference sample filtering for chroma (in any format),
-  //  1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4,
-  //  2 (default) = Apply filter in both directions for 4:4:4 only,
-  //  3 = Apply filter in both directions for 4:2:2 and 4:4:4
-  return isLuma(chType) ||
-         (chFmt==CHROMA_444 && ToolOptionList::ChromaIntraReferenceSampleFiltering.getInt()!=0) ||
-         (chFmt==CHROMA_422 && (ToolOptionList::ChromaIntraReferenceSampleFiltering.getInt()&1)==1 ) ;
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1) || (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
-  return isLuma(chType) || (chFmt != CHROMA_420);
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
   return isLuma(chType) || (chFmt == CHROMA_444);
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
-  return isLuma(chType);
-#endif
-}
-
-
-//------------------------------------------------
-
-// this is modulated by the above filterIntraReferenceSamples
-static inline Bool applyFilteredIntraReferenceSamples(const ChannelType chType, const ChromaFormat chFmt, const Int where) /*0=DC, 1=VERTICAL, 2=HORIZONTAL*/
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  if (isLuma(chType) || chFmt==CHROMA_444)
-  {
-    return true;
-  }
-  else if (chFmt==CHROMA_422)
-  {
-    Int option=ToolOptionList::ChromaIntraReferenceSampleFiltering.getInt();
-    return option!=2 && (where==1 || option==3);
-  }
-  else return false;
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 3)
-  return isLuma(chType) || (chFmt != CHROMA_420);
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 2)
-  return isLuma(chType) || (chFmt == CHROMA_444);
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 1)
-  return isLuma(chType) || chFmt==CHROMA_444 || (chFmt==CHROMA_422 && (where==1));
-#elif (RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING == 0)
-  return isLuma(chType);
-#endif
 }
 
 

@@ -149,7 +149,6 @@ EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Sw
 
 EnvVar Tools("--     Tools","","");
 
-EnvVar ToolOptionList::ChromaIntraReferenceSampleFiltering              ("RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING",                  "2", "0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4"                                                   );
 EnvVar ToolOptionList::Get444LMChromaReferenceSamplesFrom1stColumn      ("RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN",       "1", "0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead"                                                                                                                           );
 EnvVar ToolOptionList::Chroma422IntraAngleScaling                       ("RExt__CHROMA_422_INTRA_ANGLE_SCALING",                           "1", "0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)"                                   );
 EnvVar ToolOptionList::Chroma422IntraDCDoubleWeightAboveSamples         ("RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES",          "0", "0 (default) = When generating a DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)"                                                                   );
@@ -191,7 +190,6 @@ Void printRExtMacroSettings()
   //setting macros
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  PRINT_CONSTANT(RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING,                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN,       settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__CHROMA_422_INTRA_ANGLE_SCALING,                           settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES,          settingNameWidth, settingValueWidth);

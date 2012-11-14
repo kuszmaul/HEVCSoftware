@@ -102,7 +102,6 @@ namespace DebugOptionList
 
 namespace ToolOptionList
 {
-  extern EnvVar ChromaIntraReferenceSampleFiltering;
   extern EnvVar Get444LMChromaReferenceSamplesFrom1stColumn;
   extern EnvVar Chroma422IntraAngleScaling;
   extern EnvVar Chroma422IntraDCDoubleWeightAboveSamples;
