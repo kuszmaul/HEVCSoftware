@@ -281,16 +281,6 @@
 #define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
-// Intra Prediction
-//------------------------------------------------
-
-#if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__SET_INTRA_CHROMA_DC_FILTER_422                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:2:2, 1 = Enable filtering in vertical direction only, 2 = Enable filtering in both horizontal and vertical directions
-
-  #define RExt__SET_INTRA_CHROMA_DC_FILTER_444                                   0 ///< 0 (default) = Disable intra DC filtering for chroma 4:4:4, 1 = Enable filtering in both horizontal and vertical directions
-#endif
-
-//------------------------------------------------
 // Inter Prediction
 //------------------------------------------------
 
@@ -640,16 +630,6 @@ enum MDCSMode
   MDCS_VERTICAL_ONLY   = 2,
   MDCS_BOTH_DIRECTIONS = 3,
   MDCS_NUMBER_OF_MODES = 4
-};
-
-///Filter modes
-enum FilterMode
-{
-  FILTER_DISABLED        = 0,
-  FILTER_HORIZONTAL_ONLY = 1,
-  FILTER_VERTICAL_ONLY   = 2,
-  FILTER_BOTH_DIRECTIONS = 3,
-  FILTER_NUMBER_OF_MODES = 4
 };
 
 namespace Profile

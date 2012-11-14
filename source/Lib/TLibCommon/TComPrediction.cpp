@@ -427,7 +427,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 
     if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
     {
-      xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format );
+      xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
     }
   }
 }
@@ -755,30 +755,27 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
  *
  * This function performs filtering left and top edges of the prediction samples for DC mode (intra coding).
  */
-Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType, ChromaFormat format )
+Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType )
 {
   Pel* pDst = rpDst;
   Int x, y, iDstStride2, iSrcStride2;
-  const FilterMode mode = getIntraDCFilterMode(channelType, format, iWidth, iHeight);
 
-  // boundary pixels processing
-  if (mode != FILTER_DISABLED)
+#if RESTRICT_INTRA_BOUNDARY_SMOOTHING
+  if (isLuma(channelType) && (iWidth <= MAXIMUM_FILTERED_WIDTH) && (iHeight <= MAXIMUM_FILTERED_HEIGHT))
+#else
+  if (isLuma(channelType))
+#endif
   {
+    //top-left
     pDst[0] = (Pel)((pSrc[-iSrcStride] + pSrc[-1] + 2 * pDst[0] + 2) >> 2);
-  }
 
-  //top row (vertical filter)
-  if ((mode == FILTER_BOTH_DIRECTIONS) || (mode == FILTER_VERTICAL_ONLY))
-  {
+    //top row (vertical filter)
     for ( x = 1; x < iWidth; x++ )
     {
       pDst[x] = (Pel)((pSrc[x - iSrcStride] +  3 * pDst[x] + 2) >> 2);
     }
-  }
 
-  //left column (horizontal filter)
-  if ((mode == FILTER_BOTH_DIRECTIONS) || (mode == FILTER_HORIZONTAL_ONLY))
-  {
+    //left column (horizontal filter)
     for ( y = 1, iDstStride2 = iDstStride, iSrcStride2 = iSrcStride-1; y < iHeight; y++, iDstStride2+=iDstStride, iSrcStride2+=iSrcStride )
     {
       pDst[iDstStride2] = (Pel)((pSrc[iSrcStride2] + 3 * pDst[iDstStride2] + 2) >> 2);
