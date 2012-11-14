@@ -156,21 +156,6 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
       mCodeAll[i]=true;
     }
 
-    if (allFormatsUse420TUTreeStructure())
-    {
-      if (i && mChromaFormat==CHROMA_422 && mRect[i].width==(MIN_TU_SIZE*2) && mRect[i].height==MIN_TU_SIZE)
-      {
-        mRect[i].width=MIN_TU_SIZE;
-        mRect[i].height=MIN_TU_SIZE*2;
-      }
-      else if (i && mChromaFormat==CHROMA_444 && (mRect[i].width==MIN_TU_SIZE || mRect[i].height==MIN_TU_SIZE))
-      {
-        mCodeAll[i]=mRect[i].width!=mRect[i].height;
-        mRect[i].width=MIN_TU_SIZE*2;
-        mRect[i].height=MIN_TU_SIZE*2;
-      }
-    }
-
     mOrigWidth[i]=mRect[i].width;
     if (!mCodeAll[i] && mbProcessLastOfLevel) mRect[i].width=0;
   }

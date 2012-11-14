@@ -285,7 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__ALL_CHROMA_FORMATS_USE_SAME_TU_STRUCTURE_AS_420                  0 ///< 0 (default) = Allow chroma TU tree to split down to the minimum possible TU size, 1 = Prevent chroma TU splitting wherever an equivalent 4:2:0 chroma TU could not split (e.g. prevent splitting of chroma TUs wherever luma splits down to 4x4)
   #define RExt__INTRA_NxN_CU_CHROMA_PU_SPLIT_MODE                                1 ///< 0 = An intra-NxN-split CU always has only one chroma PU, 1 (default) = In 4:4:4, an intra-NxN-split CU can have four chroma PUs (subject to limitations on minimum TU size etc.), 2 = As 1, but for any chroma format (not just 4:4:4)
   #define RExt__DOUBLE_HEIGHT_COEFFICIENT_GROUPS_422                             0 ///< 0 (default) = use standard size square coefficient groups for all formats, 1 = use double-height groups for 4:2:2
 #endif
