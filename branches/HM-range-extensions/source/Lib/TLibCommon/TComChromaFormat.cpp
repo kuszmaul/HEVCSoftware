@@ -40,62 +40,6 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
-MDCSMode getMDCSMode(const UInt width, const UInt height, const ComponentID component, const ChromaFormat format)
-{
-  //------------------
-
-  //check that the TU is not too big
-
-  UInt maximumWidth  = 0;
-  UInt maximumHeight = 0;
-
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  if (ToolOptionList::NonSubsampledChromaUseLumaMDCSSizeLimits.getInt() != 0)
-  {
-    maximumWidth  = ((getComponentScaleX(component, format) == 0) ? (ToolOptionList::LumaMDCSMaximumWidth .getInt()) : (ToolOptionList::ChromaMDCSMaximumWidth .getInt()));
-    maximumHeight = ((getComponentScaleY(component, format) == 0) ? (ToolOptionList::LumaMDCSMaximumHeight.getInt()) : (ToolOptionList::ChromaMDCSMaximumHeight.getInt()));
-  }
-  else
-  {
-    maximumWidth  = ((isLuma(component))                          ? (ToolOptionList::LumaMDCSMaximumWidth .getInt()) : (ToolOptionList::ChromaMDCSMaximumWidth .getInt()));
-    maximumHeight = ((isLuma(component))                          ? (ToolOptionList::LumaMDCSMaximumHeight.getInt()) : (ToolOptionList::ChromaMDCSMaximumHeight.getInt()));
-  }
-#elif (RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 1)
-  maximumWidth  = ((getComponentScaleX(component, format) == 0) ? (RExt__LUMA_MDCS_MAXIMUM_WIDTH ) : (RExt__CHROMA_MDCS_MAXIMUM_WIDTH ));
-  maximumHeight = ((getComponentScaleY(component, format) == 0) ? (RExt__LUMA_MDCS_MAXIMUM_HEIGHT) : (RExt__CHROMA_MDCS_MAXIMUM_HEIGHT));
-#elif (RExt__NON_SUBSAMPLED_CHROMA_USE_LUMA_MDCS_SIZE_LIMITS == 0)
-  maximumWidth  = ((isLuma(component))                          ? (RExt__LUMA_MDCS_MAXIMUM_WIDTH ) : (RExt__CHROMA_MDCS_MAXIMUM_WIDTH ));
-  maximumHeight = ((isLuma(component))                          ? (RExt__LUMA_MDCS_MAXIMUM_HEIGHT) : (RExt__CHROMA_MDCS_MAXIMUM_HEIGHT));
-#endif
-
-  if ((width > maximumWidth) || (height > maximumHeight)) return MDCS_DISABLED;
-
-  //------------------
-
-  //return the appropriate mode setting
-
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  const UInt MDCSModeIndex = ((isLuma(component)) ? (ToolOptionList::LumaMDCSMode.getInt()) : (ToolOptionList::ChromaMDCSMode.getInt()));
-#else
-  const UInt MDCSModeIndex = ((isLuma(component)) ? (RExt__LUMA_MDCS_MODE                 ) : (RExt__CHROMA_MDCS_MODE                 ));
-#endif
-
-  switch (MDCSModeIndex)
-  {
-    case 3: return MDCS_BOTH_DIRECTIONS; break;
-    case 2: return MDCS_VERTICAL_ONLY;   break;
-    case 1: return MDCS_HORIZONTAL_ONLY; break;
-    default: break;
-  }
-
-  //------------------
-
-  return MDCS_DISABLED;
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-
 Void setQPforQuant(       QpParam      &result,
                     const Int           qpy,
                     const ChannelType   chType,

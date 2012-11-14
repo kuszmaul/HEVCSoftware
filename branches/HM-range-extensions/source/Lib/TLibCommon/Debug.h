@@ -100,19 +100,6 @@ namespace DebugOptionList
   extern EnvVar SwapCbCrOnLoading;
 }
 
-namespace ToolOptionList
-{
-  extern EnvVar LumaMDCSMode;
-  extern EnvVar LumaMDCSAngleLimit;
-  extern EnvVar LumaMDCSMaximumWidth;
-  extern EnvVar LumaMDCSMaximumHeight;
-  extern EnvVar ChromaMDCSMode;
-  extern EnvVar ChromaMDCSAngleLimit;
-  extern EnvVar ChromaMDCSMaximumWidth;
-  extern EnvVar ChromaMDCSMaximumHeight;
-  extern EnvVar NonSubsampledChromaUseLumaMDCSSizeLimits;
-}
-
 // ---------------------------------------------------------------------------------------------- //
 
 Void printRExtMacroSettings();

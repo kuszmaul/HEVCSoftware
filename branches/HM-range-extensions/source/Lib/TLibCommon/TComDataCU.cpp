@@ -3817,16 +3817,18 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   //check that MDCS can be used for this TU
 
-  const MDCSMode mode = getMDCSMode(uiWidth, uiHeight, compID, getPic()->getChromaFormat());
+  const ChromaFormat format = getPic()->getChromaFormat();
 
-  if (mode == MDCS_DISABLED) return SCAN_ZIGZAG;
+  const UInt maximumWidth  = MDCS_MAXIMUM_WIDTH  >> getComponentScaleX(compID, format);
+  const UInt maximumHeight = MDCS_MAXIMUM_HEIGHT >> getComponentScaleY(compID, format);
+
+  if ((uiWidth > maximumWidth) || (uiHeight > maximumHeight)) return SCAN_ZIGZAG;
 
   //------------------------------------------------
 
   //otherwise, select the appropriate mode
 
-  const UInt angleLimit = getMDCSAngleLimit(compID);
-        UInt uiDirMode  = getIntraDir(toChannelType(compID), uiAbsPartIdx);
+  UInt uiDirMode  = getIntraDir(toChannelType(compID), uiAbsPartIdx);
 
   if (uiDirMode==DM_CHROMA_IDX)
   {
@@ -3835,19 +3837,19 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   //------------------
 
-  switch (mode)
+  switch (MDCS_MODE)
   {
     case MDCS_BOTH_DIRECTIONS:
-      if      (abs((Int)uiDirMode - VER_IDX) <= angleLimit) return SCAN_HOR;
-      else if (abs((Int)uiDirMode - HOR_IDX) <= angleLimit) return SCAN_VER;
+      if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
+      else if (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
       break;
 
     case MDCS_VERTICAL_ONLY:
-      if      (abs((Int)uiDirMode - HOR_IDX) <= angleLimit) return SCAN_VER;
+      if      (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
       break;
 
     case MDCS_HORIZONTAL_ONLY:
-      if      (abs((Int)uiDirMode - VER_IDX) <= angleLimit) return SCAN_HOR;
+      if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
       break;
 
     case MDCS_DISABLED:
