@@ -143,20 +143,6 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 
 //------------------------------------------------
 
-static inline Bool nonScaledIntraChroma422(const ChannelType chType, const ChromaFormat chFmt)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (isChroma(chType) && (chFmt == CHROMA_422) && (ToolOptionList::Chroma422IntraAngleScaling.getInt() == 0));
-#elif (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 1)
-  return false;
-#elif (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 0)
-  return (isChroma(chType) && (chFmt == CHROMA_422));
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool doubleWeightIntraDCAboveSamples(const ChannelType chType, const ChromaFormat chFmt)
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

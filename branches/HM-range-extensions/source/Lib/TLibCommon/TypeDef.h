@@ -285,7 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__CHROMA_422_INTRA_ANGLE_SCALING                                   1 ///< 0 = When generating angular intra predictions for a chroma 4:2:2 TU, intra modes map to the same angles as for square TUs, 1 (default) = scale the angles according to the TU's aspect ratio (i.e. the angle is halved for vertical modes and doubled for horizontal modes)
   #define RExt__CHROMA_422_INTRA_DC_DOUBLE_WEIGHT_ABOVE_SAMPLES                  0 ///< 0 (default) = When generating DC intra prediction for a chroma 4:2:2 TU, weight each above sample the same as a left sample, 1 = double the weighting of the above samples (i.e. weight each above sample equivalent to two left samples)
   #define RExt__CHROMA_422_INTRA_PLANAR_SINGLE_STAGE_CALCULATION                 0 ///< 0 (default) = When generating planar intra prediction for a chroma 4:2:2 TU, use intermediate stages, 1 = combine all stages into a single calculation
 
@@ -381,10 +380,6 @@
 //------------------------------------------------
 // Derived Macros
 //------------------------------------------------
-
-#if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || (RExt__CHROMA_422_INTRA_ANGLE_SCALING == 0))
-#define RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
-#endif
 
 #if ((RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST != 0) || ((RExt__CHROMA_422_QUANTISER_ADJUSTMENT != 0) && (RExt__CHROMA_422_QUANTISER_ADJUSTMENT_METHOD == 2)))
 #define RExt__EXTENDED_QP_TABLES

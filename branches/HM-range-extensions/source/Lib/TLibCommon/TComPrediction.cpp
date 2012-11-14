@@ -400,179 +400,6 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 }
 
 
-#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
-
-Void TComPrediction::xPredIntraAngChroma422( const Pel* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
-{
-  Int k,l;
-  Pel* pDst          = rpDst;
-
-  // Map the mode index to main prediction direction and angle
-  assert( dirMode > 0 ); //no planar
-  Bool modeDC        = dirMode < 2;
-  Bool modeHor       = !modeDC && (dirMode < 18);
-  Bool modeVer       = !modeDC && !modeHor;
-  Int intraPredAngle = modeVer ? (Int)dirMode - VER_IDX : modeHor ? -((Int)dirMode - HOR_IDX) : 0;
-  Int absAng         = abs(intraPredAngle);
-  Int signAng        = intraPredAngle < 0 ? -1 : 1;
-
-  // Set bitshifts and scale the angle parameter to block size
-  Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
-  Int invAngTable[9] = {0, 4096, 1638, 910, 630, 482, 390, 315, 256}; // (256 * 32) / Angle
-  Int invAngle       = invAngTable[absAng];
-  absAng             = angTable[absAng];
-  const Int iShift         = 5;
-  const Int iInt           = (1<<iShift);
-  const Int iMask          = iInt-1;
-  const Int iAdd           = (1<<(iShift-1));
-  intraPredAngle     = signAng * absAng;
-
-  // Do the DC prediction
-  if (modeDC)
-  {
-    Pel dcval = predIntraGetPredValDC(pSrc, srcStride, width, height, CHANNEL_TYPE_CHROMA, CHROMA_422, blkAboveAvailable, blkLeftAvailable);
-
-    for (k=0;k<height;k++)
-    {
-      for (l=0;l<width;l++)
-      {
-        pDst[k*dstStride+l] = dcval;
-      }
-    }
-  }
-  // Do angular predictions
-  else
-  {
-    Pel* refMain;
-    Pel* refSide;
-    Pel  refAbove[2*MAX_CU_SIZE+1];
-    Pel  refLeft[2*MAX_CU_SIZE+1];
-
-    // Initialise the Main and Left reference array.
-    if (intraPredAngle < 0)
-    {
-      for (k=0;k<width+1;k++)
-      {
-        refAbove[k+height-1] = pSrc[k-srcStride-1];
-      }
-      for (k=0;k<height+1;k++)
-      {
-        refLeft[k+width-1] = pSrc[(k-1)*srcStride-1];
-      }
-      refMain = (modeVer ? (refAbove+height-1) : (refLeft+width-1));
-      refSide = (modeVer ? (refLeft+width-1) : (refAbove+height-1));
-      // Extend the Main reference to the left.
-      Int invAngleSum    = 128;       // rounding for (shift by 8)
-      Int size = (modeVer ? height : width);
-      for (k=-1; k>size*intraPredAngle>>5; k--)
-      {
-        invAngleSum += invAngle;
-        refMain[k] = refSide[invAngleSum>>8];
-      }
-    }
-    else
-    {
-      for (k=0;k<width+height+1;k++)
-      {
-        refAbove[k] = pSrc[k-srcStride-1];
-      }
-      for (k=0;k<height+width+1;k++)
-      {
-        refLeft[k] = pSrc[(k-1)*srcStride-1];
-      }
-      refMain = modeVer ? refAbove : refLeft;
-      refSide = modeVer ? refLeft  : refAbove;
-    }
-
-    if (intraPredAngle == 0)
-    {
-      if (modeVer){
-        const Int step = 1;
-        for (k=0;k<height;k++)
-        {
-          for (l=0;l<width;l++)
-          {
-            pDst[k*dstStride+l] = refMain[(l+1)*step];
-          }
-        }
-      }
-      else{
-        for (k=0;k<height;k++)
-        {
-          for (l=0;l<width;l++)
-          {
-            pDst[k*dstStride+l] = refMain[k+1];
-          }
-        }
-      }
-    }
-    else
-    {
-      Int deltaPos=0;
-      Int deltaInt;
-      Int deltaFract;
-      Int refMainIndex;
-
-      const Int step = 1;
-      if (modeVer){
-        for (k=0;k<height;k++)
-        {
-          deltaPos += intraPredAngle;
-          deltaInt   = deltaPos >> iShift;
-          deltaFract = deltaPos & iMask;
-
-          if (deltaFract)
-          {
-            // Do linear filtering
-            for (l=0;l<width;l++)
-            {
-              refMainIndex        = l*step+deltaInt+step;
-              pDst[k*dstStride+l] = (Pel) ( ((iInt-deltaFract)*refMain[refMainIndex]+deltaFract*refMain[refMainIndex+1]+iAdd) >> iShift );
-            }
-          }
-          else
-          {
-            // Just copy the integer samples
-            for (l=0;l<width;l++)
-            {
-              pDst[k*dstStride+l] = refMain[l*step+deltaInt+step];
-            }
-          }
-        }
-      }
-      else{
-        for (l=0;l<width;l++)
-        {
-          deltaPos += intraPredAngle;
-          deltaInt   = deltaPos >> iShift;
-          deltaFract = deltaPos & iMask;
-
-          if (deltaFract)
-          {
-            // Do linear filtering
-            for (k=0;k<height;k++)
-            {
-              refMainIndex        = k+deltaInt+1;
-              pDst[k*dstStride+l] = (Pel) ( ((iInt-deltaFract)*refMain[refMainIndex]+deltaFract*refMain[refMainIndex+1]+iAdd) >> iShift );
-            }
-          }
-          else
-          {
-            // Just copy the integer samples
-            for (k=0;k<height;k++)
-            {
-              pDst[k*dstStride+l] = refMain[k+deltaInt+1];
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-#endif
-
-
 Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
 {
   const ChromaFormat   format      = rTu.GetChromaFormat();
@@ -589,7 +416,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
 
   // get starting pixel in block
-  const Int sw = (nonScaledIntraChroma422(channelType, format) ? (iWidth + iHeight + 1) : (2 * iWidth + 1));
+  const Int sw = (2 * iWidth + 1);
 
   if ( uiDirMode == PLANAR_IDX )
   {
@@ -597,18 +424,8 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   }
   else
   {
-#ifdef RExt__NON_SCALED_INTRA_CHROMA_422_ENABLED
-    if (nonScaledIntraChroma422(channelType, format))
-    {
-      // Create the prediction
-      xPredIntraAngChroma422( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, uiDirMode, bAbove, bLeft );
-    }
-    else
-#endif
-    {
-      // Create the prediction
-      xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
-    }
+    // Create the prediction
+    xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
 
     if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
     {
