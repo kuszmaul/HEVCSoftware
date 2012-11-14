@@ -1511,21 +1511,21 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
 #endif
 
-  Bool bLumaChromaCombinedSearch = combinedLumaChromaIntraSearch(); // choose estimation mode
+  Bool bSeparateLumaChroma = true; // choose estimation mode
 
   UInt uiPreCalcDistC      = 0;
   if (rpcBestCU->getPic()->getChromaFormat()==CHROMA_400)
   {
-    bLumaChromaCombinedSearch=false;
+    bSeparateLumaChroma=true;
   }
 
-  if( bLumaChromaCombinedSearch )
+  if( !bSeparateLumaChroma )
   {
     // after this function, the direction will be PLANAR, DC, HOR or VER
     // however, if Luma ends up being one of those, the chroma dir must be later changed to DM_CHROMA.
     m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
   }
-  m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, !bLumaChromaCombinedSearch DEBUG_STRING_PASS_INTO(sTest) );
+  m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma DEBUG_STRING_PASS_INTO(sTest) );
 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicComponent(COMPONENT_Y, rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
 
