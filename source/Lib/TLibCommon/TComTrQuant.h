@@ -259,7 +259,7 @@ protected:
 
 private:
   // forward Transform
-  Void xT   (Int bitDepth, UInt uiMode, Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
+  Void xT   (Int bitDepth, Bool useDST, Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
 
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
@@ -339,7 +339,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                  const QpParam      &cQP );
 
   // inverse transform
-  Void xIT    ( Int bitDepth, UInt uiMode, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
+  Void xIT    ( Int bitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
