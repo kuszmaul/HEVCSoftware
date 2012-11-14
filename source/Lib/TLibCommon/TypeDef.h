@@ -285,8 +285,6 @@
 //------------------------------------------------
 
 #if (RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST == 0)
-  #define RExt__COMBINED_LUMA_CHROMA_INTRA_MODE_SEARCH                           0 ///< 0 (default) = When processing the intra prediction mode search that defines the TU tree, only take luma into account, 1 = Also take chroma into account
-
   #define RExt__CHROMA_INTRA_REFERENCE_SAMPLE_FILTERING                          2 ///< 0 = No reference sample filtering for chroma (in any format), 1 = Apply filter vertically for 4:2:2 and in both directions for 4:4:4, 2 (default) = Apply filter in both directions for 4:4:4 only, 3 = Apply filter in both directions for 4:2:2 and 4:4:4
   #define RExt__GET_444_LMCHROMA_REFERENCE_SAMPLES_FROM_1ST_COLUMN               1 ///< 0 = Get reference samples for LM_CHROMA from 2nd column to the left of current TU in all formats, 1 (default) = In 4:4:4, get reference samples from 1st column to the left instead
 
