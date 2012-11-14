@@ -674,25 +674,18 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 {
   UInt uiSymbol;
 
-  if (!reducedIntraChromaModes())
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
+  if( uiSymbol == 0 )
   {
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUChromaPredSCModel.get( 0, 0, 0 ) );
-    if( uiSymbol == 0 )
-    {
-      uiSymbol = DM_CHROMA_IDX;
-    } 
-    else 
-    {
-      UInt uiIPredMode;
-      m_pcTDecBinIf->decodeBinsEP( uiIPredMode, 2 );
-      UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
-      pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
-      uiSymbol = uiAllowedChromaDir[ uiIPredMode ];
-    }
+    uiSymbol = DM_CHROMA_IDX;
   }
   else
   {
-    uiSymbol = DM_CHROMA_IDX;
+    UInt uiIPredMode;
+    m_pcTDecBinIf->decodeBinsEP( uiIPredMode, 2 );
+    UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
+    pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
+    uiSymbol = uiAllowedChromaDir[ uiIPredMode ];
   }
 
   pcCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, uiSymbol, uiAbsPartIdx, uiDepth );

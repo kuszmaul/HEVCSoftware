@@ -135,20 +135,6 @@ static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const
 //Intra prediction  ====================================================================================================
 //======================================================================================================================
 
-static inline Bool reducedIntraChromaModes()
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return (ToolOptionList::ReducedChromaIntraModeSet.getInt() != 0);
-#elif (RExt__REDUCED_CHROMA_INTRA_MODE_SET == 1)
-  return true;
-#elif (RExt__REDUCED_CHROMA_INTRA_MODE_SET == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 static inline Bool combinedLumaChromaIntraSearch()
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

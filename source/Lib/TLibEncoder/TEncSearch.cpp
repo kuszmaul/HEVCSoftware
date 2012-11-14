@@ -2434,13 +2434,8 @@ TEncSearch::estIntraPredChromaQT( TComDataCU* pcCU,
         //----- check chroma modes -----
         pcCU->getAllowedChromaDir( uiPartOffset, uiModeList );
 
-        if (reducedIntraChromaModes())
-        {
-          uiMinMode=4;
-          uiMaxMode=NUM_CHROMA_MODE;
-        }
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-        else if (DebugOptionList::ForceChromaMode.isSet())
+        if (DebugOptionList::ForceChromaMode.isSet())
         {
           uiMinMode=DebugOptionList::ForceChromaMode.getInt();
           if (uiModeList[uiMinMode]==34) uiMinMode=5; // if the fixed mode has been renumbered because DM_CHROMA covers it, use DM_CHROMA.
