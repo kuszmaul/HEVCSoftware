@@ -937,26 +937,19 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
 
   UInt useTransformSkip;
 
-  if (isChroma(component) && singleTransformSkipFlag(rTu.GetChromaFormat()))
-  {
-    useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, COMPONENT_Y);
-  }
-  else
-  {
-    m_pcTDecBinIf->decodeBin( useTransformSkip , m_cTransformSkipSCModel.get( 0, toChannelType(component), 0 ) );
+  m_pcTDecBinIf->decodeBin( useTransformSkip , m_cTransformSkipSCModel.get( 0, toChannelType(component), 0 ) );
 
-    DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T("\tparseTransformSkip()");
-    DTRACE_CABAC_T( "\tsymbol=" )
-    DTRACE_CABAC_V( useTransformSkip )
-    DTRACE_CABAC_T( "\tAddr=" )
-    DTRACE_CABAC_V( pcCU->getAddr() )
-    DTRACE_CABAC_T( "\tetype=" )
-    DTRACE_CABAC_V( component )
-    DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
-    DTRACE_CABAC_V( uiAbsPartIdx )
-    DTRACE_CABAC_T( "\n" )
-  }
+  DTRACE_CABAC_VL( g_nSymbolCounter++ )
+  DTRACE_CABAC_T("\tparseTransformSkip()");
+  DTRACE_CABAC_T( "\tsymbol=" )
+  DTRACE_CABAC_V( useTransformSkip )
+  DTRACE_CABAC_T( "\tAddr=" )
+  DTRACE_CABAC_V( pcCU->getAddr() )
+  DTRACE_CABAC_T( "\tetype=" )
+  DTRACE_CABAC_V( component )
+  DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+  DTRACE_CABAC_V( uiAbsPartIdx )
+  DTRACE_CABAC_T( "\n" )
   
   pcCU->setTransformSkipSubParts( useTransformSkip, component, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(component));
 }

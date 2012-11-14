@@ -153,20 +153,6 @@ static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle 
 
 //------------------------------------------------
 
-static inline Bool singleTransformSkipFlag(const ChromaFormat format)
-{
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  return ((format == CHROMA_444) && (ToolOptionList::SingleTransformSkipFlagForAllChannels444.getInt() != 0));
-#elif (RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 1)
-  return (format == CHROMA_444);
-#elif (RExt__SINGLE_TRANSFORM_SKIP_FLAG_FOR_ALL_CHANNELS_444 == 0)
-  return false;
-#endif
-}
-
-
-//------------------------------------------------
-
 Void setQPforQuant(       class QpParam      &result,
                     const       Int           qpy,
                     const       ChannelType   chType,

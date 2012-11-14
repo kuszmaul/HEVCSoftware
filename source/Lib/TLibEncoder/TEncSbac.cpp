@@ -896,11 +896,6 @@ void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
     return;
   }
 
-  if (isChroma(component) && singleTransformSkipFlag(rTu.GetChromaFormat()))
-  {
-    return;
-  }
-
   UInt useTransformSkip = pcCU->getTransformSkip( uiAbsPartIdx,component);
   m_pcBinIf->encodeBin( useTransformSkip, m_cTransformSkipSCModel.get( 0, toChannelType(component), 0 ) );
 
