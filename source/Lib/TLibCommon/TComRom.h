@@ -154,10 +154,6 @@ extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize
 // ====================================================================================================================
 
 extern const UInt   ctxIndMap4x4[4*4];
-#ifdef RExt__EXTENDED_CHROMA_SIGNIFICANCE_MAP_CONTEXT
-extern const UInt   ctxIndMap4x8[4*8];
-extern const UInt   ctxIndMap8x4[8*4];
-#endif
 
 extern const UInt   g_uiGroupIdx[ MAX_TU_SIZE ];
 extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];

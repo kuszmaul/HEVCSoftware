@@ -853,16 +853,10 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
 {
   TComDataCU* pcCU = rTu.getCU();
 
-  UInt uiCbf = pcCU->getCbf     ( rTu.GetAbsPartIdxTU(), compID, rTu.GetTransformDepthRel() );
-  UInt uiCtx = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
-
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-  const UInt contextSet = compID;
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
+        UInt uiCbf      = pcCU->getCbf     ( rTu.GetAbsPartIdxTU(), compID, rTu.GetTransformDepthRel() );
+        UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
   const UInt contextSet = toChannelType(compID);
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
-  const UInt contextSet = CHANNEL_TYPE_LUMA;
-#endif
+
 
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );
 
@@ -1045,16 +1039,8 @@ Void TEncSbac::codeLastSignificantXY( UInt uiPosX, UInt uiPosY, Int width, Int h
   UInt uiGroupIdxX    = g_uiGroupIdx[ uiPosX ];
   UInt uiGroupIdxY    = g_uiGroupIdx[ uiPosY ];
 
-#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
-  ContextModel *pCtxX = m_cCuCtxLastX.get( 0, component );
-  ContextModel *pCtxY = m_cCuCtxLastY.get( 0, component );
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   ContextModel *pCtxX = m_cCuCtxLastX.get( 0, toChannelType(component) );
   ContextModel *pCtxY = m_cCuCtxLastY.get( 0, toChannelType(component) );
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
-  ContextModel *pCtxX = m_cCuCtxLastX.get( 0, CHANNEL_TYPE_LUMA );
-  ContextModel *pCtxY = m_cCuCtxLastY.get( 0, CHANNEL_TYPE_LUMA );
-#endif
 
   Int blkSizeOffsetX, blkSizeOffsetY, shiftX, shiftY;
   getLastSignificantContextParameters(component, width, height, blkSizeOffsetX, blkSizeOffsetY, shiftX, shiftY);
@@ -1531,16 +1517,8 @@ Void TEncSbac::estSignificantMapBit( estBitsSbacStruct* pcEstBitsSbac, Int width
 
   //set up the number of channels and context variables
 
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-  const UInt firstComponent = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
-  const UInt lastComponent  = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cr));
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
   const UInt firstComponent = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
   const UInt lastComponent  = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-  const UInt firstComponent = COMPONENT_Y;
-  const UInt lastComponent  = COMPONENT_Y;
-#endif
 
   //----------------------------------------------------------
 
@@ -1605,16 +1583,8 @@ Void TEncSbac::estLastSignificantPositionBit( estBitsSbacStruct* pcEstBitsSbac, 
 
   //set up the number of channels
 
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-  const UInt firstComponent = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
-  const UInt lastComponent  = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cr));
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
   const UInt firstComponent = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
   const UInt lastComponent  = ((isLuma(chType)) ? (COMPONENT_Y) : (COMPONENT_Cb));
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-  const UInt firstComponent = COMPONENT_Y;
-  const UInt lastComponent  = COMPONENT_Y;
-#endif
 
   //--------------------------------------------------------------------------------------------------
 
@@ -1631,24 +1601,12 @@ Void TEncSbac::estLastSignificantPositionBit( estBitsSbacStruct* pcEstBitsSbac, 
 
     Int ctx;
 
-#if   (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 2)
-    ContextModel *const pCtxX          = m_cCuCtxLastX.get( 0, component );
-    ContextModel *const pCtxY          = m_cCuCtxLastY.get( 0, component );
-    Int          *const lastXBitsArray = pcEstBitsSbac->lastXBits[component];
-    Int          *const lastYBitsArray = pcEstBitsSbac->lastYBits[component];
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 1)
     const ChannelType channelType = toChannelType(ComponentID(component));
 
     ContextModel *const pCtxX = m_cCuCtxLastX.get( 0, channelType );
     ContextModel *const pCtxY = m_cCuCtxLastY.get( 0, channelType );
     Int          *const lastXBitsArray = pcEstBitsSbac->lastXBits[channelType];
     Int          *const lastYBitsArray = pcEstBitsSbac->lastYBits[channelType];
-#elif (RExt__SIGNIFICANCE_MAP_CONTEXT_CHANNEL_SEPARATION == 0)
-    ContextModel *const pCtxX          = m_cCuCtxLastX.get( 0, CHANNEL_TYPE_LUMA );
-    ContextModel *const pCtxY          = m_cCuCtxLastY.get( 0, CHANNEL_TYPE_LUMA );
-    Int          *const lastXBitsArray = pcEstBitsSbac->lastXBits;
-    Int          *const lastYBitsArray = pcEstBitsSbac->lastYBits;
-#endif
 
     //------------------------------------------------
 

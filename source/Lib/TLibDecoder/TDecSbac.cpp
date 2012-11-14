@@ -892,15 +892,8 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
   UInt uiSymbol;
   TComDataCU* pcCU = rTu.getCU();
 
-  const UInt uiCtx = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
-
-#if   (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 2)
-  const UInt contextSet = compID;
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 1)
+  const UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
   const UInt contextSet = toChannelType(compID);
-#elif (RExt__CBF_CONTEXT_CHANNEL_SEPARATION == 0)
-  const UInt contextSet = CHANNEL_TYPE_LUMA;
-#endif
 
   m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );
 
@@ -969,16 +962,8 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
 {
   UInt uiLast;
 
-#if   (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 2)
-  ContextModel *pCtxX = m_cCuCtxLastX.get( 0, component );
-  ContextModel *pCtxY = m_cCuCtxLastY.get( 0, component );
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 1)
   ContextModel *pCtxX = m_cCuCtxLastX.get( 0, toChannelType(component) );
   ContextModel *pCtxY = m_cCuCtxLastY.get( 0, toChannelType(component) );
-#elif (RExt__LAST_POSITION_CONTEXT_CHANNEL_SEPARATION == 0)
-  ContextModel *pCtxX = m_cCuCtxLastX.get( 0, CHANNEL_TYPE_LUMA );
-  ContextModel *pCtxY = m_cCuCtxLastY.get( 0, CHANNEL_TYPE_LUMA );
-#endif
 
   if ( uiScanIdx == SCAN_VER )
   {
