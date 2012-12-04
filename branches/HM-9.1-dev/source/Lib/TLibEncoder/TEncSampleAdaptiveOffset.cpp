@@ -1703,10 +1703,6 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLu
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
-
-  m_eSliceType          =  m_pcPic->getSlice(0)->getSliceType();
-  m_iPicNalReferenceIdc = (m_pcPic->getSlice(0)->isReferenced() ? 1 :0);
-
 #if SAO_CHROMA_LAMBDA 
   m_dLambdaLuma    = dLambdaLuma;
   m_dLambdaChroma  = dLambdaChroma;

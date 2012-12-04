@@ -79,8 +79,6 @@ protected:
   Int  m_iNumCuInHeight;
   Int  m_iNumTotalParts;
   static const Int m_iNumClass[MAX_NUM_SAO_TYPE];
-  SliceType  m_eSliceType;
-  Int        m_iPicNalReferenceIdc;
 
   UInt m_uiSaoBitIncreaseY;
   UInt m_uiSaoBitIncreaseC;  //for chroma
