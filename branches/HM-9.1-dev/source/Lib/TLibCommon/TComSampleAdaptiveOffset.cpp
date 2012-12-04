@@ -520,8 +520,6 @@ inline Int xSign(Int x)
 Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic)
 {
   m_pcPic   = pcPic;
-  m_uiNumSlicesInPic = numSlicesInPic;
-  m_iSGDepth = 0;
   m_bUseNIF = ( pcPic->getIndependentSliceBoundaryForNDBFilter() || pcPic->getIndependentTileBoundaryForNDBFilter() );
   if(m_bUseNIF)
   {
