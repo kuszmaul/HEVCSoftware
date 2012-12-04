@@ -54,10 +54,6 @@
 class TComLoopFilter
 {
 private:
-  Bool      m_disableDeblockingFilterFlag;
-  Int       m_betaOffsetDiv2;
-  Int       m_tcOffsetDiv2;
-
   UInt      m_uiNumPartitions;
   UChar*    m_aapucBS[2];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
   Bool*     m_aapbEdgeFilter[2][3];
