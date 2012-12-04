@@ -1458,6 +1458,28 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         }
       }
     }
+#if TICKET845
+    else if (pcSlice->getSPS()->getUseSAO())
+    {
+      Int addr = pcCU->getAddr();
+      SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
+      for (Int cIdx=0; cIdx<3; cIdx++)
+      {
+        SaoLcuParam *saoLcuParam = &(saoParam->saoLcuParam[cIdx][addr]);
+        if ( ((cIdx == 0) && !pcSlice->getSaoEnabledFlag()) || ((cIdx == 1 || cIdx == 2) && !pcSlice->getSaoEnabledFlagChroma()))
+        {
+          saoLcuParam->mergeUpFlag   = 0;
+          saoLcuParam->mergeLeftFlag = 0;
+          saoLcuParam->subTypeIdx    = 0;
+          saoLcuParam->typeIdx       = -1;
+          saoLcuParam->offset[0]     = 0;
+          saoLcuParam->offset[1]     = 0;
+          saoLcuParam->offset[2]     = 0;
+          saoLcuParam->offset[3]     = 0;
+        }
+      }
+    }    
+#endif
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
