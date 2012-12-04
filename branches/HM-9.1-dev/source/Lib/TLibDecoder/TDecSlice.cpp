@@ -363,6 +363,28 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
       }
       pcSbacDecoder->parseSaoOneLcuInterleaving(rx, ry, saoParam,pcCU, cuAddrInSlice, cuAddrUpInSlice, allowMergeLeft, allowMergeUp);
     }
+#if TICKET845
+    else if ( pcSlice->getSPS()->getUseSAO() )
+    {
+      Int addr = pcCU->getAddr();
+      SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
+      for (Int cIdx=0; cIdx<3; cIdx++)
+      {
+        SaoLcuParam *saoLcuParam = &(saoParam->saoLcuParam[cIdx][addr]);
+        if ( ((cIdx == 0) && !pcSlice->getSaoEnabledFlag()) || ((cIdx == 1 || cIdx == 2) && !pcSlice->getSaoEnabledFlagChroma()))
+        {
+          saoLcuParam->mergeUpFlag   = 0;
+          saoLcuParam->mergeLeftFlag = 0;
+          saoLcuParam->subTypeIdx    = 0;
+          saoLcuParam->typeIdx       = -1;
+          saoLcuParam->offset[0]     = 0;
+          saoLcuParam->offset[1]     = 0;
+          saoLcuParam->offset[2]     = 0;
+          saoLcuParam->offset[3]     = 0;
+        }
+      }
+    }
+#endif
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );
     m_pcCuDecoder->decompressCU ( pcCU );
     

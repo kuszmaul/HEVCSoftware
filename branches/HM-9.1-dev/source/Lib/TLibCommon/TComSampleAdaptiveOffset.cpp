@@ -1042,7 +1042,9 @@ Void TComSampleAdaptiveOffset::processSaoCuOrg(Int iAddr, Int iSaoType, Int iYCb
  */
 Void TComSampleAdaptiveOffset::SAOProcess(SAOParam* pcSaoParam)
 {
+#if !TICKET845
   if (pcSaoParam->bSaoFlag[0] || pcSaoParam->bSaoFlag[1])
+#endif
   {
     m_uiSaoBitIncreaseY = max(g_bitDepthY - 10, 0);
     m_uiSaoBitIncreaseC = max(g_bitDepthC - 10, 0);
@@ -1058,11 +1060,15 @@ Void TComSampleAdaptiveOffset::SAOProcess(SAOParam* pcSaoParam)
       pcSaoParam->oneUnitFlag[2] = 0;  
     }
     Int iY  = 0;
+#if !TICKET845
     if (pcSaoParam->bSaoFlag[0])
+#endif
     {
       processSaoUnitAll( pcSaoParam->saoLcuParam[iY], pcSaoParam->oneUnitFlag[iY], iY);
     }
+#if !TICKET845
     if(pcSaoParam->bSaoFlag[1])
+#endif
     {
        processSaoUnitAll( pcSaoParam->saoLcuParam[1], pcSaoParam->oneUnitFlag[1], 1);//Cb
        processSaoUnitAll( pcSaoParam->saoLcuParam[2], pcSaoParam->oneUnitFlag[2], 2);//Cr
