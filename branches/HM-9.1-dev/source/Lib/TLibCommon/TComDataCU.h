@@ -187,9 +187,11 @@ private:
   Char*         m_apiMVPNum[2];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
 
+#if !REMOVE_BURST_IPCM
   Int           m_numSucIPCM;         ///< the number of succesive IPCM blocks associated with the current log2CUSize
   Bool          m_lastCUSucIPCMFlag;  ///< True indicates that the last CU is IPCM and shares the same root as the current CU.  
-
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
