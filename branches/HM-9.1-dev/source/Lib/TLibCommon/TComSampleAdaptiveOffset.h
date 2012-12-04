@@ -105,7 +105,6 @@ protected:
   Pel* m_pTmpU2;
   Pel* m_pTmpL1;
   Pel* m_pTmpL2;
-  Int* m_iLcuPartIdx;
   Int     m_maxNumOffsetsPerPic;
   Bool    m_saoLcuBoundary;
   Bool    m_saoLcuBasedOptimization;

@@ -78,7 +78,6 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
   m_pTmpU2 = NULL;
   m_pTmpL1 = NULL;
   m_pTmpL2 = NULL;
-  m_iLcuPartIdx = NULL;
 }
 
 TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
@@ -252,7 +251,6 @@ Void TComSampleAdaptiveOffset::create( UInt uiSourceWidth, UInt uiSourceHeight, 
 
   m_pChromaClipTable = &(m_pChromaClipTableBase[iCRangeExtC]);
 
-  m_iLcuPartIdx = new Int [m_iNumCuInHeight*m_iNumCuInWidth];
   m_pTmpL1 = new Pel [m_uiMaxCUHeight+1];
   m_pTmpL2 = new Pel [m_uiMaxCUHeight+1];
   m_pTmpU1 = new Pel [m_iPicWidth];
@@ -320,10 +318,6 @@ Void TComSampleAdaptiveOffset::destroy()
   if (m_pTmpU2)
   {
     delete [] m_pTmpU2; m_pTmpU2 = NULL;
-  }
-  if(m_iLcuPartIdx)
-  {
-    delete []m_iLcuPartIdx; m_iLcuPartIdx = NULL;
   }
 }
 
