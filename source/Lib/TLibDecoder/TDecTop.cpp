@@ -596,7 +596,6 @@ Void TDecTop::xDecodePPS()
   m_cEntropyDecoder.decodePPS( pps, &m_parameterSetManagerDecoder );
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
 
-#if DEPENDENT_SLICES
   if( pps->getDependentSliceEnabledFlag() )
   {
     Int NumCtx = pps->getEntropyCodingSyncEnabledFlag()?2:1;
@@ -609,7 +608,6 @@ Void TDecTop::xDecodePPS()
       m_cSliceDecoder.setCtxMem( ctx, st );
     }
   }
-#endif
 }
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
 Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType )

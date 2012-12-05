@@ -170,9 +170,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getPPSId(),                             "pic_parameter_set_id" );
   WRITE_UVLC( pcPPS->getSPSId(),                             "seq_parameter_set_id" );
 #if DEPENDENT_SLICE_SEGMENT_FLAGS
-#if DEPENDENT_SLICES
   WRITE_FLAG( pcPPS->getDependentSliceEnabledFlag()    ? 1 : 0, "dependent_slice_enabled_flag" );
-#endif
 #endif
   WRITE_FLAG( pcPPS->getSignHideFlag(), "sign_data_hiding_flag" );
   WRITE_FLAG( pcPPS->getCabacInitPresentFlag() ? 1 : 0,   "cabac_init_present_flag" );
@@ -196,9 +194,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getOutputFlagPresentFlag() ? 1 : 0,  "output_flag_present_flag" );
   WRITE_FLAG( pcPPS->getTransquantBypassEnableFlag() ? 1 : 0, "transquant_bypass_enable_flag" );
 #if !DEPENDENT_SLICE_SEGMENT_FLAGS
-#if DEPENDENT_SLICES
   WRITE_FLAG( pcPPS->getDependentSliceEnabledFlag()    ? 1 : 0, "dependent_slice_enabled_flag" );
-#endif
 #endif
   WRITE_FLAG( pcPPS->getTilesEnabledFlag()             ? 1 : 0, "tiles_enabled_flag" );
   WRITE_FLAG( pcPPS->getEntropyCodingSyncEnabledFlag() ? 1 : 0, "entropy_coding_sync_enabled_flag" );
@@ -1103,13 +1099,8 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   {
     UInt* pSubstreamSizes               = pSlice->getSubstreamSizes();
     Int maxNumParts                       = pSlice->getPic()->getNumPartInCU();
-#if DEPENDENT_SLICES
     numZeroSubstreamsAtStartOfSlice       = pSlice->getDependentSliceCurStartCUAddr()/maxNumParts/pSlice->getPic()->getFrameWidthInCU();
     Int  numZeroSubstreamsAtEndOfSlice    = pSlice->getPic()->getFrameHeightInCU()-1 - ((pSlice->getDependentSliceCurEndCUAddr()-1)/maxNumParts/pSlice->getPic()->getFrameWidthInCU());
-#else
-    numZeroSubstreamsAtStartOfSlice       = pSlice->getSliceCurStartCUAddr()/maxNumParts/pSlice->getPic()->getFrameWidthInCU();
-    Int  numZeroSubstreamsAtEndOfSlice    = pSlice->getPic()->getFrameHeightInCU()-1 - ((pSlice->getSliceCurEndCUAddr()-1)/maxNumParts/pSlice->getPic()->getFrameWidthInCU());
-#endif
     numEntryPointOffsets                  = pSlice->getPPS()->getNumSubstreams() - numZeroSubstreamsAtStartOfSlice - numZeroSubstreamsAtEndOfSlice - 1;
     pSlice->setNumEntryPointOffsets(numEntryPointOffsets);
     entryPointOffset           = new UInt[numEntryPointOffsets];

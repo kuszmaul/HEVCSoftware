@@ -206,9 +206,6 @@ protected:
   //====== Dependent Slice ========
   Int       m_iDependentSliceMode;
   Int       m_iDependentSliceArgument;
-#if DEPENDENT_SLICES
-  Bool      m_entropySliceEnabledFlag;
-#endif
   Bool      m_bLFCrossSliceBoundaryFlag;
 
   Bool      m_bPCMInputBitDepthFlag;
