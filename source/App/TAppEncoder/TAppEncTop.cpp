@@ -289,6 +289,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setChromaSampleLocTypeTopField( m_chromaSampleLocTypeTopField );
   m_cTEncTop.setChromaSampleLocTypeBottomField( m_chromaSampleLocTypeBottomField );
   m_cTEncTop.setNeutralChromaIndicationFlag( m_neutralChromaIndicationFlag );
+#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
+  m_cTEncTop.setPicStructPresentFlag( m_picStructPresentFlag );
+#endif
   m_cTEncTop.setBitstreamRestrictionFlag( m_bitstreamRestrictionFlag );
   m_cTEncTop.setTilesFixedStructureFlag( m_tilesFixedStructureFlag );
   m_cTEncTop.setMotionVectorsOverPicBoundariesFlag( m_motionVectorsOverPicBoundariesFlag );
