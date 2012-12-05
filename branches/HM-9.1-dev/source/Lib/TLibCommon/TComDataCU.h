@@ -468,7 +468,7 @@ public:
                                               Bool MotionDataCompresssion = false,
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
-  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true, Bool MotionDataCompresssion = false );
+  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool MotionDataCompresssion = false );
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true, Bool MotionDataCompresssion = false );
 #else
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
@@ -476,7 +476,7 @@ public:
                                               Bool bEnforceSliceRestriction=true, 
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
-  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true );
+  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true );
 #endif
   TComDataCU*   getPUBelowLeft              ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true );
