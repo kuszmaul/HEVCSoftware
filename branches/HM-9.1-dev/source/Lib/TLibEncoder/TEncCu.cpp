@@ -94,7 +94,9 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   }
   
   m_bEncodeDQP = false;
+#if !REMOVE_BURST_IPCM
   m_checkBurstIPCMFlag = false;
+#endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
