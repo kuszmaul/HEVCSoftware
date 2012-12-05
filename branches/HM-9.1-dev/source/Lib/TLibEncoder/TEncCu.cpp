@@ -968,10 +968,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bEntropyLimit=true;
         }
       }
-      {
-        bSliceLimit=false;
-        bEntropyLimit=false;
-      }
       if(bSliceLimit||bEntropyLimit)
       {
         rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
