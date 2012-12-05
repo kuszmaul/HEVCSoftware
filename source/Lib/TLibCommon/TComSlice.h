@@ -179,7 +179,8 @@ private:
   Bool     m_useTransformSkip;                                                      //!< transform skipping flag for setting default scaling matrix for 4x4
 };
 
-class ProfileTierLevel{
+class ProfileTierLevel
+{
   Int     m_profileSpace;
   Bool    m_tierFlag;
   Int     m_profileIdc;
@@ -206,7 +207,8 @@ public:
 };
 
 
-class TComPTL{
+class TComPTL
+{
   ProfileTierLevel m_generalPTL;
   ProfileTierLevel m_subLayerPTL[6];      // max. value of max_sub_layers_minus1 is 6
   Bool m_subLayerProfilePresentFlag[6];
@@ -226,7 +228,8 @@ public:
 /// VPS class
 
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
-class TComBitRatePicRateInfo{
+class TComBitRatePicRateInfo
+{
   Bool        m_bitRateInfoPresentFlag[MAX_TLAYER];
   Bool        m_picRateInfoPresentFlag[MAX_TLAYER];
   Int         m_avgBitRate[MAX_TLAYER];
@@ -332,6 +335,7 @@ struct HrdSubLayerInfo
 #endif
   UInt cbrFlag           [MAX_CPB_CNT][2];
 };
+
 class TComVUI
 {
 private:
@@ -1098,7 +1102,8 @@ public:
   Void setSliceHeaderExtensionPresentFlag   (Bool val)            { m_sliceHeaderExtensionPresentFlag = val; }
 };
 
-typedef struct {
+typedef struct
+{
   // Explicit weighted prediction parameters parsed in slice header,
   // or Implicit weighted prediction parameters (8 bits depth values).
   Bool        bPresentFlag;
@@ -1110,7 +1115,8 @@ typedef struct {
   Int         w, o, offset, shift, round;
 } wpScalingParam;
 
-typedef struct {
+typedef struct
+{
   Int64 iAC;
   Int64 iDC;
 } wpACDCParam;
