@@ -80,8 +80,10 @@ private:
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
+#if !REMOVE_BURST_IPCM
   Bool                    m_checkBurstIPCMFlag;
-
+#endif
+  
   //  Access channel
   TEncCfg*                m_pcEncCfg;
   TEncSearch*             m_pcPredSearch;
