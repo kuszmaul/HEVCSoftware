@@ -1388,7 +1388,7 @@ TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartU
   return m_pcCUAboveRight;
 }
 
-TComDataCU* TComDataCU::getPUBelowLeft( UInt& uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction, Bool bEnforceDependentSliceRestriction )
+TComDataCU* TComDataCU::getPUBelowLeft( UInt& uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction )
 {
   UInt uiAbsPartIdxLB     = g_auiZscanToRaster[uiCurrPartUnitIdx];
   UInt uiAbsZorderCUIdxLB = g_auiZscanToRaster[ m_uiAbsIdxInLCU ] + (m_puhHeight[0] / m_pcPic->getMinCUHeight() - 1)*m_pcPic->getNumPartInWidth();
@@ -1423,10 +1423,6 @@ TComDataCU* TComDataCU::getPUBelowLeft( UInt& uiBLPartUnitIdx, UInt uiCurrPartUn
     uiBLPartUnitIdx = g_auiRasterToZscan[ uiAbsPartIdxLB + uiNumPartInCUWidth*2 - 1 ];
     if ( (bEnforceSliceRestriction && (m_pcCULeft==NULL || m_pcCULeft->getSlice()==NULL || 
        m_pcCULeft->getSCUAddr()+uiBLPartUnitIdx < m_pcPic->getCU( getAddr() )->getSliceStartCU(uiCurrPartUnitIdx)||
-       (m_pcPic->getPicSym()->getTileIdxMap( m_pcCULeft->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
-       ))||
-       (bEnforceDependentSliceRestriction && (m_pcCULeft==NULL || m_pcCULeft->getSlice()==NULL || 
-       m_pcCULeft->getSCUAddr()+uiBLPartUnitIdx < m_pcPic->getCU( getAddr() )->getDependentSliceStartCU(uiCurrPartUnitIdx)||
        (m_pcPic->getPicSym()->getTileIdxMap( m_pcCULeft->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
        ))
      )
@@ -2630,7 +2626,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   //left bottom
   UInt uiLeftBottomPartIdx = 0;
   TComDataCU* pcCULeftBottom = 0;
-  pcCULeftBottom = this->getPUBelowLeft( uiLeftBottomPartIdx, uiPartIdxLB, true, false );
+  pcCULeftBottom = this->getPUBelowLeft( uiLeftBottomPartIdx, uiPartIdxLB );
 #if MERGE_CLEANUP_AND_K0197
   Bool isAvailableA0 = pcCULeftBottom &&
   pcCULeftBottom->isDiffMER(xP-1, yP+nPSH, xP, yP) &&
@@ -2998,7 +2994,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   
   TComDataCU* tmpCU = NULL;
   UInt idx;
-  tmpCU = getPUBelowLeft(idx, uiPartIdxLB, true, false);
+  tmpCU = getPUBelowLeft(idx, uiPartIdxLB);
   bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
 
   if (!bAddedSmvp)
@@ -3241,7 +3237,7 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
     }
     case MD_BELOW_LEFT:
     {
-      pcTmpCU = getPUBelowLeft(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUBelowLeft(uiIdx, uiPartUnitIdx);
       break;
     }
     case MD_ABOVE_LEFT:
@@ -3339,7 +3335,7 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
     }
   case MD_BELOW_LEFT:
     {
-      pcTmpCU = getPUBelowLeft(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUBelowLeft(uiIdx, uiPartUnitIdx);
       break;
     }
   case MD_ABOVE_LEFT:
