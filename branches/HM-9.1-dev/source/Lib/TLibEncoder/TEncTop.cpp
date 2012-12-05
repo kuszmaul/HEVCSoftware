@@ -666,7 +666,6 @@ Void TEncTop::xInitPPS()
   {
     m_cPPS.setDependentSliceEnabledFlag( true );
   }
-#if DEPENDENT_SLICES
   if( m_cPPS.getDependentSliceEnabledFlag() )
   {
     Int NumCtx = m_cPPS.getEntropyCodingSyncEnabledFlag()?2:1;
@@ -679,7 +678,6 @@ Void TEncTop::xInitPPS()
       m_cSliceEncoder.setCtxMem( ctx, st );
     }
   }
-#endif
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.
