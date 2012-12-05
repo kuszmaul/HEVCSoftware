@@ -1310,9 +1310,9 @@ TComDataCU* TComDataCU::getPUAboveLeft( UInt& uiALPartUnitIdx, UInt uiCurrPartUn
 }
 
 #if !LINEBUF_CLEANUP
-TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction, Bool bEnforceDependentSliceRestriction, Bool MotionDataCompresssion )
+TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction, Bool MotionDataCompresssion )
 #else 
-TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction, Bool bEnforceDependentSliceRestriction )
+TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction )
 #endif
 {
   UInt uiAbsPartIdxRT     = g_auiZscanToRaster[uiCurrPartUnitIdx];
@@ -1355,10 +1355,6 @@ TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartU
     if ( (bEnforceSliceRestriction && (m_pcCUAbove==NULL || m_pcCUAbove->getSlice()==NULL || 
        m_pcCUAbove->getSCUAddr()+uiARPartUnitIdx < m_pcPic->getCU( getAddr() )->getSliceStartCU(uiCurrPartUnitIdx)||
        (m_pcPic->getPicSym()->getTileIdxMap( m_pcCUAbove->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
-       ))||
-       (bEnforceDependentSliceRestriction && (m_pcCUAbove==NULL || m_pcCUAbove->getSlice()==NULL || 
-       m_pcCUAbove->getSCUAddr()+uiARPartUnitIdx < m_pcPic->getCU( getAddr() )->getDependentSliceStartCU(uiCurrPartUnitIdx)||
-       (m_pcPic->getPicSym()->getTileIdxMap( m_pcCUAbove->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
        ))
      )
     {
@@ -1383,11 +1379,6 @@ TComDataCU* TComDataCU::getPUAboveRight( UInt& uiARPartUnitIdx, UInt uiCurrPartU
   if ( (bEnforceSliceRestriction && (m_pcCUAboveRight==NULL || m_pcCUAboveRight->getSlice()==NULL ||
        m_pcPic->getPicSym()->getInverseCUOrderMap( m_pcCUAboveRight->getAddr()) > m_pcPic->getPicSym()->getInverseCUOrderMap( getAddr()) ||
        m_pcCUAboveRight->getSCUAddr()+uiARPartUnitIdx < m_pcPic->getCU( getAddr() )->getSliceStartCU(uiCurrPartUnitIdx)||
-       (m_pcPic->getPicSym()->getTileIdxMap( m_pcCUAboveRight->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
-       ))||
-       (bEnforceDependentSliceRestriction && (m_pcCUAboveRight==NULL || m_pcCUAboveRight->getSlice()==NULL || 
-       m_pcPic->getPicSym()->getInverseCUOrderMap( m_pcCUAboveRight->getAddr()) > m_pcPic->getPicSym()->getInverseCUOrderMap( getAddr()) ||
-       m_pcCUAboveRight->getSCUAddr()+uiARPartUnitIdx < m_pcPic->getCU( getAddr() )->getDependentSliceStartCU(uiCurrPartUnitIdx)||
        (m_pcPic->getPicSym()->getTileIdxMap( m_pcCUAboveRight->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))
        ))
      )
@@ -2595,9 +2586,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   UInt uiAboveRightPartIdx = 0;
   TComDataCU* pcCUAboveRight = 0;
 #if LINEBUF_CLEANUP
-  pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT, true, false );
+  pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT );
 #else
-  pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT, true, false, true );
+  pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT, true, true );
 #endif
 #if MERGE_CLEANUP_AND_K0197
   Bool isAvailableB0 = pcCUAboveRight &&
@@ -3242,9 +3233,9 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
     case MD_ABOVE_RIGHT:
     {
 #if LINEBUF_CLEANUP
-      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx);
 #else
-      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, false, true);
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, true);
 #endif
       break;
     }
@@ -3340,9 +3331,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   case MD_ABOVE_RIGHT:
     {
 #if LINEBUF_CLEANUP
-      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx);
 #else
-      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, false, true);
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartUnitIdx, true, true);
 #endif
       break;
     }
