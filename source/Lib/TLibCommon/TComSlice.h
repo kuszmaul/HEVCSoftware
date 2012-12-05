@@ -1137,8 +1137,6 @@ private:
   TComReferencePictureSet *m_pcRPS;
   TComReferencePictureSet m_LocalRPS;
   Int         m_iBDidx; 
-  Int         m_iCombinationBDidx;
-  Bool        m_bCombineWithReferenceFlag;
   TComRefPicListModification m_RefPicListModification;
   NalUnitType m_eNalUnitType;         ///< Nal unit type for the slice
   SliceType   m_eSliceType;
@@ -1265,10 +1263,6 @@ public:
 
   Void      setRPSidx          ( Int iBDidx ) { m_iBDidx = iBDidx; }
   Int       getRPSidx          () { return m_iBDidx; }
-  Void      setCombinationBDidx          ( Int iCombinationBDidx ) { m_iCombinationBDidx = iCombinationBDidx; }
-  Int       getCombinationBDidx          () { return m_iCombinationBDidx; }
-  Void      setCombineWithReferenceFlag          ( Bool bCombineWithReferenceFlag ) { m_bCombineWithReferenceFlag = bCombineWithReferenceFlag; }
-  Bool      getCombineWithReferenceFlag          () { return m_bCombineWithReferenceFlag; }
   Int       getPrevPOC      ()                          { return  m_prevPOC;       }
   TComRefPicListModification* getRefPicListModification() { return &m_RefPicListModification; }
   Void      setLastIDR(Int iIDRPOC)                       { m_iLastIDR = iIDRPOC; }
