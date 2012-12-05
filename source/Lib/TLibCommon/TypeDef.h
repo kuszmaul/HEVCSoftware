@@ -207,23 +207,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-enum SliceMode
-{
-  NO_SLICES                       = 0,          ///< don't use slices
-  FIXED_NUMBER_OF_LCU_IN_SLICE    = 1,          ///< Limit maximum number of largest coding tree blocks in a slice
-  FIXED_NUMBER_OF_BYTES_IN_SLICE  = 2,          ///< Limit maximum number of bins/bits in a slice
-  FIXED_NUMBER_OF_TILES_IN_SLICE  = 3,          ///< slices span an integer number of tiles
-};
-
-// Dependent slice options
-enum DependentSliceMode
-{
-  NO_DEPENDENT_SLICES                         = 0,          ///< don't use dependent slices
-  FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE      = 1,          ///< limit maximum number of largest coding tree blocks in an dependent slice
-  MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE   = 2,          ///< limit maximum number of bins/bits in an dependent slice
-  FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE    = 3,          ///< dependent slices span an integer number of tiles
-};
-
 #define LOG2_MAX_NUM_COLUMNS_MINUS1        7
 #define LOG2_MAX_NUM_ROWS_MINUS1           7
 #define LOG2_MAX_COLUMN_WIDTH              13
@@ -294,6 +277,24 @@ typedef       Int             TCoeff;     ///< transform coefficient
 
 /// parameters for adaptive loop filter
 class TComPicSym;
+
+// Slice encoding modes
+enum SliceMode
+{
+  NO_SLICES                       = 0,          ///< don't use slices
+  FIXED_NUMBER_OF_LCU_IN_SLICE    = 1,          ///< Limit maximum number of largest coding tree blocks in a slice
+  FIXED_NUMBER_OF_BYTES_IN_SLICE  = 2,          ///< Limit maximum number of bins/bits in a slice
+  FIXED_NUMBER_OF_TILES_IN_SLICE  = 3,          ///< slices span an integer number of tiles
+};
+
+// Dependent slice encoding modes
+enum DependentSliceMode
+{
+  NO_DEPENDENT_SLICES                         = 0,          ///< don't use dependent slices
+  FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE      = 1,          ///< limit maximum number of largest coding tree blocks in an dependent slice
+  MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE   = 2,          ///< limit maximum number of bins/bits in an dependent slice
+  FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE    = 3,          ///< dependent slices span an integer number of tiles
+};
 
 #define NUM_DOWN_PART 4
 
