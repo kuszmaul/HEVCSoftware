@@ -465,7 +465,6 @@ public:
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
                                               UInt uiCurrPartUnitIdx, 
                                               Bool bEnforceSliceRestriction=true, 
-                                              Bool bEnforceDependentSliceRestriction=true, 
                                               Bool MotionDataCompresssion = false,
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
@@ -475,7 +474,6 @@ public:
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
                                               UInt uiCurrPartUnitIdx, 
                                               Bool bEnforceSliceRestriction=true, 
-                                              Bool bEnforceDependentSliceRestriction=true, 
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool bEnforceDependentSliceRestriction=true );
