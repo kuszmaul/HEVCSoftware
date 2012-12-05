@@ -460,7 +460,6 @@ public:
   TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx, 
                                               UInt uiCurrPartUnitIdx, 
                                               Bool bEnforceSliceRestriction=true, 
-                                              Bool bEnforceDependentSliceRestriction=true,
                                               Bool bEnforceTileRestriction=true );
 #if !LINEBUF_CLEANUP
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
