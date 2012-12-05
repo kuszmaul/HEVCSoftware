@@ -369,9 +369,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("SliceArgument",        m_iSliceArgument,       0, "if SliceMode==1 SliceArgument represents max # of LCUs. if SliceMode==2 SliceArgument represents max # of bytes.")
     ("DependentSliceMode",     m_iDependentSliceMode,    0, "0: Disable all dependent slice limits, 1: Enforce max # of LCUs, 2: Enforce constraint based dependent slices")
     ("DependentSliceArgument", m_iDependentSliceArgument,0, "if DependentSliceMode==1 SliceArgument represents max # of LCUs. if DependentSliceMode==2 DependentSliceArgument represents max # of bins.")
-#if DEPENDENT_SLICES && !REMOVE_ENTROPY_SLICES
-    ("EntropySliceEnabledFlag", m_entropySliceEnabledFlag, false, "Enable use of entropy slices instead of dependent slices." )
-#endif
     ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
 
     ("ConstrainedIntraPred", m_bUseConstrainedIntraPred, false, "Constrained Intra Prediction")
@@ -862,12 +859,6 @@ Void TAppEncCfg::xCheckParameter()
   
   Bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
-#if !DEPENDENT_SLICES
-  xConfirmPara( m_iWaveFrontSynchro && m_iDependentSliceMode, "Wavefront and Dependent Slice can not be applied together");
-#endif
-#if DEPENDENT_SLICES && !REMOVE_ENTROPY_SLICES
-  xConfirmPara( m_iWaveFrontSynchro && m_entropySliceEnabledFlag, "WaveFrontSynchro and EntropySliceEnabledFlag can not be applied together");
-#endif
 
   //TODO:ChromaFmt assumes 4:2:0 below
   xConfirmPara( m_iSourceWidth  % TComSPS::getCropUnitX(CHROMA_420) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
