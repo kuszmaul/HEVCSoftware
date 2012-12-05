@@ -1182,7 +1182,6 @@ TComDataCU* TComDataCU::getPULeft( UInt& uiLPartUnitIdx,
 TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx, 
                                     UInt uiCurrPartUnitIdx, 
                                     Bool bEnforceSliceRestriction, 
-                                    Bool bEnforceDependentSliceRestriction, 
                                     Bool MotionDataCompresssion,
                                     Bool planarAtLCUBoundary ,
                                     Bool bEnforceTileRestriction )
@@ -1190,7 +1189,6 @@ TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx,
 TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx, 
                                     UInt uiCurrPartUnitIdx, 
                                     Bool bEnforceSliceRestriction, 
-                                    Bool bEnforceDependentSliceRestriction, 
                                     Bool planarAtLCUBoundary ,
                                     Bool bEnforceTileRestriction )
 #endif
@@ -1227,8 +1225,6 @@ TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx,
 #endif
 
   if ( (bEnforceSliceRestriction && (m_pcCUAbove==NULL || m_pcCUAbove->getSlice()==NULL || m_pcCUAbove->getSCUAddr()+uiAPartUnitIdx < m_pcPic->getCU( getAddr() )->getSliceStartCU(uiCurrPartUnitIdx)))
-      ||
-       (bEnforceDependentSliceRestriction && (m_pcCUAbove==NULL || m_pcCUAbove->getSlice()==NULL || m_pcCUAbove->getSCUAddr()+uiAPartUnitIdx < m_pcPic->getCU( getAddr() )->getDependentSliceStartCU(uiCurrPartUnitIdx)))
       ||
        (bEnforceTileRestriction &&(m_pcCUAbove==NULL || m_pcCUAbove->getSlice()==NULL || (m_pcPic->getPicSym()->getTileIdxMap( m_pcCUAbove->getAddr() ) != m_pcPic->getPicSym()->getTileIdxMap(getAddr()))))
       )
@@ -1746,26 +1742,15 @@ Int TComDataCU::getIntraDirLumaPredictor( UInt uiAbsPartIdx, Int* uiIntraDirPred
   Int         uiPredNum = 0;
   
   // Get intra direction of left PU
-#if DEPENDENT_SLICES
-  Bool bDepSliceRestriction = ( !m_pcSlice->getPPS()->getDependentSliceEnabledFlag());
-#endif
   pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   
   iLeftIntraDir  = pcTempCU ? ( pcTempCU->isIntra( uiTempPartIdx ) ? pcTempCU->getLumaIntraDir( uiTempPartIdx ) : DC_IDX ) : DC_IDX;
   
   // Get intra direction of above PU
 #if LINEBUF_CLEANUP
-#if DEPENDENT_SLICES
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, bDepSliceRestriction, true );
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, true );
 #else
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, true, true );
-#endif
-#else
-#if DEPENDENT_SLICES
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, bDepSliceRestriction, false, true );
-#else
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, true, false, true );
-#endif
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, false, true );
 #endif
   
   iAboveIntraDir = pcTempCU ? ( pcTempCU->isIntra( uiTempPartIdx ) ? pcTempCU->getLumaIntraDir( uiTempPartIdx ) : DC_IDX ) : DC_IDX;
@@ -1819,18 +1804,11 @@ UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
   UInt        uiTempPartIdx;
   UInt        uiCtx;
   // Get left split flag
-#if DEPENDENT_SLICES
-  Bool bDepSliceRestriction = ( !m_pcSlice->getPPS()->getDependentSliceEnabledFlag());
-#endif
   pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   uiCtx  = ( pcTempCU ) ? ( ( pcTempCU->getDepth( uiTempPartIdx ) > uiDepth ) ? 1 : 0 ) : 0;
   
   // Get above split flag
-#if DEPENDENT_SLICES
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, bDepSliceRestriction );
-#else
   pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-#endif
   uiCtx += ( pcTempCU ) ? ( ( pcTempCU->getDepth( uiTempPartIdx ) > uiDepth ) ? 1 : 0 ) : 0;
   
   return uiCtx;
@@ -1883,18 +1861,11 @@ UInt TComDataCU::getCtxSkipFlag( UInt uiAbsPartIdx )
   UInt        uiCtx = 0;
   
   // Get BCBP of left PU
-#if DEPENDENT_SLICES
-  Bool bDepSliceRestriction = ( !m_pcSlice->getPPS()->getDependentSliceEnabledFlag());
-#endif
   pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   uiCtx    = ( pcTempCU ) ? pcTempCU->isSkipped( uiTempPartIdx ) : 0;
   
   // Get BCBP of above PU
-#if DEPENDENT_SLICES
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, bDepSliceRestriction );
-#else
   pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-#endif
   uiCtx   += ( pcTempCU ) ? pcTempCU->isSkipped( uiTempPartIdx ) : 0;
   
   return uiCtx;
@@ -2588,9 +2559,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   UInt uiAbovePartIdx = 0;
   TComDataCU* pcCUAbove = 0;
 #if LINEBUF_CLEANUP
-  pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT, true, false );
+  pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT );
 #else
-  pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT, true, false, true );
+  pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT, true, true );
 #endif
 #if MERGE_CLEANUP_AND_K0197
   Bool isAvailableB1 = pcCUAbove &&
@@ -3274,9 +3245,9 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
     case MD_ABOVE:
     {
 #if LINEBUF_CLEANUP
-      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx );
 #else
-      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, false, true);
+      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, true);
 #endif
       break;
     }
@@ -3372,9 +3343,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   case MD_ABOVE:
     {
 #if LINEBUF_CLEANUP
-      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, false);
+      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx);
 #else
-      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, false, true);
+      pcTmpCU = getPUAbove(uiIdx, uiPartUnitIdx, true, true);
 #endif
       break;
     }
