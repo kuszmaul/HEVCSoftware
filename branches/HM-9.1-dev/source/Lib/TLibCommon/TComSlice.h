@@ -416,6 +416,9 @@ public:
     ,m_chromaSampleLocTypeBottomField(0)
     ,m_neutralChromaIndicationFlag(false)
     ,m_fieldSeqFlag(false)
+#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
+    ,m_picStructPresentFlag(false)
+#endif
     ,m_hrdParametersPresentFlag(false)
     ,m_bitstreamRestrictionFlag(false)
     ,m_tilesFixedStructureFlag(false)

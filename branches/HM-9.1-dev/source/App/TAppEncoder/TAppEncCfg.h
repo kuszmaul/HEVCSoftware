@@ -250,6 +250,9 @@ protected:
   Int       m_chromaSampleLocTypeTopField;                    ///< Specifies the location of chroma samples for top field
   Int       m_chromaSampleLocTypeBottomField;                 ///< Specifies the location of chroma samples for bottom field
   Bool      m_neutralChromaIndicationFlag;                    ///< Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)
+#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
+  Bool      m_picStructPresentFlag;                           ///< Indicates that pic_struct values are present in picture timing SEI messages
+#endif
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present
   Bool      m_tilesFixedStructureFlag;                        ///< Indicates that each active picture parameter set has the same values of the syntax elements related to tiles
   Bool      m_motionVectorsOverPicBoundariesFlag;             ///< Indicates that no samples outside the picture boundaries are used for inter prediction
