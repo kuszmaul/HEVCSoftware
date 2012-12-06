@@ -280,6 +280,10 @@ protected:
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool      m_picStructPresentFlag;                           ///< Indicates that pic_struct values are present in picture timing SEI messages
 #endif
+#if POC_TEMPORAL_RELATIONSHIP
+  Bool      m_pocProportionalToTimingFlag;                    ///< Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS
+  Int       m_numTicksPocDiffOneMinus1;                       ///< Number of ticks minus 1 that for a POC difference of one
+#endif
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present
   Bool      m_tilesFixedStructureFlag;                        ///< Indicates that each active picture parameter set has the same values of the syntax elements related to tiles
   Bool      m_motionVectorsOverPicBoundariesFlag;             ///< Indicates that no samples outside the picture boundaries are used for inter prediction
@@ -709,6 +713,12 @@ public:
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool      getPicStructPresentFlag()                     { return m_picStructPresentFlag; }
   Void      setPicStructPresentFlag(Bool i)               { m_picStructPresentFlag = i; }  
+#endif
+#if POC_TEMPORAL_RELATIONSHIP
+  Bool      getPocProportionalToTimingFlag()              { return m_pocProportionalToTimingFlag; }
+  Void      setPocProportionalToTimingFlag(Bool x)        { m_pocProportionalToTimingFlag = x;    }
+  Int       getNumTicksPocDiffOneMinus1()                 { return m_numTicksPocDiffOneMinus1;    }
+  Void      setNumTicksPocDiffOneMinus1(Int x)            { m_numTicksPocDiffOneMinus1 = x;       }
 #endif
   Bool      getBitstreamRestrictionFlag()                 { return m_bitstreamRestrictionFlag; }
   Void      setBitstreamRestrictionFlag(Bool i)           { m_bitstreamRestrictionFlag = i; }

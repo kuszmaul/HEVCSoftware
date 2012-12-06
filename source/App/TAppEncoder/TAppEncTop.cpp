@@ -292,6 +292,10 @@ Void TAppEncTop::xInitLibCfg()
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   m_cTEncTop.setPicStructPresentFlag( m_picStructPresentFlag );
 #endif
+#if POC_TEMPORAL_RELATIONSHIP
+  m_cTEncTop.setPocProportionalToTimingFlag( m_pocProportionalToTimingFlag );
+  m_cTEncTop.setNumTicksPocDiffOneMinus1   ( m_numTicksPocDiffOneMinus1    );
+#endif
   m_cTEncTop.setBitstreamRestrictionFlag( m_bitstreamRestrictionFlag );
   m_cTEncTop.setTilesFixedStructureFlag( m_tilesFixedStructureFlag );
   m_cTEncTop.setMotionVectorsOverPicBoundariesFlag( m_motionVectorsOverPicBoundariesFlag );
