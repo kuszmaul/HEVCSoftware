@@ -56,7 +56,6 @@ static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis);
 
 TDecGop::TDecGop()
 {
-  m_iGopSize = 0;
   m_dDecTime = 0;
   m_pcSbacDecoders = NULL;
   m_pcBinCABACs = NULL;
