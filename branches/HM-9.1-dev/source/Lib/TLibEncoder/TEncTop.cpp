@@ -563,6 +563,10 @@ Void TEncTop::xInitSPS()
 #endif
       pcVUI->setFieldSeqFlag(false);
       pcVUI->setHrdParametersPresentFlag(false);
+#if POC_TEMPORAL_RELATIONSHIP
+      pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
+      pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+#endif
       pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
       pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
       pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
