@@ -51,7 +51,6 @@ TDecTop::TDecTop()
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
 #endif
-  m_bRefreshPending = 0;
   m_pocCRA = 0;
   m_prevRAPisBLA = false;
   m_pocRandomAccess = MAX_INT;          
