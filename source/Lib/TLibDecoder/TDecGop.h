@@ -66,7 +66,6 @@
 class TDecGop
 {
 private:
-  Int                   m_iGopSize;
   TComList<TComPic*>    m_cListPic;         //  Dynamic buffer
   
   //  Access channel
@@ -103,7 +102,6 @@ public:
   Void  destroy ();
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
-  Void  setGopSize( Int i) { m_iGopSize = i; }
 
   void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
 
