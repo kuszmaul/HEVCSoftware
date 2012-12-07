@@ -541,42 +541,43 @@ Void TEncTop::xInitSPS()
   m_cSPS.setVuiParametersPresentFlag(getVuiParametersPresentFlag());
   if (m_cSPS.getVuiParametersPresentFlag())
   {
-      TComVUI* pcVUI = m_cSPS.getVuiParameters();
-      pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioIdc() != -1);
-      pcVUI->setAspectRatioIdc(getAspectRatioIdc());
-      pcVUI->setSarWidth(getSarWidth());
-      pcVUI->setSarHeight(getSarHeight());
-      pcVUI->setOverscanInfoPresentFlag(getOverscanInfoPresentFlag());
-      pcVUI->setOverscanAppropriateFlag(getOverscanAppropriateFlag());
-      pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag());
-      pcVUI->setVideoFormat(getVideoFormat());
-      pcVUI->setVideoFullRangeFlag(getVideoFullRangeFlag());
-      pcVUI->setColourDescriptionPresentFlag(getColourDescriptionPresentFlag());
-      pcVUI->setTransferCharacteristics(getTransferCharacteristics());
-      pcVUI->setMatrixCoefficients(getMatrixCoefficients());
-      pcVUI->setChromaLocInfoPresentFlag(getChromaLocInfoPresentFlag());
-      pcVUI->setChromaSampleLocTypeTopField(getChromaSampleLocTypeTopField());
-      pcVUI->setChromaSampleLocTypeBottomField(getChromaSampleLocTypeBottomField());
-      pcVUI->setNeutralChromaIndicationFlag(getNeutralChromaIndicationFlag());
+    TComVUI* pcVUI = m_cSPS.getVuiParameters();
+    pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioIdc() != -1);
+    pcVUI->setAspectRatioIdc(getAspectRatioIdc());
+    pcVUI->setSarWidth(getSarWidth());
+    pcVUI->setSarHeight(getSarHeight());
+    pcVUI->setOverscanInfoPresentFlag(getOverscanInfoPresentFlag());
+    pcVUI->setOverscanAppropriateFlag(getOverscanAppropriateFlag());
+    pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag());
+    pcVUI->setVideoFormat(getVideoFormat());
+    pcVUI->setVideoFullRangeFlag(getVideoFullRangeFlag());
+    pcVUI->setColourDescriptionPresentFlag(getColourDescriptionPresentFlag());
+    pcVUI->setColourPrimaries(getColourPrimaries());
+    pcVUI->setTransferCharacteristics(getTransferCharacteristics());
+    pcVUI->setMatrixCoefficients(getMatrixCoefficients());
+    pcVUI->setChromaLocInfoPresentFlag(getChromaLocInfoPresentFlag());
+    pcVUI->setChromaSampleLocTypeTopField(getChromaSampleLocTypeTopField());
+    pcVUI->setChromaSampleLocTypeBottomField(getChromaSampleLocTypeBottomField());
+    pcVUI->setNeutralChromaIndicationFlag(getNeutralChromaIndicationFlag());
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-      pcVUI->setPicStructPresentFlag(getPicStructPresentFlag());  
+    pcVUI->setPicStructPresentFlag(getPicStructPresentFlag());
 #endif
-      pcVUI->setFieldSeqFlag(false);
-      pcVUI->setHrdParametersPresentFlag(false);
+    pcVUI->setFieldSeqFlag(false);
+    pcVUI->setHrdParametersPresentFlag(false);
 #if POC_TEMPORAL_RELATIONSHIP
-      pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
-      pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+    pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
+    pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
 #endif
-      pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
-      pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
-      pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
+    pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
+    pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
+    pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
 #if MIN_SPATIAL_SEGMENTATION
-      pcVUI->setMinSpatialSegmentationIdc(getMinSpatialSegmentationIdc());
+    pcVUI->setMinSpatialSegmentationIdc(getMinSpatialSegmentationIdc());
 #endif
-      pcVUI->setMaxBytesPerPicDenom(getMaxBytesPerPicDenom());
-      pcVUI->setMaxBitsPerMinCuDenom(getMaxBitsPerMinCuDenom());
-      pcVUI->setLog2MaxMvLengthHorizontal(getLog2MaxMvLengthHorizontal());
-      pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
+    pcVUI->setMaxBytesPerPicDenom(getMaxBytesPerPicDenom());
+    pcVUI->setMaxBitsPerMinCuDenom(getMaxBitsPerMinCuDenom());
+    pcVUI->setLog2MaxMvLengthHorizontal(getLog2MaxMvLengthHorizontal());
+    pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
 }
 
