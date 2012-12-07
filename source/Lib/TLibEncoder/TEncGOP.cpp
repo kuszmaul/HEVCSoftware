@@ -101,9 +101,8 @@ TEncGOP::~TEncGOP()
 }
 
 /** Create list to contain pointers to LCU start addresses of slice.
- * \param iWidth, iHeight are picture width, height. iMaxCUWidth, iMaxCUHeight are LCU width, height.
  */
-Void  TEncGOP::create( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight )
+Void  TEncGOP::create()
 {
   m_bLongtermTestPictureHasBeenCoded = 0;
   m_bLongtermTestPictureHasBeenCoded2 = 0;
@@ -289,7 +288,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     // Do decoding refresh marking if any 
     pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
-    m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid,rcListPic);
+    m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
 
     if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
@@ -300,7 +299,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     if(pcSlice->getTLayer() > 0)
     {
-      if(pcSlice->isTemporalLayerSwitchingPoint(rcListPic, pcSlice->getRPS()) || pcSlice->getSPS()->getTemporalIdNestingFlag())
+      if(pcSlice->isTemporalLayerSwitchingPoint(rcListPic) || pcSlice->getSPS()->getTemporalIdNestingFlag())
       {
         if(pcSlice->getTemporalLayerNonReferenceFlag())
         {
@@ -311,7 +310,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TLA);
         }
       }
-      else if(pcSlice->isStepwiseTemporalLayerSwitchingPointCandidate(rcListPic, pcSlice->getRPS()))
+      else if(pcSlice->isStepwiseTemporalLayerSwitchingPointCandidate(rcListPic))
       {
         Bool isSTSA=true;
         for(Int ii=iGOPid+1;(ii<m_pcCfg->getGOPSize() && isSTSA==true);ii++)
@@ -763,7 +762,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     if(pcSlice->getSPS()->getUseSAO())
     {
-      m_pcSAO->createPicSaoInfo(pcPic, uiNumSlices);
+      m_pcSAO->createPicSaoInfo(pcPic);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////// File writing

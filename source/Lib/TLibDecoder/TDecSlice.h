@@ -77,10 +77,10 @@ public:
   virtual ~TDecSlice();
   
   Void  init              ( TDecEntropy* pcEntropyDecoder, TDecCu* pcMbDecoder );
-  Void  create            ( TComSlice* pcSlice, Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void  create            ();
   Void  destroy           ();
   
-  Void  decompressSlice   ( TComInputBitstream* pcBitstream, TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
+  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
   Void      initCtxMem(  UInt i );
   Void      setCtxMem( TDecSbac* sb, Int b )   { CTXMem[b] = sb; }
 };

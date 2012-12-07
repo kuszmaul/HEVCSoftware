@@ -172,7 +172,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 
-Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame, Int& iPOCLastDisplay)
+Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
 {
   if (!m_pcPic)
   {
@@ -356,7 +356,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize());
 
-    m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+    m_cSliceDecoder.create();
   }
 
   //  Set picture slice pointer
@@ -465,7 +465,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   if (bNextSlice)
   {
-    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic);
+    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA );
     // Set reference list
     pcSlice->setRefPicList( m_cListPic );
 
@@ -577,7 +577,7 @@ Void TDecTop::xDecodeSPS()
 Void TDecTop::xDecodePPS()
 {
   TComPPS* pps = new TComPPS();
-  m_cEntropyDecoder.decodePPS( pps, &m_parameterSetManagerDecoder );
+  m_cEntropyDecoder.decodePPS( pps );
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
 
   if( pps->getDependentSliceEnabledFlag() )

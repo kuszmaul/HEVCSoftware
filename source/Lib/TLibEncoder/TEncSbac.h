@@ -102,7 +102,7 @@ public:
   Void  codeSaoTypeIdx    ( UInt  uiCode);
   Void  codeSaoUflc       ( UInt uiLength, UInt  uiCode );
   Void  codeSAOSign       ( UInt  uiCode);  //<! code SAO offset sign
-  Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
+  Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -114,8 +114,8 @@ private:
   Void  xCopyFrom            ( TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( TEncSbac* pSrc );  
   
-  Void codeDFFlag( UInt uiCode, const Char *pSymbolName )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
-  Void codeDFSvlc( Int iCode, const Char *pSymbolName )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
+  Void codeDFFlag( UInt /*uiCode*/, const Char */*pSymbolName*/ )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
+  Void codeDFSvlc( Int /*iCode*/, const Char */*pSymbolName*/ )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
 
 protected:
   TComBitIf*    m_pcBitIf;

@@ -300,7 +300,7 @@ Void SEIReader::xParseSEIuserDataUnregistered(SEIuserDataUnregistered &sei, UInt
  * parse bitstream bs and unpack a decoded picture hash SEI message
  * of payloadSize bytes into sei.
  */
-Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt payloadSize)
+Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt /*payloadSize*/)
 {
   UInt val;
   READ_CODE (8, val, "hash_type");
@@ -331,7 +331,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
     }
   }
 }
-Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt payloadSize)
+Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
   UInt val; 
   READ_CODE(4, val, "active_vps_id");
@@ -359,7 +359,7 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt p
   }
 }
 
-Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt payloadSize)
+Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payloadSize*/)
 {
   Int i, nalOrVcl;
   UInt code;
@@ -395,7 +395,7 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt payloadSi
   }
   xParseByteAlign();
 }
-Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt payloadSize)
+Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize*/)
 {
   Int i;
   UInt code;
@@ -447,7 +447,7 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt payloadSize)
   }
   xParseByteAlign();
 }
-Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt payloadSize)
+Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize*/)
 {
   Int  iCode;
   UInt uiCode;
@@ -457,7 +457,7 @@ Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt payloadSize)
   xParseByteAlign();
 }
 #if SEI_DISPLAY_ORIENTATION
-Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt payloadSize)
+Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*payloadSize*/)
 {
   UInt val;
   READ_FLAG( val,       "display_orientation_cancel_flag" );       sei.cancelFlag            = val;
@@ -474,7 +474,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt pay
 }
 #endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
-Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt payloadSize)
+Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /*payloadSize*/)
 {
   UInt val;
   READ_CODE ( 8, val, "tl0_idx" );  sei.tl0Idx = val;

@@ -515,9 +515,8 @@ inline Int xSign(Int x)
 
 /** initialize variables for SAO process
  * \param  pcPic picture data pointer
- * \param  numSlicesInPic number of slices in picture
  */
-Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic)
+Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic)
 {
   m_pcPic   = pcPic;
   m_bUseNIF = ( pcPic->getIndependentSliceBoundaryForNDBFilter() || pcPic->getIndependentTileBoundaryForNDBFilter() );

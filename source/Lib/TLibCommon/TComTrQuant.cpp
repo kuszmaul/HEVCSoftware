@@ -865,7 +865,7 @@ void xITrMxN(Int bitDepth, Short *coeff,Short *block, Int iWidth, Int iHeight, U
 #endif //MATRIX_MULT
 
 // To minimize the distortion only. No rate is considered. 
-Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, UInt const *scan, Int* deltaU, Int width, Int height )
+Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, UInt const *scan, Int* deltaU, Int width, Int height )
 {
   Int lastCG = -1;
   Int absSum = 0 ;
@@ -1108,7 +1108,7 @@ Void TComTrQuant::xQuant( TComDataCU* pcCU,
     {
       if(uiAcSum>=2)
       {
-        signBitHidingHDQ( pcCU, piQCoef, piCoef, scan, deltaU, iWidth, iHeight ) ;
+        signBitHidingHDQ( piQCoef, piCoef, scan, deltaU, iWidth, iHeight ) ;
       }
     }
   } //if RDOQ
@@ -1185,7 +1185,7 @@ Void TComTrQuant::xDeQuant(Int bitDepth, const TCoeff* pSrc, Int* pDes, Int iWid
   }
 }
 
-Void TComTrQuant::init( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int iSymbolMode, UInt *aTableLP4, UInt *aTableLP8, UInt *aTableLastPosVlcIndex,
+Void TComTrQuant::init( UInt uiMaxTrSize,
                        Bool bUseRDOQ,  
 #if RDOQ_TRANSFORMSKIP
                        Bool bUseRDOQTS,  
@@ -1647,7 +1647,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
         {
           UInt   uiPosY        = uiBlkPos >> uiLog2BlkSize;
           UInt   uiPosX        = uiBlkPos - ( uiPosY << uiLog2BlkSize );
-          UShort uiCtxSig      = getSigCtxInc( patternSigCtx, uiScanIdx, uiPosX, uiPosY, uiLog2BlkSize, uiWidth, uiHeight, eTType );
+          UShort uiCtxSig      = getSigCtxInc( patternSigCtx, uiScanIdx, uiPosX, uiPosY, uiLog2BlkSize, eTType );
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ],
                                                 lLevelDouble, uiMaxAbsLevel, uiCtxSig, uiOneCtx, uiAbsCtx, uiGoRiceParam, 
                                                 c1Idx, c2Idx, iQBits, dTemp, 0 );
@@ -1736,7 +1736,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
       {
         if (uiSigCoeffGroupFlag[ uiCGBlkPos ] == 0)
         {
-          UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiScanIdx, uiWidth, uiHeight);
+          UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiWidth, uiHeight);
           d64BaseCost += xGetRateSigCoeffGroup(0, uiCtxSig) - rdStats.d64SigCost;;  
           pdCostCoeffGroupSig[ iCGScanPos ] = xGetRateSigCoeffGroup(0, uiCtxSig);  
         } 
@@ -1753,7 +1753,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
             Double d64CostZeroCG = d64BaseCost;
             
             // add SigCoeffGroupFlag cost to total cost
-            UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiScanIdx, uiWidth, uiHeight);
+            UInt  uiCtxSig = getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, uiCGPosX, uiCGPosY, uiWidth, uiHeight);
             if (iCGScanPos < iCGLastScanPos)
             {
               d64BaseCost  += xGetRateSigCoeffGroup(1, uiCtxSig); 
@@ -1841,7 +1841,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
           UInt   uiPosY       = uiBlkPos >> uiLog2BlkSize;
           UInt   uiPosX       = uiBlkPos - ( uiPosY << uiLog2BlkSize );
           
-          Double d64CostLast= uiScanIdx == SCAN_VER ? xGetRateLast( uiPosY, uiPosX, uiWidth ) : xGetRateLast( uiPosX, uiPosY, uiWidth );
+          Double d64CostLast= uiScanIdx == SCAN_VER ? xGetRateLast( uiPosY, uiPosX ) : xGetRateLast( uiPosX, uiPosY );
           Double totalCost = d64BaseCost + d64CostLast - pdCostSig[ iScanPos ];
           
           if( totalCost < d64BestCost )
@@ -2059,9 +2059,7 @@ Int TComTrQuant::getSigCtxInc    (
                                    Int                             posX,
                                    Int                             posY,
                                    Int                             log2BlockSize,
-                                   Int                             width
-                                  ,Int                             height
-                                  ,TextType                        textureType
+                                   TextType                        textureType
                                   )
 {
   const Int ctxIndMap[16] =
@@ -2318,8 +2316,7 @@ __inline Double TComTrQuant::xGetRateSigCoeffGroup  ( UShort                    
  * \param uiWidth width of the transform unit (TU)
 */
 __inline Double TComTrQuant::xGetRateLast   ( const UInt                      uiPosX,
-                                              const UInt                      uiPosY,
-                                              const UInt                      uiBlkWdth     ) const
+                                              const UInt                      uiPosY ) const
 {
   UInt uiCtxX   = g_uiGroupIdx[uiPosX];
   UInt uiCtxY   = g_uiGroupIdx[uiPosY];
@@ -2375,7 +2372,6 @@ __inline Double TComTrQuant::xGetIEPRate      (                                 
 UInt TComTrQuant::getSigCoeffGroupCtxInc  ( const UInt*               uiSigCoeffGroupFlag,
                                            const UInt                      uiCGPosX,
                                            const UInt                      uiCGPosY,
-                                           const UInt                      scanIdx,
                                            Int width, Int height)
 {
   UInt uiRight = 0;

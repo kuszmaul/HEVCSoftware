@@ -112,7 +112,7 @@ public:
   
   Void  deletePicBuffer();
 
-  Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame,  Int& iPOCLastDisplay);
+  Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

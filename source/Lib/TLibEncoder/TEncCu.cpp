@@ -259,9 +259,9 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   }
 #endif
 }
-/** \param  pcCU  pointer of CU data class, bForceTerminate when set to true terminates slice (default is false).
+/** \param  pcCU  pointer of CU data class
  */
-Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
+Void TEncCu::encodeCU ( TComDataCU* pcCU )
 {
   if ( pcCU->getSlice()->getPPS()->getUseDQP() )
   {
@@ -1219,7 +1219,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
-    m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
+    m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }

@@ -50,9 +50,9 @@ using namespace std;
 //! \ingroup TLibDecoder
 //! \{
 #if HM9_NALU_TYPES
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *pcBitstream, Bool isVclNalUnit)
+static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, Bool isVclNalUnit)
 #else
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *pcBitstream)
+static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf)
 #endif
 {
   UInt zeroCount = 0;
@@ -138,9 +138,9 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
 #if HM9_NALU_TYPES
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream, (nalUnitBuf[0] & 64) == 0);
+  convertPayloadToRBSP(nalUnitBuf, (nalUnitBuf[0] & 64) == 0);
 #else
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream);
+  convertPayloadToRBSP(nalUnitBuf);
 #endif
   
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);

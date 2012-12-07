@@ -120,7 +120,7 @@ public:
   ~TComTrQuant();
   
   // initialize class
-  Void init                 ( UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxTrSize, Int iSymbolMode = 0, UInt *aTable4 = NULL, UInt *aTable8 = NULL, UInt *aTableLastPosVlcIndex=NULL, Bool useRDOQ = false,  
+  Void init                 ( UInt uiMaxTrSize, Bool useRDOQ = false,  
 #if RDOQ_TRANSFORMSKIP
     Bool useRDOQTS = false,  
 #endif
@@ -170,14 +170,11 @@ public:
                                      Int                             posX,
                                      Int                             posY,
                                      Int                             log2BlkSize,
-                                     Int                             width
-                                    ,Int                             height
-                                    ,TextType                        textureType
+                                     TextType                        textureType
                                     );
   static UInt getSigCoeffGroupCtxInc  ( const UInt*                   uiSigCoeffGroupFlag,
                                        const UInt                       uiCGPosX,
                                        const UInt                       uiCGPosY,
-                                       const UInt                     scanIdx,
                                        Int width, Int height);
   Void initScalingList                      ();
   Void destroyScalingList                   ();
@@ -239,7 +236,7 @@ private:
   // skipping Transform
   Void xTransformSkip (Int bitDepth, Pel* piBlkResi, UInt uiStride, Int* psCoeff, Int width, Int height );
 
-  Void signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, UInt const *scan, Int* deltaU, Int width, Int height );
+  Void signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, UInt const *scan, Int* deltaU, Int width, Int height );
 
   // quantization
   Void xQuant( TComDataCU* pcCU, 
@@ -296,8 +293,7 @@ __inline Int xGetICRate  ( UInt                            uiAbsLevel,
                            UInt                            c2Idx
                          ) const;
   __inline Double xGetRateLast     ( const UInt                      uiPosX,
-                                     const UInt                      uiPosY,
-                                     const UInt                      uiBlkWdth     ) const;
+                                     const UInt                      uiPosY ) const;
   __inline Double xGetRateSigCoeffGroup (  UShort                    uiSignificanceCoeffGroup,
                                      UShort                          ui16CtxNumSig ) const;
   __inline Double xGetRateSigCoef (  UShort                          uiSignificance,
