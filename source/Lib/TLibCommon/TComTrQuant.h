@@ -67,8 +67,6 @@ typedef struct
 
   Int blockCbpBits[3*NUM_QT_CBF_CTX][2];
   Int blockRootCbpBits[4][2];
-  Int scanZigzag[2];            ///< flag for zigzag scan
-  Int scanNonZigzag[2];         ///< flag for non zigzag scan
 } estBitsSbacStruct;
 
 // ====================================================================================================================
