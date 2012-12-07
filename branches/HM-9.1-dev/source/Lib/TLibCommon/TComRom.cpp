@@ -68,7 +68,7 @@ Void initROM()
     g_auiSigLastScan[0][i] = new UInt[ c*c ];
     g_auiSigLastScan[1][i] = new UInt[ c*c ];
     g_auiSigLastScan[2][i] = new UInt[ c*c ];
-    initSigLastScan( g_auiSigLastScan[0][i], g_auiSigLastScan[1][i], g_auiSigLastScan[2][i], c, c, i);
+    initSigLastScan( g_auiSigLastScan[0][i], g_auiSigLastScan[1][i], g_auiSigLastScan[2][i], c, c);
 
     c <<= 1;
   }  
@@ -408,7 +408,7 @@ const UInt g_auiGoRicePrefixLen[5] =
   8, 7, 6, 5, 4
 };
 
-Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight, Int iDepth)
+Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
 {
   const UInt  uiNumScanPos  = UInt( iWidth * iWidth );
   UInt        uiNextScanPos = 0;

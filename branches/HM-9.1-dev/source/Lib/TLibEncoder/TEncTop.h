@@ -171,7 +171,7 @@ public:
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
-  Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic );
+  Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
   TComScalingList*        getScalingList        () { return  &m_scalingList;         }
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function

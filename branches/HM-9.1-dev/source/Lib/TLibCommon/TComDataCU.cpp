@@ -3738,7 +3738,7 @@ UInt TComDataCU::getSCUAddr()
  * \param bRightTileBoundary true means that right boundary coincides tile boundary
  * \param bIndependentTileBoundaryEnabled true for independent tile boundary enabled
  */
-Void TComDataCU::setNDBFilterBlockBorderAvailability(UInt numLCUInPicWidth, UInt numLCUInPicHeight, UInt numSUInLCUWidth, UInt numSUInLCUHeight, UInt picWidth, UInt picHeight
+Void TComDataCU::setNDBFilterBlockBorderAvailability(UInt numLCUInPicWidth, UInt /*numLCUInPicHeight*/, UInt numSUInLCUWidth, UInt numSUInLCUHeight, UInt picWidth, UInt picHeight
                                                     ,std::vector<Bool>& LFCrossSliceBoundary
                                                     ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
                                                     ,Bool bIndependentTileBoundaryEnabled)

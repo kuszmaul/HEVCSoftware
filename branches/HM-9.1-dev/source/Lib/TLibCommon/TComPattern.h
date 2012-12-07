@@ -94,7 +94,6 @@ public:
                            Int         iOffsetRight,
                            Int         iOffsetAbove,
                            Int         iOffsetBottom,
-                           UInt        uiPartDepth,
                            UInt        uiAbsZorderIdx );
 };
 
@@ -168,7 +167,7 @@ public:
 private:
 
   /// padding of unavailable reference samples for intra prediction
-  Void  fillReferenceSamples        (Int bitDepth, TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode = false);
+  Void  fillReferenceSamples        (Int bitDepth, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode = false);
   
 
   /// constrained intra prediction

@@ -120,7 +120,7 @@ public:
   Void  compressCU          ( TComDataCU*&  rpcCU );
   
   /// CU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCU, Bool bForceTerminate = false  );
+  Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 #if RATE_CONTROL_LAMBDA_DOMAIN

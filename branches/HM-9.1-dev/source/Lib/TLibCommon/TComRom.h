@@ -61,7 +61,7 @@
 
 Void         initROM();
 Void         destroyROM();
-Void         initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight, Int iDepth);
+Void         initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight);
 // ====================================================================================================================
 // Data structure related table & variable
 // ====================================================================================================================

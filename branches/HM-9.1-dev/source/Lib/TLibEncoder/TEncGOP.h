@@ -121,7 +121,7 @@ public:
   TEncGOP();
   virtual ~TEncGOP();
   
-  Void  create      ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight );
+  Void  create      ();
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );

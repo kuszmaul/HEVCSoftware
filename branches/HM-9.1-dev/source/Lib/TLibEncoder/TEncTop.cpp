@@ -92,7 +92,7 @@ Void TEncTop::create ()
   initROM();
   
   // create processing unit classes
-  m_cGOPEncoder.        create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight );
+  m_cGOPEncoder.        create();
   m_cSliceEncoder.      create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
   if (m_bUseSAO)
@@ -275,9 +275,6 @@ Void TEncTop::destroy ()
 
 Void TEncTop::init()
 {
-  UInt *aTable4=NULL, *aTable8=NULL;
-  UInt* aTableLastPosVlcIndex=NULL; 
-  
   // initialize SPS
   xInitSPS();
   
@@ -299,10 +296,8 @@ Void TEncTop::init()
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
   
-  m_cTrQuant.init( g_uiMaxCUWidth, g_uiMaxCUHeight, 1 << m_uiQuadtreeTULog2MaxSize,
-                  0,
-                  aTable4, aTable8, 
-                  aTableLastPosVlcIndex, m_useRDOQ, 
+  m_cTrQuant.init( 1 << m_uiQuadtreeTULog2MaxSize,
+                  m_useRDOQ, 
 #if RDOQ_TRANSFORMSKIP
                   m_useRDOQTS,
 #endif
@@ -866,7 +861,7 @@ Void TEncTop::xInitRPS()
    // This is a function that 
    // determines what Reference Picture Set to use 
    // for a specific slice (with POC = POCCurr)
-Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
+Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid )
 {
   slice->setRPSidx(GOPid);
 

@@ -152,7 +152,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     m_LFCrossSliceBoundaryFlag.push_back( pcSlice->getLFCrossSliceBoundaryFlag());
   }
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);
-  m_pcSliceDecoder->decompressSlice( pcBitstream, ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
+  m_pcSliceDecoder->decompressSlice( ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
   m_pcEntropyDecoder->setBitstream(  ppcSubstreams[uiNumSubstreams-1] );
   // deallocate all created substreams, including internal buffers.
   for (UInt ui = 0; ui < uiNumSubstreams; ui++)
@@ -198,7 +198,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
       saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
       saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
       m_pcSAO->setSaoLcuBasedOptimization(1);
-      m_pcSAO->createPicSaoInfo(rpcPic, (Int) m_sliceStartCUAddress.size() - 1);
+      m_pcSAO->createPicSaoInfo(rpcPic);
       m_pcSAO->SAOProcess(saoParam);
       m_pcSAO->PCMLFDisableProcess(rpcPic);
       m_pcSAO->destroyPicSaoInfo();

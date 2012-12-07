@@ -127,7 +127,7 @@ public:
   Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, Int iYCbCr,Int iAddr = 0);
 
   Void processSaoCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);  //!< LCU-basd SAO process without slice granularity 
-  Void createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic = 1);
+  Void createPicSaoInfo(TComPic* pcPic);
   Void destroyPicSaoInfo();
   Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt width, UInt height, Bool* pbBorderAvail, Int iYCbCr);
 
