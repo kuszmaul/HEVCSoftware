@@ -1703,11 +1703,34 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     }
     pcSlice->setDependentSliceCurEndCUAddr( uiBoundingCUAddrDependentSlice );
   }
+  if ((m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE || m_pcCfg->getDependentSliceMode() == MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE) && 
+    (m_pcCfg->getNumRowsMinus1() > 0 || m_pcCfg->getNumColumnsMinus1() > 0))
+  {
+    UInt lcuEncAddr = (uiStartCUAddrDependentSlice+rpcPic->getNumPartInCU()-1)/rpcPic->getNumPartInCU();
+    UInt lcuAddr = rpcPic->getPicSym()->getCUOrderMap(lcuEncAddr);
+    UInt startTileIdx = rpcPic->getPicSym()->getTileIdxMap(lcuAddr);
+    UInt tileBoundingCUAddrSlice = 0;
+    while (lcuEncAddr < uiNumberOfCUsInFrame && rpcPic->getPicSym()->getTileIdxMap(lcuAddr) == startTileIdx)
+    {
+      lcuEncAddr++;
+      lcuAddr = rpcPic->getPicSym()->getCUOrderMap(lcuEncAddr);
+    }
+    tileBoundingCUAddrSlice = lcuEncAddr*rpcPic->getNumPartInCU();
+
+    if (tileBoundingCUAddrSlice < uiBoundingCUAddrDependentSlice)
+    {
+      uiBoundingCUAddrDependentSlice = tileBoundingCUAddrSlice;
+      pcSlice->setDependentSliceCurEndCUAddr( uiBoundingCUAddrDependentSlice );
+      tileBoundary = true;
+    }
+  }
+
   if(uiBoundingCUAddrDependentSlice>uiBoundingCUAddrSlice)
   {
     uiBoundingCUAddrDependentSlice = uiBoundingCUAddrSlice;
     pcSlice->setDependentSliceCurEndCUAddr(uiBoundingCUAddrSlice);
   }
+
   //calculate real dependent slice start address
   UInt uiInternalAddress = rpcPic->getPicSym()->getPicSCUAddr(pcSlice->getDependentSliceCurStartCUAddr()) % rpcPic->getNumPartInCU();
   UInt uiExternalAddress = rpcPic->getPicSym()->getPicSCUAddr(pcSlice->getDependentSliceCurStartCUAddr()) / rpcPic->getNumPartInCU();
