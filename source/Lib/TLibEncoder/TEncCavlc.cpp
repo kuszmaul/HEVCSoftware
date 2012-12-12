@@ -633,38 +633,27 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #endif
 
   //calculate number of bits required for slice address
-  Int maxAddrOuter = pcSlice->getPic()->getNumCUsInFrame();
-  Int reqBitsOuter = 0;
-  while(maxAddrOuter>(1<<reqBitsOuter)) 
+  Int maxSliceSegmentAddress = pcSlice->getPic()->getNumCUsInFrame();
+  Int bitsSliceSegmentAddress = 0;
+  while(maxSliceSegmentAddress>(1<<bitsSliceSegmentAddress)) 
   {
-    reqBitsOuter++;
+    bitsSliceSegmentAddress++;
   }
-  Int maxAddrInner = pcSlice->getPic()->getNumPartInCU()>>(2);
-  maxAddrInner = 1;
-  Int reqBitsInner = 0;
-  
-  while(maxAddrInner>(1<<reqBitsInner))
-  {
-    reqBitsInner++;
-  }
-  Int lCUAddress;
-  Int innerAddress;
+  Int ctuAddress;
   if (pcSlice->isNextSlice())
   {
     // Calculate slice address
-    lCUAddress = (pcSlice->getSliceCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
-    innerAddress = 0;
+    ctuAddress = (pcSlice->getSliceCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
   }
   else
   {
     // Calculate slice address
-    lCUAddress = (pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
-    innerAddress = 0;
-    
+    ctuAddress = (pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
   }
   //write slice address
-  Int address = (pcSlice->getPic()->getPicSym()->getCUOrderMap(lCUAddress) << reqBitsInner) + innerAddress;
-  WRITE_FLAG( address==0, "first_slice_in_pic_flag" );
+  Int sliceSegmentAddress = pcSlice->getPic()->getPicSym()->getCUOrderMap(ctuAddress);
+
+  WRITE_FLAG( sliceSegmentAddress==0, "first_slice_segment_in_pic_flag" );
   if ( pcSlice->getRapPicFlag() )
   {
     WRITE_FLAG( 0, "no_output_of_prior_pics_flag" );
@@ -672,18 +661,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "pic_parameter_set_id" );
 #if DEPENDENT_SLICE_SEGMENT_FLAGS
   pcSlice->setDependentSliceSegmentFlag(!pcSlice->isNextSlice());
-  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (address!=0) )
+  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentAddress!=0) )
   {
     WRITE_FLAG( pcSlice->getDependentSliceSegmentFlag() ? 1 : 0, "dependent_slice_segment_flag" );
   }
 #endif
-  if(address>0) 
+  if(sliceSegmentAddress>0) 
   {
-    WRITE_CODE( address, reqBitsOuter+reqBitsInner, "slice_address" );
+    WRITE_CODE( sliceSegmentAddress, bitsSliceSegmentAddress, "slice_segment_address" );
   }
 #if !DEPENDENT_SLICE_SEGMENT_FLAGS
   pcSlice->setDependentSliceSegmentFlag(!pcSlice->isNextSlice());
-  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (address!=0) )
+  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentAddress!=0) )
   {
     WRITE_FLAG( pcSlice->getDependentSliceSegmentFlag() ? 1 : 0, "dependent_slice_flag" );
   }
