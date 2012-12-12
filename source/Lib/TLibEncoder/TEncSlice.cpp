@@ -1055,7 +1055,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         pcSlice->setNextSlice( true );
         break;
       }
-      if (m_pcCfg->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+pppcRDSbacCoder->getBinsCoded() > m_pcCfg->getDependentSliceArgument()&&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
+      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+m_pcEntropyCoder->getNumberOfWrittenBits() > (m_pcCfg->getDependentSliceArgument() << 3) &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
       {
         pcSlice->setNextDependentSlice( true );
         break;
@@ -1081,7 +1081,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         pcSlice->setNextSlice( true );
         break;
       }
-      if (m_pcCfg->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+ m_pcEntropyCoder->getNumberOfWrittenBits()> m_pcCfg->getDependentSliceArgument()&&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
+      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+ m_pcEntropyCoder->getNumberOfWrittenBits()> m_pcCfg->getDependentSliceArgument()<<3 &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
       {
         pcSlice->setNextDependentSlice( true );
         break;
@@ -1630,7 +1630,7 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
       uiCUAddrIncrement               = m_pcCfg->getDependentSliceArgument();
       uiBoundingCUAddrDependentSlice    = ((uiStartCUAddrDependentSlice + uiCUAddrIncrement) < uiNumberOfCUsInFrame*rpcPic->getNumPartInCU() ) ? (uiStartCUAddrDependentSlice + uiCUAddrIncrement) : uiNumberOfCUsInFrame*rpcPic->getNumPartInCU();
       break;
-    case MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE:
       uiCUAddrIncrement               = rpcPic->getNumCUsInFrame();
       uiBoundingCUAddrDependentSlice    = pcSlice->getDependentSliceCurEndCUAddr();
       break;
@@ -1703,7 +1703,7 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     }
     pcSlice->setDependentSliceCurEndCUAddr( uiBoundingCUAddrDependentSlice );
   }
-  if ((m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE || m_pcCfg->getDependentSliceMode() == MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE) && 
+  if ((m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE || m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE) && 
     (m_pcCfg->getNumRowsMinus1() > 0 || m_pcCfg->getNumColumnsMinus1() > 0))
   {
     UInt lcuEncAddr = (uiStartCUAddrDependentSlice+rpcPic->getNumPartInCU()-1)/rpcPic->getNumPartInCU();
