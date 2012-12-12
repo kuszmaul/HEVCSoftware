@@ -953,24 +953,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       {
         m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
       }
-      Bool bEntropyLimit=false;
-      Bool bSliceLimit=false;
-      bSliceLimit=rpcBestCU->getSlice()->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE&&(rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceArgument()<<3);
-      if(rpcBestCU->getSlice()->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&m_pcEncCfg->getUseSBACRD())
-      {
-        if(rpcBestCU->getTotalBins()>rpcBestCU->getSlice()->getDependentSliceArgument())
-        {
-          bEntropyLimit=true;
-        }
-      }
-      else if(rpcBestCU->getSlice()->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE)
-      {
-        if(rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getDependentSliceArgument())
-        {
-          bEntropyLimit=true;
-        }
-      }
-      if(bSliceLimit||bEntropyLimit)
+      Bool isEndOfSlice        = rpcBestCU->getSlice()->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE
+                                 && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceArgument()<<3);
+      Bool isEndOfSliceSegment = rpcBestCU->getSlice()->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE
+                                 && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getDependentSliceArgument()<<3);
+      if(isEndOfSlice||isEndOfSliceSegment)
       {
         rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
       }
@@ -1075,37 +1062,15 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
   // Set dependent slice end parameter
-  if(m_pcEncCfg->getUseSBACRD()) 
+  if(pcSlice->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+numberOfWrittenBits > pcSlice->getDependentSliceArgument()<<3) 
   {
-    TEncBinCABAC *pppcRDSbacCoder = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
-    UInt uiBinsCoded = pppcRDSbacCoder->getBinsCoded();
-    if(pcSlice->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+uiBinsCoded>pcSlice->getDependentSliceArgument())
-    {
-      pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
-      return;
-    }
-  }
-  else
-  {
-    if(pcSlice->getDependentSliceMode()==MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+numberOfWrittenBits>pcSlice->getDependentSliceArgument()) 
-    {
-      pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
-      return;
-    }
+    pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
+    return;
   }
   if(granularityBoundary)
   {
     pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
-    if(m_pcEncCfg->getUseSBACRD()) 
-    {
-      TEncBinCABAC *pppcRDSbacCoder = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
-      pcSlice->setDependentSliceCounter(pcSlice->getDependentSliceCounter()+pppcRDSbacCoder->getBinsCoded());
-      pppcRDSbacCoder->setBinsCoded( 0 );
-    }
-    else 
-    {
-      pcSlice->setDependentSliceCounter(pcSlice->getDependentSliceCounter()+numberOfWrittenBits);
-    }
+    pcSlice->setDependentSliceCounter(pcSlice->getDependentSliceCounter()+numberOfWrittenBits);
     if (m_pcBitCounter)
     {
       m_pcEntropyCoder->resetBits();      
