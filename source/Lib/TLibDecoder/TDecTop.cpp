@@ -438,8 +438,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   pcPic->getPicSym()->setInverseCUOrderMap(pcPic->getPicSym()->getNumberOfCUsInFrame(), pcPic->getPicSym()->getNumberOfCUsInFrame());
 
   //convert the start and end CU addresses of the slice and dependent slice into encoding order
-  pcSlice->setDependentSliceCurStartCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getDependentSliceCurStartCUAddr()) );
-  pcSlice->setDependentSliceCurEndCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getDependentSliceCurEndCUAddr()) );
+  pcSlice->setSliceSegmentCurStartCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurStartCUAddr()) );
+  pcSlice->setSliceSegmentCurEndCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurEndCUAddr()) );
   if(pcSlice->isNextSlice())
   {
     pcSlice->setSliceCurStartCUAddr(pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceCurStartCUAddr()));
@@ -580,7 +580,7 @@ Void TDecTop::xDecodePPS()
   m_cEntropyDecoder.decodePPS( pps );
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
 
-  if( pps->getDependentSliceEnabledFlag() )
+  if( pps->getDependentSliceSegmentsEnabledFlag() )
   {
     Int NumCtx = pps->getEntropyCodingSyncEnabledFlag()?2:1;
     m_cSliceDecoder.initCtxMem(NumCtx);

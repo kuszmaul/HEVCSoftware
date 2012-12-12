@@ -940,7 +940,7 @@ private:
 
   Bool        m_TransquantBypassEnableFlag; // Indicates presence of cu_transquant_bypass_flag in CUs.
   Bool        m_useTransformSkip;
-  Bool        m_dependentSliceEnabledFlag;     //!< Indicates the presence of dependent slices
+  Bool        m_dependentSliceSegmentsEnabledFlag;     //!< Indicates the presence of dependent slices
   Bool        m_tilesEnabledFlag;              //!< Indicates the presence of tiles
   Bool        m_entropyCodingSyncEnabledFlag;  //!< Indicates the presence of wavefronts
   
@@ -1024,8 +1024,8 @@ public:
 
   Void    setLoopFilterAcrossTilesEnabledFlag  (Bool b)    { m_loopFilterAcrossTilesEnabledFlag = b; }
   Bool    getLoopFilterAcrossTilesEnabledFlag  ()          { return m_loopFilterAcrossTilesEnabledFlag;   }
-  Bool    getDependentSliceEnabledFlag() const             { return m_dependentSliceEnabledFlag; }
-  Void    setDependentSliceEnabledFlag(Bool val)           { m_dependentSliceEnabledFlag = val; }
+  Bool    getDependentSliceSegmentsEnabledFlag() const     { return m_dependentSliceSegmentsEnabledFlag; }
+  Void    setDependentSliceSegmentsEnabledFlag(Bool val)   { m_dependentSliceSegmentsEnabledFlag = val; }
   Bool    getTilesEnabledFlag() const                      { return m_tilesEnabledFlag; }
   Void    setTilesEnabledFlag(Bool val)                    { m_tilesEnabledFlag = val; }
   Bool    getEntropyCodingSyncEnabledFlag() const          { return m_entropyCodingSyncEnabledFlag; }
@@ -1141,7 +1141,7 @@ private:
   NalUnitType m_eNalUnitType;         ///< Nal unit type for the slice
   SliceType   m_eSliceType;
   Int         m_iSliceQp;
-  Bool        m_dependentSliceFlag;
+  Bool        m_dependentSliceSegmentFlag;
 #if ADAPTIVE_QP_SELECTION
   Int         m_iSliceQpBase;
 #endif
@@ -1200,19 +1200,19 @@ private:
   UInt        m_uiTLayer;
   Bool        m_bTLayerSwitchingFlag;
 
-  UInt        m_uiSliceMode;
-  UInt        m_uiSliceArgument;
-  UInt        m_uiSliceCurStartCUAddr;
-  UInt        m_uiSliceCurEndCUAddr;
-  UInt        m_uiSliceIdx;
-  UInt        m_uiDependentSliceMode;
-  UInt        m_uiDependentSliceArgument;
-  UInt        m_uiDependentSliceCurStartCUAddr;
-  UInt        m_uiDependentSliceCurEndCUAddr;
-  Bool        m_bNextSlice;
-  Bool        m_bNextDependentSlice;
-  UInt        m_uiSliceBits;
-  UInt        m_uiDependentSliceCounter;
+  UInt        m_sliceMode;
+  UInt        m_sliceArgument;
+  UInt        m_sliceCurStartCUAddr;
+  UInt        m_sliceCurEndCUAddr;
+  UInt        m_sliceIdx;
+  UInt        m_sliceSegmentMode;
+  UInt        m_sliceSegmentArgument;
+  UInt        m_sliceSegmentCurStartCUAddr;
+  UInt        m_sliceSegmentCurEndCUAddr;
+  Bool        m_nextSlice;
+  Bool        m_nextSliceSegment;
+  UInt        m_sliceBits;
+  UInt        m_sliceSegmentBits;
   Bool        m_bFinalized;
 
   wpScalingParam  m_weightPredTable[2][MAX_NUM_REF][3]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
@@ -1270,8 +1270,8 @@ public:
   SliceType getSliceType    ()                          { return  m_eSliceType;         }
   Int       getPOC          ()                          { return  m_iPOC;           }
   Int       getSliceQp      ()                          { return  m_iSliceQp;           }
-  Bool      getDependentSliceFlag() const               { return m_dependentSliceFlag; }
-  void      setDependentSliceFlag(Bool val)             { m_dependentSliceFlag = val; }
+  Bool      getDependentSliceSegmentFlag() const        { return m_dependentSliceSegmentFlag; }
+  void      setDependentSliceSegmentFlag(Bool val)      { m_dependentSliceSegmentFlag = val; }
 #if ADAPTIVE_QP_SELECTION
   Int       getSliceQpBase  ()                          { return  m_iSliceQpBase;       }
 #endif
@@ -1383,33 +1383,33 @@ public:
   Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
   UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
 
-  Void setSliceMode                     ( UInt uiMode )     { m_uiSliceMode = uiMode;                     }
-  UInt getSliceMode                     ()                  { return m_uiSliceMode;                       }
-  Void setSliceArgument                 ( UInt uiArgument ) { m_uiSliceArgument = uiArgument;             }
-  UInt getSliceArgument                 ()                  { return m_uiSliceArgument;                   }
-  Void setSliceCurStartCUAddr           ( UInt uiAddr )     { m_uiSliceCurStartCUAddr = uiAddr;           }
-  UInt getSliceCurStartCUAddr           ()                  { return m_uiSliceCurStartCUAddr;             }
-  Void setSliceCurEndCUAddr             ( UInt uiAddr )     { m_uiSliceCurEndCUAddr = uiAddr;             }
-  UInt getSliceCurEndCUAddr             ()                  { return m_uiSliceCurEndCUAddr;               }
-  Void setSliceIdx                      ( UInt i)           { m_uiSliceIdx = i;                           }
-  UInt getSliceIdx                      ()                  { return  m_uiSliceIdx;                       }
+  Void setSliceMode                     ( UInt uiMode )     { m_sliceMode = uiMode;                     }
+  UInt getSliceMode                     ()                  { return m_sliceMode;                       }
+  Void setSliceArgument                 ( UInt uiArgument ) { m_sliceArgument = uiArgument;             }
+  UInt getSliceArgument                 ()                  { return m_sliceArgument;                   }
+  Void setSliceCurStartCUAddr           ( UInt uiAddr )     { m_sliceCurStartCUAddr = uiAddr;           }
+  UInt getSliceCurStartCUAddr           ()                  { return m_sliceCurStartCUAddr;             }
+  Void setSliceCurEndCUAddr             ( UInt uiAddr )     { m_sliceCurEndCUAddr = uiAddr;             }
+  UInt getSliceCurEndCUAddr             ()                  { return m_sliceCurEndCUAddr;               }
+  Void setSliceIdx                      ( UInt i)           { m_sliceIdx = i;                           }
+  UInt getSliceIdx                      ()                  { return  m_sliceIdx;                       }
   Void copySliceInfo                    (TComSlice *pcSliceSrc);
-  Void setDependentSliceMode              ( UInt uiMode )     { m_uiDependentSliceMode = uiMode;              }
-  UInt getDependentSliceMode              ()                  { return m_uiDependentSliceMode;                }
-  Void setDependentSliceArgument          ( UInt uiArgument ) { m_uiDependentSliceArgument = uiArgument;      }
-  UInt getDependentSliceArgument          ()                  { return m_uiDependentSliceArgument;            }
-  Void setDependentSliceCurStartCUAddr    ( UInt uiAddr )     { m_uiDependentSliceCurStartCUAddr = uiAddr;    }
-  UInt getDependentSliceCurStartCUAddr    ()                  { return m_uiDependentSliceCurStartCUAddr;      }
-  Void setDependentSliceCurEndCUAddr      ( UInt uiAddr )     { m_uiDependentSliceCurEndCUAddr = uiAddr;      }
-  UInt getDependentSliceCurEndCUAddr      ()                  { return m_uiDependentSliceCurEndCUAddr;        }
-  Void setNextSlice                     ( Bool b )          { m_bNextSlice = b;                           }
-  Bool isNextSlice                      ()                  { return m_bNextSlice;                        }
-  Void setNextDependentSlice              ( Bool b )          { m_bNextDependentSlice = b;                    }
-  Bool isNextDependentSlice               ()                  { return m_bNextDependentSlice;                 }
-  Void setSliceBits                     ( UInt uiVal )      { m_uiSliceBits = uiVal;                      }
-  UInt getSliceBits                     ()                  { return m_uiSliceBits;                       }  
-  Void setDependentSliceCounter           ( UInt uiVal )      { m_uiDependentSliceCounter = uiVal;            }
-  UInt getDependentSliceCounter           ()                  { return m_uiDependentSliceCounter;             }
+  Void setSliceSegmentMode              ( UInt uiMode )     { m_sliceSegmentMode = uiMode;              }
+  UInt getSliceSegmentMode              ()                  { return m_sliceSegmentMode;                }
+  Void setSliceSegmentArgument          ( UInt uiArgument ) { m_sliceSegmentArgument = uiArgument;      }
+  UInt getSliceSegmentArgument          ()                  { return m_sliceSegmentArgument;            }
+  Void setSliceSegmentCurStartCUAddr    ( UInt uiAddr )     { m_sliceSegmentCurStartCUAddr = uiAddr;    }
+  UInt getSliceSegmentCurStartCUAddr    ()                  { return m_sliceSegmentCurStartCUAddr;      }
+  Void setSliceSegmentCurEndCUAddr      ( UInt uiAddr )     { m_sliceSegmentCurEndCUAddr = uiAddr;      }
+  UInt getSliceSegmentCurEndCUAddr      ()                  { return m_sliceSegmentCurEndCUAddr;        }
+  Void setNextSlice                     ( Bool b )          { m_nextSlice = b;                           }
+  Bool isNextSlice                      ()                  { return m_nextSlice;                        }
+  Void setNextSliceSegment              ( Bool b )          { m_nextSliceSegment = b;                    }
+  Bool isNextSliceSegment               ()                  { return m_nextSliceSegment;                 }
+  Void setSliceBits                     ( UInt uiVal )      { m_sliceBits = uiVal;                      }
+  UInt getSliceBits                     ()                  { return m_sliceBits;                       }  
+  Void setSliceSegmentBits              ( UInt uiVal )      { m_sliceSegmentBits = uiVal;            }
+  UInt getSliceSegmentBits              ()                  { return m_sliceSegmentBits;             }
   Void setFinalized                     ( Bool uiVal )      { m_bFinalized = uiVal;                       }
   Bool getFinalized                     ()                  { return m_bFinalized;                        }
   Void  setWpScaling    ( wpScalingParam  wp[2][MAX_NUM_REF][3] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*2*MAX_NUM_REF*3); }

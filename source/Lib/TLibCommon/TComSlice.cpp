@@ -51,7 +51,7 @@ TComSlice::TComSlice()
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR )
 , m_eSliceType                    ( I_SLICE )
 , m_iSliceQp                      ( 0 )
-, m_dependentSliceFlag            ( false )
+, m_dependentSliceSegmentFlag            ( false )
 #if ADAPTIVE_QP_SELECTION
 , m_iSliceQpBase                  ( 0 )
 #endif
@@ -81,19 +81,19 @@ TComSlice::TComSlice()
 , m_bNoBackPredFlag               ( false )
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
-, m_uiSliceMode                   ( 0 )
-, m_uiSliceArgument               ( 0 )
-, m_uiSliceCurStartCUAddr         ( 0 )
-, m_uiSliceCurEndCUAddr           ( 0 )
-, m_uiSliceIdx                    ( 0 )
-, m_uiDependentSliceMode            ( 0 )
-, m_uiDependentSliceArgument        ( 0 )
-, m_uiDependentSliceCurStartCUAddr  ( 0 )
-, m_uiDependentSliceCurEndCUAddr    ( 0 )
-, m_bNextSlice                    ( false )
-, m_bNextDependentSlice             ( false )
-, m_uiSliceBits                   ( 0 )
-, m_uiDependentSliceCounter         ( 0 )
+, m_sliceMode                   ( 0 )
+, m_sliceArgument               ( 0 )
+, m_sliceCurStartCUAddr         ( 0 )
+, m_sliceCurEndCUAddr           ( 0 )
+, m_sliceIdx                    ( 0 )
+, m_sliceSegmentMode            ( 0 )
+, m_sliceSegmentArgument        ( 0 )
+, m_sliceSegmentCurStartCUAddr  ( 0 )
+, m_sliceSegmentCurEndCUAddr    ( 0 )
+, m_nextSlice                    ( false )
+, m_nextSliceSegment             ( false )
+, m_sliceBits                   ( 0 )
+, m_sliceSegmentBits         ( 0 )
 , m_bFinalized                    ( false )
 , m_uiTileOffstForMultES          ( 0 )
 , m_puiSubstreamSizes             ( NULL )
@@ -777,17 +777,17 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_uiTLayer                      = pSrc->m_uiTLayer;
   m_bTLayerSwitchingFlag          = pSrc->m_bTLayerSwitchingFlag;
 
-  m_uiSliceMode                   = pSrc->m_uiSliceMode;
-  m_uiSliceArgument               = pSrc->m_uiSliceArgument;
-  m_uiSliceCurStartCUAddr         = pSrc->m_uiSliceCurStartCUAddr;
-  m_uiSliceCurEndCUAddr           = pSrc->m_uiSliceCurEndCUAddr;
-  m_uiSliceIdx                    = pSrc->m_uiSliceIdx;
-  m_uiDependentSliceMode            = pSrc->m_uiDependentSliceMode;
-  m_uiDependentSliceArgument        = pSrc->m_uiDependentSliceArgument; 
-  m_uiDependentSliceCurStartCUAddr  = pSrc->m_uiDependentSliceCurStartCUAddr;
-  m_uiDependentSliceCurEndCUAddr    = pSrc->m_uiDependentSliceCurEndCUAddr;
-  m_bNextSlice                    = pSrc->m_bNextSlice;
-  m_bNextDependentSlice             = pSrc->m_bNextDependentSlice;
+  m_sliceMode                   = pSrc->m_sliceMode;
+  m_sliceArgument               = pSrc->m_sliceArgument;
+  m_sliceCurStartCUAddr         = pSrc->m_sliceCurStartCUAddr;
+  m_sliceCurEndCUAddr           = pSrc->m_sliceCurEndCUAddr;
+  m_sliceIdx                    = pSrc->m_sliceIdx;
+  m_sliceSegmentMode            = pSrc->m_sliceSegmentMode;
+  m_sliceSegmentArgument        = pSrc->m_sliceSegmentArgument; 
+  m_sliceSegmentCurStartCUAddr  = pSrc->m_sliceSegmentCurStartCUAddr;
+  m_sliceSegmentCurEndCUAddr    = pSrc->m_sliceSegmentCurEndCUAddr;
+  m_nextSlice                    = pSrc->m_nextSlice;
+  m_nextSliceSegment             = pSrc->m_nextSliceSegment;
   for ( Int e=0 ; e<2 ; e++ )
   {
     for ( Int n=0 ; n<MAX_NUM_REF ; n++ )
@@ -1467,7 +1467,7 @@ TComPPS::TComPPS()
 , m_numRefIdxL1DefaultActive    (1)
 , m_TransquantBypassEnableFlag  (false)
 , m_useTransformSkip             (false)
-, m_dependentSliceEnabledFlag    (false)
+, m_dependentSliceSegmentsEnabledFlag    (false)
 , m_tilesEnabledFlag               (false)
 , m_entropyCodingSyncEnabledFlag   (false)
 , m_loopFilterAcrossTilesEnabledFlag  (true)

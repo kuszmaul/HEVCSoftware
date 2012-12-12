@@ -167,10 +167,12 @@ protected:
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost 
   Bool      m_bUseCbfFastMode;                              ///< flag for using Cbf Fast PU Mode Decision
   Bool      m_useEarlySkipDetection;                         ///< flag for using Early SKIP Detection
-  Int       m_iSliceMode;           ///< 0: Disable all Recon slice limits, 1 : Maximum number of largest coding units per slice, 2: Maximum number of bytes in a slice
-  Int       m_iSliceArgument;       ///< If m_iSliceMode==1, m_iSliceArgument=max. # of largest coding units. If m_iSliceMode==2, m_iSliceArgument=max. # of bytes.
-  Int       m_iDependentSliceMode;    ///< 0: Disable all dependent slice limits, 1 : Maximum number of largest coding units per slice, 2: Constraint based dependent slice
-  Int       m_iDependentSliceArgument;///< If m_iDependentSliceMode==1, m_iEDependentSliceArgument=max. # of largest coding units. If m_iDependnetSliceMode==2, m_iDependnetSliceArgument=max. # of bins.
+  Int       m_sliceMode;                                     ///< 0: no slice limits, 1 : max number of CTBs per slice, 2: max number of bytes per slice, 
+                                                             ///< 3: max number of tiles per slice
+  Int       m_sliceArgument;                                 ///< argument according to selected slice mode
+  Int       m_sliceSegmentMode;                              ///< 0: no slice segment limits, 1 : max number of CTBs per slice segment, 2: max number of bytes per slice segment, 
+                                                             ///< 3: max number of tiles per slice segment
+  Int       m_sliceSegmentArgument;                          ///< argument according to selected slice segment mode
 
   Bool      m_bLFCrossSliceBoundaryFlag;  ///< 1: filter across slice boundaries 0: do not filter across slice boundaries
   Bool      m_bLFCrossTileBoundaryFlag;   ///< 1: filter across tile boundaries  0: do not filter across tile boundaries

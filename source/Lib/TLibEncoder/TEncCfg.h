@@ -201,11 +201,11 @@ protected:
   UInt      m_pcmLog2MaxSize;
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
-  Int       m_iSliceMode;
-  Int       m_iSliceArgument; 
+  Int       m_sliceMode;
+  Int       m_sliceArgument; 
   //====== Dependent Slice ========
-  Int       m_iDependentSliceMode;
-  Int       m_iDependentSliceArgument;
+  Int       m_sliceSegmentMode;
+  Int       m_sliceSegmentArgument;
   Bool      m_bLFCrossSliceBoundaryFlag;
 
   Bool      m_bPCMInputBitDepthFlag;
@@ -474,15 +474,15 @@ public:
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 
   //====== Slice ========
-  Void  setSliceMode                   ( Int  i )       { m_iSliceMode = i;              }
-  Void  setSliceArgument               ( Int  i )       { m_iSliceArgument = i;          }
-  Int   getSliceMode                   ()              { return m_iSliceMode;           }
-  Int   getSliceArgument               ()              { return m_iSliceArgument;       }
+  Void  setSliceMode                   ( Int  i )       { m_sliceMode = i;              }
+  Void  setSliceArgument               ( Int  i )       { m_sliceArgument = i;          }
+  Int   getSliceMode                   ()              { return m_sliceMode;           }
+  Int   getSliceArgument               ()              { return m_sliceArgument;       }
   //====== Dependent Slice ========
-  Void  setDependentSliceMode            ( Int  i )      { m_iDependentSliceMode = i;       }
-  Void  setDependentSliceArgument        ( Int  i )      { m_iDependentSliceArgument = i;   }
-  Int   getDependentSliceMode            ()              { return m_iDependentSliceMode;    }
-  Int   getDependentSliceArgument        ()              { return m_iDependentSliceArgument;}
+  Void  setSliceSegmentMode            ( Int  i )      { m_sliceSegmentMode = i;       }
+  Void  setSliceSegmentArgument        ( Int  i )      { m_sliceSegmentArgument = i;   }
+  Int   getSliceSegmentMode            ()              { return m_sliceSegmentMode;    }
+  Int   getSliceSegmentArgument        ()              { return m_sliceSegmentArgument;}
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
   Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
 

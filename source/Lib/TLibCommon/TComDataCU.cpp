@@ -109,8 +109,8 @@ TComDataCU::TComDataCU()
   m_apiMVPNum[1]       = NULL;
 
   m_bDecSubCu          = false;
-  m_uiSliceStartCU        = 0;
-  m_uiDependentSliceStartCU = 0;
+  m_sliceStartCU        = 0;
+  m_sliceSegmentStartCU = 0;
 }
 
 TComDataCU::~TComDataCU()
@@ -208,8 +208,8 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_acCUMvField[1].setNumPartition(uiNumPartition );
   }
   
-  m_uiSliceStartCU        = (UInt*  )xMalloc(UInt, uiNumPartition);
-  m_uiDependentSliceStartCU = (UInt*  )xMalloc(UInt, uiNumPartition);
+  m_sliceStartCU        = (UInt*  )xMalloc(UInt, uiNumPartition);
+  m_sliceSegmentStartCU = (UInt*  )xMalloc(UInt, uiNumPartition);
   
   // create pattern memory
   m_pcPattern            = (TComPattern*)xMalloc(TComPattern, 1);
@@ -297,15 +297,15 @@ Void TComDataCU::destroy()
   m_apcCUColocated[0]   = NULL;
   m_apcCUColocated[1]   = NULL;
 
-  if( m_uiSliceStartCU )
+  if( m_sliceStartCU )
   {
-    xFree(m_uiSliceStartCU);
-    m_uiSliceStartCU=NULL;
+    xFree(m_sliceStartCU);
+    m_sliceStartCU=NULL;
   }
-  if(m_uiDependentSliceStartCU )
+  if(m_sliceSegmentStartCU )
   {
-    xFree(m_uiDependentSliceStartCU);
-    m_uiDependentSliceStartCU=NULL;
+    xFree(m_sliceSegmentStartCU);
+    m_sliceSegmentStartCU=NULL;
   }
 }
 
@@ -367,26 +367,26 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   {
     if(pcPic->getPicSym()->getInverseCUOrderMap(iCUAddr)*pcPic->getNumPartInCU()+i>=getSlice()->getSliceCurStartCUAddr())
     {
-      m_uiSliceStartCU[i]=getSlice()->getSliceCurStartCUAddr();
+      m_sliceStartCU[i]=getSlice()->getSliceCurStartCUAddr();
     }
     else
     {
-      m_uiSliceStartCU[i]=pcPic->getCU(getAddr())->m_uiSliceStartCU[i];
+      m_sliceStartCU[i]=pcPic->getCU(getAddr())->m_sliceStartCU[i];
     }
   }
   for(Int i=0; i<pcPic->getNumPartInCU(); i++)
   {
-    if(pcPic->getPicSym()->getInverseCUOrderMap(iCUAddr)*pcPic->getNumPartInCU()+i>=getSlice()->getDependentSliceCurStartCUAddr())
+    if(pcPic->getPicSym()->getInverseCUOrderMap(iCUAddr)*pcPic->getNumPartInCU()+i>=getSlice()->getSliceSegmentCurStartCUAddr())
     {
-      m_uiDependentSliceStartCU[i]=getSlice()->getDependentSliceCurStartCUAddr();
+      m_sliceSegmentStartCU[i]=getSlice()->getSliceSegmentCurStartCUAddr();
     }
     else
     {
-      m_uiDependentSliceStartCU[i]=pcPic->getCU(getAddr())->m_uiDependentSliceStartCU[i];
+      m_sliceSegmentStartCU[i]=pcPic->getCU(getAddr())->m_sliceSegmentStartCU[i];
     }
   }
 
-  Int partStartIdx = getSlice()->getDependentSliceCurStartCUAddr() - pcPic->getPicSym()->getInverseCUOrderMap(iCUAddr) * pcPic->getNumPartInCU();
+  Int partStartIdx = getSlice()->getSliceSegmentCurStartCUAddr() - pcPic->getPicSym()->getInverseCUOrderMap(iCUAddr) * pcPic->getNumPartInCU();
 
   Int numElements = min<Int>( partStartIdx, m_uiNumPartition );
   for ( Int ui = 0; ui < numElements; ui++ )
@@ -558,7 +558,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
-    if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU+ui >= getSlice()->getDependentSliceCurStartCUAddr())
+    if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU+ui >= getSlice()->getSliceSegmentCurStartCUAddr())
     {
       m_apiMVPIdx[0][ui] = -1;
       m_apiMVPIdx[1][ui] = -1;
@@ -590,7 +590,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
 
   UInt uiTmp = uhWidth*uhHeight;
 
-  if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU >= getSlice()->getDependentSliceCurStartCUAddr())
+  if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU >= getSlice()->getSliceSegmentCurStartCUAddr())
   {
     m_acCUMvField[0].clearMvField();
     m_acCUMvField[1].clearMvField();
@@ -676,7 +676,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     m_apiMVPIdx[1][ui] = -1;
     m_apiMVPNum[0][ui] = -1;
     m_apiMVPNum[1][ui] = -1;
-    if(m_pcPic->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU+ui<getSlice()->getDependentSliceCurStartCUAddr())
+    if(m_pcPic->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU+ui<getSlice()->getSliceSegmentCurStartCUAddr())
     {
       m_apiMVPIdx[0][ui] = pcCU->m_apiMVPIdx[0][uiPartOffset+ui];
       m_apiMVPIdx[1][ui] = pcCU->m_apiMVPIdx[1][uiPartOffset+ui];;
@@ -724,7 +724,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_acCUMvField[0].clearMvField();
   m_acCUMvField[1].clearMvField();
 
-  if(m_pcPic->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU<getSlice()->getDependentSliceCurStartCUAddr())
+  if(m_pcPic->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU<getSlice()->getSliceSegmentCurStartCUAddr())
   {
     // Part of this CU contains data from an older slice. Now copy in that data.
     UInt uiMaxCuWidth=pcCU->getSlice()->getSPS()->getMaxCUWidth();
@@ -766,8 +766,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   m_apcCUColocated[0] = pcCU->getCUColocated(REF_PIC_LIST_0);
   m_apcCUColocated[1] = pcCU->getCUColocated(REF_PIC_LIST_1);
-  memcpy(m_uiSliceStartCU,pcCU->m_uiSliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
-  memcpy(m_uiDependentSliceStartCU,pcCU->m_uiDependentSliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceStartCU,pcCU->m_sliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceSegmentStartCU,pcCU->m_sliceSegmentStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
 }
 
 Void TComDataCU::setOutsideCUPart( UInt uiAbsPartIdx, UInt uiDepth )
@@ -867,8 +867,8 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   m_acCUMvField[0].linkToWithOffset( pcCU->getCUMvField(REF_PIC_LIST_0), uiPart );
   m_acCUMvField[1].linkToWithOffset( pcCU->getCUMvField(REF_PIC_LIST_1), uiPart );
-  memcpy(m_uiSliceStartCU,pcCU->m_uiSliceStartCU+uiPart,sizeof(UInt)*m_uiNumPartition);
-  memcpy(m_uiDependentSliceStartCU,pcCU->m_uiDependentSliceStartCU+uiPart,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceStartCU,pcCU->m_sliceStartCU+uiPart,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceSegmentStartCU,pcCU->m_sliceSegmentStartCU+uiPart,sizeof(UInt)*m_uiNumPartition);
 }
 
 // Copy inter prediction info from the biggest CU
@@ -910,8 +910,8 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   
   m_acCUMvField[ eRefPicList ].linkToWithOffset( pcCU->getCUMvField(eRefPicList), uiAbsPartIdx );
 
-  memcpy(m_uiSliceStartCU,pcCU->m_uiSliceStartCU+uiAbsPartIdx,sizeof(UInt)*m_uiNumPartition);
-  memcpy(m_uiDependentSliceStartCU,pcCU->m_uiDependentSliceStartCU+uiAbsPartIdx,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceStartCU,pcCU->m_sliceStartCU+uiAbsPartIdx,sizeof(UInt)*m_uiNumPartition);
+  memcpy(m_sliceSegmentStartCU,pcCU->m_sliceSegmentStartCU+uiAbsPartIdx,sizeof(UInt)*m_uiNumPartition);
 }
 
 // Copy small CU to bigger CU.
@@ -990,8 +990,8 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_pcIPCMSampleCb + uiTmp2 , pcCU->getPCMSampleCb(), sizeof(Pel) * uiTmp );
   memcpy( m_pcIPCMSampleCr + uiTmp2 , pcCU->getPCMSampleCr(), sizeof(Pel) * uiTmp );
   m_uiTotalBins += pcCU->getTotalBins();
-  memcpy( m_uiSliceStartCU        + uiOffset, pcCU->m_uiSliceStartCU,        sizeof( UInt ) * uiNumPartition  );
-  memcpy( m_uiDependentSliceStartCU + uiOffset, pcCU->m_uiDependentSliceStartCU, sizeof( UInt ) * uiNumPartition  );
+  memcpy( m_sliceStartCU        + uiOffset, pcCU->m_sliceStartCU,        sizeof( UInt ) * uiNumPartition  );
+  memcpy( m_sliceSegmentStartCU + uiOffset, pcCU->m_sliceSegmentStartCU, sizeof( UInt ) * uiNumPartition  );
 }
 
 // Copy current predicted part to a CU in picture.
@@ -1062,8 +1062,8 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   memcpy( rpcCU->getPCMSampleCb() + uiTmp2 , m_pcIPCMSampleCb, sizeof( Pel ) * uiTmp );
   memcpy( rpcCU->getPCMSampleCr() + uiTmp2 , m_pcIPCMSampleCr, sizeof( Pel ) * uiTmp );
   rpcCU->getTotalBins() = m_uiTotalBins;
-  memcpy( rpcCU->m_uiSliceStartCU        + m_uiAbsIdxInLCU, m_uiSliceStartCU,        sizeof( UInt ) * m_uiNumPartition  );
-  memcpy( rpcCU->m_uiDependentSliceStartCU + m_uiAbsIdxInLCU, m_uiDependentSliceStartCU, sizeof( UInt ) * m_uiNumPartition  );
+  memcpy( rpcCU->m_sliceStartCU        + m_uiAbsIdxInLCU, m_sliceStartCU,        sizeof( UInt ) * m_uiNumPartition  );
+  memcpy( rpcCU->m_sliceSegmentStartCU + m_uiAbsIdxInLCU, m_sliceSegmentStartCU, sizeof( UInt ) * m_uiNumPartition  );
 }
 
 Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
@@ -1134,8 +1134,8 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getPCMSampleCb() + uiTmp2 , m_pcIPCMSampleCb, sizeof( Pel ) * uiTmp );
   memcpy( rpcCU->getPCMSampleCr() + uiTmp2 , m_pcIPCMSampleCr, sizeof( Pel ) * uiTmp );
   rpcCU->getTotalBins() = m_uiTotalBins;
-  memcpy( rpcCU->m_uiSliceStartCU        + uiPartOffset, m_uiSliceStartCU,        sizeof( UInt ) * uiQNumPart  );
-  memcpy( rpcCU->m_uiDependentSliceStartCU + uiPartOffset, m_uiDependentSliceStartCU, sizeof( UInt ) * uiQNumPart  );
+  memcpy( rpcCU->m_sliceStartCU        + uiPartOffset, m_sliceStartCU,        sizeof( UInt ) * uiQNumPart  );
+  memcpy( rpcCU->m_sliceSegmentStartCU + uiPartOffset, m_sliceSegmentStartCU, sizeof( UInt ) * uiQNumPart  );
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -1550,8 +1550,6 @@ TComDataCU* TComDataCU::getPUAboveRightAdi(UInt&  uiARPartUnitIdx, UInt uiCurrPa
 /** Get left QpMinCu
 *\param   uiLPartUnitIdx
 *\param   uiCurrAbsIdxInLCU
-*\param   bEnforceSliceRestriction
-*\param   bEnforceDependentSliceRestriction
 *\returns TComDataCU*   point of TComDataCU of left QpMinCu
 */
 TComDataCU* TComDataCU::getQpMinCuLeft( UInt& uiLPartUnitIdx, UInt uiCurrAbsIdxInLCU)
@@ -1576,8 +1574,6 @@ TComDataCU* TComDataCU::getQpMinCuLeft( UInt& uiLPartUnitIdx, UInt uiCurrAbsIdxI
 /** Get Above QpMinCu
 *\param   aPartUnitIdx
 *\param   currAbsIdxInLCU
-*\param   enforceSliceRestriction
-*\param   enforceDependentSliceRestriction
 *\returns TComDataCU*   point of TComDataCU of above QpMinCu
 */
 TComDataCU* TComDataCU::getQpMinCuAbove( UInt& aPartUnitIdx, UInt currAbsIdxInLCU )
@@ -1935,7 +1931,7 @@ Void TComDataCU::setQPSubParts( Int qp, UInt uiAbsPartIdx, UInt uiDepth )
 
   for(UInt uiSCUIdx = uiAbsPartIdx; uiSCUIdx < uiAbsPartIdx+uiCurrPartNumb; uiSCUIdx++)
   {
-    if( m_pcPic->getCU( getAddr() )->getDependentSliceStartCU(uiSCUIdx+getZorderIdxInCU()) == pcSlice->getDependentSliceCurStartCUAddr() )
+    if( m_pcPic->getCU( getAddr() )->getSliceSegmentStartCU(uiSCUIdx+getZorderIdxInCU()) == pcSlice->getSliceSegmentCurStartCUAddr() )
     {
       m_phQP[uiSCUIdx] = qp;
     }

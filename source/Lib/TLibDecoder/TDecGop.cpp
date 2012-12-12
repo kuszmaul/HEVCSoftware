@@ -112,7 +112,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   //-- For time output for each slice
   long iBeforeTime = clock();
   
-  UInt uiStartCUAddr   = pcSlice->getDependentSliceCurStartCUAddr();
+  UInt uiStartCUAddr   = pcSlice->getSliceSegmentCurStartCUAddr();
 
   UInt uiSliceStartCuAddr = pcSlice->getSliceCurStartCUAddr();
   if(uiSliceStartCuAddr == uiStartCUAddr)
