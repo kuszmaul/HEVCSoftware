@@ -308,7 +308,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     }
     
     // if hadamard is used in ME process
-    if ( !m_pcCfg->getUseHADME() )
+    if ( !m_pcCfg->getUseHADME() && rpcSlice->getSliceType( ) != I_SLICE )
     {
       dLambda *= 0.95;
     }
