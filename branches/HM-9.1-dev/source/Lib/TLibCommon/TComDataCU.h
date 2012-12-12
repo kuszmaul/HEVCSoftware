@@ -201,8 +201,8 @@ private:
   UInt          m_uiTotalDistortion;  ///< sum of partition distortion
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;       ///< sum of partition bins
-  UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
-  UInt*         m_uiDependentSliceStartCU; ///< Start CU address of current slice
+  UInt*         m_sliceStartCU;    ///< Start CU address of current slice
+  UInt*         m_sliceSegmentStartCU; ///< Start CU address of current slice
   Char          m_codedQP;
 protected:
   
@@ -527,8 +527,8 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
   
-  UInt          getSliceStartCU         ( UInt pos )                  { return m_uiSliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
-  UInt          getDependentSliceStartCU  ( UInt pos )                  { return m_uiDependentSliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
+  UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
+  UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for RD cost storage

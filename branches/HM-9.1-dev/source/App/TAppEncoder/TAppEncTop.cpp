@@ -183,27 +183,27 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLog2ParallelMergeLevelMinus2 ( m_log2ParallelMergeLevel - 2 );
 
   //====== Slice ========
-  m_cTEncTop.setSliceMode               ( m_iSliceMode                );
-  m_cTEncTop.setSliceArgument           ( m_iSliceArgument            );
+  m_cTEncTop.setSliceMode               ( m_sliceMode                );
+  m_cTEncTop.setSliceArgument           ( m_sliceArgument            );
 
   //====== Dependent Slice ========
-  m_cTEncTop.setDependentSliceMode        ( m_iDependentSliceMode         );
-  m_cTEncTop.setDependentSliceArgument    ( m_iDependentSliceArgument     );
+  m_cTEncTop.setSliceSegmentMode        ( m_sliceSegmentMode         );
+  m_cTEncTop.setSliceSegmentArgument    ( m_sliceSegmentArgument     );
   Int iNumPartInCU = 1<<(m_uiMaxCUDepth<<1);
-  if(m_iDependentSliceMode==FIXED_NUMBER_OF_LCU)
+  if(m_sliceSegmentMode==FIXED_NUMBER_OF_LCU)
   {
-    m_cTEncTop.setDependentSliceArgument ( m_iDependentSliceArgument * iNumPartInCU );
+    m_cTEncTop.setSliceSegmentArgument ( m_sliceSegmentArgument * iNumPartInCU );
   }
-  if(m_iSliceMode==FIXED_NUMBER_OF_LCU)
+  if(m_sliceMode==FIXED_NUMBER_OF_LCU)
   {
-    m_cTEncTop.setSliceArgument ( m_iSliceArgument * iNumPartInCU );
+    m_cTEncTop.setSliceArgument ( m_sliceArgument * iNumPartInCU );
   }
-  if(m_iSliceMode==FIXED_NUMBER_OF_TILES)
+  if(m_sliceMode==FIXED_NUMBER_OF_TILES)
   {
-    m_cTEncTop.setSliceArgument ( m_iSliceArgument );
+    m_cTEncTop.setSliceArgument ( m_sliceArgument );
   }
   
-  if(m_iSliceMode == 0 )
+  if(m_sliceMode == 0 )
   {
     m_bLFCrossSliceBoundaryFlag = true;
   }

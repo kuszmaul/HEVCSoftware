@@ -217,7 +217,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_UVLC( uiCode, "pic_parameter_set_id");                      pcPPS->setPPSId (uiCode);
   READ_UVLC( uiCode, "seq_parameter_set_id");                      pcPPS->setSPSId (uiCode);
 #if DEPENDENT_SLICE_SEGMENT_FLAGS
-  READ_FLAG( uiCode, "dependent_slices_enabled_flag"    );    pcPPS->setDependentSliceEnabledFlag   ( uiCode == 1 );
+  READ_FLAG( uiCode, "dependent_slice_segments_enabled_flag"    );    pcPPS->setDependentSliceSegmentsEnabledFlag   ( uiCode == 1 );
 #endif
   READ_FLAG ( uiCode, "sign_data_hiding_flag" ); pcPPS->setSignHideFlag( uiCode );
 
@@ -266,7 +266,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "transquant_bypass_enable_flag");
   pcPPS->setTransquantBypassEnableFlag(uiCode ? true : false);
 #if !DEPENDENT_SLICE_SEGMENT_FLAGS
-  READ_FLAG( uiCode, "dependent_slices_enabled_flag"    );    pcPPS->setDependentSliceEnabledFlag   ( uiCode == 1 );
+  READ_FLAG( uiCode, "dependent_slices_enabled_flag"    );    pcPPS->setDependentSliceSegmentsEnabledFlag   ( uiCode == 1 );
 #endif
   READ_FLAG( uiCode, "tiles_enabled_flag"               );    pcPPS->setTilesEnabledFlag            ( uiCode == 1 );
   READ_FLAG( uiCode, "entropy_coding_sync_enabled_flag" );    pcPPS->setEntropyCodingSyncEnabledFlag( uiCode == 1 );
@@ -800,13 +800,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   rpcSlice->setSPS(sps);
   rpcSlice->setPPS(pps);
 #if DEPENDENT_SLICE_SEGMENT_FLAGS
-  if( pps->getDependentSliceEnabledFlag() && ( !firstSliceInPic ))
+  if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceInPic ))
   {
-    READ_FLAG( uiCode, "dependent_slice_flag" );       rpcSlice->setDependentSliceFlag(uiCode ? true : false);
+    READ_FLAG( uiCode, "dependent_slice_segment_flag" );       rpcSlice->setDependentSliceSegmentFlag(uiCode ? true : false);
   }
   else
   {
-    rpcSlice->setDependentSliceFlag(false);
+    rpcSlice->setDependentSliceSegmentFlag(false);
   }
 #endif
   Int numCUs = ((sps->getPicWidthInLumaSamples()+sps->getMaxCUWidth()-1)/sps->getMaxCUWidth())*((sps->getPicHeightInLumaSamples()+sps->getMaxCUHeight()-1)/sps->getMaxCUHeight());
@@ -835,34 +835,34 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   }
   //set uiCode to equal slice start address (or dependent slice start address)
   sliceAddress=(maxParts*lCUAddress)+(innerAddress);
-  rpcSlice->setDependentSliceCurStartCUAddr( sliceAddress );
-  rpcSlice->setDependentSliceCurEndCUAddr(numCUs*maxParts);
+  rpcSlice->setSliceSegmentCurStartCUAddr( sliceAddress );
+  rpcSlice->setSliceSegmentCurEndCUAddr(numCUs*maxParts);
 #if !DEPENDENT_SLICE_SEGMENT_FLAGS
-  if( pps->getDependentSliceEnabledFlag() && (sliceAddress !=0 ))
+  if( pps->getDependentSliceSegmentsEnabledFlag() && (sliceAddress !=0 ))
   {
-    READ_FLAG( uiCode, "dependent_slice_flag" );       rpcSlice->setDependentSliceFlag(uiCode ? true : false);
+    READ_FLAG( uiCode, "dependent_slice_flag" );       rpcSlice->setDependentSliceSegmentFlag(uiCode ? true : false);
   }
   else
   {
-    rpcSlice->setDependentSliceFlag(false);
+    rpcSlice->setDependentSliceSegmentFlag(false);
   }
 #endif
 
-  if (rpcSlice->getDependentSliceFlag())
+  if (rpcSlice->getDependentSliceSegmentFlag())
   {
     rpcSlice->setNextSlice          ( false );
-    rpcSlice->setNextDependentSlice ( true  );
+    rpcSlice->setNextSliceSegment ( true  );
   }
   else
   {
     rpcSlice->setNextSlice          ( true  );
-    rpcSlice->setNextDependentSlice ( false );
+    rpcSlice->setNextSliceSegment ( false );
 
     rpcSlice->setSliceCurStartCUAddr(sliceAddress);
     rpcSlice->setSliceCurEndCUAddr(numCUs*maxParts);
   }
   
-  if(!rpcSlice->getDependentSliceFlag())
+  if(!rpcSlice->getDependentSliceSegmentFlag())
   {
 #if HLS_EXTRA_SLICE_HEADER_BITS
     for (Int i = 0; i < rpcSlice->getPPS()->getNumExtraSliceHeaderBits(); i++)
