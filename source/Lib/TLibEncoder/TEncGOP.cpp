@@ -684,7 +684,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_pcSliceEncoder->compressSlice   ( pcPic );
 
       Bool bNoBinBitConstraintViolated = (!pcSlice->isNextSlice() && !pcSlice->isNextDependentSlice());
-      if (pcSlice->isNextSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU_IN_SLICE))
+      if (pcSlice->isNextSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU))
       {
         uiStartCUAddrSlice = pcSlice->getSliceCurEndCUAddr();
         // Reconstruction slice
@@ -711,7 +711,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           uiNumSlices ++;
         }
       }
-      else if (pcSlice->isNextDependentSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE))
+      else if (pcSlice->isNextDependentSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU))
       {
         uiStartCUAddrDependentSlice                                                     = pcSlice->getDependentSliceCurEndCUAddr();
         m_storedStartCUAddrForEncodingDependentSlice.push_back(uiStartCUAddrDependentSlice);
