@@ -955,32 +955,38 @@ SliceArgument.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
  0 & Single slice \\
- 1 & Maximum number of CUs (at a depth of SliceGranuarity) per slice \\
+ 1 & Maximum number of CTUs per slice \\
  2 & Maximum number of bytes per slice \\
+ 3 & Maximum number of tiles per slice \\
 \end{tabular}
 \\
 
 \Option{SliceArgument} &
 \ShortOption{\None} &
 \Default{\NotSet} &
-Specifies the maximum number of CUs or bytes in a slice depending on the
+Specifies the maximum number of CTUs, bytes or tiles in a slice depending on the
 SliceMode setting.
 \\
 
-\Option{EntropySliceMode} &
+\Option{SliceSegmentMode} &
 \ShortOption{\None} &
 \Default{0} &
-Enables entropy slice coding. When set to 1, the parameter SliceArgument
-will specify the maximum number of CUs in a slice. When set to 2, the
-parameter SliceArgument will specify the number of bytes (LCEC) or bins
-(CABAC) in a slice.
+Enables (dependent) slice segment coding in conjunction with 
+SliceSegmentArgument.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ 0 & Single slice \\
+ 1 & Maximum number of CTUs per slice segment\\
+ 2 & Maximum number of bytes per slice segment\\
+ 3 & Maximum number of tiles per slice segment\\
+\end{tabular}
 \\
 
-\Option{EntropySliceArgument} &
+\Option{SliceSegmentArgument} &
 \ShortOption{\None} &
 \Default{\NotSet} &
-Defines the maximum number of CUs or bytes/bins in an entropy slice
-depending on the SliceMode setting.
+Defines the maximum number of CTUs, bytes or tiles a slice segment
+depending on the SliceSegmentMode setting.
 \\
 
 \Option{WaveFrontSynchro} &
