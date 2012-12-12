@@ -784,8 +784,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   TComPPS* pps = NULL;
   TComSPS* sps = NULL;
 
-  UInt firstSliceInPic;
-  READ_FLAG( firstSliceInPic, "first_slice_in_pic_flag" );
+  UInt firstSliceSegmentInPic;
+  READ_FLAG( firstSliceSegmentInPic, "first_slice_segment_in_pic_flag" );
   if( rpcSlice->getRapPicFlag())
   { 
     READ_FLAG( uiCode, "no_output_of_prior_pics_flag" );  //ignored
@@ -800,7 +800,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   rpcSlice->setSPS(sps);
   rpcSlice->setPPS(pps);
 #if DEPENDENT_SLICE_SEGMENT_FLAGS
-  if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceInPic ))
+  if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceSegmentInPic ))
   {
     READ_FLAG( uiCode, "dependent_slice_segment_flag" );       rpcSlice->setDependentSliceSegmentFlag(uiCode ? true : false);
   }
@@ -809,36 +809,25 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setDependentSliceSegmentFlag(false);
   }
 #endif
-  Int numCUs = ((sps->getPicWidthInLumaSamples()+sps->getMaxCUWidth()-1)/sps->getMaxCUWidth())*((sps->getPicHeightInLumaSamples()+sps->getMaxCUHeight()-1)/sps->getMaxCUHeight());
+  Int numCTUs = ((sps->getPicWidthInLumaSamples()+sps->getMaxCUWidth()-1)/sps->getMaxCUWidth())*((sps->getPicHeightInLumaSamples()+sps->getMaxCUHeight()-1)/sps->getMaxCUHeight());
   Int maxParts = (1<<(sps->getMaxCUDepth()<<1));
-  Int numParts = 0;
-  UInt lCUAddress = 0;
-  Int reqBitsOuter = 0;
-  while(numCUs>(1<<reqBitsOuter))
+  UInt sliceSegmentAddress = 0;
+  Int bitsSliceSegmentAddress = 0;
+  while(numCTUs>(1<<bitsSliceSegmentAddress))
   {
-    reqBitsOuter++;
-  }
-  Int reqBitsInner = 0;
-  while((numParts)>(1<<reqBitsInner)) 
-  {
-    reqBitsInner++;
+    bitsSliceSegmentAddress++;
   }
 
-  UInt innerAddress = 0;
-  Int  sliceAddress = 0;
-  if(!firstSliceInPic)
+  if(!firstSliceSegmentInPic)
   {
-    UInt address;
-    READ_CODE( reqBitsOuter+reqBitsInner, address, "slice_address" );
-    lCUAddress = address >> reqBitsInner;
-    innerAddress = address - (lCUAddress<<reqBitsInner);
+    READ_CODE( bitsSliceSegmentAddress, sliceSegmentAddress, "slice_segment_address" );
   }
   //set uiCode to equal slice start address (or dependent slice start address)
-  sliceAddress=(maxParts*lCUAddress)+(innerAddress);
-  rpcSlice->setSliceSegmentCurStartCUAddr( sliceAddress );
-  rpcSlice->setSliceSegmentCurEndCUAddr(numCUs*maxParts);
+  Int startCuAddress = maxParts*sliceSegmentAddress;
+  rpcSlice->setSliceSegmentCurStartCUAddr( startCuAddress );
+  rpcSlice->setSliceSegmentCurEndCUAddr(numCTUs*maxParts);
 #if !DEPENDENT_SLICE_SEGMENT_FLAGS
-  if( pps->getDependentSliceSegmentsEnabledFlag() && (sliceAddress !=0 ))
+  if( pps->getDependentSliceSegmentsEnabledFlag() && (startCuAddress !=0 ))
   {
     READ_FLAG( uiCode, "dependent_slice_flag" );       rpcSlice->setDependentSliceSegmentFlag(uiCode ? true : false);
   }
@@ -858,8 +847,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNextSlice          ( true  );
     rpcSlice->setNextSliceSegment ( false );
 
-    rpcSlice->setSliceCurStartCUAddr(sliceAddress);
-    rpcSlice->setSliceCurEndCUAddr(numCUs*maxParts);
+    rpcSlice->setSliceCurStartCUAddr(startCuAddress);
+    rpcSlice->setSliceCurEndCUAddr(numCTUs*maxParts);
   }
   
   if(!rpcSlice->getDependentSliceSegmentFlag())
