@@ -1050,12 +1050,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       m_pcCuEncoder->encodeCU( pcCU );
 
       pppcRDSbacCoder->setBinCountingEnableFlag( false );
-      if (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE && ( ( pcSlice->getSliceBits() + m_pcEntropyCoder->getNumberOfWrittenBits() ) ) > m_pcCfg->getSliceArgument()<<3)
+      if (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_BYTES && ( ( pcSlice->getSliceBits() + m_pcEntropyCoder->getNumberOfWrittenBits() ) ) > m_pcCfg->getSliceArgument()<<3)
       {
         pcSlice->setNextSlice( true );
         break;
       }
-      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+m_pcEntropyCoder->getNumberOfWrittenBits() > (m_pcCfg->getDependentSliceArgument() << 3) &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
+      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES && pcSlice->getDependentSliceCounter()+m_pcEntropyCoder->getNumberOfWrittenBits() > (m_pcCfg->getDependentSliceArgument() << 3) &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
       {
         pcSlice->setNextDependentSlice( true );
         break;
@@ -1076,12 +1076,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     {
       m_pcCuEncoder->compressCU( pcCU );
       m_pcCuEncoder->encodeCU( pcCU );
-      if (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE && ( ( pcSlice->getSliceBits()+ m_pcEntropyCoder->getNumberOfWrittenBits() ) ) > m_pcCfg->getSliceArgument()<<3)
+      if (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_BYTES && ( ( pcSlice->getSliceBits()+ m_pcEntropyCoder->getNumberOfWrittenBits() ) ) > m_pcCfg->getSliceArgument()<<3)
       {
         pcSlice->setNextSlice( true );
         break;
       }
-      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE && pcSlice->getDependentSliceCounter()+ m_pcEntropyCoder->getNumberOfWrittenBits()> m_pcCfg->getDependentSliceArgument()<<3 &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
+      if (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES && pcSlice->getDependentSliceCounter()+ m_pcEntropyCoder->getNumberOfWrittenBits()> m_pcCfg->getDependentSliceArgument()<<3 &&pcSlice->getSliceCurEndCUAddr()!=pcSlice->getDependentSliceCurEndCUAddr())
       {
         pcSlice->setNextDependentSlice( true );
         break;
@@ -1514,15 +1514,15 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     UInt uiCUAddrIncrement;
     switch (m_pcCfg->getSliceMode())
     {
-    case FIXED_NUMBER_OF_LCU_IN_SLICE:
+    case FIXED_NUMBER_OF_LCU:
       uiCUAddrIncrement        = m_pcCfg->getSliceArgument();
       uiBoundingCUAddrSlice    = ((uiStartCUAddrSlice + uiCUAddrIncrement) < uiNumberOfCUsInFrame*rpcPic->getNumPartInCU()) ? (uiStartCUAddrSlice + uiCUAddrIncrement) : uiNumberOfCUsInFrame*rpcPic->getNumPartInCU();
       break;
-    case FIXED_NUMBER_OF_BYTES_IN_SLICE:
+    case FIXED_NUMBER_OF_BYTES:
       uiCUAddrIncrement        = rpcPic->getNumCUsInFrame();
       uiBoundingCUAddrSlice    = pcSlice->getSliceCurEndCUAddr();
       break;
-    case FIXED_NUMBER_OF_TILES_IN_SLICE:
+    case FIXED_NUMBER_OF_TILES:
       tileIdx                = rpcPic->getPicSym()->getTileIdxMap(
         rpcPic->getPicSym()->getCUOrderMap(uiStartCUAddrSlice/rpcPic->getNumPartInCU())
         );
@@ -1558,11 +1558,11 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     UInt uiCUAddrIncrement     ;
     switch (m_pcCfg->getSliceMode())
     {
-    case FIXED_NUMBER_OF_LCU_IN_SLICE:
+    case FIXED_NUMBER_OF_LCU:
       uiCUAddrIncrement        = m_pcCfg->getSliceArgument();
       uiBoundingCUAddrSlice    = ((uiStartCUAddrSlice + uiCUAddrIncrement) < uiNumberOfCUsInFrame*rpcPic->getNumPartInCU()) ? (uiStartCUAddrSlice + uiCUAddrIncrement) : uiNumberOfCUsInFrame*rpcPic->getNumPartInCU();
       break;
-    case FIXED_NUMBER_OF_TILES_IN_SLICE:
+    case FIXED_NUMBER_OF_TILES:
       tileIdx                = rpcPic->getPicSym()->getTileIdxMap(
         rpcPic->getPicSym()->getCUOrderMap(uiStartCUAddrSlice/rpcPic->getNumPartInCU())
         );
@@ -1595,7 +1595,7 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
   }
 
   Bool tileBoundary = false;
-  if ((m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_LCU_IN_SLICE || m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_BYTES_IN_SLICE) && 
+  if ((m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_LCU || m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_BYTES) && 
       (m_pcCfg->getNumRowsMinus1() > 0 || m_pcCfg->getNumColumnsMinus1() > 0))
   {
     UInt lcuEncAddr = (uiStartCUAddrSlice+rpcPic->getNumPartInCU()-1)/rpcPic->getNumPartInCU();
@@ -1626,15 +1626,15 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     UInt uiCUAddrIncrement;
     switch (m_pcCfg->getDependentSliceMode())
     {
-    case FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_LCU:
       uiCUAddrIncrement               = m_pcCfg->getDependentSliceArgument();
       uiBoundingCUAddrDependentSlice    = ((uiStartCUAddrDependentSlice + uiCUAddrIncrement) < uiNumberOfCUsInFrame*rpcPic->getNumPartInCU() ) ? (uiStartCUAddrDependentSlice + uiCUAddrIncrement) : uiNumberOfCUsInFrame*rpcPic->getNumPartInCU();
       break;
-    case FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_BYTES:
       uiCUAddrIncrement               = rpcPic->getNumCUsInFrame();
       uiBoundingCUAddrDependentSlice    = pcSlice->getDependentSliceCurEndCUAddr();
       break;
-    case FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_TILES:
       tileIdx                = rpcPic->getPicSym()->getTileIdxMap(
         rpcPic->getPicSym()->getCUOrderMap(pcSlice->getDependentSliceCurStartCUAddr()/rpcPic->getNumPartInCU())
         );
@@ -1669,11 +1669,11 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     UInt uiCUAddrIncrement;
     switch (m_pcCfg->getDependentSliceMode())
     {
-    case FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_LCU:
       uiCUAddrIncrement               = m_pcCfg->getDependentSliceArgument();
       uiBoundingCUAddrDependentSlice    = ((uiStartCUAddrDependentSlice + uiCUAddrIncrement) < uiNumberOfCUsInFrame*rpcPic->getNumPartInCU() ) ? (uiStartCUAddrDependentSlice + uiCUAddrIncrement) : uiNumberOfCUsInFrame*rpcPic->getNumPartInCU();
       break;
-    case FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE:
+    case FIXED_NUMBER_OF_TILES:
       tileIdx                = rpcPic->getPicSym()->getTileIdxMap(
         rpcPic->getPicSym()->getCUOrderMap(pcSlice->getDependentSliceCurStartCUAddr()/rpcPic->getNumPartInCU())
         );
@@ -1703,7 +1703,7 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
     }
     pcSlice->setDependentSliceCurEndCUAddr( uiBoundingCUAddrDependentSlice );
   }
-  if ((m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE || m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE) && 
+  if ((m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_LCU || m_pcCfg->getDependentSliceMode() == FIXED_NUMBER_OF_BYTES) && 
     (m_pcCfg->getNumRowsMinus1() > 0 || m_pcCfg->getNumColumnsMinus1() > 0))
   {
     UInt lcuEncAddr = (uiStartCUAddrDependentSlice+rpcPic->getNumPartInCU()-1)/rpcPic->getNumPartInCU();
@@ -1786,12 +1786,12 @@ Void TEncSlice::xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& u
   {
     // For fixed number of LCU within an entropy and reconstruction slice we already know whether we will encounter end of entropy and/or reconstruction slice
     // first. Set the flags accordingly.
-    if ( (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU_IN_SLICE && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE)
-      || (m_pcCfg->getSliceMode()==0 && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE)
-      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU_IN_SLICE && m_pcCfg->getDependentSliceMode()==0) 
-      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_TILES_IN_SLICE && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE)
-      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_TILES_IN_SLICE && m_pcCfg->getDependentSliceMode()==0) 
-      || (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_TILES_IN_DEPENDENT_SLICE && m_pcCfg->getSliceMode()==0)
+    if ( (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU)
+      || (m_pcCfg->getSliceMode()==0 && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU)
+      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU && m_pcCfg->getDependentSliceMode()==0) 
+      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_TILES && m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_LCU)
+      || (m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_TILES && m_pcCfg->getDependentSliceMode()==0) 
+      || (m_pcCfg->getDependentSliceMode()==FIXED_NUMBER_OF_TILES && m_pcCfg->getSliceMode()==0)
       || tileBoundary
 )
     {

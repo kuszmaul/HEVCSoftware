@@ -953,9 +953,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       {
         m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
       }
-      Bool isEndOfSlice        = rpcBestCU->getSlice()->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE
+      Bool isEndOfSlice        = rpcBestCU->getSlice()->getSliceMode()==FIXED_NUMBER_OF_BYTES
                                  && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceArgument()<<3);
-      Bool isEndOfSliceSegment = rpcBestCU->getSlice()->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE
+      Bool isEndOfSliceSegment = rpcBestCU->getSlice()->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES
                                  && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getDependentSliceArgument()<<3);
       if(isEndOfSlice||isEndOfSliceSegment)
       {
@@ -1055,14 +1055,14 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     iGranularityEnd+=max(iGranularitySize,(pcCU->getPic()->getNumPartInCU()>>(uiDepth<<1)));
   }
   // Set slice end parameter
-  if(pcSlice->getSliceMode()==FIXED_NUMBER_OF_BYTES_IN_SLICE&&!pcSlice->getFinalized()&&pcSlice->getSliceBits()+numberOfWrittenBits>pcSlice->getSliceArgument()<<3) 
+  if(pcSlice->getSliceMode()==FIXED_NUMBER_OF_BYTES&&!pcSlice->getFinalized()&&pcSlice->getSliceBits()+numberOfWrittenBits>pcSlice->getSliceArgument()<<3) 
   {
     pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
     pcSlice->setSliceCurEndCUAddr(iGranularityEnd);
     return;
   }
   // Set dependent slice end parameter
-  if(pcSlice->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES_IN_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+numberOfWrittenBits > pcSlice->getDependentSliceArgument()<<3) 
+  if(pcSlice->getDependentSliceMode()==FIXED_NUMBER_OF_BYTES&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+numberOfWrittenBits > pcSlice->getDependentSliceArgument()<<3) 
   {
     pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
     return;
