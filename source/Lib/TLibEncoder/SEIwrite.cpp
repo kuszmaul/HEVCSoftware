@@ -69,6 +69,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
     break;
 #endif
+#if SEI_GDR_INFO
+  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+    fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -106,6 +111,11 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
 #if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     xWriteSEITemporalLevel0Index(*static_cast<const SEITemporalLevel0Index*>(&sei));
+    break;
+#endif
+#if SEI_GDR_INFO
+  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+    xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
 #endif
   default:
@@ -327,7 +337,13 @@ Void SEIWriter::xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei)
   xWriteByteAlign();
 }
 #endif
-
+#if SEI_GDR_INFO
+Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei)
+{
+  WRITE_FLAG( sei.m_gdrForegroundFlag, "gdr_foreground_flag");
+  xWriteByteAlign();
+}
+#endif
 Void SEIWriter::xWriteByteAlign()
 {
   if( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0)

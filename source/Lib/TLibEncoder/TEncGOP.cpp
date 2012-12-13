@@ -931,7 +931,23 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_cpbRemovalDelay ++;
     if( ( m_pcEncTop->getRecoveryPointSEIEnabled() ) && ( pcSlice->getSliceType() == I_SLICE ) )
     {
-      // Recovery point SEI
+#if SEI_GDR_INFO
+      if( m_pcEncTop->getGradualDecodingRefreshInfoEnabled() && !pcSlice->getRapPicFlag() )
+      {
+        // Gradual decoding refresh SEI 
+        OutputNALUnit nalu(NAL_UNIT_SEI);
+        m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+
+        SEIGradualDecodingRefreshInfo seiGradualDecodingRefreshInfo;
+        seiGradualDecodingRefreshInfo.m_gdrForegroundFlag = true; // Indicating all "foreground"
+
+        m_seiWriter.writeSEImessage( nalu.m_Bitstream, seiGradualDecodingRefreshInfo );
+        writeRBSPTrailingBits(nalu.m_Bitstream);
+        accessUnit.push_back(new NALUnitEBSP(nalu));
+      }
+#endif      
+    // Recovery point SEI
       OutputNALUnit nalu(NAL_UNIT_SEI);
       m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
@@ -945,6 +961,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
     }
+
     /* use the main bitstream buffer for storing the marshalled picture */
     m_pcEntropyCoder->setBitstream(NULL);
 

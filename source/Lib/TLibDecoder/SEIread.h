@@ -79,6 +79,9 @@ protected:
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void xParseSEITemporalLevel0Index   (SEITemporalLevel0Index &sei, UInt payloadSize);
 #endif
+#if SEI_GDR_INFO
+  Void xParseSEIGradualDecodingRefreshInfo (SEIGradualDecodingRefreshInfo &sei, UInt payloadSize);
+#endif
   Void xParseByteAlign();
 };
 

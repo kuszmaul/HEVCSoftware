@@ -481,6 +481,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if SEI_TEMPORAL_LEVEL0_INDEX
   ("SEITemporalLevel0Index",         m_temporalLevel0IndexSEIEnabled,          0, "Control generation of temporal level 0 index SEI messages")
 #endif
+#if SEI_GDR_INFO
+  ("SEIGradualDecodingRefreshInfo",  m_gradualDecodingRefreshInfoEnabled,      0, "Control generation of gradual decoding refresh information SEI message")               
+#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   ("BitRatePicRateMaxTLayers",   m_bitRatePicRateMaxTLayers,           0, "Maximum number of sub-layers signalled; can be inferred otherwise; here for easy parsing of config. file")
   ("BitRateInfoPresent",         cfg_bitRateInfoPresentFlag,          string(""), "Control signalling of bit rate information of avg. bit rate and max. bit rate in VPS\n"
