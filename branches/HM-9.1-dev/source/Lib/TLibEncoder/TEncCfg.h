@@ -232,6 +232,9 @@ protected:
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Int       m_temporalLevel0IndexSEIEnabled;
 #endif
+#if SEI_GDR_INFO
+  Int       m_gradualDecodingRefreshInfoEnabled;
+#endif
   //====== Weighted Prediction ========
   Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -618,6 +621,10 @@ public:
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void  setTemporalLevel0IndexSEIEnabled(Int b)          { m_temporalLevel0IndexSEIEnabled = b; }
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
+#endif
+#if SEI_GDR_INFO
+  Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
+  Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
 #endif
   Void      setUseWP               ( Bool  b )   { m_bUseWeightPred    = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }

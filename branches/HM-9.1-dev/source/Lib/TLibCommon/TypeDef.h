@@ -40,6 +40,7 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define SEI_GDR_INFO                                1  ///< K0128: Gradual decoding refresh (GDR) Information SEI messages
 #define SUFFIX_SEI_NUT_DECODED_HASH_SEI             1  ///< K0120: Use the suffix SEI NUT for the decoded hash SEI message
 #define HLS_SEI_GENERIC_EXTENSION                   1  ///< K0371: generic SEI payload extension mechanism
 #define HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG    1  ///< K0371: remove active_parameter_set_sei_extension_flag

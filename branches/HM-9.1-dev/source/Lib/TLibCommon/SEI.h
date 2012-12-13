@@ -61,6 +61,9 @@ public:
 #else
     DECODED_PICTURE_HASH   = 256,
 #endif
+#if SEI_GDR_INFO
+    GRADUAL_DECODING_REFRESH_INFO = 135,
+#endif
   };
   
   SEI() {}
@@ -227,7 +230,20 @@ public:
   UInt rapIdx;
 };
 #endif
+#if SEI_GDR_INFO
+class SEIGradualDecodingRefreshInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return GRADUAL_DECODING_REFRESH_INFO; }
 
+  SEIGradualDecodingRefreshInfo()
+    : m_gdrForegroundFlag(0)
+  {}
+  virtual ~SEIGradualDecodingRefreshInfo() {}
+
+  Bool m_gdrForegroundFlag;
+};
+#endif
 /**
  * A structure to collate all SEI messages.  This ought to be replaced
  * with a list of std::list<SEI*>.  However, since there is only one
@@ -248,6 +264,9 @@ public:
 #if SEI_TEMPORAL_LEVEL0_INDEX
     , temporal_level0_index(0)
 #endif
+#if SEI_GDR_INFO
+    , gradualDecodingRefreshInfo(0)
+#endif
     {}
 
   ~SEImessages()
@@ -264,6 +283,9 @@ public:
 #if SEI_TEMPORAL_LEVEL0_INDEX
     delete temporal_level0_index;
 #endif
+#if SEI_GDR_INFO
+    delete gradualDecodingRefreshInfo;
+#endif
   }
 
   SEIuserDataUnregistered* user_data_unregistered;
@@ -278,6 +300,9 @@ public:
 #endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   SEITemporalLevel0Index* temporal_level0_index;
+#endif
+#if SEI_GDR_INFO
+  SEIGradualDecodingRefreshInfo* gradualDecodingRefreshInfo;
 #endif
 };
 

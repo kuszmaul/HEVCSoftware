@@ -75,6 +75,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
     break;
 #endif
+#if SEI_GDR_INFO
+  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+    fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -192,6 +197,12 @@ Void SEIReader::xReadSEImessage(SEImessages& seis)
   case SEI::TEMPORAL_LEVEL0_INDEX:
     seis.temporal_level0_index = new SEITemporalLevel0Index;
     xParseSEITemporalLevel0Index(*seis.temporal_level0_index, payloadSize);
+    break;
+#endif
+#if SEI_GDR_INFO
+  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+    seis.gradualDecodingRefreshInfo = new SEIGradualDecodingRefreshInfo;
+    xParseSEIGradualDecodingRefreshInfo(*seis.gradualDecodingRefreshInfo, payloadSize);
     break;
 #endif
   default:
@@ -479,6 +490,14 @@ Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /
   UInt val;
   READ_CODE ( 8, val, "tl0_idx" );  sei.tl0Idx = val;
   READ_CODE ( 8, val, "rap_idx" );  sei.rapIdx = val;
+  xParseByteAlign();
+}
+#endif
+#if SEI_GDR_INFO
+Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInfo& sei, UInt /*payloadSize*/)
+{
+  UInt val;
+  READ_FLAG( val, "gdr_foreground_flag" ); sei.m_gdrForegroundFlag = val ? 1 : 0;
   xParseByteAlign();
 }
 #endif

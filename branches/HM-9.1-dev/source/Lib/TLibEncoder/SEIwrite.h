@@ -63,6 +63,9 @@ protected:
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
 #endif
+#if SEI_GDR_INFO
+  Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);
+#endif
   Void xWriteByteAlign();
 };
 
