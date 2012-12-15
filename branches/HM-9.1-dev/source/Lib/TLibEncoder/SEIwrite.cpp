@@ -287,7 +287,11 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
 
   WRITE_CODE( sei.m_auCpbRemovalDelay, ( vui->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay" );
   WRITE_CODE( sei.m_picDpbOutputDelay, ( vui->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+  if( vui->getSubPicCpbParamsPresentFlag() && vui->getSubPicCpbParamsInPicTimingSEIFlag() )
+#else
   if( sei.m_sps->getVuiParameters()->getSubPicCpbParamsPresentFlag() )
+#endif
   {
     WRITE_UVLC( sei.m_numDecodingUnitsMinus1,     "num_decoding_units_minus1" );
     WRITE_FLAG( sei.m_duCommonCpbRemovalDelayFlag, "du_common_cpb_removal_delay_flag" );

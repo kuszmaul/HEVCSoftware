@@ -422,6 +422,9 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
       {
         READ_CODE( 8, uiCode, "tick_divisor_minus2" );                pcVUI->setTickDivisorMinus2( uiCode );
         READ_CODE( 5, uiCode, "du_cpb_removal_delay_length_minus1" ); pcVUI->setDuCpbRemovalDelayLengthMinus1( uiCode );
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+        READ_FLAG( uiCode, "sub_pic_cpb_params_in_pic_timing_sei_flag" ); pcVUI->setSubPicCpbParamsInPicTimingSEIFlag( uiCode ? true : false );
+#endif
       }
       READ_CODE( 4, uiCode, "bit_rate_scale" );                       pcVUI->setBitRateScale( uiCode );
       READ_CODE( 4, uiCode, "cpb_size_scale" );                       pcVUI->setCpbSizeScale( uiCode );

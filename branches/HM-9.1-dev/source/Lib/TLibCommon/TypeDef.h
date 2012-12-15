@@ -40,6 +40,8 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI  1  ///< K0126: Disallow co-existence of sub-picture CPB removal times in both picture timing SEI messages
+                                                       ///<        and decoding unit information SEI messages.
 #define SEI_GDR_INFO                                1  ///< K0128: Gradual decoding refresh (GDR) Information SEI messages
 #define SUFFIX_SEI_NUT_DECODED_HASH_SEI             1  ///< K0120: Use the suffix SEI NUT for the decoded hash SEI message
 #define HLS_SEI_GENERIC_EXTENSION                   1  ///< K0371: generic SEI payload extension mechanism
