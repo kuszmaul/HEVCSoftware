@@ -382,6 +382,9 @@ private:
   Bool m_subPicCpbParamsPresentFlag;
   UInt m_tickDivisorMinus2;
   UInt m_duCpbRemovalDelayLengthMinus1;
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+  Bool m_subPicCpbParamsInPicTimingSEIFlag;
+#endif
   UInt m_bitRateScale;
   UInt m_cpbSizeScale;
 #if HRD_BUFFER
@@ -442,6 +445,9 @@ public:
     ,m_subPicCpbParamsPresentFlag(false)
     ,m_tickDivisorMinus2(0)
     ,m_duCpbRemovalDelayLengthMinus1(0)
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+    ,m_subPicCpbParamsInPicTimingSEIFlag(false)
+#endif
     ,m_bitRateScale(0)
     ,m_cpbSizeScale(0)
     ,m_initialCpbRemovalDelayLengthMinus1(0)
@@ -570,6 +576,11 @@ public:
 
   Void setDuCpbRemovalDelayLengthMinus1     ( UInt value ) { m_duCpbRemovalDelayLengthMinus1 = value;      }
   UInt getDuCpbRemovalDelayLengthMinus1     ( )            { return m_duCpbRemovalDelayLengthMinus1;       }
+
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+  Void setSubPicCpbParamsInPicTimingSEIFlag ( Bool flag)   { m_subPicCpbParamsInPicTimingSEIFlag = flag;   }
+  Bool getSubPicCpbParamsInPicTimingSEIFlag ()             { return m_subPicCpbParamsInPicTimingSEIFlag;   }
+#endif
 
   Void setBitRateScale                      ( UInt value ) { m_bitRateScale = value;                       }
   UInt getBitRateScale                      ( )            { return m_bitRateScale;                        }

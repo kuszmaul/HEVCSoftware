@@ -423,7 +423,11 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   READ_CODE( ( vui->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
   sei.m_picDpbOutputDelay = code;
 
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+  if( vui->getSubPicCpbParamsPresentFlag() && vui->getSubPicCpbParamsInPicTimingSEIFlag() )
+#else
   if( sei.m_sps->getVuiParameters()->getSubPicCpbParamsPresentFlag() )
+#endif
   {
     READ_UVLC( code, "num_decoding_units_minus1");
     sei.m_numDecodingUnitsMinus1 = code;

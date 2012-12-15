@@ -318,6 +318,9 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
       {
         WRITE_CODE(pcVUI->getTickDivisorMinus2(), 8,            "tick_divisor_minus2");
         WRITE_CODE(pcVUI->getDuCpbRemovalDelayLengthMinus1(), 5,  "du_cpb_removal_delay_length_minus1");
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+        WRITE_FLAG( pcVUI->getSubPicCpbParamsInPicTimingSEIFlag(), "sub_pic_cpb_params_in_pic_timing_sei_flag" ); 
+#endif
       }
       WRITE_CODE(pcVUI->getBitRateScale(), 4,                   "bit_rate_scale");
       WRITE_CODE(pcVUI->getCpbSizeScale(), 4,                   "cpb_size_scale");
