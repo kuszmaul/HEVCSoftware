@@ -566,7 +566,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 {
   WRITE_CODE( pcVPS->getVPSId(),                    4,        "video_parameter_set_id" );
+#if !MOVE_VPS_TEMPORAL_ID_NESTING_FLAG
   WRITE_FLAG( pcVPS->getTemporalNestingFlag(),                "vps_temporal_id_nesting_flag" );
+#endif
 #if VPS_REARRANGE
   WRITE_CODE( 3,                                    2,        "vps_reserved_three_2bits" );
 #else
@@ -574,6 +576,10 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 #endif
   WRITE_CODE( 0,                                    6,        "vps_reserved_zero_6bits" );
   WRITE_CODE( pcVPS->getMaxTLayers() - 1,           3,        "vps_max_sub_layers_minus1" );
+#if MOVE_VPS_TEMPORAL_ID_NESTING_FLAG
+  WRITE_FLAG( pcVPS->getTemporalNestingFlag(),                "vps_temporal_id_nesting_flag" );
+  assert (pcVPS->getMaxTLayers()>1||pcVPS->getTemporalNestingFlag());
+#endif
 #if VPS_REARRANGE
   WRITE_CODE( 0xffff,                              16,        "vps_reserved_ffff_16bits" );
   codePTL( pcVPS->getPTL(), true, pcVPS->getMaxTLayers() - 1 );

@@ -61,6 +61,7 @@
 #define POC_TEMPORAL_RELATIONSHIP                   1  ///< K0120: Add syntax in SPS/VUI to indicate POC temporal relationship
 #define SIGNAL_BITRATE_PICRATE_IN_VPS               1  ///< K0125: Signal bit_rate and pic_rate in VPS
 #define MOVE_SPS_TEMPORAL_ID_NESTING_FLAG           1  ///< K0120: Move sps_temporal_id_nesting_flag and replace sps_reserved_zero_bit
+#define MOVE_VPS_TEMPORAL_ID_NESTING_FLAG           1  ///< K0137: Move vps_temporal_id_nesting_flag
 #define CONDITION_SUBLAYERPROFILEPRESENTFLAG        1  ///< K0125: Condition signalling of sub_layer_profile_present_flag
 
 #define VPS_OPERATING_POINT                         1  ///< K0204 - Operation point added to VPS
