@@ -70,6 +70,12 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
   
   vps.setMaxTLayers                       ( m_maxTempLayer );
+#if MOVE_VPS_TEMPORAL_ID_NESTING_FLAG
+  if (m_maxTempLayer == 1)
+  {
+    vps.setTemporalNestingFlag(true);
+  }
+#endif
   vps.setMaxLayers                        ( 1 );
   for(Int i = 0; i < MAX_TLAYER; i++)
   {
