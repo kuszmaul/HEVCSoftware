@@ -1045,6 +1045,17 @@ Void TComTrQuant::xQuant( TComDataCU* pcCU,
     }
     else
     {
+      Int chromaQPOffset;
+      if(eTType == TEXT_CHROMA_U)
+      {
+        chromaQPOffset = pcCU->getSlice()->getPPS()->getChromaCbQpOffset() + pcCU->getSlice()->getSliceQpDeltaCb();
+      }
+      else
+      {
+        chromaQPOffset = pcCU->getSlice()->getPPS()->getChromaCrQpOffset() + pcCU->getSlice()->getSliceQpDeltaCr();
+      }
+      iQpBase = iQpBase + chromaQPOffset;
+      
       qpScaled = Clip3( -qpBDOffset, 57, iQpBase);
 
       if(qpScaled < 0)
