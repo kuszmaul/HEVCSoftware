@@ -125,7 +125,8 @@ private:
 #endif  
   
 #if WEIGHTED_CHROMA_DISTORTION
-  Double                  m_chromaDistortionWeight;   
+  Double                  m_cbDistortionWeight; 
+  Double                  m_crDistortionWeight; 
 #endif
   Double                  m_dLambda;
   Double                  m_sqrtLambda;
@@ -156,7 +157,8 @@ public:
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   
 #if WEIGHTED_CHROMA_DISTORTION
-  Void    setChromaDistortionWeight      ( Double chromaDistortionWeight) { m_chromaDistortionWeight = chromaDistortionWeight; };
+  Void    setCbDistortionWeight      ( Double cbDistortionWeight) { m_cbDistortionWeight = cbDistortionWeight; };
+  Void    setCrDistortionWeight      ( Double crDistortionWeight) { m_crDistortionWeight = crDistortionWeight; };
 #endif
   Void    setLambda      ( Double dLambda );
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
@@ -256,7 +258,7 @@ private:
   
 public:
 #if WEIGHTED_CHROMA_DISTORTION
-  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted = false, DFunc eDFunc = DF_SSE );
+  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted = false, TextType eText = TEXT_LUMA, DFunc eDFunc = DF_SSE );
 #else
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
