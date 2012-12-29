@@ -877,12 +877,8 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileCol      = 0;
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
-  Bool bAllowDependence = false;
-  if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
-  {
-    bAllowDependence = true;
-  }
-  if( bAllowDependence )
+  Bool depSliceSegmentsEnabled = pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag();
+  if( depSliceSegmentsEnabled )
   {
     if(pcSlice->getSliceSegmentCurStartCUAddr()!= pcSlice->getSliceCurStartCUAddr())
     {
@@ -951,7 +947,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         // dependent tiles => substreams are "per frame".
         uiSubStrm = uiLin % iNumSubstreams;
       }
-      if ( ((pcSlice->getPPS()->getNumSubstreams() > 1) || bAllowDependence ) && (uiCol == uiTileLCUX) && m_pcCfg->getWaveFrontsynchro())
+      if ( ((pcSlice->getPPS()->getNumSubstreams() > 1) || depSliceSegmentsEnabled ) && (uiCol == uiTileLCUX) && m_pcCfg->getWaveFrontsynchro())
       {
         // We'll sync if the TR is available.
         TComDataCU *pcCUUp = pcCU->getCUAbove();
@@ -972,7 +968,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
              )
            )
         {
-          if ( (uiCUAddr != 0) && pcCUTR && (pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr())  && bAllowDependence)
+          if ( (uiCUAddr != 0) && pcCUTR && (pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr())  && depSliceSegmentsEnabled)
           {
             ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]->loadContexts( &m_pcBufferSbacCoders[uiTileCol] );
           }
@@ -1104,7 +1100,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
          ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]->load( m_pppcRDSbacCoder[0][CI_CURR_BEST] );
        
          //Store probabilties of second LCU in line into buffer
-         if ( ( uiCol == uiTileLCUX+1) && (bAllowDependence || (pcSlice->getPPS()->getNumSubstreams() > 1)) && m_pcCfg->getWaveFrontsynchro())
+         if ( ( uiCol == uiTileLCUX+1) && (depSliceSegmentsEnabled || (pcSlice->getPPS()->getNumSubstreams() > 1)) && m_pcCfg->getWaveFrontsynchro())
         {
           m_pcBufferSbacCoders[uiTileCol].loadContexts(ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]);
         }
@@ -1138,11 +1134,11 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
 #endif
   }
-  if ((pcSlice->getPPS()->getNumSubstreams() > 1) && !bAllowDependence)
+  if ((pcSlice->getPPS()->getNumSubstreams() > 1) && !depSliceSegmentsEnabled)
   {
     pcSlice->setNextSlice( true );
   }
-  if( bAllowDependence )
+  if( depSliceSegmentsEnabled )
   {
     if (m_pcCfg->getWaveFrontsynchro())
     {
@@ -1220,17 +1216,13 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
   UInt uiTileCol      = 0;
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
-  Bool bAllowDependence = false;
+  Bool depSliceSegmentsEnabled = pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag();
 #if DEPSLICE_TILE_INDEPENDENT_BUGFIX
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());  /* for tiles, uiStartCUAddr is NOT the real raster scan address, it is actually
                                                                                                an encoding order index, so we need to convert the index (uiStartCUAddr)
                                                                                                into the real raster scan address (uiCUAddr) via the CUOrderMap */
 #endif
-if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
-  {
-    bAllowDependence = true;
-  }
-  if( bAllowDependence )
+  if( depSliceSegmentsEnabled )
   {
 #if DEPSLICE_TILE_INDEPENDENT_BUGFIX
     if( pcSlice->isNextSlice()||
@@ -1298,7 +1290,7 @@ if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
 
       m_pcEntropyCoder->setBitstream( &pcSubstreams[uiSubStrm] );
       // Synchronize cabac probabilities with upper-right LCU if it's available and we're at the start of a line.
-      if (((pcSlice->getPPS()->getNumSubstreams() > 1) || bAllowDependence) && (uiCol == uiTileLCUX) && m_pcCfg->getWaveFrontsynchro())
+      if (((pcSlice->getPPS()->getNumSubstreams() > 1) || depSliceSegmentsEnabled) && (uiCol == uiTileLCUX) && m_pcCfg->getWaveFrontsynchro())
       {
         // We'll sync if the TR is available.
         TComDataCU *pcCUUp = rpcPic->getCU( uiCUAddr )->getCUAbove();
@@ -1321,7 +1313,7 @@ if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
              ))
            )
         {
-          if ( (uiCUAddr != 0) && pcCUTR && ( pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr() ) && bAllowDependence)
+          if ( (uiCUAddr != 0) && pcCUTR && ( pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr() ) && depSliceSegmentsEnabled)
           {
             pcSbacCoders[uiSubStrm].loadContexts( &m_pcBufferSbacCoders[uiTileCol] );
           }
@@ -1512,13 +1504,13 @@ if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
        
 
        //Store probabilties of second LCU in line into buffer
-       if ( (bAllowDependence || (pcSlice->getPPS()->getNumSubstreams() > 1)) && (uiCol == uiTileLCUX+1) && m_pcCfg->getWaveFrontsynchro())
+       if ( (depSliceSegmentsEnabled || (pcSlice->getPPS()->getNumSubstreams() > 1)) && (uiCol == uiTileLCUX+1) && m_pcCfg->getWaveFrontsynchro())
       {
         m_pcBufferSbacCoders[uiTileCol].loadContexts( &pcSbacCoders[uiSubStrm] );
       }
     }
   }
-  if( bAllowDependence )
+  if( depSliceSegmentsEnabled )
   {
     if (m_pcCfg->getWaveFrontsynchro())
     {
