@@ -1221,13 +1221,23 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
   Bool bAllowDependence = false;
-  if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
+#if DEPSLICE_TILE_INDEPENDENT_BUGFIX
+  uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());  /* for tiles, uiStartCUAddr is NOT the real raster scan address, it is actually
+                                                                                               an encoding order index, so we need to convert the index (uiStartCUAddr)
+                                                                                               into the real raster scan address (uiCUAddr) via the CUOrderMap */
+#endif
+if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
   {
     bAllowDependence = true;
   }
   if( bAllowDependence )
   {
+#if DEPSLICE_TILE_INDEPENDENT_BUGFIX
+    if( pcSlice->isNextSlice()||
+        uiCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr())
+#else
     if(pcSlice->isNextSlice())
+#endif
     {
       if(m_pcCfg->getWaveFrontsynchro())
       {
@@ -1244,7 +1254,9 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       if(pcSlice->getPPS()->getNumSubstreams() > 1)
       {
         Int iNumSubstreamsPerTile = iNumSubstreams/rpcPic->getPicSym()->getNumTiles();
+#if !DEPSLICE_TILE_INDEPENDENT_BUGFIX
         uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());
+#endif
         uiLin     = uiCUAddr / uiWidthInLCUs;
         uiSubStrm = rpcPic->getPicSym()->getTileIdxMap(rpcPic->getPicSym()->getCUOrderMap( uiCUAddr))*iNumSubstreamsPerTile
           + uiLin%iNumSubstreamsPerTile;
@@ -1254,9 +1266,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
   }
 
   UInt uiEncCUOrder;
+#if !DEPSLICE_TILE_INDEPENDENT_BUGFIX
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());  /*for tiles, uiStartCUAddr is NOT the real raster scan address, it is actually
                                                                                               an encoding order index, so we need to convert the index (uiStartCUAddr)
                                                                                               into the real raster scan address (uiCUAddr) via the CUOrderMap*/
+#endif
   for( uiEncCUOrder = uiStartCUAddr /rpcPic->getNumPartInCU();
        uiEncCUOrder < (uiBoundingCUAddr+rpcPic->getNumPartInCU()-1)/rpcPic->getNumPartInCU();
        uiCUAddr = rpcPic->getPicSym()->getCUOrderMap(++uiEncCUOrder) )
