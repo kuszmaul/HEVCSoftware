@@ -64,7 +64,6 @@ const UChar TComPattern::m_aucIntraFilter[5] =
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
- \param  iOffsetRight  neighbour offset (right)
  \param  iOffsetAbove  neighbour offset (above)
  \param  iOffsetBottom neighbour offset (bottom)
  */
@@ -73,7 +72,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
                                            Int iRoiHeight,
                                            Int iStride,
                                            Int iOffsetLeft,
-                                           Int iOffsetRight,
                                            Int iOffsetAbove,
                                            Int iOffsetBottom )
 {
@@ -83,7 +81,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
   m_iPatternStride  = iStride;
   m_iOffsetLeft     = iOffsetLeft;
   m_iOffsetAbove    = iOffsetAbove;
-  m_iOffsetRight    = iOffsetRight;
   m_iOffsetBottom   = iOffsetBottom;
 }
 
@@ -94,7 +91,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
- \param  iOffsetRight  neighbour offset (right)
  \param  iOffsetAbove  neighbour offset (above)
  \param  iOffsetBottom neighbour offset (bottom)
  \param  uiAbsPartIdx  part index
@@ -104,13 +100,11 @@ Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
                                          UChar       iRoiWidth,
                                          UChar       iRoiHeight,
                                          Int         iOffsetLeft,
-                                         Int         iOffsetRight,
                                          Int         iOffsetAbove,
                                          Int         iOffsetBottom,
                                          UInt        uiAbsPartIdx )
 {
   m_iOffsetLeft   = iOffsetLeft;
-  m_iOffsetRight  = iOffsetRight;
   m_iOffsetAbove  = iOffsetAbove;
   m_iOffsetBottom = iOffsetBottom;
   
@@ -149,13 +143,12 @@ Void TComPattern::initPattern ( Pel* piY,
                                Int iRoiHeight,
                                Int iStride,
                                Int iOffsetLeft,
-                               Int iOffsetRight,
                                Int iOffsetAbove,
                                Int iOffsetBottom )
 {
-  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetRight,      iOffsetAbove,      iOffsetBottom );
-  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetRight >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
-  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetRight >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
+  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetAbove,      iOffsetBottom );
+  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
+  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
   
   return;
 }
@@ -163,10 +156,8 @@ Void TComPattern::initPattern ( Pel* piY,
 Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPartIdx )
 {
   Int   uiOffsetLeft  = 0;
-  Int   uiOffsetRight = 0;
   Int   uiOffsetAbove = 0;
   
-  TComPic* pcPic         = pcCU->getPic();
   UChar uiWidth          = pcCU->getWidth (0)>>uiPartDepth;
   UChar uiHeight         = pcCU->getHeight(0)>>uiPartDepth;
   
@@ -181,31 +172,12 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
   
   if( uiCurrPicPelY != 0 )
   {
-    UInt uiNumPartInWidth = ( uiWidth/pcPic->getMinCUWidth() );
     uiOffsetAbove = 1;
-    
-    if( uiCurrPicPelX + uiWidth < pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() )
-    {
-      if( ( g_auiZscanToRaster[uiAbsZorderIdx] + uiNumPartInWidth ) % pcPic->getNumPartInWidth() ) // Not CU boundary
-      {
-        if( g_auiRasterToZscan[ (Int)g_auiZscanToRaster[uiAbsZorderIdx] - (Int)pcPic->getNumPartInWidth() + (Int)uiNumPartInWidth ] < uiAbsZorderIdx )
-        {
-          uiOffsetRight = 1;
-        }
-      }
-      else // if it is CU boundary
-      {
-        if( g_auiZscanToRaster[uiAbsZorderIdx] < pcPic->getNumPartInWidth() && (uiCurrPicPelX+uiWidth) < pcPic->getPicYuvRec()->getWidth() ) // first line
-        {
-          uiOffsetRight = 1;
-        }
-      }
-    }
   }
   
-  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiAbsPartIdx );
-  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiAbsPartIdx );
-  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiAbsPartIdx );
+  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
+  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
+  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
 }
 
 Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt uiPartDepth, Int* piAdiBuf, Int iOrgBufStride, Int iOrgBufHeight, Bool& bAbove, Bool& bLeft, Bool bLMmode )

@@ -56,7 +56,6 @@ class TComPatternParam
 {
 private:
   Int   m_iOffsetLeft;
-  Int   m_iOffsetRight;
   Int   m_iOffsetAbove;
   Int   m_iOffsetBottom;
   Pel*  m_piPatternOrigin;
@@ -81,7 +80,6 @@ public:
                            Int         iRoiHeight,
                            Int         iStride,
                            Int         iOffsetLeft,
-                           Int         iOffsetRight,
                            Int         iOffsetAbove,
                            Int         iOffsetBottom );
   
@@ -91,7 +89,6 @@ public:
                            UChar       iRoiWidth,
                            UChar       iRoiHeight,
                            Int         iOffsetLeft,
-                           Int         iOffsetRight,
                            Int         iOffsetAbove,
                            Int         iOffsetBottom,
                            UInt        uiAbsZorderIdx );
@@ -133,7 +130,6 @@ public:
                                Int         iRoiHeight,
                                Int         iStride,
                                Int         iOffsetLeft,
-                               Int         iOffsetRight,
                                Int         iOffsetAbove,
                                Int         iOffsetBottom );
   
