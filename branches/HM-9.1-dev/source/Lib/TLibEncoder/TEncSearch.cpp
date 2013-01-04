@@ -4059,7 +4059,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
                             iRoiWidth,
                             iRoiHeight,
                             pcYuv->getStride(),
-                            0, 0, 0 );
+                            0, 0 );
   
   Pel*        piRefY      = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr );
   Int         iRefStride  = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getPicYuvRec()->getStride();
@@ -4397,7 +4397,7 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU* pcCU,
                           pcPatternKey->getROIYWidth(),
                           pcPatternKey->getROIYHeight(),
                           iRefStride,
-                          0, 0, 0 );
+                          0, 0 );
   
   //  Half-pel refinement
   xExtDIFUpSamplingH ( &cPatternRoi, biPred );
