@@ -65,15 +65,13 @@ const UChar TComPattern::m_aucIntraFilter[5] =
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
  \param  iOffsetAbove  neighbour offset (above)
- \param  iOffsetBottom neighbour offset (bottom)
  */
 Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
                                            Int iRoiWidth,
                                            Int iRoiHeight,
                                            Int iStride,
                                            Int iOffsetLeft,
-                                           Int iOffsetAbove,
-                                           Int iOffsetBottom )
+                                           Int iOffsetAbove )
 {
   m_piPatternOrigin = piTexture;
   m_iROIWidth       = iRoiWidth;
@@ -81,7 +79,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
   m_iPatternStride  = iStride;
   m_iOffsetLeft     = iOffsetLeft;
   m_iOffsetAbove    = iOffsetAbove;
-  m_iOffsetBottom   = iOffsetBottom;
 }
 
 /**
@@ -92,7 +89,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
  \param  iOffsetAbove  neighbour offset (above)
- \param  iOffsetBottom neighbour offset (bottom)
  \param  uiAbsPartIdx  part index
  */
 Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
@@ -101,12 +97,10 @@ Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
                                          UChar       iRoiHeight,
                                          Int         iOffsetLeft,
                                          Int         iOffsetAbove,
-                                         Int         iOffsetBottom,
                                          UInt        uiAbsPartIdx )
 {
   m_iOffsetLeft   = iOffsetLeft;
   m_iOffsetAbove  = iOffsetAbove;
-  m_iOffsetBottom = iOffsetBottom;
   
   m_iROIWidth     = iRoiWidth;
   m_iROIHeight    = iRoiHeight;
@@ -143,12 +137,11 @@ Void TComPattern::initPattern ( Pel* piY,
                                Int iRoiHeight,
                                Int iStride,
                                Int iOffsetLeft,
-                               Int iOffsetAbove,
-                               Int iOffsetBottom )
+                               Int iOffsetAbove )
 {
-  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetAbove,      iOffsetBottom );
-  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
-  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
+  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetAbove      );
+  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1 );
+  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1 );
   
   return;
 }
@@ -175,9 +168,9 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
     uiOffsetAbove = 1;
   }
   
-  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
-  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
-  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, 0, uiAbsPartIdx );
+  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
+  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
+  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
 }
 
 Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt uiPartDepth, Int* piAdiBuf, Int iOrgBufStride, Int iOrgBufHeight, Bool& bAbove, Bool& bLeft, Bool bLMmode )
