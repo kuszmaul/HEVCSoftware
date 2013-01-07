@@ -41,6 +41,7 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define FIX827 1 ///< Fix for issue #827: CABAC init tables
 
 // ====================================================================================================================
 // Constants
@@ -299,9 +300,15 @@ INIT_SAO_MERGE_FLAG[3][NUM_SAO_MERGE_FLAG_CTX] =
 static const UChar 
 INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] = 
 {
-  { 200, }, 
+#if FIX827
+  { 160, },
+  { 185, },
+  { 200, },
+#else
+  { 200, },
   { 185, }, 
-  { 160, }, 
+  { 160, },
+#endif
 };
 
 static const UChar
