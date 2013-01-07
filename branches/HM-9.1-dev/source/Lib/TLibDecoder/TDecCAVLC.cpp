@@ -961,7 +961,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           numOfLtrp += numLtrpInSPS;
           rps->setNumberOfLongtermPictures(numOfLtrp);
         }
-        Int bitsForLtrpInSPS = 1;
+        Int bitsForLtrpInSPS = 0;
         while (rpcSlice->getSPS()->getNumLongTermRefPicSPS() > (1 << bitsForLtrpInSPS))
         {
           bitsForLtrpInSPS++;
@@ -976,7 +976,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           Int pocLsbLt;
           if (k < numLtrpInSPS)
           {
-            READ_CODE(bitsForLtrpInSPS, uiCode, "lt_idx_sps[i]");
+            uiCode = 0;
+            if (bitsForLtrpInSPS > 0)
+            {
+              READ_CODE(bitsForLtrpInSPS, uiCode, "lt_idx_sps[i]");
+            }
             Int usedByCurrFromSPS=rpcSlice->getSPS()->getUsedByCurrPicLtSPSFlag(uiCode);
 
             pocLsbLt = rpcSlice->getSPS()->getLtRefPicPocLsbSps(uiCode);

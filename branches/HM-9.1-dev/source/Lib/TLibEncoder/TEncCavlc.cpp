@@ -756,7 +756,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         }
         numLtrpInSH -= numLtrpInSPS;
 
-        Int bitsForLtrpInSPS = 1;
+        Int bitsForLtrpInSPS = 0;
         while (pcSlice->getSPS()->getNumLongTermRefPicSPS() > (1 << bitsForLtrpInSPS))
         {
           bitsForLtrpInSPS++;
@@ -774,7 +774,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         {
           if (counter < numLtrpInSPS)
           {
-            WRITE_CODE( ltrpInSPS[counter], bitsForLtrpInSPS, "lt_idx_sps[i]");
+            if (bitsForLtrpInSPS > 0)
+            {
+              WRITE_CODE( ltrpInSPS[counter], bitsForLtrpInSPS, "lt_idx_sps[i]");              
+            }
           }
           else 
           {
