@@ -59,6 +59,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::ACTIVE_PARAMETER_SETS:
     fprintf( g_hTrace, "=========== Active Parameter sets SEI message ===========\n");
     break;
+  case SEI::FRAME_PACKING:
+    fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
+    break;
 #if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
@@ -102,6 +105,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
     break;
   case SEI::RECOVERY_POINT:
     xWriteSEIRecoveryPoint(*static_cast<const SEIRecoveryPoint*>(&sei));
+    break;
+  case SEI::FRAME_PACKING:
+    xWriteSEIFramePacking(*static_cast<const SEIFramePacking*>(&sei));
     break;
 #if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
@@ -315,6 +321,40 @@ Void SEIWriter::xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei)
   WRITE_SVLC( sei.m_recoveryPocCnt,    "recovery_poc_cnt"    );
   WRITE_FLAG( sei.m_exactMatchingFlag, "exact_matching_flag" );
   WRITE_FLAG( sei.m_brokenLinkFlag,    "broken_link_flag"    );
+  xWriteByteAlign();
+}
+Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
+{
+  WRITE_UVLC( sei.m_arrangementId,                  "frame_packing_arrangement_id" );
+  WRITE_FLAG( sei.m_arrangementCancelFlag,          "frame_packing_arrangement_cancel_flag" );
+
+  if( sei.m_arrangementCancelFlag == 0 ) {
+    WRITE_CODE( sei.m_arrangementType, 7,           "frame_packing_arrangement_type" );
+
+    WRITE_FLAG( sei.m_quincunxSamplingFlag,         "quincunx_sampling_flag" );
+    WRITE_CODE( sei.m_contentInterpretationType, 6, "content_interpretation_type" );
+    WRITE_FLAG( sei.m_spatialFlippingFlag,          "spatial_flipping_flag" );
+    WRITE_FLAG( sei.m_frame0FlippedFlag,            "frame0_flipped_flag" );
+    WRITE_FLAG( sei.m_fieldViewsFlag,               "field_views_flag" );
+    WRITE_FLAG( sei.m_currentFrameIsFrame0Flag,     "current_frame_is_frame0_flag" );
+
+    WRITE_FLAG( sei.m_frame0SelfContainedFlag,      "frame0_self_contained_flag" );
+    WRITE_FLAG( sei.m_frame1SelfContainedFlag,      "frame1_self_contained_flag" );
+
+    if(sei.m_quincunxSamplingFlag == 0 && sei.m_arrangementType != 5)
+    {
+      WRITE_CODE( sei.m_frame0GridPositionX, 4,     "frame0_grid_position_x" );
+      WRITE_CODE( sei.m_frame0GridPositionY, 4,     "frame0_grid_position_y" );
+      WRITE_CODE( sei.m_frame1GridPositionX, 4,     "frame1_grid_position_x" );
+      WRITE_CODE( sei.m_frame1GridPositionY, 4,     "frame1_grid_position_y" );
+    }
+
+    WRITE_CODE( sei.m_arrangementReservedByte, 8,   "frame_packing_arrangement_reserved_byte" );
+    WRITE_UVLC( sei.m_arrangementRepetetionPeriod,  "frame_packing_arrangement_repetition_period" );
+  }
+
+  WRITE_FLAG( sei.m_arrangementExtensionFlag,       "frame_packing_arrangement_extension_flag" );
+
   xWriteByteAlign();
 }
 #if SEI_DISPLAY_ORIENTATION

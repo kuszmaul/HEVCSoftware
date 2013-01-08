@@ -57,6 +57,7 @@ protected:
   Void xWriteSEIPictureTiming(const SEIPictureTiming& sei);
   TComSPS *m_pSPS;
   Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
+  Void xWriteSEIFramePacking(const SEIFramePacking& sei);
 #if SEI_DISPLAY_ORIENTATION
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
 #endif
