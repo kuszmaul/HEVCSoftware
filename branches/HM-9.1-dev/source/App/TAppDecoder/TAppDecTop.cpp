@@ -263,8 +263,8 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
        not_displayed--;
       if ( m_pchReconFile )
       {
-        Window &conf = pcPic->getConformanceWindow();
-        Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+        const Window &conf = pcPic->getConformanceWindow();
+        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
                             pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
                             Window();
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
@@ -322,8 +322,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        Window &conf = pcPic->getConformanceWindow();
-        Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+        const Window &conf = pcPic->getConformanceWindow();
+        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
                             pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
                             Window();
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
