@@ -73,6 +73,7 @@ protected:
   Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize);
   Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize);
   Void xParseSEIRecoveryPoint         (SEIRecoveryPoint& sei, UInt payloadSize);
+  Void xParseSEIFramePacking          (SEIFramePacking& sei, UInt payloadSize);
 #if SEI_DISPLAY_ORIENTATION
   Void xParseSEIDisplayOrientation    (SEIDisplayOrientation &sei, UInt payloadSize);
 #endif
