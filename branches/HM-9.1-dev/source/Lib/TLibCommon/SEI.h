@@ -49,6 +49,7 @@ public:
     PICTURE_TIMING         = 1,
     USER_DATA_UNREGISTERED = 5,
     RECOVERY_POINT         = 6,
+    FRAME_PACKING          = 45,
 #if SEI_DISPLAY_ORIENTATION
     DISPLAY_ORIENTATION    = 47,
 #endif
@@ -192,6 +193,33 @@ public:
   Bool m_exactMatchingFlag;
   Bool m_brokenLinkFlag;
 };
+class SEIFramePacking : public SEI
+{
+public:
+  PayloadType payloadType() const { return FRAME_PACKING; }
+
+  SEIFramePacking() {}
+  virtual ~SEIFramePacking() {}
+
+  Int  m_arrangementId;
+  Bool m_arrangementCancelFlag;
+  Int  m_arrangementType;
+  Bool m_quincunxSamplingFlag;
+  Int  m_contentInterpretationType;
+  Bool m_spatialFlippingFlag;
+  Bool m_frame0FlippedFlag;
+  Bool m_fieldViewsFlag;
+  Bool m_currentFrameIsFrame0Flag;
+  Bool m_frame0SelfContainedFlag;
+  Bool m_frame1SelfContainedFlag;
+  Int  m_frame0GridPositionX;
+  Int  m_frame0GridPositionY;
+  Int  m_frame1GridPositionX;
+  Int  m_frame1GridPositionY;
+  Int  m_arrangementReservedByte;
+  Int  m_arrangementRepetetionPeriod;
+  Bool m_arrangementExtensionFlag;
+};
 #if SEI_DISPLAY_ORIENTATION
 class SEIDisplayOrientation : public SEI
 {
@@ -258,6 +286,7 @@ public:
     , buffering_period(0)
     , picture_timing(0)
     , recovery_point(0)
+    , frame_packing(0)
 #if SEI_DISPLAY_ORIENTATION
     , display_orientation(0)
 #endif
@@ -277,6 +306,7 @@ public:
     delete buffering_period;
     delete picture_timing;
     delete recovery_point;
+    delete frame_packing;
 #if SEI_DISPLAY_ORIENTATION
     delete display_orientation;
 #endif
@@ -295,6 +325,7 @@ public:
   SEIPictureTiming* picture_timing;
   TComSPS* m_pSPS;
   SEIRecoveryPoint* recovery_point;
+  SEIFramePacking* frame_packing;
 #if SEI_DISPLAY_ORIENTATION
   SEIDisplayOrientation* display_orientation;
 #endif
