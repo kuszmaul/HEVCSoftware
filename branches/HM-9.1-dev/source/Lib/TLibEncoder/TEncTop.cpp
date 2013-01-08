@@ -554,6 +554,7 @@ Void TEncTop::xInitSPS()
     pcVUI->setChromaSampleLocTypeTopField(getChromaSampleLocTypeTopField());
     pcVUI->setChromaSampleLocTypeBottomField(getChromaSampleLocTypeBottomField());
     pcVUI->setNeutralChromaIndicationFlag(getNeutralChromaIndicationFlag());
+    pcVUI->setDefaultDisplayWindow(getDefaultDisplayWindow());
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
     pcVUI->setPicStructPresentFlag(getPicStructPresentFlag());
 #endif

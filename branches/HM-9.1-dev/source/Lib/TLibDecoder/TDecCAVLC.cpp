@@ -397,9 +397,15 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
   READ_FLAG(     uiCode, "field_seq_flag");                           pcVUI->setFieldSeqFlag(uiCode);
   assert(pcVUI->getFieldSeqFlag() == false);        // not supported yet
 
-#if HLS_DISPLAY_WINDOW_PLACEHOLDER
-  READ_FLAG(uiCode, "default_display_window_flag");                   assert(uiCode == 0);
-#endif
+  READ_FLAG(     uiCode, "default_display_window_flag");
+  if (uiCode != 0)
+  {
+    Window &defDisp = pcVUI->getDefaultDisplayWindow();
+    READ_UVLC(   uiCode, "def_disp_win_left_offset" );                defDisp.setWindowLeftOffset  ( uiCode );
+    READ_UVLC(   uiCode, "def_disp_win_right_offset" );               defDisp.setWindowRightOffset ( uiCode );
+    READ_UVLC(   uiCode, "def_disp_win_top_offset" );                 defDisp.setWindowTopOffset   ( uiCode );
+    READ_UVLC(   uiCode, "def_disp_win_bottom_offset" );              defDisp.setWindowBottomOffset( uiCode );
+  }
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   READ_FLAG(uiCode, "pic_struct_present_flag");                       pcVUI->setPicStructPresentFlag(uiCode);
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
@@ -524,11 +530,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_FLAG(     uiCode, "conformance_window_flag");
   if (uiCode != 0)
   {
-    ConformanceWindow &conf = pcSPS->getConformanceWindow();
-    READ_UVLC(   uiCode, "conf_win_left_offset" );               conf.setConfWinLeftOffset  ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "conf_win_right_offset" );              conf.setConfWinRightOffset ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "conf_win_top_offset" );                conf.setConfWinTopOffset   ( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "conf_win_bottom_offset" );             conf.setConfWinBottomOffset( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
+    Window &conf = pcSPS->getConformanceWindow();
+    READ_UVLC(   uiCode, "conf_win_left_offset" );               conf.setWindowLeftOffset  ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_right_offset" );              conf.setWindowRightOffset ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_top_offset" );                conf.setWindowTopOffset   ( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_bottom_offset" );             conf.setWindowBottomOffset( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );

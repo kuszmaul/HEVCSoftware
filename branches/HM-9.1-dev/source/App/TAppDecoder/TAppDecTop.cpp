@@ -263,8 +263,8 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
        not_displayed--;
       if ( m_pchReconFile )
       {
-        ConformanceWindow &conf = pcPic->getConformanceWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getConfWinLeftOffset(), conf.getConfWinRightOffset(), conf.getConfWinTopOffset(), conf.getConfWinBottomOffset() );
+        Window &conf = pcPic->getConformanceWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getWindowLeftOffset(), conf.getWindowRightOffset(), conf.getWindowTopOffset(), conf.getWindowBottomOffset() );
       }
       
       // update POC of display order
@@ -315,8 +315,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        ConformanceWindow conf = pcPic->getConformanceWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getConfWinLeftOffset(), conf.getConfWinRightOffset(), conf.getConfWinTopOffset(), conf.getConfWinBottomOffset() );
+        Window conf = pcPic->getConformanceWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getWindowLeftOffset(), conf.getWindowRightOffset(), conf.getWindowTopOffset(), conf.getWindowBottomOffset() );
       }
       
       // update POC of display order
