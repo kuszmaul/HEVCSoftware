@@ -218,7 +218,7 @@ public:
   Int  m_frame1GridPositionY;
   Int  m_arrangementReservedByte;
   Int  m_arrangementRepetetionPeriod;
-  Bool m_arrangementExtensionFlag;
+  Bool m_upsampledAspectRatio;
 };
 #if SEI_DISPLAY_ORIENTATION
 class SEIDisplayOrientation : public SEI

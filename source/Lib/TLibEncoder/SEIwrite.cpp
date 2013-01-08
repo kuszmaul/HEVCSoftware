@@ -353,7 +353,7 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
     WRITE_UVLC( sei.m_arrangementRepetetionPeriod,  "frame_packing_arrangement_repetition_period" );
   }
 
-  WRITE_FLAG( sei.m_arrangementExtensionFlag,       "frame_packing_arrangement_extension_flag" );
+  WRITE_FLAG( sei.m_upsampledAspectRatio,           "upsampled_aspect_ratio" );
 
   xWriteByteAlign();
 }

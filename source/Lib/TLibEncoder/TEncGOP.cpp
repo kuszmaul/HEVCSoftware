@@ -864,7 +864,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         sei_frame_packing.m_frame1GridPositionY = 0;
         sei_frame_packing.m_arrangementReservedByte = 0;
         sei_frame_packing.m_arrangementRepetetionPeriod = 1;
-        sei_frame_packing.m_arrangementExtensionFlag = 0;
+        sei_frame_packing.m_upsampledAspectRatio = 0;
 
         nalu = NALUnit(NAL_UNIT_SEI);
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
