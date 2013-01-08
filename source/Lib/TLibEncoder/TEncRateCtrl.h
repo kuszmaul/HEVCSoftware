@@ -204,11 +204,11 @@ public:
 
   Double estimatePicLambda( list<TEncRCPic*>& listPreviousPictures );
   Int    estimatePicQP    ( Double lambda, list<TEncRCPic*>& listPreviousPictures );
-  Double getLCUTargetBpp( list<TEncRCPic*>& listPreviousPictures );
-  Double getLCUEstLambda( Double bpp, list<TEncRCPic*>& listPreviousPictures );
+  Double getLCUTargetBpp();
+  Double getLCUEstLambda( Double bpp );
   Int    getLCUEstQP( Double lambda, Int clipPicQP );
 
-  Void updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Int numOfEffectivePixel, Bool updateLCUParameter = true );
+  Void updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter = true );
   Void updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda, Double effectivePercentage );
 
   Void addToPictureLsit( list<TEncRCPic*>& listPreviousPictures );
@@ -217,8 +217,8 @@ public:
   Double calAverageLambda();
 
 private:
-  Int xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
-  Int xEstPicHeaderBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
+  Int xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP );
+  Int xEstPicHeaderBits( list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
 
 public:
   TEncRCSeq*      getRCSequence()                         { return m_encRCSeq; }

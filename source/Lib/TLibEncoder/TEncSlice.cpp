@@ -1022,8 +1022,8 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         else
         {
-          bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBpp( m_pcRateCtrl->getPicList() );
-          estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp, m_pcRateCtrl->getPicList() );
+          bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBpp();
+          estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
           estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
           estQP     = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, estQP );
 
@@ -1070,7 +1070,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         m_pcRdCost->setLambda(oldLambda);
 
-        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, numberOfEffectivePixels, m_pcCfg->getLCULevelRC() );
+        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, m_pcCfg->getLCULevelRC() );
       }
 #endif
       
