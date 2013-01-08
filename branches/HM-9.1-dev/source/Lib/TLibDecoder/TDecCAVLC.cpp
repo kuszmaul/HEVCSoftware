@@ -397,6 +397,10 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
   READ_FLAG(     uiCode, "field_seq_flag");                           pcVUI->setFieldSeqFlag(uiCode);
   assert(pcVUI->getFieldSeqFlag() == false);        // not supported yet
 
+#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
+  READ_FLAG(uiCode, "pic_struct_present_flag");                       pcVUI->setPicStructPresentFlag(uiCode);
+#endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
+
   READ_FLAG(     uiCode, "default_display_window_flag");
   if (uiCode != 0)
   {
@@ -406,9 +410,6 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
     READ_UVLC(   uiCode, "def_disp_win_top_offset" );                 defDisp.setWindowTopOffset   ( uiCode );
     READ_UVLC(   uiCode, "def_disp_win_bottom_offset" );              defDisp.setWindowBottomOffset( uiCode );
   }
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-  READ_FLAG(uiCode, "pic_struct_present_flag");                       pcVUI->setPicStructPresentFlag(uiCode);
-#endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
   
   READ_FLAG(     uiCode, "hrd_parameters_present_flag");              pcVUI->setHrdParametersPresentFlag(uiCode);
   if( pcVUI->getHrdParametersPresentFlag() )
