@@ -169,7 +169,14 @@ public:
   PayloadType payloadType() const { return PICTURE_TIMING; }
 
   SEIPictureTiming()
+#if TIMING_SEI_PIC_STRUCT
+  : m_picStruct               (0)
+  , m_progressiveSourceIdc    (0)
+  , m_duplicateFlag           (false)
+  , m_numNalusInDuMinus1      (NULL)
+#else
   : m_numNalusInDuMinus1      (NULL)
+#endif
   , m_duCpbRemovalDelayMinus1 (NULL)
   , m_sps                     (NULL)
   {}
@@ -184,6 +191,12 @@ public:
       delete m_duCpbRemovalDelayMinus1;
     }
   }
+
+#if TIMING_SEI_PIC_STRUCT
+  UInt  m_picStruct;
+  UInt  m_progressiveSourceIdc;
+  Bool  m_duplicateFlag;
+#endif
 
   UInt  m_auCpbRemovalDelay;
   UInt  m_picDpbOutputDelay;

@@ -290,6 +290,14 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
 
   if( !vui->getNalHrdParametersPresentFlag() && !vui->getVclHrdParametersPresentFlag() )
     return;
+#if TIMING_SEI_PIC_STRUCT
+  if( vui->getFrameFieldInfoPresentFlag() )
+  {
+    WRITE_CODE( sei.m_picStruct, 4,              "pic_struct" );
+    WRITE_CODE( sei.m_progressiveSourceIdc, 2,   "progressive_source_idc" );
+    WRITE_FLAG( sei.m_duplicateFlag ? 1 : 0,     "duplicate_flag" );
+  }
+#endif
 
   WRITE_CODE( sei.m_auCpbRemovalDelay, ( vui->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay" );
   WRITE_CODE( sei.m_picDpbOutputDelay, ( vui->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );

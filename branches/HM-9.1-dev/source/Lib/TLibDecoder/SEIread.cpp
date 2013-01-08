@@ -425,6 +425,15 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
     return;
   }
 
+#if TIMING_SEI_PIC_STRUCT
+  if( vui->getFrameFieldInfoPresentFlag() )
+  {
+    READ_CODE( 4, code, "pic_struct" );             sei.m_picStruct            = code;
+    READ_CODE( 2, code, "progressive_source_idc" ); sei.m_progressiveSourceIdc = code;
+    READ_FLAG(    code, "duplicate_flag" );         sei.m_duplicateFlag        = ( code == 1 ? true : false );
+  }
+#endif
+
   READ_CODE( ( vui->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay" );
   sei.m_auCpbRemovalDelay = code;
   READ_CODE( ( vui->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
