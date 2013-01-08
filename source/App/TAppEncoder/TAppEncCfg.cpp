@@ -461,8 +461,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DefDispWinRightOffset",          m_defDispWinRightOffset,                  0, "Specifies the right offset of the default display window from the conformance window")
   ("DefDispWinTopOffset",            m_defDispWinTopOffset,                    0, "Specifies the top offset of the default display window from the conformance window")
   ("DefDispWinBottomOffset",         m_defDispWinBottomOffset,                 0, "Specifies the bottom offset of the default display window from the conformance window")
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-  ("PicStructPresentFlag",           m_picStructPresentFlag,               false, "Indicates that pic_struct values are present in picture timing SEI messages")
+#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
+  ("FrameFieldInfoPresentFlag",      m_frameFieldInfoPresentFlag,               false, "Indicates that pic_struct and field coding related values are present in picture timing SEI messages")
 #endif
 #if POC_TEMPORAL_RELATIONSHIP
   ("PocProportionalToTimingFlag",   m_pocProportionalToTimingFlag,         false, "Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS")

@@ -51,7 +51,7 @@
 #define HLS_GROUP_SPS_PCM_FLAGS                     1  ///< K0217: Group together syntax elements for PCM in SPS
 #define HLS_EXTRA_SLICE_HEADER_BITS                 1  ///< K0210: signal num_extra_slice_header_bits in PPS
 #define HLS_MOVE_SPS_PICLIST_FLAGS                  1  ///< K0170: move restricted_ref_pic_lists_flag and lists_modification_present_flag
-#define HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG          1  ///< add pic_struct_present_flag to VUI
+#define HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG   1  ///< add frame_field_info_present_flag to VUI
 #define TICKET845 1
 
 #define VARYING_DBL_PARAMS                          1  ///< K0289: Specifying varying deblocking parameters in GOP

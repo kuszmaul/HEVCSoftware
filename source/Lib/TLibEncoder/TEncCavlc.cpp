@@ -294,8 +294,8 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
   WRITE_FLAG(pcVUI->getNeutralChromaIndicationFlag(),           "neutral_chroma_indication_flag");
   WRITE_FLAG(pcVUI->getFieldSeqFlag(),                          "field_seq_flag");
   assert(pcVUI->getFieldSeqFlag() == 0);                        // not currently supported
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-  WRITE_FLAG(pcVUI->getPicStructPresentFlag(),                  "pic_struct_present_flag");
+#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
+  WRITE_FLAG(pcVUI->getFrameFieldInfoPresentFlag(),             "frame_field_info_present_flag");
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
 
   Window defaultDisplayWindow = pcVUI->getDefaultDisplayWindow();

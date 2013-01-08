@@ -398,8 +398,8 @@ private:
   Bool m_fieldSeqFlag;
 
   Window m_defaultDisplayWindow;
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-  Bool m_picStructPresentFlag;
+#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
+  Bool m_frameFieldInfoPresentFlag;
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
   Bool m_hrdParametersPresentFlag;
   Bool m_bitstreamRestrictionFlag;
@@ -461,8 +461,8 @@ public:
     ,m_chromaSampleLocTypeBottomField(0)
     ,m_neutralChromaIndicationFlag(false)
     ,m_fieldSeqFlag(false)
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-    ,m_picStructPresentFlag(false)
+#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
+    ,m_frameFieldInfoPresentFlag(false)
 #endif
     ,m_hrdParametersPresentFlag(false)
     ,m_bitstreamRestrictionFlag(false)
@@ -556,9 +556,9 @@ public:
   Bool getFieldSeqFlag() { return m_fieldSeqFlag; }
   Void setFieldSeqFlag(Bool i) { m_fieldSeqFlag = i; }
 
-#if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
-  Bool getPicStructPresentFlag() { return m_picStructPresentFlag; }
-  Void setPicStructPresentFlag(Bool i) { m_picStructPresentFlag = i; }
+#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
+  Bool getFrameFieldInfoPresentFlag() { return m_frameFieldInfoPresentFlag; }
+  Void setFrameFieldInfoPresentFlag(Bool i) { m_frameFieldInfoPresentFlag = i; }
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
 
   Window& getDefaultDisplayWindow()                              { return m_defaultDisplayWindow;                }
