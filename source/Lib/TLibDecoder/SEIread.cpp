@@ -33,7 +33,7 @@
 
 /** 
  \file     SEIread.cpp
- \brief    reading funtionality for SEI messages
+ \brief    reading functionality for SEI messages
  */
 
 #include "TLibCommon/CommonDef.h"
@@ -207,7 +207,7 @@ Void SEIReader::xReadSEImessage(SEImessages& seis)
     break;
 #endif
 #if SEI_GDR_INFO
-  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+  case SEI::REGION_REFRESH_INFO:
     seis.gradualDecodingRefreshInfo = new SEIGradualDecodingRefreshInfo;
     xParseSEIGradualDecodingRefreshInfo(*seis.gradualDecodingRefreshInfo, payloadSize);
     break;
