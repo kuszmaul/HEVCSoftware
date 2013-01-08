@@ -384,10 +384,10 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
 
   TComVUI *pVUI = sei.m_sps->getVuiParameters();
 
-  READ_UVLC( code, "seq_parameter_set_id" );                            sei.m_seqParameterSetId     = code;
+  READ_UVLC( code, "bp_seq_parameter_set_id" );                         sei.m_bpSeqParameterSetId     = code;
   if( !pVUI->getSubPicCpbParamsPresentFlag() )
   {
-    READ_FLAG( code, "alt_cpb_params_present_flag" );                   sei.m_altCpbParamsPresentFlag = code;
+    READ_FLAG( code, "rap_cpb_params_present_flag" );                   sei.m_rapCpbParamsPresentFlag = code;
   }
 
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
@@ -401,7 +401,7 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
         sei.m_initialCpbRemovalDelay[i][nalOrVcl] = code;
         READ_CODE( ( pVUI->getInitialCpbRemovalDelayLengthMinus1() + 1 ) , code, "initial_cpb_removal_delay_offset" );
         sei.m_initialCpbRemovalDelayOffset[i][nalOrVcl] = code;
-        if( pVUI->getSubPicCpbParamsPresentFlag() || sei.m_altCpbParamsPresentFlag )
+        if( pVUI->getSubPicCpbParamsPresentFlag() || sei.m_rapCpbParamsPresentFlag )
         {
           READ_CODE( ( pVUI->getInitialCpbRemovalDelayLengthMinus1() + 1 ) , code, "initial_alt_cpb_removal_delay" );
           sei.m_initialAltCpbRemovalDelay[i][nalOrVcl] = code;

@@ -948,7 +948,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_buffering_period.m_initialAltCpbRemovalDelay      [0][1]  = uiInitialCpbRemovalDelay;
       sei_buffering_period.m_initialAltCpbRemovalDelayOffset[0][1]  = uiInitialCpbRemovalDelay;
 
-      sei_buffering_period.m_altCpbParamsPresentFlag              = 0;
+      sei_buffering_period.m_rapCpbParamsPresentFlag              = 0;
       sei_buffering_period.m_sps                                  = pcSlice->getSPS();
 
       m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_buffering_period );

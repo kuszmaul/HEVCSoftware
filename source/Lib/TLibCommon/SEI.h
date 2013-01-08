@@ -155,8 +155,8 @@ public:
   {}
   virtual ~SEIBufferingPeriod() {}
 
-  UInt m_seqParameterSetId;
-  Bool m_altCpbParamsPresentFlag;
+  UInt m_bpSeqParameterSetId;
+  Bool m_rapCpbParamsPresentFlag;
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
