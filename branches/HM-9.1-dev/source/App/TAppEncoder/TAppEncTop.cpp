@@ -226,6 +226,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
+  m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
+  m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
+  m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );
+  m_cTEncTop.setFramePackingArrangementSEIQuincunx( m_framePackingSEIQuincunx );
+  m_cTEncTop.setFramePackingArrangementSEIInterpretation( m_framePackingSEIInterpretation );
 #if SEI_DISPLAY_ORIENTATION
   m_cTEncTop.setDisplayOrientationSEIAngle( m_displayOrientationSEIAngle );
 #endif

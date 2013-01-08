@@ -194,6 +194,11 @@ protected:
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
+  Int       m_framePackingSEIEnabled;
+  Int       m_framePackingSEIType;
+  Int       m_framePackingSEIId;
+  Int       m_framePackingSEIQuincunx;
+  Int       m_framePackingSEIInterpretation;
 #if SEI_DISPLAY_ORIENTATION
   Int       m_displayOrientationSEIAngle;
 #endif
