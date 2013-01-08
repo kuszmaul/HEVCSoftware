@@ -842,6 +842,36 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
+
+      //TODO: check the position is correct
+      if(m_pcCfg->getFramePackingArrangementSEIEnabled())
+      {
+        SEIFramePacking sei_frame_packing;
+        sei_frame_packing.m_arrangementId = m_pcCfg->getFramePackingArrangementSEIId();
+        sei_frame_packing.m_arrangementCancelFlag = 0;
+        sei_frame_packing.m_arrangementType = m_pcCfg->getFramePackingArrangementSEIType();
+        sei_frame_packing.m_quincunxSamplingFlag = m_pcCfg->getFramePackingArrangementSEIQuincunx();
+        sei_frame_packing.m_contentInterpretationType = m_pcCfg->getFramePackingArrangementSEIInterpretation();
+        sei_frame_packing.m_spatialFlippingFlag = 0;
+        sei_frame_packing.m_frame0FlippedFlag = 0;
+        sei_frame_packing.m_fieldViewsFlag = (sei_frame_packing.m_arrangementType == 2);
+        sei_frame_packing.m_currentFrameIsFrame0Flag = ((sei_frame_packing.m_arrangementType == 5) && m_iNumPicCoded&1);
+        sei_frame_packing.m_frame0SelfContainedFlag = 0;
+        sei_frame_packing.m_frame1SelfContainedFlag = 0;
+        sei_frame_packing.m_frame0GridPositionX = 0;
+        sei_frame_packing.m_frame0GridPositionY = 0;
+        sei_frame_packing.m_frame1GridPositionX = 0;
+        sei_frame_packing.m_frame1GridPositionY = 0;
+        sei_frame_packing.m_arrangementReservedByte = 0;
+        sei_frame_packing.m_arrangementRepetetionPeriod = 1;
+        sei_frame_packing.m_arrangementExtensionFlag = 0;
+
+        nalu = NALUnit(NAL_UNIT_SEI);
+        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_frame_packing);
+        writeRBSPTrailingBits(nalu.m_Bitstream);
+        accessUnit.push_back(new NALUnitEBSP(nalu));
+      }
 #if SEI_DISPLAY_ORIENTATION
       if (m_pcCfg->getDisplayOrientationSEIAngle())
       {

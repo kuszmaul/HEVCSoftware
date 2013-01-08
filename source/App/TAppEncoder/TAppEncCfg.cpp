@@ -473,6 +473,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIRecoveryPoint",               m_recoveryPointSEIEnabled,                0, "Control generation of recovery point SEI messages")
   ("SEIBufferingPeriod",             m_bufferingPeriodSEIEnabled,              0, "Control generation of buffering period SEI messages")
   ("SEIPictureTiming",               m_pictureTimingSEIEnabled,                0, "Control generation of picture timing SEI messages")
+  ("SEIFramePacking",                m_framePackingSEIEnabled,                 0, "Control generation of frame packing SEI messages")
+  ("SEIFramePackingType",            m_framePackingSEIType,                    0, "Define frame packing arrangement\n"
+                                                                                  "\t0: checkerboard - pixels alternatively represent either frames\n"
+                                                                                  "\t1: column alternation - frames are interlaced by column\n"
+                                                                                  "\t2: row alternation - frames are interlaced by row\n"
+                                                                                  "\t3: side by side - frames are displayed horizontally\n"
+                                                                                  "\t4: top bottom - frames are displayed vertically\n"
+                                                                                  "\t5: frame alternation - one frame is alternated with the other")
+  ("SEIFramePackingId",              m_framePackingSEIId,                      0, "Id of frame packing SEI message for a given session")
+  ("SEIFramePackingQuincunx",        m_framePackingSEIQuincunx,                0, "Indicate the presence of a Quincunx type video frame")
+  ("SEIFramePackingInterpretation",  m_framePackingSEIInterpretation,          0, "Indicate the interpretation of the frame pair\n"
+                                                                                  "\t0: unspecified\n"
+                                                                                  "\t1: stereo pair, frame0 represents left view\n"
+                                                                                  "\t2: stereo pair, frame0 represents right view")
 #if SEI_DISPLAY_ORIENTATION
   ("SEIDisplayOrientation",          m_displayOrientationSEIAngle,             0, "Control generation of display orientation SEI messages\n"
                                                               "\tN: 0 < N < (2^16 - 1) enable display orientation SEI message with anticlockwise_rotation = N and display_orientation_repetition_period = 1\n"
