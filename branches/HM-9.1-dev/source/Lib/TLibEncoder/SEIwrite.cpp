@@ -120,7 +120,7 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
     break;
 #endif
 #if SEI_GDR_INFO
-  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+  case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
 #endif

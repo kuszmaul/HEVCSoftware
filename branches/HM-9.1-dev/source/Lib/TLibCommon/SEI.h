@@ -45,25 +45,38 @@ class SEI
 public:
   enum PayloadType
   {
-    BUFFERING_PERIOD       = 0,
-    PICTURE_TIMING         = 1,
-    USER_DATA_UNREGISTERED = 5,
-    RECOVERY_POINT         = 6,
-    FRAME_PACKING          = 45,
+    BUFFERING_PERIOD                     = 0,
+    PICTURE_TIMING                       = 1,
+    PAN_SCAN_RECT                        = 2,
+    FILLER_PAYLOAD                       = 3,
+    USER_DATA_REGISTERED_ITU_T_T35       = 4,
+    USER_DATA_UNREGISTERED               = 5,
+    RECOVERY_POINT                       = 6,
+    SCENE_INFO                           = 9,
+    FULL_FRAME_SNAPSHOT                  = 15,
+    PROGRESSIVE_REFINEMENT_SEGMENT_START = 16,
+    PROGRESSIVE_REFINEMENT_SEGMENT_END   = 17,
+    FILM_GRAIN_CHARACTERISTICS           = 19,
+    POST_FILTER_HINT                     = 22,
+    TONE_MAPPING_INFO                    = 23,
+    FRAME_PACKING                        = 45,
 #if SEI_DISPLAY_ORIENTATION
-    DISPLAY_ORIENTATION    = 47,
+    DISPLAY_ORIENTATION                  = 47,
 #endif
-    ACTIVE_PARAMETER_SETS  = 129,
+    SOP_DESCRIPTION                      = 128,
+    ACTIVE_PARAMETER_SETS                = 129,
+    DECODING_UNIT_INFO                   = 130,
 #if SEI_TEMPORAL_LEVEL0_INDEX
-    TEMPORAL_LEVEL0_INDEX  = 131,
+    TEMPORAL_LEVEL0_INDEX                = 131,
 #endif
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
-    DECODED_PICTURE_HASH   = 132,
+    DECODED_PICTURE_HASH                 = 132,
 #else
-    DECODED_PICTURE_HASH   = 256,
+    DECODED_PICTURE_HASH                 = 256,
 #endif
+    SCALABLE_NESTING                     = 133,
 #if SEI_GDR_INFO
-    GRADUAL_DECODING_REFRESH_INFO = 134,
+    REGION_REFRESH_INFO                  = 134,
 #endif
   };
   
@@ -262,7 +275,7 @@ public:
 class SEIGradualDecodingRefreshInfo : public SEI
 {
 public:
-  PayloadType payloadType() const { return GRADUAL_DECODING_REFRESH_INFO; }
+  PayloadType payloadType() const { return REGION_REFRESH_INFO; }
 
   SEIGradualDecodingRefreshInfo()
     : m_gdrForegroundFlag(0)
