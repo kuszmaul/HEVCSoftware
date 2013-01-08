@@ -264,7 +264,14 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       if ( m_pchReconFile )
       {
         Window &conf = pcPic->getConformanceWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getWindowLeftOffset(), conf.getWindowRightOffset(), conf.getWindowTopOffset(), conf.getWindowBottomOffset() );
+        Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+                            pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
+                            Window();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+                                       conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                       conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                       conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                       conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
       }
       
       // update POC of display order
@@ -315,8 +322,15 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        Window conf = pcPic->getConformanceWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getWindowLeftOffset(), conf.getWindowRightOffset(), conf.getWindowTopOffset(), conf.getWindowBottomOffset() );
+        Window &conf = pcPic->getConformanceWindow();
+        Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+                            pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
+                            Window();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+                                       conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                       conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                       conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                       conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
       }
       
       // update POC of display order
