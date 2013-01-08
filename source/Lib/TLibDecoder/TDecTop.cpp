@@ -117,7 +117,7 @@ Void TDecTop::deletePicBuffer ( )
 Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 {
   Int  numReorderPics[MAX_TLAYER];
-  ConformanceWindow &conformanceWindow = pcSlice->getSPS()->getConformanceWindow();
+  Window &conformanceWindow = pcSlice->getSPS()->getConformanceWindow();
 
   for( Int temporalLayer=0; temporalLayer < MAX_TLAYER; temporalLayer++) 
   {

@@ -456,6 +456,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ChromaSampleLocTypeTopField",    m_chromaSampleLocTypeTopField,            0, "Specifies the location of chroma samples for top field")
   ("ChromaSampleLocTypeBottomField", m_chromaSampleLocTypeBottomField,         0, "Specifies the location of chroma samples for bottom field")
   ("NeutralChromaIndication",        m_neutralChromaIndicationFlag,        false, "Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)")
+  ("DefaultDisplayWindowFlag",       m_defaultDisplayWindowFlag,            true, "Indicates the presence of the Default Window parameters")
+  ("DefDispWinLeftOffset",           m_defDispWinLeftOffset,                   0, "Specifies the left offset of the default display window from the conformance window")
+  ("DefDispWinRightOffset",          m_defDispWinRightOffset,                  0, "Specifies the right offset of the default display window from the conformance window")
+  ("DefDispWinTopOffset",            m_defDispWinTopOffset,                    0, "Specifies the top offset of the default display window from the conformance window")
+  ("DefDispWinBottomOffset",         m_defDispWinBottomOffset,                 0, "Specifies the bottom offset of the default display window from the conformance window")
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   ("PicStructPresentFlag",           m_picStructPresentFlag,               false, "Indicates that pic_struct values are present in picture timing SEI messages")
 #endif

@@ -260,6 +260,11 @@ protected:
   Int       m_chromaSampleLocTypeTopField;                    ///< Specifies the location of chroma samples for top field
   Int       m_chromaSampleLocTypeBottomField;                 ///< Specifies the location of chroma samples for bottom field
   Bool      m_neutralChromaIndicationFlag;                    ///< Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)
+  Bool      m_defaultDisplayWindowFlag;                       ///< Indicates the presence of the default window parameters
+  Int       m_defDispWinLeftOffset;                           ///< Specifies the left offset from the conformance window of the default window
+  Int       m_defDispWinRightOffset;                          ///< Specifies the right offset from the conformance window of the default window
+  Int       m_defDispWinTopOffset;                            ///< Specifies the top offset from the conformance window of the default window
+  Int       m_defDispWinBottomOffset;                         ///< Specifies the bottom offset from the conformance window of the default window
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool      m_picStructPresentFlag;                           ///< Indicates that pic_struct values are present in picture timing SEI messages
 #endif

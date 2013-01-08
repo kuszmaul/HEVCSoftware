@@ -336,6 +336,45 @@ struct HrdSubLayerInfo
   UInt cbrFlag           [MAX_CPB_CNT][2];
 };
 
+class Window
+{
+private:
+  Bool          m_enabledFlag;
+  Int           m_winLeftOffset;
+  Int           m_winRightOffset;
+  Int           m_winTopOffset;
+  Int           m_winBottomOffset;
+public:
+  Window()
+  : m_enabledFlag (false)
+  , m_winLeftOffset     (0)
+  , m_winRightOffset    (0)
+  , m_winTopOffset      (0)
+  , m_winBottomOffset   (0)
+  { }
+
+  Bool          getWindowEnabledFlag() const      { return m_enabledFlag; }
+  Void          resetWindow()                     { m_enabledFlag = false; m_winLeftOffset = m_winRightOffset = m_winTopOffset = m_winBottomOffset = 0; }
+  Int           getWindowLeftOffset() const       { return m_enabledFlag ? m_winLeftOffset : 0; }
+  Void          setWindowLeftOffset(Int val)      { m_winLeftOffset = val; m_enabledFlag = true; }
+  Int           getWindowRightOffset() const      { return m_enabledFlag ? m_winRightOffset : 0; }
+  Void          setWindowRightOffset(Int val)     { m_winRightOffset = val; m_enabledFlag = true; }
+  Int           getWindowTopOffset() const        { return m_enabledFlag ? m_winTopOffset : 0; }
+  Void          setWindowTopOffset(Int val)       { m_winTopOffset = val; m_enabledFlag = true; }
+  Int           getWindowBottomOffset() const     { return m_enabledFlag ? m_winBottomOffset: 0; }
+  Void          setWindowBottomOffset(Int val)    { m_winBottomOffset = val; m_enabledFlag = true; }
+
+  Void          setWindow(Int offsetLeft, Int offsetLRight, Int offsetLTop, Int offsetLBottom)
+  {
+    m_enabledFlag       = true;
+    m_winLeftOffset     = offsetLeft;
+    m_winRightOffset    = offsetLRight;
+    m_winTopOffset      = offsetLTop;
+    m_winBottomOffset   = offsetLBottom;
+  }
+};
+
+
 class TComVUI
 {
 private:
@@ -357,6 +396,8 @@ private:
   Int  m_chromaSampleLocTypeBottomField;
   Bool m_neutralChromaIndicationFlag;
   Bool m_fieldSeqFlag;
+
+  Window m_defaultDisplayWindow;
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool m_picStructPresentFlag;
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
@@ -520,6 +561,9 @@ public:
   Void setPicStructPresentFlag(Bool i) { m_picStructPresentFlag = i; }
 #endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
 
+  Window& getDefaultDisplayWindow()                              { return m_defaultDisplayWindow;                }
+  Void    setDefaultDisplayWindow(Window& defaultDisplayWindow ) { m_defaultDisplayWindow = defaultDisplayWindow; }
+
   Bool getHrdParametersPresentFlag() { return m_hrdParametersPresentFlag; }
   Void setHrdParametersPresentFlag(Bool i) { m_hrdParametersPresentFlag = i; }
 
@@ -637,45 +681,6 @@ public:
 #endif
 };
 
-class ConformanceWindow
-{
-private:
-  Bool          m_conformanceWindowFlag;
-  Int           m_confWinLeftOffset;
-  Int           m_confWinRightOffset;
-  Int           m_confWinTopOffset;
-  Int           m_confWinBottomOffset;
-public:
-  ConformanceWindow()
-  : m_conformanceWindowFlag (false)
-  , m_confWinLeftOffset     (0)
-  , m_confWinRightOffset    (0)
-  , m_confWinTopOffset      (0)
-  , m_confWinBottomOffset   (0)
-  { }
-
-  Bool          getConformanceWindowFlag() const      { return m_conformanceWindowFlag; }
-  Void          resetConformanceWindow()              { m_conformanceWindowFlag = false; m_confWinLeftOffset = m_confWinRightOffset = m_confWinTopOffset = m_confWinBottomOffset = 0; }
-  Int           getConfWinLeftOffset() const          { return m_conformanceWindowFlag ? m_confWinLeftOffset : 0; }
-  Void          setConfWinLeftOffset(Int val)         { m_confWinLeftOffset = val; m_conformanceWindowFlag = true; }
-  Int           getConfWinRightOffset() const         { return m_conformanceWindowFlag ? m_confWinRightOffset : 0; }
-  Void          setConfWinRightOffset(Int val)        { m_confWinRightOffset = val; m_conformanceWindowFlag = true; }
-  Int           getConfWinTopOffset() const           { return m_conformanceWindowFlag ? m_confWinTopOffset : 0; }
-  Void          setConfWinTopOffset(Int val)          { m_confWinTopOffset = val; m_conformanceWindowFlag = true; }
-  Int           getConfWinBottomOffset() const        { return m_conformanceWindowFlag ? m_confWinBottomOffset : 0; }
-  Void          setConfWinBottomOffset(Int val)       { m_confWinBottomOffset = val; m_conformanceWindowFlag = true; }
-
-  Void          setConformanceWindow(Int confLeft, Int confRight, Int confTop, Int confBottom)
-  {
-    m_conformanceWindowFlag = true;
-    m_confWinLeftOffset     = confLeft;
-    m_confWinRightOffset    = confRight;
-    m_confWinTopOffset      = confTop;
-    m_confWinBottomOffset   = confBottom;
-  }
-};
-
-
 /// SPS class
 class TComSPS
 {
@@ -690,7 +695,7 @@ private:
   UInt        m_picWidthInLumaSamples;
   UInt        m_picHeightInLumaSamples;
   
-  ConformanceWindow m_conformanceWindow;
+  Window      m_conformanceWindow;
 
   UInt        m_uiMaxCUWidth;
   UInt        m_uiMaxCUHeight;
@@ -780,8 +785,8 @@ public:
   Void setPicHeightInLumaSamples      ( UInt u ) { m_picHeightInLumaSamples = u;       }
   UInt getPicHeightInLumaSamples      ()         { return  m_picHeightInLumaSamples;   }
 
-  ConformanceWindow& getConformanceWindow()                                      { return  m_conformanceWindow;          }
-  Void               setConformanceWindow(ConformanceWindow& conformanceWindow ) { m_conformanceWindow = conformanceWindow; }
+  Window& getConformanceWindow()                           { return  m_conformanceWindow;             }
+  Void    setConformanceWindow(Window& conformanceWindow ) { m_conformanceWindow = conformanceWindow; }
 
   UInt  getNumLongTermRefPicSPS()             { return m_numLongTermRefPicSPS; }
   Void  setNumLongTermRefPicSPS(UInt val)     { m_numLongTermRefPicSPS = val; }

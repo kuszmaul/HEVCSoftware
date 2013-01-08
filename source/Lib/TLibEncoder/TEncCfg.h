@@ -111,7 +111,7 @@ protected:
   Int       m_iSourceWidth;
   Int       m_iSourceHeight;
   Int       m_conformanceMode;
-  ConformanceWindow m_conformanceWindow;
+  Window    m_conformanceWindow;
   Int       m_iFrameToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
@@ -285,6 +285,7 @@ protected:
   Int       m_chromaSampleLocTypeTopField;                    ///< Specifies the location of chroma samples for top field
   Int       m_chromaSampleLocTypeBottomField;                 ///< Specifies the location of chroma samples for bottom field
   Bool      m_neutralChromaIndicationFlag;                    ///< Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)
+  Window    m_defaultDisplayWindow;                           ///< Represents the default display window parameters
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool      m_picStructPresentFlag;                           ///< Indicates that pic_struct values are present in picture timing SEI messages
 #endif
@@ -327,8 +328,8 @@ public:
   Void      setSourceWidth                  ( Int   i )      { m_iSourceWidth = i; }
   Void      setSourceHeight                 ( Int   i )      { m_iSourceHeight = i; }
 
-  ConformanceWindow &getConformanceWindow()                                                  { return m_conformanceWindow; }
-  Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setConformanceWindow (confLeft, confRight, confTop, confBottom); }
+  Window   &getConformanceWindow()                           { return m_conformanceWindow; }
+  Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
   Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
   
@@ -732,6 +733,8 @@ public:
   Void      setChromaSampleLocTypeBottomField(Int i)      { m_chromaSampleLocTypeBottomField = i; }
   Bool      getNeutralChromaIndicationFlag()              { return m_neutralChromaIndicationFlag; }
   Void      setNeutralChromaIndicationFlag(Bool i)        { m_neutralChromaIndicationFlag = i; }
+  Window   &getDefaultDisplayWindow()                     { return m_defaultDisplayWindow; }
+  Void      setDefaultDisplayWindow (Int offsetLeft, Int offsetRight, Int offsetTop, Int offsetBottom ) { m_defaultDisplayWindow.setWindow (offsetLeft, offsetRight, offsetTop, offsetBottom); }
 #if HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG
   Bool      getPicStructPresentFlag()                     { return m_picStructPresentFlag; }
   Void      setPicStructPresentFlag(Bool i)               { m_picStructPresentFlag = i; }  
