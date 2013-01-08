@@ -59,6 +59,15 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::ACTIVE_PARAMETER_SETS:
     fprintf( g_hTrace, "=========== Active Parameter sets SEI message ===========\n");
     break;
+  case SEI::BUFFERING_PERIOD:
+    fprintf( g_hTrace, "=========== Buffering period SEI message ===========\n");
+    break;
+  case SEI::PICTURE_TIMING:
+    fprintf( g_hTrace, "=========== Picture timing SEI message ===========\n");
+    break;
+  case SEI::RECOVERY_POINT:
+    fprintf( g_hTrace, "=========== Recovery point SEI message ===========\n");
+    break;
   case SEI::FRAME_PACKING:
     fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
     break;
