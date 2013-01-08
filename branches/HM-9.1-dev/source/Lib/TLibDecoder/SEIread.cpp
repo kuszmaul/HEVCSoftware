@@ -508,7 +508,7 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt payloadSize)
     READ_CODE( 8, val, "frame_packing_arrangement_reserved_byte" );   sei.m_arrangementReservedByte = val;
     READ_UVLC( val, "frame_packing_arrangement_repetition_period" );  sei.m_arrangementRepetetionPeriod = val;
   }
-  READ_FLAG( val, "frame_packing_arrangement_extension_flag" );       sei.m_arrangementExtensionFlag = val;
+  READ_FLAG( val, "upsampled_aspect_ratio" );                       sei.m_upsampledAspectRatio = val;
 
   xParseByteAlign();
 }
