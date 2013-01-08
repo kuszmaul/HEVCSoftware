@@ -117,7 +117,7 @@ Void TDecTop::deletePicBuffer ( )
 Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 {
   Int  numReorderPics[MAX_TLAYER];
-  CroppingWindow &picCroppingWindow = pcSlice->getSPS()->getPicCroppingWindow();
+  ConformanceWindow &conformanceWindow = pcSlice->getSPS()->getConformanceWindow();
 
   for( Int temporalLayer=0; temporalLayer < MAX_TLAYER; temporalLayer++) 
   {
@@ -130,7 +130,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     rpcPic = new TComPic();
     
     rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
-                     picCroppingWindow, numReorderPics, true);
+                     conformanceWindow, numReorderPics, true);
     rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
     m_cListPic.pushBack( rpcPic );
     
@@ -168,7 +168,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   }
   rpcPic->destroy();
   rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
-                   picCroppingWindow, numReorderPics, true);
+                   conformanceWindow, numReorderPics, true);
   rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 

@@ -91,7 +91,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                  ( m_iSourceWidth );
   m_cTEncTop.setSourceHeight                 ( m_iSourceHeight );
-  m_cTEncTop.setPicCroppingWindow            ( m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+  m_cTEncTop.setConformanceWindow            ( m_confLeft, m_confRight, m_confTop, m_confBottom );
   m_cTEncTop.setFrameToBeEncoded             ( m_iFrameToBeEncoded );
   
   //====== Coding Structure ========
@@ -531,7 +531,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
     if (m_pchReconFile)
     {
-      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
     }
 
     const AccessUnit& au = *(iterBitstream++);

@@ -126,10 +126,10 @@ TEncPic::~TEncPic()
  * \return Void
  */
 Void TEncPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth,  
-                      CroppingWindow &picCroppingWindow, Int *numReorderPics, Bool bIsVirtual )
+                      ConformanceWindow &conformanceWindow, Int *numReorderPics, Bool bIsVirtual )
 {
   TComPic::create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth,  
-                   picCroppingWindow, numReorderPics, bIsVirtual );
+                   conformanceWindow, numReorderPics, bIsVirtual );
   m_uiMaxAQDepth = uiMaxAQDepth;
   if ( uiMaxAQDepth > 0 )
   {

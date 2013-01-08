@@ -521,14 +521,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   READ_UVLC (    uiCode, "pic_width_in_luma_samples" );          pcSPS->setPicWidthInLumaSamples ( uiCode    );
   READ_UVLC (    uiCode, "pic_height_in_luma_samples" );         pcSPS->setPicHeightInLumaSamples( uiCode    );
-  READ_FLAG(     uiCode, "pic_cropping_flag");
+  READ_FLAG(     uiCode, "conformance_window_flag");
   if (uiCode != 0)
   {
-    CroppingWindow &crop = pcSPS->getPicCroppingWindow();
-    READ_UVLC(   uiCode, "pic_crop_left_offset" );               crop.setPicCropLeftOffset  ( uiCode * TComSPS::getCropUnitX( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "pic_crop_right_offset" );              crop.setPicCropRightOffset ( uiCode * TComSPS::getCropUnitX( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "pic_crop_top_offset" );                crop.setPicCropTopOffset   ( uiCode * TComSPS::getCropUnitY( pcSPS->getChromaFormatIdc() ) );
-    READ_UVLC(   uiCode, "pic_crop_bottom_offset" );             crop.setPicCropBottomOffset( uiCode * TComSPS::getCropUnitY( pcSPS->getChromaFormatIdc() ) );
+    ConformanceWindow &conf = pcSPS->getConformanceWindow();
+    READ_UVLC(   uiCode, "conf_win_left_offset" );               conf.setConfWinLeftOffset  ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_right_offset" );              conf.setConfWinRightOffset ( uiCode * TComSPS::getWinUnitX( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_top_offset" );                conf.setConfWinTopOffset   ( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
+    READ_UVLC(   uiCode, "conf_win_bottom_offset" );             conf.setConfWinBottomOffset( uiCode * TComSPS::getWinUnitY( pcSPS->getChromaFormatIdc() ) );
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );

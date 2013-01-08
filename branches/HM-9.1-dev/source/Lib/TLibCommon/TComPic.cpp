@@ -73,7 +73,7 @@ TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, CroppingWindow &croppingWindow,
+Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, ConformanceWindow &conformanceWindow,
                       Int *numReorderPics, Bool bIsVirtual)
 
 {
@@ -88,8 +88,8 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   m_SEIs = NULL;
   m_bUsedByCurr = false;
 
-  /* store cropping parameters with picture */
-  m_croppingWindow = croppingWindow;
+  /* store conformance window parameters with picture */
+  m_conformanceWindow = conformanceWindow;
 
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
