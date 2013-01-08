@@ -65,6 +65,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::USER_DATA_UNREGISTERED:
     fprintf( g_hTrace, "=========== User Data Unregistered SEI message ===========\n");
     break;
+  case SEI::FRAME_PACKING:
+    fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
+    break;
 #if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
@@ -186,6 +189,10 @@ Void SEIReader::xReadSEImessage(SEImessages& seis)
   case SEI::RECOVERY_POINT:
     seis.recovery_point = new SEIRecoveryPoint;
     xParseSEIRecoveryPoint(*seis.recovery_point, payloadSize);
+    break;
+  case SEI::FRAME_PACKING:
+    seis.frame_packing = new SEIFramePacking;
+    xParseSEIFramePacking(*seis.frame_packing, payloadSize);
     break;
 #if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
@@ -471,6 +478,41 @@ Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize
   READ_FLAG( uiCode, "broken_link_flag" );      sei.m_brokenLinkFlag     = uiCode;
   xParseByteAlign();
 }
+Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt payloadSize)
+{
+  UInt val;
+  READ_UVLC( val, "frame_packing_arrangement_id" );                 sei.m_arrangementId = val;
+  READ_FLAG( val, "frame_packing_arrangement_cancel_flag" );        sei.m_arrangementCancelFlag = val;
+
+  if ( !sei.m_arrangementCancelFlag )
+  {
+    READ_CODE( 7, val, "frame_packing_arrangement_type" );          sei.m_arrangementType = val;
+    READ_FLAG( val, "quincunx_sampling_flag" );                     sei.m_quincunxSamplingFlag = val;
+
+    READ_CODE( 6, val, "content_interpretation_type" );             sei.m_contentInterpretationType = val;
+    READ_FLAG( val, "spatial_flipping_flag" );                      sei.m_spatialFlippingFlag = val;
+    READ_FLAG( val, "frame0_flipped_flag" );                        sei.m_frame0FlippedFlag = val;
+    READ_FLAG( val, "field_views_flag" );                           sei.m_fieldViewsFlag = val;
+    READ_FLAG( val, "current_frame_is_frame0_flag" );               sei.m_currentFrameIsFrame0Flag = val;
+    READ_FLAG( val, "frame0_self_contained_flag" );                 sei.m_frame0SelfContainedFlag = val;
+    READ_FLAG( val, "frame1_self_contained_flag" );                 sei.m_frame1SelfContainedFlag = val;
+
+    if ( sei.m_quincunxSamplingFlag == 0 && sei.m_arrangementType != 5)
+    {
+      READ_CODE( 4, val, "frame0_grid_position_x" );                sei.m_frame0GridPositionX = val;
+      READ_CODE( 4, val, "frame0_grid_position_y" );                sei.m_frame0GridPositionY = val;
+      READ_CODE( 4, val, "frame1_grid_position_x" );                sei.m_frame1GridPositionX = val;
+      READ_CODE( 4, val, "frame1_grid_position_y" );                sei.m_frame1GridPositionY = val;
+    }
+
+    READ_CODE( 8, val, "frame_packing_arrangement_reserved_byte" );   sei.m_arrangementReservedByte = val;
+    READ_UVLC( val, "frame_packing_arrangement_repetition_period" );  sei.m_arrangementRepetetionPeriod = val;
+  }
+  READ_FLAG( val, "frame_packing_arrangement_extension_flag" );       sei.m_arrangementExtensionFlag = val;
+
+  xParseByteAlign();
+}
+
 #if SEI_DISPLAY_ORIENTATION
 Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*payloadSize*/)
 {
