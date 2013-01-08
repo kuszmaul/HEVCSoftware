@@ -275,13 +275,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
-  ("CroppingMode",          m_croppingMode,        0, "Cropping mode (0: no cropping, 1:automatic padding, 2: padding, 3:cropping")
-  ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for cropping mode 2")
-  ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for cropping mode 2")
-  ("CropLeft",              m_cropLeft,            0, "Left cropping for cropping mode 3")
-  ("CropRight",             m_cropRight,           0, "Right cropping for cropping mode 3")
-  ("CropTop",               m_cropTop,             0, "Top cropping for cropping mode 3")
-  ("CropBottom",            m_cropBottom,          0, "Bottom cropping for cropping mode 3")
+  ("ConformanceMode",       m_conformanceMode,     0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
+  ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for conformance window mode 2")
+  ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for conformance window mode 2")
+  ("ConfLeft",              m_confLeft,            0, "Left offset for window conformance mode 3")
+  ("ConfRight",             m_confRight,           0, "Right offset for window conformance mode 3")
+  ("ConfTop",               m_confTop,             0, "Top offset for window conformance mode 3")
+  ("ConfBottom",            m_confBottom,          0, "Bottom offset for window conformance mode 3")
   ("FrameRate,-fr",         m_iFrameRate,          0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_iFrameToBeEncoded,   0, "Number of frames to be encoded (default=all)")
@@ -443,8 +443,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AspectRatioIdc",                 m_aspectRatioIdc,                         0, "aspect_ratio_idc")
   ("SarWidth",                       m_sarWidth,                               0, "horizontal size of the sample aspect ratio")
   ("SarHeight",                      m_sarHeight,                              0, "vertical size of the sample aspect ratio")
-  ("OverscanInfoPresent",            m_overscanInfoPresentFlag,            false, "Indicates whether cropped decoded pictures are suitable for display using overscan\n")
-  ("OverscanAppropriate",            m_overscanAppropriateFlag,            false, "Indicates whether cropped decoded pictures are suitable for display using overscan\n")
+  ("OverscanInfoPresent",            m_overscanInfoPresentFlag,            false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
+  ("OverscanAppropriate",            m_overscanAppropriateFlag,            false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
   ("VideoSignalTypePresent",         m_videoSignalTypePresentFlag,         false, "Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present")
   ("VideoFormat",                    m_videoFormat,                            5, "Indicates representation of pictures")
   ("VideoFullRange",                 m_videoFullRangeFlag,                 false, "Indicates the black level and range of luma and chroma signals")
@@ -622,12 +622,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   if (!m_outputBitDepthC) { m_outputBitDepthC = m_internalBitDepthC; }
 
   // TODO:ChromaFmt assumes 4:2:0 below
-  switch (m_croppingMode)
+  switch (m_conformanceMode)
   {
   case 0:
     {
-      // no cropping or padding
-      m_cropLeft = m_cropRight = m_cropTop = m_cropBottom = 0;
+      // no conformance or padding
+      m_confLeft = m_confRight = m_confTop = m_confBottom = 0;
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
     }
@@ -637,20 +637,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       Int minCuSize = m_uiMaxCUHeight >> (m_uiMaxCUDepth - 1);
       if (m_iSourceWidth % minCuSize)
       {
-        m_aiPad[0] = m_cropRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
-        m_iSourceWidth  += m_cropRight;
+        m_aiPad[0] = m_confRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
+        m_iSourceWidth  += m_confRight;
       }
       if (m_iSourceHeight % minCuSize)
       {
-        m_aiPad[1] = m_cropBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
-        m_iSourceHeight += m_cropBottom;
+        m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
+        m_iSourceHeight += m_confBottom;
       }
-      if (m_aiPad[0] % TComSPS::getCropUnitX(CHROMA_420) != 0)
+      if (m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0)
       {
         fprintf(stderr, "Error: picture width is not an integer multiple of the specified chroma subsampling\n");
         exit(EXIT_FAILURE);
       }
-      if (m_aiPad[1] % TComSPS::getCropUnitY(CHROMA_420) != 0)
+      if (m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0)
       {
         fprintf(stderr, "Error: picture height is not an integer multiple of the specified chroma subsampling\n");
         exit(EXIT_FAILURE);
@@ -662,20 +662,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       //padding
       m_iSourceWidth  += m_aiPad[0];
       m_iSourceHeight += m_aiPad[1];
-      m_cropRight  = m_aiPad[0];
-      m_cropBottom = m_aiPad[1];
+      m_confRight  = m_aiPad[0];
+      m_confBottom = m_aiPad[1];
       break;
     }
   case 3:
     {
-      // cropping
-      if ((m_cropLeft == 0) && (m_cropRight == 0) && (m_cropTop == 0) && (m_cropBottom == 0))
+      // conformance
+      if ((m_confLeft == 0) && (m_confRight == 0) && (m_confTop == 0) && (m_confBottom == 0))
       {
-        fprintf(stderr, "Warning: Cropping enabled, but all cropping parameters set to zero\n");
+        fprintf(stderr, "Warning: Conformance window enabled, but all conformance window parameters set to zero\n");
       }
       if ((m_aiPad[1] != 0) || (m_aiPad[0]!=0))
       {
-        fprintf(stderr, "Warning: Cropping enabled, padding parameters will be ignored\n");
+        fprintf(stderr, "Warning: Conformance window enabled, padding parameters will be ignored\n");
       }
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
@@ -893,16 +893,16 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
 
   //TODO:ChromaFmt assumes 4:2:0 below
-  xConfirmPara( m_iSourceWidth  % TComSPS::getCropUnitX(CHROMA_420) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_iSourceHeight % TComSPS::getCropUnitY(CHROMA_420) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_iSourceWidth  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_iSourceHeight % TComSPS::getWinUnitY(CHROMA_420) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_aiPad[0] % TComSPS::getCropUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_aiPad[1] % TComSPS::getCropUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_cropLeft   % TComSPS::getCropUnitX(CHROMA_420) != 0, "Left cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropRight  % TComSPS::getCropUnitX(CHROMA_420) != 0, "Right cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropTop    % TComSPS::getCropUnitY(CHROMA_420) != 0, "Top cropping must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_cropBottom % TComSPS::getCropUnitY(CHROMA_420) != 0, "Bottom cropping must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
 
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
@@ -1378,7 +1378,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Input          File          : %s\n", m_pchInputFile          );
   printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
-  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_cropLeft - m_cropRight, m_iSourceHeight - m_cropTop - m_cropBottom, m_iFrameRate );
+  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_iFrameToBeEncoded-1, m_iFrameToBeEncoded );
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );

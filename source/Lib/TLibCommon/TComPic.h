@@ -79,7 +79,7 @@ private:
   Bool                  m_bCheckLTMSB;
   
   Int                   m_numReorderPics[MAX_TLAYER];
-  CroppingWindow        m_croppingWindow;
+  ConformanceWindow     m_conformanceWindow;
 
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
@@ -89,7 +89,7 @@ public:
   TComPic();
   virtual ~TComPic();
   
-  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, CroppingWindow &croppingWindow,
+  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, ConformanceWindow &conformanceWindow,
                         Int *numReorderPics, Bool bIsVirtual = false );
                         
   virtual Void  destroy();
@@ -147,7 +147,7 @@ public:
   Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 
-  CroppingWindow& getCroppingWindow()        { return m_croppingWindow; }
+  ConformanceWindow& getConformanceWindow()  { return m_conformanceWindow; }
 
   Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
                                         ,std::vector<Bool>* LFCrossSliceBoundary

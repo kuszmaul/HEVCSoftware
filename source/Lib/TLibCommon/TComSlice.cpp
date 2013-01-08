@@ -1456,8 +1456,8 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     }
   }
 }
-const Int TComSPS::m_cropUnitX[]={1,2,2,1};
-const Int TComSPS::m_cropUnitY[]={1,2,1,1};
+const Int TComSPS::m_winUnitX[]={1,2,2,1};
+const Int TComSPS::m_winUnitY[]={1,2,1,1};
 
 TComPPS::TComPPS()
 : m_PPSId                       (0)

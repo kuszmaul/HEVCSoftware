@@ -110,8 +110,8 @@ protected:
   Int       m_FrameSkip;
   Int       m_iSourceWidth;
   Int       m_iSourceHeight;
-  Int       m_croppingMode;
-  CroppingWindow m_picCroppingWindow;
+  Int       m_conformanceMode;
+  ConformanceWindow m_conformanceWindow;
   Int       m_iFrameToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
@@ -273,7 +273,7 @@ protected:
   Int       m_sarWidth;                                       ///< horizontal size of the sample aspect ratio
   Int       m_sarHeight;                                      ///< vertical size of the sample aspect ratio
   Bool      m_overscanInfoPresentFlag;                        ///< Signals whether overscan_appropriate_flag is present
-  Bool      m_overscanAppropriateFlag;                        ///< Indicates whether cropped decoded pictures are suitable for display using overscan
+  Bool      m_overscanAppropriateFlag;                        ///< Indicates whether conformant decoded pictures are suitable for display using overscan
   Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present
   Int       m_videoFormat;                                    ///< Indicates representation of pictures
   Bool      m_videoFullRangeFlag;                             ///< Indicates the black level and range of luma and chroma signals
@@ -327,8 +327,8 @@ public:
   Void      setSourceWidth                  ( Int   i )      { m_iSourceWidth = i; }
   Void      setSourceHeight                 ( Int   i )      { m_iSourceHeight = i; }
 
-  CroppingWindow &getPicCroppingWindow()                                                     { return m_picCroppingWindow; }
-  Void      setPicCroppingWindow (Int cropLeft, Int cropRight, Int cropTop, Int cropBottom ) { m_picCroppingWindow.setPicCropping (cropLeft, cropRight, cropTop, cropBottom); }
+  ConformanceWindow &getConformanceWindow()                                                  { return m_conformanceWindow; }
+  Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setConformanceWindow (confLeft, confRight, confTop, confBottom); }
 
   Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
   

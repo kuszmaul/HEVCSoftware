@@ -263,8 +263,8 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
        not_displayed--;
       if ( m_pchReconFile )
       {
-        CroppingWindow &crop = pcPic->getCroppingWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
+        ConformanceWindow &conf = pcPic->getConformanceWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getConfWinLeftOffset(), conf.getConfWinRightOffset(), conf.getConfWinTopOffset(), conf.getConfWinBottomOffset() );
       }
       
       // update POC of display order
@@ -315,8 +315,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        CroppingWindow crop = pcPic->getCroppingWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
+        ConformanceWindow conf = pcPic->getConformanceWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), conf.getConfWinLeftOffset(), conf.getConfWinRightOffset(), conf.getConfWinTopOffset(), conf.getConfWinBottomOffset() );
       }
       
       // update POC of display order

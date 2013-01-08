@@ -421,7 +421,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     {
       TEncPic* pcEPic = new TEncPic;
       pcEPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1 ,
-                      m_picCroppingWindow, m_numReorderPics);
+                      m_conformanceWindow, m_numReorderPics);
       rpcPic = pcEPic;
     }
     else
@@ -429,7 +429,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic = new TComPic;
 
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
-                      m_picCroppingWindow, m_numReorderPics);
+                      m_conformanceWindow, m_numReorderPics);
     }
     if (getUseSAO())
     {
@@ -470,7 +470,7 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
   m_cSPS.setPicHeightInLumaSamples        ( m_iSourceHeight     );
-  m_cSPS.setPicCroppingWindow             ( m_picCroppingWindow );
+  m_cSPS.setConformanceWindow             ( m_conformanceWindow );
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );

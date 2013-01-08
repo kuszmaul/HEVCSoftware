@@ -63,11 +63,11 @@ protected:
   UInt      m_FrameSkip;                                      ///< number of skipped frames from the beginning
   Int       m_iSourceWidth;                                   ///< source width in pixel
   Int       m_iSourceHeight;                                  ///< source height in pixel
-  Int       m_croppingMode;
-  Int       m_cropLeft;
-  Int       m_cropRight;
-  Int       m_cropTop;
-  Int       m_cropBottom;
+  Int       m_conformanceMode;
+  Int       m_confLeft;
+  Int       m_confRight;
+  Int       m_confTop;
+  Int       m_confBottom;
   Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
@@ -248,7 +248,7 @@ protected:
   Int       m_sarWidth;                                       ///< horizontal size of the sample aspect ratio
   Int       m_sarHeight;                                      ///< vertical size of the sample aspect ratio
   Bool      m_overscanInfoPresentFlag;                        ///< Signals whether overscan_appropriate_flag is present
-  Bool      m_overscanAppropriateFlag;                        ///< Indicates whether cropped decoded pictures are suitable for display using overscan
+  Bool      m_overscanAppropriateFlag;                        ///< Indicates whether conformant decoded pictures are suitable for display using overscan
   Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present
   Int       m_videoFormat;                                    ///< Indicates representation of pictures
   Bool      m_videoFullRangeFlag;                             ///< Indicates the black level and range of luma and chroma signals
