@@ -259,10 +259,10 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
 {
   Int i, nalOrVcl;
   TComVUI *vui = sei.m_sps->getVuiParameters();
-  WRITE_UVLC( sei.m_seqParameterSetId, "seq_parameter_set_id" );
+  WRITE_UVLC( sei.m_bpSeqParameterSetId, "bp_seq_parameter_set_id" );
   if( !vui->getSubPicCpbParamsPresentFlag() )
   {
-    WRITE_FLAG( sei.m_altCpbParamsPresentFlag, "alt_cpb_params_present_flag" );
+    WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
   }
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
@@ -273,7 +273,7 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
       {
         WRITE_CODE( sei.m_initialCpbRemovalDelay[i][nalOrVcl],( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,           "initial_cpb_removal_delay" );
         WRITE_CODE( sei.m_initialCpbRemovalDelayOffset[i][nalOrVcl],( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ),      "initial_cpb_removal_delay_offset" );
-        if( vui->getSubPicCpbParamsPresentFlag() || sei.m_altCpbParamsPresentFlag )
+        if( vui->getSubPicCpbParamsPresentFlag() || sei.m_rapCpbParamsPresentFlag )
         {
           WRITE_CODE( sei.m_initialAltCpbRemovalDelay[i][nalOrVcl], ( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,     "initial_alt_cpb_removal_delay" );
           WRITE_CODE( sei.m_initialAltCpbRemovalDelayOffset[i][nalOrVcl], ( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ),"initial_alt_cpb_removal_delay_offset" );
