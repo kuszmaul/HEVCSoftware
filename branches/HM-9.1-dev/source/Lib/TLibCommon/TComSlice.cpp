@@ -1258,6 +1258,9 @@ TComVPS::TComVPS()
 #if VPS_OPERATING_POINT
 , m_numHrdParameters          (  0)
 , m_maxNuhReservedZeroLayerId (  0)
+, m_hrdParameters             (NULL)
+, m_hrdOpSetIdx               (NULL)
+, m_cprmsPresentFlag          (NULL)
 #endif
 {
 
@@ -1271,8 +1274,9 @@ TComVPS::TComVPS()
 
 TComVPS::~TComVPS()
 {
-
-
+  if( m_hrdParameters    != NULL )     delete m_hrdParameters;
+  if( m_hrdOpSetIdx      != NULL )     delete m_hrdOpSetIdx;
+  if( m_cprmsPresentFlag != NULL )     delete m_cprmsPresentFlag;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1356,65 +1360,66 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   }
 
   TComVUI *vui = getVuiParameters();
+  TComHRD *hrd = vui->getHrdParameters();
 
-  vui->setTimingInfoPresentFlag( true );
+  hrd->setTimingInfoPresentFlag( true );
   switch( frameRate )
   {
   case 24:
-    vui->setNumUnitsInTick( 1125000 );    vui->setTimeScale    ( 27000000 );
+    hrd->setNumUnitsInTick( 1125000 );    hrd->setTimeScale    ( 27000000 );
     break;
   case 25:
-    vui->setNumUnitsInTick( 1080000 );    vui->setTimeScale    ( 27000000 );
+    hrd->setNumUnitsInTick( 1080000 );    hrd->setTimeScale    ( 27000000 );
     break;
   case 30:
-    vui->setNumUnitsInTick( 900900 );     vui->setTimeScale    ( 27000000 );
+    hrd->setNumUnitsInTick( 900900 );     hrd->setTimeScale    ( 27000000 );
     break;
   case 50:
-    vui->setNumUnitsInTick( 540000 );     vui->setTimeScale    ( 27000000 );
+    hrd->setNumUnitsInTick( 540000 );     hrd->setTimeScale    ( 27000000 );
     break;
   case 60:
-    vui->setNumUnitsInTick( 450450 );     vui->setTimeScale    ( 27000000 );
+    hrd->setNumUnitsInTick( 450450 );     hrd->setTimeScale    ( 27000000 );
     break;
   default:
-    vui->setNumUnitsInTick( 1001 );       vui->setTimeScale    ( 60000 );
+    hrd->setNumUnitsInTick( 1001 );       hrd->setTimeScale    ( 60000 );
     break;
   }
 
   Bool rateCnt = ( bitRate > 0 );
-  vui->setNalHrdParametersPresentFlag( rateCnt );
-  vui->setVclHrdParametersPresentFlag( rateCnt );
+  hrd->setNalHrdParametersPresentFlag( rateCnt );
+  hrd->setVclHrdParametersPresentFlag( rateCnt );
 
-  vui->setSubPicCpbParamsPresentFlag( ( numDU > 1 ) );
+  hrd->setSubPicCpbParamsPresentFlag( ( numDU > 1 ) );
 
-  if( vui->getSubPicCpbParamsPresentFlag() )
+  if( hrd->getSubPicCpbParamsPresentFlag() )
   {
-    vui->setTickDivisorMinus2( 100 - 2 );                          // 
-    vui->setDuCpbRemovalDelayLengthMinus1( 7 );                    // 8-bit precision ( plus 1 for last DU in AU )
+    hrd->setTickDivisorMinus2( 100 - 2 );                          // 
+    hrd->setDuCpbRemovalDelayLengthMinus1( 7 );                    // 8-bit precision ( plus 1 for last DU in AU )
 #if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
-    vui->setSubPicCpbParamsInPicTimingSEIFlag( true );
+    hrd->setSubPicCpbParamsInPicTimingSEIFlag( true );
   }
   else
   {
-    vui->setSubPicCpbParamsInPicTimingSEIFlag( false );  
+    hrd->setSubPicCpbParamsInPicTimingSEIFlag( false );  
 #endif
   }
 
-  vui->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
-  vui->setCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
+  hrd->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
+  hrd->setCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
 #if HRD_BUFFER
-  vui->setDuCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
+  hrd->setDuCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
 #endif
     
-  vui->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
+  hrd->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
   if( randomAccess )
   {
-    vui->setCpbRemovalDelayLengthMinus1(5);                        // 32 = 2^5 (plus 1)
-    vui->setDpbOutputDelayLengthMinus1 (5);                        // 32 + 3 = 2^6
+    hrd->setCpbRemovalDelayLengthMinus1(5);                        // 32 = 2^5 (plus 1)
+    hrd->setDpbOutputDelayLengthMinus1 (5);                        // 32 + 3 = 2^6
   }
   else
   {
-    vui->setCpbRemovalDelayLengthMinus1(9);                        // max. 2^10
-    vui->setDpbOutputDelayLengthMinus1 (9);                        // max. 2^10
+    hrd->setCpbRemovalDelayLengthMinus1(9);                        // max. 2^10
+    hrd->setDpbOutputDelayLengthMinus1 (9);                        // max. 2^10
   }
 
 /*
@@ -1428,31 +1433,31 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 
   for( i = 0; i < MAX_TLAYER; i ++ )
   {
-    vui->setFixedPicRateFlag( i, 1 );
-    vui->setPicDurationInTcMinus1( i, 0 );
-    vui->setLowDelayHrdFlag( i, 0 );
-    vui->setCpbCntMinus1( i, 0 );
+    hrd->setFixedPicRateFlag( i, 1 );
+    hrd->setPicDurationInTcMinus1( i, 0 );
+    hrd->setLowDelayHrdFlag( i, 0 );
+    hrd->setCpbCntMinus1( i, 0 );
 
     birateValue  = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
 #if HRD_BUFFER
     ducpbSizeValue = bitRate/numDU;
 #endif
-    for( j = 0; j < ( vui->getCpbCntMinus1( i ) + 1 ); j ++ )
+    for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
-      vui->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
-      vui->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
+      hrd->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
+      hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
 #if HRD_BUFFER
-      vui->setDuCpbSizeValueMinus1( i, j, 0, ( ducpbSizeValue - 1 ) );
+      hrd->setDuCpbSizeValueMinus1( i, j, 0, ( ducpbSizeValue - 1 ) );
 #endif
-      vui->setCbrFlag( i, j, 0, ( j == 0 ) );
+      hrd->setCbrFlag( i, j, 0, ( j == 0 ) );
 
-      vui->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
-      vui->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
+      hrd->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
+      hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
 #if HRD_BUFFER
-        vui->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
+        hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
 #endif
-      vui->setCbrFlag( i, j, 1, ( j == 0 ) );
+      hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
     }
   }
 }

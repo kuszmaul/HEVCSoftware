@@ -620,7 +620,7 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs )
     m_SEIs = new SEImessages;
   }
 #endif
-  m_SEIs->m_pSPS = m_parameterSetManagerDecoder.getSPS(0);
+  m_SEIs->m_pSPS = m_parameterSetManagerDecoder.getPrefetchedSPS(0);
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   m_seiReader.parseSEImessage( bs, *m_SEIs, nalUnitType );
   if(nalUnitType == NAL_UNIT_SEI_SUFFIX)
