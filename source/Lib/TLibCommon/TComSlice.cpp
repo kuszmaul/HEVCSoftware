@@ -611,6 +611,7 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
   }
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP ) // IDR picture found
   {
+    pocCRA = getPOC();
     prevRAPisBLA = false;
   }
   else if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
