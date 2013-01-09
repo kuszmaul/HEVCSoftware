@@ -469,7 +469,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, Int iDir, UI
         pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, !pcCU->getSlice()->getLFCrossSliceBoundaryFlag(), true, false, !m_bLFCrossTileBoundary);
 #endif
       }
-      if (pcSlice->isInterB())
+      if (pcSlice->isInterB() || pcCUP->getSlice()->isInterB())
       {
         Int iRefIdx;
         Int *piRefP0, *piRefP1, *piRefQ0, *piRefQ1;
