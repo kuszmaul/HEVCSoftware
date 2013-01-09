@@ -75,7 +75,6 @@ public:
   virtual Void  codeTilesWPPEntryPoint  ( TComSlice* pSlice )     = 0;
   virtual Void  codeTerminatingBit      ( UInt uilsLast )                                       = 0;
   virtual Void  codeSliceFinish         ()                                                      = 0;
-  virtual Void  encodeStart             ()                                                      = 0;
   virtual Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;
   virtual Void codeScalingList   ( TComScalingList* scalingList )      = 0;
   
@@ -148,7 +147,6 @@ public:
   Void    encodeTilesWPPEntryPoint( TComSlice* pSlice );
   Void    encodeTerminatingBit      ( UInt uiIsLast );
   Void    encodeSliceFinish         ();
-  Void    encodeStart               ();
   TEncEntropyIf*      m_pcEntropyCoderIf;
   
 public:

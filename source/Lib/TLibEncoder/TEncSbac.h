@@ -96,7 +96,6 @@ public:
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast      );
   Void  codeSliceFinish         ();
-  Void  encodeStart             ();
   Void  codeSaoMaxUvlc    ( UInt code, UInt maxSymbol );
   Void  codeSaoMerge  ( UInt  uiCode );
   Void  codeSaoTypeIdx    ( UInt  uiCode);
