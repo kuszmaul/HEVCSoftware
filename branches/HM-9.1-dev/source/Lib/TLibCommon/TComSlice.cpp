@@ -369,6 +369,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     {
       pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pcRPS->getDeltaPOC(i));
       pcRefPic->setIsLongTerm(0);
+      pcRefPic->setIsUsedAsLongTerm(0);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetStCurr0[NumPocStCurr0] = pcRefPic;
       NumPocStCurr0++;
@@ -381,6 +382,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     {
       pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pcRPS->getDeltaPOC(i));
       pcRefPic->setIsLongTerm(0);
+      pcRefPic->setIsUsedAsLongTerm(0);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetStCurr1[NumPocStCurr1] = pcRefPic;
       NumPocStCurr1++;
@@ -393,6 +395,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     {
       pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i));
       pcRefPic->setIsLongTerm(1);
+      pcRefPic->setIsUsedAsLongTerm(1);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetLtCurr[NumPocLtCurr] = pcRefPic;
       NumPocLtCurr++;
@@ -443,13 +446,9 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     }
   }
 
-  ::memset(m_isUsedAsLongTerm, 0, sizeof(m_isUsedAsLongTerm));
-
   for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[0]-1); rIdx ++)
   {
     m_apcRefPicList[0][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? rpsCurrList0[ m_RefPicListModification.getRefPicSetIdxL0(rIdx) ] : rpsCurrList0[rIdx % numPocTotalCurr];
-    m_isUsedAsLongTerm[0][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? (m_RefPicListModification.getRefPicSetIdxL0(rIdx) >= (NumPocStCurr0 + NumPocStCurr1))
-                                  : ((rIdx % numPocTotalCurr) >= (NumPocStCurr0 + NumPocStCurr1));
   }
   if ( m_eSliceType == P_SLICE )
   {
@@ -461,8 +460,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[1]-1); rIdx ++)
     {
       m_apcRefPicList[1][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? rpsCurrList1[ m_RefPicListModification.getRefPicSetIdxL1(rIdx) ] : rpsCurrList1[rIdx % numPocTotalCurr];
-      m_isUsedAsLongTerm[1][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ?
-                                  (m_RefPicListModification.getRefPicSetIdxL1(rIdx) >= (NumPocStCurr0 + NumPocStCurr1)): ((rIdx % numPocTotalCurr) >= (NumPocStCurr0 + NumPocStCurr1));
     }
   }
 #else
@@ -889,6 +886,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
         isReference = 1;
         rpcPic->setUsedByCurr(pReferencePictureSet->getUsed(i));
         rpcPic->setIsLongTerm(0);
+        rpcPic->setIsUsedAsLongTerm(0);
       }
     }
     for(;i<pReferencePictureSet->getNumberOfPictures();i++)
@@ -983,6 +981,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
         {
           isAvailable = 1;
           rpcPic->setIsLongTerm(1);
+          rpcPic->setIsUsedAsLongTerm(1);
           break;
         }
       }

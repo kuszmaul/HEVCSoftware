@@ -60,7 +60,7 @@ private:
   UInt                  m_uiTLayer;               //  Temporal layer
   Bool                  m_bUsedByCurr;            //  Used by current picture
   Bool                  m_bIsLongTerm;            //  IS long term picture
-  Bool                  m_isUsedAsLongTerm;      //  long term picture is used as reference before
+  Bool                  m_bIsUsedAsLongTerm;      //  long term picture is used as reference before
   TComPicSym*           m_apcPicSym;              //  Symbol
   
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
@@ -101,6 +101,8 @@ public:
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
   Void          setIsLongTerm( Bool lt ) { m_bIsLongTerm = lt; }
+  Bool          getIsUsedAsLongTerm()          { return m_bIsUsedAsLongTerm; }
+  Void          setIsUsedAsLongTerm( Bool lt ) { m_bIsUsedAsLongTerm = lt; }
   Void          setCheckLTMSBPresent     (Bool b ) {m_bCheckLTMSB=b;}
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
