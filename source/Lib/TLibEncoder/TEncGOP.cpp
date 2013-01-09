@@ -1491,7 +1491,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             pCRD[ numDU - 1 ] = 0;/* by definition */
             UInt tmp = 0;
             UInt accum = 0;
-            UInt prevAccum = 0;
 
             for( i = ( numDU - 2 ); i >= 0; i -- )
             {
@@ -1519,7 +1518,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 else                            ui64Tmp = maxDiff - tmp + 1;
               }
               pCRD[ i ] = (UInt)ui64Tmp - uiPrev - 1;
-              if( pCRD[ i ] < 0 )
+              if( (Int)pCRD[ i ] < 0 )
               {
                 pCRD[ i ] ++;
               }
