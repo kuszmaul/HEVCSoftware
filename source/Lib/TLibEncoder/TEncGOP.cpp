@@ -800,7 +800,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           numDU ++;
         }
-        pcSlice->getSPS()->getVuiParameters()->setNumDU( numDU );
+        pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->setNumDU( numDU );
         pcSlice->getSPS()->setHrdParameters( m_pcCfg->getFrameRate(), numDU, m_pcCfg->getTargetBitrate(), ( m_pcCfg->getIntraPeriod() > 0 ) );
       }
       if( m_pcCfg->getBufferingPeriodSEIEnabled() || m_pcCfg->getPictureTimingSEIEnabled() )
@@ -894,13 +894,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
-        ( ( pcSlice->getSPS()->getVuiParameters()->getNalHrdParametersPresentFlag() ) || ( pcSlice->getSPS()->getVuiParameters()->getVclHrdParametersPresentFlag() ) ) )
+        ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
+       || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
     {
-      if( pcSlice->getSPS()->getVuiParameters()->getSubPicCpbParamsPresentFlag() )
+      if( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getSubPicCpbParamsPresentFlag() )
       {
-        UInt numDU = pcSlice->getSPS()->getVuiParameters()->getNumDU();
+        UInt numDU = pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNumDU();
         pictureTimingSEI.m_numDecodingUnitsMinus1     = ( numDU - 1 );
-        pictureTimingSEI.m_duCommonCpbRemovalDelayFlag = 0;
+        pictureTimingSEI.m_duCommonCpbRemovalDelayFlag = false;
 
         if( pictureTimingSEI.m_numNalusInDuMinus1 == NULL )
         {
@@ -924,7 +925,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     if( ( m_pcCfg->getBufferingPeriodSEIEnabled() ) && ( pcSlice->getSliceType() == I_SLICE ) &&
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
-        ( ( pcSlice->getSPS()->getVuiParameters()->getNalHrdParametersPresentFlag() ) || ( pcSlice->getSPS()->getVuiParameters()->getVclHrdParametersPresentFlag() ) ) )
+        ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
+       || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
     {
       OutputNALUnit nalu(NAL_UNIT_SEI);
       m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
@@ -938,11 +940,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_buffering_period.m_initialCpbRemovalDelay      [0][1]     = uiInitialCpbRemovalDelay;
       sei_buffering_period.m_initialCpbRemovalDelayOffset[0][1]     = uiInitialCpbRemovalDelay;
 
-      Double dTmp = (Double)pcSlice->getSPS()->getVuiParameters()->getNumUnitsInTick() / (Double)pcSlice->getSPS()->getVuiParameters()->getTimeScale();
+      Double dTmp = (Double)pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNumUnitsInTick() / (Double)pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getTimeScale();
 
       UInt uiTmp = (UInt)( dTmp * 90000.0 ); 
       uiInitialCpbRemovalDelay -= uiTmp;
-      uiInitialCpbRemovalDelay -= uiTmp / ( pcSlice->getSPS()->getVuiParameters()->getTickDivisorMinus2() + 2 );
+      uiInitialCpbRemovalDelay -= uiTmp / ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getTickDivisorMinus2() + 2 );
       sei_buffering_period.m_initialAltCpbRemovalDelay      [0][0]  = uiInitialCpbRemovalDelay;
       sei_buffering_period.m_initialAltCpbRemovalDelayOffset[0][0]  = uiInitialCpbRemovalDelay;
       sei_buffering_period.m_initialAltCpbRemovalDelay      [0][1]  = uiInitialCpbRemovalDelay;
@@ -1256,8 +1258,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
           if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
               ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
-              ( ( pcSlice->getSPS()->getVuiParameters()->getNalHrdParametersPresentFlag() ) || ( pcSlice->getSPS()->getVuiParameters()->getVclHrdParametersPresentFlag() ) ) &&
-              ( pcSlice->getSPS()->getVuiParameters()->getSubPicCpbParamsPresentFlag() ) )
+              ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
+             || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) &&
+              ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getSubPicCpbParamsPresentFlag() ) )
           {
             UInt numRBSPBytes = 0;
             for (AccessUnit::const_iterator it = accessUnit.begin(); it != accessUnit.end(); it++)
@@ -1458,33 +1461,75 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
       if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
           ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
-          ( ( pcSlice->getSPS()->getVuiParameters()->getNalHrdParametersPresentFlag() ) || ( pcSlice->getSPS()->getVuiParameters()->getVclHrdParametersPresentFlag() ) ) )
+          ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
+         || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
       {
         OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
         TComVUI *vui = pcSlice->getSPS()->getVuiParameters();
+        TComHRD *hrd = vui->getHrdParameters();
 
-        if( vui->getSubPicCpbParamsPresentFlag() )
+        if( hrd->getSubPicCpbParamsPresentFlag() )
         {
           Int i;
           UInt64 ui64Tmp;
-          UInt uiTmp, uiPrev, uiCurr;
+          UInt uiPrev = 0;
+          UInt numDU = ( pictureTimingSEI.m_numDecodingUnitsMinus1 + 1 );
+          UInt *pCRD = &pictureTimingSEI.m_duCpbRemovalDelayMinus1[0];
+          UInt maxDiff = ( hrd->getTickDivisorMinus2() + 2 ) - 1;
 
-          uiPrev = 0;
-          for( i = 0; i < ( pictureTimingSEI.m_numDecodingUnitsMinus1 + 1 ); i ++ )
+          for( i = 0; i < numDU; i ++ )
           {
             pictureTimingSEI.m_numNalusInDuMinus1[ i ]       = ( i == 0 ) ? ( accumNalsDU[ i ] ) : ( accumNalsDU[ i ] - accumNalsDU[ i - 1] - 1 );
-            ui64Tmp = ( ( ( accumBitsDU[ pictureTimingSEI.m_numDecodingUnitsMinus1 ] - accumBitsDU[ i ] ) * ( vui->getTimeScale() / vui->getNumUnitsInTick() ) * ( vui->getTickDivisorMinus2() + 2 ) ) 
-                        / ( m_pcCfg->getTargetBitrate() << 10 ) );
+          }
 
-            uiTmp = (UInt)ui64Tmp;
-            if( uiTmp >= ( vui->getTickDivisorMinus2() + 2 ) )      uiCurr = 0;
-            else                                                     uiCurr = ( vui->getTickDivisorMinus2() + 2 ) - uiTmp;
+          if( numDU == 1 )
+          {
+            pCRD[ 0 ] = 0; /* don't care */
+          }
+          else
+          {
+            pCRD[ numDU - 1 ] = 0;/* by definition */
+            UInt tmp = 0;
+            UInt accum = 0;
+            UInt prevAccum = 0;
 
-            if( i == pictureTimingSEI.m_numDecodingUnitsMinus1 ) uiCurr = vui->getTickDivisorMinus2() + 2;
-            if( uiCurr <= uiPrev )                                   uiCurr = uiPrev + 1;
+            for( i = ( numDU - 2 ); i >= 0; i -- )
+            {
+              ui64Tmp = ( ( ( accumBitsDU[ numDU - 1 ]  - accumBitsDU[ i ] ) * ( hrd->getTimeScale() / hrd->getNumUnitsInTick() ) * ( hrd->getTickDivisorMinus2() + 2 ) ) / ( m_pcCfg->getTargetBitrate() ) );
+              if( (UInt)ui64Tmp > maxDiff )
+              {
+                tmp ++;
+              }
+            }
+            uiPrev = 0;
 
-            pictureTimingSEI.m_duCpbRemovalDelayMinus1[ i ]              = (uiCurr - uiPrev) - 1;
-            uiPrev = uiCurr;
+            UInt flag = 0;
+            for( i = ( numDU - 2 ); i >= 0; i -- )
+            {
+              flag = 0;
+              ui64Tmp = ( ( ( accumBitsDU[ numDU - 1 ]  - accumBitsDU[ i ] ) * ( hrd->getTimeScale() / hrd->getNumUnitsInTick() ) * ( hrd->getTickDivisorMinus2() + 2 ) ) / ( m_pcCfg->getTargetBitrate() ) );
+
+              if( (UInt)ui64Tmp > maxDiff )
+              {
+                if(uiPrev >= maxDiff - tmp)
+                {
+                  ui64Tmp = uiPrev + 1;
+                  flag = 1;
+                }
+                else                            ui64Tmp = maxDiff - tmp + 1;
+              }
+              pCRD[ i ] = (UInt)ui64Tmp - uiPrev - 1;
+              if( pCRD[ i ] < 0 )
+              {
+                pCRD[ i ] ++;
+              }
+              else if (tmp > 0 && flag == 1) 
+              {
+                tmp --;
+              }
+              accum += pCRD[ i ] + 1;
+              uiPrev = accum;
+            }
           }
         }
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);

@@ -257,6 +257,143 @@ public:
   Void        setAvgPicRate(Int i, Int x) {m_avgPicRate[i] = x;}
 };
 #endif
+
+struct HrdSubLayerInfo
+{
+  Bool fixedPicRateFlag;
+  Bool fixedPicRateWithinCvsFlag;
+  UInt picDurationInTcMinus1;
+  Bool lowDelayHrdFlag;
+  UInt cpbCntMinus1;
+  UInt bitRateValueMinus1[MAX_CPB_CNT][2];
+  UInt cpbSizeValue      [MAX_CPB_CNT][2];
+#if HRD_BUFFER
+  UInt ducpbSizeValue    [MAX_CPB_CNT][2];
+#endif
+  UInt cbrFlag           [MAX_CPB_CNT][2];
+};
+
+class TComHRD
+{
+private:
+  Bool m_timingInfoPresentFlag;
+  UInt m_numUnitsInTick;
+  UInt m_timeScale;
+  Bool m_nalHrdParametersPresentFlag;
+  Bool m_vclHrdParametersPresentFlag;
+  Bool m_subPicCpbParamsPresentFlag;
+  UInt m_tickDivisorMinus2;
+  UInt m_duCpbRemovalDelayLengthMinus1;
+  Bool m_subPicCpbParamsInPicTimingSEIFlag;
+  UInt m_bitRateScale;
+  UInt m_cpbSizeScale;
+  UInt m_ducpbSizeScale;
+  UInt m_initialCpbRemovalDelayLengthMinus1;
+  UInt m_cpbRemovalDelayLengthMinus1;
+  UInt m_dpbOutputDelayLengthMinus1;
+  UInt m_numDU;
+  HrdSubLayerInfo m_HRD[MAX_TLAYER];
+
+public:
+  TComHRD()
+  :m_timingInfoPresentFlag(false)
+  ,m_numUnitsInTick(1001)
+  ,m_timeScale(60000)
+  ,m_nalHrdParametersPresentFlag(0)
+  ,m_vclHrdParametersPresentFlag(0)
+  ,m_subPicCpbParamsPresentFlag(false)
+  ,m_tickDivisorMinus2(0)
+  ,m_duCpbRemovalDelayLengthMinus1(0)
+  ,m_subPicCpbParamsInPicTimingSEIFlag(false)
+  ,m_bitRateScale(0)
+  ,m_cpbSizeScale(0)
+  ,m_initialCpbRemovalDelayLengthMinus1(0)
+  ,m_cpbRemovalDelayLengthMinus1(0)
+  ,m_dpbOutputDelayLengthMinus1(0)
+  {}
+
+  virtual ~TComHRD() {}
+
+  Void setTimingInfoPresentFlag             ( Bool flag )  { m_timingInfoPresentFlag = flag;               }
+  Bool getTimingInfoPresentFlag             ( )            { return m_timingInfoPresentFlag;               }
+
+  Void setNumUnitsInTick                    ( UInt value ) { m_numUnitsInTick = value;                     }
+  UInt getNumUnitsInTick                    ( )            { return m_numUnitsInTick;                      }
+
+  Void setTimeScale                         ( UInt value ) { m_timeScale = value;                          }
+  UInt getTimeScale                         ( )            { return m_timeScale;                           }
+
+  Void setNalHrdParametersPresentFlag       ( Bool flag )  { m_nalHrdParametersPresentFlag = flag;         }
+  Bool getNalHrdParametersPresentFlag       ( )            { return m_nalHrdParametersPresentFlag;         }
+
+  Void setVclHrdParametersPresentFlag       ( Bool flag )  { m_vclHrdParametersPresentFlag = flag;         }
+  Bool getVclHrdParametersPresentFlag       ( )            { return m_vclHrdParametersPresentFlag;         }
+
+  Void setSubPicCpbParamsPresentFlag        ( Bool flag )  { m_subPicCpbParamsPresentFlag = flag;          }
+  Bool getSubPicCpbParamsPresentFlag        ( )            { return m_subPicCpbParamsPresentFlag;          }
+  
+  Void setTickDivisorMinus2                 ( UInt value ) { m_tickDivisorMinus2 = value;                  }
+  UInt getTickDivisorMinus2                 ( )            { return m_tickDivisorMinus2;                   }
+
+  Void setDuCpbRemovalDelayLengthMinus1     ( UInt value ) { m_duCpbRemovalDelayLengthMinus1 = value;      }
+  UInt getDuCpbRemovalDelayLengthMinus1     ( )            { return m_duCpbRemovalDelayLengthMinus1;       }
+
+#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
+  Void setSubPicCpbParamsInPicTimingSEIFlag ( Bool flag)   { m_subPicCpbParamsInPicTimingSEIFlag = flag;   }
+  Bool getSubPicCpbParamsInPicTimingSEIFlag ()             { return m_subPicCpbParamsInPicTimingSEIFlag;   }
+#endif
+
+  Void setBitRateScale                      ( UInt value ) { m_bitRateScale = value;                       }
+  UInt getBitRateScale                      ( )            { return m_bitRateScale;                        }
+
+  Void setCpbSizeScale                      ( UInt value ) { m_cpbSizeScale = value;                       }
+  UInt getCpbSizeScale                      ( )            { return m_cpbSizeScale;                        }
+#if HRD_BUFFER
+  Void setDuCpbSizeScale                    ( UInt value ) { m_ducpbSizeScale = value;                     }
+  UInt getDuCpbSizeScale                    ( )            { return m_ducpbSizeScale;                      }
+#endif
+
+  Void setInitialCpbRemovalDelayLengthMinus1( UInt value ) { m_initialCpbRemovalDelayLengthMinus1 = value; }
+  UInt getInitialCpbRemovalDelayLengthMinus1( )            { return m_initialCpbRemovalDelayLengthMinus1;  }
+
+  Void setCpbRemovalDelayLengthMinus1       ( UInt value ) { m_cpbRemovalDelayLengthMinus1 = value;        }
+  UInt getCpbRemovalDelayLengthMinus1       ( )            { return m_cpbRemovalDelayLengthMinus1;         }
+
+  Void setDpbOutputDelayLengthMinus1        ( UInt value ) { m_dpbOutputDelayLengthMinus1 = value;         }
+  UInt getDpbOutputDelayLengthMinus1        ( )            { return m_dpbOutputDelayLengthMinus1;          }
+
+  Void setFixedPicRateFlag       ( Int layer, Bool flag )  { m_HRD[layer].fixedPicRateFlag = flag;         }
+  Bool getFixedPicRateFlag       ( Int layer            )  { return m_HRD[layer].fixedPicRateFlag;         }
+
+  Void setFixedPicRateWithinCvsFlag       ( Int layer, Bool flag )  { m_HRD[layer].fixedPicRateWithinCvsFlag = flag;         }
+  Bool getFixedPicRateWithinCvsFlag       ( Int layer            )  { return m_HRD[layer].fixedPicRateWithinCvsFlag;         }
+
+  Void setPicDurationInTcMinus1  ( Int layer, UInt value ) { m_HRD[layer].picDurationInTcMinus1 = value;   }
+  UInt getPicDurationInTcMinus1  ( Int layer             ) { return m_HRD[layer].picDurationInTcMinus1;    }
+
+  Void setLowDelayHrdFlag        ( Int layer, Bool flag )  { m_HRD[layer].lowDelayHrdFlag = flag;          }
+  Bool getLowDelayHrdFlag        ( Int layer            )  { return m_HRD[layer].lowDelayHrdFlag;          }
+
+  Void setCpbCntMinus1           ( Int layer, UInt value ) { m_HRD[layer].cpbCntMinus1 = value; }
+  UInt getCpbCntMinus1           ( Int layer            )  { return m_HRD[layer].cpbCntMinus1; }
+
+  Void setBitRateValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].bitRateValueMinus1[cpbcnt][nalOrVcl] = value; }
+  UInt getBitRateValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl             ) { return m_HRD[layer].bitRateValueMinus1[cpbcnt][nalOrVcl];  }
+
+  Void setCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].cpbSizeValue[cpbcnt][nalOrVcl] = value;       }
+  UInt getCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl            )  { return m_HRD[layer].cpbSizeValue[cpbcnt][nalOrVcl];        }
+#if HRD_BUFFER
+  Void setDuCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].ducpbSizeValue[cpbcnt][nalOrVcl] = value;       }
+  UInt getDuCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl            )  { return m_HRD[layer].ducpbSizeValue[cpbcnt][nalOrVcl];        }
+#endif
+
+  Void setCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl] = value;            }
+  Bool getCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl             ) { return m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl];             }
+
+  Void setNumDU                              ( UInt value ) { m_numDU = value;                            }
+  UInt getNumDU                              ( )            { return m_numDU;          }
+};
+
 class TComVPS
 {
 private:
@@ -272,7 +409,11 @@ private:
 #if VPS_OPERATING_POINT
   UInt        m_numHrdParameters;
   UInt        m_maxNuhReservedZeroLayerId;
-  Bool        m_opLayerIdIncludedFlag[MAX_VPS_NUM_HRD_PARAMETERS_ALLOWED_PLUS1][MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
+  TComHRD*    m_hrdParameters;
+  UInt*       m_hrdOpSetIdx;
+  Bool*       m_cprmsPresentFlag;
+  UInt        m_numOpSets;
+  Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
 #endif
 
   TComPTL     m_pcPTL;
@@ -283,6 +424,19 @@ private:
 public:
   TComVPS();
   virtual ~TComVPS();
+
+  Void    createHrdParamBuffer()
+  {
+    m_hrdParameters    = new TComHRD[ getNumHrdParameters() ];
+    m_hrdOpSetIdx      = new UInt   [ getNumHrdParameters() ];
+    m_cprmsPresentFlag = new Bool   [ getNumHrdParameters() ];
+  }
+
+  TComHRD* getHrdParameters   ( UInt i )             { return &m_hrdParameters[ i ]; }
+  UInt    getHrdOpSetIdx      ( UInt i )             { return m_hrdOpSetIdx[ i ]; }
+  Void    setHrdOpSetIdx      ( UInt val, UInt i )   { m_hrdOpSetIdx[ i ] = val;  }
+  Bool    getCprmsPresentFlag ( UInt i )             { return m_cprmsPresentFlag[ i ]; }
+  Void    setCprmsPresentFlag ( Bool val, UInt i )   { m_cprmsPresentFlag[ i ] = val;  }
 
   Int     getVPSId       ()                   { return m_VPSId;          }
   Void    setVPSId       (Int i)              { m_VPSId = i;             }
@@ -312,28 +466,16 @@ public:
   UInt    getMaxNuhReservedZeroLayerId()                        { return m_maxNuhReservedZeroLayerId; }
   Void    setMaxNuhReservedZeroLayerId(UInt v)                  { m_maxNuhReservedZeroLayerId = v;    }
 
-  UInt    getOpLayerIdIncludedFlag(UInt opIdx, UInt id)         { return m_opLayerIdIncludedFlag[opIdx][id]; }
-  Void    setOpLayerIdIncludedFlag(UInt v, UInt opIdx, UInt id) { m_opLayerIdIncludedFlag[opIdx][id] = v;    }
+  UInt    getMaxOpSets()                                        { return m_numOpSets; }
+  Void    setMaxOpSets(UInt v)                                  { m_numOpSets = v;    }
+  Bool    getLayerIdIncludedFlag(UInt opsIdx, UInt id)          { return m_layerIdIncludedFlag[opsIdx][id]; }
+  Void    setLayerIdIncludedFlag(Bool v, UInt opsIdx, UInt id)  { m_layerIdIncludedFlag[opsIdx][id] = v;    }
 #endif
 
   TComPTL* getPTL() { return &m_pcPTL; }
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
 #endif
-};
-
-struct HrdSubLayerInfo
-{
-  Bool fixedPicRateFlag;
-  UInt picDurationInTcMinus1;
-  Bool lowDelayHrdFlag;
-  UInt cpbCntMinus1;
-  UInt bitRateValueMinus1[MAX_CPB_CNT][2];
-  UInt cpbSizeValue      [MAX_CPB_CNT][2];
-#if HRD_BUFFER
-  UInt ducpbSizeValue    [MAX_CPB_CNT][2];
-#endif
-  UInt cbrFlag           [MAX_CPB_CNT][2];
 };
 
 class Window
@@ -415,27 +557,7 @@ private:
   Int  m_maxBitsPerMinCuDenom;
   Int  m_log2MaxMvLengthHorizontal;
   Int  m_log2MaxMvLengthVertical;
-  Bool m_timingInfoPresentFlag;
-  UInt m_numUnitsInTick;
-  UInt m_timeScale;
-  Bool m_nalHrdParametersPresentFlag;
-  Bool m_vclHrdParametersPresentFlag;
-  Bool m_subPicCpbParamsPresentFlag;
-  UInt m_tickDivisorMinus2;
-  UInt m_duCpbRemovalDelayLengthMinus1;
-#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
-  Bool m_subPicCpbParamsInPicTimingSEIFlag;
-#endif
-  UInt m_bitRateScale;
-  UInt m_cpbSizeScale;
-#if HRD_BUFFER
-  UInt m_ducpbSizeScale;
-#endif
-  UInt m_initialCpbRemovalDelayLengthMinus1;
-  UInt m_cpbRemovalDelayLengthMinus1;
-  UInt m_dpbOutputDelayLengthMinus1;
-  UInt m_numDU;
-  HrdSubLayerInfo m_HRD[MAX_TLAYER];
+  TComHRD m_hrdParameters;
 #if POC_TEMPORAL_RELATIONSHIP
   Bool m_pocProportionalToTimingFlag;
   Int  m_numTicksPocDiffOneMinus1;
@@ -478,22 +600,6 @@ public:
     ,m_maxBitsPerMinCuDenom(1)
     ,m_log2MaxMvLengthHorizontal(15)
     ,m_log2MaxMvLengthVertical(15)
-    ,m_timingInfoPresentFlag(false)
-    ,m_numUnitsInTick(1001)
-    ,m_timeScale(60000)
-    ,m_nalHrdParametersPresentFlag(0)
-    ,m_vclHrdParametersPresentFlag(0)
-    ,m_subPicCpbParamsPresentFlag(false)
-    ,m_tickDivisorMinus2(0)
-    ,m_duCpbRemovalDelayLengthMinus1(0)
-#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
-    ,m_subPicCpbParamsInPicTimingSEIFlag(false)
-#endif
-    ,m_bitRateScale(0)
-    ,m_cpbSizeScale(0)
-    ,m_initialCpbRemovalDelayLengthMinus1(0)
-    ,m_cpbRemovalDelayLengthMinus1(0)
-    ,m_dpbOutputDelayLengthMinus1(0)
 #if POC_TEMPORAL_RELATIONSHIP
     ,m_pocProportionalToTimingFlag(false)
     ,m_numTicksPocDiffOneMinus1(0)
@@ -597,82 +703,8 @@ public:
   Int getLog2MaxMvLengthVertical() { return m_log2MaxMvLengthVertical; }
   Void setLog2MaxMvLengthVertical(Int i) { m_log2MaxMvLengthVertical = i; }
 
-  Void setTimingInfoPresentFlag             ( Bool flag )  { m_timingInfoPresentFlag = flag;               }
-  Bool getTimingInfoPresentFlag             ( )            { return m_timingInfoPresentFlag;               }
+  TComHRD* getHrdParameters                 ()             { return &m_hrdParameters; }
 
-  Void setNumUnitsInTick                    ( UInt value ) { m_numUnitsInTick = value;                     }
-  UInt getNumUnitsInTick                    ( )            { return m_numUnitsInTick;                      }
-
-  Void setTimeScale                         ( UInt value ) { m_timeScale = value;                          }
-  UInt getTimeScale                         ( )            { return m_timeScale;                           }
-
-  Void setNalHrdParametersPresentFlag       ( Bool flag )  { m_nalHrdParametersPresentFlag = flag;         }
-  Bool getNalHrdParametersPresentFlag       ( )            { return m_nalHrdParametersPresentFlag;         }
-
-  Void setVclHrdParametersPresentFlag       ( Bool flag )  { m_vclHrdParametersPresentFlag = flag;         }
-  Bool getVclHrdParametersPresentFlag       ( )            { return m_vclHrdParametersPresentFlag;         }
-
-  Void setSubPicCpbParamsPresentFlag        ( Bool flag )  { m_subPicCpbParamsPresentFlag = flag;          }
-  Bool getSubPicCpbParamsPresentFlag        ( )            { return m_subPicCpbParamsPresentFlag;          }
-  
-  Void setTickDivisorMinus2                 ( UInt value ) { m_tickDivisorMinus2 = value;                  }
-  UInt getTickDivisorMinus2                 ( )            { return m_tickDivisorMinus2;                   }
-
-  Void setDuCpbRemovalDelayLengthMinus1     ( UInt value ) { m_duCpbRemovalDelayLengthMinus1 = value;      }
-  UInt getDuCpbRemovalDelayLengthMinus1     ( )            { return m_duCpbRemovalDelayLengthMinus1;       }
-
-#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
-  Void setSubPicCpbParamsInPicTimingSEIFlag ( Bool flag)   { m_subPicCpbParamsInPicTimingSEIFlag = flag;   }
-  Bool getSubPicCpbParamsInPicTimingSEIFlag ()             { return m_subPicCpbParamsInPicTimingSEIFlag;   }
-#endif
-
-  Void setBitRateScale                      ( UInt value ) { m_bitRateScale = value;                       }
-  UInt getBitRateScale                      ( )            { return m_bitRateScale;                        }
-
-  Void setCpbSizeScale                      ( UInt value ) { m_cpbSizeScale = value;                       }
-  UInt getCpbSizeScale                      ( )            { return m_cpbSizeScale;                        }
-#if HRD_BUFFER
-  Void setDuCpbSizeScale                    ( UInt value ) { m_ducpbSizeScale = value;                     }
-  UInt getDuCpbSizeScale                    ( )            { return m_ducpbSizeScale;                      }
-#endif
-
-  Void setInitialCpbRemovalDelayLengthMinus1( UInt value ) { m_initialCpbRemovalDelayLengthMinus1 = value; }
-  UInt getInitialCpbRemovalDelayLengthMinus1( )            { return m_initialCpbRemovalDelayLengthMinus1;  }
-
-  Void setCpbRemovalDelayLengthMinus1       ( UInt value ) { m_cpbRemovalDelayLengthMinus1 = value;        }
-  UInt getCpbRemovalDelayLengthMinus1       ( )            { return m_cpbRemovalDelayLengthMinus1;         }
-
-  Void setDpbOutputDelayLengthMinus1        ( UInt value ) { m_dpbOutputDelayLengthMinus1 = value;         }
-  UInt getDpbOutputDelayLengthMinus1        ( )            { return m_dpbOutputDelayLengthMinus1;          }
-
-  Void setFixedPicRateFlag       ( Int layer, Bool flag )  { m_HRD[layer].fixedPicRateFlag = flag;         }
-  Bool getFixedPicRateFlag       ( Int layer            )  { return m_HRD[layer].fixedPicRateFlag;         }
-
-  Void setPicDurationInTcMinus1  ( Int layer, UInt value ) { m_HRD[layer].picDurationInTcMinus1 = value;   }
-  UInt getPicDurationInTcMinus1  ( Int layer             ) { return m_HRD[layer].picDurationInTcMinus1;    }
-
-  Void setLowDelayHrdFlag        ( Int layer, Bool flag )  { m_HRD[layer].lowDelayHrdFlag = flag;          }
-  Bool getLowDelayHrdFlag        ( Int layer            )  { return m_HRD[layer].lowDelayHrdFlag;          }
-
-  Void setCpbCntMinus1           ( Int layer, UInt value ) { m_HRD[layer].cpbCntMinus1 = value; }
-  UInt getCpbCntMinus1           ( Int layer            )  { return m_HRD[layer].cpbCntMinus1; }
-
-  Void setBitRateValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].bitRateValueMinus1[cpbcnt][nalOrVcl] = value; }
-  UInt getBitRateValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl             ) { return m_HRD[layer].bitRateValueMinus1[cpbcnt][nalOrVcl];  }
-
-  Void setCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].cpbSizeValue[cpbcnt][nalOrVcl] = value;       }
-  UInt getCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl            )  { return m_HRD[layer].cpbSizeValue[cpbcnt][nalOrVcl];        }
-#if HRD_BUFFER
-  Void setDuCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].ducpbSizeValue[cpbcnt][nalOrVcl] = value;       }
-  UInt getDuCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl            )  { return m_HRD[layer].ducpbSizeValue[cpbcnt][nalOrVcl];        }
-#endif
-
-
-  Void setCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl] = value;            }
-  Bool getCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl             ) { return m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl];             }
-
-  Void setNumDU                              ( UInt value ) { m_numDU = value;                            }
-  UInt getNumDU                              ( )            { return m_numDU;          }
 #if POC_TEMPORAL_RELATIONSHIP
   Bool getPocProportionalToTimingFlag() {return m_pocProportionalToTimingFlag; }
   Void setPocProportionalToTimingFlag(Bool x) {m_pocProportionalToTimingFlag = x;}

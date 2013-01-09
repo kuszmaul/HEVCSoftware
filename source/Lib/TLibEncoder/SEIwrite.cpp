@@ -82,7 +82,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     break;
 #endif
 #if SEI_GDR_INFO
-  case SEI::GRADUAL_DECODING_REFRESH_INFO:
+  case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
 #endif
@@ -268,24 +268,26 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
 {
   Int i, nalOrVcl;
   TComVUI *vui = sei.m_sps->getVuiParameters();
+  TComHRD *hrd = vui->getHrdParameters();
+
   WRITE_UVLC( sei.m_bpSeqParameterSetId, "bp_seq_parameter_set_id" );
-  if( !vui->getSubPicCpbParamsPresentFlag() )
+  if( !hrd->getSubPicCpbParamsPresentFlag() )
   {
     WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
   }
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
-    if( ( ( nalOrVcl == 0 ) && ( vui->getNalHrdParametersPresentFlag() ) ) ||
-        ( ( nalOrVcl == 1 ) && ( vui->getVclHrdParametersPresentFlag() ) ) )
+    if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||
+        ( ( nalOrVcl == 1 ) && ( hrd->getVclHrdParametersPresentFlag() ) ) )
     {
-      for( i = 0; i < ( vui->getCpbCntMinus1( 0 ) + 1 ); i ++ )
+      for( i = 0; i < ( hrd->getCpbCntMinus1( 0 ) + 1 ); i ++ )
       {
-        WRITE_CODE( sei.m_initialCpbRemovalDelay[i][nalOrVcl],( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,           "initial_cpb_removal_delay" );
-        WRITE_CODE( sei.m_initialCpbRemovalDelayOffset[i][nalOrVcl],( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ),      "initial_cpb_removal_delay_offset" );
-        if( vui->getSubPicCpbParamsPresentFlag() || sei.m_rapCpbParamsPresentFlag )
+        WRITE_CODE( sei.m_initialCpbRemovalDelay[i][nalOrVcl],( hrd->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,           "initial_cpb_removal_delay" );
+        WRITE_CODE( sei.m_initialCpbRemovalDelayOffset[i][nalOrVcl],( hrd->getInitialCpbRemovalDelayLengthMinus1() + 1 ),      "initial_cpb_removal_delay_offset" );
+        if( hrd->getSubPicCpbParamsPresentFlag() || sei.m_rapCpbParamsPresentFlag )
         {
-          WRITE_CODE( sei.m_initialAltCpbRemovalDelay[i][nalOrVcl], ( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,     "initial_alt_cpb_removal_delay" );
-          WRITE_CODE( sei.m_initialAltCpbRemovalDelayOffset[i][nalOrVcl], ( vui->getInitialCpbRemovalDelayLengthMinus1() + 1 ),"initial_alt_cpb_removal_delay_offset" );
+          WRITE_CODE( sei.m_initialAltCpbRemovalDelay[i][nalOrVcl], ( hrd->getInitialCpbRemovalDelayLengthMinus1() + 1 ) ,     "initial_alt_cpb_removal_delay" );
+          WRITE_CODE( sei.m_initialAltCpbRemovalDelayOffset[i][nalOrVcl], ( hrd->getInitialCpbRemovalDelayLengthMinus1() + 1 ),"initial_alt_cpb_removal_delay_offset" );
         }
       }
     }
@@ -296,8 +298,9 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
 {
   Int i;
   TComVUI *vui = sei.m_sps->getVuiParameters();
+  TComHRD *hrd = vui->getHrdParameters();
 
-  if( !vui->getNalHrdParametersPresentFlag() && !vui->getVclHrdParametersPresentFlag() )
+  if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )
     return;
 #if TIMING_SEI_PIC_STRUCT
   if( vui->getFrameFieldInfoPresentFlag() )
@@ -308,10 +311,10 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
   }
 #endif
 
-  WRITE_CODE( sei.m_auCpbRemovalDelay, ( vui->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay" );
-  WRITE_CODE( sei.m_picDpbOutputDelay, ( vui->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
+  WRITE_CODE( sei.m_auCpbRemovalDelay, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay" );
+  WRITE_CODE( sei.m_picDpbOutputDelay, ( hrd->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
 #if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
-  if( vui->getSubPicCpbParamsPresentFlag() && vui->getSubPicCpbParamsInPicTimingSEIFlag() )
+  if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
 #else
   if( sei.m_sps->getVuiParameters()->getSubPicCpbParamsPresentFlag() )
 #endif
@@ -320,14 +323,17 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
     WRITE_FLAG( sei.m_duCommonCpbRemovalDelayFlag, "du_common_cpb_removal_delay_flag" );
     if( sei.m_duCommonCpbRemovalDelayFlag )
     {
-      WRITE_CODE( sei.m_duCommonCpbRemovalDelayMinus1, ( vui->getDuCpbRemovalDelayLengthMinus1() + 1 ),                       "du_common_cpb_removal_delay_minus1" );
+      WRITE_CODE( sei.m_duCommonCpbRemovalDelayMinus1, ( hrd->getDuCpbRemovalDelayLengthMinus1() + 1 ),                       "du_common_cpb_removal_delay_minus1" );
     }
     else
     {
-      for( i = 0; i < ( sei.m_numDecodingUnitsMinus1 + 1 ); i ++ )
+      for( i = 0; i <= sei.m_numDecodingUnitsMinus1; i ++ )
       {
         WRITE_UVLC( sei.m_numNalusInDuMinus1[ i ],  "num_nalus_in_du_minus1");
-        WRITE_CODE( sei.m_duCpbRemovalDelayMinus1[ i ], ( vui->getDuCpbRemovalDelayLengthMinus1() + 1 ),                        "du_cpb_removal_delay_minus1" );
+        if( ( !sei.m_duCommonCpbRemovalDelayFlag ) && ( i < sei.m_numDecodingUnitsMinus1 ) )
+        {
+          WRITE_CODE( sei.m_duCpbRemovalDelayMinus1[ i ], ( hrd->getDuCpbRemovalDelayLengthMinus1() + 1 ),                        "du_cpb_removal_delay_minus1" );
+        }
       }
     }
   }
