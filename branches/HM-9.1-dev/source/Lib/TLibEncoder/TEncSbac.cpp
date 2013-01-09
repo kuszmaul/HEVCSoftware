@@ -279,11 +279,6 @@ Void TEncSbac::codeSliceFinish()
   m_pcBinIf->finish();
 }
 
-Void TEncSbac::encodeStart()
-{
-  m_pcBinIf->start();
-}
-
 Void TEncSbac::xWriteUnarySymbol( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset )
 {
   m_pcBinIf->encodeBin( uiSymbol ? 1 : 0, pcSCModel[0] );
