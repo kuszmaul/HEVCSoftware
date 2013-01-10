@@ -1216,6 +1216,7 @@ private:
   Int         m_iSliceQpDeltaCr;
   TComPic*    m_apcRefPicList [2][MAX_NUM_REF+1];
   Int         m_aiRefPOCList  [2][MAX_NUM_REF+1];
+  Bool        m_bIsUsedAsLongTerm[2][MAX_NUM_REF+1];
   Int         m_iDepth;
   
   // referenced slice?
@@ -1339,6 +1340,7 @@ public:
   UInt      getColFromL0Flag    ()                              { return  m_colFromL0Flag;              }
   UInt      getColRefIdx        ()                              { return  m_colRefIdx;                  }
   Void      checkColRefIdx      (UInt curSliceIdx, TComPic* pic);
+  Bool      getIsUsedAsLongTerm (Int i, Int j)                  { return m_bIsUsedAsLongTerm[i][j]; }
   Bool      getCheckLDC     ()                                  { return m_bCheckLDC; }
   Bool      getMvdL1ZeroFlag ()                                  { return m_bLMvdL1Zero;    }
   Int       getNumRpsCurrTempList();
