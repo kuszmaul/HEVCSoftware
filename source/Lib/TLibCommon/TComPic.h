@@ -101,8 +101,6 @@ public:
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
   Void          setIsLongTerm( Bool lt ) { m_bIsLongTerm = lt; }
-  Bool          getIsUsedAsLongTerm()          { return m_bIsUsedAsLongTerm; }
-  Void          setIsUsedAsLongTerm( Bool lt ) { m_bIsUsedAsLongTerm = lt; }
   Void          setCheckLTMSBPresent     (Bool b ) {m_bCheckLTMSB=b;}
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
