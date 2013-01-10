@@ -1494,37 +1494,6 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth );
 }
 
-// check whether current try is the best
-Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
-{
-  if( rpcTempCU->getTotalCost() < rpcBestCU->getTotalCost() )
-  {
-    TComYuv* pcYuv;
-    UChar uhDepth = rpcBestCU->getDepth(0);
-
-    // Change Information data
-    TComDataCU* pcCU = rpcBestCU;
-    rpcBestCU = rpcTempCU;
-    rpcTempCU = pcCU;
-    
-    // Change Prediction data
-    pcYuv = m_ppcPredYuvBest[uhDepth];
-    m_ppcPredYuvBest[uhDepth] = m_ppcPredYuvTemp[uhDepth];
-    m_ppcPredYuvTemp[uhDepth] = pcYuv;
-    
-    // Change Reconstruction data
-    pcYuv = m_ppcRecoYuvBest[uhDepth];
-    m_ppcRecoYuvBest[uhDepth] = m_ppcRecoYuvTemp[uhDepth];
-    m_ppcRecoYuvTemp[uhDepth] = pcYuv;
-    
-    pcYuv = NULL;
-    pcCU  = NULL;
-    
-    if( m_bUseSBACRD )  // store temp best CI for next CU coding
-      m_pppcRDSbacCoder[uhDepth][CI_TEMP_BEST]->store(m_pppcRDSbacCoder[uhDepth][CI_NEXT_BEST]);
-  }
-}
-
 /** check whether current try is the best with identifying the depth of current try
  * \param rpcBestCU
  * \param rpcTempCU
