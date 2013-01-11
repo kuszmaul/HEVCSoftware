@@ -155,6 +155,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   SEIPictureTiming pictureTimingSEI;
   UInt *accumBitsDU = NULL;
   UInt *accumNalsDU = NULL;
+#if DU_INFO_SEI_K0126
+  SEIDecodingUnitInfo decodingUnitInfoSEI;
+#endif  
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
     UInt uiColDir = 1;
@@ -792,7 +795,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           pcSlice->getSPS()->setUsedByCurrPicLtSPSFlag(k, m_ltRefPicUsedByCurrPicFlag[k]);
         }
       }
+#if DU_INFO_SEI_K0126
+      if( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() )
+#else
       if( m_pcCfg->getPictureTimingSEIEnabled() )
+#endif
       {
         UInt maxCU = m_pcCfg->getSliceArgument() >> ( pcSlice->getSPS()->getMaxCUDepth() << 1);
         UInt numDU = ( m_pcCfg->getSliceMode() == 1 ) ? ( pcPic->getNumCUsInFrame() / maxCU ) : ( 0 );
@@ -803,7 +810,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->setNumDU( numDU );
         pcSlice->getSPS()->setHrdParameters( m_pcCfg->getFrameRate(), numDU, m_pcCfg->getTargetBitrate(), ( m_pcCfg->getIntraPeriod() > 0 ) );
       }
+#if DU_INFO_SEI_K0126
+      if( m_pcCfg->getBufferingPeriodSEIEnabled() || m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() )
+#else
       if( m_pcCfg->getBufferingPeriodSEIEnabled() || m_pcCfg->getPictureTimingSEIEnabled() )
+#endif
       {
         pcSlice->getSPS()->getVuiParameters()->setHrdParametersPresentFlag( true );
       }
@@ -892,7 +903,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_bSeqFirst = false;
     }
 
+#if DU_INFO_SEI_K0126
+    if( ( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() ) &&
+#else
     if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
+#endif
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
         ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
        || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
@@ -923,6 +938,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pictureTimingSEI.m_auCpbRemovalDelay = m_totalCoded - m_lastBPSEI;
       pictureTimingSEI.m_picDpbOutputDelay = pcSlice->getSPS()->getNumReorderPics(0) + pcSlice->getPOC() - m_totalCoded;
     }
+
     if( ( m_pcCfg->getBufferingPeriodSEIEnabled() ) && ( pcSlice->getSliceType() == I_SLICE ) &&
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
         ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
@@ -1256,12 +1272,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             uiOneBitstreamPerSliceLength += nalu.m_Bitstream.getNumberOfWrittenBits() + 24; // length of bitstream after byte-alignment + 3 byte startcode 0x000001
           }
 
+#if DU_INFO_SEI_K0126
+          if( ( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() ) &&
+#else
           if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
+#endif
               ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
               ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
              || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) &&
               ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getSubPicCpbParamsPresentFlag() ) )
           {
+#if DU_INFO_SEI_K0126
+              UInt numNalus = 0;
+#endif
             UInt numRBSPBytes = 0;
             for (AccessUnit::const_iterator it = accessUnit.begin(); it != accessUnit.end(); it++)
             {
@@ -1273,10 +1296,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
               {
                 numRBSPBytes += numRBSPBytes_nal;
+#if DU_INFO_SEI_K0126
+                numNalus ++;
+#endif
               }
             }
             accumBitsDU[ pcSlice->getSliceIdx() ] = ( numRBSPBytes << 3 );
+#if DU_INFO_SEI_K0126
+            accumNalsDU[ pcSlice->getSliceIdx() ] = numNalus;   // SEI not counted for bit count; hence shouldn't be counted for # of NALUs - only for consistency
+#else
             accumNalsDU[ pcSlice->getSliceIdx() ] = (UInt)accessUnit.size();
+#endif
           }
           processingState = ENCODE_SLICE;
           }
@@ -1459,7 +1489,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         m_pcRateCtrl->updataRCFrameStatus((Int)frameBits, pcSlice->getSliceType());
       }
 #endif
+#if DU_INFO_SEI_K0126
+      if( ( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() ) &&
+#else
       if( ( m_pcCfg->getPictureTimingSEIEnabled() ) &&
+#endif
           ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) && 
           ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
          || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
@@ -1531,6 +1565,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             }
           }
         }
+#if DU_INFO_SEI_K0126
+        if( m_pcCfg->getPictureTimingSEIEnabled() )
+        {
+#endif
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
         pictureTimingSEI.m_sps = pcSlice->getSPS();
         m_seiWriter.writeSEImessage(nalu.m_Bitstream, pictureTimingSEI);
@@ -1538,6 +1576,58 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
         accessUnit.insert(it, new NALUnitEBSP(nalu));
+#if DU_INFO_SEI_K0126
+        }
+        if( m_pcCfg->getDecodingUnitInfoSEIEnabled() && hrd->getSubPicCpbParamsPresentFlag() )
+        {             
+          m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+          decodingUnitInfoSEI.m_sps = pcSlice->getSPS();
+          for( Int i = 0; i < ( pictureTimingSEI.m_numDecodingUnitsMinus1 + 1 ); i ++ )
+          {
+            OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
+
+            SEIDecodingUnitInfo tempSEI;
+            tempSEI.m_decodingUnitIdx = i;
+            tempSEI.m_duSptCpbRemovalDelay = pictureTimingSEI.m_duCpbRemovalDelayMinus1[i] + 1;
+            tempSEI.m_sps = decodingUnitInfoSEI.m_sps;
+
+            // Number of DUs is the same as 
+            AccessUnit::const_iterator it;
+            Int ctr;
+            // Insert the first one in the right location, before the first slice
+            if(i == 0)
+            {
+              // Insert before the first slice. 
+              m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
+              writeRBSPTrailingBits(nalu.m_Bitstream);
+
+              AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
+              accessUnit.insert(it, new NALUnitEBSP(nalu));            
+            }
+            else
+            {
+              // For the second decoding unit onwards we know how many NALUs are present
+              for (ctr = 0, it = accessUnit.begin(); it != accessUnit.end(); it++)
+              {            
+                if(ctr == accumNalsDU[ i - 1 ])
+                {
+                  // Insert before the first slice. 
+                  m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
+                  writeRBSPTrailingBits(nalu.m_Bitstream);
+
+                  // AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
+                  accessUnit.insert(it, new NALUnitEBSP(nalu));
+                  break;
+                }
+                if ((*it)->m_nalUnitType != NAL_UNIT_SEI && (*it)->m_nalUnitType != NAL_UNIT_SEI_SUFFIX)
+                {
+                  ctr++;
+                }
+              }
+            }            
+          }
+        }      
+#endif
       }
       pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 

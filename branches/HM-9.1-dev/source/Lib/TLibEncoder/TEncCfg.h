@@ -240,6 +240,9 @@ protected:
 #if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
 #endif
+#if DU_INFO_SEI_K0126
+  Int       m_decodingUnitInfoSEIEnabled;
+#endif
   //====== Weighted Prediction ========
   Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -641,6 +644,10 @@ public:
 #if SEI_GDR_INFO
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
+#endif
+#if DU_INFO_SEI_K0126
+  Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
+  Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
 #endif
   Void      setUseWP               ( Bool  b )   { m_bUseWeightPred    = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }

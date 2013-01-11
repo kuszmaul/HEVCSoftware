@@ -358,7 +358,28 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     m_cSliceDecoder.create();
   }
-
+#if DU_INFO_SEI_K0126
+  else
+  {
+    // slices after the first slice
+    if(pcPic->getSEIs() == NULL)
+    {
+      pcPic->setSEIs(m_SEIs);
+      m_SEIs = NULL;
+    }
+    else
+    {
+      // CHeck if any new SEI has arrived
+      if(m_SEIs)
+      {
+        // Currently only decoding Unit SEI message occuring between VCL NALUs copied
+        SEImessages *picSEI = pcPic->getSEIs();
+        picSEI->decodingUnitInfo.insert(picSEI->decodingUnitInfo.end(), m_SEIs->decodingUnitInfo.begin(), m_SEIs->decodingUnitInfo.end());
+        delete m_SEIs; m_SEIs = NULL;
+      }
+    }
+  }
+#endif
   //  Set picture slice pointer
   TComSlice*  pcSlice = m_apcSlicePilot;
   Bool bNextSlice     = pcSlice->isNextSlice();
