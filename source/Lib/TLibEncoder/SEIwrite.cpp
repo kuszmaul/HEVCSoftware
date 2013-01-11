@@ -86,6 +86,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
 #endif
+#if DU_INFO_SEI_K0126
+  case SEI::DECODING_UNIT_INFO
+    fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -103,6 +108,11 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
   case SEI::ACTIVE_PARAMETER_SETS:
     xWriteSEIActiveParameterSets(*static_cast<const SEIActiveParameterSets*>(& sei)); 
     break; 
+#if DU_INFO_SEI_K0126
+  case SEI::DECODING_UNIT_INFO:
+    xWriteSEIDecodingUnitInfo(*static_cast<const SEIDecodingUnitInfo*>(& sei));
+    break;
+#endif
   case SEI::DECODED_PICTURE_HASH:
     xWriteSEIDecodedPictureHash(*static_cast<const SEIDecodedPictureHash*>(&sei));
     break;
@@ -263,6 +273,18 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
     }
   }
 }
+#if DU_INFO_SEI_K0126
+Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei)
+{
+  TComVUI *vui = sei.m_sps->getVuiParameters();
+  WRITE_UVLC(sei.m_decodingUnitIdx, "decoding_unit_idx");
+  if(vui->getHrdParameters()->getSubPicCpbParamsInPicTimingSEIFlag())
+  {
+    WRITE_CODE( sei.m_duSptCpbRemovalDelay, (vui->getHrdParameters()->getDuCpbRemovalDelayLengthMinus1() + 1), "du_spt_cpb_removal_delay");
+  }
+  xWriteByteAlign();
+}
+#endif
 
 Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
 {

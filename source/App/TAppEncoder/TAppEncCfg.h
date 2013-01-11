@@ -207,6 +207,9 @@ protected:
 #if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
 #endif
+#if DU_INFO_SEI_K0126
+  Int       m_decodingUnitInfoSEIEnabled;
+#endif
 #endif
   // weighted prediction
   Bool      m_bUseWeightPred;                                 ///< Use of explicit Weighting Prediction for P_SLICE

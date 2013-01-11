@@ -207,6 +207,23 @@ public:
   UInt* m_duCpbRemovalDelayMinus1;
   TComSPS* m_sps;
 };
+#if DU_INFO_SEI_K0126
+class SEIDecodingUnitInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return DECODING_UNIT_INFO; }
+
+  SEIDecodingUnitInfo()
+    : m_decodingUnitIdx(0)
+    , m_duSptCpbRemovalDelay(0)
+    , m_sps(NULL)
+  {}
+  virtual ~SEIDecodingUnitInfo() {}
+  Int m_decodingUnitIdx;
+  Int m_duSptCpbRemovalDelay;
+  TComSPS* m_sps;
+};
+#endif
 class SEIRecoveryPoint : public SEI
 {
 public:
@@ -322,7 +339,11 @@ public:
 #if SEI_GDR_INFO
     , gradualDecodingRefreshInfo(0)
 #endif
-    {}
+  {
+#if DU_INFO_SEI_K0126
+    decodingUnitInfo.clear();
+#endif
+  }
 
   ~SEImessages()
   {
@@ -346,6 +367,9 @@ public:
 
   SEIuserDataUnregistered* user_data_unregistered;
   SEIActiveParameterSets* active_parameter_sets; 
+#if DU_INFO_SEI_K0126
+  std::vector<SEIDecodingUnitInfo> decodingUnitInfo;
+#endif
   SEIDecodedPictureHash* picture_digest;
   SEIBufferingPeriod* buffering_period;
   SEIPictureTiming* picture_timing;

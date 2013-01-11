@@ -503,6 +503,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if SEI_GDR_INFO
   ("SEIGradualDecodingRefreshInfo",  m_gradualDecodingRefreshInfoEnabled,      0, "Control generation of gradual decoding refresh information SEI message")               
 #endif
+#if DU_INFO_SEI_K0126
+  ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
+#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   ("BitRatePicRateMaxTLayers",   m_bitRatePicRateMaxTLayers,           0, "Maximum number of sub-layers signalled; can be inferred otherwise; here for easy parsing of config. file")
   ("BitRateInfoPresent",         cfg_bitRateInfoPresentFlag,          string(""), "Control signalling of bit rate information of avg. bit rate and max. bit rate in VPS\n"

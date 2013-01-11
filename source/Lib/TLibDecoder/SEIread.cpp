@@ -83,6 +83,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
 #endif
+#if DU_INFO_SEI_K0126
+  case SEI::DECODING_UNIT_INFO
+    fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -170,6 +175,14 @@ Void SEIReader::xReadSEImessage(SEImessages& seis)
     seis.active_parameter_sets = new SEIActiveParameterSets; 
     xParseSEIActiveParameterSets(*seis.active_parameter_sets, payloadSize); 
     break; 
+#if DU_INFO_SEI_K0126
+  case SEI::DECODING_UNIT_INFO:
+    seis.decodingUnitInfo.resize(seis.decodingUnitInfo.size()+1);   // Add DU info SEI message
+    seis.decodingUnitInfo.back().m_sps = seis.m_pSPS;               
+    // Need to add code to determine which NALUs belong to which DU
+    xParseSEIDecodingUnitInfo(seis.decodingUnitInfo.back(), payloadSize);
+    break;
+#endif
 #if !SUFFIX_SEI_NUT_DECODED_HASH_SEI
   case SEI::DECODED_PICTURE_HASH:
     seis.picture_digest = new SEIDecodedPictureHash;
@@ -376,7 +389,26 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
     READ_FLAG(val, "alignment_bit");
   }
 }
+#if DU_INFO_SEI_K0126
+Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*payloadSize*/)
+{
+  UInt val;
+  READ_UVLC(val, "decoding_unit_idx");
+  sei.m_decodingUnitIdx = val;
 
+  TComVUI *vui = sei.m_sps->getVuiParameters();
+  if(vui->getHrdParameters()->getSubPicCpbParamsInPicTimingSEIFlag())
+  {
+    READ_CODE( ( vui->getHrdParameters()->getDuCpbRemovalDelayLengthMinus1() + 1 ), val, "du_spt_cpb_removal_delay");
+    sei.m_duSptCpbRemovalDelay = val;
+  }
+  else
+  {
+    sei.m_duSptCpbRemovalDelay = 0;
+  }
+  xParseByteAlign();
+}
+#endif
 Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payloadSize*/)
 {
   Int i, nalOrVcl;

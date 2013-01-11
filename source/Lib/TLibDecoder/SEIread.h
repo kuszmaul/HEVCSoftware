@@ -69,6 +69,9 @@ protected:
 #endif
   Void xParseSEIuserDataUnregistered  (SEIuserDataUnregistered &sei, UInt payloadSize);
   Void xParseSEIActiveParameterSets   (SEIActiveParameterSets  &sei, UInt payloadSize);
+#if DU_INFO_SEI_K0126
+  Void xParseSEIDecodingUnitInfo      (SEIDecodingUnitInfo& sei, UInt payloadSize);
+#endif
   Void xParseSEIDecodedPictureHash    (SEIDecodedPictureHash& sei, UInt payloadSize);
   Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize);
   Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize);
