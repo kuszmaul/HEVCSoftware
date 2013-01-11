@@ -878,23 +878,50 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
   Bool depSliceSegmentsEnabled = pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag();
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+  uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
+  uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr();
+#endif
   if( depSliceSegmentsEnabled )
   {
+#if DEPSLICE_TILE_INDEPENDENT_BUGFIX
+    if((pcSlice->getSliceSegmentCurStartCUAddr()!= pcSlice->getSliceCurStartCUAddr())&&(uiCUAddr != uiTileStartLCU))
+#else
     if(pcSlice->getSliceSegmentCurStartCUAddr()!= pcSlice->getSliceCurStartCUAddr())
+#endif
     {
       if( m_pcCfg->getWaveFrontsynchro() )
       {
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+        uiTileCol = rpcPic->getPicSym()->getTileIdxMap(uiCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1);
+#endif
         m_pcBufferSbacCoders[uiTileCol].loadContexts( CTXMem[1] );
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
       }
       m_pppcRDSbacCoder[0][CI_CURR_BEST]->loadContexts( CTXMem[0] );
       if (pcSlice->getPPS()->getNumSubstreams() > 1)
       {
+#endif
         Int iNumSubstreamsPerTile = iNumSubstreams/rpcPic->getPicSym()->getNumTiles();
         uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
         uiLin     = uiCUAddr / uiWidthInLCUs;
         uiSubStrm = rpcPic->getPicSym()->getTileIdxMap(rpcPic->getPicSym()->getCUOrderMap(uiCUAddr))*iNumSubstreamsPerTile
           + uiLin%iNumSubstreamsPerTile;
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+        if ( (uiCUAddr%uiWidthInLCUs+1) >= uiWidthInLCUs  )
+        {
+          uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
+          uiCol     = uiCUAddr % uiWidthInLCUs;
+          if(uiCol==uiTileStartLCU)
+          {
+            CTXMem[0]->loadContexts(m_pcSbacCoder);
+          }
+        }
+#endif
       }
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+      m_pppcRDSbacCoder[0][CI_CURR_BEST]->loadContexts( CTXMem[0] );
+#endif
       ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]->loadContexts( CTXMem[0] );
     }
     else
@@ -908,7 +935,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   }
   // for every CU in slice
   UInt uiEncCUOrder;
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
+#endif
   for( uiEncCUOrder = uiStartCUAddr/rpcPic->getNumPartInCU();
        uiEncCUOrder < (uiBoundingCUAddr+(rpcPic->getNumPartInCU()-1))/rpcPic->getNumPartInCU();
        uiCUAddr = rpcPic->getPicSym()->getCUOrderMap(++uiEncCUOrder) )
@@ -961,17 +990,22 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         if ( ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) || 
              (pcCUTR->getSCUAddr()+uiMaxParts-1 < pcSlice->getSliceCurStartCUAddr()) ||
              ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr)))
-             )||
+             )
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+             ||
              ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) || 
              (pcCUTR->getSCUAddr()+uiMaxParts-1 < pcSlice->getSliceSegmentCurStartCUAddr()) ||
              ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr)))
              )
+#endif
            )
         {
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
           if ( (uiCUAddr != 0) && pcCUTR && (pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr())  && depSliceSegmentsEnabled)
           {
             ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]->loadContexts( &m_pcBufferSbacCoders[uiTileCol] );
           }
+#endif
           // TR not available.
         }
         else
@@ -1222,6 +1256,9 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
                                                                                                an encoding order index, so we need to convert the index (uiStartCUAddr)
                                                                                                into the real raster scan address (uiCUAddr) via the CUOrderMap */
 #endif
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+  uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr();
+#endif
   if( depSliceSegmentsEnabled )
   {
 #if DEPSLICE_TILE_INDEPENDENT_BUGFIX
@@ -1241,10 +1278,15 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
     {
       if(m_pcCfg->getWaveFrontsynchro())
       {
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+        uiTileCol = rpcPic->getPicSym()->getTileIdxMap(uiCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1);
+#endif
         m_pcBufferSbacCoders[uiTileCol].loadContexts( CTXMem[1] );
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
       }
       if(pcSlice->getPPS()->getNumSubstreams() > 1)
       {
+#endif
         Int iNumSubstreamsPerTile = iNumSubstreams/rpcPic->getPicSym()->getNumTiles();
 #if !DEPSLICE_TILE_INDEPENDENT_BUGFIX
         uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());
@@ -1252,6 +1294,17 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         uiLin     = uiCUAddr / uiWidthInLCUs;
         uiSubStrm = rpcPic->getPicSym()->getTileIdxMap(rpcPic->getPicSym()->getCUOrderMap( uiCUAddr))*iNumSubstreamsPerTile
           + uiLin%iNumSubstreamsPerTile;
+#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+        if ( (uiCUAddr%uiWidthInLCUs+1) >= uiWidthInLCUs  )
+        {
+          uiCol     = uiCUAddr % uiWidthInLCUs;
+          uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
+          if(uiCol==uiTileLCUX)
+          {
+            CTXMem[0]->loadContexts(m_pcSbacCoder);
+          }
+        }
+#endif
       }
       pcSbacCoders[uiSubStrm].loadContexts( CTXMem[0] );
     }
@@ -1305,18 +1358,23 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
              ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) || 
              (pcCUTR->getSCUAddr()+uiMaxParts-1 < pcSlice->getSliceCurStartCUAddr()) ||
              ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr)))
-             ))||
+             ))
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
+             ||
              (true/*bEnforceDependentSliceRestriction*/ &&
              ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) || 
              (pcCUTR->getSCUAddr()+uiMaxParts-1 < pcSlice->getSliceSegmentCurStartCUAddr()) ||
              ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr)))
              ))
+#endif
            )
         {
+#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
           if ( (uiCUAddr != 0) && pcCUTR && ( pcCUTR->getSCUAddr()+uiMaxParts-1 >= pcSlice->getSliceCurStartCUAddr() ) && depSliceSegmentsEnabled)
           {
             pcSbacCoders[uiSubStrm].loadContexts( &m_pcBufferSbacCoders[uiTileCol] );
           }
+#endif
           // TR not available.
         }
         else
