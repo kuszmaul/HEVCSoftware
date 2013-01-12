@@ -1498,7 +1498,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           ( ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getNalHrdParametersPresentFlag() ) 
          || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) )
       {
+#if !DU_INFO_SEI_K0126
         OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
+#endif
         TComVUI *vui = pcSlice->getSPS()->getVuiParameters();
         TComHRD *hrd = vui->getHrdParameters();
 
@@ -1568,6 +1570,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if DU_INFO_SEI_K0126
         if( m_pcCfg->getPictureTimingSEIEnabled() )
         {
+        OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
 #endif
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
         pictureTimingSEI.m_sps = pcSlice->getSPS();
@@ -1591,9 +1594,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             tempSEI.m_duSptCpbRemovalDelay = pictureTimingSEI.m_duCpbRemovalDelayMinus1[i] + 1;
             tempSEI.m_sps = decodingUnitInfoSEI.m_sps;
 
-            // Number of DUs is the same as 
-            AccessUnit::const_iterator it;
-            Int ctr;
+            AccessUnit::iterator it;
             // Insert the first one in the right location, before the first slice
             if(i == 0)
             {
@@ -1601,11 +1602,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
               writeRBSPTrailingBits(nalu.m_Bitstream);
 
-              AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
+              it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
               accessUnit.insert(it, new NALUnitEBSP(nalu));            
             }
             else
             {
+              Int ctr;
               // For the second decoding unit onwards we know how many NALUs are present
               for (ctr = 0, it = accessUnit.begin(); it != accessUnit.end(); it++)
               {            
@@ -1615,7 +1617,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                   m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
                   writeRBSPTrailingBits(nalu.m_Bitstream);
 
-                  // AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
                   accessUnit.insert(it, new NALUnitEBSP(nalu));
                   break;
                 }
