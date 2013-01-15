@@ -524,18 +524,17 @@ to be specified if non-equal luma and chroma bit-depth processing is
 required.
 \\
 
-\Option{CroppingMode} &
+\Option{ConformanceMode} &
 \ShortOption{\None} &
 \Default{0} &
-Specifies the cropping/padding parameters to be applied to the input
+Specifies the conformance mode (cropping/padding parameters) to be applied to the input
 video. The following modes are available:
 \par
 \begin{tabular}{cp{0.45\textwidth}}
 0 & No cropping / padding \\
 1 & Automatic padding to the next minimum CU size \\
 2 & Padding according to parameters HorizontalPadding and VerticalPadding \\
-3 & Cropping according to parameters CropLeft, CropRight, CropTop and
-    CropBottom \\
+3 & Cropping according to parameters ConfLeft, ConfRight, ConfTop and ConfBottom \\
 \end{tabular}
 \\
 
@@ -549,10 +548,10 @@ video in luma samples.  Must be a multiple of the chroma resolution
 (e.g. a multiple of two for 4:2:0).
 \\
 
-\Option{CropLeft}%
-\Option{CropRight}%
-\Option{CropTop}%
-\Option{CropBottom} &
+\Option{ConfLeft}%
+\Option{ConfRight}%
+\Option{ConfTop}%
+\Option{ConfBottom} &
 \ShortOption{\None} &
 \Default{0} &
 Specifies the horizontal and vertical cropping to be applied to the
@@ -1428,6 +1427,29 @@ Specifies the location of chroma samples for bottom field.
 \Default{false} &
 Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1).
 \\
+
+\Option{DefaultDisplayWindowFlag} &
+\ShortOption{\None} &
+\Default{1} &
+Indicates the presence of the Default Window parameters.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+0 & Disabled \\
+1 & Enabled \\
+\end{tabular}
+\\
+
+\Option{DefDispWinLeftOffset}%
+\Option{DefDispWinRightOffset}%
+\Option{DefDispWinTopOffset}%
+\Option{DefDispWinBottomOffset} &
+\ShortOption{\None} &
+\Default{0} &
+Specifies the horizontal and vertical offset to be applied to the
+input video from the conformance window in luma samples.
+Must be a multiple of the chroma resolution (e.g. a multiple of two for 4:2:0).
+\\
+
 \Option{BitstreamRestriction} &
 \ShortOption{} &
 \Default{false} &
@@ -1496,7 +1518,7 @@ SEI messages.
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the buffering_period
-SEI messages. This options has no effect if VuiParametersPresent is disabled.
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
   0 & Disabled \\
@@ -1507,12 +1529,70 @@ SEI messages. This options has no effect if VuiParametersPresent is disabled.
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the picture_timing
-SEI messages. This options has no effect if VuiParametersPresent is disabled.
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
   0 & Disabled \\
   1 & Enabled \\
 \end{tabular}
+\\
+\Option{SEIFramePacking} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the frame_packing_arrangement SEI messages.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Disabled \\
+  1 & Enabled \\
+\end{tabular}
+\\
+\Option{SEIFramePackingType} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the arrangmenet type in the frame_packing_arrangement SEI message.
+This option has no effect if SEIFramePacking is disabled.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Checkerboard \\
+  1 & Line Alternate \\
+  2 & Column Alternate \\
+  3 & Side by Side \\
+  4 & Top Bottom \\
+  5 & Frame Alternate \\
+  6 & 2D Image \\
+  7 & Tile Format \\
+\end{tabular}
+\\
+\Option{SEIFramePackingInterpretation} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the constituent frames relationship in the frame_packing_arrangement SEI message. 
+This option has no effect if SEIFramePacking is disabled.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Unspecified \\
+  1 & Frame 0 is associated with the left view of a stereo pair \\
+  2 & Frame 0 is associated with the right view of a stereo pair \\
+\end{tabular}
+\\
+\Option{SEIFramePackingQuincunx} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the quincunx_sampling signalling in the
+frame_packing_arrangement SEI messages. This option has no
+effect if SEIFramePacking is disabled.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Disabled \\
+  1 & Enabled \\
+\end{tabular}
+\\
+\Option{SEIFramePackingId} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the session number in the frame_packing_arrangement
+SEI messages. This option has no effect if SEIFramePacking is
+disabled.
 \\
 \end{OptionTable}
 
@@ -1684,6 +1764,18 @@ has the following behaviour:
   MD5. "[rxMD5:...]" is the signalled MD5 if different.
 \end{itemize}
 \\
+
+\Option{RespectDefDispWindow} &
+\ShortOption{-w} &
+\Default{0} &
+Video region to be output by the decoder.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Output content inside the conformance window. \\
+  1 & Output content inside the default window. \\
+\end{tabular}
+\\
+
 \end{OptionTable}
 
 
