@@ -244,7 +244,7 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
 #endif
   //====== Weighted Prediction ========
-  Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)
+  Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
   UInt      m_log2ParallelMergeLevelMinus2;       ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                    ///< Maximum number of merge candidates
@@ -649,9 +649,9 @@ public:
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
 #endif
-  Void      setUseWP               ( Bool  b )   { m_bUseWeightPred    = b;    }
+  Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }
-  Bool      getUseWP               ()            { return m_bUseWeightPred;    }
+  Bool      getUseWP               ()            { return m_useWeightedPred;   }
   Bool      getWPBiPred            ()            { return m_useWeightedBiPred; }
   Void      setLog2ParallelMergeLevelMinus2   ( UInt u )    { m_log2ParallelMergeLevelMinus2       = u;    }
   UInt      getLog2ParallelMergeLevelMinus2   ()            { return m_log2ParallelMergeLevelMinus2;       }
