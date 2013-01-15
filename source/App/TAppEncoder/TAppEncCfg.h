@@ -212,8 +212,8 @@ protected:
 #endif
 #endif
   // weighted prediction
-  Bool      m_bUseWeightPred;                                 ///< Use of explicit Weighting Prediction for P_SLICE
-  Bool      m_useWeightedBiPred;                                    ///< Use of Bi-Directional Weighting Prediction (B_SLICE)
+  Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
+  Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
   
   UInt      m_log2ParallelMergeLevel;                         ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                                ///< Max number of merge candidates

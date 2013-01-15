@@ -183,7 +183,7 @@ Void TAppEncTop::xInitLibCfg()
   
 
   //====== Weighted Prediction ========
-  m_cTEncTop.setUseWP                   ( m_bUseWeightPred      );
+  m_cTEncTop.setUseWP                   ( m_useWeightedPred      );
   m_cTEncTop.setWPBiPred                ( m_useWeightedBiPred   );
   //====== Parallel Merge Estimation ========
   m_cTEncTop.setLog2ParallelMergeLevelMinus2 ( m_log2ParallelMergeLevel - 2 );

@@ -387,8 +387,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("LosslessCuEnabled",        m_useLossless, false)
 
-  ("weighted_pred_flag,-wpP",     m_bUseWeightPred, false, "weighted prediction flag (P-Slices)")
-  ("weighted_bipred_flag,-wpB",   m_useWeightedBiPred,    false,    "weighted bipred flag (B-Slices)")
+  ("WeightedPredP,-wpP",          m_useWeightedPred,               false,      "Use weighted prediction in P slices")
+  ("WeightedPredB,-wpB",          m_useWeightedBiPred,             false,      "Use weighted (bidirectional) prediction in B slices")
   ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
   ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
   ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
@@ -1464,7 +1464,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
 
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
-  printf("WPP:%d ", (Int)m_bUseWeightPred);
+  printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);
   printf("PME:%d ", m_log2ParallelMergeLevel);
   printf(" WaveFrontSynchro:%d WaveFrontSubstreams:%d",
