@@ -84,7 +84,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     break;
 #endif
 #if DU_INFO_SEI_K0126
-  case SEI::DECODING_UNIT_INFO
+  case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
 #endif
