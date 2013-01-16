@@ -74,7 +74,7 @@ private:
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
   TComSlice*              m_apcSlicePilot;
   
-  SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
+  SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
 
   // functional classes
   TComPrediction          m_cPrediction;

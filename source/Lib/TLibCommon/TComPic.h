@@ -43,11 +43,10 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
+#include "SEI.h"
 
 //! \ingroup TLibCommon
 //! \{
-
-class SEImessages;
 
 // ====================================================================================================================
 // Class definition
@@ -83,7 +82,7 @@ private:
 
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
-  SEImessages* m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
+  SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
 public:
   TComPic();
@@ -163,17 +162,17 @@ public:
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
 
   /** transfer ownership of seis to this picture */
-  void setSEIs(SEImessages* seis) { m_SEIs = seis; }
+  void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  SEImessages* getSEIs() { return m_SEIs; }
+  SEIMessages& getSEIs() { return m_SEIs; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  const SEImessages* getSEIs() const { return m_SEIs; }
+  const SEIMessages& getSEIs() const { return m_SEIs; }
 
 };// END CLASS DEFINITION TComPic
 

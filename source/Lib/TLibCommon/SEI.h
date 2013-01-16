@@ -32,6 +32,7 @@
  */
 
 #pragma once
+#include <list>
 
 //! \ingroup TLibCommon
 //! \{
@@ -151,7 +152,6 @@ public:
   PayloadType payloadType() const { return BUFFERING_PERIOD; }
 
   SEIBufferingPeriod()
-  :m_sps (NULL)
   {}
   virtual ~SEIBufferingPeriod() {}
 
@@ -161,7 +161,6 @@ public:
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelayOffset[MAX_CPB_CNT][2];
-  TComSPS* m_sps;
 };
 class SEIPictureTiming : public SEI
 {
@@ -178,7 +177,6 @@ public:
   : m_numNalusInDuMinus1      (NULL)
 #endif
   , m_duCpbRemovalDelayMinus1 (NULL)
-  , m_sps                     (NULL)
   {}
   virtual ~SEIPictureTiming()
   {
@@ -205,7 +203,6 @@ public:
   UInt  m_duCommonCpbRemovalDelayMinus1;
   UInt* m_numNalusInDuMinus1;
   UInt* m_duCpbRemovalDelayMinus1;
-  TComSPS* m_sps;
 };
 #if DU_INFO_SEI_K0126
 class SEIDecodingUnitInfo : public SEI
@@ -216,12 +213,10 @@ public:
   SEIDecodingUnitInfo()
     : m_decodingUnitIdx(0)
     , m_duSptCpbRemovalDelay(0)
-    , m_sps(NULL)
   {}
   virtual ~SEIDecodingUnitInfo() {}
   Int m_decodingUnitIdx;
   Int m_duSptCpbRemovalDelay;
-  TComSPS* m_sps;
 };
 #endif
 class SEIRecoveryPoint : public SEI
@@ -315,76 +310,11 @@ public:
   Bool m_gdrForegroundFlag;
 };
 #endif
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
-{
-public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , active_parameter_sets(0)
-    , picture_digest(0)
-    , buffering_period(0)
-    , picture_timing(0)
-    , recovery_point(0)
-    , frame_packing(0)
-#if SEI_DISPLAY_ORIENTATION
-    , display_orientation(0)
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-    , temporal_level0_index(0)
-#endif
-#if SEI_GDR_INFO
-    , gradualDecodingRefreshInfo(0)
-#endif
-  {
-#if DU_INFO_SEI_K0126
-    decodingUnitInfo.clear();
-#endif
-  }
 
-  ~SEImessages()
-  {
-    delete user_data_unregistered;
-    delete active_parameter_sets; 
-    delete picture_digest;
-    delete buffering_period;
-    delete picture_timing;
-    delete recovery_point;
-    delete frame_packing;
-#if SEI_DISPLAY_ORIENTATION
-    delete display_orientation;
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-    delete temporal_level0_index;
-#endif
-#if SEI_GDR_INFO
-    delete gradualDecodingRefreshInfo;
-#endif
-  }
+typedef std::list<SEI*> SEIMessages;
 
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIActiveParameterSets* active_parameter_sets; 
-#if DU_INFO_SEI_K0126
-  std::vector<SEIDecodingUnitInfo> decodingUnitInfo;
-#endif
-  SEIDecodedPictureHash* picture_digest;
-  SEIBufferingPeriod* buffering_period;
-  SEIPictureTiming* picture_timing;
-  TComSPS* m_pSPS;
-  SEIRecoveryPoint* recovery_point;
-  SEIFramePacking* frame_packing;
-#if SEI_DISPLAY_ORIENTATION
-  SEIDisplayOrientation* display_orientation;
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-  SEITemporalLevel0Index* temporal_level0_index;
-#endif
-#if SEI_GDR_INFO
-  SEIGradualDecodingRefreshInfo* gradualDecodingRefreshInfo;
-#endif
-};
+/// output a selection of SEI messages by payload type. Ownership stays in original message list.
+SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
+Void deleteSEIs (SEIMessages &seiList);
 
 //! \}

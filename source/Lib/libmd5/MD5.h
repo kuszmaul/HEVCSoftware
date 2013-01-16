@@ -75,7 +75,7 @@ private:
  * Returns: a statically allocated null-terminated string.  DO NOT FREE.
  */
 inline const char*
-digestToString(unsigned char digest[3][16], int numChar)
+digestToString(const unsigned char digest[3][16], int numChar)
 {
   const char* hex = "0123456789abcdef";
   static char string[99];

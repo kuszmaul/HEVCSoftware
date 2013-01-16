@@ -57,8 +57,6 @@
 // Class definition
 // ====================================================================================================================
 
-class SEImessages;
-
 /// SBAC decoder class
 class TDecSbac : public TDecEntropyIf
 {

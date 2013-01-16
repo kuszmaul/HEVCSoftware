@@ -47,7 +47,6 @@
 
 class TDecSbac;
 class TDecCavlc;
-class SEImessages;
 class ParameterSetManagerDecoder;
 
 //! \ingroup TLibDecoder

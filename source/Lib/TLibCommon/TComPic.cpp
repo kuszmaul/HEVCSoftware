@@ -84,8 +84,11 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   }
   m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   
-  /* there are no SEI messages associated with this picture initially */
-  m_SEIs = NULL;
+  // there are no SEI messages associated with this picture initially
+  if (m_SEIs.size() > 0)
+  {
+    deleteSEIs (m_SEIs);
+  }
   m_bUsedByCurr = false;
 
   /* store conformance window parameters with picture */
@@ -120,7 +123,7 @@ Void TComPic::destroy()
     m_apcPicYuv[1]  = NULL;
   }
   
-  delete m_SEIs;
+  deleteSEIs(m_SEIs);
 }
 
 Void TComPic::compressMotion()

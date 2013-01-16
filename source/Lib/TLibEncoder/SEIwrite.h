@@ -46,18 +46,18 @@ public:
   SEIWriter() {};
   virtual ~SEIWriter() {};
 
-  void writeSEImessage(TComBitIf& bs, const SEI& sei);
+  void writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps);
 
 protected:
-  Void xWriteSEIpayloadData(const SEI& sei);
+  Void xWriteSEIpayloadData(const SEI& sei, TComSPS *sps);
   Void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
   Void xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei);
 #if DU_INFO_SEI_K0126
-  Void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei);
+  Void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps);
 #endif
   Void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei);
-  Void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei);
-  Void xWriteSEIPictureTiming(const SEIPictureTiming& sei);
+  Void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS *sps);
+  Void xWriteSEIPictureTiming(const SEIPictureTiming& sei, TComSPS *sps);
   TComSPS *m_pSPS;
   Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
   Void xWriteSEIFramePacking(const SEIFramePacking& sei);

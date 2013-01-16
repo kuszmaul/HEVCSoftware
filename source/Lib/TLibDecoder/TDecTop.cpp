@@ -347,9 +347,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
-    /* transfer any SEI messages that have been received to the picture */
+    // transfer any SEI messages that have been received to the picture
     pcPic->setSEIs(m_SEIs);
-    m_SEIs = NULL;
+    m_SEIs.clear();
 
     // Recursive structure
     m_cCuDecoder.create ( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
@@ -362,20 +362,21 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   else
   {
     // slices after the first slice
-    if(pcPic->getSEIs() == NULL)
+    if(pcPic->getSEIs().empty())
     {
       pcPic->setSEIs(m_SEIs);
-      m_SEIs = NULL;
+      m_SEIs.clear();
     }
     else
     {
       // CHeck if any new SEI has arrived
-      if(m_SEIs)
+      if(!m_SEIs.empty())
       {
         // Currently only decoding Unit SEI message occuring between VCL NALUs copied
-        SEImessages *picSEI = pcPic->getSEIs();
-        picSEI->decodingUnitInfo.insert(picSEI->decodingUnitInfo.end(), m_SEIs->decodingUnitInfo.begin(), m_SEIs->decodingUnitInfo.end());
-        delete m_SEIs; m_SEIs = NULL;
+        SEIMessages &picSEI = pcPic->getSEIs();
+        SEIMessages decodingUnitInfos = getSeisByType (m_SEIs, SEI::DECODING_UNIT_INFO);
+        picSEI.insert(picSEI.end(), decodingUnitInfos.begin(), decodingUnitInfos.end());
+        deleteSEIs(m_SEIs);
       }
     }
   }
@@ -620,38 +621,16 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType 
 Void TDecTop::xDecodeSEI( TComInputBitstream* bs )
 #endif
 {
-  if ( m_SEIs == NULL )
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+  if(nalUnitType == NAL_UNIT_SEI_SUFFIX)
   {
-    if( (nalUnitType == NAL_UNIT_SEI_SUFFIX) && (m_pcPic->getSEIs()) )
-    {
-      m_SEIs = m_pcPic->getSEIs();          // If suffix SEI and SEI already present, use already existing SEI structure
-    }
-    else
-    {
-      m_SEIs = new SEImessages;
-    }
+    m_seiReader.parseSEImessage( bs, m_pcPic->getSEIs(), nalUnitType, m_parameterSetManagerDecoder.getPrefetchedSPS(0) );
   }
   else
   {
-    assert(nalUnitType != NAL_UNIT_SEI_SUFFIX);   
+    m_seiReader.parseSEImessage( bs, m_SEIs, nalUnitType, m_parameterSetManagerDecoder.getPrefetchedSPS(0) );
   }
-#else
-  {
-    m_SEIs = new SEImessages;
-  }
-#endif
-  m_SEIs->m_pSPS = m_parameterSetManagerDecoder.getPrefetchedSPS(0);
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
-  m_seiReader.parseSEImessage( bs, *m_SEIs, nalUnitType );
-  if(nalUnitType == NAL_UNIT_SEI_SUFFIX)
-  {
-    if(!m_pcPic->getSEIs())
-    {
-      m_pcPic->setSEIs(m_SEIs); // Only suffix SEI present and new object created; update picture SEI variable
-    }
-    m_SEIs = NULL;  // SEI structure already updated using this pointer; not required now.
-  }
+
 #else
   m_seiReader.parseSEImessage( bs, *m_SEIs );
 #endif
