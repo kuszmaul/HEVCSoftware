@@ -849,7 +849,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         nalu = NALUnit(NAL_UNIT_SEI); 
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_active_parameter_sets); 
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_active_parameter_sets, pcSlice->getSPS()); 
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
@@ -879,7 +879,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         nalu = NALUnit(NAL_UNIT_SEI);
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_frame_packing);
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_frame_packing, pcSlice->getSPS());
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
@@ -894,7 +894,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         nalu = NALUnit(NAL_UNIT_SEI); 
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_display_orientation); 
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_display_orientation, pcSlice->getSPS()); 
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
@@ -967,9 +967,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_buffering_period.m_initialAltCpbRemovalDelayOffset[0][1]  = uiInitialCpbRemovalDelay;
 
       sei_buffering_period.m_rapCpbParamsPresentFlag              = 0;
-      sei_buffering_period.m_sps                                  = pcSlice->getSPS();
 
-      m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_buffering_period );
+      m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_buffering_period, pcSlice->getSPS());
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
 
@@ -990,7 +989,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         SEIGradualDecodingRefreshInfo seiGradualDecodingRefreshInfo;
         seiGradualDecodingRefreshInfo.m_gdrForegroundFlag = true; // Indicating all "foreground"
 
-        m_seiWriter.writeSEImessage( nalu.m_Bitstream, seiGradualDecodingRefreshInfo );
+        m_seiWriter.writeSEImessage( nalu.m_Bitstream, seiGradualDecodingRefreshInfo, pcSlice->getSPS() );
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
@@ -1005,7 +1004,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_recovery_point.m_exactMatchingFlag = ( pcSlice->getPOC() == 0 ) ? (true) : (false);
       sei_recovery_point.m_brokenLinkFlag    = false;
 
-      m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_recovery_point );
+      m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_recovery_point, pcSlice->getSPS() );
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
     }
@@ -1402,7 +1401,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         /* write the SEI messages */
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_recon_picture_digest);
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_recon_picture_digest, pcSlice->getSPS());
         writeRBSPTrailingBits(nalu.m_Bitstream);
 
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
@@ -1433,7 +1432,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
         /* write the SEI messages */
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_temporal_level0_index);
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_temporal_level0_index, pcSlice->getSPS());
         writeRBSPTrailingBits(nalu.m_Bitstream);
 
         /* insert the SEI message NALUnit before any Slice NALUnits */
@@ -1573,8 +1572,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
 #endif
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
-        pictureTimingSEI.m_sps = pcSlice->getSPS();
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, pictureTimingSEI);
+        m_seiWriter.writeSEImessage(nalu.m_Bitstream, pictureTimingSEI, pcSlice->getSPS());
         writeRBSPTrailingBits(nalu.m_Bitstream);
 
         AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
@@ -1584,7 +1582,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if( m_pcCfg->getDecodingUnitInfoSEIEnabled() && hrd->getSubPicCpbParamsPresentFlag() )
         {             
           m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
-          decodingUnitInfoSEI.m_sps = pcSlice->getSPS();
           for( Int i = 0; i < ( pictureTimingSEI.m_numDecodingUnitsMinus1 + 1 ); i ++ )
           {
             OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
@@ -1592,14 +1589,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             SEIDecodingUnitInfo tempSEI;
             tempSEI.m_decodingUnitIdx = i;
             tempSEI.m_duSptCpbRemovalDelay = pictureTimingSEI.m_duCpbRemovalDelayMinus1[i] + 1;
-            tempSEI.m_sps = decodingUnitInfoSEI.m_sps;
 
             AccessUnit::iterator it;
             // Insert the first one in the right location, before the first slice
             if(i == 0)
             {
               // Insert before the first slice. 
-              m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
+              m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI, pcSlice->getSPS());
               writeRBSPTrailingBits(nalu.m_Bitstream);
 
               it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
@@ -1614,7 +1610,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 if(ctr == accumNalsDU[ i - 1 ])
                 {
                   // Insert before the first slice. 
-                  m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI);
+                  m_seiWriter.writeSEImessage(nalu.m_Bitstream, tempSEI, pcSlice->getSPS());
                   writeRBSPTrailingBits(nalu.m_Bitstream);
 
                   accessUnit.insert(it, new NALUnitEBSP(nalu));

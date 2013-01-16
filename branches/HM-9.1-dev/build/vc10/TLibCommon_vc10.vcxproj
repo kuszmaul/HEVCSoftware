@@ -146,6 +146,7 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.cpp" />
     <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\SEI.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComBitStream.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComCABACTables.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDataCU.cpp" />

@@ -49,7 +49,7 @@ extern Bool g_md5_mismatch; ///< top level flag to signal when there is a decode
 
 //! \ingroup TLibDecoder
 //! \{
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis);
+static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI);
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
@@ -235,7 +235,13 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   }
   if (m_decodedPictureHashSEIEnabled)
   {
-    calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), rpcPic->getSEIs());
+    SEIMessages pictureHashes = getSeisByType(rpcPic->getSEIs(), SEI::DECODED_PICTURE_HASH );
+    const SEIDecodedPictureHash *hash = ( pictureHashes.size() > 0 ) ? (SEIDecodedPictureHash*) *(pictureHashes.begin()) : NULL;
+    if (pictureHashes.size() > 1)
+    {
+      printf ("Warning: Got multiple decoded picture hash SEI messages. Using first.");
+    }
+    calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), hash);
   }
 
   rpcPic->setOutputMark(true);
@@ -255,16 +261,16 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
  *            ***ERROR*** - calculated hash does not match the SEI message
  *            unk         - no SEI message was available for comparison
  */
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
+static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI)
 {
   /* calculate MD5sum for entire reconstructed picture */
   UChar recon_digest[3][16];
   Int numChar=0;
   const Char* hashType = "\0";
 
-  if (seis && seis->picture_digest)
+  if (pictureHashSEI)
   {
-    switch (seis->picture_digest->method)
+    switch (pictureHashSEI->method)
     {
     case SEIDecodedPictureHash::MD5:
       {
@@ -298,14 +304,14 @@ static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
   const Char* ok = "(unk)";
   Bool mismatch = false;
 
-  if (seis && seis->picture_digest)
+  if (pictureHashSEI)
   {
     ok = "(OK)";
     for(Int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
     {
       for (UInt i = 0; i < numChar; i++)
       {
-        if (recon_digest[yuvIdx][i] != seis->picture_digest->digest[yuvIdx][i])
+        if (recon_digest[yuvIdx][i] != pictureHashSEI->digest[yuvIdx][i])
         {
           ok = "(***ERROR***)";
           mismatch = true;
@@ -319,7 +325,7 @@ static void calcAndPrintHashStatus(TComPicYuv& pic, const SEImessages* seis)
   if (mismatch)
   {
     g_md5_mismatch = true;
-    printf("[rx%s:%s] ", hashType, digestToString(seis->picture_digest->digest, numChar));
+    printf("[rx%s:%s] ", hashType, digestToString(pictureHashSEI->digest, numChar));
   }
 }
 //! \}

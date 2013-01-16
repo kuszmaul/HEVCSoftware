@@ -52,8 +52,6 @@
 // Class definition
 // ====================================================================================================================
 
-class SEImessages;
-
 /// CAVLC decoder class
 class TDecCavlc : public SyntaxElementParser, public TDecEntropyIf
 {
@@ -85,7 +83,7 @@ public:
   Void  parseSPS            ( TComSPS* pcSPS );
   Void  parsePPS            ( TComPPS* pcPPS);
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
-  Void  parseSEI(SEImessages&);
+  Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
   Void  parseProfileTier    (ProfileTierLevel *ptl);
 #if SIGNAL_BITRATE_PICRATE_IN_VPS

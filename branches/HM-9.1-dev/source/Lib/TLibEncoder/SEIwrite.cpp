@@ -98,7 +98,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 }
 #endif
 
-void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
+void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
 {
   switch (sei.payloadType())
   {
@@ -110,17 +110,17 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
     break; 
 #if DU_INFO_SEI_K0126
   case SEI::DECODING_UNIT_INFO:
-    xWriteSEIDecodingUnitInfo(*static_cast<const SEIDecodingUnitInfo*>(& sei));
+    xWriteSEIDecodingUnitInfo(*static_cast<const SEIDecodingUnitInfo*>(& sei), sps);
     break;
 #endif
   case SEI::DECODED_PICTURE_HASH:
     xWriteSEIDecodedPictureHash(*static_cast<const SEIDecodedPictureHash*>(&sei));
     break;
   case SEI::BUFFERING_PERIOD:
-    xWriteSEIBufferingPeriod(*static_cast<const SEIBufferingPeriod*>(&sei));
+    xWriteSEIBufferingPeriod(*static_cast<const SEIBufferingPeriod*>(&sei), sps);
     break;
   case SEI::PICTURE_TIMING:
-    xWriteSEIPictureTiming(*static_cast<const SEIPictureTiming*>(&sei));
+    xWriteSEIPictureTiming(*static_cast<const SEIPictureTiming*>(&sei), sps);
     break;
   case SEI::RECOVERY_POINT:
     xWriteSEIRecoveryPoint(*static_cast<const SEIRecoveryPoint*>(&sei));
@@ -152,7 +152,7 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei)
  * marshal a single SEI message sei, storing the marshalled representation
  * in bitstream bs.
  */
-Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei)
+Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 {
   /* calculate how large the payload data is */
   /* TODO: this would be far nicer if it used vectored buffers */
@@ -163,7 +163,7 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei)
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = false;
 #endif
-  xWriteSEIpayloadData(sei);
+  xWriteSEIpayloadData(sei, sps);
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = true;
 #endif
@@ -195,7 +195,7 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei)
   xTraceSEIMessageType(sei.payloadType());
 #endif
 
-  xWriteSEIpayloadData(sei);
+  xWriteSEIpayloadData(sei, sps);
 }
 
 /**
@@ -274,9 +274,9 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
   }
 }
 #if DU_INFO_SEI_K0126
-Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei)
+Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps)
 {
-  TComVUI *vui = sei.m_sps->getVuiParameters();
+  TComVUI *vui = sps->getVuiParameters();
   WRITE_UVLC(sei.m_decodingUnitIdx, "decoding_unit_idx");
   if(vui->getHrdParameters()->getSubPicCpbParamsInPicTimingSEIFlag())
   {
@@ -286,10 +286,10 @@ Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei)
 }
 #endif
 
-Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
+Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS *sps)
 {
   Int i, nalOrVcl;
-  TComVUI *vui = sei.m_sps->getVuiParameters();
+  TComVUI *vui = sps->getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
   WRITE_UVLC( sei.m_bpSeqParameterSetId, "bp_seq_parameter_set_id" );
@@ -316,10 +316,10 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei)
   }
   xWriteByteAlign();
 }
-Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei)
+Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sps)
 {
   Int i;
-  TComVUI *vui = sei.m_sps->getVuiParameters();
+  TComVUI *vui = sps->getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
   if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )

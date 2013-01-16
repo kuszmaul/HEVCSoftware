@@ -48,7 +48,6 @@
 
 #include "TLibCommon/SEI.h"
 class TComInputBitstream;
-class SEImessages;
 
 
 class SEIReader: public SyntaxElementParser
@@ -57,24 +56,24 @@ public:
   SEIReader() {};
   virtual ~SEIReader() {};
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
-  Void parseSEImessage(TComInputBitstream* bs, SEImessages& seis, const NalUnitType nalUnitType);
+  Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
 #else
-  Void parseSEImessage(TComInputBitstream* bs, SEImessages& seis);
+  Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis);
 #endif
 protected:
 #if SUFFIX_SEI_NUT_DECODED_HASH_SEI
-  Void xReadSEImessage                (SEImessages& seis, const NalUnitType nalUnitType);
+  Void xReadSEImessage                (SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
 #else
-  Void xReadSEImessage                (SEImessages& seis);
+  Void xReadSEImessage                (SEIMessages& seis);
 #endif
   Void xParseSEIuserDataUnregistered  (SEIuserDataUnregistered &sei, UInt payloadSize);
   Void xParseSEIActiveParameterSets   (SEIActiveParameterSets  &sei, UInt payloadSize);
 #if DU_INFO_SEI_K0126
-  Void xParseSEIDecodingUnitInfo      (SEIDecodingUnitInfo& sei, UInt payloadSize);
+  Void xParseSEIDecodingUnitInfo      (SEIDecodingUnitInfo& sei, UInt payloadSize, TComSPS *sps);
 #endif
   Void xParseSEIDecodedPictureHash    (SEIDecodedPictureHash& sei, UInt payloadSize);
-  Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize);
-  Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize);
+  Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize, TComSPS *sps);
+  Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize, TComSPS *sps);
   Void xParseSEIRecoveryPoint         (SEIRecoveryPoint& sei, UInt payloadSize);
   Void xParseSEIFramePacking          (SEIFramePacking& sei, UInt payloadSize);
 #if SEI_DISPLAY_ORIENTATION

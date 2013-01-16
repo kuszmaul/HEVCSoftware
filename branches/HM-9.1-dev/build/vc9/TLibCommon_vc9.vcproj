@@ -295,6 +295,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\SEI.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComBitStream.cpp"
 				>
 			</File>
