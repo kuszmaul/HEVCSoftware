@@ -63,7 +63,6 @@ TComPic::TComPic()
 , m_bIndependentTileBoundaryForNDBFilter  (false)
 , m_pNDBFilterYuvTmp                      (NULL)
 , m_bCheckLTMSB                           (false)
-, m_SEIs                                  (NULL)
 {
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
