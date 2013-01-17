@@ -376,16 +376,13 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt /*p
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
   UInt val; 
-  READ_CODE(4, val, "active_vps_id");
-  sei.activeVPSId = val; 
+  READ_CODE(4, val, "active_vps_id");      sei.activeVPSId = val; 
+  READ_UVLC(   val, "num_sps_ids_minus1"); sei.numSpsIdsMinus1 = val;
 
-  READ_CODE(1, val, "active_sps_id_present_flag");
-  sei.activeSPSIdPresentFlag = val; 
-
-  if(sei.activeSPSIdPresentFlag)
+  sei.activeSeqParamSetId.resize(sei.numSpsIdsMinus1 + 1);
+  for (Int i=0; i < (sei.numSpsIdsMinus1 + 1); i++)
   {
-    READ_UVLC(val, "active_seq_param_set_id");
-    sei.activeSeqParamSetId = val; 
+    READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val; 
   }
 
 #if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG

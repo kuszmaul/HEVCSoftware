@@ -249,12 +249,14 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 
 Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 {
-  WRITE_CODE(sei.activeVPSId, 4, "active_vps_id");
-  WRITE_CODE(sei.activeSPSIdPresentFlag, 1, "active_sps_id_present_flag");
+  WRITE_CODE(sei.activeVPSId,     4, "active_vps_id");
+  WRITE_UVLC(sei.numSpsIdsMinus1,    "num_sps_ids_minus1");
 
-  if (sei.activeSPSIdPresentFlag) 
+  assert (sei.activeSeqParamSetId.size() == (sei.numSpsIdsMinus1 + 1));
+
+  for (Int i = 0; i < sei.activeSeqParamSetId.size(); i++)
   {
-    WRITE_UVLC(sei.activeSeqParamSetId, "active_seq_param_set_id"); 
+    WRITE_UVLC(sei.activeSeqParamSetId[i], "active_seq_param_set_id"); 
   }
 
 #if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
