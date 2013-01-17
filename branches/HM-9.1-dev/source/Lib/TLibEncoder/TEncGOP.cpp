@@ -1512,7 +1512,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
           for( i = 0; i < numDU; i ++ )
           {
-            pictureTimingSEI.m_numNalusInDuMinus1[ i ]       = ( i == 0 ) ? ( accumNalsDU[ i ] ) : ( accumNalsDU[ i ] - accumNalsDU[ i - 1] - 1 );
+            pictureTimingSEI.m_numNalusInDuMinus1[ i ]       = ( i == 0 ) ? ( accumNalsDU[ i ] - 1 ) : ( accumNalsDU[ i ] - accumNalsDU[ i - 1] - 1 );
           }
 
           if( numDU == 1 )
