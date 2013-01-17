@@ -1495,6 +1495,10 @@ SEI messages.
   0 & Disabled \\
   1 & Transmits MD5 in SEI message and writes the value to the encoder
       log \\
+  2 & Transmits CRC in SEI message and writes the value to the encoder
+      log \\
+  3 & Transmits checksum in SEI message and writes the value to the encoder
+      log \\
 \end{tabular}
 \\
 \Option{SEIRecoveryPoint} &
@@ -1502,22 +1506,12 @@ SEI messages.
 \Default{0} &
 Enables or disables the insertion of the Recovery point
 SEI messages.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
 \\
 \Option{SEIActiveParameterSets} &
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Active parameter sets
 SEI messages.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
 \\
 \Option{SEIBufferingPeriod} &
 \ShortOption{\None} &
@@ -1525,32 +1519,48 @@ SEI messages.
 Enables or disables the insertion of the Buffering period
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
 SEIBufferingPeriod requires SEIActiveParameterSets to be enabled.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
 \\
 \Option{SEIPictureTiming} &
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Picture timing
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
+\\
+\Option{SEIDecodingUnitInfo} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Decoding unit information
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
+\\
+\Option{SEIGradualDecodingRefreshInfo} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Gradual decoding refresh information
+SEI messages.
+\\
+\Option{SEITemporalLevel0Index} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Temporal level zero index
+SEI messages.
+\\
+\Option{SEIDisplayOrientation} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Display orientation
+SEI messages.
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.30\textwidth}}
   0 & Disabled \\
-  1 & Enabled \\
+  N: $0 < N < (2^{16} - 1)$ & Enable display orientation SEI message with 
+  \mbox{anticlockwise_rotation = N} 
+  and \mbox{display_orientation_repetition_period = 1} \\
 \end{tabular}
 \\
 \Option{SEIFramePacking} &
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Frame packing arrangement SEI messages.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
 \\
 \Option{SEIFramePackingType} &
 \ShortOption{\None} &
@@ -1587,11 +1597,6 @@ This option has no effect if SEIFramePacking is disabled.
 Enables or disables the quincunx_sampling signalling in the
 Frame packing arrangement SEI messages. This option has no
 effect if SEIFramePacking is disabled.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
 \\
 \Option{SEIFramePackingId} &
 \ShortOption{\None} &
