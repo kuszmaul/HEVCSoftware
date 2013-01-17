@@ -42,7 +42,6 @@
 //! \{
 
 TDecTop::TDecTop()
-: m_SEIs(0)
 {
   m_pcPic = 0;
   m_iMaxRefPicNum = 0;
@@ -361,23 +360,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if DU_INFO_SEI_K0126
   else
   {
-    // slices after the first slice
-    if(pcPic->getSEIs().empty())
+    // Check if any new SEI has arrived
+    if(!m_SEIs.empty())
     {
-      pcPic->setSEIs(m_SEIs);
-      m_SEIs.clear();
-    }
-    else
-    {
-      // CHeck if any new SEI has arrived
-      if(!m_SEIs.empty())
-      {
-        // Currently only decoding Unit SEI message occuring between VCL NALUs copied
-        SEIMessages &picSEI = pcPic->getSEIs();
-        SEIMessages decodingUnitInfos = getSeisByType (m_SEIs, SEI::DECODING_UNIT_INFO);
-        picSEI.insert(picSEI.end(), decodingUnitInfos.begin(), decodingUnitInfos.end());
-        deleteSEIs(m_SEIs);
-      }
+      // Currently only decoding Unit SEI message occurring between VCL NALUs copied
+      SEIMessages &picSEI = pcPic->getSEIs();
+      SEIMessages decodingUnitInfos = extractSeisByType (m_SEIs, SEI::DECODING_UNIT_INFO);
+      picSEI.insert(picSEI.end(), decodingUnitInfos.begin(), decodingUnitInfos.end());
+      deleteSEIs(m_SEIs);
     }
   }
 #endif
