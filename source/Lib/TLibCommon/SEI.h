@@ -33,6 +33,7 @@
 
 #pragma once
 #include <list>
+#include <vector>
 
 //! \ingroup TLibCommon
 //! \{
@@ -131,7 +132,7 @@ public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
   SEIActiveParameterSets() 
-    :activeSPSIdPresentFlag(1)
+    :numSpsIdsMinus1(0)
 #if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
     ,activeParamSetSEIExtensionFlag(0)
 #endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
@@ -139,8 +140,8 @@ public:
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
-  Int activeSPSIdPresentFlag;
-  Int activeSeqParamSetId; 
+  Int numSpsIdsMinus1;
+  std::vector<Int> activeSeqParamSetId; 
 #if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
   Int activeParamSetSEIExtensionFlag; 
 #endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
