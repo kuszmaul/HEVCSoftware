@@ -1553,7 +1553,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               pCRD[ i ] = (UInt)ui64Tmp - uiPrev - 1;
               if( (Int)pCRD[ i ] < 0 )
               {
-                pCRD[ i ] ++;
+                pCRD[ i ] = 0;
               }
               else if (tmp > 0 && flag == 1) 
               {
