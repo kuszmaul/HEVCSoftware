@@ -1488,7 +1488,7 @@ Indicate the maximum absolute value of a decoded vertical MV component in quarte
 \Option{SEIpictureDigest} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the calculation and insertion of the picture_digest
+Enables or disables the calculation and insertion of the Decoded picture hash
 SEI messages.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1500,7 +1500,18 @@ SEI messages.
 \Option{SEIRecoveryPoint} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the recovery_point
+Enables or disables the insertion of the Recovery point
+SEI messages.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Disabled \\
+  1 & Enabled \\
+\end{tabular}
+\\
+\Option{SEIActiveParameterSets} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Active parameter sets
 SEI messages.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1511,8 +1522,9 @@ SEI messages.
 \Option{SEIBufferingPeriod} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the buffering_period
+Enables or disables the insertion of the Buffering period
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
+SEIBufferingPeriod requires SEIActiveParameterSets to be enabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
   0 & Disabled \\
@@ -1522,7 +1534,7 @@ SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \Option{SEIPictureTiming} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the picture_timing
+Enables or disables the insertion of the Picture timing
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1533,7 +1545,7 @@ SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \Option{SEIFramePacking} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the frame_packing_arrangement SEI messages.
+Enables or disables the insertion of the Frame packing arrangement SEI messages.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
   0 & Disabled \\
@@ -1543,7 +1555,7 @@ Enables or disables the insertion of the frame_packing_arrangement SEI messages.
 \Option{SEIFramePackingType} &
 \ShortOption{\None} &
 \Default{0} &
-Indicates the arrangmenet type in the frame_packing_arrangement SEI message.
+Indicates the arrangement type in the Frame packing arrangement SEI message.
 This option has no effect if SEIFramePacking is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1560,7 +1572,7 @@ This option has no effect if SEIFramePacking is disabled.
 \Option{SEIFramePackingInterpretation} &
 \ShortOption{\None} &
 \Default{0} &
-Indicates the constituent frames relationship in the frame_packing_arrangement SEI message. 
+Indicates the constituent frames relationship in the Frame packing arrangement SEI message. 
 This option has no effect if SEIFramePacking is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1573,7 +1585,7 @@ This option has no effect if SEIFramePacking is disabled.
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the quincunx_sampling signalling in the
-frame_packing_arrangement SEI messages. This option has no
+Frame packing arrangement SEI messages. This option has no
 effect if SEIFramePacking is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
@@ -1584,7 +1596,7 @@ effect if SEIFramePacking is disabled.
 \Option{SEIFramePackingId} &
 \ShortOption{\None} &
 \Default{0} &
-Indicates the session number in the frame_packing_arrangement
+Indicates the session number in the Frame packing arrangement
 SEI messages. This option has no effect if SEIFramePacking is
 disabled.
 \\
