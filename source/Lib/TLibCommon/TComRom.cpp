@@ -98,9 +98,6 @@ UInt g_auiZscanToRaster [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToZscan [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelX  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelY  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
-#if !LINEBUF_CLEANUP
-UInt g_motionRefer   [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, }; 
-#endif
 
 UInt g_auiPUOffset[8] = { 0, 8, 4, 4, 2, 10, 1, 5};
 
@@ -136,55 +133,6 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
     g_auiRasterToZscan[ g_auiZscanToRaster[i] ] = i;
   }
 }
-
-#if !LINEBUF_CLEANUP
-/** generate motion data compression mapping table
-* \param uiMaxCUWidth, width of LCU
-* \param uiMaxCUHeight, hight of LCU
-* \param uiMaxDepth, max depth of LCU
-* \returns Void
-*/
-Void initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
-{
-  Int  minSUWidth  = (Int)uiMaxCUWidth  >> ( (Int)uiMaxDepth - 1 );
-  Int  minSUHeight = (Int)uiMaxCUHeight >> ( (Int)uiMaxDepth - 1 );
-
-  Int  numPartInWidth  = (Int)uiMaxCUWidth  / (Int)minSUWidth;
-  Int  numPartInHeight = (Int)uiMaxCUHeight / (Int)minSUHeight;
-
-  for ( Int i = 0; i < numPartInWidth*numPartInHeight; i++ )
-  {
-    g_motionRefer[i] = i;
-  }
-
-  UInt maxCUDepth = g_uiMaxCUDepth - ( g_uiAddCUDepth - 1);
-  Int  minCUWidth  = (Int)uiMaxCUWidth  >> ( (Int)maxCUDepth - 1);
-
-  if(!(minCUWidth == 8 && minSUWidth == 4)) //check if Minimum PU width == 4
-  {
-    return;
-  }
-  
-  Int compressionNum = 2;
-
-  for ( Int i = numPartInWidth*(numPartInHeight-1); i < numPartInWidth*numPartInHeight; i += compressionNum*2)
-  {
-    for ( Int j = 1; j < compressionNum; j++ )
-    {
-      g_motionRefer[g_auiRasterToZscan[i+j]] = g_auiRasterToZscan[i];
-    }
-  }
-
-  for ( Int i = numPartInWidth*(numPartInHeight-1)+compressionNum*2-1; i < numPartInWidth*numPartInHeight; i += compressionNum*2)
-  {
-    for ( Int j = 1; j < compressionNum; j++ )
-    {
-      g_motionRefer[g_auiRasterToZscan[i-j]] = g_auiRasterToZscan[i];
-    }
-  }
-}
-
-#endif
 
 Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
 {

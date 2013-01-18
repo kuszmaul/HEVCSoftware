@@ -110,9 +110,6 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   
   // initialize conversion matrix from partition index to pel
   initRasterToPelXY( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
-#if !LINEBUF_CLEANUP
-  initMotionReferIdx ( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
-#endif
 }
 
 Void TEncCu::destroy()
