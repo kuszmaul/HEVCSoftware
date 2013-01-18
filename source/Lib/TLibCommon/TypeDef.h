@@ -40,8 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define PICTURE_TIMING_SEI_K0126                    1  ///< K0126: Syntax changes to picture timing SEI message for efficient and error-resilient signallng of  
-                                                       ///<        sub-picture CPB removal time in picture timing SEI message
 #define DU_INFO_SEI_K0126                           1  ///< K0126: Decoding Unit (DU) information SEI message
 #define MOVE_TEMPORAL_ENABLE_MVP_FLAG               1  ///< K0251: move temporal_enable_mvp_flag
 #define TIMING_SEI_PIC_STRUCT                       1  ///< K0165: add pic_struc and other field related elements to picture timing SEI
