@@ -184,24 +184,16 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
   UInt uiTileLCUX;
   Int iNumSubstreamsPerTile = 1; // if independent.
   Bool depSliceSegmentsEnabled = rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getPPS()->getDependentSliceSegmentsEnabledFlag();
-#if  DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
   uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr))->getFirstCUAddr();
-#endif
   if( depSliceSegmentsEnabled )
   {
     if( (!rpcPic->getSlice(rpcPic->getCurrSliceIdx())->isNextSlice()) &&
        iStartCUAddr != rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr))->getFirstCUAddr())
     {
-#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
-      uiTileCol = 0;
-#endif
       if(pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
       {
-#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
         uiTileCol = rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1);
-#endif
         m_pcBufferSbacDecoders[uiTileCol].loadContexts( CTXMem[1]  );//2.LCU
-#if DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
         if ( (iStartCUAddr%uiWidthInLCUs+1) >= uiWidthInLCUs  )
         {
           uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
@@ -211,7 +203,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
             CTXMem[0]->loadContexts(pcSbacDecoder);
           }
         }
-#endif
       }
       pcSbacDecoder->loadContexts(CTXMem[0] ); //end of depSlice-1
       pcSbacDecoders[uiSubStrm].loadContexts(pcSbacDecoder);
@@ -261,22 +252,8 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
              ((pcCUTR->getSCUAddr()+uiMaxParts-1) < pcSlice->getSliceCurStartCUAddr()) ||
              ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(iCUAddr)))
              ))
-#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
-             ||
-             (true/*bEnforceDependentSliceRestriction*/ &&
-             ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) || 
-             ((pcCUTR->getSCUAddr()+uiMaxParts-1) < pcSlice->getSliceSegmentCurStartCUAddr()) ||
-             ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(iCUAddr)))
-             ))
-#endif
            )
         {
-#if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
-          if( (iCUAddr!=0) && pcCUTR && ((pcCUTR->getSCUAddr()+uiMaxParts-1) >= pcSlice->getSliceCurStartCUAddr()) && depSliceSegmentsEnabled)
-          {
-             pcSbacDecoders[uiSubStrm].loadContexts( &m_pcBufferSbacDecoders[uiTileCol] ); 
-          }
-#endif
           // TR not available.
         }
         else
