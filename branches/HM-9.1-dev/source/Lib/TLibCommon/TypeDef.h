@@ -96,8 +96,6 @@
 
 #define STRONG_INTRA_SMOOTHING           1  ///< Enables Bilinear interploation of reference samples instead of 121 filter in intra prediction when reference samples are flat.
 
-#define RPL_INIT_FIX 1 ///< K0255 2nd part (editorial)
-
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS                64
 
