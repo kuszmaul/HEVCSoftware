@@ -85,8 +85,6 @@
 #define VPS_REARRANGE                               1  ///< JCTVC-K0254
 #define HRD_BUFFER                                  1  ///< JCTVC-K0221
 
-#define DEPENDENT_SLICE_SEGMENT_FLAGS   1   ///< K0184: Move dependent_slice_enabled_flag after seq_parameter_set_id in PPS.
-                                            ///< Move dependent_slice_flag between pic_parameter_set_id and slice_address.
 #define HM9_NALU_TYPES 1
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
