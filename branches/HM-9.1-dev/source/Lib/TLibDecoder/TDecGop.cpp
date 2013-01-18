@@ -179,9 +179,6 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( rpcPic );
 
-#if !TICKET845
-  pcSlice = rpcPic->getSlice(0);
-#endif
   if(pcSlice->getSPS()->getUseSAO())
   {
     m_sliceStartCUAddress.push_back(rpcPic->getNumCUsInFrame()* rpcPic->getNumPartInCU());
@@ -190,9 +187,6 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 
   if( pcSlice->getSPS()->getUseSAO() )
   {
-#if !TICKET845
-    if(pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma())
-#endif
     {
       SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
       saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
