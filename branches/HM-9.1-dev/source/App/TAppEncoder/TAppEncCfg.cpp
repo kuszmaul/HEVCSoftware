@@ -67,13 +67,8 @@ TAppEncCfg::TAppEncCfg()
 , m_pchBitstreamFile()
 , m_pchReconFile()
 , m_pchdQPFile()
-#if MIN_SPATIAL_SEGMENTATION
 , m_pColumnWidth()
 , m_pRowHeight()
-#else
-, m_pchColumnWidth()
-, m_pchRowHeight()
-#endif
 , m_scalingListFile()
 {
   m_aidQP = NULL;
@@ -89,13 +84,8 @@ TAppEncCfg::~TAppEncCfg()
   free(m_pchBitstreamFile);
   free(m_pchReconFile);
   free(m_pchdQPFile);
-#if MIN_SPATIAL_SEGMENTATION
   free(m_pColumnWidth);
   free(m_pRowHeight);
-#else
-  free(m_pchColumnWidth);
-  free(m_pchRowHeight);
-#endif
   free(m_scalingListFile);
 }
 
@@ -539,7 +529,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
-#if MIN_SPATIAL_SEGMENTATION
   Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   Char* pRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
@@ -597,10 +586,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     m_pRowHeight = NULL;
   }
-#else
-  m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
-  m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
-#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   readBoolString(cfg_bitRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_bitRateInfoPresentFlag, "bit rate info. present flag" );
   readIntString (cfg_avgBitRate,             m_bitRatePicRateMaxTLayers, m_avgBitRate,             "avg. bit rate"               );
@@ -1223,7 +1208,6 @@ Void TAppEncCfg::xCheckParameter()
     m_maxDecPicBuffering[MAX_TLAYER-1] = m_numReorderPics[MAX_TLAYER-1];
   }
 
-#if MIN_SPATIAL_SEGMENTATION
   if(m_vuiParametersPresentFlag && m_bitstreamRestrictionFlag)
   { 
     Int PicSizeInSamplesY =  m_iSourceWidth * m_iSourceHeight;
@@ -1297,7 +1281,6 @@ Void TAppEncCfg::xCheckParameter()
       m_minSpatialSegmentationIdc = 0;
     }
   }
-#endif
   xConfirmPara( m_bUseLComb==false && m_numReorderPics[MAX_TLAYER-1]!=0, "ListCombination can only be 0 in low delay coding (more precisely when L0 and L1 are identical)" );  // Note however this is not the full necessary condition as ref_pic_list_combination_flag can only be 0 if L0 == L1.
   xConfirmPara( m_iWaveFrontSynchro < 0, "WaveFrontSynchro cannot be negative" );
   xConfirmPara( m_iWaveFrontSubstreams <= 0, "WaveFrontSubstreams must be positive" );

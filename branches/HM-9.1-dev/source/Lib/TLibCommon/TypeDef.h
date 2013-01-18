@@ -72,8 +72,6 @@
 
 #define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
 
-#define MIN_SPATIAL_SEGMENTATION                    1  ///< JCTVC-K0236
-
 #define VPS_REARRANGE                               1  ///< JCTVC-K0254
 #define HRD_BUFFER                                  1  ///< JCTVC-K0221
 

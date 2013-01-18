@@ -293,9 +293,7 @@ protected:
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present
   Bool      m_tilesFixedStructureFlag;                        ///< Indicates that each active picture parameter set has the same values of the syntax elements related to tiles
   Bool      m_motionVectorsOverPicBoundariesFlag;             ///< Indicates that no samples outside the picture boundaries are used for inter prediction
-#if MIN_SPATIAL_SEGMENTATION
   Int       m_minSpatialSegmentationIdc;                      ///< Indicates the maximum size of the spatial segments in the pictures in the coded video sequence
-#endif
   Int       m_maxBytesPerPicDenom;                            ///< Indicates a number of bytes not exceeded by the sum of the sizes of the VCL NAL units associated with any coded picture
   Int       m_maxBitsPerMinCuDenom;                           ///< Indicates an upper bound for the number of bits of coding_unit() data
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
@@ -504,7 +502,6 @@ public:
   Int   getUniformSpacingIdr           ()                  { return m_iUniformSpacingIdr; }
   Void  setNumColumnsMinus1            ( Int i )           { m_iNumColumnsMinus1 = i; }
   Int   getNumColumnsMinus1            ()                  { return m_iNumColumnsMinus1; }
-#if MIN_SPATIAL_SEGMENTATION
   Void  setColumnWidth ( UInt* columnWidth )
   {
     if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
@@ -519,42 +516,9 @@ public:
       }
     }
   }
-#else
-  Void  setColumnWidth ( Char* str )
-  {
-    Char *columnWidth;
-    Int  i=0;
-    Int  m_iWidthInCU = ( m_iSourceWidth%g_uiMaxCUWidth ) ? m_iSourceWidth/g_uiMaxCUWidth + 1 : m_iSourceWidth/g_uiMaxCUWidth;
-
-    if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
-    {
-      m_puiColumnWidth = new UInt[m_iNumColumnsMinus1];
-
-      columnWidth = strtok(str, " ,-");
-      while(columnWidth!=NULL)
-      {
-        if( i>=m_iNumColumnsMinus1 )
-        {
-          printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
-          exit( EXIT_FAILURE );
-        }
-        *( m_puiColumnWidth + i ) = atoi( columnWidth );
-        printf("col: m_iWidthInCU= %4d i=%4d width= %4d\n",m_iWidthInCU,i,m_puiColumnWidth[i]); //AFU
-        columnWidth = strtok(NULL, " ,-");
-        i++;
-      }
-      if( i<m_iNumColumnsMinus1 )
-      {
-        printf( "The width of some columns is not defined.\n" );
-        exit( EXIT_FAILURE );
-      }
-    }
-  }
-#endif
   UInt  getColumnWidth                 ( UInt columnidx )  { return *( m_puiColumnWidth + columnidx ); }
   Void  setNumRowsMinus1               ( Int i )           { m_iNumRowsMinus1 = i; }
   Int   getNumRowsMinus1               ()                  { return m_iNumRowsMinus1; }
-#if MIN_SPATIAL_SEGMENTATION
   Void  setRowHeight (UInt* rowHeight)
   {
     if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
@@ -569,38 +533,6 @@ public:
       }
     }
   }
-#else
-  Void  setRowHeight (Char* str)
-  {
-    Char *rowHeight;
-    Int  i=0;
-    Int  m_iHeightInCU = ( m_iSourceHeight%g_uiMaxCUHeight ) ? m_iSourceHeight/g_uiMaxCUHeight + 1 : m_iSourceHeight/g_uiMaxCUHeight;
-
-    if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
-    {
-      m_puiRowHeight = new UInt[m_iNumRowsMinus1];
-
-      rowHeight = strtok(str, " ,-");
-      while(rowHeight!=NULL)
-      {
-        if( i>=m_iNumRowsMinus1 )
-        {
-          printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
-          exit( EXIT_FAILURE );
-        }
-        *( m_puiRowHeight + i ) = atoi( rowHeight );
-        printf("row: m_iHeightInCU=%4d i=%4d height=%4d\n",m_iHeightInCU,i,m_puiRowHeight[i]); //AFU
-        rowHeight = strtok(NULL, " ,-");
-        i++;
-      }
-      if( i<m_iNumRowsMinus1 )
-      {
-        printf( "The height of some rows is not defined.\n" );
-        exit( EXIT_FAILURE );
-     }
-    }
-  }
-#endif
   UInt  getRowHeight                   ( UInt rowIdx )     { return *( m_puiRowHeight + rowIdx ); }
   Void  xCheckGSParameters();
   Void  setWaveFrontSynchro(Int iWaveFrontSynchro)       { m_iWaveFrontSynchro = iWaveFrontSynchro; }
@@ -742,10 +674,8 @@ public:
   Void      setTilesFixedStructureFlag(Bool i)            { m_tilesFixedStructureFlag = i; }
   Bool      getMotionVectorsOverPicBoundariesFlag()       { return m_motionVectorsOverPicBoundariesFlag; }
   Void      setMotionVectorsOverPicBoundariesFlag(Bool i) { m_motionVectorsOverPicBoundariesFlag = i; }
-#if MIN_SPATIAL_SEGMENTATION
   Int       getMinSpatialSegmentationIdc()                { return m_minSpatialSegmentationIdc; }
   Void      setMinSpatialSegmentationIdc(Int i)           { m_minSpatialSegmentationIdc = i; }
-#endif
   Int       getMaxBytesPerPicDenom()                      { return m_maxBytesPerPicDenom; }
   Void      setMaxBytesPerPicDenom(Int i)                 { m_maxBytesPerPicDenom = i; }
   Int       getMaxBitsPerMinCuDenom()                     { return m_maxBitsPerMinCuDenom; }

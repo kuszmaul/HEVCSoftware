@@ -548,9 +548,7 @@ private:
   Bool m_tilesFixedStructureFlag;
   Bool m_motionVectorsOverPicBoundariesFlag;
   Bool m_restrictedRefPicListsFlag;
-#if MIN_SPATIAL_SEGMENTATION
   Int  m_minSpatialSegmentationIdc;
-#endif
   Int  m_maxBytesPerPicDenom;
   Int  m_maxBitsPerMinCuDenom;
   Int  m_log2MaxMvLengthHorizontal;
@@ -587,9 +585,7 @@ public:
     ,m_tilesFixedStructureFlag(false)
     ,m_motionVectorsOverPicBoundariesFlag(true)
     ,m_restrictedRefPicListsFlag(1)
-#if MIN_SPATIAL_SEGMENTATION
     ,m_minSpatialSegmentationIdc(0)
-#endif
     ,m_maxBytesPerPicDenom(2)
     ,m_maxBitsPerMinCuDenom(1)
     ,m_log2MaxMvLengthHorizontal(15)
@@ -677,10 +673,8 @@ public:
   Bool getRestrictedRefPicListsFlag() { return m_restrictedRefPicListsFlag; }
   Void setRestrictedRefPicListsFlag(Bool b) { m_restrictedRefPicListsFlag = b; }
 
-#if MIN_SPATIAL_SEGMENTATION
   Int getMinSpatialSegmentationIdc() { return m_minSpatialSegmentationIdc; }
   Void setMinSpatialSegmentationIdc(Int i) { m_minSpatialSegmentationIdc = i; }
-#endif
   Int getMaxBytesPerPicDenom() { return m_maxBytesPerPicDenom; }
   Void setMaxBytesPerPicDenom(Int i) { m_maxBytesPerPicDenom = i; }
 
