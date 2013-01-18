@@ -123,18 +123,12 @@ public:
 
   SEIActiveParameterSets() 
     :numSpsIdsMinus1(0)
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-    ,activeParamSetSEIExtensionFlag(0)
-#endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
   {}
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
   Int numSpsIdsMinus1;
   std::vector<Int> activeSeqParamSetId; 
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-  Int activeParamSetSEIExtensionFlag; 
-#endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
 };
 
 class SEIBufferingPeriod : public SEI
