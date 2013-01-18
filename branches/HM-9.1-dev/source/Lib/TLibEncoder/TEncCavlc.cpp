@@ -96,24 +96,16 @@ Void TEncCavlc::codeDFSvlc(Int iCode, const Char *pSymbolName)
   WRITE_SVLC(iCode, pSymbolName);
 }
 
-#if SPS_INTER_REF_SET_PRED
 Void TEncCavlc::codeShortTermRefPicSet( TComSPS* pcSPS, TComReferencePictureSet* rps, Bool calledFromSliceHeader, Int idx)
-#else
-Void TEncCavlc::codeShortTermRefPicSet( TComSPS* pcSPS, TComReferencePictureSet* rps, Bool calledFromSliceHeader)
-#endif
 {
 #if PRINT_RPS_INFO
   Int lastBits = getNumberOfWrittenBits();
 #endif
-#if SPS_INTER_REF_SET_PRED
   if (idx > 0)
   {
-#endif
   WRITE_FLAG( rps->getInterRPSPrediction(), "inter_ref_pic_set_prediction_flag" ); // inter_RPS_prediction_flag
-#if SPS_INTER_REF_SET_PRED
   }
-#endif
-  if (rps->getInterRPSPrediction()) 
+  if (rps->getInterRPSPrediction())
   {
     Int deltaRPS = rps->getDeltaRPS();
     if(calledFromSliceHeader)
@@ -555,12 +547,8 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   for(Int i=0; i < rpsList->getNumberOfReferencePictureSets(); i++)
   {
     rps = rpsList->getReferencePictureSet(i);
-#if SPS_INTER_REF_SET_PRED
     codeShortTermRefPicSet(pcSPS,rps,false, i);
-#else
-    codeShortTermRefPicSet(pcSPS,rps,false);
-#endif
-  }    
+  }
   WRITE_FLAG( pcSPS->getLongTermRefsPresent() ? 1 : 0,         "long_term_ref_pics_present_flag" );
   if (pcSPS->getLongTermRefsPresent()) 
   {
@@ -755,11 +743,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if(pcSlice->getRPSidx() < 0)
       {
         WRITE_FLAG( 0, "short_term_ref_pic_set_sps_flag");
-#if SPS_INTER_REF_SET_PRED
         codeShortTermRefPicSet(pcSlice->getSPS(), rps, true, pcSlice->getSPS()->getRPSList()->getNumberOfReferencePictureSets());
-#else
-        codeShortTermRefPicSet(pcSlice->getSPS(), rps, true);
-#endif
       }
       else
       {
