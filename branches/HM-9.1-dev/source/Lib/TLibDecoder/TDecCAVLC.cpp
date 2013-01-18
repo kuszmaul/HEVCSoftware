@@ -682,9 +682,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   parsePTL ( pcVPS->getPTL(), true, pcVPS->getMaxTLayers()-1);
   READ_CODE( 12, uiCode,  "vps_reserved_zero_12bits" );           assert(uiCode == 0);
 #endif
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
   parseBitratePicRateInfo( pcVPS->getBitratePicrateInfo(), 0, pcVPS->getMaxTLayers() - 1);
-#endif
   UInt subLayerOrderingInfoPresentFlag;
   READ_FLAG(subLayerOrderingInfoPresentFlag, "vps_sub_layer_ordering_info_present_flag");
   for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
@@ -1354,7 +1352,7 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   }
   READ_CODE(16, uiCode, "XXX_reserved_zero_16bits[]");  assert( uiCode == 0 );  
 }
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
+
 Void TDecCavlc::parseBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)
 {
   UInt uiCode;
@@ -1374,7 +1372,7 @@ Void TDecCavlc::parseBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLe
     }
   }
 }
-#endif  
+
 Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )
 {
   ruiBit = false;

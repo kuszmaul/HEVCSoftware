@@ -227,7 +227,6 @@ public:
 };
 /// VPS class
 
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
 class TComBitRatePicRateInfo
 {
   Bool        m_bitRateInfoPresentFlag[MAX_TLAYER];
@@ -256,7 +255,6 @@ public:
   Int         getAvgPicRate(Int i) {return m_avgPicRate[i];}
   Void        setAvgPicRate(Int i, Int x) {m_avgPicRate[i] = x;}
 };
-#endif
 
 struct HrdSubLayerInfo
 {
@@ -409,9 +407,7 @@ private:
 #endif
 
   TComPTL     m_pcPTL;
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo    m_bitRatePicRateInfo;
-#endif
 
 public:
   TComVPS();
@@ -465,9 +461,7 @@ public:
 #endif
 
   TComPTL* getPTL() { return &m_pcPTL; }
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
-#endif
 };
 
 class Window

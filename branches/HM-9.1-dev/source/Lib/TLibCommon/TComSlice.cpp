@@ -1946,7 +1946,7 @@ TComPTL::TComPTL()
   ::memset(m_subLayerProfilePresentFlag, 0, sizeof(m_subLayerProfilePresentFlag));
   ::memset(m_subLayerLevelPresentFlag,   0, sizeof(m_subLayerLevelPresentFlag  ));
 }
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
+
 TComBitRatePicRateInfo::TComBitRatePicRateInfo()
 {
   ::memset(m_bitRateInfoPresentFlag, 0, sizeof(m_bitRateInfoPresentFlag));
@@ -1956,5 +1956,4 @@ TComBitRatePicRateInfo::TComBitRatePicRateInfo()
   ::memset(m_constantPicRateIdc,     0, sizeof(m_constantPicRateIdc));
   ::memset(m_avgPicRate,             0, sizeof(m_avgPicRate));
 }
-#endif
 //! \}
