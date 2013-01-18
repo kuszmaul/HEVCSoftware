@@ -1270,23 +1270,12 @@ Void TEncCavlc::codeTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   assert(0);
 }
 
-#if !REMOVE_BURST_IPCM
-/** Code I_PCM information. 
- * \param pcCU pointer to CU
- * \param uiAbsPartIdx CU index
- * \param numIPCM the number of succesive IPCM blocks with the same size 
- * \param firstIPCMFlag 
- * \returns Void
- */
-Void TEncCavlc::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag)
-#else
-/** Code I_PCM information. 
+/** Code I_PCM information.
  * \param pcCU pointer to CU
  * \param uiAbsPartIdx CU index
  * \returns Void
  */
 Void TEncCavlc::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
-#endif
 {
   assert(0);
 }
