@@ -1389,26 +1389,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           calcChecksum(*pcPic->getPicYuvRec(), sei_recon_picture_digest.digest);
           digestStr = digestToString(sei_recon_picture_digest.digest, 4);
         }
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
         OutputNALUnit nalu(NAL_UNIT_SEI_SUFFIX, pcSlice->getTLayer());
-#else
-        OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
-#endif
 
         /* write the SEI messages */
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
         m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_recon_picture_digest, pcSlice->getSPS());
         writeRBSPTrailingBits(nalu.m_Bitstream);
 
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
         accessUnit.insert(accessUnit.end(), new NALUnitEBSP(nalu));
-#else
-        /* insert the SEI message NALUnit before any Slice NALUnits */
-        AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
-        accessUnit.insert(it, new NALUnitEBSP(nalu));
-#endif
       }
-#if SEI_TEMPORAL_LEVEL0_INDEX
       if (m_pcCfg->getTemporalLevel0IndexSEIEnabled())
       {
         SEITemporalLevel0Index sei_temporal_level0_index;
@@ -1435,7 +1424,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
         accessUnit.insert(it, new NALUnitEBSP(nalu));
       }
-#endif
 
       xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime );
 

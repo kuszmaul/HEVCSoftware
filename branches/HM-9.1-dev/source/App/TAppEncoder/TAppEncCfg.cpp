@@ -490,9 +490,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDisplayOrientation",          m_displayOrientationSEIAngle,             0, "Control generation of display orientation SEI messages\n"
                                                               "\tN: 0 < N < (2^16 - 1) enable display orientation SEI message with anticlockwise_rotation = N and display_orientation_repetition_period = 1\n"
                                                               "\t0: disable")
-#if SEI_TEMPORAL_LEVEL0_INDEX
   ("SEITemporalLevel0Index",         m_temporalLevel0IndexSEIEnabled,          0, "Control generation of temporal level 0 index SEI messages")
-#endif
 #if SEI_GDR_INFO
   ("SEIGradualDecodingRefreshInfo",  m_gradualDecodingRefreshInfoEnabled,      0, "Control generation of gradual decoding refresh information SEI message")               
 #endif

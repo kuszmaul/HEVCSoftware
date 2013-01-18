@@ -232,9 +232,7 @@ protected:
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
   Int       m_displayOrientationSEIAngle;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   Int       m_temporalLevel0IndexSEIEnabled;
-#endif
 #if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
 #endif
@@ -631,10 +629,8 @@ public:
   Int   getFramePackingArrangementSEIInterpretation()    { return m_framePackingSEIInterpretation; }
   Void  setDisplayOrientationSEIAngle(Int b)             { m_displayOrientationSEIAngle = b; }
   Int   getDisplayOrientationSEIAngle()                  { return m_displayOrientationSEIAngle; }
-#if SEI_TEMPORAL_LEVEL0_INDEX
   Void  setTemporalLevel0IndexSEIEnabled(Int b)          { m_temporalLevel0IndexSEIEnabled = b; }
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
-#endif
 #if SEI_GDR_INFO
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }

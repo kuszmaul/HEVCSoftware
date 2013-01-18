@@ -200,14 +200,12 @@ protected:
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
   Int       m_displayOrientationSEIAngle;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   Int       m_temporalLevel0IndexSEIEnabled;
 #if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
 #endif
 #if DU_INFO_SEI_K0126
   Int       m_decodingUnitInfoSEIEnabled;
-#endif
 #endif
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
