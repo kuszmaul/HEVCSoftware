@@ -62,9 +62,7 @@ public:
     POST_FILTER_HINT                     = 22,
     TONE_MAPPING_INFO                    = 23,
     FRAME_PACKING                        = 45,
-#if SEI_DISPLAY_ORIENTATION
     DISPLAY_ORIENTATION                  = 47,
-#endif
     SOP_DESCRIPTION                      = 128,
     ACTIVE_PARAMETER_SETS                = 129,
     DECODING_UNIT_INFO                   = 130,
@@ -259,7 +257,7 @@ public:
   Int  m_arrangementRepetetionPeriod;
   Bool m_upsampledAspectRatio;
 };
-#if SEI_DISPLAY_ORIENTATION
+
 class SEIDisplayOrientation : public SEI
 {
 public:
@@ -280,7 +278,6 @@ public:
   UInt repetitionPeriod;
   Bool extensionFlag;
 };
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
 class SEITemporalLevel0Index : public SEI
 {

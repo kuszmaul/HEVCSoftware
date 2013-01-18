@@ -231,9 +231,7 @@ protected:
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-#if SEI_DISPLAY_ORIENTATION
   Int       m_displayOrientationSEIAngle;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Int       m_temporalLevel0IndexSEIEnabled;
 #endif
@@ -631,10 +629,8 @@ public:
   Int   getFramePackingArrangementSEIQuincunx()          { return m_framePackingSEIQuincunx; }
   Void  setFramePackingArrangementSEIInterpretation(Int b)  { m_framePackingSEIInterpretation = b; }
   Int   getFramePackingArrangementSEIInterpretation()    { return m_framePackingSEIInterpretation; }
-#if SEI_DISPLAY_ORIENTATION
   Void  setDisplayOrientationSEIAngle(Int b)             { m_displayOrientationSEIAngle = b; }
   Int   getDisplayOrientationSEIAngle()                  { return m_displayOrientationSEIAngle; }
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void  setTemporalLevel0IndexSEIEnabled(Int b)          { m_temporalLevel0IndexSEIEnabled = b; }
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }

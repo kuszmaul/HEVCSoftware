@@ -487,11 +487,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                   "\t0: unspecified\n"
                                                                                   "\t1: stereo pair, frame0 represents left view\n"
                                                                                   "\t2: stereo pair, frame0 represents right view")
-#if SEI_DISPLAY_ORIENTATION
   ("SEIDisplayOrientation",          m_displayOrientationSEIAngle,             0, "Control generation of display orientation SEI messages\n"
                                                               "\tN: 0 < N < (2^16 - 1) enable display orientation SEI message with anticlockwise_rotation = N and display_orientation_repetition_period = 1\n"
                                                               "\t0: disable")
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   ("SEITemporalLevel0Index",         m_temporalLevel0IndexSEIEnabled,          0, "Control generation of temporal level 0 index SEI messages")
 #endif

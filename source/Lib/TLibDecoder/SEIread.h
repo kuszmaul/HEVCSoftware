@@ -76,9 +76,7 @@ protected:
   Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize, TComSPS *sps);
   Void xParseSEIRecoveryPoint         (SEIRecoveryPoint& sei, UInt payloadSize);
   Void xParseSEIFramePacking          (SEIFramePacking& sei, UInt payloadSize);
-#if SEI_DISPLAY_ORIENTATION
   Void xParseSEIDisplayOrientation    (SEIDisplayOrientation &sei, UInt payloadSize);
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void xParseSEITemporalLevel0Index   (SEITemporalLevel0Index &sei, UInt payloadSize);
 #endif

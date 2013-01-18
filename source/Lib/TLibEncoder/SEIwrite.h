@@ -61,9 +61,7 @@ protected:
   TComSPS *m_pSPS;
   Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
   Void xWriteSEIFramePacking(const SEIFramePacking& sei);
-#if SEI_DISPLAY_ORIENTATION
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
 #endif

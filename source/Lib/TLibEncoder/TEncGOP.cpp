@@ -881,7 +881,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
-#if SEI_DISPLAY_ORIENTATION
       if (m_pcCfg->getDisplayOrientationSEIAngle())
       {
         SEIDisplayOrientation sei_display_orientation;
@@ -896,7 +895,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         writeRBSPTrailingBits(nalu.m_Bitstream);
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
-#endif
 
       m_bSeqFirst = false;
     }
