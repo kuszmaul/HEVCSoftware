@@ -884,11 +884,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
 
-#if SAVE_BITS_REFPICLIST_MOD_FLAG
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)
-#else
-    if( pcSlice->getPPS()->getListsModificationPresentFlag() )
-#endif
     {
       TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
       if(!pcSlice->isIntra())
