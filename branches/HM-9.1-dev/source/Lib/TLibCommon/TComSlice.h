@@ -338,10 +338,8 @@ public:
   Void setDuCpbRemovalDelayLengthMinus1     ( UInt value ) { m_duCpbRemovalDelayLengthMinus1 = value;      }
   UInt getDuCpbRemovalDelayLengthMinus1     ( )            { return m_duCpbRemovalDelayLengthMinus1;       }
 
-#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
   Void setSubPicCpbParamsInPicTimingSEIFlag ( Bool flag)   { m_subPicCpbParamsInPicTimingSEIFlag = flag;   }
   Bool getSubPicCpbParamsInPicTimingSEIFlag ()             { return m_subPicCpbParamsInPicTimingSEIFlag;   }
-#endif
 
   Void setBitRateScale                      ( UInt value ) { m_bitRateScale = value;                       }
   UInt getBitRateScale                      ( )            { return m_bitRateScale;                        }

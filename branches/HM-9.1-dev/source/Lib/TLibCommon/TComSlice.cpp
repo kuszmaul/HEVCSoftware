@@ -1328,13 +1328,11 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   {
     hrd->setTickDivisorMinus2( 100 - 2 );                          // 
     hrd->setDuCpbRemovalDelayLengthMinus1( 7 );                    // 8-bit precision ( plus 1 for last DU in AU )
-#if SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI
     hrd->setSubPicCpbParamsInPicTimingSEIFlag( true );
   }
   else
   {
     hrd->setSubPicCpbParamsInPicTimingSEIFlag( false );  
-#endif
   }
 
   hrd->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
