@@ -106,8 +106,6 @@
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS                64
 
-#define FLAT_4x4_DSL 1 ///< Use flat 4x4 default scaling list (see notes on K0203)
-
 #define RDOQ_TRANSFORMSKIP          1   // Enable RDOQ for transform skip (see noted on K0245)
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 

@@ -536,22 +536,6 @@ Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int i
   }
 }
 
-#if !FLAT_4x4_DSL
-Int g_quantIntraDefault4x4[16] =
-{
-  16,16,17,21,
-  16,17,20,25,
-  17,20,30,41,
-  21,25,41,70
-};
-Int g_quantInterDefault4x4[16] =
-{
-  16,16,17,21,
-  16,17,21,24,
-  17,21,24,36,
-  21,24,36,57
-};
-#endif
 Int g_quantTSDefault4x4[16] =
 {
   16,16,16,16,
