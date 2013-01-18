@@ -831,9 +831,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         sei_active_parameter_sets.numSpsIdsMinus1 = 0;
         sei_active_parameter_sets.activeSeqParamSetId.resize(sei_active_parameter_sets.numSpsIdsMinus1 + 1); 
         sei_active_parameter_sets.activeSeqParamSetId[0] = pcSlice->getSPS()->getSPSId(); 
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-        sei_active_parameter_sets.activeParamSetSEIExtensionFlag = 0;
-#endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
 
         nalu = NALUnit(NAL_UNIT_SEI); 
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);

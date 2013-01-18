@@ -367,11 +367,6 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
     READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val; 
   }
 
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-  READ_CODE(1, val, "active_param_set_sei_extension_flag");
-  sei.activeParamSetSEIExtensionFlag = val; 
-  
-#endif /* !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
   UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned(); 
   
   while(uibits--)
