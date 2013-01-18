@@ -231,9 +231,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );
   m_cTEncTop.setFramePackingArrangementSEIQuincunx( m_framePackingSEIQuincunx );
   m_cTEncTop.setFramePackingArrangementSEIInterpretation( m_framePackingSEIInterpretation );
-#if SEI_DISPLAY_ORIENTATION
   m_cTEncTop.setDisplayOrientationSEIAngle( m_displayOrientationSEIAngle );
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
 #endif

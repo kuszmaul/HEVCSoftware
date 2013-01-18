@@ -199,9 +199,7 @@ protected:
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-#if SEI_DISPLAY_ORIENTATION
   Int       m_displayOrientationSEIAngle;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   Int       m_temporalLevel0IndexSEIEnabled;
 #if SEI_GDR_INFO

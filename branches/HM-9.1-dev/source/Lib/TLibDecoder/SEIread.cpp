@@ -77,11 +77,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::FRAME_PACKING:
     fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
     break;
-#if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
     break;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
@@ -235,12 +233,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
       sei = new SEIFramePacking;
       xParseSEIFramePacking((SEIFramePacking&) *sei, payloadSize);
       break;
-#if SEI_DISPLAY_ORIENTATION
     case SEI::DISPLAY_ORIENTATION:
       sei = new SEIDisplayOrientation;
       xParseSEIDisplayOrientation((SEIDisplayOrientation&) *sei, payloadSize);
       break;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
     case SEI::TEMPORAL_LEVEL0_INDEX:
       sei = new SEITemporalLevel0Index;
@@ -597,7 +593,6 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt payloadSize)
   xParseByteAlign();
 }
 
-#if SEI_DISPLAY_ORIENTATION
 Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*payloadSize*/)
 {
   UInt val;
@@ -613,7 +608,6 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
   }
   xParseByteAlign();
 }
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
 Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /*payloadSize*/)
 {

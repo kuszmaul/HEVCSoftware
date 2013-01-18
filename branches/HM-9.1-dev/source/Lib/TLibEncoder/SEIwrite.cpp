@@ -71,11 +71,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::FRAME_PACKING:
     fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
     break;
-#if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
     break;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
@@ -128,11 +126,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::FRAME_PACKING:
     xWriteSEIFramePacking(*static_cast<const SEIFramePacking*>(&sei));
     break;
-#if SEI_DISPLAY_ORIENTATION
   case SEI::DISPLAY_ORIENTATION:
     xWriteSEIDisplayOrientation(*static_cast<const SEIDisplayOrientation*>(&sei));
     break;
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     xWriteSEITemporalLevel0Index(*static_cast<const SEITemporalLevel0Index*>(&sei));
@@ -412,7 +408,6 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
 
   xWriteByteAlign();
 }
-#if SEI_DISPLAY_ORIENTATION
 Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
 {
   WRITE_FLAG( sei.cancelFlag,           "display_orientation_cancel_flag" );
@@ -427,7 +422,6 @@ Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
   }
   xWriteByteAlign();
 }
-#endif
 #if SEI_TEMPORAL_LEVEL0_INDEX
 Void SEIWriter::xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei)
 {
