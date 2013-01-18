@@ -40,8 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG   1  ///< add frame_field_info_present_flag to VUI
-
 #define VARYING_DBL_PARAMS                          1  ///< K0289: Specifying varying deblocking parameters in GOP
 
 #define SIGNAL_BITRATE_PICRATE_IN_VPS               1  ///< K0125: Signal bit_rate and pic_rate in VPS

@@ -292,9 +292,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setChromaSampleLocTypeBottomField( m_chromaSampleLocTypeBottomField );
   m_cTEncTop.setNeutralChromaIndicationFlag( m_neutralChromaIndicationFlag );
   m_cTEncTop.setDefaultDisplayWindow( m_defDispWinLeftOffset, m_defDispWinRightOffset, m_defDispWinTopOffset, m_defDispWinBottomOffset );
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   m_cTEncTop.setFrameFieldInfoPresentFlag( m_frameFieldInfoPresentFlag );
-#endif
   m_cTEncTop.setPocProportionalToTimingFlag( m_pocProportionalToTimingFlag );
   m_cTEncTop.setNumTicksPocDiffOneMinus1   ( m_numTicksPocDiffOneMinus1    );
   m_cTEncTop.setBitstreamRestrictionFlag( m_bitstreamRestrictionFlag );

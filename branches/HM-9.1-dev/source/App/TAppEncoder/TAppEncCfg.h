@@ -256,9 +256,7 @@ protected:
   Int       m_defDispWinRightOffset;                          ///< Specifies the right offset from the conformance window of the default window
   Int       m_defDispWinTopOffset;                            ///< Specifies the top offset from the conformance window of the default window
   Int       m_defDispWinBottomOffset;                         ///< Specifies the bottom offset from the conformance window of the default window
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   Bool      m_frameFieldInfoPresentFlag;                      ///< Indicates that pic_struct values are present in picture timing SEI messages
-#endif
   Bool      m_pocProportionalToTimingFlag;                    ///< Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS
   Int       m_numTicksPocDiffOneMinus1;                       ///< Number of ticks minus 1 that for a POC difference of one
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present

@@ -281,9 +281,7 @@ protected:
   Int       m_chromaSampleLocTypeBottomField;                 ///< Specifies the location of chroma samples for bottom field
   Bool      m_neutralChromaIndicationFlag;                    ///< Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)
   Window    m_defaultDisplayWindow;                           ///< Represents the default display window parameters
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   Bool      m_frameFieldInfoPresentFlag;                      ///< Indicates that pic_struct and other field coding related values are present in picture timing SEI messages
-#endif
   Bool      m_pocProportionalToTimingFlag;                    ///< Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS
   Int       m_numTicksPocDiffOneMinus1;                       ///< Number of ticks minus 1 that for a POC difference of one
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present
@@ -652,10 +650,8 @@ public:
   Void      setNeutralChromaIndicationFlag(Bool i)        { m_neutralChromaIndicationFlag = i; }
   Window   &getDefaultDisplayWindow()                     { return m_defaultDisplayWindow; }
   Void      setDefaultDisplayWindow (Int offsetLeft, Int offsetRight, Int offsetTop, Int offsetBottom ) { m_defaultDisplayWindow.setWindow (offsetLeft, offsetRight, offsetTop, offsetBottom); }
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   Bool      getFrameFieldInfoPresentFlag()                { return m_frameFieldInfoPresentFlag; }
   Void      setFrameFieldInfoPresentFlag(Bool i)          { m_frameFieldInfoPresentFlag = i; }  
-#endif
   Bool      getPocProportionalToTimingFlag()              { return m_pocProportionalToTimingFlag; }
   Void      setPocProportionalToTimingFlag(Bool x)        { m_pocProportionalToTimingFlag = x;    }
   Int       getNumTicksPocDiffOneMinus1()                 { return m_numTicksPocDiffOneMinus1;    }
