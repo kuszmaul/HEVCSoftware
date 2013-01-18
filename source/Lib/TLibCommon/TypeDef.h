@@ -40,7 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define MOVE_SPS_TEMPORAL_ID_NESTING_FLAG           1  ///< K0120: Move sps_temporal_id_nesting_flag and replace sps_reserved_zero_bit
 #define MOVE_VPS_TEMPORAL_ID_NESTING_FLAG           1  ///< K0137: Move vps_temporal_id_nesting_flag
 #define CONDITION_SUBLAYERPROFILEPRESENTFLAG        1  ///< K0125: Condition signalling of sub_layer_profile_present_flag
 
