@@ -54,7 +54,6 @@
 #define HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG    1  ///< K0371: remove active_parameter_set_sei_extension_flag
 #define HLS_ADD_SUBLAYER_ORDERING_INFO_PRESENT_FLAG 1  ///< K0330: Use sub_layer_ordering_info_present_flag in VPS and SPS as a shortcut to signal only one set of values
 #define HLS_GROUP_SPS_PCM_FLAGS                     1  ///< K0217: Group together syntax elements for PCM in SPS
-#define HLS_EXTRA_SLICE_HEADER_BITS                 1  ///< K0210: signal num_extra_slice_header_bits in PPS
 #define HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG   1  ///< add frame_field_info_present_flag to VUI
 
 #define VARYING_DBL_PARAMS                          1  ///< K0289: Specifying varying deblocking parameters in GOP

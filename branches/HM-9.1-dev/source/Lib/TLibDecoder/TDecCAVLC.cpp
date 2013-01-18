@@ -318,10 +318,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_UVLC( uiCode, "log2_parallel_merge_level_minus2");
   pcPPS->setLog2ParallelMergeLevelMinus2 (uiCode);
 
-#if HLS_EXTRA_SLICE_HEADER_BITS
   READ_CODE(3, uiCode, "num_extra_slice_header_bits");
   pcPPS->setNumExtraSliceHeaderBits(uiCode);
-#endif /* HLS_EXTRA_SLICE_HEADER_BITS */
 
   READ_FLAG( uiCode, "slice_segment_header_extension_present_flag");
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
@@ -857,12 +855,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   
   if(!rpcSlice->getDependentSliceSegmentFlag())
   {
-#if HLS_EXTRA_SLICE_HEADER_BITS
     for (Int i = 0; i < rpcSlice->getPPS()->getNumExtraSliceHeaderBits(); i++)
     {
       READ_FLAG(uiCode, "slice_reserved_undetermined_flag[]"); // ignored
     }
-#endif /* HLS_EXTRA_SLICE_HEADER_BITS */
 
     READ_UVLC (    uiCode, "slice_type" );            rpcSlice->setSliceType((SliceType)uiCode);
     if( pps->getOutputFlagPresentFlag() )

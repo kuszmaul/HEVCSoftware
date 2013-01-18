@@ -228,9 +228,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   }
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
-#if HLS_EXTRA_SLICE_HEADER_BITS
   WRITE_CODE( pcPPS->getNumExtraSliceHeaderBits(), 3, "num_extra_slice_header_bits");
-#endif /* HLS_EXTRA_SLICE_HEADER_BITS */
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
   WRITE_FLAG( 0, "pps_extension_flag" );
 }
@@ -690,13 +688,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
   if ( !pcSlice->getDependentSliceSegmentFlag() )
   {
-#if HLS_EXTRA_SLICE_HEADER_BITS
     for (Int i = 0; i < pcSlice->getPPS()->getNumExtraSliceHeaderBits(); i++)
     {
       assert(!!"slice_reserved_undetermined_flag[]");
       WRITE_FLAG(0, "slice_reserved_undetermined_flag[]");
     }
-#endif /* HLS_EXTRA_SLICE_HEADER_BITS */
 
     WRITE_UVLC( pcSlice->getSliceType(),       "slice_type" );
 
