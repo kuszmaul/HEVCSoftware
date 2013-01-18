@@ -832,22 +832,16 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
 #else
-#if K0251
     if (!pcSlice->getIdrPicFlag())
-#else
-    if (!pcSlice->isIntra())
-#endif
     {
       if (pcSlice->getSPS()->getTMVPFlagsPresent())
       {
         WRITE_FLAG( pcSlice->getEnableTMVPFlag(), "enable_temporal_mvp_flag" );
       }
-#if K0251
     }
 
     if (!pcSlice->isIntra())
     {
-#endif
 #endif
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");

@@ -1063,11 +1063,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if (!rpcSlice->isIntra())
     {
 #else
-#if K0251
     if (!rpcSlice->getIdrPicFlag())
-#else
-    if (!rpcSlice->isIntra())
-#endif
     {
       if (rpcSlice->getSPS()->getTMVPFlagsPresent())
       {
@@ -1078,7 +1074,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       {
         rpcSlice->setEnableTMVPFlag(false);
       }
-#if K0251
     }
     else
     {
@@ -1087,7 +1082,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 
     if (!rpcSlice->isIntra())
     {
-#endif
 #endif //MOVE_TEMPORAL_ENABLE_MVP_FLAG
 
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
