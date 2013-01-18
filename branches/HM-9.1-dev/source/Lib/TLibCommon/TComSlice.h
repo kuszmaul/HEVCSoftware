@@ -1583,11 +1583,27 @@ public:
   TComPPS* getPPS(Int ppsId)  { return m_ppsMap.getPS(ppsId); };
   TComPPS* getFirstPPS()      { return m_ppsMap.getFirstPS(); };
 
+  //! activate a SPS from a active parameter sets SEI message
+  //! \returns true, if activation is successful
+  Bool activateSPSWithSEI(Int SPSId);
+
+  //! activate a PPS and depending on isIDR parameter also SPS and VPS
+  //! \returns true, if activation is successful
+  Bool activatePPS(Int ppsId, Bool isIDR);
+
+  TComVPS* getActiveVPS(){ return m_vpsMap.getPS(m_activeVPSId); };
+  TComSPS* getActiveSPS(){ return m_spsMap.getPS(m_activeSPSId); };
+  TComPPS* getActivePPS(){ return m_ppsMap.getPS(m_activePPSId); };
+
 protected:
   
   ParameterSetMap<TComVPS> m_vpsMap;
   ParameterSetMap<TComSPS> m_spsMap; 
   ParameterSetMap<TComPPS> m_ppsMap;
+
+  Int m_activeVPSId;
+  Int m_activeSPSId;
+  Int m_activePPSId;
 };
 
 //! \}

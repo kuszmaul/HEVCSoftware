@@ -188,8 +188,15 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
       break; 
 #if DU_INFO_SEI_K0126
     case SEI::DECODING_UNIT_INFO:
-      sei = new SEIDecodingUnitInfo; 
-      xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
+      if (!sps)
+      {
+        printf ("Warning: Found Decoding unit SEI message, but no active SPS is available. Ignoring.");
+      }
+      else
+      {
+        sei = new SEIDecodingUnitInfo; 
+        xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
+      }
       break; 
 #endif
 #if !SUFFIX_SEI_NUT_DECODED_HASH_SEI
@@ -199,12 +206,26 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
       break;
 #endif
     case SEI::BUFFERING_PERIOD:
-      sei = new SEIBufferingPeriod;
-      xParseSEIBufferingPeriod((SEIBufferingPeriod&) *sei, payloadSize, sps);
+      if (!sps)
+      {
+        printf ("Warning: Found Buffering period SEI message, but no active SPS is available. Ignoring.");
+      }
+      else
+      {
+        sei = new SEIBufferingPeriod;
+        xParseSEIBufferingPeriod((SEIBufferingPeriod&) *sei, payloadSize, sps);
+      }
       break;
     case SEI::PICTURE_TIMING:
-      sei = new SEIPictureTiming;
-      xParseSEIPictureTiming((SEIPictureTiming&)*sei, payloadSize, sps);
+      if (!sps)
+      {
+        printf ("Warning: Found Picture timing SEI message, but no active SPS is available. Ignoring.");
+      }
+      else
+      {
+        sei = new SEIPictureTiming;
+        xParseSEIPictureTiming((SEIPictureTiming&)*sei, payloadSize, sps);
+      }
       break;
     case SEI::RECOVERY_POINT:
       sei = new SEIRecoveryPoint;
