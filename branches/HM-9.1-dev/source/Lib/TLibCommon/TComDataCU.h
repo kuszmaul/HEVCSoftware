@@ -461,24 +461,13 @@ public:
                                               UInt uiCurrPartUnitIdx, 
                                               Bool bEnforceSliceRestriction=true, 
                                               Bool bEnforceTileRestriction=true );
-#if !LINEBUF_CLEANUP
-  TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
-                                              UInt uiCurrPartUnitIdx, 
-                                              Bool bEnforceSliceRestriction=true, 
-                                              Bool MotionDataCompresssion = false,
-                                              Bool planarAtLCUBoundary = false,
-                                              Bool bEnforceTileRestriction=true );
-  TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool MotionDataCompresssion = false );
-  TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true, Bool MotionDataCompresssion = false );
-#else
-  TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx, 
+  TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx,
                                               UInt uiCurrPartUnitIdx, 
                                               Bool bEnforceSliceRestriction=true, 
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
-#endif
   TComDataCU*   getPUBelowLeft              ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
 
   TComDataCU*   getQpMinCuLeft              ( UInt&  uiLPartUnitIdx , UInt uiCurrAbsIdxInLCU );
