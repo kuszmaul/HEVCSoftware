@@ -40,7 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define DEPSLICE_TILE_INDEPENDENT_BUGFIX            1  ///< Bug fix for issue #912: CABAC context need to re-initialized at the beginning of a tile to make tiles independent
 #define DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX        1  ///< Bug fix for issue #943: WPP: CABAC context are initialized to defaults, when WPP-initialization is unavailable
 #define SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI  1  ///< K0126: Disallow co-existence of sub-picture CPB removal times in both picture timing SEI messages
                                                        ///<        and decoding unit information SEI messages.
