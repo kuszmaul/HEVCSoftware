@@ -384,9 +384,7 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
   READ_FLAG(     uiCode, "field_seq_flag");                           pcVUI->setFieldSeqFlag(uiCode);
   assert(pcVUI->getFieldSeqFlag() == false);        // not supported yet
 
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   READ_FLAG(uiCode, "frame_field_info_present_flag");                 pcVUI->setFrameFieldInfoPresentFlag(uiCode);
-#endif /* HLS_ADD_VUI_PICSTRUCT_PRESENT_FLAG */
 
   READ_FLAG(     uiCode, "default_display_window_flag");
   if (uiCode != 0)

@@ -553,9 +553,7 @@ Void TEncTop::xInitSPS()
     pcVUI->setChromaSampleLocTypeBottomField(getChromaSampleLocTypeBottomField());
     pcVUI->setNeutralChromaIndicationFlag(getNeutralChromaIndicationFlag());
     pcVUI->setDefaultDisplayWindow(getDefaultDisplayWindow());
-#if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
     pcVUI->setFrameFieldInfoPresentFlag(getFrameFieldInfoPresentFlag());
-#endif
     pcVUI->setFieldSeqFlag(false);
     pcVUI->setHrdParametersPresentFlag(false);
     pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
