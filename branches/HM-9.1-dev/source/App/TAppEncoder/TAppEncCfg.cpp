@@ -103,10 +103,8 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   in>>entry.m_POC;
   in>>entry.m_QPOffset;
   in>>entry.m_QPFactor;
-#if VARYING_DBL_PARAMS
   in>>entry.m_tcOffsetDiv2;
   in>>entry.m_betaOffsetDiv2;
-#endif
   in>>entry.m_temporalId;
   in>>entry.m_numRefPicsActive;
   in>>entry.m_numRefPics;
@@ -899,10 +897,8 @@ Void TAppEncCfg::xCheckParameter()
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
     m_GOPList[0] = GOPEntry();
     m_GOPList[0].m_QPFactor = 1;
-#if VARYING_DBL_PARAMS
     m_GOPList[0].m_betaOffsetDiv2 = 0;
     m_GOPList[0].m_tcOffsetDiv2 = 0;
-#endif
     m_GOPList[0].m_POC = 1;
     m_GOPList[0].m_numRefPicsActive = 4;
   }
@@ -929,7 +925,6 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
   
-#if VARYING_DBL_PARAMS
   if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable) )
   {
     for(Int i=0; i<m_iGOPSize; i++)
@@ -938,7 +933,6 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( (m_GOPList[i].m_tcOffsetDiv2 + m_loopFilterTcOffsetDiv2) < -6 || (m_GOPList[i].m_tcOffsetDiv2 + m_loopFilterTcOffsetDiv2) > 6, "Loop Filter Tc Offset div. 2 for one of the GOP entries exceeds supported range (-6 to 6)" );
     }
   }
-#endif
   m_extraRPSs=0;
   //start looping through frames in coding order until we can verify that the GOP structure is correct.
   while(!verifiedGOP&&!errorGOP) 

@@ -51,10 +51,8 @@ struct GOPEntry
   Int m_POC;
   Int m_QPOffset;
   Double m_QPFactor;
-#if VARYING_DBL_PARAMS
   Int m_tcOffsetDiv2;
   Int m_betaOffsetDiv2;
-#endif
   Int m_temporalId;
   Bool m_refPic;
   Int m_numRefPicsActive;
@@ -74,10 +72,8 @@ struct GOPEntry
   : m_POC(-1)
   , m_QPOffset(0)
   , m_QPFactor(0)
-#if VARYING_DBL_PARAMS
   , m_tcOffsetDiv2(0)
   , m_betaOffsetDiv2(0)
-#endif
   , m_temporalId(0)
   , m_refPic(false)
   , m_numRefPicsActive(0)
