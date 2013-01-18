@@ -94,8 +94,6 @@
 #define SPS_INTER_REF_SET_PRED      1   ///< K0136: Not send inter_ref_pic_set_prediction_flag for index 0
 #define HM9_NALU_TYPES 1
 
-#define STRONG_INTRA_SMOOTHING           1  ///< Enables Bilinear interploation of reference samples instead of 121 filter in intra prediction when reference samples are flat.
-
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS                64
 

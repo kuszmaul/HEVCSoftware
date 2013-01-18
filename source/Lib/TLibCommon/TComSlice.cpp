@@ -1263,9 +1263,7 @@ TComSPS::TComSPS()
 , m_bUseSAO                   (false) 
 , m_bTemporalIdNestingFlag    (false)
 , m_scalingListEnabledFlag    (false)
-#if STRONG_INTRA_SMOOTHING
-, m_useStrongIntraSmoothing   (false) 
-#endif
+, m_useStrongIntraSmoothing   (false)
 , m_vuiParametersPresentFlag  (false)
 , m_vuiParameters             ()
 {

@@ -248,7 +248,6 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
     piFilterBuf[l++] = piAdiTemp[1 + i];
   }
 
-#if STRONG_INTRA_SMOOTHING
   if (pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing())
   {
     Int blkSize = 32;
@@ -296,15 +295,6 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
       piFilterBufN[i] = (piFilterBuf[i - 1] + 2 * piFilterBuf[i]+piFilterBuf[i + 1] + 2) >> 2;
     }
   }
-#else
-  // 1. filtering with [1 2 1]
-  piFilterBufN[0] = piFilterBuf[0];
-  piFilterBufN[iBufSize - 1] = piFilterBuf[iBufSize - 1];
-  for (i = 1; i < iBufSize - 1; i++)
-  {
-    piFilterBufN[i] = (piFilterBuf[i - 1] + 2 * piFilterBuf[i]+piFilterBuf[i + 1] + 2) >> 2;
-  }
-#endif
 
   // fill 1. filter buffer with filtered values
   l=0;
