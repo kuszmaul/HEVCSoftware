@@ -313,14 +313,12 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
 
   if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )
     return;
-#if TIMING_SEI_PIC_STRUCT
   if( vui->getFrameFieldInfoPresentFlag() )
   {
     WRITE_CODE( sei.m_picStruct, 4,              "pic_struct" );
     WRITE_CODE( sei.m_progressiveSourceIdc, 2,   "progressive_source_idc" );
     WRITE_FLAG( sei.m_duplicateFlag ? 1 : 0,     "duplicate_flag" );
   }
-#endif
 
   WRITE_CODE( sei.m_auCpbRemovalDelay - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay_minus1" );
   WRITE_CODE( sei.m_picDpbOutputDelay, ( hrd->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
