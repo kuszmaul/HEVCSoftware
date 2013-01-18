@@ -40,7 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define MOVE_VPS_TEMPORAL_ID_NESTING_FLAG           1  ///< K0137: Move vps_temporal_id_nesting_flag
 #define CONDITION_SUBLAYERPROFILEPRESENTFLAG        1  ///< K0125: Condition signalling of sub_layer_profile_present_flag
 
 #define VPS_OPERATING_POINT                         1  ///< K0204 - Operation point added to VPS
