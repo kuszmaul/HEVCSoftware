@@ -189,12 +189,8 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 #endif
   if( depSliceSegmentsEnabled )
   {
-#if DEPSLICE_TILE_INDEPENDENT_BUGFIX
     if( (!rpcPic->getSlice(rpcPic->getCurrSliceIdx())->isNextSlice()) &&
        iStartCUAddr != rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr))->getFirstCUAddr())
-#else
-    if( !rpcPic->getSlice(rpcPic->getCurrSliceIdx())->isNextSlice() )
-#endif
     {
 #if !DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX
       uiTileCol = 0;
