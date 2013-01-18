@@ -69,9 +69,7 @@ public:
     TEMPORAL_LEVEL0_INDEX                = 131,
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
-#if SEI_GDR_INFO
     REGION_REFRESH_INFO                  = 134,
-#endif
   };
   
   SEI() {}
@@ -281,7 +279,7 @@ public:
   UInt tl0Idx;
   UInt rapIdx;
 };
-#if SEI_GDR_INFO
+
 class SEIGradualDecodingRefreshInfo : public SEI
 {
 public:
@@ -294,7 +292,6 @@ public:
 
   Bool m_gdrForegroundFlag;
 };
-#endif
 
 typedef std::list<SEI*> SEIMessages;
 

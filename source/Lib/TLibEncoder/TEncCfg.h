@@ -233,9 +233,7 @@ protected:
   Int       m_framePackingSEIInterpretation;
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
-#if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
-#endif
   Int       m_decodingUnitInfoSEIEnabled;
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
@@ -559,10 +557,8 @@ public:
   Int   getDisplayOrientationSEIAngle()                  { return m_displayOrientationSEIAngle; }
   Void  setTemporalLevel0IndexSEIEnabled(Int b)          { m_temporalLevel0IndexSEIEnabled = b; }
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
-#if SEI_GDR_INFO
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
-#endif
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
   Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }

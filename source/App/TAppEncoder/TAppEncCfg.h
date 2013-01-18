@@ -199,9 +199,7 @@ protected:
   Int       m_framePackingSEIInterpretation;
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
-#if SEI_GDR_INFO
   Int       m_gradualDecodingRefreshInfoEnabled;
-#endif
   Int       m_decodingUnitInfoSEIEnabled;
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices

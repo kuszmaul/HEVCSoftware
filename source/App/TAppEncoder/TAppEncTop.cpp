@@ -233,9 +233,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFramePackingArrangementSEIInterpretation( m_framePackingSEIInterpretation );
   m_cTEncTop.setDisplayOrientationSEIAngle( m_displayOrientationSEIAngle );
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
-#if SEI_GDR_INFO
   m_cTEncTop.setGradualDecodingRefreshInfoEnabled( m_gradualDecodingRefreshInfoEnabled );
-#endif
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );

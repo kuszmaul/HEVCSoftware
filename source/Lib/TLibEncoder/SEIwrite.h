@@ -61,9 +61,7 @@ protected:
   Void xWriteSEIFramePacking(const SEIFramePacking& sei);
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
-#if SEI_GDR_INFO
   Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);
-#endif
   Void xWriteByteAlign();
 };
 
