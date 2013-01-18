@@ -396,7 +396,6 @@ private:
   UInt        m_uiMaxDecPicBuffering[MAX_TLAYER]; 
   UInt        m_uiMaxLatencyIncrease[MAX_TLAYER];
 
-#if VPS_OPERATING_POINT
   UInt        m_numHrdParameters;
   UInt        m_maxNuhReservedZeroLayerId;
   TComHRD*    m_hrdParameters;
@@ -404,7 +403,6 @@ private:
   Bool*       m_cprmsPresentFlag;
   UInt        m_numOpSets;
   Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
-#endif
 
   TComPTL     m_pcPTL;
   TComBitRatePicRateInfo    m_bitRatePicRateInfo;
@@ -447,7 +445,6 @@ public:
   Void    setMaxLatencyIncrease(UInt v, UInt tLayer)            { m_uiMaxLatencyIncrease[tLayer] = v;    }
   UInt    getMaxLatencyIncrease(UInt tLayer)                    { return m_uiMaxLatencyIncrease[tLayer]; }
 
-#if VPS_OPERATING_POINT
   UInt    getNumHrdParameters()                                 { return m_numHrdParameters; }
   Void    setNumHrdParameters(UInt v)                           { m_numHrdParameters = v;    }
 
@@ -458,7 +455,6 @@ public:
   Void    setMaxOpSets(UInt v)                                  { m_numOpSets = v;    }
   Bool    getLayerIdIncludedFlag(UInt opsIdx, UInt id)          { return m_layerIdIncludedFlag[opsIdx][id]; }
   Void    setLayerIdIncludedFlag(Bool v, UInt opsIdx, UInt id)  { m_layerIdIncludedFlag[opsIdx][id] = v;    }
-#endif
 
   TComPTL* getPTL() { return &m_pcPTL; }
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }

@@ -541,7 +541,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     }
   }
 
-#if VPS_OPERATING_POINT
   assert( pcVPS->getNumHrdParameters() <= MAX_VPS_NUM_HRD_PARAMETERS );
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   WRITE_CODE( pcVPS->getMaxNuhReservedZeroLayerId(), 6,     "vps_max_nuh_reserved_zero_layer_id" );
@@ -576,10 +575,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     }
     codeHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
   }
-#else
-  WRITE_UVLC( 0,                                           "vps_num_hrd_parameters" );
-  // hrd_parameters
-#endif
   WRITE_FLAG( 0,                     "vps_extension_flag" );
   
   //future extensions here..
