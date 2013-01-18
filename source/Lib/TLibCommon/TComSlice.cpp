@@ -1337,10 +1337,8 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 
   hrd->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
   hrd->setCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
-#if HRD_BUFFER
   hrd->setDuCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
-#endif
-    
+  
   hrd->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
   if( randomAccess )
   {
@@ -1358,9 +1356,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 */
   Int i, j;
   UInt birateValue, cpbSizeValue;
-#if HRD_BUFFER
   UInt ducpbSizeValue;
-#endif
 
   for( i = 0; i < MAX_TLAYER; i ++ )
   {
@@ -1371,23 +1367,17 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 
     birateValue  = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
-#if HRD_BUFFER
     ducpbSizeValue = bitRate/numDU;
-#endif
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
       hrd->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
       hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
-#if HRD_BUFFER
       hrd->setDuCpbSizeValueMinus1( i, j, 0, ( ducpbSizeValue - 1 ) );
-#endif
       hrd->setCbrFlag( i, j, 0, ( j == 0 ) );
 
       hrd->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
       hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
-#if HRD_BUFFER
-        hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
-#endif
+      hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
       hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
     }
   }
