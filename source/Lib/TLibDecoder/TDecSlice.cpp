@@ -366,7 +366,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       }
       pcSbacDecoder->parseSaoOneLcuInterleaving(rx, ry, saoParam,pcCU, cuAddrInSlice, cuAddrUpInSlice, allowMergeLeft, allowMergeUp);
     }
-#if TICKET845
     else if ( pcSlice->getSPS()->getUseSAO() )
     {
       Int addr = pcCU->getAddr();
@@ -387,7 +386,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         }
       }
     }
-#endif
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );
     m_pcCuDecoder->decompressCU ( pcCU );
     

@@ -1519,7 +1519,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         }
       }
     }
-#if TICKET845
     else if (pcSlice->getSPS()->getUseSAO())
     {
       Int addr = pcCU->getAddr();
@@ -1539,8 +1538,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
           saoLcuParam->offset[3]     = 0;
         }
       }
-    }    
-#endif
+    }
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
