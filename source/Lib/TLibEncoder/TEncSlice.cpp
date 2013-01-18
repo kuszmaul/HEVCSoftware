@@ -395,7 +395,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     rpcSlice->setDeblockingFilterDisable( m_pcCfg->getLoopFilterDisable() );
     if ( !rpcSlice->getDeblockingFilterDisable())
     {
-#if VARYING_DBL_PARAMS
       if ( !m_pcCfg->getLoopFilterOffsetInPPS() && eSliceType!=I_SLICE)
       {
         rpcSlice->getPPS()->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getGOPEntry(iGOPid).m_betaOffsetDiv2 + m_pcCfg->getLoopFilterBetaOffset() );
@@ -405,14 +404,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
       }
       else
       {
-#endif
       rpcSlice->getPPS()->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getLoopFilterBetaOffset() );
       rpcSlice->getPPS()->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getLoopFilterTcOffset() );
       rpcSlice->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getLoopFilterBetaOffset() );
       rpcSlice->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getLoopFilterTcOffset() );
-#if VARYING_DBL_PARAMS
       }
-#endif
     }
   }
   else

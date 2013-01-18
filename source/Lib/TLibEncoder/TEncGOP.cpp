@@ -1630,11 +1630,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 {
   TComSlice* pcSlice = pcPic->getSlice(pcPic->getCurrSliceIdx());
   Bool bCalcDist = false;
-#if VARYING_DBL_PARAMS
   m_pcLoopFilter->setCfg(m_pcCfg->getLFCrossTileBoundaryFlag());
-#else
-  m_pcLoopFilter->setCfg(m_pcCfg->getLFCrossTileBoundaryFlag());
-#endif
   m_pcLoopFilter->loopFilterPic( pcPic );
   
   m_pcEntropyCoder->setEntropyCoder ( m_pcEncTop->getRDGoOnSbacCoder(), pcSlice );
