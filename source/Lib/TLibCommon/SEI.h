@@ -211,7 +211,7 @@ public:
   Int m_decodingUnitIdx;
   Int m_duSptCpbRemovalDelay;
 };
-#endif
+
 class SEIRecoveryPoint : public SEI
 {
 public:
