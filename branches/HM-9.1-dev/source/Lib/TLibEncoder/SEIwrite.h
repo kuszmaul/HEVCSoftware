@@ -52,9 +52,7 @@ protected:
   Void xWriteSEIpayloadData(const SEI& sei, TComSPS *sps);
   Void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
   Void xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei);
-#if DU_INFO_SEI_K0126
   Void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps);
-#endif
   Void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei);
   Void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS *sps);
   Void xWriteSEIPictureTiming(const SEIPictureTiming& sei, TComSPS *sps);

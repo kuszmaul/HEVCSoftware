@@ -88,11 +88,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
 #endif
-#if DU_INFO_SEI_K0126
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
-#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -169,7 +167,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIActiveParameterSets; 
       xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize); 
       break; 
-#if DU_INFO_SEI_K0126
     case SEI::DECODING_UNIT_INFO:
       if (!sps)
       {
@@ -181,7 +178,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
         xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
       }
       break; 
-#endif
     case SEI::BUFFERING_PERIOD:
       if (!sps)
       {
@@ -387,7 +383,7 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
     READ_FLAG(val, "alignment_bit");
   }
 }
-#if DU_INFO_SEI_K0126
+
 Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*payloadSize*/, TComSPS *sps)
 {
   UInt val;
@@ -406,7 +402,7 @@ Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*paylo
   }
   xParseByteAlign();
 }
-#endif
+
 Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payloadSize*/, TComSPS *sps)
 {
   Int i, nalOrVcl;

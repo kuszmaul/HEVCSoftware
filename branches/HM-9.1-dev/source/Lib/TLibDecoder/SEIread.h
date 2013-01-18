@@ -60,9 +60,7 @@ protected:
   Void xReadSEImessage                (SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
   Void xParseSEIuserDataUnregistered  (SEIuserDataUnregistered &sei, UInt payloadSize);
   Void xParseSEIActiveParameterSets   (SEIActiveParameterSets  &sei, UInt payloadSize);
-#if DU_INFO_SEI_K0126
   Void xParseSEIDecodingUnitInfo      (SEIDecodingUnitInfo& sei, UInt payloadSize, TComSPS *sps);
-#endif
   Void xParseSEIDecodedPictureHash    (SEIDecodedPictureHash& sei, UInt payloadSize);
   Void xParseSEIBufferingPeriod       (SEIBufferingPeriod& sei, UInt payloadSize, TComSPS *sps);
   Void xParseSEIPictureTiming         (SEIPictureTiming& sei, UInt payloadSize, TComSPS *sps);
