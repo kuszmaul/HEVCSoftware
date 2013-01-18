@@ -556,10 +556,8 @@ private:
   Int  m_log2MaxMvLengthHorizontal;
   Int  m_log2MaxMvLengthVertical;
   TComHRD m_hrdParameters;
-#if POC_TEMPORAL_RELATIONSHIP
   Bool m_pocProportionalToTimingFlag;
   Int  m_numTicksPocDiffOneMinus1;
-#endif
 
 public:
   TComVUI()
@@ -596,10 +594,8 @@ public:
     ,m_maxBitsPerMinCuDenom(1)
     ,m_log2MaxMvLengthHorizontal(15)
     ,m_log2MaxMvLengthVertical(15)
-#if POC_TEMPORAL_RELATIONSHIP
     ,m_pocProportionalToTimingFlag(false)
     ,m_numTicksPocDiffOneMinus1(0)
-#endif
   {}
 
   virtual ~TComVUI() {}
@@ -699,12 +695,10 @@ public:
 
   TComHRD* getHrdParameters                 ()             { return &m_hrdParameters; }
 
-#if POC_TEMPORAL_RELATIONSHIP
   Bool getPocProportionalToTimingFlag() {return m_pocProportionalToTimingFlag; }
   Void setPocProportionalToTimingFlag(Bool x) {m_pocProportionalToTimingFlag = x;}
   Int  getNumTicksPocDiffOneMinus1() {return m_numTicksPocDiffOneMinus1;}
   Void setNumTicksPocDiffOneMinus1(Int x) { m_numTicksPocDiffOneMinus1 = x;}
-#endif
 };
 
 /// SPS class
