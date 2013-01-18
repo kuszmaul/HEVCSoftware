@@ -1005,13 +1005,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rps->setNumberOfPictures(0);
         rpcSlice->setRPS(rps);
       }
-#if MOVE_TEMPORAL_ENABLE_MVP_FLAG
       if (rpcSlice->getSPS()->getTMVPFlagsPresent())
       {
         READ_FLAG( uiCode, "slice_temporal_mvp_enable_flag" );
         rpcSlice->setEnableTMVPFlag( uiCode == 1 ? true : false ); 
       }
-#endif
     }
     if(sps->getUseSAO())
     {
@@ -1024,34 +1022,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 
-#if MOVE_TEMPORAL_ENABLE_MVP_FLAG
     if (rpcSlice->getIdrPicFlag())
     {
         rpcSlice->setEnableTMVPFlag(false);
     }
     if (!rpcSlice->isIntra())
     {
-#else
-    if (!rpcSlice->getIdrPicFlag())
-    {
-      if (rpcSlice->getSPS()->getTMVPFlagsPresent())
-      {
-        READ_FLAG( uiCode, "enable_temporal_mvp_flag" );
-        rpcSlice->setEnableTMVPFlag(uiCode); 
-      }
-      else
-      {
-        rpcSlice->setEnableTMVPFlag(false);
-      }
-    }
-    else
-    {
-        rpcSlice->setEnableTMVPFlag(false);
-    }
-
-    if (!rpcSlice->isIntra())
-    {
-#endif //MOVE_TEMPORAL_ENABLE_MVP_FLAG
 
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
       if (uiCode)

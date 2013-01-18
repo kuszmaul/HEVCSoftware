@@ -40,7 +40,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define MOVE_TEMPORAL_ENABLE_MVP_FLAG               1  ///< K0251: move temporal_enable_mvp_flag
 #define TIMING_SEI_PIC_STRUCT                       1  ///< K0165: add pic_struc and other field related elements to picture timing SEI
 #define DEPSLICE_TILE_INDEPENDENT_BUGFIX            1  ///< Bug fix for issue #912: CABAC context need to re-initialized at the beginning of a tile to make tiles independent
 #define DEPSLICE_TILE_WPP_INDEPENDENT_BUGFIX        1  ///< Bug fix for issue #943: WPP: CABAC context are initialized to defaults, when WPP-initialization is unavailable

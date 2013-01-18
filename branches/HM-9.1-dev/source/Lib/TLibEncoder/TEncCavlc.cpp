@@ -776,12 +776,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           }
         }
       }
-#if MOVE_TEMPORAL_ENABLE_MVP_FLAG
       if (pcSlice->getSPS()->getTMVPFlagsPresent())
       {
         WRITE_FLAG( pcSlice->getEnableTMVPFlag() ? 1 : 0, "slice_temporal_mvp_enable_flag" );
       }
-#endif
     }
     if(pcSlice->getSPS()->getUseSAO())
     {
@@ -797,21 +795,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     //check if numrefidxes match the defaults. If not, override
 
-#if MOVE_TEMPORAL_ENABLE_MVP_FLAG
     if (!pcSlice->isIntra())
     {
-#else
-    if (!pcSlice->getIdrPicFlag())
-    {
-      if (pcSlice->getSPS()->getTMVPFlagsPresent())
-      {
-        WRITE_FLAG( pcSlice->getEnableTMVPFlag(), "enable_temporal_mvp_flag" );
-      }
-    }
-
-    if (!pcSlice->isIntra())
-    {
-#endif
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");
       if (overrideFlag) 
