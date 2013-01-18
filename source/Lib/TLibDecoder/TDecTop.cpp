@@ -363,7 +363,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     m_cSliceDecoder.create();
   }
-#if DU_INFO_SEI_K0126
   else
   {
     // Check if any new SEI has arrived
@@ -376,7 +375,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       deleteSEIs(m_SEIs);
     }
   }
-#endif
+  
   //  Set picture slice pointer
   TComSlice*  pcSlice = m_apcSlicePilot;
   Bool bNextSlice     = pcSlice->isNextSlice();

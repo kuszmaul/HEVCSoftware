@@ -197,7 +197,7 @@ public:
   UInt* m_numNalusInDuMinus1;
   UInt* m_duCpbRemovalDelayMinus1;
 };
-#if DU_INFO_SEI_K0126
+
 class SEIDecodingUnitInfo : public SEI
 {
 public:
