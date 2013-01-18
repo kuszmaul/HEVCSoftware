@@ -68,9 +68,7 @@ protected:
   Void xParseSEIFramePacking          (SEIFramePacking& sei, UInt payloadSize);
   Void xParseSEIDisplayOrientation    (SEIDisplayOrientation &sei, UInt payloadSize);
   Void xParseSEITemporalLevel0Index   (SEITemporalLevel0Index &sei, UInt payloadSize);
-#if SEI_GDR_INFO
   Void xParseSEIGradualDecodingRefreshInfo (SEIGradualDecodingRefreshInfo &sei, UInt payloadSize);
-#endif
   Void xParseByteAlign();
 };
 

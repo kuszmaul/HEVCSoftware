@@ -77,11 +77,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::TEMPORAL_LEVEL0_INDEX:
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
     break;
-#if SEI_GDR_INFO
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
-#endif
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
@@ -126,11 +124,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::TEMPORAL_LEVEL0_INDEX:
     xWriteSEITemporalLevel0Index(*static_cast<const SEITemporalLevel0Index*>(&sei));
     break;
-#if SEI_GDR_INFO
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
-#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -403,13 +399,13 @@ Void SEIWriter::xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei)
   WRITE_CODE( sei.rapIdx, 8 , "rap_idx" );
   xWriteByteAlign();
 }
-#if SEI_GDR_INFO
+
 Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei)
 {
   WRITE_FLAG( sei.m_gdrForegroundFlag, "gdr_foreground_flag");
   xWriteByteAlign();
 }
-#endif
+
 Void SEIWriter::xWriteByteAlign()
 {
   if( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0)
