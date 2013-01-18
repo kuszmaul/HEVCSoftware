@@ -1429,9 +1429,7 @@ TComPPS::TComPPS()
 , m_sliceHeaderExtensionPresentFlag    (false)
 , m_loopFilterAcrossSlicesEnabledFlag (false)
 , m_listsModificationPresentFlag(  0)
-#if HLS_EXTRA_SLICE_HEADER_BITS
 , m_numExtraSliceHeaderBits(0)
-#endif /* HLS_EXTRA_SLICE_HEADER_BITS */
 {
   m_scalingList = new TComScalingList;
 }
