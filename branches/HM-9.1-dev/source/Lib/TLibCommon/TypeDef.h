@@ -85,8 +85,6 @@
 #define VPS_REARRANGE                               1  ///< JCTVC-K0254
 #define HRD_BUFFER                                  1  ///< JCTVC-K0221
 
-#define HM9_NALU_TYPES 1
-
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS                64
 
