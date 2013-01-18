@@ -1245,10 +1245,6 @@ TComSPS::TComSPS()
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
 , m_bUseLComb                 (false)
-#if !HLS_MOVE_SPS_PICLIST_FLAGS
-, m_restrictedRefPicListsFlag   (  1)
-, m_listsModificationPresentFlag(  0)
-#endif /* !HLS_MOVE_SPS_PICLIST_FLAGS */
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
@@ -1432,9 +1428,7 @@ TComPPS::TComPPS()
 , m_encCABACTableIdx            (I_SLICE)
 , m_sliceHeaderExtensionPresentFlag    (false)
 , m_loopFilterAcrossSlicesEnabledFlag (false)
-#if HLS_MOVE_SPS_PICLIST_FLAGS
 , m_listsModificationPresentFlag(  0)
-#endif /* HLS_MOVE_SPS_PICLIST_FLAGS */
 #if HLS_EXTRA_SLICE_HEADER_BITS
 , m_numExtraSliceHeaderBits(0)
 #endif /* HLS_EXTRA_SLICE_HEADER_BITS */
