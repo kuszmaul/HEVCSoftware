@@ -334,9 +334,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxQPAdaptationRange,-aqr",     m_iQPAdaptationRange,           6, "QP adaptation range")
   ("dQPFile,m",                     cfg_dQPFile,           string(""), "dQP file name")
   ("RDOQ",                          m_useRDOQ,                  true )
-#if RDOQ_TRANSFORMSKIP
   ("RDOQTS",                        m_useRDOQTS,                true )
-#endif  
   // Entropy coding parameters
   ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
   
@@ -1398,9 +1396,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("HAD:%d ", m_bUseHADME           );
   printf("SRD:%d ", m_bUseSBACRD          );
   printf("RDQ:%d ", m_useRDOQ            );
-#if RDOQ_TRANSFORMSKIP
   printf("RDQTS:%d ", m_useRDOQTS        );
-#endif
   printf("SQP:%d ", m_uiDeltaQpRD         );
   printf("ASR:%d ", m_bUseASR             );
   printf("LComb:%d ", m_bUseLComb         );
