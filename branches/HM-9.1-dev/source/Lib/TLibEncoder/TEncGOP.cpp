@@ -2131,15 +2131,11 @@ Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*
   // Arrange long-term reference pictures in the correct order of LSB and MSB,
   // and assign values for pocLSBLT and MSB present flag
   Int longtermPicsPoc[MAX_NUM_REF_PICS], longtermPicsLSB[MAX_NUM_REF_PICS], indices[MAX_NUM_REF_PICS];
-#if REMOVE_LTRP_LSB_RESTRICTIONS
   Int longtermPicsMSB[MAX_NUM_REF_PICS];
-#endif
   Bool mSBPresentFlag[MAX_NUM_REF_PICS];
   ::memset(longtermPicsPoc, 0, sizeof(longtermPicsPoc));    // Store POC values of LTRP
   ::memset(longtermPicsLSB, 0, sizeof(longtermPicsLSB));    // Store POC LSB values of LTRP
-#if REMOVE_LTRP_LSB_RESTRICTIONS
   ::memset(longtermPicsMSB, 0, sizeof(longtermPicsMSB));    // Store POC LSB values of LTRP
-#endif
   ::memset(indices        , 0, sizeof(indices));            // Indices to aid in tracking sorted LTRPs
   ::memset(mSBPresentFlag , 0, sizeof(mSBPresentFlag));     // Indicate if MSB needs to be present
 
@@ -2152,14 +2148,11 @@ Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*
     longtermPicsPoc[ctr] = rps->getPOC(i);                                  // LTRP POC
     longtermPicsLSB[ctr] = getLSB(longtermPicsPoc[ctr], maxPicOrderCntLSB); // LTRP POC LSB
     indices[ctr]      = i; 
-#if REMOVE_LTRP_LSB_RESTRICTIONS
     longtermPicsMSB[ctr] = longtermPicsPoc[ctr] - longtermPicsLSB[ctr];
-#endif
   }
   Int numLongPics = rps->getNumberOfLongtermPictures();
   assert(ctr == numLongPics);
 
-#if REMOVE_LTRP_LSB_RESTRICTIONS
   // Arrange pictures in decreasing order of MSB; 
   for(i = 0; i < numLongPics; i++)
   {
@@ -2174,52 +2167,6 @@ Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*
       }
     }
   }
-#else
-  // Arrange LTR pictures in decreasing order of LSB
-  for(i = 0; i < numLongPics; i++)
-  {
-    for(Int j = 0; j < numLongPics - 1; j++)
-    {
-      if(longtermPicsLSB[j] < longtermPicsLSB[j+1])
-      {
-        std::swap(longtermPicsPoc[j], longtermPicsPoc[j+1]);
-        std::swap(longtermPicsLSB[j], longtermPicsLSB[j+1]);
-        std::swap(indices[j]        , indices[j+1]        );
-      }
-    }
-  }
-  // Now for those pictures that have the same LSB, arrange them 
-  // in increasing MSB cycle, or equivalently decreasing MSB
-  for(i = 0; i < numLongPics;)    // i incremented using j
-  {
-    Int j = i + 1;
-    Int pocLSB = longtermPicsLSB[i];
-    for(; j < numLongPics; j++)
-    {
-      if(pocLSB != longtermPicsLSB[j])
-      {
-        break;
-      }
-    }
-    // Last index upto which lsb equals pocLSB is j - 1 
-    // Now sort based on the MSB values
-    Int sta, end;
-    for(sta = i; sta < j; sta++)
-    {
-      for(end = i; end < j - 1; end++)
-      {
-      // longtermPicsMSB = longtermPicsPoc - longtermPicsLSB
-        if(longtermPicsPoc[end] - longtermPicsLSB[end] < longtermPicsPoc[end+1] - longtermPicsLSB[end+1])
-        {
-          std::swap(longtermPicsPoc[end], longtermPicsPoc[end+1]);
-          std::swap(longtermPicsLSB[end], longtermPicsLSB[end+1]);
-          std::swap(indices[end]        , indices[end+1]        );
-        }
-      }
-    }
-    i = j;
-  }
-#endif
 
   for(i = 0; i < numLongPics; i++)
   {
