@@ -539,9 +539,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   codePTL( pcVPS->getPTL(), true, pcVPS->getMaxTLayers() - 1 );
   WRITE_CODE( 0,                                   12,        "vps_reserved_zero_12bits" );
 #endif
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
   codeBitratePicRateInfo(pcVPS->getBitratePicrateInfo(), 0, pcVPS->getMaxTLayers() - 1);
-#endif  
   const Bool subLayerOrderingInfoPresentFlag = 1;
   WRITE_FLAG(subLayerOrderingInfoPresentFlag,              "vps_sub_layer_ordering_info_present_flag");
   for(UInt i=0; i <= pcVPS->getMaxTLayers()-1; i++)
@@ -970,7 +968,7 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   }
   WRITE_CODE(0 , 16, "XXX_reserved_zero_16bits[]");  
 }
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
+
 Void TEncCavlc::codeBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)
 {
   for(Int i = tempLevelLow; i <= tempLevelHigh; i++)
@@ -989,7 +987,6 @@ Void TEncCavlc::codeBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLev
     }
   }
 }
-#endif  
 /**
  - write wavefront substreams sizes for the slice header.
  .
