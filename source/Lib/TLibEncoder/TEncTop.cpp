@@ -298,9 +298,7 @@ Void TEncTop::init()
   
   m_cTrQuant.init( 1 << m_uiQuadtreeTULog2MaxSize,
                   m_useRDOQ, 
-#if RDOQ_TRANSFORMSKIP
                   m_useRDOQTS,
-#endif
                   true 
                   ,m_useTransformSkipFast
 #if ADAPTIVE_QP_SELECTION                  

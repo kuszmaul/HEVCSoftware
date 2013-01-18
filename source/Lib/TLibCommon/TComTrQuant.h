@@ -119,9 +119,7 @@ public:
   
   // initialize class
   Void init                 ( UInt uiMaxTrSize, Bool useRDOQ = false,  
-#if RDOQ_TRANSFORMSKIP
-    Bool useRDOQTS = false,  
-#endif
+    Bool useRDOQTS = false,
     Bool bEnc = false, Bool useTransformSkipFast = false
 #if ADAPTIVE_QP_SELECTION
     , Bool bUseAdaptQpSelect = false
@@ -216,9 +214,7 @@ protected:
   UInt     m_uiMaxTrSize;
   Bool     m_bEnc;
   Bool     m_useRDOQ;
-#if RDOQ_TRANSFORMSKIP
   Bool     m_useRDOQTS;
-#endif
 #if ADAPTIVE_QP_SELECTION
   Bool     m_bUseAdaptQpSelect;
 #endif
