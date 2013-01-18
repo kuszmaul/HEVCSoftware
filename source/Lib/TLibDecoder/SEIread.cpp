@@ -257,7 +257,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     seis.push_back(sei);
   }
 
-#if HLS_SEI_GENERIC_EXTENSION
   /* By definition the underlying bitstream terminates in a byte-aligned manner.
    * 1. Extract all bar the last MIN(bitsremaining,nine) bits as reserved_payload_extension_data
    * 2. Examine the final 8 bits to determine the payload_bit_equal_to_one marker
@@ -293,7 +292,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     READ_CODE (1, dummy, "payload_bit_equal_to_one");
     READ_CODE (payloadBitsRemaining-1, dummy, "payload_bit_equal_to_zero");
   }
-#endif
 
   /* restore primary bitstream for sei_message */
   delete getBitstream();
