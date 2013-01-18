@@ -66,14 +66,8 @@ public:
     SOP_DESCRIPTION                      = 128,
     ACTIVE_PARAMETER_SETS                = 129,
     DECODING_UNIT_INFO                   = 130,
-#if SEI_TEMPORAL_LEVEL0_INDEX
     TEMPORAL_LEVEL0_INDEX                = 131,
-#endif
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
     DECODED_PICTURE_HASH                 = 132,
-#else
-    DECODED_PICTURE_HASH                 = 256,
-#endif
     SCALABLE_NESTING                     = 133,
 #if SEI_GDR_INFO
     REGION_REFRESH_INFO                  = 134,
@@ -278,7 +272,7 @@ public:
   UInt repetitionPeriod;
   Bool extensionFlag;
 };
-#if SEI_TEMPORAL_LEVEL0_INDEX
+
 class SEITemporalLevel0Index : public SEI
 {
 public:
@@ -293,7 +287,6 @@ public:
   UInt tl0Idx;
   UInt rapIdx;
 };
-#endif
 #if SEI_GDR_INFO
 class SEIGradualDecodingRefreshInfo : public SEI
 {

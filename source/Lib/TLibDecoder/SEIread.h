@@ -55,17 +55,9 @@ class SEIReader: public SyntaxElementParser
 public:
   SEIReader() {};
   virtual ~SEIReader() {};
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
-#else
-  Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis);
-#endif
 protected:
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   Void xReadSEImessage                (SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
-#else
-  Void xReadSEImessage                (SEIMessages& seis);
-#endif
   Void xParseSEIuserDataUnregistered  (SEIuserDataUnregistered &sei, UInt payloadSize);
   Void xParseSEIActiveParameterSets   (SEIActiveParameterSets  &sei, UInt payloadSize);
 #if DU_INFO_SEI_K0126
@@ -77,9 +69,7 @@ protected:
   Void xParseSEIRecoveryPoint         (SEIRecoveryPoint& sei, UInt payloadSize);
   Void xParseSEIFramePacking          (SEIFramePacking& sei, UInt payloadSize);
   Void xParseSEIDisplayOrientation    (SEIDisplayOrientation &sei, UInt payloadSize);
-#if SEI_TEMPORAL_LEVEL0_INDEX
   Void xParseSEITemporalLevel0Index   (SEITemporalLevel0Index &sei, UInt payloadSize);
-#endif
 #if SEI_GDR_INFO
   Void xParseSEIGradualDecodingRefreshInfo (SEIGradualDecodingRefreshInfo &sei, UInt payloadSize);
 #endif

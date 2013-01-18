@@ -74,11 +74,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
     break;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
     break;
-#endif
 #if SEI_GDR_INFO
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
@@ -129,11 +127,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::DISPLAY_ORIENTATION:
     xWriteSEIDisplayOrientation(*static_cast<const SEIDisplayOrientation*>(&sei));
     break;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     xWriteSEITemporalLevel0Index(*static_cast<const SEITemporalLevel0Index*>(&sei));
     break;
-#endif
 #if SEI_GDR_INFO
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
@@ -422,14 +418,13 @@ Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
   }
   xWriteByteAlign();
 }
-#if SEI_TEMPORAL_LEVEL0_INDEX
+
 Void SEIWriter::xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei)
 {
   WRITE_CODE( sei.tl0Idx, 8 , "tl0_idx" );
   WRITE_CODE( sei.rapIdx, 8 , "rap_idx" );
   xWriteByteAlign();
 }
-#endif
 #if SEI_GDR_INFO
 Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei)
 {

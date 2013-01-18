@@ -123,11 +123,7 @@ protected:
   Void      xDecodeVPS();
   Void      xDecodeSPS();
   Void      xDecodePPS();
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   Void      xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType );
-#else
-  Void      xDecodeSEI( TComInputBitstream* bs );
-#endif
 
 };// END CLASS DEFINITION TDecTop
 

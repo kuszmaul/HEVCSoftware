@@ -50,7 +50,6 @@
 #define SUBPICCPBREMOVALTIME_DUSEI_OR_PICTIMINGSEI  1  ///< K0126: Disallow co-existence of sub-picture CPB removal times in both picture timing SEI messages
                                                        ///<        and decoding unit information SEI messages.
 #define SEI_GDR_INFO                                1  ///< K0128: Gradual decoding refresh (GDR) Information SEI messages
-#define SUFFIX_SEI_NUT_DECODED_HASH_SEI             1  ///< K0120: Use the suffix SEI NUT for the decoded hash SEI message
 #define HLS_SEI_GENERIC_EXTENSION                   1  ///< K0371: generic SEI payload extension mechanism
 #define HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG    1  ///< K0371: remove active_parameter_set_sei_extension_flag
 #define HLS_ADD_SUBLAYER_ORDERING_INFO_PRESENT_FLAG 1  ///< K0330: Use sub_layer_ordering_info_present_flag in VPS and SPS as a shortcut to signal only one set of values
@@ -74,7 +73,6 @@
   #define MAX_VPS_OP_SETS_PLUS1                     1024
   #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1  1
 #endif
-#define SEI_TEMPORAL_LEVEL0_INDEX                   1  ///< K0205 - Temporal level zero index SEI message
 
 #define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
 

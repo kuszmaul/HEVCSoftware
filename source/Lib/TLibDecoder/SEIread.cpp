@@ -80,11 +80,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
     break;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   case SEI::TEMPORAL_LEVEL0_INDEX:
     fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
     break;
-#endif
 #if SEI_GDR_INFO
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
@@ -105,22 +103,14 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 /**
  * unmarshal a single SEI message from bitstream bs
  */
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
 void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps)
-#else
-void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis)
-#endif
 {
   setBitstream(bs);
 
   assert(!m_pcBitstream->getNumBitsUntilByteAligned());
   do
   {
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
     xReadSEImessage(seis, nalUnitType, sps);
-#else
-    xReadSEImessage(seis);
-#endif
     /* SEI messages are an integer number of bytes, something has failed
     * in the parsing if bitstream not byte-aligned */
     assert(!m_pcBitstream->getNumBitsUntilByteAligned());
@@ -130,11 +120,8 @@ void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis)
   READ_CODE(8, rbspTrailingBits, "rbsp_trailing_bits");
   assert(rbspTrailingBits == 0x80);
 }
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+
 Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps)
-#else
-Void SEIReader::xReadSEImessage(SEIMessages& seis)
-#endif
 {
 #if ENC_DEC_TRACE
   xTraceSEIHeader();
@@ -168,12 +155,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
   TComInputBitstream *bs = getBitstream();
   setBitstream(bs->extractSubstream(payloadSize * 8));
 
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   SEI *sei = NULL;
 
   if(nalUnitType == NAL_UNIT_SEI)
   {
-#endif
     switch (payloadType)
     {
     case SEI::USER_DATA_UNREGISTERED:
@@ -196,12 +181,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
         xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
       }
       break; 
-#endif
-#if !SUFFIX_SEI_NUT_DECODED_HASH_SEI
-    case SEI::DECODED_PICTURE_HASH:
-      sei = new SEIDecodedPictureHash;
-      xParseSEIDecodedPictureHash((SEIDecodedPictureHash&) *sei, payloadSize);
-      break;
 #endif
     case SEI::BUFFERING_PERIOD:
       if (!sps)
@@ -237,12 +216,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
       sei = new SEIDisplayOrientation;
       xParseSEIDisplayOrientation((SEIDisplayOrientation&) *sei, payloadSize);
       break;
-#if SEI_TEMPORAL_LEVEL0_INDEX
     case SEI::TEMPORAL_LEVEL0_INDEX:
       sei = new SEITemporalLevel0Index;
       xParseSEITemporalLevel0Index((SEITemporalLevel0Index&) *sei, payloadSize);
       break;
-#endif
 #if SEI_GDR_INFO
     case SEI::REGION_REFRESH_INFO:
       sei = new SEIGradualDecodingRefreshInfo;
@@ -257,7 +234,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
       }
       printf ("Unknown prefix SEI message (payloadType = %d) was found!\n", payloadType);
     }
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   }
   else
   {
@@ -280,7 +256,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis)
   {
     seis.push_back(sei);
   }
-#endif
 
 #if HLS_SEI_GENERIC_EXTENSION
   /* By definition the underlying bitstream terminates in a byte-aligned manner.
@@ -608,7 +583,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
   }
   xParseByteAlign();
 }
-#if SEI_TEMPORAL_LEVEL0_INDEX
+
 Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /*payloadSize*/)
 {
   UInt val;
@@ -616,7 +591,6 @@ Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /
   READ_CODE ( 8, val, "rap_idx" );  sei.rapIdx = val;
   xParseByteAlign();
 }
-#endif
 #if SEI_GDR_INFO
 Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInfo& sei, UInt /*payloadSize*/)
 {

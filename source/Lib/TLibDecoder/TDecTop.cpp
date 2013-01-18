@@ -611,13 +611,9 @@ Void TDecTop::xDecodePPS()
     }
   }
 }
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+
 Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType )
-#else
-Void TDecTop::xDecodeSEI( TComInputBitstream* bs )
-#endif
 {
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   if(nalUnitType == NAL_UNIT_SEI_SUFFIX)
   {
     m_seiReader.parseSEImessage( bs, m_pcPic->getSEIs(), nalUnitType, m_parameterSetManagerDecoder.getActiveSPS() );
@@ -637,10 +633,6 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs )
       }
     }
   }
-
-#else
-  m_seiReader.parseSEImessage( bs, *m_SEIs );
-#endif
 }
 
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
@@ -664,12 +656,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       return false;
       
     case NAL_UNIT_SEI:
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
     case NAL_UNIT_SEI_SUFFIX:
       xDecodeSEI( nalu.m_Bitstream, nalu.m_nalUnitType );
-#else
-      xDecodeSEI( nalu.m_Bitstream );
-#endif
       return false;
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
