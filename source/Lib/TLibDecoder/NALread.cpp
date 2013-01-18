@@ -49,11 +49,7 @@ using namespace std;
 
 //! \ingroup TLibDecoder
 //! \{
-#if HM9_NALU_TYPES
 static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, Bool isVclNalUnit)
-#else
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf)
-#endif
 {
   UInt zeroCount = 0;
   vector<uint8_t>::iterator it_read, it_write;
@@ -75,7 +71,6 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf)
   }
   assert(zeroCount == 0);
   
-#if HM9_NALU_TYPES
   if (isVclNalUnit)
   {
     // Remove cabac_zero_word from payload if present
@@ -92,7 +87,6 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf)
       printf("\nDetected %d instances of cabac_zero_word", n/2);      
     }
   }
-#endif
 
   nalUnitBuf.resize(it_write - nalUnitBuf.begin());
 }
@@ -137,11 +131,7 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 {
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
-#if HM9_NALU_TYPES
   convertPayloadToRBSP(nalUnitBuf, (nalUnitBuf[0] & 64) == 0);
-#else
-  convertPayloadToRBSP(nalUnitBuf);
-#endif
   
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
   delete pcBitstream;
