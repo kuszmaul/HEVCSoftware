@@ -1137,11 +1137,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     TComRefPicListModification* refPicListModification = rpcSlice->getRefPicListModification();
     if(!rpcSlice->isIntra())
     {
-#if SAVE_BITS_REFPICLIST_MOD_FLAG
       if( !rpcSlice->getPPS()->getListsModificationPresentFlag() || rpcSlice->getNumRpsCurrTempList() <= 1 )
-#else
-      if( !rpcSlice->getPPS()->getListsModificationPresentFlag() )
-#endif
       {
         refPicListModification->setRefPicListModificationFlagL0( 0 );
       }
@@ -1184,11 +1180,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     if(rpcSlice->isInterB())
     {
-#if SAVE_BITS_REFPICLIST_MOD_FLAG
       if( !rpcSlice->getPPS()->getListsModificationPresentFlag() || rpcSlice->getNumRpsCurrTempList() <= 1 )
-#else
-      if( !rpcSlice->getPPS()->getListsModificationPresentFlag() )
-#endif
       {
         refPicListModification->setRefPicListModificationFlagL1( 0 );
       }
