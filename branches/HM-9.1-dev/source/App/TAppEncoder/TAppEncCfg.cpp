@@ -459,10 +459,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   ("FrameFieldInfoPresentFlag",      m_frameFieldInfoPresentFlag,               false, "Indicates that pic_struct and field coding related values are present in picture timing SEI messages")
 #endif
-#if POC_TEMPORAL_RELATIONSHIP
   ("PocProportionalToTimingFlag",   m_pocProportionalToTimingFlag,         false, "Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS")
   ("NumTicksPocDiffOneMinus1",      m_numTicksPocDiffOneMinus1,                0, "Number of ticks minus 1 that for a POC difference of one")
-#endif
   ("BitstreamRestriction",           m_bitstreamRestrictionFlag,           false, "Signals whether bitstream restriction parameters are present")
   ("TilesFixedStructure",            m_tilesFixedStructureFlag,            false, "Indicates that each active picture parameter set has the same values of the syntax elements related to tiles")
   ("MotionVectorsOverPicBoundaries", m_motionVectorsOverPicBoundariesFlag, false, "Indicates that no samples outside the picture boundaries are used for inter prediction")

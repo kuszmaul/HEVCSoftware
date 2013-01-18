@@ -265,10 +265,8 @@ protected:
 #if HLS_ADD_VUI_FRAME_FIELD_INFO_PRESENT_FLAG
   Bool      m_frameFieldInfoPresentFlag;                      ///< Indicates that pic_struct values are present in picture timing SEI messages
 #endif
-#if POC_TEMPORAL_RELATIONSHIP
   Bool      m_pocProportionalToTimingFlag;                    ///< Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS
   Int       m_numTicksPocDiffOneMinus1;                       ///< Number of ticks minus 1 that for a POC difference of one
-#endif
   Bool      m_bitstreamRestrictionFlag;                       ///< Signals whether bitstream restriction parameters are present
   Bool      m_tilesFixedStructureFlag;                        ///< Indicates that each active picture parameter set has the same values of the syntax elements related to tiles
   Bool      m_motionVectorsOverPicBoundariesFlag;             ///< Indicates that no samples outside the picture boundaries are used for inter prediction

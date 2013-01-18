@@ -296,13 +296,11 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
   {
     codeHrdParameters(pcVUI->getHrdParameters(), 1, pcSPS->getMaxTLayers() - 1 );
   }
-#if POC_TEMPORAL_RELATIONSHIP
   WRITE_FLAG( pcVUI->getPocProportionalToTimingFlag(), "poc_proportional_to_timing_flag" );
   if( pcVUI->getPocProportionalToTimingFlag() && pcVUI->getHrdParameters()->getTimingInfoPresentFlag() )
   {
     WRITE_UVLC( pcVUI->getNumTicksPocDiffOneMinus1(), "num_ticks_poc_diff_one_minus1" );
   }
-#endif
 
   WRITE_FLAG(pcVUI->getBitstreamRestrictionFlag(),              "bitstream_restriction_flag");
   if (pcVUI->getBitstreamRestrictionFlag())
