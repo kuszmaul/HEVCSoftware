@@ -466,13 +466,8 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   }
 #endif
 
-#if PICTURE_TIMING_SEI_K0126
   READ_CODE( ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_minus1" );
   sei.m_auCpbRemovalDelay = code + 1;
-#else
-  READ_CODE( ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay" );
-  sei.m_auCpbRemovalDelay = code;
-#endif
   READ_CODE( ( hrd->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
   sei.m_picDpbOutputDelay = code;
 
@@ -491,10 +486,6 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
       READ_CODE( ( hrd->getDuCpbRemovalDelayLengthMinus1() + 1 ), code, "du_common_cpb_removal_delay_minus1" );
       sei.m_duCommonCpbRemovalDelayMinus1 = code;
     }
-#if !PICTURE_TIMING_SEI_K0126
-    else
-    {
-#endif
       if( sei.m_numNalusInDuMinus1 != NULL )
       {
         delete sei.m_numNalusInDuMinus1;
@@ -516,9 +507,6 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
           sei.m_duCpbRemovalDelayMinus1[ i ] = code;
         }
       }
-#if !PICTURE_TIMING_SEI_K0126
-    }
-#endif
   }
   xParseByteAlign();
 }
