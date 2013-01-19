@@ -1003,8 +1003,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Int iY
   Pel* pOrg;
   Pel* pRec;
   Int iStride;
-  Int iLcuWidth  = pTmpSPS->getMaxCUHeight();
-  Int iLcuHeight = pTmpSPS->getMaxCUWidth();
+  Int iLcuHeight = pTmpSPS->getMaxCUHeight();
+  Int iLcuWidth  = pTmpSPS->getMaxCUWidth();
   UInt uiLPelX   = pTmpCu->getCUPelX();
   UInt uiTPelY   = pTmpCu->getCUPelY();
   UInt uiRPelX;
