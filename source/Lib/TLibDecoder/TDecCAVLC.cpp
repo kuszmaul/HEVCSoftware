@@ -710,8 +710,15 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     }
     parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
   }
-  READ_FLAG( uiCode,  "vps_extension_flag" );          assert(!uiCode);
-  //future extensions go here..
+  
+  READ_FLAG( uiCode,  "vps_extension_flag" );
+  if (uiCode)
+  {
+    while ( xMoreRbspData() )
+    {
+      READ_FLAG( uiCode, "vps_extension_data_flag");
+    }
+  }
   
   return;
 }
