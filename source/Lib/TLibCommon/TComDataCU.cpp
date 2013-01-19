@@ -2387,7 +2387,6 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx )
 {
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
-  UInt uiIdx = 1;
   Bool abCandIsInter[ MRG_MAX_NUM_CANDS ];
   for( UInt ui = 0; ui < getSlice()->getMaxNumMergeCand(); ++ui )
   {
@@ -2605,53 +2604,51 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         uiLCUIdx = -1 ; 
       }
     }
+    
+    
     iRefIdx = 0;
-
     Bool bExistMV = false;
     UInt uiPartIdxCenter;
     UInt uiCurLCUIdx = getAddr();
+    Int dir = 0;
+    UInt uiArrayAddr = iCount;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );
     bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_0, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx );
     if( bExistMV == false )
     {
-      bExistMV = xGetColMVP( REF_PIC_LIST_0, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx );
+      bExistMV = xGetColMVP( REF_PIC_LIST_0, uiCurLCUIdx, uiPartIdxCenter, cColMv, iRefIdx );
     }
     if( bExistMV )
     {
-      UInt uiArrayAddr = iCount;
-      abCandIsInter[uiArrayAddr] = true;
-      pcMvFieldNeighbours[uiArrayAddr << 1].setMvField( cColMv, iRefIdx );
-
-      if ( getSlice()->isInterB() )
-      {       
-        iRefIdx = 0;
-        bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
-        if( bExistMV == false )
-        {
-          bExistMV = xGetColMVP( REF_PIC_LIST_1, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx );
-        }
-        if( bExistMV )
-        {
-          pcMvFieldNeighbours[ ( uiArrayAddr << 1 ) + 1 ].setMvField( cColMv, iRefIdx );
-          puhInterDirNeighbours[uiArrayAddr] = 3;
-        }
-        else
-        {
-          puhInterDirNeighbours[uiArrayAddr] = 1;
-        }
-      }
-      else
+      dir |= 1;
+      pcMvFieldNeighbours[ 2 * uiArrayAddr ].setMvField( cColMv, iRefIdx );
+    }
+    
+    if ( getSlice()->isInterB() )
+    {
+      bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
+      if( bExistMV == false )
       {
-        puhInterDirNeighbours[uiArrayAddr] = 1;
+        bExistMV = xGetColMVP( REF_PIC_LIST_1, uiCurLCUIdx, uiPartIdxCenter, cColMv, iRefIdx );
       }
+      if( bExistMV )
+      {
+        dir |= 2;
+        pcMvFieldNeighbours[ 2 * uiArrayAddr + 1 ].setMvField( cColMv, iRefIdx );
+      }
+    }
+    
+    if (dir != 0)
+    {
+      puhInterDirNeighbours[uiArrayAddr] = dir;
+      abCandIsInter[uiArrayAddr] = true;
+
       if ( mrgCandIdx == iCount )
       {
         return;
       }
       iCount++;
     }
-    uiIdx++;
-
   }
   // early termination
   if (iCount == getSlice()->getMaxNumMergeCand()) 
