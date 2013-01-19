@@ -1295,8 +1295,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
   Pel* pOrg;
   Pel* pRec;
   Int stride;
-  Int lcuWidth  = pTmpSPS->getMaxCUHeight();
-  Int lcuHeight = pTmpSPS->getMaxCUWidth();
+  Int lcuHeight = pTmpSPS->getMaxCUHeight();
+  Int lcuWidth  = pTmpSPS->getMaxCUWidth();
   UInt rPelX;
   UInt bPelY;
   Int64* stats;
