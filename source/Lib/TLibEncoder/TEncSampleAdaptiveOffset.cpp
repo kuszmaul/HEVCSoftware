@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1003,8 +1003,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Int iY
   Pel* pOrg;
   Pel* pRec;
   Int iStride;
-  Int iLcuWidth  = pTmpSPS->getMaxCUHeight();
-  Int iLcuHeight = pTmpSPS->getMaxCUWidth();
+  Int iLcuHeight = pTmpSPS->getMaxCUHeight();
+  Int iLcuWidth  = pTmpSPS->getMaxCUWidth();
   UInt uiLPelX   = pTmpCu->getCUPelX();
   UInt uiTPelY   = pTmpCu->getCUPelY();
   UInt uiRPelX;
@@ -1295,8 +1295,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
   Pel* pOrg;
   Pel* pRec;
   Int stride;
-  Int lcuWidth  = pTmpSPS->getMaxCUHeight();
-  Int lcuHeight = pTmpSPS->getMaxCUWidth();
+  Int lcuHeight = pTmpSPS->getMaxCUHeight();
+  Int lcuWidth  = pTmpSPS->getMaxCUWidth();
   UInt rPelX;
   UInt bPelY;
   Int64* stats;
@@ -1703,10 +1703,6 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLu
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
-
-  m_eSliceType          =  m_pcPic->getSlice(0)->getSliceType();
-  m_iPicNalReferenceIdc = (m_pcPic->getSlice(0)->isReferenced() ? 1 :0);
-
 #if SAO_CHROMA_LAMBDA 
   m_dLambdaLuma    = dLambdaLuma;
   m_dLambdaChroma  = dLambdaChroma;
@@ -2103,8 +2099,7 @@ if( saoParam->saoLcuParam[1][addr].typeIdx == -1)
   }
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
-#if SAO_ENCODING_CHOICE_CHROMA_BF
-  if( !saoParam->bSaoFlag[0]) 
+  if( !saoParam->bSaoFlag[0])
   {
     m_depthSaoRate[0][depth] = 1.0;
   }
@@ -2120,10 +2115,6 @@ if( saoParam->saoLcuParam[1][addr].typeIdx == -1)
   {
     m_depthSaoRate[1][depth] = numNoSao[1]/((Double) frameHeightInCU*frameWidthInCU*2);
   }
-#else
-m_depthSaoRate[0][depth] = numNoSao[0]/((Double) frameHeightInCU*frameWidthInCU);
-m_depthSaoRate[1][depth] = numNoSao[1]/((Double) frameHeightInCU*frameWidthInCU*2);
-#endif
 #else
   if( depth == 0)
   {
