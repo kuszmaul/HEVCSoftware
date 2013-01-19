@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,8 +80,7 @@ private:
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
-  Bool                    m_checkBurstIPCMFlag;
-
+  
   //  Access channel
   TEncCfg*                m_pcEncCfg;
   TEncSearch*             m_pcPredSearch;
@@ -118,7 +117,7 @@ public:
   Void  compressCU          ( TComDataCU*&  rpcCU );
   
   /// CU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCU, Bool bForceTerminate = false  );
+  Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 #if RATE_CONTROL_LAMBDA_DOMAIN
@@ -144,7 +143,6 @@ protected:
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCheckDQP           ( TComDataCU*  pcCU );
   
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
@@ -154,14 +152,6 @@ protected:
 
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
-
-#if !REMOVE_BURST_IPCM
-  Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
-  Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
-
-  Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
-  Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions

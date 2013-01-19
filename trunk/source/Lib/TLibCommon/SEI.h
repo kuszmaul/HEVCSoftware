@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
  */
 
 #pragma once
+#include <list>
+#include <vector>
 
 //! \ingroup TLibCommon
 //! \{
@@ -45,22 +47,29 @@ class SEI
 public:
   enum PayloadType
   {
-    BUFFERING_PERIOD       = 0,
-    PICTURE_TIMING         = 1,
-    USER_DATA_UNREGISTERED = 5,
-    RECOVERY_POINT         = 6,
-#if SEI_DISPLAY_ORIENTATION
-    DISPLAY_ORIENTATION    = 47,
-#endif
-    ACTIVE_PARAMETER_SETS  = 130, 
-#if SEI_TEMPORAL_LEVEL0_INDEX
-    TEMPORAL_LEVEL0_INDEX  = 132,
-#endif
-#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
-    DECODED_PICTURE_HASH   = 133,
-#else
-    DECODED_PICTURE_HASH   = 256,
-#endif
+    BUFFERING_PERIOD                     = 0,
+    PICTURE_TIMING                       = 1,
+    PAN_SCAN_RECT                        = 2,
+    FILLER_PAYLOAD                       = 3,
+    USER_DATA_REGISTERED_ITU_T_T35       = 4,
+    USER_DATA_UNREGISTERED               = 5,
+    RECOVERY_POINT                       = 6,
+    SCENE_INFO                           = 9,
+    FULL_FRAME_SNAPSHOT                  = 15,
+    PROGRESSIVE_REFINEMENT_SEGMENT_START = 16,
+    PROGRESSIVE_REFINEMENT_SEGMENT_END   = 17,
+    FILM_GRAIN_CHARACTERISTICS           = 19,
+    POST_FILTER_HINT                     = 22,
+    TONE_MAPPING_INFO                    = 23,
+    FRAME_PACKING                        = 45,
+    DISPLAY_ORIENTATION                  = 47,
+    SOP_DESCRIPTION                      = 128,
+    ACTIVE_PARAMETER_SETS                = 129,
+    DECODING_UNIT_INFO                   = 130,
+    TEMPORAL_LEVEL0_INDEX                = 131,
+    DECODED_PICTURE_HASH                 = 132,
+    SCALABLE_NESTING                     = 133,
+    REGION_REFRESH_INFO                  = 134,
   };
   
   SEI() {}
@@ -113,19 +122,13 @@ public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
   SEIActiveParameterSets() 
-    :activeSPSIdPresentFlag(1)
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-    ,activeParamSetSEIExtensionFlag(0)
-#endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
+    :numSpsIdsMinus1(0)
   {}
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
-  Int activeSPSIdPresentFlag;
-  Int activeSeqParamSetId; 
-#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
-  Int activeParamSetSEIExtensionFlag; 
-#endif /* HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
+  Int numSpsIdsMinus1;
+  std::vector<Int> activeSeqParamSetId; 
 };
 
 class SEIBufferingPeriod : public SEI
@@ -134,17 +137,15 @@ public:
   PayloadType payloadType() const { return BUFFERING_PERIOD; }
 
   SEIBufferingPeriod()
-  :m_sps (NULL)
   {}
   virtual ~SEIBufferingPeriod() {}
 
-  UInt m_seqParameterSetId;
-  Bool m_altCpbParamsPresentFlag;
+  UInt m_bpSeqParameterSetId;
+  Bool m_rapCpbParamsPresentFlag;
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelayOffset[MAX_CPB_CNT][2];
-  TComSPS* m_sps;
 };
 class SEIPictureTiming : public SEI
 {
@@ -152,9 +153,11 @@ public:
   PayloadType payloadType() const { return PICTURE_TIMING; }
 
   SEIPictureTiming()
-  : m_numNalusInDuMinus1      (NULL)
+  : m_picStruct               (0)
+  , m_progressiveSourceIdc    (0)
+  , m_duplicateFlag           (false)
+  , m_numNalusInDuMinus1      (NULL)
   , m_duCpbRemovalDelayMinus1 (NULL)
-  , m_sps                     (NULL)
   {}
   virtual ~SEIPictureTiming()
   {
@@ -168,6 +171,10 @@ public:
     }
   }
 
+  UInt  m_picStruct;
+  UInt  m_progressiveSourceIdc;
+  Bool  m_duplicateFlag;
+
   UInt  m_auCpbRemovalDelay;
   UInt  m_picDpbOutputDelay;
   UInt  m_numDecodingUnitsMinus1;
@@ -175,8 +182,22 @@ public:
   UInt  m_duCommonCpbRemovalDelayMinus1;
   UInt* m_numNalusInDuMinus1;
   UInt* m_duCpbRemovalDelayMinus1;
-  TComSPS* m_sps;
 };
+
+class SEIDecodingUnitInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return DECODING_UNIT_INFO; }
+
+  SEIDecodingUnitInfo()
+    : m_decodingUnitIdx(0)
+    , m_duSptCpbRemovalDelay(0)
+  {}
+  virtual ~SEIDecodingUnitInfo() {}
+  Int m_decodingUnitIdx;
+  Int m_duSptCpbRemovalDelay;
+};
+
 class SEIRecoveryPoint : public SEI
 {
 public:
@@ -189,7 +210,34 @@ public:
   Bool m_exactMatchingFlag;
   Bool m_brokenLinkFlag;
 };
-#if SEI_DISPLAY_ORIENTATION
+class SEIFramePacking : public SEI
+{
+public:
+  PayloadType payloadType() const { return FRAME_PACKING; }
+
+  SEIFramePacking() {}
+  virtual ~SEIFramePacking() {}
+
+  Int  m_arrangementId;
+  Bool m_arrangementCancelFlag;
+  Int  m_arrangementType;
+  Bool m_quincunxSamplingFlag;
+  Int  m_contentInterpretationType;
+  Bool m_spatialFlippingFlag;
+  Bool m_frame0FlippedFlag;
+  Bool m_fieldViewsFlag;
+  Bool m_currentFrameIsFrame0Flag;
+  Bool m_frame0SelfContainedFlag;
+  Bool m_frame1SelfContainedFlag;
+  Int  m_frame0GridPositionX;
+  Int  m_frame0GridPositionY;
+  Int  m_frame1GridPositionX;
+  Int  m_frame1GridPositionY;
+  Int  m_arrangementReservedByte;
+  Int  m_arrangementRepetetionPeriod;
+  Bool m_upsampledAspectRatio;
+};
+
 class SEIDisplayOrientation : public SEI
 {
 public:
@@ -210,8 +258,7 @@ public:
   UInt repetitionPeriod;
   Bool extensionFlag;
 };
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
+
 class SEITemporalLevel0Index : public SEI
 {
 public:
@@ -226,59 +273,29 @@ public:
   UInt tl0Idx;
   UInt rapIdx;
 };
-#endif
 
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
+class SEIGradualDecodingRefreshInfo : public SEI
 {
 public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , active_parameter_sets(0)
-    , picture_digest(0)
-    , buffering_period(0)
-    , picture_timing(0)
-    , recovery_point(0)
-#if SEI_DISPLAY_ORIENTATION
-    , display_orientation(0)
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-    , temporal_level0_index(0)
-#endif
-    {}
+  PayloadType payloadType() const { return REGION_REFRESH_INFO; }
 
-  ~SEImessages()
-  {
-    delete user_data_unregistered;
-    delete active_parameter_sets; 
-    delete picture_digest;
-    delete buffering_period;
-    delete picture_timing;
-    delete recovery_point;
-#if SEI_DISPLAY_ORIENTATION
-    delete display_orientation;
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-    delete temporal_level0_index;
-#endif
-  }
+  SEIGradualDecodingRefreshInfo()
+    : m_gdrForegroundFlag(0)
+  {}
+  virtual ~SEIGradualDecodingRefreshInfo() {}
 
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIActiveParameterSets* active_parameter_sets; 
-  SEIDecodedPictureHash* picture_digest;
-  SEIBufferingPeriod* buffering_period;
-  SEIPictureTiming* picture_timing;
-  TComSPS* m_pSPS;
-  SEIRecoveryPoint* recovery_point;
-#if SEI_DISPLAY_ORIENTATION
-  SEIDisplayOrientation* display_orientation;
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
-  SEITemporalLevel0Index* temporal_level0_index;
-#endif
+  Bool m_gdrForegroundFlag;
 };
+
+typedef std::list<SEI*> SEIMessages;
+
+/// output a selection of SEI messages by payload type. Ownership stays in original message list.
+SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
+
+/// remove a selection of SEI messages by payload type from the original list and return them in a new list. 
+SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
+
+/// delete list of SEI messages (freeing the referenced objects)
+Void deleteSEIs (SEIMessages &seiList);
 
 //! \}

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,8 +79,6 @@ protected:
   Int  m_iNumCuInHeight;
   Int  m_iNumTotalParts;
   static const Int m_iNumClass[MAX_NUM_SAO_TYPE];
-  SliceType  m_eSliceType;
-  Int        m_iPicNalReferenceIdc;
 
   UInt m_uiSaoBitIncreaseY;
   UInt m_uiSaoBitIncreaseC;  //for chroma
@@ -97,15 +95,12 @@ protected:
   Int   *m_iUpBufft;
   Int   *ipSwap;
   Bool  m_bUseNIF;       //!< true for performing non-cross slice boundary ALF
-  UInt  m_uiNumSlicesInPic;      //!< number of slices in picture
-  Int   m_iSGDepth;              //!< slice granularity depth
   TComPicYuv* m_pcYuvTmp;    //!< temporary picture buffer pointer when non-across slice/tile boundary SAO is enabled
 
   Pel* m_pTmpU1;
   Pel* m_pTmpU2;
   Pel* m_pTmpL1;
   Pel* m_pTmpL2;
-  Int* m_iLcuPartIdx;
   Int     m_maxNumOffsetsPerPic;
   Bool    m_saoLcuBoundary;
   Bool    m_saoLcuBasedOptimization;
@@ -132,7 +127,7 @@ public:
   Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, Int iYCbCr,Int iAddr = 0);
 
   Void processSaoCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);  //!< LCU-basd SAO process without slice granularity 
-  Void createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic = 1);
+  Void createPicSaoInfo(TComPic* pcPic);
   Void destroyPicSaoInfo();
   Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt width, UInt height, Bool* pbBorderAvail, Int iYCbCr);
 
