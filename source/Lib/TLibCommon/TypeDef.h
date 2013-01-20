@@ -43,6 +43,7 @@
 #define L0043_MSS_IDC 1
 #define L0116_ENTRY_POINT 1
 #define L0363_MORE_BITS 1
+#define L0363_MVP_POC 1
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
