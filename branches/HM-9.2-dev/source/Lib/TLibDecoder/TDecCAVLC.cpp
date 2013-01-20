@@ -1337,7 +1337,13 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   {
     READ_FLAG(  uiCode, "XXX_profile_compatibility_flag[][j]");   ptl->setProfileCompatibilityFlag(j, uiCode ? 1 : 0);
   }
-  READ_CODE(16, uiCode, "XXX_reserved_zero_16bits[]");  assert( uiCode == 0 );  
+#if L0363_MORE_BITS
+  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[0..15]");
+  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[16..31]");
+  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[32..47]");
+#else
+  READ_CODE(16, uiCode, "XXX_reserved_zero_16bits[]");  assert( uiCode == 0 );
+#endif
 }
 
 Void TDecCavlc::parseBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)

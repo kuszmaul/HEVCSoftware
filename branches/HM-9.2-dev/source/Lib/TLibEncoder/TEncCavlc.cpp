@@ -940,7 +940,13 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   {
     WRITE_FLAG( ptl->getProfileCompatibilityFlag(j), "XXX_profile_compatibility_flag[][j]");   
   }
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_16bits[]");  
+#if L0363_MORE_BITS
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[0..15]");
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[16..31]");
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[32..47]");
+#else
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_16bits[]");
+#endif
 }
 
 Void TEncCavlc::codeBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)
