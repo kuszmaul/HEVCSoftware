@@ -40,6 +40,8 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define L0043_MSS_IDC 1
+
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1  1
