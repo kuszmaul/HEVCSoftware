@@ -846,6 +846,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         sei_frame_packing.m_arrangementId = m_pcCfg->getFramePackingArrangementSEIId();
         sei_frame_packing.m_arrangementCancelFlag = 0;
         sei_frame_packing.m_arrangementType = m_pcCfg->getFramePackingArrangementSEIType();
+#if L0444_FPA_TYPE
+        assert((sei_frame_packing.m_arrangementType > 2) && (sei_frame_packing.m_arrangementType < 7) );
+#endif
         sei_frame_packing.m_quincunxSamplingFlag = m_pcCfg->getFramePackingArrangementSEIQuincunx();
         sei_frame_packing.m_contentInterpretationType = m_pcCfg->getFramePackingArrangementSEIInterpretation();
         sei_frame_packing.m_spatialFlippingFlag = 0;
