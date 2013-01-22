@@ -154,7 +154,11 @@ public:
 
   SEIPictureTiming()
   : m_picStruct               (0)
+#if L0046_RENAME_PROG_SRC_IDC
+  , m_sourceScanType          (0)
+#else
   , m_progressiveSourceIdc    (0)
+#endif
   , m_duplicateFlag           (false)
   , m_numNalusInDuMinus1      (NULL)
   , m_duCpbRemovalDelayMinus1 (NULL)
@@ -172,7 +176,11 @@ public:
   }
 
   UInt  m_picStruct;
+#if L0046_RENAME_PROG_SRC_IDC
+  UInt  m_sourceScanType;
+#else
   UInt  m_progressiveSourceIdc;
+#endif
   Bool  m_duplicateFlag;
 
   UInt  m_auCpbRemovalDelay;
