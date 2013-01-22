@@ -134,6 +134,93 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 
 }
 
+SEIActiveParameterSets* TEncGOP::xCreateSEIActiveParameterSets (TComSPS *sps)
+{
+  SEIActiveParameterSets *seiActiveParameterSets = new SEIActiveParameterSets(); 
+  seiActiveParameterSets->activeVPSId = m_pcCfg->getVPS()->getVPSId(); 
+  seiActiveParameterSets->numSpsIdsMinus1 = 0;
+  seiActiveParameterSets->activeSeqParamSetId.resize(seiActiveParameterSets->numSpsIdsMinus1 + 1); 
+  seiActiveParameterSets->activeSeqParamSetId[0] = sps->getSPSId();
+  return seiActiveParameterSets;
+}
+
+SEIFramePacking* TEncGOP::xCreateSEIFramePacking()
+{
+  SEIFramePacking *seiFramePacking = new SEIFramePacking();
+  seiFramePacking->m_arrangementId = m_pcCfg->getFramePackingArrangementSEIId();
+  seiFramePacking->m_arrangementCancelFlag = 0;
+  seiFramePacking->m_arrangementType = m_pcCfg->getFramePackingArrangementSEIType();
+#if L0444_FPA_TYPE
+  assert((seiFramePacking->m_arrangementType > 2) && (seiFramePacking->m_arrangementType < 7) );
+#endif
+  seiFramePacking->m_quincunxSamplingFlag = m_pcCfg->getFramePackingArrangementSEIQuincunx();
+  seiFramePacking->m_contentInterpretationType = m_pcCfg->getFramePackingArrangementSEIInterpretation();
+  seiFramePacking->m_spatialFlippingFlag = 0;
+  seiFramePacking->m_frame0FlippedFlag = 0;
+  seiFramePacking->m_fieldViewsFlag = (seiFramePacking->m_arrangementType == 2);
+  seiFramePacking->m_currentFrameIsFrame0Flag = ((seiFramePacking->m_arrangementType == 5) && m_iNumPicCoded&1);
+  seiFramePacking->m_frame0SelfContainedFlag = 0;
+  seiFramePacking->m_frame1SelfContainedFlag = 0;
+  seiFramePacking->m_frame0GridPositionX = 0;
+  seiFramePacking->m_frame0GridPositionY = 0;
+  seiFramePacking->m_frame1GridPositionX = 0;
+  seiFramePacking->m_frame1GridPositionY = 0;
+  seiFramePacking->m_arrangementReservedByte = 0;
+  seiFramePacking->m_arrangementRepetetionPeriod = 1;
+  seiFramePacking->m_upsampledAspectRatio = 0;
+  return seiFramePacking;
+}
+
+SEIDisplayOrientation* TEncGOP::xCreateSEIDisplayOrientation()
+{
+  SEIDisplayOrientation *seiDisplayOrientation = new SEIDisplayOrientation();
+  seiDisplayOrientation->cancelFlag = false;
+  seiDisplayOrientation->horFlip = false;
+  seiDisplayOrientation->verFlip = false;
+  seiDisplayOrientation->anticlockwiseRotation = m_pcCfg->getDisplayOrientationSEIAngle();
+  return seiDisplayOrientation;
+}
+
+Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps)
+{
+  OutputNALUnit nalu(NAL_UNIT_SEI);
+
+  if(m_pcCfg->getActiveParameterSetsSEIEnabled())
+  {
+    SEIActiveParameterSets *sei = xCreateSEIActiveParameterSets (sps);
+
+    //nalu = NALUnit(NAL_UNIT_SEI); 
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps); 
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
+  }
+
+  if(m_pcCfg->getFramePackingArrangementSEIEnabled())
+  {
+    SEIFramePacking *sei = xCreateSEIFramePacking ();
+
+    nalu = NALUnit(NAL_UNIT_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
+  }
+  if (m_pcCfg->getDisplayOrientationSEIAngle())
+  {
+    SEIDisplayOrientation *sei = xCreateSEIDisplayOrientation();
+
+    nalu = NALUnit(NAL_UNIT_SEI); 
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps); 
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
+  }
+}
+
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -824,67 +911,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
 #endif
 
-      if(m_pcCfg->getActiveParameterSetsSEIEnabled())
-      {
-        SEIActiveParameterSets sei_active_parameter_sets; 
-        sei_active_parameter_sets.activeVPSId = m_pcCfg->getVPS()->getVPSId(); 
-        sei_active_parameter_sets.numSpsIdsMinus1 = 0;
-        sei_active_parameter_sets.activeSeqParamSetId.resize(sei_active_parameter_sets.numSpsIdsMinus1 + 1); 
-        sei_active_parameter_sets.activeSeqParamSetId[0] = pcSlice->getSPS()->getSPSId(); 
-
-        nalu = NALUnit(NAL_UNIT_SEI); 
-        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_active_parameter_sets, pcSlice->getSPS()); 
-        writeRBSPTrailingBits(nalu.m_Bitstream);
-        accessUnit.push_back(new NALUnitEBSP(nalu));
-      }
-
-      //TODO: check the position is correct
-      if(m_pcCfg->getFramePackingArrangementSEIEnabled())
-      {
-        SEIFramePacking sei_frame_packing;
-        sei_frame_packing.m_arrangementId = m_pcCfg->getFramePackingArrangementSEIId();
-        sei_frame_packing.m_arrangementCancelFlag = 0;
-        sei_frame_packing.m_arrangementType = m_pcCfg->getFramePackingArrangementSEIType();
-#if L0444_FPA_TYPE
-        assert((sei_frame_packing.m_arrangementType > 2) && (sei_frame_packing.m_arrangementType < 7) );
-#endif
-        sei_frame_packing.m_quincunxSamplingFlag = m_pcCfg->getFramePackingArrangementSEIQuincunx();
-        sei_frame_packing.m_contentInterpretationType = m_pcCfg->getFramePackingArrangementSEIInterpretation();
-        sei_frame_packing.m_spatialFlippingFlag = 0;
-        sei_frame_packing.m_frame0FlippedFlag = 0;
-        sei_frame_packing.m_fieldViewsFlag = (sei_frame_packing.m_arrangementType == 2);
-        sei_frame_packing.m_currentFrameIsFrame0Flag = ((sei_frame_packing.m_arrangementType == 5) && m_iNumPicCoded&1);
-        sei_frame_packing.m_frame0SelfContainedFlag = 0;
-        sei_frame_packing.m_frame1SelfContainedFlag = 0;
-        sei_frame_packing.m_frame0GridPositionX = 0;
-        sei_frame_packing.m_frame0GridPositionY = 0;
-        sei_frame_packing.m_frame1GridPositionX = 0;
-        sei_frame_packing.m_frame1GridPositionY = 0;
-        sei_frame_packing.m_arrangementReservedByte = 0;
-        sei_frame_packing.m_arrangementRepetetionPeriod = 1;
-        sei_frame_packing.m_upsampledAspectRatio = 0;
-
-        nalu = NALUnit(NAL_UNIT_SEI);
-        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_frame_packing, pcSlice->getSPS());
-        writeRBSPTrailingBits(nalu.m_Bitstream);
-        accessUnit.push_back(new NALUnitEBSP(nalu));
-      }
-      if (m_pcCfg->getDisplayOrientationSEIAngle())
-      {
-        SEIDisplayOrientation sei_display_orientation;
-        sei_display_orientation.cancelFlag = false;
-        sei_display_orientation.horFlip = false;
-        sei_display_orientation.verFlip = false;
-        sei_display_orientation.anticlockwiseRotation = m_pcCfg->getDisplayOrientationSEIAngle();
-
-        nalu = NALUnit(NAL_UNIT_SEI); 
-        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
-        m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_display_orientation, pcSlice->getSPS()); 
-        writeRBSPTrailingBits(nalu.m_Bitstream);
-        accessUnit.push_back(new NALUnitEBSP(nalu));
-      }
+      xCreateLeadingSEIMessages(accessUnit, pcSlice->getSPS());
 
       m_bSeqFirst = false;
     }
