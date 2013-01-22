@@ -879,7 +879,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
         if (numBits > 0)
         {
-          READ_CODE( numBits, uiCode, "short_term_ref_pic_set_idx");        }
+          READ_CODE( numBits, uiCode, "short_term_ref_pic_set_idx");
+        }
         else
         {
           uiCode = 0;
@@ -1229,66 +1230,67 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setLFCrossSliceBoundaryFlag( (uiCode==1)?true:false);
 
   }
-    if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
-    {
-      UInt *entryPointOffset          = NULL;
-      UInt numEntryPointOffsets, offsetLenMinus1;
+  
+  if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
+  {
+    UInt *entryPointOffset          = NULL;
+    UInt numEntryPointOffsets, offsetLenMinus1;
 
-      READ_UVLC(numEntryPointOffsets, "num_entry_point_offsets"); rpcSlice->setNumEntryPointOffsets ( numEntryPointOffsets );
-      if (numEntryPointOffsets>0)
-      {
-        READ_UVLC(offsetLenMinus1, "offset_len_minus1");
-      }
-      entryPointOffset = new UInt[numEntryPointOffsets];
-      for (UInt idx=0; idx<numEntryPointOffsets; idx++)
-      {
+    READ_UVLC(numEntryPointOffsets, "num_entry_point_offsets"); rpcSlice->setNumEntryPointOffsets ( numEntryPointOffsets );
+    if (numEntryPointOffsets>0)
+    {
+      READ_UVLC(offsetLenMinus1, "offset_len_minus1");
+    }
+    entryPointOffset = new UInt[numEntryPointOffsets];
+    for (UInt idx=0; idx<numEntryPointOffsets; idx++)
+    {
 #if L0116_ENTRY_POINT
-        READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset_minus1");
-        entryPointOffset[ idx ] = uiCode + 1;
+      READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset_minus1");
+      entryPointOffset[ idx ] = uiCode + 1;
 #else
-        READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset");
-        entryPointOffset[ idx ] = uiCode;
+      READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset");
+      entryPointOffset[ idx ] = uiCode;
 #endif
-      }
-
-      if ( pps->getTilesEnabledFlag() )
-      {
-        rpcSlice->setTileLocationCount( numEntryPointOffsets );
-
-        UInt prevPos = 0;
-        for (Int idx=0; idx<rpcSlice->getTileLocationCount(); idx++)
-        {
-          rpcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
-          prevPos += entryPointOffset[ idx ];
-        }
-      }
-      else if ( pps->getEntropyCodingSyncEnabledFlag() )
-      {
-      Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
-        rpcSlice->allocSubstreamSizes(numSubstreams);
-        UInt *pSubstreamSizes       = rpcSlice->getSubstreamSizes();
-        for (Int idx=0; idx<numSubstreams-1; idx++)
-        {
-          if ( idx < numEntryPointOffsets )
-          {
-            pSubstreamSizes[ idx ] = ( entryPointOffset[ idx ] << 3 ) ;
-          }
-          else
-          {
-            pSubstreamSizes[ idx ] = 0;
-          }
-        }
-      }
-
-      if (entryPointOffset)
-      {
-        delete [] entryPointOffset;
-      }
     }
-    else
+
+    if ( pps->getTilesEnabledFlag() )
     {
-      rpcSlice->setNumEntryPointOffsets ( 0 );
+      rpcSlice->setTileLocationCount( numEntryPointOffsets );
+
+      UInt prevPos = 0;
+      for (Int idx=0; idx<rpcSlice->getTileLocationCount(); idx++)
+      {
+        rpcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
+        prevPos += entryPointOffset[ idx ];
+      }
     }
+    else if ( pps->getEntropyCodingSyncEnabledFlag() )
+    {
+    Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
+      rpcSlice->allocSubstreamSizes(numSubstreams);
+      UInt *pSubstreamSizes       = rpcSlice->getSubstreamSizes();
+      for (Int idx=0; idx<numSubstreams-1; idx++)
+      {
+        if ( idx < numEntryPointOffsets )
+        {
+          pSubstreamSizes[ idx ] = ( entryPointOffset[ idx ] << 3 ) ;
+        }
+        else
+        {
+          pSubstreamSizes[ idx ] = 0;
+        }
+      }
+    }
+
+    if (entryPointOffset)
+    {
+      delete [] entryPointOffset;
+    }
+  }
+  else
+  {
+    rpcSlice->setNumEntryPointOffsets ( 0 );
+  }
 
   if(pps->getSliceHeaderExtensionPresentFlag())
   {
