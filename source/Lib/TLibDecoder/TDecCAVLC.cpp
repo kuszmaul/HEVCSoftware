@@ -258,7 +258,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   pcPPS->setUseWP( uiCode==1 );
   READ_FLAG( uiCode, "weighted_bipred_flag" );         // Use of Bi-Directional Weighting Prediction (B_SLICE)
   pcPPS->setWPBiPred( uiCode==1 );
-  printf("TDecCavlc::parsePPS():\tm_bUseWeightPred=%d\tm_uiBiPredIdc=%d\n", pcPPS->getUseWP(), pcPPS->getWPBiPred());
 
 #if !L0255_MOVE_PPS_FLAGS
   READ_FLAG( uiCode, "output_flag_present_flag" );
@@ -1523,11 +1522,7 @@ Void TDecCavlc::xReadPCMAlignZero( )
     for(uiBits = 0; uiBits < uiNumberOfBits; uiBits++)
     {
       xReadFlag( uiSymbol );
-
-      if(uiSymbol)
-      {
-        printf("\nWarning! pcm_align_zero include a non-zero value.\n");
-      }
+      assert( uiSymbol == 0 );
     }
   }
 }
