@@ -541,7 +541,9 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
     case NAL_UNIT_CODED_SLICE_IDR:
     case NAL_UNIT_CODED_SLICE_IDR_N_LP:
     case NAL_UNIT_CODED_SLICE_CRA:
+    case NAL_UNIT_CODED_SLICE_RADL_N:
     case NAL_UNIT_CODED_SLICE_DLP:
+    case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_TFD:
     case NAL_UNIT_VPS:
     case NAL_UNIT_SPS:
