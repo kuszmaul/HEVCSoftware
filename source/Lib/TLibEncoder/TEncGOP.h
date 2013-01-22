@@ -149,6 +149,13 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 
   Double xCalculateRVM();
+
+  SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
+  SEIFramePacking*        xCreateSEIFramePacking();
+  SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
+
+  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
+
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================
