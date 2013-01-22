@@ -40,6 +40,7 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define L0045_CONDITION_SIGNALLING 1  ///< L0045: Condition the signaling of some syntax elements in picture timing SEI message
 #define L0043_MSS_IDC 1
 #define L0116_ENTRY_POINT 1
 #define L0363_MORE_BITS 1
