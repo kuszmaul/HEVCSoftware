@@ -450,7 +450,11 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   if( vui->getFrameFieldInfoPresentFlag() )
   {
     READ_CODE( 4, code, "pic_struct" );             sei.m_picStruct            = code;
+#if L0046_RENAME_PROG_SRC_IDC
+    READ_CODE( 2, code, "source_scan_type" );       sei.m_sourceScanType = code;
+#else
     READ_CODE( 2, code, "progressive_source_idc" ); sei.m_progressiveSourceIdc = code;
+#endif
     READ_FLAG(    code, "duplicate_flag" );         sei.m_duplicateFlag        = ( code == 1 ? true : false );
   }
 
