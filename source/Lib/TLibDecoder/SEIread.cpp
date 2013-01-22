@@ -439,10 +439,13 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   TComVUI *vui = sps->getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
+#if !L0045_CONDITION_SIGNALLING
+  // This condition was probably OK before the pic_struct, progressive_source_idc, duplicate_flag were added
   if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )
   {
     return;
   }
+#endif
 
   if( vui->getFrameFieldInfoPresentFlag() )
   {
@@ -451,6 +454,10 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
     READ_FLAG(    code, "duplicate_flag" );         sei.m_duplicateFlag        = ( code == 1 ? true : false );
   }
 
+#if L0045_CONDITION_SIGNALLING
+  if( hrd->getCpbDpbDelaysPresentFlag())
+  {
+#endif
   READ_CODE( ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_minus1" );
   sei.m_auCpbRemovalDelay = code + 1;
   READ_CODE( ( hrd->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
@@ -489,6 +496,9 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
         }
       }
   }
+#if L0045_CONDITION_SIGNALLING
+  }
+#endif
   xParseByteAlign();
 }
 Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize*/)

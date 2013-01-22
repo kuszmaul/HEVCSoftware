@@ -382,6 +382,9 @@ public:
 
   Void setNumDU                              ( UInt value ) { m_numDU = value;                            }
   UInt getNumDU                              ( )            { return m_numDU;          }
+#if L0045_CONDITION_SIGNALLING
+  Bool getCpbDpbDelaysPresentFlag() { return getNalHrdParametersPresentFlag() || getVclHrdParametersPresentFlag(); }
+#endif
 };
 
 class TComVPS
