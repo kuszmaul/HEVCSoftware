@@ -466,22 +466,22 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   if( hrd->getCpbDpbDelaysPresentFlag())
   {
 #endif
-  READ_CODE( ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_minus1" );
-  sei.m_auCpbRemovalDelay = code + 1;
-  READ_CODE( ( hrd->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
-  sei.m_picDpbOutputDelay = code;
+    READ_CODE( ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_minus1" );
+    sei.m_auCpbRemovalDelay = code + 1;
+    READ_CODE( ( hrd->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
+    sei.m_picDpbOutputDelay = code;
 
-  if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
-  {
-    READ_UVLC( code, "num_decoding_units_minus1");
-    sei.m_numDecodingUnitsMinus1 = code;
-    READ_FLAG( code, "du_common_cpb_removal_delay_flag" );
-    sei.m_duCommonCpbRemovalDelayFlag = code;
-    if( sei.m_duCommonCpbRemovalDelayFlag )
+    if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
     {
-      READ_CODE( ( hrd->getDuCpbRemovalDelayLengthMinus1() + 1 ), code, "du_common_cpb_removal_delay_minus1" );
-      sei.m_duCommonCpbRemovalDelayMinus1 = code;
-    }
+      READ_UVLC( code, "num_decoding_units_minus1");
+      sei.m_numDecodingUnitsMinus1 = code;
+      READ_FLAG( code, "du_common_cpb_removal_delay_flag" );
+      sei.m_duCommonCpbRemovalDelayFlag = code;
+      if( sei.m_duCommonCpbRemovalDelayFlag )
+      {
+        READ_CODE( ( hrd->getDuCpbRemovalDelayLengthMinus1() + 1 ), code, "du_common_cpb_removal_delay_minus1" );
+        sei.m_duCommonCpbRemovalDelayMinus1 = code;
+      }
       if( sei.m_numNalusInDuMinus1 != NULL )
       {
         delete sei.m_numNalusInDuMinus1;
@@ -503,7 +503,7 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
           sei.m_duCpbRemovalDelayMinus1[ i ] = code;
         }
       }
-  }
+    }
 #if L0045_CONDITION_SIGNALLING
   }
 #endif
