@@ -737,21 +737,21 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       READ_UVLC(   uiCode, "vps_num_ticks_poc_diff_one_minus1");    timingInfo->setNumTicksPocDiffOneMinus1   (uiCode);
     }
 #endif
-  READ_UVLC( uiCode, "vps_num_hrd_parameters" );                  pcVPS->setNumHrdParameters( uiCode );
+    READ_UVLC( uiCode, "vps_num_hrd_parameters" );                  pcVPS->setNumHrdParameters( uiCode );
 
-  if( pcVPS->getNumHrdParameters() > 0 )
-  {
-    pcVPS->createHrdParamBuffer();
-  }
-  for( UInt i = 0; i < pcVPS->getNumHrdParameters(); i ++ )
-  {
-    READ_UVLC( uiCode, "hrd_op_set_idx" );                       pcVPS->setHrdOpSetIdx( uiCode, i );
-    if( i > 0 )
+    if( pcVPS->getNumHrdParameters() > 0 )
     {
-      READ_FLAG( uiCode, "cprms_present_flag[i]" );               pcVPS->setCprmsPresentFlag( uiCode == 1 ? true : false, i );
+      pcVPS->createHrdParamBuffer();
     }
-    parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
-  }
+    for( UInt i = 0; i < pcVPS->getNumHrdParameters(); i ++ )
+    {
+      READ_UVLC( uiCode, "hrd_op_set_idx" );                       pcVPS->setHrdOpSetIdx( uiCode, i );
+      if( i > 0 )
+      {
+        READ_FLAG( uiCode, "cprms_present_flag[i]" );               pcVPS->setCprmsPresentFlag( uiCode == 1 ? true : false, i );
+      }
+      parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
+    }
 #if L0043_TIMING_INFO
   }
 #endif

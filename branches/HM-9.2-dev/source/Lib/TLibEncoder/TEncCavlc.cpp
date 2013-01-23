@@ -591,24 +591,24 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_UVLC(timingInfo->getNumTicksPocDiffOneMinus1(),   "vps_num_ticks_poc_diff_one_minus1");
     }
 #endif
-  pcVPS->setNumHrdParameters( 0 );
-  WRITE_UVLC( pcVPS->getNumHrdParameters(),                 "vps_num_hrd_parameters" );
+    pcVPS->setNumHrdParameters( 0 );
+    WRITE_UVLC( pcVPS->getNumHrdParameters(),                 "vps_num_hrd_parameters" );
 
-  if( pcVPS->getNumHrdParameters() > 0 )
-  {
-    pcVPS->createHrdParamBuffer();
-  }
-  for( UInt i = 0; i < pcVPS->getNumHrdParameters(); i ++ )
-  {
-    // Only applicable for version 1
-    pcVPS->setHrdOpSetIdx( 0, i );
-     WRITE_UVLC( pcVPS->getHrdOpSetIdx( i ),                "hrd_op_set_idx" );
-    if( i > 0 )
+    if( pcVPS->getNumHrdParameters() > 0 )
     {
-      WRITE_FLAG( pcVPS->getCprmsPresentFlag( i ) ? 1 : 0, "cprms_present_flag[i]" );
+      pcVPS->createHrdParamBuffer();
     }
-    codeHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
-  }
+    for( UInt i = 0; i < pcVPS->getNumHrdParameters(); i ++ )
+    {
+      // Only applicable for version 1
+      pcVPS->setHrdOpSetIdx( 0, i );
+      WRITE_UVLC( pcVPS->getHrdOpSetIdx( i ),                "hrd_op_set_idx" );
+      if( i > 0 )
+      {
+        WRITE_FLAG( pcVPS->getCprmsPresentFlag( i ) ? 1 : 0, "cprms_present_flag[i]" );
+      }
+      codeHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
+    }
 #if L0043_TIMING_INFO
   }
 #endif
