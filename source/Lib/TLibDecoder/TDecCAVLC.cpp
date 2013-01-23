@@ -402,17 +402,32 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
     READ_UVLC(   uiCode, "def_disp_win_top_offset" );                 defDisp.setWindowTopOffset   ( uiCode );
     READ_UVLC(   uiCode, "def_disp_win_bottom_offset" );              defDisp.setWindowBottomOffset( uiCode );
   }
-  
+#if L0043_TIMING_INFO
+  TimingInfo *timingInfo = pcVUI->getTimingInfo();
+  READ_FLAG(       uiCode, "vui_timing_info_present_flag");         timingInfo->setTimingInfoPresentFlag      (uiCode ? true : false);
+  if(timingInfo->getTimingInfoPresentFlag())
+  {
+    READ_CODE( 32, uiCode, "vui_num_units_in_tick");                timingInfo->setNumUnitsInTick             (uiCode);
+    READ_CODE( 32, uiCode, "vui_time_scale");                       timingInfo->setTimeScale                  (uiCode);
+    READ_FLAG(     uiCode, "vui_poc_proportional_to_timing_flag");  timingInfo->setPocProportionalToTimingFlag(uiCode ? true : false);
+    if(timingInfo->getPocProportionalToTimingFlag())
+    {
+      READ_UVLC(   uiCode, "vui_num_ticks_poc_diff_one_minus1");    timingInfo->setNumTicksPocDiffOneMinus1   (uiCode);
+    }
+  }
+#endif  
   READ_FLAG(     uiCode, "hrd_parameters_present_flag");              pcVUI->setHrdParametersPresentFlag(uiCode);
   if( pcVUI->getHrdParametersPresentFlag() )
   {
     parseHrdParameters( pcVUI->getHrdParameters(), 1, pcSPS->getMaxTLayers() - 1 );
   }
+#if !L0043_TIMING_INFO
   READ_FLAG( uiCode, "poc_proportional_to_timing_flag" ); pcVUI->setPocProportionalToTimingFlag(uiCode ? true : false);
   if( pcVUI->getPocProportionalToTimingFlag() && pcVUI->getHrdParameters()->getTimingInfoPresentFlag() )
   {
     READ_UVLC( uiCode, "num_ticks_poc_diff_one_minus1" ); pcVUI->setNumTicksPocDiffOneMinus1(uiCode);
   }
+#endif
   READ_FLAG(     uiCode, "bitstream_restriction_flag");               pcVUI->setBitstreamRestrictionFlag(uiCode);
   if (pcVUI->getBitstreamRestrictionFlag())
   {
@@ -437,12 +452,14 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
   UInt  uiCode;
   if( commonInfPresentFlag )
   {
+#if !L0043_TIMING_INFO
     READ_FLAG( uiCode, "timing_info_present_flag" );                  hrd->setTimingInfoPresentFlag( uiCode == 1 ? true : false );
     if( hrd->getTimingInfoPresentFlag() )
     {
       READ_CODE( 32, uiCode, "num_units_in_tick" );                   hrd->setNumUnitsInTick( uiCode );
       READ_CODE( 32, uiCode, "time_scale" );                          hrd->setTimeScale( uiCode );
     }
+#endif
     READ_FLAG( uiCode, "nal_hrd_parameters_present_flag" );           hrd->setNalHrdParametersPresentFlag( uiCode == 1 ? true : false );
     READ_FLAG( uiCode, "vcl_hrd_parameters_present_flag" );           hrd->setVclHrdParametersPresentFlag( uiCode == 1 ? true : false );
     if( hrd->getNalHrdParametersPresentFlag() || hrd->getVclHrdParametersPresentFlag() )
@@ -705,7 +722,20 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       READ_FLAG( uiCode, "layer_id_included_flag[opsIdx][i]" );   pcVPS->setLayerIdIncludedFlag( uiCode == 1 ? true : false, opsIdx, i );
     }
   }
-
+#if L0043_TIMING_INFO
+  TimingInfo *timingInfo = pcVPS->getTimingInfo();
+  READ_FLAG(       uiCode, "vps_timing_info_present_flag");         timingInfo->setTimingInfoPresentFlag      (uiCode ? true : false);
+  if(timingInfo->getTimingInfoPresentFlag())
+  {
+    READ_CODE( 32, uiCode, "vps_num_units_in_tick");                timingInfo->setNumUnitsInTick             (uiCode);
+    READ_CODE( 32, uiCode, "vps_time_scale");                       timingInfo->setTimeScale                  (uiCode);
+    READ_FLAG(     uiCode, "vps_poc_proportional_to_timing_flag");  timingInfo->setPocProportionalToTimingFlag(uiCode ? true : false);
+    if(timingInfo->getPocProportionalToTimingFlag())
+    {
+      READ_UVLC(   uiCode, "vps_num_ticks_poc_diff_one_minus1");    timingInfo->setNumTicksPocDiffOneMinus1   (uiCode);
+    }
+  }
+#endif
   READ_UVLC( uiCode, "vps_num_hrd_parameters" );                  pcVPS->setNumHrdParameters( uiCode );
 
   if( pcVPS->getNumHrdParameters() > 0 )

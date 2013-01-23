@@ -1293,6 +1293,31 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   TComVUI *vui = getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
+#if L0043_TIMING_INFO
+  TimingInfo *timingInfo = vui->getTimingInfo();
+  timingInfo->setTimingInfoPresentFlag( true );
+  switch( frameRate )
+  {
+  case 24:
+    timingInfo->setNumUnitsInTick( 1125000 );    timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 25:
+    timingInfo->setNumUnitsInTick( 1080000 );    timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 30:
+    timingInfo->setNumUnitsInTick( 900900 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 50:
+    timingInfo->setNumUnitsInTick( 540000 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 60:
+    timingInfo->setNumUnitsInTick( 450450 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  default:
+    timingInfo->setNumUnitsInTick( 1001 );       timingInfo->setTimeScale    ( 60000 );
+    break;
+  }
+#else
   hrd->setTimingInfoPresentFlag( true );
   switch( frameRate )
   {
@@ -1315,6 +1340,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     hrd->setNumUnitsInTick( 1001 );       hrd->setTimeScale    ( 60000 );
     break;
   }
+#endif
 
   Bool rateCnt = ( bitRate > 0 );
   hrd->setNalHrdParametersPresentFlag( rateCnt );
