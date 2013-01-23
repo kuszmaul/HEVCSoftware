@@ -122,10 +122,13 @@ public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
   SEIActiveParameterSets() 
+#if !L0047_APS_FLAGS
     :numSpsIdsMinus1(0)
-#if L0047_APS_FLAGS
+#else
+    : activeVPSId            (0)
     , m_fullRandomAccessFlag (false)
     , m_noParamSetUpdateFlag (false)
+    , numSpsIdsMinus1        (0)
 #endif
   {}
   virtual ~SEIActiveParameterSets() {}
