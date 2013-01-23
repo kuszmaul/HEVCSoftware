@@ -123,10 +123,18 @@ public:
 
   SEIActiveParameterSets() 
     :numSpsIdsMinus1(0)
+#if L0047_APS_FLAGS
+    , m_fullRandomAccessFlag (false)
+    , m_noParamSetUpdateFlag (false)
+#endif
   {}
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
+#if L0047_APS_FLAGS
+  Bool m_fullRandomAccessFlag;
+  Bool m_noParamSetUpdateFlag;
+#endif
   Int numSpsIdsMinus1;
   std::vector<Int> activeSeqParamSetId; 
 };
