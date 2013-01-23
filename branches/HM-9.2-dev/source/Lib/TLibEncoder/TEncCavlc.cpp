@@ -308,13 +308,15 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
     {
       WRITE_UVLC(timingInfo->getNumTicksPocDiffOneMinus1(),   "vui_num_ticks_poc_diff_one_minus1");
     }
-  }
 #endif
   WRITE_FLAG(pcVUI->getHrdParametersPresentFlag(),              "hrd_parameters_present_flag");
   if( pcVUI->getHrdParametersPresentFlag() )
   {
     codeHrdParameters(pcVUI->getHrdParameters(), 1, pcSPS->getMaxTLayers() - 1 );
   }
+#if L0043_TIMING_INFO
+  }
+#endif
 #if !L0043_TIMING_INFO
   WRITE_FLAG( pcVUI->getPocProportionalToTimingFlag(), "poc_proportional_to_timing_flag" );
   if( pcVUI->getPocProportionalToTimingFlag() && pcVUI->getHrdParameters()->getTimingInfoPresentFlag() )
@@ -588,7 +590,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     {
       WRITE_UVLC(timingInfo->getNumTicksPocDiffOneMinus1(),   "vps_num_ticks_poc_diff_one_minus1");
     }
-  }
 #endif
   pcVPS->setNumHrdParameters( 0 );
   WRITE_UVLC( pcVPS->getNumHrdParameters(),                 "vps_num_hrd_parameters" );
@@ -608,6 +609,9 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     }
     codeHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
   }
+#if L0043_TIMING_INFO
+  }
+#endif
   WRITE_FLAG( 0,                     "vps_extension_flag" );
   
   //future extensions here..
