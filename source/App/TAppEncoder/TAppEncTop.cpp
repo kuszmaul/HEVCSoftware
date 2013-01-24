@@ -299,6 +299,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxBitsPerMinCuDenom( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical( m_log2MaxMvLengthVertical );
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *bitRatePicRateInfo = m_cTEncTop.getVPS()->getBitratePicrateInfo();
   // The number of bit rate/pic rate have to equal to number of sub-layers.
   if(m_bitRatePicRateMaxTLayers)
@@ -323,6 +324,7 @@ Void TAppEncTop::xInitLibCfg()
       bitRatePicRateInfo->setConstantPicRateIdc(i, m_constantPicRateIdc[i]);
     }
   }
+#endif
 }
 
 Void TAppEncTop::xCreateLib()

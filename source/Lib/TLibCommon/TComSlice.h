@@ -226,6 +226,7 @@ public:
 };
 /// VPS class
 
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
 class TComBitRatePicRateInfo
 {
   Bool        m_bitRateInfoPresentFlag[MAX_TLAYER];
@@ -254,6 +255,7 @@ public:
   Int         getAvgPicRate(Int i) {return m_avgPicRate[i];}
   Void        setAvgPicRate(Int i, Int x) {m_avgPicRate[i] = x;}
 };
+#endif
 
 struct HrdSubLayerInfo
 {
@@ -447,10 +449,13 @@ private:
   Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
 
   TComPTL     m_pcPTL;
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo    m_bitRatePicRateInfo;
+#endif
 #if L0043_TIMING_INFO
   TimingInfo  m_timingInfo;
 #endif
+
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -501,7 +506,9 @@ public:
   Void    setLayerIdIncludedFlag(Bool v, UInt opsIdx, UInt id)  { m_layerIdIncludedFlag[opsIdx][id] = v;    }
 
   TComPTL* getPTL() { return &m_pcPTL; }
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
+#endif
 #if L0043_TIMING_INFO
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
 #endif
