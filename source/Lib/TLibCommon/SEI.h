@@ -34,6 +34,7 @@
 #pragma once
 #include <list>
 #include <vector>
+#include <cstring>
 
 //! \ingroup TLibCommon
 //! \{
