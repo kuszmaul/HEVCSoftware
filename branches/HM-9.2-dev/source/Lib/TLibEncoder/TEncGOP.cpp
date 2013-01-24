@@ -984,6 +984,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_buffering_period.m_initialAltCpbRemovalDelayOffset[0][1]  = uiInitialCpbRemovalDelay;
 
       sei_buffering_period.m_rapCpbParamsPresentFlag              = 0;
+#if L0044_CPB_DPB_DELAY_OFFSET
+      sei_buffering_period.m_cpbDelayOffset = 0;
+      sei_buffering_period.m_dpbDelayOffset = 0;
+#endif
 
       m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_buffering_period, pcSlice->getSPS());
       writeRBSPTrailingBits(nalu.m_Bitstream);

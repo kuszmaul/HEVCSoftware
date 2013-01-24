@@ -148,11 +148,28 @@ public:
   PayloadType payloadType() const { return BUFFERING_PERIOD; }
 
   SEIBufferingPeriod()
+#if L0044_CPB_DPB_DELAY_OFFSET
+  : m_bpSeqParameterSetId (0)
+  , m_rapCpbParamsPresentFlag (false)
+  , m_cpbDelayOffset      (0)
+  , m_dpbDelayOffset      (0)
+  {
+    ::memset(m_initialCpbRemovalDelay, 0, sizeof(m_initialCpbRemovalDelay));
+    ::memset(m_initialCpbRemovalDelayOffset, 0, sizeof(m_initialCpbRemovalDelayOffset));
+    ::memset(m_initialAltCpbRemovalDelay, 0, sizeof(m_initialAltCpbRemovalDelay));
+    ::memset(m_initialAltCpbRemovalDelayOffset, 0, sizeof(m_initialAltCpbRemovalDelayOffset));
+  }
+#else
   {}
+#endif
   virtual ~SEIBufferingPeriod() {}
 
   UInt m_bpSeqParameterSetId;
   Bool m_rapCpbParamsPresentFlag;
+#if L0044_CPB_DPB_DELAY_OFFSET
+  Bool m_cpbDelayOffset;
+  Bool m_dpbDelayOffset;
+#endif
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
