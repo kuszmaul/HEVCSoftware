@@ -214,9 +214,10 @@ static istream& operator>>(istream &in, Level::Name &level)
   return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
 }
 
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
 Void readBoolString(const string inpString, const Int numEntries, Bool* &memberArray, const char *elementName);
 Void readIntString(const string inpString, const Int numEntries, Int* &memberArray, const char *elementName);
-
+#endif
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -236,12 +237,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   string cfg_bitRateInfoPresentFlag;
   string cfg_picRateInfoPresentFlag;
   string cfg_avgBitRate;
   string cfg_maxBitRate;
   string cfg_avgPicRate;
   string cfg_constantPicRateIdc;
+#endif
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -472,6 +475,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEITemporalLevel0Index",         m_temporalLevel0IndexSEIEnabled,          0, "Control generation of temporal level 0 index SEI messages")
   ("SEIGradualDecodingRefreshInfo",  m_gradualDecodingRefreshInfoEnabled,      0, "Control generation of gradual decoding refresh information SEI message")
   ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   ("BitRatePicRateMaxTLayers",   m_bitRatePicRateMaxTLayers,           0, "Maximum number of sub-layers signalled; can be inferred otherwise; here for easy parsing of config. file")
   ("BitRateInfoPresent",         cfg_bitRateInfoPresentFlag,          string(""), "Control signalling of bit rate information of avg. bit rate and max. bit rate in VPS\n"
                                                                           "\t0: Do not sent bit rate info\n"
@@ -483,6 +487,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxBitRate",                   cfg_maxBitRate,                    string(""), "List of max. bit rates for the different sub-layers; include non-negative number even if corresponding flag is 0")
   ("AvgPicRate",                   cfg_avgPicRate,                    string(""), "List of avg. picture rates for the different sub-layers; include non-negative number even if corresponding flag is 0")
   ("ConstantPicRateIdc",           cfg_constantPicRateIdc,            string(""), "List of constant picture rate IDCs; include non-negative number even if corresponding flag is 0")
+#endif
   ;
   
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -571,12 +576,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     m_pRowHeight = NULL;
   }
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   readBoolString(cfg_bitRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_bitRateInfoPresentFlag, "bit rate info. present flag" );
   readIntString (cfg_avgBitRate,             m_bitRatePicRateMaxTLayers, m_avgBitRate,             "avg. bit rate"               );
   readIntString (cfg_maxBitRate,             m_bitRatePicRateMaxTLayers, m_maxBitRate,             "max. bit rate"               );
   readBoolString(cfg_picRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_picRateInfoPresentFlag, "bit rate info. present flag" );
   readIntString (cfg_avgPicRate,             m_bitRatePicRateMaxTLayers, m_avgPicRate,             "avg. pic rate"               );
   readIntString (cfg_constantPicRateIdc,     m_bitRatePicRateMaxTLayers, m_constantPicRateIdc,     "constant pic rate Idc"       );
+#endif
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
   
   /* rules for input, output and internal bitdepths as per help text */
@@ -695,7 +702,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   return true;
 }
-
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
 Void readBoolString(const string inpString, const Int numEntries, Bool* &memberArray, const char *elementName)
 {
   Char* inpArray = inpString.empty() ? NULL : strdup(inpString.c_str());
@@ -758,6 +765,7 @@ Void readIntString(const string inpString, const Int numEntries, Int* &memberArr
     memberArray = NULL;
   }
 }
+#endif
 // ====================================================================================================================
 // Private member functions
 // ====================================================================================================================
