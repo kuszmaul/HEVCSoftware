@@ -456,15 +456,15 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, Int iDir, UI
       if (pcSlice->isInterB() || pcCUP->getSlice()->isInterB())
       {
         Int iRefIdx;
-        Int *piRefP0, *piRefP1, *piRefQ0, *piRefQ1;
+        TComPic *piRefP0, *piRefP1, *piRefQ0, *piRefQ1;
         iRefIdx = pcCUP->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiPartP);
-        piRefP0 = (iRefIdx < 0) ? NULL :  (Int*) pcCUP->getSlice()->getRefPic(REF_PIC_LIST_0, iRefIdx);
+        piRefP0 = (iRefIdx < 0) ? NULL : pcCUP->getSlice()->getRefPic(REF_PIC_LIST_0, iRefIdx);
         iRefIdx = pcCUP->getCUMvField(REF_PIC_LIST_1)->getRefIdx(uiPartP);
-        piRefP1 = (iRefIdx < 0) ? NULL :  (Int*) pcCUP->getSlice()->getRefPic(REF_PIC_LIST_1, iRefIdx);
+        piRefP1 = (iRefIdx < 0) ? NULL : pcCUP->getSlice()->getRefPic(REF_PIC_LIST_1, iRefIdx);
         iRefIdx = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiPartQ);
-        piRefQ0 = (iRefIdx < 0) ? NULL :  (Int*) pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx);
+        piRefQ0 = (iRefIdx < 0) ? NULL : pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx);
         iRefIdx = pcCUQ->getCUMvField(REF_PIC_LIST_1)->getRefIdx(uiPartQ);
-        piRefQ1 = (iRefIdx < 0) ? NULL :  (Int*) pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx);
+        piRefQ1 = (iRefIdx < 0) ? NULL : pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx);
         
         
         TComMv pcMvP0 = pcCUP->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartP);
@@ -479,26 +479,29 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, Int iDir, UI
           {
             if ( piRefP0 == piRefQ0 )
             {
-              pcMvP0 -= pcMvQ0;   pcMvP1 -= pcMvQ1;
-              uiBs = (pcMvP0.getAbsHor() >= 4) | (pcMvP0.getAbsVer() >= 4) |
-              (pcMvP1.getAbsHor() >= 4) | (pcMvP1.getAbsVer() >= 4);
+              uiBs  = ((abs(pcMvQ0.getHor() - pcMvP0.getHor()) >= 4) ||
+                       (abs(pcMvQ0.getVer() - pcMvP0.getVer()) >= 4) ||
+                       (abs(pcMvQ1.getHor() - pcMvP1.getHor()) >= 4) ||
+                       (abs(pcMvQ1.getVer() - pcMvP1.getVer()) >= 4)) ? 1 : 0;
             }
             else
             {
-              pcMvP0 -= pcMvQ1;   pcMvP1 -= pcMvQ0;
-              uiBs = (pcMvP0.getAbsHor() >= 4) | (pcMvP0.getAbsVer() >= 4) |
-              (pcMvP1.getAbsHor() >= 4) | (pcMvP1.getAbsVer() >= 4);
+              uiBs  = ((abs(pcMvQ1.getHor() - pcMvP0.getHor()) >= 4) ||
+                       (abs(pcMvQ1.getVer() - pcMvP0.getVer()) >= 4) ||
+                       (abs(pcMvQ0.getHor() - pcMvP1.getHor()) >= 4) ||
+                       (abs(pcMvQ0.getVer() - pcMvP1.getVer()) >= 4)) ? 1 : 0;
             }
           }
           else    // Same L0 & L1
           {
-            TComMv pcMvSub0 = pcMvP0 - pcMvQ0;
-            TComMv pcMvSub1 = pcMvP1 - pcMvQ1;
-            pcMvP0 -= pcMvQ1;   pcMvP1 -= pcMvQ0;
-            uiBs = ( (pcMvP0.getAbsHor() >= 4) | (pcMvP0.getAbsVer() >= 4) |
-                    (pcMvP1.getAbsHor() >= 4) | (pcMvP1.getAbsVer() >= 4) ) &&
-            ( (pcMvSub0.getAbsHor() >= 4) | (pcMvSub0.getAbsVer() >= 4) |
-             (pcMvSub1.getAbsHor() >= 4) | (pcMvSub1.getAbsVer() >= 4) );
+            uiBs  = ((abs(pcMvQ0.getHor() - pcMvP0.getHor()) >= 4) ||
+                     (abs(pcMvQ0.getVer() - pcMvP0.getVer()) >= 4) ||
+                     (abs(pcMvQ1.getHor() - pcMvP1.getHor()) >= 4) ||
+                     (abs(pcMvQ1.getVer() - pcMvP1.getVer()) >= 4)) &&
+                    ((abs(pcMvQ1.getHor() - pcMvP0.getHor()) >= 4) ||
+                     (abs(pcMvQ1.getVer() - pcMvP0.getVer()) >= 4) ||
+                     (abs(pcMvQ0.getHor() - pcMvP1.getHor()) >= 4) ||
+                     (abs(pcMvQ0.getVer() - pcMvP1.getVer()) >= 4)) ? 1 : 0;
           }
         }
         else // for all different Ref_Idx
@@ -509,16 +512,17 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, Int iDir, UI
       else  // pcSlice->isInterP()
       {
         Int iRefIdx;
-        Int *piRefP0, *piRefQ0;
+        TComPic *piRefP0, *piRefQ0;
         iRefIdx = pcCUP->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiPartP);
-        piRefP0 = (iRefIdx < 0) ? NULL :  (Int*) pcCUP->getSlice()->getRefPic(REF_PIC_LIST_0, iRefIdx);
+        piRefP0 = (iRefIdx < 0) ? NULL : pcCUP->getSlice()->getRefPic(REF_PIC_LIST_0, iRefIdx);
         iRefIdx = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiPartQ);
-        piRefQ0 = (iRefIdx < 0) ? NULL :  (Int*) pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx);
+        piRefQ0 = (iRefIdx < 0) ? NULL : pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx);
         TComMv pcMvP0 = pcCUP->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartP);
         TComMv pcMvQ0 = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartQ);
         
-        pcMvP0 -= pcMvQ0;
-        uiBs = (piRefP0 != piRefQ0) | (pcMvP0.getAbsHor() >= 4) | (pcMvP0.getAbsVer() >= 4);
+        uiBs  = ((piRefP0 != piRefQ0) ||
+                 (abs(pcMvQ0.getHor() - pcMvP0.getHor()) >= 4) ||
+                 (abs(pcMvQ0.getVer() - pcMvP0.getVer()) >= 4)) ? 1 : 0;
       }
     }   // enf of "if( one of BCBP == 0 )"
   }   // enf of "if( not Intra )"
