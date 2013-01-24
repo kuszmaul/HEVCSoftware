@@ -282,6 +282,13 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
   {
     WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
   }
+#if L0044_CPB_DPB_DELAY_OFFSET
+  if( sei.m_rapCpbParamsPresentFlag )
+  {
+    WRITE_FLAG( sei.m_cpbDelayOffset, "cpb_delay_offset" );
+    WRITE_FLAG( sei.m_dpbDelayOffset, "dpb_delay_offset" );
+  }
+#endif
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||

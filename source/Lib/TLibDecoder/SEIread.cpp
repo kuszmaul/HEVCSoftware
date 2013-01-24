@@ -411,7 +411,13 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
   {
     READ_FLAG( code, "rap_cpb_params_present_flag" );                   sei.m_rapCpbParamsPresentFlag = code;
   }
-
+#if L0044_CPB_DPB_DELAY_OFFSET
+  if( sei.m_rapCpbParamsPresentFlag )
+  {
+    READ_FLAG( code, "cpb_delay_offset" );                              sei.m_cpbDelayOffset = code;
+    READ_FLAG( code, "dpb_delay_offset" );                              sei.m_dpbDelayOffset = code;
+  }
+#endif
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( pHRD->getNalHrdParametersPresentFlag() ) ) ||
