@@ -1018,6 +1018,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         READ_FLAG( uiCode, "slice_temporal_mvp_enable_flag" );
         rpcSlice->setEnableTMVPFlag( uiCode == 1 ? true : false ); 
       }
+      else
+      {
+        rpcSlice->setEnableTMVPFlag(false);
+      }
     }
     if(sps->getUseSAO())
     {
