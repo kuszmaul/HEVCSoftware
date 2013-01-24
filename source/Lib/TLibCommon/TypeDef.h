@@ -50,7 +50,7 @@
 #define L0363_MVP_POC 1
 #define L0255_MOVE_PPS_FLAGS       1  ///< move some flags to earlier positions in the PPS
 #define L0444_FPA_TYPE             1  ///< remove FPA types 0,1,2 and 7
-
+#define L0372 1
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
