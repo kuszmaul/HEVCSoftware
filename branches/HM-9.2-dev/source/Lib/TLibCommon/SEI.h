@@ -271,7 +271,11 @@ public:
   Int  m_frame1GridPositionX;
   Int  m_frame1GridPositionY;
   Int  m_arrangementReservedByte;
+#if L0045_FPA_PERSISTENCE_FLAG
+  Bool m_arrangementPersistenceFlag;
+#else
   Int  m_arrangementRepetetionPeriod;
+#endif
   Bool m_upsampledAspectRatio;
 };
 
