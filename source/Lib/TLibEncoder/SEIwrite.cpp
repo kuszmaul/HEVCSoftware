@@ -285,8 +285,8 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
 #if L0044_CPB_DPB_DELAY_OFFSET
   if( sei.m_rapCpbParamsPresentFlag )
   {
-    WRITE_FLAG( sei.m_cpbDelayOffset, "cpb_delay_offset" );
-    WRITE_FLAG( sei.m_dpbDelayOffset, "dpb_delay_offset" );
+    WRITE_CODE( sei.m_cpbDelayOffset, hrd->getCpbRemovalDelayLengthMinus1() + 1, "cpb_delay_offset" );
+    WRITE_CODE( sei.m_dpbDelayOffset, hrd->getDpbOutputDelayLengthMinus1()  + 1, "dpb_delay_offset" );
   }
 #endif
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
