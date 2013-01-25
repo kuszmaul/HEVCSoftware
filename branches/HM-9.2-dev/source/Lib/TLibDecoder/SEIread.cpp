@@ -414,8 +414,8 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
 #if L0044_CPB_DPB_DELAY_OFFSET
   if( sei.m_rapCpbParamsPresentFlag )
   {
-    READ_FLAG( code, "cpb_delay_offset" );                              sei.m_cpbDelayOffset = code;
-    READ_FLAG( code, "dpb_delay_offset" );                              sei.m_dpbDelayOffset = code;
+    READ_CODE( pHRD->getCpbRemovalDelayLengthMinus1() + 1, code, "cpb_delay_offset" );      sei.m_cpbDelayOffset = code;
+    READ_CODE( pHRD->getDpbOutputDelayLengthMinus1()  + 1, code, "dpb_delay_offset" );      sei.m_dpbDelayOffset = code;
   }
 #endif
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
