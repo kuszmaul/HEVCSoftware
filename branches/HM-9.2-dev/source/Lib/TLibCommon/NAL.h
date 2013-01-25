@@ -81,6 +81,18 @@ struct NALUnit
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_TFD;
   }
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Bool isSei()
+  {
+    return m_nalUnitType == NAL_UNIT_SEI 
+        || m_nalUnitType == NAL_UNIT_SEI_SUFFIX;
+  }
+
+  Bool isVcl()
+  {
+    return ( (UInt)m_nalUnitType < 32 );
+  }
+#endif
 };
 
 struct OutputNALUnit;
