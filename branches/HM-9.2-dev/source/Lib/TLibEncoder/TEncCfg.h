@@ -180,6 +180,9 @@ protected:
   Bool      m_bUseLComb;
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
+#if L0232_RD_PENALTY
+  UInt      m_rdPenalty;
+#endif
   Bool      m_bUseFastEnc;
   Bool      m_bUseEarlyCU;
   Bool      m_useFastDecisionForMerge;
@@ -421,6 +424,9 @@ public:
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
+#if L0232_RD_PENALTY
+  Void      setRDpenalty                 ( UInt  b )     { m_rdPenalty  = b; }
+#endif
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
@@ -440,6 +446,9 @@ public:
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
+#if L0232_RD_PENALTY
+  Int      getRDpenalty                  ()      { return m_rdPenalty;  }
+#endif
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
