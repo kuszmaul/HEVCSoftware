@@ -1310,7 +1310,7 @@ Void TAppEncCfg::xCheckParameter()
 #if L0444_FPA_TYPE
   if (m_framePackingSEIEnabled)
   {
-    xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 6 , "SEIFramePackingType must be in rage 3 to 6");
+    xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
   }
 #endif
 
