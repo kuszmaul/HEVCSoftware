@@ -540,7 +540,7 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt payloadSize)
   {
     READ_CODE( 7, val, "frame_packing_arrangement_type" );          sei.m_arrangementType = val;
 #if L0444_FPA_TYPE
-    assert((sei.m_arrangementType > 2) && (sei.m_arrangementType < 7) );
+    assert((sei.m_arrangementType > 2) && (sei.m_arrangementType < 6) );
 #endif
     READ_FLAG( val, "quincunx_sampling_flag" );                     sei.m_quincunxSamplingFlag = val;
 
