@@ -223,9 +223,19 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
   READ_FLAG( uiCode,   "cabac_init_present_flag" );            pcPPS->setCabacInitPresentFlag( uiCode ? true : false );
 
+#if L0323_LIMIT_DEFAULT_LIST_SIZE
+  READ_UVLC(uiCode, "num_ref_idx_l0_default_active_minus1");
+  assert(uiCode <= 14);
+  pcPPS->setNumRefIdxL0DefaultActive(uiCode+1);
+  
+  READ_UVLC(uiCode, "num_ref_idx_l1_default_active_minus1");
+  assert(uiCode <= 14);
+  pcPPS->setNumRefIdxL1DefaultActive(uiCode+1);
+#else
   READ_UVLC(uiCode, "num_ref_idx_l0_default_active_minus1");       pcPPS->setNumRefIdxL0DefaultActive(uiCode+1);
   READ_UVLC(uiCode, "num_ref_idx_l1_default_active_minus1");       pcPPS->setNumRefIdxL1DefaultActive(uiCode+1);
-
+#endif
+  
   READ_SVLC(iCode, "init_qp_minus26" );                            pcPPS->setPicInitQPMinus26(iCode);
   READ_FLAG( uiCode, "constrained_intra_pred_flag" );              pcPPS->setConstrainedIntraPred( uiCode ? true : false );
   READ_FLAG( uiCode, "transform_skip_enabled_flag" );               
