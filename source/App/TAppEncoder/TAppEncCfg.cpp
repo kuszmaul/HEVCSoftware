@@ -279,6 +279,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
   ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
 
+#if L0046_CONSTRAINT_FLAGS
+  ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
+  ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
+  ("NonPackedSource",   m_nonPackedConstraintFlag, false, "Indicate that source does not contain frame packing")
+  ("FrameOnly",         m_frameOnlyConstraintFlag, false, "Indicate that the bitstream contains only frames")
+#endif
+  
   // Unit definition parameters
   ("MaxCUWidth",              m_uiMaxCUWidth,             64u)
   ("MaxCUHeight",             m_uiMaxCUHeight,            64u)
