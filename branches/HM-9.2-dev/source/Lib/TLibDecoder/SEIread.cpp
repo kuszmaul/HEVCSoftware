@@ -401,6 +401,14 @@ Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*paylo
   {
     sei.m_duSptCpbRemovalDelay = 0;
   }
+#if L0044_DU_DPB_OUTPUT_DELAY_HRD
+  READ_FLAG( val, "dpb_output_du_delay_present_flag"); sei.m_dpbOutputDuDelayPresentFlag = val ? true : false;
+  if(sei.m_dpbOutputDuDelayPresentFlag)
+  {
+    READ_CODE(vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, val, "pic_spt_dpb_output_du_delay"); 
+    sei.m_picSptDpbOutputDuDelay = val;
+  }
+#endif
   xParseByteAlign();
 }
 
@@ -483,6 +491,13 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
     READ_CODE( ( hrd->getDpbOutputDelayLengthMinus1() + 1 ), code, "pic_dpb_output_delay" );
     sei.m_picDpbOutputDelay = code;
 
+#if L0044_DU_DPB_OUTPUT_DELAY_HRD
+    if(hrd->getSubPicCpbParamsPresentFlag())
+    {
+      READ_CODE(hrd->getDpbOutputDelayDuLengthMinus1()+1, code, "pic_dpb_output_du_delay" );
+      sei.m_picDpbOutputDuDelay = code;
+    }
+#endif
     if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
     {
       READ_UVLC( code, "num_decoding_units_minus1");
