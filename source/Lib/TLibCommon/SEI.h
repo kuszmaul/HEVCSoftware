@@ -285,7 +285,7 @@ public:
   Int  m_frame1GridPositionX;
   Int  m_frame1GridPositionY;
   Int  m_arrangementReservedByte;
-#if L0045_FPA_PERSISTENCE_FLAG
+#if L0045_PERSISTENCE_FLAGS
   Bool m_arrangementPersistenceFlag;
 #else
   Int  m_arrangementRepetetionPeriod;
@@ -300,7 +300,11 @@ public:
 
   SEIDisplayOrientation()
     : cancelFlag(true)
+#if L0045_PERSISTENCE_FLAGS
+    , persistenceFlag(0)
+#else
     , repetitionPeriod(1)
+#endif
     , extensionFlag(false)
     {}
   virtual ~SEIDisplayOrientation() {}
@@ -310,7 +314,11 @@ public:
   Bool verFlip;
 
   UInt anticlockwiseRotation;
+#if L0045_PERSISTENCE_FLAGS
+  Bool persistenceFlag;
+#else
   UInt repetitionPeriod;
+#endif
   Bool extensionFlag;
 };
 
