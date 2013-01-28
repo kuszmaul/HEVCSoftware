@@ -255,7 +255,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   m_iNumPicCoded = 0;
   SEIPictureTiming pictureTimingSEI;
 #if L0044_DU_DPB_OUTPUT_DELAY_HRD
-  Int picSptDpbOutputDuDelay;
+  Int picSptDpbOutputDuDelay = 0;
 #endif
   UInt *accumBitsDU = NULL;
   UInt *accumNalsDU = NULL;
