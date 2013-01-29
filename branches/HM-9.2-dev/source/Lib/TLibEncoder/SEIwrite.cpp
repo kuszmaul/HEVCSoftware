@@ -289,7 +289,7 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
   {
     WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
   }
-#if L328_SPLICING
+#if L0328_SPLICING
   WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
   WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
 #endif
