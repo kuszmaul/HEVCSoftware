@@ -175,6 +175,10 @@ public:
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelayOffset[MAX_CPB_CNT][2];
+#if L328_SPLICING
+  Bool m_concatenationFlag;
+  UInt m_auCpbRemovalDelayDelta;
+#endif
 };
 class SEIPictureTiming : public SEI
 {
