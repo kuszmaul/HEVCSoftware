@@ -425,7 +425,7 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
   {
     READ_FLAG( code, "rap_cpb_params_present_flag" );                   sei.m_rapCpbParamsPresentFlag = code;
   }
-#if L328_SPLICING
+#if L0328_SPLICING
   //read splicing flag and cpb_removal_delay_delta
   READ_FLAG( code, "concatenation_flag"); 
   sei.m_concatenationFlag = code;

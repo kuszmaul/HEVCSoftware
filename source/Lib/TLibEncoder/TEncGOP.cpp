@@ -1005,7 +1005,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_buffering_period.m_initialAltCpbRemovalDelayOffset[0][1]  = uiInitialCpbRemovalDelay;
 
       sei_buffering_period.m_rapCpbParamsPresentFlag              = 0;
-#if L328_SPLICING
+#if L0328_SPLICING
       //for the concatenation, it can be set to one during splicing.
       sei_buffering_period.m_concatenationFlag = 0;
       //since the temporal layer HRD is not ready, we assumed it is fixed
