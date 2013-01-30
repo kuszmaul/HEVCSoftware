@@ -4544,7 +4544,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     xEstimateResidualQT( pcCU, 0, 0, 0, rpcYuvResi,  pcCU->getDepth(0), dCost, uiBits, uiDistortion, &uiZeroDistortion );
     
     m_pcEntropyCoder->resetBits();
-    m_pcEntropyCoder->encodeQtRootCbfZero( pcCU, 0 );
+    m_pcEntropyCoder->encodeQtRootCbfZero( pcCU );
     UInt zeroResiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     Double dZeroCost = m_pcRdCost->calcRdCost( zeroResiBits, uiZeroDistortion );
     if(pcCU->isLosslessCoded( 0 ))

@@ -126,7 +126,7 @@ public:
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeQtCbfZero     ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
-  Void codeQtRootCbfZero ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeQtRootCbfZero ( TComDataCU* pcCU );
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -136,7 +136,7 @@ public:
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
   Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType );
+  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, TextType eTType );
 
   Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
   

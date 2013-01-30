@@ -550,9 +550,9 @@ Void TEncEntropy::encodeQtCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType
 {
   m_pcEntropyCoderIf->codeQtCbfZero( pcCU, uiAbsPartIdx, eType, uiTrDepth );
 }
-Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU )
 {
-  m_pcEntropyCoderIf->codeQtRootCbfZero( pcCU, uiAbsPartIdx );
+  m_pcEntropyCoderIf->codeQtRootCbfZero( pcCU );
 }
 
 // dQP

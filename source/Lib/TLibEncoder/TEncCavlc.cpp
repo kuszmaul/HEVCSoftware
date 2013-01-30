@@ -1212,12 +1212,12 @@ Void TEncCavlc::codeQtCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eTy
 {
   assert(0);
 }
-Void TEncCavlc::codeQtRootCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeQtRootCbfZero( TComDataCU* pcCU )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType )
+Void TEncCavlc::codeTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, TextType eTType )
 {
   assert(0);
 }
