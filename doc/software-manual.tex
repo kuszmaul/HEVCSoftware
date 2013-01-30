@@ -1524,7 +1524,7 @@ Indicate the maximum absolute value of a decoded vertical MV component in quarte
 %% SEI messages
 %%
 \begin{OptionTable}{SEI messages}
-\Option{SEIpictureDigest} &
+\Option{SEIDecodedPictureHash} &
 \ShortOption{\None} &
 \Default{0} &
 Enables or disables the calculation and insertion of the Decoded picture hash
@@ -1539,6 +1539,13 @@ SEI messages.
   3 & Transmits checksum in SEI message and writes the value to the encoder
       log \\
 \end{tabular}
+\\
+\begin{OptionTable}{SEI messages}
+\Option{SEIpictureDigest} &
+\ShortOption{\None} &
+\Default{0} &
+Deprecated alias for SEIDecodedPictureHash.
+Do not use anymore.
 \\
 \Option{SEIRecoveryPoint} &
 \ShortOption{\None} &
