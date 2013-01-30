@@ -68,7 +68,7 @@ protected:
   Int       m_confRight;
   Int       m_confTop;
   Int       m_confBottom;
-  Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
+  Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
   // profile/level
@@ -195,7 +195,7 @@ protected:
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   
-  Int       m_decodePictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
+  Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
