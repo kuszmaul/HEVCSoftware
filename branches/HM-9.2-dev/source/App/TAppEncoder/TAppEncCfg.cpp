@@ -399,11 +399,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxNumMergeCand",             m_maxNumMergeCand,             5u,         "Maximum number of merge candidates")
 
   /* Misc. */
-  ("SEIpictureDigest",  m_decodePictureHashSEIEnabled, 0, "Control generation of decode picture hash SEI messages\n"
-                                              "\t3: checksum\n"
-                                              "\t2: CRC\n"
-                                              "\t1: use MD5\n"
-                                              "\t0: disable")
+  ("SEIDecodedPictureHash",       m_decodePictureHashSEIEnabled, 0, "Control generation of decode picture hash SEI messages\n"
+                                                                    "\t3: checksum\n"
+                                                                    "\t2: CRC\n"
+                                                                    "\t1: use MD5\n"
+                                                                    "\t0: disable")
+  ("SEIpictureDigest",            m_decodePictureHashSEIEnabled, 0, "deprecated alias for SEIDecodedPictureHash")
   ("TMVPMode", m_TMVPModeId, 1, "TMVP mode 0: TMVP disable for all slices. 1: TMVP enable for all slices (default) 2: TMVP enable for certain slices only")
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -786,11 +787,11 @@ Void TAppEncCfg::xCheckParameter()
 {
   if (!m_decodePictureHashSEIEnabled)
   {
-    fprintf(stderr, "*************************************************************\n");
-    fprintf(stderr, "** WARNING: --SEIpictureDigest is now disabled by default. **\n");
-    fprintf(stderr, "**          Automatic verification of decoded pictures by  **\n");
-    fprintf(stderr, "**          a decoder requires this option to be enabled.  **\n");
-    fprintf(stderr, "*************************************************************\n");
+    fprintf(stderr, "******************************************************************\n");
+    fprintf(stderr, "** WARNING: --SEIDecodedPictureHash is now disabled by default. **\n");
+    fprintf(stderr, "**          Automatic verification of decoded pictures by a     **\n");
+    fprintf(stderr, "**          decoder requires this option to be enabled.         **\n");
+    fprintf(stderr, "******************************************************************\n");
   }
 
   Bool check_failed = false; /* abort if there is a fatal configuration problem */
