@@ -317,7 +317,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pocCurr=0;
       iTimeOffset = 1;
     }
-    if(pocCurr>=m_pcCfg->getFrameToBeEncoded())
+    if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
       continue;
     }
@@ -2109,7 +2109,7 @@ Double TEncGOP::xCalculateRVM()
 {
   Double dRVM = 0;
   
-  if( m_pcCfg->getGOPSize() == 1 && m_pcCfg->getIntraPeriod() != 1 && m_pcCfg->getFrameToBeEncoded() > RVM_VCEGAM10_M * 2 )
+  if( m_pcCfg->getGOPSize() == 1 && m_pcCfg->getIntraPeriod() != 1 && m_pcCfg->getFramesToBeEncoded() > RVM_VCEGAM10_M * 2 )
   {
     // calculate RVM only for lowdelay configurations
     std::vector<Double> vRL , vB;

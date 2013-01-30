@@ -96,7 +96,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setSourceWidth                  ( m_iSourceWidth );
   m_cTEncTop.setSourceHeight                 ( m_iSourceHeight );
   m_cTEncTop.setConformanceWindow            ( m_confLeft, m_confRight, m_confTop, m_confBottom );
-  m_cTEncTop.setFrameToBeEncoded             ( m_iFrameToBeEncoded );
+  m_cTEncTop.setFramesToBeEncoded            ( m_framesToBeEncoded );
   
   //====== Coding Structure ========
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
@@ -227,7 +227,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
-  m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodePictureHashSEIEnabled);
+  m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
@@ -413,7 +413,7 @@ Void TAppEncTop::encode()
     // increase number of received frames
     m_iFrameRcvd++;
     
-    bEos = (m_iFrameRcvd == m_iFrameToBeEncoded);
+    bEos = (m_iFrameRcvd == m_framesToBeEncoded);
 
     Bool flush = 0;
     // if end of file (which is only detected on a read failure) flush the encoder of any queued pictures
@@ -422,7 +422,7 @@ Void TAppEncTop::encode()
       flush = true;
       bEos = true;
       m_iFrameRcvd--;
-      m_cTEncTop.setFrameToBeEncoded(m_iFrameRcvd);
+      m_cTEncTop.setFramesToBeEncoded(m_iFrameRcvd);
     }
 
     // call encoding function for one frame

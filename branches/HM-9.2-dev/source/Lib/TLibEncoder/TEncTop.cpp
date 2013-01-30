@@ -114,7 +114,7 @@ Void TEncTop::create ()
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
-    m_cRateCtrl.init( m_iFrameToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
+    m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
   }
 #else

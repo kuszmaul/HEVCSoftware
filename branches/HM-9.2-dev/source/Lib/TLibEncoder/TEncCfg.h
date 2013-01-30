@@ -108,7 +108,7 @@ protected:
   Int       m_iSourceHeight;
   Int       m_conformanceMode;
   Window    m_conformanceWindow;
-  Int       m_iFrameToBeEncoded;
+  Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
   /* profile & level */
@@ -321,7 +321,7 @@ public:
   Window   &getConformanceWindow()                           { return m_conformanceWindow; }
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
-  Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
+  Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
   
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -384,7 +384,7 @@ public:
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
-  Int       getFrameToBeEncoded             ()      { return  m_iFrameToBeEncoded; }
+  Int       getFramesToBeEncoded            ()      { return  m_framesToBeEncoded; }
   void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
   Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
 

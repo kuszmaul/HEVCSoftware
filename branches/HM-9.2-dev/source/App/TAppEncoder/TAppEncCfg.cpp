@@ -272,7 +272,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ConfBottom",            m_confBottom,          0, "Bottom offset for window conformance mode 3")
   ("FrameRate,-fr",         m_iFrameRate,          0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
-  ("FramesToBeEncoded,f",   m_iFrameToBeEncoded,   0, "Number of frames to be encoded (default=all)")
+  ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
   
   // Profile and level
   ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
@@ -399,12 +399,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxNumMergeCand",             m_maxNumMergeCand,             5u,         "Maximum number of merge candidates")
 
   /* Misc. */
-  ("SEIDecodedPictureHash",       m_decodePictureHashSEIEnabled, 0, "Control generation of decode picture hash SEI messages\n"
+  ("SEIDecodedPictureHash",       m_decodedPictureHashSEIEnabled, 0, "Control generation of decode picture hash SEI messages\n"
                                                                     "\t3: checksum\n"
                                                                     "\t2: CRC\n"
                                                                     "\t1: use MD5\n"
                                                                     "\t0: disable")
-  ("SEIpictureDigest",            m_decodePictureHashSEIEnabled, 0, "deprecated alias for SEIDecodedPictureHash")
+  ("SEIpictureDigest",            m_decodedPictureHashSEIEnabled, 0, "deprecated alias for SEIDecodedPictureHash")
   ("TMVPMode", m_TMVPModeId, 1, "TMVP mode 0: TMVP disable for all slices. 1: TMVP enable for all slices (default) 2: TMVP enable for certain slices only")
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -666,18 +666,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   
   // allocate slice-based dQP values
-  m_aidQP = new Int[ m_iFrameToBeEncoded + m_iGOPSize + 1 ];
-  ::memset( m_aidQP, 0, sizeof(Int)*( m_iFrameToBeEncoded + m_iGOPSize + 1 ) );
+  m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
+  ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
   
   // handling of floating-point QP values
   // if QP is not integer, sequence is split into two sections having QP and QP+1
   m_iQP = (Int)( m_fQP );
   if ( m_iQP < m_fQP )
   {
-    Int iSwitchPOC = (Int)( m_iFrameToBeEncoded - (m_fQP - m_iQP)*m_iFrameToBeEncoded + 0.5 );
+    Int iSwitchPOC = (Int)( m_framesToBeEncoded - (m_fQP - m_iQP)*m_framesToBeEncoded + 0.5 );
     
     iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
-    for ( Int i=iSwitchPOC; i<m_iFrameToBeEncoded + m_iGOPSize + 1; i++ )
+    for ( Int i=iSwitchPOC; i<m_framesToBeEncoded + m_iGOPSize + 1; i++ )
     {
       m_aidQP[i] = 1;
     }
@@ -691,7 +691,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     {
       Int iValue;
       Int iPOC = 0;
-      while ( iPOC < m_iFrameToBeEncoded )
+      while ( iPOC < m_framesToBeEncoded )
       {
         if ( fscanf(fpt, "%d", &iValue ) == EOF ) break;
         m_aidQP[ iPOC ] = iValue;
@@ -785,7 +785,7 @@ Bool confirmPara(Bool bflag, const Char* message);
 
 Void TAppEncCfg::xCheckParameter()
 {
-  if (!m_decodePictureHashSEIEnabled)
+  if (!m_decodedPictureHashSEIEnabled)
   {
     fprintf(stderr, "******************************************************************\n");
     fprintf(stderr, "** WARNING: --SEIDecodedPictureHash is now disabled by default. **\n");
@@ -800,7 +800,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_inputBitDepthY < 8,                                                     "InputBitDepth must be at least 8" );
   xConfirmPara( m_inputBitDepthC < 8,                                                     "InputBitDepthC must be at least 8" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
-  xConfirmPara( m_iFrameToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
+  xConfirmPara( m_framesToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
@@ -1283,7 +1283,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iWaveFrontSubstreams <= 0, "WaveFrontSubstreams must be positive" );
   xConfirmPara( m_iWaveFrontSubstreams > 1 && !m_iWaveFrontSynchro, "Must have WaveFrontSynchro > 0 in order to have WaveFrontSubstreams > 1" );
 
-  xConfirmPara( m_decodePictureHashSEIEnabled<0 || m_decodePictureHashSEIEnabled>3, "this hash type is not correct!\n");
+  xConfirmPara( m_decodedPictureHashSEIEnabled<0 || m_decodedPictureHashSEIEnabled>3, "this hash type is not correct!\n");
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
@@ -1361,7 +1361,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
-  printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_iFrameToBeEncoded-1, m_iFrameToBeEncoded );
+  printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter          : %d\n", m_uiQuadtreeTUMaxDepthInter);
