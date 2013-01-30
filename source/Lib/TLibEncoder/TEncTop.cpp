@@ -421,7 +421,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     {
       TEncPic* pcEPic = new TEncPic;
       pcEPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1 ,
-                      m_conformanceWindow, m_numReorderPics);
+                      m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics);
       rpcPic = pcEPic;
     }
     else
@@ -429,7 +429,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic = new TComPic;
 
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
-                      m_conformanceWindow, m_numReorderPics);
+                      m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics);
     }
     if (getUseSAO())
     {
