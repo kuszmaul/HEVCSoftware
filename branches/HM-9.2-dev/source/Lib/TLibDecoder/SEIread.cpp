@@ -552,7 +552,7 @@ Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize
   READ_FLAG( uiCode, "broken_link_flag" );      sei.m_brokenLinkFlag     = uiCode;
   xParseByteAlign();
 }
-Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt payloadSize)
+Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/)
 {
   UInt val;
   READ_UVLC( val, "frame_packing_arrangement_id" );                 sei.m_arrangementId = val;
