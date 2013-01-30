@@ -608,8 +608,10 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
 #else
     READ_UVLC( val,     "display_orientation_repetition_period" ); sei.repetitionPeriod      = val;
 #endif
+#if !REMOVE_SINGLE_SEI_EXTENSION_FLAGS
     READ_FLAG( val,     "display_orientation_extension_flag" );    sei.extensionFlag         = val;
     assert( !sei.extensionFlag );
+#endif
   }
   xParseByteAlign();
 }
