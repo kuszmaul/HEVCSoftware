@@ -1327,8 +1327,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
   {
     for (idxX = 0; idxX< frameWidthInCU; idxX++)
     {
-      lcuWidth  = pTmpSPS->getMaxCUHeight();
-      lcuHeight = pTmpSPS->getMaxCUWidth();
+      lcuHeight = pTmpSPS->getMaxCUHeight();
+      lcuWidth  = pTmpSPS->getMaxCUWidth();
       addr     = idxX  + frameWidthInCU*idxY;
       pTmpCu = pcPic->getCU(addr);
       lPelX   = pTmpCu->getCUPelX();
