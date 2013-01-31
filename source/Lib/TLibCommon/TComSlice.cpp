@@ -1293,6 +1293,31 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   TComVUI *vui = getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
+#if L0043_TIMING_INFO
+  TimingInfo *timingInfo = vui->getTimingInfo();
+  timingInfo->setTimingInfoPresentFlag( true );
+  switch( frameRate )
+  {
+  case 24:
+    timingInfo->setNumUnitsInTick( 1125000 );    timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 25:
+    timingInfo->setNumUnitsInTick( 1080000 );    timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 30:
+    timingInfo->setNumUnitsInTick( 900900 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 50:
+    timingInfo->setNumUnitsInTick( 540000 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  case 60:
+    timingInfo->setNumUnitsInTick( 450450 );     timingInfo->setTimeScale    ( 27000000 );
+    break;
+  default:
+    timingInfo->setNumUnitsInTick( 1001 );       timingInfo->setTimeScale    ( 60000 );
+    break;
+  }
+#else
   hrd->setTimingInfoPresentFlag( true );
   switch( frameRate )
   {
@@ -1315,6 +1340,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     hrd->setNumUnitsInTick( 1001 );       hrd->setTimeScale    ( 60000 );
     break;
   }
+#endif
 
   Bool rateCnt = ( bitRate > 0 );
   hrd->setNalHrdParametersPresentFlag( rateCnt );
@@ -1327,6 +1353,9 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     hrd->setTickDivisorMinus2( 100 - 2 );                          // 
     hrd->setDuCpbRemovalDelayLengthMinus1( 7 );                    // 8-bit precision ( plus 1 for last DU in AU )
     hrd->setSubPicCpbParamsInPicTimingSEIFlag( true );
+#if L0044_DU_DPB_OUTPUT_DELAY_HRD
+    hrd->setDpbOutputDelayDuLengthMinus1( 5 + 7 );                 // With sub-clock tick factor of 100, at least 7 bits to have the same value as AU dpb delay
+#endif
   }
   else
   {
@@ -1355,6 +1384,9 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   Int i, j;
   UInt birateValue, cpbSizeValue;
   UInt ducpbSizeValue;
+#if L0363_DU_BIT_RATE
+  UInt duBitRateValue = 0;
+#endif
 
   for( i = 0; i < MAX_TLAYER; i ++ )
   {
@@ -1366,6 +1398,9 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     birateValue  = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
     ducpbSizeValue = bitRate/numDU;
+#if L0363_DU_BIT_RATE
+    duBitRateValue = bitRate;
+#endif
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
       hrd->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
@@ -1376,6 +1411,9 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
       hrd->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
       hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
       hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
+#if L0363_DU_BIT_RATE
+      hrd->setDuBitRateValueMinus1( i, j, 1, ( duBitRateValue - 1 ) );
+#endif
       hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
     }
   }
@@ -1936,15 +1974,22 @@ ProfileTierLevel::ProfileTierLevel()
   , m_tierFlag        (false)
   , m_profileIdc      (0)
   , m_levelIdc        (0)
+#if L0046_CONSTRAINT_FLAGS
+, m_progressiveSourceFlag  (false)
+, m_interlacedSourceFlag   (false)
+, m_nonPackedConstraintFlag(false)
+, m_frameOnlyConstraintFlag(false)
+#endif
 {
   ::memset(m_profileCompatibilityFlag, 0, sizeof(m_profileCompatibilityFlag));
 }
+
 TComPTL::TComPTL()
 {
   ::memset(m_subLayerProfilePresentFlag, 0, sizeof(m_subLayerProfilePresentFlag));
   ::memset(m_subLayerLevelPresentFlag,   0, sizeof(m_subLayerLevelPresentFlag  ));
 }
-
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
 TComBitRatePicRateInfo::TComBitRatePicRateInfo()
 {
   ::memset(m_bitRateInfoPresentFlag, 0, sizeof(m_bitRateInfoPresentFlag));
@@ -1954,4 +1999,5 @@ TComBitRatePicRateInfo::TComBitRatePicRateInfo()
   ::memset(m_constantPicRateIdc,     0, sizeof(m_constantPicRateIdc));
   ::memset(m_avgPicRate,             0, sizeof(m_avgPicRate));
 }
+#endif
 //! \}

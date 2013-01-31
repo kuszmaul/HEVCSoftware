@@ -79,6 +79,7 @@ private:
   
   Int                   m_numReorderPics[MAX_TLAYER];
   Window                m_conformanceWindow;
+  Window                m_defaultDisplayWindow;
 
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
@@ -88,7 +89,7 @@ public:
   TComPic();
   virtual ~TComPic();
   
-  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow,
+  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow, 
                         Int *numReorderPics, Bool bIsVirtual = false );
                         
   virtual Void  destroy();
@@ -147,6 +148,7 @@ public:
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 
   Window&       getConformanceWindow()  { return m_conformanceWindow; }
+  Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
 
   Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
                                         ,std::vector<Bool>* LFCrossSliceBoundary

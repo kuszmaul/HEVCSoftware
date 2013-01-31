@@ -114,7 +114,7 @@ Void TEncTop::create ()
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
-    m_cRateCtrl.init( m_iFrameToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
+    m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
   }
 #else
@@ -280,7 +280,9 @@ Void TEncTop::init()
   
   /* set the VPS profile information */
   *m_cVPS.getPTL() = *m_cSPS.getPTL();
-
+#if L0043_TIMING_INFO
+  m_cVPS.getTimingInfo()->setTimingInfoPresentFlag       ( false );
+#endif
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
   xInitPPS();
@@ -419,7 +421,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     {
       TEncPic* pcEPic = new TEncPic;
       pcEPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1 ,
-                      m_conformanceWindow, m_numReorderPics);
+                      m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics);
       rpcPic = pcEPic;
     }
     else
@@ -427,7 +429,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic = new TComPic;
 
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
-                      m_conformanceWindow, m_numReorderPics);
+                      m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics);
     }
     if (getUseSAO())
     {
@@ -452,6 +454,13 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setTierFlag(m_levelTier);
   profileTierLevel.setProfileIdc(m_profile);
   profileTierLevel.setProfileCompatibilityFlag(m_profile, 1);
+#if L0046_CONSTRAINT_FLAGS
+  profileTierLevel.setProgressiveSourceFlag(m_progressiveSourceFlag);
+  profileTierLevel.setInterlacedSourceFlag(m_interlacedSourceFlag);
+  profileTierLevel.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
+  profileTierLevel.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
+#endif
+  
   if (m_profile == Profile::MAIN10 && g_bitDepthY == 8 && g_bitDepthC == 8)
   {
     /* The above constraint is equal to Profile::MAIN */
@@ -554,8 +563,13 @@ Void TEncTop::xInitSPS()
     pcVUI->setFrameFieldInfoPresentFlag(getFrameFieldInfoPresentFlag());
     pcVUI->setFieldSeqFlag(false);
     pcVUI->setHrdParametersPresentFlag(false);
+#if L0043_TIMING_INFO
+    pcVUI->getTimingInfo()->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
+    pcVUI->getTimingInfo()->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+#else
     pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
     pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+#endif
     pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
     pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
     pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
@@ -652,6 +666,9 @@ Void TEncTop::xInitPPS()
       bestPos=i;
     }
   }
+#if L0323_LIMIT_DEFAULT_LIST_SIZE
+  assert(bestPos <= 15);
+#endif
   m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());

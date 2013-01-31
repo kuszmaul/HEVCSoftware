@@ -264,9 +264,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       if ( m_pchReconFile )
       {
         const Window &conf = pcPic->getConformanceWindow();
-        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
-                            pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
-                            Window();
+        const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
@@ -323,9 +321,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       if ( m_pchReconFile )
       {
         const Window &conf = pcPic->getConformanceWindow();
-        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
-                            pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
-                            Window();
+        const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),

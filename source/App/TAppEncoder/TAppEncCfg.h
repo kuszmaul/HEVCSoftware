@@ -68,14 +68,20 @@ protected:
   Int       m_confRight;
   Int       m_confTop;
   Int       m_confBottom;
-  Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
+  Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
   // profile/level
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-
+#if L0046_CONSTRAINT_FLAGS
+  Bool m_progressiveSourceFlag;
+  Bool m_interlacedSourceFlag;
+  Bool m_nonPackedConstraintFlag;
+  Bool m_frameOnlyConstraintFlag;
+#endif
+  
   // coding structure
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
   Int       m_iDecodingRefreshType;                           ///< random access type
@@ -157,6 +163,9 @@ protected:
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
+#if L0232_RD_PENALTY
+  Int      m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty) 
+#endif
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
@@ -186,7 +195,7 @@ protected:
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   
-  Int       m_decodePictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
+  Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
@@ -271,6 +280,7 @@ protected:
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   Int       m_bitRatePicRateMaxTLayers;                       ///< Indicates max. number of sub-layers for which bit rate is signalled.
   Bool*     m_bitRateInfoPresentFlag;                         ///< Indicates whether bit rate information is signalled
   Bool*     m_picRateInfoPresentFlag;                         ///< Indicates whether pic rate information is signalled
@@ -278,6 +288,8 @@ protected:
   Int*      m_maxBitRate;                                     ///< Indicates max. bit rate information for various sub-layers
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
+#endif
+  #
 public:
   TAppEncCfg();
   virtual ~TAppEncCfg();
