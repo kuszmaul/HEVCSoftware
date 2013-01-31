@@ -92,8 +92,6 @@
 
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
 
-#define SAO_SKIP_RIGHT                   1  ///< H1101: disallow using unavailable pixel during RDO
-
 #define REMOVE_SINGLE_SEI_EXTENSION_FLAGS 1 ///< remove display orientation SEI extension flag (there is a generic SEI extension mechanism now) 
 
 #define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
