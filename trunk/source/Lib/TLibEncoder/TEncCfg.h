@@ -108,13 +108,19 @@ protected:
   Int       m_iSourceHeight;
   Int       m_conformanceMode;
   Window    m_conformanceWindow;
-  Int       m_iFrameToBeEncoded;
+  Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
   /* profile & level */
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
+#if L0046_CONSTRAINT_FLAGS
+  Bool m_progressiveSourceFlag;
+  Bool m_interlacedSourceFlag;
+  Bool m_nonPackedConstraintFlag;
+  Bool m_frameOnlyConstraintFlag;
+#endif
 
   //====== Coding Structure ========
   UInt      m_uiIntraPeriod;
@@ -180,6 +186,9 @@ protected:
   Bool      m_bUseLComb;
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
+#if L0232_RD_PENALTY
+  UInt      m_rdPenalty;
+#endif
   Bool      m_bUseFastEnc;
   Bool      m_bUseEarlyCU;
   Bool      m_useFastDecisionForMerge;
@@ -312,7 +321,7 @@ public:
   Window   &getConformanceWindow()                           { return m_conformanceWindow; }
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
-  Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
+  Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
   
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -375,7 +384,7 @@ public:
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
-  Int       getFrameToBeEncoded             ()      { return  m_iFrameToBeEncoded; }
+  Int       getFramesToBeEncoded            ()      { return  m_framesToBeEncoded; }
   void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
   Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
 
@@ -421,6 +430,9 @@ public:
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
+#if L0232_RD_PENALTY
+  Void      setRDpenalty                 ( UInt  b )     { m_rdPenalty  = b; }
+#endif
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
@@ -440,6 +452,9 @@ public:
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
+#if L0232_RD_PENALTY
+  Int      getRDpenalty                  ()      { return m_rdPenalty;  }
+#endif
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
@@ -662,6 +677,20 @@ public:
   Void      setLog2MaxMvLengthHorizontal(Int i)           { m_log2MaxMvLengthHorizontal = i; }
   Int       getLog2MaxMvLengthVertical()                  { return m_log2MaxMvLengthVertical; }
   Void      setLog2MaxMvLengthVertical(Int i)             { m_log2MaxMvLengthVertical = i; }
+  
+#if L0046_CONSTRAINT_FLAGS
+  Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
+  Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
+  
+  Bool getInterlacedSourceFlag() const { return m_interlacedSourceFlag; }
+  Void setInterlacedSourceFlag(Bool b) { m_interlacedSourceFlag = b; }
+  
+  Bool getNonPackedConstraintFlag() const { return m_nonPackedConstraintFlag; }
+  Void setNonPackedConstraintFlag(Bool b) { m_nonPackedConstraintFlag = b; }
+  
+  Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
+  Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
+#endif
 };
 
 //! \}

@@ -462,7 +462,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Int confLeft, Int confRight, Int c
     dstPicYuv = pPicYuv;
   }
   // location of upper left pel in a plane
-  Int planeOffset = 0; //confLeft + confTop * iStride;
+  Int planeOffset = confLeft + confTop * iStride;
   
   if (! writePlane(m_cHandle, dstPicYuv->getLumaAddr() + planeOffset, is16bit, iStride, width, height))
   {
@@ -475,8 +475,10 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Int confLeft, Int confRight, Int c
   iStride >>= 1;
   confLeft >>= 1;
   confRight >>= 1;
+  confTop >>= 1;
+  confBottom >>= 1;
 
-  planeOffset = 0; // confLeft + confTop * iStride;
+  planeOffset = confLeft + confTop * iStride;
 
   if (! writePlane(m_cHandle, dstPicYuv->getCbAddr() + planeOffset, is16bit, iStride, width, height))
   {

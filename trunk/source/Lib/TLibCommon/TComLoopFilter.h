@@ -56,7 +56,7 @@ class TComLoopFilter
 private:
   UInt      m_uiNumPartitions;
   UChar*    m_aapucBS[2];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
-  Bool*     m_aapbEdgeFilter[2][3];
+  Bool*     m_aapbEdgeFilter[2];
   LFCUParam m_stLFCUParam;                  ///< status structure
   
   Bool      m_bLFCrossTileBoundary;
