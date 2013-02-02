@@ -524,7 +524,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSAO( m_bUseSAO );
 
   m_cSPS.setMaxTLayers( m_maxTempLayer );
-  m_cSPS.setTemporalIdNestingFlag( false );
+  m_cSPS.setTemporalIdNestingFlag( ( m_maxTempLayer == 1 ) ? true : false );
   for ( i = 0; i < m_cSPS.getMaxTLayers(); i++ )
   {
     m_cSPS.setMaxDecPicBuffering(m_maxDecPicBuffering[i], i);
