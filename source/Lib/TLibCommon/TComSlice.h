@@ -791,8 +791,6 @@ private:
   UInt        m_uiMaxCUWidth;
   UInt        m_uiMaxCUHeight;
   UInt        m_uiMaxCUDepth;
-  UInt        m_uiMinTrDepth;
-  UInt        m_uiMaxTrDepth;
   TComRPSList m_RPSList;
   Bool        m_bLongTermRefsPresent;
   Bool        m_TMVPFlagsPresent;
@@ -896,10 +894,6 @@ public:
   UInt getBitsForPOC  ()         { return m_uiBitsForPOC;   }
   Bool getUseAMP() { return m_useAMP; }
   Void setUseAMP( Bool b ) { m_useAMP = b; }
-  Void setMinTrDepth  ( UInt u ) { m_uiMinTrDepth = u;      }
-  UInt getMinTrDepth  ()         { return  m_uiMinTrDepth;  }
-  Void setMaxTrDepth  ( UInt u ) { m_uiMaxTrDepth = u;      }
-  UInt getMaxTrDepth  ()         { return  m_uiMaxTrDepth;  }
   Void setQuadtreeTULog2MaxSize( UInt u ) { m_uiQuadtreeTULog2MaxSize = u;    }
   UInt getQuadtreeTULog2MaxSize()         { return m_uiQuadtreeTULog2MaxSize; }
   Void setQuadtreeTULog2MinSize( UInt u ) { m_uiQuadtreeTULog2MinSize = u;    }

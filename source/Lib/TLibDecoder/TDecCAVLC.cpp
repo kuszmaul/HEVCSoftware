@@ -562,7 +562,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   UInt  uiCode;
   READ_CODE( 4,  uiCode, "sps_video_parameter_set_id");          pcSPS->setVPSId        ( uiCode );
   READ_CODE( 3,  uiCode, "sps_max_sub_layers_minus1" );          pcSPS->setMaxTLayers   ( uiCode+1 );
-  READ_FLAG( uiCode, "sps_temporal_id_nesting_flag" );               pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
+  READ_FLAG(     uiCode, "sps_temporal_id_nesting_flag" );       pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
   if ( pcSPS->getMaxTLayers() == 1 )
   {
     // sps_temporal_id_nesting_flag must be 1 when sps_max_sub_layers_minus1 is 0
@@ -646,9 +646,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
   pcSPS->setMaxCUDepth( uiMaxCUDepthCorrect+g_uiAddCUDepth  ); 
   g_uiMaxCUDepth  = uiMaxCUDepthCorrect+g_uiAddCUDepth;
-  // BB: these parameters may be removed completly and replaced by the fixed values
-  pcSPS->setMinTrDepth( 0 );
-  pcSPS->setMaxTrDepth( 1 );
+
   READ_FLAG( uiCode, "scaling_list_enabled_flag" );                 pcSPS->setScalingListFlag ( uiCode );
   if(pcSPS->getScalingListFlag())
   {
