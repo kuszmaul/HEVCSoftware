@@ -786,11 +786,14 @@ private:
   UInt        m_picWidthInLumaSamples;
   UInt        m_picHeightInLumaSamples;
   
-  Window      m_conformanceWindow;
-
+  Int         m_log2MinCodingBlockSize;
+  Int         m_log2DiffMaxMinCodingBlockSize;
   UInt        m_uiMaxCUWidth;
   UInt        m_uiMaxCUHeight;
   UInt        m_uiMaxCUDepth;
+
+  Window      m_conformanceWindow;
+
   TComRPSList m_RPSList;
   Bool        m_bLongTermRefsPresent;
   Bool        m_TMVPFlagsPresent;
@@ -878,6 +881,12 @@ public:
 
   Bool getUsedByCurrPicLtSPSFlag(Int i)        {return m_usedByCurrPicLtSPSFlag[i];}
   Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { m_usedByCurrPicLtSPSFlag[i] = x;}
+
+  Int  getLog2MinCodingBlockSize() const           { return m_log2MinCodingBlockSize; }
+  Void setLog2MinCodingBlockSize(Int val)          { m_log2MinCodingBlockSize = val; }
+  Int  getLog2DiffMaxMinCodingBlockSize() const    { return m_log2DiffMaxMinCodingBlockSize; }
+  Void setLog2DiffMaxMinCodingBlockSize(Int val)   { m_log2DiffMaxMinCodingBlockSize = val; }
+
   Void setMaxCUWidth  ( UInt u ) { m_uiMaxCUWidth = u;      }
   UInt getMaxCUWidth  ()         { return  m_uiMaxCUWidth;  }
   Void setMaxCUHeight ( UInt u ) { m_uiMaxCUHeight = u;     }

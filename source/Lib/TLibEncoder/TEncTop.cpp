@@ -481,6 +481,17 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
+
+  Int minCUSize = m_cSPS.getMaxCUWidth() >> ( m_cSPS.getMaxCUDepth()-g_uiAddCUDepth );
+  Int log2MinCUSize = 0;
+  while(minCUSize > 1)
+  {
+    minCUSize >>= 1;
+    log2MinCUSize++;
+  }
+
+  m_cSPS.setLog2MinCodingBlockSize(log2MinCUSize);
+  m_cSPS.setLog2DiffMaxMinCodingBlockSize(m_cSPS.getMaxCUDepth()-g_uiAddCUDepth);
   
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
   m_cSPS.setUsePCM        ( m_usePCM           );

@@ -267,19 +267,26 @@ Void TDecTop::xActivateParameterSets()
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumColumnsMinus1() + 1) : 1);
   pps->setMinCuDQPSize( sps->getMaxCUWidth() >> ( pps->getMaxCuDQPDepth()) );
 
-  for (Int i = 0; i < sps->getMaxCUDepth() - g_uiAddCUDepth; i++)
+  g_bitDepthY     = sps->getBitDepthY();
+  g_bitDepthC     = sps->getBitDepthC();
+  g_uiMaxCUWidth  = sps->getMaxCUWidth();
+  g_uiMaxCUHeight = sps->getMaxCUHeight();
+  g_uiMaxCUDepth  = sps->getMaxCUDepth();
+  g_uiAddCUDepth  = max (0, sps->getLog2MinCodingBlockSize() - (Int)sps->getQuadtreeTULog2MinSize() );
+
+  for (Int i = 0; i < sps->getLog2DiffMaxMinCodingBlockSize(); i++)
   {
     sps->setAMPAcc( i, sps->getUseAMP() );
   }
 
-  for (Int i = sps->getMaxCUDepth() - g_uiAddCUDepth; i < sps->getMaxCUDepth(); i++)
+  for (Int i = sps->getLog2DiffMaxMinCodingBlockSize(); i < sps->getMaxCUDepth(); i++)
   {
     sps->setAMPAcc( i, 0 );
   }
 
   m_cSAO.destroy();
-  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight );
-  m_cLoopFilter.        create( g_uiMaxCUDepth );
+  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getMaxCUWidth(), sps->getMaxCUHeight() );
+  m_cLoopFilter.create( sps->getMaxCUDepth() );
 }
 
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )

@@ -592,13 +592,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
-  g_bitDepthY = 8 + uiCode;
-  pcSPS->setBitDepthY(g_bitDepthY);
+  pcSPS->setBitDepthY( uiCode + 8 );
   pcSPS->setQpBDOffsetY( (Int) (6*uiCode) );
 
   READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
-  g_bitDepthC = 8 + uiCode;
-  pcSPS->setBitDepthC(g_bitDepthC);
+  pcSPS->setBitDepthC( uiCode + 8 );
   pcSPS->setQpBDOffsetC( (Int) (6*uiCode) );
 
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
@@ -626,12 +624,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     }
   }
 
-  READ_UVLC( uiCode, "log2_min_coding_block_size_minus3" );
-  UInt log2MinCUSize = uiCode + 3;
+  READ_UVLC( uiCode, "log2_min_coding_block_size_minus3" );      
+  Int log2MinCUSize = uiCode + 3;
+  pcSPS->setLog2MinCodingBlockSize(log2MinCUSize);
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
-  UInt uiMaxCUDepthCorrect = uiCode;
-  pcSPS->setMaxCUWidth  ( 1<<(log2MinCUSize + uiMaxCUDepthCorrect) ); g_uiMaxCUWidth  = 1<<(log2MinCUSize + uiMaxCUDepthCorrect);
-  pcSPS->setMaxCUHeight ( 1<<(log2MinCUSize + uiMaxCUDepthCorrect) ); g_uiMaxCUHeight = 1<<(log2MinCUSize + uiMaxCUDepthCorrect);
+  pcSPS->setLog2DiffMaxMinCodingBlockSize(uiCode);
+  Int maxCUDepthDelta = uiCode;
+  pcSPS->setMaxCUWidth  ( 1<<(log2MinCUSize + maxCUDepthDelta) ); 
+  pcSPS->setMaxCUHeight ( 1<<(log2MinCUSize + maxCUDepthDelta) );
   READ_UVLC( uiCode, "log2_min_transform_block_size_minus2" );   pcSPS->setQuadtreeTULog2MinSize( uiCode + 2 );
 
   READ_UVLC( uiCode, "log2_diff_max_min_transform_block_size" ); pcSPS->setQuadtreeTULog2MaxSize( uiCode + pcSPS->getQuadtreeTULog2MinSize() );
@@ -639,13 +639,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   READ_UVLC( uiCode, "max_transform_hierarchy_depth_inter" );    pcSPS->setQuadtreeTUMaxDepthInter( uiCode+1 );
   READ_UVLC( uiCode, "max_transform_hierarchy_depth_intra" );    pcSPS->setQuadtreeTUMaxDepthIntra( uiCode+1 );
-  g_uiAddCUDepth = 0;
-  while( ( pcSPS->getMaxCUWidth() >> uiMaxCUDepthCorrect ) > ( 1 << ( pcSPS->getQuadtreeTULog2MinSize() + g_uiAddCUDepth )  ) )
-  {
-    g_uiAddCUDepth++;
-  }
-  pcSPS->setMaxCUDepth( uiMaxCUDepthCorrect+g_uiAddCUDepth  ); 
-  g_uiMaxCUDepth  = uiMaxCUDepthCorrect+g_uiAddCUDepth;
+
+  Int addCuDepth = max (0, log2MinCUSize - (Int)pcSPS->getQuadtreeTULog2MinSize() );
+  pcSPS->setMaxCUDepth( maxCUDepthDelta + addCuDepth ); 
 
   READ_FLAG( uiCode, "scaling_list_enabled_flag" );                 pcSPS->setScalingListFlag ( uiCode );
   if(pcSPS->getScalingListFlag())
