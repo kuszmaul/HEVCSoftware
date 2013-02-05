@@ -1228,6 +1228,8 @@ TComSPS::TComSPS()
 // Structure
 , m_picWidthInLumaSamples     (352)
 , m_picHeightInLumaSamples    (288)
+, m_log2MinCodingBlockSize    (  0)
+, m_log2DiffMaxMinCodingBlockSize (0)
 , m_uiMaxCUWidth              ( 32)
 , m_uiMaxCUHeight             ( 32)
 , m_uiMaxCUDepth              (  3)
