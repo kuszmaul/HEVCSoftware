@@ -481,8 +481,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
-  m_cSPS.setMinTrDepth    ( 0                   );
-  m_cSPS.setMaxTrDepth    ( 1                   );
   
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
   m_cSPS.setUsePCM        ( m_usePCM           );
