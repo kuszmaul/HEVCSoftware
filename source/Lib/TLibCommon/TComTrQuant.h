@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -121,17 +121,9 @@ public:
   ~TComTrQuant();
 
   // initialize class
-  Void init                 ( UInt  uiMaxWidth,
-                              UInt  uiMaxHeight,
-                              UInt  uiMaxTrSize,
-                              Int   iSymbolMode           = 0,
-                              UInt *aTable4               = NULL,
-                              UInt *aTable8               = NULL,
-                              UInt *aTableLastPosVlcIndex = NULL,
+  Void init                 ( UInt  uiMaxTrSize,
                               Bool useRDOQ                = false,
-#if RDOQ_TRANSFORMSKIP
                               Bool useRDOQTS              = false,  
-#endif
                               Bool bEnc                   = false,
                               Bool useTransformSkipFast   = false
 #if ADAPTIVE_QP_SELECTION
@@ -234,9 +226,7 @@ protected:
   UInt     m_uiMaxTrSize;
   Bool     m_bEnc;
   Bool     m_useRDOQ;
-#if RDOQ_TRANSFORMSKIP
   Bool     m_useRDOQTS;
-#endif
 #if ADAPTIVE_QP_SELECTION
   Bool     m_bUseAdaptQpSelect;
 #endif
@@ -255,7 +245,7 @@ private:
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
 
-  Void signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
+  Void signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
 
   // quantization
   Void xQuant(       TComTU       &rTu,
@@ -312,7 +302,6 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
 
   __inline Double xGetRateLast     ( const UInt                      uiPosX,
                                      const UInt                      uiPosY,
-                                     const UInt                      uiBlkWdth,
                                      const ComponentID               component     ) const;
   __inline Double xGetRateSigCoeffGroup (  UShort                    uiSignificanceCoeffGroup,
                                      UShort                          ui16CtxNumSig ) const;

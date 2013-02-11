@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1090,11 +1090,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 
   //===== transform and quantization =====
   //--- init rate estimation arrays for RDOQ ---
-#if RDOQ_TRANSFORMSKIP
   if( useTransformSkip ? m_pcEncCfg->getUseRDOQTS() : m_pcEncCfg->getUseRDOQ() )
-#else
-  if(m_pcEncCfg->getUseRDOQ() && useTransformSkip == false)
-#endif
   {
     m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, uiWidth, uiHeight, chType );
   }
@@ -1206,7 +1202,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 
   //===== update distortion =====
 #if WEIGHTED_CHROMA_DISTORTION
-  ruiDist += m_pcRdCost->getDistPart( g_bitDepth[chType], piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, !bIsLuma );
+  ruiDist += m_pcRdCost->getDistPart( g_bitDepth[chType], piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, !bIsLuma, compID );
 #else
   ruiDist += m_pcRdCost->getDistPart( g_bitDepth[chType], piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
 #endif
@@ -3642,7 +3638,7 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 
   if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType()==P_SLICE )
   {
-    xWeightedPredictionUni( pcCU, pcTemplateCand, uiPartAddr, iSizeX, iSizeY, eRefPicList, pcTemplateCand, uiPartIdx, iRefIdx );
+    xWeightedPredictionUni( pcCU, pcTemplateCand, uiPartAddr, iSizeX, iSizeY, eRefPicList, pcTemplateCand, iRefIdx );
   }
 
   // calc distortion
@@ -3661,7 +3657,7 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   uiCost = ruiDist + m_pcRdCost->getCost( m_auiMVPIdxCost[iMVPIdx][iMVPNum] );
 #else
 #if WEIGHTED_CHROMA_DISTORTION
-  uiCost = m_pcRdCost->getDistPart( g_bitDepth[CHANNEL_TYPE_LUMA], pcTemplateCand->getAddr(COMPONENT_Y, uiPartAddr), pcTemplateCand->getStride(COMPONENT_Y), pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y), iSizeX, iSizeY, false, DF_SAD );
+  uiCost = m_pcRdCost->getDistPart( g_bitDepth[CHANNEL_TYPE_LUMA], pcTemplateCand->getAddr(COMPONENT_Y, uiPartAddr), pcTemplateCand->getStride(COMPONENT_Y), pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y), iSizeX, iSizeY, false, COMPONENT_Y, DF_SAD );
 #else
   uiCost = m_pcRdCost->getDistPart( g_bitDepth[CHANNEL_TYPE_LUMA], pcTemplateCand->getAddr(COMPONENT_Y, uiPartAddr), pcTemplateCand->getStride(COMPONENT_Y), pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y), iSizeX, iSizeY, DF_SAD );
 #endif
@@ -4140,7 +4136,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       uiDistortion += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], rpcYuvRec->getAddr(compID), rpcYuvRec->getStride(compID), pcYuvOrg->getAddr(compID),
                                                pcYuvOrg->getStride(compID), uiWidth >> csx, uiHeight >> csy
 #if WEIGHTED_CHROMA_DISTORTION
-                                               , isChroma(compID)
+                                               , isChroma(compID), compID
 #endif
                                                );
     }
@@ -4156,7 +4152,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
 
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
-    m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
+    m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
 
     uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     pcCU->getTotalBits()       = uiBits;
@@ -4335,6 +4331,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   for(UInt ch=0; ch<rpcYuvRec->getNumberValidComponents(); ch++)
   {
     const ComponentID compID=ComponentID(ch);
+    // TODO: RExt - should this getDistPart call include a non-default compID?
 #if WEIGHTED_CHROMA_DISTORTION
     uiDistortionBest += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], rpcYuvRec->getAddr(compID ), rpcYuvRec->getStride(compID ), pcYuvOrg->getAddr(compID ), pcYuvOrg->getStride(compID), uiWidth >> pcYuvOrg->getComponentScaleX(compID), uiHeight >> pcYuvOrg->getComponentScaleY(compID), isChroma(compID));
 #else
@@ -4487,6 +4484,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
         const UInt totalAdjustedDepthChan = rTu.GetTransformDepthTotalAdj(compID);
         const Int  bdOffset               = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
 
+        // TODO: RExt - should this getDistPart call include a non-default compID?
 #if WEIGHTED_CHROMA_DISTORTION
         UInt uiDistComp = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pTempPel, tuCompRect.width, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
                                                       pcResi->getStride(compID), tuCompRect.width, tuCompRect.height, isChroma(compID)); // initialized with zero residual destortion
@@ -4510,7 +4508,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
 
           m_pcTrQuant->invTransformNxN( rTu, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), pcCoeffCurr[compID], cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&(sSingleStringComp[compID]), DEBUG_INTER_CODING_INV_TRAN) );
 
-
+          // TODO: RExt - should this getDistPart call include a non-default compID?
 #if WEIGHTED_CHROMA_DISTORTION
           UInt uiNonzeroDistComp = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
@@ -4621,11 +4619,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
 
         pcCU->setTransformSkipSubParts ( 1, compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
 
-#if RDOQ_TRANSFORMSKIP
         if (m_pcEncCfg->getUseRDOQTS() && compID!=COMPONENT_Cr)
-#else
-        if (m_pcEncCfg->getUseRDOQ() && compID!=COMPONENT_Cr)
-#endif
         {
           m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, tuCompRect.width, tuCompRect.height, chType );
         }
@@ -4661,7 +4655,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
 
           m_pcTrQuant->invTransformNxN( rTu, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), pcCoeffCurr[compID], cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&sSingleStringTS, DEBUG_INTER_CODING_INV_TRAN));
 
-
+          // TODO: RExt - should this getDistPart call include a non-default compID?
 #if WEIGHTED_CHROMA_DISTORTION
             uiNonzeroDistComp = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
                                                          m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
@@ -5064,7 +5058,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
       m_pcEntropyCoder->encodeCUTransquantBypassFlag(pcCU, 0, true);
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
-    m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
+    m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
 
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -370,7 +370,7 @@ TEncRCPic::~TEncRCPic()
   destroy();
 }
 
-Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
+Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP )
 {
   Int targetBits        = 0;
   Int GOPbitsLeft       = encRCGOP->getBitsLeft();
@@ -399,7 +399,7 @@ Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list
   return targetBits;
 }
 
-Int TEncRCPic::xEstPicHeaderBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
+Int TEncRCPic::xEstPicHeaderBits( list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
 {
   Int numPreviousPics   = 0;
   Int totalPreviousBits = 0;
@@ -442,8 +442,8 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
   m_encRCSeq = encRCSeq;
   m_encRCGOP = encRCGOP;
 
-  Int targetBits    = xEstPicTargetBits( encRCSeq, encRCGOP, listPreviousPictures, frameLevel );
-  Int estHeaderBits = xEstPicHeaderBits( encRCSeq, encRCGOP, listPreviousPictures, frameLevel );
+  Int targetBits    = xEstPicTargetBits( encRCSeq, encRCGOP );
+  Int estHeaderBits = xEstPicHeaderBits( listPreviousPictures, frameLevel );
 
   if ( targetBits < estHeaderBits + 100 )
   {
@@ -607,7 +607,7 @@ Int TEncRCPic::estimatePicQP( Double lambda, list<TEncRCPic*>& listPreviousPictu
   return QP;
 }
 
-Double TEncRCPic::getLCUTargetBpp( list<TEncRCPic*>& listPreviousPictures )
+Double TEncRCPic::getLCUTargetBpp()
 {
   Int   LCUIdx    = getLCUCoded();
   Double bpp      = -1.0;
@@ -649,7 +649,7 @@ Double TEncRCPic::getLCUTargetBpp( list<TEncRCPic*>& listPreviousPictures )
   return bpp;
 }
 
-Double TEncRCPic::getLCUEstLambda( Double bpp, list<TEncRCPic*>& listPreviousPictures )
+Double TEncRCPic::getLCUEstLambda( Double bpp )
 {
   Int   LCUIdx = getLCUCoded();
   Double alpha;
@@ -671,7 +671,7 @@ Double TEncRCPic::getLCUEstLambda( Double bpp, list<TEncRCPic*>& listPreviousPic
 
   //for Lambda clip, LCU level clip
   Double clipNeighbourLambda = -1.0;
-  for ( int i=m_numberOfLCU - m_LCULeft - 1; i>=0; i-- )
+  for ( int i=LCUIdx - 1; i>=0; i-- )
   {
     if ( m_LCUs[i].m_lambda > 0 )
     {
@@ -728,7 +728,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
   return estQP;
 }
 
-Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Int numOfEffectivePixel, Bool updateLCUParameter )
+Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter )
 {
   m_LCUs[LCUIdx].m_actualBits = bits;
   m_LCUs[LCUIdx].m_QP         = QP;

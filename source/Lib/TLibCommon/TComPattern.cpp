@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -195,8 +195,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       
       //------------------------------------------------
 
-#if STRONG_INTRA_SMOOTHING
-      //TODO: RExt - investigate the use of this for chroma (luma only for now to match HM9.0)
+      //TODO: RExt - investigate the use of this for chroma (luma only for now to match HM)
       Bool useStrongIntraSmoothing = isLuma(chType) && pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing();
 
       const Pel bottomLeft = piAdiTemp[stride * uiTuHeight2];
@@ -211,7 +210,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
         if ((uiTuWidth < 32) || (!bilinearLeft) || (!bilinearAbove))
           useStrongIntraSmoothing = false;
       }
-#endif
 
       *piDestPtr = *piSrcPtr; // bottom left is not filtered
       piDestPtr -= stride;
@@ -221,7 +219,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       //left column (bottom to top)
 
-#if STRONG_INTRA_SMOOTHING
       if (useStrongIntraSmoothing)
       {
         const Int shift = g_aucConvertToBit[uiTuHeight] + 3; //log2(uiTuHeight2)
@@ -234,7 +231,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
         piSrcPtr -= stride * (uiTuHeight2 - 1);
       }
       else
-#endif
       {
         for(UInt i=1; i<uiTuHeight2; i++, piDestPtr-=stride, piSrcPtr-=stride)
         {
@@ -246,13 +242,11 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       
       //top-left
 
-#if STRONG_INTRA_SMOOTHING
       if (useStrongIntraSmoothing)
       {
         *piDestPtr = piSrcPtr[0];
       }
       else
-#endif
       {
         *piDestPtr = ( piSrcPtr[stride] + 2*piSrcPtr[0] + piSrcPtr[1] + 2 ) >> 2;
       }
@@ -263,7 +257,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       //top row (left-to-right)
 
-#if STRONG_INTRA_SMOOTHING
       if (useStrongIntraSmoothing)
       {
         const Int shift = g_aucConvertToBit[uiTuWidth] + 3; //log2(uiTuWidth2)
@@ -276,7 +269,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
         piSrcPtr += uiTuWidth2 - 1;
       }
       else
-#endif
       {
         for(UInt i=1; i<uiTuWidth2; i++, piDestPtr++, piSrcPtr++)
         {
@@ -543,7 +535,7 @@ Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
 {
   Bool bAboveLeftFlag;
   UInt uiPartAboveLeft;
-  TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT, true, false );
+  TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
     bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->getPredictionMode( uiPartAboveLeft ) == MODE_INTRA );
@@ -566,7 +558,7 @@ Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartAbove;
-    TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart], true, false );
+    TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUAbove && pcCUAbove->getPredictionMode( uiPartAbove ) == MODE_INTRA )
@@ -607,7 +599,7 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartLeft;
-    TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart], true, false );
+    TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCULeft && pcCULeft->getPredictionMode( uiPartLeft ) == MODE_INTRA )
@@ -647,7 +639,7 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartAboveRight;
-    TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset, true, false );
+    TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUAboveRight && pcCUAboveRight->getPredictionMode( uiPartAboveRight ) == MODE_INTRA )
@@ -687,7 +679,7 @@ Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, 
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartBelowLeft;
-    TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset, true, false );
+    TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUBelowLeft && pcCUBelowLeft->getPredictionMode( uiPartBelowLeft ) == MODE_INTRA )

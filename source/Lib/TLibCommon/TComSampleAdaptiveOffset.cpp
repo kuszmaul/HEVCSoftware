@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,6 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
   m_pTmpU2 = NULL;
   m_pTmpL1 = NULL;
   m_pTmpL2 = NULL;
-  m_iLcuPartIdx = NULL;
 }
 
 TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
@@ -220,7 +219,6 @@ Void TComSampleAdaptiveOffset::create( UInt uiSourceWidth, UInt uiSourceHeight, 
     m_apClipTable[ch] = &(m_apClipTableBase[ch][iCRangeExt]);
   }
 
-  m_iLcuPartIdx = new Int [m_iNumCuInHeight*m_iNumCuInWidth];
   m_pTmpL1 = new Pel [m_uiMaxCUHeight+1];
   m_pTmpL2 = new Pel [m_uiMaxCUHeight+1];
   m_pTmpU1 = new Pel [m_iPicWidth];
@@ -278,10 +276,6 @@ Void TComSampleAdaptiveOffset::destroy()
   if (m_pTmpU2)
   {
     delete [] m_pTmpU2; m_pTmpU2 = NULL;
-  }
-  if(m_iLcuPartIdx)
-  {
-    delete []m_iLcuPartIdx; m_iLcuPartIdx = NULL;
   }
 }
 
@@ -468,13 +462,10 @@ inline Int xSign(Int x)
 
 /** initialize variables for SAO process
  * \param  pcPic picture data pointer
- * \param  numSlicesInPic number of slices in picture
  */
-Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic, Int numSlicesInPic)
+Void TComSampleAdaptiveOffset::createPicSaoInfo(TComPic* pcPic)
 {
   m_pcPic   = pcPic;
-  m_uiNumSlicesInPic = numSlicesInPic;
-  m_iSGDepth = 0;
   m_bUseNIF = ( pcPic->getIndependentSliceBoundaryForNDBFilter() || pcPic->getIndependentTileBoundaryForNDBFilter() );
   if(m_bUseNIF)
   {
@@ -977,38 +968,31 @@ Void TComSampleAdaptiveOffset::processSaoCuOrg(Int iAddr, Int iSaoType, Componen
  */
 Void TComSampleAdaptiveOffset::SAOProcess(SAOParam* pcSaoParam)
 {
-  const UInt numValidComp = m_pcPic->getNumberValidComponents();
-  const Bool bChroma = isChromaEnabled(m_pcPic->getChromaFormat());
-  if (pcSaoParam->bSaoFlag[CHANNEL_TYPE_LUMA] || (bChroma && pcSaoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]))
+  for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
-    for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
-    {
-      m_auiSaoBitIncrease[ch] = max(g_bitDepth[ch] - 10, 0);
-    }
-
-    if(m_bUseNIF)
-    {
-      m_pcPic->getPicYuvRec()->copyToPic(m_pcYuvTmp);
-    }
-
-    if (m_saoLcuBasedOptimization)
-    {
-      for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
-      {
-        pcSaoParam->oneUnitFlag[i] = 0;
-      }
-    }
-
-    for(UInt chan=0; chan<numValidComp; chan++)
-    {
-      const ComponentID ch=ComponentID(chan);
-
-      if (pcSaoParam->bSaoFlag[toChannelType(ch)])
-        processSaoUnitAll( pcSaoParam->saoLcuParam[ch], pcSaoParam->oneUnitFlag[ch], ch);
-    }
-
-    m_pcPic = NULL;
+    m_auiSaoBitIncrease[ch] = max(g_bitDepth[ch] - 10, 0);
   }
+
+  if(m_bUseNIF)
+  {
+    m_pcPic->getPicYuvRec()->copyToPic(m_pcYuvTmp);
+  }
+
+  if (m_saoLcuBasedOptimization)
+  {
+    for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
+    {
+      pcSaoParam->oneUnitFlag[i] = 0;
+    }
+  }
+
+  for(UInt chan=0; chan<m_pcPic->getNumberValidComponents(); chan++)
+  {
+    const ComponentID ch=ComponentID(chan);
+    processSaoUnitAll( pcSaoParam->saoLcuParam[ch], pcSaoParam->oneUnitFlag[ch], ch);
+  }
+
+  m_pcPic = NULL;
 }
 
 /** Process SAO all units

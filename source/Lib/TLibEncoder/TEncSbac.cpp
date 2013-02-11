@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -284,11 +284,6 @@ Void TEncSbac::codeTerminatingBit( UInt uilsLast )
 Void TEncSbac::codeSliceFinish()
 {
   m_pcBinIf->finish();
-}
-
-Void TEncSbac::encodeStart()
-{
-  m_pcBinIf->start();
 }
 
 Void TEncSbac::xWriteUnarySymbol( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset )
@@ -907,48 +902,22 @@ void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
 }
 
 
-#if !REMOVE_BURST_IPCM
-/** Code I_PCM information. 
- * \param pcCU pointer to CU
- * \param uiAbsPartIdx CU index
- * \param numIPCM the number of succesive IPCM blocks with the same size 
- * \param firstIPCMFlag 
- * \returns Void
- */
-Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag)
-#else
-/** Code I_PCM information. 
+/** Code I_PCM information.
  * \param pcCU pointer to CU
  * \param uiAbsPartIdx CU index
  * \returns Void
  */
 Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
-#endif
 {
   UInt uiIPCM = (pcCU->getIPCMFlag(uiAbsPartIdx) == true)? 1 : 0;
 
   Bool writePCMSampleFlag = pcCU->getIPCMFlag(uiAbsPartIdx);
 
-#if !REMOVE_BURST_IPCM
-  if( uiIPCM == 0 || firstIPCMFlag)
-  {
-    m_pcBinIf->encodeBinTrm (uiIPCM);
-
-    if ( firstIPCMFlag )
-    {
-      m_pcBinIf->encodeNumSubseqIPCM( numIPCM - 1 );
-      m_pcBinIf->encodePCMAlignBits();
-    }
-  }
-#else
   m_pcBinIf->encodeBinTrm (uiIPCM);
-#endif
 
   if (writePCMSampleFlag)
   {
-#if REMOVE_BURST_IPCM
     m_pcBinIf->encodePCMAlignBits();
-#endif
 
     const UInt minCoeffSizeY = pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getMinCUHeight();
     const UInt offsetY       = minCoeffSizeY * uiAbsPartIdx;
@@ -971,15 +940,7 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
       }
     }
 
-#if !REMOVE_BURST_IPCM
-    numIPCM--;
-    if(numIPCM == 0)
-    {
-      m_pcBinIf->resetBac();
-    }
-#else
     m_pcBinIf->resetBac();
-#endif
   }
 }
 
@@ -1108,7 +1069,6 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   DTRACE_CABAC_T( "\theight=" )
   DTRACE_CABAC_V( uiHeight )
   DTRACE_CABAC_T( "\tdepth=" )
-// NOTE: RExt - the following commented debug lines have been changed to make consistent with HM
 //  DTRACE_CABAC_V( rTu.GetTransformDepthTotalAdj(compID) )
   DTRACE_CABAC_V( rTu.GetTransformDepthTotal() )
   DTRACE_CABAC_T( "\tabspartidx=" )

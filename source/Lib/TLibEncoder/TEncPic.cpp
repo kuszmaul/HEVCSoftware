@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -126,13 +126,13 @@ TEncPic::~TEncPic()
  * \return Void
  */
 Void TEncPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth,
-                      CroppingWindow &picCroppingWindow, Int *numReorderPics, Bool bIsVirtual )
+                      Window &conformanceWindow, Int *numReorderPics, Bool bIsVirtual )
 {
-  TComPic::create( iWidth, iHeight, chromaFormat, uiMaxWidth, uiMaxHeight, uiMaxDepth, picCroppingWindow, numReorderPics, bIsVirtual );
+  TComPic::create( iWidth, iHeight, chromaFormat, uiMaxWidth, uiMaxHeight, uiMaxDepth, conformanceWindow, numReorderPics, bIsVirtual );
   m_uiMaxAQDepth = uiMaxAQDepth;
   if ( uiMaxAQDepth > 0 )
   {
-    m_acAQLayer = new TEncPicQPAdaptationLayer[ m_uiMaxAQDepth ]; 
+    m_acAQLayer = new TEncPicQPAdaptationLayer[ m_uiMaxAQDepth ];
     for (UInt d = 0; d < m_uiMaxAQDepth; d++)
     {
       m_acAQLayer[d].create( iWidth, iHeight, uiMaxWidth>>d, uiMaxHeight>>d );

@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,25 +76,20 @@ public:
   virtual Void  codeTilesWPPEntryPoint  ( TComSlice* pSlice )     = 0;
   virtual Void  codeTerminatingBit      ( UInt uilsLast )                                       = 0;
   virtual Void  codeSliceFinish         ()                                                      = 0;
-  virtual Void  encodeStart             ()                                                      = 0;
   virtual Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;
   virtual Void codeScalingList   ( TComScalingList* scalingList )      = 0;
-  
+
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-  
+
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  
-#if !REMOVE_BURST_IPCM
-  virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
-#else
+
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
 
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
   virtual Void codeQtCbf         ( TComTU &rTu, const ComponentID compID ) = 0;
@@ -102,7 +97,7 @@ public:
   virtual Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth ) = 0;
   virtual Void codeQtRootCbfZero ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiplePU ) = 0;
-  
+
   virtual Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
@@ -116,7 +111,7 @@ public:
   virtual Void codeSaoTypeIdx      ( UInt   uiCode) = 0;
   virtual Void codeSaoUflc         ( UInt uiLength, UInt   uiCode ) = 0;
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType) = 0;
-  
+
   virtual Void updateContextTables ( SliceType eSliceType, Int iQp, Bool bExecuteFinish )   = 0;
   virtual Void updateContextTables ( SliceType eSliceType, Int iQp )   = 0;
 
@@ -139,14 +134,13 @@ public:
   UInt    getCoeffCost              ()                        { return  m_pcEntropyCoderIf->getCoeffCost(); }
   Void    resetEntropy              ()                        { m_pcEntropyCoderIf->resetEntropy();  }
   Void    determineCabacInitIdx     ()                        { m_pcEntropyCoderIf->determineCabacInitIdx(); }
-  
+
   Void    encodeSliceHeader         ( TComSlice* pcSlice );
   Void    encodeTilesWPPEntryPoint( TComSlice* pSlice );
   Void    encodeTerminatingBit      ( UInt uiIsLast );
   Void    encodeSliceFinish         ();
-  Void    encodeStart               ();
   TEncEntropyIf*      m_pcEntropyCoderIf;
-  
+
 public:
   Void encodeVPS               ( TComVPS* pcVPS);
   // SPS
@@ -160,16 +154,16 @@ public:
   Void encodeRefFrmIdxPU  ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMvdPU        ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
-  Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
+  Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU = false );
-  
+
   Void encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
+
   Void encodeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
   Void encodeQtCbf             ( TComTU &rTu, const ComponentID compID );
   Void encodeQtCbfZero         ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
@@ -185,9 +179,9 @@ private:
   Void xEncodeTransform        ( Bool& bCodeDQP, TComTU &rTu );
 public:
   Void encodeCoeff             ( TComDataCU* pcCU,                 UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP );
-  
+
   Void encodeCoeffNxN         ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
-  
+
   Void estimateBit             ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   Void    encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID compID );
   Void    encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);

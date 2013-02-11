@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,8 +47,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-class SEImessages;
-
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -82,17 +80,17 @@ private:
   Bool                  m_bCheckLTMSB;
 
   Int                   m_numReorderPics[MAX_TLAYER];
-  CroppingWindow        m_croppingWindow;
+  Window                m_conformanceWindow;
 
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
-  SEImessages* m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
+  SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
 public:
   TComPic();
   virtual ~TComPic();
 
-  Void          create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, CroppingWindow &croppingWindow,
+  Void          create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow,
                         Int *numReorderPics,Bool bIsVirtual /*= false*/ );
 
   virtual Void  destroy();
@@ -104,8 +102,6 @@ public:
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm() const            { return m_bIsLongTerm; }
   Void          setIsLongTerm( Bool lt ) { m_bIsLongTerm = lt; }
-  Bool          getIsUsedAsLongTerm() const    { return m_bIsUsedAsLongTerm; }
-  Void          setIsUsedAsLongTerm( Bool lt ) { m_bIsUsedAsLongTerm = lt; }
   Void          setCheckLTMSBPresent     (Bool b ) {m_bCheckLTMSB=b;}
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
@@ -155,7 +151,7 @@ public:
   Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 
-  CroppingWindow& getCroppingWindow()        { return m_croppingWindow; }
+  Window&       getConformanceWindow()  { return m_conformanceWindow; }
 
   Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
                                         ,std::vector<Bool>* LFCrossSliceBoundary
@@ -172,17 +168,17 @@ public:
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
 
   /** transfer ownership of seis to this picture */
-  void setSEIs(SEImessages* seis) { m_SEIs = seis; }
+  void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  SEImessages* getSEIs() { return m_SEIs; }
+  SEIMessages& getSEIs() { return m_SEIs; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  const SEImessages* getSEIs() const { return m_SEIs; }
+  const SEIMessages& getSEIs() const { return m_SEIs; }
 };// END CLASS DEFINITION TComPic
 
 //! \}

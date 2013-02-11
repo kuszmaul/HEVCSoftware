@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,7 @@ Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[M
   if ( bWriteMode )
   {
     m_cHandle.open( pchFile, ios::binary | ios::out );
-    
+
     if( m_cHandle.fail() )
     {
       printf("\nfailed to write reconstructed YUV file\n");
@@ -156,14 +156,14 @@ Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[M
   else
   {
     m_cHandle.open( pchFile, ios::binary | ios::in );
-    
+
     if( m_cHandle.fail() )
     {
       printf("\nfailed to open Input YUV file\n");
       exit(0);
     }
   }
-  
+
   return;
 }
 
@@ -192,7 +192,7 @@ Void TVideoIOYuv::skipFrames(UInt numFrames, UInt width, UInt height, ChromaForm
 {
   if (!numFrames)
     return;
-  
+
   //------------------
   //set the frame size according to the chroma format
   streamoff frameSize = 0;
@@ -205,7 +205,7 @@ Void TVideoIOYuv::skipFrames(UInt numFrames, UInt width, UInt height, ChromaForm
   }
   frameSize *= wordsize;
   //------------------
-  
+
   const streamoff offset = frameSize * numFrames;
 
   /* attempt to seek */
@@ -533,7 +533,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
 
   const UInt width444       = width_full444 - pad_h444;
   const UInt height444      = height_full444 - pad_v444;
-  
+
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
 #else
@@ -585,12 +585,12 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
  * @param aiPad       source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
-Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int cropLeft, Int cropRight, Int cropTop, Int cropBottom, ChromaFormat format )
+Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )
 {
   // compute actual YUV frame size excluding padding size
   const Int   iStride444 = pPicYuv->getStride(COMPONENT_Y);
-  const UInt width444  = pPicYuv->getWidth(COMPONENT_Y) - cropLeft - cropRight;
-  const UInt height444 = pPicYuv->getHeight(COMPONENT_Y) -  cropTop  - cropBottom;
+  const UInt width444  = pPicYuv->getWidth(COMPONENT_Y) - confLeft - confRight;
+  const UInt height444 = pPicYuv->getHeight(COMPONENT_Y) -  confTop  - confBottom;
   Bool is16bit = false;
   Bool nonZeroBitDepthShift=false;
 
@@ -636,14 +636,18 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int cropLeft
 #else
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
 #endif
-  
+
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
     const ComponentID compID = channelOrder[comp];
     const ChannelType ch=toChannelType(compID);
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
-    const Int planeOffset =  (cropLeft>>csx) + (cropTop>>csy) * pPicYuv->getStride(compID);
+#if RExt__BACKWARDS_COMPATIBILITY_HM==1
+    const Int planeOffset = 0;
+#else
+    const Int planeOffset =  (confLeft>>csx) + (confTop>>csy) * pPicYuv->getStride(compID);
+#endif
     if (! writePlane(m_cHandle, dstPicYuv->getAddr(compID) + planeOffset, is16bit, iStride444, width444, height444, compID, dstPicYuv->getChromaFormat(), format, m_fileBitdepth[ch]))
     {
       retval=false;
@@ -654,6 +658,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int cropLeft
   {
     dstPicYuv->destroy();
     delete dstPicYuv;
-  }  
+  }
   return retval;
 }

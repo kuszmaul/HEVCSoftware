@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,9 +204,9 @@ UInt calcMD5(const TComPicYuv& pic, TComDigest &digest)
   return 16;
 }
 
-std::string digestToString(TComDigest &digest, Int numChar)
+std::string digestToString(const TComDigest &digest, Int numChar)
 {
-  const char* hex = "0123456789abcdef";
+  static const char* hex = "0123456789abcdef";
   std::string result;
 
   for(Int pos=0; pos<Int(digest.hash.size()); pos++)

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,7 +96,6 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
   }
 
   m_bEncodeDQP = false;
-  m_checkBurstIPCMFlag = false;
 #if RATE_CONTROL_LAMBDA_DOMAIN
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
@@ -110,9 +109,6 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
 
   // initialize conversion matrix from partition index to pel
   initRasterToPelXY( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
-#if !LINEBUF_CLEANUP
-  initMotionReferIdx ( uiMaxWidth, uiMaxHeight, m_uhTotalDepth );
-#endif
 }
 
 Void TEncCu::destroy()
@@ -262,25 +258,14 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   }
 #endif
 }
-/** \param  pcCU  pointer of CU data class, bForceTerminate when set to true terminates slice (default is false).
+/** \param  pcCU  pointer of CU data class
  */
-
-Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
+Void TEncCu::encodeCU ( TComDataCU* pcCU )
 {
   if ( pcCU->getSlice()->getPPS()->getUseDQP() )
   {
     setdQPFlag(true);
   }
-
-#if !REMOVE_BURST_IPCM
-  TComPic* pcPic = pcCU->getPic();
-  Bool checkBurstIPCMFlag = pcPic->getSlice(0)->getSPS()->getUsePCM();
-
-  setCheckBurstIPCMFlag( checkBurstIPCMFlag );
-
-  pcCU->setNumSucIPCM(0);
-  pcCU->setLastCUSucIPCMFlag(false);
-#endif
 
   // Encode CU data
   xEncodeCU( pcCU, 0, 0 );
@@ -480,8 +465,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   // If slice start or slice end is within this cu...
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
-  Bool bSliceStart = pcSlice->getDependentSliceCurStartCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getDependentSliceCurStartCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart();
-  Bool bSliceEnd = (pcSlice->getDependentSliceCurEndCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getDependentSliceCurEndCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart());
+  Bool bSliceStart = pcSlice->getSliceSegmentCurStartCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getSliceSegmentCurStartCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart();
+  Bool bSliceEnd = (pcSlice->getSliceSegmentCurEndCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getSliceSegmentCurEndCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart());
   Bool bInsidePicture = ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getPicHeightInLumaSamples() );
   // We need to split, so don't try these modes.
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
@@ -601,24 +586,22 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
 
-          { // 2NxN, Nx2N
-            if(doNotBlockPu)
+          if(doNotBlockPu)
+          {
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug)  );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+            if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_Nx2N )
             {
-              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug)  );
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_Nx2N )
-              {
-                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
-              }
+              doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
-            if(doNotBlockPu)
+          }
+          if(doNotBlockPu)
+          {
+            xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO(sDebug)  );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+            if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxN)
             {
-              xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO(sDebug)  );
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxN)
-              {
-                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
-              }
+              doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
           }
 
@@ -735,12 +718,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
-#if !REMOVE_BURST_IPCM
-        // initialize PCM flag
-        rpcTempCU->setIPCMFlag( 0, false);
-        rpcTempCU->setIPCMFlagSubParts ( false, 0, uiDepth); //SUB_LCU_DQP
-#endif
-
         // do normal intra modes
         if ( !bEarlySkip )
         {
@@ -849,13 +826,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   else
   {
     Int iStartQP;
-    if( pcPic->getCU( rpcTempCU->getAddr() )->getDependentSliceStartCU(rpcTempCU->getZorderIdxInCU()) == pcSlice->getDependentSliceCurStartCUAddr())
+    if( pcPic->getCU( rpcTempCU->getAddr() )->getSliceSegmentStartCU(rpcTempCU->getZorderIdxInCU()) == pcSlice->getSliceSegmentCurStartCUAddr())
     {
       iStartQP = rpcTempCU->getQP(0);
     }
     else
     {
-      UInt uiCurSliceStartPartIdx = pcSlice->getDependentSliceCurStartCUAddr() % pcPic->getNumPartInCU() - rpcTempCU->getZorderIdxInCU();
+      UInt uiCurSliceStartPartIdx = pcSlice->getSliceSegmentCurStartCUAddr() % pcPic->getNumPartInCU() - rpcTempCU->getZorderIdxInCU();
       iStartQP = rpcTempCU->getQP(uiCurSliceStartPartIdx);
     }
     iMinQP = iStartQP;
@@ -903,7 +880,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         pcSubBestPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
         pcSubTempPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
 
-        Bool bInSlice = pcSubBestPartCU->getSCUAddr()+pcSubBestPartCU->getTotalNumPart()>pcSlice->getDependentSliceCurStartCUAddr()&&pcSubBestPartCU->getSCUAddr()<pcSlice->getDependentSliceCurEndCUAddr();
+        Bool bInSlice = pcSubBestPartCU->getSCUAddr()+pcSubBestPartCU->getTotalNumPart()>pcSlice->getSliceSegmentCurStartCUAddr()&&pcSubBestPartCU->getSCUAddr()<pcSlice->getSliceSegmentCurEndCUAddr();
         if(bInSlice && ( pcSubBestPartCU->getCUPelX() < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( pcSubBestPartCU->getCUPelY() < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
         {
           if( m_bUseSBACRD )
@@ -962,7 +939,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         Bool hasResidual = false;
         for( UInt uiBlkIdx = 0; uiBlkIdx < rpcTempCU->getTotalNumPart(); uiBlkIdx ++)
         {
-          if( ( pcPic->getCU( rpcTempCU->getAddr() )->getDependentSliceStartCU(uiBlkIdx+rpcTempCU->getZorderIdxInCU()) == rpcTempCU->getSlice()->getDependentSliceCurStartCUAddr() ) &&
+          if( ( pcPic->getCU( rpcTempCU->getAddr() )->getSliceSegmentStartCU(uiBlkIdx+rpcTempCU->getZorderIdxInCU()) == rpcTempCU->getSlice()->getSliceSegmentCurStartCUAddr() ) &&
               (     rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Y)
                 || (rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Cb) && (numberValidComponents > COMPONENT_Cb))
                 || (rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Cr) && (numberValidComponents > COMPONENT_Cr)) ) )
@@ -973,9 +950,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
 
         UInt uiTargetPartIdx;
-        if ( pcPic->getCU( rpcTempCU->getAddr() )->getDependentSliceStartCU(rpcTempCU->getZorderIdxInCU()) != pcSlice->getDependentSliceCurStartCUAddr() )
+        if ( pcPic->getCU( rpcTempCU->getAddr() )->getSliceSegmentStartCU(rpcTempCU->getZorderIdxInCU()) != pcSlice->getSliceSegmentCurStartCUAddr() )
         {
-          uiTargetPartIdx = pcSlice->getDependentSliceCurStartCUAddr() % pcPic->getNumPartInCU() - rpcTempCU->getZorderIdxInCU();
+          uiTargetPartIdx = pcSlice->getSliceSegmentCurStartCUAddr() % pcPic->getNumPartInCU() - rpcTempCU->getZorderIdxInCU();
         }
         else
         {
@@ -1008,28 +985,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       {
         m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
       }
-      Bool bEntropyLimit=false;
-      Bool bSliceLimit=false;
-      bSliceLimit=rpcBestCU->getSlice()->getSliceMode()==AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE&&(rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceArgument()<<3);
-      if(rpcBestCU->getSlice()->getDependentSliceMode()==SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&m_pcEncCfg->getUseSBACRD())
-      {
-        if(rpcBestCU->getTotalBins()>rpcBestCU->getSlice()->getDependentSliceArgument())
-        {
-          bEntropyLimit=true;
-        }
-      }
-      else if(rpcBestCU->getSlice()->getDependentSliceMode()==SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE)
-      {
-        if(rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getDependentSliceArgument())
-        {
-          bEntropyLimit=true;
-        }
-      }
-
-      bSliceLimit=false;
-      bEntropyLimit=false;
-
-      if(bSliceLimit||bEntropyLimit)
+      Bool isEndOfSlice        = rpcBestCU->getSlice()->getSliceMode()==FIXED_NUMBER_OF_BYTES
+                                 && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceArgument()<<3);
+      Bool isEndOfSliceSegment = rpcBestCU->getSlice()->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES
+                                 && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceSegmentArgument()<<3);
+      if(isEndOfSlice||isEndOfSliceSegment)
       {
         rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
       }
@@ -1076,8 +1036,8 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   //Calculate end address
   UInt uiCUAddr = pcCU->getSCUAddr()+uiAbsPartIdx;
 
-  UInt uiInternalAddress = pcPic->getPicSym()->getPicSCUAddr(pcSlice->getDependentSliceCurEndCUAddr()-1) % pcPic->getNumPartInCU();
-  UInt uiExternalAddress = pcPic->getPicSym()->getPicSCUAddr(pcSlice->getDependentSliceCurEndCUAddr()-1) / pcPic->getNumPartInCU();
+  UInt uiInternalAddress = pcPic->getPicSym()->getPicSCUAddr(pcSlice->getSliceSegmentCurEndCUAddr()-1) % pcPic->getNumPartInCU();
+  UInt uiExternalAddress = pcPic->getPicSym()->getPicSCUAddr(pcSlice->getSliceSegmentCurEndCUAddr()-1) / pcPic->getNumPartInCU();
   UInt uiPosX = ( uiExternalAddress % pcPic->getFrameWidthInCU() ) * g_uiMaxCUWidth+ g_auiRasterToPelX[ g_auiZscanToRaster[uiInternalAddress] ];
   UInt uiPosY = ( uiExternalAddress / pcPic->getFrameWidthInCU() ) * g_uiMaxCUHeight+ g_auiRasterToPelY[ g_auiZscanToRaster[uiInternalAddress] ];
   UInt uiWidth = pcSlice->getSPS()->getPicWidthInLumaSamples();
@@ -1108,11 +1068,7 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool granularityBoundary=((uiPosX+pcCU->getWidth(uiAbsPartIdx))%uiGranularityWidth==0||(uiPosX+pcCU->getWidth(uiAbsPartIdx)==uiWidth))
     &&((uiPosY+pcCU->getHeight(uiAbsPartIdx))%uiGranularityWidth==0||(uiPosY+pcCU->getHeight(uiAbsPartIdx)==uiHeight));
 
-#if !REMOVE_BURST_IPCM
-  if(granularityBoundary && (!(pcCU->getIPCMFlag(uiAbsPartIdx) && ( pcCU->getNumSucIPCM() > 1 ))))
-#else
   if(granularityBoundary)
-#endif
   {
     // The 1-terminating bit is added to all streams, so don't add it here when it's 1.
     if (!bTerminateSlice)
@@ -1128,49 +1084,27 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   // Calculate slice end IF this CU puts us over slice bit size.
   UInt iGranularitySize = pcCU->getPic()->getNumPartInCU();
   Int iGranularityEnd = ((pcCU->getSCUAddr()+uiAbsPartIdx)/iGranularitySize)*iGranularitySize;
-  if(iGranularityEnd<=pcSlice->getDependentSliceCurStartCUAddr())
+  if(iGranularityEnd<=pcSlice->getSliceSegmentCurStartCUAddr())
   {
     iGranularityEnd+=max(iGranularitySize,(pcCU->getPic()->getNumPartInCU()>>(uiDepth<<1)));
   }
   // Set slice end parameter
-  if(pcSlice->getSliceMode()==AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE&&!pcSlice->getFinalized()&&pcSlice->getSliceBits()+numberOfWrittenBits>pcSlice->getSliceArgument()<<3)
+  if(pcSlice->getSliceMode()==FIXED_NUMBER_OF_BYTES&&!pcSlice->getFinalized()&&pcSlice->getSliceBits()+numberOfWrittenBits>pcSlice->getSliceArgument()<<3)
   {
-    pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
+    pcSlice->setSliceSegmentCurEndCUAddr(iGranularityEnd);
     pcSlice->setSliceCurEndCUAddr(iGranularityEnd);
     return;
   }
   // Set dependent slice end parameter
-  if(m_pcEncCfg->getUseSBACRD())
+  if(pcSlice->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES&&!pcSlice->getFinalized()&&pcSlice->getSliceSegmentBits()+numberOfWrittenBits > pcSlice->getSliceSegmentArgument()<<3)
   {
-    TEncBinCABAC *pppcRDSbacCoder = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
-    UInt uiBinsCoded = pppcRDSbacCoder->getBinsCoded();
-    if(pcSlice->getDependentSliceMode()==SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+uiBinsCoded>pcSlice->getDependentSliceArgument())
-    {
-      pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
-      return;
-    }
-  }
-  else
-  {
-    if(pcSlice->getDependentSliceMode()==SHARP_MULTIPLE_CONSTRAINT_BASED_DEPENDENT_SLICE&&!pcSlice->getFinalized()&&pcSlice->getDependentSliceCounter()+numberOfWrittenBits>pcSlice->getDependentSliceArgument())
-    {
-      pcSlice->setDependentSliceCurEndCUAddr(iGranularityEnd);
-      return;
-    }
+    pcSlice->setSliceSegmentCurEndCUAddr(iGranularityEnd);
+    return;
   }
   if(granularityBoundary)
   {
     pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
-    if(m_pcEncCfg->getUseSBACRD())
-    {
-      TEncBinCABAC *pppcRDSbacCoder = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
-      pcSlice->setDependentSliceCounter(pcSlice->getDependentSliceCounter()+pppcRDSbacCoder->getBinsCoded());
-      pppcRDSbacCoder->setBinsCoded( 0 );
-    }
-    else
-    {
-      pcSlice->setDependentSliceCounter(pcSlice->getDependentSliceCounter()+numberOfWrittenBits);
-    }
+    pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
     if (m_pcBitCounter)
     {
       m_pcEntropyCoder->resetBits();
@@ -1224,18 +1158,10 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
 
-#if !REMOVE_BURST_IPCM
-  if( getCheckBurstIPCMFlag() )
-  {
-    pcCU->setLastCUSucIPCMFlag( checkLastCUSucIPCM( pcCU, uiAbsPartIdx ));
-    pcCU->setNumSucIPCM( countNumSucIPCM ( pcCU, uiAbsPartIdx ) );
-  }
-#endif
-
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   // If slice start is within this cu...
-  Bool bSliceStart = pcSlice->getDependentSliceCurStartCUAddr() > pcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
-    pcSlice->getDependentSliceCurStartCUAddr() < pcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcPic->getNumPartInCU() >> (uiDepth<<1) );
+  Bool bSliceStart = pcSlice->getSliceSegmentCurStartCUAddr() > pcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
+    pcSlice->getSliceSegmentCurStartCUAddr() < pcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcPic->getNumPartInCU() >> (uiDepth<<1) );
   // We need to split, so don't try these modes.
   if(!bSliceStart&&( uiRPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
   {
@@ -1253,16 +1179,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       setdQPFlag(true);
     }
-#if !REMOVE_BURST_IPCM
-    pcCU->setNumSucIPCM(0);
-    pcCU->setLastCUSucIPCMFlag(false);
-#endif
-
     for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++, uiAbsPartIdx+=uiQNumParts )
     {
       uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
       uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
-      Bool bInSlice = pcCU->getSCUAddr()+uiAbsPartIdx+uiQNumParts>pcSlice->getDependentSliceCurStartCUAddr()&&pcCU->getSCUAddr()+uiAbsPartIdx<pcSlice->getDependentSliceCurEndCUAddr();
+      Bool bInSlice = pcCU->getSCUAddr()+uiAbsPartIdx+uiQNumParts>pcSlice->getSliceSegmentCurStartCUAddr()&&pcCU->getSCUAddr()+uiAbsPartIdx<pcSlice->getSliceSegmentCurEndCUAddr();
       if(bInSlice&&( uiLPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
       {
         xEncodeCU( pcCU, uiAbsPartIdx, uiDepth+1 );
@@ -1288,7 +1209,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
-    m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
+    m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
@@ -1633,10 +1554,6 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
-#if !REMOVE_BURST_IPCM
-  // rpcTempCU->setCUTransquantBypassSubParts(false, 0, uiDepth); // NOTE RExt - the value of this is overwritten below
-#endif
-
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
 
   rpcTempCU->setIPCMFlag(0, true);
@@ -1677,37 +1594,6 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   DEBUG_STRING_NEW(a)
   DEBUG_STRING_NEW(b)
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
-}
-
-// check whether current try is the best
-Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
-{
-  if( rpcTempCU->getTotalCost() < rpcBestCU->getTotalCost() )
-  {
-    TComYuv* pcYuv;
-    UChar uhDepth = rpcBestCU->getDepth(0);
-
-    // Change Information data
-    TComDataCU* pcCU = rpcBestCU;
-    rpcBestCU = rpcTempCU;
-    rpcTempCU = pcCU;
-
-    // Change Prediction data
-    pcYuv = m_ppcPredYuvBest[uhDepth];
-    m_ppcPredYuvBest[uhDepth] = m_ppcPredYuvTemp[uhDepth];
-    m_ppcPredYuvTemp[uhDepth] = pcYuv;
-
-    // Change Reconstruction data
-    pcYuv = m_ppcRecoYuvBest[uhDepth];
-    m_ppcRecoYuvBest[uhDepth] = m_ppcRecoYuvTemp[uhDepth];
-    m_ppcRecoYuvTemp[uhDepth] = pcYuv;
-
-    pcYuv = NULL;
-    pcCU  = NULL;
-
-    if( m_bUseSBACRD )  // store temp best CI for next CU coding
-      m_pppcRDSbacCoder[uhDepth][CI_TEMP_BEST]->store(m_pppcRDSbacCoder[uhDepth][CI_NEXT_BEST]);
-  }
 }
 
 /** check whether current try is the best with identifying the depth of current try
@@ -1771,100 +1657,6 @@ Void TEncCu::xCheckDQP( TComDataCU* pcCU )
   }
 }
 
-#if !REMOVE_BURST_IPCM
-/** Check whether the last CU shares the same root as the current CU and is IPCM or not.
- * \param pcCU
- * \param uiCurAbsPartIdx
- * \returns Bool
- */
-Bool TEncCu::checkLastCUSucIPCM( TComDataCU* pcCU, UInt uiCurAbsPartIdx )
-{
-  Bool lastCUSucIPCMFlag = false;
-
-  UInt curDepth = pcCU->getDepth(uiCurAbsPartIdx);
-  UInt shift = ((pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx())->getSPS()->getMaxCUDepth() - curDepth)<<1);
-  UInt startPartUnitIdx = ((uiCurAbsPartIdx&(0x03<<shift))>>shift);
-
-  TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
-  if( pcSlice->getDependentSliceCurStartCUAddr() == ( pcCU->getSCUAddr() + uiCurAbsPartIdx ) )
-  {
-    return false;
-  }
-
-  if(curDepth > 0 && startPartUnitIdx > 0)
-  {
-    Int lastValidPartIdx = pcCU->getLastValidPartIdx((Int) uiCurAbsPartIdx );
-
-    if( lastValidPartIdx >= 0 )
-    {
-      if(( pcCU->getSliceStartCU( uiCurAbsPartIdx ) == pcCU->getSliceStartCU( (UInt) lastValidPartIdx ))
-        &&
-        ( pcCU->getDepth( uiCurAbsPartIdx ) == pcCU->getDepth( (UInt) lastValidPartIdx ))
-        &&
-        pcCU->getIPCMFlag( (UInt) lastValidPartIdx ) )
-      {
-        lastCUSucIPCMFlag = true;
-      }
-    }
-  }
-
-  return  lastCUSucIPCMFlag;
-}
-
-/** Count the number of successive IPCM CUs sharing the same root.
- * \param pcCU
- * \param uiCurAbsPartIdx
- * \returns Int
- */
-Int TEncCu::countNumSucIPCM ( TComDataCU* pcCU, UInt uiCurAbsPartIdx )
-{
-  Int numSucIPCM = 0;
-  UInt CurDepth = pcCU->getDepth(uiCurAbsPartIdx);
-
-  if( pcCU->getIPCMFlag(uiCurAbsPartIdx) )
-  {
-    if(CurDepth == 0)
-    {
-       numSucIPCM = 1;
-    }
-    else
-    {
-      TComPic* pcPic = pcCU->getPic();
-      TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
-      UInt qNumParts = ( pcPic->getNumPartInCU() >> ((CurDepth-1)<<1) )>>2;
-
-      Bool continueFlag = true;
-      UInt absPartIdx = uiCurAbsPartIdx;
-      UInt shift = ((pcSlice->getSPS()->getMaxCUDepth() - CurDepth)<<1);
-      UInt startPartUnitIdx = ((uiCurAbsPartIdx&(0x03<<shift))>>shift);
-
-      for ( UInt partUnitIdx = startPartUnitIdx; partUnitIdx < 4 && continueFlag; partUnitIdx++, absPartIdx+=qNumParts )
-      {
-        UInt lPelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[absPartIdx] ];
-        UInt tPelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[absPartIdx] ];
-        Bool inSliceFlag = ( pcCU->getSCUAddr()+absPartIdx+qNumParts>pcSlice->getDependentSliceCurStartCUAddr() ) && ( pcCU->getSCUAddr()+absPartIdx < pcSlice->getDependentSliceCurEndCUAddr());
-
-        if( inSliceFlag && ( lPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( tPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
-        {
-          UInt uiDepth = pcCU->getDepth(absPartIdx);
-
-          if( ( CurDepth == uiDepth) && pcCU->getIPCMFlag( absPartIdx ) )
-          {
-            numSucIPCM++;
-          }
-          else
-          {
-            continueFlag = false;
-          }
-        }
-      }
-    }
-  }
-
-  return numSucIPCM;
-}
-#endif
-
 Void TEncCu::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
 {
   pDst->iN = pSrc->iN;
@@ -1878,10 +1670,10 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
-  Bool bSliceStart = pcSlice->getDependentSliceCurStartCUAddr() > rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
-    pcSlice->getDependentSliceCurStartCUAddr() < rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcCU->getPic()->getNumPartInCU() >> (uiDepth<<1) );
-  Bool bSliceEnd   = pcSlice->getDependentSliceCurEndCUAddr() > rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
-    pcSlice->getDependentSliceCurEndCUAddr() < rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcCU->getPic()->getNumPartInCU() >> (uiDepth<<1) );
+  Bool bSliceStart = pcSlice->getSliceSegmentCurStartCUAddr() > rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
+    pcSlice->getSliceSegmentCurStartCUAddr() < rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcCU->getPic()->getNumPartInCU() >> (uiDepth<<1) );
+  Bool bSliceEnd   = pcSlice->getSliceSegmentCurEndCUAddr() > rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx &&
+    pcSlice->getSliceSegmentCurEndCUAddr() < rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+( pcCU->getPic()->getNumPartInCU() >> (uiDepth<<1) );
   if(!bSliceEnd && !bSliceStart && ( uiRPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
   {
     UInt uiAbsPartIdxInRaster = g_auiZscanToRaster[uiAbsPartIdx];
@@ -1903,8 +1695,8 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
       UInt uiSubCULPelX   = uiLPelX + ( g_uiMaxCUWidth >>(uiDepth+1) )*( uiPartUnitIdx &  1 );
       UInt uiSubCUTPelY   = uiTPelY + ( g_uiMaxCUHeight>>(uiDepth+1) )*( uiPartUnitIdx >> 1 );
 
-      Bool bInSlice = rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+uiQNumParts > pcSlice->getDependentSliceCurStartCUAddr() &&
-        rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx < pcSlice->getDependentSliceCurEndCUAddr();
+      Bool bInSlice = rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx+uiQNumParts > pcSlice->getSliceSegmentCurStartCUAddr() &&
+        rpcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx < pcSlice->getSliceSegmentCurEndCUAddr();
       if(bInSlice&&( uiSubCULPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiSubCUTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
       {
         xCopyYuv2Pic( rpcPic, uiCUAddr, uiAbsPartIdx, uiDepth+1, uiSrcDepth, pcCU, uiSubCULPelX, uiSubCUTPelY );   // Copy Yuv data to picture Yuv

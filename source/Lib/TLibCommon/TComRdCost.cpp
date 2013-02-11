@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -448,7 +448,7 @@ UInt TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iS
 }
 
 #if WEIGHTED_CHROMA_DISTORTION
-UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted, DFunc eDFunc )
+UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted, const ComponentID compID, DFunc eDFunc )
 #else
 UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
 #endif
@@ -466,9 +466,9 @@ UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* pi
   cDtParam.bitDepth     = bitDepth;
 
 #if WEIGHTED_CHROMA_DISTORTION
-  if (bWeighted)
+  if (bWeighted && isChroma(compID))
   {
-    return ((Int) (m_chromaDistortionWeight * cDtParam.DistFunc( &cDtParam )));
+    return ((Int) (m_distortionWeight[compID] * cDtParam.DistFunc( &cDtParam )));
   }
   else
   {

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -168,7 +168,7 @@ Void TAppDecTop::decode()
     }
     if (bNewPicture || !bitstreamFile)
     {
-      m_cTDecTop.executeLoopFilters(poc, pcListPic, m_iSkipFrame, m_iPOCLastDisplay);
+      m_cTDecTop.executeLoopFilters(poc, pcListPic);
     }
 
     if( pcListPic )
@@ -268,8 +268,17 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
        not_displayed--;
       if ( m_pchReconFile )
       {
-        CroppingWindow &crop = pcPic->getCroppingWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
+        const Window &conf = pcPic->getConformanceWindow();
+        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+                                 pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
+                                 Window();
+
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+                                       RGBChannelOrder,
+                                       conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                       conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                       conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                       conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
       }
       
       // update POC of display order
@@ -323,8 +332,17 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        CroppingWindow crop = pcPic->getCroppingWindow();
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
+        const Window &conf = pcPic->getConformanceWindow();
+        const Window &defDisp =  m_respectDefDispWindow || !pcPic->getSlice(0)->getSPS()->getVuiParametersPresentFlag() ?
+                            pcPic->getSlice(0)->getSPS()->getVuiParameters()->getDefaultDisplayWindow() :
+                            Window();
+
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+                                       RGBChannelOrder,
+                                       conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                       conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                       conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                       conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
       }
       
       // update POC of display order
