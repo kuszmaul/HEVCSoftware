@@ -53,9 +53,9 @@
 // ====================================================================================================================
 
 TAppDecTop::TAppDecTop()
+: m_iPOCLastDisplay(-MAX_INT)
 {
   ::memset (m_abDecFlag, 0, sizeof (m_abDecFlag));
-  m_iPOCLastDisplay  = -MAX_INT;
 }
 
 Void TAppDecTop::create()
@@ -168,7 +168,7 @@ Void TAppDecTop::decode()
     }
     if (bNewPicture || !bitstreamFile)
     {
-      m_cTDecTop.executeDeblockAndAlf(poc, pcListPic, m_iSkipFrame, m_iPOCLastDisplay);
+      m_cTDecTop.executeLoopFilters(poc, pcListPic, m_iSkipFrame, m_iPOCLastDisplay);
     }
 
     if( pcListPic )
@@ -262,13 +262,14 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
     const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
     
-    if ( pcPic->getOutputMark() && (not_displayed >  sps->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
+    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
     {
       // write to file
        not_displayed--;
       if ( m_pchReconFile )
       {
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+        CroppingWindow &crop = pcPic->getCroppingWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
       }
       
       // update POC of display order
@@ -322,7 +323,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       // write to file
       if ( m_pchReconFile )
       {
-        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+        CroppingWindow crop = pcPic->getCroppingWindow();
+        m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(), RGBChannelOrder, crop.getPicCropLeftOffset(), crop.getPicCropRightOffset(), crop.getPicCropTopOffset(), crop.getPicCropBottomOffset() );
       }
       
       // update POC of display order

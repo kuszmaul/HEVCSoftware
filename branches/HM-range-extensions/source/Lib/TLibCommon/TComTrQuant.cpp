@@ -2182,12 +2182,11 @@ Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPos
 
 
 /** Context derivation process of coeff_abs_significant_flag
- * \param pcCoeff pointer to prior coded transform coefficients
- * \param posX column of current scan position
- * \param posY row of current scan position
- * \param blockType log2 value of block size if square block, or 4 otherwise
- * \param width width of the block
- * \param height height of the block
+ * \param patternSigCtx pattern for current coefficient group
+ * \param codingParameters coding parmeters for the TU (includes the scan)
+ * \param scanPosition current position in scan order
+ * \param log2BlockWidth log2 width of the block
+ * \param log2BlockHeight log2 height of the block
  * \param ChannelType channel type (CHANNEL_TYPE_LUMA/CHROMA)
  * \returns ctxInc for current scan position
  */

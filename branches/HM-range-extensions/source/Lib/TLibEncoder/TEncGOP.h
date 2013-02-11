@@ -115,6 +115,10 @@ private:
   UInt                    m_lastBPSEI;
   UInt                    m_totalCoded;
   UInt                    m_cpbRemovalDelay;
+#if SEI_TEMPORAL_LEVEL0_INDEX
+  UInt                    m_tl0Idx;
+  UInt                    m_rapIdx;
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();

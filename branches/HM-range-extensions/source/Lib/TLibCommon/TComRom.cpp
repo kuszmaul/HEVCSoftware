@@ -75,25 +75,23 @@ public:
     {
       //------------------------------------------------
 
-      case SCAN_ZIGZAG:
+      case SCAN_DIAG:
         {
-          if (((m_line + m_column) & 0x1) == 0) //on even ranks, we go bottom-left to top-right
+          if ((m_column == (m_blockWidth - 1)) || (m_line == 0)) //if we reach the end of a rank, go diagonally down to the next one
           {
-            if (m_column == (m_blockWidth - 1)) m_line++; //at the right edge, we go down a line
-            else
+            m_line   += m_column + 1;
+            m_column  = 0;
+
+            if (m_line >= m_blockHeight) //if that takes us outside the block, adjust so that we are back on the bottom row
             {
-              m_column++;
-              if (m_line != 0) m_line--; //at the top edge, we just let the column advance happen and stop the line
+              m_column += m_line - (m_blockHeight - 1);
+              m_line    = m_blockHeight - 1;
             }
           }
-          else //on odd ranks, we go top-right to bottom-left
+          else
           {
-            if (m_line == (m_blockHeight - 1)) m_column++; //at the bottom edge, we go across one column
-            else
-            {
-              m_line++;
-              if (m_column != 0) m_column--; //at the left edge, we just let the line advance happen and stop the column
-            }
+            m_column++;
+            m_line--;
           }
         }
         break;
@@ -121,29 +119,6 @@ public:
             m_line = 0;
           }
           else m_line++;
-        }
-        break;
-
-      //------------------------------------------------
-
-      case SCAN_DIAG:
-        {
-          if ((m_column == (m_blockWidth - 1)) || (m_line == 0)) //if we reach the end of a rank, go diagonally down to the next one
-          {
-            m_line   += m_column + 1;
-            m_column  = 0;
-
-            if (m_line >= m_blockHeight) //if that takes us outside the block, adjust so that we are back on the bottom row
-            {
-              m_column += m_line - (m_blockHeight - 1);
-              m_line    = m_blockHeight - 1;
-            }
-          }
-          else
-          {
-            m_column++;
-            m_line--;
-          }
         }
         break;
 

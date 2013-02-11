@@ -382,9 +382,6 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       DTRACE_CABAC_T( "\n" );
     }
 
-    UInt uiLumaTrMode, uiChromaTrMode;
-    pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx( uiAbsPartIdx ), uiLumaTrMode, uiChromaTrMode );
-
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
     {
       assert( pcCU->getCbf( uiAbsPartIdx, COMPONENT_Y, 0 ) );
@@ -663,9 +660,6 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
 #endif
-
-  UInt uiLumaTrMode, uiChromaTrMode;
-  pcCU->convertTransIdx( uiAbsPartIdx, pcCU->getTransformIdx(uiAbsPartIdx), uiLumaTrMode, uiChromaTrMode );
   
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
