@@ -101,7 +101,6 @@ public:
                  );
   Void  create  ();
   Void  destroy ();
-
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
   Void  setGopSize( Int i) { m_iGopSize = i; }

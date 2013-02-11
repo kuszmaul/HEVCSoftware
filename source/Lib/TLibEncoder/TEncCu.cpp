@@ -97,6 +97,11 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
 
   m_bEncodeDQP = false;
   m_checkBurstIPCMFlag = false;
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
+  m_temporalSAD      = 0;
+#endif
 
   // initialize partition order.
   UInt* piTmp = &g_auiZscanToRaster[0];
@@ -234,6 +239,12 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   // initialize CU data
   m_ppcBestCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
   m_ppcTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
+
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  m_addSADDepth      = 0;
+  m_LCUPredictionSAD = 0;
+  m_temporalSAD      = 0;
+#endif
 
   // analysis of CU
   DEBUG_STRING_NEW(sDebug)
@@ -439,6 +450,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMinQP = rpcTempCU->getQP(0);
     iMaxQP = rpcTempCU->getQP(0);
   }
+
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if ( (rpcTempCU->getSlice()->getPPS()->getTransquantBypassEnableFlag()) )
   {
@@ -450,12 +462,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     }
   }
 #endif
+
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  if ( m_pcEncCfg->getUseRateCtrl() )
+  {
+    iMinQP = m_pcRateCtrl->getRCQP();
+    iMaxQP = m_pcRateCtrl->getRCQP();
+  }
+#else
   if(m_pcEncCfg->getUseRateCtrl())
   {
     Int qp = m_pcRateCtrl->getUnitQP();
     iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
     iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
   }
+#endif
 
   // If slice start or slice end is within this cu...
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
@@ -541,6 +562,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = iMinQP;
       }
     }
+
+#if RATE_CONTROL_LAMBDA_DOMAIN
+    if ( uiDepth <= m_addSADDepth )
+    {
+      m_LCUPredictionSAD += m_temporalSAD;
+      m_addSADDepth = uiDepth;
+    }
+#endif
 
     if(!earlyDetectionSkipMode)
     {
@@ -787,6 +816,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   else if(!(bSliceEnd && bInsidePicture))
   {
     bBoundary = true;
+#if RATE_CONTROL_LAMBDA_DOMAIN
+    m_addSADDepth++;
+#endif
   }
 
   // copy orginal YUV samples to PCM buffer
@@ -830,12 +862,20 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMaxQP = iStartQP;
   }
 
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  if ( m_pcEncCfg->getUseRateCtrl() )
+  {
+    iMinQP = m_pcRateCtrl->getRCQP();
+    iMaxQP = m_pcRateCtrl->getRCQP();
+  }
+#else
   if(m_pcEncCfg->getUseRateCtrl())
   {
     Int qp = m_pcRateCtrl->getUnitQP();
     iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
     iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
   }
+#endif
 
   for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
   {
@@ -1306,7 +1346,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( bTransquantBypassFlag, 0, uhDepth );
 #endif
-  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
   for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
@@ -1468,6 +1508,16 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   if ( !rpcTempCU->getMergeAMP() )
   {
     return;
+  }
+#endif
+
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
+  {
+    UInt SAD = m_pcRdCost->getSADPart( g_bitDepth[CHANNEL_TYPE_LUMA], m_ppcPredYuvTemp[uhDepth]->getAddr(COMPONENT_Y), m_ppcPredYuvTemp[uhDepth]->getStride(COMPONENT_Y),
+      m_ppcOrigYuv[uhDepth]->getAddr(COMPONENT_Y), m_ppcOrigYuv[uhDepth]->getStride(COMPONENT_Y),
+      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
+    m_temporalSAD = (Int)SAD;
   }
 #endif
 

@@ -99,7 +99,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const UInt        log2BlockHeight = g_aucConvertToBit[height] + 2;
   const ChannelType channelType     = toChannelType(component);
 
-  result.scanType = ((uiScanIdx == SCAN_ZIGZAG) ? SCAN_DIAG : COEFF_SCAN_TYPE(uiScanIdx));
+  result.scanType = COEFF_SCAN_TYPE(uiScanIdx);
   
   //------------------------------------------------
 

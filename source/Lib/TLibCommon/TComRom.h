@@ -187,7 +187,9 @@ extern const TMatrixCoeff g_as_DST_MAT_4 [4][4];
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
+#ifndef ENC_DEC_TRACE
 #define ENC_DEC_TRACE 0
+#endif
 
 
 #if ENC_DEC_TRACE

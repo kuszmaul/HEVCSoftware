@@ -136,6 +136,14 @@ Void TDecTop::xUpdateGopSize (TComSlice* pcSlice)
 
 Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 {
+  Int  numReorderPics[MAX_TLAYER];
+  CroppingWindow &picCroppingWindow = pcSlice->getSPS()->getPicCroppingWindow();
+
+  for( Int temporalLayer=0; temporalLayer < MAX_TLAYER; temporalLayer++) 
+  {
+    numReorderPics[temporalLayer] = pcSlice->getSPS()->getNumReorderPics(temporalLayer);
+  }
+
   xUpdateGopSize(pcSlice);
   
   m_iMaxRefPicNum = pcSlice->getSPS()->getMaxDecPicBuffering(pcSlice->getTLayer())+pcSlice->getSPS()->getNumReorderPics(pcSlice->getTLayer()) + 1; // +1 to have space for the picture currently being decoded
@@ -143,7 +151,8 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   {
     rpcPic = new TComPic();
     
-    rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+    rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
+                     picCroppingWindow, numReorderPics, true);
     rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
     m_cListPic.pushBack( rpcPic );
     
@@ -180,11 +189,12 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+  rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
+                   picCroppingWindow, numReorderPics, true);
   rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 
-Void TDecTop::executeDeblockAndAlf(Int& poc, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame, Int& iPOCLastDisplay)
+Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame, Int& iPOCLastDisplay)
 {
   if (!m_pcPic)
   {
@@ -284,7 +294,7 @@ Void TDecTop::xActivateParameterSets()
   }
 
   m_cSAO.destroy();
-  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight );
   m_cLoopFilter.        create( g_uiMaxCUDepth );
 }
 
@@ -504,7 +514,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         pcSlice->setRefPic(pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx), REF_PIC_LIST_1, iRefIdx);
       }
     }
-    if (pcSlice->isInterB())
+    if (!pcSlice->isIntra())
     {
       Bool bLowDelay = true;
       Int  iCurrPOC  = pcSlice->getPOC();
@@ -517,11 +527,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
           bLowDelay = false;
         }
       }
-      for (iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(REF_PIC_LIST_1) && bLowDelay; iRefIdx++)
+      if (pcSlice->isInterB())
       {
-        if ( pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx)->getPOC() > iCurrPOC )
+        for (iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(REF_PIC_LIST_1) && bLowDelay; iRefIdx++)
         {
-          bLowDelay = false;
+          if ( pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx)->getPOC() > iCurrPOC )
+          {
+            bLowDelay = false;
+          }
         }
       }
 
@@ -620,12 +633,47 @@ Void TDecTop::xDecodePPS()
 #endif
 }
 
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType )
+#else
 Void TDecTop::xDecodeSEI( TComInputBitstream* bs )
+#endif
 {
-  if ( m_SEIs == NULL ) m_SEIs = new SEImessages;
-
+  if ( m_SEIs == NULL )
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+  {
+    if( (nalUnitType == NAL_UNIT_SEI_SUFFIX) && (m_pcPic->getSEIs()) )
+    {
+      m_SEIs = m_pcPic->getSEIs();          // If suffix SEI and SEI already present, use already existing SEI structure
+    }
+    else
+    {
+      m_SEIs = new SEImessages;
+    }
+  }
+  else
+  {
+    assert(nalUnitType != NAL_UNIT_SEI_SUFFIX);   
+  }
+#else
+  {
+    m_SEIs = new SEImessages;
+  }
+#endif
   m_SEIs->m_pSPS = m_parameterSetManagerDecoder.getSPS(0);
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+  m_seiReader.parseSEImessage( bs, *m_SEIs, nalUnitType );
+  if(nalUnitType == NAL_UNIT_SEI_SUFFIX)
+  {
+    if(!m_pcPic->getSEIs())
+    {
+      m_pcPic->setSEIs(m_SEIs); // Only suffix SEI present and new object created; update picture SEI variable
+    }
+    m_SEIs = NULL;  // SEI structure already updated using this pointer; not required now.
+  }
+#else
   m_seiReader.parseSEImessage( bs, *m_SEIs );
+#endif
 }
 
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
@@ -649,7 +697,12 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       return false;
       
     case NAL_UNIT_SEI:
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+    case NAL_UNIT_SEI_SUFFIX:
+      xDecodeSEI( nalu.m_Bitstream, nalu.m_nalUnitType );
+#else
       xDecodeSEI( nalu.m_Bitstream );
+#endif
       return false;
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
@@ -724,7 +777,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     }
     else if ( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
-      m_pocRandomAccess = 0; // no need to skip the reordered pictures in IDR, they are decodable.
+      m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
     }
     else 
     {

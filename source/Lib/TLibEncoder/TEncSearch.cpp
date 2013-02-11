@@ -2664,13 +2664,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
     if ( iPUIdx == 0 )
     {
-      pcCU->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
     }
     pcCU->setPartSizeSubParts( partSize, 0, uiDepth );
   }
   else
   {
-    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
   }
 
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
@@ -4506,15 +4506,8 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
           pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 );
 
           QpParam cQP;
-#if RExt__BACKWARDS_COMPATIBILITY_HM
-          {
-            //NOTE: RExt - This relationship with 'uiAbsSumU' affecting Cr's Qp offset causes a decoder mismatch in HM when Cb Qp offset != Cr Qp offset
-            const Int chromaOffsetModified = (compID!=COMPONENT_Cr || uiAbsSum[COMPONENT_Cb]!=0) ? chromaOffset : pcCU->getSlice()->getPPS()->getQpOffset(COMPONENT_Cb);
-            setQPforQuant( cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffsetModified, pcCU->getPic()->getChromaFormat(), false );
-          }
-#else
           setQPforQuant( cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), false );
-#endif
+
           m_pcTrQuant->invTransformNxN( rTu, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), pcCoeffCurr[compID], cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&(sSingleStringComp[compID]), DEBUG_INTER_CODING_INV_TRAN) );
 
 

@@ -66,6 +66,16 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::USER_DATA_UNREGISTERED:
     fprintf( g_hTrace, "=========== User Data Unregistered SEI message ===========\n");
     break;
+#if SEI_DISPLAY_ORIENTATION
+  case SEI::DISPLAY_ORIENTATION:
+    fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
+    break;
+#endif
+#if SEI_TEMPORAL_LEVEL0_INDEX
+  case SEI::TEMPORAL_LEVEL0_INDEX:
+    fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -76,22 +86,37 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 /**
  * unmarshal a single SEI message from bitstream bs
  */
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+void SEIReader::parseSEImessage(TComInputBitstream* bs, SEImessages& seis, const NalUnitType nalUnitType)
+#else
 void SEIReader::parseSEImessage(TComInputBitstream* bs, SEImessages& seis)
+#endif
 {
   setBitstream(bs);
 
   assert(!m_pcBitstream->getNumBitsUntilByteAligned());
   do
   {
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+    xReadSEImessage(seis, nalUnitType);
+#else
     xReadSEImessage(seis);
+#endif
     /* SEI messages are an integer number of bytes, something has failed
     * in the parsing if bitstream not byte-aligned */
     assert(!m_pcBitstream->getNumBitsUntilByteAligned());
-  } while (0x80 != m_pcBitstream->peekBits(8));
-  assert(m_pcBitstream->getNumBitsLeft() == 8); /* rsbp_trailing_bits */
+  } while (m_pcBitstream->getNumBitsLeft() > 8);
+
+  UInt rbspTrailingBits;
+  READ_CODE(8, rbspTrailingBits, "rbsp_trailing_bits");
+  assert(rbspTrailingBits == 0x80);
 }
 
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+Void SEIReader::xReadSEImessage(SEImessages& seis, const NalUnitType nalUnitType)
+#else
 Void SEIReader::xReadSEImessage(SEImessages& seis)
+#endif
 {
 #if ENC_DEC_TRACE
   xTraceSEIHeader();
@@ -116,38 +141,131 @@ Void SEIReader::xReadSEImessage(SEImessages& seis)
   xTraceSEIMessageType((SEI::PayloadType)payloadType);
 #endif
 
-  switch (payloadType)
+  /* extract the payload for this single SEI message.
+   * This allows greater safety in erroneous parsing of an SEI message
+   * from affecting subsequent messages.
+   * After parsing the payload, bs needs to be restored as the primary
+   * bitstream.
+   */
+  TComInputBitstream *bs = getBitstream();
+  setBitstream(bs->extractSubstream(payloadSize * 8));
+
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
+  if(nalUnitType == NAL_UNIT_SEI)
   {
-  case SEI::USER_DATA_UNREGISTERED:
-    seis.user_data_unregistered = new SEIuserDataUnregistered;
-    xParseSEIuserDataUnregistered(*seis.user_data_unregistered, payloadSize);
-    break;
-  case SEI::ACTIVE_PARAMETER_SETS:
-    seis.active_parameter_sets = new SEIActiveParameterSets;
-    xParseSEIActiveParameterSets(*seis.active_parameter_sets, payloadSize);
-    break;
-  case SEI::DECODED_PICTURE_HASH:
-    seis.picture_digest = new SEIDecodedPictureHash;
-    xParseSEIDecodedPictureHash(*seis.picture_digest, payloadSize);
-    break;
-  case SEI::BUFFERING_PERIOD:
-    seis.buffering_period = new SEIBufferingPeriod;
-    seis.buffering_period->m_sps = seis.m_pSPS;
-    xParseSEIBufferingPeriod(*seis.buffering_period, payloadSize);
-    break;
-  case SEI::PICTURE_TIMING:
-    seis.picture_timing = new SEIPictureTiming;
-    seis.picture_timing->m_sps = seis.m_pSPS;
-    xParseSEIPictureTiming(*seis.picture_timing, payloadSize);
-    break;
-  case SEI::RECOVERY_POINT:
-    seis.recovery_point = new SEIRecoveryPoint;
-    xParseSEIRecoveryPoint(*seis.recovery_point, payloadSize);
-    break;
-  default:
-    assert(!"Unhandled SEI message");
-    break;
+#endif
+    switch (payloadType)
+    {
+    case SEI::USER_DATA_UNREGISTERED:
+      seis.user_data_unregistered = new SEIuserDataUnregistered;
+      xParseSEIuserDataUnregistered(*seis.user_data_unregistered, payloadSize);
+      break;
+    case SEI::ACTIVE_PARAMETER_SETS:
+      seis.active_parameter_sets = new SEIActiveParameterSets;
+      xParseSEIActiveParameterSets(*seis.active_parameter_sets, payloadSize);
+      break;
+#if !SUFFIX_SEI_NUT_DECODED_HASH_SEI
+    case SEI::DECODED_PICTURE_HASH:
+      seis.picture_digest = new SEIDecodedPictureHash;
+      xParseSEIDecodedPictureHash(*seis.picture_digest, payloadSize);
+      break;
+#endif
+    case SEI::BUFFERING_PERIOD:
+      seis.buffering_period = new SEIBufferingPeriod;
+      seis.buffering_period->m_sps = seis.m_pSPS;
+      xParseSEIBufferingPeriod(*seis.buffering_period, payloadSize);
+      break;
+    case SEI::PICTURE_TIMING:
+      seis.picture_timing = new SEIPictureTiming;
+      seis.picture_timing->m_sps = seis.m_pSPS;
+      xParseSEIPictureTiming(*seis.picture_timing, payloadSize);
+      break;
+    case SEI::RECOVERY_POINT:
+      seis.recovery_point = new SEIRecoveryPoint;
+      xParseSEIRecoveryPoint(*seis.recovery_point, payloadSize);
+      break;
+#if SEI_DISPLAY_ORIENTATION
+    case SEI::DISPLAY_ORIENTATION:
+      seis.display_orientation = new SEIDisplayOrientation;
+      xParseSEIDisplayOrientation(*seis.display_orientation, payloadSize);
+      break;
+#endif
+#if SEI_TEMPORAL_LEVEL0_INDEX
+    case SEI::TEMPORAL_LEVEL0_INDEX:
+      seis.temporal_level0_index = new SEITemporalLevel0Index;
+      xParseSEITemporalLevel0Index(*seis.temporal_level0_index, payloadSize);
+      break;
+#endif
+    default:
+      for (UInt i = 0; i < payloadSize; i++)
+      {
+        UInt seiByte;
+        READ_CODE (8, seiByte, "unknown prefix SEI payload byte");
+      }
+      printf ("Unknown prefix SEI message (payloadType = %d) was found!\n", payloadType);
+    }
+#if SUFFIX_SEI_NUT_DECODED_HASH_SEI
   }
+  else
+  {
+    switch (payloadType)
+    {
+      case SEI::DECODED_PICTURE_HASH:
+        seis.picture_digest = new SEIDecodedPictureHash;
+        xParseSEIDecodedPictureHash(*seis.picture_digest, payloadSize);
+        break;
+      default:
+        for (UInt i = 0; i < payloadSize; i++)
+        {
+          UInt seiByte;
+          READ_CODE (8, seiByte, "unknown suffix SEI payload byte");
+        }
+        printf ("Unknown suffix SEI message (payloadType = %d) was found!\n", payloadType);
+    }
+  }
+#endif
+
+#if HLS_SEI_GENERIC_EXTENSION
+  /* By definition the underlying bitstream terminates in a byte-aligned manner.
+   * 1. Extract all bar the last MIN(bitsremaining,nine) bits as reserved_payload_extension_data
+   * 2. Examine the final 8 bits to determine the payload_bit_equal_to_one marker
+   * 3. Extract the remainingreserved_payload_extension_data bits.
+   *
+   * If there are fewer than 9 bits available, extract them.
+   */
+  Int payloadBitsRemaining = getBitstream()->getNumBitsLeft();
+  if (payloadBitsRemaining) /* more_data_in_payload() */
+  {
+    for (; payloadBitsRemaining > 9; payloadBitsRemaining--)
+    {
+      UInt reservedPayloadExtensionData;
+      READ_CODE (1, reservedPayloadExtensionData, "reserved_payload_extension_data");
+    }
+
+    /* 2 */
+    Int finalBits = getBitstream()->peekBits(payloadBitsRemaining);
+    Int finalPayloadBits = 0;
+    for (Int mask = 0xff; finalBits & (mask >> finalPayloadBits); finalPayloadBits++)
+    {
+      continue;
+    }
+
+    /* 3 */
+    for (; payloadBitsRemaining > 9 - finalPayloadBits; payloadBitsRemaining--)
+    {
+      UInt reservedPayloadExtensionData;
+      READ_CODE (1, reservedPayloadExtensionData, "reserved_payload_extension_data");
+    }
+
+    UInt dummy;
+    READ_CODE (1, dummy, "payload_bit_equal_to_one");
+    READ_CODE (payloadBitsRemaining-1, dummy, "payload_bit_equal_to_zero");
+  }
+#endif
+
+  /* restore primary bitstream for sei_message */
+  delete getBitstream();
+  setBitstream(bs);
 }
 
 /**
@@ -224,8 +342,10 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt p
     sei.activeSeqParamSetId = val;
   }
 
+#if !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG
   READ_CODE(1, val, "active_param_set_sei_extension_flag");
   sei.activeParamSetSEIExtensionFlag = val;
+#endif /* !HLS_REMOVE_ACTIVE_PARAM_SET_SEI_EXT_FLAG */
 
   UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned();
 
@@ -334,6 +454,34 @@ Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt payloadSize)
   READ_FLAG( uiCode, "broken_link_flag" );      sei.m_brokenLinkFlag     = uiCode;
   xParseByteAlign();
 }
+
+#if SEI_DISPLAY_ORIENTATION
+Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt payloadSize)
+{
+  UInt val;
+  READ_FLAG( val,       "display_orientation_cancel_flag" );       sei.cancelFlag            = val;
+  if( !sei.cancelFlag ) 
+  {
+    READ_FLAG( val,     "hor_flip" );                              sei.horFlip               = val;
+    READ_FLAG( val,     "ver_flip" );                              sei.verFlip               = val;
+    READ_CODE( 16, val, "anticlockwise_rotation" );                sei.anticlockwiseRotation = val;
+    READ_UVLC( val,     "display_orientation_repetition_period" ); sei.repetitionPeriod      = val;
+    READ_FLAG( val,     "display_orientation_extension_flag" );    sei.extensionFlag         = val;
+    assert( !sei.extensionFlag );
+  }
+  xParseByteAlign();
+}
+#endif
+
+#if SEI_TEMPORAL_LEVEL0_INDEX
+Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt payloadSize)
+{
+  UInt val;
+  READ_CODE ( 8, val, "tl0_idx" );  sei.tl0Idx = val;
+  READ_CODE ( 8, val, "rap_idx" );  sei.rapIdx = val;
+  xParseByteAlign();
+}
+#endif
 
 Void SEIReader::xParseByteAlign()
 {
