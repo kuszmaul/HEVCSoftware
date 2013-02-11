@@ -117,6 +117,11 @@ private:
   UInt                    m_cpbRemovalDelay;
   UInt                    m_tl0Idx;
   UInt                    m_rapIdx;
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Bool                    m_activeParameterSetSEIPresentInAU;
+  Bool                    m_bufferingPeriodSEIPresentInAU;
+  Bool                    m_pictureTimingSEIPresentInAU;
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -152,6 +157,21 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 
   Double xCalculateRVM();
+
+  SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
+  SEIFramePacking*        xCreateSEIFramePacking();
+  SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
+
+  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Int xGetFirstSeiLocation (AccessUnit &accessUnit);
+  Void xResetNonNestedSEIPresentFlags()
+  {
+    m_activeParameterSetSEIPresentInAU = false;
+    m_bufferingPeriodSEIPresentInAU    = false;
+    m_pictureTimingSEIPresentInAU      = false;
+  }
+#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================

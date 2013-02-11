@@ -191,7 +191,11 @@ Void TEncSampleAdaptiveOffset::rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, 
 
     if (iTypeIdx>=0)
     {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987
       iEstDist = estSaoTypeDist(iPartIdx, iTypeIdx, uiShift, dLambda, currentDistortionTableBo, currentRdCostTableBo);
+#else
+      iEstDist = estSaoTypeDist(yCbCr, iPartIdx, iTypeIdx, uiShift, dLambda, currentDistortionTableBo, currentRdCostTableBo);
+#endif
       if( iTypeIdx == SAO_BO )
       {
         // Estimate Best Position
@@ -1031,14 +1035,11 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
     numSkipLine = 0;
   }
 
-#if SAO_SKIP_RIGHT
-  Int numSkipLineRight = 5-(2*csx); // NOTE: RExt - numSkipLineRight is format dependent
-  //NOTE: RExt - numSkipLineRight is dependent on SAO_SKIP_RIGHT here but not elsewhere (in new HM8.0 code)
+  Int numSkipLineRight = 5-(2*csx);
   if (m_saoLcuBasedOptimization == 0)
   {
     numSkipLineRight = 0;
   }
-#endif
 
   iPicWidthTmp  = m_iPicWidth  >> csx;
   iPicHeightTmp = m_iPicHeight >> csy;
@@ -1069,18 +1070,12 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
     pOrg = getPicYuvAddr(m_pcPic->getPicYuvOrg(), iYCbCr, iAddr);
     pRec = getPicYuvAddr(m_pcPic->getPicYuvRec(), iYCbCr, iAddr);
 
-#if SAO_SKIP_RIGHT
     iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth : iLcuWidth-numSkipLineRight;
-#endif
 
     iEndY   = (uiBPelY == iPicHeightTmp) ? iLcuHeight : iLcuHeight-numSkipLine;
     for (y=0; y<iEndY; y++)
     {
-#if SAO_SKIP_RIGHT
       for (x=0; x<iEndX; x++)
-#else
-      for (x=0; x<iLcuWidth; x++)
-#endif
       {
         iClassIdx = pTableBo[pRec[x]];
         if (iClassIdx)
@@ -1119,11 +1114,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
       pRec = getPicYuvAddr(m_pcPic->getPicYuvRec(), iYCbCr, iAddr);
 
       iStartX = (uiLPelX == 0) ? 1 : 0;
-#if SAO_SKIP_RIGHT
       iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth-numSkipLineRight;
-#else
-      iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth;
-#endif
       for (y=0; y<iLcuHeight-numSkipLine; y++)
       {
         iSignLeft = xSign(pRec[iStartX] - pRec[iStartX-1]);
@@ -1156,9 +1147,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
       pRec = getPicYuvAddr(m_pcPic->getPicYuvRec(), iYCbCr, iAddr);
 
       iStartY = (uiTPelY == 0) ? 1 : 0;
-#if SAO_SKIP_RIGHT
       iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth : iLcuWidth-numSkipLineRight;
-#endif
       iEndY   = (uiBPelY == iPicHeightTmp) ? iLcuHeight-1 : iLcuHeight-numSkipLine;
       if (uiTPelY == 0)
       {
@@ -1172,11 +1161,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
       }
       for (y=iStartY; y<iEndY; y++)
       {
-#if SAO_SKIP_RIGHT
         for (x=0; x<iEndX; x++)
-#else
-        for (x=0; x<iLcuWidth; x++)
-#endif
         {
           iSignDown     =  xSign(pRec[x] - pRec[x+iStride]);
           uiEdgeType    =  iSignDown + m_iUpBuff1[x] + 2;
@@ -1204,11 +1189,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
       pRec = getPicYuvAddr(m_pcPic->getPicYuvRec(), iYCbCr, iAddr);
 
       iStartX = (uiLPelX == 0) ? 1 : 0;
-#if SAO_SKIP_RIGHT
       iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth-numSkipLineRight;
-#else
-      iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth;
-#endif
 
       iStartY = (uiTPelY == 0) ? 1 : 0;
       iEndY   = (uiBPelY == iPicHeightTmp) ? iLcuHeight-1 : iLcuHeight-numSkipLine;
@@ -1257,11 +1238,7 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Compon
       pRec = getPicYuvAddr(m_pcPic->getPicYuvRec(), iYCbCr, iAddr);
 
       iStartX = (uiLPelX == 0) ? 1 : 0;
-#if SAO_SKIP_RIGHT
       iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth-numSkipLineRight;
-#else
-      iEndX   = (uiRPelX == iPicWidthTmp) ? iLcuWidth-1 : iLcuWidth;
-#endif
 
       iStartY = (uiTPelY == 0) ? 1 : 0;
       iEndY   = (uiBPelY == iPicHeightTmp) ? iLcuHeight-1 : iLcuHeight-numSkipLine;
@@ -1358,13 +1335,8 @@ Void TEncSampleAdaptiveOffset::calcSaoStatsCu_BeforeDblk( TComPic* pcPic )
 
         picWidthTmp  = m_iPicWidth               >> csx;
         picHeightTmp = m_iPicHeight              >> csy;
-#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
-        lcuWidth     = pTmpSPS->getMaxCUHeight() >> csx;
-        lcuHeight    = pTmpSPS->getMaxCUWidth()  >> csy;
-#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
         lcuWidth     = pTmpSPS->getMaxCUWidth()  >> csx;
         lcuHeight    = pTmpSPS->getMaxCUHeight() >> csy;
-#endif
         lPelX        = pTmpCu->getCUPelX()       >> csx;
         tPelY        = pTmpCu->getCUPelY()       >> csy;
         rPelX        = lPelX + lcuWidth  ;
@@ -1698,10 +1670,18 @@ Void TEncSampleAdaptiveOffset::resetStats()
  * \param dLambdaLuma
  * \param dLambdaChroma
  */
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 #if SAO_ENCODING_CHOICE
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLuma, Double dLambdaChroma, Int depth)
 #else
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLuma, Double dLambdaChroma)
+#endif
+#else
+#if SAO_ENCODING_CHOICE
+Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, const Double dLambdas[MAX_NUM_COMPONENT], Int depth)
+#else
+Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, const Double dLambdas[MAX_NUM_COMPONENT], )
+#endif
 #endif
 #else
 /** Sample adaptive offset process
@@ -1710,13 +1690,19 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLu
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
-
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
 #if SAO_CHROMA_LAMBDA
   m_dLambdaLuma    = dLambdaLuma;
   m_dLambdaChroma  = dLambdaChroma;
 #else
   m_dLambdaLuma    = dLambda;
   m_dLambdaChroma  = dLambda;
+#endif
+#else
+#if !SAO_CHROMA_LAMBDA
+  Double dLambdaLuma=dLambda;
+  Double dLambdaChroma=dLambda;
+#endif
 #endif
 
   if(m_bUseNIF)
@@ -1742,16 +1728,40 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
   Double dCostFinal = 0;
   if ( m_saoLcuBasedOptimization)
   {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
 #if SAO_ENCODING_CHOICE
     rdoSaoUnitAll(pcSaoParam, m_dLambdaLuma, m_dLambdaChroma, depth);
 #else
     rdoSaoUnitAll(pcSaoParam, m_dLambdaLuma, m_dLambdaChroma);
 #endif
+#else
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
+#if SAO_ENCODING_CHOICE
+    rdoSaoUnitAll(pcSaoParam, dLambdaLuma, dLambdaChroma, depth);
+#else
+    rdoSaoUnitAll(pcSaoParam, dLambdaLuma, dLambdaChroma);
+#endif
+#else
+#if SAO_ENCODING_CHOICE
+    rdoSaoUnitAll(pcSaoParam, dLambdas, depth);
+#else
+    rdoSaoUnitAll(pcSaoParam, dLambdas);
+#endif
+#endif
+#endif
   }
   else
   {
     dCostFinal = 0;
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
     Double lambdaRdo = m_dLambdaLuma;
+#else
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
+    Double lambdaRdo = dLambdaLuma;
+#else
+    Double lambdaRdo = dLambdas[COMPONENT_Y];
+#endif
+#endif
     resetStats();
     getSaoStats(pcSaoParam->psSaoPart[COMPONENT_Y], COMPONENT_Y);
     runQuadTreeDecision(pcSaoParam->psSaoPart[COMPONENT_Y], 0, dCostFinal, m_uiMaxSplitLevel, lambdaRdo, COMPONENT_Y);
@@ -1902,10 +1912,18 @@ Void TEncSampleAdaptiveOffset::assignSaoUnitSyntax(SaoLcuParam* saoLcuParam,  SA
  * \param lambda
  * \param lambdaChroma
  */
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 #if SAO_ENCODING_CHOICE
 Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma, Int depth)
 #else
 Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma)
+#endif
+#else
+#if SAO_ENCODING_CHOICE
+Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double lambdas[MAX_NUM_COMPONENT], Int depth)
+#else
+Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double lambdas[MAX_NUM_COMPONENT])
+#endif
 #endif
 {
   Int idxY;
@@ -2035,11 +2053,19 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, Double lambda, 
           calcSaoStatsCu(addr, compIdx, compID);
         }
       }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
       saoComponentParamDist(allowMergeLeft, allowMergeUp, saoParam, addr, addrUp, addrLeft, COMPONENT_Y,  lambda, &mergeSaoParam[COMPONENT_Y][0], &compDistortion[COMPONENT_Y]);
       if (chromaEnabled)
       {
         sao2ChromaParamDist(allowMergeLeft, allowMergeUp, saoParam, addr, addrUp, addrLeft, lambdaChroma, &mergeSaoParam[COMPONENT_Cb][0], &mergeSaoParam[COMPONENT_Cr][0], &compDistortion[COMPONENT_Y]);
       }
+#else
+      saoComponentParamDist(allowMergeLeft, allowMergeUp, saoParam, addr, addrUp, addrLeft, COMPONENT_Y,  lambdas[COMPONENT_Y], &mergeSaoParam[COMPONENT_Y][0], &compDistortion[COMPONENT_Y]);
+      if (chromaEnabled)
+      {
+        sao2ChromaParamDist(allowMergeLeft, allowMergeUp, saoParam, addr, addrUp, addrLeft, lambdas, &mergeSaoParam[COMPONENT_Cb][0], &mergeSaoParam[COMPONENT_Cr][0], &compDistortion[COMPONENT_Y]);
+      }
+#endif
 
       if( saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] || (chromaEnabled && saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]) )
       {
@@ -2169,13 +2195,29 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, Double lambda, 
  * \param yCbCr color component index
  * \param lambda
  */
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987
 inline Int64 TEncSampleAdaptiveOffset::estSaoTypeDist(Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo)
+#else
+inline Int64 TEncSampleAdaptiveOffset::estSaoTypeDist(const ComponentID compID, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo) // NOTE: RExt - Remove overloaded function call in the future?
+{
+  return estSaoTypeDist(compID, compID, typeIdx, shift, lambda, currentDistortionTableBo, currentRdCostTableBo);
+}
+
+
+inline Int64 TEncSampleAdaptiveOffset::estSaoTypeDist(const ComponentID compID, Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo)
+#endif
 {
   Int64 estDist = 0;
   Int classIdx;
-  Int bitDepth =       g_bitDepth[compPartIdx==0?0:1];          // TODO: RExt - compPartIdx is not always a component!
-  Int saoBitIncrease = m_auiSaoBitIncrease[compPartIdx==0?0:1]; // TODO: RExt - compPartIdx is not always a component!
-  Int saoOffsetTh =    m_iOffsetTh[compPartIdx==0?0:1];         // TODO: RExt - compPartIdx is not always a component!
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987
+  Int bitDepth =       g_bitDepth[compPartIdx==0?0:1];          // TODO: RExt - compPartIdx is not always a component! HM Ticket 987
+  Int saoBitIncrease = m_auiSaoBitIncrease[compPartIdx==0?0:1]; // TODO: RExt - compPartIdx is not always a component! HM Ticket 987
+  Int saoOffsetTh =    m_iOffsetTh[compPartIdx==0?0:1];         // TODO: RExt - compPartIdx is not always a component! HM Ticket 987
+#else
+  Int bitDepth =       g_bitDepth[isLuma(compID)?0:1];
+  Int saoBitIncrease = m_auiSaoBitIncrease[isLuma(compID)?0:1];
+  Int saoOffsetTh =    m_iOffsetTh[isLuma(compID)?0:1];
+#endif
 
   for(classIdx=1; classIdx < ( (typeIdx < SAO_BO) ?  m_iNumClass[typeIdx]+1 : SAO_MAX_BO_CLASSES+1); classIdx++)
   {
@@ -2399,30 +2441,27 @@ Void TEncSampleAdaptiveOffset::saoComponentParamDist(Int allowMergeLeft, Int all
   }
 }
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion)
+#else
+Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, const Double lambdas[MAX_NUM_COMPONENT], SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion)
+#endif
 {
   Int typeIdx;
+  static const Int numChromaComponents=2; // NOTE: RExt - placeholder for 4:4:4:4...
 
-  Int64 estDist[2];
+  Int64 estDist[numChromaComponents];
   Int classIdx;
   Int shift = 2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8);
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
   Int64 bestDist = 0;
+#else
+  Double bestDistOverLambda = 0;
+#endif
 
-  SaoLcuParam*  saoLcuParam[2] = {&(saoParam->saoLcuParam[COMPONENT_Cb][addr]), &(saoParam->saoLcuParam[COMPONENT_Cr][addr])};
-  SaoLcuParam*  saoLcuParamNeighbor[2] = {NULL, NULL};
-  SaoLcuParam*  saoMergeParam[2][2];
-  saoMergeParam[0][0] = &cbSaoParam[0];
-  saoMergeParam[0][1] = &cbSaoParam[1];
-  saoMergeParam[1][0] = &crSaoParam[0];
-  saoMergeParam[1][1] = &crSaoParam[1];
-
-  resetSaoUnit(saoLcuParam[0]);
-  resetSaoUnit(saoLcuParam[1]);
-  resetSaoUnit(saoMergeParam[0][0]);
-  resetSaoUnit(saoMergeParam[0][1]);
-  resetSaoUnit(saoMergeParam[1][0]);
-  resetSaoUnit(saoMergeParam[1][1]);
-
+  SaoLcuParam*  saoLcuParam[numChromaComponents] = {&(saoParam->saoLcuParam[COMPONENT_Cb][addr]), &(saoParam->saoLcuParam[COMPONENT_Cr][addr])};
+  SaoLcuParam*  saoLcuParamNeighbor[numChromaComponents] = {NULL, NULL};
+  SaoLcuParam*  saoMergeParam[numChromaComponents][2];
 
   Double costPartBest = MAX_DOUBLE;
 
@@ -2431,31 +2470,57 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
   Int     currentDistortionTableBo[MAX_NUM_SAO_CLASS];
   Double  currentRdCostTableBo[MAX_NUM_SAO_CLASS];
 
-  SaoLcuParam   saoLcuParamRdo[2];
-  Double   estRate = 0;
+  SaoLcuParam   saoLcuParamRdo[numChromaComponents];
 
-  resetSaoUnit(&saoLcuParamRdo[0]);
-  resetSaoUnit(&saoLcuParamRdo[1]);
+  for(Int compIdx=0; compIdx < numChromaComponents; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+  {
+    saoMergeParam[compIdx][0] = compIdx==1 ? (&crSaoParam[0]):(&cbSaoParam[0]); // NOTE: RExt - placeholder for 4:4:4:4.
+    saoMergeParam[compIdx][1] = compIdx==1 ? (&crSaoParam[1]):(&cbSaoParam[1]);
+
+    resetSaoUnit(saoLcuParam[compIdx]);
+    resetSaoUnit(saoMergeParam[compIdx][0]);
+    resetSaoUnit(saoMergeParam[compIdx][1]);
+
+    resetSaoUnit(&saoLcuParamRdo[compIdx]);
+}
 
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_TEMP_BEST]);
   m_pcRDGoOnSbacCoder->resetBits();
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
   m_pcEntropyCoder->encodeSaoOffset(&saoLcuParamRdo[0], COMPONENT_Cb);
   m_pcEntropyCoder->encodeSaoOffset(&saoLcuParamRdo[1], COMPONENT_Cr);
-
   costPartBest = m_pcEntropyCoder->getNumberOfWrittenBits()*lambda ;
   copySaoUnit(saoLcuParam[0], &saoLcuParamRdo[0] );
   copySaoUnit(saoLcuParam[1], &saoLcuParamRdo[1] );
+#else
+  costPartBest=0;
+  {
+    UInt lastWrittenBits=0;
+    for(Int compIdx=0; compIdx < numChromaComponents; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+    {
+      m_pcEntropyCoder->encodeSaoOffset(&saoLcuParamRdo[compIdx], ComponentID(compIdx+1));
+      UInt thisWrittenBits=m_pcEntropyCoder->getNumberOfWrittenBits();
+      costPartBest += (thisWrittenBits-lastWrittenBits)*lambdas[compIdx+1];
+      lastWrittenBits=thisWrittenBits;
+      copySaoUnit(saoLcuParam[compIdx], &saoLcuParamRdo[compIdx] );
+    }
+  }
+#endif
 
   for (typeIdx=0; typeIdx<MAX_NUM_SAO_TYPE; typeIdx++)
   {
     if( typeIdx == SAO_BO )
     {
       // Estimate Best Position
-      for(Int compIdx = 0; compIdx < 2; compIdx++) //NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+      for(Int compIdx = 0; compIdx < numChromaComponents; compIdx++) //NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
       {
         Double currentRDCost = 0.0;
         bestRDCostTableBo = MAX_DOUBLE;
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
         estDist[compIdx] = estSaoTypeDist(ComponentID(compIdx+1), typeIdx, shift, lambda, currentDistortionTableBo, currentRdCostTableBo);
+#else
+        estDist[compIdx] = estSaoTypeDist(ComponentID(compIdx+1), typeIdx, shift, lambdas[compIdx+1], currentDistortionTableBo, currentRdCostTableBo);
+#endif
         for(Int i=0; i< SAO_MAX_BO_CLASSES -SAO_BO_LEN +1; i++)
         {
           currentRDCost = 0.0;
@@ -2482,14 +2547,25 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
     }
     else
     {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
       estDist[0] = estSaoTypeDist(COMPONENT_Cb, typeIdx, shift, lambda, currentDistortionTableBo, currentRdCostTableBo);
       estDist[1] = estSaoTypeDist(COMPONENT_Cr, typeIdx, shift, lambda, currentDistortionTableBo, currentRdCostTableBo);
+#else
+      for(Int compIdx = 0; compIdx < numChromaComponents; compIdx++) //NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+      {
+        estDist[compIdx] = estSaoTypeDist(ComponentID(compIdx+1), typeIdx, shift, lambdas[compIdx+1], currentDistortionTableBo, currentRdCostTableBo);
+      }
+#endif
     }
 
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_TEMP_BEST]);
     m_pcRDGoOnSbacCoder->resetBits();
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO==0
+    UInt lastWrittenBits=0;
+    m_dCost[1][typeIdx] = 0;
+#endif
 
-    for(Int compIdx = 0; compIdx < 2; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+    for(Int compIdx = 0; compIdx < numChromaComponents; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
     {
       resetSaoUnit(&saoLcuParamRdo[compIdx]);
       saoLcuParamRdo[compIdx].length = m_iNumClass[typeIdx];
@@ -2503,20 +2579,40 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
       }
 
       m_pcEntropyCoder->encodeSaoOffset(&saoLcuParamRdo[compIdx], ComponentID(compIdx+1));
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO==0
+      UInt thisWrittenBits=m_pcEntropyCoder->getNumberOfWrittenBits();
+      m_dCost[1][typeIdx] += Double(estDist[compIdx]) + lambdas[compIdx+1] * (thisWrittenBits-lastWrittenBits);
+      lastWrittenBits=thisWrittenBits;
+#endif
     }
-    estRate = m_pcEntropyCoder->getNumberOfWrittenBits();
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
+    Double estRate = m_pcEntropyCoder->getNumberOfWrittenBits();
     m_dCost[1][typeIdx] = (Double)((Double)(estDist[0] + estDist[1])  + lambda * (Double) estRate);
+#endif
 
     if(m_dCost[1][typeIdx] < costPartBest)
     {
       costPartBest = m_dCost[1][typeIdx];
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
       copySaoUnit(saoLcuParam[0], &saoLcuParamRdo[0] );
       copySaoUnit(saoLcuParam[1], &saoLcuParamRdo[1] );
       bestDist = (estDist[0]+estDist[1]);
+#else
+      bestDistOverLambda = 0;
+      for(Int compIdx = 0; compIdx < numChromaComponents; compIdx++) // NOTE: RExt - These are *chroma* component indices - i.e. 0 = Cb and 1 = Cr
+      {
+        copySaoUnit(saoLcuParam[compIdx], &saoLcuParamRdo[compIdx] );
+        bestDistOverLambda += (estDist[compIdx]/lambdas[compIdx+1]);
+      }
+#endif
     }
   }
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
   distortion[0] += ((Double)bestDist/lambda);
+#else
+  distortion[0] += bestDistOverLambda;
+#endif
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_TEMP_BEST]);
   m_pcEntropyCoder->encodeSaoOffset(saoLcuParam[0], COMPONENT_Cb);
   m_pcEntropyCoder->encodeSaoOffset(saoLcuParam[1], COMPONENT_Cr);
@@ -2559,7 +2655,11 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
         copySaoUnit(saoMergeParam[compIdx][idxNeighbor], saoLcuParamNeighbor[compIdx] );
         saoMergeParam[compIdx][idxNeighbor]->mergeUpFlag   = idxNeighbor;
         saoMergeParam[compIdx][idxNeighbor]->mergeLeftFlag = !idxNeighbor;
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
         distortion[idxNeighbor+1] += ((Double)estDist[compIdx]/lambda);
+#else
+        distortion[idxNeighbor+1] += ((Double)estDist[compIdx]/lambdas[compIdx+1]);
+#endif
       }
     }
   }

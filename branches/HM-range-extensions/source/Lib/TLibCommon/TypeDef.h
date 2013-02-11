@@ -90,11 +90,37 @@
 // Tool Switches
 // ====================================================================================================================
 
+#define L0363_DU_BIT_RATE                                 1 ///< L0363: add bit_rate_du_value_minus1 to HRD parameters
+#define L0328_SPLICING                                    1 ///< L0328: splicing support in HRD
+#define L0044_DU_DPB_OUTPUT_DELAY_HRD                     1 ///< L0044: Include dpb_output_delay_du_length_minus1 in hrd_parameters(), dpb_output_du_delay in
+                                                            ///<        picture timing SEI and DU information SEI
+#define L0045_PERSISTENCE_FLAGS                           1      ///< L0045: Replace "repetition_period" syntax elements in SEI with "persistence_flag"
+#define L0045_NON_NESTED_SEI_RESTRICTIONS                 1 ///< L0045; Include restriction on the order of APS and non-nested BP, PT and DU info SEI messages
+#define L0044_CPB_DPB_DELAY_OFFSET                        1  ///< L0044: Include syntax elements cpb_delay_offset and dpb_delay_offset in the BP SEI message
+#define L0047_APS_FLAGS                                   1  ///< L0047: Include full_random_access_flag and no_param_set_update_flag in the active parameter set SEI message
+#define L0043_TIMING_INFO                                 1  ///< L0043: Timing information is signalled in VUI outside hrd_parameters()
+#define L0046_RENAME_PROG_SRC_IDC                         1  ///< L0046: Rename progressive_source_idc to source_scan_type
+#define L0045_CONDITION_SIGNALLING                        1  ///< L0045: Condition the signaling of some syntax elements in picture timing SEI message
+#define L0043_MSS_IDC                                     1
+#define L0116_ENTRY_POINT                                 1
+#define L0363_MORE_BITS                                   1
+#define L0363_MVP_POC                                     1
+#define L0363_BYTE_ALIGN                                  1
+#define L0363_SEI_ALLOW_SUFFIX                            1
+#define L0323_LIMIT_DEFAULT_LIST_SIZE                     1
+#define L0046_CONSTRAINT_FLAGS                            1
+#define L0255_MOVE_PPS_FLAGS                              1  ///< move some flags to earlier positions in the PPS
+#define L0444_FPA_TYPE                                    1  ///< allow only FPA types 3, 4 and 5
+#define L0372                                             1
+#define SIGNAL_BITRATE_PICRATE_IN_VPS                     0  ///< K0125: Signal bit_rate and pic_rate in VPS
+#define L0232_RD_PENALTY                                  1  ///< L0232: RD-penalty for 32x32 TU for intra in non-intra slices
+
 #define MAX_VPS_NUM_HRD_PARAMETERS                        1
 #define MAX_VPS_OP_SETS_PLUS1                          1024
 #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1          1
 
 #define RATE_CONTROL_LAMBDA_DOMAIN                        1  ///< JCTVC-K0103, rate control by R-lambda model
+#define L0033_RC_BUGFIX                                   1  ///< JCTVC-L0033, bug fix for R-lambda model based rate control
 
 #define MAXIMUM_INTRA_FILTERED_WIDTH                     16
 #define MAXIMUM_INTRA_FILTERED_HEIGHT                    16
@@ -119,12 +145,12 @@
 
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3                  1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
 
-#define SAO_SKIP_RIGHT                                    1  ///< H1101: disallow using unavailable pixel during RDO
+#define REMOVE_SINGLE_SEI_EXTENSION_FLAGS                 1 ///< remove display orientation SEI extension flag (there is a generic SEI extension mechanism now) 
 
 #define SAO_ENCODING_CHOICE                               1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
 #define SAO_ENCODING_RATE                                 0.75
-#define SAO_ENCODING_CHOICE_CHROMA                        1 ///< J0044: picture early termination Luma and Chroma are handled separatenly
+#define SAO_ENCODING_CHOICE_CHROMA                        1 ///< J0044: picture early termination Luma and Chroma are handled separately
 #if SAO_ENCODING_CHOICE_CHROMA
 #define SAO_ENCODING_RATE_CHROMA                          0.5
 #endif
@@ -235,13 +261,6 @@
 
 
 // ====================================================================================================================
-// VPS constants
-// ====================================================================================================================
-
-#define MAX_LAYER_NUM                                               10
-
-
-// ====================================================================================================================
 // RExt control settings
 // ====================================================================================================================
 
@@ -262,8 +281,15 @@
 // Backwards-compatibility
 //------------------------------------------------
 
-#define RExt__BACKWARDS_COMPATIBILITY_HM                                       0 ///< Maintain backwards compatibility with HM for certain non-standard test configuration settings
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
+
+// NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986                            1 ///< Maintain backwards compatibility with HM for ticket 986 (encodeQtCbfZero called with inconsistent depths)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987                            0 ///< Maintain backwards compatibility with HM for ticket 987 (SAO mixing quadtree indices and components)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990                            0 ///< Maintain backwards compatibility with HM for ticket 990 (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO                        1 ///< Maintain backwards compatibility with HM for ticket 990 (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant - SAO interaction subclause). Ticket 993 compatibility must disabled.
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992                            0 ///< Maintain backwards compatibility with HM for ticket 992 (MAX_CU_SIZE)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993                            0 ///< Maintain backwards compatibility with HM for ticket 993 (TEncSAO m_dLambdaLuma/Chroma member variables not required)
 
 // ====================================================================================================================
 // Basic type redefinition

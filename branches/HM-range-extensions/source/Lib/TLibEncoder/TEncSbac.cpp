@@ -849,7 +849,11 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
   TComDataCU* pcCU = rTu.getCU();
 
         UInt uiCbf      = pcCU->getCbf     ( rTu.GetAbsPartIdxTU(), compID, rTu.GetTransformDepthRel() );
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
         UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+#else
+        UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
+#endif
   const UInt contextSet = toChannelType(compID);
 
 
@@ -960,16 +964,24 @@ Void TEncSbac::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
 }
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
 Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType, const Bool useAdjustedDepth )
+#else
+Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
+#endif
 {
   // this function is only used to estimate the bits when cbf is 0
   // and will never be called when writing the bistream. do not need to write log
   UInt uiCbf = 0;
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType, useAdjustedDepth );
+#else
+  UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType );
+#endif
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
 }
 
-Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU )
 {
   // this function is only used to estimate the bits when cbf is 0
   // and will never be called when writing the bistream. do not need to write log
@@ -1405,9 +1417,9 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
  */
 Void TEncSbac::estBit( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType )
 {
-  estCBFBit( pcEstBitsSbac, 0, chType );
+  estCBFBit( pcEstBitsSbac );
 
-  estSignificantCoeffGroupMapBit( pcEstBitsSbac, 0, chType );
+  estSignificantCoeffGroupMapBit( pcEstBitsSbac, chType );
 
   // encode significance map
   estSignificantMapBit( pcEstBitsSbac, width, height, chType );
@@ -1416,7 +1428,7 @@ Void TEncSbac::estBit( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, 
   estLastSignificantPositionBit( pcEstBitsSbac, width, height, chType );
 
   // encode significant coefficients
-  estSignificantCoefficientsBit( pcEstBitsSbac, 0, chType );
+  estSignificantCoefficientsBit( pcEstBitsSbac, chType );
 }
 
 /*!
@@ -1425,7 +1437,7 @@ Void TEncSbac::estBit( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, 
  *    estimate bit cost for each CBP bit
  ****************************************************************************
  */
-Void TEncSbac::estCBFBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType )
+Void TEncSbac::estCBFBit( estBitsSbacStruct* pcEstBitsSbac )
 {
   ContextModel *pCtx = m_cCUQtCbfSCModel.get( 0 );
 
@@ -1451,7 +1463,7 @@ Void TEncSbac::estCBFBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, Chann
  *    estimate SAMBAC bit cost for significant coefficient group map
  ****************************************************************************
  */
-Void TEncSbac::estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType )
+Void TEncSbac::estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, ChannelType chType )
 {
   Int firstCtx = 0, numCtx = NUM_SIG_CG_FLAG_CTX;
 
@@ -1606,7 +1618,7 @@ Void TEncSbac::estLastSignificantPositionBit( estBitsSbacStruct* pcEstBitsSbac, 
  *    estimate bit cost of significant coefficient
  ****************************************************************************
  */
-Void TEncSbac::estSignificantCoefficientsBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType )
+Void TEncSbac::estSignificantCoefficientsBit( estBitsSbacStruct* pcEstBitsSbac, ChannelType chType )
 {
   ContextModel *ctxOne = m_cCUOneSCModel.get(0, 0);
   ContextModel *ctxAbs = m_cCUAbsSCModel.get(0, 0);

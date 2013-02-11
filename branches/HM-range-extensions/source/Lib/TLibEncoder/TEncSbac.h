@@ -141,8 +141,12 @@ public:
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf               ( TComTU & rTU, const ComponentID compID );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
-  Void codeQtRootCbfZero       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#else
+  Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType );
+#endif
+  Void codeQtRootCbfZero       ( TComDataCU* pcCU );
   Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
 
   Void codeIntraDirChroma      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -161,11 +165,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType);
-  Void estCBFBit                     ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
-  Void estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
+  Void estCBFBit                     ( estBitsSbacStruct* pcEstBitsSbac );
+  Void estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, ChannelType chType );
   Void estSignificantMapBit          ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   Void estLastSignificantPositionBit ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
-  Void estSignificantCoefficientsBit ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
+  Void estSignificantCoefficientsBit ( estBitsSbacStruct* pcEstBitsSbac, ChannelType chType );
 
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true  );
   Void updateContextTables           ( SliceType eSliceType, Int iQp  ) { this->updateContextTables( eSliceType, iQp, true); };

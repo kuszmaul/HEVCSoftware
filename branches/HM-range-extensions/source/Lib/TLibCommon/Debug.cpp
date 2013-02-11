@@ -231,6 +231,24 @@ UInt getDecimalWidth(const Double value)
                                                                //for the minus sign
 }
 
+UInt getZScanIndex(const UInt x, const UInt y)
+{
+  UInt remainingX = x;
+  UInt remainingY = y;
+  UInt offset     = 0;
+  UInt result     = 0;
+
+  while ((remainingX != 0) || (remainingY != 0))
+  {
+    result |= ((remainingX & 0x1) << offset) | ((remainingY & 0x1) << (offset + 1));
+
+    remainingX >>= 1;
+    remainingY >>= 1;
+    offset      += 2;
+  }
+
+  return result;
+}
 
 
 // --------------------------------------------------------------------------------------------------------------------- //

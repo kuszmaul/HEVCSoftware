@@ -448,7 +448,7 @@ UInt TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iS
 }
 
 #if WEIGHTED_CHROMA_DISTORTION
-UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted, const ComponentID compID, DFunc eDFunc )
+UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc )
 #else
 UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
 #endif
@@ -466,7 +466,7 @@ UInt TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* pi
   cDtParam.bitDepth     = bitDepth;
 
 #if WEIGHTED_CHROMA_DISTORTION
-  if (bWeighted && isChroma(compID))
+  if (isChroma(compID))
   {
     return ((Int) (m_distortionWeight[compID] * cDtParam.DistFunc( &cDtParam )));
   }
