@@ -85,13 +85,19 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setProfile(m_profile);
   m_cTEncTop.setLevel(m_levelTier, m_level);
+#if L0046_CONSTRAINT_FLAGS
+  m_cTEncTop.setProgressiveSourceFlag(m_progressiveSourceFlag);
+  m_cTEncTop.setInterlacedSourceFlag(m_interlacedSourceFlag);
+  m_cTEncTop.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
+  m_cTEncTop.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
+#endif
 
   m_cTEncTop.setFrameRate                    ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                  ( m_iSourceWidth );
   m_cTEncTop.setSourceHeight                 ( m_iSourceHeight );
   m_cTEncTop.setConformanceWindow            ( m_confLeft, m_confRight, m_confTop, m_confBottom );
-  m_cTEncTop.setFrameToBeEncoded             ( m_iFrameToBeEncoded );
+  m_cTEncTop.setFramesToBeEncoded            ( m_framesToBeEncoded );
   
   //====== Coding Structure ========
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
@@ -166,6 +172,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setdQPs                         ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
+#if L0232_RD_PENALTY
+  m_cTEncTop.setRDpenalty                    ( m_rdPenalty );
+#endif
   m_cTEncTop.setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
   m_cTEncTop.setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
   m_cTEncTop.setQuadtreeTUMaxDepthInter      ( m_uiQuadtreeTUMaxDepthInter );
@@ -225,7 +234,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
-  m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodePictureHashSEIEnabled);
+  m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
@@ -310,7 +319,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxBitsPerMinCuDenom( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical( m_log2MaxMvLengthVertical );
-
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *bitRatePicRateInfo = m_cTEncTop.getVPS()->getBitratePicrateInfo();
   // The number of bit rate/pic rate have to equal to number of sub-layers.
   if(m_bitRatePicRateMaxTLayers)
@@ -335,6 +344,7 @@ Void TAppEncTop::xInitLibCfg()
       bitRatePicRateInfo->setConstantPicRateIdc(i, m_constantPicRateIdc[i]);
     }
   }
+#endif
 }
 
 Void TAppEncTop::xCreateLib()
@@ -418,7 +428,7 @@ Void TAppEncTop::encode()
     // increase number of received frames
     m_iFrameRcvd++;
     
-    bEos = (m_iFrameRcvd == m_iFrameToBeEncoded);
+    bEos = (m_iFrameRcvd == m_framesToBeEncoded);
 
     Bool flush = 0;
     // if end of file (which is only detected on a read failure) flush the encoder of any queued pictures
@@ -427,7 +437,7 @@ Void TAppEncTop::encode()
       flush = true;
       bEos = true;
       m_iFrameRcvd--;
-      m_cTEncTop.setFrameToBeEncoded(m_iFrameRcvd);
+      m_cTEncTop.setFramesToBeEncoded(m_iFrameRcvd);
     }
 
     // call encoding function for one frame
@@ -559,7 +569,9 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
     case NAL_UNIT_CODED_SLICE_IDR:
     case NAL_UNIT_CODED_SLICE_IDR_N_LP:
     case NAL_UNIT_CODED_SLICE_CRA:
+    case NAL_UNIT_CODED_SLICE_RADL_N:
     case NAL_UNIT_CODED_SLICE_DLP:
+    case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_TFD:
     case NAL_UNIT_VPS:
     case NAL_UNIT_SPS:

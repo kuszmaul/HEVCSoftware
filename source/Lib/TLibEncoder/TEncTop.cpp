@@ -59,7 +59,7 @@ TEncTop::TEncTop()
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
   {
-    g_hTrace = fopen( "TraceEnc.txt", "wb" );
+    g_hTrace = fopen( "TraceEnc_RExt.txt", "wb" );
   }
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
@@ -120,7 +120,7 @@ Void TEncTop::create ()
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
-    m_cRateCtrl.init( m_iFrameToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
+    m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
   }
 #else
@@ -287,6 +287,9 @@ Void TEncTop::init()
 
   // set the VPS profile information
   *m_cVPS.getPTL() = *m_cSPS.getPTL();
+#if L0043_TIMING_INFO
+  m_cVPS.getTimingInfo()->setTimingInfoPresentFlag       ( false );
+#endif
 
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
@@ -427,13 +430,13 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     if ( getUseAdaptiveQP() )
     {
       TEncPic* pcEPic = new TEncPic;
-      pcEPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1, m_conformanceWindow, m_numReorderPics);
+      pcEPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics);
       rpcPic = pcEPic;
     }
     else
     {
       rpcPic = new TComPic;
-      rpcPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_conformanceWindow, m_numReorderPics, false );
+      rpcPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics, false );
     }
 
     if (getUseSAO())
@@ -460,6 +463,13 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setTierFlag(m_levelTier);
   profileTierLevel.setProfileIdc(m_profile);
   profileTierLevel.setProfileCompatibilityFlag(m_profile, 1);
+#if L0046_CONSTRAINT_FLAGS
+  profileTierLevel.setProgressiveSourceFlag(m_progressiveSourceFlag);
+  profileTierLevel.setInterlacedSourceFlag(m_interlacedSourceFlag);
+  profileTierLevel.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
+  profileTierLevel.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
+#endif
+
   if ((m_profile == Profile::MAIN10) && (g_bitDepth[CHANNEL_TYPE_LUMA] == 8) && (g_bitDepth[CHANNEL_TYPE_CHROMA]))
   {
     /* The above constraint is equal to Profile::MAIN */
@@ -528,7 +538,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSAO( m_bUseSAO );
 
   m_cSPS.setMaxTLayers( m_maxTempLayer );
-  m_cSPS.setTemporalIdNestingFlag( false );
+  m_cSPS.setTemporalIdNestingFlag( ( m_maxTempLayer == 1 ) ? true : false );
   for ( i = 0; i < m_cSPS.getMaxTLayers(); i++ )
   {
     m_cSPS.setMaxDecPicBuffering(m_maxDecPicBuffering[i], i);
@@ -566,8 +576,13 @@ Void TEncTop::xInitSPS()
     pcVUI->setFrameFieldInfoPresentFlag(getFrameFieldInfoPresentFlag());
     pcVUI->setFieldSeqFlag(false);
     pcVUI->setHrdParametersPresentFlag(false);
+#if L0043_TIMING_INFO
+    pcVUI->getTimingInfo()->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
+    pcVUI->getTimingInfo()->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+#else
     pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
     pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
+#endif
     pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
     pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
     pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
@@ -670,6 +685,9 @@ Void TEncTop::xInitPPS()
       bestPos=i;
     }
   }
+#if L0323_LIMIT_DEFAULT_LIST_SIZE
+  assert(bestPos <= 15);
+#endif
   m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());

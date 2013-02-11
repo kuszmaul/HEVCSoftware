@@ -139,6 +139,12 @@ Void printSBACCoeffData(  const UInt          lastX,
 Void printCbfArray( class TComDataCU* pcCU  );
 
 UInt getDecimalWidth(const Double value);
+UInt getZScanIndex(const UInt x, const UInt y);
+
+//template specialisation for char type to get it to render as a number
+template <typename ValueType> inline Void writeValueToStream               (const ValueType     &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<                value;  }
+template <>                   inline Void writeValueToStream<         char>(const          char &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<           int (value); }
+template <>                   inline Void writeValueToStream<unsigned char>(const unsigned char &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) << (unsigned int)(value); }
 
 template <typename ValueType>
 Void printBlock(const ValueType    *const source,
@@ -146,9 +152,10 @@ Void printBlock(const ValueType    *const source,
                 const UInt                height,
                 const UInt                stride,
                 const UInt                outputValueWidth = 0,         //if set to 0, the maximum output width will be calculated and used
-                const Int                 shiftLeftBy      = 0,         //set a negative value to right-shift instead
-                const Bool                printAverage     = false,     //Also print the average of the values in the block
                 const Bool                onlyPrintEdges   = false,     //print only the top row and left column for printing prediction reference samples
+                const Bool                printInZScan     = false,     //output values in Z-scan format (useful for values addressed by AbsPartIdxes)
+                const Int                 shiftLeftBy      = 0,         //set a negative value to right-shift instead
+                const Bool                printAverage     = false,     //also print the average of the values in the block
                       std::ostream      & stream           = std::cout)
 {
   //find the maximum output width
@@ -162,7 +169,13 @@ Void printBlock(const ValueType    *const source,
     for (UInt y = 0; y < height; y++)
       for (UInt x = 0; x < width; x++)
       {
-        const ValueType value = (onlyPrintEdges && ((x == 0) || (y == 0))) ? 0 : leftShift(source[(y * stride) + x], shiftLeftBy);
+        ValueType value = 0;
+
+        if (!onlyPrintEdges || (x == 0) || (y == 0))
+        {
+          value = leftShift(source[printInZScan ? getZScanIndex(x, y) : ((y * stride) + x)], shiftLeftBy);
+        }
+
         if      (value < minimumValue) minimumValue = value;
         else if (value > maximumValue) maximumValue = value;
       }
@@ -171,6 +184,7 @@ Void printBlock(const ValueType    *const source,
   }
 
   //------------------
+  //print out the block
 
   ValueType valueSum = 0;
 
@@ -182,11 +196,11 @@ Void printBlock(const ValueType    *const source,
 
       if (!onlyPrintEdges || (x == 0) || (y == 0))
       {
-        value     = leftShift(source[(y * stride) + x], shiftLeftBy);
+        value     = leftShift(source[printInZScan ? getZScanIndex(x, y) : ((y * stride) + x)], shiftLeftBy);
         valueSum += value;
       }
 
-      stream << std::setw(outputWidth) << value;
+      writeValueToStream(value, stream, outputWidth);
     }
     stream << "\n";
   }

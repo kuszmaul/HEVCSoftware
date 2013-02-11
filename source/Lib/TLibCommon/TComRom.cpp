@@ -436,7 +436,7 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   3,  //  16x16
   3,  //  32x32
   3   //  64x64
-#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992 != 0)
  ,3   // 128x128
 #endif
 };
@@ -449,7 +449,7 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   4,  //  16x16   33
   4,  //  32x32   33
   5   //  64x64   33
-#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992 != 0)
  ,4   // 128x128  33
 #endif
 };

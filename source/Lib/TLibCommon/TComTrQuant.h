@@ -159,8 +159,13 @@ public:
   // Misc functions
 
 #if RDOQ_CHROMA_LAMBDA
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990
   Void setLambda(Double dLambdaLuma, Double dLambdaChroma) { m_dLambdaLuma = dLambdaLuma; m_dLambdaChroma = dLambdaChroma; }
   Void selectLambda(ChannelType chType) { m_dLambda = isLuma(chType) ? m_dLambdaLuma : m_dLambdaChroma; }
+#else
+  Void setLambda(const Double dLambdas[MAX_NUM_COMPONENT]) { for(UInt i=0; i<MAX_NUM_COMPONENT; i++) m_dLambdas[i]=dLambdas[i]; }
+  Void selectLambda(const ComponentID compIdx) { m_dLambda = m_dLambdas[compIdx]; }
+#endif
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif
@@ -218,8 +223,12 @@ protected:
 
 //  QpParam  m_cQP; - removed - placed on the stack.
 #if RDOQ_CHROMA_LAMBDA
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990
   Double   m_dLambdaLuma;
   Double   m_dLambdaChroma;
+#else
+  Double   m_dLambdas[MAX_NUM_COMPONENT];
+#endif
 #endif
   Double   m_dLambda;
   UInt     m_uiRDOQOffset;

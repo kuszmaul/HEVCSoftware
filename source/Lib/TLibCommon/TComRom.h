@@ -50,7 +50,7 @@
 // Macros
 // ====================================================================================================================
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992
 #define     MAX_CU_DEPTH             7                           // log2(LCUSize)
 #else
 #define     MAX_CU_DEPTH             6                           // log2(LCUSize)

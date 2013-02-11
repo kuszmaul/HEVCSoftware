@@ -61,7 +61,7 @@ public:
   TComBitCounter()            {}
   virtual ~TComBitCounter()   {}
   
-  Void        write                 ( UInt uiBits, UInt uiNumberOfBits )  { m_uiBitCounter += uiNumberOfBits; }
+  Void        write                 ( UInt /*uiBits*/, UInt uiNumberOfBits )  { m_uiBitCounter += uiNumberOfBits; }
   Void        resetBits             ()                                    { m_uiBitCounter = 0;               }
   UInt getNumberOfWrittenBits() const { return m_uiBitCounter; }
 };

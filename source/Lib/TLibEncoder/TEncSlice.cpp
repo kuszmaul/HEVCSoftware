@@ -169,29 +169,38 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 #if WEIGHTED_CHROMA_DISTORTION
 // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
-  Double weight = 1.0;
-
+  Double weights[MAX_NUM_COMPONENT] = { 1.0 };
+  Double dLambdas[MAX_NUM_COMPONENT] = { dLambda };
   for(UInt compIdx=1; compIdx<MAX_NUM_COMPONENT; compIdx++)
   {
     const ComponentID compID=ComponentID(compIdx);
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Double tmpWeight = pow( 2.0, (iQP-getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
-    weight=tmpWeight;
+    weights[compIdx]=tmpWeight;
+    dLambdas[compIdx]=dLambda/tmpWeight;
   }
 
 #endif
 
 #if RDOQ_CHROMA_LAMBDA
 // for RDOQ
-  m_pcTrQuant->setLambda( dLambda, dLambda / weight ); // TODO: RExt - this is a bit peculiar - weight is that of the Cr component, not chroma channel.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990
+  m_pcTrQuant->setLambda( dLambda, dLambdas[COMPONENT_Cr] ); // TODO: RExt - HM Ticket 990 - lambda is for Cr, not chroma.
+#else
+  m_pcTrQuant->setLambda( dLambdas );
+#endif
 #else
   m_pcTrQuant->setLambda( dLambda );
 #endif
 
 #if SAO_CHROMA_LAMBDA
 // For SAO
-  slice   ->setLambda( dLambda, dLambda / weight );
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
+  slice   ->setLambda( dLambda, dLambdas[COMPONENT_Cr] );
+#else
+  slice   ->setLambda( dLambdas );
+#endif
 #else
   slice   ->setLambda( dLambda );
 #endif
@@ -456,6 +465,9 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 
   // store lambda
   slice->setSliceQp( sliceQP );
+#if L0033_RC_BUGFIX
+  slice->setSliceQpBase ( sliceQP );
+#endif
   setUpLambda(slice, lambda, sliceQP);
 }
 #else
@@ -911,6 +923,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
 
         m_pcRateCtrl->setRCQP( estQP );
+#if L0033_RC_BUGFIX
+        pcCU->getSlice()->setSliceQpBase( estQP );
+#endif
       }
 #endif
 

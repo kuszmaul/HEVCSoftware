@@ -1735,9 +1735,17 @@ UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
   return uiCtx;
 }
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
 UInt TComDataCU::getCtxQtCbf( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
+#else
+UInt TComDataCU::getCtxQtCbf( TComTU &rTu, const ChannelType chType )
+#endif
 {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   const UInt transformDepth = useAdjustedDepth ? rTu.GetTransformDepthRelAdj(chType) : rTu.GetTransformDepthRel();
+#else
+  const UInt transformDepth = rTu.GetTransformDepthRel();
+#endif
 
   if (isChroma(chType))
   {
@@ -2419,6 +2427,8 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   for( UInt ui = 0; ui < getSlice()->getMaxNumMergeCand(); ++ui )
   {
     abCandIsInter[ui] = false;
+    pcMvFieldNeighbours[ ( ui << 1 )     ].setRefIdx(NOT_VALID);
+    pcMvFieldNeighbours[ ( ui << 1 ) + 1 ].setRefIdx(NOT_VALID);
   }
   numValidMergeCand = getSlice()->getMaxNumMergeCand();
   // compute the location of the current PU
@@ -3131,17 +3141,21 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
     }
   }
 
-  if ( pcTmpCU != NULL && m_pcSlice->isEqualRef(eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx), iRefIdx) )
-  {
-    TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
-
-    pInfo->m_acMvCand[ pInfo->iN++] = cMvPred;
-    return true;
-  }
-
   if ( pcTmpCU == NULL )
   {
     return false;
+  }
+  
+#if L0363_MVP_POC
+  if ( pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) >= 0 && m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getPOC() == pcTmpCU->getSlice()->getRefPOC( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ))
+#else
+  if ( m_pcSlice->isEqualRef(eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx), iRefIdx) )
+#endif
+  {
+    TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+    
+    pInfo->m_acMvCand[ pInfo->iN++] = cMvPred;
+    return true;
   }
 
   RefPicList eRefPicList2nd = REF_PIC_LIST_0;
@@ -3444,102 +3458,6 @@ Void TComDataCU::xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter )
                                         + ( iPartHeight/m_pcPic->getMinCUHeight()  )/2*m_pcPic->getNumPartInWidth()
                                         + ( iPartWidth/m_pcPic->getMinCUWidth()  )/2];
 }
-
-/**
- * \param uiPartIdx
- * \param eRefPicList
- * \param iRefIdx
- * \param pcMv
- * \returns Bool
- */
-/*
-Bool TComDataCU::xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv *pcMv )
-{
-  Int iCurrPOC = m_pcSlice->getPOC();
-
-  // use coldir.
-  TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());
-  TComDataCU *pColCU = pColPic->getCU( m_uiCUAddr );
-
-  Int iColPOC = pColCU->getSlice()->getPOC();
-  UInt uiPartIdxCenter;
-  xDeriveCenterIdx( uiPartIdx, uiPartIdxCenter );
-
-  if (pColCU->isIntra(uiPartIdxCenter))
-  {
-    return false;
-  }
-
-  // Prefer a vector crossing us.  Prefer shortest.
-  RefPicList eColRefPicList = REF_PIC_LIST_0;
-  Bool bFirstCrosses = false;
-  Int  iFirstColDist = -1;
-  for (Int l = 0; l < 2; l++)
-  {
-    Bool bSaveIt = false;
-    Int iColRefIdx = pColCU->getCUMvField(RefPicList(l))->getRefIdx(uiPartIdxCenter);
-    if (iColRefIdx < 0)
-    {
-      continue;
-    }
-    Int iColRefPOC = pColCU->getSlice()->getRefPOC(RefPicList(l), iColRefIdx);
-    Int iColDist = abs(iColRefPOC - iColPOC);
-    Bool bCrosses = iColPOC < iCurrPOC ? iColRefPOC > iCurrPOC : iColRefPOC < iCurrPOC;
-    if (iFirstColDist < 0)
-    {
-      bSaveIt = true;
-    }
-    else if (bCrosses && !bFirstCrosses)
-    {
-      bSaveIt = true;
-    }
-    else if (bCrosses == bFirstCrosses && l == eRefPicList)
-    {
-      bSaveIt = true;
-    }
-
-    if (bSaveIt)
-    {
-      bFirstCrosses = bCrosses;
-      iFirstColDist = iColDist;
-      eColRefPicList = RefPicList(l);
-    }
-  }
-
-  // Scale the vector.
-  Int iColRefPOC = pColCU->getSlice()->getRefPOC(eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiPartIdxCenter));
-  TComMv cColMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiPartIdxCenter);
-
-  Int iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getPOC();
-
-  Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getIsLongTerm();
-  Bool bIsColRefLongTerm = pColCU->getSlice()->getIsUsedAsLongTerm(eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiPartIdxCenter));
-
-  if ( bIsCurrRefLongTerm != bIsColRefLongTerm )
-  {
-    return false;
-  }
-
-  if ( bIsCurrRefLongTerm || bIsColRefLongTerm )
-  {
-    pcMv[0] = cColMv;
-  }
-  else
-  {
-    Int iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
-    if ( iScale == 4096 )
-    {
-      pcMv[0] = cColMv;
-    }
-    else
-    {
-      pcMv[0] = cColMv.scaleMv( iScale );
-    }
-  }
-
-  return true;
-}
-*/
 
 Void TComDataCU::compressMV()
 {

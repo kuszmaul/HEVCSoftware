@@ -866,7 +866,11 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
   UInt uiSymbol;
   TComDataCU* pcCU = rTu.getCU();
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   const UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+#else
+  const UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
+#endif
   const UInt contextSet = toChannelType(compID);
 
   m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );

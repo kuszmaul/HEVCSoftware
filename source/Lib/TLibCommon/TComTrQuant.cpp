@@ -1053,9 +1053,8 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     // Represents scaling through forward transform
     Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize);
 
-    // NOTE: RExt - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
     const Int iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
-    // NOTE: RExt - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
+    // NOTE: RExt - QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
 #if ADAPTIVE_QP_SELECTION
     Int iQBitsC = MAX_INT;
@@ -1946,7 +1945,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   }
   else
   {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
     ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, channelType, false );
+#else
+    ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, channelType );
+#endif
     ui16CtxCbf  += getCBFContextOffset(compID);
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 0 ] );
     d64BaseCost += xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 1 ] );

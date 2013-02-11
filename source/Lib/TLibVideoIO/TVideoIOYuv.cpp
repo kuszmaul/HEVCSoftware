@@ -643,11 +643,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     const ChannelType ch=toChannelType(compID);
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
-#if RExt__BACKWARDS_COMPATIBILITY_HM==1
-    const Int planeOffset = 0;
-#else
     const Int planeOffset =  (confLeft>>csx) + (confTop>>csy) * pPicYuv->getStride(compID);
-#endif
     if (! writePlane(m_cHandle, dstPicYuv->getAddr(compID) + planeOffset, is16bit, iStride444, width444, height444, compID, dstPicYuv->getChromaFormat(), format, m_fileBitdepth[ch]))
     {
       retval=false;

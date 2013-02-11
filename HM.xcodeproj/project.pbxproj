@@ -432,7 +432,6 @@
 		08FB7794FE84155DC02AAC07 /* Trinity */ = {
 			isa = PBXGroup;
 			children = (
-                                71161E9E16A7253F0021E8A8 /* SEI.cpp */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -526,6 +525,7 @@
 				676795BD11AD61FC00421804 /* TComSlice.cpp */,
 				676795BE11AD61FC00421804 /* TComSlice.h */,
 				65EA1B941357451300988950 /* SEI.h */,
+				71161E9E16A7253F0021E8A8 /* SEI.cpp */,
 				65EA1B90135744FE00988950 /* SEIwrite.h */,
 				65EA1B91135744FE00988950 /* SEIwrite.cpp */,
 				676795BF11AD61FC00421804 /* TComTrQuant.cpp */,

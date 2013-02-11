@@ -686,7 +686,7 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
 {
   assert(width <= height);
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992
   Int leftColumn[MAX_CU_SIZE], topRow[MAX_CU_SIZE], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];
 #else
   Int leftColumn[MAX_CU_SIZE+1], topRow[MAX_CU_SIZE+1], bottomRow[MAX_CU_SIZE], rightColumn[MAX_CU_SIZE];

@@ -210,8 +210,6 @@ protected:
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
-  // NOTE: RExt - this function is redundant
-  //Bool xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv *pcMv );
 
 public:
   TComDataCU();
@@ -489,7 +487,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
+#else
+  UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
+#endif
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
