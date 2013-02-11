@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,7 +145,7 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 
 static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples)
 {
-  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE RExt - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
+  return (rectSamples.width <= MAX_TS_WIDTH); // NOTE: RExt - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
 }
 
 

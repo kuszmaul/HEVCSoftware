@@ -37,6 +37,7 @@ OBJS          	= \
 			$(OBJ_DIR)/TComYuv.o \
 			$(OBJ_DIR)/ContextModel.o \
 			$(OBJ_DIR)/ContextModel3DBuffer.o \
+			$(OBJ_DIR)/SEI.o \
 			$(OBJ_DIR)/TComCABACTables.o \
 			$(OBJ_DIR)/TComSampleAdaptiveOffset.o \
 			$(OBJ_DIR)/TComBitStream.o \

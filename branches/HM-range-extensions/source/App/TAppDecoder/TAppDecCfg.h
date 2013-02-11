@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,7 @@ protected:
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
 
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
+  Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
   
 public:
   TAppDecCfg()
@@ -73,6 +74,7 @@ public:
   , m_iSkipFrame(0)
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
+  , m_respectDefDispWindow(0)
   {
     for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
       m_outputBitDepth[channelTypeIndex] = 0;

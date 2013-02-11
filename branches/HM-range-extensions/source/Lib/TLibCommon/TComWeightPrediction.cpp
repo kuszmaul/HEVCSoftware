@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -317,7 +317,7 @@ Void TComWeightPrediction::xWeightedPredictionBi( TComDataCU* pcCU, const TComYu
  * \returns Void
  */
 Void TComWeightPrediction::xWeightedPredictionUni( TComDataCU* pcCU, const TComYuv* pcYuvSrc, const UInt uiPartAddr, const Int iWidth, const Int iHeight,
-    const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iPartIdx, const Int iRefIdx_)
+                                                   const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iRefIdx_)
 { 
   wpScalingParam  *pwp, *pwpTmp;
 

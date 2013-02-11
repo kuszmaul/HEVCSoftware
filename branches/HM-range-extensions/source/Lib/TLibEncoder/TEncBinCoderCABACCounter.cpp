@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,10 +74,7 @@ UInt TEncBinCABACCounter::getNumWrittenBits()
 Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
 #ifdef DEBUG_ENCODER_SEARCH_BINS
-  static const UInt targetLine = 52407;
-  static const UInt window     = 1000;
-
-  if ((g_debugCounter + window) >= targetLine) std::cout << g_debugCounter << ": coding bin value " << binValue << ", fracBits = [" << m_fracBits;
+  const UInt64 startingFracBits = m_fracBits;
 #endif
   
   m_uiBinsCoded += m_binCountIncrement;
@@ -85,14 +82,15 @@ Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
   rcCtxModel.update( binValue );
 
 #ifdef DEBUG_ENCODER_SEARCH_BINS
-  if ((g_debugCounter + window) >= targetLine) std::cout << "->" << m_fracBits << "]\n";
+  if ((g_debugCounter + debugEncoderSearchBinWindow) >= debugEncoderSearchBinTargetLine)
+    std::cout << g_debugCounter << ": coding bin value " << binValue << ", fracBits = [" << startingFracBits << "->" << m_fracBits << "]\n";
 
-  if (g_debugCounter == targetLine)
+  if (g_debugCounter >= debugEncoderSearchBinTargetLine)
   {
     char breakPointThis;
     breakPointThis = 7;
   }
-  if (g_debugCounter >= (targetLine + window)) exit(0);
+  if (g_debugCounter >= (debugEncoderSearchBinTargetLine + debugEncoderSearchBinWindow)) exit(0);
   g_debugCounter++;
 #endif
 }

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,21 +109,19 @@ private:
   Bool                    m_bRefreshPending;
   Int                     m_pocCRA;
   std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
-  std::vector<Int>        m_storedStartCUAddrForEncodingDependentSlice;
+  std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;
   UInt                    m_totalCoded;
   UInt                    m_cpbRemovalDelay;
-#if SEI_TEMPORAL_LEVEL0_INDEX
   UInt                    m_tl0Idx;
   UInt                    m_rapIdx;
-#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
   
-  Void  create      ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight );
+  Void  create      ();
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );

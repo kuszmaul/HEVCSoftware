@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,6 +71,10 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
   
   vps.setMaxTLayers                       ( m_maxTempLayer );
+  if (m_maxTempLayer == 1)
+  {
+    vps.setTemporalNestingFlag(true);
+  }
   vps.setMaxLayers                        ( 1 );
   for(Int i = 0; i < MAX_TLAYER; i++)
   {
@@ -86,7 +90,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                  ( m_iSourceWidth );
   m_cTEncTop.setSourceHeight                 ( m_iSourceHeight );
-  m_cTEncTop.setPicCroppingWindow            ( m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+  m_cTEncTop.setConformanceWindow            ( m_confLeft, m_confRight, m_confTop, m_confBottom );
   m_cTEncTop.setFrameToBeEncoded             ( m_iFrameToBeEncoded );
   
   //====== Coding Structure ========
@@ -161,9 +165,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
   m_cTEncTop.setdQPs                         ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
-#if RDOQ_TRANSFORMSKIP
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
-#endif
   m_cTEncTop.setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
   m_cTEncTop.setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
   m_cTEncTop.setQuadtreeTUMaxDepthInter      ( m_uiQuadtreeTUMaxDepthInter );
@@ -184,36 +186,33 @@ Void TAppEncTop::xInitLibCfg()
   
 
   //====== Weighted Prediction ========
-  m_cTEncTop.setUseWP                   ( m_bUseWeightPred      );
+  m_cTEncTop.setUseWP                   ( m_useWeightedPred      );
   m_cTEncTop.setWPBiPred                ( m_useWeightedBiPred   );
   //====== Parallel Merge Estimation ========
   m_cTEncTop.setLog2ParallelMergeLevelMinus2 ( m_log2ParallelMergeLevel - 2 );
 
   //====== Slice ========
-  m_cTEncTop.setSliceMode               ( m_iSliceMode                );
-  m_cTEncTop.setSliceArgument           ( m_iSliceArgument            );
+  m_cTEncTop.setSliceMode               ( m_sliceMode                );
+  m_cTEncTop.setSliceArgument           ( m_sliceArgument            );
 
   //====== Dependent Slice ========
-  m_cTEncTop.setDependentSliceMode        ( m_iDependentSliceMode         );
-  m_cTEncTop.setDependentSliceArgument    ( m_iDependentSliceArgument     );
-#if DEPENDENT_SLICES && !REMOVE_ENTROPY_SLICES
-  m_cTEncTop.setEntropySliceEnabledFlag   ( m_entropySliceEnabledFlag );
-#endif
+  m_cTEncTop.setSliceSegmentMode        ( m_sliceSegmentMode         );
+  m_cTEncTop.setSliceSegmentArgument    ( m_sliceSegmentArgument     );
   Int iNumPartInCU = 1<<(m_uiMaxCUDepth<<1);
-  if(m_iDependentSliceMode==SHARP_FIXED_NUMBER_OF_LCU_IN_DEPENDENT_SLICE)
+  if(m_sliceSegmentMode==FIXED_NUMBER_OF_LCU)
   {
-    m_cTEncTop.setDependentSliceArgument ( m_iDependentSliceArgument * iNumPartInCU );
+    m_cTEncTop.setSliceSegmentArgument ( m_sliceSegmentArgument * iNumPartInCU );
   }
-  if(m_iSliceMode==AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE)
+  if(m_sliceMode==FIXED_NUMBER_OF_LCU)
   {
-    m_cTEncTop.setSliceArgument ( m_iSliceArgument * iNumPartInCU );
+    m_cTEncTop.setSliceArgument ( m_sliceArgument * iNumPartInCU );
   }
-  if(m_iSliceMode==AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE)
+  if(m_sliceMode==FIXED_NUMBER_OF_TILES)
   {
-    m_cTEncTop.setSliceArgument ( m_iSliceArgument );
+    m_cTEncTop.setSliceArgument ( m_sliceArgument );
   }
   
-  if(m_iSliceMode == 0 )
+  if(m_sliceMode == 0 )
   {
     m_bLFCrossSliceBoundaryFlag = true;
   }
@@ -230,24 +229,22 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
-#if SEI_DISPLAY_ORIENTATION
+  m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
+  m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
+  m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );
+  m_cTEncTop.setFramePackingArrangementSEIQuincunx( m_framePackingSEIQuincunx );
+  m_cTEncTop.setFramePackingArrangementSEIInterpretation( m_framePackingSEIInterpretation );
   m_cTEncTop.setDisplayOrientationSEIAngle( m_displayOrientationSEIAngle );
-#endif
-#if SEI_TEMPORAL_LEVEL0_INDEX
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
-#endif
+  m_cTEncTop.setGradualDecodingRefreshInfoEnabled( m_gradualDecodingRefreshInfoEnabled );
+  m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
   if(m_iUniformSpacingIdr==0)
   {
-#if MIN_SPATIAL_SEGMENTATION
     m_cTEncTop.setColumnWidth              ( m_pColumnWidth );
     m_cTEncTop.setRowHeight                ( m_pRowHeight );
-#else
-    m_cTEncTop.setColumnWidth              ( m_pchColumnWidth );
-    m_cTEncTop.setRowHeight                ( m_pchRowHeight );
-#endif
   }
   m_cTEncTop.xCheckGSParameters();
   Int uiTilesCount          = (m_iNumRowsMinus1+1) * (m_iNumColumnsMinus1+1);
@@ -282,9 +279,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
 #endif
   m_cTEncTop.setUseRecalculateQPAccordingToLambda( m_recalculateQPAccordingToLambda );
-#if STRONG_INTRA_SMOOTHING
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
-#endif
   m_cTEncTop.setActiveParameterSetsSEIEnabled ( m_activeParameterSetsSEIEnabled ); 
   m_cTEncTop.setVuiParametersPresentFlag( m_vuiParametersPresentFlag );
   m_cTEncTop.setAspectRatioIdc( m_aspectRatioIdc );
@@ -303,17 +298,19 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setChromaSampleLocTypeTopField( m_chromaSampleLocTypeTopField );
   m_cTEncTop.setChromaSampleLocTypeBottomField( m_chromaSampleLocTypeBottomField );
   m_cTEncTop.setNeutralChromaIndicationFlag( m_neutralChromaIndicationFlag );
+  m_cTEncTop.setDefaultDisplayWindow( m_defDispWinLeftOffset, m_defDispWinRightOffset, m_defDispWinTopOffset, m_defDispWinBottomOffset );
+  m_cTEncTop.setFrameFieldInfoPresentFlag( m_frameFieldInfoPresentFlag );
+  m_cTEncTop.setPocProportionalToTimingFlag( m_pocProportionalToTimingFlag );
+  m_cTEncTop.setNumTicksPocDiffOneMinus1   ( m_numTicksPocDiffOneMinus1    );
   m_cTEncTop.setBitstreamRestrictionFlag( m_bitstreamRestrictionFlag );
   m_cTEncTop.setTilesFixedStructureFlag( m_tilesFixedStructureFlag );
   m_cTEncTop.setMotionVectorsOverPicBoundariesFlag( m_motionVectorsOverPicBoundariesFlag );
-#if MIN_SPATIAL_SEGMENTATION
   m_cTEncTop.setMinSpatialSegmentationIdc( m_minSpatialSegmentationIdc );
-#endif
   m_cTEncTop.setMaxBytesPerPicDenom( m_maxBytesPerPicDenom );
   m_cTEncTop.setMaxBitsPerMinCuDenom( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical( m_log2MaxMvLengthVertical );
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
+
   TComBitRatePicRateInfo *bitRatePicRateInfo = m_cTEncTop.getVPS()->getBitratePicrateInfo();
   // The number of bit rate/pic rate have to equal to number of sub-layers.
   if(m_bitRatePicRateMaxTLayers)
@@ -338,7 +335,6 @@ Void TAppEncTop::xInitLibCfg()
       bitRatePicRateInfo->setConstantPicRateIdc(i, m_constantPicRateIdc[i]);
     }
   }
-#endif
 }
 
 Void TAppEncTop::xCreateLib()
@@ -530,7 +526,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
     if (m_pchReconFile)
     {
-      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, RGBChannelOrder, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, RGBChannelOrder, m_confLeft, m_confRight, m_confTop, m_confBottom );
     }
 
     const AccessUnit& au = *(iterBitstream++);

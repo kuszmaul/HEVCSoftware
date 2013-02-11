@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -112,6 +112,16 @@ extern Bool g_bFinalEncode;
 extern UInt g_debugCounter;
 extern Bool g_printDebug;
 extern Void* g_debugAddr;
+
+#ifdef DEBUG_ENCODER_SEARCH_BINS
+extern const UInt debugEncoderSearchBinTargetLine;
+extern const UInt debugEncoderSearchBinWindow;
+#endif
+
+#ifdef DEBUG_CABAC_BINS
+extern const UInt debugCabacBinTargetLine;
+extern const UInt debugCabacBinWindow;
+#endif
 
 
 Void printSBACCoeffData(  const UInt          lastX,

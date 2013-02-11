@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,9 +54,6 @@
 class TComLoopFilter
 {
 private:
-  Bool      m_disableDeblockingFilterFlag;
-  Int       m_betaOffsetDiv2;
-  Int       m_tcOffsetDiv2;
 
   UInt      m_uiNumPartitions;
   UChar*    m_aapucBS[NUM_EDGE_DIR];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
@@ -74,7 +71,7 @@ protected:
   // filtering functions
   Void xSetEdgefilterTU           ( TComTU &rTu );
   Void xSetEdgefilterPU           ( TComDataCU* pcCU, UInt uiAbsZorderIdx );
-  Void xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZorderIdx, DeblockEdgeDir edgeDir, UInt uiPartIdx );
+  Void xGetBoundaryStrengthSingle ( TComDataCU* pcCU, DeblockEdgeDir edgeDir, UInt uiPartIdx );
   UInt xCalcBsIdx                 ( TComDataCU* pcCU, UInt absCUIdxInLCU, DeblockEdgeDir edgeDir, Int iEdgeIdx, Int iBaseUnitIdx, const struct TComRectangle *rect=NULL )
   {
     TComPic* const pcPic = pcCU->getPic();
@@ -110,7 +107,7 @@ protected:
   Void xEdgeFilterLuma            ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir, Int iEdge );
   Void xEdgeFilterChroma          ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir, Int iEdge );
   
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Bool sw, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
+  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int tc, Bool sw, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
   __inline Void xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter);
   
 

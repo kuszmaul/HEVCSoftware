@@ -115,6 +115,7 @@
 		6782E0F111AD694400E8FFB8 /* TAppDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6782E0EC11AD694400E8FFB8 /* TAppDecTop.cpp */; };
 		7104E1E312005B5600F42AA8 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */; };
 		710DD68B1335295200BE8EDE /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */; };
+                71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71161E9E16A7253F0021E8A8 /* SEI.cpp */; };
 		71206CD616066EC700A354E7 /* SyntaxElementParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */; };
 		71206CD716066EC700A354E7 /* SyntaxElementParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 71206CD516066EC700A354E7 /* SyntaxElementParser.h */; };
 		71206CDB16066EDD00A354E7 /* SyntaxElementWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71206CD916066EDD00A354E7 /* SyntaxElementWriter.cpp */; };
@@ -329,7 +330,8 @@
 		6782E0EC11AD694400E8FFB8 /* TAppDecTop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TAppDecTop.cpp; path = source/App/TAppDecoder/TAppDecTop.cpp; sourceTree = "<group>"; };
 		6782E0ED11AD694400E8FFB8 /* TAppDecTop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TAppDecTop.h; path = source/App/TAppDecoder/TAppDecTop.h; sourceTree = "<group>"; };
 		7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTAppCommon.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementParser.cpp; path = source/Lib/TLibDecoder/SyntaxElementParser.cpp; sourceTree = "<group>"; };
+		71161E9E16A7253F0021E8A8 /* SEI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SEI.cpp; path = source/Lib/TLibCommon/SEI.cpp; sourceTree = "<group>"; };
+                71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementParser.cpp; path = source/Lib/TLibDecoder/SyntaxElementParser.cpp; sourceTree = "<group>"; };
 		71206CD516066EC700A354E7 /* SyntaxElementParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SyntaxElementParser.h; path = source/Lib/TLibDecoder/SyntaxElementParser.h; sourceTree = "<group>"; };
 		71206CD916066EDD00A354E7 /* SyntaxElementWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementWriter.cpp; path = source/Lib/TLibEncoder/SyntaxElementWriter.cpp; sourceTree = "<group>"; };
 		71206CDA16066EDD00A354E7 /* SyntaxElementWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SyntaxElementWriter.h; path = source/Lib/TLibEncoder/SyntaxElementWriter.h; sourceTree = "<group>"; };
@@ -430,6 +432,7 @@
 		08FB7794FE84155DC02AAC07 /* Trinity */ = {
 			isa = PBXGroup;
 			children = (
+                                71161E9E16A7253F0021E8A8 /* SEI.cpp */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -969,6 +972,7 @@
 				61601BB615A74998008F8892 /* Debug.cpp in Sources */,
 				61601BB815A74998008F8892 /* TComChromaFormat.cpp in Sources */,
 				61601BBB15A74998008F8892 /* TComTU.cpp in Sources */,
+                                71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

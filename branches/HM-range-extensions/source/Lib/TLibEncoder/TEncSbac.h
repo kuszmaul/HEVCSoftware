@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ public:
   // SBAC RD
   Void  resetCoeffCost         ()                { m_uiCoeffCost = 0;  }
   UInt  getCoeffCost           ()                { return  m_uiCoeffCost;  }
-  
+
   Void  load                   ( TEncSbac* pScr  );
   Void  loadIntraDirMode       ( TEncSbac* pScr, const ChannelType chType  );
   Void  store                  ( TEncSbac* pDest );
@@ -97,14 +97,12 @@ public:
   Void  codeTilesWPPEntryPoint ( TComSlice* pSlice );
   Void  codeTerminatingBit     ( UInt uilsLast      );
   Void  codeSliceFinish        ();
-  Void  encodeStart            ();
-
   Void  codeSaoMaxUvlc       ( UInt code, UInt maxSymbol );
   Void  codeSaoMerge         ( UInt  uiCode );
   Void  codeSaoTypeIdx       ( UInt  uiCode);
   Void  codeSaoUflc          ( UInt uiLength, UInt  uiCode );
   Void  codeSAOSign          ( UInt  uiCode);  //<! code SAO offset sign
-  Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
+  Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -112,12 +110,12 @@ private:
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
   Void  xWriteTerminatingBit ( UInt uiBit );
-  
+
   Void  xCopyFrom            ( TEncSbac* pSrc );
-  Void  xCopyContextsFrom    ( TEncSbac* pSrc );  
-  
-  Void codeDFFlag( UInt uiCode, const Char *pSymbolName )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
-  Void codeDFSvlc( Int iCode, const Char *pSymbolName )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
+  Void  xCopyContextsFrom    ( TEncSbac* pSrc );
+
+  Void codeDFFlag( UInt /*uiCode*/, const Char* /*pSymbolName*/ )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
+  Void codeDFSvlc( Int /*iCode*/, const Char* /*pSymbolName*/ )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
 
 protected:
   TComBitIf*    m_pcBitIf;
@@ -128,7 +126,7 @@ protected:
   UInt          m_uiCoeffCost;
 
   //--Adaptive loop filter
-  
+
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -136,28 +134,24 @@ public:
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  
+
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if !REMOVE_BURST_IPCM
-  Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag);
-#else
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf               ( TComTU & rTU, const ComponentID compID );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
   Void codeQtRootCbfZero       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
-  
+
   Void codeIntraDirChroma      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir            ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeRefFrmIdx           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd                 ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  
+
   Void codeDeltaQP             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
+
   Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
@@ -165,22 +159,22 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
   // -------------------------------------------------------------------------------------------------------------------
-  
+
   Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType);
   Void estCBFBit                     ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
   Void estSignificantCoeffGroupMapBit( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
   Void estSignificantMapBit          ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   Void estLastSignificantPositionBit ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
   Void estSignificantCoefficientsBit ( estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, ChannelType chType );
-  
+
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true  );
   Void updateContextTables           ( SliceType eSliceType, Int iQp  ) { this->updateContextTables( eSliceType, iQp, true); };
 
-  
+
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
   UInt                 m_uiLastQp;
-  
+
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -198,16 +192,16 @@ private:
   ContextModel3DBuffer m_cCUQtCbfSCModel;
   ContextModel3DBuffer m_cCUTransSubdivFlagSCModel;
   ContextModel3DBuffer m_cCUQtRootCbfSCModel;
-  
+
   ContextModel3DBuffer m_cCUSigCoeffGroupSCModel;
   ContextModel3DBuffer m_cCUSigSCModel;
   ContextModel3DBuffer m_cCuCtxLastX;
   ContextModel3DBuffer m_cCuCtxLastY;
   ContextModel3DBuffer m_cCUOneSCModel;
   ContextModel3DBuffer m_cCUAbsSCModel;
-  
+
   ContextModel3DBuffer m_cMVPIdxSCModel;
-  
+
   ContextModel3DBuffer m_cCUAMPSCModel;
   ContextModel3DBuffer m_cSaoMergeSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;

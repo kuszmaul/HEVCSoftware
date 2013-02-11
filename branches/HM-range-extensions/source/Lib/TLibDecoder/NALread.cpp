@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,11 +49,7 @@ using namespace std;
 
 //! \ingroup TLibDecoder
 //! \{
-#if HM9_NALU_TYPES
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *pcBitstream, Bool isVclNalUnit)
-#else
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *pcBitstream)
-#endif
+static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, Bool isVclNalUnit)
 {
   UInt zeroCount = 0;
   vector<uint8_t>::iterator it_read, it_write;
@@ -75,7 +71,6 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
   }
   assert(zeroCount == 0);
   
-#if HM9_NALU_TYPES
   if (isVclNalUnit)
   {
     // Remove cabac_zero_word from payload if present
@@ -92,7 +87,6 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
       printf("\nDetected %d instances of cabac_zero_word", n/2);      
     }
   }
-#endif
 
   nalUnitBuf.resize(it_write - nalUnitBuf.begin());
 }
@@ -137,11 +131,7 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 {
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
-#if HM9_NALU_TYPES
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream, (nalUnitBuf[0] & 64) == 0);
-#else
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream);
-#endif
+  convertPayloadToRBSP(nalUnitBuf, (nalUnitBuf[0] & 64) == 0);
   
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
   delete pcBitstream;

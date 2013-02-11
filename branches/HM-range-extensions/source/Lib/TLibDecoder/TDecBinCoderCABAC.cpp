@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 */
 
 #include "TDecBinCoderCABAC.h"
+#include "TLibCommon/Debug.h"
 
 //! \ingroup TLibDecoder
 //! \{
@@ -105,6 +106,10 @@ TDecBinCABAC::copyState( TDecBinIf* pcTDecBinIf )
 Void
 TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
 {
+#ifdef DEBUG_CABAC_BINS
+  const UInt startingRange = m_uiRange;
+#endif
+
   UInt uiLPS = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) - 4 ];
   m_uiRange -= uiLPS;
   UInt scaledRange = m_uiRange << 7;
@@ -115,18 +120,16 @@ TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     ruiBin = rcCtxModel.getMps();
     rcCtxModel.updateMPS();
     
-    if ( scaledRange >= ( 256 << 7 ) )
+    if ( scaledRange < ( 256 << 7 ) )
     {
-      return;
-    }
-    
-    m_uiRange = scaledRange >> 6;
-    m_uiValue += m_uiValue;
-    
-    if ( ++m_bitsNeeded == 0 )
-    {
-      m_bitsNeeded = -8;
-      m_uiValue += m_pcTComBitstream->readByte();      
+      m_uiRange = scaledRange >> 6;
+      m_uiValue += m_uiValue;
+      
+      if ( ++m_bitsNeeded == 0 )
+      {
+        m_bitsNeeded = -8;
+        m_uiValue += m_pcTComBitstream->readByte();      
+      }
     }
   }
   else
@@ -146,6 +149,19 @@ TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
       m_bitsNeeded -= 8;
     }
   }
+
+#ifdef DEBUG_CABAC_BINS
+  if ((g_debugCounter + debugCabacBinWindow) >= debugCabacBinTargetLine)
+    std::cout << g_debugCounter << ": coding bin value " << ruiBin << ", range = [" << startingRange << "->" << m_uiRange << "]\n";
+
+  if (g_debugCounter >= debugCabacBinTargetLine)
+  {
+    char breakPointThis;
+    breakPointThis = 7;
+  }
+  if (g_debugCounter >= (debugCabacBinTargetLine + debugCabacBinWindow)) exit(0);
+  g_debugCounter++;
+#endif
 }
 
 Void
@@ -249,39 +265,6 @@ Void TDecBinCABAC::resetBac()
   m_bitsNeeded = -8;
   m_uiValue    = m_pcTComBitstream->read( 16 );
 }
-
-#if !REMOVE_BURST_IPCM
-/** Decode subsequent_pcm_num.
- * \param numSubseqIPCM
- * \returns Void
- */
-Void TDecBinCABAC::decodeNumSubseqIPCM( Int& numSubseqIPCM )
-{
-  UInt bit = 0;
-
-  numSubseqIPCM = 0;
-
-  do
-  {
-    m_uiValue += m_uiValue;
-    if ( ++m_bitsNeeded >= 0 )
-    {
-      m_bitsNeeded = -8;
-      m_uiValue += m_pcTComBitstream->readByte();
-    }
-    bit = ((m_uiValue&128)>>7);
-    numSubseqIPCM++;
-  }
-  while( bit && (numSubseqIPCM < 3 ));
-
-  if( bit && (numSubseqIPCM == 3 ))
-  {
-    numSubseqIPCM++;
-  }
-
-  numSubseqIPCM --;
-}
-#endif
 
 /** Decode PCM alignment zero bits.
  * \returns Void

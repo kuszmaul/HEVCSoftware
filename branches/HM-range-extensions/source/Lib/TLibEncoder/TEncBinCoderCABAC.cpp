@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 #include "TEncBinCoderCABAC.h"
 #include "TLibCommon/TComRom.h"
+#include "TLibCommon/Debug.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -121,43 +122,13 @@ Void TEncBinCABAC::resetBac()
   start();
 }
 
-#if !REMOVE_BURST_IPCM
-/** Encode # of subsequent IPCM blocks.
- * \param numSubseqIPCM 
- * \returns Void
- */
-Void TEncBinCABAC::encodeNumSubseqIPCM( Int numSubseqIPCM )
-{
-  finish();
-  m_pcTComBitIf->write( 1, 1 ); // stop bit
-
-  m_pcTComBitIf->write( numSubseqIPCM ? 1 : 0, 1);
-
-  if ( numSubseqIPCM > 0)
-  {
-    Bool bCodeLast = ( 3 > numSubseqIPCM );
-
-    while( --numSubseqIPCM )
-    {
-      m_pcTComBitIf->write( 1, 1 );
-    }
-    if( bCodeLast )
-    {
-      m_pcTComBitIf->write( 0, 1 );
-    }
-  }
-}
-#endif
-
 /** Encode PCM alignment zero bits.
  * \returns Void
  */
 Void TEncBinCABAC::encodePCMAlignBits()
 {
-#if REMOVE_BURST_IPCM
   finish();
   m_pcTComBitIf->write(1, 1);
-#endif
   m_pcTComBitIf->writeAlignZero(); // pcm align zero
 }
 
@@ -212,15 +183,19 @@ UInt TEncBinCABAC::getNumWrittenBits()
  */
 Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
-  if (false)
-  {
-    DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T( "\tstate=" )
-    DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
-    DTRACE_CABAC_T( "\tsymbol=" )
-    DTRACE_CABAC_V( binValue )
-    DTRACE_CABAC_T( "\n" )
-  }
+  //{
+  //  DTRACE_CABAC_VL( g_nSymbolCounter++ )
+  //  DTRACE_CABAC_T( "\tstate=" )
+  //  DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
+  //  DTRACE_CABAC_T( "\tsymbol=" )
+  //  DTRACE_CABAC_V( binValue )
+  //  DTRACE_CABAC_T( "\n" )
+  //}
+
+#ifdef DEBUG_CABAC_BINS
+  const UInt startingRange = m_uiRange;
+#endif
+
   m_uiBinsCoded += m_binCountIncrement;
   rcCtxModel.setBinsCoded( 1 );
   
@@ -234,22 +209,33 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
     m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
     m_bitsLeft -= numBits;
+    testAndWriteOut();
   }
   else
   {
     rcCtxModel.updateMPS();
 
-    if ( m_uiRange >= 256 )
+    if ( m_uiRange < 256 )
     {
-      return;
+      m_uiLow <<= 1;
+      m_uiRange <<= 1;
+      m_bitsLeft--;
+      testAndWriteOut();
     }
-    
-    m_uiLow <<= 1;
-    m_uiRange <<= 1;
-    m_bitsLeft--;
   }
-  
-  testAndWriteOut();
+
+#ifdef DEBUG_CABAC_BINS
+  if ((g_debugCounter + debugCabacBinWindow) >= debugCabacBinTargetLine)
+    std::cout << g_debugCounter << ": coding bin value " << binValue << ", range = [" << startingRange << "->" << m_uiRange << "]\n";
+
+  if (g_debugCounter >= debugCabacBinTargetLine)
+  {
+    char breakPointThis;
+    breakPointThis = 7;
+  }
+  if (g_debugCounter >= (debugCabacBinTargetLine + debugCabacBinWindow)) exit(0);
+  g_debugCounter++;
+#endif
 }
 
 /**

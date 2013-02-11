@@ -512,30 +512,29 @@ Specifies the bit depth of the output locally reconstructed video file.
 Note: This option has no effect on the decoding process.
 \\
 
-\Option{InputBitDepthC}
-\Option{InternalBitDepthC}
+\Option{InputBitDepthC}%
+\Option{InternalBitDepthC}%
 \Option{OutputBitDepthC} &
 \ShortOption{\None} &
-\Default{(InputBitDepth)}
-\Default{(InternalBitDepth)}
+\Default{(InputBitDepth)}%
+\Default{(InternalBitDepth)}%
 \Default{(InternalBitDepthC)} &
 Specifies the various bit-depths for chroma components.  These only need
 to be specified if non-equal luma and chroma bit-depth processing is
 required.
 \\
 
-\Option{CroppingMode} &
+\Option{ConformanceMode} &
 \ShortOption{\None} &
 \Default{0} &
-Specifies the cropping/padding parameters to be applied to the input
+Specifies the conformance mode (cropping/padding parameters) to be applied to the input
 video. The following modes are available:
 \par
 \begin{tabular}{cp{0.45\textwidth}}
 0 & No cropping / padding \\
 1 & Automatic padding to the next minimum CU size \\
 2 & Padding according to parameters HorizontalPadding and VerticalPadding \\
-3 & Cropping according to parameters CropLeft, CropRight, CropTop and
-    CropBottom \\
+3 & Cropping according to parameters ConfLeft, ConfRight, ConfTop and ConfBottom \\
 \end{tabular}
 \\
 
@@ -549,10 +548,10 @@ video in luma samples.  Must be a multiple of the chroma resolution
 (e.g. a multiple of two for 4:2:0).
 \\
 
-\Option{CropLeft}%
-\Option{CropRight}%
-\Option{CropTop}%
-\Option{CropBottom} &
+\Option{ConfLeft}%
+\Option{ConfRight}%
+\Option{ConfTop}%
+\Option{ConfBottom} &
 \ShortOption{\None} &
 \Default{0} &
 Specifies the horizontal and vertical cropping to be applied to the
@@ -955,32 +954,38 @@ SliceArgument.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
  0 & Single slice \\
- 1 & Maximum number of CUs (at a depth of SliceGranuarity) per slice \\
+ 1 & Maximum number of CTUs per slice \\
  2 & Maximum number of bytes per slice \\
+ 3 & Maximum number of tiles per slice \\
 \end{tabular}
 \\
 
 \Option{SliceArgument} &
 \ShortOption{\None} &
 \Default{\NotSet} &
-Specifies the maximum number of CUs or bytes in a slice depending on the
+Specifies the maximum number of CTUs, bytes or tiles in a slice depending on the
 SliceMode setting.
 \\
 
-\Option{EntropySliceMode} &
+\Option{SliceSegmentMode} &
 \ShortOption{\None} &
 \Default{0} &
-Enables entropy slice coding. When set to 1, the parameter SliceArgument
-will specify the maximum number of CUs in a slice. When set to 2, the
-parameter SliceArgument will specify the number of bytes (LCEC) or bins
-(CABAC) in a slice.
+Enables (dependent) slice segment coding in conjunction with 
+SliceSegmentArgument.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ 0 & Single slice \\
+ 1 & Maximum number of CTUs per slice segment\\
+ 2 & Maximum number of bytes per slice segment\\
+ 3 & Maximum number of tiles per slice segment\\
+\end{tabular}
 \\
 
-\Option{EntropySliceArgument} &
+\Option{SliceSegmentArgument} &
 \ShortOption{\None} &
 \Default{\NotSet} &
-Defines the maximum number of CUs or bytes/bins in an entropy slice
-depending on the SliceMode setting.
+Defines the maximum number of CTUs, bytes or tiles a slice segment
+depending on the SliceSegmentMode setting.
 \\
 
 \Option{WaveFrontSynchro} &
@@ -1197,22 +1202,16 @@ reconstructed samples of PCM blocks is not skipped.
 % 0 = (loop-filtering is not skipped for PCM samples).
 \\
 
-\Option{weighted_pred_flag} &
+\Option{WeightedPredP} &
 \ShortOption{-wpP} &
 \Default{false} &
-Controls the use of weighted prediction in P slices.
+Enables the use of weighted prediction in P slices.
 \\
 
-\Option{weighted_bipred_idc} &
+\Option{WeightedPredB} &
 \ShortOption{-wpB} &
-\Default{0} &
-Controls the use of weighted prediction in B slices.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-0 & Disabled \\
-1 & Explicit weighted prediction \\
-2 & Implicit weighted prediction \\
-\end{tabular}
+\Default{false} &
+Enables the use of weighted prediction in B slices.
 \\
 
 \Option{SignHideFlag} &
@@ -1422,6 +1421,29 @@ Specifies the location of chroma samples for bottom field.
 \Default{false} &
 Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1).
 \\
+
+\Option{DefaultDisplayWindowFlag} &
+\ShortOption{\None} &
+\Default{1} &
+Indicates the presence of the Default Window parameters.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+0 & Disabled \\
+1 & Enabled \\
+\end{tabular}
+\\
+
+\Option{DefDispWinLeftOffset}%
+\Option{DefDispWinRightOffset}%
+\Option{DefDispWinTopOffset}%
+\Option{DefDispWinBottomOffset} &
+\ShortOption{\None} &
+\Default{0} &
+Specifies the horizontal and vertical offset to be applied to the
+input video from the conformance window in luma samples.
+Must be a multiple of the chroma resolution (e.g. a multiple of two for 4:2:0).
+\\
+
 \Option{BitstreamRestriction} &
 \ShortOption{} &
 \Default{false} &
@@ -1460,53 +1482,128 @@ Indicate the maximum absolute value of a decoded vertical MV component in quarte
 \end{OptionTable}
 
 %%
-%% Miscellaneous parameters
+%% SEI messages
 %%
-\begin{OptionTable}{Miscellaneous parameters}
+\begin{OptionTable}{SEI messages}
 \Option{SEIpictureDigest} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the calculation and insertion of the picture_digest
+Enables or disables the calculation and insertion of the Decoded picture hash
 SEI messages.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
   0 & Disabled \\
   1 & Transmits MD5 in SEI message and writes the value to the encoder
       log \\
+  2 & Transmits CRC in SEI message and writes the value to the encoder
+      log \\
+  3 & Transmits checksum in SEI message and writes the value to the encoder
+      log \\
 \end{tabular}
 \\
 \Option{SEIRecoveryPoint} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the recovery_point
+Enables or disables the insertion of the Recovery point
 SEI messages.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
+\\
+\Option{SEIActiveParameterSets} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Active parameter sets
+SEI messages.
 \\
 \Option{SEIBufferingPeriod} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the buffering_period
-SEI messages. This options has no effect if VuiParametersPresent is disabled.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
-\end{tabular}
+Enables or disables the insertion of the Buffering period
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
+SEIBufferingPeriod requires SEIActiveParameterSets to be enabled.
 \\
 \Option{SEIPictureTiming} &
 \ShortOption{\None} &
 \Default{0} &
-Enables or disables the insertion of the picture_timing
-SEI messages. This options has no effect if VuiParametersPresent is disabled.
+Enables or disables the insertion of the Picture timing
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
+\\
+\Option{SEIDecodingUnitInfo} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Decoding unit information
+SEI messages. This option has no effect if VuiParametersPresent is disabled.
+\\
+\Option{SEIGradualDecodingRefreshInfo} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Gradual decoding refresh information
+SEI messages.
+\\
+\Option{SEITemporalLevel0Index} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Temporal level zero index
+SEI messages.
+\\
+\Option{SEIDisplayOrientation} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Display orientation
+SEI messages.
+\par
+\begin{tabular}{cp{0.30\textwidth}}
+  0 & Disabled \\
+  N: $0 < N < (2^{16} - 1)$ & Enable display orientation SEI message with 
+  \mbox{anticlockwise_rotation = N} 
+  and \mbox{display_orientation_repetition_period = 1} \\
+\end{tabular}
+\\
+\Option{SEIFramePacking} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the insertion of the Frame packing arrangement SEI messages.
+\\
+\Option{SEIFramePackingType} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the arrangement type in the Frame packing arrangement SEI message.
+This option has no effect if SEIFramePacking is disabled.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
-  0 & Disabled \\
-  1 & Enabled \\
+  0 & Checkerboard \\
+  1 & Line Alternate \\
+  2 & Column Alternate \\
+  3 & Side by Side \\
+  4 & Top Bottom \\
+  5 & Frame Alternate \\
+  6 & 2D Image \\
+  7 & Tile Format \\
 \end{tabular}
+\\
+\Option{SEIFramePackingInterpretation} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the constituent frames relationship in the Frame packing arrangement SEI message. 
+This option has no effect if SEIFramePacking is disabled.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Unspecified \\
+  1 & Frame 0 is associated with the left view of a stereo pair \\
+  2 & Frame 0 is associated with the right view of a stereo pair \\
+\end{tabular}
+\\
+\Option{SEIFramePackingQuincunx} &
+\ShortOption{\None} &
+\Default{0} &
+Enables or disables the quincunx_sampling signalling in the
+Frame packing arrangement SEI messages. This option has no
+effect if SEIFramePacking is disabled.
+\\
+\Option{SEIFramePackingId} &
+\ShortOption{\None} &
+\Default{0} &
+Indicates the session number in the Frame packing arrangement
+SEI messages. This option has no effect if SEIFramePacking is
+disabled.
 \\
 \end{OptionTable}
 
@@ -1678,6 +1775,18 @@ has the following behaviour:
   MD5. "[rxMD5:...]" is the signalled MD5 if different.
 \end{itemize}
 \\
+
+\Option{RespectDefDispWindow} &
+\ShortOption{-w} &
+\Default{0} &
+Video region to be output by the decoder.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Output content inside the conformance window. \\
+  1 & Output content inside the default window. \\
+\end{tabular}
+\\
+
 \end{OptionTable}
 
 

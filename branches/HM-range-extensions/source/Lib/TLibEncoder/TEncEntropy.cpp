@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,18 +75,13 @@ Void  TEncEntropy::encodeTilesWPPEntryPoint( TComSlice* pSlice )
 Void TEncEntropy::encodeTerminatingBit      ( UInt uiIsLast )
 {
   m_pcEntropyCoderIf->codeTerminatingBit( uiIsLast );
-  
+
   return;
 }
 
 Void TEncEntropy::encodeSliceFinish()
 {
   m_pcEntropyCoderIf->codeSliceFinish();
-}
-
-Void TEncEntropy::encodeStart()
-{
-  m_pcEntropyCoderIf->encodeStart();
 }
 
 Void TEncEntropy::encodePPS( TComPPS* pcPPS )
@@ -107,12 +102,6 @@ Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPart
   {
     uiAbsPartIdx = 0;
   }
-#if !REMOVE_BURST_IPCM
-  else if( pcCU->getLastCUSucIPCMFlag() && pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
   m_pcEntropyCoderIf->codeCUTransquantBypassFlag( pcCU, uiAbsPartIdx );
 }
 
@@ -132,23 +121,16 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
-#if !REMOVE_BURST_IPCM
-  else if( pcCU->getLastCUSucIPCMFlag() && pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
 
 /** encode merge flag
  * \param pcCU
  * \param uiAbsPartIdx
- * \param uiPUIdx
  * \returns Void
  */
-Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx )
-{ 
+Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
   // at least one merge candidate exists
   m_pcEntropyCoderIf->codeMergeFlag( pcCU, uiAbsPartIdx );
 }
@@ -156,11 +138,10 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiP
 /** encode merge index
  * \param pcCU
  * \param uiAbsPartIdx
- * \param uiPUIdx
  * \param bRD
  * \returns Void
  */
-Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD )
+Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
   {
@@ -183,12 +164,6 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
-#if !REMOVE_BURST_IPCM
-  else if( pcCU->getLastCUSucIPCMFlag() && pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
 
   if ( pcCU->getSlice()->isIntra() )
   {
@@ -205,12 +180,6 @@ Void TEncEntropy::encodeSplitFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
   {
     uiAbsPartIdx = 0;
   }
-#if !REMOVE_BURST_IPCM
-  else if( pcCU->getLastCUSucIPCMFlag() && pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
 
   m_pcEntropyCoderIf->codeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
@@ -228,18 +197,12 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     uiAbsPartIdx = 0;
   }
-#if !REMOVE_BURST_IPCM
-  else if( pcCU->getLastCUSucIPCMFlag() && pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
 
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-/** Encode I_PCM information. 
- * \param pcCU pointer to CU 
+/** Encode I_PCM information.
+ * \param pcCU pointer to CU
  * \param uiAbsPartIdx CU index
  * \param bRD flag indicating estimation or encoding
  * \returns Void
@@ -252,31 +215,13 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     return;
   }
-  
+
   if( bRD )
   {
     uiAbsPartIdx = 0;
   }
-  
-#if !REMOVE_BURST_IPCM
-  Int numIPCM = 0;
-  Bool firstIPCMFlag = false;
 
-  if( pcCU->getIPCMFlag(uiAbsPartIdx) )
-  {
-    numIPCM = 1;
-    firstIPCMFlag = true;
-
-    if( !bRD )
-    {
-      numIPCM = pcCU->getNumSucIPCM();
-      firstIPCMFlag = !pcCU->getLastCUSucIPCMFlag();
-    }
-  }
-  m_pcEntropyCoderIf->codeIPCMInfo ( pcCU, uiAbsPartIdx, numIPCM, firstIPCMFlag);
-#else
   m_pcEntropyCoderIf->codeIPCMInfo ( pcCU, uiAbsPartIdx );
-#endif
 
 }
 
@@ -359,7 +304,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       assert( pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr ) == pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr - 1 ) );
     }
   }
-    
+
   if( uiSubdiv )
   {
     TComTURecurse tuRecurseChild(rTu, true);
@@ -391,7 +336,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     {
       m_pcEntropyCoderIf->codeQtCbf( rTu, COMPONENT_Y );
     }
-      
+
     if ( bHaveACodedBlock )
     {
       // dQP: only for LCU once
@@ -493,7 +438,7 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugPred = bDebugPredEnabled && g_bFinalEncode;
 #endif
-  
+
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
   UInt uiDepth = pcCU->getDepth( uiAbsPartIdx );
@@ -501,10 +446,10 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
-    encodeMergeFlag( pcCU, uiSubPartIdx, uiPartIdx );
+    encodeMergeFlag( pcCU, uiSubPartIdx );
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
-      encodeMergeIndex( pcCU, uiSubPartIdx, uiPartIdx );
+      encodeMergeIndex( pcCU, uiSubPartIdx );
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       if (bDebugPred)
       {
@@ -620,7 +565,7 @@ Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
 {
-  //NOTE: RExt - In HM8.0, this function is called in multiple ways, which may not be intended.
+  //NOTE: RExt - In HM, this function is called in multiple ways, which may not be intended.
   //      In xEstimateResidualQT, when coding the chroma channel, it is called with both TrDepth and TrDepthC (adjusted for step-up cases).
   //      In other places, it is called with TrDepth, but only when there is no step-up case (luma-equivalent size > 4)
   m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType, useAdjustedDepth );
@@ -638,7 +583,7 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   {
     uiAbsPartIdx = 0;
   }
-  
+
   if ( pcCU->getSlice()->getPPS()->getUseDQP() )
   {
     m_pcEntropyCoderIf->codeDeltaQP( pcCU, uiAbsPartIdx );
@@ -660,7 +605,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
 #endif
-  
+
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
     if (false)
@@ -682,7 +627,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-  
+
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);
@@ -698,7 +643,7 @@ Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID
 }
 
 Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, const ChannelType chType)
-{  
+{
   m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, chType );
 }
 
@@ -732,7 +677,7 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID co
       {
         UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
         m_pcEntropyCoderIf->codeSaoMaxUvlc(absOffset, offsetTh-1);
-      }  
+      }
       for( i=0; i< saoLcuParam->length; i++)
       {
         if (saoLcuParam->offset[i] != 0)
@@ -805,12 +750,12 @@ Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, In
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {
   Int count = 0;
-  
+
   for ( Int i = 0; i < uiSize; i++ )
   {
     count += pcCoef[i] != 0;
   }
-  
+
   return count;
 }
 

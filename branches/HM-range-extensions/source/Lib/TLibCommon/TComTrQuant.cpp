@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -867,7 +867,7 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
 
 // To minimize the distortion only. No rate is considered.
-Void TComTrQuant::signBitHidingHDQ( TComDataCU* pcCU, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
+Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
 {
   const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
   const UInt height    = codingParameters.heightInGroups << MLS_CG_LOG2_HEIGHT;
@@ -1021,13 +1021,9 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
   const ChromaFormat chFmt = pcCU->getPic()->getChromaFormat();
 
   const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
-#if RDOQ_TRANSFORMSKIP
+
   Bool useRDOQ = useTransformSkip ? m_useRDOQTS : m_useRDOQ;
   if ( useRDOQ && (isLuma(compID) || RDOQ_CHROMA) )
-#else
-  Bool useRDOQForTransformSkip = !(m_useTransformSkipFast && useTransformSkip);
-  if ( m_useRDOQ && (isLuma(compID) || RDOQ_CHROMA) && useRDOQForTransformSkip )
-#endif
   {
 #if ADAPTIVE_QP_SELECTION
     xRateDistOptQuant( rTu, piCoef, pDes, pArlDes, uiAcSum, compID, cQP );
@@ -1041,15 +1037,6 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, chFmt);
 
     Int deltaU[32*32] ;
-
-#if ADAPTIVE_QP_SELECTION && RExt__BACKWARDS_COMPATIBILITY_HM
-    const Int qpBDOffset   = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
-    const Int iQpBase      = pcCU->getSlice()->getSliceQpBase();
-    const Int chromaOffset = 0; // NOTE RExt - with RDOQ disabled, the original code does not use chroma offset. If chroma offsets are non-zero, the resulting reconstructed image will contain additional noise.
-
-    QpParam cQpBase;
-    setQPforQuant(cQpBase, iQpBase, toChannelType(compID), qpBDOffset, chromaOffset, chFmt, pcCU->getTransformSkip(uiAbsPartIdx,compID));
-#endif
 
     const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
@@ -1065,19 +1052,14 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     // Represents scaling through forward transform
     Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize);
-    Int iQBits  = MAX_INT;
+
+    // NOTE: RExt - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
+    const Int iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
+    // NOTE: RExt - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
+
 #if ADAPTIVE_QP_SELECTION
     Int iQBitsC = MAX_INT;
     Int iAddC   = MAX_INT;
-
-#if   (RExt__BACKWARDS_COMPATIBILITY_HM == 1)
-    const Int QP_base_per = cQpBase.getAdjustedQp().per;
-    iQBits  = QUANT_SHIFT + QP_base_per + iTransformShift;
-    iQBitsC = QUANT_SHIFT + QP_base_per + iTransformShift - ARL_C_PRECISION;
-    iAddC   = 1 << (iQBitsC-1);
-#elif (RExt__BACKWARDS_COMPATIBILITY_HM == 0)
-    //NOTE: RExt - The forward quantisation should be based on the same Qp (cQP) as the dequantisation
-    iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
 
     if (m_bUseAdaptQpSelect)
     {
@@ -1085,10 +1067,6 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
       iAddC   = 1 << (iQBitsC-1);
     }
 #endif
-#else
-    iQBits = QUANT_SHIFT + cQP..getAdjustedQp().per + iTransformShift; // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
-#endif
-    //NOTE: RExt - QBits will be OK for any bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
     Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
 
@@ -1124,7 +1102,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     {
       if(uiAcSum>=2)
       {
-        signBitHidingHDQ( pcCU, piQCoef, piCoef, deltaU, codingParameters ) ;
+        signBitHidingHDQ( piQCoef, piCoef, deltaU, codingParameters ) ;
       }
     }
   } //if RDOQ
@@ -1168,7 +1146,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const Int QP_per = cQP.getAdjustedQp().per;
   const Int QP_rem = cQP.getAdjustedQp().rem;
 
-  const Int rightShift     = (IQUANT_SHIFT - (iTransformShift + QP_per)) + (getUseScalingList() ? LOG2_SCALING_LIST_NEUTRAL_VALUE : 0);
+  const Int rightShift = (IQUANT_SHIFT - (iTransformShift + QP_per)) + (getUseScalingList() ? LOG2_SCALING_LIST_NEUTRAL_VALUE : 0);
 
   TCoeff clipQCoef;
   Intermediate_Int iCoeffQ;
@@ -1176,10 +1154,10 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   if(getUseScalingList())
   {
     //from the dequantisation equation:
-    //iCoeffQ                         = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx] * additionalMultiplier) + iAdd ) >> rightShift
-    //(sizeof(Intermediate_Int) * 8)  =              inputBitDepth    +    dequantCoefBits        +  additionalBits                 - rightShift
-    const UInt             dequantCoefBits     = ((1 + IQUANT_SHIFT) + SCALING_LIST_BITS);
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - (dequantCoefBits)));
+    //iCoeffQ                         = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift
+    //(sizeof(Intermediate_Int) * 8)  =              inputBitDepth    +    dequantCoefBits                   - rightShift
+    const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
+    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
 
@@ -1250,17 +1228,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 }
 
 
-Void TComTrQuant::init(   UInt  uiMaxWidth,
-                          UInt  uiMaxHeight,
-                          UInt  uiMaxTrSize,
-                          Int   iSymbolMode,
-                          UInt *aTableLP4,
-                          UInt *aTableLP8,
-                          UInt *aTableLastPosVlcIndex,
+Void TComTrQuant::init(   UInt  uiMaxTrSize,
                           Bool  bUseRDOQ,
-#if RDOQ_TRANSFORMSKIP
-                          Bool bUseRDOQTS,  
-#endif
+                          Bool  bUseRDOQTS,  
                           Bool  bEnc,
                           Bool  useTransformSkipFast
 #if ADAPTIVE_QP_SELECTION
@@ -1271,9 +1241,7 @@ Void TComTrQuant::init(   UInt  uiMaxWidth,
   m_uiMaxTrSize  = uiMaxTrSize;
   m_bEnc         = bEnc;
   m_useRDOQ      = bUseRDOQ;
-#if RDOQ_TRANSFORMSKIP
   m_useRDOQTS    = bUseRDOQTS;
-#endif
 #if ADAPTIVE_QP_SELECTION
   m_bUseAdaptQpSelect = bUseAdaptQpSelect;
 #endif
@@ -1313,6 +1281,11 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     return;
   }
 
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
+  printBlock(pcResidual, uiWidth, uiHeight, uiStride);
+#endif
+
   const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
 
   uiAbsSum = 0;
@@ -1327,12 +1300,22 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     xT( g_bitDepth[toChannelType(compID)], useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
   }
 
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
+  printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+#endif
+
   xQuant( rTu, m_plTempCoeff, rpcCoeff,
 
 #if ADAPTIVE_QP_SELECTION
        rpcArlCoeff,
 #endif
        uiAbsSum, compID, cQP );
+
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
+  printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
+#endif
 }
 
 
@@ -1349,7 +1332,6 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   const TComRectangle &rect = rTu.getRect(compID);
   const UInt uiWidth = rect.width;
   const UInt uiHeight = rect.height;
-
 
 #if defined DEBUG_STRING
   if (psDebug)
@@ -1372,9 +1354,19 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     return;
   }
 
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to dequantiser\n";
+  printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
+#endif
+
   const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
 
   xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
+
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between dequantiser and inverse-transform\n";
+  printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+#endif
 
 #if defined DEBUG_STRING
   if (psDebug)
@@ -1416,8 +1408,11 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
   }
 
-  if (((uiWidth == uiHeight) && ((g_debugCounter & uiWidth) == 0)) || ((uiWidth != uiHeight) && ((g_debugCounter & (uiWidth << 5)) == 0)))
-    g_debugCounter |= (uiWidth == uiHeight) ? uiWidth : (uiWidth << 5);
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
+  printBlock(rpcResidual, uiWidth, uiHeight, uiStride);
+  g_debugCounter++;
+#endif
 }
 
 Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
@@ -1442,7 +1437,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     Pel* pResi = rpcResidual + uiAddr;
     TCoeff* rpcCoeff = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
-    QpParam cQP; // NOTE RExt - set QP is now possibly dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
+    QpParam cQP; // NOTE: RExt - setQPforQuant is now dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
     setQPforQuant( cQP,
                    pcCU->getQP( 0 ),
                    toChannelType(compID),
@@ -1978,7 +1973,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
           UInt   uiPosY       = uiBlkPos >> uiLog2BlockWidth;
           UInt   uiPosX       = uiBlkPos - ( uiPosY << uiLog2BlockWidth );
 
-          Double d64CostLast= codingParameters.scanType == SCAN_VER ? xGetRateLast( uiPosY, uiPosX, uiWidth, compID ) : xGetRateLast( uiPosX, uiPosY, uiWidth, compID );
+          Double d64CostLast= codingParameters.scanType == SCAN_VER ? xGetRateLast( uiPosY, uiPosX, compID ) : xGetRateLast( uiPosX, uiPosY, compID );
           Double totalCost = d64BaseCost + d64CostLast - pdCostSig[ iScanPos ];
 
           if( totalCost < d64BestCost )
@@ -2498,7 +2493,6 @@ __inline Double TComTrQuant::xGetRateSigCoeffGroup  ( UShort                    
 */
 __inline Double TComTrQuant::xGetRateLast   ( const UInt                      uiPosX,
                                               const UInt                      uiPosY,
-                                              const UInt                      uiBlkWdth,
                                               const ComponentID               component  ) const
 {
   UInt uiCtxX   = g_uiGroupIdx[uiPosX];

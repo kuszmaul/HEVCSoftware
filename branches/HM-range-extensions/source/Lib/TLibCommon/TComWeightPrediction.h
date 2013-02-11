@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ public:
   Void  addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const  wpScalingParam *wp0, TComYuv* rpcYuvDst );
 
   Void  xWeightedPredictionUni( TComDataCU* pcCU, const TComYuv* pcYuvSrc, const UInt uiPartAddr, const Int iWidth, const Int iHeight,
-                                const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iPartIdx, const Int iRefIdx=-1 );
+                                const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iRefIdx=-1 );
   Void  xWeightedPredictionBi( TComDataCU* pcCU, const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const Int iRefIdx0, const Int iRefIdx1,
                                 const UInt uiPartIdx, const Int iWidth, const Int iHeight, TComYuv* rpcYuvDst );
 };

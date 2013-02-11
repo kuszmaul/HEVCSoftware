@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-TDecSbac::TDecSbac() 
+TDecSbac::TDecSbac()
 // new structure here
 : m_pcBitstream                  ( 0 )
 , m_pcTDecBinIf                  ( NULL )
@@ -144,10 +144,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_CUTransquantBypassFlagSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
 
   m_uiLastDQpNonZero  = 0;
-  
+
   // new structure
   m_uiLastQp          = qp;
-  
+
   m_pcTDecBinIf->start();
 }
 
@@ -158,7 +158,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 {
   UInt uiBit;
   m_pcTDecBinIf->decodeBinTrm(uiBit);
-  m_pcTDecBinIf->finish();  
+  m_pcTDecBinIf->finish();
 
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
@@ -205,29 +205,29 @@ Void TDecSbac::xReadUnaryMaxSymbol( UInt& ruiSymbol, ContextModel* pcSCModel, In
     ruiSymbol = 0;
     return;
   }
-  
+
   m_pcTDecBinIf->decodeBin( ruiSymbol, pcSCModel[0] );
-  
+
   if( ruiSymbol == 0 || uiMaxSymbol == 1 )
   {
     return;
   }
-  
+
   UInt uiSymbol = 0;
   UInt uiCont;
-  
+
   do
   {
     m_pcTDecBinIf->decodeBin( uiCont, pcSCModel[ iOffset ] );
     uiSymbol++;
   }
   while( uiCont && ( uiSymbol < uiMaxSymbol - 1 ) );
-  
+
   if( uiCont && ( uiSymbol == uiMaxSymbol - 1 ) )
   {
     uiSymbol++;
   }
-  
+
   ruiSymbol = uiSymbol;
 }
 
@@ -235,42 +235,42 @@ Void TDecSbac::xReadEpExGolomb( UInt& ruiSymbol, UInt uiCount )
 {
   UInt uiSymbol = 0;
   UInt uiBit = 1;
-  
+
   while( uiBit )
   {
     m_pcTDecBinIf->decodeBinEP( uiBit );
     uiSymbol += uiBit << uiCount++;
   }
-  
+
   if ( --uiCount )
   {
     UInt bins;
     m_pcTDecBinIf->decodeBinsEP( bins, uiCount );
     uiSymbol += bins;
   }
-  
+
   ruiSymbol = uiSymbol;
 }
 
 Void TDecSbac::xReadUnarySymbol( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset )
 {
   m_pcTDecBinIf->decodeBin( ruiSymbol, pcSCModel[0] );
-  
+
   if( !ruiSymbol )
   {
     return;
   }
-  
+
   UInt uiSymbol = 0;
   UInt uiCont;
-  
+
   do
   {
     m_pcTDecBinIf->decodeBin( uiCont, pcSCModel[ iOffset ] );
     uiSymbol++;
   }
   while( uiCont );
-  
+
   ruiSymbol = uiSymbol;
 }
 
@@ -309,44 +309,26 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
 }
 
 
-/** Parse I_PCM information. 
+/** Parse I_PCM information.
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \param uiDepth
  * \returns Void
  *
- * If I_PCM flag indicates that the CU is I_PCM, parse its PCM alignment bits and codes. 
+ * If I_PCM flag indicates that the CU is I_PCM, parse its PCM alignment bits and codes.
  */
 Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
-#if !REMOVE_BURST_IPCM
-  Int numSubseqIPCM = 0;
-#endif
   Bool readPCMSampleFlag = false;
 
-#if !REMOVE_BURST_IPCM
-  if(pcCU->getNumSucIPCM() > 0) 
+  m_pcTDecBinIf->decodeBinTrm(uiSymbol);
+
+  if (uiSymbol)
   {
     readPCMSampleFlag = true;
+    m_pcTDecBinIf->decodePCMAlignBits();
   }
-  else
-  {
-#endif
-    m_pcTDecBinIf->decodeBinTrm(uiSymbol);
-
-    if (uiSymbol)
-    {
-      readPCMSampleFlag = true;
-#if !REMOVE_BURST_IPCM
-      m_pcTDecBinIf->decodeNumSubseqIPCM(numSubseqIPCM);
-      pcCU->setNumSucIPCM(numSubseqIPCM + 1);
-#endif
-      m_pcTDecBinIf->decodePCMAlignBits();
-    }
-#if !REMOVE_BURST_IPCM
-  }
-#endif
 
   if (readPCMSampleFlag == true)
   {
@@ -379,15 +361,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
     }
 
-#if !REMOVE_BURST_IPCM
-    pcCU->setNumSucIPCM( pcCU->getNumSucIPCM() - 1);
-    if(pcCU->getNumSucIPCM() == 0)
-    {
-#endif
-      m_pcTDecBinIf->resetBac();
-#if !REMOVE_BURST_IPCM
-    }
-#endif
+    m_pcTDecBinIf->resetBac();
   }
 }
 
@@ -400,7 +374,7 @@ Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx,
 
 /** parse skip flag
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \param uiDepth
  * \returns Void
  */
@@ -410,7 +384,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   {
     return;
   }
-  
+
   UInt uiSymbol = 0;
   UInt uiCtxSkip = pcCU->getCtxSkipFlag( uiAbsPartIdx );
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSkipFlagSCModel.get( 0, 0, uiCtxSkip ) );
@@ -421,7 +395,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CABAC_T( "\tuiSymbol: ");
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\n");
-  
+
   if( uiSymbol )
   {
     pcCU->setSkipFlagSubParts( true,        uiAbsPartIdx, uiDepth );
@@ -434,7 +408,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
 /** parse merge flag
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \param uiDepth
  * \param uiPUIdx
  * \returns Void
@@ -455,7 +429,7 @@ Void TDecSbac::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   DTRACE_CABAC_T( "\n" );
 }
 
-Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
+Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex )
 {
   UInt uiUnaryIdx = 0;
   UInt uiNumCand = pcCU->getSlice()->getMaxNumMergeCand();
@@ -501,19 +475,19 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
     pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
     return;
   }
-  
+
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tSplitFlag\n" )
   pcCU->setDepthSubParts( uiDepth + uiSymbol, uiAbsPartIdx );
-  
+
   return;
 }
 
 /** parse partition size
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \param uiDepth
  * \returns Void
  */
@@ -521,7 +495,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 {
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
-  
+
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     uiSymbol = 1;
@@ -530,7 +504,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
     }
     eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
-    UInt uiTrLevel = 0;    
+    UInt uiTrLevel = 0;
     UInt uiWidthInBit  = g_aucConvertToBit[pcCU->getWidth(uiAbsPartIdx)]+2;
     UInt uiTrSizeInBit = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxTrSize()]+2;
     uiTrLevel          = uiWidthInBit >= uiTrSizeInBit ? uiWidthInBit - uiTrSizeInBit : 0;
@@ -590,7 +564,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
 /** parse prediction mode
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \param uiDepth
  * \returns Void
  */
@@ -601,7 +575,7 @@ Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
     return;
   }
-  
+
   UInt uiSymbol;
   Int  iPredMode = MODE_INTER;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
@@ -616,7 +590,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   UInt partNum = mode==SIZE_NxN?4:1;
   UInt partOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(absPartIdx) << 1 ) ) >> 2;
   UInt mpmPred[4],symbol;
-  Int j,intraPredMode;    
+  Int j,intraPredMode;
   if (mode==SIZE_NxN)
   {
     depth++;
@@ -645,12 +619,12 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
       intraPredMode = 0;
       m_pcTDecBinIf->decodeBinsEP( symbol, 5 );
       intraPredMode = symbol;
-        
+
       //postponed sorting of MPMs (only in remaining branch)
       assert(predNum>=3); // It is currently always 3!
       if (preds[0] > preds[1])
-      { 
-        std::swap(preds[0], preds[1]); 
+      {
+        std::swap(preds[0], preds[1]);
       }
       if (preds[0] > preds[2])
       {
@@ -692,7 +666,7 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 }
 
 
-Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth )
+Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx )
 {
   UInt uiSymbol;
   const UInt uiCtx = pcCU->getCtxInterDir( uiAbsPartIdx );
@@ -719,7 +693,7 @@ Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPar
   return;
 }
 
-Void TDecSbac::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList )
+Void TDecSbac::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList )
 {
   UInt uiSymbol;
 
@@ -830,7 +804,7 @@ Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2Transfo
   DTRACE_CABAC_T( "\n" )
 }
 
-Void TDecSbac::parseQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf )
+Void TDecSbac::parseQtRootCbf( UInt uiAbsPartIdx, UInt& uiQtRootCbf )
 {
   UInt uiSymbol;
   const UInt uiCtx = 0;
@@ -844,7 +818,7 @@ Void TDecSbac::parseQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
-  
+
   uiQtRootCbf = uiSymbol;
 }
 
@@ -853,7 +827,7 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Int qp;
   UInt uiDQp;
   Int  iDQp;
-  
+
   UInt uiSymbol;
 
   xReadUnaryMaxSymbol (uiDQp,  &m_cCUDeltaQpSCModel.get( 0, 0, 0 ), 1, CU_DQP_TU_CMAX);
@@ -876,13 +850,13 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
     qp = (((Int) pcCU->getRefQP( uiAbsPartIdx ) + iDQp + 52 + 2*qpBdOffsetY )%(52+qpBdOffsetY)) - qpBdOffsetY;
   }
-  else 
+  else
   {
     iDQp=0;
     qp = pcCU->getRefQP(uiAbsPartIdx);
   }
-  
-  pcCU->setQPSubParts(qp, uiAbsPartIdx, uiDepth);  
+
+  pcCU->setQPSubParts(qp, uiAbsPartIdx, uiDepth);
   pcCU->setCodedQP(qp);
 }
 
@@ -908,7 +882,7 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
   DTRACE_CABAC_T( "\n" )
-  
+
   pcCU->setCbfSubParts( uiSymbol << rTu.GetTransformDepthRel(), compID, rTu.GetAbsPartIdxTU(compID), rTu.GetTransformDepthTotalAdj(compID) );
 }
 
@@ -943,7 +917,7 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
-  
+
   pcCU->setTransformSkipSubParts( useTransformSkip, component, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(component));
 }
 
@@ -1023,7 +997,7 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
     }
     uiPosLastY = g_uiMinInGroup[ uiPosLastY ] + uiTemp;
   }
-  
+
   if( uiScanIdx == SCAN_VER )
   {
     swap( uiPosLastX, uiPosLastY );
@@ -1048,7 +1022,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   DTRACE_CABAC_T( "\theight=" )
   DTRACE_CABAC_V( uiHeight )
   DTRACE_CABAC_T( "\tdepth=" )
-// NOTE: RExt - the following commented debug lines have been changed to make consistent with HM
 //  DTRACE_CABAC_V( rTu.GetTransformDepthTotalAdj(compID) )
   DTRACE_CABAC_V( rTu.GetTransformDepthTotal() )
   DTRACE_CABAC_T( "\tabspartidx=" )
@@ -1089,7 +1062,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   const UInt         uiMaxNumCoeff     = uiWidth * uiHeight;
   const UInt         uiMaxNumCoeffM1   = uiMaxNumCoeff - 1;
 
-  Bool beValid; 
+  Bool beValid;
   if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
     beValid = false;
@@ -1100,7 +1073,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   }
 
   UInt absSum = 0;
-  
+
   //select scans
   TUEntropyCodingParameters codingParameters;
   getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, rTu.GetChromaFormat());
@@ -1113,7 +1086,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   }
 
   //--------------------------------------------------------------------------------------------------
-        
+
   //===== decode last significant =====
   UInt uiPosLastX, uiPosLastY;
   parseLastSignificantXY( uiPosLastX, uiPosLastY, uiWidth, uiHeight, compID, codingParameters.scanType );
@@ -1148,7 +1121,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     Int  iSubPos   = iSubSet << MLS_CG_SIZE;
     uiGoRiceParam  = 0;
     Int numNonZero = 0;
-    
+
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << MLS_CG_SIZE;
 
@@ -1188,7 +1161,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     {
       uiBlkPos  = codingParameters.scan[ iScanPosSig ];
       uiSig     = 0;
-        
+
       if( uiSigCoeffGroupFlag[ iCGBlkPos ] )
       {
         if( iScanPosSig > iSubPos || iSubSet == 0  || numNonZero )
@@ -1228,7 +1201,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
       Int absCoeff[1 << MLS_CG_SIZE];
 
-      for ( Int i = 0; i < numNonZero; i++) absCoeff[i] = 1;   
+      for ( Int i = 0; i < numNonZero; i++) absCoeff[i] = 1;
       Int numC1Flag = min(numNonZero, C1FLAG_NUMBER);
       Int firstC2FlagIdx = -1;
 
@@ -1249,13 +1222,13 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
         }
         absCoeff[ idx ] = uiBin + 1;
       }
-      
+
       if (c1 == 0)
       {
         baseCtxMod = m_cCUAbsSCModel.get( 0, 0 ) + (NUM_ABS_FLAG_CTX_PER_SET * uiCtxSet);
         if ( firstC2FlagIdx != -1)
         {
-          m_pcTDecBinIf->decodeBin( uiBin, baseCtxMod[0] ); 
+          m_pcTDecBinIf->decodeBin( uiBin, baseCtxMod[0] );
           absCoeff[ firstC2FlagIdx ] = uiBin + 2;
         }
       }
@@ -1271,8 +1244,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
         m_pcTDecBinIf->decodeBinsEP( coeffSigns, numNonZero );
         coeffSigns <<= 32 - numNonZero;
       }
-      
-      Int iFirstCoeff2 = 1;    
+
+      Int iFirstCoeff2 = 1;
       if (c1 == 0 || numNonZero > C1FLAG_NUMBER)
       {
         for( Int idx = 0; idx < numNonZero; idx++ )
@@ -1285,14 +1258,14 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
             xReadCoefRemainExGolomb( uiLevel, uiGoRiceParam );
 
             absCoeff[ idx ] = uiLevel + baseLevel;
-            
+
             if(absCoeff[idx]>3*(1<<uiGoRiceParam))
             {
               uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);
             }
           }
 
-          if(absCoeff[ idx ] >= 2)  
+          if(absCoeff[ idx ] >= 2)
           {
             iFirstCoeff2 = 0;
           }
@@ -1354,7 +1327,7 @@ Void TDecSbac::parseSaoMaxUvlc ( UInt& val, UInt maxSymbol )
       break;
     }
     i++;
-    if (i == maxSymbol) 
+    if (i == maxSymbol)
     {
       break;
     }
@@ -1379,13 +1352,13 @@ Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
 {
   UInt uiCode;
   m_pcTDecBinIf->decodeBin( uiCode, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
-  if (uiCode == 0) 
+  if (uiCode == 0)
   {
     ruiVal = 0;
   }
   else
   {
-    m_pcTDecBinIf->decodeBinEP( uiCode ); 
+    m_pcTDecBinIf->decodeBinEP( uiCode );
     if (uiCode == 0)
     {
       ruiVal = 5;
@@ -1432,7 +1405,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, const ComponentID comp
     SAO_EO_LEN,
     SAO_EO_LEN,
     SAO_BO_LEN
-  }; 
+  };
 
   if (compIdx==COMPONENT_Cr)
   {
@@ -1459,7 +1432,7 @@ Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, const ComponentID comp
 
       for(Int i=0; i< psSaoLcuParam->length; i++)
       {
-        if (psSaoLcuParam->offset[i] != 0) 
+        if (psSaoLcuParam->offset[i] != 0)
         {
           m_pcTDecBinIf->decodeBinEP ( uiSymbol);
           if (uiSymbol)
@@ -1515,8 +1488,8 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
   {
     if (rx>0 && iCUAddrInSlice!=0 && allowMergeLeft)
     {
-      parseSaoMerge(uiSymbol); 
-      pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag = (Bool)uiSymbol;  
+      parseSaoMerge(uiSymbol);
+      pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag = (Bool)uiSymbol;
     }
     if (pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag==0)
     {
