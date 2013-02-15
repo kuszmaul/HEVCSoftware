@@ -257,6 +257,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
   m_iNumPicCoded = 0;
   SEIPictureTiming pictureTimingSEI;
+#if L0208_SOP_DESCRIPTION_SEI
+  Bool writeSOP = m_pcCfg->getSOPDescriptionSEIEnabled();
+#endif
 #if K0180_SCALABLE_NESTING_SEI
   // Initialize Scalable Nesting SEI with single layer values
   SEIScalableNesting scalableNestingSEI;
@@ -947,6 +950,46 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       m_bSeqFirst = false;
     }
+
+#if L0208_SOP_DESCRIPTION_SEI
+    if (writeSOP) // write SOP description SEI (if enabled) at the beginning of GOP
+    {
+      Int SOPcurrPOC = pocCurr;
+
+      OutputNALUnit nalu(NAL_UNIT_SEI);
+      m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+      m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+
+      SEISOPDescription SOPDescriptionSEI;
+      SOPDescriptionSEI.m_sopSeqParameterSetId = pcSlice->getSPS()->getSPSId();
+
+      UInt i = 0;
+      UInt prevEntryId = iGOPid;
+      for (UInt j = iGOPid; j < m_iGopSize; j++)
+      {
+        Int deltaPOC = m_pcCfg->getGOPEntry(j).m_POC - m_pcCfg->getGOPEntry(prevEntryId).m_POC;
+        if ((SOPcurrPOC + deltaPOC) < m_pcCfg->getFramesToBeEncoded())
+        {
+          SOPcurrPOC += deltaPOC;
+          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC);
+          SOPDescriptionSEI.m_sopDescTemporalId[i] = m_pcCfg->getGOPEntry(j).m_temporalId;
+          SOPDescriptionSEI.m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(pcSlice, SOPcurrPOC, j);
+          SOPDescriptionSEI.m_sopDescPocDelta[i] = deltaPOC;
+
+          prevEntryId = j;
+          i++;
+        }
+      }
+
+      SOPDescriptionSEI.m_numPicsInSopMinus1 = i - 1;
+
+      m_seiWriter.writeSEImessage( nalu.m_Bitstream, SOPDescriptionSEI, pcSlice->getSPS());
+      writeRBSPTrailingBits(nalu.m_Bitstream);
+      accessUnit.push_back(new NALUnitEBSP(nalu));
+
+      writeSOP = false;
+    }
+#endif
 
     if( ( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() ) &&
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) &&
