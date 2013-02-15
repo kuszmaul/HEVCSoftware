@@ -83,6 +83,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
+#if K0180_SCALABLE_NESTING_SEI
+  case SEI::SCALABLE_NESTING:
+    fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -90,7 +95,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 }
 #endif
 
+#if K0180_SCALABLE_NESTING_SEI
+void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps)
+#else
 void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
+#endif
 {
   switch (sei.payloadType())
   {
@@ -127,6 +136,11 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
+#if K0180_SCALABLE_NESTING_SEI
+  case SEI::SCALABLE_NESTING:
+    xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
+    break;
+#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -144,6 +158,20 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
   bs_count.resetBits();
   setBitstream(&bs_count);
 
+
+#if K0180_SCALABLE_NESTING_SEI
+
+#if ENC_DEC_TRACE
+  Bool traceEnable = g_HLSTraceEnable;
+  g_HLSTraceEnable = false;
+#endif
+  xWriteSEIpayloadData(bs_count, sei, sps);
+#if ENC_DEC_TRACE
+  g_HLSTraceEnable = traceEnable;
+#endif
+
+#else
+
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = false;
 #endif
@@ -151,12 +179,18 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 #if ENC_DEC_TRACE
   g_HLSTraceEnable = true;
 #endif
+
+#endif
+
   UInt payload_data_num_bits = bs_count.getNumberOfWrittenBits();
   assert(0 == payload_data_num_bits % 8);
 
   setBitstream(&bs);
 
 #if ENC_DEC_TRACE
+#if K0180_SCALABLE_NESTING_SEI
+  if (g_HLSTraceEnable)
+#endif
   xTraceSEIHeader();
 #endif
 
@@ -176,10 +210,17 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 
   /* payloadData */
 #if ENC_DEC_TRACE
+#if K0180_SCALABLE_NESTING_SEI
+  if (g_HLSTraceEnable)
+#endif
   xTraceSEIMessageType(sei.payloadType());
 #endif
 
+#if K0180_SCALABLE_NESTING_SEI
+  xWriteSEIpayloadData(bs, sei, sps);
+#else
   xWriteSEIpayloadData(sei, sps);
+#endif
 }
 
 /**
@@ -453,6 +494,50 @@ Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefr
   WRITE_FLAG( sei.m_gdrForegroundFlag, "gdr_foreground_flag");
   xWriteByteAlign();
 }
+
+#if K0180_SCALABLE_NESTING_SEI
+Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps)
+{
+  WRITE_FLAG( sei.m_bitStreamSubsetFlag,             "bitstream_subset_flag"         );
+  WRITE_FLAG( sei.m_nestingOpFlag,                   "nesting_op_flag      "         );
+  if (sei.m_nestingOpFlag)
+  {
+    WRITE_FLAG( sei.m_defaultOpFlag,                 "default_op_flag"               );
+    WRITE_UVLC( sei.m_nestingNumOpsMinus1,           "nesting_num_ops"               );
+    for (UInt i = (sei.m_defaultOpFlag ? 1 : 0); i <= sei.m_nestingNumOpsMinus1; i++)
+    {
+      WRITE_CODE( sei.m_nestingNoOpMaxTemporalIdPlus1, 3, "nesting_no_op_max_temporal_id" );
+      WRITE_CODE( sei.m_nestingMaxTemporalIdPlus1[i], 3,  "nesting_max_temporal_id"       );
+      WRITE_UVLC( sei.m_nestingOpIdx[i],                  "nesting_op_idx"                );
+    }
+  }
+  else
+  {
+    WRITE_FLAG( sei.m_allLayersFlag,                      "all_layers_flag"               );
+    if (!sei.m_allLayersFlag)
+    {
+      WRITE_CODE( sei.m_nestingNoOpMaxTemporalIdPlus1, 3, "nesting_no_op_max_temporal_id" );
+      WRITE_UVLC( sei.m_nestingNumLayersMinus1,           "nesting_num_layers"            );
+      for (UInt i = 0; i <= sei.m_nestingNumLayersMinus1; i++)
+      {
+        WRITE_CODE( sei.m_nestingLayerId[i], 6,           "nesting_layer_id"              );
+      }
+    }
+  }
+ 
+  // byte alignment
+  while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )
+  {
+    WRITE_FLAG( 0, "nesting_zero_bit" );
+  }
+
+  // write nested SEI messages
+  for (SEIMessages::const_iterator it = sei.m_nestedSEIs.begin(); it != sei.m_nestedSEIs.end(); it++)
+  {
+    writeSEImessage(bs, *(*it), sps);
+  }
+}
+#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

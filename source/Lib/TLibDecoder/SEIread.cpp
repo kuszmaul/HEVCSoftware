@@ -89,6 +89,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
+#if K0180_SCALABLE_NESTING_SEI
+  case SEI::SCALABLE_NESTING:
+    fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -218,6 +223,12 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIGradualDecodingRefreshInfo;
       xParseSEIGradualDecodingRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize);
       break;
+#if K0180_SCALABLE_NESTING_SEI
+    case SEI::SCALABLE_NESTING:
+      sei = new SEIScalableNesting;
+      xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
+      break;
+#endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
       {
@@ -630,6 +641,55 @@ Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInf
   READ_FLAG( val, "gdr_foreground_flag" ); sei.m_gdrForegroundFlag = val ? 1 : 0;
   xParseByteAlign();
 }
+
+#if K0180_SCALABLE_NESTING_SEI
+Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps)
+{
+  UInt uiCode;
+  SEIMessages seis;
+
+  READ_FLAG( uiCode,            "bitstream_subset_flag"         ); sei.m_bitStreamSubsetFlag = uiCode;
+  READ_FLAG( uiCode,            "nesting_op_flag"               ); sei.m_nestingOpFlag = uiCode;
+  if (sei.m_nestingOpFlag)
+  {
+    READ_FLAG( uiCode,            "default_op_flag"               ); sei.m_defaultOpFlag = uiCode;
+    READ_UVLC( uiCode,            "nesting_num_ops_minus1"        ); sei.m_nestingNumOpsMinus1 = uiCode;
+    for (UInt i = sei.m_defaultOpFlag; i <= sei.m_nestingNumOpsMinus1; i++)
+    {
+      READ_CODE( 3,        uiCode,  "nesting_max_temporal_id_plus1"   ); sei.m_nestingMaxTemporalIdPlus1[i] = uiCode;
+      READ_UVLC( uiCode,            "nesting_op_idx"                  ); sei.m_nestingOpIdx[i] = uiCode;
+    }
+  }
+  else
+  {
+    READ_FLAG( uiCode,            "all_layers_flag"               ); sei.m_allLayersFlag       = uiCode;
+    if (!sei.m_allLayersFlag)
+    {
+      READ_CODE( 3,        uiCode,  "nesting_no_op_max_temporal_id_plus1"  ); sei.m_nestingNoOpMaxTemporalIdPlus1 = uiCode;
+      READ_UVLC( uiCode,            "nesting_num_layers_minus1"            ); sei.m_nestingNumLayersMinus1        = uiCode;
+      for (UInt i = 0; i <= sei.m_nestingNumLayersMinus1; i++)
+      {
+        READ_CODE( 6,           uiCode,     "nesting_layer_id"      ); sei.m_nestingLayerId[i]   = uiCode;
+      }
+    }
+  }
+
+  // byte alignment
+  while ( m_pcBitstream->getNumBitsRead() % 8 != 0 )
+  {
+    UInt code;
+    READ_FLAG( code, "nesting_zero_bit" );
+  }
+
+  sei.m_callerOwnsSEIs = false;
+
+  // read nested SEI messages
+  do {
+    xReadSEImessage(sei.m_nestedSEIs, nalUnitType, sps);
+  } while (m_pcBitstream->getNumBitsLeft() > 8);
+
+}
+#endif
 
 Void SEIReader::xParseByteAlign()
 {

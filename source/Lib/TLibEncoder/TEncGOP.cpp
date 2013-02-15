@@ -95,6 +95,9 @@ TEncGOP::TEncGOP()
   m_lastBPSEI         = 0;
 #if L0045_NON_NESTED_SEI_RESTRICTIONS
   xResetNonNestedSEIPresentFlags();
+#if K0180_SCALABLE_NESTING_SEI
+  xResetNestedSEIPresentFlags();
+#endif
 #endif
   return;
 }
@@ -254,6 +257,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
   m_iNumPicCoded = 0;
   SEIPictureTiming pictureTimingSEI;
+#if K0180_SCALABLE_NESTING_SEI
+  // Initialize Scalable Nesting SEI with single layer values
+  SEIScalableNesting scalableNestingSEI;
+  scalableNestingSEI.m_bitStreamSubsetFlag           = 1;      // If the nested SEI messages are picture buffereing SEI mesages, picure timing SEI messages or sub-picture timing SEI messages, bitstream_subset_flag shall be equal to 1
+  scalableNestingSEI.m_nestingOpFlag                 = 0;
+  scalableNestingSEI.m_nestingNumOpsMinus1           = 0;      //nesting_num_ops_minus1
+  scalableNestingSEI.m_allLayersFlag                 = 0;
+  scalableNestingSEI.m_nestingNoOpMaxTemporalIdPlus1 = 6 + 1;  //nesting_no_op_max_temporal_id_plus1
+  scalableNestingSEI.m_nestingNumLayersMinus1        = 1 - 1;  //nesting_num_layers_minus1
+  scalableNestingSEI.m_nestingLayerId[0]             = 0;
+  scalableNestingSEI.m_callerOwnsSEIs                = true;
+#endif
 #if L0044_DU_DPB_OUTPUT_DELAY_HRD
   Int picSptDpbOutputDuDelay = 0;
 #endif
@@ -1032,6 +1047,32 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       accessUnit.push_back(new NALUnitEBSP(nalu));
 #endif
 
+#if K0180_SCALABLE_NESTING_SEI
+      if (m_pcCfg->getScalableNestingSEIEnabled())
+      {
+        OutputNALUnit nalu(NAL_UNIT_SEI);
+        m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+        scalableNestingSEI.m_nestedSEIs.clear();
+        scalableNestingSEI.m_nestedSEIs.push_back(&sei_buffering_period);
+        m_seiWriter.writeSEImessage( nalu.m_Bitstream, scalableNestingSEI, pcSlice->getSPS());
+        writeRBSPTrailingBits(nalu.m_Bitstream);
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+        UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
+        UInt offsetPosition = m_activeParameterSetSEIPresentInAU + m_bufferingPeriodSEIPresentInAU + m_pictureTimingSEIPresentInAU;   // Insert BP SEI after non-nested APS, BP and PT SEIs
+        AccessUnit::iterator it;
+        for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+        {
+          it++;
+        }
+        accessUnit.insert(it, new NALUnitEBSP(nalu));
+        m_nestedBufferingPeriodSEIPresentInAU = true;
+#else
+        accessUnit.push_back(new NALUnitEBSP(nalu));
+#endif
+      }
+#endif
+
       m_lastBPSEI = m_totalCoded;
       m_cpbRemovalDelay = 0;
     }
@@ -1618,6 +1659,34 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
           accessUnit.insert(it, new NALUnitEBSP(nalu));
 #endif
+
+#if K0180_SCALABLE_NESTING_SEI
+          if ( m_pcCfg->getScalableNestingSEIEnabled() ) // put picture timing SEI into scalable nesting SEI
+          {
+            OutputNALUnit nalu(NAL_UNIT_SEI, pcSlice->getTLayer());
+            m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+            scalableNestingSEI.m_nestedSEIs.clear();
+            scalableNestingSEI.m_nestedSEIs.push_back(&pictureTimingSEI);
+            m_seiWriter.writeSEImessage(nalu.m_Bitstream, scalableNestingSEI, pcSlice->getSPS());
+            writeRBSPTrailingBits(nalu.m_Bitstream);
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+            UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
+            UInt offsetPosition = m_activeParameterSetSEIPresentInAU 
+              + m_bufferingPeriodSEIPresentInAU + m_pictureTimingSEIPresentInAU + m_nestedBufferingPeriodSEIPresentInAU;    // Insert PT SEI after APS and BP SEI
+            AccessUnit::iterator it;
+            for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+            {
+              it++;
+            }
+            accessUnit.insert(it, new NALUnitEBSP(nalu));
+            m_nestedPictureTimingSEIPresentInAU = true;
+#else
+            AccessUnit::iterator it = find_if(accessUnit.begin(), accessUnit.end(), mem_fun(&NALUnit::isSlice));
+            accessUnit.insert(it, new NALUnitEBSP(nalu));
+#endif
+          }
+#endif
+
         }
         if( m_pcCfg->getDecodingUnitInfoSEIEnabled() && hrd->getSubPicCpbParamsPresentFlag() )
         {             
@@ -1683,6 +1752,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
 #if L0045_NON_NESTED_SEI_RESTRICTIONS
       xResetNonNestedSEIPresentFlags();
+#if K0180_SCALABLE_NESTING_SEI
+      xResetNestedSEIPresentFlags();
+#endif
 #endif
       pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
@@ -2310,7 +2382,7 @@ Int TEncGOP::xGetFirstSeiLocation(AccessUnit &accessUnit)
        break;
      }               
   }
-  assert(it != accessUnit.end());
+//  assert(it != accessUnit.end());  // Triggers with some legit configurations
   return seiStartPos;
 }
 #endif
