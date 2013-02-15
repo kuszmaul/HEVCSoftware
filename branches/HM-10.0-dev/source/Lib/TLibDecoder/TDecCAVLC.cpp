@@ -1300,11 +1300,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 
   }
   
+  UInt *entryPointOffset          = NULL;
+  UInt numEntryPointOffsets, offsetLenMinus1;
   if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
   {
-    UInt *entryPointOffset          = NULL;
-    UInt numEntryPointOffsets, offsetLenMinus1;
-
     READ_UVLC(numEntryPointOffsets, "num_entry_point_offsets"); rpcSlice->setNumEntryPointOffsets ( numEntryPointOffsets );
     if (numEntryPointOffsets>0)
     {
@@ -1320,6 +1319,45 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset");
       entryPointOffset[ idx ] = uiCode;
 #endif
+    }
+  }
+  else
+  {
+    rpcSlice->setNumEntryPointOffsets ( 0 );
+  }
+
+  if(pps->getSliceHeaderExtensionPresentFlag())
+  {
+    READ_UVLC(uiCode,"slice_header_extension_length");
+    for(Int i=0; i<uiCode; i++)
+    {
+      UInt ignore;
+      READ_CODE(8,ignore,"slice_header_extension_data_byte");
+    }
+  }
+  m_pcBitstream->readByteAlignment();
+
+  if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
+  {
+    Int endOfSliceHeaderLocation = m_pcBitstream->getByteLocation();
+    Int  curEntryPointOffset     = 0;
+    Int  prevEntryPointOffset    = 0;
+    for (UInt idx=0; idx<numEntryPointOffsets; idx++)
+    {
+      curEntryPointOffset += entryPointOffset[ idx ];
+
+      Int emulationPreventionByteCount = 0;
+      for ( UInt curByteIdx  = 0; curByteIdx<m_pcBitstream->numEmulationPreventionBytesRead(); curByteIdx++ )
+      {
+        if ( m_pcBitstream->getEmulationPreventionByteLocation( curByteIdx ) >= ( prevEntryPointOffset + endOfSliceHeaderLocation ) && 
+             m_pcBitstream->getEmulationPreventionByteLocation( curByteIdx ) <  ( curEntryPointOffset  + endOfSliceHeaderLocation ) )
+        {
+          emulationPreventionByteCount++;
+        }
+      }
+
+      entryPointOffset[ idx ] -= emulationPreventionByteCount;
+      prevEntryPointOffset = curEntryPointOffset;
     }
 
     if ( pps->getTilesEnabledFlag() )
@@ -1356,21 +1394,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       delete [] entryPointOffset;
     }
   }
-  else
-  {
-    rpcSlice->setNumEntryPointOffsets ( 0 );
-  }
 
-  if(pps->getSliceHeaderExtensionPresentFlag())
-  {
-    READ_UVLC(uiCode,"slice_header_extension_length");
-    for(Int i=0; i<uiCode; i++)
-    {
-      UInt ignore;
-      READ_CODE(8,ignore,"slice_header_extension_data_byte");
-    }
-  }
-  m_pcBitstream->readByteAlignment();
   return;
 }
   
