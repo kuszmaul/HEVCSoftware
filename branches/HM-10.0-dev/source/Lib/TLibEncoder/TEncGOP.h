@@ -119,6 +119,10 @@ private:
   Bool                    m_activeParameterSetSEIPresentInAU;
   Bool                    m_bufferingPeriodSEIPresentInAU;
   Bool                    m_pictureTimingSEIPresentInAU;
+#if K0180_SCALABLE_NESTING_SEI
+  Bool                    m_nestedBufferingPeriodSEIPresentInAU;
+  Bool                    m_nestedPictureTimingSEIPresentInAU;
+#endif
 #endif
 public:
   TEncGOP();
@@ -168,6 +172,13 @@ protected:
     m_bufferingPeriodSEIPresentInAU    = false;
     m_pictureTimingSEIPresentInAU      = false;
   }
+#if K0180_SCALABLE_NESTING_SEI
+  Void xResetNestedSEIPresentFlags()
+  {
+    m_nestedBufferingPeriodSEIPresentInAU    = false;
+    m_nestedPictureTimingSEIPresentInAU      = false;
+  }
+#endif
 #endif
 };// END CLASS DEFINITION TEncGOP
 
