@@ -1364,7 +1364,40 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               }
               if (ui+1 < pcSlice->getPPS()->getNumSubstreams())
               {
-                puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits();
+
+                UInt cnt = 0;
+                vector<uint8_t>& rbsp   = pcSubstreamsOut[ui].getFIFO();
+                for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
+                {
+                  /* 1) find the next emulated 00 00 {00,01,02,03}
+                   * 2a) if not found, write all remaining bytes out, stop.
+                   * 2b) otherwise, write all non-emulated bytes out
+                   * 3) insert emulation_prevention_three_byte
+                   */
+                  vector<uint8_t>::iterator found = it;
+                  do
+                  {
+                    /* NB, end()-1, prevents finding a trailing two byte sequence */
+                    found = search_n(found, rbsp.end()-1, 2, 0);
+                    found++;
+                    /* if not found, found == end, otherwise found = second zero byte */
+                    if (found == rbsp.end())
+                    {
+                      break;
+                    }
+                    if (*(++found) <= 3)
+                    {
+                      break;
+                    }
+                  } while (true);
+                  it = found;
+                  if (found != rbsp.end())
+                  {
+                    it++;
+                    cnt++;
+                  }
+                }
+                puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits() + (cnt<<3);
               }
             }
 
