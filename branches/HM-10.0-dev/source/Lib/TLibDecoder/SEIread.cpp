@@ -89,6 +89,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
+#if L0208_SOP_DESCRIPTION_SEI
+  case SEI::SOP_DESCRIPTION:
+    fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
+    break;
+#endif
 #if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
@@ -223,6 +228,12 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIGradualDecodingRefreshInfo;
       xParseSEIGradualDecodingRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize);
       break;
+#if L0208_SOP_DESCRIPTION_SEI
+    case SEI::SOP_DESCRIPTION:
+      sei = new SEISOPDescription;
+      xParseSEISOPDescription((SEISOPDescription&) *sei, payloadSize);
+      break;
+#endif
 #if K0180_SCALABLE_NESTING_SEI
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
@@ -641,6 +652,32 @@ Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInf
   READ_FLAG( val, "gdr_foreground_flag" ); sei.m_gdrForegroundFlag = val ? 1 : 0;
   xParseByteAlign();
 }
+
+#if L0208_SOP_DESCRIPTION_SEI
+Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize)
+{
+  Int iCode;
+  UInt uiCode;
+
+  READ_UVLC( uiCode,           "sop_seq_parameter_set_id"            ); sei.m_sopSeqParameterSetId = uiCode;
+  READ_UVLC( uiCode,           "num_pics_in_sop_minus1"              ); sei.m_numPicsInSopMinus1 = uiCode;
+  for (UInt i = 0; i <= sei.m_numPicsInSopMinus1; i++)
+  {
+    READ_CODE( 6, uiCode,                     "sop_desc_vcl_nalu_type" );  sei.m_sopDescVclNaluType[i] = uiCode;
+    READ_CODE( 3, sei.m_sopDescTemporalId[i], "sop_desc_temporal_id"   );  sei.m_sopDescTemporalId[i] = uiCode;
+    if (sei.m_sopDescVclNaluType[i] != NAL_UNIT_CODED_SLICE_IDR && sei.m_sopDescVclNaluType[i] != NAL_UNIT_CODED_SLICE_IDR_N_LP)
+    {
+      READ_UVLC( sei.m_sopDescStRpsIdx[i],    "sop_desc_st_rps_idx"    ); sei.m_sopDescStRpsIdx[i] = uiCode;
+    }
+    if (i > 0)
+    {
+      READ_SVLC( iCode,                       "sop_desc_poc_delta"     ); sei.m_sopDescPocDelta[i] = iCode;
+    }
+  }
+
+  xParseByteAlign();
+}
+#endif
 
 #if K0180_SCALABLE_NESTING_SEI
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps)

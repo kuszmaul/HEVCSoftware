@@ -83,6 +83,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
+#if L0208_SOP_DESCRIPTION_SEI
+  case SEI::SOP_DESCRIPTION:
+    fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
+    break;
+#endif
 #if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
@@ -136,6 +141,11 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
+#if L0208_SOP_DESCRIPTION_SEI
+  case SEI::SOP_DESCRIPTION:
+    xWriteSEISOPDescription(*static_cast<const SEISOPDescription*>(&sei));
+    break;
+#endif
 #if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
@@ -494,6 +504,29 @@ Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefr
   WRITE_FLAG( sei.m_gdrForegroundFlag, "gdr_foreground_flag");
   xWriteByteAlign();
 }
+
+#if L0208_SOP_DESCRIPTION_SEI
+Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
+{
+  WRITE_UVLC( sei.m_sopSeqParameterSetId,           "sop_seq_parameter_set_id"               );
+  WRITE_UVLC( sei.m_numPicsInSopMinus1,             "num_pics_in_sop_minus1"               );
+  for (UInt i = 0; i <= sei.m_numPicsInSopMinus1; i++)
+  {
+    WRITE_CODE( sei.m_sopDescVclNaluType[i], 6, "sop_desc_vcl_nalu_type" );
+    WRITE_CODE( sei.m_sopDescTemporalId[i],  3, "sop_desc_temporal_id" );
+    if (sei.m_sopDescVclNaluType[i] != NAL_UNIT_CODED_SLICE_IDR && sei.m_sopDescVclNaluType[i] != NAL_UNIT_CODED_SLICE_IDR_N_LP)
+    {
+      WRITE_UVLC( sei.m_sopDescStRpsIdx[i],           "sop_desc_st_rps_idx"               );
+    }
+    if (i > 0)
+    {
+      WRITE_SVLC( sei.m_sopDescPocDelta[i],           "sop_desc_poc_delta"               );
+    }
+  }
+
+  xWriteByteAlign();
+}
+#endif
 
 #if K0180_SCALABLE_NESTING_SEI
 Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps)

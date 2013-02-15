@@ -66,6 +66,9 @@ protected:
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
   Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);
+#if L0208_SOP_DESCRIPTION_SEI
+  Void xWriteSEISOPDescription(const SEISOPDescription& sei);
+#endif
 #if K0180_SCALABLE_NESTING_SEI
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps);
 #endif

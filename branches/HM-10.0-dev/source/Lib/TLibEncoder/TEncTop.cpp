@@ -910,6 +910,38 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 
 }
 
+#if L0208_SOP_DESCRIPTION_SEI
+Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )
+{
+  int rpsIdx = GOPid;
+
+  for(Int extraNum=m_iGOPSize; extraNum<m_extraRPSs+m_iGOPSize; extraNum++)
+  {    
+    if(m_uiIntraPeriod > 0 && getDecodingRefreshType() > 0)
+    {
+      Int POCIndex = POCCurr%m_uiIntraPeriod;
+      if(POCIndex == 0)
+      {
+        POCIndex = m_uiIntraPeriod;
+      }
+      if(POCIndex == m_GOPList[extraNum].m_POC)
+      {
+        rpsIdx = extraNum;
+      }
+    }
+    else
+    {
+      if(POCCurr==m_GOPList[extraNum].m_POC)
+      {
+        rpsIdx = extraNum;
+      }
+    }
+  }
+
+  return rpsIdx;
+}
+#endif
+
 Void  TEncTop::xInitPPSforTiles()
 {
   m_cPPS.setUniformSpacingFlag( m_iUniformSpacingIdr );
