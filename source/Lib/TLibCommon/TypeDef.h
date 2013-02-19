@@ -272,11 +272,17 @@
 #define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
 
 //------------------------------------------------
-// Transform and Quantisation
+// Processing controls
 //------------------------------------------------
+
+#define RExt__COLOUR_SPACE_CONVERSIONS                                         1 ///< Set to 1 to enable the RExt_2.0 RGB colour space conversion schemes
 
 #define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
 
+// This can be enabled by the makefile
+#ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
+#define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 1=decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
+#endif
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
@@ -366,6 +372,17 @@ enum ComponentID
   COMPONENT_Cr      = 2,
   MAX_NUM_COMPONENT = 3
 };
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+enum InputColourSpaceConversion // defined in terms of conversion prior to input of encoder.
+{
+  IPCOLOURSPACE_UNCHANGED               = 0,
+  IPCOLOURSPACE_YCbCrtoYCrCb            = 1, // Mainly used for debug!
+  IPCOLOURSPACE_YCbCrtoYYY              = 2, // Mainly used for debug!
+  IPCOLOURSPACE_RGBtoGBR                = 3,
+  NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS = 4
+};
+#endif
 
 enum DeblockEdgeDir
 {

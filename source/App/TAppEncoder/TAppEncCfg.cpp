@@ -65,6 +65,11 @@ TAppEncCfg::TAppEncCfg()
 : m_pchInputFile()
 , m_pchBitstreamFile()
 , m_pchReconFile()
+#if RExt__COLOUR_SPACE_CONVERSIONS
+, m_inputColourSpaceConvert(IPCOLOURSPACE_UNCHANGED)
+, m_snrInternalColourSpace(false)
+, m_outputInternalColourSpace(false)
+#endif
 , m_pchdQPFile()
 , m_pColumnWidth()
 , m_pRowHeight()
@@ -271,6 +276,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  string inputColourSpaceConvert;
+#endif
 
   po::Options opts;
   opts.addOptions()
@@ -290,6 +298,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepth[CHANNEL_TYPE_CHROMA],        0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
+  ("SNRInternalColourSpace",  m_snrInternalColourSpace,             false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
+  ("OutputInternalColourSpace",  m_outputInternalColourSpace,        false, "If true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
+#endif
   ("InputChromaFormat",     tmpInputChromaFormat,                       420, "InputChromaFormatIDC")
   ("ChromaFormatIDC,-cf",   tmpChromaFormat,                             0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",       m_conformanceMode,                           0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
@@ -641,6 +654,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
+#endif
+
   switch (m_conformanceMode)
   {
   case 0:
@@ -837,6 +854,10 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_LUMA  ] < 8,                                   "InputBitDepth must be at least 8" );
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_CHROMA] < 8,                                   "InputBitDepthC must be at least 8" );
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  std::string sTempIPCSC="InputColourSpaceConvert must be empty, "+getListOfColourSpaceConverts(true);
+  xConfirmPara( m_inputColourSpaceConvert >= NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS,         sTempIPCSC.c_str() );
+#endif
   xConfirmPara( m_InputChromaFormatIDC >= NUM_CHROMA_FORMAT,                                "InputChromaFormatIDC must be either 400, 420, 422 or 444" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
   xConfirmPara( m_framesToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );

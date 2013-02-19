@@ -38,6 +38,9 @@
 #include "TDecCAVLC.h"
 #include "SEIread.h"
 #include "TDecSlice.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -1410,7 +1413,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_CODE(8,ignore,"slice_header_extension_data_byte");
     }
   }
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,m_pcBitstream->readByteAlignment(),0);
+#else
   m_pcBitstream->readByteAlignment();
+#endif
   return;
 }
 
@@ -1605,7 +1612,11 @@ Void TDecCavlc::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   Int qp;
   Int  iDQp;
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  READ_SVLC(iDQp, "delta_qp");
+#else
   xReadSvlc( iDQp );
+#endif
 
   Int qpBdOffsetY = pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
   qp = (((Int) pcCU->getRefQP( uiAbsPartIdx ) + iDQp + 52 + 2*qpBdOffsetY )%(52+ qpBdOffsetY)) -  qpBdOffsetY;
@@ -1670,7 +1681,11 @@ Void TDecCavlc::xReadPCMAlignZero( )
 
     for(uiBits = 0; uiBits < uiNumberOfBits; uiBits++)
     {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      READ_FLAG( uiSymbol, "pcm-align");
+#else
       xReadFlag( uiSymbol );
+#endif
       assert( uiSymbol == 0 );
     }
   }
@@ -1684,7 +1699,11 @@ Void TDecCavlc::xReadUnaryMaxSymbol( UInt& ruiSymbol, UInt uiMaxSymbol )
     return;
   }
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  READ_FLAG( ruiSymbol, "xReadUnaryMaxSymbol");
+#else
   xReadFlag( ruiSymbol );
+#endif
 
   if (ruiSymbol == 0 || uiMaxSymbol == 1)
   {
@@ -1696,7 +1715,11 @@ Void TDecCavlc::xReadUnaryMaxSymbol( UInt& ruiSymbol, UInt uiMaxSymbol )
 
   do
   {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    READ_FLAG( uiCont, "xReadUnaryMaxSymbol");
+#else
     xReadFlag( uiCont );
+#endif
     uiSymbol++;
   }
   while( uiCont && (uiSymbol < uiMaxSymbol-1) );
@@ -1715,7 +1738,11 @@ Void TDecCavlc::xReadExGolombLevel( UInt& ruiSymbol )
   UInt uiCount = 0;
   do
   {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    READ_FLAG( uiSymbol, "xReadExGolombLevel" );
+#else
     xReadFlag( uiSymbol );
+#endif
     uiCount++;
   }
   while( uiSymbol && (uiCount != 13));
@@ -1739,14 +1766,22 @@ Void TDecCavlc::xReadEpExGolomb( UInt& ruiSymbol, UInt uiCount )
 
   while( uiBit )
   {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    READ_FLAG( uiBit, "xReadEpExGolomb" );
+#else
     xReadFlag( uiBit );
+#endif
     uiSymbol += uiBit << uiCount++;
   }
 
   uiCount--;
   while( uiCount-- )
   {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    READ_FLAG( uiBit, "xReadEpExGolomb" );
+#else
     xReadFlag( uiBit );
+#endif
     uiSymbol += uiBit << uiCount;
   }
 

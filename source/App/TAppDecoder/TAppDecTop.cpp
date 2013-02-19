@@ -44,6 +44,9 @@
 #include "TAppDecTop.h"
 #include "TLibDecoder/AnnexBread.h"
 #include "TLibDecoder/NALread.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 //! \ingroup TAppDecoder
 //! \{
@@ -116,7 +119,12 @@ Void TAppDecTop::decode()
      * the process of reading a new slice that is the first slice of a new frame
      * requires the TDecTop::decode() method to be called again with the same
      * nal unit. */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    TComCodingStatistics::TComCodingStatisticsData backupStats(TComCodingStatistics::GetStatistics());
+    streampos location = bitstreamFile.tellg() - streampos(bytestream.GetNumBufferedBytes());
+#else
     streampos location = bitstreamFile.tellg();
+#endif
     AnnexBStats stats = AnnexBStats();
     Bool bPreviousPictureDecoded = false;
 
@@ -160,8 +168,14 @@ Void TAppDecTop::decode()
            * need for the annexB parser to read three extra bytes.
            * [1] except for the first NAL unit in the file
            *     (but bNewPicture doesn't happen then) */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+          bitstreamFile.seekg(location);
+          bytestream.reset();
+          TComCodingStatistics::SetStatistics(backupStats);
+#else
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
+#endif
         }
         bPreviousPictureDecoded = true; 
       }
@@ -258,9 +272,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
 
     const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
     
     if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
     {
@@ -272,7 +288,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+#if RExt__COLOUR_SPACE_CONVERSIONS
+                                       m_outputColourSpaceConvert,
+#else
                                        RGBChannelOrder,
+#endif
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -321,9 +341,11 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
 
     const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
 
     if ( pcPic->getOutputMark() )
     {
@@ -334,7 +356,11 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+#if RExt__COLOUR_SPACE_CONVERSIONS
+                                       m_outputColourSpaceConvert,
+#else
                                        RGBChannelOrder,
+#endif
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
