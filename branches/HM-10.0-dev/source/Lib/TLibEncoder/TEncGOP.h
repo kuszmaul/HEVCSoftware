@@ -180,6 +180,9 @@ protected:
   }
 #endif
 #endif
+#if L0386_DB_METRIC
+  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
+#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================
