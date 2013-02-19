@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "10.0_RExt1.0_dev (SquareTU422)"                 ///< Current software version
+#define NV_VERSION        "10.0_RExt1.0_dev (SquareTU422 with full Transform Skip search)"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information

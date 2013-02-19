@@ -142,9 +142,6 @@ public:
 #endif
                            UInt&            uiAbsSum,
                      const QpParam        & cQP
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-                    ,const Int              CBFDepthOffset
-#endif
                     );
 
 
