@@ -1763,10 +1763,12 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
   Int iDeltaDenom;
   // decode delta_luma_log2_weight_denom :
   READ_UVLC( uiLog2WeightDenomLuma, "luma_log2_weight_denom" );     // ue(v): luma_log2_weight_denom
+  assert( uiLog2WeightDenomLuma <= 7 );
   if( bChroma ) 
   {
     READ_SVLC( iDeltaDenom, "delta_chroma_log2_weight_denom" );     // se(v): delta_chroma_log2_weight_denom
     assert((iDeltaDenom + (Int)uiLog2WeightDenomLuma)>=0);
+    assert((iDeltaDenom + (Int)uiLog2WeightDenomLuma)<=7);
     uiLog2WeightDenomChroma = (UInt)(iDeltaDenom + uiLog2WeightDenomLuma);
   }
 
@@ -1805,8 +1807,12 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
       {
         Int iDeltaWeight;
         READ_SVLC( iDeltaWeight, "delta_luma_weight_lX" );  // se(v): delta_luma_weight_l0[i]
+        assert( iDeltaWeight >= -128 );
+        assert( iDeltaWeight <=  127 );
         wp[0].iWeight = (iDeltaWeight + (1<<wp[0].uiLog2WeightDenom));
         READ_SVLC( wp[0].iOffset, "luma_offset_lX" );       // se(v): luma_offset_l0[i]
+        assert( wp[0].iOffset >= -128 );
+        assert( wp[0].iOffset <=  127 );
       }
       else 
       {
@@ -1821,10 +1827,14 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
           {
             Int iDeltaWeight;
             READ_SVLC( iDeltaWeight, "delta_chroma_weight_lX" );  // se(v): chroma_weight_l0[i][j]
+            assert( iDeltaWeight >= -128 );
+            assert( iDeltaWeight <=  127 );
             wp[j].iWeight = (iDeltaWeight + (1<<wp[1].uiLog2WeightDenom));
 
             Int iDeltaChroma;
             READ_SVLC( iDeltaChroma, "delta_chroma_offset_lX" );  // se(v): delta_chroma_offset_l0[i][j]
+            assert( iDeltaChroma >= -512 );
+            assert( iDeltaChroma <=  511 );
             Int pred = ( 128 - ( ( 128*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
             wp[j].iOffset = Clip3(-128, 127, (iDeltaChroma + pred) );
           }
