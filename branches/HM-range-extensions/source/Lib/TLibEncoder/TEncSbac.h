@@ -139,7 +139,11 @@ public:
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf               ( TComTU & rTU, const ComponentID compID );
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  Void codeQtCbf               ( TComTU & rTu, const ComponentID compID, const Bool lowestLevel );
+#else
+  Void codeQtCbf               ( TComTU & rTu, const ComponentID compID );
+#endif
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
   Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );

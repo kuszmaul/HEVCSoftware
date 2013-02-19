@@ -296,7 +296,11 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     {
       if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr - 1 ) )
       {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+        m_pcEntropyCoderIf->codeQtCbf( rTu, compID, (uiSubdiv == 0) );
+#else
         m_pcEntropyCoderIf->codeQtCbf( rTu, compID );
+#endif
       }
     }
     else
@@ -334,7 +338,11 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     }
     else
     {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+      m_pcEntropyCoderIf->codeQtCbf( rTu, COMPONENT_Y, true ); //luma CBF is always at the lowest level
+#else
       m_pcEntropyCoderIf->codeQtCbf( rTu, COMPONENT_Y );
+#endif
     }
 
     if ( bHaveACodedBlock )
@@ -350,28 +358,42 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       }
       const UInt numValidComp=pcCU->getPic()->getNumberValidComponents();
 
-      {
-        const ComponentID compID=COMPONENT_Y;
-        if (rTu.ProcessComponentSection(compID) && cbf[compID])
-        {
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-            if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
-#endif
-            const UInt offset=rTu.getCoefficientOffset(compID);
-            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID)+offset), compID );
-        }
-      }
-
-      for(UInt ch=1; ch<numValidComp; ch++)
+      for(UInt ch=COMPONENT_Y; ch<numValidComp; ch++)
       {
         const ComponentID compID=ComponentID(ch);
-        if (rTu.ProcessComponentSection(compID) && cbf[compID])
+        if (rTu.ProcessComponentSection(compID) && (cbf[compID] != 0))
         {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-            if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
+          if (bDebugRQT) printf("Call NxN for chan %d width=%d height=%d cbf=%d\n", compID, rTu.getRect(compID).width, rTu.getRect(compID).height, 1);
 #endif
-            const UInt offset=rTu.getCoefficientOffset(compID);
-            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID)+offset), compID );
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+          if (rTu.getRect(compID).width != rTu.getRect(compID).height)
+          {
+            //code two sub-TUs
+            TComTURecurse subTUIterator(rTu, false, TComTU::VERTICAL_SPLIT, true, compID);
+
+            do
+            {
+              const UChar subTUCBF = pcCU->getCbf(subTUIterator.GetAbsPartIdxTU(compID), compID, (uiTrIdx + 1));
+
+              if (subTUCBF != 0)
+              {
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+                if (bDebugRQT) printf("Call NxN for chan %d width=%d height=%d cbf=%d\n", compID, subTUIterator.getRect(compID).width, subTUIterator.getRect(compID).height, 1);
+#endif
+                m_pcEntropyCoderIf->codeCoeffNxN( subTUIterator, (pcCU->getCoeff(compID) + subTUIterator.getCoefficientOffset(compID)), compID );
+              }
+            }
+            while (subTUIterator.nextSection(rTu));
+          }
+          else
+          {
+#endif
+            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID)), compID );
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+          }
+#endif
         }
       }
     }
@@ -548,10 +570,17 @@ Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicLis
   return;
 }
 
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+Void TEncEntropy::encodeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
+{
+  m_pcEntropyCoderIf->codeQtCbf( rTu, compID, lowestLevel );
+}
+#else
 Void TEncEntropy::encodeQtCbf( TComTU &rTu, const ComponentID compID )
 {
   m_pcEntropyCoderIf->codeQtCbf( rTu, compID );
 }
+#endif
 
 Void TEncEntropy::encodeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
 {
@@ -644,13 +673,48 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
 Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID)
 {
-  // This is for Transform unit processing. This may be used at mode selection stage for Inter.
-  m_pcEntropyCoderIf->codeCoeffNxN( rTu, pcCoef, compID);
+  TComDataCU *pcCU = rTu.getCU();
+
+  if (pcCU->getCbf(rTu.GetAbsPartIdxTU(), compID , rTu.GetTransformDepthRel()) != 0)
+  {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+    if (rTu.getRect(compID).width != rTu.getRect(compID).height)
+    {
+      //code two sub-TUs
+      TComTURecurse subTUIterator(rTu, false, TComTU::VERTICAL_SPLIT, true, compID);
+
+      const UInt subTUSize = subTUIterator.getRect(compID).width * subTUIterator.getRect(compID).height;
+
+      do
+      {
+        const UChar subTUCBF = pcCU->getCbf(subTUIterator.GetAbsPartIdxTU(compID), compID, (subTUIterator.GetTransformDepthRel() + 1));
+
+        if (subTUCBF != 0)
+        {
+          m_pcEntropyCoderIf->codeCoeffNxN( subTUIterator, (pcCoef + (subTUIterator.GetSectionNumber() * subTUSize)), compID);
+        }
+      }
+      while (subTUIterator.nextSection(rTu));
+    }
+    else
+    {
+#endif
+      m_pcEntropyCoderIf->codeCoeffNxN(rTu, pcCoef, compID);
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+    }
+#endif
+  }
 }
 
 Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, const ChannelType chType)
 {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  const UInt heightAtEntropyCoding = (width != height) ? (height >> 1) : height;
+
+  m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, heightAtEntropyCoding, chType );
+#else
   m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, chType );
+#endif
 }
 
 /** Encode SAO Offset

@@ -125,7 +125,11 @@ public:
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
   
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
+#else
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID );
+#endif
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

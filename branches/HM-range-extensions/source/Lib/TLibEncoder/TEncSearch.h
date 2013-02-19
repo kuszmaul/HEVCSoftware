@@ -247,6 +247,9 @@ protected:
                                           TComTU        &rTu
                                     DEBUG_STRING_FN_DECLARE(sTest)
                                          ,Int            default0Save1Load2 = 0
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+                                         ,Bool           codingSubTUs = false
+#endif
                                    );
 
   Void  xRecurIntraCodingQT       ( Bool         bLumaOnly,

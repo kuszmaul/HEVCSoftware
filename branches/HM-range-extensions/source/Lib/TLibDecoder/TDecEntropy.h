@@ -93,7 +93,11 @@ public:
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
   
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;
+#else
   virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID ) = 0;
+#endif
   virtual Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf ) = 0;
   
   virtual Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;

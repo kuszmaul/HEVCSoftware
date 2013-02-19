@@ -903,35 +903,121 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 
 
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
+#else
 Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
+#endif
 {
-  UInt uiSymbol;
   TComDataCU* pcCU = rTu.getCU();
 
+  const UInt absPartIdx       = rTu.GetAbsPartIdxTU(compID);
+  const UInt TUDepth          = rTu.GetTransformDepthRel();
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  const UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+  const UInt uiCtx            = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
 #else
-  const UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
+  const UInt uiCtx            = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
 #endif
-  const UInt contextSet = toChannelType(compID);
+  const UInt contextSet       = toChannelType(compID);
 
-  m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx )
-      RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(TComCodingStatisticsClassType(STATS__CABAC_BITS__QT_CBF, g_aucConvertToBit[rTu.getRect(compID).width]+2, compID))
-                          );
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  const UInt width            = rTu.getRect(compID).width;
+  const UInt height           = rTu.getRect(compID).height;
+  const Bool canQuadSplit     = (width >= (MIN_TU_SIZE * 2)) && (height >= (MIN_TU_SIZE * 2));
+  const UInt coveredPartIdxes = rTu.GetAbsPartIdxNumParts(compID);
 
-  DTRACE_CABAC_VL( g_nSymbolCounter++ )
-  DTRACE_CABAC_T( "\tparseQtCbf()" )
-  DTRACE_CABAC_T( "\tsymbol=" )
-  DTRACE_CABAC_V( uiSymbol )
-  DTRACE_CABAC_T( "\tctx=" )
-  DTRACE_CABAC_V( uiCtx )
-  DTRACE_CABAC_T( "\tetype=" )
-  DTRACE_CABAC_V( compID )
-  DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
-  DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
-  DTRACE_CABAC_T( "\n" )
+  //NOTE: RExt - since the CBF for chroma is coded at the highest level possible, if sub-TUs are
+  //             to be coded for a 4x8 chroma TU, their CBFs must be coded at the highest 4x8 level
+  //             (i.e. where luma TUs are 8x8 rather than 4x4)
+  //    ___ ___
+  //   |   |   | <- 4 x (8x8 luma + 4x8 4:2:2 chroma)
+  //   |___|___|    each quadrant has its own chroma CBF
+  //   |   |   | _ _ _ _
+  //   |___|___|        |
+  //   <--16--->        V
+  //                   _ _
+  //                  |_|_| <- 4 x 4x4 luma + 1 x 4x8 4:2:2 chroma
+  //                  |_|_|    no chroma CBF is coded - instead the parent CBF is inherited
+  //                  <-8->    if sub-TUs are present, their CBFs had to be coded at the parent level
 
-  pcCU->setCbfSubParts( uiSymbol << rTu.GetTransformDepthRel(), compID, rTu.GetAbsPartIdxTU(compID), rTu.GetTransformDepthTotalAdj(compID) );
+  const UInt lowestTUDepth = TUDepth + ((!lowestLevel && !canQuadSplit) ? 1 : 0); //unsplittable TUs inherit their parent's CBF
+        UInt lowestTUCBF   = 0;
+
+  if ((width != height) && (lowestLevel || !canQuadSplit)) //if sub-TUs are present
+  {
+    const UInt subTUDepth        = lowestTUDepth + 1;
+    const UInt partIdxesPerSubTU = rTu.GetAbsPartIdxNumParts(compID) >> 1;
+
+    UInt combinedSubTUCBF = 0;
+
+    for (UInt subTU = 0; subTU < 2; subTU++)
+    {
+      UInt uiCbf = MAX_UINT;
+      m_pcTDecBinIf->decodeBin(uiCbf, m_cCUQtCbfSCModel.get(0, contextSet, uiCtx) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(TComCodingStatisticsClassType(STATS__CABAC_BITS__QT_CBF, g_aucConvertToBit[rTu.getRect(compID).width]+2, compID)));
+      
+      const UInt subTUAbsPartIdx = absPartIdx + (subTU * partIdxesPerSubTU);
+      pcCU->setCbfPartRange((uiCbf << subTUDepth), compID, subTUAbsPartIdx, partIdxesPerSubTU);
+      combinedSubTUCBF |= uiCbf;
+
+      DTRACE_CABAC_VL( g_nSymbolCounter++ )
+      DTRACE_CABAC_T( "\tparseQtCbf()" )
+      DTRACE_CABAC_T( "\tsub-TU=" )
+      DTRACE_CABAC_V( subTU )
+      DTRACE_CABAC_T( "\tsymbol=" )
+      DTRACE_CABAC_V( uiCbf )
+      DTRACE_CABAC_T( "\tctx=" )
+      DTRACE_CABAC_V( uiCtx )
+      DTRACE_CABAC_T( "\tetype=" )
+      DTRACE_CABAC_V( compID )
+      DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+      DTRACE_CABAC_V( subTUAbsPartIdx )
+      DTRACE_CABAC_T( "\n" )
+    }
+
+    //propagate the sub-TU CBF up to the lowest TU level
+    if (combinedSubTUCBF != 0)
+    {
+      pcCU->bitwiseOrCbfPartRange((combinedSubTUCBF << lowestTUDepth), compID, absPartIdx, coveredPartIdxes);
+      lowestTUCBF = combinedSubTUCBF;
+    }
+  }
+  else
+  {
+#endif
+    UInt uiCbf = MAX_UINT;
+    m_pcTDecBinIf->decodeBin(uiCbf, m_cCUQtCbfSCModel.get(0, contextSet, uiCtx) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(TComCodingStatisticsClassType(STATS__CABAC_BITS__QT_CBF, g_aucConvertToBit[rTu.getRect(compID).width]+2, compID)));
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+    pcCU->setCbfSubParts((uiCbf << lowestTUDepth), compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#else
+    pcCU->setCbfSubParts((uiCbf << TUDepth), compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tparseQtCbf()" )
+    DTRACE_CABAC_T( "\tsymbol=" )
+    DTRACE_CABAC_V( uiCbf )
+    DTRACE_CABAC_T( "\tctx=" )
+    DTRACE_CABAC_V( uiCtx )
+    DTRACE_CABAC_T( "\tetype=" )
+    DTRACE_CABAC_V( compID )
+    DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+    DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
+    DTRACE_CABAC_T( "\n" )
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+    lowestTUCBF = uiCbf;
+  }
+
+  //propagate the lowest level CBF up to the current level
+  if (lowestTUCBF != 0)
+  {
+    for (UInt depth = TUDepth; depth < lowestTUDepth; depth++)
+    {
+      pcCU->bitwiseOrCbfPartRange((lowestTUCBF << depth), compID, absPartIdx, coveredPartIdxes);
+    }
+  }
+#endif
 }
 
 
@@ -968,7 +1054,11 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
 
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  pcCU->setTransformSkipPartRange( useTransformSkip, component, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(component));
+#else
   pcCU->setTransformSkipSubParts( useTransformSkip, component, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(component));
+#endif
 }
 
 
@@ -1063,7 +1153,7 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
 Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 {
   TComDataCU* pcCU=rTu.getCU();
-  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU(compID);
   const TComRectangle &rRect=rTu.getRect(compID);
   const UInt uiWidth=rRect.width;
   const UInt uiHeight=rRect.height;

@@ -76,7 +76,11 @@ public:
   Void  resetEntropy        ( TComSlice* /*pcSlice*/  )     { assert(0); };
   Void  setBitstream        ( TComInputBitstream* p )   { m_pcBitstream = p; }
   Void  parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
-  Void  parseQtCbf          ( class TComTU &rTu, const ComponentID compID );
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  Void parseQtCbf           ( class TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
+#else
+  Void parseQtCbf           ( class TComTU &rTu, const ComponentID compID );
+#endif
   Void  parseQtRootCbf      ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   Void  parseVPS            ( TComVPS* pcVPS );
   Void  parseSPS            ( TComSPS* pcSPS );
