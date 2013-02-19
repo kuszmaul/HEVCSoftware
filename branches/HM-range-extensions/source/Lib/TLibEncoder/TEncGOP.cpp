@@ -242,7 +242,13 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
+#if RExt__COLOUR_SPACE_CONVERSIONS
+Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic,
+                           TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP,
+                           const InputColourSpaceConversion snr_conversion)
+#else
 Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP)
+#endif
 {
   TComPic*        pcPic;
   TComPicYuv*     pcPicYuvRecOut;
@@ -1490,7 +1496,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         accessUnit.insert(it, new NALUnitEBSP(nalu));
       }
 
+#if RExt__COLOUR_SPACE_CONVERSIONS
+      xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
+#else
       xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime );
+#endif
 
       if (!digestStr.empty())
       {
@@ -1912,7 +1922,11 @@ static const Char* nalUnitTypeToString(NalUnitType type)
 }
 #endif
 
+#if RExt__COLOUR_SPACE_CONVERSIONS
+Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion )
+#else
 Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime )
+#endif
 {
   Double  dPSNR[MAX_NUM_COMPONENT];
 
@@ -1921,14 +1935,29 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     dPSNR[i]=0.0;
   }
 
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  TComPicYuv cscd;
+  if (conversion!=IPCOLOURSPACE_UNCHANGED)
+  {
+    cscd.create(pcPicD->getWidth(COMPONENT_Y), pcPicD->getHeight(COMPONENT_Y), pcPicD->getChromaFormat(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
+    TVideoIOYuv::ColourSpaceConvert(*pcPicD, cscd, conversion, g_bitDepth, false);
+  }
+  TComPicYuv &picd=(conversion==IPCOLOURSPACE_UNCHANGED)?*pcPicD : cscd;
+#endif
+
   //===== calculate PSNR =====
   Double MSEyuvframe[MAX_NUM_COMPONENT] = {0, 0, 0};
 
   for(Int chan=0; chan<pcPicD->getNumberValidComponents(); chan++)
   {
     const ComponentID ch=ComponentID(chan);
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    const Pel*  pOrg    = (conversion!=IPCOLOURSPACE_UNCHANGED) ? pcPic ->getPicYuvTrueOrg()->getAddr(ch) : pcPic ->getPicYuvOrg()->getAddr(ch);
+    Pel*  pRec    = picd.getAddr(ch);
+#else
     const Pel*  pOrg    = pcPic ->getPicYuvOrg()->getAddr(ch);
-          Pel*  pRec    = pcPicD->getAddr(ch);
+    Pel*  pRec    = pcPicD->getAddr(ch);
+#endif
     const Int   iStride = pcPicD->getStride(ch);
 
     const Int   iWidth  = pcPicD->getWidth (ch) - (m_pcEncTop->getPad(0) >> pcPic->getComponentScaleX(ch));
@@ -2022,6 +2051,10 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     }
     printf("]");
   }
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  cscd.destroy();
+#endif
 }
 
 /** Function for deciding the nal_unit_type.

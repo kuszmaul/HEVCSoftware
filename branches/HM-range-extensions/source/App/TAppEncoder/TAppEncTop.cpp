@@ -410,12 +410,21 @@ Void TAppEncTop::encode()
   Int   iNumEncoded = 0;
   Bool  bEos = false;
 
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  const InputColourSpaceConversion ipCSC  =  m_inputColourSpaceConvert;
+  const InputColourSpaceConversion snrCSC = (!m_snrInternalColourSpace) ? m_inputColourSpaceConvert : IPCOLOURSPACE_UNCHANGED;
+#else
   const Bool RGBChannelOrder = m_vuiParametersPresentFlag && (m_matrixCoefficients == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
   
   list<AccessUnit> outputAccessUnits; ///< list of access units to write out.  is populated by the encoding process
 
   // allocate original YUV buffer
   pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  TComPicYuv cPicYuvTrueOrg;
+  cPicYuvTrueOrg.create(m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth);
+#endif
   
   while ( !bEos )
   {
@@ -423,7 +432,11 @@ Void TAppEncTop::encode()
     xGetBuffer(pcPicYuvRec);
 
     // read input YUV file
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, &cPicYuvTrueOrg, ipCSC, m_aiPad, m_InputChromaFormatIDC );
+#else
     m_cTVideoIOYuvInputFile.read( pcPicYuvOrg, RGBChannelOrder, m_aiPad, m_InputChromaFormatIDC );
+#endif
     
     // increase number of received frames
     m_iFrameRcvd++;
@@ -441,7 +454,11 @@ Void TAppEncTop::encode()
     }
 
     // call encoding function for one frame
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
+#else
     m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
+#endif
     
     // write bistream to file if necessary
     if ( iNumEncoded > 0 )
@@ -460,6 +477,9 @@ Void TAppEncTop::encode()
   
   // delete used buffers in encoder class
   m_cTEncTop.deletePicBuffer();
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  cPicYuvTrueOrg.destroy();
+#endif
   
   // delete buffers & classes
   xDeleteBuffer();
@@ -524,7 +544,13 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
   TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
   list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
 
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  const InputColourSpaceConversion ipCSC = (!m_outputInternalColourSpace) ? m_inputColourSpaceConvert : IPCOLOURSPACE_UNCHANGED;
+#else
   const Bool RGBChannelOrder = m_vuiParametersPresentFlag && (m_matrixCoefficients == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
+
   
   for ( i = 0; i < iNumEncoded; i++ )
   {
@@ -536,7 +562,11 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
     if (m_pchReconFile)
     {
+#if RExt__COLOUR_SPACE_CONVERSIONS
+      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, ipCSC, m_confLeft, m_confRight, m_confTop, m_confBottom );
+#else
       m_cTVideoIOYuvReconFile.write( pcPicYuvRec, RGBChannelOrder, m_confLeft, m_confRight, m_confTop, m_confBottom );
+#endif
     }
 
     const AccessUnit& au = *(iterBitstream++);

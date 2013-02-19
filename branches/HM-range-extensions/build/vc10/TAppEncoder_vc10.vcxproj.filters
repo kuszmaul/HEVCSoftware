@@ -9,10 +9,6 @@
       <UniqueIdentifier>{45205fc1-f025-43cb-ac9f-2f6b288020ab}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{22b56140-f05f-49ef-93df-2b61ddd76211}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\App\TAppEncoder\encmain.cpp">

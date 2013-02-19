@@ -48,6 +48,8 @@
 
 using namespace std;
 
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
@@ -63,6 +65,7 @@ static const ComponentID CHANNEL_ORDER[2/*0 = GBR/YUV, 1 = RGB*/][2/*0 = normal,
     {COMPONENT_Cb, COMPONENT_Y, COMPONENT_Cr}
   },
 };
+#endif
 
 // ====================================================================================================================
 // Local Functions
@@ -509,10 +512,17 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
  * @param aiPad        source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
+#if RExt__COLOUR_SPACE_CONVERSIONS
+Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, const InputColourSpaceConversion ipcsc, Int aiPad[2], ChromaFormat format )
+#else
 Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2], ChromaFormat format )
+#endif
 {
   // check end-of-file
   if ( isEof() ) return false;
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  TComPicYuv *pPicYuv=pPicYuvTrueOrg;
+#endif
   if (format>=NUM_CHROMA_FORMAT) format=pPicYuv->getChromaFormat();
 
   Bool is16bit = false;
@@ -534,15 +544,21 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
   const UInt width444       = width_full444 - pad_h444;
   const UInt height444      = height_full444 - pad_v444;
 
+#if RExt__COLOUR_SPACE_CONVERSIONS ==0
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
 #else
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
 #endif
+#endif
 
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    const ComponentID compID = ComponentID(comp);
+#else
     const ComponentID compID = channelOrder[comp];
+#endif
     const ChannelType chType=toChannelType(compID);
 
     const Int desired_bitdepth = m_fileBitdepth[chType] + m_bitdepthShift[chType];
@@ -557,13 +573,16 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
 #endif
 
     if (! readPlane(pPicYuv->getAddr(compID), m_cHandle, is16bit, stride444, width444, height444, pad_h444, pad_v444, compID, pPicYuv->getChromaFormat(), format, m_fileBitdepth[chType]))
+    {
       return false;
+    }
 
     if (compID < pPicYuv->getNumberValidComponents() )
     {
       const UInt csx=getComponentScaleX(compID, pPicYuv->getChromaFormat());
       const UInt csy=getComponentScaleY(compID, pPicYuv->getChromaFormat());
       scalePlane(pPicYuv->getAddr(compID), stride444>>csx, width_full444>>csx, height_full444>>csy, m_bitdepthShift[chType], minval, maxval);
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       if (getenv("COPY_LUMA_TO_CHROMA_444") && pPicYuv->getChromaFormat()==CHROMA_444 && isChroma(compID))
       {
@@ -571,8 +590,18 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
         ::memcpy ( pPicYuv->getBuf(compID), pPicYuv->getBuf(COMPONENT_Y), sizeof (Pel) * pPicYuv->getStride(COMPONENT_Y) * pPicYuv->getTotalHeight(COMPONENT_Y));
       }
 #endif
+#endif
     }
   }
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
+  for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
+  {
+    internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
+  }
+  ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, internalBitDepth, true);
+#endif
 
   return true;
 }
@@ -585,8 +614,28 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
  * @param aiPad       source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
+#if RExt__COLOUR_SPACE_CONVERSIONS
+Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversion ipCSC, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )
+#else
 Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )
+#endif
 {
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  TComPicYuv cPicYuvCSCd;
+  if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
+  {
+    cPicYuvCSCd.create(pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), pPicYuvUser->getChromaFormat(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
+    Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
+    for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
+    {
+      internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
+    }
+    ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, internalBitDepth, false);
+  }
+  TComPicYuv *pPicYuv=(ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUser : &cPicYuvCSCd;
+#endif
+
   // compute actual YUV frame size excluding padding size
   const Int   iStride444 = pPicYuv->getStride(COMPONENT_Y);
   const UInt width444  = pPicYuv->getWidth(COMPONENT_Y) - confLeft - confRight;
@@ -631,15 +680,21 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     dstPicYuv = pPicYuv;
   }
 
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
 #else
   const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
 #endif
+#endif
 
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    const ComponentID compID = ComponentID(comp);
+#else
     const ComponentID compID = channelOrder[comp];
+#endif
     const ChannelType ch=toChannelType(compID);
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
@@ -655,5 +710,89 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     dstPicYuv->destroy();
     delete dstPicYuv;
   }
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  cPicYuvCSCd.destroy();
+#endif
+
   return retval;
 }
+
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+
+static Void
+copyPlane(const TComPicYuv &src, const ComponentID srcPlane, TComPicYuv &dest, const ComponentID destPlane)
+{
+  const UInt width=src.getWidth(srcPlane);
+  const UInt height=src.getHeight(srcPlane);
+  assert(dest.getWidth(destPlane) == width);
+  assert(dest.getHeight(destPlane) == height);
+  const Pel *pSrc=src.getAddr(srcPlane);
+  Pel *pDest=dest.getAddr(destPlane);
+  const UInt strideSrc=src.getStride(srcPlane);
+  const UInt strideDest=dest.getStride(destPlane);
+  for(UInt y=0; y<height; y++, pSrc+=strideSrc, pDest+=strideDest)
+  {
+    memcpy(pDest, pSrc, width*sizeof(Pel));
+  }
+}
+
+// static member
+Void TVideoIOYuv::ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, const Int bitDepths[MAX_NUM_CHANNEL_TYPE], Bool bIsForwards)
+{
+  const ChromaFormat  format=src.getChromaFormat();
+  const UInt          numValidComp=src.getNumberValidComponents();
+
+  switch (conversion)
+  {
+    case IPCOLOURSPACE_YCbCrtoYYY:
+      if (format!=CHROMA_444)
+      {
+        // only 444 is handled.
+        assert(format==CHROMA_444);
+        exit(1);
+      }
+
+      {
+        for(UInt comp=0; comp<numValidComp; comp++)
+          copyPlane(src, ComponentID(bIsForwards?0:comp), dest, ComponentID(comp));
+      }
+      break;
+    case IPCOLOURSPACE_YCbCrtoYCrCb:
+      {
+        for(UInt comp=0; comp<numValidComp; comp++)
+          copyPlane(src, ComponentID(comp), dest, ComponentID((numValidComp-comp)%numValidComp));
+      }
+      break;
+
+    case IPCOLOURSPACE_RGBtoGBR:
+      {
+        if (format!=CHROMA_444)
+        {
+          // only 444 is handled.
+          assert(format==CHROMA_444);
+          exit(1);
+        }
+
+        // channel re-mapping
+        for(UInt comp=0; comp<numValidComp; comp++)
+        {
+          const ComponentID compIDsrc=ComponentID((comp+1)%numValidComp);
+          const ComponentID compIDdst=ComponentID(comp);
+          copyPlane(src, bIsForwards?compIDsrc:compIDdst, dest, bIsForwards?compIDdst:compIDsrc);
+        }
+      }
+      break;
+
+    case IPCOLOURSPACE_UNCHANGED:
+    default:
+      {
+        for(UInt comp=0; comp<numValidComp; comp++)
+          copyPlane(src, ComponentID(comp), dest, ComponentID(comp));
+      }
+      break;
+  }
+}
+
+#endif

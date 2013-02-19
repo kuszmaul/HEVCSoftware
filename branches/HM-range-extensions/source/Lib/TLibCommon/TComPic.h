@@ -56,7 +56,13 @@
 class TComPic
 {
 public:
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  typedef enum { PIC_YUV_ORG=0, PIC_YUV_REC=1, PIC_YUV_TRUE_ORG=2, NUM_PIC_YUV=3 } PIC_YUV_T;
+     // TRUE_ORG is the input file without any pre-encoder colour space conversion (but with possible bit depth increment)
+  TComPicYuv*   getPicYuvTrueOrg()        { return  m_apcPicYuv[PIC_YUV_TRUE_ORG]; }
+#else
   typedef enum { PIC_YUV_ORG=0, PIC_YUV_REC=1, NUM_PIC_YUV=2 } PIC_YUV_T;
+#endif
 
 private:
   UInt                  m_uiTLayer;               //  Temporal layer

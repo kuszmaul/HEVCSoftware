@@ -37,6 +37,9 @@
 
 #include "NALread.h"
 #include "TDecTop.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -660,19 +663,31 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   {
     case NAL_UNIT_VPS:
       xDecodeVPS();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,nalu.m_Bitstream->readByteAlignment(),0);
+#endif
       return false;
 
     case NAL_UNIT_SPS:
       xDecodeSPS();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,nalu.m_Bitstream->readByteAlignment(),0);
+#endif
       return false;
 
     case NAL_UNIT_PPS:
       xDecodePPS();
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,nalu.m_Bitstream->readByteAlignment(),0);
+#endif
       return false;
 
     case NAL_UNIT_SEI:
     case NAL_UNIT_SEI_SUFFIX:
       xDecodeSEI( nalu.m_Bitstream, nalu.m_nalUnitType );
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+//      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,nalu.m_Bitstream->readByteAlignment(),0); // NOTE: RExt - Byte alignment now read as part of xDecodeSEI (SEIReader::parseSEImessage)
+#endif
       return false;
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:

@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "10.0_RExt1.0_dev"                 ///< Current software version
+#define NV_VERSION        "10.0_RExt1.0_dev (BitAnalyser+RGBCommandLine)"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
