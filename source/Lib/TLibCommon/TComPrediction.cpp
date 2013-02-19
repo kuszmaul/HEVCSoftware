@@ -272,6 +272,14 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
     {
       intraPredAngle = bIsModeVer ? (intraPredAngle>>1) : 2*intraPredAngle;
       invAngle       = bIsModeVer ? 2*invAngle          : (invAngle>>1);
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+      if (std::abs(intraPredAngle) > 32)
+      {
+        intraPredAngle = 32 * signAng;
+        invAngle       = 256;
+      }
+#endif
     }
 
     Pel* refMain;
@@ -721,7 +729,11 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
     leftColumn[k]   <<= shift1Dhor;
   }
 
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  const UInt topRowShift = 0;
+#else
   const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
+#endif
 
   // Generate prediction signal
   for (Int y=0;y<height;y++)

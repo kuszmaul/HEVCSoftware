@@ -1258,6 +1258,9 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
                                       UInt          & uiAbsSum,
                                 const QpParam       & cQP
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+                               ,const Int             CBFDepthOffset
+#endif
                               )
 {
   const TComRectangle &rect = rTu.getRect(compID);
@@ -1265,10 +1268,64 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   const UInt uiHeight       = rect.height;
   TComDataCU* pcCU          = rTu.getCU();
   const UInt uiAbsPartIdx   = rTu.GetAbsPartIdxTU();
+  const UInt uiOrgTrDepth   = rTu.GetTransformDepthRel();
 
+  uiAbsSum=0;
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  if (uiWidth != uiHeight) //for intra, the TU will have been split above this level, so this condition won't be true, hence this only affects inter
+  {
+    //------------------------------------------------
+
+    //recurse deeper
+
+    TComTURecurse subTURecurse(rTu, false, TComTU::VERTICAL_SPLIT, true, compID);
+
+    do
+    {
+      //------------------
+   
+      //set sub-TU buffers
+      const UInt lineOffset = subTURecurse.GetSectionNumber() * subTURecurse.getRect(compID).height;
+
+      Pel    *subTUResidual        = pcResidual  + (lineOffset * uiStride);
+      TCoeff *subTUCoefficients    = rpcCoeff    + (lineOffset * subTURecurse.getRect(compID).width);
+#if ADAPTIVE_QP_SELECTION
+      TCoeff *subTUARLCoefficients = rpcArlCoeff + (lineOffset * subTURecurse.getRect(compID).width);
+#endif
+
+      //------------------
+
+      UInt subTUAbsSum = 0;
+
+      transformNxN(subTURecurse, compID, subTUResidual, uiStride, subTUCoefficients,
+#if ADAPTIVE_QP_SELECTION
+                   subTUARLCoefficients,
+#endif
+                   subTUAbsSum, cQP, (CBFDepthOffset + 1));
+
+      uiAbsSum += subTUAbsSum;
+
+      //------------------
+
+    }
+    while (subTURecurse.nextSection(rTu));
+
+    //------------------------------------------------
+
+    //copy the combined sub-TU CBF up to the parent level
+
+    if (uiAbsSum > 0) pcCU->bitwiseOrCbfPartRange((1 << (uiOrgTrDepth + CBFDepthOffset)), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+
+    //------------------------------------------------
+
+    return;
+  }
+#endif
+
+  //transform and quantise
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
-    uiAbsSum=0;
     for (UInt k = 0; k<uiHeight; k++)
     {
       for (UInt j = 0; j<uiWidth; j++)
@@ -1277,43 +1334,50 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
         uiAbsSum += abs(pcResidual[k*uiStride+j]);
       }
     }
-    return;
-  }
-
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
-  printBlock(pcResidual, uiWidth, uiHeight, uiStride);
-#endif
-
-  const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
-
-  uiAbsSum = 0;
-  assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
-
-  if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)
-  {
-    xTransformSkip( pcResidual, uiStride, m_plTempCoeff, rTu, compID );
   }
   else
   {
-    xT( g_bitDepth[toChannelType(compID)], useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
-  }
-
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
-  printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
+    printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
-  xQuant( rTu, m_plTempCoeff, rpcCoeff,
+    const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
+
+    assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
+
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)
+    {
+      xTransformSkip( pcResidual, uiStride, m_plTempCoeff, rTu, compID );
+    }
+    else
+    {
+      xT( g_bitDepth[toChannelType(compID)], useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+    }
+
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
+    printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+#endif
+
+    xQuant( rTu, m_plTempCoeff, rpcCoeff,
 
 #if ADAPTIVE_QP_SELECTION
-       rpcArlCoeff,
+         rpcArlCoeff,
 #endif
-       uiAbsSum, compID, cQP );
+         uiAbsSum, compID, cQP );
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
-  printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
+    printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
+#endif
+  }
+
+  //set the CBF
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << (uiOrgTrDepth + CBFDepthOffset)), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+#else
+  pcCU->setCbfSubParts((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
 #endif
 }
 
@@ -1331,6 +1395,37 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   const TComRectangle &rect = rTu.getRect(compID);
   const UInt uiWidth = rect.width;
   const UInt uiHeight = rect.height;
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  if (uiWidth != uiHeight) //for intra, the TU will have been split above this level, so this condition won't be true, hence this only affects inter
+  {
+    //------------------------------------------------
+
+    //recurse deeper
+
+    TComTURecurse subTURecurse(rTu, false, TComTU::VERTICAL_SPLIT, true, compID);
+
+    do
+    {
+      //------------------
+   
+      const UInt lineOffset = subTURecurse.GetSectionNumber() * subTURecurse.getRect(compID).height;
+
+      Pel    *subTUResidual     = rpcResidual + (lineOffset * uiStride);
+      TCoeff *subTUCoefficients = pcCoeff     + (lineOffset * subTURecurse.getRect(compID).width);
+
+      invTransformNxN(subTURecurse, compID, subTUResidual, uiStride, subTUCoefficients, cQP DEBUG_STRING_PASS_INTO(psDebug));
+
+      //------------------
+
+    }
+    while (subTURecurse.nextSection(rTu));
+
+    //------------------------------------------------
+
+    return;
+  }
+#endif
 
 #if defined DEBUG_STRING
   if (psDebug)
@@ -1350,68 +1445,69 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
         rpcResidual[k*uiStride+j] = pcCoeff[k*uiWidth+j];
       }
     }
-    return;
-  }
-
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to dequantiser\n";
-  printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
-#endif
-
-  const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
-
-  xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
-
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between dequantiser and inverse-transform\n";
-  printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
-#endif
-
-#if defined DEBUG_STRING
-  if (psDebug)
-  {
-    std::stringstream ss(stringstream::out);
-    printBlockToStream(ss, "###InvTran deq: ", m_plTempCoeff, uiWidth, uiHeight, uiWidth);
-    (*psDebug)+=ss.str();
-  }
-#endif
-
-  if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
-  {
-    xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, rTu, compID );
-
-#if defined DEBUG_STRING
-    if (psDebug)
-    {
-      Int iTransformShift = getTransformShift(rTu.GetEquivalentLog2TrSize(compID)) + (roundTransformShiftUp(compID, rTu.GetChromaFormat(), true) ? 1 : 0);
-      std::stringstream ss(stringstream::out);
-      printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
-      ss << "TransShift=" << iTransformShift << "\n";
-      (*psDebug)+=ss.str();
-      (*psDebug)+="(TS)\n";
-    }
-#endif
   }
   else
   {
-    xIT( g_bitDepth[toChannelType(compID)], useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to dequantiser\n";
+    printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
+#endif
+
+    const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
+
+    xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
+
+#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between dequantiser and inverse-transform\n";
+    printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+#endif
 
 #if defined DEBUG_STRING
     if (psDebug)
     {
       std::stringstream ss(stringstream::out);
-      printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
+      printBlockToStream(ss, "###InvTran deq: ", m_plTempCoeff, uiWidth, uiHeight, uiWidth);
       (*psDebug)+=ss.str();
-      (*psDebug)+="(Non TS)\n";
     }
 #endif
-  }
+
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
+    {
+      xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, rTu, compID );
+
+#if defined DEBUG_STRING
+      if (psDebug)
+      {
+        Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
+        std::stringstream ss(stringstream::out);
+        printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
+        ss << "TransShift=" << iTransformShift << "\n";
+        (*psDebug)+=ss.str();
+        (*psDebug)+="(TS)\n";
+      }
+#endif
+    }
+    else
+    {
+      xIT( g_bitDepth[toChannelType(compID)], useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+
+#if defined DEBUG_STRING
+      if (psDebug)
+      {
+        std::stringstream ss(stringstream::out);
+        printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
+        (*psDebug)+=ss.str();
+        (*psDebug)+="(Non TS)\n";
+      }
+#endif
+    }
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-  std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
-  printBlock(rpcResidual, uiWidth, uiHeight, uiStride);
-  g_debugCounter++;
+    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
+    printBlock(rpcResidual, uiWidth, uiHeight, uiStride);
+    g_debugCounter++;
 #endif
+  }
 }
 
 Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,

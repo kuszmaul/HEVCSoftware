@@ -39,11 +39,16 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
-TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, const UInt initTrDepth444relCU)
+/*static*/ const UInt TComTU::NUMBER_OF_SECTIONS[TComTU::NUMBER_OF_SPLIT_MODES] = { 1, 2, 4 };
+
+static     const UInt         partIdxStepShift  [TComTU::NUMBER_OF_SPLIT_MODES] = { 0, 1, 2 };
+
+//----------------------------------------------------------------------------------------------------------------------
+
+TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, const UInt initTrDepthRelCU)
   : mChromaFormat(pcCU->getSlice()->getSPS()->getChromaFormatIdc()),
     mbProcessLastOfLevel(true), // does not matter. the top level is not 4 quadrants.
-    mCuTrDepth444(cuDepth),
-    mTrDepth444RelCU(initTrDepth444relCU),
+    mCuDepth(cuDepth),
     mSection(0),
     mSplitMode(DONT_SPLIT),
     mAbsPartIdxCU(absPartIdxCU),
@@ -54,12 +59,13 @@ TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, co
     mpParent(NULL)
 {
   TComSPS *pSPS=pcCU->getSlice()->getSPS();
-  mLog2TrLumaSize = g_aucConvertToBit[pSPS->getMaxCUWidth() >> (mCuTrDepth444+mTrDepth444RelCU)]+2;
+  mLog2TrLumaSize = g_aucConvertToBit[pSPS->getMaxCUWidth() >> (mCuDepth+initTrDepthRelCU)]+2;
 
   const UInt baseOffset444=pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight()*absPartIdxCU;
 
   for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
   {
+    mTrDepthRelCU[i] = initTrDepthRelCU;
     const UInt csx=getComponentScaleX(ComponentID(i), mChromaFormat);
     const UInt csy=getComponentScaleY(ComponentID(i), mChromaFormat);
     mOrigWidth[i]=mRect[i].width = (i < getNumberValidComponents(mChromaFormat)) ? (pcCU->getWidth( absPartIdxCU) >> csx) : 0;
@@ -80,20 +86,24 @@ TComTURecurse::TComTURecurse(      TComDataCU *pcCU,
 
 
 
-TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MODE splitMode)
+TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MODE splitMode, const Bool splitAtCurrentDepth, const ComponentID absPartIdxSourceComponent)
   : mChromaFormat(parent.mChromaFormat),
     mbProcessLastOfLevel(bProcessLastOfLevel),
-    mCuTrDepth444(parent.mCuTrDepth444),
-    mTrDepth444RelCU(parent.mTrDepth444RelCU + (splitMode==DONT_SPLIT?0:1)),
+    mCuDepth(parent.mCuDepth),
     mSection(0),
     mSplitMode(splitMode),
     mAbsPartIdxCU(parent.mAbsPartIdxCU),
-    mAbsPartIdxTURelCU(parent.mAbsPartIdxTURelCU),
-    mAbsPartIdxStep(parent.mAbsPartIdxStep >> splitMode),
+    mAbsPartIdxTURelCU(parent.GetRelPartIdxTU(absPartIdxSourceComponent)),
+    mAbsPartIdxStep(std::max<UInt>(1, (parent.GetAbsPartIdxNumParts(absPartIdxSourceComponent) >> partIdxStepShift[splitMode]))),
     mpcCU(parent.mpcCU),
-    mLog2TrLumaSize(parent.mLog2TrLumaSize - (splitMode==DONT_SPLIT?0:1)),
+    mLog2TrLumaSize(parent.mLog2TrLumaSize - ((splitMode != QUAD_SPLIT) ? 0 : 1)), //no change in width for vertical split
     mpParent(&parent)
 {
+  for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
+  {
+    mTrDepthRelCU[i] = parent.mTrDepthRelCU[i] + ((splitAtCurrentDepth || (splitMode == DONT_SPLIT)) ? 0 : 1);
+  }
+
   if (mSplitMode==DONT_SPLIT)
   {
     for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
@@ -137,6 +147,7 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
         mRect[i].width = parent.mRect[i].width;
         mRect[i].height= parent.mRect[i].height;
         mCodeAll[i]=false; // go up a level, so only process one entry of a quadrant
+        mTrDepthRelCU[i]--;
       }
       else if (mRect[i].width < mRect[i].height)
       {

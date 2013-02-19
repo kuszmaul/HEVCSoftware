@@ -844,33 +844,94 @@ Void TEncSbac::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
+#else
 Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
+#endif
 {
   TComDataCU* pcCU = rTu.getCU();
 
-        UInt uiCbf      = pcCU->getCbf     ( rTu.GetAbsPartIdxTU(), compID, rTu.GetTransformDepthRel() );
+  const UInt absPartIdx   = rTu.GetAbsPartIdxTU(compID);
+  const UInt TUDepth      = rTu.GetTransformDepthRel();
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-        UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
+        UInt uiCtx        = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
 #else
-        UInt uiCtx      = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
+        UInt uiCtx        = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
 #endif
-  const UInt contextSet = toChannelType(compID);
+  const UInt contextSet   = toChannelType(compID);
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  const UInt width        = rTu.getRect(compID).width;
+  const UInt height       = rTu.getRect(compID).height;
+  const Bool canQuadSplit = (width >= (MIN_TU_SIZE * 2)) && (height >= (MIN_TU_SIZE * 2));
+
+  //NOTE: RExt - since the CBF for chroma is coded at the highest level possible, if sub-TUs are
+  //             to be coded for a 4x8 chroma TU, their CBFs must be coded at the highest 4x8 level
+  //             (i.e. where luma TUs are 8x8 rather than 4x4)
+  //    ___ ___
+  //   |   |   | <- 4 x (8x8 luma + 4x8 4:2:2 chroma)
+  //   |___|___|    each quadrant has its own chroma CBF
+  //   |   |   | _ _ _ _
+  //   |___|___|        |
+  //   <--16--->        V
+  //                   _ _
+  //                  |_|_| <- 4 x 4x4 luma + 1 x 4x8 4:2:2 chroma
+  //                  |_|_|    no chroma CBF is coded - instead the parent CBF is inherited
+  //                  <-8->    if sub-TUs are present, their CBFs had to be coded at the parent level
+
+  const UInt lowestTUDepth = TUDepth + ((!lowestLevel && !canQuadSplit) ? 1 : 0); //unsplittable TUs inherit their parent's CBF
+
+  if ((width != height) && (lowestLevel || !canQuadSplit)) //if sub-TUs are present
+  {
+    const UInt subTUDepth        = lowestTUDepth + 1;                      //if this is the lowest level of the TU-tree, the sub-TUs are directly below. Otherwise, this must be the level above the lowest level (as specified above)
+    const UInt partIdxesPerSubTU = rTu.GetAbsPartIdxNumParts(compID) >> 1;
+
+    for (UInt subTU = 0; subTU < 2; subTU++)
+    {
+      const UInt subTUAbsPartIdx = absPartIdx + (subTU * partIdxesPerSubTU);
+      const UInt uiCbf           = pcCU->getCbf(subTUAbsPartIdx, compID, subTUDepth);
+
+      m_pcBinIf->encodeBin(uiCbf, m_cCUQtCbfSCModel.get(0, contextSet, uiCtx));
+
+      DTRACE_CABAC_VL( g_nSymbolCounter++ )
+      DTRACE_CABAC_T( "\tparseQtCbf()" )
+      DTRACE_CABAC_T( "\tsub-TU=" )
+      DTRACE_CABAC_V( subTU )
+      DTRACE_CABAC_T( "\tsymbol=" )
+      DTRACE_CABAC_V( uiCbf )
+      DTRACE_CABAC_T( "\tctx=" )
+      DTRACE_CABAC_V( uiCtx )
+      DTRACE_CABAC_T( "\tetype=" )
+      DTRACE_CABAC_V( compID )
+      DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+      DTRACE_CABAC_V( subTUAbsPartIdx )
+      DTRACE_CABAC_T( "\n" )
+    }
+  }
+  else
+  {
+    const UInt uiCbf = pcCU->getCbf( absPartIdx, compID, lowestTUDepth );
+#else
+    const UInt uiCbf = pcCU->getCbf( absPartIdx, compID, TUDepth );
+#endif
+    m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );
 
 
-  m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );
-
-
-  DTRACE_CABAC_VL( g_nSymbolCounter++ )
-  DTRACE_CABAC_T( "\tparseQtCbf()" )
-  DTRACE_CABAC_T( "\tsymbol=" )
-  DTRACE_CABAC_V( uiCbf )
-  DTRACE_CABAC_T( "\tctx=" )
-  DTRACE_CABAC_V( uiCtx )
-  DTRACE_CABAC_T( "\tetype=" )
-  DTRACE_CABAC_V( compID )
-  DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
-  DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
-  DTRACE_CABAC_T( "\n" )
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tparseQtCbf()" )
+    DTRACE_CABAC_T( "\tsymbol=" )
+    DTRACE_CABAC_V( uiCbf )
+    DTRACE_CABAC_T( "\tctx=" )
+    DTRACE_CABAC_V( uiCtx )
+    DTRACE_CABAC_T( "\tetype=" )
+    DTRACE_CABAC_V( compID )
+    DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
+    DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
+    DTRACE_CABAC_T( "\n" )
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  }
+#endif
 }
 
 
@@ -1068,7 +1129,7 @@ Void TEncSbac::codeLastSignificantXY( UInt uiPosX, UInt uiPosY, Int width, Int h
 Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID )
 {
   TComDataCU* pcCU=rTu.getCU();
-  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU(compID);
   const TComRectangle &tuRect=rTu.getRect(compID);
   const UInt uiWidth=tuRect.width;
   const UInt uiHeight=tuRect.height;
@@ -1113,7 +1174,12 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   // compute number of significant coefficients
   UInt uiNumSig = TEncEntropy::countNonZeroCoeffs(pcCoef, uiWidth * uiHeight);
 
-  if ( uiNumSig == 0 ) return;
+  if ( uiNumSig == 0 )
+  {
+    std::cerr << "ERROR: codeCoeffNxN called for empty TU!" << std::endl;
+    assert(false);
+    exit(1);
+  }
 
   //--------------------------------------------------------------------------------------------------
 

@@ -49,7 +49,7 @@
 
 /// padding of unavailable reference samples for intra prediction
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
-                           const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
+                           const Int iNumIntraNeighbor, const Int unitWidth, const Int unitHeight, const Int iAboveUnits, const Int iLeftUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt );
 
@@ -102,51 +102,43 @@ Void TComPattern::initPattern (Pel* piY,
 // NOTE: RExt - this has been kept in this C++ file to allow easier tracking/comparison against HM.
 Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug), Bool bLMmode)
 {
-  const ComponentID regionCompID = bLMmode ? COMPONENT_Cb : compID;
-  const ChannelType chType       = toChannelType(compID);
+  // NOTE: RExt - This function has been modified for increased flexibility as part of the Square TU 4:2:2 implementation
+  const ChannelType chType    = toChannelType(compID);
 
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiZorderIdxInPart=rTu.GetAbsPartIdxTU();
+  const UInt uiTuWidth        = rTu.getRect(compID).width;
+  const UInt uiTuHeight       = rTu.getRect(compID).height;
+  const UInt uiTuWidth2       = uiTuWidth  << 1;
+  const UInt uiTuHeight2      = uiTuHeight << 1;
+
+  const Int  iBaseUnitSize    = g_uiMaxCUWidth >> g_uiMaxCUDepth;
+  const Int  iUnitWidth       = iBaseUnitSize  >> pcCU->getPic()->getPicYuvRec()->getComponentScaleX(compID);
+  const Int  iUnitHeight      = iBaseUnitSize  >> pcCU->getPic()->getPicYuvRec()->getComponentScaleY(compID);
+  const Int  iTUWidthInUnits  = uiTuWidth  / iUnitWidth;
+  const Int  iTUHeightInUnits = uiTuHeight / iUnitHeight;
+  const Int  iAboveUnits      = iTUWidthInUnits  << 1;
+  const Int  iLeftUnits       = iTUHeightInUnits << 1;
+
+  const Int  iPartIdxStride   = pcCU->getPic()->getNumPartInWidth(); //NOTE: RExt - despite the name "TComPic::getNumPartInWidth", this gets the number of parts in an **LCU** width, not the picture width
+  const UInt uiPartIdxLT      = pcCU->getZorderIdxInCU() + uiZorderIdxInPart;
+  const UInt uiPartIdxRT      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] +   iTUWidthInUnits  - 1                   ];
+  const UInt uiPartIdxLB      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] + ((iTUHeightInUnits - 1) * iPartIdxStride)];
 
   Int   iPicStride = pcCU->getPic()->getStride(compID);
-  Int   iUnitSize = 0;
-  Int   iNumUnitsInCu = 0;
-  Int   iTotalUnits = 0;
   Bool  bNeighborFlags[4 * MAX_NUM_SPU_W + 1];
   Int   iNumIntraNeighbor = 0;
 
-  UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB;
+  bNeighborFlags[iLeftUnits] = isAboveLeftAvailable( pcCU, uiPartIdxLT );
+  iNumIntraNeighbor += bNeighborFlags[iLeftUnits] ? 1 : 0;
+  iNumIntraNeighbor  += isAboveAvailable     ( pcCU, uiPartIdxLT, uiPartIdxRT, (bNeighborFlags + iLeftUnits + 1)                    );
+  iNumIntraNeighbor  += isAboveRightAvailable( pcCU, uiPartIdxLT, uiPartIdxRT, (bNeighborFlags + iLeftUnits + 1 + iTUWidthInUnits ) );
+  iNumIntraNeighbor  += isLeftAvailable      ( pcCU, uiPartIdxLT, uiPartIdxLB, (bNeighborFlags + iLeftUnits - 1)                    );
+  iNumIntraNeighbor  += isBelowLeftAvailable ( pcCU, uiPartIdxLT, uiPartIdxLB, (bNeighborFlags + iLeftUnits - 1 - iTUHeightInUnits) );
 
-  UInt uiPartDepth=rTu.GetTransformDepthRelAdj(regionCompID);
-
-  const UInt csx=pcCU->getPic()->getPicYuvRec()->getComponentScaleX(compID);
-  const UInt csy=pcCU->getPic()->getPicYuvRec()->getComponentScaleY(compID);
-
-  const UInt  uiTuWidth_  = pcCU->getWidth (0) >> uiPartDepth;
-  const UInt  uiTuHeight_ = pcCU->getHeight(0) >> uiPartDepth;
-
-  pcCU->deriveLeftRightTopIdxAdi( uiPartIdxLT, uiPartIdxRT, uiZorderIdxInPart, uiPartDepth );
-  pcCU->deriveLeftBottomIdxAdi  ( uiPartIdxLB,              uiZorderIdxInPart, uiPartDepth );
-
-
-  iUnitSize      = (g_uiMaxCUWidth >> g_uiMaxCUDepth) >> csx;
-  iNumUnitsInCu  = (uiTuWidth_ / iUnitSize) >> csx; // Not actually csx dependent!
-  iTotalUnits    = (iNumUnitsInCu << 2) + 1;
-
-  bNeighborFlags[iNumUnitsInCu*2] = isAboveLeftAvailable( pcCU, uiPartIdxLT );
-  iNumIntraNeighbor  += (Int)(bNeighborFlags[iNumUnitsInCu*2]);
-  iNumIntraNeighbor  += isAboveAvailable     ( pcCU, uiPartIdxLT, uiPartIdxRT, bNeighborFlags+(iNumUnitsInCu*2)+1 );
-  iNumIntraNeighbor  += isAboveRightAvailable( pcCU, uiPartIdxLT, uiPartIdxRT, bNeighborFlags+(iNumUnitsInCu*3)+1 );
-  iNumIntraNeighbor  += isLeftAvailable      ( pcCU, uiPartIdxLT, uiPartIdxLB, bNeighborFlags+(iNumUnitsInCu*2)-1 );
-  iNumIntraNeighbor  += isBelowLeftAvailable ( pcCU, uiPartIdxLT, uiPartIdxLB, bNeighborFlags+ iNumUnitsInCu   -1 );
-  
   bAbove = true;
   bLeft  = true;
 
-  const Int          uiTuWidth   = uiTuWidth_  >> csx;
-  const Int          uiTuHeight  = uiTuHeight_ >> csy;
-  const Int          uiTuWidth2  = uiTuWidth<<1;
-  const Int          uiTuHeight2 = uiTuHeight<<1;
   const ChromaFormat chFmt       = rTu.GetChromaFormat();
   const UInt         uiROIWidth  = uiTuWidth2+1;
   const UInt         uiROIHeight = uiTuHeight2+1;
@@ -160,8 +152,8 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   {
     Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
-    fillReferenceSamples (g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu,
-                          iTotalUnits, uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt);
+    fillReferenceSamples (g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
+                          uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt);
 
 
 #ifdef DEBUG_STRING
@@ -308,13 +300,15 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 }
 
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
-                           const Int iNumIntraNeighbor, const Int unitWidth, const Int iNumUnitsInCu, const Int iTotalUnits,
+                           const Int iNumIntraNeighbor, const Int unitWidth, const Int unitHeight, const Int iAboveUnits, const Int iLeftUnits,
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt )
 {
+  // NOTE: RExt - This function has been modified for increased flexibility as part of the Square TU 4:2:2 implementation
   const Pel* piRoiTemp;
   Int  i, j;
   Int  iDCValue = 1 << (bitDepth - 1);
+  const Int iTotalUnits = iAboveUnits + iLeftUnits + 1; //+1 for top-left
 
   if (iNumIntraNeighbor == 0)
   {
@@ -349,10 +343,8 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
   }
   else // reference samples are partially available
   {
-    const Int unitHeight = unitWidth << ((isChroma(chType) && pcCU->getPic()->getChromaFormat()==CHROMA_422) ? 1 : 0);
-    Int  iNumUnits2 = iNumUnitsInCu<<1;
     // all above units have "unitWidth" samples each, all left/below-left units have "unitHeight" samples each
-    Int  iTotalSamples = 2*iNumUnitsInCu*unitHeight + (2*iNumUnitsInCu+1)*unitWidth;
+    const Int  iTotalSamples = (iLeftUnits * unitHeight) + ((iAboveUnits + 1) * unitWidth);
     Pel  piAdiLine[5 * MAX_CU_SIZE];
     Pel  *piAdiLineTemp; 
     const Bool *pbNeighborFlags;
@@ -366,8 +358,8 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     
     // Fill top-left sample
     piRoiTemp = piRoiOrigin - iPicStride - 1;
-    piAdiLineTemp = piAdiLine + (iNumUnits2*unitHeight);
-    pbNeighborFlags = bNeighborFlags + iNumUnits2;
+    piAdiLineTemp = piAdiLine + (iLeftUnits * unitHeight);
+    pbNeighborFlags = bNeighborFlags + iLeftUnits;
     if (*pbNeighborFlags)
     {
       Pel topLeftVal=piRoiTemp[0];
@@ -377,12 +369,12 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       }
     }
 
-    // Fill left & below-left samples
+    // Fill left & below-left samples (downwards)
     piRoiTemp += iPicStride;
     piAdiLineTemp--;
     pbNeighborFlags--;
 
-    for (j=0; j<iNumUnits2; j++)
+    for (j=0; j<iLeftUnits; j++)
     {
       if (*pbNeighborFlags)
       {
@@ -396,12 +388,12 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       pbNeighborFlags--;
     }
 
-    // Fill above & above-right samples (each unit has "unitWidth" samples"
+    // Fill above & above-right samples (left-to-right) (each unit has "unitWidth" samples)
     piRoiTemp = piRoiOrigin - iPicStride;
     // offset line buffer by iNumUints2*unitHeight (for left/below-left) + unitWidth (for above-left)
-    piAdiLineTemp = piAdiLine + iNumUnits2*unitHeight + unitWidth;
-    pbNeighborFlags = bNeighborFlags + iNumUnits2 + 1;
-    for (j=0; j<iNumUnits2; j++)
+    piAdiLineTemp = piAdiLine + (iLeftUnits * unitHeight) + unitWidth;
+    pbNeighborFlags = bNeighborFlags + iLeftUnits + 1;
+    for (j=0; j<iAboveUnits; j++)
     {
       if (*pbNeighborFlags)
       {
@@ -418,7 +410,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     // Pad reference samples when necessary
     Int iCurrJnit = 0;
     Pel  *piAdiLineCur   = piAdiLine;
-    Pel  * const piAdiLineTopRowAdjusted = piAdiLine + iNumUnits2*unitHeight - iNumUnits2*unitWidth;
+    const UInt piAdiLineTopRowOffset = iLeftUnits * (unitHeight - unitWidth);
 
     if (!bNeighborFlags[0])
     {
@@ -429,10 +421,10 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
         {
           iNext++;
         }
-        Pel *piAdiLineNext=(iNext<iNumUnits2) ? (piAdiLine+iNext*unitHeight) : (piAdiLineTopRowAdjusted+iNext*unitWidth);
+        Pel *piAdiLineNext = piAdiLine + ((iNext < iLeftUnits) ? (iNext * unitHeight) : (piAdiLineTopRowOffset + (iNext * unitWidth)));
         const Pel refSample = *piAdiLineNext;
         // Pad unavailable samples with new value
-        Int iNextOrTop=iNext < iNumUnits2 ? iNext : iNumUnits2;
+        Int iNextOrTop = std::min<Int>(iNext, iLeftUnits);
         // fill left column
         while (iCurrJnit < iNextOrTop)
         {
@@ -462,7 +454,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       if (!bNeighborFlags[iCurrJnit]) // samples not available
       {
         {
-          const Int numSamplesInCurrUnit = iCurrJnit >= iNumUnits2 ? unitWidth : unitHeight;
+          const Int numSamplesInCurrUnit = (iCurrJnit >= iLeftUnits) ? unitWidth : unitHeight;
           const Pel refSample = *(piAdiLineCur-1);
           for (i=0; i<numSamplesInCurrUnit; i++)
           {
@@ -474,7 +466,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       }
       else
       {
-        piAdiLineCur += iCurrJnit >= iNumUnits2 ? unitWidth : unitHeight;
+        piAdiLineCur += (iCurrJnit >= iLeftUnits) ? unitWidth : unitHeight;
         iCurrJnit++;
       }
     }

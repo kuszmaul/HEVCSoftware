@@ -141,7 +141,11 @@ public:
                            TCoeff        *& rpcArlCoeff,
 #endif
                            UInt&            uiAbsSum,
-                     const QpParam        & cQP );
+                     const QpParam        & cQP
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+                    ,const Int              CBFDepthOffset
+#endif
+                    );
 
 
   Void invTransformNxN(      TComTU       & rTu,
