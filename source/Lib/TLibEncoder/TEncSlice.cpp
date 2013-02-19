@@ -387,6 +387,15 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setNumRefIdx(REF_PIC_LIST_0,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
   rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
   
+#if L0386_DB_METRIC
+  if ( m_pcCfg->getDeblockingFilterMetric() )
+  {
+    rpcSlice->setDeblockingFilterOverrideFlag(true);
+    rpcSlice->setDeblockingFilterDisable(false);
+    rpcSlice->setDeblockingFilterBetaOffsetDiv2( 0 );
+    rpcSlice->setDeblockingFilterTcOffsetDiv2( 0 );
+  } else
+#endif
   if (rpcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
   {
     rpcSlice->getPPS()->setDeblockingFilterOverrideEnabledFlag( !m_pcCfg->getLoopFilterOffsetInPPS() );

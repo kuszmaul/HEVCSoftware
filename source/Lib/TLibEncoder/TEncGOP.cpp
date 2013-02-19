@@ -866,6 +866,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     //-- Loop filter
     Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
     m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
+#if L0386_DB_METRIC
+    if ( m_pcCfg->getDeblockingFilterMetric() )
+    {
+      dblMetric(pcPic, uiNumSlices);
+    }
+#endif
     m_pcLoopFilter->loopFilterPic( pcPic );
 
     pcSlice = pcPic->getSlice(0);
@@ -2463,6 +2469,135 @@ Int TEncGOP::xGetFirstSeiLocation(AccessUnit &accessUnit)
   }
 //  assert(it != accessUnit.end());  // Triggers with some legit configurations
   return seiStartPos;
+}
+#endif
+
+#if L0386_DB_METRIC
+Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
+{
+  const UChar betatable[52] =
+  {
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64
+  };
+  TComPicYuv* pcPicYuvRec = pcPic->getPicYuvRec();
+  Pel* Rec    = pcPicYuvRec->getLumaAddr( 0 );
+  Pel* tempRec = Rec;
+  Int  stride = pcPicYuvRec->getStride();
+  UInt log2maxTB = pcPic->getSlice(0)->getSPS()->getQuadtreeTULog2MaxSize();
+  UInt maxTBsize = (1<<log2maxTB);
+  const UInt minBlockArtSize = 8;
+  const UInt picWidth = pcPicYuvRec->getWidth();
+  const UInt picHeight = pcPicYuvRec->getHeight();
+  const UInt noCol = (picWidth>>log2maxTB);
+  const UInt noRows = (picHeight>>log2maxTB);
+  UInt64 *colSAD = (UInt64*)malloc(noCol*sizeof(UInt64));
+  UInt64 *rowSAD = (UInt64*)malloc(noRows*sizeof(UInt64));
+  UInt colIdx = 0;
+  UInt rowIdx = 0;
+  Pel p0, p1, p2, q0, q1, q2;
+  
+  Int qp = pcPic->getSlice(0)->getSliceQp();
+  Int bitdepthScale = 1 << (g_bitDepthY-8);
+  Int indexB = Clip3(0, MAX_QP, qp);
+  Int beta = betatable[indexB]*bitdepthScale;
+  const Int thr2 = (beta>>2);
+  const Int thr1 = 2*bitdepthScale;
+  UInt a = 0;
+  
+  memset(colSAD, 0, noCol*sizeof(UInt64));
+  memset(rowSAD, 0, noRows*sizeof(UInt64));
+  
+  if (maxTBsize > minBlockArtSize)
+  {
+    // Analyze vertical artifact edges
+    for(Int c = maxTBsize; c < picWidth; c += maxTBsize)
+    {
+      for(Int r = 0; r < picHeight; r++)
+      {
+        p2 = Rec[c-3];
+        p1 = Rec[c-2];
+        p0 = Rec[c-1];
+        q0 = Rec[c];
+        q1 = Rec[c+1];
+        q2 = Rec[c+2];
+        a = ((abs(p2-(p1<<1)+p0)+abs(q0-(q1<<1)+q2))<<1);
+        if ( thr1 < a && a < thr2)
+        {
+          colSAD[colIdx] += abs(p0 - q0);
+        }
+        Rec += stride;
+      }
+      colIdx++;
+      Rec = tempRec;
+    }
+    
+    // Analyze horizontal artifact edges
+    for(Int r = maxTBsize; r < picHeight; r += maxTBsize)
+    {
+      for(Int c = 0; c < picWidth; c++)
+      {
+        p2 = Rec[c + (r-3)*stride];
+        p1 = Rec[c + (r-2)*stride];
+        p0 = Rec[c + (r-1)*stride];
+        q0 = Rec[c + r*stride];
+        q1 = Rec[c + (r+1)*stride];
+        q2 = Rec[c + (r+2)*stride];
+        a = ((abs(p2-(p1<<1)+p0)+abs(q0-(q1<<1)+q2))<<1);
+        if (thr1 < a && a < thr2)
+        {
+          rowSAD[rowIdx] += abs(p0 - q0);
+        }
+      }
+      rowIdx++;
+    }
+  }
+  
+  UInt64 colSADsum = 0;
+  UInt64 rowSADsum = 0;
+  for(Int c = 0; c < noCol-1; c++)
+  {
+    colSADsum += colSAD[c];
+  }
+  for(Int r = 0; r < noRows-1; r++)
+  {
+    rowSADsum += rowSAD[r];
+  }
+  
+  colSADsum <<= 10;
+  rowSADsum <<= 10;
+  colSADsum /= (noCol-1);
+  colSADsum /= picHeight;
+  rowSADsum /= (noRows-1);
+  rowSADsum /= picWidth;
+  
+  UInt64 avgSAD = ((colSADsum + rowSADsum)>>1);
+  avgSAD >>= (g_bitDepthY-8);
+  
+  if ( avgSAD > 2048 )
+  {
+    avgSAD >>= 9;
+    Int offset = Clip3(2,6,(Int)avgSAD);
+    for (Int i=0; i<uiNumSlices; i++)
+    {
+      pcPic->getSlice(i)->setDeblockingFilterOverrideFlag(true);
+      pcPic->getSlice(i)->setDeblockingFilterDisable(false);
+      pcPic->getSlice(i)->setDeblockingFilterBetaOffsetDiv2( offset );
+      pcPic->getSlice(i)->setDeblockingFilterTcOffsetDiv2( offset );
+    }
+  }
+  else
+  {
+    for (Int i=0; i<uiNumSlices; i++)
+    {
+      pcPic->getSlice(i)->setDeblockingFilterOverrideFlag(false);
+      pcPic->getSlice(i)->setDeblockingFilterDisable(        pcPic->getSlice(i)->getPPS()->getPicDisableDeblockingFilterFlag() );
+      pcPic->getSlice(i)->setDeblockingFilterBetaOffsetDiv2( pcPic->getSlice(i)->getPPS()->getDeblockingFilterBetaOffsetDiv2() );
+      pcPic->getSlice(i)->setDeblockingFilterTcOffsetDiv2(   pcPic->getSlice(i)->getPPS()->getDeblockingFilterTcOffsetDiv2()   );
+    }
+  }
+  
+  free(colSAD);
+  free(rowSAD);
 }
 #endif
 //! \}
