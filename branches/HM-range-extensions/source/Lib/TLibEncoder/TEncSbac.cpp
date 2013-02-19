@@ -1039,29 +1039,7 @@ Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
 #else
   UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType );
 #endif
-
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-  const ComponentID compID       = isChroma(chType) ? COMPONENT_Cb : COMPONENT_Y;
-  const UInt        width        = rTu.getRect(compID).width;
-  const UInt        height       = rTu.getRect(compID).height;
-
-  //check that Cb and Cr are the same
-  assert(isLuma(chType) || ((width == rTu.getRect(COMPONENT_Cr).width) && (height == rTu.getRect(COMPONENT_Cr).height)));
-
-  if (width != height) //a zero CBF is only ever coded at the lowest level (since there are no more levels after a zero)
-  {
-    for (UInt subTU = 0; subTU < 2; subTU++)
-    {
-      m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
-    }
-  }
-  else
-  {
-#endif
-    m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-  }
-#endif
+  m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
 }
 
 Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU )

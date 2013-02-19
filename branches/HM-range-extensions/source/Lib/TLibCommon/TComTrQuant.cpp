@@ -1258,9 +1258,6 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
                                       UInt          & uiAbsSum,
                                 const QpParam       & cQP
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-                               ,const Int             CBFDepthOffset
-#endif
                               )
 {
   const TComRectangle &rect = rTu.getRect(compID);
@@ -1271,57 +1268,6 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   const UInt uiOrgTrDepth   = rTu.GetTransformDepthRel();
 
   uiAbsSum=0;
-
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-  if (uiWidth != uiHeight) //for intra, the TU will have been split above this level, so this condition won't be true, hence this only affects inter
-  {
-    //------------------------------------------------
-
-    //recurse deeper
-
-    TComTURecurse subTURecurse(rTu, false, TComTU::VERTICAL_SPLIT, true, compID);
-
-    do
-    {
-      //------------------
-   
-      //set sub-TU buffers
-      const UInt lineOffset = subTURecurse.GetSectionNumber() * subTURecurse.getRect(compID).height;
-
-      Pel    *subTUResidual        = pcResidual  + (lineOffset * uiStride);
-      TCoeff *subTUCoefficients    = rpcCoeff    + (lineOffset * subTURecurse.getRect(compID).width);
-#if ADAPTIVE_QP_SELECTION
-      TCoeff *subTUARLCoefficients = rpcArlCoeff + (lineOffset * subTURecurse.getRect(compID).width);
-#endif
-
-      //------------------
-
-      UInt subTUAbsSum = 0;
-
-      transformNxN(subTURecurse, compID, subTUResidual, uiStride, subTUCoefficients,
-#if ADAPTIVE_QP_SELECTION
-                   subTUARLCoefficients,
-#endif
-                   subTUAbsSum, cQP, (CBFDepthOffset + 1));
-
-      uiAbsSum += subTUAbsSum;
-
-      //------------------
-
-    }
-    while (subTURecurse.nextSection(rTu));
-
-    //------------------------------------------------
-
-    //copy the combined sub-TU CBF up to the parent level
-
-    if (uiAbsSum > 0) pcCU->bitwiseOrCbfPartRange((1 << (uiOrgTrDepth + CBFDepthOffset)), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-
-    //------------------------------------------------
-
-    return;
-  }
-#endif
 
   //transform and quantise
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
@@ -1375,7 +1321,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 
   //set the CBF
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-  pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << (uiOrgTrDepth + CBFDepthOffset)), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+  pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
 #else
   pcCU->setCbfSubParts((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
 #endif
