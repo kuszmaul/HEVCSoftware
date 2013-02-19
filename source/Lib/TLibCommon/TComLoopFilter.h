@@ -113,6 +113,12 @@ public:
   
   /// picture-level deblocking filter
   Void loopFilterPic( TComPic* pcPic );
+
+  static Int getBeta( Int qp )
+  {
+    Int indexB = Clip3( 0, MAX_QP, qp );
+    return sm_betaTable[ indexB ];
+  }
 };
 
 //! \}
