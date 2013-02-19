@@ -2475,10 +2475,6 @@ Int TEncGOP::xGetFirstSeiLocation(AccessUnit &accessUnit)
 #if L0386_DB_METRIC
 Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
 {
-  const UChar betatable[52] =
-  {
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64
-  };
   TComPicYuv* pcPicYuvRec = pcPic->getPicYuvRec();
   Pel* Rec    = pcPicYuvRec->getLumaAddr( 0 );
   Pel* tempRec = Rec;
@@ -2498,8 +2494,7 @@ Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
   
   Int qp = pcPic->getSlice(0)->getSliceQp();
   Int bitdepthScale = 1 << (g_bitDepthY-8);
-  Int indexB = Clip3(0, MAX_QP, qp);
-  Int beta = betatable[indexB]*bitdepthScale;
+  Int beta = TComLoopFilter::getBeta( qp ) * bitdepthScale;
   const Int thr2 = (beta>>2);
   const Int thr1 = 2*bitdepthScale;
   UInt a = 0;
