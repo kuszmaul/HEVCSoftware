@@ -98,6 +98,9 @@ protected:
   __inline Int xCalcDP( Pel* piSrc, Int iOffset);
   __inline Int xCalcDQ( Pel* piSrc, Int iOffset);
   
+  static const UChar sm_tcTable[54];
+  static const UChar sm_betaTable[52];
+
 public:
   TComLoopFilter();
   virtual ~TComLoopFilter();
