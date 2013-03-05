@@ -1925,24 +1925,24 @@ Bool ParameterSetManager::activateSPSWithSEI(Int spsId)
 
 //! activate a PPS and depending on isIDR parameter also SPS and VPS
 //! \returns true, if activation is successful
-Bool ParameterSetManager::activatePPS(Int ppsId, Bool isIDR)
+Bool ParameterSetManager::activatePPS(Int ppsId, Bool isIRAP)
 {
   TComPPS *pps = m_ppsMap.getPS(ppsId);
   if (pps)
   {
     Int spsId = pps->getSPSId();
-    if (!isIDR && (spsId != m_activeSPSId))
+    if (!isIRAP && (spsId != m_activeSPSId))
     {
-      printf("Warning: tried to activate PPS referring to a inactive SPS at non-IDR.");
+      printf("Warning: tried to activate PPS referring to a inactive SPS at non-IRAP.");
       return false;
     }
     TComSPS *sps = m_spsMap.getPS(spsId);
     if (sps)
     {
       Int vpsId = sps->getVPSId();
-      if (!isIDR && (vpsId != m_activeVPSId))
+      if (!isIRAP && (vpsId != m_activeVPSId))
       {
-        printf("Warning: tried to activate PPS referring to a inactive VPS at non-IDR.");
+        printf("Warning: tried to activate PPS referring to a inactive VPS at non-IRAP.");
         return false;
       }
       if (m_vpsMap.getPS(vpsId))

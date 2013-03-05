@@ -255,7 +255,7 @@ Void TDecTop::xActivateParameterSets()
   TComSPS *sps = m_parameterSetManagerDecoder.getSPS(pps->getSPSId());
   assert (sps != 0);
 
-  if (false == m_parameterSetManagerDecoder.activatePPS(m_apcSlicePilot->getPPSId(),m_apcSlicePilot->getIdrPicFlag()))
+  if (false == m_parameterSetManagerDecoder.activatePPS(m_apcSlicePilot->getPPSId(),m_apcSlicePilot->isIRAP()))
   {
     printf ("Parameter set activation failed!");
     assert (0);
