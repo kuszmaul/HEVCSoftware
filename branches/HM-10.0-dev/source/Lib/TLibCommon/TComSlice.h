@@ -1395,9 +1395,10 @@ public:
   Bool      isReferenced()                                      { return m_bRefenced; }
   Void      setPOC              ( Int i )                       { m_iPOC              = i; if(getTLayer()==0) m_prevPOC=i; }
   Void      setNalUnitType      ( NalUnitType e )               { m_eNalUnitType      = e;      }
-  NalUnitType getNalUnitType    ()                              { return m_eNalUnitType;        }
+  NalUnitType getNalUnitType    () const                        { return m_eNalUnitType;        }
   Bool      getRapPicFlag       ();  
   Bool      getIdrPicFlag       ()                              { return getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP; }
+  Bool      isIRAP              () const                        { return (getNalUnitType() >= 16) && (getNalUnitType() <= 23); }  
   Void      checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& pocCRA, Bool& prevRAPisBLA);
   Void      decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic);
   Void      setSliceType        ( SliceType e )                 { m_eSliceType        = e;      }
@@ -1627,7 +1628,7 @@ public:
 
   //! activate a PPS and depending on isIDR parameter also SPS and VPS
   //! \returns true, if activation is successful
-  Bool activatePPS(Int ppsId, Bool isIDR);
+  Bool activatePPS(Int ppsId, Bool isIRAP);
 
   TComVPS* getActiveVPS(){ return m_vpsMap.getPS(m_activeVPSId); };
   TComSPS* getActiveSPS(){ return m_spsMap.getPS(m_activeSPSId); };
