@@ -1383,17 +1383,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
             // Substreams...
             TComOutputBitstream *pcOut = pcBitstreamRedirect;
-          Int offs = 0;
-          Int nss = pcSlice->getPPS()->getNumSubstreams();
-          if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
-          {
-            // 1st line present for WPP.
-            offs = pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU()/pcSlice->getPic()->getFrameWidthInCU();
-            nss  = pcSlice->getNumEntryPointOffsets()+1;
-          }
-          for ( UInt ui = 0 ; ui < nss; ui++ )
-          {
-            pcOut->addSubstream(&pcSubstreamsOut[ui+offs]);
+            Int offs = 0;
+            Int nss = pcSlice->getPPS()->getNumSubstreams();
+            if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
+            {
+              // 1st line present for WPP.
+              offs = pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU()/pcSlice->getPic()->getFrameWidthInCU();
+              nss  = pcSlice->getNumEntryPointOffsets()+1;
+            }
+            for ( UInt ui = 0 ; ui < nss; ui++ )
+            {
+              pcOut->addSubstream(&pcSubstreamsOut[ui+offs]);
             }
           }
 
@@ -1427,7 +1427,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
              || ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getVclHrdParametersPresentFlag() ) ) &&
               ( pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getSubPicCpbParamsPresentFlag() ) )
           {
-              UInt numNalus = 0;
+            UInt numNalus = 0;
             UInt numRBSPBytes = 0;
             for (AccessUnit::const_iterator it = accessUnit.begin(); it != accessUnit.end(); it++)
             {
