@@ -1404,7 +1404,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           // If current NALU is the first NALU of slice (containing slice header) and more NALUs exist (due to multiple dependent slices) then buffer it.
           // If current NALU is the last NALU of slice and a NALU was buffered, then (a) Write current NALU (b) Update an write buffered NALU at approproate location in NALU list.
           Bool bNALUAlignedWrittenToList    = false; // used to ensure current NALU is not written more than once to the NALU list.
-          xWriteTileLocationToSliceHeader(nalu, pcBitstreamRedirect, pcSlice);
+          xAttachSliceDataToNalUnit(nalu, pcBitstreamRedirect);
           accessUnit.push_back(new NALUnitEBSP(nalu));
 #if RATE_CONTROL_LAMBDA_DOMAIN
           actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
@@ -2274,42 +2274,25 @@ Double TEncGOP::xCalculateRVM()
   return( dRVM );
 }
 
-/** Determine the difference between consecutive tile sizes (in bytes) and writes it to  bistream rNalu [slice header]
- * \param rpcBitstreamRedirect contains the bitstream to be concatenated to rNalu. rpcBitstreamRedirect contains slice payload. rpcSlice contains tile location information.
- * \returns Updates rNalu to contain concatenated bitstream. rpcBitstreamRedirect is cleared at the end of this function call.
+/** Attaches the input bitstream to the stream in the output NAL unit
+    Updates rNalu to contain concatenated bitstream. rpcBitstreamRedirect is cleared at the end of this function call.
+ *  \param codedSliceData contains the coded slice data (bitstream) to be concatenated to rNalu
+ *  \param rNalu          target NAL unit
  */
-Void TEncGOP::xWriteTileLocationToSliceHeader (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect, TComSlice*& rpcSlice)
+Void TEncGOP::xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& codedSliceData)
 {
   // Byte-align
   rNalu.m_Bitstream.writeByteAlignment();   // Slice header byte-alignment
 
   // Perform bitstream concatenation
-  if (rpcBitstreamRedirect->getNumberOfWrittenBits() > 0)
+  if (codedSliceData->getNumberOfWrittenBits() > 0)
   {
-    UInt uiBitCount  = rpcBitstreamRedirect->getNumberOfWrittenBits();
-    if (rpcBitstreamRedirect->getByteStreamLength()>0)
-    {
-      UChar *pucStart  =  reinterpret_cast<UChar*>(rpcBitstreamRedirect->getByteStream());
-      UInt uiWriteByteCount = 0;
-      while (uiWriteByteCount < (uiBitCount >> 3) )
-      {
-        UInt uiBits = (*pucStart);
-        rNalu.m_Bitstream.write(uiBits, 8);
-        pucStart++;
-        uiWriteByteCount++;
-      }
-    }
-    UInt uiBitsHeld = (uiBitCount & 0x07);
-    for (UInt uiIdx=0; uiIdx < uiBitsHeld; uiIdx++)
-    {
-      rNalu.m_Bitstream.write((rpcBitstreamRedirect->getHeldBits() & (1 << (7-uiIdx))) >> (7-uiIdx), 1);
-    }          
+    rNalu.m_Bitstream.addSubstream(codedSliceData);
   }
 
   m_pcEntropyCoder->setBitstream(&rNalu.m_Bitstream);
 
-  delete rpcBitstreamRedirect;
-  rpcBitstreamRedirect = new TComOutputBitstream;
+  codedSliceData->clear();
 }
 
 // Function will arrange the long-term pictures in the decreasing order of poc_lsb_lt, 
