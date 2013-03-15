@@ -1378,7 +1378,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
             it = found;
             if (found != rbsp.end())
             {
-              it++;
               uiCounter++;
             }
           }
