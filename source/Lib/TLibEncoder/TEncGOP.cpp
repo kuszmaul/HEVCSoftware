@@ -1401,7 +1401,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                   it = found;
                   if (found != rbsp.end())
                   {
-                    it++;
                     cnt++;
                   }
                 }
