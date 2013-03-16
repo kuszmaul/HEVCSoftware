@@ -1435,12 +1435,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           if (!sliceSegment)
           {
             pcSlice->setTileLocationCount ( 0 );
-            m_pcSliceEncoder->encodeSlice(pcPic, pcBitstreamRedirect, pcSubstreamsOut); // redirect is only used for CAVLC tile position info.
           }
-          else
-          {
-            m_pcSliceEncoder->encodeSlice(pcPic, &nalu.m_Bitstream, pcSubstreamsOut); // nalu.m_Bitstream is only used for CAVLC tile position info.
-          }
+          m_pcSliceEncoder->encodeSlice(pcPic, pcSubstreamsOut);
 
           {
             // Construct the final bitstream by flushing and concatenating substreams.
