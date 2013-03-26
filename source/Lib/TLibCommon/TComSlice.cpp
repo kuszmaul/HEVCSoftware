@@ -123,7 +123,7 @@ TComSlice::TComSlice()
     m_aiRefPOCList  [0][iNumCount] = 0;
     m_aiRefPOCList  [1][iNumCount] = 0;
   }
-  resetWpScaling(m_weightPredTable);
+  resetWpScaling();
   initWpAcDcParam();
   m_saoEnabledFlag = false;
 }
@@ -1130,7 +1130,7 @@ Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, wpScalingParam *&wp )
  * \param wpScalingParam
  * \returns Void
  */
-Void  TComSlice::resetWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
+Void  TComSlice::resetWpScaling()
 {
   for ( Int e=0 ; e<2 ; e++ )
   {
@@ -1138,7 +1138,7 @@ Void  TComSlice::resetWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
     {
       for ( Int yuv=0 ; yuv<3 ; yuv++ )
       {
-        wpScalingParam  *pwp = &(wp[e][i][yuv]);
+        wpScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
         pwp->bPresentFlag      = false;
         pwp->uiLog2WeightDenom = 0;
         pwp->uiLog2WeightDenom = 0;
@@ -1154,23 +1154,15 @@ Void  TComSlice::resetWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
  */
 Void  TComSlice::initWpScaling()
 {
-  initWpScaling(m_weightPredTable);
-}
-
-/** set WP tables 
- * \param wpScalingParam
- * \returns Void
- */
-Void  TComSlice::initWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
-{
   for ( Int e=0 ; e<2 ; e++ )
   {
     for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
     {
       for ( Int yuv=0 ; yuv<3 ; yuv++ )
       {
-        wpScalingParam  *pwp = &(wp[e][i][yuv]);
-        if ( !pwp->bPresentFlag ) {
+        wpScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
+        if ( !pwp->bPresentFlag ) 
+        {
           // Inferring values not present :
           pwp->iWeight = (1 << pwp->uiLog2WeightDenom);
           pwp->iOffset = 0;
