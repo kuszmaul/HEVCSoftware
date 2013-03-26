@@ -174,34 +174,6 @@ void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* 
 #endif
 }
 
-/** copy SAO parameter
-* \param dst  
-* \param src 
-*/
-inline Void copySaoOneLcuParam(SaoLcuParam* dst,  SaoLcuParam* src)
-{
-  Int i;
-  dst->partIdx = src->partIdx;
-  dst->typeIdx = src->typeIdx;
-  if (dst->typeIdx != -1)
-  {
-    dst->subTypeIdx = src->subTypeIdx ;
-    dst->length  = src->length;
-    for (i=0;i<dst->length;i++)
-    {
-      dst->offset[i] = src->offset[i];
-    }
-  }
-  else
-  {
-    dst->length  = 0;
-    for (i=0;i<SAO_BO_LEN;i++)
-    {
-      dst->offset[i] = 0;
-    }
-  }
-}
-
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 {
 #if ENC_DEC_TRACE  
