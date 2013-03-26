@@ -918,8 +918,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       {
         iPOCmsb = iPrevPOCmsb;
       }
-      if ( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA
-        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLANT
+      if ( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
         || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
       {
         // For BLA picture types, POCmsb is set to 0.
@@ -1034,8 +1034,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         offset += rps->getNumberOfLongtermPictures();
         rps->setNumberOfPictures(offset);        
       }  
-      if ( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA
-        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLANT
+      if ( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
         || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
       {
         // In the case of BLA picture types, rps data is read from slice header but ignored
