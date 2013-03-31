@@ -1203,9 +1203,9 @@ TComVPS::TComVPS()
 
 TComVPS::~TComVPS()
 {
-  if( m_hrdParameters    != NULL )     delete m_hrdParameters;
-  if( m_hrdOpSetIdx      != NULL )     delete m_hrdOpSetIdx;
-  if( m_cprmsPresentFlag != NULL )     delete m_cprmsPresentFlag;
+  if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
+  if( m_hrdOpSetIdx      != NULL )     delete[] m_hrdOpSetIdx;
+  if( m_cprmsPresentFlag != NULL )     delete[] m_cprmsPresentFlag;
 }
 
 // ------------------------------------------------------------------------------------------------
