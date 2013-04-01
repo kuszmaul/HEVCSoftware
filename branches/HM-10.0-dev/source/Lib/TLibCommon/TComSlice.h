@@ -1542,8 +1542,7 @@ public:
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
-  TComPic*  xGetLongTermRefPic  (TComList<TComPic*>& rcListPic,
-                         Int                 poc);
+  TComPic*  xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb);
 };// END CLASS DEFINITION TComSlice
 
 
