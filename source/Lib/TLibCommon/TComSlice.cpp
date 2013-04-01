@@ -239,31 +239,47 @@ TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic,
 }
 
 
-TComPic* TComSlice::xGetLongTermRefPic (TComList<TComPic*>& rcListPic,
-                                        Int                 poc)
+TComPic* TComSlice::xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb)
 {
-  TComList<TComPic*>::iterator  iterPic = rcListPic.begin();  
+  TComList<TComPic*>::iterator  iterPic = rcListPic.begin();
   TComPic*                      pcPic = *(iterPic);
   TComPic*                      pcStPic = pcPic;
+  
+  Int pocCycle = 1 << getSPS()->getBitsForPOC();
+  if (!pocHasMsb)
+  {
+    poc = poc % pocCycle;
+  }
+  
   while ( iterPic != rcListPic.end() )
   {
     pcPic = *(iterPic);
-    if(pcPic && (pcPic->getPOC()%(1<<getSPS()->getBitsForPOC())) == (poc%(1<<getSPS()->getBitsForPOC())))
+    if (pcPic)
     {
-      if(pcPic->getIsLongTerm())
+      Int picPoc = pcPic->getPOC();
+      if (!pocHasMsb)
       {
-        return pcPic;
+        picPoc = picPoc % pocCycle;
       }
-      else
+      
+      if (poc == picPoc)
       {
-        pcStPic = pcPic;
-      }
-      break;
+       if (pcPic->getIsLongTerm())
+       {
+         return pcPic;
+       }
+       else
+       {
+         pcStPic = pcPic;
+       }
+       break;
+      }      
     }
 
     iterPic++;
   }
-  return  pcStPic;
+  
+  return pcStPic;
 }
 
 Void TComSlice::setRefPOCList       ()
@@ -391,7 +407,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   {
     if(m_pcRPS->getUsed(i))
     {
-      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i));
+      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i), m_pcRPS->getCheckLTMSBPresent(i));
       pcRefPic->setIsLongTerm(1);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetLtCurr[NumPocLtCurr] = pcRefPic;
@@ -399,7 +415,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     }
     if(pcRefPic==NULL) 
     {
-      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i));
+      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i), m_pcRPS->getCheckLTMSBPresent(i));
     }
     pcRefPic->setCheckLTMSBPresent(m_pcRPS->getCheckLTMSBPresent(i));  
   }
@@ -917,7 +933,16 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
         j++;
         rpcPic = *(iterPic++);
 
-        if((rpcPic->getPicSym()->getSlice(0)->getPOC()%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC())) == (this->getPOC() + pReferencePictureSet->getDeltaPOC(i))%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC()) && rpcPic->getSlice(0)->isReferenced())
+        Int pocCycle = 1 << rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
+        Int curPoc = rpcPic->getPicSym()->getSlice(0)->getPOC();
+        Int refPoc = pReferencePictureSet->getPOC(i);
+        if (!pReferencePictureSet->getCheckLTMSBPresent(i))
+        {
+          curPoc = curPoc % pocCycle;
+          refPoc = refPoc % pocCycle;
+        }
+        
+        if (rpcPic->getSlice(0)->isReferenced() && curPoc == refPoc)
         {
           isAvailable = 1;
           rpcPic->setIsLongTerm(1);
