@@ -1234,7 +1234,11 @@ TComVPS::TComVPS()
   for( Int i = 0; i < MAX_TLAYER; i++)
   {
     m_numReorderPics[i] = 0;
+#if L0323_DPB
+    m_uiMaxDecPicBuffering[i] = 1; 
+#else
     m_uiMaxDecPicBuffering[i] = 0; 
+#endif
     m_uiMaxLatencyIncrease[i] = 0;
   }
 }
@@ -1294,7 +1298,11 @@ TComSPS::TComSPS()
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {
     m_uiMaxLatencyIncrease[i] = 0;
+#if L0323_DPB
+    m_uiMaxDecPicBuffering[i] = 1;
+#else
     m_uiMaxDecPicBuffering[i] = 0;
+#endif
     m_numReorderPics[i]       = 0;
   }
   m_scalingList = new TComScalingList;
