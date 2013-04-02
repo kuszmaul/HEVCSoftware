@@ -506,8 +506,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseLossless   ( m_useLossless  );
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
-  
+#if !L0034_COMBINED_LIST_CLEANUP
   m_cSPS.setUseLComb    ( m_bUseLComb           );
+#endif
   
   Int i;
   

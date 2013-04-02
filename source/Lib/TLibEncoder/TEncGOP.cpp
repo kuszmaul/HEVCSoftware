@@ -595,7 +595,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType ( P_SLICE );
     }
-
+#if !L0034_COMBINED_LIST_CLEANUP
     if (pcSlice->getSliceType() != B_SLICE || !pcSlice->getSPS()->getUseLComb())
     {
       pcSlice->setNumRefIdx(REF_PIC_LIST_C, 0);
@@ -607,6 +607,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setRefPicListCombinationFlag(pcSlice->getSPS()->getUseLComb());
       pcSlice->setNumRefIdx(REF_PIC_LIST_C, pcSlice->getNumRefIdx(REF_PIC_LIST_0));
     }
+#endif
 
     if (pcSlice->getSliceType() == B_SLICE)
     {
@@ -638,6 +639,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     //-------------------------------------------------------------
     pcSlice->setRefPOCList();
 
+#if L0034_COMBINED_LIST_CLEANUP
+    pcSlice->setList1IdxToList0Idx();
+#else
     pcSlice->setNoBackPredFlag( false );
     if ( pcSlice->getSliceType() == B_SLICE && !pcSlice->getRefPicListCombinationFlag())
     {
@@ -661,6 +665,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setNumRefIdx(REF_PIC_LIST_C, 0);
     }
     pcSlice->generateCombinedList();
+#endif
 
     if (m_pcEncTop->getTMVPModeId() == 2)
     {

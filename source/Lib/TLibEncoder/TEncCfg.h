@@ -186,7 +186,9 @@ protected:
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
+#if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;
+#endif
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
 #if L0232_RD_PENALTY
@@ -469,7 +471,9 @@ public:
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
+#if !L0034_COMBINED_LIST_CLEANUP
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
+#endif
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
 #if L0232_RD_PENALTY
@@ -491,7 +495,9 @@ public:
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
+#if !L0034_COMBINED_LIST_CLEANUP
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
+#endif
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
 #if L0232_RD_PENALTY
