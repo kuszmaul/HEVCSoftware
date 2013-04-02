@@ -1432,10 +1432,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           m_pcSbacCoder->load( &pcSbacCoders[0] );
 
           pcSlice->setTileOffstForMultES( uiOneBitstreamPerSliceLength );
-          if (!sliceSegment)
-          {
-            pcSlice->setTileLocationCount ( 0 );
-          }
+          pcSlice->setTileLocationCount ( 0 );
           m_pcSliceEncoder->encodeSlice(pcPic, pcSubstreamsOut);
 
           {
