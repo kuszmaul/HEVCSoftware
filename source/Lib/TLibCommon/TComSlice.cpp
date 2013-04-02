@@ -254,7 +254,7 @@ TComPic* TComSlice::xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, B
   while ( iterPic != rcListPic.end() )
   {
     pcPic = *(iterPic);
-    if (pcPic)
+    if (pcPic && pcPic->getPOC()!=this->getPOC() && pcPic->getSlice( 0 )->isReferenced())
     {
       Int picPoc = pcPic->getPOC();
       if (!pocHasMsb)
@@ -836,13 +836,16 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
   TComPic* rpcPic;
   Int i, isReference;
 
-  Int j = 0;
   // loop through all pictures in the reference picture buffer
   TComList<TComPic*>::iterator iterPic = rcListPic.begin();
   while ( iterPic != rcListPic.end())
   {
-    j++;
     rpcPic = *(iterPic++);
+
+    if(!rpcPic->getSlice( 0 )->isReferenced())
+    {
+      continue;
+    }
 
     isReference = 0;
     // loop through all pictures in the Reference Picture Set
@@ -880,7 +883,8 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     // the Reference Picture Set
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)    
     {            
-      rpcPic->getSlice( 0 )->setReferenced( false );   
+      rpcPic->getSlice( 0 )->setReferenced( false );
+      rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }
     //check that pictures of higher temporal layers are not used
@@ -903,7 +907,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
 Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess)
 {
   TComPic* rpcPic;
-  Int i, isAvailable, j;
+  Int i, isAvailable;
   Int atLeastOneLost = 0;
   Int atLeastOneRemoved = 0;
   Int iPocLost = 0;
@@ -912,13 +916,11 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
   // to see if the picture should be kept as reference picture
   for(i=pReferencePictureSet->getNumberOfNegativePictures()+pReferencePictureSet->getNumberOfPositivePictures();i<pReferencePictureSet->getNumberOfPictures();i++)
   {
-    j = 0;
     isAvailable = 0;
     // loop through all pictures in the reference picture buffer
     TComList<TComPic*>::iterator iterPic = rcListPic.begin();
     while ( iterPic != rcListPic.end())
     {
-      j++;
       rpcPic = *(iterPic++);
       if(pReferencePictureSet->getCheckLTMSBPresent(i)==true)
       {
@@ -941,7 +943,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
       iterPic = rcListPic.begin();
       while ( iterPic != rcListPic.end())
       {
-        j++;
         rpcPic = *(iterPic++);
 
         Int pocCycle = 1 << rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
@@ -986,18 +987,16 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
         }
       }
     }
-  }  
+  }
   // loop through all short-term pictures in the Reference Picture Set
   // to see if the picture should be kept as reference picture
   for(i=0;i<pReferencePictureSet->getNumberOfNegativePictures()+pReferencePictureSet->getNumberOfPositivePictures();i++)
   {
-    j = 0;
     isAvailable = 0;
     // loop through all pictures in the reference picture buffer
     TComList<TComPic*>::iterator iterPic = rcListPic.begin();
     while ( iterPic != rcListPic.end())
     {
-      j++;
       rpcPic = *(iterPic++);
 
       if(!rpcPic->getIsLongTerm() && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i) && rpcPic->getSlice(0)->isReferenced())

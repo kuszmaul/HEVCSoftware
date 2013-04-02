@@ -947,7 +947,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         numOfLtrp += uiCode;
         rps->setNumberOfLongtermPictures(numOfLtrp);
         Int maxPicOrderCntLSB = 1 << rpcSlice->getSPS()->getBitsForPOC();
-        Int prevLSB = 0, prevDeltaMSB = 0, deltaPocMSBCycleLT = 0;;
+        Int prevDeltaMSB = 0, deltaPocMSBCycleLT = 0;;
         for(Int j=offset+rps->getNumberOfLongtermPictures()-1, k = 0; k < numOfLtrp; j--, k++)
         {
           Int pocLsbLt;
@@ -974,8 +974,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           {
             READ_UVLC( uiCode, "delta_poc_msb_cycle_lt[i]" );
             Bool deltaFlag = false;
-            //            First LTRP                               || First LTRP from SH           || curr LSB    != prev LSB
-            if( (j == offset+rps->getNumberOfLongtermPictures()-1) || (j == offset+(numOfLtrp-numLtrpInSPS)-1) || (pocLsbLt != prevLSB) )
+            //            First LTRP                               || First LTRP from SH
+            if( (j == offset+rps->getNumberOfLongtermPictures()-1) || (j == offset+(numOfLtrp-numLtrpInSPS)-1) )
             {
               deltaFlag = true;
             }
@@ -1000,7 +1000,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
             rps->setDeltaPOC(j, - rpcSlice->getPOC() + pocLsbLt);
             rps->setCheckLTMSBPresent(j,false);  
           }
-          prevLSB = pocLsbLt;
           prevDeltaMSB = deltaPocMSBCycleLT;
         }
         offset += rps->getNumberOfLongtermPictures();
