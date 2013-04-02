@@ -59,8 +59,10 @@ TComSlice::TComSlice()
 , m_deblockingFilterOverrideFlag   ( false )
 , m_deblockingFilterBetaOffsetDiv2 ( 0 )
 , m_deblockingFilterTcOffsetDiv2   ( 0 )
+#if !L0034_COMBINED_LIST_CLEANUP
 , m_bRefPicListModificationFlagLC ( false )
 , m_bRefPicListCombinationFlag    ( false )
+#endif
 , m_bCheckLDC                     ( false )
 , m_iSliceQpDelta                 ( 0 )
 , m_iSliceQpDeltaCb               ( 0 )
@@ -78,7 +80,9 @@ TComSlice::TComSlice()
 #else
 , m_dLambda                       ( 0.0 )
 #endif
+#if !L0034_COMBINED_LIST_CLEANUP
 , m_bNoBackPredFlag               ( false )
+#endif
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
 , m_sliceMode                   ( 0 )
@@ -103,10 +107,20 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_enableTMVPFlag                ( true )
 {
+#if L0034_COMBINED_LIST_CLEANUP
+  m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = 0;
+#else
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
+#endif
   
   initEqualRef();
   
+#if L0034_COMBINED_LIST_CLEANUP
+  for ( Int idx = 0; idx < MAX_NUM_REF; idx++ )
+  {
+    m_list1IdxToList0Idx[idx] = -1;
+  }
+#else
   for(Int iNumCount = 0; iNumCount < MAX_NUM_REF_LC; iNumCount++)
   {
     m_iRefIdxOfLC[REF_PIC_LIST_0][iNumCount]=-1;
@@ -116,6 +130,7 @@ TComSlice::TComSlice()
     m_iRefIdxOfL0FromRefIdxOfL1[iNumCount] = -1;
     m_iRefIdxOfL1FromRefIdxOfL0[iNumCount] = -1;
   }    
+#endif
   for(Int iNumCount = 0; iNumCount < MAX_NUM_REF; iNumCount++)
   {
     m_apcRefPicList [0][iNumCount] = NULL;
@@ -144,14 +159,18 @@ Void TComSlice::initSlice()
   
   m_colRefIdx = 0;
   initEqualRef();
+#if !L0034_COMBINED_LIST_CLEANUP
   m_bNoBackPredFlag = false;
   m_bRefPicListCombinationFlag = false;
   m_bRefPicListModificationFlagLC = false;
+#endif
   m_bCheckLDC = false;
   m_iSliceQpDeltaCb = 0;
   m_iSliceQpDeltaCr = 0;
 
+#if !L0034_COMBINED_LIST_CLEANUP
   m_aiNumRefIdx[REF_PIC_LIST_C]      = 0;
+#endif
 
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
 
@@ -294,6 +313,24 @@ Void TComSlice::setRefPOCList()
 
 }
 
+#if L0034_COMBINED_LIST_CLEANUP
+Void TComSlice::setList1IdxToList0Idx()
+{
+  Int idxL0, idxL1;
+  for ( idxL1 = 0; idxL1 < getNumRefIdx( REF_PIC_LIST_1 ); idxL1++ )
+  {
+    m_list1IdxToList0Idx[idxL1] = -1;
+    for ( idxL0 = 0; idxL0 < getNumRefIdx( REF_PIC_LIST_0 ); idxL0++ )
+    {
+      if ( m_apcRefPicList[REF_PIC_LIST_0][idxL0]->getPOC() == m_apcRefPicList[REF_PIC_LIST_1][idxL1]->getPOC() )
+      {
+        m_list1IdxToList0Idx[idxL1] = idxL0;
+        break;
+      }
+    }
+  }
+}
+#else
 Void TComSlice::generateCombinedList()
 {
   if(m_aiNumRefIdx[REF_PIC_LIST_C] > 0)
@@ -356,6 +393,7 @@ Void TComSlice::generateCombinedList()
     }
   }
 }
+#endif
 
 Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
 {
@@ -669,11 +707,21 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_deblockingFilterBetaOffsetDiv2 = pSrc->m_deblockingFilterBetaOffsetDiv2;
   m_deblockingFilterTcOffsetDiv2 = pSrc->m_deblockingFilterTcOffsetDiv2;
   
+#if L0034_COMBINED_LIST_CLEANUP
+  for (i = 0; i < 2; i++)
+#else
   for (i = 0; i < 3; i++)
+#endif
   {
     m_aiNumRefIdx[i]     = pSrc->m_aiNumRefIdx[i];
   }
 
+#if L0034_COMBINED_LIST_CLEANUP
+  for (i = 0; i < MAX_NUM_REF; i++)
+  {
+    m_list1IdxToList0Idx[i] = pSrc->m_list1IdxToList0Idx[i];
+  } 
+#else
   for (i = 0; i < 2; i++)
   {
     for (j = 0; j < MAX_NUM_REF_LC; j++)
@@ -690,6 +738,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   }
   m_bRefPicListModificationFlagLC = pSrc->m_bRefPicListModificationFlagLC;
   m_bRefPicListCombinationFlag    = pSrc->m_bRefPicListCombinationFlag;
+#endif
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
   m_iSliceQpDeltaCb      = pSrc->m_iSliceQpDeltaCb;
@@ -741,7 +790,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     }
   }
 
+#if !L0034_COMBINED_LIST_CLEANUP
   m_bNoBackPredFlag      = pSrc->m_bNoBackPredFlag;
+#endif
   m_uiTLayer                      = pSrc->m_uiTLayer;
   m_bTLayerSwitchingFlag          = pSrc->m_bTLayerSwitchingFlag;
 
@@ -1276,7 +1327,9 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if !L0034_COMBINED_LIST_CLEANUP
 , m_bUseLComb                 (false)
+#endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
