@@ -316,12 +316,15 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     for (; payloadBitsRemaining > 9 - finalPayloadBits; payloadBitsRemaining--)
     {
       UInt reservedPayloadExtensionData;
-      READ_CODE (1, reservedPayloadExtensionData, "reserved_payload_extension_data");
+      READ_FLAG (reservedPayloadExtensionData, "reserved_payload_extension_data");
     }
 
     UInt dummy;
-    READ_CODE (1, dummy, "payload_bit_equal_to_one");
-    READ_CODE (payloadBitsRemaining-1, dummy, "payload_bit_equal_to_zero");
+    READ_FLAG (dummy, "payload_bit_equal_to_one"); payloadBitsRemaining--;
+    while (payloadBitsRemaining)
+    {
+      READ_FLAG (dummy, "payload_bit_equal_to_zero"); payloadBitsRemaining--;
+    }
   }
 
   /* restore primary bitstream for sei_message */
