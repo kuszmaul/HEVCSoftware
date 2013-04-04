@@ -440,7 +440,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       continue;
     }
 
-    if( getNalUnitType(pocCurr) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
+    if( getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
       m_iLastIDR = pocCurr;
     }        
@@ -500,12 +500,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceType(P_SLICE);
     }
     // Set the nal unit type
-    pcSlice->setNalUnitType(getNalUnitType(pocCurr));
-    if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_TRAIL_R)
+    pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR));
+    if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
-      if(pcSlice->getTemporalLayerNonReferenceFlag())
+      if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_TRAIL_R)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
+      }
+      if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_RADL_R)
+      {
+        pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_RADL_N);
+      }
+      if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_RASL_R)
+      {
+        pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_RASL_N);
       }
     }
 
@@ -1082,7 +1090,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if ((SOPcurrPOC + deltaPOC) < m_pcCfg->getFramesToBeEncoded())
         {
           SOPcurrPOC += deltaPOC;
-          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC);
+          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC, m_iLastIDR);
           SOPDescriptionSEI.m_sopDescTemporalId[i] = m_pcCfg->getGOPEntry(j).m_temporalId;
           SOPDescriptionSEI.m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(pcSlice, SOPcurrPOC, j);
           SOPDescriptionSEI.m_sopDescPocDelta[i] = deltaPOC;
@@ -2296,7 +2304,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
  * \returns the nal unit type of the picture
  * This function checks the configuration and returns the appropriate nal_unit_type for the picture.
  */
-NalUnitType TEncGOP::getNalUnitType(Int pocCurr)
+NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR)
 {
   if (pocCurr == 0)
   {
@@ -2323,6 +2331,13 @@ NalUnitType TEncGOP::getNalUnitType(Int pocCurr)
       // controlling the reference pictures used for encoding that leading picture. Such a leading 
       // picture need not be marked as a TFD picture.
       return NAL_UNIT_CODED_SLICE_RASL_R;
+    }
+  }
+  if (lastIDR>0)
+  {
+    if (pocCurr < lastIDR)
+    {
+      return NAL_UNIT_CODED_SLICE_RADL_R;
     }
   }
   return NAL_UNIT_CODED_SLICE_TRAIL_R;
