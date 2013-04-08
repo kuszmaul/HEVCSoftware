@@ -265,6 +265,23 @@ Void TDecTop::xActivateParameterSets()
     assert (0);
   }
 
+  if( pps->getDependentSliceSegmentsEnabledFlag() )
+  {
+    Int NumCtx = pps->getEntropyCodingSyncEnabledFlag()?2:1;
+
+    if (m_cSliceDecoder.getCtxMemSize() != NumCtx)
+    {
+      m_cSliceDecoder.initCtxMem(NumCtx);
+      for ( UInt st = 0; st < NumCtx; st++ )
+      {
+        TDecSbac* ctx = NULL;
+        ctx = new TDecSbac;
+        ctx->init( &m_cBinCABAC );
+        m_cSliceDecoder.setCtxMem( ctx, st );
+      }
+    }
+  }
+
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
   pps->setSPS(sps);
@@ -617,19 +634,6 @@ Void TDecTop::xDecodePPS()
   TComPPS* pps = new TComPPS();
   m_cEntropyDecoder.decodePPS( pps );
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
-
-  if( pps->getDependentSliceSegmentsEnabledFlag() )
-  {
-    Int NumCtx = pps->getEntropyCodingSyncEnabledFlag()?2:1;
-    m_cSliceDecoder.initCtxMem(NumCtx);
-    for ( UInt st = 0; st < NumCtx; st++ )
-    {
-      TDecSbac* ctx = NULL;
-      ctx = new TDecSbac;
-      ctx->init( &m_cBinCABAC );
-      m_cSliceDecoder.setCtxMem( ctx, st );
-    }
-  }
 }
 
 Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType )
