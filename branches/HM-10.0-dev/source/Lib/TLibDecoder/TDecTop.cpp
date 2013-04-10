@@ -337,19 +337,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_apcSlicePilot->setTLayerInfo(nalu.m_temporalId);
 
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
-  if (m_apcSlicePilot->isNextSlice())
+
+  // Skip pictures due to random access
+  if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
   {
-    // Skip pictures due to random access
-    if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
-    {
-      return false;
-    }
-    // Skip TFD pictures associated with BLA/BLANT pictures
-    if (isSkipPictureForBLA(iPOCLastDisplay))
-    {
-      return false;
-    }
-  } 
+    return false;
+  }
+  // Skip TFD pictures associated with BLA/BLANT pictures
+  if (isSkipPictureForBLA(iPOCLastDisplay))
+  {
+    return false;
+  }
 
   //we should only get a different poc for a new picture (with CTU address==0)
   if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (!m_apcSlicePilot->getSliceCurStartCUAddr()==0))
