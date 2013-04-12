@@ -1244,8 +1244,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         READ_FLAG ( uiCode, "slice_disable_deblocking_filter_flag" );   rpcSlice->setDeblockingFilterDisable(uiCode ? 1 : 0);
         if(!rpcSlice->getDeblockingFilterDisable())
         {
-          READ_SVLC( iCode, "beta_offset_div2" );                       rpcSlice->setDeblockingFilterBetaOffsetDiv2(iCode);
-          READ_SVLC( iCode, "tc_offset_div2" );                         rpcSlice->setDeblockingFilterTcOffsetDiv2(iCode);
+          READ_SVLC( iCode, "slice_beta_offset_div2" );                       rpcSlice->setDeblockingFilterBetaOffsetDiv2(iCode);
+          assert(rpcSlice->getDeblockingFilterBetaOffsetDiv2() >= -6 &&
+                 rpcSlice->getDeblockingFilterBetaOffsetDiv2() <=  6);
+          READ_SVLC( iCode, "slice_tc_offset_div2" );                         rpcSlice->setDeblockingFilterTcOffsetDiv2(iCode);
+          assert(rpcSlice->getDeblockingFilterTcOffsetDiv2() >= -6 &&
+                 rpcSlice->getDeblockingFilterTcOffsetDiv2() <=  6);
         }
       }
       else
