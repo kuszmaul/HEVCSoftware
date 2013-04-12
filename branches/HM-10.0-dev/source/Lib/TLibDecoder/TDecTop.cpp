@@ -518,8 +518,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic );
     // Set reference list
+#if FIX1071
+    pcSlice->setRefPicList( m_cListPic, true );
+#else
     pcSlice->setRefPicList( m_cListPic );
-
+#endif
+    
     // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)
     if (pcSlice->isInterB() && pcSlice->getNumRefIdx(REF_PIC_LIST_1) == 0)
