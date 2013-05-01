@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  \file     TEncSampleAdaptiveOffset.h
  \brief    estimation part of sample adaptive offset class (header)
  */
@@ -52,10 +52,20 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
+#if SAO_ENCODING_CHOICE
+#if SAO_ENCODING_CHOICE_CHROMA
+static const UInt NUM_SAO_RATE_DEPTHS=4;
+#endif
+#endif
 
 class TEncSampleAdaptiveOffset : public TComSampleAdaptiveOffset
 {
 private:
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
+  Double            m_dLambdaLuma;
+  Double            m_dLambdaChroma;
+#endif
+
   TEncEntropy*      m_pcEntropyCoder;
   TEncSbac***       m_pppcRDSbacCoder;              ///< for CABAC
   TEncSbac*         m_pcRDGoOnSbacCoder;
@@ -76,12 +86,11 @@ private:
   Double *m_dCostPartBest; //[MAX_NUM_SAO_PART]; 
   Int64  *m_iDistOrg;      //[MAX_NUM_SAO_PART]; 
   Int    *m_iTypePartBest; //[MAX_NUM_SAO_PART]; 
-  Int     m_iOffsetThY;
-  Int     m_iOffsetThC;
+  Int     m_iOffsetTh[MAX_NUM_CHANNEL_TYPE];
   Bool    m_bUseSBACRD;
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
-  Double  m_depthSaoRate[2][4];
+  Double  m_depthSaoRate[MAX_NUM_CHANNEL_TYPE][NUM_SAO_RATE_DEPTHS];
 #else
   Double  m_depth0SaoRate;
 #endif
@@ -95,38 +104,63 @@ public:
   Void endSaoEnc();
   Void resetStats();
 #if SAO_CHROMA_LAMBDA
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 #if SAO_ENCODING_CHOICE
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma, Int depth);
 #else
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma);
 #endif
 #else
+#if SAO_ENCODING_CHOICE
+  Void SAOProcess(SAOParam *pcSaoParam, const Double dLambdas[MAX_NUM_COMPONENT], Int depth);
+#else
+  Void SAOProcess(SAOParam *pcSaoParam, const Double dLambdas[MAX_NUM_COMPONENT]);
+#endif
+#endif
+#else
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda);
 #endif
 
-  Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, Int yCbCr);
-  Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda, Int yCbCr);
+  Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, ComponentID yCbCr);
+  Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda, ComponentID yCbCr);
   
   Void disablePartTree(SAOQTPart *psQTPart, Int iPartIdx);
-  Void getSaoStats(SAOQTPart *psQTPart, Int iYCbCr);
-  Void calcSaoStatsCu(Int iAddr, Int iPartIdx, Int iYCbCr);
-  Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail, Int iYCbCr);
-  Void calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);
+  Void getSaoStats(SAOQTPart *psQTPart, ComponentID iYCbCr);
+  Void calcSaoStatsCu(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
+  Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail, ComponentID iYCbCr);
+  Void calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, ComponentID iYCbCr);
   Void calcSaoStatsCu_BeforeDblk( TComPic* pcPic );
   Void destroyEncBuffer();
   Void createEncBuffer();
-  Void assignSaoUnitSyntax(SaoLcuParam* saoLcuParam,  SAOQTPart* saoPart, Bool &oneUnitFlag, Int yCbCr);
+  Void assignSaoUnitSyntax(SaoLcuParam* saoLcuParam,  SAOQTPart* saoPart, Bool &oneUnitFlag);
   Void checkMerge(SaoLcuParam * lcuParamCurr,SaoLcuParam * lcuParamCheck, Int dir);
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 #if SAO_ENCODING_CHOICE
   Void rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma, Int depth);
 #else
   Void rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma);
 #endif
-  Void saoComponentParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Int yCbCr, Double lambda, SaoLcuParam *compSaoParam, Double *distortion);
-  Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *crSaoParam, SaoLcuParam *cbSaoParam, Double *distortion);
+#else
+#if SAO_ENCODING_CHOICE
+  Void rdoSaoUnitAll(SAOParam *saoParam, const Double lambdas[MAX_NUM_COMPONENT], Int depth);
+#else
+  Void rdoSaoUnitAll(SAOParam *saoParam, const Double lambdas[MAX_NUM_COMPONENT]);
+#endif
+#endif
+  Void saoComponentParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, ComponentID yCbCr, Double lambda, SaoLcuParam *compSaoParam, Double *distortion);
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
+  Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion);
+#else
+  Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, const Double lambdas[MAX_NUM_COMPONENT], SaoLcuParam *cbSaoParam, SaoLcuParam *crSaoParam, Double *distortion);
+#endif
   inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 offsetOrg, Int shift);
   inline Int64 estIterOffset(Int typeIdx, Int classIdx, Double lambda, Int64 offsetInput, Int64 count, Int64 offsetOrg, Int shift, Int bitIncrease, Int *currentDistortionTableBo, Double *currentRdCostTableBo, Int offsetTh );
-  inline Int64 estSaoTypeDist(Int compIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987
+  inline Int64 estSaoTypeDist(Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
+#else
+  inline Int64 estSaoTypeDist(const ComponentID compID, Int compPartIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
+  inline Int64 estSaoTypeDist(const ComponentID compID, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
+#endif
   Void setMaxNumOffsetsPerPic(Int iVal) {m_maxNumOffsetsPerPic = iVal; }
   Int  getMaxNumOffsetsPerPic() {return m_maxNumOffsetsPerPic; }
 };

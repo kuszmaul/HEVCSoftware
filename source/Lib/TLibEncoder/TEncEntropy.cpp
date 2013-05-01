@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -38,6 +38,12 @@
 #include "TEncEntropy.h"
 #include "TLibCommon/TypeDef.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
+#include "TLibCommon/TComTU.h"
+
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#include "../TLibCommon/Debug.h"
+static const Bool bDebugPredEnabled = DebugOptionList::DebugPred.getInt()!=0;
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -53,10 +59,8 @@ Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
   if (pcSlice->getSPS()->getUseSAO())
   {
     SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-    pcSlice->setSaoEnabledFlag     (saoParam->bSaoFlag[0]);
-    {
-      pcSlice->setSaoEnabledFlagChroma   (saoParam->bSaoFlag[1]);
-    }
+    pcSlice->setSaoEnabledFlag       (saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]);
+    pcSlice->setSaoEnabledFlagChroma (saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]);
   }
 
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
@@ -71,7 +75,7 @@ Void  TEncEntropy::encodeTilesWPPEntryPoint( TComSlice* pSlice )
 Void TEncEntropy::encodeTerminatingBit      ( UInt uiIsLast )
 {
   m_pcEntropyCoderIf->codeTerminatingBit( uiIsLast );
-  
+
   return;
 }
 
@@ -126,7 +130,7 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
  * \returns Void
  */
 Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{ 
+{
   // at least one merge candidate exists
   m_pcEntropyCoderIf->codeMergeFlag( pcCU, uiAbsPartIdx );
 }
@@ -134,7 +138,6 @@ Void TEncEntropy::encodeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 /** encode merge index
  * \param pcCU
  * \param uiAbsPartIdx
- * \param uiPUIdx
  * \param bRD
  * \returns Void
  */
@@ -148,6 +151,7 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bR
   m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
 }
 
+
 /** encode prediction mode
  * \param pcCU
  * \param uiAbsPartIdx
@@ -160,6 +164,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
+
   if ( pcCU->getSlice()->isIntra() )
   {
     return;
@@ -175,6 +180,7 @@ Void TEncEntropy::encodeSplitFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
   {
     uiAbsPartIdx = 0;
   }
+
   m_pcEntropyCoderIf->codeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -191,11 +197,12 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     uiAbsPartIdx = 0;
   }
+
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-/** Encode I_PCM information. 
- * \param pcCU pointer to CU 
+/** Encode I_PCM information.
+ * \param pcCU pointer to CU
  * \param uiAbsPartIdx CU index
  * \param bRD flag indicating estimation or encoding
  * \returns Void
@@ -208,42 +215,44 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     return;
   }
-  
+
   if( bRD )
   {
     uiAbsPartIdx = 0;
   }
-  
+
   m_pcEntropyCoderIf->codeIPCMInfo ( pcCU, uiAbsPartIdx );
+
 }
 
-Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP )
-{
-  const UInt uiSubdiv = pcCU->getTransformIdx( uiAbsPartIdx ) + pcCU->getDepth( uiAbsPartIdx ) > uiDepth;
-  const UInt uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()]+2 - uiDepth;
-  UInt cbfY = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA    , uiTrIdx );
-  UInt cbfU = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrIdx );
-  UInt cbfV = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrIdx );
 
-  if(uiTrIdx==0)
+Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
+{
+//pcCU, absPartIdxCU, uiAbsPartIdx, uiDepth+1, uiTrIdx+1, quadrant,
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+  const UInt numValidComponent = pcCU->getPic()->getNumberValidComponents();
+  const Bool bChroma = isChromaEnabled(pcCU->getPic()->getChromaFormat());
+  const UInt uiTrIdx = rTu.GetTransformDepthRel();
+  const UInt uiDepth = rTu.GetTransformDepthTotal();
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
+  if (bDebugRQT)
+    printf("x..codeTransform: offsetLuma=%d offsetChroma=%d absPartIdx=%d, uiDepth=%d\n width=%d, height=%d, uiTrIdx=%d, uiInnerQuadIdx=%d\n",
+           rTu.getCoefficientOffset(COMPONENT_Y), rTu.getCoefficientOffset(COMPONENT_Cb), uiAbsPartIdx, uiDepth, rTu.getRect(COMPONENT_Y).width, rTu.getRect(COMPONENT_Y).height, rTu.GetTransformDepthRel(), rTu.GetSectionNumber());
+#endif
+  const UInt uiSubdiv = pcCU->getTransformIdx( uiAbsPartIdx ) > uiTrIdx;// + pcCU->getDepth( uiAbsPartIdx ) > uiDepth;
+  const UInt uiLog2TrafoSize = rTu.GetLog2LumaTrSize();
+
+
+  UInt cbf[MAX_NUM_COMPONENT]={0,0,0};
+  Bool bHaveACodedBlock=false;
+  for(UInt ch=0; ch<numValidComponent; ch++)
   {
-    m_bakAbsPartIdxCU = uiAbsPartIdx;
+    cbf[ch] = pcCU->getCbf( uiAbsPartIdx, ComponentID(ch) , uiTrIdx );
+    if (cbf[ch]) bHaveACodedBlock=true;
   }
-  if( uiLog2TrafoSize == 2 )
-  {
-    UInt partNum = pcCU->getPic()->getNumPartInCU() >> ( ( uiDepth - 1 ) << 1 );
-    if( ( uiAbsPartIdx % partNum ) == 0 )
-    {
-      m_uiBakAbsPartIdx   = uiAbsPartIdx;
-      m_uiBakChromaOffset = offsetChroma;
-    }
-    else if( ( uiAbsPartIdx % partNum ) == (partNum - 1) )
-    {
-      cbfU = pcCU->getCbf( m_uiBakAbsPartIdx, TEXT_CHROMA_U, uiTrIdx );
-      cbfV = pcCU->getCbf( m_uiBakAbsPartIdx, TEXT_CHROMA_V, uiTrIdx );
-    }
-  }
-  
+
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
   {
     assert( uiSubdiv );
@@ -279,43 +288,31 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
 
   const UInt uiTrDepthCurr = uiDepth - pcCU->getDepth( uiAbsPartIdx );
   const Bool bFirstCbfOfCU = uiTrDepthCurr == 0;
-  if( bFirstCbfOfCU || uiLog2TrafoSize > 2 )
+
+  for(UInt ch=COMPONENT_Cb; ch<numValidComponent; ch++)
   {
-    if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr - 1 ) )
+    const ComponentID compID=ComponentID(ch);
+    if( bFirstCbfOfCU || rTu.ProcessingAllQuadrants(compID) )
     {
-      m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr );
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr - 1 ) )
+      {
+        m_pcEntropyCoderIf->codeQtCbf( rTu, compID );
+      }
     }
-    if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr - 1 ) )
+    else
     {
-      m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr );
+      assert( pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr ) == pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepthCurr - 1 ) );
     }
   }
-  else if( uiLog2TrafoSize == 2 )
-  {
-    assert( pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr ) == pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr - 1 ) );
-    assert( pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr ) == pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr - 1 ) );
-  }
-  
+
   if( uiSubdiv )
   {
-    UInt size;
-    width  >>= 1;
-    height >>= 1;
-    size = width*height;
-    uiTrIdx++;
-    ++uiDepth;
-    const UInt partNum = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
-    
-    xEncodeTransform( pcCU, offsetLuma, offsetChroma, uiAbsPartIdx, uiDepth, width, height, uiTrIdx, bCodeDQP );
-
-    uiAbsPartIdx += partNum;  offsetLuma += size;  offsetChroma += (size>>2);
-    xEncodeTransform( pcCU, offsetLuma, offsetChroma, uiAbsPartIdx, uiDepth, width, height, uiTrIdx, bCodeDQP );
-
-    uiAbsPartIdx += partNum;  offsetLuma += size;  offsetChroma += (size>>2);
-    xEncodeTransform( pcCU, offsetLuma, offsetChroma, uiAbsPartIdx, uiDepth, width, height, uiTrIdx, bCodeDQP );
-
-    uiAbsPartIdx += partNum;  offsetLuma += size;  offsetChroma += (size>>2);
-    xEncodeTransform( pcCU, offsetLuma, offsetChroma, uiAbsPartIdx, uiDepth, width, height, uiTrIdx, bCodeDQP );
+    TComTURecurse tuRecurseChild(rTu, true);
+    do
+    {
+      xEncodeTransform( bCodeDQP, tuRecurseChild );
+    }
+    while (tuRecurseChild.nextSection(rTu));
   }
   else
   {
@@ -329,68 +326,58 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
       DTRACE_CABAC_V( pcCU->getTransformIdx( uiAbsPartIdx ) );
       DTRACE_CABAC_T( "\n" );
     }
-    
-    if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, 0 ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, 0 ) )
+
+    if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
     {
-      assert( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, 0 ) );
+      assert( pcCU->getCbf( uiAbsPartIdx, COMPONENT_Y, 0 ) );
       //      printf( "saved one bin! " );
     }
     else
     {
-      m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_LUMA, pcCU->getTransformIdx( uiAbsPartIdx ) );
+      m_pcEntropyCoderIf->codeQtCbf( rTu, COMPONENT_Y );
     }
 
-
-    if ( cbfY || cbfU || cbfV )
+    if ( bHaveACodedBlock )
     {
       // dQP: only for LCU once
       if ( pcCU->getSlice()->getPPS()->getUseDQP() )
       {
         if ( bCodeDQP )
         {
-          encodeQP( pcCU, m_bakAbsPartIdxCU );
+          encodeQP( pcCU, rTu.GetAbsPartIdxCU() );
           bCodeDQP = false;
         }
       }
-    }
-    if( cbfY )
-    {
-      Int trWidth = width;
-      Int trHeight = height;
-      m_pcEntropyCoderIf->codeCoeffNxN( pcCU, (pcCU->getCoeffY()+offsetLuma), uiAbsPartIdx, trWidth, trHeight, uiDepth, TEXT_LUMA );
-    }
-    if( uiLog2TrafoSize > 2 )
-    {
-      Int trWidth = width >> 1;
-      Int trHeight = height >> 1;
-      if( cbfU )
+      const UInt numValidComp=pcCU->getPic()->getNumberValidComponents();
+
       {
-        m_pcEntropyCoderIf->codeCoeffNxN( pcCU, (pcCU->getCoeffCb()+offsetChroma), uiAbsPartIdx, trWidth, trHeight, uiDepth, TEXT_CHROMA_U );
-      }
-      if( cbfV )
-      {
-        m_pcEntropyCoderIf->codeCoeffNxN( pcCU, (pcCU->getCoeffCr()+offsetChroma), uiAbsPartIdx, trWidth, trHeight, uiDepth, TEXT_CHROMA_V );
-      }
-    }
-    else
-    {
-      UInt partNum = pcCU->getPic()->getNumPartInCU() >> ( ( uiDepth - 1 ) << 1 );
-      if( ( uiAbsPartIdx % partNum ) == (partNum - 1) )
-      {
-        Int trWidth = width;
-        Int trHeight = height;
-        if( cbfU )
+        const ComponentID compID=COMPONENT_Y;
+        if (rTu.ProcessComponentSection(compID) && cbf[compID])
         {
-          m_pcEntropyCoderIf->codeCoeffNxN( pcCU, (pcCU->getCoeffCb()+m_uiBakChromaOffset), m_uiBakAbsPartIdx, trWidth, trHeight, uiDepth, TEXT_CHROMA_U );
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+            if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
+#endif
+            const UInt offset=rTu.getCoefficientOffset(compID);
+            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID)+offset), compID );
         }
-        if( cbfV )
+      }
+
+      for(UInt ch=1; ch<numValidComp; ch++)
+      {
+        const ComponentID compID=ComponentID(ch);
+        if (rTu.ProcessComponentSection(compID) && cbf[compID])
         {
-          m_pcEntropyCoderIf->codeCoeffNxN( pcCU, (pcCU->getCoeffCr()+m_uiBakChromaOffset), m_uiBakAbsPartIdx, trWidth, trHeight, uiDepth, TEXT_CHROMA_V );
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+            if (bDebugRQT) printf("Call NxN for chan %d? width=%d cbf=%d\n", compID, rTu.getRect(compID).width, 1);
+#endif
+            const UInt offset=rTu.getCoefficientOffset(compID);
+            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID)+offset), compID );
         }
       }
     }
   }
 }
+
 
 // Intra direction for Luma
 Void TEncEntropy::encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU )
@@ -398,31 +385,45 @@ Void TEncEntropy::encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, B
   m_pcEntropyCoderIf->codeIntraDirLumaAng( pcCU, absPartIdx , isMultiplePU);
 }
 
+
 // Intra direction for Chroma
-Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  
   m_pcEntropyCoderIf->codeIntraDirChroma( pcCU, uiAbsPartIdx );
+
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  if (bDebugPredEnabled && g_bFinalEncode)
+  {
+    UInt cdir=pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, uiAbsPartIdx);
+    if (cdir==36) cdir=pcCU->getIntraDir(CHANNEL_TYPE_LUMA, uiAbsPartIdx);
+    printf("coding chroma Intra dir: %d, uiAbsPartIdx: %d, luma dir: %d\n", cdir, uiAbsPartIdx, pcCU->getIntraDir(CHANNEL_TYPE_LUMA, uiAbsPartIdx));
+  }
+#endif
 }
 
-Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+
+
+Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
-    encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
+    if (pcCU->getPic()->getChromaFormat()!=CHROMA_400)
+    {
+      encodeIntraDirModeChroma( pcCU, uiAbsPartIdx );
+
+      if (enable4ChromaPUsInIntraNxNCU(pcCU->getPic()->getChromaFormat()) && pcCU->getPartitionSize( uiAbsPartIdx )==SIZE_NxN)
+      {
+        UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(uiAbsPartIdx) << 1 ) ) >> 2;
+        encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset   );
+        encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset*2 );
+        encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset*3 );
+      }
+    }
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
-    encodePUWise( pcCU, uiAbsPartIdx, bRD );
+    encodePUWise( pcCU, uiAbsPartIdx );
   }
 }
 
@@ -432,13 +433,12 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
  * \param bRD
  * \returns Void
  */
-Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  if ( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  const Bool bDebugPred = bDebugPredEnabled && g_bFinalEncode;
+#endif
+
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
   UInt uiDepth = pcCU->getDepth( uiAbsPartIdx );
@@ -450,6 +450,13 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
       encodeMergeIndex( pcCU, uiSubPartIdx );
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+      if (bDebugPred)
+      {
+        std::cout << "Coded merge flag, CU absPartIdx: " << uiAbsPartIdx << " PU(" << uiPartIdx << ") absPartIdx: " << uiSubPartIdx;
+        std::cout << " merge index: " << (UInt)pcCU->getMergeIndex(uiSubPartIdx) << std::endl;
+      }
+#endif
     }
     else
     {
@@ -461,6 +468,16 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
           encodeRefFrmIdxPU ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
           encodeMvdPU       ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
           encodeMVPIdxPU    ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+          if (bDebugPred)
+          {
+            std::cout << "refListIdx: " << uiRefListIdx << std::endl;
+            std::cout << "MVD horizontal: " << pcCU->getCUMvField(RefPicList(uiRefListIdx))->getMvd( uiAbsPartIdx ).getHor() << std::endl;
+            std::cout << "MVD vertical:   " << pcCU->getCUMvField(RefPicList(uiRefListIdx))->getMvd( uiAbsPartIdx ).getVer() << std::endl;
+            std::cout << "MVPIdxPU: " << pcCU->getMVPIdx(RefPicList( uiRefListIdx ), uiSubPartIdx) << std::endl;
+            std::cout << "InterDir: " << (UInt)pcCU->getInterDir(uiSubPartIdx) << std::endl;
+          }
+#endif
         }
       }
     }
@@ -477,6 +494,7 @@ Void TEncEntropy::encodeInterDirPU( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 
   m_pcEntropyCoderIf->codeInterDir( pcCU, uiAbsPartIdx );
+
   return;
 }
 
@@ -489,16 +507,15 @@ Void TEncEntropy::encodeInterDirPU( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncEntropy::encodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
   assert( !pcCU->isIntra( uiAbsPartIdx ) );
-  {
-    if ( ( pcCU->getSlice()->getNumRefIdx( eRefList ) == 1 ) )
-    {
-      return;
-    }
 
-    if ( pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList ) )
-    {
-      m_pcEntropyCoderIf->codeRefFrmIdx( pcCU, uiAbsPartIdx, eRefList );
-    }
+  if ( ( pcCU->getSlice()->getNumRefIdx( eRefList ) == 1 ) )
+  {
+    return;
+  }
+
+  if ( pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList ) )
+  {
+    m_pcEntropyCoderIf->codeRefFrmIdx( pcCU, uiAbsPartIdx, eRefList );
   }
 
   return;
@@ -531,9 +548,9 @@ Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicLis
   return;
 }
 
-Void TEncEntropy::encodeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth )
+Void TEncEntropy::encodeQtCbf( TComTU &rTu, const ComponentID compID )
 {
-  m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, eType, uiTrDepth );
+  m_pcEntropyCoderIf->codeQtCbf( rTu, compID );
 }
 
 Void TEncEntropy::encodeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
@@ -546,10 +563,20 @@ Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcEntropyCoderIf->codeQtRootCbf( pcCU, uiAbsPartIdx );
 }
 
-Void TEncEntropy::encodeQtCbfZero( TComDataCU* pcCU, TextType eType, UInt uiTrDepth )
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
+Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
 {
-  m_pcEntropyCoderIf->codeQtCbfZero( pcCU, eType, uiTrDepth );
+  //NOTE: RExt - In HM, this function is called in multiple ways, which may not be intended.
+  //      In xEstimateResidualQT, when coding the chroma channel, it is called with both TrDepth and TrDepthC (adjusted for step-up cases).
+  m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType, useAdjustedDepth );
 }
+#else
+Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType )
+{
+  m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType );
+}
+#endif
+
 Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU )
 {
   m_pcEntropyCoderIf->codeQtRootCbfZero( pcCU );
@@ -562,7 +589,7 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   {
     uiAbsPartIdx = 0;
   }
-  
+
   if ( pcCU->getSlice()->getPPS()->getUseDQP() )
   {
     m_pcEntropyCoderIf->codeDeltaQP( pcCU, uiAbsPartIdx );
@@ -571,6 +598,7 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 
 
 // texture
+
 /** encode coefficients
  * \param pcCU
  * \param uiAbsPartIdx
@@ -578,18 +606,21 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
  * \param uiWidth
  * \param uiHeight
  */
-Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP )
+Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
 {
-  UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
-  UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
-  UInt uiChromaOffset = uiLumaOffset>>2;
-    
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
+#endif
+
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
-    DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T( "\tdecodeTransformIdx()\tCUDepth=" )
-    DTRACE_CABAC_V( uiDepth )
-    DTRACE_CABAC_T( "\n" )
+    if (false)
+    {
+      DTRACE_CABAC_VL( g_nSymbolCounter++ )
+      DTRACE_CABAC_T( "\tdecodeTransformIdx()\tCUDepth=" )
+      DTRACE_CABAC_V( uiDepth )
+      DTRACE_CABAC_T( "\n" )
+    }
   }
   else
   {
@@ -602,51 +633,57 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-  
-  xEncodeTransform( pcCU, uiLumaOffset, uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth, uiHeight, 0, bCodeDQP);
+
+  TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);
+#endif
+
+  xEncodeTransform( bCodeDQP, tuRecurse );
 }
 
-Void TEncEntropy::encodeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPartIdx, UInt uiTrWidth, UInt uiTrHeight, UInt uiDepth, TextType eType )
+Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID)
 {
   // This is for Transform unit processing. This may be used at mode selection stage for Inter.
-  m_pcEntropyCoderIf->codeCoeffNxN( pcCU, pcCoeff, uiAbsPartIdx, uiTrWidth, uiTrHeight, uiDepth, eType );
+  m_pcEntropyCoderIf->codeCoeffNxN( rTu, pcCoef, compID);
 }
 
-Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType)
-{  
-  eTType = eTType == TEXT_LUMA ? TEXT_LUMA : TEXT_CHROMA;
-  
-  m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, eTType );
+Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, const ChannelType chType)
+{
+  m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, chType );
 }
 
 /** Encode SAO Offset
  * \param  saoLcuParam SAO LCU paramters
  */
-Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
+Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID compID )
 {
   UInt uiSymbol;
   Int i;
 
   uiSymbol = saoLcuParam->typeIdx + 1;
-  if (compIdx!=2)
+
+  if (compID != COMPONENT_Cr)
   {
     m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
   }
+
   if (uiSymbol)
   {
-    if (saoLcuParam->typeIdx < 4 && compIdx != 2)
+    if (saoLcuParam->typeIdx < 4 && compID != COMPONENT_Cr)
     {
       saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
     }
-    Int bitDepth = compIdx ? g_bitDepthC : g_bitDepthY;
-    Int offsetTh = 1 << min(bitDepth - 5,5);
+
+    Int offsetTh = 1 << min(g_bitDepth[toChannelType(compID)] - 5,5);
+
     if( saoLcuParam->typeIdx == SAO_BO )
     {
       for( i=0; i< saoLcuParam->length; i++)
       {
         UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
         m_pcEntropyCoderIf->codeSaoMaxUvlc(absOffset, offsetTh-1);
-      }  
+      }
       for( i=0; i< saoLcuParam->length; i++)
       {
         if (saoLcuParam->offset[i] != 0)
@@ -664,7 +701,8 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
       m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[1], offsetTh-1);
       m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[2], offsetTh-1);
       m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[3], offsetTh-1);
-      if (compIdx!=2)
+
+      if (compID != COMPONENT_Cr)
       {
         uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
         m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
@@ -672,6 +710,7 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
     }
   }
 }
+
 
 /** Encode SAO unit interleaving
 * \param  rx
@@ -682,7 +721,8 @@ Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
 * \param  iCUAddrUpInSlice
 * \param  bLFCrossSliceBoundaryFlag
  */
-Void TEncEntropy::encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
+
+Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
 {
   if (saoFlag)
   {
@@ -706,21 +746,22 @@ Void TEncEntropy::encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, I
       }
       if (!saoLcuParam->mergeUpFlag)
       {
-        encodeSaoOffset(saoLcuParam, compIdx);
+        encodeSaoOffset(saoLcuParam, compID);
       }
     }
   }
 }
 
+
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {
   Int count = 0;
-  
+
   for ( Int i = 0; i < uiSize; i++ )
   {
     count += pcCoef[i] != 0;
   }
-  
+
   return count;
 }
 

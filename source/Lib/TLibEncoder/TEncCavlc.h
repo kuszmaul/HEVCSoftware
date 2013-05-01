@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -63,16 +63,21 @@ class TEncCavlc : public SyntaxElementWriter, public TEncEntropyIf
 public:
   TEncCavlc();
   virtual ~TEncCavlc();
-  
+
 protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
 
+  Void  xWritePCMAlignZero    ();
+  Void  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
+  Void  xWriteExGolombLevel    ( UInt uiSymbol );
+  Void  xWriteUnaryMaxSymbol  ( UInt uiSymbol, UInt uiMaxSymbol );
+
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
-  
+
 public:
-  
+
   Void  resetEntropy          ();
   Void  determineCabacInitIdx  () {};
 
@@ -96,7 +101,7 @@ public:
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast );
   Void  codeSliceFinish         ();
-  
+
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeSAOSign       ( UInt code   ) { printf("Not supported\n"); assert (0); }
   Void codeSaoMaxUvlc    ( UInt   code, UInt maxSymbol ){printf("Not supported\n"); assert (0);}
@@ -108,33 +113,38 @@ public:
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
- 
+
+  Void codeAlfCtrlFlag   ( ComponentID component, UInt code ) {printf("Not supported\n"); assert(0);}
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  
+
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
+
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbf         ( TComTU &rTu, const ComponentID compID );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeQtCbfZero     ( TComDataCU* pcCU, TextType eType, UInt uiTrDepth );
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
+  Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
+#else
+  Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType );
+#endif
   Void codeQtRootCbfZero ( TComDataCU* pcCU );
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  
-  Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
-  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, TextType eTType );
 
-  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
-  
+  Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
+  Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
+  Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
+
+  Void estBit            ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
+
   Void xCodePredWeightTable          ( TComSlice* pcSlice );
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }
   Void updateContextTables           ( SliceType eSliceType, Int iQp  )                          { return;   }
