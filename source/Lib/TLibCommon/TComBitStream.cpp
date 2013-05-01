@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,7 +98,6 @@ void TComOutputBitstream::clear()
 Void TComOutputBitstream::write   ( UInt uiBits, UInt uiNumberOfBits )
 {
   assert( uiNumberOfBits <= 32 );
-  assert( uiNumberOfBits == 32 || (uiBits & (~0 << uiNumberOfBits)) == 0 );
 
   /* any modulo 8 remainder of num_total_bits cannot be written this time,
    * and will be held until next time. */
@@ -176,45 +175,11 @@ Void   TComOutputBitstream::addSubstream( TComOutputBitstream* pcSubstream )
     write(pcSubstream->getHeldBits()>>(8-(uiNumBits&0x7)), uiNumBits&0x7);
   }
 }
-
 Void TComOutputBitstream::writeByteAlignment()
 {
   write( 1, 1);
   writeAlignZero();
 }
-
-Int TComOutputBitstream::countStartCodeEmulations()
-{
-  UInt cnt = 0;
-  vector<uint8_t>& rbsp   = getFIFO();
-  for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
-  {
-    vector<uint8_t>::iterator found = it;
-    do
-    {
-      // find the next emulated 00 00 {00,01,02,03}
-      // NB, end()-1, prevents finding a trailing two byte sequence
-      found = search_n(found, rbsp.end()-1, 2, 0);
-      found++;
-      // if not found, found == end, otherwise found = second zero byte
-      if (found == rbsp.end())
-      {
-        break;
-      }
-      if (*(++found) <= 3)
-      {
-        break;
-      }
-    } while (true);
-    it = found;
-    if (found != rbsp.end())
-    {
-      cnt++;
-    }
-  }
-  return cnt;
-}
-
 /**
  * read #uiNumberOfBits# from bitstream without updating the bitstream
  * state, storing the result in #ruiBits#.

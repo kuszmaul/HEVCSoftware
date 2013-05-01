@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,15 +68,17 @@ class TEncTop;
 // ====================================================================================================================
 
 /// GOP encoder class
+static const UInt MAX_NUM_LONG_TERM_REF_PICS=33;
+
 class TEncGOP
 {
 private:
   //  Data
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
-  UInt            m_numLongTermRefPicSPS;
-  UInt            m_ltRefPicPocLsbSps[33];
-  Bool            m_ltRefPicUsedByCurrPicFlag[33];
+  UInt                    m_numLongTermRefPicSPS;
+  UInt                    m_ltRefPicPocLsbSps[MAX_NUM_LONG_TERM_REF_PICS];
+  Bool                    m_ltRefPicUsedByCurrPicFlag[MAX_NUM_LONG_TERM_REF_PICS];
   Int                     m_iLastIDR;
   Int                     m_iGopSize;
   Int                     m_iNumPicCoded;
@@ -107,33 +109,22 @@ private:
   Bool                    m_bRefreshPending;
   Int                     m_pocCRA;
   std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
-  std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
+  std::vector<Int>        m_storedStartCUAddrForEncodingDependentSlice;
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;
   UInt                    m_totalCoded;
   UInt                    m_cpbRemovalDelay;
-  UInt                    m_tl0Idx;
-  UInt                    m_rapIdx;
-#if L0045_NON_NESTED_SEI_RESTRICTIONS
-  Bool                    m_activeParameterSetSEIPresentInAU;
-  Bool                    m_bufferingPeriodSEIPresentInAU;
-  Bool                    m_pictureTimingSEIPresentInAU;
-#if K0180_SCALABLE_NESTING_SEI
-  Bool                    m_nestedBufferingPeriodSEIPresentInAU;
-  Bool                    m_nestedPictureTimingSEIPresentInAU;
-#endif
-#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
   
-  Void  create      ();
+  Void  create      ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight );
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
-  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
+  Void xWriteTileLocationToSliceHeader (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect, TComSlice*& rpcSlice);
 
   
   Int   getGOPSize()          { return  m_iGopSize;  }
@@ -144,8 +135,9 @@ public:
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
+  NalUnitType getNalUnitType( Int pocCurr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
+
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
@@ -158,35 +150,6 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 
   Double xCalculateRVM();
-
-  SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
-  SEIFramePacking*        xCreateSEIFramePacking();
-  SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
-
-#if J0149_TONE_MAPPING_SEI
-  SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
-#endif
-
-  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
-#if L0045_NON_NESTED_SEI_RESTRICTIONS
-  Int xGetFirstSeiLocation (AccessUnit &accessUnit);
-  Void xResetNonNestedSEIPresentFlags()
-  {
-    m_activeParameterSetSEIPresentInAU = false;
-    m_bufferingPeriodSEIPresentInAU    = false;
-    m_pictureTimingSEIPresentInAU      = false;
-  }
-#if K0180_SCALABLE_NESTING_SEI
-  Void xResetNestedSEIPresentFlags()
-  {
-    m_nestedBufferingPeriodSEIPresentInAU    = false;
-    m_nestedPictureTimingSEIPresentInAU      = false;
-  }
-#endif
-#endif
-#if L0386_DB_METRIC
-  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
-#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,7 @@
 class TDecGop
 {
 private:
+  Int                   m_iGopSize;
   TComList<TComPic*>    m_cListPic;         //  Dynamic buffer
   
   //  Access channel
@@ -100,8 +101,10 @@ public:
                  );
   Void  create  ();
   Void  destroy ();
+
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
+  Void  setGopSize( Int i) { m_iGopSize = i; }
 
   void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
 

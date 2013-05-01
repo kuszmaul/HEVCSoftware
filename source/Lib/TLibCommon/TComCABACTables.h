@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #define __TCOM_CABAC_TABLES__
 
 #include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComRom.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -50,7 +51,7 @@
 class TComCABACTables
 {
 public:
-  const static UChar  sm_aucLPSTable[64][4];
+  const static UChar  sm_aucLPSTable[1 << CONTEXT_STATE_BITS][4];
   const static UChar  sm_aucRenormTable[32];
 };
 

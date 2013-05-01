@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,9 +75,9 @@ protected:
   static UInt xGetHADs4w        ( DistParam* pcDtParam );
   static UInt xGetHADs8w        ( DistParam* pcDtParam );
   static UInt xGetHADsw         ( DistParam* pcDtParam );
-  static UInt xCalcHADs2x2w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static UInt xCalcHADs4x4w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static UInt xCalcHADs8x8w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static UInt xCalcHADs2x2w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static UInt xCalcHADs4x4w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static UInt xCalcHADs8x8w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   
 };// END CLASS DEFINITION TComRdCostWeightPrediction
 

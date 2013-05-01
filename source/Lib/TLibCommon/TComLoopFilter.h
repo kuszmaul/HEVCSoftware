@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,43 +54,63 @@
 class TComLoopFilter
 {
 private:
+  Bool      m_disableDeblockingFilterFlag;
+  Int       m_betaOffsetDiv2;
+  Int       m_tcOffsetDiv2;
+
   UInt      m_uiNumPartitions;
-  UChar*    m_aapucBS[2];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
-  Bool*     m_aapbEdgeFilter[2];
+  UChar*    m_aapucBS[NUM_EDGE_DIR];              ///< Bs for [Ver/Hor][Y/U/V][Blk_Idx]
+  Bool*     m_aapbEdgeFilter[NUM_EDGE_DIR][MAX_NUM_COMPONENT]; // NOTE: RExt - all 'MAX_NUM_COMPONENT' are assigned the same value, and only COMPONENT_Y is used anyway!
   LFCUParam m_stLFCUParam;                  ///< status structure
   
   Bool      m_bLFCrossTileBoundary;
 
 protected:
   /// CU-level deblocking function
-  Void xDeblockCU                 ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int Edge );
+  Void xDeblockCU                 ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir );
 
   // set / get functions
   Void xSetLoopfilterParam        ( TComDataCU* pcCU, UInt uiAbsZorderIdx );
   // filtering functions
-  Void xSetEdgefilterTU           ( TComDataCU* pcCU, UInt absTUPartIdx, UInt uiAbsZorderIdx, UInt uiDepth );
+  Void xSetEdgefilterTU           ( TComTU &rTu );
   Void xSetEdgefilterPU           ( TComDataCU* pcCU, UInt uiAbsZorderIdx );
-  Void xGetBoundaryStrengthSingle ( TComDataCU* pcCU, Int iDir, UInt uiPartIdx );
-  UInt xCalcBsIdx                 ( TComDataCU* pcCU, UInt uiAbsZorderIdx, Int iDir, Int iEdgeIdx, Int iBaseUnitIdx )
+  Void xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZorderIdx, DeblockEdgeDir edgeDir, UInt uiPartIdx );
+  UInt xCalcBsIdx                 ( TComDataCU* pcCU, UInt absCUIdxInLCU, DeblockEdgeDir edgeDir, Int iEdgeIdx, Int iBaseUnitIdx, const struct TComRectangle *rect=NULL )
   {
     TComPic* const pcPic = pcCU->getPic();
     const UInt uiLCUWidthInBaseUnits = pcPic->getNumPartInWidth();
-    if( iDir == 0 )
+    Int rasterOffsetTU=0;
+    if (rect != NULL)
     {
-      return g_auiRasterToZscan[g_auiZscanToRaster[uiAbsZorderIdx] + iBaseUnitIdx * uiLCUWidthInBaseUnits + iEdgeIdx ];
+      const UInt minCuWidth =pcPic->getMinCUWidth();
+      const UInt minCuHeight=pcPic->getMinCUHeight();
+      rasterOffsetTU = rect->x0/minCuWidth + (rect->y0/minCuHeight)*uiLCUWidthInBaseUnits;
+    }
+    if( edgeDir == EDGE_VER )
+    {
+      return g_auiRasterToZscan[g_auiZscanToRaster[absCUIdxInLCU] + iBaseUnitIdx * uiLCUWidthInBaseUnits + iEdgeIdx + rasterOffsetTU ];
     }
     else
     {
-      return g_auiRasterToZscan[g_auiZscanToRaster[uiAbsZorderIdx] + iEdgeIdx * uiLCUWidthInBaseUnits + iBaseUnitIdx ];
+      return g_auiRasterToZscan[g_auiZscanToRaster[absCUIdxInLCU] + iEdgeIdx * uiLCUWidthInBaseUnits + iBaseUnitIdx + rasterOffsetTU ];
     }
   } 
   
-  Void xSetEdgefilterMultiple( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdgeIdx, Bool bValue ,UInt uiWidthInBaseUnits = 0, UInt uiHeightInBaseUnits = 0 );
+  Void xSetEdgefilterMultiple( TComDataCU* pcCU,
+                               UInt uiAbsZorderIdx,
+                               UInt uiDepth,
+                               DeblockEdgeDir edgeDir,
+                               Int iEdgeIdx,
+                               Bool bValue,
+                               UInt uiWidthInBaseUnits = 0,
+                               UInt uiHeightInBaseUnits = 0,
+                               const TComRectangle *rect = 0
+                               );
   
-  Void xEdgeFilterLuma            ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdge );
-  Void xEdgeFilterChroma          ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, Int iDir, Int iEdge );
+  Void xEdgeFilterLuma            ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir, Int iEdge );
+  Void xEdgeFilterChroma          ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir, Int iEdge );
   
-  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int tc, Bool sw, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
+  __inline Void xPelFilterLuma( Pel* piSrc, Int iOffset, Int d, Int beta, Int tc, Bool sw, Bool bPartPNoFilter, Bool bPartQNoFilter, Int iThrCut, Bool bFilterSecondP, Bool bFilterSecondQ);
   __inline Void xPelFilterChroma( Pel* piSrc, Int iOffset, Int tc, Bool bPartPNoFilter, Bool bPartQNoFilter);
   
 
@@ -98,9 +118,6 @@ protected:
   __inline Int xCalcDP( Pel* piSrc, Int iOffset);
   __inline Int xCalcDQ( Pel* piSrc, Int iOffset);
   
-  static const UChar sm_tcTable[54];
-  static const UChar sm_betaTable[52];
-
 public:
   TComLoopFilter();
   virtual ~TComLoopFilter();
@@ -109,16 +126,10 @@ public:
   Void  destroy                   ();
   
   /// set configuration
-  Void setCfg( Bool bLFCrossTileBoundary );
+  Void setCfg( Bool deblockingFilterControlPresentFlag, Bool disableDeblockingFilterFlag, Int betaOffsetDiv2, Int tcOffsetDiv2, Bool bLFCrossTileBoundary );
   
   /// picture-level deblocking filter
   Void loopFilterPic( TComPic* pcPic );
-
-  static Int getBeta( Int qp )
-  {
-    Int indexB = Clip3( 0, MAX_QP, qp );
-    return sm_betaTable[ indexB ];
-  }
 };
 
 //! \}
