@@ -60,7 +60,7 @@ protected:
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
-  UInt      m_FrameSkip;                                      ///< number of skipped frames from the beginning
+  UInt      m_FrameSkip;                                   ///< number of skipped frames from the beginning
   Int       m_iSourceWidth;                                   ///< source width in pixel
   Int       m_iSourceHeight;                                  ///< source height in pixel
   Int       m_conformanceMode;
@@ -68,20 +68,15 @@ protected:
   Int       m_confRight;
   Int       m_confTop;
   Int       m_confBottom;
-  Int       m_framesToBeEncoded;                              ///< number of encoded frames
+  Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
+  ChromaFormat m_InputChromaFormatIDC;
   
   // profile/level
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-#if L0046_CONSTRAINT_FLAGS
-  Bool m_progressiveSourceFlag;
-  Bool m_interlacedSourceFlag;
-  Bool m_nonPackedConstraintFlag;
-  Bool m_frameOnlyConstraintFlag;
-#endif
-  
+
   // coding structure
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
   Int       m_iDecodingRefreshType;                           ///< random access type
@@ -89,14 +84,8 @@ protected:
   Int       m_extraRPSs;                                      ///< extra RPSs added to handle CRA
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
-#if L0323_DPB
-  Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
-#else
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of reference pictures needed for decoding
-#endif
-#if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
-#endif
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   Bool      m_enableAMP;
@@ -134,18 +123,20 @@ protected:
   UInt      m_uiQuadtreeTUMaxDepthIntra;
   
   // coding tools (bit-depth)
-  Int       m_inputBitDepthY;                               ///< bit-depth of input file (luma component)
-  Int       m_inputBitDepthC;                               ///< bit-depth of input file (chroma component)
-  Int       m_outputBitDepthY;                              ///< bit-depth of output file (luma component)
-  Int       m_outputBitDepthC;                              ///< bit-depth of output file (chroma component)
-  Int       m_internalBitDepthY;                            ///< bit-depth codec operates at in luma (input/output files will be converted)
-  Int       m_internalBitDepthC;                            ///< bit-depth codec operates at in chroma (input/output files will be converted)
+  Int       m_inputBitDepth   [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of input file
+  Int       m_outputBitDepth  [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of output file
+  Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
+
+  //coding tools (chroma format)
+  ChromaFormat m_chromaFormatIDC;
 
   // coding tools (PCM bit-depth)
   Bool      m_bPCMInputBitDepthFlag;                          ///< 0: PCM bit-depth is internal bit-depth. 1: PCM bit-depth is input bit-depth.
 
   // coding tool (lossless)
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_useLossless;                                    ///< flag for using lossless coding
+#endif
   Bool      m_bUseSAO; 
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
@@ -156,10 +147,7 @@ protected:
   Int       m_loopFilterBetaOffsetDiv2;                     ///< beta offset for deblocking filter
   Int       m_loopFilterTcOffsetDiv2;                       ///< tc offset for deblocking filter
   Bool      m_DeblockingFilterControlPresent;                 ///< deblocking filter control present flag in PPS
-#if L0386_DB_METRIC
-  Bool      m_DeblockingFilterMetric;                         ///< blockiness metric in encoder
-#endif
-
+ 
   // coding tools (PCM)
   Bool      m_usePCM;                                         ///< flag for using IPCM
   UInt      m_pcmLog2MaxSize;                                 ///< log2 of maximum PCM block size
@@ -172,9 +160,6 @@ protected:
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
-#if L0232_RD_PENALTY
-  Int      m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty) 
-#endif
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
@@ -200,41 +185,15 @@ protected:
   UInt*     m_pColumnWidth;
   UInt*     m_pRowHeight;
   Int       m_iWaveFrontSynchro; //< 0: no WPP. >= 1: WPP is enabled, the "Top right" from which inheritance occurs is this LCU offset in the line above the current.
+  Int       m_iWaveFrontFlush; //< enable(1)/disable(0) the CABAC flush at the end of each line of LCUs.
   Int       m_iWaveFrontSubstreams; //< If iWaveFrontSynchro, this is the number of substreams per frame (dependent tiles) or per tile (independent tiles).
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   
-  Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
+  Int       m_decodePictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
-#if J0149_TONE_MAPPING_SEI
-  Bool      m_toneMappingInfoSEIEnabled;
-  Int       m_toneMapId;
-  Bool      m_toneMapCancelFlag;
-  Bool      m_toneMapPersistenceFlag;
-  Int       m_toneMapCodedDataBitDepth;
-  Int       m_toneMapTargetBitDepth;
-  Int       m_toneMapModelId; 
-  Int       m_toneMapMinValue;
-  Int       m_toneMapMaxValue;
-  Int       m_sigmoidMidpoint;
-  Int       m_sigmoidWidth;
-  Int       m_numPivots;
-  Int       m_cameraIsoSpeedIdc;
-  Int       m_cameraIsoSpeedValue;
-  Int       m_exposureCompensationValueSignFlag;
-  Int       m_exposureCompensationValueNumerator;
-  Int       m_exposureCompensationValueDenomIdc;
-  Int       m_refScreenLuminanceWhite;
-  Int       m_extendedRangeWhiteLevel;
-  Int       m_nominalBlackLevelLumaCodeValue;
-  Int       m_nominalWhiteLevelLumaCodeValue;
-  Int       m_extendedWhiteLevelLumaCodeValue;
-  Int*      m_startOfCodedInterval;
-  Int*      m_codedPivotValue;
-  Int*      m_targetPivotValue;
-#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -244,16 +203,10 @@ protected:
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
-#if L0208_SOP_DESCRIPTION_SEI
-  Int       m_SOPDescriptionSEIEnabled;
-#endif
-#if K0180_SCALABLE_NESTING_SEI
-  Int       m_scalableNestingSEIEnabled;
-#endif
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
   Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
-  
+
   UInt      m_log2ParallelMergeLevel;                         ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                                ///< Max number of merge candidates
 
@@ -276,7 +229,11 @@ protected:
   Char*     m_scalingListFile;                                ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+#else
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#endif
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Bool      m_useStrongIntraSmoothing;                        ///< enable strong intra smoothing for 32x32 blocks where the reference samples are flat
@@ -322,7 +279,6 @@ protected:
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
   Int       m_bitRatePicRateMaxTLayers;                       ///< Indicates max. number of sub-layers for which bit rate is signalled.
   Bool*     m_bitRateInfoPresentFlag;                         ///< Indicates whether bit rate information is signalled
   Bool*     m_picRateInfoPresentFlag;                         ///< Indicates whether pic rate information is signalled
@@ -330,8 +286,6 @@ protected:
   Int*      m_maxBitRate;                                     ///< Indicates max. bit rate information for various sub-layers
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
-#endif
-  #
 public:
   TAppEncCfg();
   virtual ~TAppEncCfg();

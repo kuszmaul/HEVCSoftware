@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -64,25 +64,26 @@ TComPic::TComPic()
 , m_pNDBFilterYuvTmp                      (NULL)
 , m_bCheckLTMSB                           (false)
 {
-  m_apcPicYuv[0]      = NULL;
-  m_apcPicYuv[1]      = NULL;
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
+  {
+    m_apcPicYuv[i]      = NULL;
+  }
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
+Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow,
                       Int *numReorderPics, Bool bIsVirtual)
-
 {
-  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   if (!bIsVirtual)
   {
-    m_apcPicYuv[0]  = new TComPicYuv;  m_apcPicYuv[0]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+    m_apcPicYuv[PIC_YUV_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
-  m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-  
+  m_apcPicYuv[PIC_YUV_REC]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_REC]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+
   // there are no SEI messages associated with this picture initially
   if (m_SEIs.size() > 0)
   {
@@ -92,9 +93,6 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
 
   /* store conformance window parameters with picture */
   m_conformanceWindow = conformanceWindow;
-  
-  /* store display window parameters with picture */
-  m_defaultDisplayWindow = defaultDisplayWindow;
 
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
@@ -110,38 +108,34 @@ Void TComPic::destroy()
     delete m_apcPicSym;
     m_apcPicSym = NULL;
   }
-  
-  if (m_apcPicYuv[0])
+
+  for(UInt i=0; i<NUM_PIC_YUV; i++)
   {
-    m_apcPicYuv[0]->destroy();
-    delete m_apcPicYuv[0];
-    m_apcPicYuv[0]  = NULL;
+    if (m_apcPicYuv[i])
+    {
+      m_apcPicYuv[i]->destroy();
+      delete m_apcPicYuv[i];
+      m_apcPicYuv[i]  = NULL;
+    }
   }
-  
-  if (m_apcPicYuv[1])
-  {
-    m_apcPicYuv[1]->destroy();
-    delete m_apcPicYuv[1];
-    m_apcPicYuv[1]  = NULL;
-  }
-  
+
   deleteSEIs(m_SEIs);
 }
 
 Void TComPic::compressMotion()
 {
-  TComPicSym* pPicSym = getPicSym(); 
+  TComPicSym* pPicSym = getPicSym();
   for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
   {
     TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
-    pcCU->compressMV(); 
-  } 
+    pcCU->compressMV();
+  }
 }
 
 /** Create non-deblocked filter information
  * \param pSliceStartAddress array for storing slice start addresses
  * \param numSlices number of slices in picture
- * \param sliceGranularityDepth slice granularity 
+ * \param sliceGranularityDepth slice granularity
  * \param bNDBFilterCrossSliceBoundary cross-slice-boundary in-loop filtering; true for "cross".
  * \param numTiles number of tiles in picture
  * \param bNDBFilterCrossTileBoundary cross-tile-boundary in-loop filtering; true for "cross".
@@ -189,7 +183,7 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
   for( UInt CUAddr = 0; CUAddr < numLCUInPic ; CUAddr++ )
   {
     TComDataCU* pcCU = getCU( CUAddr );
-    pcCU->setSliceSUMap(m_pSliceSUMap + (CUAddr* maxNumSUInLCU)); 
+    pcCU->setSliceSUMap(m_pSliceSUMap + (CUAddr* maxNumSUInLCU));
     pcCU->getNDBFilterBlocks()->clear();
   }
   m_vSliceCUDataLink.clear();
@@ -211,7 +205,7 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
     firstCUInStartLCU   = startAddr % maxNumSUInLCU;
 
     endLCU              = endAddr   / maxNumSUInLCU;
-    lastCUInEndLCU      = endAddr   % maxNumSUInLCU;   
+    lastCUInEndLCU      = endAddr   % maxNumSUInLCU;
 
     uiAddr = m_apcPicSym->getCUOrderMap(startLCU);
 
@@ -332,9 +326,9 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
       }
 
       pcCU->setNDBFilterBlockBorderAvailability(numLCUsInPicWidth, numLCUsInPicHeight, maxNumSUInLCUWidth, maxNumSUInLCUHeight,picWidth, picHeight
-        , *LFCrossSliceBoundary
-        ,bTopTileBoundary, bDownTileBoundary, bLeftTileBoundary, bRightTileBoundary
-        ,m_bIndependentTileBoundaryForNDBFilter);
+                                                , *LFCrossSliceBoundary
+                                                ,  bTopTileBoundary, bDownTileBoundary, bLeftTileBoundary, bRightTileBoundary
+                                                ,  m_bIndependentTileBoundaryForNDBFilter);
 
     }
 
@@ -343,7 +337,7 @@ Void TComPic::createNonDBFilterInfo(std::vector<Int> sliceStartAddress, Int slic
   if( m_bIndependentSliceBoundaryForNDBFilter || m_bIndependentTileBoundaryForNDBFilter)
   {
     m_pNDBFilterYuvTmp = new TComPicYuv();
-    m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
+    m_pNDBFilterYuvTmp->create(picWidth, picHeight, getChromaFormat(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 
 }
@@ -407,7 +401,7 @@ Void TComPic::createNonDBFilterInfoLCU(Int tileID, Int sliceID, TComDataCU* pcCU
     {
       if(uiIdx > endSU)
       {
-        break;        
+        break;
       }
       uiLPelX_su   = LCUX + g_auiRasterToPelX[ g_auiZscanToRaster[uiIdx] ];
       uiTPelY_su   = LCUY + g_auiRasterToPelY[ g_auiZscanToRaster[uiIdx] ];

@@ -108,19 +108,13 @@ protected:
   Int       m_iSourceHeight;
   Int       m_conformanceMode;
   Window    m_conformanceWindow;
-  Int       m_framesToBeEncoded;
+  Int       m_iFrameToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
   /* profile & level */
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-#if L0046_CONSTRAINT_FLAGS
-  Bool m_progressiveSourceFlag;
-  Bool m_interlacedSourceFlag;
-  Bool m_nonPackedConstraintFlag;
-  Bool m_frameOnlyConstraintFlag;
-#endif
 
   //====== Coding Structure ========
   UInt      m_uiIntraPeriod;
@@ -153,16 +147,15 @@ protected:
   Int       m_loopFilterBetaOffsetDiv2;
   Int       m_loopFilterTcOffsetDiv2;
   Bool      m_DeblockingFilterControlPresent;
-#if L0386_DB_METRIC
-  Bool      m_DeblockingFilterMetric;
-#endif
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoLcuBoundary;
   Bool      m_saoLcuBasedOptimization;
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      m_useLossless;
+#endif
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -174,6 +167,7 @@ protected:
 
   Int       m_chromaCbQpOffset;                 //  Chroma Cb QP Offset (0:default)
   Int       m_chromaCrQpOffset;                 //  Chroma Cr Qp Offset (0:default)
+  ChromaFormat m_chromaFormatIDC;
 
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
@@ -186,14 +180,9 @@ protected:
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
-#if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;
-#endif
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
-#if L0232_RD_PENALTY
-  UInt      m_rdPenalty;
-#endif
   Bool      m_bUseFastEnc;
   Bool      m_bUseEarlyCU;
   Bool      m_useFastDecisionForMerge;
@@ -234,33 +223,6 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Int       m_recoveryPointSEIEnabled;
-#if J0149_TONE_MAPPING_SEI
-  Bool      m_toneMappingInfoSEIEnabled;
-  Int       m_toneMapId;
-  Bool      m_toneMapCancelFlag;
-  Bool      m_toneMapPersistenceFlag;
-  Int       m_codedDataBitDepth;
-  Int       m_targetBitDepth;
-  Int       m_modelId; 
-  Int       m_minValue;
-  Int       m_maxValue;
-  Int       m_sigmoidMidpoint;
-  Int       m_sigmoidWidth;
-  Int       m_numPivots;
-  Int       m_cameraIsoSpeedIdc;
-  Int       m_cameraIsoSpeedValue;
-  Int       m_exposureCompensationValueSignFlag;
-  Int       m_exposureCompensationValueNumerator;
-  Int       m_exposureCompensationValueDenomIdc;
-  Int       m_refScreenLuminanceWhite;
-  Int       m_extendedRangeWhiteLevel;
-  Int       m_nominalBlackLevelLumaCodeValue;
-  Int       m_nominalWhiteLevelLumaCodeValue;
-  Int       m_extendedWhiteLevelLumaCodeValue;
-  Int*      m_startOfCodedInterval;
-  Int*      m_codedPivotValue;
-  Int*      m_targetPivotValue;
-#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -270,12 +232,6 @@ protected:
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
-#if L0208_SOP_DESCRIPTION_SEI
-  Int       m_SOPDescriptionSEIEnabled;
-#endif
-#if K0180_SCALABLE_NESTING_SEI
-  Int       m_scalableNestingSEIEnabled;
-#endif
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -299,7 +255,11 @@ protected:
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
 #endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+#else
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#endif
   TComVPS                    m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
@@ -359,7 +319,7 @@ public:
   Window   &getConformanceWindow()                           { return m_conformanceWindow; }
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
-  Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
+  Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
   
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -394,9 +354,6 @@ public:
   Void      setLoopFilterBetaOffset         ( Int   i )      { m_loopFilterBetaOffsetDiv2  = i; }
   Void      setLoopFilterTcOffset           ( Int   i )      { m_loopFilterTcOffsetDiv2    = i; }
   Void      setDeblockingFilterControlPresent ( Bool b ) { m_DeblockingFilterControlPresent = b; }
-#if L0386_DB_METRIC
-  Void      setDeblockingFilterMetric       ( Bool  b )      { m_DeblockingFilterMetric = b; }
-#endif
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
@@ -410,6 +367,9 @@ public:
   Void      setChromaCbQpOffset             ( Int   i )      { m_chromaCbQpOffset = i; }
   Void      setChromaCrQpOffset             ( Int   i )      { m_chromaCrQpOffset = i; }
 
+  Void      setChromaFormatIdc              ( ChromaFormat cf ) { m_chromaFormatIDC = cf; }
+  ChromaFormat  getChromaFormatIdc          ( )              { return m_chromaFormatIDC; }
+
 #if ADAPTIVE_QP_SELECTION
   Void      setUseAdaptQpSelect             ( Bool   i ) { m_bUseAdaptQpSelect    = i; }
   Bool      getUseAdaptQpSelect             ()           { return   m_bUseAdaptQpSelect; }
@@ -418,14 +378,16 @@ public:
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
   
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
+#endif
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
-  Int       getFramesToBeEncoded            ()      { return  m_framesToBeEncoded; }
+  Int       getFrameToBeEncoded             ()      { return  m_iFrameToBeEncoded; }
   void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
   Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
 
@@ -451,9 +413,6 @@ public:
   Int       getLoopFilterBetaOffset         ()      { return m_loopFilterBetaOffsetDiv2; }
   Int       getLoopFilterTcOffset           ()      { return m_loopFilterTcOffsetDiv2; }
   Bool      getDeblockingFilterControlPresent()  { return  m_DeblockingFilterControlPresent; }
-#if L0386_DB_METRIC
-  Bool      getDeblockingFilterMetric       ()      { return m_DeblockingFilterMetric; }
-#endif
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
@@ -464,21 +423,18 @@ public:
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      getUseLossless                  ()      { return  m_useLossless;  }
+#endif
   
   //==== Tool list ========
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
-#if !L0034_COMBINED_LIST_CLEANUP
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
-#endif
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
-#if L0232_RD_PENALTY
-  Void      setRDpenalty                 ( UInt  b )     { m_rdPenalty  = b; }
-#endif
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
@@ -495,14 +451,9 @@ public:
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
-#if !L0034_COMBINED_LIST_CLEANUP
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
-#endif
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
-#if L0232_RD_PENALTY
-  Int      getRDpenalty                  ()      { return m_rdPenalty;  }
-#endif
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
@@ -594,58 +545,6 @@ public:
   Int   getPictureTimingSEIEnabled()                     { return m_pictureTimingSEIEnabled; }
   Void  setRecoveryPointSEIEnabled(Int b)                { m_recoveryPointSEIEnabled = b; }
   Int   getRecoveryPointSEIEnabled()                     { return m_recoveryPointSEIEnabled; }
-#if J0149_TONE_MAPPING_SEI
-  Void  setToneMappingInfoSEIEnabled(Bool b)                 {  m_toneMappingInfoSEIEnabled = b;  }
-  Bool  getToneMappingInfoSEIEnabled()                       {  return m_toneMappingInfoSEIEnabled;  }
-  Void  setTMISEIToneMapId(Int b)                            {  m_toneMapId = b;  }
-  Int   getTMISEIToneMapId()                                 {  return m_toneMapId;  }
-  Void  setTMISEIToneMapCancelFlag(Bool b)                   {  m_toneMapCancelFlag=b;  }
-  Bool  getTMISEIToneMapCancelFlag()                         {  return m_toneMapCancelFlag;  }
-  Void  setTMISEIToneMapPersistenceFlag(Bool b)              {  m_toneMapPersistenceFlag = b;  }
-  Bool   getTMISEIToneMapPersistenceFlag()                   {  return m_toneMapPersistenceFlag;  }
-  Void  setTMISEICodedDataBitDepth(Int b)                    {  m_codedDataBitDepth = b;  }
-  Int   getTMISEICodedDataBitDepth()                         {  return m_codedDataBitDepth;  }
-  Void  setTMISEITargetBitDepth(Int b)                       {  m_targetBitDepth = b;  }
-  Int   getTMISEITargetBitDepth()                            {  return m_targetBitDepth;  }
-  Void  setTMISEIModelID(Int b)                              {  m_modelId = b;  }
-  Int   getTMISEIModelID()                                   {  return m_modelId;  }
-  Void  setTMISEIMinValue(Int b)                             {  m_minValue = b;  }
-  Int   getTMISEIMinValue()                                  {  return m_minValue;  }
-  Void  setTMISEIMaxValue(Int b)                             {  m_maxValue = b;  }
-  Int   getTMISEIMaxValue()                                  {  return m_maxValue;  }
-  Void  setTMISEISigmoidMidpoint(Int b)                      {  m_sigmoidMidpoint = b;  }
-  Int   getTMISEISigmoidMidpoint()                           {  return m_sigmoidMidpoint;  }
-  Void  setTMISEISigmoidWidth(Int b)                         {  m_sigmoidWidth = b;  }
-  Int   getTMISEISigmoidWidth()                              {  return m_sigmoidWidth;  }
-  Void  setTMISEIStartOfCodedInterva( Int*  p )              {  m_startOfCodedInterval = p;  }
-  Int*  getTMISEIStartOfCodedInterva()                       {  return m_startOfCodedInterval;  }
-  Void  setTMISEINumPivots(Int b)                            {  m_numPivots = b;  }
-  Int   getTMISEINumPivots()                                 {  return m_numPivots;  }
-  Void  setTMISEICodedPivotValue( Int*  p )                  {  m_codedPivotValue = p;  }
-  Int*  getTMISEICodedPivotValue()                           {  return m_codedPivotValue;  }
-  Void  setTMISEITargetPivotValue( Int*  p )                 {  m_targetPivotValue = p;  }
-  Int*  getTMISEITargetPivotValue()                          {  return m_targetPivotValue;  }
-  Void  setTMISEICameraIsoSpeedIdc(Int b)                    {  m_cameraIsoSpeedIdc = b;  }
-  Int   getTMISEICameraIsoSpeedIdc()                         {  return m_cameraIsoSpeedIdc;  }
-  Void  setTMISEICameraIsoSpeedValue(Int b)                  {  m_cameraIsoSpeedValue = b;  }
-  Int   getTMISEICameraIsoSpeedValue()                       {  return m_cameraIsoSpeedValue;  }
-  Void  setTMISEIExposureCompensationValueSignFlag(Int b)    {  m_exposureCompensationValueSignFlag = b;  }
-  Int   getTMISEIExposureCompensationValueSignFlag()         {  return m_exposureCompensationValueSignFlag;  }
-  Void  setTMISEIExposureCompensationValueNumerator(Int b)   {  m_exposureCompensationValueNumerator = b;  }
-  Int   getTMISEIExposureCompensationValueNumerator()        {  return m_exposureCompensationValueNumerator;  }
-  Void  setTMISEIExposureCompensationValueDenomIdc(Int b)    {  m_exposureCompensationValueDenomIdc =b;  }
-  Int   getTMISEIExposureCompensationValueDenomIdc()         {  return m_exposureCompensationValueDenomIdc;  }
-  Void  setTMISEIRefScreenLuminanceWhite(Int b)              {  m_refScreenLuminanceWhite = b;  }
-  Int   getTMISEIRefScreenLuminanceWhite()                   {  return m_refScreenLuminanceWhite;  }
-  Void  setTMISEIExtendedRangeWhiteLevel(Int b)              {  m_extendedRangeWhiteLevel = b;  }
-  Int   getTMISEIExtendedRangeWhiteLevel()                   {  return m_extendedRangeWhiteLevel;  }
-  Void  setTMISEINominalBlackLevelLumaCodeValue(Int b)       {  m_nominalBlackLevelLumaCodeValue = b;  }
-  Int   getTMISEINominalBlackLevelLumaCodeValue()            {  return m_nominalBlackLevelLumaCodeValue;  }
-  Void  setTMISEINominalWhiteLevelLumaCodeValue(Int b)       {  m_nominalWhiteLevelLumaCodeValue = b;  }
-  Int   getTMISEINominalWhiteLevelLumaCodeValue()            {  return m_nominalWhiteLevelLumaCodeValue;  }
-  Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)      {  m_extendedWhiteLevelLumaCodeValue =b;  }
-  Int   getTMISEIExtendedWhiteLevelLumaCodeValue()           {  return m_extendedWhiteLevelLumaCodeValue;  }
-#endif
   Void  setFramePackingArrangementSEIEnabled(Int b)      { m_framePackingSEIEnabled = b; }
   Int   getFramePackingArrangementSEIEnabled()           { return m_framePackingSEIEnabled; }
   Void  setFramePackingArrangementSEIType(Int b)         { m_framePackingSEIType = b; }
@@ -664,14 +563,6 @@ public:
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
-#if L0208_SOP_DESCRIPTION_SEI
-  Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
-  Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
-#endif
-#if K0180_SCALABLE_NESTING_SEI
-  Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
-  Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
-#endif
   Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }
   Bool      getUseWP               ()            { return m_useWeightedPred;   }
@@ -713,8 +604,13 @@ public:
 #endif
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
   Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+#else
+  Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
+  Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
+#endif
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
@@ -785,20 +681,6 @@ public:
   Void      setLog2MaxMvLengthHorizontal(Int i)           { m_log2MaxMvLengthHorizontal = i; }
   Int       getLog2MaxMvLengthVertical()                  { return m_log2MaxMvLengthVertical; }
   Void      setLog2MaxMvLengthVertical(Int i)             { m_log2MaxMvLengthVertical = i; }
-  
-#if L0046_CONSTRAINT_FLAGS
-  Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
-  Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
-  
-  Bool getInterlacedSourceFlag() const { return m_interlacedSourceFlag; }
-  Void setInterlacedSourceFlag(Bool b) { m_interlacedSourceFlag = b; }
-  
-  Bool getNonPackedConstraintFlag() const { return m_nonPackedConstraintFlag; }
-  Void setNonPackedConstraintFlag(Bool b) { m_nonPackedConstraintFlag = b; }
-  
-  Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
-  Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
-#endif
 };
 
 //! \}
