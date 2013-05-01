@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,13 +64,13 @@ TEncPreanalyzer::~TEncPreanalyzer()
 Void TEncPreanalyzer::xPreanalyze( TEncPic* pcEPic )
 {
   TComPicYuv* pcPicYuv = pcEPic->getPicYuvOrg();
-  const Int iWidth = pcPicYuv->getWidth();
-  const Int iHeight = pcPicYuv->getHeight();
-  const Int iStride = pcPicYuv->getStride();
+  const Int iWidth = pcPicYuv->getWidth(COMPONENT_Y);
+  const Int iHeight = pcPicYuv->getHeight(COMPONENT_Y);
+  const Int iStride = pcPicYuv->getStride(COMPONENT_Y);
 
   for ( UInt d = 0; d < pcEPic->getMaxAQDepth(); d++ )
   {
-    const Pel* pLineY = pcPicYuv->getLumaAddr();
+    const Pel* pLineY = pcPicYuv->getAddr(COMPONENT_Y);
     TEncPicQPAdaptationLayer* pcAQLayer = pcEPic->getAQLayer(d);
     const UInt uiAQPartWidth = pcAQLayer->getAQPartWidth();
     const UInt uiAQPartHeight = pcAQLayer->getAQPartHeight();

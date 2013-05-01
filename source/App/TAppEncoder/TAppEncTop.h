@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,7 @@ private:
   
   UInt m_essentialBytes;
   UInt m_totalBytes;
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -85,6 +86,7 @@ protected:
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
   void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
   void printRateSummary();
+  void printChromaFormat();
   
 public:
   TAppEncTop();
@@ -92,6 +94,7 @@ public:
   
   Void        encode      ();                               ///< main encoding function
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
+  
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}

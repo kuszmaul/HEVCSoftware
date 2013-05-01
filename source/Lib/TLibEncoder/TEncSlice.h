@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,18 +95,20 @@ private:
   Double*                 m_pdRdPicLambda;                      ///< array of lambda candidates
   Double*                 m_pdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)
   Int*                    m_piRdPicQp;                          ///< array of picture QP candidates (Int-type)
-  TEncBinCABAC*           m_pcBufferBinCoderCABACs;       ///< line of bin coder CABAC
+  TEncBinCABAC*           m_pcBufferBinCoderCABACs;             ///< line of bin coder CABAC
   TEncSbac*               m_pcBufferSbacCoders;                 ///< line to store temporary contexts
   TEncBinCABAC*           m_pcBufferLowLatBinCoderCABACs;       ///< dependent tiles: line of bin coder CABAC
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
   UInt                    m_uiSliceIdx;
+#if DEPENDENT_SLICES
   std::vector<TEncSbac*> CTXMem;
+#endif
 public:
   TEncSlice();
   virtual ~TEncSlice();
   
-  Void    create              ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
+  Void    create              ( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
   Void    destroy             ();
   Void    init                ( TEncTop* pcEncTop );
   
@@ -121,7 +123,7 @@ public:
   // compress and encode slice
   Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
-  Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams  );
+  Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* rpcBitstream, TComOutputBitstream* pcSubstreams  );
   
   // misc. functions
   Void    setSearchRange      ( TComSlice* pcSlice  );                                  ///< set ME range adaptively
@@ -131,8 +133,10 @@ public:
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
+#if DEPENDENT_SLICES
   Void      initCtxMem( UInt i );
   Void      setCtxMem( TEncSbac* sb, Int b )   { CTXMem[b] = sb; }
+#endif
 
 private:
   Double  xGetQPValueAccordingToLambda ( Double lambda );

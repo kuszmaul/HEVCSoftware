@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -204,11 +204,11 @@ public:
 
   Double estimatePicLambda( list<TEncRCPic*>& listPreviousPictures );
   Int    estimatePicQP    ( Double lambda, list<TEncRCPic*>& listPreviousPictures );
-  Double getLCUTargetBpp();
-  Double getLCUEstLambda( Double bpp );
+  Double getLCUTargetBpp( list<TEncRCPic*>& listPreviousPictures );
+  Double getLCUEstLambda( Double bpp, list<TEncRCPic*>& listPreviousPictures );
   Int    getLCUEstQP( Double lambda, Int clipPicQP );
 
-  Void updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter = true );
+  Void updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Int numOfEffectivePixel, Bool updateLCUParameter = true );
   Void updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda, Double effectivePercentage );
 
   Void addToPictureLsit( list<TEncRCPic*>& listPreviousPictures );
@@ -217,8 +217,8 @@ public:
   Double calAverageLambda();
 
 private:
-  Int xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP );
-  Int xEstPicHeaderBits( list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
+  Int xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
+  Int xEstPicHeaderBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel );
 
 public:
   TEncRCSeq*      getRCSequence()                         { return m_encRCSeq; }
@@ -328,13 +328,20 @@ typedef struct LCUData
   Double  m_costMAD;           ///<  texture complexity for a unit
 }LCUData;
 
+enum MAD_HISTORY {
+  MAD_PPPrevious = 0,
+  MAD_PPrevious  = 1,
+  MAD_Previous   = 2,
+  NUM_MAD_HISTORY= 3
+};
+
 class MADLinearModel
 {
 private:
   Bool   m_activeOn;
   Double m_paramY1;
   Double m_paramY2;
-  Double m_costMADs[3];
+  Double m_costMADs[NUM_MAD_HISTORY];
 
 public:
   MADLinearModel ()   {};
@@ -412,7 +419,7 @@ public:
   TEncRateCtrl         () {};
   virtual ~TEncRateCtrl() {};
 
-  Void          create                (Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight);
+  Void          create                (Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight, const ChromaFormat format);
   Void          destroy               ();
 
   Void          initFrameData         (Int qp = 0);

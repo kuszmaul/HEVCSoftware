@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@
 //! \ingroup TLibCommon
 //! \{
 
-const UChar TComCABACTables::sm_aucLPSTable[64][4] =
+const UChar TComCABACTables::sm_aucLPSTable[1 << CONTEXT_STATE_BITS][4] =
 {
   { 128, 176, 208, 240},
   { 128, 167, 197, 227},

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,10 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iomanip>
+#include <assert.h>
+#include "TComDataCU.h"
+#include "Debug.h"
 // ====================================================================================================================
 // Initialize / destroy functions
 // ====================================================================================================================
@@ -46,11 +50,97 @@
 //! \ingroup TLibCommon
 //! \{
 
+class ScanGenerator
+{
+private:
+  UInt m_line, m_column;
+  const UInt m_blockWidth, m_blockHeight;
+  const UInt m_stride;
+  const COEFF_SCAN_TYPE m_scanType;
+
+public:
+  ScanGenerator(UInt blockWidth, UInt blockHeight, UInt stride, COEFF_SCAN_TYPE scanType)
+    : m_line(0), m_column(0), m_blockWidth(blockWidth), m_blockHeight(blockHeight), m_stride(stride), m_scanType(scanType)
+  { }
+  
+  UInt GetCurrentX() const { return m_column; }
+  UInt GetCurrentY() const { return m_line; }
+
+  UInt GetNextIndex(UInt blockOffsetX, UInt blockOffsetY)
+  {
+    Int rtn=((m_line + blockOffsetY) * m_stride) + m_column + blockOffsetX;
+
+    //advance line and column to the next position
+    switch (m_scanType)
+    {
+      //------------------------------------------------
+
+      case SCAN_DIAG:
+        {
+          if ((m_column == (m_blockWidth - 1)) || (m_line == 0)) //if we reach the end of a rank, go diagonally down to the next one
+          {
+            m_line   += m_column + 1;
+            m_column  = 0;
+
+            if (m_line >= m_blockHeight) //if that takes us outside the block, adjust so that we are back on the bottom row
+            {
+              m_column += m_line - (m_blockHeight - 1);
+              m_line    = m_blockHeight - 1;
+            }
+          }
+          else
+          {
+            m_column++;
+            m_line--;
+          }
+        }
+        break;
+
+      //------------------------------------------------
+
+      case SCAN_HOR:
+        {
+          if (m_column == (m_blockWidth - 1))
+          {
+            m_line++;
+            m_column = 0;
+          }
+          else m_column++;
+        }
+        break;
+
+      //------------------------------------------------
+
+      case SCAN_VER:
+        {
+          if (m_line == (m_blockHeight - 1))
+          {
+            m_column++;
+            m_line = 0;
+          }
+          else m_line++;
+        }
+        break;
+
+      //------------------------------------------------
+
+      default:
+        {
+          std::cerr << "ERROR: Unknown scan type \"" << m_scanType << "\"in ScanGenerator::GetNextIndex" << std::endl;
+          exit(1);
+        }
+        break;
+    }
+
+    return rtn;
+  }
+};
+
 // initialize ROM variables
 Void initROM()
 {
   Int i, c;
-  
+
   // g_aucConvertToBit[ x ]: log2(x/4), if x=4 -> 0, x=8 -> 1, x=16 -> 2, ...
   ::memset( g_aucConvertToBit,   -1, sizeof( g_aucConvertToBit ) );
   c=0;
@@ -60,26 +150,92 @@ Void initROM()
     c++;
   }
   g_aucConvertToBit[ i ] = c;
-  
-  c=2;
-  for ( i=0; i<MAX_CU_DEPTH; i++ )
-  {
-    g_auiSigLastScan[0][i] = new UInt[ c*c ];
-    g_auiSigLastScan[1][i] = new UInt[ c*c ];
-    g_auiSigLastScan[2][i] = new UInt[ c*c ];
-    initSigLastScan( g_auiSigLastScan[0][i], g_auiSigLastScan[1][i], g_auiSigLastScan[2][i], c, c);
 
-    c <<= 1;
-  }  
+  // initialise scan orders
+  for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+  {
+    for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+    {
+      const UInt blockWidth  = 1 << log2BlockWidth;
+      const UInt blockHeight = 1 << log2BlockHeight;
+      const UInt totalValues = blockWidth * blockHeight;
+
+      //--------------------------------------------------------------------------------------------------
+
+      //non-grouped scan orders
+
+      for (UInt scanTypeIndex = 0; scanTypeIndex < SCAN_NUMBER_OF_TYPES; scanTypeIndex++)
+      {
+        const COEFF_SCAN_TYPE scanType = COEFF_SCAN_TYPE(scanTypeIndex);
+
+        g_scanOrder[SCAN_UNGROUPED][scanType][log2BlockWidth][log2BlockHeight] = new UInt[totalValues];
+
+        ScanGenerator fullBlockScan(blockWidth, blockHeight, blockWidth, scanType);
+
+        for (UInt scanPosition = 0; scanPosition < totalValues; scanPosition++)
+        {
+          g_scanOrder[SCAN_UNGROUPED][scanType][log2BlockWidth][log2BlockHeight][scanPosition] = fullBlockScan.GetNextIndex(0, 0);
+        }
+      }
+
+      //--------------------------------------------------------------------------------------------------
+
+      //grouped scan orders
+
+      const UInt  groupWidth           = 1           << MLS_CG_LOG2_WIDTH;
+      const UInt  groupHeight          = 1           << MLS_CG_LOG2_HEIGHT;
+      const UInt  widthInGroups        = blockWidth  >> MLS_CG_LOG2_WIDTH;
+      const UInt  heightInGroups       = blockHeight >> MLS_CG_LOG2_HEIGHT;
+
+      const UInt  groupSize            = groupWidth    * groupHeight;
+      const UInt  totalGroups          = widthInGroups * heightInGroups;
+
+      for (UInt scanTypeIndex = 0; scanTypeIndex < SCAN_NUMBER_OF_TYPES; scanTypeIndex++)
+      {
+        const COEFF_SCAN_TYPE scanType = COEFF_SCAN_TYPE(scanTypeIndex);
+
+        g_scanOrder[SCAN_GROUPED_4x4][scanType][log2BlockWidth][log2BlockHeight] = new UInt[totalValues];
+
+        ScanGenerator fullBlockScan(widthInGroups, heightInGroups, groupWidth, scanType);
+
+        for (UInt groupIndex = 0; groupIndex < totalGroups; groupIndex++)
+        {
+          const UInt groupPositionY  = fullBlockScan.GetCurrentY();
+          const UInt groupPositionX  = fullBlockScan.GetCurrentX();
+          const UInt groupOffsetX    = groupPositionX * groupWidth;
+          const UInt groupOffsetY    = groupPositionY * groupHeight;
+          const UInt groupOffsetScan = groupIndex     * groupSize;
+
+          ScanGenerator groupScan(groupWidth, groupHeight, blockWidth, scanType);
+
+          for (UInt scanPosition = 0; scanPosition < groupSize; scanPosition++)
+          {
+            g_scanOrder[SCAN_GROUPED_4x4][scanType][log2BlockWidth][log2BlockHeight][groupOffsetScan + scanPosition] = groupScan.GetNextIndex(groupOffsetX, groupOffsetY);
+          }
+
+          fullBlockScan.GetNextIndex(0,0);
+        }
+      }
+
+      //--------------------------------------------------------------------------------------------------
+    }
+  }
 }
 
 Void destroyROM()
 {
-  for (Int i=0; i<MAX_CU_DEPTH; i++ )
+  for(UInt groupTypeIndex = 0; groupTypeIndex < SCAN_NUMBER_OF_GROUP_TYPES; groupTypeIndex++)
   {
-    delete[] g_auiSigLastScan[0][i];
-    delete[] g_auiSigLastScan[1][i];
-    delete[] g_auiSigLastScan[2][i];
+    for (UInt scanOrderIndex = 0; scanOrderIndex < SCAN_NUMBER_OF_TYPES; scanOrderIndex++)
+    {
+      for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+      {
+        for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+        {
+          delete [] g_scanOrder[groupTypeIndex][scanOrderIndex][log2BlockWidth][log2BlockHeight];
+        }
+      }
+    }
   }
 }
 
@@ -95,8 +251,11 @@ UInt g_auiZscanToRaster [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToZscan [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelX  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelY  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+#if !LINEBUF_CLEANUP
+UInt g_motionRefer   [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+#endif
 
-UInt g_auiPUOffset[8] = { 0, 8, 4, 4, 2, 10, 1, 5};
+UInt g_auiPUOffset[NUMBER_OF_PART_SIZES] = { 0, 8, 4, 4, 2, 10, 1, 5};
 
 Void initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx )
 {
@@ -131,6 +290,54 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 }
 
+#if !LINEBUF_CLEANUP
+/** generate motion data compression mapping table
+* \param uiMaxCUWidth, width of LCU
+* \param uiMaxCUHeight, hight of LCU
+* \param uiMaxDepth, max depth of LCU
+* \returns Void
+*/
+Void initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
+{
+  Int  minSUWidth  = (Int)uiMaxCUWidth  >> ( (Int)uiMaxDepth - 1 );
+  Int  minSUHeight = (Int)uiMaxCUHeight >> ( (Int)uiMaxDepth - 1 );
+
+  Int  numPartInWidth  = (Int)uiMaxCUWidth  / (Int)minSUWidth;
+  Int  numPartInHeight = (Int)uiMaxCUHeight / (Int)minSUHeight;
+
+  for ( Int i = 0; i < numPartInWidth*numPartInHeight; i++ )
+  {
+    g_motionRefer[i] = i;
+  }
+
+  UInt maxCUDepth = g_uiMaxCUDepth - ( g_uiAddCUDepth - 1);
+  Int  minCUWidth  = (Int)uiMaxCUWidth  >> ( (Int)maxCUDepth - 1);
+
+  if(!(minCUWidth == 8 && minSUWidth == 4)) //check if Minimum PU width == 4
+  {
+    return;
+  }
+
+  Int compressionNum = 2;
+
+  for ( Int i = numPartInWidth*(numPartInHeight-1); i < numPartInWidth*numPartInHeight; i += compressionNum*2)
+  {
+    for ( Int j = 1; j < compressionNum; j++ )
+    {
+      g_motionRefer[g_auiRasterToZscan[i+j]] = g_auiRasterToZscan[i];
+    }
+  }
+
+  for ( Int i = numPartInWidth*(numPartInHeight-1)+compressionNum*2-1; i < numPartInWidth*numPartInHeight; i += compressionNum*2)
+  {
+    for ( Int j = 1; j < compressionNum; j++ )
+    {
+      g_motionRefer[g_auiRasterToZscan[i-j]] = g_auiRasterToZscan[i];
+    }
+  }
+}
+#endif
+
 Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
 {
   UInt    i;
@@ -162,17 +369,17 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
 };
 
 
-Int g_quantScales[6] =
+Int g_quantScales[SCALING_LIST_REM_NUM] =
 {
   26214,23302,20560,18396,16384,14564
-};    
+};
 
-Int g_invQuantScales[6] =
+Int g_invQuantScales[SCALING_LIST_REM_NUM] =
 {
   40,45,51,57,64,72
 };
 
-const Short g_aiT4[4][4] =
+const TMatrixCoeff g_aiT4[4][4] =
 {
   { 64, 64, 64, 64},
   { 83, 36,-36,-83},
@@ -180,7 +387,7 @@ const Short g_aiT4[4][4] =
   { 36,-83, 83,-36}
 };
 
-const Short g_aiT8[8][8] =
+const TMatrixCoeff g_aiT8[8][8] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64},
   { 89, 75, 50, 18,-18,-50,-75,-89},
@@ -192,7 +399,7 @@ const Short g_aiT8[8][8] =
   { 18,-50, 75,-89, 89,-75, 50,-18}
 };
 
-const Short g_aiT16[16][16] =
+const TMatrixCoeff g_aiT16[16][16] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64},
   { 90, 87, 80, 70, 57, 43, 25,  9, -9,-25,-43,-57,-70,-80,-87,-90},
@@ -212,7 +419,7 @@ const Short g_aiT16[16][16] =
   {  9,-25, 43,-57, 70,-80, 87,-90, 90,-87, 80,-70, 57,-43, 25, -9}
 };
 
-const Short g_aiT32[32][32] =
+const TMatrixCoeff g_aiT32[32][32] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64},
   { 90, 90, 88, 85, 82, 78, 73, 67, 61, 54, 46, 38, 31, 22, 13,  4, -4,-13,-22,-31,-38,-46,-54,-61,-67,-73,-78,-82,-85,-88,-90,-90},
@@ -248,17 +455,17 @@ const Short g_aiT32[32][32] =
   {  4,-13, 22,-31, 38,-46, 54,-61, 67,-73, 78,-82, 85,-88, 90,-90, 90,-90, 88,-85, 82,-78, 73,-67, 61,-54, 46,-38, 31,-22, 13, -4}
 };
 
-const UChar g_aucChromaScale[58]=
+const UChar g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize]=
 {
-   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
-  17,18,19,20,21,22,23,24,25,26,27,28,29,29,30,31,32,
-  33,33,34,34,35,35,36,36,37,37,38,39,40,41,42,43,44,
-  45,46,47,48,49,50,51
+  //0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,29,30,31,32,33,33,34,34,35,35,36,36,37,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51 },
+  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,32,33,34,35,36,37,37,38,39,40,40,41,42,42,43,44,44,45,45,46,47,48,49,50,51 },
+  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,51,51,51,51,51,51 }
 };
 
-
 // Mode-Dependent DCT/DST 
-const Short g_as_DST_MAT_4 [4][4]=
+const TMatrixCoeff g_as_DST_MAT_4 [4][4]=
 {
   {29,   55,    74,   84},
   {74,   74,    0 ,  -74},
@@ -272,43 +479,40 @@ const Short g_as_DST_MAT_4 [4][4]=
 // ====================================================================================================================
 
 #if FAST_UDI_USE_MPM
-const UChar g_aucIntraModeNumFast[7] =
+const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 {
   3,  //   2x2
   8,  //   4x4
   8,  //   8x8
-  3,  //  16x16   
-  3,  //  32x32   
-  3,  //  64x64   
-  3   // 128x128  
+  3,  //  16x16
+  3,  //  32x32
+  3   //  64x64
+#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
+ ,3   // 128x128
+#endif
 };
 #else // FAST_UDI_USE_MPM
-const UChar g_aucIntraModeNumFast[7] =
+const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 {
   3,  //   2x2
   9,  //   4x4
   9,  //   8x8
   4,  //  16x16   33
   4,  //  32x32   33
-  5,  //  64x64   33
-  4   // 128x128  33
+  5   //  64x64   33
+#if (RExt__BACKWARDS_COMPATIBILITY_HM != 0)
+ ,4   // 128x128  33
+#endif
 };
 #endif // FAST_UDI_USE_MPM
-
-// chroma
-
-const UChar g_aucConvertTxtTypeToIdx[4] = { 0, 1, 1, 2 };
 
 
 // ====================================================================================================================
 // Bit-depth
 // ====================================================================================================================
 
-Int  g_bitDepthY = 8;
-Int  g_bitDepthC = 8;
-
-UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
-UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
+Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE] = {8, 8};
+Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};    // PCM bit-depth
 
 // ====================================================================================================================
 // Misc.
@@ -317,7 +521,7 @@ UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
 Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 
 #if ENC_DEC_TRACE
-FILE*  g_hTrace = NULL;
+FILE*  g_hTrace = stdout; // Set to NULL to open up a file. Set to stdout to use the current output
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
 Bool   g_HLSTraceEnable = true;
@@ -329,159 +533,99 @@ UInt64 g_nSymbolCounter = 0;
 // ====================================================================================================================
 
 // scanning order table
-UInt* g_auiSigLastScan[ 3 ][ MAX_CU_DEPTH ];
+UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
 
-const UInt g_sigLastScan8x8[ 3 ][ 4 ] =
+const UInt ctxIndMap4x4[4*4] =
 {
-  {0, 2, 1, 3},
-  {0, 1, 2, 3},
-  {0, 2, 1, 3}
+  0, 1, 4, 5,
+  2, 3, 4, 5,
+  6, 6, 8, 8,
+  7, 7, 8, 8
 };
-UInt g_sigLastScanCG32x32[ 64 ];
 
-const UInt g_uiMinInGroup[ 10 ] = {0,1,2,3,4,6,8,12,16,24};
-const UInt g_uiGroupIdx[ 32 ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
+const UInt g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ] = {0,1,2,3,4,6,8,12,16,24};
+const UInt g_uiGroupIdx[ MAX_TU_SIZE ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
 
 // Rice parameters for absolute transform levels
-const UInt g_auiGoRiceRange[5] =
+const UInt g_auiGoRiceRange[MAXIMUM_GOLOMB_RICE_PARAMETER] =
 {
   7, 14, 26, 46, 78
 };
 
-const UInt g_auiGoRicePrefixLen[5] =
+const UInt g_auiGoRicePrefixLen[MAXIMUM_GOLOMB_RICE_PARAMETER] =
 {
   8, 7, 6, 5, 4
 };
 
-Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
+const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
-  const UInt  uiNumScanPos  = UInt( iWidth * iWidth );
-  UInt        uiNextScanPos = 0;
-
-  if( iWidth < 16 )
   {
-    UInt* pBuffTemp = pBuffD;
-    if( iWidth == 8 )
-    {
-      pBuffTemp = g_sigLastScanCG32x32;
-    }
-    for( UInt uiScanLine = 0; uiNextScanPos < uiNumScanPos; uiScanLine++ )
-    {
-      Int    iPrimDim  = Int( uiScanLine );
-      Int    iScndDim  = 0;
-      while( iPrimDim >= iWidth )
-      {
-        iScndDim++;
-        iPrimDim--;
-      }
-      while( iPrimDim >= 0 && iScndDim < iWidth )
-      {
-        pBuffTemp[ uiNextScanPos ] = iPrimDim * iWidth + iScndDim ;
-        uiNextScanPos++;
-        iScndDim++;
-        iPrimDim--;
-      }
-    }
-  }
-  if( iWidth > 4 )
+  "INTRA4X4_LUMA",
+  "INTRA4X4_CHROMAU",
+  "INTRA4X4_CHROMAV",
+  "INTER4X4_LUMA",
+  "INTER4X4_CHROMAU",
+  "INTER4X4_CHROMAV"
+  },
   {
-    UInt uiNumBlkSide = iWidth >> 2;
-    UInt uiNumBlks    = uiNumBlkSide * uiNumBlkSide;
-    UInt log2Blk      = g_aucConvertToBit[ uiNumBlkSide ] + 1;
-
-    for( UInt uiBlk = 0; uiBlk < uiNumBlks; uiBlk++ )
-    {
-      uiNextScanPos   = 0;
-      UInt initBlkPos = g_auiSigLastScan[ SCAN_DIAG ][ log2Blk ][ uiBlk ];
-      if( iWidth == 32 )
-      {
-        initBlkPos = g_sigLastScanCG32x32[ uiBlk ];
-      }
-      UInt offsetY    = initBlkPos / uiNumBlkSide;
-      UInt offsetX    = initBlkPos - offsetY * uiNumBlkSide;
-      UInt offsetD    = 4 * ( offsetX + offsetY * iWidth );
-      UInt offsetScan = 16 * uiBlk;
-      for( UInt uiScanLine = 0; uiNextScanPos < 16; uiScanLine++ )
-      {
-        Int    iPrimDim  = Int( uiScanLine );
-        Int    iScndDim  = 0;
-        while( iPrimDim >= 4 )
-        {
-          iScndDim++;
-          iPrimDim--;
-        }
-        while( iPrimDim >= 0 && iScndDim < 4 )
-        {
-          pBuffD[ uiNextScanPos + offsetScan ] = iPrimDim * iWidth + iScndDim + offsetD;
-          uiNextScanPos++;
-          iScndDim++;
-          iPrimDim--;
-        }
-      }
-    }
-  }
-
-  UInt uiCnt = 0;
-  if( iWidth > 2 )
+  "INTRA8X8_LUMA",
+  "INTRA8X8_CHROMAU", 
+  "INTRA8X8_CHROMAV", 
+  "INTER8X8_LUMA",
+  "INTER8X8_CHROMAU", 
+  "INTER8X8_CHROMAV"  
+  },
   {
-    UInt numBlkSide = iWidth >> 2;
-    for(Int blkY=0; blkY < numBlkSide; blkY++)
-    {
-      for(Int blkX=0; blkX < numBlkSide; blkX++)
-      {
-        UInt offset    = blkY * 4 * iWidth + blkX * 4;
-        for(Int y=0; y < 4; y++)
-        {
-          for(Int x=0; x < 4; x++)
-          {
-            pBuffH[uiCnt] = y*iWidth + x + offset;
-            uiCnt ++;
-          }
-        }
-      }
-    }
-
-    uiCnt = 0;
-    for(Int blkX=0; blkX < numBlkSide; blkX++)
-    {
-      for(Int blkY=0; blkY < numBlkSide; blkY++)
-      {
-        UInt offset    = blkY * 4 * iWidth + blkX * 4;
-        for(Int x=0; x < 4; x++)
-        {
-          for(Int y=0; y < 4; y++)
-          {
-            pBuffV[uiCnt] = y*iWidth + x + offset;
-            uiCnt ++;
-          }
-        }
-      }
-    }
-  }
-  else
+  "INTRA16X16_LUMA",
+  "INTRA16X16_CHROMAU", 
+  "INTRA16X16_CHROMAV", 
+  "INTER16X16_LUMA",
+  "INTER16X16_CHROMAU", 
+  "INTER16X16_CHROMAV"  
+  },
   {
-    for(Int iY=0; iY < iHeight; iY++)
-    {
-      for(Int iX=0; iX < iWidth; iX++)
-      {
-        pBuffH[uiCnt] = iY*iWidth + iX;
-        uiCnt ++;
-      }
-    }
+  "INTRA32X32_LUMA",
+  "INTER32X32_LUMA",
+  },
+};
 
-    uiCnt = 0;
-    for(Int iX=0; iX < iWidth; iX++)
-    {
-      for(Int iY=0; iY < iHeight; iY++)
-      {
-        pBuffV[uiCnt] = iY*iWidth + iX;
-        uiCnt ++;
-      }
-    }    
-  }
-}
+const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
+{
+  {
+  },
+  {
+  },
+  {
+  "INTRA16X16_LUMA_DC",
+  "INTRA16X16_CHROMAU_DC", 
+  "INTRA16X16_CHROMAV_DC", 
+  "INTER16X16_LUMA_DC",
+  "INTER16X16_CHROMAU_DC", 
+  "INTER16X16_CHROMAV_DC"  
+  },
+  {
+  "INTRA32X32_LUMA_DC",
+  "INTER32X32_LUMA_DC",
+  },
+};
 
-Int g_quantTSDefault4x4[16] =
+#if !FLAT_4x4_DSL
+Int g_quantIntraDefault4x4[4*4] =
+{
+  16,16,17,21,
+  16,17,20,25,
+  17,20,30,41,
+  21,25,41,70
+};
+Int g_quantInterDefault4x4[4*4] =
+{
+  16,16,17,21,
+  16,17,21,24,
+  17,21,24,36,
+  21,24,36,57
+};
+#endif
+Int g_quantTSDefault4x4[4*4] =
 {
   16,16,16,16,
   16,16,16,16,
@@ -489,7 +633,7 @@ Int g_quantTSDefault4x4[16] =
   16,16,16,16
 };
 
-Int g_quantIntraDefault8x8[64] =
+Int g_quantIntraDefault8x8[8*8] =
 {
   16,16,16,16,17,18,21,24,
   16,16,16,16,17,19,22,25,
@@ -501,7 +645,7 @@ Int g_quantIntraDefault8x8[64] =
   24,25,29,36,47,65,88,115
 };
 
-Int g_quantInterDefault8x8[64] =
+Int g_quantInterDefault8x8[8*8] =
 {
   16,16,16,16,17,18,20,24,
   16,16,16,17,18,20,24,25,
@@ -512,9 +656,12 @@ Int g_quantInterDefault8x8[64] =
   20,24,25,28,33,41,54,71,
   24,25,28,33,41,54,71,91
 };
-UInt g_scalingListSize   [4] = {16,64,256,1024}; 
-UInt g_scalingListSizeX  [4] = { 4, 8, 16,  32};
-UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={6,6,6,2};
-Int  g_eTTable[4] = {0,3,1,2};
 
+UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
+UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
+#if RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
+UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM};
+#else
+UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={SCALING_LIST_NUM, SCALING_LIST_NUM, SCALING_LIST_NUM, NUMBER_OF_PREDICTION_MODES};
+#endif
 //! \}

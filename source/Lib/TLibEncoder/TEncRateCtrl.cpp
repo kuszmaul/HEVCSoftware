@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 */
 #include "TEncRateCtrl.h"
 #include "../TLibCommon/TComPic.h"
+#include "../TLibCommon/TComChromaFormat.h"
 
 #include <cmath>
 
@@ -369,7 +370,7 @@ TEncRCPic::~TEncRCPic()
   destroy();
 }
 
-Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP )
+Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
 {
   Int targetBits        = 0;
   Int GOPbitsLeft       = encRCGOP->getBitsLeft();
@@ -398,7 +399,7 @@ Int TEncRCPic::xEstPicTargetBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP )
   return targetBits;
 }
 
-Int TEncRCPic::xEstPicHeaderBits( list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
+Int TEncRCPic::xEstPicHeaderBits( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, list<TEncRCPic*>& listPreviousPictures, Int frameLevel )
 {
   Int numPreviousPics   = 0;
   Int totalPreviousBits = 0;
@@ -441,8 +442,8 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
   m_encRCSeq = encRCSeq;
   m_encRCGOP = encRCGOP;
 
-  Int targetBits    = xEstPicTargetBits( encRCSeq, encRCGOP );
-  Int estHeaderBits = xEstPicHeaderBits( listPreviousPictures, frameLevel );
+  Int targetBits    = xEstPicTargetBits( encRCSeq, encRCGOP, listPreviousPictures, frameLevel );
+  Int estHeaderBits = xEstPicHeaderBits( encRCSeq, encRCGOP, listPreviousPictures, frameLevel );
 
   if ( targetBits < estHeaderBits + 100 )
   {
@@ -606,7 +607,7 @@ Int TEncRCPic::estimatePicQP( Double lambda, list<TEncRCPic*>& listPreviousPictu
   return QP;
 }
 
-Double TEncRCPic::getLCUTargetBpp()
+Double TEncRCPic::getLCUTargetBpp( list<TEncRCPic*>& listPreviousPictures )
 {
   Int   LCUIdx    = getLCUCoded();
   Double bpp      = -1.0;
@@ -637,17 +638,10 @@ Double TEncRCPic::getLCUTargetBpp()
     }
   }
 
-#if L0033_RC_BUGFIX
-  if ( avgBits < 1 )
-  {
-    avgBits = 1;
-  }
-#else
   if ( avgBits < 5 )
   {
     avgBits = 5;
   }
-#endif
 
   bpp = ( Double )avgBits/( Double )m_LCUs[ LCUIdx ].m_numberOfPixel;
   m_LCUs[ LCUIdx ].m_targetBits = avgBits;
@@ -655,7 +649,7 @@ Double TEncRCPic::getLCUTargetBpp()
   return bpp;
 }
 
-Double TEncRCPic::getLCUEstLambda( Double bpp )
+Double TEncRCPic::getLCUEstLambda( Double bpp, list<TEncRCPic*>& listPreviousPictures )
 {
   Int   LCUIdx = getLCUCoded();
   Double alpha;
@@ -677,7 +671,7 @@ Double TEncRCPic::getLCUEstLambda( Double bpp )
 
   //for Lambda clip, LCU level clip
   Double clipNeighbourLambda = -1.0;
-  for ( int i=LCUIdx - 1; i>=0; i-- )
+  for ( int i=m_numberOfLCU - m_LCULeft - 1; i>=0; i-- )
   {
     if ( m_LCUs[i].m_lambda > 0 )
     {
@@ -715,11 +709,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
 
   //for Lambda clip, LCU level clip
   Int clipNeighbourQP = g_RCInvalidQPValue;
-#if L0033_RC_BUGFIX
-  for ( int i=LCUIdx - 1; i>=0; i-- )
-#else
   for ( int i=LCUIdx; i>=0; i-- )
-#endif
   {
     if ( (getLCU(i)).m_QP > g_RCInvalidQPValue )
     {
@@ -738,7 +728,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
   return estQP;
 }
 
-Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter )
+Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Int numOfEffectivePixel, Bool updateLCUParameter )
 {
   m_LCUs[LCUIdx].m_actualBits = bits;
   m_LCUs[LCUIdx].m_QP         = QP;
@@ -1171,18 +1161,15 @@ Void TEncRateCtrl::destroyRCGOP()
 #define MAD_PRED_Y1             1.0
 #define MAD_PRED_Y2             0.0
 
-enum MAD_HISOTRY {
-  MAD_PPPrevious = 0,
-  MAD_PPrevious  = 1,
-  MAD_Previous   = 2
-};
-
 Void    MADLinearModel::initMADLinearModel()
 {
   m_activeOn = false;
   m_paramY1  = 1.0;
   m_paramY2  = 0.0;
-  m_costMADs[0] = m_costMADs[1] = m_costMADs[2] = 0.0;
+  for(UInt i=0; i<NUM_MAD_HISTORY; i++)
+  {
+    m_costMADs[i] = 0.0;
+  }
 }
 
 Double  MADLinearModel::getMAD()
@@ -1338,7 +1325,7 @@ Int     PixelBaseURQQuadraticModel::xConvertQStep2QP(Double qStep )
 }
 
 
-Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight)
+Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int targetKbps, Int qp, Int numLCUInBasicUnit, Int sourceWidth, Int sourceHeight, Int maxCUWidth, Int maxCUHeight, const ChromaFormat format)
 {
   Int leftInHeight, leftInWidth;
 
@@ -1351,7 +1338,7 @@ Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int 
   m_refFrameNum              = m_isLowdelay ? (sizeGOP) : (sizeGOP>>1);
   m_nonRefFrameNum           = sizeGOP-m_refFrameNum;
   m_sizeGOP                  = sizeGOP;
-  m_numOfPixels              = ((sourceWidth*sourceHeight*3)>>1);
+  m_numOfPixels              = getTotalSamples(sourceWidth, sourceHeight, format);
   m_indexGOP                 = 0;
   m_indexFrame               = 0;
   m_indexLCU                 = 0;
@@ -1387,7 +1374,7 @@ Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int 
       leftInWidth = min(leftInWidth, maxCUWidth);
       m_pcLCUData[addressUnit].m_widthInPixel = leftInWidth;
       m_pcLCUData[addressUnit].m_heightInPixel= leftInHeight;
-      m_pcLCUData[addressUnit].m_pixels       = ((leftInHeight*leftInWidth*3)>>1);
+      m_pcLCUData[addressUnit].m_pixels       = getTotalSamples(leftInWidth, leftInHeight, format);
     }
   }
 }
@@ -1721,9 +1708,9 @@ Void  TEncRateCtrl::updateLCUData(TComDataCU* pcCU, UInt64 actualLCUBits, Int qp
   Int     x, y;
   Double  costMAD = 0.0;
 
-  Pel*  pOrg   = pcCU->getPic()->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-  Pel*  pRec   = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
-  Int   stride = pcCU->getPic()->getStride();
+  Pel*  pOrg   = pcCU->getPic()->getPicYuvOrg()->getAddr(COMPONENT_Y, pcCU->getAddr(), 0);
+  Pel*  pRec   = pcCU->getPic()->getPicYuvRec()->getAddr(COMPONENT_Y, pcCU->getAddr(), 0);
+  Int   stride = pcCU->getPic()->getStride(COMPONENT_Y);
 
   Int   width  = m_pcLCUData[m_indexLCU].m_widthInPixel;
   Int   height = m_pcLCUData[m_indexLCU].m_heightInPixel;

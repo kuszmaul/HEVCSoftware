@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>TAppEncoder</ProjectName>
-    <ProjectGuid>{D759E4E1-D33A-4483-B57B-0FD248E022FE}</ProjectGuid>
+    <ProjectGuid>{D3FFC910-9022-42AA-9A65-7648A0ED61A3}</ProjectGuid>
     <RootNamespace>TAppEncoder</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -73,18 +73,6 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\..\bin\vc10\$(Platform)\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -177,20 +165,20 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="TAppCommon_vc10.vcxproj">
+      <Project>{f32af661-2227-4ac2-9564-b302f8599a1f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="TAppCommon_vc10.vcxproj">
       <Project>{d1e8a1c2-15db-4c94-80e8-4f70cf0a2dc5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="TLibCommon_vc10.vcxproj">
-      <Project>{78018d78-f890-47e3-a0b7-09d273f0b11d}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{12792f9b-6fde-4314-b7d0-dbab960e81ef}</Project>
     </ProjectReference>
     <ProjectReference Include="TLibEncoder_vc10.vcxproj">
-      <Project>{47e90995-1fc5-4ee4-a94d-ad474169f0e1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{33968493-70bb-4d8b-886c-67fe13c23c42}</Project>
     </ProjectReference>
     <ProjectReference Include="TLibVideoIO_vc10.vcxproj">
-      <Project>{5280c25a-d316-4be7-ae50-29d72108624f}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{f767f240-f185-4ca4-b44b-a15682e03722}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
