@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		61601BB615A74998008F8892 /* Debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61601BAF15A74998008F8892 /* Debug.cpp */; };
+		61601BB715A74998008F8892 /* Debug.h in Headers */ = {isa = PBXBuildFile; fileRef = 61601BB015A74998008F8892 /* Debug.h */; };
+		61601BB815A74998008F8892 /* TComChromaFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61601BB115A74998008F8892 /* TComChromaFormat.cpp */; };
+		61601BB915A74998008F8892 /* TComChromaFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 61601BB215A74998008F8892 /* TComChromaFormat.h */; };
+		61601BBA15A74998008F8892 /* TComRectangle.h in Headers */ = {isa = PBXBuildFile; fileRef = 61601BB315A74998008F8892 /* TComRectangle.h */; };
+		61601BBB15A74998008F8892 /* TComTU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 61601BB415A74998008F8892 /* TComTU.cpp */; };
+		61601BBC15A74998008F8892 /* TComTU.h in Headers */ = {isa = PBXBuildFile; fileRef = 61601BB515A74998008F8892 /* TComTU.h */; };
 		65EA1B88135744C400988950 /* libmd5.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EA1B85135744C400988950 /* libmd5.h */; };
 		65EA1B89135744C400988950 /* libmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 65EA1B86135744C400988950 /* libmd5.c */; };
 		65EA1B8A135744C400988950 /* MD5.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EA1B87135744C400988950 /* MD5.h */; };
@@ -108,7 +115,7 @@
 		6782E0F111AD694400E8FFB8 /* TAppDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6782E0EC11AD694400E8FFB8 /* TAppDecTop.cpp */; };
 		7104E1E312005B5600F42AA8 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */; };
 		710DD68B1335295200BE8EDE /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */; };
-		71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71161E9E16A7253F0021E8A8 /* SEI.cpp */; };
+                71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71161E9E16A7253F0021E8A8 /* SEI.cpp */; };
 		71206CD616066EC700A354E7 /* SyntaxElementParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */; };
 		71206CD716066EC700A354E7 /* SyntaxElementParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 71206CD516066EC700A354E7 /* SyntaxElementParser.h */; };
 		71206CDB16066EDD00A354E7 /* SyntaxElementWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71206CD916066EDD00A354E7 /* SyntaxElementWriter.cpp */; };
@@ -209,6 +216,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		61601BAF15A74998008F8892 /* Debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Debug.cpp; path = source/Lib/TLibCommon/Debug.cpp; sourceTree = "<group>"; };
+		61601BB015A74998008F8892 /* Debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Debug.h; path = source/Lib/TLibCommon/Debug.h; sourceTree = "<group>"; };
+		61601BB115A74998008F8892 /* TComChromaFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TComChromaFormat.cpp; path = source/Lib/TLibCommon/TComChromaFormat.cpp; sourceTree = "<group>"; };
+		61601BB215A74998008F8892 /* TComChromaFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TComChromaFormat.h; path = source/Lib/TLibCommon/TComChromaFormat.h; sourceTree = "<group>"; };
+		61601BB315A74998008F8892 /* TComRectangle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TComRectangle.h; path = source/Lib/TLibCommon/TComRectangle.h; sourceTree = "<group>"; };
+		61601BB415A74998008F8892 /* TComTU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TComTU.cpp; path = source/Lib/TLibCommon/TComTU.cpp; sourceTree = "<group>"; };
+		61601BB515A74998008F8892 /* TComTU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TComTU.h; path = source/Lib/TLibCommon/TComTU.h; sourceTree = "<group>"; };
 		65EA1B85135744C400988950 /* libmd5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libmd5.h; path = source/Lib/libmd5/libmd5.h; sourceTree = "<group>"; };
 		65EA1B86135744C400988950 /* libmd5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = libmd5.c; path = source/Lib/libmd5/libmd5.c; sourceTree = "<group>"; };
 		65EA1B87135744C400988950 /* MD5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MD5.h; path = source/Lib/libmd5/MD5.h; sourceTree = "<group>"; };
@@ -317,7 +331,7 @@
 		6782E0ED11AD694400E8FFB8 /* TAppDecTop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TAppDecTop.h; path = source/App/TAppDecoder/TAppDecTop.h; sourceTree = "<group>"; };
 		7104E1CD12005ABA00F42AA8 /* libTAppCommon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTAppCommon.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		71161E9E16A7253F0021E8A8 /* SEI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SEI.cpp; path = source/Lib/TLibCommon/SEI.cpp; sourceTree = "<group>"; };
-		71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementParser.cpp; path = source/Lib/TLibDecoder/SyntaxElementParser.cpp; sourceTree = "<group>"; };
+                71206CD416066EC700A354E7 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementParser.cpp; path = source/Lib/TLibDecoder/SyntaxElementParser.cpp; sourceTree = "<group>"; };
 		71206CD516066EC700A354E7 /* SyntaxElementParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SyntaxElementParser.h; path = source/Lib/TLibDecoder/SyntaxElementParser.h; sourceTree = "<group>"; };
 		71206CD916066EDD00A354E7 /* SyntaxElementWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SyntaxElementWriter.cpp; path = source/Lib/TLibEncoder/SyntaxElementWriter.cpp; sourceTree = "<group>"; };
 		71206CDA16066EDD00A354E7 /* SyntaxElementWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SyntaxElementWriter.h; path = source/Lib/TLibEncoder/SyntaxElementWriter.h; sourceTree = "<group>"; };
@@ -456,6 +470,13 @@
 		6767959711AD61D700421804 /* TLibCommon */ = {
 			isa = PBXGroup;
 			children = (
+				61601BAF15A74998008F8892 /* Debug.cpp */,
+				61601BB015A74998008F8892 /* Debug.h */,
+				61601BB115A74998008F8892 /* TComChromaFormat.cpp */,
+				61601BB215A74998008F8892 /* TComChromaFormat.h */,
+				61601BB315A74998008F8892 /* TComRectangle.h */,
+				61601BB415A74998008F8892 /* TComTU.cpp */,
+				61601BB515A74998008F8892 /* TComTU.h */,
 				712FAEA81379BA2F00DB5314 /* AccessUnit.h */,
 				712FAEA91379BA2F00DB5314 /* NAL.h */,
 				65EA1B85135744C400988950 /* libmd5.h */,
@@ -686,6 +707,10 @@
 				DBC9C94114477F6400A77A93 /* TComSampleAdaptiveOffset.h in Headers */,
 				DBC9C94C1447847400A77A93 /* TComRdCostWeightPrediction.h in Headers */,
 				DBC9C94E1447847400A77A93 /* TComWeightPrediction.h in Headers */,
+				61601BB715A74998008F8892 /* Debug.h in Headers */,
+				61601BB915A74998008F8892 /* TComChromaFormat.h in Headers */,
+				61601BBA15A74998008F8892 /* TComRectangle.h in Headers */,
+				61601BBC15A74998008F8892 /* TComTU.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -944,7 +969,10 @@
 				DBC9C94014477F6400A77A93 /* TComSampleAdaptiveOffset.cpp in Sources */,
 				DBC9C94B1447847400A77A93 /* TComRdCostWeightPrediction.cpp in Sources */,
 				DBC9C94D1447847400A77A93 /* TComWeightPrediction.cpp in Sources */,
-				71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */,
+				61601BB615A74998008F8892 /* Debug.cpp in Sources */,
+				61601BB815A74998008F8892 /* TComChromaFormat.cpp in Sources */,
+				61601BBB15A74998008F8892 /* TComTU.cpp in Sources */,
+                                71161E9F16A7253F0021E8A8 /* SEI.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1083,7 +1111,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = source/Lib;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = "";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -1097,7 +1125,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = source/Lib;
-				SDKROOT = "";
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
