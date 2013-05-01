@@ -39,11 +39,13 @@
 #define __COMMONDEF__
 
 #include <algorithm>
+#include <iostream>
+#include <assert.h>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
 #pragma warning( disable : 4018 )
-// disable bool coercion "performance warning"
+// disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
 #include "TypeDef.h"
@@ -55,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "10.1"                 ///< Current software version
+#define NV_VERSION        "10.0_RExt2.0"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -109,14 +111,12 @@
 
 #define MAX_NUM_REF_PICS            16          ///< max. number of pictures used for reference
 #define MAX_NUM_REF                 16          ///< max. number of entries in picture reference list
-#if !L0034_COMBINED_LIST_CLEANUP
 #define MAX_NUM_REF_LC              MAX_NUM_REF_PICS  // TODO: remove this macro definition (leftover from combined list concept)
-#endif
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
-#define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
+#define MAX_DOUBLE                  1.7e+308    ///< max. value of Double-type value
 
 #define MIN_QP                      0
 #define MAX_QP                      51
@@ -126,15 +126,22 @@
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
-extern Int g_bitDepthY;
-extern Int g_bitDepthC;
 
-/** clip x, such that 0 <= x <= #g_maxLumaVal */
-template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
-template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
+extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
 
-/** clip a, such that minVal <= a <= maxVal */
-template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
+template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
+
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
+{
+  if ((a > maxVal) || (a < minVal))
+  {
+    std::cerr << "ERROR: Range check " << minVal << " >= " << a << " <= " << maxVal << " failed" << std::endl;
+    assert(false);
+    exit(1);
+  }
+}  ///< general min/max clip
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -151,6 +158,10 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
+template <typename ValueType> inline ValueType leftShift       (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ( value                                   >> -shift); }
+template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  >> shift) : ( value                                   << -shift); }
+template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ((value + (ValueType(1) << (-shift - 1))) >> -shift); }
+template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (ValueType(1) << (shift - 1))) >> shift) : ( value                                   << -shift); }
 
 // ====================================================================================================================
 // Coding tool configuration
@@ -194,62 +205,63 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 //       effort can be done without use of macros to alter the names used to indicate the different NAL unit types.
 enum NalUnitType
 {
-  NAL_UNIT_CODED_SLICE_TRAIL_N = 0, // 0
-  NAL_UNIT_CODED_SLICE_TRAIL_R,     // 1
+  NAL_UNIT_CODED_SLICE_TRAIL_N = 0,   // 0
+  NAL_UNIT_CODED_SLICE_TRAIL_R,   // 1
   
-  NAL_UNIT_CODED_SLICE_TSA_N,       // 2
-  NAL_UNIT_CODED_SLICE_TLA_R,       // 3
+  NAL_UNIT_CODED_SLICE_TSA_N,     // 2
+  NAL_UNIT_CODED_SLICE_TLA,       // 3   // Current name in the spec: TSA_R
   
-  NAL_UNIT_CODED_SLICE_STSA_N,      // 4
-  NAL_UNIT_CODED_SLICE_STSA_R,      // 5
+  NAL_UNIT_CODED_SLICE_STSA_N,    // 4
+  NAL_UNIT_CODED_SLICE_STSA_R,    // 5
 
-  NAL_UNIT_CODED_SLICE_RADL_N,      // 6
-  NAL_UNIT_CODED_SLICE_RADL_R,      // 7
+  NAL_UNIT_CODED_SLICE_RADL_N,    // 6
+  NAL_UNIT_CODED_SLICE_DLP,       // 7 // Current name in the spec: RADL_R
   
-  NAL_UNIT_CODED_SLICE_RASL_N,      // 8
-  NAL_UNIT_CODED_SLICE_RASL_R,      // 9
+  NAL_UNIT_CODED_SLICE_RASL_N,    // 8
+  NAL_UNIT_CODED_SLICE_TFD,       // 9 // Current name in the spec: RASL_R
 
-  NAL_UNIT_RESERVED_VCL_N10,
-  NAL_UNIT_RESERVED_VCL_R11,
-  NAL_UNIT_RESERVED_VCL_N12,
-  NAL_UNIT_RESERVED_VCL_R13,
-  NAL_UNIT_RESERVED_VCL_N14,
-  NAL_UNIT_RESERVED_VCL_R15,
+  NAL_UNIT_RESERVED_10,
+  NAL_UNIT_RESERVED_11,
+  NAL_UNIT_RESERVED_12,
+  NAL_UNIT_RESERVED_13,
+  NAL_UNIT_RESERVED_14,
+  NAL_UNIT_RESERVED_15,
 
-  NAL_UNIT_CODED_SLICE_BLA_W_LP,    // 16
-  NAL_UNIT_CODED_SLICE_BLA_W_RADL,  // 17
-  NAL_UNIT_CODED_SLICE_BLA_N_LP,    // 18
-  NAL_UNIT_CODED_SLICE_IDR_W_RADL,  // 19
-  NAL_UNIT_CODED_SLICE_IDR_N_LP,    // 20
-  NAL_UNIT_CODED_SLICE_CRA,         // 21
-  NAL_UNIT_RESERVED_IRAP_VCL22,
-  NAL_UNIT_RESERVED_IRAP_VCL23,
+  NAL_UNIT_CODED_SLICE_BLA,       // 16   // Current name in the spec: BLA_W_LP
+  NAL_UNIT_CODED_SLICE_BLANT,     // 17   // Current name in the spec: BLA_W_DLP
+  NAL_UNIT_CODED_SLICE_BLA_N_LP,  // 18
+  NAL_UNIT_CODED_SLICE_IDR,       // 19  // Current name in the spec: IDR_W_DLP
+  NAL_UNIT_CODED_SLICE_IDR_N_LP,  // 20
+  NAL_UNIT_CODED_SLICE_CRA,       // 21
+  NAL_UNIT_RESERVED_22,
+  NAL_UNIT_RESERVED_23,
 
-  NAL_UNIT_RESERVED_VCL24,
-  NAL_UNIT_RESERVED_VCL25,
-  NAL_UNIT_RESERVED_VCL26,
-  NAL_UNIT_RESERVED_VCL27,
-  NAL_UNIT_RESERVED_VCL28,
-  NAL_UNIT_RESERVED_VCL29,
-  NAL_UNIT_RESERVED_VCL30,
-  NAL_UNIT_RESERVED_VCL31,
+  NAL_UNIT_RESERVED_24,
+  NAL_UNIT_RESERVED_25,
+  NAL_UNIT_RESERVED_26,
+  NAL_UNIT_RESERVED_27,
+  NAL_UNIT_RESERVED_28,
+  NAL_UNIT_RESERVED_29,
+  NAL_UNIT_RESERVED_30,
+  NAL_UNIT_RESERVED_31,
 
-  NAL_UNIT_VPS,                     // 32
-  NAL_UNIT_SPS,                     // 33
-  NAL_UNIT_PPS,                     // 34
-  NAL_UNIT_ACCESS_UNIT_DELIMITER,   // 35
-  NAL_UNIT_EOS,                     // 36
-  NAL_UNIT_EOB,                     // 37
-  NAL_UNIT_FILLER_DATA,             // 38
-  NAL_UNIT_PREFIX_SEI,              // 39
-  NAL_UNIT_SUFFIX_SEI,              // 40
-  NAL_UNIT_RESERVED_NVCL41,
-  NAL_UNIT_RESERVED_NVCL42,
-  NAL_UNIT_RESERVED_NVCL43,
-  NAL_UNIT_RESERVED_NVCL44,
-  NAL_UNIT_RESERVED_NVCL45,
-  NAL_UNIT_RESERVED_NVCL46,
-  NAL_UNIT_RESERVED_NVCL47,
+  NAL_UNIT_VPS,                   // 32
+  NAL_UNIT_SPS,                   // 33
+  NAL_UNIT_PPS,                   // 34
+  NAL_UNIT_ACCESS_UNIT_DELIMITER, // 35
+  NAL_UNIT_EOS,                   // 36
+  NAL_UNIT_EOB,                   // 37
+  NAL_UNIT_FILLER_DATA,           // 38
+  NAL_UNIT_SEI,                   // 39 Prefix SEI
+  NAL_UNIT_SEI_SUFFIX,            // 40 Suffix SEI
+
+  NAL_UNIT_RESERVED_41,
+  NAL_UNIT_RESERVED_42,
+  NAL_UNIT_RESERVED_43,
+  NAL_UNIT_RESERVED_44,
+  NAL_UNIT_RESERVED_45,
+  NAL_UNIT_RESERVED_46,
+  NAL_UNIT_RESERVED_47,
   NAL_UNIT_UNSPECIFIED_48,
   NAL_UNIT_UNSPECIFIED_49,
   NAL_UNIT_UNSPECIFIED_50,

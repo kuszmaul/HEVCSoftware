@@ -46,6 +46,8 @@
 #include <memory.h>
 #include <assert.h>
 #include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComChromaFormat.h"
+#include "math.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -58,69 +60,126 @@
 class TEncAnalyze
 {
 private:
-  Double    m_dPSNRSumY;
-  Double    m_dPSNRSumU;
-  Double    m_dPSNRSumV;
+  Double    m_dPSNRSum[MAX_NUM_COMPONENT];
   Double    m_dAddBits;
   UInt      m_uiNumPic;
   Double    m_dFrmRate; //--CFG_KDY
+  Double    m_MSEyuvframe[MAX_NUM_COMPONENT]; // sum of MSEs
   
 public:
-  TEncAnalyze() { m_dPSNRSumY = m_dPSNRSumU = m_dPSNRSumV = m_dAddBits = m_uiNumPic = 0;  }
   virtual ~TEncAnalyze()  {}
+  TEncAnalyze() { clear(); }
   
-  Void  addResult( Double psnrY, Double psnrU, Double psnrV, Double bits)
+  Void  addResult( Double psnr[MAX_NUM_COMPONENT], Double bits, const Double MSEyuvframe[MAX_NUM_COMPONENT])
   {
-    m_dPSNRSumY += psnrY;
-    m_dPSNRSumU += psnrU;
-    m_dPSNRSumV += psnrV;
     m_dAddBits  += bits;
-    
+    for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
+    {
+      m_dPSNRSum[i] += psnr[i];
+      m_MSEyuvframe[i] += MSEyuvframe[i];
+    }
+
     m_uiNumPic++;
   }
   
-  Double  getPsnrY()  { return  m_dPSNRSumY;  }
-  Double  getPsnrU()  { return  m_dPSNRSumU;  }
-  Double  getPsnrV()  { return  m_dPSNRSumV;  }
-  Double  getBits()   { return  m_dAddBits;   }
-  UInt    getNumPic() { return  m_uiNumPic;   }
+  Double  getPsnr(ComponentID compID) const { return  m_dPSNRSum[compID];  }
+  Double  getBits()                   const { return  m_dAddBits;   }
+  UInt    getNumPic()                 const { return  m_uiNumPic;   }
   
   Void    setFrmRate  (Double dFrameRate) { m_dFrmRate = dFrameRate; } //--CFG_KDY
-  Void    clear() { m_dPSNRSumY = m_dPSNRSumU = m_dPSNRSumV = m_dAddBits = m_uiNumPic = 0;  }
-  Void    printOut ( Char cDelim )
+  Void    clear()
+  {
+    m_dAddBits = 0;
+    for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
+    {
+      m_dPSNRSum[i] = 0;
+      m_MSEyuvframe[i] = 0;
+    }
+    m_uiNumPic = 0;
+  }
+
+
+  Double calculateCombinedSNR(const ChromaFormat chFmt)
+  {
+    Double MSEyuv = 0;
+    Int    scale  = 0;
+
+    Int maximumBitDepth = g_bitDepth[0];
+    for (UInt channelTypeIndex = 1; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+      if (g_bitDepth[channelTypeIndex] > maximumBitDepth)
+        maximumBitDepth = g_bitDepth[channelTypeIndex];
+    
+    const UInt maxval                = 255 << (maximumBitDepth - 8);
+    const UInt numberValidComponents = getNumberValidComponents(chFmt);
+
+    for (UInt comp=0; comp<numberValidComponents; comp++)
+    {
+      const ComponentID compID        = ComponentID(comp);
+      const UInt        csx           = getComponentScaleX(compID, chFmt);
+      const UInt        csy           = getComponentScaleY(compID, chFmt);
+      const Int         scaleChan     = (4>>(csx+csy));
+      const UInt        bitDepthShift = 2 * (maximumBitDepth - g_bitDepth[toChannelType(compID)]); //*2 because this is a squared number
+
+      const Double      channelMSE    = (m_MSEyuvframe[compID] * Double(1 << bitDepthShift)) / Double(getNumPic());
+
+      scale  += scaleChan;
+      MSEyuv += scaleChan * channelMSE;
+    }
+
+    MSEyuv /= Double(scale);  // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
+    Double PSNRyuv = (MSEyuv==0 ? 99.99 : 10*log10((maxval*maxval)/MSEyuv));
+    return PSNRyuv;
+  }
+
+
+  Void    printOut ( Char cDelim, const ChromaFormat chFmt )
   {
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
-    
-    printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR \n" );
-    //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-    printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf\n",
-           getNumPic(), cDelim,
-           getBits() * dScale,
-           getPsnrY() / (Double)getNumPic(),
-           getPsnrU() / (Double)getNumPic(),
-           getPsnrV() / (Double)getNumPic() );
+
+    switch (chFmt)
+    {
+      case CHROMA_400:
+        printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR\n" );
+        //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+        printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf\n",
+               getNumPic(), cDelim,
+               getBits() * dScale,
+               getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+        break;
+      case CHROMA_420:
+      case CHROMA_422:
+      case CHROMA_444:
+        {
+          Double PSNRyuv = calculateCombinedSNR(chFmt);
+          printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+          //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+          printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                 getNumPic(), cDelim,
+                 getBits() * dScale,
+                 getPsnr(COMPONENT_Y) / (Double)getNumPic(),
+                 getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
+                 getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
+                 PSNRyuv );
+          break;
+        }
+      default:
+        fprintf(stderr, "Unknown format during print out\n");
+        exit(1);
+        break;
+    }
   }
   
-  Void    printSummaryOut ()
-  {
-    FILE* pFile = fopen ("summaryTotal.txt", "at");
-    Double dFps     =   m_dFrmRate; //--CFG_KDY
-    Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
-    
-    fprintf(pFile, "%f\t %f\t %f\t %f\n", getBits() * dScale,
-            getPsnrY() / (Double)getNumPic(),
-            getPsnrU() / (Double)getNumPic(),
-            getPsnrV() / (Double)getNumPic() );
-    fclose(pFile);
-  }
-  
-  Void    printSummary(Char ch)
+
+  Void    printSummary(const ChromaFormat chFmt, Char ch='T')
   {
     FILE* pFile = NULL;
     
     switch( ch ) 
     {
+      case 'T':
+        pFile = fopen ("summaryTotal.txt", "at");
+        break;
       case 'I':
         pFile = fopen ("summary_I.txt", "at");
         break;
@@ -138,12 +197,32 @@ public:
     
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
-    
-    fprintf(pFile, "%f\t %f\t %f\t %f\n",
+    switch (chFmt)
+    {
+      case CHROMA_400:
+        fprintf(pFile, "%f\t %f\n",
             getBits() * dScale,
-            getPsnrY() / (Double)getNumPic(),
-            getPsnrU() / (Double)getNumPic(),
-            getPsnrV() / (Double)getNumPic() );
+            getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+        break;
+      case CHROMA_420:
+      case CHROMA_422:
+      case CHROMA_444:
+        {
+          Double PSNRyuv = calculateCombinedSNR(chFmt);
+          fprintf(pFile, "%f\t %f\t %f\t %f\t %f\n",
+              getBits() * dScale,
+              getPsnr(COMPONENT_Y) / (Double)getNumPic(),
+              getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
+              getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
+              PSNRyuv );
+          break;
+        }
+
+      default:
+          fprintf(stderr, "Unknown format during print out\n");
+          exit(1);
+          break;
+    }
     
     fclose(pFile);
   }

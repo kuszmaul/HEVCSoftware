@@ -43,7 +43,7 @@
 //! \ingroup TAppDecoder
 //! \{
 
-bool g_md5_mismatch = false; ///< top level flag that indicates if there has been a decoding mismatch
+Bool g_md5_mismatch = false; ///< top level flag that indicates if there has been a decoding mismatch
 
 // ====================================================================================================================
 // Main function
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
   }
 
   // starting time
-  double dResult;
+  Double dResult;
   long lBefore = clock();
 
   // call decoding function
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   }
 
   // ending time
-  dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
+  dResult = (Double)(clock()-lBefore) / CLOCKS_PER_SEC;
   printf("\n Total Time: %12.3f sec.\n", dResult);
 
   // destroy application decoder class

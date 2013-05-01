@@ -172,17 +172,19 @@ public:
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
-#if L0208_SOP_DESCRIPTION_SEI
-  Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
-#endif
   TComScalingList*        getScalingList        () { return  &m_scalingList;         }
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+  Void encode( Bool bEos,
+               TComPicYuv* pcPicYuvOrg,
+#if RExt__COLOUR_SPACE_CONVERSIONS
+               TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+#endif
+               TComList<TComPicYuv*>& rcListPicYuvRecOut,
+               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );
 
   void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); }
 };

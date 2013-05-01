@@ -153,9 +153,6 @@ public:
 
   Void          addSubstream    ( TComOutputBitstream* pcSubstream );
   Void writeByteAlignment();
-
-  //! returns the number of start code emulations contained in the current buffer
-  Int countStartCodeEmulations();
 };
 
 /**
@@ -165,7 +162,6 @@ public:
 class TComInputBitstream
 {
   std::vector<uint8_t> *m_fifo; /// FIFO for storage of complete bytes
-  std::vector<UInt> m_emulationPreventionByteLocation;
 
 protected:
   UInt m_fifo_idx; /// Read index into m_fifo
@@ -192,7 +188,7 @@ public:
     ruiBits = (*m_fifo)[m_fifo_idx++];
   }
 
-  Void        readOutTrailingBits ();
+  UInt        readOutTrailingBits (); // NOTE: RExt - now returns the number of bits read.
   UChar getHeldBits  ()          { return m_held_bits;          }
   TComOutputBitstream& operator= (const TComOutputBitstream& src);
   UInt  getByteLocation              ( )                     { return m_fifo_idx                    ; }
@@ -208,14 +204,7 @@ public:
   TComInputBitstream *extractSubstream( UInt uiNumBits ); // Read the nominated number of bits, and return as a bitstream.
   Void                deleteFifo(); // Delete internal fifo of bitstream.
   UInt  getNumBitsRead() { return m_numBitsRead; }
-  Void readByteAlignment();
-
-  Void      pushEmulationPreventionByteLocation ( UInt pos )                  { m_emulationPreventionByteLocation.push_back( pos ); }
-  UInt      numEmulationPreventionBytesRead     ()                            { return (UInt) m_emulationPreventionByteLocation.size();    }
-  std::vector<UInt>  getEmulationPreventionByteLocation  ()                   { return m_emulationPreventionByteLocation;           }
-  UInt      getEmulationPreventionByteLocation  ( UInt idx )                  { return m_emulationPreventionByteLocation[ idx ];    }
-  Void      clearEmulationPreventionByteLocation()                            { m_emulationPreventionByteLocation.clear();          }
-  Void      setEmulationPreventionByteLocation  ( std::vector<UInt> vec )     { m_emulationPreventionByteLocation = vec;            }
+  UInt readByteAlignment(); // NOTE: RExt - now returns the number of bits read.
 };
 
 //! \}
