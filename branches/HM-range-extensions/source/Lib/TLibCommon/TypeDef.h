@@ -300,6 +300,8 @@
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
 #endif
 
+#define RExt__M0335_SAO_OFFSET_SCALING                                         1 ///< 0 = Disable scaling of SAO offset for bit depths larger than 10, 1 (default) = enable SAO offset scaling
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
