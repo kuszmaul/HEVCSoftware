@@ -304,6 +304,8 @@
 
 #define RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING                             1 ///< 0 = Scale chroma intra modes in 4:2:2 by shifting the angle at the time of prediction, 1 (default) = apply a mapping table to convert the intra mode
 
+#define RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT                              1 ///< 0 = Use angular prediction for horizontal and vertical modes, 1 (default) use Sample Adaptive intra Predict (SAP) for horizontal and vertical modes in RExt profile
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------

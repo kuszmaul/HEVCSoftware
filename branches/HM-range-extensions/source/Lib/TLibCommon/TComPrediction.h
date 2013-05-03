@@ -114,7 +114,11 @@ public:
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, TComMv& rcMvPred );
   
   // Angular Intra
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+  Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel *piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples );
+#else
   Void predIntraAng               ( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples );
+#endif
   
   Pel  predIntraGetPredValDC      ( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft );
 
@@ -133,6 +137,10 @@ public:
                               ,Bool        bLMmode = false // using for LM chroma or not
                               );
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt);
+
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+  static Bool UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode);
+#endif
 };
 
 //! \}
