@@ -511,7 +511,11 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   //===== get prediction signal =====
 
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+  m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0 /* Decoder does not have an original image */, 0, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+#else
   m_pcPrediction->predIntraAng( compID,   uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+#endif
 
 #ifdef DEBUG_STRING
   ss << sTemp;
@@ -540,7 +544,11 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   //===== reconstruction =====
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+        Pel* pPred      = piPred;
+#else
   const Pel* pPred      = piPred;
+#endif
   const Pel* pResi      = piResi;
         Pel* pReco      = pcRecoYuv->getAddr( compID, uiAbsPartIdx );
         Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
@@ -552,42 +560,119 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
   const Int clipbd = g_bitDepth[toChannelType(compID)];
-  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+  if (TComPrediction::UseSampleAdaptiveIntraPrediction(rTu, uiChFinalMode))
   {
-#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
-    if (DEBUG_STRING_CHANNEL_CONDITION(compID))
-      ss << "###: ";
-#endif
-
-#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
-    if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+    if ( uiChFinalMode == HOR_IDX )
     {
-      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
-        ss << pPred[ uiX ] << ", ";
-      }
-      ss << "  --  ";
-    }
+        for(UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          const Pel rec=pPred[uiX] + pResi[ uiX ];
+          pRecIPred[ uiX ] = pReco [ uiX ] = ClipBD( rec, clipbd );
+          if (uiX+1 < uiWidth)
+            pPred[ uiX + 1 ] = rec; // NOTE: RExt - should this be the clipped version?
+        }
+#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
+        if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+        {
+          ss << "###: ";
+          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+          {
+            ss << pPred[ uiX ] << ", ";
+          }
+          ss << "  --  ";
+          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+          {
+            ss << pResi[ uiX ] << ", ";
+          }
+          ss << "\n";
+        }
 #endif
-
-    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        pPred     += uiStride;
+        pResi     += uiStride;
+        pReco     += uiStride;
+        pRecIPred += uiRecIPredStride;
+      }
+    }
+    else
+    {
+      for (UInt uiY = 0 ; uiY < uiHeight; uiY++ )
+      {
+        for(UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          const Pel rec=pPred[uiX] + pResi[ uiX ];
+          pRecIPred[ uiX ] = pReco [ uiX ] = ClipBD( rec, clipbd );
+          if (uiY+1 < uiHeight)
+            pPred[ uiX + uiStride ] = rec; // NOTE: RExt - should this be the clipped version?
+        }
+#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
+        if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+        {
+          ss << "###: ";
+          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+          {
+            ss << pPred[ uiX ] << ", ";
+          }
+          ss << "  --  ";
+          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+          {
+            ss << pResi[ uiX ] << ", ";
+          }
+          ss << "\n";
+        }
+#endif
+        pPred     += uiStride;
+        pResi     += uiStride;
+        pReco     += uiStride;
+        pRecIPred += uiRecIPredStride;
+      }
+    }
+  }
+  else
+  {
+#endif
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
       if (DEBUG_STRING_CHANNEL_CONDITION(compID))
-        ss << pResi[ uiX ] << ", ";
+        ss << "###: ";
 #endif
-      pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
-      pRecIPred[ uiX ] = pReco[ uiX ];
-    }
-    pPred     += uiStride;
-    pResi     += uiStride;
-    pReco     += uiStride;
-    pRecIPred += uiRecIPredStride;
+
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
-    if (DEBUG_STRING_CHANNEL_CONDITION(compID))
-      ss << "\n";
+      if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+      {
+        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          ss << pPred[ uiX ] << ", ";
+        }
+        ss << "  --  ";
+      }
 #endif
+
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
+        if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+          ss << pResi[ uiX ] << ", ";
+#endif
+        pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
+        pRecIPred[ uiX ] = pReco[ uiX ];
+      }
+      pPred     += uiStride;
+      pResi     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+#if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
+      if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+        ss << "\n";
+#endif
+    }
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   }
+#endif
 }
 
 

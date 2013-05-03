@@ -404,7 +404,11 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 }
 
 
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
+#else
 Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
+#endif
 {
   const ChromaFormat   format      = rTu.GetChromaFormat();
   const ChannelType    channelType = toChannelType(compID);
@@ -417,25 +421,75 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   //assert( iWidth == iHeight  );
 
         Pel *pDst = piPred;
+#if !RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
+#endif
 
   // get starting pixel in block
   const Int sw = (2 * iWidth + 1);
 
-  if ( uiDirMode == PLANAR_IDX )
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+  if ( UseSampleAdaptiveIntraPrediction(rTu, uiDirMode) )
   {
-    xPredIntraPlanar( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format );
+    const Pel *ptrSrc = getPredictorPtr( compID, false ) ;
+    // Sample Adaptive intra-Prediction (SAP)
+    if (uiDirMode==HOR_IDX)
+    {
+      // left column filled with reference samples
+      // remaining columns filled with piOrg data (if available).
+      for(Int y=0; y<iHeight; y++)
+      {
+        piPred[y*uiStride+0] = ptrSrc[(y+1)*sw];
+      }
+      if (piOrg!=0)
+      {
+        piPred+=1; // miss off first column
+        for(Int y=0; y<iHeight; y++, piPred+=uiStride, piOrg+=uiOrgStride)
+        {
+          memcpy(piPred, piOrg, (iWidth-1)*sizeof(Pel));
+        }
+      }
+    }
+    else // VER_IDX
+    {
+      // top row filled with reference samples
+      // remaining rows filled with piOrd data (if available)
+      for(Int x=0; x<iWidth; x++)
+      {
+        piPred[x] = ptrSrc[x+1];
+      }
+      if (piOrg!=0)
+      {
+        piPred+=uiStride; // miss off the first row
+        for(Int y=1; y<iHeight; y++, piPred+=uiStride, piOrg+=uiOrgStride)
+        {
+          memcpy(piPred, piOrg, iWidth*sizeof(Pel));
+        }
+      }
+    }
   }
   else
   {
-    // Create the prediction
-    xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
-
-    if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
+    const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
+#endif
+    if ( uiDirMode == PLANAR_IDX )
     {
-      xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
+      xPredIntraPlanar( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format );
     }
+    else
+    {
+      // Create the prediction
+      xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
+
+      if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
+      {
+        xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
+      }
+    }
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   }
+#endif
+
 }
 
 /** Function for checking identical motion.
@@ -790,4 +844,16 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
 
   return;
 }
+
+#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+/* Static member function */
+Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode)
+{
+  // TODO: RExt - possibly check other sub-layers profile idcs here?
+  return (rTu.getCU()->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::REXTDEV) &&
+         rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
+         (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
+}
+#endif
+
 //! \}
