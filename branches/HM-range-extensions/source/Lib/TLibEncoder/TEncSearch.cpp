@@ -1050,7 +1050,12 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
         TCoeff*    pcArlCoeff     = m_ppcQTTempArlCoeff[compID][ uiQTLayer ] + rTu.getCoefficientOffset(compID);
 #endif
   const UInt uiChPredMode  = pcCU->getIntraDir( chType, uiAbsPartIdx );
+#if RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING
+  const UInt uiChCodedMode = (uiChPredMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;
+  const UInt uiChFinalMode = ((chFmt == CHROMA_422)       && !bIsLuma) ? g_chroma422IntraAngleMappingTable[uiChCodedMode] : uiChCodedMode;
+#else
   const UInt uiChFinalMode = (uiChPredMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;
+#endif
 
   //===== init availability pattern =====
   Bool  bAboveAvail = false;

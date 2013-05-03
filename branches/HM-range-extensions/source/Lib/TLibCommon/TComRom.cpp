@@ -455,6 +455,11 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 };
 #endif // FAST_UDI_USE_MPM
 
+#if RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING
+const UChar g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE] =
+  //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, DM
+  { 0, 1, 2, 2, 2, 2, 3, 5, 7, 8, 10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 23, 24, 24, 25, 25, 26, 27, 27, 28, 28, 29, 29, 30, 31, DM_CHROMA_IDX};
+#endif
 
 // ====================================================================================================================
 // Bit-depth

@@ -302,6 +302,8 @@
 
 #define RExt__M0335_SAO_OFFSET_SCALING                                         1 ///< 0 = Disable scaling of SAO offset for bit depths larger than 10, 1 (default) = enable SAO offset scaling
 
+#define RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING                             1 ///< 0 = Scale chroma intra modes in 4:2:2 by shifting the angle at the time of prediction, 1 (default) = apply a mapping table to convert the intra mode
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
