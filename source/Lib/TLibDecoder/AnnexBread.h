@@ -153,6 +153,10 @@ public:
     return val;
   }
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  UInt GetNumBufferedBytes() const { return m_NumFutureBytes; }
+#endif
+
 private:
   UInt m_NumFutureBytes; /* number of valid bytes in m_FutureBytes */
   uint32_t m_FutureBytes; /* bytes that have been peeked */

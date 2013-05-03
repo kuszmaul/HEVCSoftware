@@ -53,10 +53,21 @@
 
 #else
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+
+#define READ_CODE(length, code, name)     xReadCode ( length, code, name )
+#define READ_UVLC(        code, name)     xReadUvlc (         code, name )
+#define READ_SVLC(        code, name)     xReadSvlc (         code, name )
+#define READ_FLAG(        code, name)     xReadFlag (         code, name )
+
+#else
+
 #define READ_CODE(length, code, name)     xReadCode ( length, code )
 #define READ_UVLC(        code, name)     xReadUvlc (         code )
 #define READ_SVLC(        code, name)     xReadSvlc (         code )
 #define READ_FLAG(        code, name)     xReadFlag (         code )
+
+#endif
 
 #endif
 
@@ -77,10 +88,17 @@ protected:
   {};
   virtual ~SyntaxElementParser() {};
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  Void  xReadCode    ( UInt   length, UInt& val, const Char *pSymbolName );
+  Void  xReadUvlc    ( UInt&  val, const Char *pSymbolName );
+  Void  xReadSvlc    ( Int&   val, const Char *pSymbolName );
+  Void  xReadFlag    ( UInt&  val, const Char *pSymbolName );
+#else
   Void  xReadCode    ( UInt   length, UInt& val );
   Void  xReadUvlc    ( UInt&  val );
   Void  xReadSvlc    ( Int&   val );
   Void  xReadFlag    ( UInt&  val );
+#endif
 #if ENC_DEC_TRACE
   Void  xReadCodeTr  (UInt  length, UInt& rValue, const Char *pSymbolName);
   Void  xReadUvlcTr  (              UInt& rValue, const Char *pSymbolName);
