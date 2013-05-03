@@ -112,13 +112,9 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
         pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD); x--;
         pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD); x--;
       }
-      switch (x)
+      for( ; x >= 0; x-- )
       {
-        case 2: pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD); x--;
-          // fall through
-        case 1: pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD); x--;
-          // fall through
-        case 0: pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD); x--;
+        pDst[x] = weightBidir(w0,pSrc0[x], w1,pSrc1[x], round, shift, offset, clipBD);
       }
 
       pSrc0 += iSrc0Stride;
@@ -171,13 +167,9 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
         pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
         pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
       }
-      switch (x)
+      for( ; x >= 0; x--)
       {
-        case 2:  pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-          // fall through
-        case 1:  pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-          // fall through
-        case 0:  pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD);
       }
       pSrc0 += iSrc0Stride;
       pDst  += iDstStride;

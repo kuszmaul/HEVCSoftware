@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "10.1_RExt2.0"                 ///< Current software version
+#define NV_VERSION        "10.1_RExt2.0_dev(Bug-fix)"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information

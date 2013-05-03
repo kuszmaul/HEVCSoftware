@@ -169,7 +169,6 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 #if WEIGHTED_CHROMA_DISTORTION
 // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
-  Double weights[MAX_NUM_COMPONENT] = { 1.0 };
   Double dLambdas[MAX_NUM_COMPONENT] = { dLambda };
   for(UInt compIdx=1; compIdx<MAX_NUM_COMPONENT; compIdx++)
   {
@@ -177,7 +176,6 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Double tmpWeight = pow( 2.0, (iQP-getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
-    weights[compIdx]=tmpWeight;
     dLambdas[compIdx]=dLambda/tmpWeight;
   }
 

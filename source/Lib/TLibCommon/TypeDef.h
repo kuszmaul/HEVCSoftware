@@ -307,11 +307,13 @@
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
 
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986                            1 ///< Maintain backwards compatibility with HM for ticket 986 (encodeQtCbfZero called with inconsistent depths)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987                            0 ///< Maintain backwards compatibility with HM for ticket 987 (SAO mixing quadtree indices and components)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990                            0 ///< Maintain backwards compatibility with HM for ticket 990 (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO                        1 ///< Maintain backwards compatibility with HM for ticket 990 (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant - SAO interaction subclause). Ticket 993 compatibility must disabled.
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992                            0 ///< Maintain backwards compatibility with HM for ticket 992 (MAX_CU_SIZE)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986                            1 ///< Maintain backwards compatibility with HM for ticket 986  (encodeQtCbfZero called with inconsistent depths)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987                            0 ///< Maintain backwards compatibility with HM for ticket 987  (SAO mixing quadtree indices and components)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990                            0 ///< Maintain backwards compatibility with HM for ticket 990  (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO                        1 ///< Maintain backwards compatibility with HM for ticket 990  (RDOQ_CHROMA_LAMBDA interaction with TComTrQuant - SAO interaction subclause). Ticket 993 compatibility must disabled.
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992                            0 ///< Maintain backwards compatibility with HM for ticket 992  (MAX_CU_SIZE)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026                           1 ///< Maintain backwards compatibility with HM for ticket 1026 (xGetICRate is deprecated)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082                           0 ///< Maintain backwards compatibility with HM for ticket 1082 (SAO bit depth increase (only affects operation at greater than 10-bit)
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -599,6 +601,7 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
+    REXTDEV = 4
   };
 }
 

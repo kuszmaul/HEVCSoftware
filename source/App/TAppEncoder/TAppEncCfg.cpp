@@ -192,6 +192,7 @@ strToProfile[] =
   {"main",               Profile::MAIN            },
   {"main10",             Profile::MAIN10          },
   {"main-still-picture", Profile::MAINSTILLPICTURE},
+  {"rext-dev",           Profile::REXTDEV         }
 };
 
 static const struct MapStrToTier
@@ -344,9 +345,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,                         0, "Number of frames to be encoded (default=all)")
 
   // Profile and level
-  ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
-  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
-  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
+  ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for FDIS main), main10 (for FDIS main10), main-still-picture, rext-dev (for Range Extensions Development profile) or none")
+  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1, or none")
+  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level (main or high only)")
 
 #if L0046_CONSTRAINT_FLAGS
   ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")

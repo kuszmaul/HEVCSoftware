@@ -277,10 +277,13 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
     default: assert(false); break;
   }
 
-  WRITE_CODE(sei.method, 8, "hash_type");
-  for(UInt i=0; i<UInt(sei.m_digest.hash.size()); i++)
+  if (traceString != 0) //use of this variable is needed to avoid a compiler error with G++ 4.6.1
   {
-    WRITE_CODE(sei.m_digest.hash[i], 8, traceString);
+    WRITE_CODE(sei.method, 8, "hash_type");
+    for(UInt i=0; i<UInt(sei.m_digest.hash.size()); i++)
+    {
+      WRITE_CODE(sei.m_digest.hash[i], 8, traceString);
+    }
   }
 }
 
