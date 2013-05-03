@@ -179,9 +179,9 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
           // fall through
         case 0:  pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
       }
+      pSrc0 += iSrc0Stride;
+      pDst  += iDstStride;
     }
-    pSrc0 += iSrc0Stride;
-    pDst  += iDstStride;
   }
 }
 

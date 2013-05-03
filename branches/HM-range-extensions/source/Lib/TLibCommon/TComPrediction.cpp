@@ -118,8 +118,8 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 {
   if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] == NULL ) // check if first is null (in which case, nothing initialised yet)
   {
-    Int extWidth  = g_uiMaxCUWidth + 16; 
-    Int extHeight = g_uiMaxCUHeight + 1;
+    Int extWidth  = MAX_CU_SIZE + 16; 
+    Int extHeight = MAX_CU_SIZE + 1;
 
     for (UInt i = 0; i < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; i++)
     {
@@ -130,7 +130,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
       }
     }
 
-    m_iYuvExtSize = (g_uiMaxCUHeight*2+1) * (g_uiMaxCUWidth*2+1);
+    m_iYuvExtSize = (MAX_CU_SIZE*2+1) * (MAX_CU_SIZE*2+1);
     for(UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
     {
       for(UInt buf=0; buf<NUM_PRED_BUF; buf++)
@@ -142,16 +142,16 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
     // new structure
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
     {
-      m_acYuvPred[i] .create( g_uiMaxCUWidth, g_uiMaxCUHeight, chromaFormatIDC );
+      m_acYuvPred[i] .create( MAX_CU_SIZE, MAX_CU_SIZE, chromaFormatIDC );
     }
 
-    m_cYuvPredTemp.create( g_uiMaxCUWidth, g_uiMaxCUHeight, chromaFormatIDC );
+    m_cYuvPredTemp.create( MAX_CU_SIZE, MAX_CU_SIZE, chromaFormatIDC );
   }
 
 
-  if (m_iLumaRecStride != (g_uiMaxCUWidth>>1) + 1)
+  if (m_iLumaRecStride != (MAX_CU_SIZE>>1) + 1)
   {
-    m_iLumaRecStride =  (g_uiMaxCUWidth>>1) + 1;
+    m_iLumaRecStride =  (MAX_CU_SIZE>>1) + 1;
     if (!m_pLumaRecBuffer)
     {
       m_pLumaRecBuffer = new Pel[ m_iLumaRecStride * m_iLumaRecStride ];
