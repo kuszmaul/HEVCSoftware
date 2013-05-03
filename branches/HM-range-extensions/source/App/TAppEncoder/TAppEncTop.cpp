@@ -151,10 +151,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseAdaptQpSelect             ( m_bUseAdaptQpSelect   );
 #endif
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Int lowestQP;
   lowestQP =  - 6*(g_bitDepth[CHANNEL_TYPE_LUMA] - 8); // XXX: check
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
   {
     m_bUseAdaptiveQP = false;

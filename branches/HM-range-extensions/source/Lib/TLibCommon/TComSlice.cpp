@@ -493,8 +493,8 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   if (checkNumPocTotalCurr)
   {
     // The variable NumPocTotalCurr is derived as specified in subclause 7.4.7.2. It is a requirement of bitstream conformance that the following applies to the value of NumPocTotalCurr:
-    // – If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
-    // – Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
+    // - If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
+    // - Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
     {
       assert(numPocTotalCurr == 0);
@@ -2122,9 +2122,9 @@ Bool ParameterSetManager::activatePPS(Int ppsId, Bool isIRAP)
 
 ProfileTierLevel::ProfileTierLevel()
   : m_profileSpace    (0)
-  , m_tierFlag        (false)
-  , m_profileIdc      (0)
-  , m_levelIdc        (0)
+  , m_tierFlag        (Level::MAIN)
+  , m_profileIdc      (Profile::NONE)
+  , m_levelIdc        (Level::NONE)
 #if L0046_CONSTRAINT_FLAGS
   , m_progressiveSourceFlag  (false)
   , m_interlacedSourceFlag   (false)

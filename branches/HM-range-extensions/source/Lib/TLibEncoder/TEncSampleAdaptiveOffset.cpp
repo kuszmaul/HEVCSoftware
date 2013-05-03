@@ -2401,7 +2401,11 @@ Void TEncSampleAdaptiveOffset::saoComponentParamDist(Int allowMergeLeft, Int all
         Int   merge_iOffset;
         for(classIdx = 0; classIdx < m_iNumClass[typeIdx]; classIdx++)
         {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082
           merge_iOffset = saoLcuParamNeighbor->offset[classIdx];
+#else
+          merge_iOffset = saoLcuParamNeighbor->offset[classIdx] << m_auiSaoBitIncrease[toChannelType(yCbCr)];
+#endif
           estDist   += estSaoDist(m_iCount [yCbCr][typeIdx][classIdx+mergeBandPosition+1], merge_iOffset, m_iOffsetOrg[yCbCr][typeIdx][classIdx+mergeBandPosition+1],  shift);
         }
       }
@@ -2621,7 +2625,11 @@ Void TEncSampleAdaptiveOffset::sao2ChromaParamDist(Int allowMergeLeft, Int allow
           Int   merge_iOffset;
           for(classIdx = 0; classIdx < m_iNumClass[typeIdx]; classIdx++)
           {
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082
             merge_iOffset = saoLcuParamNeighbor[compIdx]->offset[classIdx];
+#else
+            merge_iOffset = saoLcuParamNeighbor[compIdx]->offset[classIdx] << m_auiSaoBitIncrease[CHANNEL_TYPE_CHROMA];
+#endif
             estDist[compIdx]   += estSaoDist(m_iCount [compIdx+1][typeIdx][classIdx+mergeBandPosition+1], merge_iOffset, m_iOffsetOrg[compIdx+1][typeIdx][classIdx+mergeBandPosition+1],  shift);
           }
         }

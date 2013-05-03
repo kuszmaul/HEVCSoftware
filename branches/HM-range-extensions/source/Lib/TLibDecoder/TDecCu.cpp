@@ -555,14 +555,14 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
-      if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+    if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+    {
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          ss << pPred[ uiX ] << ", ";
-        }
-        ss << "  --  ";
+        ss << pPred[ uiX ] << ", ";
       }
+      ss << "  --  ";
+    }
 #endif
 
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -579,8 +579,8 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     pReco     += uiStride;
     pRecIPred += uiRecIPredStride;
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
-      if (DEBUG_STRING_CHANNEL_CONDITION(compID))
-        ss << "\n";
+    if (DEBUG_STRING_CHANNEL_CONDITION(compID))
+      ss << "\n";
 #endif
   }
 }

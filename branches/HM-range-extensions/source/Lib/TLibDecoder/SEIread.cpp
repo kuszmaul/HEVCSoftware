@@ -386,11 +386,14 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
     default: assert(false); break;
   }
 
-  sei.m_digest.hash.clear();
-  for(;bytesRead < payloadSize; bytesRead++)
+  if (traceString != 0) //use of this variable is needed to avoid a compiler error with G++ 4.6.1
   {
-    READ_CODE (8, val, traceString);
-    sei.m_digest.hash.push_back((unsigned char)val);
+    sei.m_digest.hash.clear();
+    for(;bytesRead < payloadSize; bytesRead++)
+    {
+      READ_CODE (8, val, traceString);
+      sei.m_digest.hash.push_back((unsigned char)val);
+    }
   }
 }
 

@@ -1026,7 +1026,7 @@ Void TEncCavlc::codePTL( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubL
   {
     codeProfileTier(pcPTL->getGeneralPTL());    // general_...
   }
-  WRITE_CODE( pcPTL->getGeneralPTL()->getLevelIdc(), 8, "general_level_idc" );
+  WRITE_CODE( Int(pcPTL->getGeneralPTL()->getLevelIdc()), 8, "general_level_idc" );
 
 #if L0363_BYTE_ALIGN
   for (Int i = 0; i < maxNumSubLayersMinus1; i++)
@@ -1064,15 +1064,15 @@ Void TEncCavlc::codePTL( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubL
     }
     if( pcPTL->getSubLayerLevelPresentFlag(i) )
     {
-      WRITE_CODE( pcPTL->getSubLayerPTL(i)->getLevelIdc(), 8, "sub_layer_level_idc[i]" );
+      WRITE_CODE( Int(pcPTL->getSubLayerPTL(i)->getLevelIdc()), 8, "sub_layer_level_idc[i]" );
     }
   }
 }
 Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
 {
   WRITE_CODE( ptl->getProfileSpace(), 2 ,     "XXX_profile_space[]");
-  WRITE_FLAG( ptl->getTierFlag    (),         "XXX_tier_flag[]"    );
-  WRITE_CODE( ptl->getProfileIdc  (), 5 ,     "XXX_profile_idc[]"  );
+  WRITE_FLAG( Int(ptl->getTierFlag  ()),      "XXX_tier_flag[]"    );
+  WRITE_CODE( Int(ptl->getProfileIdc()), 5 ,  "XXX_profile_idc[]"  );
   for(Int j = 0; j < 32; j++)
   {
     WRITE_FLAG( ptl->getProfileCompatibilityFlag(j), "XXX_profile_compatibility_flag[][j]");

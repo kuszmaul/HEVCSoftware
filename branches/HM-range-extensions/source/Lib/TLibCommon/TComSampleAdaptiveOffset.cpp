@@ -457,7 +457,8 @@ Void TComSampleAdaptiveOffset::resetSAOParam(SAOParam *pcSaoParam)
  */
 inline Int xSign(Int x)
 {
-  return ((x >> 31) | ((Int)( (((UInt) -x)) >> 31)));
+  static const UInt shift = (sizeof(Int) * 8) - 1;
+  return ((x >> shift) | ((Int)( (((UInt) -x)) >> shift)));
 }
 
 /** initialize variables for SAO process
@@ -968,7 +969,7 @@ Void TComSampleAdaptiveOffset::processSaoCuOrg(Int iAddr, Int iSaoType, Componen
  */
 Void TComSampleAdaptiveOffset::SAOProcess(SAOParam* pcSaoParam)
 {
-  for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  for(UInt ch = 0; ch < MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_auiSaoBitIncrease[ch] = max(g_bitDepth[ch] - 10, 0);
   }

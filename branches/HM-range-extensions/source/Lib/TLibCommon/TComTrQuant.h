@@ -294,6 +294,8 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                              Int                             iQBits,
                                              Double                          dTemp,
                                              Bool                            bLast        ) const;
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
   __inline Double xGetICRateCost   ( UInt                            uiAbsLevel,
                                      UShort                          ui16CtxNumOne,
                                      UShort                          ui16CtxNumAbs,
@@ -301,6 +303,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                      UInt                            c1Idx,
                                      UInt                            c2Idx
                                      ) const;
+#endif
 
   __inline Int xGetICRate  ( UInt                            uiAbsLevel,
                              UShort                          ui16CtxNumOne,

@@ -190,11 +190,11 @@ private:
 
 class ProfileTierLevel
 {
-  Int     m_profileSpace;
-  Bool    m_tierFlag;
-  Int     m_profileIdc;
-  Bool    m_profileCompatibilityFlag[32];
-  Int     m_levelIdc;
+  Int               m_profileSpace;
+  Level::Tier       m_tierFlag;
+  Profile::Name     m_profileIdc;
+  Bool              m_profileCompatibilityFlag[32];
+  Level::Name       m_levelIdc;
 
 #if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
@@ -209,17 +209,17 @@ public:
   Int   getProfileSpace() const   { return m_profileSpace; }
   Void  setProfileSpace(Int x)    { m_profileSpace = x; }
 
-  Bool  getTierFlag()     const   { return m_tierFlag; }
-  Void  setTierFlag(Bool x)       { m_tierFlag = x; }
+  Level::Tier  getTierFlag()     const   { return m_tierFlag; }
+  Void  setTierFlag(Level::Tier x)       { m_tierFlag = x; }
 
-  Int   getProfileIdc()   const   { return m_profileIdc; }
-  Void  setProfileIdc(Int x)      { m_profileIdc = x; }
+  Profile::Name   getProfileIdc()   const   { return m_profileIdc; }
+  Void  setProfileIdc(Profile::Name x)      { m_profileIdc = x; }
 
   Bool  getProfileCompatibilityFlag(Int i) const    { return m_profileCompatibilityFlag[i]; }
   Void  setProfileCompatibilityFlag(Int i, Bool x)  { m_profileCompatibilityFlag[i] = x; }
 
-  Int   getLevelIdc()   const   { return m_levelIdc; }
-  Void  setLevelIdc(Int x)      { m_levelIdc = x; }
+  Level::Name   getLevelIdc()   const   { return m_levelIdc; }
+  Void  setLevelIdc(Level::Name x)      { m_levelIdc = x; }
   
 #if L0046_CONSTRAINT_FLAGS
   Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
