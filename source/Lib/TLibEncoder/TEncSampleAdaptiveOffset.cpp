@@ -1702,7 +1702,11 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
+#if RExt__M0335_SAO_OFFSET_SCALING
+    m_auiSaoBitIncrease[ch] = max((g_bitDepth[ch] - SAOScaleFactorBitDepthOffset[ch]), 0);
+#else
     m_auiSaoBitIncrease[ch] = max(g_bitDepth[ch] - 10, 0);
+#endif
     m_iOffsetTh[ch]         = 1 << min(g_bitDepth[ch] - 5, 5);
   }
 
