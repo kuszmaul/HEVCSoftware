@@ -1690,19 +1690,9 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, const Double dLa
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
-#if SAO_CHROMA_LAMBDA
-  m_dLambdaLuma    = dLambdaLuma;
-  m_dLambdaChroma  = dLambdaChroma;
-#else
-  m_dLambdaLuma    = dLambda;
-  m_dLambdaChroma  = dLambda;
-#endif
-#else
 #if !SAO_CHROMA_LAMBDA
   Double dLambdaLuma=dLambda;
   Double dLambdaChroma=dLambda;
-#endif
 #endif
 
   if(m_bUseNIF)
@@ -1728,13 +1718,6 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
   Double dCostFinal = 0;
   if ( m_saoLcuBasedOptimization)
   {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
-#if SAO_ENCODING_CHOICE
-    rdoSaoUnitAll(pcSaoParam, m_dLambdaLuma, m_dLambdaChroma, depth);
-#else
-    rdoSaoUnitAll(pcSaoParam, m_dLambdaLuma, m_dLambdaChroma);
-#endif
-#else
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
 #if SAO_ENCODING_CHOICE
     rdoSaoUnitAll(pcSaoParam, dLambdaLuma, dLambdaChroma, depth);
@@ -1748,19 +1731,14 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
     rdoSaoUnitAll(pcSaoParam, dLambdas);
 #endif
 #endif
-#endif
   }
   else
   {
     dCostFinal = 0;
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
-    Double lambdaRdo = m_dLambdaLuma;
-#else
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_990_SAO
     Double lambdaRdo = dLambdaLuma;
 #else
     Double lambdaRdo = dLambdas[COMPONENT_Y];
-#endif
 #endif
     resetStats();
     getSaoStats(pcSaoParam->psSaoPart[COMPONENT_Y], COMPONENT_Y);

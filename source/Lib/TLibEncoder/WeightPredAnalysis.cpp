@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -51,7 +51,7 @@ WeightPredAnalysis::WeightPredAnalysis()
 
   for ( UInt lst =0 ; lst<NUM_REF_PIC_LIST_01 ; lst++ )
   {
-    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ )
     {
       for ( Int comp=0 ; comp<MAX_NUM_COMPONENT ;comp++ )
       {
@@ -148,7 +148,7 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *slice)
   Int iPresentCnt = 0;
   for ( UInt lst=0 ; lst<NUM_REF_PIC_LIST_01 ; lst++ )
   {
-    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ )
     {
       for(Int chan=0; chan<pPic->getNumberValidComponents(); chan++)
       {
@@ -165,7 +165,7 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *slice)
 
     for ( UInt lst=0 ; lst<NUM_REF_PIC_LIST_01 ; lst++ )
     {
-      for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+      for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ )
       {
         for(Int chan=0; chan<pPic->getNumberValidComponents(); chan++)
         {
@@ -206,7 +206,7 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
 
   // selecting whether WP is used, or not
   xSelectWP(slice, m_wp, iDenom);
-  
+
   slice->setWpScaling( m_wp );
 
   return (true);
@@ -252,10 +252,14 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
         // Chroma offset range limination
         if(comp)
         {
-          Int shift = 1 << (bitDepth - 1);
-          Int pred = ( shift - ( ( shift*weight)>>(log2Denom) ) );
+          Int pred = ( 128 - ( ( 128*weight)>>(log2Denom) ) );
           Int deltaOffset = Clip3( -512, 511, (offset - pred) );    // signed 10bit
           offset = Clip3( -128, 127, (deltaOffset + pred) );        // signed 8bit
+        }
+        // Luma offset range limitation
+        else
+        {
+          offset = Clip3( -128, 127, offset);
         }
 
         // Weighting factor limitation
@@ -274,7 +278,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
   return (true);
 }
 
-/** select whether weighted pred enables or not. 
+/** select whether weighted pred enables or not.
  * \param TComSlice *slice
  * \param wpScalingParam
  * \param iDenom
@@ -327,7 +331,7 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
 }
 
 
-/** calculate SAD values for both WP version and non-WP version. 
+/** calculate SAD values for both WP version and non-WP version.
  * \param Pel *pOrgPel
  * \param Pel *pRefPel
  * \param Int iWidth

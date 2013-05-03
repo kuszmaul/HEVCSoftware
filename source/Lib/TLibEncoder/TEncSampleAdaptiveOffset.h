@@ -61,11 +61,6 @@ static const UInt NUM_SAO_RATE_DEPTHS=4;
 class TEncSampleAdaptiveOffset : public TComSampleAdaptiveOffset
 {
 private:
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_993
-  Double            m_dLambdaLuma;
-  Double            m_dLambdaChroma;
-#endif
-
   TEncEntropy*      m_pcEntropyCoder;
   TEncSbac***       m_pppcRDSbacCoder;              ///< for CABAC
   TEncSbac*         m_pcRDGoOnSbacCoder;

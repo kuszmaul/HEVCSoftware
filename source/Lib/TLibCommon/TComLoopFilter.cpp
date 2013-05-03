@@ -56,12 +56,12 @@
 // Tables
 // ====================================================================================================================
 
-const UChar tctable_8x8[MAX_QP + 1 + DEFAULT_INTRA_TC_OFFSET] =
+const UChar TComLoopFilter::sm_tcTable[MAX_QP + 1 + DEFAULT_INTRA_TC_OFFSET] =
 {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,5,5,6,6,7,8,9,10,11,13,14,16,18,20,22,24
 };
 
-const UChar betatable_8x8[MAX_QP + 1] =
+const UChar TComLoopFilter::sm_betaTable[MAX_QP + 1] =
 {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,7,8,9,10,11,12,13,14,15,16,17,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64
 };
@@ -459,7 +459,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcLCU, DeblockEdge
         piRefQ0 = (iRefIdx < 0) ? NULL : pcSlice->getRefPic(REF_PIC_LIST_0, iRefIdx);
         iRefIdx = pcCUQ->getCUMvField(REF_PIC_LIST_1)->getRefIdx(uiPartQ);
         piRefQ1 = (iRefIdx < 0) ? NULL : pcSlice->getRefPic(REF_PIC_LIST_1, iRefIdx);
-        
+
         TComMv pcMvP0 = pcCUP->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartP);
         TComMv pcMvP1 = pcCUP->getCUMvField(REF_PIC_LIST_1)->getMv(uiPartP);
         TComMv pcMvQ0 = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartQ);
@@ -520,7 +520,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcLCU, DeblockEdge
 
         if (piRefP0 == NULL) pcMvP0.setZero();
         if (piRefQ0 == NULL) pcMvQ0.setZero();
-        
+
         uiBs  = ((piRefP0 != piRefQ0) ||
                  (abs(pcMvQ0.getHor() - pcMvP0.getHor()) >= 4) ||
                  (abs(pcMvQ0.getVer() - pcMvP0.getVer()) >= 4)) ? 1 : 0;
@@ -598,8 +598,8 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
       Int iIndexTC = Clip3(0, MAX_QP+DEFAULT_INTRA_TC_OFFSET, Int(iQP + DEFAULT_INTRA_TC_OFFSET*(uiBs-1) + (tcOffsetDiv2 << 1)));
       Int iIndexB = Clip3(0, MAX_QP, iQP + (betaOffsetDiv2 << 1));
 
-      Int iTc =  tctable_8x8[iIndexTC]*iBitdepthScale;
-      Int iBeta = betatable_8x8[iIndexB]*iBitdepthScale;
+      Int iTc =  sm_tcTable[iIndexTC]*iBitdepthScale;
+      Int iBeta = sm_betaTable[iIndexB]*iBitdepthScale;
       Int iSideThreshold = (iBeta+(iBeta>>1))>>3;
       Int iThrCut = iTc*10;
 
@@ -763,7 +763,7 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         Int iBitdepthScale = 1 << (g_bitDepth[CHANNEL_TYPE_CHROMA]-8);
 
         Int iIndexTC = Clip3(0, MAX_QP+DEFAULT_INTRA_TC_OFFSET, iQP + DEFAULT_INTRA_TC_OFFSET*(ucBs - 1) + (tcOffsetDiv2 << 1));
-        Int iTc =  tctable_8x8[iIndexTC]*iBitdepthScale;
+        Int iTc =  sm_tcTable[iIndexTC]*iBitdepthScale;
 
         for ( UInt uiStep = 0; uiStep < uiLoopLength; uiStep++ )
         {
