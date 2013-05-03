@@ -1595,6 +1595,22 @@ Void TAppEncCfg::xSetGlobal()
   }
 }
 
+const Char *profileToString(const Profile::Name profile)
+{
+  static const UInt numberOfProfiles = sizeof(strToProfile)/sizeof(*strToProfile);
+
+  for (UInt profileIndex = 0; profileIndex < numberOfProfiles; profileIndex++)
+  {
+    if (strToProfile[profileIndex].value == profile) return strToProfile[profileIndex].str;
+  }
+
+  //if we get here, we didn't find this profile in the list - so there is an error
+  std::cerr << "ERROR: Unknown profile \"" << profile << "\" in profileToString" << std::endl;
+  assert(false);
+  exit(1);
+  return "";
+}
+
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
@@ -1604,6 +1620,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+  printf("Profile                      : %s\n", profileToString(m_profile) );
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter          : %d\n", m_uiQuadtreeTUMaxDepthInter);
