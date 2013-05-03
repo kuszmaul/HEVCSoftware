@@ -9,10 +9,6 @@
       <UniqueIdentifier>{5e50c4f1-0ca1-47af-8104-45cc6d910254}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{ff0d9379-b34f-4787-8951-1e06360f58a4}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\App\TAppDecoder\decmain.cpp">

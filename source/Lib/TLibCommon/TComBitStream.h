@@ -192,7 +192,7 @@ public:
     ruiBits = (*m_fifo)[m_fifo_idx++];
   }
 
-  Void        readOutTrailingBits ();
+  UInt        readOutTrailingBits (); // NOTE: RExt - now returns the number of bits read.
   UChar getHeldBits  ()          { return m_held_bits;          }
   TComOutputBitstream& operator= (const TComOutputBitstream& src);
   UInt  getByteLocation              ( )                     { return m_fifo_idx                    ; }
@@ -208,7 +208,7 @@ public:
   TComInputBitstream *extractSubstream( UInt uiNumBits ); // Read the nominated number of bits, and return as a bitstream.
   Void                deleteFifo(); // Delete internal fifo of bitstream.
   UInt  getNumBitsRead() { return m_numBitsRead; }
-  Void readByteAlignment();
+  UInt readByteAlignment(); // NOTE: RExt - now returns the number of bits read.
 
   Void      pushEmulationPreventionByteLocation ( UInt pos )                  { m_emulationPreventionByteLocation.push_back( pos ); }
   UInt      numEmulationPreventionBytesRead     ()                            { return (UInt) m_emulationPreventionByteLocation.size();    }

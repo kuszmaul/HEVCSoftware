@@ -35,6 +35,7 @@
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/SEI.h"
 #include "TLibCommon/TComSlice.h"
+#include "TLibCommon/TComPicYuv.h"
 #include "SEIwrite.h"
 
 //! \ingroup TLibEncoder
@@ -117,8 +118,8 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
     xWriteSEIuserDataUnregistered(*static_cast<const SEIuserDataUnregistered*>(&sei));
     break;
   case SEI::ACTIVE_PARAMETER_SETS:
-    xWriteSEIActiveParameterSets(*static_cast<const SEIActiveParameterSets*>(& sei)); 
-    break; 
+    xWriteSEIActiveParameterSets(*static_cast<const SEIActiveParameterSets*>(& sei));
+    break;
   case SEI::DECODING_UNIT_INFO:
     xWriteSEIDecodingUnitInfo(*static_cast<const SEIDecodingUnitInfo*>(& sei), sps);
     break;
@@ -163,6 +164,7 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
 #endif
   default:
     assert(!"Unhandled SEI message");
+    break;
   }
 }
 
@@ -249,7 +251,7 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
  */
 Void SEIWriter::xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei)
 {
-  for (UInt i = 0; i < 16; i++)
+  for (UInt i = 0; i < ISO_IEC_11578_LEN; i++)
   {
     WRITE_CODE(sei.uuid_iso_iec_11578[i], 8 , "sei.uuid_iso_iec_11578[i]");
   }
@@ -266,29 +268,19 @@ Void SEIWriter::xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei
  */
 Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 {
-  UInt val;
+  const Char *traceString="\0";
+  switch (sei.method)
+  {
+    case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
+    case SEIDecodedPictureHash::CRC: traceString="picture_crc"; break;
+    case SEIDecodedPictureHash::CHECKSUM: traceString="picture_checksum"; break;
+    default: assert(false); break;
+  }
 
   WRITE_CODE(sei.method, 8, "hash_type");
-
-  for(Int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
+  for(UInt i=0; i<UInt(sei.m_digest.hash.size()); i++)
   {
-    if(sei.method == SEIDecodedPictureHash::MD5)
-    {
-      for (UInt i = 0; i < 16; i++)
-      {
-        WRITE_CODE(sei.digest[yuvIdx][i], 8, "picture_md5");
-      }
-    }
-    else if(sei.method == SEIDecodedPictureHash::CRC)
-    {
-      val = (sei.digest[yuvIdx][0] << 8)  + sei.digest[yuvIdx][1];
-      WRITE_CODE(val, 16, "picture_crc");
-    }
-    else if(sei.method == SEIDecodedPictureHash::CHECKSUM)
-    {
-      val = (sei.digest[yuvIdx][0] << 24)  + (sei.digest[yuvIdx][1] << 16) + (sei.digest[yuvIdx][2] << 8) + sei.digest[yuvIdx][3];
-      WRITE_CODE(val, 32, "picture_checksum");
-    }
+    WRITE_CODE(sei.m_digest.hash[i], 8, traceString);
   }
 }
 
@@ -309,11 +301,11 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
   }
 
   UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
-  UInt uiAlignedBits = ( 8 - (uiBits&7) ) % 8;  
-  if(uiAlignedBits) 
+  UInt uiAlignedBits = ( 8 - (uiBits&7) ) % 8;
+  if(uiAlignedBits)
   {
     WRITE_FLAG(1, "alignment_bit" );
-    uiAlignedBits--; 
+    uiAlignedBits--;
     while(uiAlignedBits--)
     {
       WRITE_FLAG(0, "alignment_bit" );

@@ -44,6 +44,9 @@
 #include "TAppDecTop.h"
 #include "TLibDecoder/AnnexBread.h"
 #include "TLibDecoder/NALread.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 //! \ingroup TAppDecoder
 //! \{
@@ -116,7 +119,12 @@ Void TAppDecTop::decode()
      * the process of reading a new slice that is the first slice of a new frame
      * requires the TDecTop::decode() method to be called again with the same
      * nal unit. */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    TComCodingStatistics::TComCodingStatisticsData backupStats(TComCodingStatistics::GetStatistics());
+    streampos location = bitstreamFile.tellg() - streampos(bytestream.GetNumBufferedBytes());
+#else
     streampos location = bitstreamFile.tellg();
+#endif
     AnnexBStats stats = AnnexBStats();
     Bool bPreviousPictureDecoded = false;
 
@@ -160,8 +168,14 @@ Void TAppDecTop::decode()
            * need for the annexB parser to read three extra bytes.
            * [1] except for the first NAL unit in the file
            *     (but bNewPicture doesn't happen then) */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+          bitstreamFile.seekg(location);
+          bytestream.reset();
+          TComCodingStatistics::SetStatistics(backupStats);
+#else
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
+#endif
         }
         bPreviousPictureDecoded = true; 
       }
@@ -175,10 +189,12 @@ Void TAppDecTop::decode()
     {
       if ( m_pchReconFile && !recon_opened )
       {
-        if (!m_outputBitDepthY) { m_outputBitDepthY = g_bitDepthY; }
-        if (!m_outputBitDepthC) { m_outputBitDepthC = g_bitDepthC; }
+        for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+        {
+          if (m_outputBitDepth[channelType] == 0) m_outputBitDepth[channelType] = g_bitDepth[channelType];
+        }
 
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
+        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, g_bitDepth ); // write mode
         recon_opened = true;
       }
       if ( bNewPicture && 
@@ -256,6 +272,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
+    TComSPS *sps = pcPic->getSlice(0)->getSPS();
+
+    const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
     
     if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
     {
@@ -263,9 +284,15 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
        not_displayed--;
       if ( m_pchReconFile )
       {
-        const Window &conf = pcPic->getConformanceWindow();
+        const Window &conf    = pcPic->getConformanceWindow();
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+#if RExt__COLOUR_SPACE_CONVERSIONS
+                                       m_outputColourSpaceConvert,
+#else
+                                       RGBChannelOrder,
+#endif
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -314,15 +341,26 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
+#if RExt__COLOUR_SPACE_CONVERSIONS==0
+    TComSPS *sps = pcPic->getSlice(0)->getSPS();
+
+    const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
+#endif
 
     if ( pcPic->getOutputMark() )
     {
       // write to file
       if ( m_pchReconFile )
       {
-        const Window &conf = pcPic->getConformanceWindow();
+        const Window &conf    = pcPic->getConformanceWindow();
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
+#if RExt__COLOUR_SPACE_CONVERSIONS
+                                       m_outputColourSpaceConvert,
+#else
+                                       RGBChannelOrder,
+#endif
                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -351,7 +389,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       pcPic->setOutputMark(false);
     }
 #if !DYN_REF_FREE
-    if(pcPic)
+    if(pcPic != NULL)
     {
       pcPic->destroy();
       delete pcPic;
