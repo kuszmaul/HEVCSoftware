@@ -340,11 +340,6 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
   TComVUI *vui = sps->getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
-#if !L0045_CONDITION_SIGNALLING
-  // This condition was probably OK before the pic_struct, progressive_source_idc, duplicate_flag were added
-  if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )
-    return;
-#endif
   if( vui->getFrameFieldInfoPresentFlag() )
   {
     WRITE_CODE( sei.m_picStruct, 4,              "pic_struct" );
@@ -352,10 +347,8 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
     WRITE_FLAG( sei.m_duplicateFlag ? 1 : 0,     "duplicate_flag" );
   }
 
-#if L0045_CONDITION_SIGNALLING
   if( hrd->getCpbDpbDelaysPresentFlag() )
   {
-#endif
     WRITE_CODE( sei.m_auCpbRemovalDelay - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay_minus1" );
     WRITE_CODE( sei.m_picDpbOutputDelay, ( hrd->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
     if(hrd->getSubPicCpbParamsPresentFlag())
@@ -379,9 +372,7 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
         }
       }
     }
-#if L0045_CONDITION_SIGNALLING
   }
-#endif
   xWriteByteAlign();
 }
 Void SEIWriter::xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei)

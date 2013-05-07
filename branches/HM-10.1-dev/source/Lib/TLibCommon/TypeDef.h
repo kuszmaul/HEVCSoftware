@@ -48,7 +48,6 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
-#define L0045_CONDITION_SIGNALLING 1  ///< L0045: Condition the signaling of some syntax elements in picture timing SEI message
 #define L0363_MORE_BITS 1
 #define L0363_MVP_POC 1
 #define L0363_SEI_ALLOW_SUFFIX 1
