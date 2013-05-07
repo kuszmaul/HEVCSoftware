@@ -1255,13 +1255,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     entryPointOffset = new UInt[numEntryPointOffsets];
     for (UInt idx=0; idx<numEntryPointOffsets; idx++)
     {
-#if L0116_ENTRY_POINT
       READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset_minus1");
       entryPointOffset[ idx ] = uiCode + 1;
-#else
-      READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset");
-      entryPointOffset[ idx ] = uiCode;
-#endif
     }
   }
   else

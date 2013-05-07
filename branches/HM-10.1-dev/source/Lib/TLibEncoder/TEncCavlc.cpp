@@ -1125,11 +1125,7 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
 
   for (UInt idx=0; idx<numEntryPointOffsets; idx++)
   {
-#if L0116_ENTRY_POINT
     WRITE_CODE(entryPointOffset[ idx ]-1, offsetLenMinus1+1, "entry_point_offset_minus1");
-#else
-    WRITE_CODE(entryPointOffset[ idx ], offsetLenMinus1+1, "entry_point_offset");
-#endif
   }
 
   delete [] entryPointOffset;
