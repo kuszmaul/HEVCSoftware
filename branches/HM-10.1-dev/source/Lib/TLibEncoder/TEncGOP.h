@@ -115,13 +115,11 @@ private:
   UInt                    m_cpbRemovalDelay;
   UInt                    m_tl0Idx;
   UInt                    m_rapIdx;
-#if L0045_NON_NESTED_SEI_RESTRICTIONS
   Bool                    m_activeParameterSetSEIPresentInAU;
   Bool                    m_bufferingPeriodSEIPresentInAU;
   Bool                    m_pictureTimingSEIPresentInAU;
   Bool                    m_nestedBufferingPeriodSEIPresentInAU;
   Bool                    m_nestedPictureTimingSEIPresentInAU;
-#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -164,7 +162,6 @@ protected:
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
 
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
-#if L0045_NON_NESTED_SEI_RESTRICTIONS
   Int xGetFirstSeiLocation (AccessUnit &accessUnit);
   Void xResetNonNestedSEIPresentFlags()
   {
@@ -177,7 +174,6 @@ protected:
     m_nestedBufferingPeriodSEIPresentInAU    = false;
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
-#endif
 #if L0386_DB_METRIC
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
 #endif
