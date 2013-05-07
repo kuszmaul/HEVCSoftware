@@ -594,10 +594,6 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
     READ_FLAG( val,     "ver_flip" );                              sei.verFlip               = val;
     READ_CODE( 16, val, "anticlockwise_rotation" );                sei.anticlockwiseRotation = val;
     READ_FLAG( val,     "display_orientation_persistence_flag" );  sei.persistenceFlag       = val;
-#if !REMOVE_SINGLE_SEI_EXTENSION_FLAGS
-    READ_FLAG( val,     "display_orientation_extension_flag" );    sei.extensionFlag         = val;
-    assert( !sei.extensionFlag );
-#endif
   }
   xParseByteAlign();
 }
