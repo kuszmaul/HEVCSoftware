@@ -186,11 +186,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_UVLC( uiCode, "pps_pic_parameter_set_id");                     pcPPS->setPPSId (uiCode);
   READ_UVLC( uiCode, "pps_seq_parameter_set_id");                     pcPPS->setSPSId (uiCode);
   READ_FLAG( uiCode, "dependent_slice_segments_enabled_flag"    );    pcPPS->setDependentSliceSegmentsEnabledFlag   ( uiCode == 1 );
-#if L0255_MOVE_PPS_FLAGS
   READ_FLAG( uiCode, "output_flag_present_flag" );                    pcPPS->setOutputFlagPresentFlag( uiCode==1 );
 
   READ_CODE(3, uiCode, "num_extra_slice_header_bits");                pcPPS->setNumExtraSliceHeaderBits(uiCode);
-#endif
   READ_FLAG ( uiCode, "sign_data_hiding_flag" ); pcPPS->setSignHideFlag( uiCode );
 
   READ_FLAG( uiCode,   "cabac_init_present_flag" );            pcPPS->setCabacInitPresentFlag( uiCode ? true : false );
@@ -241,10 +239,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "weighted_bipred_flag" );         // Use of Bi-Directional Weighting Prediction (B_SLICE)
   pcPPS->setWPBiPred( uiCode==1 );
 
-#if !L0255_MOVE_PPS_FLAGS
-  READ_FLAG( uiCode, "output_flag_present_flag" );
-  pcPPS->setOutputFlagPresentFlag( uiCode==1 );
-#endif
   READ_FLAG( uiCode, "transquant_bypass_enable_flag");
   pcPPS->setTransquantBypassEnableFlag(uiCode ? true : false);
   READ_FLAG( uiCode, "tiles_enabled_flag"               );    pcPPS->setTilesEnabledFlag            ( uiCode == 1 );
@@ -306,10 +300,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_UVLC( uiCode, "log2_parallel_merge_level_minus2");
   pcPPS->setLog2ParallelMergeLevelMinus2 (uiCode);
 
-#if !L0255_MOVE_PPS_FLAGS
-  READ_CODE(3, uiCode, "num_extra_slice_header_bits");
-  pcPPS->setNumExtraSliceHeaderBits(uiCode);
-#endif
   READ_FLAG( uiCode, "slice_segment_header_extension_present_flag");
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
 
