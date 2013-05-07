@@ -447,13 +447,11 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
   {
     READ_FLAG( code, "rap_cpb_params_present_flag" );                   sei.m_rapCpbParamsPresentFlag = code;
   }
-#if L0328_SPLICING
   //read splicing flag and cpb_removal_delay_delta
   READ_FLAG( code, "concatenation_flag"); 
   sei.m_concatenationFlag = code;
   READ_CODE( ( pHRD->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_delta_minus1" );
   sei.m_auCpbRemovalDelayDelta = code + 1;
-#endif
 #if L0044_CPB_DPB_DELAY_OFFSET
   if( sei.m_rapCpbParamsPresentFlag )
   {
