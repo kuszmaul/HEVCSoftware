@@ -48,7 +48,6 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
-#define L0363_MORE_BITS 1
 #define L0363_MVP_POC 1
 #define L0363_SEI_ALLOW_SUFFIX 1
 #define L0444_FPA_TYPE             1  ///< allow only FPA types 3, 4 and 5
