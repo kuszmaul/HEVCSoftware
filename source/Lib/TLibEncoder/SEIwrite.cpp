@@ -89,11 +89,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
     break;
-#if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -101,11 +99,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 }
 #endif
 
-#if K0180_SCALABLE_NESTING_SEI
 void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps)
-#else
-void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
-#endif
 {
   switch (sei.payloadType())
   {
@@ -148,11 +142,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::SOP_DESCRIPTION:
     xWriteSEISOPDescription(*static_cast<const SEISOPDescription*>(&sei));
     break;
-#if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
-#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -171,8 +163,6 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
   setBitstream(&bs_count);
 
 
-#if K0180_SCALABLE_NESTING_SEI
-
 #if ENC_DEC_TRACE
   Bool traceEnable = g_HLSTraceEnable;
   g_HLSTraceEnable = false;
@@ -182,27 +172,13 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
   g_HLSTraceEnable = traceEnable;
 #endif
 
-#else
-
-#if ENC_DEC_TRACE
-  g_HLSTraceEnable = false;
-#endif
-  xWriteSEIpayloadData(sei, sps);
-#if ENC_DEC_TRACE
-  g_HLSTraceEnable = true;
-#endif
-
-#endif
-
   UInt payload_data_num_bits = bs_count.getNumberOfWrittenBits();
   assert(0 == payload_data_num_bits % 8);
 
   setBitstream(&bs);
 
 #if ENC_DEC_TRACE
-#if K0180_SCALABLE_NESTING_SEI
   if (g_HLSTraceEnable)
-#endif
   xTraceSEIHeader();
 #endif
 
@@ -222,17 +198,11 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 
   /* payloadData */
 #if ENC_DEC_TRACE
-#if K0180_SCALABLE_NESTING_SEI
   if (g_HLSTraceEnable)
-#endif
   xTraceSEIMessageType(sei.payloadType());
 #endif
 
-#if K0180_SCALABLE_NESTING_SEI
   xWriteSEIpayloadData(bs, sei, sps);
-#else
-  xWriteSEIpayloadData(sei, sps);
-#endif
 }
 
 /**
@@ -597,7 +567,6 @@ Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
   xWriteByteAlign();
 }
 
-#if K0180_SCALABLE_NESTING_SEI
 Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps)
 {
   WRITE_FLAG( sei.m_bitStreamSubsetFlag,             "bitstream_subset_flag"         );
@@ -639,7 +608,6 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     writeSEImessage(bs, *(*it), sps);
   }
 }
-#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

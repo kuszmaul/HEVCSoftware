@@ -45,7 +45,6 @@
 
 #define MAX_NUM_PICS_IN_SOP           1024
 
-#define K0180_SCALABLE_NESTING_SEI  1   ///JCTVC-K0180 scalable nesting sei message
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
