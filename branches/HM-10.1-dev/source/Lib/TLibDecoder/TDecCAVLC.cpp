@@ -1251,6 +1251,16 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
   {
     Int endOfSliceHeaderLocation = m_pcBitstream->getByteLocation();
+    
+    // Adjust endOfSliceHeaderLocation to account for emulation prevention bytes in the slice segment header
+    for ( UInt curByteIdx  = 0; curByteIdx<m_pcBitstream->numEmulationPreventionBytesRead(); curByteIdx++ )
+    {
+      if ( m_pcBitstream->getEmulationPreventionByteLocation( curByteIdx ) < endOfSliceHeaderLocation )
+      {
+        endOfSliceHeaderLocation++;
+      }
+    }
+
     Int  curEntryPointOffset     = 0;
     Int  prevEntryPointOffset    = 0;
     for (UInt idx=0; idx<numEntryPointOffsets; idx++)
