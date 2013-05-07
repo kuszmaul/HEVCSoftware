@@ -440,15 +440,12 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
     {
       hrd->setFixedPicRateWithinCvsFlag( i, true );
     }
-#if L0372
     hrd->setLowDelayHrdFlag( i, 0 ); // Infered to be 0 when not present
     hrd->setCpbCntMinus1   ( i, 0 ); // Infered to be 0 when not present
-#endif
     if( hrd->getFixedPicRateWithinCvsFlag( i ) )
     {
       READ_UVLC( uiCode, "elemental_duration_in_tc_minus1" );             hrd->setPicDurationInTcMinus1( i, uiCode );
     }
-#if L0372
     else
     {      
       READ_FLAG( uiCode, "low_delay_hrd_flag" );                      hrd->setLowDelayHrdFlag( i, uiCode == 1 ? true : false  );
@@ -457,10 +454,6 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
     {
       READ_UVLC( uiCode, "cpb_cnt_minus1" );                          hrd->setCpbCntMinus1( i, uiCode );      
     }
-#else
-    READ_FLAG( uiCode, "low_delay_hrd_flag" );                      hrd->setLowDelayHrdFlag( i, uiCode == 1 ? true : false  );
-    READ_UVLC( uiCode, "cpb_cnt_minus1" );                          hrd->setCpbCntMinus1( i, uiCode );
-#endif
     for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
     {
       if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||
