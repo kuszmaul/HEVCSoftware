@@ -187,6 +187,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 {
   m_pcTDecBinIf->decodeBinTrm( ruiBit );
+  if ( ruiBit )
+  {
+    m_pcTDecBinIf->finish();
+  }
 }
 
 
