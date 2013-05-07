@@ -1009,7 +1009,6 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
     WRITE_FLAG( ptl->getProfileCompatibilityFlag(j), "XXX_profile_compatibility_flag[][j]");   
   }
 
-#if L0046_CONSTRAINT_FLAGS
   WRITE_FLAG(ptl->getProgressiveSourceFlag(),   "general_progressive_source_flag");
   WRITE_FLAG(ptl->getInterlacedSourceFlag(),    "general_interlaced_source_flag");
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
@@ -1018,13 +1017,6 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[0..15]");
   WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[16..31]");
   WRITE_CODE(0 , 12, "XXX_reserved_zero_44bits[32..43]");
-#elif L0363_MORE_BITS
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[0..15]");
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[16..31]");
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_48bits[32..47]");
-#else
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_16bits[]");
-#endif
 }
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
 Void TEncCavlc::codeBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)

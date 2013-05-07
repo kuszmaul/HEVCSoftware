@@ -186,12 +186,10 @@ class ProfileTierLevel
   Bool    m_profileCompatibilityFlag[32];
   Int     m_levelIdc;
 
-#if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;
   Bool m_frameOnlyConstraintFlag;
-#endif
   
 public:
   ProfileTierLevel();
@@ -211,7 +209,6 @@ public:
   Int   getLevelIdc()   const   { return m_levelIdc; }
   Void  setLevelIdc(Int x)      { m_levelIdc = x; }
   
-#if L0046_CONSTRAINT_FLAGS
   Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
   Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
   
@@ -223,7 +220,6 @@ public:
   
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
-#endif
 };
 
 
