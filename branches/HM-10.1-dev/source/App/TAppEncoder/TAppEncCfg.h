@@ -208,7 +208,6 @@ protected:
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
-#if J0149_TONE_MAPPING_SEI
   Bool      m_toneMappingInfoSEIEnabled;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
@@ -234,7 +233,6 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;

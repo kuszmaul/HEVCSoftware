@@ -195,7 +195,6 @@ SEIDisplayOrientation* TEncGOP::xCreateSEIDisplayOrientation()
   return seiDisplayOrientation;
 }
 
-#if J0149_TONE_MAPPING_SEI
 SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
 {
   SEIToneMappingInfo *seiToneMappingInfo = new SEIToneMappingInfo();
@@ -281,7 +280,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   }
   return seiToneMappingInfo;
 }
-#endif
+
 Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps)
 {
   OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
@@ -323,7 +322,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#if J0149_TONE_MAPPING_SEI
   if(m_pcCfg->getToneMappingInfoSEIEnabled())
   {
     SEIToneMappingInfo *sei = xCreateSEIToneMappingInfo ();
@@ -335,7 +333,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#endif
 }
 
 // ====================================================================================================================

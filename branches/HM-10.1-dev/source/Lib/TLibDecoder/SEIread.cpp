@@ -89,11 +89,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
-#if J0149_TONE_MAPPING_SEI
   case SEI::TONE_MAPPING_INFO:
     fprintf( g_hTrace, "===========Tone Mapping Info SEI message ===========\n");
     break;
-#endif
 #if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
@@ -233,12 +231,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIGradualDecodingRefreshInfo;
       xParseSEIGradualDecodingRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize);
       break;
-#if J0149_TONE_MAPPING_SEI
     case SEI::TONE_MAPPING_INFO:
       sei = new SEIToneMappingInfo;
       xParseSEIToneMappingInfo((SEIToneMappingInfo&) *sei, payloadSize);
       break;
-#endif
 #if L0208_SOP_DESCRIPTION_SEI
     case SEI::SOP_DESCRIPTION:
       sei = new SEISOPDescription;
@@ -667,7 +663,6 @@ Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInf
   xParseByteAlign();
 }
 
-#if J0149_TONE_MAPPING_SEI
 Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payloadSize*/)
 {
   Int i;
@@ -748,7 +743,6 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
 
   xParseByteAlign();
 }
-#endif
 
 #if L0208_SOP_DESCRIPTION_SEI
 Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize)
