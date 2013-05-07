@@ -691,9 +691,7 @@ Void TEncTop::xInitPPS()
       bestPos=i;
     }
   }
-#if L0323_LIMIT_DEFAULT_LIST_SIZE
   assert(bestPos <= 15);
-#endif
   m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());
