@@ -95,11 +95,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
     break;
-#if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -237,12 +235,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEISOPDescription;
       xParseSEISOPDescription((SEISOPDescription&) *sei, payloadSize);
       break;
-#if K0180_SCALABLE_NESTING_SEI
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
       break;
-#endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
       {
@@ -760,7 +756,6 @@ Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize
   xParseByteAlign();
 }
 
-#if K0180_SCALABLE_NESTING_SEI
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps)
 {
   UInt uiCode;
@@ -807,7 +802,6 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
   } while (m_pcBitstream->getNumBitsLeft() > 8);
 
 }
-#endif
 
 Void SEIReader::xParseByteAlign()
 {

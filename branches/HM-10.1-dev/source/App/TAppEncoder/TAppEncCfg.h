@@ -237,9 +237,7 @@ protected:
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
-#if K0180_SCALABLE_NESTING_SEI
   Int       m_scalableNestingSEIEnabled;
-#endif
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
   Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
