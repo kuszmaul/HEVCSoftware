@@ -331,7 +331,6 @@ protected:
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
 #endif
-  #
 public:
   TAppEncCfg();
   virtual ~TAppEncCfg();
