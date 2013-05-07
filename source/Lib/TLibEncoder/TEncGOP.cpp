@@ -354,9 +354,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
   m_iNumPicCoded = 0;
   SEIPictureTiming pictureTimingSEI;
-#if L0208_SOP_DESCRIPTION_SEI
   Bool writeSOP = m_pcCfg->getSOPDescriptionSEIEnabled();
-#endif
 #if K0180_SCALABLE_NESTING_SEI
   // Initialize Scalable Nesting SEI with single layer values
   SEIScalableNesting scalableNestingSEI;
@@ -1069,7 +1067,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_bSeqFirst = false;
     }
 
-#if L0208_SOP_DESCRIPTION_SEI
     if (writeSOP) // write SOP description SEI (if enabled) at the beginning of GOP
     {
       Int SOPcurrPOC = pocCurr;
@@ -1107,7 +1104,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       writeSOP = false;
     }
-#endif
 
     if( ( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() ) &&
         ( pcSlice->getSPS()->getVuiParametersPresentFlag() ) &&

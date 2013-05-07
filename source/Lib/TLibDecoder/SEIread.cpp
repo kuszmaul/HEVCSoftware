@@ -92,11 +92,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::TONE_MAPPING_INFO:
     fprintf( g_hTrace, "===========Tone Mapping Info SEI message ===========\n");
     break;
-#if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
     break;
-#endif
 #if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
@@ -235,12 +233,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIToneMappingInfo;
       xParseSEIToneMappingInfo((SEIToneMappingInfo&) *sei, payloadSize);
       break;
-#if L0208_SOP_DESCRIPTION_SEI
     case SEI::SOP_DESCRIPTION:
       sei = new SEISOPDescription;
       xParseSEISOPDescription((SEISOPDescription&) *sei, payloadSize);
       break;
-#endif
 #if K0180_SCALABLE_NESTING_SEI
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
@@ -740,7 +736,6 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
   xParseByteAlign();
 }
 
-#if L0208_SOP_DESCRIPTION_SEI
 Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize)
 {
   Int iCode;
@@ -764,7 +759,6 @@ Void SEIReader::xParseSEISOPDescription(SEISOPDescription &sei, UInt payloadSize
 
   xParseByteAlign();
 }
-#endif
 
 #if K0180_SCALABLE_NESTING_SEI
 Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps)

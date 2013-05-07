@@ -43,7 +43,6 @@
 
 #define FIX1071 1 ///< Temporary fix for issue #1071
 
-#define L0208_SOP_DESCRIPTION_SEI     1 ///< L0208: add SOP descrioption SEI
 #define MAX_NUM_PICS_IN_SOP           1024
 
 #define K0180_SCALABLE_NESTING_SEI  1   ///JCTVC-K0180 scalable nesting sei message
