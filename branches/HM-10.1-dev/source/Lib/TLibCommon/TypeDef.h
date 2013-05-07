@@ -62,7 +62,6 @@
 #define L0363_MVP_POC 1
 #define L0363_SEI_ALLOW_SUFFIX 1
 #define L0444_FPA_TYPE             1  ///< allow only FPA types 3, 4 and 5
-#define L0372 1
 #define L0232_RD_PENALTY           1  ///< L0232: RD-penalty for 32x32 TU for intra in non-intra slices
 #define L0386_DB_METRIC            1  ///< L0386: non-normative blockiness metric (automatically configures deblocking parameters in bitstream)
 #define L0323_DPB                     1 ///< L0323: Specification of active reference indices and decoded picture buffer
