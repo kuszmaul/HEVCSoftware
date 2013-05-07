@@ -48,8 +48,6 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
-#define L0386_DB_METRIC            1  ///< L0386: non-normative blockiness metric (automatically configures deblocking parameters in bitstream)
-
 #define L0034_COMBINED_LIST_CLEANUP 1
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1

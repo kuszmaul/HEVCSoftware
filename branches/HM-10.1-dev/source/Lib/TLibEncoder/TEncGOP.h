@@ -174,9 +174,7 @@ protected:
     m_nestedBufferingPeriodSEIPresentInAU    = false;
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
-#if L0386_DB_METRIC
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
-#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================
