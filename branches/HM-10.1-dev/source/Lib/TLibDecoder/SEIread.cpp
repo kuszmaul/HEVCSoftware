@@ -601,11 +601,7 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/
     }
 
     READ_CODE( 8, val, "frame_packing_arrangement_reserved_byte" );   sei.m_arrangementReservedByte = val;
-#if L0045_PERSISTENCE_FLAGS
     READ_FLAG( val,  "frame_packing_arrangement_persistence_flag" );  sei.m_arrangementPersistenceFlag = val ? true : false;
-#else
-    READ_UVLC( val, "frame_packing_arrangement_repetition_period" );  sei.m_arrangementRepetetionPeriod = val;
-#endif
   }
   READ_FLAG( val, "upsampled_aspect_ratio" );                       sei.m_upsampledAspectRatio = val;
 
@@ -621,11 +617,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
     READ_FLAG( val,     "hor_flip" );                              sei.horFlip               = val;
     READ_FLAG( val,     "ver_flip" );                              sei.verFlip               = val;
     READ_CODE( 16, val, "anticlockwise_rotation" );                sei.anticlockwiseRotation = val;
-#if L0045_PERSISTENCE_FLAGS
     READ_FLAG( val,     "display_orientation_persistence_flag" );  sei.persistenceFlag       = val;
-#else
-    READ_UVLC( val,     "display_orientation_repetition_period" ); sei.repetitionPeriod      = val;
-#endif
 #if !REMOVE_SINGLE_SEI_EXTENSION_FLAGS
     READ_FLAG( val,     "display_orientation_extension_flag" );    sei.extensionFlag         = val;
     assert( !sei.extensionFlag );
