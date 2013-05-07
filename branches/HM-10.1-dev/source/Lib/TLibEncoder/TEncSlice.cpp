@@ -455,9 +455,7 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 
   // store lambda
   slice->setSliceQp( sliceQP );
-#if L0033_RC_BUGFIX
   slice->setSliceQpBase ( sliceQP );
-#endif
   m_pcRdCost ->setLambda( lambda );
 #if WEIGHTED_CHROMA_DISTORTION
   // for RDO
@@ -1050,9 +1048,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
 
         m_pcRateCtrl->setRCQP( estQP );
-#if L0033_RC_BUGFIX
         pcCU->getSlice()->setSliceQpBase( estQP );
-#endif
       }
 #endif
 
