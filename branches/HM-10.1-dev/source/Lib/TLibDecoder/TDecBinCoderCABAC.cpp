@@ -74,6 +74,11 @@ TDecBinCABAC::start()
 Void
 TDecBinCABAC::finish()
 {
+  UInt lastByte;
+  
+  m_pcTComBitstream->peekPreviousByte( lastByte );
+  // Check for proper stop/alignment pattern
+  assert( ((lastByte << (8 + m_bitsNeeded)) & 0xff) == 0x80 );
 }
 
 Void 
