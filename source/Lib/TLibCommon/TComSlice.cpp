@@ -1483,9 +1483,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   Int i, j;
   UInt birateValue, cpbSizeValue;
   UInt ducpbSizeValue;
-#if L0363_DU_BIT_RATE
   UInt duBitRateValue = 0;
-#endif
 
   for( i = 0; i < MAX_TLAYER; i ++ )
   {
@@ -1497,9 +1495,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     birateValue  = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
     ducpbSizeValue = bitRate/numDU;
-#if L0363_DU_BIT_RATE
     duBitRateValue = bitRate;
-#endif
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
       hrd->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
@@ -1510,9 +1506,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
       hrd->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
       hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
       hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
-#if L0363_DU_BIT_RATE
       hrd->setDuBitRateValueMinus1( i, j, 1, ( duBitRateValue - 1 ) );
-#endif
       hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
     }
   }
