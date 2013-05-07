@@ -498,10 +498,6 @@ Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
     WRITE_FLAG( sei.verFlip,                   "ver_flip" );
     WRITE_CODE( sei.anticlockwiseRotation, 16, "anticlockwise_rotation" );
     WRITE_FLAG( sei.persistenceFlag,          "display_orientation_persistence_flag" );
-#if !REMOVE_SINGLE_SEI_EXTENSION_FLAGS
-    WRITE_FLAG( sei.extensionFlag,             "display_orientation_extension_flag" );
-    assert( !sei.extensionFlag );
-#endif
   }
   xWriteByteAlign();
 }
