@@ -297,11 +297,6 @@ struct HrdSubLayerInfo
 class TComHRD
 {
 private:
-#if !L0043_TIMING_INFO
-  Bool m_timingInfoPresentFlag;
-  UInt m_numUnitsInTick;
-  UInt m_timeScale;
-#endif
   Bool m_nalHrdParametersPresentFlag;
   Bool m_vclHrdParametersPresentFlag;
   Bool m_subPicCpbParamsPresentFlag;
@@ -322,14 +317,7 @@ private:
 
 public:
   TComHRD()
-#if !L0043_TIMING_INFO
-  :m_timingInfoPresentFlag(false)
-  ,m_numUnitsInTick(1001)
-  ,m_timeScale(60000)
-  ,m_nalHrdParametersPresentFlag(0)
-#else
   :m_nalHrdParametersPresentFlag(0)
-#endif
   ,m_vclHrdParametersPresentFlag(0)
   ,m_subPicCpbParamsPresentFlag(false)
   ,m_tickDivisorMinus2(0)
@@ -346,16 +334,6 @@ public:
   {}
 
   virtual ~TComHRD() {}
-#if !L0043_TIMING_INFO
-  Void setTimingInfoPresentFlag             ( Bool flag )  { m_timingInfoPresentFlag = flag;               }
-  Bool getTimingInfoPresentFlag             ( )            { return m_timingInfoPresentFlag;               }
-
-  Void setNumUnitsInTick                    ( UInt value ) { m_numUnitsInTick = value;                     }
-  UInt getNumUnitsInTick                    ( )            { return m_numUnitsInTick;                      }
-
-  Void setTimeScale                         ( UInt value ) { m_timeScale = value;                          }
-  UInt getTimeScale                         ( )            { return m_timeScale;                           }
-#endif
 
   Void setNalHrdParametersPresentFlag       ( Bool flag )  { m_nalHrdParametersPresentFlag = flag;         }
   Bool getNalHrdParametersPresentFlag       ( )            { return m_nalHrdParametersPresentFlag;         }
@@ -433,7 +411,6 @@ public:
 #endif
 };
 
-#if L0043_TIMING_INFO
 class TimingInfo
 {
   Bool m_timingInfoPresentFlag;
@@ -464,7 +441,6 @@ public:
   Int  getNumTicksPocDiffOneMinus1          ( )            { return m_numTicksPocDiffOneMinus1;            }
   Void setNumTicksPocDiffOneMinus1          (Int x       ) { m_numTicksPocDiffOneMinus1 = x;               }
 };
-#endif
 
 class TComVPS
 {
@@ -490,9 +466,7 @@ private:
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo    m_bitRatePicRateInfo;
 #endif
-#if L0043_TIMING_INFO
   TimingInfo  m_timingInfo;
-#endif
 
 public:
   TComVPS();
@@ -547,9 +521,7 @@ public:
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
 #endif
-#if L0043_TIMING_INFO
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
-#endif
 };
 
 class Window
@@ -626,12 +598,7 @@ private:
   Int  m_log2MaxMvLengthHorizontal;
   Int  m_log2MaxMvLengthVertical;
   TComHRD m_hrdParameters;
-#if L0043_TIMING_INFO
   TimingInfo m_timingInfo;
-#else
-  Bool m_pocProportionalToTimingFlag;
-  Int  m_numTicksPocDiffOneMinus1;
-#endif
 
 public:
   TComVUI()
@@ -664,10 +631,6 @@ public:
     ,m_maxBitsPerMinCuDenom(1)
     ,m_log2MaxMvLengthHorizontal(15)
     ,m_log2MaxMvLengthVertical(15)
-#if !L0043_TIMING_INFO  
-    ,m_pocProportionalToTimingFlag(false)
-    ,m_numTicksPocDiffOneMinus1(0)
-#endif
   {}
 
   virtual ~TComVUI() {}
@@ -762,14 +725,7 @@ public:
   Void setLog2MaxMvLengthVertical(Int i) { m_log2MaxMvLengthVertical = i; }
 
   TComHRD* getHrdParameters                 ()             { return &m_hrdParameters; }
-#if L0043_TIMING_INFO
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
-#else
-  Bool getPocProportionalToTimingFlag() {return m_pocProportionalToTimingFlag; }
-  Void setPocProportionalToTimingFlag(Bool x) {m_pocProportionalToTimingFlag = x;}
-  Int  getNumTicksPocDiffOneMinus1() {return m_numTicksPocDiffOneMinus1;}
-  Void setNumTicksPocDiffOneMinus1(Int x) { m_numTicksPocDiffOneMinus1 = x;}
-#endif
 };
 
 /// SPS class

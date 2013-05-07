@@ -287,7 +287,6 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
     WRITE_UVLC(defaultDisplayWindow.getWindowTopOffset(),       "def_disp_win_top_offset");
     WRITE_UVLC(defaultDisplayWindow.getWindowBottomOffset(),    "def_disp_win_bottom_offset");
   }
-#if L0043_TIMING_INFO
   TimingInfo *timingInfo = pcVUI->getTimingInfo();
   WRITE_FLAG(timingInfo->getTimingInfoPresentFlag(),          "vui_timing_info_present_flag");
   if(timingInfo->getTimingInfoPresentFlag())
@@ -299,22 +298,12 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
     {
       WRITE_UVLC(timingInfo->getNumTicksPocDiffOneMinus1(),   "vui_num_ticks_poc_diff_one_minus1");
     }
-#endif
-  WRITE_FLAG(pcVUI->getHrdParametersPresentFlag(),              "hrd_parameters_present_flag");
-  if( pcVUI->getHrdParametersPresentFlag() )
-  {
-    codeHrdParameters(pcVUI->getHrdParameters(), 1, pcSPS->getMaxTLayers() - 1 );
+    WRITE_FLAG(pcVUI->getHrdParametersPresentFlag(),              "hrd_parameters_present_flag");
+    if( pcVUI->getHrdParametersPresentFlag() )
+    {
+      codeHrdParameters(pcVUI->getHrdParameters(), 1, pcSPS->getMaxTLayers() - 1 );
+    }
   }
-#if L0043_TIMING_INFO
-  }
-#endif
-#if !L0043_TIMING_INFO
-  WRITE_FLAG( pcVUI->getPocProportionalToTimingFlag(), "poc_proportional_to_timing_flag" );
-  if( pcVUI->getPocProportionalToTimingFlag() && pcVUI->getHrdParameters()->getTimingInfoPresentFlag() )
-  {
-    WRITE_UVLC( pcVUI->getNumTicksPocDiffOneMinus1(), "num_ticks_poc_diff_one_minus1" );
-  }
-#endif
 
   WRITE_FLAG(pcVUI->getBitstreamRestrictionFlag(),              "bitstream_restriction_flag");
   if (pcVUI->getBitstreamRestrictionFlag())
@@ -338,14 +327,6 @@ Void TEncCavlc::codeHrdParameters( TComHRD *hrd, Bool commonInfPresentFlag, UInt
 {
   if( commonInfPresentFlag )
   {
-#if !L0043_TIMING_INFO
-    WRITE_FLAG( hrd->getTimingInfoPresentFlag() ? 1 : 0,        "timing_info_present_flag" );
-    if( hrd->getTimingInfoPresentFlag() )
-    {
-      WRITE_CODE( hrd->getNumUnitsInTick(), 32,                  "num_units_in_tick" );
-      WRITE_CODE( hrd->getTimeScale(),      32,                  "time_scale" );
-    }
-#endif
     WRITE_FLAG( hrd->getNalHrdParametersPresentFlag() ? 1 : 0 ,  "nal_hrd_parameters_present_flag" );
     WRITE_FLAG( hrd->getVclHrdParametersPresentFlag() ? 1 : 0 ,  "vcl_hrd_parameters_present_flag" );
     if( hrd->getNalHrdParametersPresentFlag() || hrd->getVclHrdParametersPresentFlag() )
@@ -588,7 +569,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_FLAG( pcVPS->getLayerIdIncludedFlag( opsIdx, i ) ? 1 : 0, "layer_id_included_flag[opsIdx][i]" );
     }
   }
-#if L0043_TIMING_INFO
   TimingInfo *timingInfo = pcVPS->getTimingInfo();
   WRITE_FLAG(timingInfo->getTimingInfoPresentFlag(),          "vps_timing_info_present_flag");
   if(timingInfo->getTimingInfoPresentFlag())
@@ -600,7 +580,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     {
       WRITE_UVLC(timingInfo->getNumTicksPocDiffOneMinus1(),   "vps_num_ticks_poc_diff_one_minus1");
     }
-#endif
     pcVPS->setNumHrdParameters( 0 );
     WRITE_UVLC( pcVPS->getNumHrdParameters(),                 "vps_num_hrd_parameters" );
 
@@ -619,9 +598,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       }
       codeHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
     }
-#if L0043_TIMING_INFO
   }
-#endif
   WRITE_FLAG( 0,                     "vps_extension_flag" );
   
   //future extensions here..
