@@ -63,7 +63,6 @@
 #define L0043_MSS_IDC 1
 #define L0363_MORE_BITS 1
 #define L0363_MVP_POC 1
-#define L0363_BYTE_ALIGN 1
 #define L0363_SEI_ALLOW_SUFFIX 1
 #define L0046_CONSTRAINT_FLAGS 1
 #define L0444_FPA_TYPE             1  ///< allow only FPA types 3, 4 and 5
