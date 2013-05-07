@@ -389,10 +389,8 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
 {
   UInt val; 
   READ_CODE(4, val, "active_vps_id");      sei.activeVPSId = val; 
-#if L0047_APS_FLAGS
   READ_FLAG( val, "full_random_access_flag");  sei.m_fullRandomAccessFlag = val ? true : false;
   READ_FLAG( val, "no_param_set_update_flag"); sei.m_noParamSetUpdateFlag = val ? true : false;
-#endif
   READ_UVLC(   val, "num_sps_ids_minus1"); sei.numSpsIdsMinus1 = val;
 
   sei.activeSeqParamSetId.resize(sei.numSpsIdsMinus1 + 1);
