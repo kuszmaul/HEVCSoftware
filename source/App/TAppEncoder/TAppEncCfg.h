@@ -75,12 +75,10 @@ protected:
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-#if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;
   Bool m_frameOnlyConstraintFlag;
-#endif
   
   // coding structure
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)

@@ -1386,7 +1386,6 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   {
     READ_FLAG(  uiCode, "XXX_profile_compatibility_flag[][j]");   ptl->setProfileCompatibilityFlag(j, uiCode ? 1 : 0);
   }
-#if L0046_CONSTRAINT_FLAGS
   READ_FLAG(uiCode, "general_progressive_source_flag");
   ptl->setProgressiveSourceFlag(uiCode ? true : false);
 
@@ -1402,13 +1401,6 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[0..15]");
   READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[16..31]");
   READ_CODE(12, uiCode, "XXX_reserved_zero_44bits[32..43]");
-#elif L0363_MORE_BITS
-  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[0..15]");
-  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[16..31]");
-  READ_CODE(16, uiCode, "XXX_reserved_zero_48bits[32..47]");
-#else
-  READ_CODE(16, uiCode, "XXX_reserved_zero_16bits[]");  assert( uiCode == 0 );
-#endif
 }
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
 Void TDecCavlc::parseBitratePicRateInfo(TComBitRatePicRateInfo *info, Int tempLevelLow, Int tempLevelHigh)
