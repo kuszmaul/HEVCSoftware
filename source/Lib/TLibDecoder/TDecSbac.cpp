@@ -151,6 +151,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 {
   UInt uiBit;
   m_pcTDecBinIf->decodeBinTrm(uiBit);
+  assert(uiBit); // end_of_sub_stream_one_bit must be equal to 1
   m_pcTDecBinIf->finish();  
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
