@@ -1383,7 +1383,6 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   Bool    bCheckSplit   = ( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
   
 #if HHI_RQT_INTRA_SPEEDUP
-#if L0232_RD_PENALTY
   Int maxTuSize = pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
   Int isIntraSlice = (pcCU->getSlice()->getSliceType() == I_SLICE);
   // don't check split if TU size is less or equal to max TU size
@@ -1400,14 +1399,10 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     }
   }
   if( bCheckFirst && noSplitIntraMaxTuSize )
-#else
-  if( bCheckFirst && bCheckFull )
-#endif
   {
     bCheckSplit = false;
   }
 #else
-#if L0232_RD_PENALTY
   Int maxTuSize = pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
   Int isIntraSlice = (pcCU->getSlice()->getSliceType() == I_SLICE);
   // if maximum RD-penalty don't check TU size 32x32 
@@ -1415,7 +1410,6 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   {
     bCheckFull    = ( uiLog2TrSize  <= min(maxTuSize,4));
   }
-#endif
 #endif
   Double  dSingleCost   = MAX_DOUBLE;
   UInt    uiSingleDistY = 0;
@@ -1590,12 +1584,10 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
       }
       //----- determine rate and r-d cost -----
       UInt uiSingleBits = xGetIntraBitsQT( pcCU, uiTrDepth, uiAbsPartIdx, true, !bLumaOnly, false );
-#if L0232_RD_PENALTY
       if(m_pcEncCfg->getRDpenalty() && (uiLog2TrSize==5) && !isIntraSlice)
       {
         uiSingleBits=uiSingleBits*4; 
       }
-#endif
       dSingleCost       = m_pcRdCost->calcRdCost( uiSingleBits, uiSingleDistY + uiSingleDistC );
     }
   }
