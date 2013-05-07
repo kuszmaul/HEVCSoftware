@@ -288,7 +288,11 @@ protected:
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      m_RCEnableRateControl;
   Int       m_RCTargetBitrate;
+#if M0036_RC_IMPROVEMENT
+  Int       m_RCKeepHierarchicalBit;
+#else
   Bool      m_RCKeepHierarchicalBit;
+#endif
   Bool      m_RCLCULevelRC;
   Bool      m_RCUseLCUSeparateModel;
   Int       m_RCInitialQP;
@@ -693,8 +697,13 @@ public:
   Void      setUseRateCtrl         ( Bool b )      { m_RCEnableRateControl = b;      }
   Int       getTargetBitrate       ()              { return m_RCTargetBitrate;       }
   Void      setTargetBitrate       ( Int bitrate ) { m_RCTargetBitrate  = bitrate;   }
+#if M0036_RC_IMPROVEMENT
+  Int       getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
+  Void      setKeepHierBit         ( Int i )       { m_RCKeepHierarchicalBit = i;    }
+#else
   Bool      getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
   Void      setKeepHierBit         ( Bool b )      { m_RCKeepHierarchicalBit = b;    }
+#endif
   Bool      getLCULevelRC          ()              { return m_RCLCULevelRC; }
   Void      setLCULevelRC          ( Bool b )      { m_RCLCULevelRC = b; }
   Bool      getUseLCUSeparateModel ()              { return m_RCUseLCUSeparateModel; }

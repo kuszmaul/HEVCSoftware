@@ -1024,7 +1024,11 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         Double estLambda = -1.0;
         Double bpp       = -1.0;
 
+#if M0036_RC_IMPROVEMENT
+        if ( ( rpcPic->getSlice( 0 )->getSliceType() == I_SLICE && m_pcCfg->getForceIntraQP() ) || !m_pcCfg->getLCULevelRC() )
+#else
         if ( rpcPic->getSlice( 0 )->getSliceType() == I_SLICE || !m_pcCfg->getLCULevelRC() )
+#endif
         {
           estQP = pcSlice->getSliceQp();
         }
@@ -1036,6 +1040,15 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
           estQP     = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, estQP );
 
           m_pcRdCost->setLambda(estLambda);
+#if M0036_RC_IMPROVEMENT
+#if RDOQ_CHROMA_LAMBDA
+          // set lambda for RDOQ
+          Double weight=m_pcRdCost->getChromaWeight();
+          m_pcTrQuant->setLambda( estLambda, estLambda / weight );
+#else
+          m_pcTrQuant->setLambda( estLambda );
+#endif
+#endif
         }
 
         m_pcRateCtrl->setRCQP( estQP );
@@ -1051,12 +1064,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if RATE_CONTROL_LAMBDA_DOMAIN
       if ( m_pcCfg->getUseRateCtrl() )
       {
+#if !M0036_RC_IMPROVEMENT
         UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
         Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
         Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
         Double MAD = (Double)SAD / (Double)(height * width);
         MAD = MAD * MAD;
         ( m_pcRateCtrl->getRCPic()->getLCU(uiCUAddr) ).m_MAD = MAD;
+#endif
 
         Int actualQP        = g_RCInvalidQPValue;
         Double actualLambda = m_pcRdCost->getLambda();

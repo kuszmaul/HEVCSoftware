@@ -1324,8 +1324,9 @@ Rate control: target bitrate, in bps.
 
 \Option{KeepHierarchicalBit} &
 \ShortOption{\None} &
-\Default{false} &
-Rate control: keep hierarchical bit allocation in rate control algorithm.
+\Default{0} &
+Rate control: 0: equal bit allocation among pictures;
+1: fix ratio hierarchical bit allocation; 2: adaptive hierarchical ratio bit allocation.
 It is suggested to enable hierarchical bit allocation for hierarchical-B coding structure.
 \\
 

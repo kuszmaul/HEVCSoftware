@@ -98,7 +98,7 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if RATE_CONTROL_LAMBDA_DOMAIN
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
@@ -120,7 +120,7 @@ public:
   Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
-#if RATE_CONTROL_LAMBDA_DOMAIN
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
 protected:

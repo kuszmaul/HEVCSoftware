@@ -1693,14 +1693,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if RATE_CONTROL_LAMBDA_DOMAIN
       if ( m_pcCfg->getUseRateCtrl() )
       {
+#if !M0036_RC_IMPROVEMENT
         Double effectivePercentage = m_pcRateCtrl->getRCPic()->getEffectivePercentage();
+#endif
         Double avgQP     = m_pcRateCtrl->getRCPic()->calAverageQP();
         Double avgLambda = m_pcRateCtrl->getRCPic()->calAverageLambda();
         if ( avgLambda < 0.0 )
         {
           avgLambda = lambda;
         }
+#if M0036_RC_IMPROVEMENT
+        m_pcRateCtrl->getRCPic()->updateAfterPicture( actualHeadBits, actualTotalBits, avgQP, avgLambda );
+#else
         m_pcRateCtrl->getRCPic()->updateAfterPicture( actualHeadBits, actualTotalBits, avgQP, avgLambda, effectivePercentage );
+#endif
         m_pcRateCtrl->getRCPic()->addToPictureLsit( m_pcRateCtrl->getPicList() );
 
         m_pcRateCtrl->getRCSeq()->updateAfterPic( actualTotalBits );
