@@ -561,24 +561,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     //---------------
     pcSlice->setRefPOCList();
-#if !L0034_COMBINED_LIST_CLEANUP
-    pcSlice->setNoBackPredFlag( false );
-    if ( pcSlice->getSliceType() == B_SLICE )
-    {
-      if ( pcSlice->getNumRefIdx(RefPicList( 0 ) ) == pcSlice->getNumRefIdx(RefPicList( 1 ) ) )
-      {
-        pcSlice->setNoBackPredFlag( true );
-        for ( i=0; i < pcSlice->getNumRefIdx(RefPicList( 1 ) ); i++ )
-        {
-          if ( pcSlice->getRefPOC(RefPicList(1), i) != pcSlice->getRefPOC(RefPicList(0), i) ) 
-          {
-            pcSlice->setNoBackPredFlag( false );
-            break;
-          }
-        }
-      }
-    }
-#endif
   }
 
   pcPic->setCurrSliceIdx(m_uiSliceIdx);
