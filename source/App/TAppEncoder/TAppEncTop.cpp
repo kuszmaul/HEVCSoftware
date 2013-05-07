@@ -236,7 +236,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
-#if J0149_TONE_MAPPING_SEI
   m_cTEncTop.setToneMappingInfoSEIEnabled                 ( m_toneMappingInfoSEIEnabled );
   m_cTEncTop.setTMISEIToneMapId                           ( m_toneMapId );
   m_cTEncTop.setTMISEIToneMapCancelFlag                   ( m_toneMapCancelFlag );
@@ -262,7 +261,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMISEINominalBlackLevelLumaCodeValue      ( m_nominalBlackLevelLumaCodeValue );
   m_cTEncTop.setTMISEINominalWhiteLevelLumaCodeValue      ( m_nominalWhiteLevelLumaCodeValue );
   m_cTEncTop.setTMISEIExtendedWhiteLevelLumaCodeValue     ( m_extendedWhiteLevelLumaCodeValue );
-#endif
   m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
   m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
   m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );

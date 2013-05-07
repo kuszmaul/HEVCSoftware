@@ -72,11 +72,9 @@ TAppEncCfg::TAppEncCfg()
 , m_scalingListFile()
 {
   m_aidQP = NULL;
-#if J0149_TONE_MAPPING_SEI
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
   m_targetPivotValue = NULL;
-#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -85,7 +83,6 @@ TAppEncCfg::~TAppEncCfg()
   {
     delete[] m_aidQP;
   }
-#if J0149_TONE_MAPPING_SEI
   if ( m_startOfCodedInterval )
   {
     delete[] m_startOfCodedInterval;
@@ -101,7 +98,6 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_targetPivotValue;
     m_targetPivotValue = NULL;
   }
-#endif
   free(m_pchInputFile);
   free(m_pchBitstreamFile);
   free(m_pchReconFile);
@@ -259,11 +255,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
-#if J0149_TONE_MAPPING_SEI
   string cfg_startOfCodedInterval;
   string cfg_codedPivotValue;
   string cfg_targetPivotValue;
-#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   string cfg_bitRateInfoPresentFlag;
   string cfg_picRateInfoPresentFlag;
@@ -502,7 +496,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIRecoveryPoint",               m_recoveryPointSEIEnabled,                0, "Control generation of recovery point SEI messages")
   ("SEIBufferingPeriod",             m_bufferingPeriodSEIEnabled,              0, "Control generation of buffering period SEI messages")
   ("SEIPictureTiming",               m_pictureTimingSEIEnabled,                0, "Control generation of picture timing SEI messages")
-#if J0149_TONE_MAPPING_SEI
   ("SEIToneMappingInfo",                       m_toneMappingInfoSEIEnabled,    false, "Control generation of Tone Mapping SEI messages")
   ("SEIToneMapId",                             m_toneMapId,                        0, "Specifies Id of Tone Mapping SEI message for a given session")
   ("SEIToneMapCancelFlag",                     m_toneMapCancelFlag,            false, "Indicates that Tone Mapping SEI message cancels the persistance or follows")
@@ -533,7 +526,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapNominalBlackLevelLumaCodeValue",        m_nominalBlackLevelLumaCodeValue,          16, "Specifies luma sample value of the nominal black level assigned decoded pictures")
   ("SEIToneMapNominalWhiteLevelLumaCodeValue",        m_nominalWhiteLevelLumaCodeValue,         235, "Specifies luma sample value of the nominal white level assigned decoded pictures")
   ("SEIToneMapExtendedWhiteLevelLumaCodeValue",       m_extendedWhiteLevelLumaCodeValue,        300, "Specifies luma sample value of the extended dynamic range assigned decoded pictures")
-#endif
   ("SEIFramePacking",                m_framePackingSEIEnabled,                 0, "Control generation of frame packing SEI messages")
   ("SEIFramePackingType",            m_framePackingSEIType,                    0, "Define frame packing arrangement\n"
                                                                                   "\t0: checkerboard - pixels alternatively represent either frames\n"
@@ -776,7 +768,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   m_iWaveFrontSubstreams = m_iWaveFrontSynchro ? (m_iSourceHeight + m_uiMaxCUHeight - 1) / m_uiMaxCUHeight : 1;
 
-#if J0149_TONE_MAPPING_SEI
   if( m_toneMappingInfoSEIEnabled && !m_toneMapCancelFlag )
   {
     Char* pcStartOfCodedInterval = cfg_startOfCodedInterval.empty() ? NULL: strdup(cfg_startOfCodedInterval.c_str());
@@ -835,7 +826,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_targetPivotValue = NULL;
     }
   }
-#endif
   // check validity of input parameters
   xCheckParameter();
   
@@ -1453,7 +1443,6 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara( m_decodedPictureHashSEIEnabled<0 || m_decodedPictureHashSEIEnabled>3, "this hash type is not correct!\n");
 
-#if J0149_TONE_MAPPING_SEI
   if (m_toneMappingInfoSEIEnabled)
   {
     xConfirmPara( m_toneMapCodedDataBitDepth < 8 || m_toneMapCodedDataBitDepth > 14 , "SEIToneMapCodedDataBitDepth must be in rage 8 to 14");
@@ -1464,7 +1453,6 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_nominalBlackLevelLumaCodeValue >= m_nominalWhiteLevelLumaCodeValue, "SEIToneMapNominalWhiteLevelLumaCodeValue shall be greater than SEIToneMapNominalBlackLevelLumaCodeValue");
     xConfirmPara( m_extendedWhiteLevelLumaCodeValue < m_nominalWhiteLevelLumaCodeValue, "SEIToneMapExtendedWhiteLevelLumaCodeValue shall be greater than or equal to SEIToneMapNominalWhiteLevelLumaCodeValue");
   }
-#endif
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )

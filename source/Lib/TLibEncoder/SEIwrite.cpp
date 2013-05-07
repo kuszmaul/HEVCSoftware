@@ -83,11 +83,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
-#if J0149_TONE_MAPPING_SEI
   case SEI::TONE_MAPPING_INFO:
     fprintf( g_hTrace, "=========== Tone Mapping Info SEI message ===========\n");
     break;
-#endif
 #if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
@@ -146,11 +144,9 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
-#if J0149_TONE_MAPPING_SEI
   case SEI::TONE_MAPPING_INFO:
     xWriteSEIToneMappingInfo(*static_cast<const SEIToneMappingInfo*>(&sei));
     break;
-#endif
 #if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     xWriteSEISOPDescription(*static_cast<const SEISOPDescription*>(&sei));
@@ -482,7 +478,6 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
   xWriteByteAlign();
 }
 
-#if J0149_TONE_MAPPING_SEI
 Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 {
   Int i;
@@ -554,7 +549,6 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 
   xWriteByteAlign();
 }
-#endif
 
 Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
 {

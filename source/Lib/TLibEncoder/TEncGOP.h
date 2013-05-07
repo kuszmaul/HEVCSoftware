@@ -163,9 +163,7 @@ protected:
   SEIFramePacking*        xCreateSEIFramePacking();
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
 
-#if J0149_TONE_MAPPING_SEI
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
-#endif
 
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
 #if L0045_NON_NESTED_SEI_RESTRICTIONS

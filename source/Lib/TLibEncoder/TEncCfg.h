@@ -234,7 +234,6 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Int       m_recoveryPointSEIEnabled;
-#if J0149_TONE_MAPPING_SEI
   Bool      m_toneMappingInfoSEIEnabled;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
@@ -260,7 +259,6 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -598,7 +596,6 @@ public:
   Int   getPictureTimingSEIEnabled()                     { return m_pictureTimingSEIEnabled; }
   Void  setRecoveryPointSEIEnabled(Int b)                { m_recoveryPointSEIEnabled = b; }
   Int   getRecoveryPointSEIEnabled()                     { return m_recoveryPointSEIEnabled; }
-#if J0149_TONE_MAPPING_SEI
   Void  setToneMappingInfoSEIEnabled(Bool b)                 {  m_toneMappingInfoSEIEnabled = b;  }
   Bool  getToneMappingInfoSEIEnabled()                       {  return m_toneMappingInfoSEIEnabled;  }
   Void  setTMISEIToneMapId(Int b)                            {  m_toneMapId = b;  }
@@ -649,7 +646,6 @@ public:
   Int   getTMISEINominalWhiteLevelLumaCodeValue()            {  return m_nominalWhiteLevelLumaCodeValue;  }
   Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)      {  m_extendedWhiteLevelLumaCodeValue =b;  }
   Int   getTMISEIExtendedWhiteLevelLumaCodeValue()           {  return m_extendedWhiteLevelLumaCodeValue;  }
-#endif
   Void  setFramePackingArrangementSEIEnabled(Int b)      { m_framePackingSEIEnabled = b; }
   Int   getFramePackingArrangementSEIEnabled()           { return m_framePackingSEIEnabled; }
   Void  setFramePackingArrangementSEIType(Int b)         { m_framePackingSEIType = b; }

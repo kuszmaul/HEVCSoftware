@@ -373,7 +373,6 @@ public:
 };
 #endif
 
-#if J0149_TONE_MAPPING_SEI 
 class SEIToneMappingInfo : public SEI
 {
 public:
@@ -406,7 +405,6 @@ public:
   Int    m_nominalWhiteLevelLumaCodeValue;
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
-#endif
 
 typedef std::list<SEI*> SEIMessages;
 
