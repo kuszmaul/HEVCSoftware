@@ -262,7 +262,11 @@ protected:
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      m_RCEnableRateControl;                ///< enable rate control or not
   Int       m_RCTargetBitrate;                    ///< target bitrate when rate control is enabled
+#if M0036_RC_IMPROVEMENT
+  Int       m_RCKeepHierarchicalBit;              ///< 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation
+#else
   Bool      m_RCKeepHierarchicalBit;              ///< whether keeping hierarchical bit allocation structure or not
+#endif
   Bool      m_RCLCULevelRC;                       ///< true: LCU level rate control; false: picture level rate control
   Bool      m_RCUseLCUSeparateModel;              ///< use separate R-lambda model at LCU level
   Int       m_RCInitialQP;                        ///< inital QP for rate control

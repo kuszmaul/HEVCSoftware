@@ -64,6 +64,16 @@ const Int g_RCSmoothWindowSize = 40;
 const Int g_RCMaxPicListSize = 32;
 const Double g_RCWeightPicTargetBitInGOP    = 0.9;
 const Double g_RCWeightPicRargetBitInBuffer = 1.0 - g_RCWeightPicTargetBitInGOP;
+#if M0036_RC_IMPROVEMENT
+const Int g_RCIterationNum = 20;
+const Double g_RCWeightHistoryLambda = 0.5;
+const Double g_RCWeightCurrentLambda = 1.0 - g_RCWeightHistoryLambda;
+const Int g_RCLCUSmoothWindowSize = 4;
+const Double g_RCAlphaMinValue = 0.05;
+const Double g_RCAlphaMaxValue = 500.0;
+const Double g_RCBetaMinValue  = -3.0;
+const Double g_RCBetaMaxValue  = -0.1;
+#endif
 
 struct TRCLCU
 {
@@ -71,7 +81,11 @@ struct TRCLCU
   Int m_QP;     // QP of skip mode is set to g_RCInvalidQPValue
   Int m_targetBits;
   Double m_lambda;
+#if M0036_RC_IMPROVEMENT
+  Double m_bitWeight;
+#else
   Double m_MAD;
+#endif
   Int m_numberOfPixel;
 };
 
@@ -88,7 +102,11 @@ public:
   ~TEncRCSeq();
 
 public:
+#if M0036_RC_IMPROVEMENT
+  Void create( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int numberOfLevel, Bool useLCUSeparateModel, Int adaptiveBit );
+#else
   Void create( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int numberOfLevel, Bool useLCUSeparateModel );
+#endif
   Void destroy();
   Void initBitsRatio( Int bitsRatio[] );
   Void initGOPID2Level( Int GOPID2Level[] );
@@ -96,6 +114,9 @@ public:
   Void initLCUPara( TRCParameter** LCUPara = NULL );    // NULL to initial with default value
   Void updateAfterPic ( Int bits );
   Int  getRefineBitsForIntra( Int orgBits );
+#if M0036_RC_IMPROVEMENT
+  Void setAllBitRatio( Double basicLambda, Double* equaCoeffA, Double* equaCoeffB );
+#endif
 
 public:
   Int  getTotalFrames()                 { return m_totalFrames; }
@@ -133,6 +154,12 @@ public:
   Double getAlphaUpdate()               { return m_alphaUpdate; }
   Double getBetaUpdate()                { return m_betaUpdate; }
 
+#if M0036_RC_IMPROVEMENT
+  Int    getAdaptiveBits()              { return m_adaptiveBit;  }
+  Double getLastLambda()                { return m_lastLambda;   }
+  Void   setLastLambda( Double lamdba ) { m_lastLambda = lamdba; }
+#endif
+
 private:
   Int m_totalFrames;
   Int m_targetRate;
@@ -159,6 +186,11 @@ private:
   Double m_alphaUpdate;
   Double m_betaUpdate;
   Bool m_useLCUSeparateModel;
+
+#if M0036_RC_IMPROVEMENT
+  Int m_adaptiveBit;
+  Double m_lastLambda;
+#endif
 };
 
 class TEncRCGOP
@@ -174,6 +206,10 @@ public:
 
 private:
   Int  xEstGOPTargetBits( TEncRCSeq* encRCSeq, Int GOPSize );
+#if M0036_RC_IMPROVEMENT
+  Void   xCalEquaCoeff( TEncRCSeq* encRCSeq, Double* lambdaRatio, Double* equaCoeffA, Double* equaCoeffB, Int GOPSize );
+  Double xSolveEqua( Double targetBpp, Double* equaCoeffA, Double* equaCoeffB, Int GOPSize );
+#endif
 
 public:
   TEncRCSeq* getEncRCSeq()        { return m_encRCSeq; }
@@ -209,10 +245,16 @@ public:
   Int    getLCUEstQP( Double lambda, Int clipPicQP );
 
   Void updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Bool updateLCUParameter = true );
+#if M0036_RC_IMPROVEMENT
+  Void updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda );
+#else
   Void updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda, Double effectivePercentage );
+#endif
 
   Void addToPictureLsit( list<TEncRCPic*>& listPreviousPictures );
+#if !M0036_RC_IMPROVEMENT
   Double getEffectivePercentage();
+#endif
   Double calAverageQP();
   Double calAverageLambda();
 
@@ -238,8 +280,10 @@ public:
   TRCLCU* getLCU()                                        { return m_LCUs; }
   TRCLCU& getLCU( Int LCUIdx )                            { return m_LCUs[LCUIdx]; }
   Int  getPicActualHeaderBits()                           { return m_picActualHeaderBits; }
+#if !M0036_RC_IMPROVEMENT
   Double getTotalMAD()                                    { return m_totalMAD; }
   Void   setTotalMAD( Double MAD )                        { m_totalMAD = MAD; }
+#endif
   Int  getPicActualBits()                                 { return m_picActualBits; }
   Int  getPicActualQP()                                   { return m_picQP; }
   Double getPicActualLambda()                             { return m_picLambda; }
@@ -266,11 +310,15 @@ private:
 
   TRCLCU* m_LCUs;
   Int m_picActualHeaderBits;    // only SH and potential APS
+#if !M0036_RC_IMPROVEMENT
   Double m_totalMAD;
+#endif
   Int m_picActualBits;          // the whole picture, including header
   Int m_picQP;                  // in integer form
   Double m_picLambda;
+#if !M0036_RC_IMPROVEMENT
   TEncRCPic* m_lastPicture;
+#endif
 };
 
 class TEncRateCtrl
@@ -280,7 +328,11 @@ public:
   ~TEncRateCtrl();
 
 public:
+#if M0036_RC_IMPROVEMENT
+  Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP] );
+#else
   Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP] );
+#endif
   Void destroy();
   Void initRCPic( Int frameLevel );
   Void initRCGOP( Int numberOfPictures );
