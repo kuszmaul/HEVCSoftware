@@ -527,13 +527,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_FLAG(subLayerOrderingInfoPresentFlag, "sps_sub_layer_ordering_info_present_flag");
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
-#if L0323_DPB
     READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1");
     pcSPS->setMaxDecPicBuffering( uiCode + 1, i);
-#else
-    READ_UVLC ( uiCode, "sps_max_dec_pic_buffering");
-    pcSPS->setMaxDecPicBuffering( uiCode, i);
-#endif
     READ_UVLC ( uiCode, "sps_num_reorder_pics" );
     pcSPS->setNumReorderPics(uiCode, i);
     READ_UVLC ( uiCode, "sps_max_latency_increase");
@@ -653,11 +648,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   READ_FLAG(subLayerOrderingInfoPresentFlag, "vps_sub_layer_ordering_info_present_flag");
   for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
   {
-#if L0323_DPB
     READ_UVLC( uiCode,  "vps_max_dec_pic_buffering_minus1[i]" );     pcVPS->setMaxDecPicBuffering( uiCode + 1, i );
-#else
-    READ_UVLC( uiCode,  "vps_max_dec_pic_buffering[i]" );     pcVPS->setMaxDecPicBuffering( uiCode, i );
-#endif
     READ_UVLC( uiCode,  "vps_num_reorder_pics[i]" );          pcVPS->setNumReorderPics( uiCode, i );
     READ_UVLC( uiCode,  "vps_max_latency_increase[i]" );      pcVPS->setMaxLatencyIncrease( uiCode, i );
 
