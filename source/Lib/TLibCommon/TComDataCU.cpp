@@ -1572,8 +1572,7 @@ Char TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
   {
     return getSlice()->getSliceQp();
   }
-  else
-  if ( iLastValidPartIdx >= 0 )
+  else if ( iLastValidPartIdx >= 0 )
   {
     return getQP( iLastValidPartIdx );
   }
@@ -2411,9 +2410,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   TComDataCU* pcCULeft = 0;
   pcCULeft = getPULeft( uiLeftPartIdx, uiPartIdxLB );
   Bool isAvailableA1 = pcCULeft &&
-  pcCULeft->isDiffMER(xP -1, yP+nPSH-1, xP, yP) &&
-  !( uiPUIdx == 1 && (cCurPS == SIZE_Nx2N || cCurPS == SIZE_nLx2N || cCurPS == SIZE_nRx2N) ) &&
-  !pcCULeft->isIntra( uiLeftPartIdx ) ;
+    pcCULeft->isDiffMER(xP -1, yP+nPSH-1, xP, yP) &&
+    !( uiPUIdx == 1 && (cCurPS == SIZE_Nx2N || cCurPS == SIZE_nLx2N || cCurPS == SIZE_nRx2N) ) &&
+    !pcCULeft->isIntra( uiLeftPartIdx ) ;
   if ( isAvailableA1 )
   {
     abCandIsInter[iCount] = true;
@@ -3179,7 +3178,7 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   }
   
   RefPicList eRefPicList2nd = REF_PIC_LIST_0;
-  if(       eRefPicList == REF_PIC_LIST_0 )
+  if( eRefPicList == REF_PIC_LIST_0 )
   {
     eRefPicList2nd = REF_PIC_LIST_1;
   }
@@ -3205,24 +3204,24 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
     bIsNeibRefLongTerm = pcTmpCU->getSlice()->getRefPic( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) )->getIsLongTerm();
     if ( bIsCurrRefLongTerm == bIsNeibRefLongTerm ) 
     {
-    if ( bIsCurrRefLongTerm || bIsNeibRefLongTerm )
-    {
-      rcMv = cMvPred;
-    }
-    else
-    {
-      Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
-      if ( iScale == 4096 )
+      if ( bIsCurrRefLongTerm || bIsNeibRefLongTerm )
       {
         rcMv = cMvPred;
       }
       else
       {
-        rcMv = cMvPred.scaleMv( iScale );
+        Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
+        if ( iScale == 4096 )
+        {
+          rcMv = cMvPred;
+        }
+        else
+        {
+          rcMv = cMvPred.scaleMv( iScale );
+        }
       }
-    }
-    pInfo->m_acMvCand[ pInfo->iN++] = rcMv;
-    return true;
+      pInfo->m_acMvCand[ pInfo->iN++] = rcMv;
+      return true;
     }
   }
   //---------------------- V2(END) --------------------//
