@@ -193,7 +193,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   seiToneMappingInfo->m_codedDataBitDepth = m_pcCfg->getTMISEICodedDataBitDepth();
   assert(seiToneMappingInfo->m_codedDataBitDepth >= 8 && seiToneMappingInfo->m_codedDataBitDepth <= 14);
   seiToneMappingInfo->m_targetBitDepth = m_pcCfg->getTMISEITargetBitDepth();
-  assert( (seiToneMappingInfo->m_targetBitDepth >= 1 && seiToneMappingInfo->m_targetBitDepth <= 17) || (seiToneMappingInfo->m_targetBitDepth  == 255) );
+  assert( seiToneMappingInfo->m_targetBitDepth >= 1 && seiToneMappingInfo->m_targetBitDepth <= 17 );
   seiToneMappingInfo->m_modelId = m_pcCfg->getTMISEIModelID();
   assert(seiToneMappingInfo->m_modelId >=0 &&seiToneMappingInfo->m_modelId<=4);
 
@@ -675,7 +675,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
-    Int sliceQP              = pcSlice->getSliceQp();
     Double lambda            = 0.0;
     Int actualHeadBits       = 0;
     Int actualTotalBits      = 0;
@@ -691,9 +690,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_pcRateCtrl->initRCPic( frameLevel );
       estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
 
+      Int sliceQP = m_pcCfg->getInitialQP();
       if ( ( pcSlice->getPOC() == 0 && m_pcCfg->getInitialQP() > 0 ) || ( frameLevel == 0 && m_pcCfg->getForceIntraQP() ) ) // QP is specified
       {
-        sliceQP              = m_pcCfg->getInitialQP();
         Int    NumberBFrames = ( m_pcCfg->getGOPSize() - 1 );
         Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)NumberBFrames );
         Double dQPFactor     = 0.57*dLambda_scale;
@@ -1930,7 +1929,7 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
 {
   Int i;
   //  Rec. output
-  TComList<TComPicYuv*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
+  TComList<TComPicYuv*>::iterator iterPicYuvRec = rcListPicYuvRecOut.end();
   for ( i = 0; i < iNumPicRcvd - iTimeOffset + 1; i++ )
   {
     iterPicYuvRec--;
@@ -1939,7 +1938,7 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
   rpcPicYuvRecOut = *(iterPicYuvRec);
   
   //  Current pic.
-  TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
+  TComList<TComPic*>::iterator iterPic = rcListPic.begin();
   while (iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic);
@@ -1951,7 +1950,8 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
     iterPic++;
   }
   
-  assert (rpcPic->getPOC() == pocCurr);
+  assert( rpcPic != NULL );
+  assert( rpcPic->getPOC() == pocCurr );
   
   return;
 }
@@ -2439,6 +2439,8 @@ Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
   const UInt picHeight = pcPicYuvRec->getHeight();
   const UInt noCol = (picWidth>>log2maxTB);
   const UInt noRows = (picHeight>>log2maxTB);
+  assert(noCol > 1);
+  assert(noRows > 1);
   UInt64 *colSAD = (UInt64*)malloc(noCol*sizeof(UInt64));
   UInt64 *rowSAD = (UInt64*)malloc(noRows*sizeof(UInt64));
   UInt colIdx = 0;
