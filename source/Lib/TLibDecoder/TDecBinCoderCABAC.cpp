@@ -244,17 +244,6 @@ Void TDecBinCABAC::resetBac()
   m_uiValue    = m_pcTComBitstream->read( 16 );
 }
 
-/** Decode PCM alignment zero bits.
- * \returns Void
- */
-Void TDecBinCABAC::decodePCMAlignBits()
-{
-  Int iNum = m_pcTComBitstream->getNumBitsUntilByteAligned();
-  
-  UInt uiBit = 0;
-  m_pcTComBitstream->read( iNum, uiBit );
-}
-
 /** Read a PCM code.
  * \param uiLength code bit-depth
  * \param ruiCode pointer to PCM code value
