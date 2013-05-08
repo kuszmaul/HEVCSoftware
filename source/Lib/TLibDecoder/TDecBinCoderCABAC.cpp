@@ -81,17 +81,6 @@ TDecBinCABAC::finish()
   assert( ((lastByte << (8 + m_bitsNeeded)) & 0xff) == 0x80 );
 }
 
-Void 
-TDecBinCABAC::flush()
-{
-  while (m_pcTComBitstream->getNumBitsLeft() > 0 && m_pcTComBitstream->getNumBitsUntilByteAligned() != 0)
-  {
-    UInt uiBits;
-    m_pcTComBitstream->read ( 1, uiBits );
-  }
-  start();
-}
-
 /**
  - Copy CABAC state.
  .
