@@ -1185,7 +1185,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode )
 {
   assert( rpcTempCU->getSlice()->getSliceType() != I_SLICE );
-  TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
+  TComMvField  cMvFieldNeighbours[ 2 * MRG_MAX_NUM_CANDS ]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
   Int numValidMergeCand = 0;
 
@@ -1197,9 +1197,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uhDepth );
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
-
+  
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
-  for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
+  for( UInt ui = 0; ui < numValidMergeCand; ++ui )
   {
     mergeCandBuffer[ui] = 0;
   }
@@ -1220,10 +1220,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   {
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
     {
+      if(!(uiNoResidual==1 && mergeCandBuffer[uiMergeCand]==1))
       {
-        if(!(uiNoResidual==1 && mergeCandBuffer[uiMergeCand]==1))
-        {
-
         if( !(bestIsSkip && uiNoResidual == 0) )
         {
           // set MC parameters
@@ -1235,74 +1233,69 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
-
-       // do MC
-       m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
-       // estimate residual and encode everything
-       m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
-         m_ppcOrigYuv    [uhDepth],
-         m_ppcPredYuvTemp[uhDepth],
-         m_ppcResiYuvTemp[uhDepth],
-         m_ppcResiYuvBest[uhDepth],
-         m_ppcRecoYuvTemp[uhDepth],
-         (uiNoResidual? true:false));
-
-
-       if(uiNoResidual==0)
-       {
-         if(rpcTempCU->getQtRootCbf(0) == 0)
-         {
-           mergeCandBuffer[uiMergeCand] = 1;
-         }
-       }
-
-       rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
+          
+          // do MC
+          m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+          // estimate residual and encode everything
+          m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
+                                                    m_ppcOrigYuv    [uhDepth],
+                                                    m_ppcPredYuvTemp[uhDepth],
+                                                    m_ppcResiYuvTemp[uhDepth],
+                                                    m_ppcResiYuvBest[uhDepth],
+                                                    m_ppcRecoYuvTemp[uhDepth],
+                                                    (uiNoResidual? true:false));
+          
+          
+          if ( uiNoResidual == 0 && rpcTempCU->getQtRootCbf(0) == 0 )
+          {
+            // If no residual when allowing for one, then set mark to not try case where residual is forced to 0
+            mergeCandBuffer[uiMergeCand] = 1;
+          }
+          
+          rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
           rpcTempCU->initEstData( uhDepth, orgQP );
-
-
-      if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
-      {
-        bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
-      }
-
-    }
-    }
-   }
-  }
-
-  if(uiNoResidual == 0 && m_pcEncCfg->getUseEarlySkipDetection())
-  {
-    if(rpcBestCU->getQtRootCbf( 0 ) == 0)
-    {
-      if( rpcBestCU->getMergeFlag( 0 ))
-      {
-        *earlyDetectionSkipMode = true;
-      }
-      else
-      {
-        Int absoulte_MV=0;
-        for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
-        {
-          if ( rpcBestCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+          
+          if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
           {
-            TComCUMvField* pcCUMvField = rpcBestCU->getCUMvField(RefPicList( uiRefListIdx ));
-            Int iHor = pcCUMvField->getMvd( 0 ).getAbsHor();
-            Int iVer = pcCUMvField->getMvd( 0 ).getAbsVer();
-            absoulte_MV+=iHor+iVer;
+            bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
           }
         }
-
-        if(absoulte_MV == 0)
+      }
+    }
+    
+    if(uiNoResidual == 0 && m_pcEncCfg->getUseEarlySkipDetection())
+    {
+      if(rpcBestCU->getQtRootCbf( 0 ) == 0)
+      {
+        if( rpcBestCU->getMergeFlag( 0 ))
         {
           *earlyDetectionSkipMode = true;
         }
+        else
+        {
+          Int absoulte_MV=0;
+          for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+          {
+            if ( rpcBestCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+            {
+              TComCUMvField* pcCUMvField = rpcBestCU->getCUMvField(RefPicList( uiRefListIdx ));
+              Int iHor = pcCUMvField->getMvd( 0 ).getAbsHor();
+              Int iVer = pcCUMvField->getMvd( 0 ).getAbsVer();
+              absoulte_MV+=iHor+iVer;
+            }
+          }
+          
+          if(absoulte_MV == 0)
+          {
+            *earlyDetectionSkipMode = true;
+          }
+        }
       }
     }
   }
- }
 }
 
 
