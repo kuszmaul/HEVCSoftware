@@ -59,7 +59,6 @@ public:
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
-  virtual Void  resetBac          ()                                          = 0;
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
 
   virtual ~TDecBinIf() {}

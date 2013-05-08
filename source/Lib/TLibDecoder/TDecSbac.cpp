@@ -383,7 +383,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       piPCMSample += uiWidth;
     }
 
-    m_pcTDecBinIf->resetBac();
+    m_pcTDecBinIf->start();
   }
 }
 
