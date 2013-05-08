@@ -55,7 +55,6 @@ public:
   
   Void  start             ();
   Void  finish            ();
-  Void  flush             ();
   
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );

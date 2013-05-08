@@ -53,7 +53,6 @@ public:
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
-  virtual Void  flush            ()                                           = 0;
 
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel )  = 0;
   virtual Void  decodeBinEP       ( UInt& ruiBin                           )  = 0;
