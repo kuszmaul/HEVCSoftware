@@ -313,17 +313,10 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
 Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
-  Bool readPCMSampleFlag = false;
 
-    m_pcTDecBinIf->decodeBinTrm(uiSymbol);
+  m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
-    if (uiSymbol)
-    {
-      readPCMSampleFlag = true;
-      m_pcTDecBinIf->decodePCMAlignBits();
-    }
-
-  if (readPCMSampleFlag == true)
+  if (uiSymbol)
   {
     Bool bIpcmFlag = true;
 
@@ -390,7 +383,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       piPCMSample += uiWidth;
     }
 
-      m_pcTDecBinIf->resetBac();
+    m_pcTDecBinIf->resetBac();
   }
 }
 
