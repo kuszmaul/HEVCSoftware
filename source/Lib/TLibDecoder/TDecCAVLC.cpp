@@ -183,8 +183,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
   Int   iCode;
 
-  READ_UVLC( uiCode, "pps_pic_parameter_set_id");                     pcPPS->setPPSId (uiCode);
-  READ_UVLC( uiCode, "pps_seq_parameter_set_id");                     pcPPS->setSPSId (uiCode);
+  READ_UVLC( uiCode, "pps_pic_parameter_set_id");
+  assert(uiCode <= 63);
+  pcPPS->setPPSId (uiCode);
+  
+  READ_UVLC( uiCode, "pps_seq_parameter_set_id");
+  assert(uiCode <= 15);
+  pcPPS->setSPSId (uiCode);
+  
   READ_FLAG( uiCode, "dependent_slice_segments_enabled_flag"    );    pcPPS->setDependentSliceSegmentsEnabledFlag   ( uiCode == 1 );
   READ_FLAG( uiCode, "output_flag_present_flag" );                    pcPPS->setOutputFlagPresentFlag( uiCode==1 );
 
@@ -484,6 +490,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   UInt  uiCode;
   READ_CODE( 4,  uiCode, "sps_video_parameter_set_id");          pcSPS->setVPSId        ( uiCode );
   READ_CODE( 3,  uiCode, "sps_max_sub_layers_minus1" );          pcSPS->setMaxTLayers   ( uiCode+1 );
+  assert(uiCode <= 6);
+  
   READ_FLAG(     uiCode, "sps_temporal_id_nesting_flag" );       pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
   if ( pcSPS->getMaxTLayers() == 1 )
   {
@@ -493,7 +501,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   
   parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
   READ_UVLC(     uiCode, "sps_seq_parameter_set_id" );           pcSPS->setSPSId( uiCode );
+  assert(uiCode <= 15);
+  
   READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
+  assert(uiCode <= 3);
   // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
   assert (uiCode == 1);
   if( uiCode == 3 )
@@ -514,17 +525,21 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
+  assert(uiCode <= 6);
   pcSPS->setBitDepthY( uiCode + 8 );
   pcSPS->setQpBDOffsetY( (Int) (6*uiCode) );
 
   READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
+  assert(uiCode <= 6);
   pcSPS->setBitDepthC( uiCode + 8 );
   pcSPS->setQpBDOffsetC( (Int) (6*uiCode) );
 
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
-
+  assert(uiCode <= 12);
+  
   UInt subLayerOrderingInfoPresentFlag;
   READ_FLAG(subLayerOrderingInfoPresentFlag, "sps_sub_layer_ordering_info_present_flag");
+  
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
     READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1");
@@ -588,6 +603,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC( uiCode, "num_short_term_ref_pic_sets" );
+  assert(uiCode <= 64);
   pcSPS->createRPSList(uiCode);
 
   TComRPSList* rpsList = pcSPS->getRPSList();
