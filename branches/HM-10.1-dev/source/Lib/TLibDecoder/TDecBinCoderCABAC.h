@@ -61,7 +61,6 @@ public:
   Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
-  Void  resetBac          ();
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
   
   Void  copyState         ( TDecBinIf* pcTDecBinIf );

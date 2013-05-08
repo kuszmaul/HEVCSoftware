@@ -234,16 +234,6 @@ TDecBinCABAC::decodeBinTrm( UInt& ruiBin )
   }
 }
 
-/** Reset BAC register values.
- * \returns Void
- */
-Void TDecBinCABAC::resetBac()
-{
-  m_uiRange    = 510;
-  m_bitsNeeded = -8;
-  m_uiValue    = m_pcTComBitstream->read( 16 );
-}
-
 /** Read a PCM code.
  * \param uiLength code bit-depth
  * \param ruiCode pointer to PCM code value
