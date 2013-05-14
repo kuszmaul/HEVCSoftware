@@ -55,6 +55,9 @@
 #define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
 #define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
 
+#define RC_FIX                                      1  /// suggested fix for M0036
+#define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
+
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS                64
 
