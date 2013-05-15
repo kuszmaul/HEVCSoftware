@@ -1105,6 +1105,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       // run CU encoder
       m_pcCuEncoder->compressCU( pcCU );
 
+#if !TICKET_1090_FIX
 #if RATE_CONTROL_LAMBDA_DOMAIN
       if ( m_pcCfg->getUseRateCtrl() )
       {
@@ -1147,6 +1148,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #endif
       }
 #endif
+#endif
       
       // restore entropy coder to an initial stage
       m_pcEntropyCoder->setEntropyCoder ( m_pppcRDSbacCoder[0][CI_CURR_BEST], pcSlice );
@@ -1179,6 +1181,47 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
           m_pcBufferSbacCoders[uiTileCol].loadContexts(ppppcRDSbacCoders[uiSubStrm][0][CI_CURR_BEST]);
         }
       }
+
+#if TICKET_1090_FIX
+#if RATE_CONTROL_LAMBDA_DOMAIN
+      if ( m_pcCfg->getUseRateCtrl() )
+      {
+#if !M0036_RC_IMPROVEMENT
+        UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
+        Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
+        Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
+        Double MAD = (Double)SAD / (Double)(height * width);
+        MAD = MAD * MAD;
+        ( m_pcRateCtrl->getRCPic()->getLCU(uiCUAddr) ).m_MAD = MAD;
+#endif
+
+        Int actualQP        = g_RCInvalidQPValue;
+        Double actualLambda = m_pcRdCost->getLambda();
+        Int actualBits      = pcCU->getTotalBits();
+        Int numberOfEffectivePixels    = 0;
+        for ( Int idx = 0; idx < rpcPic->getNumPartInCU(); idx++ )
+        {
+          if ( pcCU->getPredictionMode( idx ) != MODE_NONE && ( !pcCU->isSkipped( idx ) ) )
+          {
+            numberOfEffectivePixels = numberOfEffectivePixels + 16;
+            break;
+          }
+        }
+
+        if ( numberOfEffectivePixels == 0 )
+        {
+          actualQP = g_RCInvalidQPValue;
+        }
+        else
+        {
+          actualQP = pcCU->getQP( 0 );
+        }
+        m_pcRdCost->setLambda(oldLambda);
+
+        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, m_pcCfg->getLCULevelRC() );
+      }
+#endif
+#endif
     }
     // other case: encodeCU is not called
     else
