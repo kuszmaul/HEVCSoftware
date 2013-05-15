@@ -778,16 +778,26 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures )
   m_estPicLambda = estLambda;
 
 #if M0036_RC_IMPROVEMENT
-#if RC_FIX
-  if(m_encRCSeq->getUseLCUSeparateModel())
-  {
-#endif
   Double totalWeight = 0.0;
   // initial BU bit allocation weight
   for ( Int i=0; i<m_numberOfLCU; i++ )
   {
+#if RC_FIX
+    Double alphaLCU, betaLCU;
+    if ( m_encRCSeq->getUseLCUSeparateModel() )
+    {
+      alphaLCU = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_alpha;
+      betaLCU  = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_beta;
+    }
+    else
+    {
+      alphaLCU = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
+      betaLCU  = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
+    }
+#else
     Double alphaLCU = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_alpha;
     Double betaLCU  = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_beta;
+#endif
 
     m_LCUs[i].m_bitWeight =  m_LCUs[i].m_numberOfPixel * pow( estLambda/alphaLCU, 1.0/betaLCU );
 
@@ -802,9 +812,6 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures )
     Double BUTargetBits = m_targetBits * m_LCUs[i].m_bitWeight / totalWeight;
     m_LCUs[i].m_bitWeight = BUTargetBits;
   }
-#if RC_FIX
-  }
-#endif
 #endif
 
   return estLambda;
