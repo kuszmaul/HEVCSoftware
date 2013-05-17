@@ -105,7 +105,7 @@ Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
   m_pcCuDecoder       = pcCuDecoder;
 }
 
-Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders)
+Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders, Bool& bPicComplete)
 {
   TComDataCU* pcCU;
   UInt        uiIsLast = 0;
@@ -389,8 +389,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         CTXMem[1]->loadContexts( &m_pcBufferSbacDecoders[uiTileCol] );//ctx 2.LCU
       }
       CTXMem[0]->loadContexts( pcSbacDecoder );//ctx end of dep.slice
+      bPicComplete = iCUAddr == (rpcPic->getNumCUsInFrame()-1);
       return;
     }
+    bPicComplete = iCUAddr == (rpcPic->getNumCUsInFrame()-1);
   }
 }
 

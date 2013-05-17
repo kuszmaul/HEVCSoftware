@@ -40,16 +40,12 @@
 #include "TDecSbac.h"
 #include "TDecBinCoder.h"
 #include "TDecBinCoderCABAC.h"
-#include "libmd5/MD5.h"
-#include "TLibCommon/SEI.h"
 
 #include <time.h>
 
-extern Bool g_md5_mismatch; ///< top level flag to signal when there is a decode problem
-
 //! \ingroup TLibDecoder
 //! \{
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI);
+
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
@@ -102,7 +98,7 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
 // Public member functions
 // ====================================================================================================================
 
-Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
+Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool& bPicComplete)
 {
   TComSlice*  pcSlice = rpcPic->getSlice(rpcPic->getCurrSliceIdx());
   // Table of extracted substreams.
@@ -152,7 +148,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     m_LFCrossSliceBoundaryFlag.push_back( pcSlice->getLFCrossSliceBoundaryFlag());
   }
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);
-  m_pcSliceDecoder->decompressSlice( ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
+  m_pcSliceDecoder->decompressSlice( ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders, bPicComplete);
   m_pcEntropyDecoder->setBitstream(  ppcSubstreams[uiNumSubstreams-1] );
   // deallocate all created substreams, including internal buffers.
   for (UInt ui = 0; ui < uiNumSubstreams; ui++)
@@ -227,16 +223,6 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     }
     printf ("] ");
   }
-  if (m_decodedPictureHashSEIEnabled)
-  {
-    SEIMessages pictureHashes = getSeisByType(rpcPic->getSEIs(), SEI::DECODED_PICTURE_HASH );
-    const SEIDecodedPictureHash *hash = ( pictureHashes.size() > 0 ) ? (SEIDecodedPictureHash*) *(pictureHashes.begin()) : NULL;
-    if (pictureHashes.size() > 1)
-    {
-      printf ("Warning: Got multiple decoded picture hash SEI messages. Using first.");
-    }
-    calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), hash);
-  }
 
   rpcPic->setOutputMark(true);
   rpcPic->setReconMark(true);
@@ -244,82 +230,5 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   m_LFCrossSliceBoundaryFlag.clear();
 }
 
-/**
- * Calculate and print hash for pic, compare to picture_digest SEI if
- * present in seis.  seis may be NULL.  Hash is printed to stdout, in
- * a manner suitable for the status line. Theformat is:
- *  [Hash_type:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,(yyy)]
- * Where, x..x is the hash
- *        yyy has the following meanings:
- *            OK          - calculated hash matches the SEI message
- *            ***ERROR*** - calculated hash does not match the SEI message
- *            unk         - no SEI message was available for comparison
- */
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI)
-{
-  /* calculate MD5sum for entire reconstructed picture */
-  UChar recon_digest[3][16];
-  Int numChar=0;
-  const Char* hashType = "\0";
 
-  if (pictureHashSEI)
-  {
-    switch (pictureHashSEI->method)
-    {
-    case SEIDecodedPictureHash::MD5:
-      {
-        hashType = "MD5";
-        calcMD5(pic, recon_digest);
-        numChar = 16;
-        break;
-      }
-    case SEIDecodedPictureHash::CRC:
-      {
-        hashType = "CRC";
-        calcCRC(pic, recon_digest);
-        numChar = 2;
-        break;
-      }
-    case SEIDecodedPictureHash::CHECKSUM:
-      {
-        hashType = "Checksum";
-        calcChecksum(pic, recon_digest);
-        numChar = 4;
-        break;
-      }
-    default:
-      {
-        assert (!"unknown hash type");
-      }
-    }
-  }
-
-  /* compare digest against received version */
-  const Char* ok = "(unk)";
-  Bool mismatch = false;
-
-  if (pictureHashSEI)
-  {
-    ok = "(OK)";
-    for(Int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
-    {
-      for (UInt i = 0; i < numChar; i++)
-      {
-        if (recon_digest[yuvIdx][i] != pictureHashSEI->digest[yuvIdx][i])
-        {
-          ok = "(***ERROR***)";
-          mismatch = true;
-        }
-      }
-    }
-  }
-
-  printf("[%s:%s,%s] ", hashType, digestToString(recon_digest, numChar), ok);
-
-  if (mismatch)
-  {
-    g_md5_mismatch = true;
-    printf("[rx%s:%s] ", hashType, digestToString(pictureHashSEI->digest, numChar));
-  }
-}
 //! \}

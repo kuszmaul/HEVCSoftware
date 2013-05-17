@@ -126,6 +126,7 @@ Void TAppDecTop::decode()
 
     // call actual decoding function
     Bool bNewPicture = false;
+    Bool bPicComplete = false;
     if (nalUnit.empty())
     {
       /* this can happen if the following occur:
@@ -152,7 +153,11 @@ Void TAppDecTop::decode()
       }
       else
       {
-        bNewPicture = m_cTDecTop.decode(nalu, m_iSkipFrame, m_iPOCLastDisplay);
+        bNewPicture = m_cTDecTop.decode(nalu, m_iSkipFrame, m_iPOCLastDisplay, bPicComplete);
+        if(bPicComplete)
+        {
+          m_cTDecTop.executeLoopFilters(poc, pcListPic);
+        }
         if (bNewPicture)
         {
           bitstreamFile.clear();
@@ -166,11 +171,6 @@ Void TAppDecTop::decode()
         bPreviousPictureDecoded = true; 
       }
     }
-    if (bNewPicture || !bitstreamFile)
-    {
-      m_cTDecTop.executeLoopFilters(poc, pcListPic);
-    }
-
     if( pcListPic )
     {
       if ( m_pchReconFile && !recon_opened )
