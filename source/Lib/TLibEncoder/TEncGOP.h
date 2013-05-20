@@ -68,15 +68,17 @@ class TEncTop;
 // ====================================================================================================================
 
 /// GOP encoder class
+static const UInt MAX_NUM_LONG_TERM_REF_PICS=33;
+
 class TEncGOP
 {
 private:
   //  Data
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
-  UInt            m_numLongTermRefPicSPS;
-  UInt            m_ltRefPicPocLsbSps[33];
-  Bool            m_ltRefPicUsedByCurrPicFlag[33];
+  UInt                    m_numLongTermRefPicSPS;
+  UInt                    m_ltRefPicPocLsbSps[MAX_NUM_LONG_TERM_REF_PICS];
+  Bool                    m_ltRefPicUsedByCurrPicFlag[MAX_NUM_LONG_TERM_REF_PICS];
   Int                     m_iLastIDR;
   Int                     m_iGopSize;
   Int                     m_iNumPicCoded;
@@ -132,7 +134,12 @@ public:
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec,
+                      std::list<AccessUnit>& accessUnitsInGOP, const InputColourSpaceConversion snr_conversion );
+#else
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
+#endif
   Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
   
@@ -146,6 +153,7 @@ public:
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
+
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
@@ -153,7 +161,11 @@ protected:
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr );
   
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime, const InputColourSpaceConversion snr_conversion );
+#else
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
+#endif
   
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 

@@ -44,6 +44,9 @@
 #include "NALread.h"
 #include "TLibCommon/NAL.h"
 #include "TLibCommon/TComBitStream.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 using namespace std;
 
@@ -65,6 +68,9 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
       pos++;
       it_read++;
       zeroCount = 0;
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      TComCodingStatistics::IncrementStatisticEP(STATS__EMULATION_PREVENTION_3_BYTES, 8, 0);
+#endif
       if (it_read == nalUnitBuf.end())
       {
         break;
@@ -105,6 +111,9 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   nalu.m_reservedZero6Bits = bs.read(6);       // nuh_reserved_zero_6bits
   assert(nalu.m_reservedZero6Bits == 0);
   nalu.m_temporalId = bs.read(3) - 1;             // nuh_temporal_id_plus1
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::IncrementStatisticEP(STATS__NAL_UNIT_HEADER_BITS, 1+6+6+3, 0);
+#endif
 
   if ( nalu.m_temporalId )
   {
