@@ -1013,7 +1013,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
 #if FIX1071
-Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isIRAP)
+Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP)
 #else
 Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet)
 #endif
@@ -1042,7 +1042,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         // and should be added to the explicit Reference Picture Set
         pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
 #if FIX1071
-        pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isIRAP));
+        pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
 #else
         pcRPS->setUsed(k, pReferencePictureSet->getUsed(i));
 #endif
