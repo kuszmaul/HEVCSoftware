@@ -121,6 +121,7 @@ Void TComPrediction::initTempBuff()
 // Function for calculating DC value of the reference samples used in Intra prediction
 Pel TComPrediction::predIntraGetPredValDC( Int* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, Bool bAbove, Bool bLeft )
 {
+  assert(iWidth > 0 && iHeight > 0);
   Int iInd, iSum = 0;
   Pel pDcVal;
 
