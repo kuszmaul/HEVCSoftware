@@ -80,7 +80,7 @@ public:
   Void  create            ();
   Void  destroy           ();
   
-  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
+  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders, Bool& bPicComplete );
   Void      initCtxMem(  UInt i );
   Void      setCtxMem( TDecSbac* sb, Int b )   { CTXMem[b] = sb; }
   Int       getCtxMemSize( )                   { return (Int)CTXMem.size(); }
