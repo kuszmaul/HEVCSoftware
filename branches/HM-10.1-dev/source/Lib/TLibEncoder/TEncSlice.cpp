@@ -1218,7 +1218,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         m_pcRdCost->setLambda(oldLambda);
 
+#if RATE_CONTROL_INTRA
+        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, 
+          pcCU->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
+#else
         m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, m_pcCfg->getLCULevelRC() );
+#endif
       }
 #endif
 #endif
