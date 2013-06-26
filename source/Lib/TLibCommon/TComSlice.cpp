@@ -740,7 +740,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_maxNumMergeCand               = pSrc->m_maxNumMergeCand;
 }
 
-Int TComSlice::m_prevPOC = 0;
+Int TComSlice::m_prevTid0POC = 0;
 
 /** Function for setting the slice's temporal layer ID and corresponding temporal_layer_switching_point_flag.
  * \param uiTLayer Temporal layer ID of the current slice
