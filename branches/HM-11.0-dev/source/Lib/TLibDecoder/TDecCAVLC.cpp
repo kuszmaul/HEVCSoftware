@@ -832,7 +832,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_CODE(sps->getBitsForPOC(), uiCode, "pic_order_cnt_lsb");  
       Int iPOClsb = uiCode;
-      Int iPrevPOC = rpcSlice->getPrevPOC();
+      Int iPrevPOC = rpcSlice->getPrevTid0POC();
       Int iMaxPOClsb = 1<< sps->getBitsForPOC();
       Int iPrevPOClsb = iPrevPOC%iMaxPOClsb;
       Int iPrevPOCmsb = iPrevPOC-iPrevPOClsb;
