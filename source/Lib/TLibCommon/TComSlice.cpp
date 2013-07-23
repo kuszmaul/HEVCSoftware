@@ -235,7 +235,7 @@ TComPic* TComSlice::xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, B
   Int pocCycle = 1 << getSPS()->getBitsForPOC();
   if (!pocHasMsb)
   {
-    poc = poc % pocCycle;
+    poc = poc & (pocCycle - 1);
   }
   
   while ( iterPic != rcListPic.end() )
@@ -246,7 +246,7 @@ TComPic* TComSlice::xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, B
       Int picPoc = pcPic->getPOC();
       if (!pocHasMsb)
       {
-        picPoc = picPoc % pocCycle;
+        picPoc = picPoc & (pocCycle - 1);
       }
       
       if (poc == picPoc)
@@ -837,7 +837,10 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
       }
       else 
       {
-        if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC())) == pReferencePictureSet->getPOC(i)%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC()))
+        Int pocCycle = 1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
+        Int curPoc = rpcPic->getPicSym()->getSlice(0)->getPOC() & (pocCycle-1);
+        Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
+        if(rpcPic->getIsLongTerm() && curPoc == refPoc)
         {
           isReference = 1;
           rpcPic->setUsedByCurr(pReferencePictureSet->getUsed(i));
@@ -897,7 +900,10 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
       }
       else 
       {
-        if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC())) == pReferencePictureSet->getPOC(i)%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC()) && rpcPic->getSlice(0)->isReferenced())
+        Int pocCycle = 1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
+        Int curPoc = rpcPic->getPicSym()->getSlice(0)->getPOC() & (pocCycle-1);
+        Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
+        if(rpcPic->getIsLongTerm() && curPoc == refPoc && rpcPic->getSlice(0)->isReferenced())
         {
           isAvailable = 1;
         }
@@ -916,8 +922,8 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
         Int refPoc = pReferencePictureSet->getPOC(i);
         if (!pReferencePictureSet->getCheckLTMSBPresent(i))
         {
-          curPoc = curPoc % pocCycle;
-          refPoc = refPoc % pocCycle;
+          curPoc = curPoc & (pocCycle - 1);
+          refPoc = refPoc & (pocCycle - 1);
         }
         
         if (rpcPic->getSlice(0)->isReferenced() && curPoc == refPoc)
