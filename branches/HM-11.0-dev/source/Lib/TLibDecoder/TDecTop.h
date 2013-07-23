@@ -97,6 +97,8 @@ private:
   Int                     m_prevPOC;
   Bool                    m_bFirstSliceInPicture;
   Bool                    m_bFirstSliceInSequence;
+  Bool                    m_prevSliceSkipped;
+  Int                     m_skippedPOC;
 
 public:
   TDecTop();
