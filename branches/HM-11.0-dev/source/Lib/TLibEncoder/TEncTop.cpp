@@ -800,13 +800,13 @@ Void TEncTop::xInitRPS()
       {
         printf("Warning: number of negative pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfNegativePictures(numNeg);
-        rps->setNumberOfPositivePictures(numNeg+numPos);
+        rps->setNumberOfPictures(numNeg+numPos);
       }
       if (numPos != rps->getNumberOfPositivePictures())
       {
         printf("Warning: number of positive pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfPositivePictures(numPos);
-        rps->setNumberOfPositivePictures(numNeg+numPos);
+        rps->setNumberOfPictures(numNeg+numPos);
       }
       RPSTemp.setNumberOfPictures(numNeg+numPos);
       RPSTemp.setNumberOfNegativePictures(numNeg);
