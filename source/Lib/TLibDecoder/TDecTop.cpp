@@ -586,7 +586,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
       pcSlice->setScalingList ( pcSlice->getPPS()->getScalingList()  );
     }
-    pcSlice->getScalingList()->setUseTransformSkip(pcSlice->getPPS()->getUseTransformSkip());
     if(!pcSlice->getPPS()->getScalingListPresentFlag() && !pcSlice->getSPS()->getScalingListPresentFlag())
     {
       pcSlice->setDefaultScalingList();

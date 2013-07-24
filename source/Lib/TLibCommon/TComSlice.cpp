@@ -1654,9 +1654,9 @@ TComRefPicListModification::~TComRefPicListModification()
 
 TComScalingList::TComScalingList()
 {
-  m_useTransformSkip = false;
   init();
 }
+
 TComScalingList::~TComScalingList()
 {
   destroy();
