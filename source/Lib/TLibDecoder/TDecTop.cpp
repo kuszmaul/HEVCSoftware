@@ -50,8 +50,8 @@ TDecTop::TDecTop()
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
 #endif
+  m_associatedIRAPType = NAL_UNIT_INVALID;
   m_pocCRA = 0;
-  m_prevRAPisBLA = false;
   m_pocRandomAccess = MAX_INT;          
   m_prevPOC                = MAX_INT;
   m_bFirstSliceInPicture    = true;
@@ -342,6 +342,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_apcSlicePilot->setPOC(m_skippedPOC);
   }
 
+  m_apcSlicePilot->setAssociatedIRAPPOC(m_pocCRA);
+  m_apcSlicePilot->setAssociatedIRAPType(m_associatedIRAPType);
+
   // Skip pictures due to random access
   if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
   {
@@ -527,7 +530,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   if (bNextSlice)
   {
-    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic );
+    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
     // Set reference list
 #if FIX1071
     pcSlice->setRefPicList( m_cListPic, true );
@@ -711,7 +714,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
  */
 Bool TDecTop::isSkipPictureForBLA(Int& iPOCLastDisplay)
 {
-  if (m_prevRAPisBLA && m_apcSlicePilot->getPOC() < m_pocCRA && (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N))
+  if ((m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_N_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_RADL) && 
+       m_apcSlicePilot->getPOC() < m_pocCRA && (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N))
   {
     iPOCLastDisplay++;
     return true;
