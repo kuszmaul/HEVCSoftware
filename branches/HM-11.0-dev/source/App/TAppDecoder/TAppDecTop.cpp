@@ -118,7 +118,6 @@ Void TAppDecTop::decode()
      * nal unit. */
     streampos location = bitstreamFile.tellg();
     AnnexBStats stats = AnnexBStats();
-    Bool bPreviousPictureDecoded = false;
 
     vector<uint8_t> nalUnit;
     InputNALUnit nalu;
@@ -140,15 +139,7 @@ Void TAppDecTop::decode()
       read(nalu, nalUnit);
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu)  )
       {
-        if(bPreviousPictureDecoded)
-        {
-          bNewPicture = true;
-          bPreviousPictureDecoded = false;
-        }
-        else
-        {
-          bNewPicture = false;
-        }
+        bNewPicture = false;
       }
       else
       {
@@ -163,7 +154,6 @@ Void TAppDecTop::decode()
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
         }
-        bPreviousPictureDecoded = true; 
       }
     }
     if (bNewPicture || !bitstreamFile)
