@@ -230,14 +230,14 @@ Void TAppDecTop::xInitDecLib()
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 {
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
-  Int not_displayed = 0;
+  Int numPicsNotYetDisplayed = 0;
 
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
     if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
-       not_displayed++;
+       numPicsNotYetDisplayed++;
     }
     iterPic++;
   }
@@ -247,10 +247,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   {
     TComPic* pcPic = *(iterPic);
     
-    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
+    if ( pcPic->getOutputMark() && (numPicsNotYetDisplayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
     {
       // write to file
-       not_displayed--;
+      numPicsNotYetDisplayed--;
       if ( m_pchReconFile )
       {
         const Window &conf = pcPic->getConformanceWindow();
