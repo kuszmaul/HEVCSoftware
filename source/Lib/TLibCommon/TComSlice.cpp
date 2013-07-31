@@ -858,6 +858,10 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
+    if (rpcPic->getPOC() == this->getPOC())
+    {
+      continue;
+    }
 
     // Any picture that has PicOutputFlag equal to 1 that precedes an IRAP picture
     // in decoding order shall precede the IRAP picture in output order.
@@ -1227,7 +1231,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   pcRPS->setNumberOfNegativePictures(nrOfNegativePictures);
   pcRPS->setNumberOfPositivePictures(nrOfPositivePictures);
   pcRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
-  // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the 
+  // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the
   // inter RPS prediction with.  Here we just use the reference used by pReferencePictureSet.
   // If pReferencePictureSet is not inter_RPS_predicted, then inter_RPS_prediction is for the current RPS also disabled.
   if (!pReferencePictureSet->getInterRPSPrediction())
