@@ -958,7 +958,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
             rps->setCheckLTMSBPresent(j,false);  
             
             // reset deltaPocMSBCycleLT for first LTRP from slice header if MSB not present
-            if( j == offset+(numOfLtrp-numLtrpInSPS)-1 ) {
+            if( j == offset+(numOfLtrp-numLtrpInSPS)-1 )
+            {
               deltaPocMSBCycleLT = 0;
             }
           }
