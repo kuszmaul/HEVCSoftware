@@ -80,6 +80,9 @@ private:
   Window                m_conformanceWindow;
   Window                m_defaultDisplayWindow;
 
+  bool                  m_isTop;
+  bool                  m_isField;
+  
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
@@ -161,6 +164,13 @@ public:
   Bool          getIndependentTileBoundaryForNDBFilter         ()             {return m_bIndependentTileBoundaryForNDBFilter; }
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
+
+  /* field coding parameters*/
+
+   Void              setTopField(bool b)                  {m_isTop = b;}
+   bool              isTopField()                         {return m_isTop;}
+   Void              setField(bool b)                     {m_isField = b;}
+   bool              isField()                            {return m_isField;}
 
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
