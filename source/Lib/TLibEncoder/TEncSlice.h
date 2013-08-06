@@ -112,7 +112,7 @@ public:
   
   /// preparation of slice encoding (reference marking, QP and lambda)
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
-                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
+                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField );
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
 #else
