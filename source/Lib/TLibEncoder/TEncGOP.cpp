@@ -951,12 +951,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice = pcPic->getSlice(0);
     
     // SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
+#if HM_CLEANUP_SAO
+    if( pcSlice->getSPS()->getUseSAO() && m_pcCfg->getSaoLcuBoundary() )
+    {
+      m_pcSAO->getPreDBFStatistics(pcPic);
+    }
+#else
     if( m_pcCfg->getSaoLcuBasedOptimization() && m_pcCfg->getSaoLcuBoundary() )
     {
       m_pcSAO->resetStats();
       m_pcSAO->calcSaoStatsCu_BeforeDblk( pcPic );
     }
-    
+#endif    
     //-- Loop filter
     Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
     m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
@@ -965,7 +971,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       dblMetric(pcPic, uiNumSlices);
     }
     m_pcLoopFilter->loopFilterPic( pcPic );
-    
+
+#if !HM_CLEANUP_SAO    
     pcSlice = pcPic->getSlice(0);
     if(pcSlice->getSPS()->getUseSAO())
     {
@@ -985,7 +992,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       m_pcSAO->createPicSaoInfo(pcPic);
     }
-    
+#endif
     /////////////////////////////////////////////////////////////////////////////////////////////////// File writing
     // Set entropy coder
     m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder, pcSlice );
@@ -1515,6 +1522,29 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           {
             m_pcEntropyCoder->resetEntropy();
             m_pcEntropyCoder->setBitstream( m_pcBitCounter );
+#if HM_CLEANUP_SAO
+            Bool sliceEnabled[NUM_SAO_COMPONENTS];
+            m_pcSAO->initRDOCabacCoder(m_pcEncTop->getRDGoOnSbacCoder(), pcSlice);
+            m_pcSAO->SAOProcess(pcPic
+              , sliceEnabled
+              , pcPic->getSlice(0)->getLambdaLuma()
+#if SAO_CHROMA_LAMBDA
+              , pcPic->getSlice(0)->getLambdaChroma()
+#endif
+#if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
+              , m_pcCfg->getSaoLcuBoundary()
+#endif
+              );
+            m_pcSAO->PCMLFDisableProcess(pcPic);   
+
+            //assign SAO slice header
+            for(Int s=0; s< uiNumSlices; s++)
+            {
+              pcPic->getSlice(s)->setSaoEnabledFlag(sliceEnabled[SAO_Y]);
+              assert(sliceEnabled[SAO_Cb] == sliceEnabled[SAO_Cr]);
+              pcPic->getSlice(s)->setSaoEnabledFlagChroma(sliceEnabled[SAO_Cb]);
+            }
+#else
             m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
             SAOParam& cSaoParam = *pcSlice->getPic()->getPicSym()->getSaoParam();
             
@@ -1529,12 +1559,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
             m_pcSAO->endSaoEnc();
             m_pcSAO->PCMLFDisableProcess(pcPic);
+#endif
           }
+#if !HM_CLEANUP_SAO          
 #if SAO_RDO
           m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, pcSlice );
 #endif
+#endif
           processingState = ENCODE_SLICE;
-          
+#if !HM_CLEANUP_SAO          
           for(Int s=0; s< uiNumSlices; s++)
           {
             if (pcSlice->getSPS()->getUseSAO())
@@ -1542,6 +1575,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               pcPic->getSlice(s)->setSaoEnabledFlag((pcSlice->getPic()->getPicSym()->getSaoParam()->bSaoFlag[0]==1)?true:false);
             }
           }
+#endif
         }
           break;
         default:
@@ -1552,7 +1586,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
       }
     } // end iteration over slices
-    
+#if !HM_CLEANUP_SAO    
     if(pcSlice->getSPS()->getUseSAO())
     {
       if(pcSlice->getSPS()->getUseSAO())
@@ -1561,7 +1595,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       pcPic->destroyNonDBFilterInfo();
     }
-    
+#endif
     pcPic->compressMotion();
     
     //-- For time output for each slice
@@ -1959,6 +1993,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
   m_pcEntropyCoder->setEntropyCoder ( m_pcEncTop->getRDGoOnSbacCoder(), pcSlice );
   m_pcEntropyCoder->resetEntropy    ();
   m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
+#if !HM_CLEANUP_SAO
   pcSlice = pcPic->getSlice(0);
   if(pcSlice->getSPS()->getUseSAO())
   {
@@ -1973,7 +2008,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
   {
     pcPic->destroyNonDBFilterInfo();
   }
-  
+#endif
   m_pcEntropyCoder->resetEntropy    ();
   ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   

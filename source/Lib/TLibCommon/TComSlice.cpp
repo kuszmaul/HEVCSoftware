@@ -118,6 +118,9 @@ TComSlice::TComSlice()
   resetWpScaling();
   initWpAcDcParam();
   m_saoEnabledFlag = false;
+#if HM_CLEANUP_SAO
+  m_saoEnabledFlagChroma = false;
+#endif
 }
 
 TComSlice::~TComSlice()
