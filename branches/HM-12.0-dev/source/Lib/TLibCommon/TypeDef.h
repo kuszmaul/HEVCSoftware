@@ -41,6 +41,11 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define HM_CLEANUP_SAO                  1  ///< JCTVC-N0230, 1) three SAO encoder-only software bugfixes. 2) new SAO implementation without picture quadtree, fine-grained slice legacies, and other redundancies.
+#if HM_CLEANUP_SAO  
+#define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
+#endif
+
 #define FIX1071 1 ///< fix for issue #1071
 
 #define MAX_NUM_PICS_IN_SOP           1024
@@ -76,9 +81,9 @@
   
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5 
-
+#if !HM_CLEANUP_SAO
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
-
+#endif
 #define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
 #define SAO_ENCODING_RATE                0.75
@@ -239,6 +244,99 @@ enum SliceConstraint
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
 };
 
+#if HM_CLEANUP_SAO
+enum SAOComponentIdx
+{
+  SAO_Y =0,
+  SAO_Cb,
+  SAO_Cr,
+  NUM_SAO_COMPONENTS
+};
+
+enum SAOMode //mode
+{
+  SAO_MODE_OFF = 0,
+  SAO_MODE_NEW,
+  SAO_MODE_MERGE,
+  NUM_SAO_MODES
+};
+
+enum SAOModeMergeTypes 
+{
+  SAO_MERGE_LEFT =0,
+  SAO_MERGE_ABOVE,
+  NUM_SAO_MERGE_TYPES
+};
+
+
+enum SAOModeNewTypes 
+{
+  SAO_TYPE_START_EO =0,
+  SAO_TYPE_EO_0 = SAO_TYPE_START_EO,
+  SAO_TYPE_EO_90,
+  SAO_TYPE_EO_135,
+  SAO_TYPE_EO_45,
+  
+  SAO_TYPE_START_BO,
+  SAO_TYPE_BO = SAO_TYPE_START_BO,
+
+  NUM_SAO_NEW_TYPES
+};
+#define NUM_SAO_EO_TYPES_LOG2 2
+
+enum SAOEOClasses 
+{
+  SAO_CLASS_EO_FULL_VALLEY = 0,
+  SAO_CLASS_EO_HALF_VALLEY = 1,
+  SAO_CLASS_EO_PLAIN       = 2,
+  SAO_CLASS_EO_HALF_PEAK   = 3,
+  SAO_CLASS_EO_FULL_PEAK   = 4,
+  NUM_SAO_EO_CLASSES,
+};
+
+
+#define NUM_SAO_BO_CLASSES_LOG2  5
+enum SAOBOClasses
+{
+  //SAO_CLASS_BO_BAND0 = 0,
+  //SAO_CLASS_BO_BAND1,
+  //SAO_CLASS_BO_BAND2,
+  //...
+  //SAO_CLASS_BO_BAND31,
+
+  NUM_SAO_BO_CLASSES = (1<<NUM_SAO_BO_CLASSES_LOG2),
+};
+#define MAX_NUM_SAO_CLASSES  32  //(NUM_SAO_EO_GROUPS > NUM_SAO_BO_GROUPS)?NUM_SAO_EO_GROUPS:NUM_SAO_BO_GROUPS
+
+struct SAOOffset
+{
+  Int modeIdc; //NEW, MERGE, OFF
+  Int typeIdc; //NEW: EO_0, EO_90, EO_135, EO_45, BO. MERGE: left, above
+  Int typeAuxInfo; //BO: starting band index
+  Int offset[MAX_NUM_SAO_CLASSES];
+
+  SAOOffset();
+  ~SAOOffset();
+  Void reset();
+
+  const SAOOffset& operator= (const SAOOffset& src);
+};
+
+struct SAOBlkParam
+{
+
+  SAOBlkParam();
+  ~SAOBlkParam();
+  Void reset();
+  const SAOBlkParam& operator= (const SAOBlkParam& src);
+  SAOOffset& operator[](Int compIdx){ return offsetParam[compIdx];}
+private:
+  SAOOffset offsetParam[NUM_SAO_COMPONENTS];
+
+};
+
+
+#else
 #define NUM_DOWN_PART 4
 
 enum SAOTypeLen
@@ -310,7 +408,7 @@ struct SAOParam
   Int          numCuInWidth;
   ~SAOParam();
 };
-
+#endif
 /// parameters for deblocking filter
 typedef struct _LFCUParam
 {

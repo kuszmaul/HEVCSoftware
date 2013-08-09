@@ -1477,6 +1477,36 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
     }
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
+#if HM_CLEANUP_SAO
+    if ( pcSlice->getSPS()->getUseSAO() )
+    {
+      if (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma())
+      {
+        SAOBlkParam& saoblkParam = (rpcPic->getPicSym()->getSAOBlkParam())[uiCUAddr];
+        Bool sliceEnabled[NUM_SAO_COMPONENTS];
+        sliceEnabled[SAO_Y] = pcSlice->getSaoEnabledFlag();
+        sliceEnabled[SAO_Cb]= sliceEnabled[SAO_Cr]= pcSlice->getSaoEnabledFlagChroma();
+
+        Bool leftMergeAvail = false;
+        Bool aboveMergeAvail= false;
+        //merge left condition
+        Int rx = (uiCUAddr % uiWidthInLCUs);
+        if(rx > 0)
+        {
+          leftMergeAvail = rpcPic->getSAOMergeAvailability(uiCUAddr, uiCUAddr-1);
+        }
+
+        //merge up condition
+        Int ry = (uiCUAddr / uiWidthInLCUs);
+        if(ry > 0)
+        {
+          aboveMergeAvail = rpcPic->getSAOMergeAvailability(uiCUAddr, uiCUAddr-uiWidthInLCUs);
+        }
+
+        m_pcEntropyCoder->encodeSAOBlkParam(saoblkParam,sliceEnabled, leftMergeAvail, aboveMergeAvail);
+      }
+    }
+#else
     if ( pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma()) )
     {
       SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
@@ -1559,6 +1589,8 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
         }
       }
     }
+#endif
+
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif

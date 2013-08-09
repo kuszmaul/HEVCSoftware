@@ -369,7 +369,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SAO",                      m_bUseSAO,                   true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",      m_maxNumOffsetsPerPic,       2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",           m_saoLcuBoundary,            false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
+#if !HM_CLEANUP_SAO
   ("SAOLcuBasedOptimization",  m_saoLcuBasedOptimization,   true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
+#endif  
   ("SliceMode",                m_sliceMode,                0,     "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
   ("SliceArgument",            m_sliceArgument,            0,     "Depending on SliceMode being:"
                                                                    "\t1: max number of CTUs per slice"
@@ -1508,8 +1510,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
   printf("SAO:%d ", (m_bUseSAO)?(1):(0));
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
+#if !HM_CLEANUP_SAO
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
-
+#endif
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
   printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);

@@ -765,10 +765,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if (pcSlice->getSPS()->getUseSAO())
       {
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+#if HM_CLEANUP_SAO
+         WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+#else
          {
            SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
           WRITE_FLAG( saoParam->bSaoFlag[1], "slice_sao_chroma_flag" );
          }
+#endif
       }
     }
 
