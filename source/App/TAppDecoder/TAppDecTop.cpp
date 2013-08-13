@@ -155,7 +155,7 @@ Void TAppDecTop::decode()
         }
       }
     }
-    if (bNewPicture || !bitstreamFile)
+    if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS)
     {
       m_cTDecTop.executeLoopFilters(poc, pcListPic);
     }
@@ -170,7 +170,7 @@ Void TAppDecTop::decode()
         m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
         openedReconFile = true;
       }
-      if ( bNewPicture && 
+      if ( bNewPicture &&
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
@@ -178,6 +178,10 @@ Void TAppDecTop::decode()
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP ) )
       {
         xFlushOutput( pcListPic );
+      }
+      if (nalu.m_nalUnitType == NAL_UNIT_EOS)
+      {
+        xFlushOutput( pcListPic );        
       }
       // write reconstruction to file
       if(bNewPicture)
