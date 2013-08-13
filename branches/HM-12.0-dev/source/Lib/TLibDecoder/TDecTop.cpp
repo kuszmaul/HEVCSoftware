@@ -728,7 +728,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
       break;
     default:
-      assert (1);
+      assert (0);
   }
 
   return false;
