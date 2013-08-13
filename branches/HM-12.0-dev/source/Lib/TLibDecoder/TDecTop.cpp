@@ -739,6 +739,13 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       m_skippedPOC = 0;
       return false;
       
+    case NAL_UNIT_ACCESS_UNIT_DELIMITER:
+      // TODO: process AU delimiter
+      return false;
+      
+    case NAL_UNIT_EOB:
+      return false;
+      
     default:
       assert (0);
   }

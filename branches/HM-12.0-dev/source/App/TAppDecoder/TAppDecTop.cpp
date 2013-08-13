@@ -108,7 +108,8 @@ Void TAppDecTop::decode()
 
   // main decoder loop
   Bool openedReconFile = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
-
+  Bool loopFiltered = false;
+  
   while (!!bitstreamFile)
   {
     /* location serves to work around a design fault in the decoder, whereby
@@ -157,7 +158,11 @@ Void TAppDecTop::decode()
     }
     if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS)
     {
-      m_cTDecTop.executeLoopFilters(poc, pcListPic);
+      if (!loopFiltered || bitstreamFile)
+      {
+        m_cTDecTop.executeLoopFilters(poc, pcListPic);
+      }
+      loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
     }
 
     if( pcListPic )
