@@ -272,13 +272,6 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                              Int                             iQBits,
                                              Double                          dTemp,
                                              Bool                            bLast        ) const;
-  __inline Double xGetICRateCost   ( UInt                            uiAbsLevel,
-                                     UShort                          ui16CtxNumOne,
-                                     UShort                          ui16CtxNumAbs,
-                                     UShort                          ui16AbsGoRice 
-                                   , UInt                            c1Idx,
-                                     UInt                            c2Idx
-                                     ) const;
 __inline Int xGetICRate  ( UInt                            uiAbsLevel,
                            UShort                          ui16CtxNumOne,
                            UShort                          ui16CtxNumAbs,
