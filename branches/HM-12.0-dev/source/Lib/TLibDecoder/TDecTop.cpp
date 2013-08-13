@@ -727,6 +727,18 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RASL_R:
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
       break;
+      
+    case NAL_UNIT_EOS:
+      m_associatedIRAPType = NAL_UNIT_INVALID;
+      m_pocCRA = 0;
+      m_pocRandomAccess = MAX_INT;
+      m_prevPOC = MAX_INT;
+      m_bFirstSliceInPicture = true;
+      m_bFirstSliceInSequence = true;
+      m_prevSliceSkipped = false;
+      m_skippedPOC = 0;
+      return false;
+      
     default:
       assert (0);
   }
