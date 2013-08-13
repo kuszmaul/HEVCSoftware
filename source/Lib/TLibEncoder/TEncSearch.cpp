@@ -4953,7 +4953,7 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
       else if( checkTransformSkipUV )
       {
         m_pcEntropyCoder->resetBits();
-        m_pcEntropyCoder->encodeQtCbfZero( pcCU, TEXT_CHROMA_U, uiTrModeC );
+        m_pcEntropyCoder->encodeQtCbfZero( pcCU, TEXT_CHROMA_U, uiTrMode );
         const UInt uiNullBitsU = m_pcEntropyCoder->getNumberOfWrittenBits();
         minCostU = m_pcRdCost->calcRdCost( uiNullBitsU, uiDistU );
       }
@@ -5026,7 +5026,7 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
       else if( checkTransformSkipUV )
       {
         m_pcEntropyCoder->resetBits();
-        m_pcEntropyCoder->encodeQtCbfZero( pcCU, TEXT_CHROMA_V, uiTrModeC );
+        m_pcEntropyCoder->encodeQtCbfZero( pcCU, TEXT_CHROMA_V, uiTrMode );
         const UInt uiNullBitsV = m_pcEntropyCoder->getNumberOfWrittenBits();
         minCostV = m_pcRdCost->calcRdCost( uiNullBitsV, uiDistV );
       }
