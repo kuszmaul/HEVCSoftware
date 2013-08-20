@@ -457,12 +457,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     Pel * pcTopFieldU =  pcTopField->getPicYuvOrg()->getCbAddr();
     Pel * pcTopFieldV =  pcTopField->getPicYuvOrg()->getCrAddr();
     
-    // compute image characteristics
-    if ( getUseAdaptiveQP() )
-    {
-      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcTopField ) );
-    }
-    
     /* -- Defield -- */
     
     bool isTop = isTff;
@@ -471,6 +465,11 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     separateFields(PicBufU + nPadChroma + (nStride >> 1)*nPadChroma, pcTopFieldU, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
     separateFields(PicBufV + nPadChroma + (nStride >> 1)*nPadChroma, pcTopFieldV, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
     
+    // compute image characteristics
+    if ( getUseAdaptiveQP() )
+    {
+      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcTopField ) );
+    }    
   }
   
   if (m_iPOCLast == 0) // compress field 0
@@ -523,12 +522,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     Pel * pcBottomFieldU =  pcBottomField->getPicYuvOrg()->getCbAddr();
     Pel * pcBottomFieldV =  pcBottomField->getPicYuvOrg()->getCrAddr();
     
-    // Compute image characteristics
-    if ( getUseAdaptiveQP() )
-    {
-      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcBottomField ) );
-    }
-    
     /* -- Defield -- */
     
     bool isTop = !isTff;
@@ -537,6 +530,11 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     separateFields(PicBufU + nPadChroma + (nStride >> 1)*nPadChroma, pcBottomFieldU, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
     separateFields(PicBufV + nPadChroma + (nStride >> 1)*nPadChroma, pcBottomFieldV, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
     
+    // Compute image characteristics
+    if ( getUseAdaptiveQP() )
+    {
+      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcBottomField ) );
+    }    
   }
   
   if ( ( !(m_iNumPicRcvd) || (!flush && m_iPOCLast != 1 && m_iNumPicRcvd != m_iGOPSize && m_iGOPSize)) )
