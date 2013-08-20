@@ -492,13 +492,14 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 #endif
     pcBottomField->setReconMark (false);
     
-    TComPicYuv* rpcPicYuvRec = new TComPicYuv;
+    TComPicYuv* rpcPicYuvRec;
     if ( rcListPicYuvRecOut.size() == (UInt)m_iGOPSize )
     {
       rpcPicYuvRec = rcListPicYuvRecOut.popFront();
     }
     else
     {
+      rpcPicYuvRec = new TComPicYuv;
       rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
     }
     rcListPicYuvRecOut.pushBack( rpcPicYuvRec );
