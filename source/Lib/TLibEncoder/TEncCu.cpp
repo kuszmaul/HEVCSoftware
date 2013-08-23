@@ -392,11 +392,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Int iMinQP;
   Int iMaxQP;
   Bool isAddLowestQP = false;
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  const Int lowestQP = -rpcTempCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
-#else
-  const Int lowestQP = -127; // illegal value!
-#endif
 
   const UInt numberValidComponents = rpcBestCU->getPic()->getNumberValidComponents();
 
@@ -421,6 +416,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+  const Int lowestQP = iMinQP;
+
   if ( (rpcTempCU->getSlice()->getPPS()->getTransquantBypassEnableFlag()) )
   {
     isAddLowestQP = true;
@@ -495,7 +492,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
       if (isAddLowestQP && (iQP == lowestQP))
+#else
+      if (bIsLosslessMode) // Restore loop variable if lossless mode was searched.
+#endif
       {
         iQP = iMinQP;
       }
@@ -700,7 +701,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           }
         }
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
         if (isAddLowestQP && (iQP == lowestQP))
+#else
+        if (bIsLosslessMode) // Restore loop variable if lossless mode was searched.
+#endif
         {
           iQP = iMinQP;
         }
