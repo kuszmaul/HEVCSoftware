@@ -416,6 +416,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AMP",                     m_enableAMP,               true,  "Enable asymmetric motion partitions")
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2.")
+#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -938,6 +941,19 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
+  xConfirmPara ( ( m_profile==Profile::MAIN || m_profile==Profile::MAIN10 || m_profile==Profile::MAINSTILLPICTURE ) && m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
+  if (m_transformSkipLog2MaxSize!=2 && m_useTransformSkipFast)
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Transform skip fast is enabled (which only tests NxN splits),**\n");
+    fprintf(stderr, "**          but transform skip log2 max size is not 2 (4x4)              **\n");
+    fprintf(stderr, "**          It may be better to disabled transform skip fast mode        **\n");
+    fprintf(stderr, "***************************************************************************\n");
+  }
+#endif
+
   xConfirmPara( m_iQP <  -6 * (m_internalBitDepth[CHANNEL_TYPE_LUMA] - 8) || m_iQP > 51,    "QP exceeds supported range (-QpBDOffsety to 51)" );
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -6 || m_loopFilterBetaOffsetDiv2 > 6,        "Loop Filter Beta Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
@@ -1613,6 +1629,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("RQT:%d ", 1     );
   printf("TransformSkip:%d ",     m_useTransformSkip              );
   printf("TransformSkipFast:%d ", m_useTransformSkipFast       );
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  printf("TransformSkipLog2MaxSize:%d ", m_transformSkipLog2MaxSize);
+#endif
   printf("Slice: M=%d ", m_sliceMode);
   if (m_sliceMode!=0)
   {

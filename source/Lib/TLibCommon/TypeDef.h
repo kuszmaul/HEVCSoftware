@@ -274,6 +274,7 @@
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 #define RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS                         1 ///< 0 = use Luma 32x32 scaling lists for chroma 32x32, 1 (default) = use Chroma 16x16 for Chroma32x32
 #define RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING                              1 ///< 0 = allow any shift in transform skip, 1 (default) = when in extended-precision mode, limit the shift such that a right-shift never occurs
+#define RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE                        1 ///< 0 = do not include PPS transform-skip maximum size; 1 (default) = include PPS transform-skip maximum size
 
 #define RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL                                1 ///< 0 = disable definition of level 8.5 (unlimited picture size for still pictures), 1 (default) = enable definition of level 8.5
 

@@ -187,6 +187,9 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setUseTransformSkip             ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
+#endif
   m_cTEncTop.setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setPCMLog2MinSize          ( m_uiPCMLog2MinSize);
   m_cTEncTop.setUsePCM                       ( m_usePCM );
