@@ -167,6 +167,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 //NOTE: Bit-Limit - 25-bit source
 Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft )
 {
+  assert(iWidth > 0 && iHeight > 0);
   Int iInd, iSum = 0;
   Pel pDcVal;
 

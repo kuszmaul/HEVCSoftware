@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "10.1_RExt3.0"                 ///< Current software version
+#define NV_VERSION        "11.0_RExt3.0"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -111,9 +111,6 @@
 
 #define MAX_NUM_REF_PICS            16          ///< max. number of pictures used for reference
 #define MAX_NUM_REF                 16          ///< max. number of entries in picture reference list
-#if !L0034_COMBINED_LIST_CLEANUP
-#define MAX_NUM_REF_LC              MAX_NUM_REF_PICS  // TODO: remove this macro definition (leftover from combined list concept)
-#endif
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer

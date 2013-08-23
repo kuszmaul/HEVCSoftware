@@ -117,7 +117,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 10.1
+for the HEVC project. It applies to version 11.0
 of the software.
 \end{abstract}
 
@@ -1324,8 +1324,9 @@ Rate control: target bitrate, in bps.
 
 \Option{KeepHierarchicalBit} &
 \ShortOption{\None} &
-\Default{false} &
-Rate control: keep hierarchical bit allocation in rate control algorithm.
+\Default{0} &
+Rate control: 0: equal bit allocation among pictures;
+1: fix ratio hierarchical bit allocation; 2: adaptive hierarchical ratio bit allocation.
 It is suggested to enable hierarchical bit allocation for hierarchical-B coding structure.
 \\
 

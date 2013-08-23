@@ -191,6 +191,8 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
  */
 Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const  Int iRefIdx1, wpScalingParam *&wp0, wpScalingParam *&wp1)
 {
+  assert(iRefIdx0 >= 0 || iRefIdx1 >= 0);
+  
   TComSlice*            pcSlice       = pcCU->getSlice();
         TComPPS*        pps           = pcCU->getSlice()->getPPS();
   const Bool            wpBiPred      = pps->getWPBiPred();

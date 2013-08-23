@@ -55,7 +55,6 @@ public:
   
   Void  start             ();
   Void  finish            ();
-  Void  flush             ();
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat );
@@ -69,8 +68,6 @@ public:
 
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
-  Void  resetBac          ();
-  Void  decodePCMAlignBits();
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
   
   Void  copyState         ( TDecBinIf* pcTDecBinIf );

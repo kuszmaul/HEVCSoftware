@@ -166,6 +166,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 {
   UInt uiBit;
   m_pcTDecBinIf->decodeBinTrm(uiBit);
+  assert(uiBit == 1); // end_of_sub_stream_one_bit must be equal to 1
   m_pcTDecBinIf->finish();
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -207,6 +208,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 {
   m_pcTDecBinIf->decodeBinTrm( ruiBit );
+  if ( ruiBit == 1 )
+  {
+    m_pcTDecBinIf->finish();
+  }
 }
 
 
@@ -348,17 +353,10 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
 Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
-  Bool readPCMSampleFlag = false;
 
   m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
-  if (uiSymbol)
-  {
-    readPCMSampleFlag = true;
-    m_pcTDecBinIf->decodePCMAlignBits();
-  }
-
-  if (readPCMSampleFlag == true)
+  if (uiSymbol == 1)
   {
     Bool bIpcmFlag = true;
 
@@ -389,7 +387,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
     }
 
-    m_pcTDecBinIf->resetBac();
+    m_pcTDecBinIf->start();
   }
 }
 
@@ -653,7 +651,6 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
     }
     else
     {
-      intraPredMode = 0;
       m_pcTDecBinIf->decodeBinsEP( symbol, 5 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
       intraPredMode = symbol;
 
@@ -894,7 +891,6 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   else
   {
-    iDQp=0;
     qp = pcCU->getRefQP(uiAbsPartIdx);
   }
 
@@ -1248,7 +1244,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   pcCoef[ uiBlkPosLast ] = 1;
 
   //===== decode significance flags =====
-  UInt uiScanPosLast   = uiBlkPosLast;
+  UInt uiScanPosLast;
   for( uiScanPosLast = 0; uiScanPosLast < uiMaxNumCoeffM1; uiScanPosLast++ )
   {
     UInt uiBlkPos = codingParameters.scan[ uiScanPosLast ];

@@ -472,7 +472,6 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcLCU, DeblockEdge
 
         if ( ((piRefP0==piRefQ0)&&(piRefP1==piRefQ1)) || ((piRefP0==piRefQ1)&&(piRefP1==piRefQ0)) )
         {
-          uiBs = 0;
           if ( piRefP0 != piRefP1 )   // Different L0 & L1
           {
             if ( piRefP0 == piRefQ0 )
@@ -716,8 +715,6 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
 
   for ( UInt iIdx = 0; iIdx < uiNumParts; iIdx++ )
   {
-    ucBs = 0;
-
     uiBsAbsIdx = xCalcBsIdx( pcCU, uiAbsZorderIdx, edgeDir, iEdge, iIdx);
     ucBs = m_aapucBS[edgeDir][uiBsAbsIdx];
 
