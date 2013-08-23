@@ -733,6 +733,9 @@ private:
 
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  Bool        m_disableIntraReferenceSmoothing;
+#endif
 
   UInt        m_uiBitsForPOC;
   UInt        m_numLongTermRefPicSPS;
@@ -867,6 +870,11 @@ public:
   Void      setPCMBitDepth         (ChannelType type, UInt u) { m_uiPCMBitDepth[type] = u;    }
   Void      setPCMFilterDisableFlag     ( Bool   bValue  )    { m_bPCMFilterDisableFlag = bValue; }
   Bool      getPCMFilterDisableFlag     ()                    { return m_bPCMFilterDisableFlag;   } 
+
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  Void      setDisableIntraReferenceSmoothing (Bool bValue)   { m_disableIntraReferenceSmoothing=bValue; }
+  Bool      getDisableIntraReferenceSmoothing ()        const { return m_disableIntraReferenceSmoothing; }
+#endif
 
   Bool getScalingListFlag       ()         { return m_scalingListEnabledFlag;     }
   Void setScalingListFlag       ( Bool b ) { m_scalingListEnabledFlag  = b;       }

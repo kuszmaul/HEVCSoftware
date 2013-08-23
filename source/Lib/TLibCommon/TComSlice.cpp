@@ -1441,6 +1441,9 @@ TComSPS::TComSPS()
 #endif
 , m_useLossless               (false)
 , m_bPCMFilterDisableFlag     (false)
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+, m_disableIntraReferenceSmoothing(false)
+#endif
 , m_uiBitsForPOC              (  8)
 , m_numLongTermRefPicSPS      (  0)  
 , m_uiMaxTrSize               ( 32)

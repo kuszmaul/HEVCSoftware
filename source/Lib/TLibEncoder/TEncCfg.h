@@ -218,6 +218,9 @@ protected:
   UInt      m_uiPCMBitDepthLuma;
   UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  Bool      m_disableIntraReferenceSmoothing;
+#endif
   Bool      m_loopFilterAcrossTilesEnabledFlag;
   Int       m_iUniformSpacingIdr;
   Int       m_iNumColumnsMinus1;
@@ -517,6 +520,11 @@ public:
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
+  Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }
+#endif
+
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 

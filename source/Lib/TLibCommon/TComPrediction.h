@@ -132,7 +132,12 @@ public:
                               DEBUG_STRING_FN_DECLARE(sDebug)
                               ,Bool        bLMmode = false // using for LM chroma or not
                               );
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled);
+#else
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt);
+#endif
+
 
   static Bool UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode);
 };

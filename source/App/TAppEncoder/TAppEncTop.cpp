@@ -231,8 +231,12 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
   m_cTEncTop.setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
-  m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
-  m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
+  m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag);
+  m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag);
+
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  m_cTEncTop.setDisableIntraReferenceSmoothing(!m_enableIntraReferenceSmoothing);
+#endif
 
   m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
