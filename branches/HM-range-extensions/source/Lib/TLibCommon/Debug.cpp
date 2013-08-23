@@ -165,6 +165,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS,               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
+
+  PRINT_CONSTANT(RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0188_EXTENDED_PRECISION_PROCESSING,                      settingNameWidth, settingValueWidth);
 
   //------------------------------------------------
