@@ -57,7 +57,6 @@ public:
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
-  virtual Void  flush            ()                                           = 0;
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat )  = 0;
@@ -70,8 +69,6 @@ public:
 #endif
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
-  virtual Void  resetBac          ()                                          = 0;
-  virtual Void  decodePCMAlignBits()                                          = 0;
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
 
   virtual ~TDecBinIf() {}

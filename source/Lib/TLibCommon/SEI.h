@@ -131,22 +131,16 @@ public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
   SEIActiveParameterSets() 
-#if !L0047_APS_FLAGS
-    :numSpsIdsMinus1(0)
-#else
     : activeVPSId            (0)
     , m_fullRandomAccessFlag (false)
     , m_noParamSetUpdateFlag (false)
     , numSpsIdsMinus1        (0)
-#endif
   {}
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
-#if L0047_APS_FLAGS
   Bool m_fullRandomAccessFlag;
   Bool m_noParamSetUpdateFlag;
-#endif
   Int numSpsIdsMinus1;
   std::vector<Int> activeSeqParamSetId; 
 };
@@ -157,7 +151,6 @@ public:
   PayloadType payloadType() const { return BUFFERING_PERIOD; }
 
   SEIBufferingPeriod()
-#if L0044_CPB_DPB_DELAY_OFFSET
   : m_bpSeqParameterSetId (0)
   , m_rapCpbParamsPresentFlag (false)
   , m_cpbDelayOffset      (0)
@@ -168,25 +161,18 @@ public:
     ::memset(m_initialAltCpbRemovalDelay, 0, sizeof(m_initialAltCpbRemovalDelay));
     ::memset(m_initialAltCpbRemovalDelayOffset, 0, sizeof(m_initialAltCpbRemovalDelayOffset));
   }
-#else
-  {}
-#endif
   virtual ~SEIBufferingPeriod() {}
 
   UInt m_bpSeqParameterSetId;
   Bool m_rapCpbParamsPresentFlag;
-#if L0044_CPB_DPB_DELAY_OFFSET
   Bool m_cpbDelayOffset;
   Bool m_dpbDelayOffset;
-#endif
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelayOffset[MAX_CPB_CNT][2];
-#if L0328_SPLICING
   Bool m_concatenationFlag;
   UInt m_auCpbRemovalDelayDelta;
-#endif
 };
 class SEIPictureTiming : public SEI
 {
@@ -195,15 +181,9 @@ public:
 
   SEIPictureTiming()
   : m_picStruct               (0)
-#if L0046_RENAME_PROG_SRC_IDC
   , m_sourceScanType          (0)
-#else
-  , m_progressiveSourceIdc    (0)
-#endif
   , m_duplicateFlag           (false)
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
   , m_picDpbOutputDuDelay     (0)
-#endif
   , m_numNalusInDuMinus1      (NULL)
   , m_duCpbRemovalDelayMinus1 (NULL)
   {}
@@ -220,18 +200,12 @@ public:
   }
 
   UInt  m_picStruct;
-#if L0046_RENAME_PROG_SRC_IDC
   UInt  m_sourceScanType;
-#else
-  UInt  m_progressiveSourceIdc;
-#endif
   Bool  m_duplicateFlag;
 
   UInt  m_auCpbRemovalDelay;
   UInt  m_picDpbOutputDelay;
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
   UInt  m_picDpbOutputDuDelay;
-#endif
   UInt  m_numDecodingUnitsMinus1;
   Bool  m_duCommonCpbRemovalDelayFlag;
   UInt  m_duCommonCpbRemovalDelayMinus1;
@@ -247,18 +221,14 @@ public:
   SEIDecodingUnitInfo()
     : m_decodingUnitIdx(0)
     , m_duSptCpbRemovalDelay(0)
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
     , m_dpbOutputDuDelayPresentFlag(false)
     , m_picSptDpbOutputDuDelay(0)
-#endif
   {}
   virtual ~SEIDecodingUnitInfo() {}
   Int m_decodingUnitIdx;
   Int m_duSptCpbRemovalDelay;
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
   Bool m_dpbOutputDuDelayPresentFlag;
   Int m_picSptDpbOutputDuDelay;
-#endif
 };
 
 class SEIRecoveryPoint : public SEI
@@ -297,11 +267,7 @@ public:
   Int  m_frame1GridPositionX;
   Int  m_frame1GridPositionY;
   Int  m_arrangementReservedByte;
-#if L0045_PERSISTENCE_FLAGS
   Bool m_arrangementPersistenceFlag;
-#else
-  Int  m_arrangementRepetetionPeriod;
-#endif
   Bool m_upsampledAspectRatio;
 };
 
@@ -312,11 +278,7 @@ public:
 
   SEIDisplayOrientation()
     : cancelFlag(true)
-#if L0045_PERSISTENCE_FLAGS
     , persistenceFlag(0)
-#else
-    , repetitionPeriod(1)
-#endif
     , extensionFlag(false)
     {}
   virtual ~SEIDisplayOrientation() {}
@@ -326,11 +288,7 @@ public:
   Bool verFlip;
 
   UInt anticlockwiseRotation;
-#if L0045_PERSISTENCE_FLAGS
   Bool persistenceFlag;
-#else
-  UInt repetitionPeriod;
-#endif
   Bool extensionFlag;
 };
 
@@ -362,7 +320,6 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
-#if L0208_SOP_DESCRIPTION_SEI
 class SEISOPDescription : public SEI
 {
 public:
@@ -379,9 +336,7 @@ public:
   UInt m_sopDescStRpsIdx[MAX_NUM_PICS_IN_SOP];
   Int m_sopDescPocDelta[MAX_NUM_PICS_IN_SOP];
 };
-#endif
 
-#if J0149_TONE_MAPPING_SEI 
 class SEIToneMappingInfo : public SEI
 {
 public:
@@ -414,7 +369,6 @@ public:
   Int    m_nominalWhiteLevelLumaCodeValue;
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
-#endif
 
 typedef std::list<SEI*> SEIMessages;
 
@@ -427,7 +381,6 @@ SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 /// delete list of SEI messages (freeing the referenced objects)
 Void deleteSEIs (SEIMessages &seiList);
 
-#if K0180_SCALABLE_NESTING_SEI
 class SEIScalableNesting : public SEI
 {
 public:
@@ -457,7 +410,6 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
-#endif
 
 #endif
 

@@ -191,7 +191,13 @@ public:
     assert(m_fifo_idx < m_fifo->size());
     ruiBits = (*m_fifo)[m_fifo_idx++];
   }
-
+  
+  Void        peekPreviousByte( UInt &byte )
+  {
+    assert(m_fifo_idx > 0);
+    byte = (*m_fifo)[m_fifo_idx - 1];
+  }
+  
   UInt        readOutTrailingBits (); // NOTE: RExt - now returns the number of bits read.
   UChar getHeldBits  ()          { return m_held_bits;          }
   TComOutputBitstream& operator= (const TComOutputBitstream& src);
