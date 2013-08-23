@@ -85,6 +85,9 @@ enum TComCodingStatisticsType
   STATS__CABAC_PCM_CODE_BITS,
   STATS__BYTE_ALIGNMENT_BITS,
   STATS__TRAILING_BITS,
+#if INTRAMV
+  STATS__CABAC_BITS__INTRAMV,
+#endif
   STATS__NUM_STATS
 };
 
@@ -128,6 +131,9 @@ static inline const Char* getName(TComCodingStatisticsType name)
     "CABAC_PCM_ALIGN_BITS",
     "CABAC_PCM_CODE_BITS",
     "BYTE_ALIGNMENT_BITS",
+#if INTRAMV
+    "CABAC_BITS__INTRAMV",
+#endif
     "TRAILING_BITS"
   };
   assert(STATS__NUM_STATS == sizeof(statNames)/sizeof(Char *) && name < STATS__NUM_STATS);
@@ -447,7 +453,7 @@ class TComCodingStatistics
       // p(x)=rangeAfter/rangeBefore
       // entropy = -log2(p(x))=-log(p(x))/log(2) = -(log rangeAfter - log rangeBefore) / log(2) = (log rangeBefore / log 2 - log rangeAfter / log 2)
       SStat &s=inst.data.statistics[stat.type][stat.subClass];
-      s.bits+=Int(inst.values.values[uiRangeBefore])-Int(inst.values.values[uiRangeAfter]);
+      s.bits+=inst.values.values[uiRangeBefore]-inst.values.values[uiRangeAfter];
       s.count++;
       s.sum+=val;
     }

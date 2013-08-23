@@ -157,6 +157,10 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
+#if INTRAMV
+#define NUM_INTRAMV_PRED_CTX          3
+#endif
+
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -470,6 +474,16 @@ INIT_TRANSFORMSKIP_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
   { 139,  139}, 
   { 139,  139}, 
 };
+
+#if INTRAMV
+static const UChar 
+INIT_INTRAMV_PRED_FLAG[3][NUM_INTRAMV_PRED_CTX] = 
+{
+  { 185,  185,  201, }, 
+  { 197,  197,  185, }, 
+  { 197,  197,  185, }, 
+};
+#endif
 
 //! \}
 

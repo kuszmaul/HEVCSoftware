@@ -126,6 +126,11 @@ public:
   virtual Void codeDFFlag (UInt uiCode, const Char *pSymbolName) = 0;
   virtual Void codeDFSvlc (Int iCode, const Char *pSymbolName)   = 0;
 
+#if INTRAMV
+  virtual Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
+
   virtual ~TEncEntropyIf() {}
 
 };
@@ -190,6 +195,11 @@ public:
   Void updateContextTables     ( SliceType eSliceType, Int iQp )                        { m_pcEntropyCoderIf->updateContextTables( eSliceType, iQp, true );               }
 
   Void encodeScalingList       ( TComScalingList* scalingList );
+
+#if INTRAMV
+  Void encodeIntraMVFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeIntraMV           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
 private:
   Void xEncodeTransform        ( Bool& bCodeDQP, TComTU &rTu );

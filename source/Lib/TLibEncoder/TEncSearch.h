@@ -196,6 +196,44 @@ public:
                                  ,Bool        bUseMRG = false
 #endif
                                 );
+
+#if INTRAMV
+  Bool predIntraMVSearch        ( TComDataCU* pcCU,
+                                  TComYuv*    pcOrgYuv,
+                                  TComYuv*&   rpcPredYuv,
+                                  TComYuv*&   rpcResiYuv,
+                                  TComYuv*&   rpcRecoYuv
+                                  DEBUG_STRING_FN_DECLARE(sDebug),
+                                  Bool        bUseRes = false
+                                );
+
+  Void xIntraMotionEstimation   ( TComDataCU*   pcCU,
+                                  TComYuv*      pcYuvOrg,
+                                  Int           iPartIdx,                               
+                                  TComMv*       pcMvPred,                                    
+                                  TComMv&       rcMv,
+                                  UInt&         ruiBits,
+                                  UInt&         ruiCost
+                                );  
+
+  Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
+                                  TComMv&       cMvPred,
+                                  Int           iRoiWidth,
+                                  Int           iRoiHeight,
+                                  TComMv&       rcMvSrchRngLT,
+                                  TComMv&       rcMvSrchRngRB );
+
+  Void xIntraPatternSearch      ( TComDataCU*   pcCU,
+                                  TComPattern*  pcPatternKey,
+                                  Pel*          piRefY,
+                                  Int           iRefStride,
+                                  TComMv*       pcMvSrchRngLT,
+                                  TComMv*       pcMvSrchRngRB,
+                                  TComMv&       rcMv,
+                                  UInt&         ruiSAD,
+                                  Int iRoiWidth, 
+                                  Int iRoiHeight );
+#endif
   
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,

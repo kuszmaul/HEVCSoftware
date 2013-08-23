@@ -489,6 +489,24 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
 }
 
 
+#if INTRAMV
+Void TComPrediction::intraMotionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int iPartIdx )
+{
+  Int         iWidth;
+  Int         iHeight;
+  UInt        uiPartAddr;
+
+  pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );      
+
+  TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_I )->getMv( uiPartAddr );
+  
+  for (UInt ch = COMPONENT_Y; ch < pcYuvPred->getNumberValidComponents(); ch++)
+    xPredIntraMVBlk  (ComponentID(ch),  pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );     
+  
+  return;
+}
+#endif
+
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
 {
   Int         iWidth;
@@ -674,6 +692,36 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
     m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt);
   }
 }
+
+#if INTRAMV
+Void TComPrediction::xPredIntraMVBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic )
+{
+  Int     refStride  = refPic->getStride(compID);
+  Int     dstStride  = dstPic->getStride(compID);    
+  
+  Int mvx = mv->getHor() >>  refPic->getComponentScaleX(compID);
+  Int mvy = mv->getVer() >>  refPic->getComponentScaleY(compID);
+    
+  Int     refOffset  = mvx + mvy * refStride;
+    
+  Pel*    ref = refPic->getAddr( compID, cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;  
+  Pel*    dst = dstPic->getAddr( compID, partAddr ); 
+  
+  UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
+  UInt    cxHeight = height >> refPic->getComponentScaleY(compID); 
+    
+  for (Int row = 0; row < cxHeight; row++)
+  {
+    for (Int col = 0; col < cxWidth; col++)
+    {
+      dst[col] = ref[col];
+    }
+        
+    ref += refStride;
+    dst += dstStride;
+  }                
+}
+#endif
 
 Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst )
 {

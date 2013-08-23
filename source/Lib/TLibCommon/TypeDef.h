@@ -53,6 +53,12 @@
 // #define DEBUG_INTRA_SEARCH_COSTS     // enable to print out the cost for each mode during encoder search
 // #define DEBUG_TRANSFORM_AND_QUANTISE // enable to print out each TU as it passes through the transform-quantise-dequantise-inverseTransform process
 
+#define INTRAMV                                          1
+#if INTRAMV
+#define INTRAMV_LEFTWIDTH                                64//if the left CTU is used for IntraMV, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
+#define INTRAMV_FASTME                                   0
+#endif
+
 #ifdef DEBUG_STRING
   #define DEBUG_STRING_PASS_INTO(name) , name
   #define DEBUG_STRING_PASS_INTO_OPTIONAL(name, exp) , (exp==0)?0:name
@@ -437,7 +443,12 @@ enum PredMode
 {
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
+#if INTRAMV
+  MODE_INTRAMV               = 2,     ///< intraMV mode
+  NUMBER_OF_PREDICTION_MODES = 3
+#else
   NUMBER_OF_PREDICTION_MODES = 2
+#endif
 };
 
 /// reference list index
@@ -445,12 +456,16 @@ enum RefPicList
 {
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
+#if INTRAMV
+  REF_PIC_LIST_I = 2,
+#endif
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
+#if INTRAMV
+static const UInt NUM_REF_PIC_LIST_01  = 3; // NOTE: RExt - new definition
+#else
 static const UInt NUM_REF_PIC_LIST_01  = 2; // NOTE: RExt - new definition
-#if !L0034_COMBINED_LIST_CLEANUP
-static const UInt NUM_REF_PIC_LIST_01C = 3; // NOTE: RExt - new definition
 #endif
 
 /// distortion function index

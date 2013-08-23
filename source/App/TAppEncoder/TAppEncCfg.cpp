@@ -1676,6 +1676,11 @@ Void TAppEncCfg::xPrintParameter()
 
   printf(" SignBitHidingFlag:%d ", m_signHideFlag);
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
+
+#if INTRAMV
+  printf("INTRAMV:%d ", INTRAMV);
+#endif
+
   printf("\n\n");
   
   fflush(stdout);

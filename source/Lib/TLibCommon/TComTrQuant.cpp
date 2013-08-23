@@ -2422,7 +2422,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   Double  d64BestCost         = 0;
   Int     ui16CtxCbf          = 0;
   Int     iBestLastIdxP1      = 0;
+#if INTRAMV
+  if( (!pcCU->isIntra( uiAbsPartIdx ) || pcCU->isIntraMV( uiAbsPartIdx )) && isLuma(compID) && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
+#else
   if( !pcCU->isIntra( uiAbsPartIdx ) && isLuma(compID) && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
+#endif
   {
     ui16CtxCbf   = 0;
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockRootCbpBits[ ui16CtxCbf ][ 0 ] );

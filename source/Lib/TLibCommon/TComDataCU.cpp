@@ -1760,7 +1760,11 @@ UInt TComDataCU::getQuadtreeTULog2MinSizeInCU( UInt absPartIdx )
 {
   UInt log2CbSize = g_aucConvertToBit[getWidth( absPartIdx )] + 2;
   PartSize  partSize  = getPartitionSize( absPartIdx );
+#if INTRAMV
+  UInt quadtreeTUMaxDepth = isIntra( absPartIdx ) ? m_pcSlice->getSPS()->getQuadtreeTUMaxDepthIntra() : m_pcSlice->getSPS()->getQuadtreeTUMaxDepthInter();
+#else
   UInt quadtreeTUMaxDepth = getPredictionMode( absPartIdx ) == MODE_INTRA ? m_pcSlice->getSPS()->getQuadtreeTUMaxDepthIntra() : m_pcSlice->getSPS()->getQuadtreeTUMaxDepthInter();
+#endif
   Int intraSplitFlag = ( getPredictionMode( absPartIdx ) == MODE_INTRA && partSize == SIZE_NxN ) ? 1 : 0;
   Int interSplitFlag = ((quadtreeTUMaxDepth == 1) && (getPredictionMode( absPartIdx ) == MODE_INTER) && (partSize != SIZE_2Nx2N) );
 
@@ -1804,6 +1808,26 @@ UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 {
   return getDepth( uiAbsPartIdx );
 }
+
+
+#if INTRAMV
+UInt TComDataCU::getCtxIntraMVFlag( UInt uiAbsPartIdx )
+{
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+  UInt        uiCtx = 0;
+  
+  // Get BCBP of left PU
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx    = ( pcTempCU ) ? pcTempCU->isIntraMV( uiTempPartIdx ) : 0;
+  
+  // Get BCBP of above PU
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx   += ( pcTempCU ) ? pcTempCU->isIntraMV( uiTempPartIdx ) : 0;
+  
+  return uiCtx;
+}
+#endif
 
 UChar TComDataCU::getQtRootCbf( UInt uiIdx )
 {
@@ -2902,12 +2926,20 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   TComDataCU* tmpCU = NULL;
   UInt idx;
   tmpCU = getPUBelowLeft(idx, uiPartIdxLB);
+#if INTRAMV
+  bAddedSmvp = (tmpCU != NULL) && (!tmpCU->isIntra(idx));
+#else
   bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
+#endif
 
   if (!bAddedSmvp)
   {
     tmpCU = getPULeft(idx, uiPartIdxLB);
+#if INTRAMV
+    bAddedSmvp = (tmpCU != NULL) && (!tmpCU->isIntra(idx));
+#else
     bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
+#endif
   }
 
   // Left predictor search
