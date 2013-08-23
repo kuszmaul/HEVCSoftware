@@ -1436,6 +1436,9 @@ TComSPS::TComSPS()
 , m_usePCM                    (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+, m_useExtendedPrecision      (false)
+#endif
 , m_useLossless               (false)
 , m_bPCMFilterDisableFlag     (false)
 , m_uiBitsForPOC              (  8)

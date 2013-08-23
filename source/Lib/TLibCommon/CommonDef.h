@@ -115,7 +115,12 @@
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#define MAX_INTERMEDIATE_INT        MAX_INT64
+#else
 #define MAX_INTERMEDIATE_INT        MAX_INT
+#endif
+
 #define MAX_DOUBLE                  1.7e+308    ///< max. value of Double-type value
 
 #define MIN_QP                      0

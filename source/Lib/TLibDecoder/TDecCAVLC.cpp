@@ -669,7 +669,19 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  //NOTE: RExt - this will be conditional on the selected profile
+  READ_FLAG( uiCode, "sps_extension1_flag");
+
+  if (uiCode != 0)
+  {
+    READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision(uiCode != 0); //NOTE: RExt - this flag will only be usable in high profile
+    READ_FLAG( uiCode, "sps_extension2_flag");
+  }
+#else
   READ_FLAG( uiCode, "sps_extension_flag");
+#endif
+
   if (uiCode)
   {
     while ( xMoreRbspData() )

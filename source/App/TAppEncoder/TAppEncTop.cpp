@@ -159,6 +159,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  m_cTEncTop.setUseExtendedPrecision         ( m_useExtendedPrecision );
+#endif
+
   //====== Tool list ========
   m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );

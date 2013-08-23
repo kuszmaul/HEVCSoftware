@@ -98,9 +98,13 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 #define QUANT_SHIFT                14 // Q(4) = 2^14
 #define IQUANT_SHIFT                6
 #define SCALE_BITS                 15 // Inherited from TMuC, pressumably for fractional bit estimates in RDOQ
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+extern Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
+#else
 #define MAX_TR_DYNAMIC_RANGE       15 // Maximum input forward transform dynamic range (excluding sign bit)
 #define TRANSFORM_MAXIMUM          ((1 << MAX_TR_DYNAMIC_RANGE) - 1)
 #define TRANSFORM_MINIMUM          (-(1 << MAX_TR_DYNAMIC_RANGE))
+#endif
 
 #define SQRT2                      11585
 #define SQRT2_SHIFT                13
@@ -114,12 +118,27 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)  
 extern Int g_invQuantScales[SCALING_LIST_REM_NUM];          // IQ(QP%6)
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+#if RExt__HIGH_PRECISION_FORWARD_TRANSFORM
+static const Int g_transformMatrixShift[TRANSFORM_NUMBER_OF_DIRECTIONS] = { 14, 6 };
+#else
+static const Int g_transformMatrixShift[TRANSFORM_NUMBER_OF_DIRECTIONS] = {  6, 6 };
+#endif
+#else
 #define TRANSFORM_MATRIX_SHIFT 6 //NOTE: RExt - This value does not directly affect the transform matrices and must be adjusted in line with any change made to them
+#endif
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+extern const TMatrixCoeff g_aiT4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4];
+extern const TMatrixCoeff g_aiT8 [TRANSFORM_NUMBER_OF_DIRECTIONS][8][8];
+extern const TMatrixCoeff g_aiT16[TRANSFORM_NUMBER_OF_DIRECTIONS][16][16];
+extern const TMatrixCoeff g_aiT32[TRANSFORM_NUMBER_OF_DIRECTIONS][32][32];
+#else
 extern const TMatrixCoeff g_aiT4[4][4];
 extern const TMatrixCoeff g_aiT8[8][8];
 extern const TMatrixCoeff g_aiT16[16][16];
 extern const TMatrixCoeff g_aiT32[32][32];
+#endif
 
 // ====================================================================================================================
 // Luma QP to Chroma QP mapping
@@ -172,7 +191,11 @@ extern        Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
 // Mode-Dependent DST Matrices
 // ====================================================================================================================
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+extern const TMatrixCoeff g_as_DST_MAT_4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4];
+#else
 extern const TMatrixCoeff g_as_DST_MAT_4 [4][4];
+#endif
 
 // ====================================================================================================================
 // Misc.

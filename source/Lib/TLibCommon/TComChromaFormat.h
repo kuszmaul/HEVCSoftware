@@ -169,7 +169,11 @@ Void setQPforQuant(       class QpParam      &result,
 // NOTE: RExt - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
 static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrSize)
 {
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  return g_maxTrDynamicRange[type] - g_bitDepth[type] - uiLog2TrSize;
+#else
   return MAX_TR_DYNAMIC_RANGE - g_bitDepth[type] - uiLog2TrSize;
+#endif
 }
 
 

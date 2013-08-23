@@ -308,6 +308,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepth[CHANNEL_TYPE_CHROMA],        0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths")
+#endif
 #if RExt__COLOUR_SPACE_CONVERSIONS
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
   ("SNRInternalColourSpace",  m_snrInternalColourSpace,             false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
@@ -899,6 +902,17 @@ Void TAppEncCfg::xCheckParameter()
   // check range of parameters
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_LUMA  ] < 8,                                   "InputBitDepth must be at least 8" );
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_CHROMA] < 8,                                   "InputBitDepthC must be at least 8" );
+
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING && !RExt__HIGH_BIT_DEPTH_SUPPORT
+  if (m_useExtendedPrecision)
+  {
+    for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+    {
+      xConfirmPara((m_internalBitDepth[channelType] > 8) , "Model is not configured to support high enough internal accuracies - enable RExt__HIGH_BIT_DEPTH_SUPPORT to use increased precision internal data types etc...");
+    }
+  }
+#endif
+
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
 #if RExt__COLOUR_SPACE_CONVERSIONS
   std::string sTempIPCSC="InputColourSpaceConvert must be empty, "+getListOfColourSpaceConverts(true);
@@ -1479,6 +1493,10 @@ Void TAppEncCfg::xSetGlobal()
   {
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
     g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_inputBitDepth[channelType] : m_internalBitDepth[channelType];
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    if (m_useExtendedPrecision) g_maxTrDynamicRange[channelType] = std::max<Int>(15, (g_bitDepth[channelType] + 6));
+    else                        g_maxTrDynamicRange[channelType] = 15;
+#endif
   }
 }
 
@@ -1501,62 +1519,65 @@ const Char *profileToString(const Profile::Name profile)
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
-  printf("Input          File          : %s\n", m_pchInputFile          );
-  printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
-  printf("Reconstruction File          : %s\n", m_pchReconFile          );
-  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
-  printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
+  printf("Input          File           : %s\n", m_pchInputFile          );
+  printf("Bitstream      File           : %s\n", m_pchBitstreamFile      );
+  printf("Reconstruction File           : %s\n", m_pchReconFile          );
+  printf("Real     Format               : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
+  printf("Internal Format               : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   if (m_isField)
   {
-    printf("Frame/Field                  : Field based coding\n");
-    printf("Field index                  : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
-    printf("Field Order                  : %s field first\n", m_isTopFieldFirst?"Top":"Bottom");
+    printf("Frame/Field                   : Field based coding\n");
+    printf("Field index                   : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+    printf("Field Order                   : %s field first\n", m_isTopFieldFirst?"Top":"Bottom");
 
   }
   else
   {
-    printf("Frame/Field                  : Frame based coding\n");
-    printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+    printf("Frame/Field                   : Frame based coding\n");
+    printf("Frame index                   : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
   }
-  printf("Profile                      : %s\n", profileToString(m_profile) );
-  printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
-  printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
-  printf("Max RQT depth inter          : %d\n", m_uiQuadtreeTUMaxDepthInter);
-  printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
-  printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
-  printf("Motion search range          : %d\n", m_iSearchRange );
-  printf("Intra period                 : %d\n", m_iIntraPeriod );
-  printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
-  printf("QP                           : %5.2f\n", m_fQP );
-  printf("Max dQP signaling depth      : %d\n", m_iMaxCuDQPDepth);
+  printf("Profile                       : %s\n", profileToString(m_profile) );
+  printf("CU size / depth               : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
+  printf("RQT trans. size (min / max)   : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
+  printf("Max RQT depth inter           : %d\n", m_uiQuadtreeTUMaxDepthInter);
+  printf("Max RQT depth intra           : %d\n", m_uiQuadtreeTUMaxDepthIntra);
+  printf("Min PCM size                  : %d\n", 1 << m_uiPCMLog2MinSize);
+  printf("Motion search range           : %d\n", m_iSearchRange );
+  printf("Intra period                  : %d\n", m_iIntraPeriod );
+  printf("Decoding refresh type         : %d\n", m_iDecodingRefreshType );
+  printf("QP                            : %5.2f\n", m_fQP );
+  printf("Max dQP signaling depth       : %d\n", m_iMaxCuDQPDepth);
 
-  printf("Cb QP Offset                 : %d\n", m_cbQpOffset   );
-  printf("Cr QP Offset                 : %d\n", m_crQpOffset);
+  printf("Cb QP Offset                  : %d\n", m_cbQpOffset   );
+  printf("Cr QP Offset                  : %d\n", m_crQpOffset);
 
-  printf("QP adaptation                : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
-  printf("GOP size                     : %d\n", m_iGOPSize );
-  printf("Internal bit depth           : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("PCM sample bit depth         : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("QP adaptation                 : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
+  printf("GOP size                      : %d\n", m_iGOPSize );
+  printf("Internal bit depth            : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("PCM sample bit depth          : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  printf("Extended Precision Processing : %s\n", (m_useExtendedPrecision ? "Enabled" : "Disabled") );
+#endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
-  printf("RateControl                  : %d\n", m_RCEnableRateControl );
+  printf("RateControl                   : %d\n", m_RCEnableRateControl );
   if(m_RCEnableRateControl)
   {
-    printf("TargetBitrate                : %d\n", m_RCTargetBitrate );
-    printf("KeepHierarchicalBit          : %d\n", m_RCKeepHierarchicalBit );
-    printf("LCULevelRC                   : %d\n", m_RCLCULevelRC );
-    printf("UseLCUSeparateModel          : %d\n", m_RCUseLCUSeparateModel );
-    printf("InitialQP                    : %d\n", m_RCInitialQP );
-    printf("ForceIntraQP                 : %d\n", m_RCForceIntraQP );
+    printf("TargetBitrate                 : %d\n", m_RCTargetBitrate );
+    printf("KeepHierarchicalBit           : %d\n", m_RCKeepHierarchicalBit );
+    printf("LCULevelRC                    : %d\n", m_RCLCULevelRC );
+    printf("UseLCUSeparateModel           : %d\n", m_RCUseLCUSeparateModel );
+    printf("InitialQP                     : %d\n", m_RCInitialQP );
+    printf("ForceIntraQP                  : %d\n", m_RCForceIntraQP );
   }
 #else
-  printf("RateControl                  : %d\n", m_enableRateCtrl);
+  printf("RateControl                   : %d\n", m_enableRateCtrl);
   if(m_enableRateCtrl)
   {
-    printf("TargetBitrate                : %d\n", m_targetBitrate);
-    printf("NumLCUInUnit                 : %d\n", m_numLCUInUnit);
+    printf("TargetBitrate                 : %d\n", m_targetBitrate);
+    printf("NumLCUInUnit                  : %d\n", m_numLCUInUnit);
   }
 #endif
-  printf("Max Num Merge Candidates     : %d\n", m_maxNumMergeCand);
+  printf("Max Num Merge Candidates      : %d\n", m_maxNumMergeCand);
   printf("\n");
   
   printf("TOOL CFG: ");
