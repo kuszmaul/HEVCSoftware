@@ -3499,12 +3499,10 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
     uiDirMode = getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, getPic()->getChromaFormat()));
   }
 
-#if RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING
   if (isChroma(compID) && (format == CHROMA_422))
   {
     uiDirMode = g_chroma422IntraAngleMappingTable[uiDirMode];
   }
-#endif
 
   //------------------
 
