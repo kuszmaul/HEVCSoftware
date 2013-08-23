@@ -269,22 +269,6 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
     Int absAng                      = angTable[absAngMode];
     Int intraPredAngle              = signAng * absAng;
 
-#if !RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING
-    if ((channelType == CHANNEL_TYPE_CHROMA) && (format == CHROMA_422))
-    {
-      intraPredAngle = bIsModeVer ? (intraPredAngle>>1) : 2*intraPredAngle;
-      invAngle       = bIsModeVer ? 2*invAngle          : (invAngle>>1);
-
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
-      if (std::abs(intraPredAngle) > 32)
-      {
-        intraPredAngle = 32 * signAng;
-        invAngle       = 256;
-      }
-#endif
-    }
-#endif
-
     Pel* refMain;
     Pel* refSide;
 

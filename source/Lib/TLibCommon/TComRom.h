@@ -159,9 +159,7 @@ extern const UInt   g_auiGoRicePrefixLen[MAXIMUM_GOLOMB_RICE_PARAMETER];        
 
 extern const UChar  g_aucIntraModeNumFast[MAX_CU_DEPTH];
 
-#if RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
-#endif
 
 // ====================================================================================================================
 // Bit-depth
