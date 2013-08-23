@@ -2145,8 +2145,8 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
               minPos = uiBlkPos;
             }
           }
-          const Int scaledCoeffIdx = minPos<0 ? minPos : (Int)(getScalingListCoeffIdx(format, compID, minPos, uiWidth, uiHeight));
-          if(piDstCoeff[scaledCoeffIdx] == TRANSFORM_MAXIMUM || piDstCoeff[scaledCoeffIdx] == TRANSFORM_MINIMUM)
+
+          if(piDstCoeff[minPos] == TRANSFORM_MAXIMUM || piDstCoeff[minPos] == TRANSFORM_MINIMUM)
           {
             finalChange = -1;
           }
