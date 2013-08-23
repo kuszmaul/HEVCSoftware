@@ -110,7 +110,11 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
   }
   else if ( isFirst )
   {
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const Int shift = std::max<Int>(4, (IF_INTERNAL_PREC - bitDepth));
+#else
     Int shift = IF_INTERNAL_PREC - bitDepth;
+#endif
 
     for (row = 0; row < height; row++)
     {
@@ -126,7 +130,11 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
   }
   else
   {
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const Int shift = std::max<Int>(4, (IF_INTERNAL_PREC - bitDepth));
+#else
     Int shift = IF_INTERNAL_PREC - bitDepth;
+#endif
 
     Pel maxVal = (1 << bitDepth) - 1;
     Pel minVal = 0;
@@ -192,7 +200,11 @@ Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride
 
   Int offset;
   Pel maxVal;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  Int headRoom = std::max<Int>(2, (IF_INTERNAL_PREC - bitDepth));
+#else
   Int headRoom = IF_INTERNAL_PREC - bitDepth;
+#endif
   Int shift = IF_FILTER_PREC;
   //NOTE: RExt - with the current settings (IF_INTERNAL_PREC = 14 and IF_FILTER_PREC = 6), though headroom can be
   //             negative for bit depths greater than 14, shift will remain non-negative for bit depths of 8->20
