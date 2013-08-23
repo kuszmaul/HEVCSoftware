@@ -914,6 +914,13 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara((m_internalBitDepth[channelType] > 8) , "Model is not configured to support high enough internal accuracies - enable RExt__HIGH_BIT_DEPTH_SUPPORT to use increased precision internal data types etc...");
     }
   }
+  else
+  {
+    for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+    {
+      xConfirmPara((m_internalBitDepth[channelType] > 14) , "Model is not configured to support high enough internal accuracies - enable RExt__HIGH_BIT_DEPTH_SUPPORT to use increased precision internal data types etc...");
+    }
+  }
 #endif
 
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
