@@ -621,6 +621,7 @@ namespace Level
 
   enum Name
   {
+    //NOTE: RExt - code = (level * 30)
     NONE     = 0,
     LEVEL1   = 30,
     LEVEL2   = 60,
