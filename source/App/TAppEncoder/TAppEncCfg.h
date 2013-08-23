@@ -105,6 +105,9 @@ protected:
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)
 #endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];    ///< control flags for residual DPCM
+#endif
   Bool      m_enableAMP;
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)

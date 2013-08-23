@@ -695,6 +695,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   if (uiCode != 0)
   {
+#if RExt__NRCE2_RESIDUAL_DPCM
+    READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA, (uiCode != 0));
+    READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER, (uiCode != 0));
+#endif
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision(uiCode != 0);
 #endif

@@ -539,6 +539,10 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   //NOTE: RExt - this will be conditional on the selected profile
   if ( false // Remove 'false' once adoption of macro code.
+#if RExt__NRCE2_RESIDUAL_DPCM
+       || pcSPS->getUseResidualDPCM(MODE_INTRA)
+       || pcSPS->getUseResidualDPCM(MODE_INTER)
+#endif
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
        || pcSPS->getUseExtendedPrecision()
 #endif
@@ -548,6 +552,10 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
+#if RExt__NRCE2_RESIDUAL_DPCM
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0), "residual_dpcm_intra_enabled_flag" );
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0), "residual_dpcm_inter_enabled_flag" );
+#endif
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0), "extended_precision_processing_flag" );
 #endif

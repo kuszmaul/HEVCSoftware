@@ -731,6 +731,10 @@ private:
 
   Bool        m_useLossless;
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Bool        m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
+#endif
+
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
@@ -860,6 +864,11 @@ public:
 
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
   Bool getUseSAO                  ()           {return m_bUseSAO;}
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Bool getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
+  Void setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
+#endif
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }
   Void      setMaxTLayers( UInt uiMaxTLayers )        { assert( uiMaxTLayers <= MAX_TLAYER ); m_uiMaxTLayers = uiMaxTLayers; }

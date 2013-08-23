@@ -419,6 +419,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2.")
 #endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+  ("IntraResidualDPCM",       m_useResidualDPCM[MODE_INTRA], false, "Enable residual DPCM for intra (also known as sample-adaptive intra predict)")
+  ("InterResidualDPCM",       m_useResidualDPCM[MODE_INTER], false, "Enable residual DPCM for inter")
+#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -1589,6 +1593,10 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
   printf("Intra reference smoothing     : %s\n", (m_enableIntraReferenceSmoothing ? "Enabled" : "Disabled") );
+#endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+  printf("Intra residual DPCM           : %s\n", (m_useResidualDPCM[MODE_INTRA] ? "Enabled" : "Disabled") );
+  printf("Inter residual DPCM           : %s\n", (m_useResidualDPCM[MODE_INTER] ? "Enabled" : "Disabled") );
 #endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
   printf("RateControl                   : %d\n", m_RCEnableRateControl );
