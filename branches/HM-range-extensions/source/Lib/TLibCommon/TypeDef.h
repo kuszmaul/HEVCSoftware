@@ -265,10 +265,11 @@
 #endif
 
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   0 ///< 0 (default) = calculate costs as normal, 1 = evaluate RD-costs as (distortion / lambda) + bits so that costs are independent of lambda for lossless modes and use lambda derived from Qp' = 4 for first-pass intra prediction mode selection
-#define RExt__HIGH_BIT_DEPTH_SUPPORT                                           1 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
+#define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #define RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS                       1 ///< 0 = use the same set of matrices for both forward and inverse transform, 1 (default) = allow the set of matrices used for the forward transform to be differemt from that used for the inverse transform
-#define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 1 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
+#define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 0 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
 
+#define RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG                    1 ///< 0 = do not include SPS flag to disable intra-reference/neighbouring-smoothing; 1 (default) = include SPS flag to disable intra-reference/neighbouring-smoothing
 #define RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING                           1 ///< 0 = use 4:2:0 and 4:2:2 chroma mapping table (4:4:4 is 1:1); 1 (default) = only use 4:2:0 chroma mapping table (4:2:2 and 4:4:4 are 1:1)
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 #define RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS                         1 ///< 0 = use Luma 32x32 scaling lists for chroma 32x32, 1 (default) = use Chroma 16x16 for Chroma32x32

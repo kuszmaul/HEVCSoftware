@@ -439,6 +439,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
   ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  ("IntraReferenceSmoothing", m_enableIntraReferenceSmoothing, true, "0: Disable use of intra reference smoothing. 1: Enable use of intra reference smoothing")
+#endif
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   ("LosslessCuEnabled", m_useLossless, false)
 #endif
@@ -1566,7 +1569,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Internal bit depth            : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("PCM sample bit depth          : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-  printf("Extended Precision Processing : %s\n", (m_useExtendedPrecision ? "Enabled" : "Disabled") );
+  printf("Extended precision processing : %s\n", (m_useExtendedPrecision ? "Enabled" : "Disabled") );
+#endif
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  printf("Intra reference smoothing     : %s\n", (m_enableIntraReferenceSmoothing ? "Enabled" : "Disabled") );
 #endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
   printf("RateControl                   : %d\n", m_RCEnableRateControl );

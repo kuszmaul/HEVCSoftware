@@ -495,7 +495,11 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   //===== init availability pattern =====
   Bool  bAboveAvail = false;
   Bool  bLeftAvail  = false;
+#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+  const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
+#else
   const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt);
+#endif
 
 #ifdef DEBUG_STRING
   std::ostream &ss(std::cout);
