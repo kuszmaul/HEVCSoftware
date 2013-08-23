@@ -1205,7 +1205,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
         for( UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
           ss << pResi[ uiX ] << ", ";
-          pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
+          pReco    [ uiX ] = Pel(ClipBD<Int>( Int(pPred[uiX]) + Int(pResi[uiX]), clipbd ));
           pRecQt   [ uiX ] = pReco[ uiX ];
           pRecIPred[ uiX ] = pReco[ uiX ];
         }
@@ -1226,7 +1226,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       {
         for( UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
-          pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
+          pReco    [ uiX ] = Pel(ClipBD<Int>( Int(pPred[uiX]) + Int(pResi[uiX]), clipbd ));
           pRecQt   [ uiX ] = pReco[ uiX ];
           pRecIPred[ uiX ] = pReco[ uiX ];
         }
