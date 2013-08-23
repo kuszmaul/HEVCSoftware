@@ -36,8 +36,8 @@
  * \brief Declaration of TComInterpolationFilter class
  */
 
-#ifndef __HM_TCOMINTERPOLATIONFILTER_H__
-#define __HM_TCOMINTERPOLATIONFILTER_H__
+#ifndef __TCOMINTERPOLATIONFILTER__
+#define __TCOMINTERPOLATIONFILTER__
 
 #include "TypeDef.h"
 

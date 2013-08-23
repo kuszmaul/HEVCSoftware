@@ -35,8 +35,8 @@
     \brief    Rate control manager class
 */
 
-#ifndef _HM_TENCRATECTRL_H_
-#define _HM_TENCRATECTRL_H_
+#ifndef __TENCRATECTRL__
+#define __TENCRATECTRL__
 
 #if _MSC_VER > 1000
 #pragma once

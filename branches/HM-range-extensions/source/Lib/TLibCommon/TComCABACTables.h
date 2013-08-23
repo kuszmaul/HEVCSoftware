@@ -35,8 +35,8 @@
     \brief    static class for CABAC tables
 */
 
-#ifndef __TCOM_CABAC_TABLES__
-#define __TCOM_CABAC_TABLES__
+#ifndef __TCOMCABACTABLES__
+#define __TCOMCABACTABLES__
 
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComRom.h"

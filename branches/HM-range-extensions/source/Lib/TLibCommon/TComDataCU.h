@@ -36,8 +36,8 @@
     \todo     not all entities are documented
 */
 
-#ifndef _TCOMDATACU_
-#define _TCOMDATACU_
+#ifndef __TCOMDATACU__
+#define __TCOMDATACU__
 
 #include <assert.h>
 

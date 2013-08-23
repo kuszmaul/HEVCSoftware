@@ -35,8 +35,8 @@
     \brief    Define basic types, new types and enumerations
 */
 
-#ifndef _TYPEDEF__
-#define _TYPEDEF__
+#ifndef __TYPEDEF__
+#define __TYPEDEF__
 
 #include <vector>
 
