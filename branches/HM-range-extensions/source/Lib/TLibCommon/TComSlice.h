@@ -1180,7 +1180,7 @@ private:
   Int         m_iSliceChromaQpDelta[MAX_NUM_COMPONENT];
   TComPic*    m_apcRefPicList [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int         m_aiRefPOCList  [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
-  Bool        m_bIsUsedAsLongTerm[2][MAX_NUM_REF+1];
+  Bool        m_bIsUsedAsLongTerm[NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int         m_iDepth;
   
   // referenced slice?

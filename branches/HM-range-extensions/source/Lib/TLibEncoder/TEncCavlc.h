@@ -150,6 +150,11 @@ public:
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
+#if INTRAMV
+  Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+
 };
 
 //! \}

@@ -114,6 +114,13 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
 {
+#if INTRAMV
+  if( pcCU->isIntraMV( uiAbsPartIdx ) )                                 // Do nothing for IntraMV mode.
+  {
+    return;
+  }
+#endif
+
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
@@ -170,6 +177,18 @@ Void TDecEntropy::decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx,
   }
 #endif
 }
+
+#if INTRAMV
+Void TDecEntropy::decodeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseIntraMVFlag( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseIntraMV( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
+}
+#endif
 
 /** decode motion information for every PU block.
  * \param pcCU
@@ -389,7 +408,12 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
     fflush(stdout);
   }
 #endif
+
+#if INTRAMV
+  if( pcCU->isIntra(uiAbsPartIdx) && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
+#else
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
+#endif
   {
     uiSubdiv = 1;
   }
@@ -594,7 +618,11 @@ Void TDecEntropy::decodeQP          ( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
 {
+#if INTRAMV
+  if( pcCU->isIntra(uiAbsPartIdx)  && !pcCU->isIntraMV(uiAbsPartIdx))
+#else
   if( pcCU->isIntra(uiAbsPartIdx) )
+#endif
   {
   }
   else

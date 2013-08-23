@@ -1238,6 +1238,18 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
+#if INTRAMV
+Void TEncCavlc::codeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

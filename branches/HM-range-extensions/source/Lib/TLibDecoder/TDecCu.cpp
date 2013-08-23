@@ -313,6 +313,19 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     return;
   }
 
+#if INTRAMV
+  m_pcEntropyDecoder->decodeIntraMVFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
+
+  if ( pcCU->isIntraMV( uiAbsPartIdx ) )
+  {
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth ); 
+
+    m_pcEntropyDecoder->decodeIntraMV( pcCU, uiAbsPartIdx, 0, uiDepth );
+  }
+  else
+  {
+#endif
+
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -329,6 +342,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
+#if INTRAMV
+  }
+#endif
 
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
@@ -399,6 +415,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
+#if INTRAMV
+    case MODE_INTRAMV:
+      xReconIntraMV( m_ppcCU[uiDepth], uiDepth );
+      break;
+#endif
     default:
       assert(0);
       break;
@@ -439,6 +460,36 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 #endif
 
 }
+
+#if INTRAMV
+Void TDecCu::xReconIntraMV( TComDataCU* pcCU, UInt uiDepth )
+{
+  // intra prediction
+  m_pcPrediction->intraMotionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
+
+#if defined DEBUG_STRING && DEBUG_INTER_CODING_PRED
+  printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));
+#endif
+
+  // texture recon
+  xDecodeInterTexture( pcCU, uiDepth );
+
+  // clip for only non-zero cbp case
+  if  ( pcCU->getQtRootCbf( 0) )
+  {
+    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+  }
+  else
+  {
+    m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
+  }
+#if defined DEBUG_STRING && DEBUG_INTER_CODING_RECON
+  printBlockToStream(std::cout, "###inter-reco: ", *(m_ppcYuvReco[uiDepth]));
+#endif
+
+}
+#endif
+
 
 
 

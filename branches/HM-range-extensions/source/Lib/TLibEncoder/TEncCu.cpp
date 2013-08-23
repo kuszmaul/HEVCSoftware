@@ -702,6 +702,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
+#if INTRAMV
+        xCheckRDCostIntraMV( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug));
+        rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+#endif
+
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
         if (isAddLowestQP && (iQP == lowestQP))
 #else
@@ -1159,6 +1164,15 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
+#if INTRAMV
+  m_pcEntropyCoder->encodeIntraMVFlag( pcCU, uiAbsPartIdx );
+  if ( pcCU->isIntraMV( uiAbsPartIdx ) ) 
+  {
+    m_pcEntropyCoder->encodeIntraMV( pcCU, uiAbsPartIdx );
+  }
+  if ( !pcCU->isIntraMV( uiAbsPartIdx ) )
+  {
+#endif
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
 
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
@@ -1177,6 +1191,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
+#if INTRAMV
+  }
+#endif
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
@@ -1581,6 +1598,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
+#if INTRAMV
+  m_pcEntropyCoder->encodeIntraMVFlag ( rpcTempCU, 0,       true );
+#endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
@@ -1603,6 +1623,37 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
 }
+
+#if INTRAMV
+Void TEncCu::xCheckRDCostIntraMV( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug))
+{
+  UInt uiDepth = rpcTempCU->getDepth( 0 );
+
+  rpcTempCU->setDepthSubParts( uiDepth, 0 );
+  rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );  
+  rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
+  rpcTempCU->setPredModeSubParts( MODE_INTRAMV, 0, uiDepth );  
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
+  rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
+#endif
+
+  rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DC_IDX, 0, uiDepth );
+  rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, DC_IDX, 0, uiDepth );
+
+  // intra MV search
+  Bool bValid = m_pcPredSearch->predIntraMVSearch ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] DEBUG_STRING_PASS_INTO(sTest), false);
+  
+  if (bValid)
+  {
+    m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false DEBUG_STRING_PASS_INTO(sTest) );
+    rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+  
+    xCheckDQP( rpcTempCU );
+    xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
+  }
+}
+#endif
 
 /** Check R-D costs for a CU with PCM mode.
  * \param rpcBestCU pointer to best mode CU data structure
@@ -1638,6 +1689,9 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
+#if INTRAMV
+  m_pcEntropyCoder->encodeIntraMVFlag ( rpcTempCU, 0,       true );
+#endif
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );

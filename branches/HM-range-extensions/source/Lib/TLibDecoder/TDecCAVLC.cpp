@@ -1567,6 +1567,18 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
   assert(0);
 }
 
+#if INTRAMV
+Void TDecCavlc::parseIntraMVFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parseIntraMV ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+#endif
+
 Void TDecCavlc::parseInterDir( TComDataCU* /*pcCU*/, UInt& /*ruiInterDir*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);

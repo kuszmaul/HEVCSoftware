@@ -478,7 +478,12 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
+#if INTRAMV
+  Bool          isIntraMV ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
+  Bool          isIntra   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
+#else  
   Bool          isIntra   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
+#endif
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   Bool          isBipredRestriction( UInt puIdx );
 
@@ -504,6 +509,10 @@ public:
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
+
+#if INTRAMV
+  UInt          getCtxIntraMVFlag               ( UInt   uiAbsPartIdx                                 );
+#endif  
 
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];        }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU]; }

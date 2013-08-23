@@ -90,6 +90,10 @@ TDecSbac::TDecSbac()
 , m_cSaoTypeIdxSCModel           ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
+#if INTRAMV
+, m_cIntraMVPredFlagSCModel      (1,              1,                      NUM_INTRAMV_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -150,6 +154,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUTransSubdivFlagSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#if INTRAMV
+  m_cIntraMVPredFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_INTRAMV_PRED_FLAG );
+#endif
 
   m_uiLastDQpNonZero  = 0;
 
@@ -201,6 +208,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUTransSubdivFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#if INTRAMV
+  m_cIntraMVPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRAMV_PRED_FLAG );
+#endif
 
   m_pcTDecBinIf->start();
 }
@@ -432,6 +442,51 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
+#if INTRAMV
+Void TDecSbac::parseIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{  
+  UInt uiSymbol = 0;
+
+  {
+    UInt uiCtxIntraMV = pcCU->getCtxIntraMVFlag( uiAbsPartIdx ) ;
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraMVPredFlagSCModel.get( 0, 0, uiCtxIntraMV ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRAMV)); 
+  
+    DTRACE_CABAC_VL( g_nSymbolCounter++ );
+    DTRACE_CABAC_T( "\tIntraMVFlag" );
+    DTRACE_CABAC_T( "\tuiSymbol: ");
+    DTRACE_CABAC_V( uiSymbol );
+    DTRACE_CABAC_T( "\n");
+  }
+
+  if ( uiSymbol )
+  {
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+    pcCU->setPredModeSubParts( MODE_INTRAMV, uiAbsPartIdx, uiDepth );
+    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );    
+    pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
+    pcCU->setIntraDirSubParts ( CHANNEL_TYPE_CHROMA, DC_IDX, uiAbsPartIdx, uiDepth);
+  }
+}
+
+Void TDecSbac::parseIntraMV ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{  
+
+
+
+  Int mvx = 0, mvy = 0;
+  
+  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_I);
+
+  mvx = pcCU->getCUMvField(REF_PIC_LIST_I)->getMvd(uiAbsPartIdx).getHor();
+  mvy = pcCU->getCUMvField(REF_PIC_LIST_I)->getMvd(uiAbsPartIdx).getVer();
+
+  const TComMv cMv(mvx, mvy );
+
+  pcCU->getCUMvField( REF_PIC_LIST_I )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+}
+#endif
+
+
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx
@@ -524,6 +579,14 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 {
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
+
+#if INTRAMV
+  if ( pcCU->isIntraMV( uiAbsPartIdx ) )
+  {
+    assert( 0 );
+  }
+#endif
+
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__PART_SIZE, g_aucConvertToBit[g_uiMaxCUWidth>>uiDepth]+2);
 #endif
