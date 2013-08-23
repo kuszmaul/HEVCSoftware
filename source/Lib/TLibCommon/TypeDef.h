@@ -270,8 +270,6 @@
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
 #endif
 
-#define RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT                              1 ///< 0 = Use angular prediction for horizontal and vertical modes, 1 (default) use Sample Adaptive intra Predict (SAP) for horizontal and vertical modes in RExt profile
-
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------

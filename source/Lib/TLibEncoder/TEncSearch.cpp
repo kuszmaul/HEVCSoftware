@@ -1069,11 +1069,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
     initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions DEBUG_STRING_PASS_INTO(sDebug) );
 
     //===== get prediction signal =====
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
     predIntraAng( compID, uiChFinalMode, piOrg, uiStride, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-#else
-    predIntraAng( compID, uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-#endif
 
     // save prediction
     if( default0Save1Load2 == 1 )
@@ -2070,13 +2066,8 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
         //--- get prediction ---
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Cb, uiMode, uiWidth, uiHeight, chFmt);
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
         predIntraAng( COMPONENT_Cb, uiMode, piOrgU, uiStride, piPredU, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
         predIntraAng( COMPONENT_Cr, uiMode, piOrgV, uiStride, piPredV, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
-#else
-        predIntraAng( COMPONENT_Cb, uiMode, piPredU, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
-        predIntraAng( COMPONENT_Cr, uiMode, piPredV, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
-#endif
 
         //--- get SAD ---
         UInt  uiSAD  = m_pcRdCost->calcHAD( g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgU, uiStride, piPredU, uiStride, uiWidth, uiHeight );
@@ -2177,11 +2168,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         UInt uiSad = 0;
 
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt);
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
-#else
-        predIntraAng( COMPONENT_Y, uiMode, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
-#endif
 
         // use hadamard transform here
         uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );

@@ -507,11 +507,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   //===== get prediction signal =====
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0 /* Decoder does not have an original image */, 0, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-#else
-  m_pcPrediction->predIntraAng( compID,   uiChFinalMode, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-#endif
 
 #ifdef DEBUG_STRING
   ss << sTemp;
@@ -540,11 +536,8 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   //===== reconstruction =====
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
+
         Pel* pPred      = piPred;
-#else
-  const Pel* pPred      = piPred;
-#endif
   const Pel* pResi      = piResi;
         Pel* pReco      = pcRecoYuv->getAddr( compID, uiAbsPartIdx );
         Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
@@ -557,7 +550,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   const Int clipbd = g_bitDepth[toChannelType(compID)];
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   if (TComPrediction::UseSampleAdaptiveIntraPrediction(rTu, uiChFinalMode))
   {
     if ( uiChFinalMode == HOR_IDX )
@@ -629,7 +621,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   }
   else
   {
-#endif
     for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
@@ -666,9 +657,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
         ss << "\n";
 #endif
     }
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   }
-#endif
 }
 
 
