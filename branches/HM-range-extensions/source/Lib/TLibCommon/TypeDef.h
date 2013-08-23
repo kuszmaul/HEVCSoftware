@@ -287,6 +287,7 @@
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992                            0 ///< Maintain backwards compatibility with HM for ticket 992  (MAX_CU_SIZE)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026                           1 ///< Maintain backwards compatibility with HM for ticket 1026 (xGetICRate is deprecated)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082                           0 ///< Maintain backwards compatibility with HM for ticket 1082 (SAO bit depth increase (only affects operation at greater than 10-bit)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 // ====================================================================================================================

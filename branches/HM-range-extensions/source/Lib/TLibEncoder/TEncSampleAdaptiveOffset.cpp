@@ -1905,6 +1905,9 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
   Int addr = 0;
   Int addrUp = -1;
   Int addrLeft = -1;
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149 == 0)
+  double totalCost = 0;
+#endif
   const Bool chromaEnabled = isChromaEnabled(m_pcPic->getChromaFormat());
   const UInt numValidComponent = m_pcPic->getNumberValidComponents();
   SaoLcuParam mergeSaoParam[MAX_NUM_COMPONENT][2];
@@ -1943,6 +1946,10 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
 #endif
 #endif
 
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149 == 0)
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_CURR_BEST]);
+  m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[0][CI_NEXT_BEST]); // next best if SAO is to be disabled.
+#endif
 
   for (idxY = 0; idxY< frameHeightInCU; idxY++)
   {
@@ -2105,6 +2112,10 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
           }
         }
 
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149 == 0)
+        totalCost += bestCost;
+#endif
+
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
         if( saoParam->saoLcuParam[COMPONENT_Y][addr].typeIdx == -1)
@@ -2133,6 +2144,17 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
       }
     }
   }
+
+#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149 == 0)
+  if (totalCost >= 0.0)
+  {
+    saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]=false;
+    saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]=false;
+    m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[0][CI_NEXT_BEST]);
+    m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[0][CI_CURR_BEST]);
+  }
+#endif
+
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
   if( !saoParam->bSaoFlag[CHANNEL_TYPE_LUMA])
