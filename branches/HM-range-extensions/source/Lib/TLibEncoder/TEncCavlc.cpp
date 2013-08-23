@@ -1359,7 +1359,12 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
     //for each size
     for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
     {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+      Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
+      for(listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
+#else
       for(listId = 0; listId < g_scalingListNum[sizeId]; listId++)
+#endif
       {
 #if SCALING_LIST_OUTPUT_RESULT
         startBit = m_pcBitIf->getNumberOfWrittenBits();
@@ -1368,7 +1373,19 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
         WRITE_FLAG( scalingListPredModeFlag, "scaling_list_pred_mode_flag" );
         if(!scalingListPredModeFlag)// Copy Mode
         {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+          if (sizeId == SCALING_LIST_32x32)
+          {
+            // adjust the code, to cope with the missing chroma entries
+            WRITE_UVLC( ((Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId)) / (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES), "scaling_list_pred_matrix_id_delta");
+          }
+          else
+          {
+            WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
+          }
+#else
           WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
+#endif
         }
         else// DPCM Mode
         {
@@ -1433,7 +1450,12 @@ Bool TEncCavlc::findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltr
 }
 Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
 {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
+  for(Int predListIdx = (Int)listId ; predListIdx >= 0; predListIdx-=predListStep)
+#else
   for(Int predListIdx = (Int)listId ; predListIdx >= 0; predListIdx--)
+#endif
   {
     if( !memcmp(getScalingListAddress(sizeId,listId),((listId == predListIdx) ?
       getScalingListDefaultAddress(sizeId, predListIdx): getScalingListAddress(sizeId, predListIdx)),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId])) // check value of matrix
