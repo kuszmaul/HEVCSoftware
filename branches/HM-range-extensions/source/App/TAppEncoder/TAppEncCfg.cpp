@@ -312,7 +312,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-  ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths")
+  ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
+#endif
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  ("UseIntraMotionVectors", m_useIntraMotionVectors,                 false, "Enable the use of intra motion vectors (not valid in V1 profiles)")
 #endif
 #if RExt__COLOUR_SPACE_CONVERSIONS
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
@@ -417,11 +420,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
-  ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2.")
+  ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
-  ("IntraResidualDPCM",       m_useResidualDPCM[MODE_INTRA], false, "Enable residual DPCM for intra (also known as sample-adaptive intra predict)")
-  ("InterResidualDPCM",       m_useResidualDPCM[MODE_INTER], false, "Enable residual DPCM for inter")
+  ("IntraResidualDPCM",       m_useResidualDPCM[MODE_INTRA], false, "Enable residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
+  ("InterResidualDPCM",       m_useResidualDPCM[MODE_INTER], false, "Enable residual DPCM for inter (not valid in V1 profiles)")
 #endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
@@ -447,7 +450,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
   ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
-  ("IntraReferenceSmoothing", m_enableIntraReferenceSmoothing, true, "0: Disable use of intra reference smoothing. 1: Enable use of intra reference smoothing")
+  ("IntraReferenceSmoothing", m_enableIntraReferenceSmoothing, true, "0: Disable use of intra reference smoothing. 1: Enable use of intra reference smoothing (not valid in V1 profiles)")
 #endif
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   ("LosslessCuEnabled", m_useLossless, false)
@@ -1598,7 +1601,12 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra residual DPCM           : %s\n", (m_useResidualDPCM[MODE_INTRA] ? "Enabled" : "Disabled") );
   printf("Inter residual DPCM           : %s\n", (m_useResidualDPCM[MODE_INTER] ? "Enabled" : "Disabled") );
 #endif
-#if RATE_CONTROL_LAMBDA_DOMAIN
+
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  printf("Intra Motion Vectors          : %s\n", m_useIntraMotionVectors ? "Enabled" : "Disabled");
+#endif
+
+  #if RATE_CONTROL_LAMBDA_DOMAIN
   printf("RateControl                   : %d\n", m_RCEnableRateControl );
   if(m_RCEnableRateControl)
   {
@@ -1676,10 +1684,6 @@ Void TAppEncCfg::xPrintParameter()
 
   printf(" SignBitHidingFlag:%d ", m_signHideFlag);
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
-
-#if INTRAMV
-  printf("INTRAMV:%d ", INTRAMV);
-#endif
 
   printf("\n\n");
   

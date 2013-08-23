@@ -806,7 +806,7 @@ TEncSearch::xEncSubdivCbfQT(TComTU      &rTu,
   const UInt uiSubdiv             = ( uiTrMode > uiTrDepth ? 1 : 0 );
   const UInt uiLog2LumaTrafoSize  = rTu.GetLog2LumaTrSize();
 
-  if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
+  if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 ) // NOTE: RExt - N0256 proponents to check
   {
     assert( uiSubdiv );
   }
@@ -928,12 +928,15 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
       }
 
-#if INTRAMV
-      m_pcEntropyCoder->encodeIntraMVFlag ( pcCU, 0, true );
-      if ( pcCU->isIntraMV( 0 ) ) 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+      if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
       {
-        m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
-        return;
+        m_pcEntropyCoder->encodeIntraMVFlag ( pcCU, 0, true );
+        if ( pcCU->isIntraMV( 0 ) )
+        {
+          m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
+          return;
+        }
       }
 #endif
 
@@ -964,7 +967,7 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     }
   }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if( pcCU->isIntraMV( 0 ) )
   {
     return;
@@ -3538,7 +3541,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 }
 
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 
 // based on predInterSearch()
 Bool TEncSearch::predIntraMVSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes )
@@ -3570,12 +3573,12 @@ Bool TEncSearch::predIntraMVSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv
   xIntraMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost );
 
   // store intra MV in REF_PIC_LIST_0
-  cMEMvField.setMvField( cMv, REF_PIC_LIST_I);  
-  pcCU->getCUMvField( REF_PIC_LIST_I )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );  
+  cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRAMV);
+  pcCU->getCUMvField( REF_PIC_LIST_INTRAMV )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
 
   cMvd.setHor(cMv.getHor());
   cMvd.setVer(cMv.getVer());
-  pcCU->getCUMvField(REF_PIC_LIST_I )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
+  pcCU->getCUMvField(REF_PIC_LIST_INTRAMV )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
 
   // no valid intra MV 
   if (cMv.getHor() == 0 && cMv.getVer() == 0)
@@ -4744,7 +4747,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
                                             TComYuv*& rpcYuvResi, TComYuv*& rpcYuvResiBest, TComYuv*& rpcYuvRec,
                                             Bool bSkipRes DEBUG_STRING_FN_DECLARE(sDebug) )
 {
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if ( pcCU->isIntra(0) && !pcCU->isIntraMV(0))  
 #else
   if ( pcCU->isIntra(0) )
@@ -4880,7 +4883,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
     }
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     else if (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraMV(0) && uiZeroDistortion == uiDistortion)
     {
       const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
@@ -5034,7 +5037,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
   assert( pcCU->getDepth( 0 ) == pcCU->getDepth( uiAbsPartIdx ) );
   const UInt uiLog2TrSize = rTu.GetLog2LumaTrSize();
 
-  UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
+  UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )); // NOTE: RExt - N0256 proponents to check
   Bool bCheckFull;
   if ( SplitFlag && uiDepth == pcCU->getDepth(uiAbsPartIdx) && ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) ) )
      bCheckFull = false;
@@ -6022,11 +6025,14 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
       m_pcEntropyCoder->encodeCUTransquantBypassFlag(pcCU, 0, true);
     }
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
-#if INTRAMV
-    m_pcEntropyCoder->encodeIntraMVFlag(pcCU, 0, true); 
-    if ( pcCU->isIntraMV( 0 ) ) 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
     {
-      m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
+      m_pcEntropyCoder->encodeIntraMVFlag(pcCU, 0, true);
+      if ( pcCU->isIntraMV( 0 ) )
+      {
+        m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
+      }
     }
     if( !pcCU->isIntraMV(0))
     {
@@ -6034,7 +6040,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     }
 #endif
     Bool bDummy = false;

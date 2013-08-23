@@ -96,7 +96,7 @@ protected:
   Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void  xReconIntraMV           ( TComDataCU* pcCU, UInt uiDepth );
 #endif
   

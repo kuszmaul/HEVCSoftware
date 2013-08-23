@@ -663,6 +663,9 @@ Void TEncTop::xInitSPS()
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
 #endif
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  m_cSPS.setUseIntraMotionVectors(m_useIntraMotionVectors);
+#endif
 
   m_cSPS.setUseSAO( m_bUseSAO );
 

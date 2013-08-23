@@ -729,6 +729,10 @@ private:
   Bool        m_useExtendedPrecision;
 #endif
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool        m_useIntraMotionVectors;
+#endif
+
   Bool        m_useLossless;
 
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -860,6 +864,11 @@ public:
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
+#endif
+
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool      getUseIntraMotionVectors()         const   { return m_useIntraMotionVectors;  }
+  Void      setUseIntraMotionVectors(Bool value)       { m_useIntraMotionVectors = value; }
 #endif
 
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}

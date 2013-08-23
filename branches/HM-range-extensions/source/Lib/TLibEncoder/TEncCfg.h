@@ -181,6 +181,9 @@ protected:
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      m_useExtendedPrecision;
 #endif
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool      m_useIntraMotionVectors;
+#endif
 
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -428,6 +431,11 @@ public:
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
+#endif
+
+  #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool      getUseIntraMotionVectors()         const   { return m_useIntraMotionVectors;  }
+  Void      setUseIntraMotionVectors(Bool value)       { m_useIntraMotionVectors = value; }
 #endif
 
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }

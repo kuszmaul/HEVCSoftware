@@ -126,7 +126,7 @@ public:
   virtual Void codeDFFlag (UInt uiCode, const Char *pSymbolName) = 0;
   virtual Void codeDFSvlc (Int iCode, const Char *pSymbolName)   = 0;
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   virtual Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
@@ -196,7 +196,7 @@ public:
 
   Void encodeScalingList       ( TComScalingList* scalingList );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void encodeIntraMVFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeIntraMV           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif

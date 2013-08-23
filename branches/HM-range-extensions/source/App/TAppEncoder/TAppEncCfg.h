@@ -150,6 +150,10 @@ protected:
   Bool      m_useExtendedPrecision;
 #endif
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool      m_useIntraMotionVectors;
+#endif
+
   //coding tools (chroma format)
   ChromaFormat m_chromaFormatIDC;
 

@@ -1671,7 +1671,11 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx) ); // NOTE: RExt - N0256 proponents to check
+#else
     const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
+#endif
 
     assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
 
@@ -1786,7 +1790,11 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx) ); // NOTE: RExt - N0256 proponents to check
+#else
     const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
+#endif
 
     xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
@@ -2422,7 +2430,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   Double  d64BestCost         = 0;
   Int     ui16CtxCbf          = 0;
   Int     iBestLastIdxP1      = 0;
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if( (!pcCU->isIntra( uiAbsPartIdx ) || pcCU->isIntraMV( uiAbsPartIdx )) && isLuma(compID) && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
 #else
   if( !pcCU->isIntra( uiAbsPartIdx ) && isLuma(compID) && pcCU->getTransformIdx( uiAbsPartIdx ) == 0 )
