@@ -52,11 +52,6 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-#if SAO_ENCODING_CHOICE
-#if SAO_ENCODING_CHOICE_CHROMA
-static const UInt NUM_SAO_RATE_DEPTHS=4;
-#endif
-#endif
 
 class TEncSampleAdaptiveOffset : public TComSampleAdaptiveOffset
 {
@@ -85,7 +80,7 @@ private:
   Bool    m_bUseSBACRD;
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
-  Double  m_depthSaoRate[MAX_NUM_CHANNEL_TYPE][NUM_SAO_RATE_DEPTHS];
+  std::vector<Double> m_depthSaoRate; // [0]=(depth0, channel0), [1]=(depth0, channel 1), [MAX_NUM_CHANNEL_TYPE]=(depth 1, channel 0), etc
 #else
   Double  m_depth0SaoRate;
 #endif

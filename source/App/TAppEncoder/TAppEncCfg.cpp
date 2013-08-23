@@ -1505,14 +1505,8 @@ Void TAppEncCfg::xPrintParameter()
   {
     printf("Frame/Field                  : Field based coding\n");
     printf("Field index                  : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
-    if (m_isTopFieldFirst)
-    {
-      printf("Field Order                  : Top field first\n");
-    }
-    else
-    {
-      printf("Field Order                  : Bottom field first\n");
-    }
+    printf("Field Order                  : %s field first\n", m_isTopFieldFirst?"Top":"Bottom");
+
   }
   else
   {

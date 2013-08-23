@@ -433,7 +433,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     else
     {
-      pocCurr = iPOCLast - iNumPicRcvd + m_pcCfg->getGOPEntry(iGOPid).m_POC - isField;
+      pocCurr = iPOCLast - iNumPicRcvd + m_pcCfg->getGOPEntry(iGOPid).m_POC - ((isField && m_iGopSize>1) ? 1:0);
       iTimeOffset = m_pcCfg->getGOPEntry(iGOPid).m_POC;
     }
 
@@ -1928,7 +1928,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   if( accumBitsDU != NULL) delete accumBitsDU;
   if( accumNalsDU != NULL) delete accumNalsDU;
 
-  assert ( (m_iNumPicCoded == iNumPicRcvd) || (isField && iPOCLast == 1) );
+  assert ( (m_iNumPicCoded == iNumPicRcvd) );
 }
 
 Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
@@ -2064,23 +2064,14 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
   //  Rec. output
   TComList<TComPicYuv*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
 
-  if (isField)
+  if (isField && pocCurr > 2 && m_iGopSize!=1)
   {
-    for ( i = 0; i < ( (pocCurr == 0 ) || (pocCurr == 1 ) ? (iNumPicRcvd - iTimeOffset + 1) : (iNumPicRcvd - iTimeOffset + 2) ); i++ )
-    {
-      iterPicYuvRec--;
-    }
-    if(pocCurr == 1)
-    {
-      iterPicYuvRec++;
-    }
+    iTimeOffset--;
   }
-  else
+
+  for ( i = 0; i < (iNumPicRcvd - iTimeOffset + 1); i++ )
   {
-    for ( i = 0; i < iNumPicRcvd - iTimeOffset + 1; i++ )
-    {
-      iterPicYuvRec--;
-    }
+    iterPicYuvRec--;
   }
 
   rpcPicYuvRecOut = *(iterPicYuvRec);
