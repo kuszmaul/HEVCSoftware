@@ -447,7 +447,7 @@ class TComCodingStatistics
       // p(x)=rangeAfter/rangeBefore
       // entropy = -log2(p(x))=-log(p(x))/log(2) = -(log rangeAfter - log rangeBefore) / log(2) = (log rangeBefore / log 2 - log rangeAfter / log 2)
       SStat &s=inst.data.statistics[stat.type][stat.subClass];
-      s.bits+=inst.values.values[uiRangeBefore]-inst.values.values[uiRangeAfter];
+      s.bits+=Int(inst.values.values[uiRangeBefore])-Int(inst.values.values[uiRangeAfter]);
       s.count++;
       s.sum+=val;
     }
