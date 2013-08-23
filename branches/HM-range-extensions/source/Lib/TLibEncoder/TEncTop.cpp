@@ -669,6 +669,12 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setUseSAO( m_bUseSAO );
 
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  m_cSPS.setUseResidualRotation(m_useResidualRotation);
+#endif
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+  m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
+#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
   for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
   {
