@@ -245,17 +245,18 @@ found:
   return in;
 }
 
-static istream& operator>>(istream &in, Profile::Name &profile)
+//inline to prevent compiler warnings for "unused static function"
+static inline istream& operator>>(istream &in, Profile::Name &profile)
 {
   return readStrToEnum(strToProfile, sizeof(strToProfile)/sizeof(*strToProfile), in, profile);
 }
 
-static istream& operator>>(istream &in, Level::Tier &tier)
+static inline istream& operator>>(istream &in, Level::Tier &tier)
 {
   return readStrToEnum(strToTier, sizeof(strToTier)/sizeof(*strToTier), in, tier);
 }
 
-static istream& operator>>(istream &in, Level::Name &level)
+static inline istream& operator>>(istream &in, Level::Name &level)
 {
   return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
 }
@@ -959,6 +960,10 @@ Void TAppEncCfg::xCheckParameter()
 
   if( m_usePCM)
   {
+    for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+    {
+      xConfirmPara(((m_inputBitDepth[channelType] > m_internalBitDepth[channelType]) && m_bPCMInputBitDepthFlag), "PCM bit depth cannot be greater than internal bit depth (PCMInputBitDepthFlag cannot be used when InputBitDepth > InternalBitDepth)");
+    }
     xConfirmPara(  m_uiPCMLog2MinSize < 3,                                      "PCMLog2MinSize must be 3 or greater.");
     xConfirmPara(  m_uiPCMLog2MinSize > 5,                                      "PCMLog2MinSize must be 5 or smaller.");
     xConfirmPara(  m_pcmLog2MaxSize > 5,                                        "PCMLog2MaxSize must be 5 or smaller.");
