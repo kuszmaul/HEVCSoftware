@@ -59,15 +59,6 @@ TEncSampleAdaptiveOffset::TEncSampleAdaptiveOffset()
   m_dCostPartBest = NULL;
   m_iDistOrg = NULL;
   m_iTypePartBest = NULL;
-#if SAO_ENCODING_CHOICE_CHROMA
-  for(UInt cht=0; cht<MAX_NUM_CHANNEL_TYPE; cht++)
-  {
-    for(UInt depth=0; depth<NUM_SAO_RATE_DEPTHS; depth++)
-    {
-      m_depthSaoRate[cht][depth] = 0;
-    }
-  }
-#endif
 }
 TEncSampleAdaptiveOffset::~TEncSampleAdaptiveOffset()
 {
@@ -1933,12 +1924,16 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
   numNoSao[CHANNEL_TYPE_LUMA]   = 0;// Luma
   numNoSao[CHANNEL_TYPE_CHROMA] = 0;// Chroma
 
-  assert (depth-1 < Int(NUM_SAO_RATE_DEPTHS));
-  if( depth > 0 && m_depthSaoRate[CHANNEL_TYPE_LUMA][depth-1] > SAO_ENCODING_RATE )
+  if (m_depthSaoRate.size() < ((depth+1)*MAX_NUM_CHANNEL_TYPE))
+  {
+    m_depthSaoRate.resize((depth+1)*MAX_NUM_CHANNEL_TYPE, 0);
+  }
+
+  if( depth > 0 && m_depthSaoRate[(depth-1)*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_LUMA] > SAO_ENCODING_RATE )
   {
     saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] = false;
   }
-  if( depth > 0 && m_depthSaoRate[CHANNEL_TYPE_CHROMA][depth-1] > SAO_ENCODING_RATE_CHROMA )
+  if( depth > 0 && m_depthSaoRate[(depth-1)*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_CHROMA] > SAO_ENCODING_RATE_CHROMA )
   {
     saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA] = false;
   }
@@ -2144,22 +2139,21 @@ Void TEncSampleAdaptiveOffset::rdoSaoUnitAll(SAOParam *saoParam, const Double la
   }
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
-  assert (depth < NUM_SAO_RATE_DEPTHS);
   if( !saoParam->bSaoFlag[CHANNEL_TYPE_LUMA])
   {
-    m_depthSaoRate[CHANNEL_TYPE_LUMA][depth] = 1.0;
+    m_depthSaoRate[depth*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_LUMA] = 1.0;
   }
   else
   {
-    m_depthSaoRate[CHANNEL_TYPE_LUMA][depth] = numNoSao[CHANNEL_TYPE_LUMA]/((Double) frameHeightInCU*frameWidthInCU);
+    m_depthSaoRate[depth*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_LUMA] = numNoSao[CHANNEL_TYPE_LUMA]/((Double) frameHeightInCU*frameWidthInCU);
   }
   if( !saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA])
   {
-    m_depthSaoRate[CHANNEL_TYPE_CHROMA][depth] = 1.0;
+    m_depthSaoRate[depth*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_CHROMA] = 1.0;
   }
   else
   {
-    m_depthSaoRate[CHANNEL_TYPE_CHROMA][depth] = numNoSao[CHANNEL_TYPE_CHROMA]/((Double) frameHeightInCU*frameWidthInCU*2);
+    m_depthSaoRate[depth*MAX_NUM_CHANNEL_TYPE+CHANNEL_TYPE_CHROMA] = numNoSao[CHANNEL_TYPE_CHROMA]/((Double) frameHeightInCU*frameWidthInCU*2);
   }
 #else
   if( depth == 0)

@@ -517,7 +517,7 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
   assert( m_iGOPSize > 0 );
   
   // org. buffer
-  if ( m_cListPicYuvRec.size() == (UInt)m_iGOPSize )
+  if ( m_cListPicYuvRec.size() >= (UInt)m_iGOPSize ) // buffer will be 1 element longer when using field coding, to maintain first field whilst processing second.
   {
     rpcPicYuvRec = m_cListPicYuvRec.popFront();
 
