@@ -80,29 +80,41 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
       break;
   }
   
-  if (bFlag)
+  if (bFlag) //NOTE: RExt - this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
 #if SEQUENCE_LEVEL_LOSSLESS
     dRdCost = (Double)(uiBits);
 #else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+    dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+#else
     dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
+#endif
 #endif
   }
   else
   {
     if (eDFunc == DF_SAD)
     {
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+#else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
       dRdCost = (Double)(UInt)floor(dRdCost);
+#endif
     }
     else
     {
 #if SEQUENCE_LEVEL_LOSSLESS
       dRdCost = (Double)(uiBits);
 #else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+#else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
       dRdCost = (Double)(UInt)floor(dRdCost);
+#endif
 #endif
     }
   }
@@ -134,29 +146,41 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       break;
   }
   
-  if (bFlag)
+  if (bFlag) //NOTE: RExt - this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
 #if SEQUENCE_LEVEL_LOSSLESS
     dRdCost = (Double)(uiBits);
 #else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+    dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+#else
     dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
+#endif
 #endif
   }
   else
   {
     if (eDFunc == DF_SAD)
     {
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+#else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
       dRdCost = (Double)(UInt)floor(dRdCost);
+#endif
     }
     else
     {
 #if SEQUENCE_LEVEL_LOSSLESS
       dRdCost = (Double)(uiBits);
 #else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+#else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
       dRdCost = (Double)(UInt)floor(dRdCost);
+#endif
 #endif
     }
   }
