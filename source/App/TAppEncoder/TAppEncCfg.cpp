@@ -223,6 +223,9 @@ strToLevel[] =
   {"6",   Level::LEVEL6},
   {"6.1", Level::LEVEL6_1},
   {"6.2", Level::LEVEL6_2},
+#if RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL
+  {"8.5", Level::LEVEL8_5},
+#endif
 };
 
 template<typename T, typename P>
