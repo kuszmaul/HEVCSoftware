@@ -524,7 +524,21 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       codeVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  //NOTE: RExt - this will be conditional on the selected profile
+  if (pcSPS->getUseExtendedPrecision())
+  {
+    WRITE_FLAG( 1, "sps_extension1_flag" );
+    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0), "extended_precision_processing_flag" ); //NOTE: RExt - this flag will only be usable in high profile
+    WRITE_FLAG( 0, "sps_extension2_flag" );
+  }
+  else
+  {
+    WRITE_FLAG( 0, "sps_extension1_flag" );
+  }
+#else
   WRITE_FLAG( 0, "sps_extension_flag" );
+#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )

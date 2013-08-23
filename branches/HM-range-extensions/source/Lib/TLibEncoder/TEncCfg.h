@@ -178,6 +178,10 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
 
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  Bool      m_useExtendedPrecision;
+#endif
+
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
   
@@ -410,6 +414,11 @@ public:
 #if ADAPTIVE_QP_SELECTION
   Void      setUseAdaptQpSelect             ( Bool   i ) { m_bUseAdaptQpSelect    = i; }
   Bool      getUseAdaptQpSelect             ()           { return   m_bUseAdaptQpSelect; }
+#endif
+
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
+  Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
 #endif
 
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }

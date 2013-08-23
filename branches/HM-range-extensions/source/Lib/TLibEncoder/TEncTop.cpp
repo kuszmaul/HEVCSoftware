@@ -660,6 +660,10 @@ Void TEncTop::xInitSPS()
     m_cSPS.setPCMBitDepth (ChannelType(channelType), g_PCMBitDepth[channelType]         );
   }
 
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
+#endif
+
   m_cSPS.setUseSAO( m_bUseSAO );
 
   m_cSPS.setMaxTLayers( m_maxTempLayer );

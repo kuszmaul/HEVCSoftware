@@ -725,6 +725,10 @@ private:
   Int         m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
   Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
 
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  Bool        m_useExtendedPrecision;
+#endif
+
   Bool        m_useLossless;
 
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -842,10 +846,15 @@ public:
   Void      setAMPAcc   ( UInt uiDepth, Int iAccu ) { assert( uiDepth < g_uiMaxCUDepth);  m_iAMPAcc[uiDepth] = iAccu; }
 
   // Bit-depth
-  Int       getBitDepth     (ChannelType type)         { return m_uiBitDepth[type]; }
-  Void      setBitDepth     (ChannelType type, Int u ) { m_uiBitDepth[type] = u;    }
-  Int       getQpBDOffset   (ChannelType type) const   { return m_qpBDOffset[type]; }
-  Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;    }
+  Int       getBitDepth     (ChannelType type)         { return m_uiBitDepth[type];   }
+  Void      setBitDepth     (ChannelType type, Int u ) { m_uiBitDepth[type] = u;      }
+  Int       getQpBDOffset   (ChannelType type) const   { return m_qpBDOffset[type];   }
+  Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;      }
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
+  Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
+#endif
+
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
   Bool getUseSAO                  ()           {return m_bUseSAO;}
 

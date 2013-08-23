@@ -215,13 +215,6 @@
 
 #define RDO_WITHOUT_DQP_BITS                              0           ///< Disable counting dQP bits in RDO-based mode decision
 
-#define FULL_NBIT                                         0           ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
-#if FULL_NBIT
-# define DISTORTION_PRECISION_ADJUSTMENT(x)  0
-#else
-# define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
-#endif
-
 #define LOG2_MAX_NUM_COLUMNS_MINUS1                       7
 #define LOG2_MAX_NUM_ROWS_MINUS1                          7
 #define LOG2_MAX_COLUMN_WIDTH                            13
@@ -272,6 +265,11 @@
 #endif
 
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   0 ///< 0 (default) = calculate costs as normal, 1 = evaluate RD-costs as (distortion / lambda) + bits so that costs are independent of lambda for lossless modes and use lambda derived from Qp' = 4 for first-pass intra prediction mode selection
+#define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
+#define RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS                       1 ///< 0 = use the same set of matrices for both forward and inverse transform, 1 (default) = allow the set of matrices used for the forward transform to be differemt from that used for the inverse transform
+#define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 0 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
+
+#define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -289,6 +287,30 @@
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082                           0 ///< Maintain backwards compatibility with HM for ticket 1082 (SAO bit depth increase (only affects operation at greater than 10-bit)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
+
+//------------------------------------------------
+// Derived macros
+//------------------------------------------------
+
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#define FULL_NBIT                                                              1 ///< When enabled, use distortion measure derived from all bits of source data, otherwise discard (bitDepth - 8) least-significant bits of distortion
+#else
+#define FULL_NBIT                                                              0 ///< When enabled, use distortion measure derived from all bits of source data, otherwise discard (bitDepth - 8) least-significant bits of distortion
+#endif
+
+#if FULL_NBIT
+# define DISTORTION_PRECISION_ADJUSTMENT(x)  0
+#else
+# define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
+#endif
+
+//------------------------------------------------
+// Error checks
+//------------------------------------------------
+
+#if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && ((RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS == 0) || (RExt__HIGH_BIT_DEPTH_SUPPORT == 0)))
+#error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS and RExt__HIGH_BIT_DEPTH_SUPPORT
+#endif
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -494,6 +516,15 @@ enum MVP_DIR
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+enum TransformDirection
+{
+  TRANSFORM_FORWARD              = 0,
+  TRANSFORM_INVERSE              = 1,
+  TRANSFORM_NUMBER_OF_DIRECTIONS = 2
+};
+#endif
+
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
 {
@@ -609,12 +640,21 @@ namespace Level
 // Type definition
 // ====================================================================================================================
 
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+typedef       Int             Pel;               ///< pixel type
+typedef       Int64           TCoeff;            ///< transform coefficient
+typedef       Int             TMatrixCoeff;      ///< transform matrix coefficient
+typedef       Short           TFilterCoeff;      ///< filter coefficient
+typedef       Int64           Intermediate_Int;  ///< used as intermediate value in calculations
+typedef       UInt64          Intermediate_UInt; ///< used as intermediate value in calculations
+#else
 typedef       Short           Pel;               ///< pixel type
 typedef       Int             TCoeff;            ///< transform coefficient
 typedef       Short           TMatrixCoeff;      ///< transform matrix coefficient
 typedef       Short           TFilterCoeff;      ///< filter coefficient
 typedef       Int             Intermediate_Int;  ///< used as intermediate value in calculations
 typedef       UInt            Intermediate_UInt; ///< used as intermediate value in calculations
+#endif
 
 /// parameters for adaptive loop filter
 class TComPicSym;
