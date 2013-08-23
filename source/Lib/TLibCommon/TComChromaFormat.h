@@ -189,6 +189,12 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 //Scaling lists  =======================================================================================================
 //======================================================================================================================
 
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+static inline Int getScalingListType(const Bool isIntra, const ComponentID compID)
+{
+  return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
+}
+#else
 // for a given TU size, there is one list per intra/inter & channel combination (i.e. 6 per TU size), apart from 32x32,
 // because 32x32 Cb/Cr TUs don't exist in 4:2:0
 static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, const ComponentID compID)
@@ -202,10 +208,12 @@ static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, 
   return (numForAdjSizeID!=SCALING_LIST_NUM) ? base : base+compID;
 #endif
 }
+#endif
 
 
 //------------------------------------------------
 
+#if !RExt__SQUARE_TRANSFORM_CHROMA_422
 static inline UInt getScalingListCoeffIdx(const ChromaFormat chFmt, const ComponentID compID, const UInt blkPos, const UInt tuWidth, const UInt tuHeight)
 {
   if ( tuWidth==tuHeight || isLuma(compID) || chFmt!=CHROMA_422  )
@@ -215,7 +223,7 @@ static inline UInt getScalingListCoeffIdx(const ChromaFormat chFmt, const Compon
   else
     return ( (blkPos & (~(tuWidth-1)))<<1) + (blkPos & (tuWidth-1));
 }
-
+#endif
 
 //======================================================================================================================
 //Context variable selection  ==========================================================================================

@@ -1759,13 +1759,37 @@ Void TDecCavlc::parseScalingList(TComScalingList* scalingList)
   //for each size
   for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    for(listId = 0; listId <  SCALING_LIST_NUM; listId++)
+#else
     for(listId = 0; listId <  g_scalingListNum[sizeId]; listId++)
+#endif
     {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+      if ((sizeId==SCALING_LIST_32x32) && (listId%(SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) != 0))
+      {
+        Int *src = scalingList->getScalingListAddress(sizeId, listId);
+        const Int size = min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]);
+        const Int *srcNextSmallerSize = scalingList->getScalingListAddress(sizeId-1, listId);
+        for(Int i=0; i<size; i++)
+        {
+          src[i] = srcNextSmallerSize[i];
+        }
+        scalingList->setScalingListDC(sizeId,listId,(sizeId > SCALING_LIST_8x8) ? scalingList->getScalingListDC(sizeId-1, listId) : src[0]);
+      }
+      else
+      {
+#endif
+
       READ_FLAG( code, "scaling_list_pred_mode_flag");
       scalingListPredModeFlag = (code) ? true : false;
       if(!scalingListPredModeFlag) //Copy Mode
       {
         READ_UVLC( code, "scaling_list_pred_matrix_id_delta");
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+        if (sizeId==SCALING_LIST_32x32)
+          code*=(SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES); // Adjust the decoded code for this size, to cope with the missing 32x32 chroma entries.
+#endif
         scalingList->setRefMatrixId (sizeId,listId,(UInt)((Int)(listId)-(code)));
         if( sizeId > SCALING_LIST_8x8 )
         {
@@ -1778,6 +1802,9 @@ Void TDecCavlc::parseScalingList(TComScalingList* scalingList)
       {
         xDecodeScalingList(scalingList, sizeId, listId);
       }
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+      }
+#endif
     }
   }
 

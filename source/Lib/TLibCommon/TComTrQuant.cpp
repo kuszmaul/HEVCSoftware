@@ -1352,7 +1352,11 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
+#else
     Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+#endif
     assert(scalingListType < SCALING_LIST_NUM);
     Int *piQuantCoeff = getQuantCoeff(scalingListType,cQP.getAdjustedQp().rem,uiLog2TrSize-2);
 
@@ -1391,7 +1395,11 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
       iSign   = (iLevel < 0 ? -1: 1);
 
 
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+      const UInt scalingListCoeffIdx = uiBlockPos;
+#else
       const UInt scalingListCoeffIdx = getScalingListCoeffIdx(chFmt, compID, uiBlockPos, uiWidth, uiHeight);
+#endif
       Int64 tmpLevel = (Int64)abs(iLevel) * piQuantCoeff[scalingListCoeffIdx];
 
 #if ADAPTIVE_QP_SELECTION
@@ -1442,7 +1450,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
   const TCoeff* piQCoef   = pSrc;
   TCoeff*       piCoef    = pDes;
+#if !RExt__SQUARE_TRANSFORM_CHROMA_422
   const ChromaFormat fmt=rTu.GetChromaFormat();
+#endif
 
   const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
   const UInt numSamplesInBlock=uiWidth*uiHeight;
@@ -1453,7 +1463,11 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
 #endif
 
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
+#else
   Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+#endif
   assert(scalingListType < SCALING_LIST_NUM);
   assert ( uiWidth <= m_uiMaxTrSize );
 
@@ -1497,7 +1511,11 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
       for( Int n = 0; n < numSamplesInBlock; n++ )
       {
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+        const Int deQuantIdx = n;
+#else
         const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+#endif
 
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
@@ -1514,7 +1532,11 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
       for( Int n = 0; n < numSamplesInBlock; n++ )
       {
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+        const Int deQuantIdx = n;
+#else
         const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
+#endif
 
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
@@ -2081,7 +2103,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const UInt uiMaxNumCoeff       = uiWidth * uiHeight;
   assert(compID<MAX_NUM_COMPONENT);
 
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
+#else
   Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+#endif
   assert(scalingListType < SCALING_LIST_NUM);
 
 #if ADAPTIVE_QP_SELECTION
@@ -2156,7 +2182,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
       //===== quantization =====
       UInt    uiBlkPos          = codingParameters.scan[iScanPos];
       // set coeff
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+      const UInt scalingListCoeffIdx = uiBlkPos;
+#else
       const UInt scalingListCoeffIdx = getScalingListCoeffIdx(format, compID, uiBlkPos, uiWidth, uiHeight);
+#endif
       Double dTemp = pdErrScale[scalingListCoeffIdx];
 
       Int64 tmpLevel = Int64(abs(plSrcCoeff[ uiBlkPos ])) * piQCoef[scalingListCoeffIdx];
@@ -3030,7 +3060,11 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
 
   for(UInt size = 0; size < SCALING_LIST_SIZE_NUM; size++)
   {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    for(UInt list = 0; list < SCALING_LIST_NUM; list++)
+#else
     for(UInt list = 0; list < g_scalingListNum[size]; list++)
+#endif
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
@@ -3051,7 +3085,11 @@ Void TComTrQuant::setScalingListDec(TComScalingList *scalingList, const ChromaFo
 
   for(UInt size = 0; size < SCALING_LIST_SIZE_NUM; size++)
   {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    for(UInt list = 0; list < SCALING_LIST_NUM; list++)
+#else
     for(UInt list = 0; list < g_scalingListNum[size]; list++)
+#endif
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
@@ -3137,7 +3175,11 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format)
 
   for(UInt size = 0; size < SCALING_LIST_SIZE_NUM; size++)
   {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    for(UInt list = 0; list < SCALING_LIST_NUM; list++)
+#else
     for(UInt list = 0; list < g_scalingListNum[size]; list++)
+#endif
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
@@ -3230,16 +3272,23 @@ Void TComTrQuant::initScalingList()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
+#if !RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     const UInt lastSourceEntry = g_scalingListNum[sizeId]-1;
+#endif
 
     for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
     {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+      for(UInt listId = 0; listId < SCALING_LIST_NUM; listId++)
+#else
       for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
+#endif
       {
         m_quantCoef   [sizeId][listId][qp] = new Int    [g_scalingListSize[sizeId]];
         m_dequantCoef [sizeId][listId][qp] = new Int    [g_scalingListSize[sizeId]];
         m_errScale    [sizeId][listId][qp] = new Double [g_scalingListSize[sizeId]];
       } // listID loop
+#if !RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
       if (g_scalingListNum[sizeId] < 2*MAX_NUM_COMPONENT)
       {
         // make the first entry for inter be the second intra entry...
@@ -3247,6 +3296,7 @@ Void TComTrQuant::initScalingList()
         m_dequantCoef [sizeId][MAX_NUM_COMPONENT][qp] = m_dequantCoef [sizeId][lastSourceEntry][qp];
         m_errScale    [sizeId][MAX_NUM_COMPONENT][qp] = m_errScale    [sizeId][lastSourceEntry][qp];
       }
+#endif
     }
   }
 }
@@ -3257,7 +3307,11 @@ Void TComTrQuant::destroyScalingList()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    for(UInt listId = 0; listId < SCALING_LIST_NUM; listId++)
+#else
     for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
+#endif
     {
       for(UInt qp = 0; qp < SCALING_LIST_REM_NUM; qp++)
       {
