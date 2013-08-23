@@ -389,11 +389,7 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 }
 
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
 Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
-#else
-Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
-#endif
 {
   const ChromaFormat   format      = rTu.GetChromaFormat();
   const ChannelType    channelType = toChannelType(compID);
@@ -406,17 +402,13 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   //assert( iWidth == iHeight  );
 
         Pel *pDst = piPred;
-#if !RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
-  const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
-#endif
 
   // get starting pixel in block
   const Int sw = (2 * iWidth + 1);
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   if ( UseSampleAdaptiveIntraPrediction(rTu, uiDirMode) )
   {
-    const Pel *ptrSrc = getPredictorPtr( compID, false ) ;
+    const Pel *ptrSrc = getPredictorPtr( compID, false );
     // Sample Adaptive intra-Prediction (SAP)
     if (uiDirMode==HOR_IDX)
     {
@@ -455,8 +447,8 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   }
   else
   {
-    const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples ) ;
-#endif
+    const Pel *ptrSrc = getPredictorPtr( compID, bUseFilteredPredSamples );
+
     if ( uiDirMode == PLANAR_IDX )
     {
       xPredIntraPlanar( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format );
@@ -471,9 +463,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
         xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
       }
     }
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
   }
-#endif
 
 }
 
@@ -826,7 +816,6 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
   return;
 }
 
-#if RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT
 /* Static member function */
 Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode)
 {
@@ -835,6 +824,5 @@ Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt ui
          rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
          (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
-#endif
 
 //! \}
