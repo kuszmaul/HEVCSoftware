@@ -182,6 +182,10 @@ public:
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true  );
   Void updateContextTables           ( SliceType eSliceType, Int iQp  ) { this->updateContextTables( eSliceType, iQp, true); };
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Void codeInterRdpcmMode            ( TComTU &rTu, const ComponentID compID );
+#endif
+
 
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
@@ -219,6 +223,10 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
+#if RExt__NRCE2_RESIDUAL_DPCM
+  ContextModel3DBuffer m_interRdpcmFlagSCModel;
+  ContextModel3DBuffer m_interRdpcmDirSCModel;
+#endif
 
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   ContextModel3DBuffer m_cIntraMVPredFlagSCModel;

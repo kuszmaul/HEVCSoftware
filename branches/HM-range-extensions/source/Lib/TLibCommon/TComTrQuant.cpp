@@ -1654,25 +1654,42 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   //transform and quantise
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
-    const UInt lastColumn     = uiWidth  - 1;
-    const UInt lastRow        = uiHeight - 1;
+#if RDPCM_INTER_LOSSLESS
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+        ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
+#else
+    if((!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) ) // NOTE: RExt - RDPCM proponents to confirm
 #endif
 
     for (UInt k = 0; k<uiHeight; k++)
     {
-      for (UInt j = 0; j<uiWidth; j++)
-      {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-        rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
-#else
-        rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
-#endif
-        uiAbsSum += abs(pcResidual[k*uiStride+j]);
-      }
+      xInterResidueDpcm(rTu, pcResidual, uiStride, rpcCoeff, compID, uiAbsSum);
     }
+    else
+    {
+#endif
+#if RExt__NRCE2_RESIDUAL_ROTATION
+      const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+      const UInt lastColumn     = uiWidth  - 1;
+      const UInt lastRow        = uiHeight - 1;
+#endif
+      for (UInt k = 0; k<uiHeight; k++)
+      {
+        for (UInt j = 0; j<uiWidth; j++)
+        {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+          const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+          rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
+#else
+          rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
+#endif
+          uiAbsSum += abs(pcResidual[k*uiStride+j]);
+        }
+      }
+#if RDPCM_INTER_LOSSLESS
+    }
+#endif
   }
   else
   {
@@ -1707,12 +1724,36 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-    xQuant( rTu, m_plTempCoeff, rpcCoeff,
+#if RDPCM_INTER_LOSSY
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if( pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 &&
+        ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
+      )
+#else
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 && !pcCU->isIntra(uiAbsPartIdx))
+#endif
+    {
+      //  Inter coded TU with transform skip: select the best inter RDPCM mode
+      xQuantInterRdpcm(rTu, m_plTempCoeff, rpcCoeff, 
+#if ADAPTIVE_QP_SELECTION
+        rpcArlCoeff,
+#endif
+        uiAbsSum, compID, cQP);
+    }
+    else
+    {
+#endif
+
+      xQuant( rTu, m_plTempCoeff, rpcCoeff,
 
 #if ADAPTIVE_QP_SELECTION
-         rpcArlCoeff,
+          rpcArlCoeff,
 #endif
-         uiAbsSum, compID, cQP );
+          uiAbsSum, compID, cQP );
+#if RDPCM_INTER_LOSSY
+    }
+#endif
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
@@ -1803,6 +1844,17 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
       }
     }
+#if RDPCM_INTER_LOSSLESS
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+        ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
+#else
+    if( !pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) ) // NOTE: RExt - RDPCM proponents to confirm
+#endif
+    {
+      xInterInverseRdpcm(rTu, rpcResidual, uiStride, compID);
+    }
+#endif
   }
   else
   {
@@ -1835,7 +1887,32 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
     {
+
+      // NOTE: RExt -- RDPCM proponents to confirm the order --
+#if RDPCM_INTER_LOSSY
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+      if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
+#else
+      if( !pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) // NOTE: RExt - RDPCM proponents to confirm
+#endif
+      {
+        //  Undo inter RDPCM before the final shift down for transform skip
+        xInvInterRdpcm(rTu, m_plTempCoeff, compID);
+      }
+#endif
       xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, rTu, compID );
+//#if RDPCM_INTER_LOSSY
+//#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+//      if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+//          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
+//#else
+//        if( !pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) // NOTE: RExt - RDPCM proponents to confirm
+//#endif
+//      {
+//        xInterInverseRdpcm(rTu, rpcResidual, uiStride, compID);
+//      }
+//#endif
 
 #if defined DEBUG_STRING
       if (psDebug)
@@ -3425,5 +3502,864 @@ Void TComTrQuant::destroyScalingList()
     }
   }
 }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP )
+{
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+
+#if !RExt__SQUARE_TRANSFORM_CHROMA_422
+  const TComRectangle &rect= rTu.getRect(compID);
+
+  const UInt    uiWidth           = rect.width;
+  const UInt    uiHeight          = rect.height;
+  const ChromaFormat chFmt        = rTu.GetChromaFormat();
+#endif
+
+  // transform skip params
+  Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
+  Int offset = 0;
+
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  Int scalingListType = getScalingListType( pcCU->isIntra(uiAbsPartIdx), compID);
+#else
+  Int scalingListType = getScalingListType( pcCU->isIntra(uiAbsPartIdx), rTu.GetEquivalentLog2TrSize(compID), compID );
+#endif
+  assert( scalingListType < SCALING_LIST_NUM );
+  Int *piQuantCoeff = getQuantCoeff( scalingListType, cQP.getAdjustedQp().rem, (rTu.GetEquivalentLog2TrSize(compID)-2) );
+
+  /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+  * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+  * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+  * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+  */
+
+  const Int iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
+  // NOTE: RExt - QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
+
+  Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
+
+  TCoeff iLevel;
+  Int    iSign;
+
+  UInt scalingListCoeffIdx;
+  Int64 tmpLevel;
+
+  TCoeff tmpCoef;
+
+  // transform-skip
+  if (iTransformShift >= 0)
+  {
+    tmpCoef = resiDiff << iTransformShift;
+  }
+  else // for very high bit depths
+  {
+    Int iTrShiftNeg = -iTransformShift;
+    offset = 1 << (iTrShiftNeg - 1);
+    tmpCoef = ( resiDiff + offset ) >> iTrShiftNeg;
+  }
+
+  // quantization
+  iLevel  = tmpCoef;
+  iSign   = (iLevel < 0 ? -1: 1);
+
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+  scalingListCoeffIdx = uiPos;
+#else
+  scalingListCoeffIdx = getScalingListCoeffIdx(chFmt, compID, uiPos, uiWidth, uiHeight);
+#endif
+  tmpLevel = (Int64) abs(iLevel) * piQuantCoeff[scalingListCoeffIdx];
+
+  iLevel = (TCoeff) ((tmpLevel + iAdd ) >> iQBits);
+
+  iLevel *= iSign;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
+  const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
+  pcCoeff[ uiPos ] = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, iLevel );
+#else
+  pcCoeff[ uiPos ] = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, iLevel );
+#endif
+}
+
+Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos )
+{
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+
+#if !RExt__SQUARE_TRANSFORM_CHROMA_422
+  const TComRectangle &rect= rTu.getRect(compID);
+
+  const UInt    uiWidth           = rect.width;
+  const UInt    uiHeight          = rect.height;
+  const ChromaFormat chFmt        = rTu.GetChromaFormat();
+#endif
+
+  const Int QP_per = cQP.getAdjustedQp().per;
+  const Int QP_rem = cQP.getAdjustedQp().rem;
+
+  // transform skip params
+  Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
+
+  const Int rightShift = (IQUANT_SHIFT - (iTransformShift + QP_per)) + (getUseScalingList() ? LOG2_SCALING_LIST_NEUTRAL_VALUE : 0);
+
+  const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
+#else
+  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), uiLog2TrSize, compID);
+#endif
+
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
+  const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
+#endif
+
+  /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+   * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+   * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+   * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+   */
+
+  TCoeff clipQCoef;
+  Intermediate_Int iCoeffQ;
+  TCoeff tmpCoef;
+
+  if(getUseScalingList())
+  {
+    const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
+#else
+    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
+#endif
+    const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
+    const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
+
+    Int *piDequantCoef = getDequantCoeff(scalingListType,QP_rem,uiLog2TrSize-2);
+
+    if(rightShift > 0)
+    {
+      const Intermediate_Int iAdd = 1 << (rightShift - 1);
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+      const Int deQuantIdx = uiPos;
+#else
+      const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, uiPos, uiWidth, uiHeight);
+#endif
+
+      clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
+      iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+    else
+    {
+      const Int leftShift = -rightShift;
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+      const Int deQuantIdx = uiPos;
+#else
+      const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, uiPos, uiWidth, uiHeight);
+#endif
+
+      clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
+      iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+  }
+  else
+  {
+    const Int scale     =  g_invQuantScales[QP_rem];
+    const Int scaleBits =     (IQUANT_SHIFT + 1)   ;
+
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
+#else
+    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
+#endif
+    const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
+    const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
+
+    if (rightShift > 0)
+    {
+      const Intermediate_Int iAdd = 1 << (rightShift - 1);
+      clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
+      iCoeffQ   = (Intermediate_Int(clipQCoef) * scale + iAdd) >> rightShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+    else
+    {
+      const Int leftShift = -rightShift;
+      clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
+      iCoeffQ   = (Intermediate_Int(clipQCoef) * scale) << leftShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+  }
+
+  // Inverse transform-skip
+
+  Int offset;
+  if (iTransformShift >= 0)
+  {
+    offset = 1 << (iTransformShift - 1);
+    deQuantSample =  ( tmpCoef + offset ) >> iTransformShift;
+  }
+  else //for very high bit depths
+  {
+    Int iTrShiftNeg = -iTransformShift;
+    deQuantSample = tmpCoef << iTrShiftNeg;
+  }
+  }
+
+#endif // RExt__NRCE2_RESIDUAL_DPCM
+
+#if RDPCM_INTER_LOSSLESS
+/** Performs inverse RDPCM for inter predicted residuals. It does a recursion step in case of 4:2:2 chroma format
+ * \param rTu current TU where the residulas belong to
+ * \param stride incremental step to index the residuals array
+ * \param compID component identifier
+ */
+Void TComTrQuant::xInterInverseRdpcm( TComTU &rTu, Pel *&residuals, UInt stride, ComponentID compID )
+{
+
+  const UInt absPartIdx = rTu.GetAbsPartIdxTU(compID);
+  const TComRectangle &rect = rTu.getRect(compID);
+  TComDataCU *cu = rTu.getCU();
+  const UInt width = rect.width;
+  const UInt height = rect.height;
+
+  UInt direction = cu->getInterRdpcmMode(compID, absPartIdx);
+
+  assert(height == width);
+
+  if(direction == DPCM_OFF || direction == NUMBER_OF_INTER_RDPCM_MODES) return;
+
+  Pel *residualsPtr = residuals;
+
+  if(direction == DPCM_HOR)
+  {
+    for(int r = 0; r < height; r++)
+    {
+      for(int c = 1; c < width; c++)
+      {
+        residualsPtr[c] += residualsPtr[c-1];
+      }
+      residualsPtr += stride;
+    }
+  }
+  else if(direction == DPCM_VER)
+  {
+    Pel *previousRowResidualsPtr = residuals;
+    residualsPtr += stride;
+    for(int r = 1; r < height; r++)
+    {
+      for(int c = 0; c < width; c++)
+      {
+        residualsPtr[c] += previousRowResidualsPtr[c];
+      }
+      residualsPtr += stride;
+      previousRowResidualsPtr += stride;
+    }
+  }
+  else
+  {
+    assert(0);
+  }
+}
+
+/** Selects the best inter RDPCM mode by minimizing the sum of absolute differences for the predicted residuals
+ * \param rTu current TU data structure
+ * \param residuals pointer to the array which will contains the inter predicted residuals
+ * \param stride incremental step to index the residuals array
+ * \param coefficients pointer to the array which will contain the RDPCM predicted residuals
+ * \param compID component identifier
+ * \param bestInterRdpcmMode pointer to the variable which will contain the best inter RDPCM mode for this TU
+ * \param absSum pointer to the variable which will contain the SAD for the best inter RDPCM mode
+ */
+Void TComTrQuant::xInterResidueDpcm( TComTU      &rTu, 
+                                     Pel*        inputResiduals, 
+                                     UInt        stride,
+                                     TCoeff*     outputResiduals,
+                                     ComponentID compID,
+                                     UInt        &absSum)
+{
+
+  const TComRectangle &rect= rTu.getRect(compID);
+  TComDataCU *cu = rTu.getCU();
+  const UInt absPartIdx = rTu.GetAbsPartIdxTU(compID);
+
+  UInt height = rect.height;
+  UInt width  = rect.width;
+
+  assert(height == width);
+
+  TCoeff tempResiduals[MAX_TU_SIZE * MAX_TU_SIZE];
+  TCoeff *tempResidualsPtr;
+  Pel *inputResidualsPtr;
+  UInt currentSad, bestSad = MAX_UINT, bestInterRdpcmMode = NUMBER_OF_INTER_RDPCM_MODES;
+
+  for(UInt direction = DPCM_OFF; direction < NUMBER_OF_INTER_RDPCM_MODES; direction++)
+  {
+    currentSad = 0;
+    tempResidualsPtr = tempResiduals;
+    inputResidualsPtr = inputResiduals;
+
+    if(direction == DPCM_OFF)
+    {
+      for(int r = 0; r < height; r++)
+      {
+        for(int c = 0; c < width; c++)
+        {
+          tempResidualsPtr[c] = (TCoeff)inputResidualsPtr[c];
+          currentSad += abs(tempResidualsPtr[c]);
+        }
+        inputResidualsPtr += stride;
+        tempResidualsPtr += width;
+      }
+    }
+    else if(direction == DPCM_HOR)
+    {
+      for(int r = 0; r < height; r++)
+      {
+        tempResidualsPtr[0] = (TCoeff)inputResidualsPtr[0];
+        currentSad += abs(tempResidualsPtr[0]);
+        for(int c = 1; c < width; c++)
+        {
+          tempResidualsPtr[c] = (TCoeff)(inputResidualsPtr[c] - inputResidualsPtr[c-1]);
+          currentSad += abs(tempResidualsPtr[c]);
+        }
+        inputResidualsPtr += stride;
+        tempResidualsPtr += width;
+      }
+    }
+    else
+    {
+      //  Vertical RDPCM
+      //  First row
+      for(int c = 0; c < width; c++)
+      {
+        tempResidualsPtr[c] = (TCoeff)inputResidualsPtr[c];
+        currentSad += abs(tempResidualsPtr[c]);
+      }
+      Pel *previousRowTempResidualsPtr = inputResidualsPtr;
+      inputResidualsPtr += stride;
+      tempResidualsPtr += width;
+
+      for(int r = 1; r < height; r++)
+      {
+        for(int c = 0; c < width; c++)
+        {
+          tempResidualsPtr[c] = (TCoeff)(inputResidualsPtr[c] - previousRowTempResidualsPtr[c]);
+          currentSad += abs(tempResidualsPtr[c]);
+        }
+        inputResidualsPtr += stride;
+        tempResidualsPtr += width;
+        previousRowTempResidualsPtr += stride;
+      }
+    }
+
+    //  Check for best SAD
+    if(currentSad < bestSad)
+    {
+      bestInterRdpcmMode = direction;
+      bestSad = currentSad;
+      absSum  = currentSad;
+      //::memcpy(outputResiduals, tempResiduals, width*height*sizeof(TCoeff));
+      for(int r = 0; r < height; r++)
+      {
+        for(int c = 0; c < width; c++)
+        {
+          outputResiduals[r*width + c] = tempResiduals[r*width + c];
+        }
+      }
+    }
+  }
+
+  assert(bestInterRdpcmMode != NUMBER_OF_INTER_RDPCM_MODES);
+
+  //  Set inter Rdpcm mode and cbf
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  cu->setInterRdpcmModePartRange(bestInterRdpcmMode, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
+#else
+  cu->setInterRdpcmModeSubParts(bestInterRdpcmMode, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+}
+#endif
+
+#if RDPCM_INTER_LOSSY
+/** Performs HEVC quantisation of one sample. Main purpose of this function is to make the code for "xQuantInterRdpcm" more readable
+ * \param[in] rTu current TU where the sample belongs to
+ * \param[in] residual sample value to be quantised
+ * \param[in|out] quantisedLevel pointer to the memory location which will contain the quantised value for the residual parameter
+ * \param[in|out] quantisedArlLevel pointer to the memory location which will contain the quantised value for adaptive residual quantisation
+ * \param[in] compID current component identifier
+ * \param[in] cQP quantiser class
+ * \param[in] quantIdx index for the quantiser scale
+ * \param[in|out] deltaU pointer to the memory location which will contain the value for the quantisation error associated to this sample
+ */
+inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu, 
+                                                TCoeff      residual, 
+                                                TCoeff      &quantisedLevel,
+#if ADAPTIVE_QP_SELECTION
+                                                TCoeff      &quantisedArlLevel,
+#endif
+                                                ComponentID compID,
+                                                const QpParam     &cQP, 
+                                                Int         quantIdx,
+                                                Int         &deltaU
+                                        )
+{
+  const UInt log2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+  const UInt absPartIdx = rTu.GetAbsPartIdxTU();
+  TComDataCU *cu = rTu.getCU();
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), compID);
+#else
+  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), log2TrSize, compID);
+#endif
+  int level, signLevel;
+  Int64 tmpLevel;
+
+
+  //  Get quantiser scale
+  Int *quantiserScale = getQuantCoeff(scalingListType, cQP.getAdjustedQp().rem, log2TrSize);
+
+  //  Get transform shift
+  Int transformShift = getTransformShift(toChannelType(compID), log2TrSize);
+
+  //  Get quantiser right shift quantity
+  const Int quantiserRightShift = QUANT_SHIFT + cQP.getAdjustedQp().per + transformShift;
+
+  //  Get offset for quantiser right shift
+  const Int rightShiftOffset = (cu->getSlice()->getSliceType() == I_SLICE ? 171 : 85) << (quantiserRightShift-9);
+
+  const Int qBits8 = quantiserRightShift - 8;
+
+#if ADAPTIVE_QP_SELECTION
+  Int iQBitsC = MAX_INT;
+  Int iAddC   = MAX_INT;
+    
+  iQBitsC = quantiserRightShift - ARL_C_PRECISION;
+  iAddC   = 1 << (iQBitsC-1);
+#endif
+
+  signLevel = (residual < 0 ? -1: 1);
+  tmpLevel = (Int64)abs(residual) * quantiserScale[quantIdx];
+
+#if ADAPTIVE_QP_SELECTION
+  quantisedArlLevel = (TCoeff)((tmpLevel + iAddC ) >> iQBitsC);
+#endif
+
+  level = (TCoeff)((tmpLevel + rightShiftOffset ) >> quantiserRightShift);
+
+  deltaU = (Int)((tmpLevel - (level<<quantiserRightShift) )>> qBits8);
+
+  level *= signLevel;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
+  const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
+  quantisedLevel = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, level );
+#else
+  quantisedLevel = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, level );
+#endif
+
+}
+/** Performs HEVC inverse quantisation of one sample. Main purpose of this function is to make the code for "xQuantInterRdpcm" more readable
+ * \param[in] rTu current TU where the sample belongs to
+ * \param[in] quantisedResidual level of the quantised sample
+ * \param[in|out] reconCoeff pointer to the memory location which will contain the reconstructed value for the quantisedResidual parameter
+ * \param[in] compID current component identifier
+ * \param[in] cQP quantiser class
+ * \param[in] deQuantIdx index for the inverse quantiser scale
+ */
+inline Void TComTrQuant::xDequantiseSample(
+                                                  TComTU      &rTu,
+                                                  TCoeff      quantisedResidual, 
+                                                  TCoeff      &reconCoeff,
+                                                  ComponentID compID, 
+                                            const QpParam     &cQP, 
+                                            const Int         deQuantIdx
+  )
+{
+  const UInt log2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+  const UInt absPartIdx = rTu.GetAbsPartIdxTU();
+  TComDataCU *cu        = rTu.getCU();
+
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), compID);
+#else
+  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), log2TrSize, compID);
+#endif
+
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+  const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
+  const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
+#endif
+
+  assert(scalingListType < SCALING_LIST_NUM);
+
+  // Get the forward transform shift
+  Int transformShift = getTransformShift(toChannelType(compID), log2TrSize);
+
+  const Int QP_per = cQP.getAdjustedQp().per;
+  const Int QP_rem = cQP.getAdjustedQp().rem;
+
+  //  Get the inverse quantiser right shift
+  const Int quantiserRightShift = (IQUANT_SHIFT - (transformShift + QP_per)) + (getUseScalingList() ? LOG2_SCALING_LIST_NEUTRAL_VALUE : 0);
+
+  if(getUseScalingList())
+  {
+    const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - dequantCoefBits));
+#else
+    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - dequantCoefBits));
+#endif
+    const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
+    const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
+    TCoeff clipQuantisedCoeff;
+    Intermediate_Int iCoeffQ;
+    Int *quantiserInverseScale = getDequantCoeff(scalingListType, QP_rem, log2TrSize-2);
+
+    if(quantiserRightShift > 0)
+    {
+      const Intermediate_Int iAdd = 1 << (quantiserRightShift - 1);
+
+      clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
+      iCoeffQ   = ((Intermediate_Int(clipQuantisedCoeff) * quantiserInverseScale[deQuantIdx]) + iAdd ) >> quantiserRightShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+    else
+    {
+      const Int quantiserLeftShift = -quantiserRightShift;
+
+      clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
+      iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * quantiserInverseScale[deQuantIdx]) << quantiserLeftShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+  }
+  else
+  {
+    const Int scale     =  g_invQuantScales[QP_rem];
+    const Int scaleBits =     (IQUANT_SHIFT + 1)   ;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - scaleBits));
+#else
+    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - scaleBits));
+#endif
+    const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
+    const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
+    TCoeff clipQuantisedCoeff;
+    Intermediate_Int iCoeffQ;
+
+    if (quantiserRightShift > 0)
+    {
+      const Intermediate_Int iAdd = 1 << (quantiserRightShift - 1);
+
+      clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
+      iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * scale + iAdd) >> quantiserRightShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+    else
+    {
+      const Int quantiserLeftShift = -quantiserRightShift;
+
+      clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
+      iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * scale) << quantiserLeftShift;
+#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
+#else
+      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
+#endif
+    }
+  }
+}
+
+/** Selects the best inter RDPCM mode (off, horizontal or vertical) by minimising the sum of absolute difference associated to the quantised levels.
+ ** RDOQ is not performed unless the best selected mode is DPCM_OFF. Moreover sign data hiding is avoided when RDPCM is either horizontal or vertical
+ * \param[in] rTu current TU where the coefficients belong to
+ * \param[in] pSrc pointer to the array of input coefficients to be quantised
+ * \param[in|out] pDes pointer to the array of output quantised coefficients
+ * \param[in|out] pArlDes pointer to the array of output quantised coefficients when adaptive residual quantisation is used
+ * \param[in|out] uiAcSum pointer to the memory location which will contain the value for the sum of absolute difference associated to the quantised levels
+ * \param[in] compID current component identifier
+ * \param[in] cQP quantiser class
+ */
+Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
+                                    TCoeff      * pSrc,
+                                    TCoeff      * pDes,
+#if ADAPTIVE_QP_SELECTION
+                                    TCoeff      *&pArlDes,
+#endif
+                                    UInt         &uiAcSum,
+                                    const ComponentID   compID,
+                                    const QpParam      &cQP)
+{
+  TComDataCU *cu = rTu.getCU();
+  const TComRectangle &rect = rTu.getRect(compID);
+  UInt height = rect.height;
+  UInt width  = rect.width;
+#if !RExt__SQUARE_TRANSFORM_CHROMA_422
+  ChromaFormat chromaFormat = cu->getPic()->getChromaFormat();
+#endif
+
+  //  Check whether this function is called only for 4x4 blocks
+  assert(height == 4 && width == 4);
+
+  const UInt absPartIdx = rTu.GetAbsPartIdxTU();
+
+  //  Temporary variables for mode decision
+  UInt currentSad, bestSad = MAX_UINT;
+  UInt bestRdpcmMode = 0;  
+  TCoeff tempQCoeff[16], tempRecCoeff[16], *tempQCoeffPtr, *tempCoeffPtr;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff tempArlCoeff[16], *arlCoeffPtr;
+#endif
+  Int deltaU[32*32], tempDeltaU[32*32];
+
+  for(int direction = DPCM_OFF; direction < NUMBER_OF_INTER_RDPCM_MODES; direction++)
+  {
+    currentSad = 0;
+    tempCoeffPtr = pSrc;
+    tempQCoeffPtr = tempQCoeff;
+#if ADAPTIVE_QP_SELECTION
+    arlCoeffPtr = tempArlCoeff;
+#endif
+
+    if(direction == DPCM_OFF)
+    {
+      for(int r = 0, samplePosition = 0; r < height; r++)
+      {
+        for(int c = 0; c < width; c++, samplePosition++)
+        {
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+          const Int quantIdx = samplePosition;
+#else
+          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
+#endif
+          xQuantiseSample(rTu, tempCoeffPtr[c], tempQCoeffPtr[c], 
+#if ADAPTIVE_QP_SELECTION
+            arlCoeffPtr[c], 
+#endif
+            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+          currentSad += abs(tempQCoeffPtr[c]);
+        }
+        tempCoeffPtr += width;
+        tempQCoeffPtr += width;
+#if ADAPTIVE_QP_SELECTION
+        arlCoeffPtr += width;
+#endif
+      }
+    }
+    else if (direction == DPCM_HOR)
+    {
+      //  Processing is column-wise
+      //  First column: quantisation only
+      for(int r = 0, samplePosition = 0; r < height; r++, samplePosition += width)
+      {
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+        const Int quantIdx = samplePosition;
+#else
+        const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
+#endif
+        xQuantiseSample(rTu, tempCoeffPtr[samplePosition], tempQCoeffPtr[samplePosition], 
+#if ADAPTIVE_QP_SELECTION
+          arlCoeffPtr[samplePosition], 
+#endif
+          compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+        currentSad += abs(tempQCoeffPtr[samplePosition]);
+        xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+      }
+      
+      int samplePosition;
+      //  Remaining columns
+      for(int c = 1; c < width; c++)
+      {
+        for(int r = 0; r < height; r++)
+        {
+          samplePosition = r*width + c;
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+          const Int quantIdx = samplePosition;
+#else
+          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
+#endif
+          xQuantiseSample(rTu, tempCoeffPtr[samplePosition] - tempRecCoeff[samplePosition - 1], tempQCoeff[samplePosition], 
+#if ADAPTIVE_QP_SELECTION
+            arlCoeffPtr[samplePosition],
+#endif
+            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+          currentSad += abs(tempQCoeffPtr[samplePosition]);
+          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+          tempRecCoeff[samplePosition] += tempRecCoeff[samplePosition - 1];
+        }
+      }
+    }
+    else
+    {
+      //  Processing is row-wise
+      //  First row: quantisation only
+      for(int c = 0; c < width; c++)
+      {
+        xQuantiseSample(rTu, tempCoeffPtr[c], tempQCoeffPtr[c], 
+#if ADAPTIVE_QP_SELECTION
+          arlCoeffPtr[c],
+#endif
+          compID, cQP, c, tempDeltaU[c]);
+        currentSad += abs(tempQCoeffPtr[c]);
+        xDequantiseSample(rTu, tempQCoeffPtr[c], tempRecCoeff[c], compID, cQP, c);
+      }
+
+      //  Remaining rows
+      int samplePosition;
+      for(int r = 1; r < height; r++)
+      {
+        for(int c = 0; c < width; c++)
+        {
+          samplePosition = r*width + c;
+#if RExt__SQUARE_TRANSFORM_CHROMA_422
+          const Int quantIdx = samplePosition;
+#else
+          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
+#endif
+          xQuantiseSample(rTu, tempCoeffPtr[samplePosition] - tempRecCoeff[samplePosition - width], tempQCoeffPtr[samplePosition],
+#if ADAPTIVE_QP_SELECTION
+            arlCoeffPtr[samplePosition],
+#endif
+            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+          currentSad += abs(tempQCoeffPtr[samplePosition]);
+          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+          tempRecCoeff[samplePosition] += tempRecCoeff[samplePosition - width];
+        }
+      }
+    }
+
+    //  Optimisation step
+    if(currentSad < bestSad)
+    {
+      bestSad = currentSad;
+      uiAcSum = currentSad;
+      bestRdpcmMode = direction;
+      tempQCoeffPtr = tempQCoeff;
+#if ADAPTIVE_QP_SELECTION
+      arlCoeffPtr = tempArlCoeff;
+#endif
+      ::memcpy(deltaU, tempDeltaU, 32*32*sizeof(Int));
+      for(int r = 0; r < height; r++)
+      {
+        for(int c = 0; c < width; c++)
+        {
+          pDes[r*width + c] = tempQCoeffPtr[c];
+#if ADAPTIVE_QP_SELECTION
+          pArlDes[r*width + c] = arlCoeffPtr[c];
+#endif
+        }
+        tempQCoeffPtr += width;
+#if ADAPTIVE_QP_SELECTION
+        arlCoeffPtr += width;
+#endif
+      }
+      if(direction == DPCM_OFF && currentSad == 0)
+      {
+        //  This happens when all the residues are zero: we can avoid trying others RDPCM modes
+        break;
+      }
+    }
+  }
+
+  //  Set the best RDPCM in the current CU sata structure
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  cu->setInterRdpcmModePartRange(bestRdpcmMode, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
+#else  
+  cu->setInterRdpcmModeSubParts(bestRdpcmMode, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+
+  if(bestRdpcmMode == DPCM_OFF && m_useRDOQTS)
+  {
+    uiAcSum = 0;
+    xRateDistOptQuant( rTu, pSrc, pDes, 
+#if ADAPTIVE_QP_SELECTION
+      pArlDes, 
+#endif
+      uiAcSum, compID, cQP );
+  }
+}
+
+/** Performs inverse RDPCM over the reconstructed residuals. 
+ * \param[in] rTu current TU where the coefficients belong to
+ * \param[in|out] reconCoeff pointer to the array of reconstructed coefficients which will contain the modified values after inverse RDPCM
+ * \param[in] compID current component identifier
+ */
+Void TComTrQuant::xInvInterRdpcm (       TComTU      &rTu, 
+                                         TCoeff      *reconCoeff,
+                                   const ComponentID compID)
+{
+  const TComRectangle &rect = rTu.getRect(compID);
+  TComDataCU *cu = rTu.getCU();
+  UInt absParIdx = rTu.GetAbsPartIdxTU();
+  UInt height = rect.height;
+  UInt width  = rect.width;
+
+  assert(height == 4 && width == 4);
+
+  UInt interRdpcmMode = cu->getInterRdpcmMode(compID, absParIdx);
+
+  if(interRdpcmMode == DPCM_OFF)
+  {
+    return;
+  }
+  else if(interRdpcmMode == DPCM_HOR)
+  {
+    for(int r = 0; r < height; r++)
+    {
+      for(int c = 1; c < width; c++)
+      {
+        reconCoeff[r*width + c] += reconCoeff[r*width + c - 1];
+      }
+    }
+  }
+  else if (interRdpcmMode == DPCM_VER)
+  {
+    for(int r = 1; r < height; r++)
+    {
+      for(int c = 0; c < width; c++)
+      {
+        reconCoeff[r*width + c] += reconCoeff[(r-1)*width + c];
+      }
+    }
+  }
+  else
+  {
+    assert(0);
+  }
+}
+#endif
 
 //! \}

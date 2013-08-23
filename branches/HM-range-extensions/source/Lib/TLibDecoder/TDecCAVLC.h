@@ -122,6 +122,10 @@ public:
   Void  parseScalingList               ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Void  parseInterRdpcmMode( TComTU &rTu, ComponentID compID );
+#endif
+
 protected:
   Bool  xMoreRbspData();
 };

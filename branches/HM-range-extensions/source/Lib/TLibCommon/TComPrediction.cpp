@@ -867,8 +867,12 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
 /* Static member function */
 Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode)
 {
+#if RExt__NRCE2_RESIDUAL_DPCM
+  return (rTu.getCU()->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) &&
+#else
   // TODO: RExt - possibly check other sub-layers profile idcs here?
   return (rTu.getCU()->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::REXTDEV) &&
+#endif
          rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
          (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }

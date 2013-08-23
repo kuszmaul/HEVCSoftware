@@ -149,6 +149,10 @@ public:
 
   Void  parseScalingList ( TComScalingList* /*scalingList*/ ) {}
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Void  parseInterRdpcmMode( TComTU &rTu, ComponentID compID );
+#endif
+
 private:
   UInt m_uiLastDQpNonZero;
   UInt m_uiLastQp;
@@ -185,7 +189,10 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
-
+#if RExt__NRCE2_RESIDUAL_DPCM
+  ContextModel3DBuffer m_interRdpcmFlagSCModel;
+  ContextModel3DBuffer m_interRdpcmDirSCModel;
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   ContextModel3DBuffer m_cIntraMVPredFlagSCModel;
 #endif

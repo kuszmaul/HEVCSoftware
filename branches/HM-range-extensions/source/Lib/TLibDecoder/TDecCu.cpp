@@ -596,7 +596,12 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
 
         Pel* pPred      = piPred;
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+        Pel* pResi      = piResi;
+#else
   const Pel* pResi      = piResi;
+#endif
         Pel* pReco      = pcRecoYuv->getAddr( compID, uiAbsPartIdx );
         Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
 
@@ -679,6 +684,44 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   }
   else
   {
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && (pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx)) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA))// NOTE: RExt - RDPCM proponents to confirm
+#else
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
+#endif
+    {
+      pResi     += uiStride;
+      for( UInt uiY = 1; uiY < uiHeight; uiY++ )
+      {
+        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX - (Int)uiStride ];
+        }
+        pResi     += uiStride;
+      }
+    }
+
+    pResi = piResi;
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && (pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx)) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )// NOTE: RExt - RDPCM proponents to confirm
+#else
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
+#endif
+    {
+      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+      {
+        for( UInt uiX = 1; uiX < uiWidth; uiX++ )
+        {
+          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX-1 ];
+        }
+        pResi     += uiStride;
+      }
+    }
+    pResi = piResi;
+#endif // RExt__NRCE2_RESIDUAL_DPCM
+
     for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
