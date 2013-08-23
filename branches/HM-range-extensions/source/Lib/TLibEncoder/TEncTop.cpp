@@ -719,13 +719,10 @@ Void TEncTop::xInitPPS()
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   const Int lowestQP = - m_cSPS.getQpBDOffset(CHANNEL_TYPE_LUMA);
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  if(getUseLossless())
-#else
   if (getTransquantBypassEnableFlag())
-#endif
   {
     if ((getMaxCuDQPDepth() == 0) && (getMaxDeltaQP() == 0 ) && (getQP() == lowestQP) )
     {
@@ -740,12 +737,15 @@ Void TEncTop::xInitPPS()
   {
     if(bUseDQP == false)
     {
+#endif
       if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
       {
         bUseDQP = true;
       }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     }
   }
+#endif
 
   if(bUseDQP)
   {
