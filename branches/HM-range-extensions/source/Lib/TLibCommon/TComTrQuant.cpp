@@ -1368,6 +1368,12 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     // Represents scaling through forward transform
     Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize);
+#if RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING
+    if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+    {
+      iTransformShift = std::max<Int>(0, iTransformShift);
+    }
+#endif
 
     const Int iQBits = QUANT_SHIFT + cQP.getAdjustedQp().per + iTransformShift;
     // NOTE: RExt - QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
@@ -1480,6 +1486,12 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
   // Represents scaling through forward transform
   Int iTransformShift = getTransformShift(toChannelType(compID), uiLog2TrSize);
+#if RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING
+  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  {
+    iTransformShift = std::max<Int>(0, iTransformShift);
+  }
+#endif
 
   const Int QP_per = cQP.getAdjustedQp().per;
   const Int QP_rem = cQP.getAdjustedQp().rem;
@@ -1989,6 +2001,12 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   const Int height = rect.height;
 
   Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component));
+#if RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING
+  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  {
+    iTransformShift = std::max<Int>(0, iTransformShift);
+  }
+#endif
 
   if (iTransformShift >= 0)
   {
@@ -2028,6 +2046,12 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
   const Int height = rect.height;
 
   Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component));
+#if RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING
+  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  {
+    iTransformShift = std::max<Int>(0, iTransformShift);
+  }
+#endif
 
   if (iTransformShift >= 0)
   {
@@ -2094,7 +2118,15 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
    */
 
   // Represents scaling through forward transform
+#if RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING
+  Int iTransformShift            = getTransformShift(channelType, uiLog2TrSize);
+  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  {
+    iTransformShift = std::max<Int>(0, iTransformShift);
+  }
+#else
   const Int iTransformShift      = getTransformShift(channelType, uiLog2TrSize);
+#endif
 
   UInt       uiGoRiceParam       = 0;
   Double     d64BlockUncodedCost = 0;
