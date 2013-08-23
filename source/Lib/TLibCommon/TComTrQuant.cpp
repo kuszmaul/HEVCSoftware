@@ -184,7 +184,7 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
 
   if (uiTrSize==4)
   {
-    iT  = g_aiT4[0];
+    iT  = (useDST ? g_as_DST_MAT_4[0] : g_aiT4[0]);
   }
   else if (uiTrSize==8)
   {
@@ -210,10 +210,6 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
 
   /* Horizontal transform */
 
-  if ((uiTrSize==4) && useDST)
-  {
-    iT  =  g_as_DST_MAT_4[0];
-  }
   for (i=0; i<uiTrSize; i++)
   {
     for (j=0; j<uiTrSize; j++)
@@ -228,17 +224,6 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
   }
 
   /* Vertical transform */
-  if (uiTrSize==4)
-  {
-    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 11 && uiMode <= 34)))
-    {
-      iT  =  g_as_DST_MAT_4[0];
-    }
-    else
-    {
-      iT  = g_aiT4[0];
-    }
-  }
   for (i=0; i<uiTrSize; i++)
   {
     for (j=0; j<uiTrSize; j++)
@@ -269,7 +254,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
 
   if (uiTrSize==4)
   {
-    iT  = g_aiT4[0];
+    iT  = (useDST ? g_as_DST_MAT_4[0] : g_aiT4[0]);
   }
   else if (uiTrSize==8)
   {
@@ -294,11 +279,6 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
   const Int add_1st = 1<<(shift_1st-1);
   const Int add_2nd = (shift_2nd>0) ? (1<<(shift_2nd-1)) : 0;
 
-  if ((uiTrSize==4) && useDST)
-  {
-    iT  =  g_as_DST_MAT_4[0];
-  }
-
   /* Horizontal transform */
   for (i=0; i<uiTrSize; i++)
   {
@@ -310,18 +290,6 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
         iSum += iT[k*uiTrSize+i]*coeff[k*uiTrSize+j];
       }
       tmp[i*uiTrSize+j] = Clip3(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st); // Clipping is normative
-    }
-  }
-
-  if (uiTrSize==4)
-  {
-    if ((uiMode != REG_DCT) && ((uiMode == 0) || (uiMode >= 2 && uiMode <= 25)))   // Check for DCT or DST
-    {
-      iT  =  g_as_DST_MAT_4[0];
-    }
-    else
-    {
-      iT  = g_aiT4[0];
     }
   }
 
