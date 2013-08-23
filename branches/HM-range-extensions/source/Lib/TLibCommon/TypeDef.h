@@ -272,6 +272,8 @@
 #define RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING                           1 ///< 0 = use 4:2:0 and 4:2:2 chroma mapping table (4:4:4 is 1:1); 1 (default) = only use 4:2:0 chroma mapping table (4:2:2 and 4:4:4 are 1:1)
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 
+#define RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL                                1 ///< 0 = disable definition of level 8.5 (unlimited picture size for still pictures), 1 (default) = enable definition of level 8.5
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
@@ -633,6 +635,9 @@ namespace Level
     LEVEL6   = 180,
     LEVEL6_1 = 183,
     LEVEL6_2 = 186,
+#if RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL
+    LEVEL8_5 = 255,
+#endif
   };
 }
 
