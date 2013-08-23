@@ -269,6 +269,7 @@
 #define RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS                       1 ///< 0 = use the same set of matrices for both forward and inverse transform, 1 (default) = allow the set of matrices used for the forward transform to be differemt from that used for the inverse transform
 #define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 0 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
 
+#define RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING                           1 ///< 0 = use 4:2:0 and 4:2:2 chroma mapping table (4:4:4 is 1:1); 1 (default) = only use 4:2:0 chroma mapping table (4:2:2 and 4:4:4 are 1:1)
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 
 //------------------------------------------------
