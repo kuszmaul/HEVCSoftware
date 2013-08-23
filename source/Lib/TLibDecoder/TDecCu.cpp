@@ -558,10 +558,10 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
       {
         for(UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
-          const Pel rec=pPred[uiX] + pResi[ uiX ];
-          pRecIPred[ uiX ] = pReco [ uiX ] = ClipBD( rec, clipbd );
+          const Int rec = Int(pPred[uiX]) + Int(pResi[ uiX ]);
+          pRecIPred[ uiX ] = pReco [ uiX ] = Pel(ClipBD( rec, clipbd ));
           if (uiX+1 < uiWidth)
-            pPred[ uiX + 1 ] = rec; // NOTE: RExt - should this be the clipped version?
+            pPred[ uiX + 1 ] = Pel(rec); // NOTE: RExt - should this be the clipped version?
         }
 #if defined DEBUG_STRING && DEBUG_INTRA_CODING_TU
         if (DEBUG_STRING_CHANNEL_CONDITION(compID))

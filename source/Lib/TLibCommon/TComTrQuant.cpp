@@ -317,9 +317,10 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
         iSum += iT[k*uiTrSize+i]*coeff[k*uiTrSize+j];
       }
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-      tmp[i*uiTrSize+j] = Clip3<TCoeff>(clipMinimum, clipMaximum, (iSum + add_1st)>>shift_1st); // Clipping is normative
+      //NOTE: RExt - Clipping here is not in the standard, but is used to protect the "Pel" data type into which the inverse-transformed samples will be copied
+      tmp[i*uiTrSize+j] = Clip3<TCoeff>(clipMinimum, clipMaximum, (iSum + add_1st)>>shift_1st);
 #else
-      tmp[i*uiTrSize+j] = Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st); // Clipping is normative
+      tmp[i*uiTrSize+j] = Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st);
 #endif
     }
   }
@@ -335,9 +336,9 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
         iSum += iT[k*uiTrSize+j]*tmp[i*uiTrSize+k];
       }
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-      block[i*uiStride+j] = Pel((iSum + add_2nd)>>shift_2nd);
+      block[i*uiStride+j] = Clip3<TCoeff>(std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max(), (iSum + add_1st)>>shift_1st);
 #else
-      block[i*uiStride+j] = Pel(Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_2nd)>>shift_2nd)); // Clipping is non-normative
+      block[i*uiStride+j] = Pel(Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_2nd)>>shift_2nd));
 #endif
     }
   }
@@ -1124,19 +1125,20 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
   switch (iWidth)
   {
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    //NOTE: RExt - Clipping here is not in the standard, but is used to protect the "Pel" data type into which the inverse-transformed samples will be copied
     case 4:
       {
         if ((iHeight == 4) && useDST)    // Check for DCT or DST
         {
-          fastInverseDst( tmp, block, shift_2nd, std::numeric_limits<TCoeff>::min(), std::numeric_limits<TCoeff>::max() );
+          fastInverseDst( tmp, block, shift_2nd, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max() );
         }
-        else partialButterflyInverse4 ( tmp, block, shift_2nd, iHeight, std::numeric_limits<TCoeff>::min(), std::numeric_limits<TCoeff>::max());
+        else partialButterflyInverse4 ( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max());
       }
       break;
 
-    case  8: partialButterflyInverse8 ( tmp, block, shift_2nd, iHeight, std::numeric_limits<TCoeff>::min(), std::numeric_limits<TCoeff>::max()); break;
-    case 16: partialButterflyInverse16( tmp, block, shift_2nd, iHeight, std::numeric_limits<TCoeff>::min(), std::numeric_limits<TCoeff>::max()); break;
-    case 32: partialButterflyInverse32( tmp, block, shift_2nd, iHeight, std::numeric_limits<TCoeff>::min(), std::numeric_limits<TCoeff>::max()); break;
+    case  8: partialButterflyInverse8 ( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
+    case 16: partialButterflyInverse16( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
+    case 32: partialButterflyInverse32( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
 #else
     case 4:
       {

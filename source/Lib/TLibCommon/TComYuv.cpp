@@ -282,7 +282,7 @@ Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const
     {
       for ( Int x = uiPartWidth-1; x >= 0; x-- )
       {
-        pDst[x] = ClipBD( pSrc0[x] + pSrc1[x], clipbd);
+        pDst[x] = Pel(ClipBD<Int>( Int(pSrc0[x]) + Int(pSrc1[x]), clipbd));
       }
       pSrc0 += iSrc0Stride;
       pSrc1 += iSrc1Stride;
