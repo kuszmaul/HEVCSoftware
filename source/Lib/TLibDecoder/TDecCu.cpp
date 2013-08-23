@@ -313,8 +313,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     return;
   }
 
-#if INTRAMV
-  m_pcEntropyDecoder->decodeIntraMVFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+  {
+    m_pcEntropyDecoder->decodeIntraMVFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
+  }
 
   if ( pcCU->isIntraMV( uiAbsPartIdx ) )
   {
@@ -342,7 +345,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   }
 #endif
 
@@ -415,7 +418,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     case MODE_INTRAMV:
       xReconIntraMV( m_ppcCU[uiDepth], uiDepth );
       break;
@@ -461,7 +464,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TDecCu::xReconIntraMV( TComDataCU* pcCU, UInt uiDepth )
 {
   // intra prediction

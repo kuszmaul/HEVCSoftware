@@ -94,7 +94,7 @@ protected:
   Void xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void xPredIntraMVBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic);
 #endif
   
@@ -114,7 +114,7 @@ public:
   // inter
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void intraMotionCompensation    ( TComDataCU*  pcCU, TComYuv* pcYuvPred, Int iPartIdx = -1 );
 #endif
   

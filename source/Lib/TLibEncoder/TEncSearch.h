@@ -197,7 +197,7 @@ public:
 #endif
                                 );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Bool predIntraMVSearch        ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,

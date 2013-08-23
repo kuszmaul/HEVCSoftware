@@ -1439,6 +1439,9 @@ TComSPS::TComSPS()
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 , m_useExtendedPrecision      (false)
 #endif
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+, m_useIntraMotionVectors     (false)
+#endif
 , m_useLossless               (false)
 , m_bPCMFilterDisableFlag     (false)
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG

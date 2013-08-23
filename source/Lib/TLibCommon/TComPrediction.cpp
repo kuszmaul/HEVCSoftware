@@ -489,7 +489,7 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
 }
 
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TComPrediction::intraMotionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int iPartIdx )
 {
   Int         iWidth;
@@ -498,7 +498,7 @@ Void TComPrediction::intraMotionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvP
 
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );      
 
-  TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_I )->getMv( uiPartAddr );
+  TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRAMV )->getMv( uiPartAddr );
   
   for (UInt ch = COMPONENT_Y; ch < pcYuvPred->getNumberValidComponents(); ch++)
     xPredIntraMVBlk  (ComponentID(ch),  pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );     
@@ -693,7 +693,7 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   }
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TComPrediction::xPredIntraMVBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic )
 {
   Int     refStride  = refPic->getStride(compID);

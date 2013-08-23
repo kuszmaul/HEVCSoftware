@@ -170,7 +170,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if( pcCU->isIntraMV( uiAbsPartIdx ) )
   {
     return;
@@ -260,7 +260,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     if (cbf[ch]) bHaveACodedBlock=true;
   }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if( pcCU->isIntra(uiAbsPartIdx) && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
 #else
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
@@ -268,7 +268,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
   {
     assert( uiSubdiv );
   }
-  else if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N) && uiDepth == pcCU->getDepth(uiAbsPartIdx) &&  (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) )
+  else if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N) && uiDepth == pcCU->getDepth(uiAbsPartIdx) &&  (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) )// NOTE: RExt - N0256 proponents to check
   {
     if ( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
     {
@@ -342,7 +342,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       DTRACE_CABAC_T( "\n" );
     }
 
-    if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
+    if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )// NOTE: RExt - N0256 proponents to check
     {
       assert( pcCU->getCbf( uiAbsPartIdx, COMPONENT_Y, 0 ) );
       //      printf( "saved one bin! " );
@@ -434,7 +434,7 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TEncEntropy::encodeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -452,7 +452,7 @@ Void TEncEntropy::encodeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   assert ( !pcCU->isIntraMV( uiAbsPartIdx ) );
 #endif
 
@@ -670,7 +670,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
 #endif
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   if( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx)  )
 #else
   if( pcCU->isIntra(uiAbsPartIdx) )

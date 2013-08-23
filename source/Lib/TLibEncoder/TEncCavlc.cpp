@@ -539,6 +539,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   //NOTE: RExt - this will be conditional on the selected profile
   if ( false // Remove 'false' once adoption of macro code.
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+       || pcSPS->getUseIntraMotionVectors()
+#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
        || pcSPS->getUseResidualDPCM(MODE_INTRA)
        || pcSPS->getUseResidualDPCM(MODE_INTER)
@@ -552,6 +555,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    WRITE_FLAG( (pcSPS->getUseIntraMotionVectors() ? 1 : 0), "intra_block_copy_enabled_flag");
+#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0), "residual_dpcm_intra_enabled_flag" );
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0), "residual_dpcm_inter_enabled_flag" );
@@ -1238,7 +1244,7 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TEncCavlc::codeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

@@ -88,7 +88,7 @@ TEncSbac::TEncSbac()
 , m_cSaoTypeIdxSCModel           ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 , m_cIntraMVPredFlagSCModel      (1,              1,                      NUM_INTRAMV_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
@@ -141,7 +141,7 @@ Void TEncSbac::resetEntropy           ()
   m_cSaoTypeIdxSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   m_cIntraMVPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRAMV_PRED_FLAG );
 #endif
 
@@ -199,7 +199,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cSaoTypeIdxSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
       curCost += m_cTransformSkipSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
       curCost += m_CUTransquantBypassFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
       curCost += m_cIntraMVPredFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_INTRAMV_PRED_FLAG );
 #endif
 
@@ -251,7 +251,7 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cSaoTypeIdxSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   m_cIntraMVPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRAMV_PRED_FLAG );
 #endif  
 
@@ -439,7 +439,7 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   assert( !pcCU->isIntraMV( uiAbsPartIdx ) );
 #endif
 
@@ -532,8 +532,12 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );// NOTE: RExt - N0256 proponents to check
+#else
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
   m_pcBinIf->encodeBin( iPredMode == MODE_INTER ? 0 : 1, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
+#endif
 }
 
 Void TEncSbac::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
@@ -731,7 +735,7 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 /** code intraMV flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -760,7 +764,7 @@ Void TEncSbac::codeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncSbac::codeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  codeMvd(pcCU, uiAbsPartIdx, REF_PIC_LIST_I);
+  codeMvd(pcCU, uiAbsPartIdx, REF_PIC_LIST_INTRAMV);
 }
 #endif
 

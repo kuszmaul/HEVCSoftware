@@ -138,7 +138,11 @@ private:
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra motion vector field.
+#else
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];     ///< array of motion vectors
+#endif
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
@@ -478,7 +482,7 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Bool          isIntraMV ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
   Bool          isIntra   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
 #else  
@@ -510,7 +514,7 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   UInt          getCtxIntraMVFlag               ( UInt   uiAbsPartIdx                                 );
 #endif  
 

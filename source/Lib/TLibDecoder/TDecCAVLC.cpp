@@ -695,6 +695,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   if (uiCode != 0)
   {
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraMotionVectors(uiCode != 0);
+#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
     READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA, (uiCode != 0));
     READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER, (uiCode != 0));
@@ -1567,7 +1570,7 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
   assert(0);
 }
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 Void TDecCavlc::parseIntraMVFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
 {
   assert(0);

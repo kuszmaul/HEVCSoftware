@@ -150,7 +150,7 @@ public:
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif

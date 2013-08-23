@@ -163,7 +163,7 @@ public:
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Void codeIntraMVFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraMV             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
@@ -220,7 +220,7 @@ private:
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
 
-#if INTRAMV
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   ContextModel3DBuffer m_cIntraMVPredFlagSCModel;
 #endif
 };
