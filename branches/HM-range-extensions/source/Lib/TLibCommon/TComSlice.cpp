@@ -1467,6 +1467,14 @@ TComSPS::TComSPS()
     m_uiMaxDecPicBuffering[i] = 1; 
     m_numReorderPics[i]       = 0;
   }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
+  {
+    m_useResidualDPCM[predictionModeIndex] = false;
+  }
+#endif
+
   m_scalingList = new TComScalingList;
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_usedByCurrPicLtSPSFlag, 0, sizeof(m_usedByCurrPicLtSPSFlag));

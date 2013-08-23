@@ -666,6 +666,13 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setUseSAO( m_bUseSAO );
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+  for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
+  {
+    m_cSPS.setUseResidualDPCM(PredMode(predictionModeIndex), m_useResidualDPCM[predictionModeIndex]);
+  }
+#endif
+
   m_cSPS.setMaxTLayers( m_maxTempLayer );
   m_cSPS.setTemporalIdNestingFlag( ( m_maxTempLayer == 1 ) ? true : false );
   for ( i = 0; i < m_cSPS.getMaxTLayers(); i++ )

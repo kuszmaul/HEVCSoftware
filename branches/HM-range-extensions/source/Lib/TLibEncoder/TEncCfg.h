@@ -202,6 +202,9 @@ protected:
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   UInt      m_transformSkipLog2MaxSize;
 #endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
+#endif
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   
@@ -521,6 +524,10 @@ public:
 
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Bool getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
+  Void setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
+#endif
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
