@@ -1325,7 +1325,6 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #if ADAPTIVE_QP_SELECTION
   TCoeff* piArlCCoef = pArlDes;
 #endif
-  const ChromaFormat chFmt = pcCU->getPic()->getChromaFormat();
 
   const Bool useTransformSkip = pcCU->getTransformSkip(uiAbsPartIdx, compID);
 
@@ -1341,7 +1340,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
   else
   {
     TUEntropyCodingParameters codingParameters;
-    getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, chFmt);
+    getTUEntropyCodingParameters(codingParameters, rTu, compID);
 
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
@@ -1655,11 +1654,22 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   //transform and quantise
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+    const UInt lastColumn     = uiWidth  - 1;
+    const UInt lastRow        = uiHeight - 1;
+#endif
+
     for (UInt k = 0; k<uiHeight; k++)
     {
       for (UInt j = 0; j<uiWidth; j++)
       {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+        rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
+#else
         rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
+#endif
         uiAbsSum += abs(pcResidual[k*uiStride+j]);
       }
     }
@@ -1775,11 +1785,22 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+    const UInt lastColumn     = uiWidth  - 1;
+    const UInt lastRow        = uiHeight - 1;
+#endif
+
     for (UInt k = 0; k<uiHeight; k++)
     {
       for (UInt j = 0; j<uiWidth; j++)
       {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+        rpcResidual[(k * uiStride) + j] = Pel(pcCoeff[coefficientIndex]);
+#else
         rpcResidual[k*uiStride+j] = Pel(pcCoeff[k*uiWidth+j]);
+#endif
       }
     }
   }
@@ -2016,13 +2037,24 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   }
 #endif
 
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  const Bool rotateResidual = rTu.getCU()->getSlice()->getSPS()->getUseResidualRotation();
+  const UInt lastColumn     = width  - 1;
+  const UInt lastRow        = height - 1;
+#endif
+
   if (iTransformShift >= 0)
   {
     for (Int y = 0; y < height; y++)
     {
       for(Int x = 0; x < width; x++)
       {
-        psCoeff[(y * width) + x] = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
+        psCoeff[coefficientIndex] = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
+#else
+        psCoeff[(y * width) + x]  = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
+#endif
       }
     }
   }
@@ -2035,7 +2067,12 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
     {
       for(Int x = 0; x < width; x++)
       {
-        psCoeff[(y * width) + x] = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
+        psCoeff[coefficientIndex] = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
+#else
+        psCoeff[(y * width) + x]  = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
+#endif
       }
     }
   }
@@ -2060,6 +2097,11 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 #endif
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  const Bool rotateResidual = rTu.getCU()->getSlice()->getSPS()->getUseResidualRotation();
+  const UInt lastColumn     = width  - 1;
+  const UInt lastRow        = height - 1;
+#endif
 
   if (iTransformShift >= 0)
   {
@@ -2069,7 +2111,12 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     {
       for(Int x = 0; x < width; x++)
       {
-        pResidual[(y * uiStride) + x] =  Pel((plCoef[(y * width) + x] + offset) >> iTransformShift);
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
+        pResidual[(y * uiStride) + x] =  Pel((plCoef[coefficientIndex] + offset) >> iTransformShift);
+#else
+        pResidual[(y * uiStride) + x] =  Pel((plCoef[(y * width) + x]  + offset) >> iTransformShift);
+#endif
       }
     }
   }
@@ -2081,7 +2128,12 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     {
       for(Int x = 0; x < width; x++)
       {
-        pResidual[(y * uiStride) + x] = Pel(plCoef[(y * width) + x] << iTransformShift);
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
+        pResidual[(y * uiStride) + x] = Pel(plCoef[coefficientIndex] << iTransformShift);
+#else
+        pResidual[(y * uiStride) + x] = Pel(plCoef[(y * width) + x]  << iTransformShift);
+#endif
       }
     }
   }
@@ -2115,7 +2167,6 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const UInt             uiHeight         = rect.height;
         TComDataCU    *  pcCU             = rTu.getCU();
   const UInt             uiAbsPartIdx     = rTu.GetAbsPartIdxTU();
-  const ChromaFormat     format           = rTu.GetChromaFormat();
   const ChannelType      channelType      = toChannelType(compID);
   const UInt             uiLog2TrSize     = rTu.GetEquivalentLog2TrSize(compID);
 
@@ -2178,7 +2229,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 #endif
 
   TUEntropyCodingParameters codingParameters;
-  getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, format);
+  getTUEntropyCodingParameters(codingParameters, rTu, compID);
   const UInt uiCGSize = (1 << MLS_CG_SIZE);
 
   const Bool applyAdditionalShift = (cQP.getAdjustedQp().per > cQP.getBaseQp().per);
@@ -2705,6 +2756,14 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
                                    const Int                        log2BlockHeight,
                                    const ChannelType                chanType)
 {
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+  if (codingParameters.firstSignificanceMapContext == significanceMapContextSetStart[chanType][CONTEXT_TYPE_SINGLE])
+  {
+    //single context mode
+    return significanceMapContextSetStart[chanType][CONTEXT_TYPE_SINGLE];
+  }
+#endif
+
   const UInt rasterPosition = codingParameters.scan[scanPosition];
   const UInt posY           = rasterPosition >> log2BlockWidth;
   const UInt posX           = rasterPosition - (posY << log2BlockWidth);

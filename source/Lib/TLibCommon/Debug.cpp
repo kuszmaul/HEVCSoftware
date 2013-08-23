@@ -167,6 +167,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_DPCM,                                      settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_ROTATION,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG,            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0188_EXTENDED_PRECISION_PROCESSING,                      settingNameWidth, settingValueWidth);

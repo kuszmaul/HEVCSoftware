@@ -191,6 +191,12 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setUseTransformSkip             ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );
+#endif
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+  m_cTEncTop.setUseSingleSignificanceMapContext( m_useSingleSignificanceMapContext   );
+#endif
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
 #endif

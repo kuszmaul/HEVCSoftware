@@ -270,6 +270,8 @@
 #define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 0 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
 
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
+#define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
+#define RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT                            1 ///< 0 = select significance map context variables for transform-skipped and transquant-bypassed TUs in the same way as for transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to select a single significance map context variable for all coefficients
 #define RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG                    1 ///< 0 = do not include SPS flag to disable intra-reference/neighbouring-smoothing; 1 (default) = include SPS flag to disable intra-reference/neighbouring-smoothing
 #define RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING                           1 ///< 0 = use 4:2:0 and 4:2:2 chroma mapping table (4:4:4 is 1:1); 1 (default) = only use 4:2:0 chroma mapping table (4:2:2 and 4:4:4 are 1:1)
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
@@ -564,10 +566,15 @@ enum COEFF_SCAN_GROUP_TYPE
 
 enum SignificanceMapContextType
 {
-  CONTEXT_TYPE_4x4 = 0,
-  CONTEXT_TYPE_8x8 = 1,
-  CONTEXT_TYPE_NxN = 2,
+  CONTEXT_TYPE_4x4    = 0,
+  CONTEXT_TYPE_8x8    = 1,
+  CONTEXT_TYPE_NxN    = 2,
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+  CONTEXT_TYPE_SINGLE = 3,
+  CONTEXT_NUMBER_OF_TYPES = 4
+#else
   CONTEXT_NUMBER_OF_TYPES = 3
+#endif
 };
 
 enum ScalingListSize

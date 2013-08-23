@@ -539,6 +539,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   //NOTE: RExt - this will be conditional on the selected profile
   if ( false // Remove 'false' once adoption of macro code.
+#if RExt__NRCE2_RESIDUAL_ROTATION
+       || pcSPS->getUseResidualRotation()
+#endif
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+       || pcSPS->getUseSingleSignificanceMapContext()
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
        || pcSPS->getUseIntraMotionVectors()
 #endif
@@ -555,18 +561,24 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
+#if RExt__NRCE2_RESIDUAL_ROTATION
+    WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),             "transform_skip_rotation_enabled_flag");
+#endif
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+    WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0), "transform_skip_context_enabled_flag");
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    WRITE_FLAG( (pcSPS->getUseIntraMotionVectors() ? 1 : 0), "intra_block_copy_enabled_flag");
+    WRITE_FLAG( (pcSPS->getUseIntraMotionVectors() ? 1 : 0),           "intra_block_copy_enabled_flag");
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0), "residual_dpcm_intra_enabled_flag" );
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0), "residual_dpcm_inter_enabled_flag" );
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),       "residual_dpcm_intra_enabled_flag" );
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),       "residual_dpcm_inter_enabled_flag" );
 #endif
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0), "extended_precision_processing_flag" );
+    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),            "extended_precision_processing_flag" );
 #endif
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
-    WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0), "intra_smoothing_disabled_flag" );
+    WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),  "intra_smoothing_disabled_flag" );
 #endif
     WRITE_FLAG( 0, "sps_extension2_flag" );
   }

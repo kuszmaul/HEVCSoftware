@@ -312,11 +312,8 @@ static inline UInt getCBFContextOffset (const ComponentID component)
 //======================================================================================================================
 
 Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
-                                  const UInt                       uiScanIdx,
-                                  const UInt                       width,
-                                  const UInt                       height,
-                                  const ComponentID                component,
-                                  const ChromaFormat               format);
+                                  class TComTU                    &rTu,
+                                  const ComponentID                component);
 
 
 //======================================================================================================================

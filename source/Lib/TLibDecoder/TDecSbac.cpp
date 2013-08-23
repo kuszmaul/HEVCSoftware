@@ -1212,6 +1212,7 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
   }
 }
 
+static Bool printedOut = false;
 
 Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 {
@@ -1221,6 +1222,12 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   const UInt uiWidth=rRect.width;
   const UInt uiHeight=rRect.height;
   TCoeff* pcCoef=(pcCU->getCoeff(compID)+rTu.getCoefficientOffset(compID));
+
+  if (!printedOut)
+  {
+    std::cout << "Residual rotation = " << (pcCU->getSlice()->getSPS()->getUseResidualRotation() ? 1 : 0) << ", single context = " << (pcCU->getSlice()->getSPS()->getUseSingleSignificanceMapContext() ? 1 : 0) << "\n";
+    printedOut = true;
+  }
 
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseCoeffNxN()\teType=" )
@@ -1291,10 +1298,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   UInt absSum = 0;
 
-  //select scans
-  TUEntropyCodingParameters codingParameters;
-  getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, rTu.GetChromaFormat());
-
   //--------------------------------------------------------------------------------------------------
 
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
@@ -1303,6 +1306,10 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   }
 
   //--------------------------------------------------------------------------------------------------
+
+  //select scans
+  TUEntropyCodingParameters codingParameters;
+  getTUEntropyCodingParameters(codingParameters, rTu, compID);
 
   //===== decode last significant =====
   UInt uiPosLastX, uiPosLastY;

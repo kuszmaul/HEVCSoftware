@@ -1256,10 +1256,6 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     beValid = pcCU->getSlice()->getPPS()->getSignHideFlag() > 0;
   }
 
-  //select scans
-  TUEntropyCodingParameters codingParameters;
-  getTUEntropyCodingParameters(codingParameters, pcCU->getCoefScanIdx(uiAbsPartIdx, uiWidth, uiHeight, compID), uiWidth, uiHeight, compID, rTu.GetChromaFormat());
-
   //--------------------------------------------------------------------------------------------------
 
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
@@ -1268,6 +1264,10 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   }
 
   //--------------------------------------------------------------------------------------------------
+
+  //select scans
+  TUEntropyCodingParameters codingParameters;
+  getTUEntropyCodingParameters(codingParameters, rTu, compID);
 
   //----- encode significance map -----
 
@@ -1651,6 +1651,17 @@ Void TEncSbac::estSignificantMapBit( estBitsSbacStruct* pcEstBitsSbac, Int width
         pcEstBitsSbac->significantBits[ contextOffset ][ bin ] = m_cCUSigSCModel.get( 0, 0, contextOffset ).getEntropyBits( bin );
       }
     }
+
+#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
+    //NOTE: RExt - Single significance map context proponents to check
+    //NOTE: RExt - This could be made optional, but would require this function to have knowledge of whether the
+    //             TU is transform-skipped or transquant-bypassed and whether the SPS flag is set
+    for( UInt bin = 0; bin < 2; bin++ ) //always get the DC
+    {
+      const Int ctxIdx = significanceMapContextSetStart[chType][CONTEXT_TYPE_SINGLE];
+      pcEstBitsSbac->significantBits[ contextOffset + ctxIdx ][ bin ] = m_cCUSigSCModel.get( 0, 0, (contextOffset + ctxIdx) ).getEntropyBits( bin );
+    }
+#endif
 
     for ( Int ctxIdx = firstCtx; ctxIdx < firstCtx + numCtx; ctxIdx++ )
     {
