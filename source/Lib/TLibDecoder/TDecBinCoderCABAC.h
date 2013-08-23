@@ -35,8 +35,8 @@
     \brief    binary entropy decoder of CABAC
 */
 
-#ifndef __TDEC_BIN_CODER_CABAC__
-#define __TDEC_BIN_CODER_CABAC__
+#ifndef __TDECBINCODERCABAC__
+#define __TDECBINCODERCABAC__
 
 #include "TLibCommon/TComCABACTables.h"
 #include "TDecBinCoder.h"

@@ -35,8 +35,8 @@
     \brief    general list class (header)
 */
 
-#ifndef _TCOMLIST_
-#define _TCOMLIST_
+#ifndef __TCOMLIST__
+#define __TCOMLIST__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -106,7 +106,7 @@ public:
   
   TComIterator find( const C& rcT ) // leszek
   {
-    return find( this->begin(), this->end(), rcT );
+    return std::list< C >::find( this->begin(), this->end(), rcT );
   }
 };
 

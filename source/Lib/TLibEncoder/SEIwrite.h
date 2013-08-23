@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __SEIWRITE__
+#define __SEIWRITE__
+
 #include "SyntaxElementWriter.h"
 #include "TLibCommon/SEI.h"
 
@@ -69,3 +72,5 @@ protected:
 };
 
 //! \}
+
+#endif

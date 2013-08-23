@@ -35,8 +35,8 @@
     \brief    class for handling bitstream (header)
 */
 
-#ifndef __COMBITSTREAM__
-#define __COMBITSTREAM__
+#ifndef __TCOMBITSTREAM__
+#define __TCOMBITSTREAM__
 
 #if _MSC_VER > 1000
 #pragma once

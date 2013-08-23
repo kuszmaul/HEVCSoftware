@@ -36,8 +36,8 @@
     \brief    context model class (header)
 */
 
-#ifndef __CONTEXT_MODEL__
-#define __CONTEXT_MODEL__
+#ifndef __CONTEXTMODEL__
+#define __CONTEXTMODEL__
 
 #if _MSC_VER > 1000
 #pragma once

@@ -38,6 +38,9 @@
 
 #pragma once
 
+#ifndef __ANNEXBREAD__
+#define __ANNEXBREAD__
+
 #include <stdint.h>
 #include <istream>
 #include <vector>
@@ -188,3 +191,5 @@ struct AnnexBStats
 Bool byteStreamNALUnit(InputByteStream& bs, std::vector<uint8_t>& nalUnit, AnnexBStats& stats);
 
 //! \}
+
+#endif
