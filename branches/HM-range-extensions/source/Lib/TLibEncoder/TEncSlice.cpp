@@ -174,7 +174,8 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
   {
     const ComponentID compID=ComponentID(compIdx);
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
-    Double tmpWeight = pow( 2.0, (iQP-getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc()))/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+    Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
+    Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
     dLambdas[compIdx]=dLambda/tmpWeight;
   }
@@ -336,7 +337,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
 
 #if FULL_NBIT
-    Int    bitdepth_luma_qp_scale = 6 * (g_bitDepth - 8);
+    Int    bitdepth_luma_qp_scale = 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8);
 #else
     Int    bitdepth_luma_qp_scale = 0;
 #endif
@@ -606,7 +607,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
 
   Double dFrameLambda;
 #if FULL_NBIT
-  Int    SHIFT_QP = 12 + 6 * (g_bitDepth - 8);
+  Int    SHIFT_QP = 12 + 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8);
 #else
   Int    SHIFT_QP = 12;
 #endif

@@ -1269,7 +1269,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
     if( iScanPosSig == scanPosLast )
     {
-      absCoeff[ 0 ] = abs( pcCoef[ posLast ] );
+      absCoeff[ 0 ] = Int(abs( pcCoef[ posLast ] ));
       coeffSigns    = ( pcCoef[ posLast ] < 0 );
       numNonZero    = 1;
       lastNZPosInCG  = iScanPosSig;
@@ -1310,7 +1310,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
         }
         if( uiSig )
         {
-          absCoeff[ numNonZero ] = abs( pcCoef[ uiBlkPos ] );
+          absCoeff[ numNonZero ] = Int(abs( pcCoef[ uiBlkPos ] ));
           coeffSigns = 2 * coeffSigns + ( pcCoef[ uiBlkPos ] < 0 );
           numNonZero++;
           if( lastNZPosInCG == -1 )

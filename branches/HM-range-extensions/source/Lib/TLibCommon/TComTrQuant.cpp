@@ -174,10 +174,11 @@ Void TComTrQuant::clearSliceARLCnt()
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, Bool useDST)
+void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, Bool useDST)
 {
-  Int i,j,k,iSum;
-  Int tmp[32*32];
+  UInt i,j,k;
+  TCoeff iSum;
+  TCoeff tmp[MAX_TU_SIZE * MAX_TU_SIZE];
   const TMatrixCoeff *iT;
   UInt uiLog2TrSize = g_aucConvertToBit[ uiTrSize ] + 2;
 
@@ -202,11 +203,10 @@ void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, Boo
     assert(0);
   }
 
-  Int shift_1st = uiLog2TrSize - 1 + bitDepth-8; // log2(N) - 1 + g_bitDepth-8
-
-  Int add_1st = 1<<(shift_1st-1);
-  Int shift_2nd = uiLog2TrSize + 6;
-  Int add_2nd = 1<<(shift_2nd-1);
+  const Int shift_1st = (uiLog2TrSize +  bitDepth + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
+  const Int shift_2nd = uiLog2TrSize + TRANSFORM_MATRIX_SHIFT;
+  const Int add_1st = (shift_1st>0) ? (1<<(shift_1st-1)) : 0;
+  const Int add_2nd = 1<<(shift_2nd-1);
 
   /* Horizontal transform */
 
@@ -260,10 +260,11 @@ void xTr(Int bitDepth, Pel *block, Int *coeff, UInt uiStride, UInt uiTrSize, Boo
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
+void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
 {
-  Int i,j,k,iSum;
-  Int tmp[32*32];
+  UInt i,j,k;
+  TCoeff iSum;
+  TCoeff tmp[MAX_TU_SIZE * MAX_TU_SIZE];
   const TMatrixCoeff *iT;
 
   if (uiTrSize==4)
@@ -287,10 +288,12 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
     assert(0);
   }
 
-  Int shift_1st = SHIFT_INV_1ST;
-  Int add_1st = 1<<(shift_1st-1);
-  Int shift_2nd = SHIFT_INV_2ND - g_bitDepth-8;
-  Int add_2nd = 1<<(shift_2nd-1);
+  const Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
+  const Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - bitDepth;
+  assert(shift_2nd>=0);
+  const Int add_1st = 1<<(shift_1st-1);
+  const Int add_2nd = (shift_2nd>0) ? (1<<(shift_2nd-1)) : 0;
+
   if ((uiTrSize==4) && useDST)
   {
     iT  =  g_as_DST_MAT_4[0];
@@ -348,8 +351,8 @@ void xITr(Int *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
 void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j;
-  Int E[2],O[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[2],O[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -417,8 +420,8 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output
 void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j;
-  Int E[2],O[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[2],O[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -447,9 +450,9 @@ void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[4],O[4];
-  Int EE[2],EO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[4],O[4];
+  TCoeff EE[2],EO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -488,9 +491,9 @@ void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[4],O[4];
-  Int EE[2],EO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[4],O[4];
+  TCoeff EE[2],EO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -528,10 +531,10 @@ void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[8],O[8];
-  Int EE[4],EO[4];
-  Int EEE[2],EEO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[8],O[8];
+  TCoeff EE[4],EO[4];
+  TCoeff EEE[2],EEO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -583,10 +586,10 @@ void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[8],O[8];
-  Int EE[4],EO[4];
-  Int EEE[2],EEO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[8],O[8];
+  TCoeff EE[4],EO[4];
+  TCoeff EEE[2],EEO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -634,11 +637,11 @@ void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[16],O[16];
-  Int EE[8],EO[8];
-  Int EEE[4],EEO[4];
-  Int EEEE[2],EEEO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[16],O[16];
+  TCoeff EE[8],EO[8];
+  TCoeff EEE[4],EEO[4];
+  TCoeff EEEE[2],EEEO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -699,11 +702,11 @@ void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
-  Int E[16],O[16];
-  Int EE[8],EO[8];
-  Int EEE[4],EEO[4];
-  Int EEEE[2],EEEO[2];
-  Int add = (shift > 0) ? (1<<(shift-1)) : 0;
+  TCoeff E[16],O[16];
+  TCoeff EE[8],EO[8];
+  TCoeff EEE[4],EEO[4];
+  TCoeff EEEE[2],EEEO[2];
+  TCoeff add = (shift > 0) ? (1<<(shift-1)) : 0;
 
   for (j=0; j<line; j++)
   {
@@ -903,7 +906,7 @@ Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, 
 
     for(n = firstNZPosInCG; n <=lastNZPosInCG; n++ )
     {
-      absSum += pQCoef[ codingParameters.scan[ n + subPos ]];
+      absSum += Int(pQCoef[ codingParameters.scan[ n + subPos ]]); //NOTE: RExt - only one bit is actually required!
     }
 
     if(lastNZPosInCG>=0 && lastCG==-1)
@@ -1092,7 +1095,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
       iLevel = (TCoeff)((tmpLevel + iAdd ) >> iQBits);
       deltaU[uiBlockPos] = (Int)((tmpLevel - (iLevel<<iQBits) )>> qBits8);
 
-      uiAcSum += iLevel;
+      uiAcSum += UInt(iLevel);
       iLevel *= iSign;
       piQCoef[uiBlockPos] = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, iLevel );
     } // for n
@@ -1388,7 +1391,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     {
       for (UInt j = 0; j<uiWidth; j++)
       {
-        rpcResidual[k*uiStride+j] = pcCoeff[k*uiWidth+j];
+        rpcResidual[k*uiStride+j] = Pel(pcCoeff[k*uiWidth+j]);
       }
     }
   }
@@ -1593,20 +1596,20 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
     {
       for(Int x = 0; x < width; x++)
       {
-        psCoeff[(y * width) + x] = piBlkResi[(y * uiStride) + x] << iTransformShift;
+        psCoeff[(y * width) + x] = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
       }
     }
   }
   else //for very high bit depths
   {
     iTransformShift = -iTransformShift;
-    const Int offset = 1 << (iTransformShift - 1);
+    const TCoeff offset = 1 << (iTransformShift - 1);
 
     for (Int y = 0; y < height; y++)
     {
       for(Int x = 0; x < width; x++)
       {
-        psCoeff[(y * width) + x] = (piBlkResi[(y * uiStride) + x] + offset) >> iTransformShift;
+        psCoeff[(y * width) + x] = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
       }
     }
   }
@@ -1634,7 +1637,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     {
       for(Int x = 0; x < width; x++)
       {
-        pResidual[(y * uiStride) + x] =  (plCoef[(y * width) + x] + offset) >> iTransformShift;
+        pResidual[(y * uiStride) + x] =  Pel((plCoef[(y * width) + x] + offset) >> iTransformShift);
       }
     }
   }
@@ -1646,7 +1649,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     {
       for(Int x = 0; x < width; x++)
       {
-        pResidual[(y * uiStride) + x] = plCoef[(y * width) + x] << iTransformShift;
+        pResidual[(y * uiStride) + x] = Pel(plCoef[(y * width) + x] << iTransformShift);
       }
     }
   }
@@ -1782,7 +1785,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
       if (applyAdditionalShift) tmpLevel = (tmpLevel + 1) >> 1;
 
-      Int lLevelDouble              = (Int)min<Int64>(tmpLevel, MAX_INT - (1 << (iQBits - 1)));
+      Intermediate_Int lLevelDouble = (Intermediate_Int)min<Int64>(tmpLevel, MAX_INTERMEDIATE_INT - (Intermediate_Int(1) << (iQBits - 1)));
 
 #if ADAPTIVE_QP_SELECTION
       if( m_bUseAdaptQpSelect )
@@ -1790,7 +1793,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         piArlDstCoeff[uiBlkPos]   = (TCoeff)(( lLevelDouble + iAddC) >> iQBitsC );
       }
 #endif
-      UInt uiMaxAbsLevel        = (lLevelDouble + (1 << (iQBits - 1))) >> iQBits;
+      UInt uiMaxAbsLevel        = UInt((lLevelDouble + (Intermediate_Int(1) << (iQBits - 1))) >> iQBits);
 
       Double dErr               = Double( lLevelDouble );
       pdCostCoeff0[ iScanPos ]  = dErr * dErr * dTemp;
@@ -1828,7 +1831,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
           sigRateDelta[ uiBlkPos ] = m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 1 ] - m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 0 ];
         }
 
-        deltaU[ uiBlkPos ]        = (lLevelDouble - ((Int)uiLevel << iQBits)) >> (iQBits-8);
+        deltaU[ uiBlkPos ]        = Int((lLevelDouble - (Intermediate_Int(uiLevel) << iQBits)) >> (iQBits-8));
 
         if( uiLevel > 0 )
         {
@@ -2050,7 +2053,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   for ( Int scanPos = 0; scanPos < iBestLastIdxP1; scanPos++ )
   {
     Int blkPos = codingParameters.scan[ scanPos ];
-    Int level  = piDstCoeff[ blkPos ];
+    Int level  = Int(piDstCoeff[ blkPos ]);
     uiAbsSum += level;
     piDstCoeff[ blkPos ] = ( plSrcCoeff[ blkPos ] < 0 ) ? -level : level;
   }
@@ -2099,7 +2102,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
       for(n = firstNZPosInCG; n <=lastNZPosInCG; n++ )
       {
-        absSum += piDstCoeff[ codingParameters.scan[ n + subPos ]];
+        absSum += Int(piDstCoeff[ codingParameters.scan[ n + subPos ]]); //NOTE: RExt - only one bit is actually required!
       }
 
       if(lastNZPosInCG>=0 && lastCG==-1)
@@ -2343,7 +2346,7 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 __inline UInt TComTrQuant::xGetCodedLevel ( Double&                         rd64CodedCost,
                                             Double&                         rd64CodedCost0,
                                             Double&                         rd64CodedCostSig,
-                                            Int                             lLevelDouble,
+                                            Intermediate_Int                lLevelDouble,
                                             UInt                            uiMaxAbsLevel,
                                             UShort                          ui16CtxNumSig,
                                             UShort                          ui16CtxNumOne,
@@ -2380,7 +2383,7 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&                         rd64
   UInt uiMinAbsLevel    = ( uiMaxAbsLevel > 1 ? uiMaxAbsLevel - 1 : 1 );
   for( Int uiAbsLevel  = uiMaxAbsLevel; uiAbsLevel >= uiMinAbsLevel ; uiAbsLevel-- )
   {
-    Double dErr         = Double( lLevelDouble  - ( uiAbsLevel << iQBits ) );
+    Double dErr         = Double( lLevelDouble  - ( Intermediate_Int(uiAbsLevel) << iQBits ) );
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
     Double dCurrCost    = dErr * dErr * dTemp + xGetICRateCost( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16AbsGoRice, c1Idx, c2Idx );
 #else

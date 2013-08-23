@@ -283,7 +283,7 @@ private:
 __inline UInt              xGetCodedLevel  ( Double&                         rd64CodedCost,
                                              Double&                         rd64CodedCost0,
                                              Double&                         rd64CodedCostSig,
-                                             Int                             lLevelDouble,
+                                             Intermediate_Int                lLevelDouble,
                                              UInt                            uiMaxAbsLevel,
                                              UShort                          ui16CtxNumSig,
                                              UShort                          ui16CtxNumOne,
