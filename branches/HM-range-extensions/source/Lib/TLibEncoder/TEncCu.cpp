@@ -375,28 +375,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
-  // variables for fast encoder decision
-  Bool    bEarlySkip  = false;
-  Bool    bTrySplit    = true;
-  Double  fRD_Skip    = MAX_DOUBLE;
-
-  // variable for Early CU determination
+    // variable for Early CU determination
   Bool    bSubBranch = true;
 
   // variable for Cbf fast mode PU decision
   Bool    doNotBlockPu = true;
   Bool    earlyDetectionSkipMode = false;
-
-  Bool    bTrySplitDQP  = true;
-
-  static  Double  afCost[ MAX_CU_DEPTH ];
-  static  Int      aiNum [ MAX_CU_DEPTH ];
-
-  if ( rpcBestCU->getAddr() == 0 )
-  {
-    memset( afCost, 0, sizeof( afCost ) );
-    memset( aiNum,  0, sizeof( aiNum  ) );
-  }
 
   Bool bBoundary = false;
   UInt uiLPelX   = rpcBestCU->getCUPelX();
@@ -484,11 +468,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = lowestQP;
       }
 
-      // variables for fast encoder decision
-      bEarlySkip  = false;
-      bTrySplit    = true;
-      fRD_Skip    = MAX_DOUBLE;
-
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
       // do inter modes, SKIP and 2Nx2N
@@ -504,42 +483,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
-        // fast encoder decision for early skip
-        if ( m_pcEncCfg->getUseFastEnc() )
-        {
-          Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
-          if ( aiNum [ iIdx ] > 5 && fRD_Skip < EARLY_SKIP_THRES*afCost[ iIdx ]/aiNum[ iIdx ] )
-          {
-            bEarlySkip = true;
-            bTrySplit  = false;
-          }
-        }
-
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
-          if ( !bEarlySkip )
+          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          if(m_pcEncCfg->getUseCbfFastMode())
           {
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
-            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-            if(m_pcEncCfg->getUseCbfFastMode())
-            {
-              doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
-            }
+            doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
           }
         }
-      }
-
-      if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
-      {
-        if(iQP == iBaseQP)
-        {
-          bTrySplitDQP = bTrySplit;
-        }
-      }
-      else
-      {
-        bTrySplitDQP = bTrySplit;
       }
 
       if (isAddLowestQP && (iQP == lowestQP))
@@ -574,15 +527,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
         {
           // 2Nx2N, NxN
-          if ( !bEarlySkip )
+          if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
           {
-            if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
+            if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu)
             {
-              if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu)
-              {
-                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
-                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              }
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
           }
 
@@ -719,23 +669,20 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
 
         // do normal intra modes
-        if ( !bEarlySkip )
+        // speedup for inter frames
+        if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
+           (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
+          ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
+          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
         {
-          // speedup for inter frames
-          if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
-             (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
-            ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-            ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
+          xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
           {
-            xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
-            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-            if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+            if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
-              if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
-              {
-                xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
-                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              }
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
           }
         }
@@ -768,17 +715,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       rpcBestCU->getTotalBins() += ((TEncBinCABAC *)((TEncSbac*)m_pcEntropyCoder->m_pcEntropyCoderIf)->getEncBinIf())->getBinsCoded();
     }
     rpcBestCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcBestCU->getTotalBits(), rpcBestCU->getTotalDistortion() );
-
-    // accumulate statistics for early skip
-    if ( m_pcEncCfg->getUseFastEnc() )
-    {
-      if ( rpcBestCU->isSkipped(0) )
-      {
-        Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
-        afCost[ iIdx ] += rpcBestCU->getTotalCost();
-        aiNum [ iIdx ] ++;
-      }
-    }
 
     // Early CU determination
     if( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->isSkipped(0) )
@@ -868,7 +804,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
     // further split
-    if( bSubBranch && bTrySplitDQP && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
+    if( bSubBranch && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
     {
       UChar       uhNextDepth         = uiDepth+1;
       TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
@@ -1242,7 +1178,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 
 #if RATE_CONTROL_INTRA
-Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg) 
+Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
 {
   Int k, i, j, jj;
   Int diff[64], m1[8][8], m2[8][8], m3[8][8], iSumHad = 0;
@@ -1257,10 +1193,10 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     diff[k+5] = piOrg[5] ;
     diff[k+6] = piOrg[6] ;
     diff[k+7] = piOrg[7] ;
- 
+
     piOrg += iStrideOrg;
   }
-  
+
   //horizontal
   for (j=0; j < 8; j++)
   {
@@ -1273,7 +1209,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m2[j][5] = diff[jj+1] - diff[jj+5];
     m2[j][6] = diff[jj+2] - diff[jj+6];
     m2[j][7] = diff[jj+3] - diff[jj+7];
-    
+
     m1[j][0] = m2[j][0] + m2[j][2];
     m1[j][1] = m2[j][1] + m2[j][3];
     m1[j][2] = m2[j][0] - m2[j][2];
@@ -1282,7 +1218,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m1[j][5] = m2[j][5] + m2[j][7];
     m1[j][6] = m2[j][4] - m2[j][6];
     m1[j][7] = m2[j][5] - m2[j][7];
-    
+
     m2[j][0] = m1[j][0] + m1[j][1];
     m2[j][1] = m1[j][0] - m1[j][1];
     m2[j][2] = m1[j][2] + m1[j][3];
@@ -1292,7 +1228,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m2[j][6] = m1[j][6] + m1[j][7];
     m2[j][7] = m1[j][6] - m1[j][7];
   }
-  
+
   //vertical
   for (i=0; i < 8; i++)
   {
@@ -1304,7 +1240,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m3[5][i] = m2[1][i] - m2[5][i];
     m3[6][i] = m2[2][i] - m2[6][i];
     m3[7][i] = m2[3][i] - m2[7][i];
-    
+
     m1[0][i] = m3[0][i] + m3[2][i];
     m1[1][i] = m3[1][i] + m3[3][i];
     m1[2][i] = m3[0][i] - m3[2][i];
@@ -1313,7 +1249,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m1[5][i] = m3[5][i] + m3[7][i];
     m1[6][i] = m3[4][i] - m3[6][i];
     m1[7][i] = m3[5][i] - m3[7][i];
-    
+
     m2[0][i] = m1[0][i] + m1[1][i];
     m2[1][i] = m1[0][i] - m1[1][i];
     m2[2][i] = m1[2][i] + m1[3][i];
@@ -1323,7 +1259,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
     m2[6][i] = m1[6][i] + m1[7][i];
     m2[7][i] = m1[6][i] - m1[7][i];
   }
-  
+
   for (i = 0; i < 8; i++)
   {
     for (j = 0; j < 8; j++)
@@ -1338,7 +1274,7 @@ Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
 
 Int  TEncCu::updateLCUDataISlice(TComDataCU* pcCU, Int LCUIdx, Int width, Int height)
 {
-  Int  xBl, yBl; 
+  Int  xBl, yBl;
   const Int iBlkSize = 8;
 
   Pel* pOrgInit   = pcCU->getPic()->getPicYuvOrg()->getAddr(COMPONENT_Y, pcCU->getAddr(), 0);
@@ -1350,7 +1286,7 @@ Int  TEncCu::updateLCUDataISlice(TComDataCU* pcCU, Int LCUIdx, Int width, Int he
   {
     for ( xBl=0; (xBl+iBlkSize)<=width; xBl+= iBlkSize)
     {
-      pOrg = pOrgInit + iStrideOrig*yBl + xBl; 
+      pOrg = pOrgInit + iStrideOrig*yBl + xBl;
       iSumHad += xCalcHADs8x8_ISlice(pOrg, iStrideOrig);
     }
   }

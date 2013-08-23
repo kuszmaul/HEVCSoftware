@@ -280,7 +280,7 @@ Void TEncTop::destroy ()
   return;
 }
 
-Void TEncTop::init()
+Void TEncTop::init(Bool isFieldCoding)
 {
   // initialize SPS
   xInitSPS();
@@ -292,7 +292,7 @@ Void TEncTop::init()
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
   xInitPPS();
-  xInitRPS();
+  xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
 
@@ -389,9 +389,9 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
 
   // compress GOP
 #if RExt__COLOUR_SPACE_CONVERSIONS
-  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, snrCSC);
+  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false, snrCSC);
 #else
-  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut);
+  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false);
 #endif
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
@@ -403,6 +403,162 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
 
   iNumEncoded         = m_iNumPicRcvd;
   m_iNumPicRcvd       = 0;
+  m_uiNumAllPicCoded += iNumEncoded;
+}
+
+/**------------------------------------------------
+ Separate interlaced frame into two fields
+ -------------------------------------------------**/
+void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt height, bool isTop)
+{
+  if (!isTop)
+  {
+    org += stride;
+  }
+  for (Int y = 0; y < height>>1; y++)
+  {
+    for (Int x = 0; x < width; x++)
+    {
+      dstField[x] = org[x];
+    }
+    
+    dstField += stride;
+    org += stride*2;
+  }
+  
+}
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
+#else
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
+#endif
+{
+  /* -- FIRST FIELD -- */
+  
+  if (pcPicYuvOrg)
+  {
+    
+    /* -- First field initialization -- */
+    
+    TComPic *pcTopField;
+    xGetNewPicBuffer( pcTopField );
+    pcTopField->getPicSym()->allocSaoParam(&m_cEncSAO);
+    pcTopField->setReconMark (false);
+    
+    pcTopField->getSlice(0)->setPOC( m_iPOCLast );
+    pcTopField->getPicYuvRec()->setBorderExtension(false);
+    pcTopField->setTopField(isTff);
+
+    // compute image characteristics
+    if ( getUseAdaptiveQP() )
+    {
+      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcTopField ) );
+    }
+
+    for (UInt componentIndex = 0; componentIndex < pcPicYuvOrg->getNumberValidComponents(); componentIndex++)
+    {
+      const ComponentID component = ComponentID(componentIndex);
+      const UInt stride = pcPicYuvOrg->getStride(component);
+
+      separateFields((pcPicYuvOrg->getBuf(component) + pcPicYuvOrg->getMarginX(component) + ((pcPicYuvOrg->getMarginY(component) >> 1) * stride)),
+                     pcTopField->getPicYuvOrg()->getAddr(component),
+                     pcPicYuvOrg->getStride(component),
+                     pcPicYuvOrg->getWidth(component),
+                     pcPicYuvOrg->getHeight(component),
+                     isTff);
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+      separateFields((pcPicYuvTrueOrg->getBuf(component) + pcPicYuvTrueOrg->getMarginX(component) + ((pcPicYuvTrueOrg->getMarginY(component) >> 1) * stride)),
+                     pcTopField->getPicYuvTrueOrg()->getAddr(component),
+                     pcPicYuvTrueOrg->getStride(component),
+                     pcPicYuvTrueOrg->getWidth(component),
+                     pcPicYuvTrueOrg->getHeight(component),
+                     isTff);
+#endif
+    }  
+  }
+  
+  if (m_iPOCLast == 0) // compress field 0
+  {
+#if RExt__COLOUR_SPACE_CONVERSIONS
+    m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff, snrCSC);
+#else
+    m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff);
+#endif
+  }
+  
+  /* -- SECOND FIELD -- */
+  
+  if (pcPicYuvOrg)
+  {
+    
+    /* -- Second field initialization -- */
+    
+    TComPic* pcBottomField;
+    xGetNewPicBuffer( pcBottomField );
+    pcBottomField->getPicSym()->allocSaoParam(&m_cEncSAO);
+    pcBottomField->setReconMark (false);
+    
+    TComPicYuv* rpcPicYuvRec = new TComPicYuv;
+    if ( rcListPicYuvRecOut.size() == (UInt)m_iGOPSize )
+    {
+      rpcPicYuvRec = rcListPicYuvRecOut.popFront();
+    }
+    else
+    {
+      rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, pcPicYuvOrg->getChromaFormat(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+    }
+    rcListPicYuvRecOut.pushBack( rpcPicYuvRec );
+    
+    pcBottomField->getSlice(0)->setPOC( m_iPOCLast);
+    pcBottomField->getPicYuvRec()->setBorderExtension(false);
+    pcBottomField->setTopField(!isTff);
+
+    // Compute image characteristics
+    if ( getUseAdaptiveQP() )
+    {
+      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcBottomField ) );
+    }
+
+    for (UInt componentIndex = 0; componentIndex < pcPicYuvOrg->getNumberValidComponents(); componentIndex++)
+    {
+      const ComponentID component = ComponentID(componentIndex);
+      const UInt stride = pcPicYuvOrg->getStride(component);
+
+      separateFields((pcPicYuvOrg->getBuf(component) + pcPicYuvOrg->getMarginX(component) + ((pcPicYuvOrg->getMarginY(component) >> 1) * stride)),
+                     pcBottomField->getPicYuvOrg()->getAddr(component),
+                     pcPicYuvOrg->getStride(component),
+                     pcPicYuvOrg->getWidth(component),
+                     pcPicYuvOrg->getHeight(component),
+                     !isTff);
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+      separateFields((pcPicYuvTrueOrg->getBuf(component) + pcPicYuvTrueOrg->getMarginX(component) + ((pcPicYuvTrueOrg->getMarginY(component) >> 1) * stride)),
+                     pcBottomField->getPicYuvTrueOrg()->getAddr(component),
+                     pcPicYuvTrueOrg->getStride(component),
+                     pcPicYuvTrueOrg->getWidth(component),
+                     pcPicYuvTrueOrg->getHeight(component),
+                     !isTff);
+#endif
+    }  
+  }
+  
+  if ( ( !(m_iNumPicRcvd) || (!flush && m_iPOCLast != 1 && m_iNumPicRcvd != m_iGOPSize && m_iGOPSize)) )
+  {
+    iNumEncoded = 0;
+    return;
+  }
+  
+  // compress GOP
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff, snrCSC);
+#else
+  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff);
+#endif
+  
+  iNumEncoded = m_iNumPicRcvd;
+  m_iNumPicRcvd = 0;
   m_uiNumAllPicCoded += iNumEncoded;
 }
 
@@ -731,11 +887,11 @@ Void TEncTop::xInitPPS()
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.
-Void TEncTop::xInitRPS()
+Void TEncTop::xInitRPS(Bool isFieldCoding)
 {
   TComReferencePictureSet*      rps;
 
-  m_cSPS.createRPSList(getGOPSize()+m_extraRPSs);
+  m_cSPS.createRPSList(getGOPSize() + m_extraRPSs + 1);
   TComRPSList* rpsList = m_cSPS.getRPSList();
 
   for( Int i = 0; i < getGOPSize()+m_extraRPSs; i++)
@@ -832,13 +988,13 @@ Void TEncTop::xInitRPS()
       {
         printf("Warning: number of negative pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfNegativePictures(numNeg);
-        rps->setNumberOfPositivePictures(numNeg+numPos);
+        rps->setNumberOfPictures(numNeg+numPos);
       }
       if (numPos != rps->getNumberOfPositivePictures())
       {
         printf("Warning: number of positive pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfPositivePictures(numPos);
-        rps->setNumberOfPositivePictures(numNeg+numPos);
+        rps->setNumberOfPictures(numNeg+numPos);
       }
       RPSTemp.setNumberOfPictures(numNeg+numPos);
       RPSTemp.setNumberOfNegativePictures(numNeg);
@@ -902,7 +1058,23 @@ Void TEncTop::xInitRPS()
     }
 #endif //INTER_RPS_AUTO
   }
-
+  //In case of field coding, we need to set special parameters for the first bottom field of the sequence, since it is not specified in the cfg file. 
+  //The position = GOPSize + extraRPSs which is (a priori) unused is reserved for this field in the RPS. 
+  if (isFieldCoding) 
+  {
+    rps = rpsList->getReferencePictureSet(getGOPSize()+m_extraRPSs);
+    rps->setNumberOfPictures(1);
+    rps->setNumberOfNegativePictures(1);
+    rps->setNumberOfPositivePictures(0);
+    rps->setNumberOfLongtermPictures(0);
+    rps->setDeltaPOC(0,-1);
+    rps->setPOC(0,0);
+    rps->setUsed(0,true);
+    rps->setInterRPSPrediction(false);
+    rps->setDeltaRIdxMinus1(0);
+    rps->setDeltaRPS(0);
+    rps->setNumRefIdc(0);
+  }
 }
 
    // This is a function that
@@ -935,9 +1107,13 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
     }
   }
 
+  if(POCCurr == 1 && slice->getPic()->isField())
+  {
+    slice->setRPSidx(m_iGOPSize+m_extraRPSs);
+  }
+
   slice->setRPS(getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
   slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
-
 }
 
 Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )

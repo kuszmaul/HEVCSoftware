@@ -144,12 +144,11 @@ Void initROM()
   // g_aucConvertToBit[ x ]: log2(x/4), if x=4 -> 0, x=8 -> 1, x=16 -> 2, ...
   ::memset( g_aucConvertToBit,   -1, sizeof( g_aucConvertToBit ) );
   c=0;
-  for ( i=4; i<MAX_CU_SIZE; i*=2 )
+  for ( i=4; i<=MAX_CU_SIZE; i*=2 )
   {
     g_aucConvertToBit[ i ] = c;
     c++;
   }
-  g_aucConvertToBit[ i ] = c;
 
   // initialise scan orders
   for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
@@ -436,9 +435,6 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   3,  //  16x16
   3,  //  32x32
   3   //  64x64
-#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992 != 0)
- ,3   // 128x128
-#endif
 };
 #else // FAST_UDI_USE_MPM
 const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
@@ -449,9 +445,6 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
   4,  //  16x16   33
   4,  //  32x32   33
   5   //  64x64   33
-#if (RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992 != 0)
- ,4   // 128x128  33
-#endif
 };
 #endif // FAST_UDI_USE_MPM
 
