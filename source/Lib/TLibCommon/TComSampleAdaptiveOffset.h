@@ -54,10 +54,6 @@
 #define LUMA_GROUP_NUM                (1<<SAO_BO_BITS)
 #define MAX_NUM_SAO_CLASS             33
 
-#if RExt__M0335_SAO_OFFSET_SCALING                                  //| Luma | Chroma |
-static const Int SAOScaleFactorBitDepthOffset[MAX_NUM_CHANNEL_TYPE] = {  11  ,   10   };
-#endif
-
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================

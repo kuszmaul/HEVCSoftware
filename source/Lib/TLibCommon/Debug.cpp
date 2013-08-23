@@ -161,7 +161,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__SQUARE_TRANSFORM_CHROMA_422,                              settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__DECODER_DEBUG_BIT_STATISTICS,                             settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__M0335_SAO_OFFSET_SCALING,                                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__M0127_CHROMA_422_INTRA_ANGLE_MAPPING,                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__M0056_SAMPLE_ADAPTIVE_INTRA_PREDICT,                      settingNameWidth, settingValueWidth);
 
