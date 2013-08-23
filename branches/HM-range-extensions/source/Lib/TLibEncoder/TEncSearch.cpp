@@ -2179,7 +2179,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         // NB xModeBitsIntra will not affect the mode for chroma that may have already been pre-estimated.
         iModeBits+=xModeBitsIntra( pcCU, uiMode, uiPartOffset, uiDepth, uiInitTrDepth, CHANNEL_TYPE_LUMA );
 
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+        //NOTE: RExt - Lambda calculation at equivalent Qp of 4 is used because at that Qp, the quantisation divisor is 1.
+        static const Double sqrtLambdaAtQp4 = sqrt(0.57 * pow(2.0, ((4.0 - 12.0) / 3.0)));
+        Double cost      = (Double)uiSad + (Double)iModeBits * (pcCU->getCUTransquantBypass(0) ? sqrtLambdaAtQp4 : m_pcRdCost->getSqrtLambda());
+#else
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
+#endif
 
 #ifdef DEBUG_INTRA_SEARCH_COSTS
         std::cout << "1st pass mode " << uiMode << " SAD = " << uiSad << ", mode bits = " << iModeBits << ", cost = " << cost << "\n";

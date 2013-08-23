@@ -122,6 +122,7 @@
 
 #define SBH_THRESHOLD                                     4  ///< I0156: value of the fixed SBH controlling threshold
 
+//NOTE: RExt - See RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION for an alternative mechanism
 #define SEQUENCE_LEVEL_LOSSLESS                           0  ///< H0530: used only for sequence or frame-level lossless coding
 
 #define DISABLING_CLIP_FOR_BIPREDME                       1  ///< Ticket #175
@@ -269,6 +270,8 @@
 #ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
 #endif
+
+#define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   0 ///< 0 (default) = calculate costs as normal, 1 = evaluate RD-costs as (distortion / lambda) + bits so that costs are independent of lambda for lossless modes and use lambda derived from Qp' = 4 for first-pass intra prediction mode selection
 
 //------------------------------------------------
 // Backwards-compatibility
