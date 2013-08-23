@@ -1607,6 +1607,9 @@ TComPPS::TComPPS()
 , m_numRefIdxL1DefaultActive         (1)
 , m_TransquantBypassEnableFlag       (false)
 , m_useTransformSkip                 (false)
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+, m_transformSkipLog2MaxSize         (2)
+#endif
 , m_dependentSliceSegmentsEnabledFlag(false)
 , m_tilesEnabledFlag                 (false)
 , m_entropyCodingSyncEnabledFlag     (false)

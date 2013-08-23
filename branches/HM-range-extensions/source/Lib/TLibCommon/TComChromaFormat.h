@@ -154,10 +154,17 @@ static inline Bool filterIntraReferenceSamples (const ChannelType chType, const 
 //Transform and Quantisation  ==========================================================================================
 //======================================================================================================================
 
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples, const UInt transformSkipLog2MaxSize)
+{
+  return (rectSamples.width <= (1<<transformSkipLog2MaxSize)); // NOTE: RExt - Only width is checked. Allows Nx2N (for 4:2:2) and NxN only.
+}
+#else
 static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle &rectSamples)
 {
   return (rectSamples.width <= MAX_TS_WIDTH); // NOTE: RExt - Only width is checked. Allows 4x8 (for 4:2:2) and 4x4 only.
 }
+#endif
 
 
 //------------------------------------------------

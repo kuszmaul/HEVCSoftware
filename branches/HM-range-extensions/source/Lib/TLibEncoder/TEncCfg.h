@@ -199,6 +199,9 @@ protected:
   Bool      m_useEarlySkipDetection;
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  UInt      m_transformSkipLog2MaxSize;
+#endif
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   
@@ -520,6 +523,10 @@ public:
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  UInt getTransformSkipLog2MaxSize                     () const      { return m_transformSkipLog2MaxSize;     }
+  Void setTransformSkipLog2MaxSize                     ( UInt u )    { m_transformSkipLog2MaxSize  = u;       }
+#endif
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
   Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
   Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }

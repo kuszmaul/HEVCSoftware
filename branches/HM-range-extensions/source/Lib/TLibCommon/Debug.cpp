@@ -171,6 +171,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__N0188_EXTENDED_PRECISION_PROCESSING,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS,                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING,                      settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE,                settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL,                        settingNameWidth, settingValueWidth);
 

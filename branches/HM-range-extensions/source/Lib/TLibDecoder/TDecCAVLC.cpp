@@ -319,7 +319,20 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "slice_segment_header_extension_present_flag");
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
 
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  READ_FLAG( uiCode, "sps_extension1_flag");
+
+  if (uiCode != 0)
+  {
+    READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
+    pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
+
+    READ_FLAG( uiCode, "pps_extension2_flag");
+  }
+
+#else
   READ_FLAG( uiCode, "pps_extension_flag");
+#endif
   if (uiCode)
   {
     while ( xMoreRbspData() )
