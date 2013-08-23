@@ -289,7 +289,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
       {
         iSum += iT[k*uiTrSize+i]*coeff[k*uiTrSize+j];
       }
-      tmp[i*uiTrSize+j] = Clip3(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st); // Clipping is normative
+      tmp[i*uiTrSize+j] = Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st); // Clipping is normative
     }
   }
 
@@ -303,7 +303,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
       {
         iSum += iT[k*uiTrSize+j]*tmp[i*uiTrSize+k];
       }
-      block[i*uiStride+j] = Clip3(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_2nd)>>shift_2nd); // Clipping is non-normative
+      block[i*uiStride+j] = Pel(Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_2nd)>>shift_2nd)); // Clipping is non-normative
     }
   }
 }
