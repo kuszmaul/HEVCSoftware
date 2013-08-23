@@ -315,6 +315,11 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+#define RDPCM_INTER_LOSSLESS                                                   1  ///< Performs RDPCM on motion compensated residuals in lossless coding
+#define RDPCM_INTER_LOSSY                                                      1  ///< Performs RDPCM on motion compensated residuals in lossy coding
+#endif
+
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 #define INTRAMV_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraMV, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
 #define INTRAMV_FASTME                                                         0 ///< Fast motion estimation
@@ -373,6 +378,16 @@ typedef       unsigned long long  UInt64;
 // ====================================================================================================================
 // Enumeration
 // ====================================================================================================================
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+enum InterRdpcmMode
+{
+  DPCM_OFF = 0, 
+  DPCM_HOR, 
+  DPCM_VER, 
+  NUMBER_OF_INTER_RDPCM_MODES
+};
+#endif
 
 /// supported slice type
 enum SliceType

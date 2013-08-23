@@ -1526,4 +1526,11 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   }
   return true;
 }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+Void TEncCavlc::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
+ {
+   assert(0);
+ }
+#endif
 //! \}

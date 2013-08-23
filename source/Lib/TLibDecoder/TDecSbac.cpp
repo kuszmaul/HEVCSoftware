@@ -90,10 +90,13 @@ TDecSbac::TDecSbac()
 , m_cSaoTypeIdxSCModel           ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
+#if RExt__NRCE2_RESIDUAL_DPCM
+, m_interRdpcmFlagSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
+, m_interRdpcmDirSCModel         ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_DIR_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 , m_cIntraMVPredFlagSCModel      (1,              1,                      NUM_INTRAMV_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -154,6 +157,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUTransSubdivFlagSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#if RExt__NRCE2_RESIDUAL_DPCM
+  m_interRdpcmFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_FLAG);
+  m_interRdpcmDirSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_DIR);
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   m_cIntraMVPredFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_INTRAMV_PRED_FLAG );
 #endif
@@ -208,6 +215,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUTransSubdivFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#if RExt__NRCE2_RESIDUAL_DPCM
+  m_interRdpcmFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG );
+  m_interRdpcmDirSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR );
+#endif
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   m_cIntraMVPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRAMV_PRED_FLAG );
 #endif
@@ -457,7 +468,6 @@ Void TDecSbac::parseIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
     DTRACE_CABAC_V( uiSymbol );
     DTRACE_CABAC_T( "\n");
   }
-
   if ( uiSymbol )
   {
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
@@ -1290,6 +1300,15 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
     beValid = false;
+#if RDPCM_INTER_LOSSLESS
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if ( ((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) || // NOTE: RExt - RDPCM proponents to confirm
+         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+#else
+    if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) // NOTE: RExt - RDPCM proponents to confirm
+#endif
+      parseInterRdpcmMode(rTu, compID);
+#endif
   }
   else
   {
@@ -1303,7 +1322,50 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
   {
     parseTransformSkipFlags(rTu, compID);
+#if RDPCM_INTER_LOSSY
+    //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the inter RDPCM mode
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if ( pcCU->getTransformSkip(uiAbsPartIdx, compID) &&
+       ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) || // NOTE: RExt - RDPCM proponents to confirm
+         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+       )
+#else
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )// NOTE: RExt - RDPCM proponents to confirm
+#endif
+    {
+      parseInterRdpcmMode(rTu, compID);
+      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) > DPCM_OFF)
+      {
+        //  Sign data hiding is avoided for horizontal and vertical RDPCM modes
+        beValid = false;
+      }
+    }
+#endif
   }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Int uiIntraMode = -1;
+  const Bool       bIsLuma = isLuma(compID);
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Int isIntra = ( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx) ) ? 1 : 0;  // NOTE: RExt - RDPCM proponents to confirm
+#else
+  Int isIntra = pcCU->isIntra(uiAbsPartIdx) ? 1 : 0;
+#endif
+  if ( isIntra && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
+  {
+    uiIntraMode = pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx );
+    // NOTE: RExt - RDPCM proponents to confirm - the following lines have been moved into the 'if' clause.
+    uiIntraMode = (uiIntraMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, rTu.GetChromaFormat())) : uiIntraMode;
+    uiIntraMode = ((rTu.GetChromaFormat() == CHROMA_422) && !bIsLuma) ? g_chroma422IntraAngleMappingTable[uiIntraMode] : uiIntraMode;
+
+    Bool transformSkip = pcCU->getTransformSkip( uiAbsPartIdx,compID);
+    Bool rdpcm_lossy = ( transformSkip /*&& isIntra*/ && ( (uiIntraMode == HOR_IDX) || (uiIntraMode == VER_IDX) ) );
+    if ( rdpcm_lossy )
+    {
+      beValid = false;
+    }
+  }
+#endif
 
   //--------------------------------------------------------------------------------------------------
 
@@ -1799,5 +1861,75 @@ Void TDecSbac::loadContexts ( TDecSbac* pScr )
 {
   xCopyContextsFrom(pScr);
 }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+/** Performs CABAC decoding of the inter RDPCM mode
+ * \param rTu current TU data structure
+ * \param compID component identifier
+ */
+Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
+{
+  TComDataCU* cu = rTu.getCU();
+  const UInt absPartIdx=rTu.GetAbsPartIdxTU(compID);
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt tuHeight = g_aucConvertToBit[rect.height];
+  const UInt tuWidth  = g_aucConvertToBit[rect.width];
+  UInt code = 0;
+
+  assert(tuHeight == tuWidth);
+
+#if RDPCM_INTER_LOSSY && !RDPCM_INTER_LOSSLESS // NOTE: RExt - RDPCM proponents to confirm - change of condition
+  if (cu->getCUTransquantBypass(absPartIdx)) // NOTE: RExt - RDPCM proponents to confirm - is this necessary - it won't get called unless transform-skip=1, which should not happen it transquant-bypass=1.
+  {
+    return;
+  }
+
+  // NOTE: RExt - RDPCM proponents to confirm - is the following necessary?
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID), cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()))
+#else
+  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID)))
+#endif
+  {
+    return;
+  }
+#endif
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  const TComCodingStatisticsClassType ctype(STATS__INTER_RDPCM_BITS, g_aucConvertToBit[g_uiMaxCUWidth>>rTu.GetTransformDepthTotal()]+2);
+#endif
+
+  m_pcTDecBinIf->decodeBin(code, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
+  if(code == 0)
+  {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+    cu->setInterRdpcmModePartRange( DPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+#else
+    cu->setInterRdpcmModeSubParts( DPCM_OFF, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+  }
+  else
+  {
+    m_pcTDecBinIf->decodeBin(code, m_interRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
+    if(code == 0)
+    {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+      cu->setInterRdpcmModePartRange( DPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+#else
+      cu->setInterRdpcmModeSubParts( DPCM_HOR, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+    }
+    else
+    {
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+      cu->setInterRdpcmModePartRange( DPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+#else
+      cu->setInterRdpcmModeSubParts( DPCM_VER, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+    }
+  }
+}
+#endif
+
 
 //! \}

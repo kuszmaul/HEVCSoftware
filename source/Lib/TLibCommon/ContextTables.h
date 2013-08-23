@@ -72,6 +72,10 @@
 #define NUM_DELTA_QP_CTX              3       ///< number of context models for dQP
 
 #define NUM_SIG_CG_FLAG_CTX           2       ///< number of context models for MULTI_LEVEL_SIGNIFICANCE
+#if RExt__NRCE2_RESIDUAL_DPCM
+#define NUM_INTER_RDPCM_FLAG_CTX      1       ///< number of context models for the flag which specifies whether to use RDPCM on inter coded residues
+#define NUM_INTER_RDPCM_DIR_CTX       1       ///< number of context models for the flag which specifies which RDPCM direction is used on inter coded residues
+#endif
 
 //--------------------------------------------------------------------------------------------------
 
@@ -500,6 +504,23 @@ INIT_TRANSFORMSKIP_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
   { 139,  139}, 
   { 139,  139}, 
 };
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+static const UChar
+INIT_INTER_RDPCM_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_INTER_RDPCM_FLAG_CTX] = 
+{
+  {139, 139},
+  {139, 139},
+  {CNU, CNU}
+};
+static const UChar
+INIT_INTER_RDPCM_DIR[NUMBER_OF_SLICE_TYPES][2*NUM_INTER_RDPCM_DIR_CTX] = 
+{
+  {139, 139},
+  {139, 139},
+  {CNU, CNU}
+};
+#endif
 
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 static const UChar 

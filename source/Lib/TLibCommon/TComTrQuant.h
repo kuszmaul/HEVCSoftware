@@ -214,6 +214,13 @@ public:
   Int*    getSliceNSamples(){ return m_sliceNsamples ;}
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
+
+  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos );
+#endif
+
 protected:
 #if ADAPTIVE_QP_SELECTION
   Int     m_qpDelta[MAX_QP+1];
@@ -348,6 +355,53 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
+
+#if RDPCM_INTER_LOSSLESS
+  Void xInterInverseRdpcm( TComTU &rTu, Pel *&residuals, UInt stride, ComponentID compID );
+  Void xInterResidueDpcm          ( TComTU      &rTu, 
+                                    Pel*        inputResiduals,
+                                    UInt        stride,
+                                    TCoeff*     outputResiduals,
+                                    ComponentID compID,
+                                    UInt        &absSum
+                                  );
+#endif
+#if RDPCM_INTER_LOSSY
+  //  lossy inter RDPCM functions
+  inline Void xQuantiseSample(       TComTU      &rTu, 
+                                     TCoeff      residual, 
+                                     TCoeff      &quantisedLevel,
+#if ADAPTIVE_QP_SELECTION
+                                     TCoeff      &quantisedArlLevel,
+#endif
+                                     ComponentID compID,
+                               const QpParam     &cQP, 
+                                     Int         quantIdx,
+                                     Int         &deltaU
+                              );
+  inline Void xDequantiseSample (       TComTU      &rTu,
+                                        TCoeff      quantisedResidual, 
+                                        TCoeff      &reconCoeff,
+                                        ComponentID compID, 
+                                  const QpParam     &cQP, 
+                                  const Int         deQuantIdx
+                                );
+  Void xQuantInterRdpcm (       TComTU       &rTu,
+                                TCoeff       *pSrc,
+                                TCoeff       *pDes,
+#if ADAPTIVE_QP_SELECTION
+                                TCoeff       *&pArlDes,
+#endif
+                                UInt         &uiAcSum,
+                          const ComponentID  compID,
+                          const QpParam      &cQP     
+                        );
+  Void xInvInterRdpcm   (       TComTU      &rTu, 
+                                TCoeff      *reconCoeff,
+                          const ComponentID compID
+                        );
+
+#endif
 
 };// END CLASS DEFINITION TComTrQuant
 

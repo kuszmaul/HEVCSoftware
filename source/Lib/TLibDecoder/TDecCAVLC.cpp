@@ -1907,5 +1907,12 @@ Bool TDecCavlc::xMoreRbspData()
   return (cnt>0);
 }
 
+#if RExt__NRCE2_RESIDUAL_DPCM
+Void TDecCavlc::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
+{
+  assert(0);
+}
+#endif
+
 //! \}
 
