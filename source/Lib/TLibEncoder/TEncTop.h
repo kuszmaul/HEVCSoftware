@@ -127,7 +127,7 @@ protected:
   Void  xInitPPS          ();                             ///< initialize PPS from encoder options
   
   Void  xInitPPSforTiles  ();
-  Void  xInitRPS          ();                             ///< initialize PPS from encoder options
+  Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
 
 public:
   TEncTop();
@@ -135,7 +135,7 @@ public:
   
   Void      create          ();
   Void      destroy         ();
-  Void      init            ();
+  Void      init            (Bool isFieldCoding);
   Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
@@ -187,9 +187,19 @@ public:
                TComList<TComPicYuv*>& rcListPicYuvRecOut,
                std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );
 
-  void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); }
+  /// encode several number of pictures until end-of-sequence
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg,
+#if RExt__COLOUR_SPACE_CONVERSIONS
+               TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+#endif
+               TComList<TComPicYuv*>& rcListPicYuvRecOut,
+               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
+  
+  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField); }
+  
 };
 
 //! \}
 
 #endif // __TENCTOP__
+

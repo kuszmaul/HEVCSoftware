@@ -325,6 +325,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameSkip,-fs",         m_FrameSkip,                                0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,                         0, "Number of frames to be encoded (default=all)")
 
+  //Field coding parameters
+  ("FieldCoding", m_isField, false, "Signals if it's a field based coding")
+  ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
+  
   // Profile and level
   ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for FDIS main), main10 (for FDIS main10), main-still-picture, rext-dev (for Range Extensions Development profile) or none")
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1, or none")
@@ -604,6 +608,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
+  if(m_isField)
+  {
+    //Frame height
+    m_iSourceHeightOrg = m_iSourceHeight;
+    //Field height
+    m_iSourceHeight = m_iSourceHeight >> 1;
+    //number of fields to encode
+    m_framesToBeEncoded *= 2;
+  }
+
   Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   Char* pRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
@@ -700,6 +714,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       {
         m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
         m_iSourceHeight += m_confBottom;
+        if ( m_isField )
+        {
+          m_iSourceHeightOrg += m_confBottom << 1;
+          m_aiPad[1] = m_confBottom << 1;
+        }
       }
       if (m_aiPad[0] % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0)
       {
@@ -1002,9 +1021,13 @@ Void TAppEncCfg::xCheckParameter()
   Bool verifiedGOP=false;
   Bool errorGOP=false;
   Int checkGOP=1;
-  Int numRefs = 1;
+  Int numRefs = m_isField ? 2 : 1;
   Int refList[MAX_NUM_REF_PICS+1];
   refList[0]=0;
+  if(m_isField)
+  {
+    refList[1] = 1;
+  }
   Bool isOK[MAX_GOP];
   for(Int i=0; i<MAX_GOP; i++) 
   {
@@ -1478,7 +1501,24 @@ Void TAppEncCfg::xPrintParameter()
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
-  printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+  if (m_isField)
+  {
+    printf("Frame/Field                  : Field based coding\n");
+    printf("Field index                  : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+    if (m_isTopFieldFirst)
+    {
+      printf("Field Order                  : Top field first\n");
+    }
+    else
+    {
+      printf("Field Order                  : Bottom field first\n");
+    }
+  }
+  else
+  {
+    printf("Frame/Field                  : Frame based coding\n");
+    printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+  }
   printf("Profile                      : %s\n", profileToString(m_profile) );
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );

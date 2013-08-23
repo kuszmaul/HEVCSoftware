@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -65,11 +65,11 @@ private:
   UInt      m_uiNumPic;
   Double    m_dFrmRate; //--CFG_KDY
   Double    m_MSEyuvframe[MAX_NUM_COMPONENT]; // sum of MSEs
-  
+
 public:
   virtual ~TEncAnalyze()  {}
   TEncAnalyze() { clear(); }
-  
+
   Void  addResult( Double psnr[MAX_NUM_COMPONENT], Double bits, const Double MSEyuvframe[MAX_NUM_COMPONENT])
   {
     m_dAddBits  += bits;
@@ -81,11 +81,12 @@ public:
 
     m_uiNumPic++;
   }
-  
+
   Double  getPsnr(ComponentID compID) const { return  m_dPSNRSum[compID];  }
   Double  getBits()                   const { return  m_dAddBits;   }
+  Void    setBits(Double numBits)     { m_dAddBits=numBits; }
   UInt    getNumPic()                 const { return  m_uiNumPic;   }
-  
+
   Void    setFrmRate  (Double dFrameRate) { m_dFrmRate = dFrameRate; } //--CFG_KDY
   Void    clear()
   {
@@ -108,7 +109,7 @@ public:
     for (UInt channelTypeIndex = 1; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
       if (g_bitDepth[channelTypeIndex] > maximumBitDepth)
         maximumBitDepth = g_bitDepth[channelTypeIndex];
-    
+
     const UInt maxval                = 255 << (maximumBitDepth - 8);
     const UInt numberValidComponents = getNumberValidComponents(chFmt);
 
@@ -169,13 +170,13 @@ public:
         break;
     }
   }
-  
+
 
   Void    printSummary(const ChromaFormat chFmt, Char ch='T')
   {
     FILE* pFile = NULL;
-    
-    switch( ch ) 
+
+    switch( ch )
     {
       case 'T':
         pFile = fopen ("summaryTotal.txt", "at");
@@ -194,7 +195,7 @@ public:
         return;
         break;
     }
-    
+
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
     switch (chFmt)
@@ -223,7 +224,7 @@ public:
           exit(1);
           break;
     }
-    
+
     fclose(pFile);
   }
 };
@@ -232,6 +233,8 @@ extern TEncAnalyze             m_gcAnalyzeAll;
 extern TEncAnalyze             m_gcAnalyzeI;
 extern TEncAnalyze             m_gcAnalyzeP;
 extern TEncAnalyze             m_gcAnalyzeB;
+
+extern TEncAnalyze             m_gcAnalyzeAll_in;
 
 //! \}
 

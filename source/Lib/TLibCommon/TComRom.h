@@ -50,12 +50,7 @@
 // Macros
 // ====================================================================================================================
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_992
-#define     MAX_CU_DEPTH             7                           // log2(LCUSize)
-#else
-#define     MAX_CU_DEPTH             6                           // log2(LCUSize)
-#endif
-
+#define     MAX_CU_DEPTH             6                          // log2(LCUSize)
 #define     MAX_CU_SIZE             (1<<(MAX_CU_DEPTH))         // maximum allowable size of CU, surely 64? (not 1<<7 = 128)
 #define     MIN_PU_SIZE              4
 #define     MIN_TU_SIZE              4

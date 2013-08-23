@@ -415,7 +415,10 @@ enum RefPicList
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
-static const UInt NUM_REF_PIC_LIST_01 = 2; // NOTE: RExt - new definition
+static const UInt NUM_REF_PIC_LIST_01  = 2; // NOTE: RExt - new definition
+#if !L0034_COMBINED_LIST_CLEANUP
+static const UInt NUM_REF_PIC_LIST_01C = 3; // NOTE: RExt - new definition
+#endif
 
 /// distortion function index
 enum DFunc
