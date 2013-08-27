@@ -289,6 +289,10 @@ Void TEncTop::init(Bool isFieldCoding)
   *m_cVPS.getPTL() = *m_cSPS.getPTL();
   m_cVPS.getTimingInfo()->setTimingInfoPresentFlag       ( false );
 
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  m_cRdCost.setUseCostInBits(m_useCostInBits);
+#endif
+
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
   xInitPPS();

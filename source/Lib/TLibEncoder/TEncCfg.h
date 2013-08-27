@@ -318,6 +318,11 @@ protected:
 #else
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 #endif
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Bool      m_useCostInBits;                                  ///< Use cost functions in terms of bits (commonly used for lossless-coding development), rather than cost functions in terms of distortion.
+#endif
+
   TComVPS                    m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
@@ -439,7 +444,7 @@ public:
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
 #endif
 
-  #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   Bool      getUseIntraMotionVectors()         const   { return m_useIntraMotionVectors;  }
   Void      setUseIntraMotionVectors(Bool value)       { m_useIntraMotionVectors = value; }
 #endif
@@ -449,7 +454,7 @@ public:
   
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
-  Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
+  Void      setUseLossless                  (Bool   b )      { m_useLossless = b;   }
 #endif
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
@@ -761,6 +766,11 @@ public:
   Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
   Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
 #endif
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Bool      getUseCostInBits                ( )            { return m_useCostInBits; }
+  Void      setUseCostInBits                (Bool   b )    { m_useCostInBits = b; }
+#endif
+
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
