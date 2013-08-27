@@ -1292,7 +1292,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
       beValid = false;
 #if RDPCM_INTER_LOSSLESS
       if ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-           ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+           ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
         codeInterRdpcmMode( rTu, compID);
 #endif
     }
@@ -1311,7 +1311,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID) &&
         ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
       )
 #else
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && !pcCU->isIntra(uiAbsPartIdx))
@@ -1870,23 +1870,6 @@ Void TEncSbac::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
 
   assert(tuHeight == tuWidth);
   assert(tuHeight < 4);
-
-#if RDPCM_INTER_LOSSY && !RDPCM_INTER_LOSSLESS // NOTE: RExt - RDPCM proponents to confirm - change of condition
-  if (cu->getCUTransquantBypass(absPartIdx)) // NOTE: RExt - RDPCM proponents to confirm - is this necessary - it won't get called unless transform-skip=1, which should not happen it transquant-bypass=1.
-  {
-    return;
-  }
-
-// NOTE: RExt - RDPCM proponents to confirm - is the following necessary?
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
-  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID), cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()))
-#else
-  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID)))
-#endif
-  {
-    return;
-  }
-#endif
 
   UInt interRdpcmMode = cu->getInterRdpcmMode(compID, absPartIdx);
   if( interRdpcmMode == DPCM_OFF )
