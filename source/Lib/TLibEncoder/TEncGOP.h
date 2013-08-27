@@ -143,7 +143,7 @@ public:
   
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   
-  Void  printOutSummary      ( UInt uiNumAllPicCoded, Bool isField );
+  Void  printOutSummary      ( UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR );
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }

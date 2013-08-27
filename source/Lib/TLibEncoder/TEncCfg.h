@@ -111,6 +111,8 @@ protected:
   Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
+  Bool      m_printMSEBasedSequencePSNR;
+
   /* profile & level */
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
@@ -383,6 +385,9 @@ public:
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
   Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
+
+  Bool      getPrintMSEBasedSequencePSNR    ()         const { return m_printMSEBasedSequencePSNR;  }
+  Void      setPrintMSEBasedSequencePSNR    (Bool value)     { m_printMSEBasedSequencePSNR = value; }
   
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }

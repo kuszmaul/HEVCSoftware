@@ -128,42 +128,99 @@ public:
     }
 
     MSEyuv /= Double(scale);  // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
-    Double PSNRyuv = (MSEyuv==0 ? 99.99 : 10*log10((maxval*maxval)/MSEyuv));
+    Double PSNRyuv = (MSEyuv==0 ? 999.99 : 10*log10((maxval*maxval)/MSEyuv));
     return PSNRyuv;
   }
 
 
-  Void    printOut ( Char cDelim, const ChromaFormat chFmt )
+  Void    printOut ( Char cDelim, const ChromaFormat chFmt, const Bool printMSEBasedSNR )
   {
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
 
+    Double MSEBasedSNR[MAX_NUM_COMPONENT];
+    if (printMSEBasedSNR)
+    {
+      for (UInt componentIndex = 0; componentIndex < MAX_NUM_COMPONENT; componentIndex++)
+      {
+        const ComponentID compID = ComponentID(componentIndex);
+      
+        if (getNumPic() == 0) MSEBasedSNR[compID] = 0 * dScale; //NOTE: RExt - this is the same calculation that will be evaluated for any other statistic when there are no frames (it should result in NaN). We use it here so all the output is consistent.
+        else
+        {  
+          //NOTE: RExt - this is not the true maximum value for any bitDepth other than 8. It comes from the original HM PSNR calculation
+          const UInt maxval = 255 << (g_bitDepth[toChannelType(compID)] - 8);
+          const Double MSE = m_MSEyuvframe[compID];
+
+          MSEBasedSNR[compID] = (MSE == 0) ? 999.99 : (10 * log10((maxval * maxval) / (MSE / (Double)getNumPic())));
+        }
+      }
+    }
+
     switch (chFmt)
     {
       case CHROMA_400:
-        printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR\n" );
-        //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-        printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf\n",
-               getNumPic(), cDelim,
-               getBits() * dScale,
-               getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+        if (printMSEBasedSNR)
+        {
+          printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR\n" );
+          //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+          printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
+                 getNumPic(), cDelim,
+                 getBits() * dScale,
+                 getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+          printf( "From MSE:\t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
+                 getNumPic(), cDelim,
+                 getBits() * dScale,
+                 MSEBasedSNR[COMPONENT_Y] );
+        }
+        else
+        {
+          printf( "\tTotal Frames |  "   "Bitrate     "  "Y-PSNR\n" );
+          //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+          printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf\n",
+                 getNumPic(), cDelim,
+                 getBits() * dScale,
+                 getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+        }
         break;
       case CHROMA_420:
       case CHROMA_422:
       case CHROMA_444:
         {
           Double PSNRyuv = calculateCombinedSNR(chFmt);
-          printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
-          //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-          printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
-                 getNumPic(), cDelim,
-                 getBits() * dScale,
-                 getPsnr(COMPONENT_Y) / (Double)getNumPic(),
-                 getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
-                 getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
-                 PSNRyuv );
-          break;
+          if (printMSEBasedSNR)
+          {
+            printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+            //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+            printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                   getNumPic(), cDelim,
+                   getBits() * dScale,
+                   getPsnr(COMPONENT_Y) / (Double)getNumPic(),
+                   getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
+                   getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
+                   PSNRyuv );
+            printf( "From MSE:\t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                   getNumPic(), cDelim,
+                   getBits() * dScale,
+                   MSEBasedSNR[COMPONENT_Y],
+                   MSEBasedSNR[COMPONENT_Cb],
+                   MSEBasedSNR[COMPONENT_Cr],
+                   PSNRyuv );
+          }
+          else
+          {
+            printf( "\tTotal Frames |  "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+            //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
+            printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                   getNumPic(), cDelim,
+                   getBits() * dScale,
+                   getPsnr(COMPONENT_Y) / (Double)getNumPic(),
+                   getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
+                   getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
+                   PSNRyuv );
+          }
         }
+        break;
       default:
         fprintf(stderr, "Unknown format during print out\n");
         exit(1);

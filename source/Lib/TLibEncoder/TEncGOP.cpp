@@ -1931,7 +1931,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   assert ( (m_iNumPicCoded == iNumPicRcvd) );
 }
 
-Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
+Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR)
 {
   assert (uiNumAllPicCoded == m_gcAnalyzeAll.getNumPic());
 
@@ -1946,16 +1946,16 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
 
   //-- all
   printf( "\n\nSUMMARY --------------------------------------------------------\n" );
-  m_gcAnalyzeAll.printOut('a', chFmt);
+  m_gcAnalyzeAll.printOut('a', chFmt, printMSEBasedSNR);
 
   printf( "\n\nI Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeI.printOut('i', chFmt);
+  m_gcAnalyzeI.printOut('i', chFmt, printMSEBasedSNR);
 
   printf( "\n\nP Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeP.printOut('p', chFmt);
+  m_gcAnalyzeP.printOut('p', chFmt, printMSEBasedSNR);
 
   printf( "\n\nB Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeB.printOut('b', chFmt);
+  m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR);
 
 #if _SUMMARY_OUT_
   m_gcAnalyzeAll.printSummaryOut(chFmt);
@@ -1974,7 +1974,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
     // NOTE: RExt - prior to the above statement, the interlace analyser does not contain the correct total number of bits.
 
     printf( "\n\nSUMMARY INTERLACED ---------------------------------------------\n" );
-    m_gcAnalyzeAll_in.printOut('a', chFmt);
+    m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR);
 
 #if _SUMMARY_OUT_
     m_gcAnalyzeAll_in.printSummaryOut(chFmt);
@@ -2214,7 +2214,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     }
     const Int maxval = 255 << (g_bitDepth[toChannelType(ch)] - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize;
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 99.99 );
+    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize);
   }
 
@@ -2372,7 +2372,7 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     }
     const Int maxval = 255 << (g_bitDepth[toChannelType(ch)] - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize*2;
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 99.99 );
+    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize*2);
   }
 
