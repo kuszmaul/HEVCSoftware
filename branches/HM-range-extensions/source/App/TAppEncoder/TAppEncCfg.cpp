@@ -47,6 +47,11 @@
 #define strdup _strdup
 #endif
 
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+#define MACRO_TO_STRING_HELPER(val) #val
+#define MACRO_TO_STRING(val) MACRO_TO_STRING_HELPER(val)
+#endif
+
 static istream& operator>>(istream &, Level::Name &);
 static istream& operator>>(istream &, Level::Tier &);
 static istream& operator>>(istream &, Profile::Name &);
@@ -511,6 +516,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
 #else
   ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
+#endif
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  ("CostInBits",                     m_useCostInBits,                  false, "Use cost in bits and constant lambda based on QP'=" MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for transquant-bypass intra-search pass 1, to calculate cost independent of QP for losslessly coded intra/intramv blocks (although positive QPs will initialise contexts differently).")
 #endif
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
@@ -1615,6 +1623,16 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   printf("Single significance map context : %s\n", m_useSingleSignificanceMapContext ? "Enabled" : "Disabled");
+#endif
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  if (m_useCostInBits)
+  {
+    printf("Cost function:                  : In bits (with QP'=%d for transquant-bypass intra-search pass 1)", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME);
+  }
+  else
+  {
+    printf("Cost function:                  : Standard\n");
+  }
 #endif
   #if RATE_CONTROL_LAMBDA_DOMAIN
   printf("RateControl                     : %d\n", m_RCEnableRateControl );

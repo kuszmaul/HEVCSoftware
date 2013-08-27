@@ -67,7 +67,19 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
       assert(0);
       break;
     case DF_SAD:
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
+      dLambda = m_dLambdaMotionSAD;
+#endif
+#else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
       dLambda = (Double)m_uiLambdaMotionSAD;
+#endif
+#endif
       break;
     case DF_DEFAULT:
       dLambda =         m_dLambda;
@@ -87,7 +99,14 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
     dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-    dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+    if (m_useCostInBits)
+    {
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+    }
+    else
+    {
+      dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
+    }
 #else
     dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
 #endif
@@ -98,7 +117,15 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
     if (eDFunc == DF_SAD)
     {
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+      if (m_useCostInBits)
+      {
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+      }
+      else
+      {
+        dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
+        dRdCost = (Double)(UInt)floor(dRdCost);
+      }
 #else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
       dRdCost = (Double)(UInt)floor(dRdCost);
@@ -110,7 +137,15 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
       dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      if (m_useCostInBits)
+      {
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      }
+      else
+      {
+        dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
+        dRdCost = (Double)(UInt)floor(dRdCost);
+      }
 #else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
       dRdCost = (Double)(UInt)floor(dRdCost);
@@ -133,7 +168,19 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       assert(0);
       break;
     case DF_SAD:
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
+      dLambda = m_dLambdaMotionSAD;
+#endif
+#else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
       dLambda = (Double)m_uiLambdaMotionSAD;
+#endif
+#endif
       break;
     case DF_DEFAULT:
       dLambda =         m_dLambda;
@@ -153,7 +200,14 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-    dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+    if (m_useCostInBits)
+    {
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+    }
+    else
+    {
+      dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
+    }
 #else
     dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
 #endif
@@ -164,7 +218,15 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     if (eDFunc == DF_SAD)
     {
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+      if (m_useCostInBits)
+      {
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+      }
+      else
+      {
+        dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
+        dRdCost = (Double)(UInt)floor(dRdCost);
+      }
 #else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
       dRdCost = (Double)(UInt)floor(dRdCost);
@@ -176,7 +238,15 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      if (m_useCostInBits)
+      {
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      }
+      else
+      {
+        dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
+        dRdCost = (Double)(UInt)floor(dRdCost);
+      }
 #else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
       dRdCost = (Double)(UInt)floor(dRdCost);
@@ -192,8 +262,37 @@ Void TComRdCost::setLambda( Double dLambda )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
+  m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
+#if FULL_NBIT
+  dLambda = 0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0));
+#else
+  dLambda = 0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8)) / 3.0));
+#endif
+  m_dLambdaMotionSAD[1] = 65536.0 * sqrt(dLambda);
+  m_dLambdaMotionSSE[1] = 65536.0 * dLambda;
+#else
+  m_dLambdaMotionSAD  = 65536.0 * m_sqrtLambda;
+  m_dLambdaMotionSSE  = 65536.0 * m_dLambda;
+#endif
+#else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  m_uiLambdaMotionSAD[0] = (UInt)floor(65536.0 * m_sqrtLambda);
+  m_uiLambdaMotionSSE[0] = (UInt)floor(65536.0 * m_dLambda   );
+#if FULL_NBIT
+  dLambda = 0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0));
+#else
+  dLambda = 0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8)) / 3.0));
+#endif
+  m_uiLambdaMotionSAD[1] = (UInt)floor(65536.0 * sqrt(dLambda));
+  m_uiLambdaMotionSSE[1] = (UInt)floor(65536.0 * dLambda   );
+#else
   m_uiLambdaMotionSAD = (UInt)floor(65536.0 * m_sqrtLambda);
   m_uiLambdaMotionSSE = (UInt)floor(65536.0 * m_dLambda   );
+#endif
+#endif
 }
 
 
@@ -242,6 +341,10 @@ Void TComRdCost::init()
   m_afpDistortFunc[DF_HADS32 ] = TComRdCost::xGetHADs;
   m_afpDistortFunc[DF_HADS64 ] = TComRdCost::xGetHADs;
   m_afpDistortFunc[DF_HADS16N] = TComRdCost::xGetHADs;
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  m_useCostInBits           = false;
+#endif
   
 #if !FIX203
   m_puiComponentCostOriginP = NULL;
@@ -249,7 +352,11 @@ Void TComRdCost::init()
   m_puiVerCost              = NULL;
   m_puiHorCost              = NULL;
 #endif
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+  m_dCost                   = 0;
+#else
   m_uiCost                  = 0;
+#endif
   m_iCostScale              = 0;
 #if !FIX203
   m_iSearchLimit            = 0xdeaddead;

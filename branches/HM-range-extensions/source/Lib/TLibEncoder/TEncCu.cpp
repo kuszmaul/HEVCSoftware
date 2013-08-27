@@ -942,7 +942,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if(isEndOfSlice||isEndOfSliceSegment)
       {
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-        rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost() + (1.0 / m_pcRdCost->getLambda());
+        if (m_pcEncCfg->getUseCostInBits())
+          rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost() + (1.0 / m_pcRdCost->getLambda());
+        else
+          rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
 #else
         rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
 #endif
