@@ -1294,10 +1294,10 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     beValid = false;
 #if RDPCM_INTER_LOSSLESS
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( ((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) || // NOTE: RExt - RDPCM proponents to confirm
-         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+    if ( ((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
 #else
-    if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) // NOTE: RExt - RDPCM proponents to confirm
+    if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
 #endif
       parseInterRdpcmMode(rTu, compID);
 #endif
@@ -1318,11 +1318,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the inter RDPCM mode
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     if ( pcCU->getTransformSkip(uiAbsPartIdx, compID) &&
-       ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) || // NOTE: RExt - RDPCM proponents to confirm
-         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )  // NOTE: RExt - RDPCM proponents to confirm
+       ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
        )
 #else
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )// NOTE: RExt - RDPCM proponents to confirm
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )
 #endif
     {
       parseInterRdpcmMode(rTu, compID);
@@ -1346,7 +1346,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if ( isIntra && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
   {
     uiIntraMode = pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx );
-    // NOTE: RExt - RDPCM proponents to confirm - the following lines have been moved into the 'if' clause.
     uiIntraMode = (uiIntraMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, rTu.GetChromaFormat())) : uiIntraMode;
     uiIntraMode = ((rTu.GetChromaFormat() == CHROMA_422) && !bIsLuma) ? g_chroma422IntraAngleMappingTable[uiIntraMode] : uiIntraMode;
 
@@ -1869,23 +1868,6 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
   UInt code = 0;
 
   assert(tuHeight == tuWidth);
-
-#if RDPCM_INTER_LOSSY && !RDPCM_INTER_LOSSLESS // NOTE: RExt - RDPCM proponents to confirm - change of condition
-  if (cu->getCUTransquantBypass(absPartIdx)) // NOTE: RExt - RDPCM proponents to confirm - is this necessary - it won't get called unless transform-skip=1, which should not happen it transquant-bypass=1.
-  {
-    return;
-  }
-
-  // NOTE: RExt - RDPCM proponents to confirm - is the following necessary?
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
-  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID), cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()))
-#else
-  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID)))
-#endif
-  {
-    return;
-  }
-#endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   const TComCodingStatisticsClassType ctype(STATS__INTER_RDPCM_BITS, g_aucConvertToBit[g_uiMaxCUWidth>>rTu.GetTransformDepthTotal()]+2);
