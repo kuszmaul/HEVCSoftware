@@ -1655,41 +1655,56 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
 #if RDPCM_INTER_LOSSLESS
+    TCoeff temporaryResidual[MAX_TU_SIZE * MAX_TU_SIZE];
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
     if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ) // NOTE: RExt - RDPCM proponents to confirm
 #else
     if((!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) ) // NOTE: RExt - RDPCM proponents to confirm
 #endif
-
-    for (UInt k = 0; k<uiHeight; k++)
     {
-      xInterResidueDpcm(rTu, pcResidual, uiStride, rpcCoeff, compID, uiAbsSum);
+      for (UInt k = 0; k<uiHeight; k++)
+      {
+        xInterResidueDpcm(rTu, pcResidual, uiStride, temporaryResidual, compID, uiAbsSum);
+      }
     }
     else
     {
-#endif
-#if RExt__NRCE2_RESIDUAL_ROTATION
-      const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
-      const UInt lastColumn     = uiWidth  - 1;
-      const UInt lastRow        = uiHeight - 1;
-#endif
-      for (UInt k = 0; k<uiHeight; k++)
-      {
-        for (UInt j = 0; j<uiWidth; j++)
+      for (UInt line = 0; line < uiHeight; line++)
+        for (UInt column = 0; column < uiWidth; column++)
         {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-          const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-          rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
-#else
-          rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
-#endif
-          uiAbsSum += abs(pcResidual[k*uiStride+j]);
+          temporaryResidual[(line * uiWidth) + column] = pcResidual[(line * uiStride) + column];
         }
-      }
-#if RDPCM_INTER_LOSSLESS
     }
 #endif
+#if RExt__NRCE2_RESIDUAL_ROTATION
+    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+    const UInt lastColumn     = uiWidth  - 1;
+    const UInt lastRow        = uiHeight - 1;
+#endif
+    for (UInt k = 0; k<uiHeight; k++)
+    {
+      for (UInt j = 0; j<uiWidth; j++)
+      {
+#if RDPCM_INTER_LOSSLESS
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+        rpcCoeff[coefficientIndex] = temporaryResidual[(k * uiWidth) + j];
+#else
+        rpcCoeff[k*uiWidth+j]= temporaryResidual[k*uiWidth+j];
+#endif
+        uiAbsSum += abs(temporaryResidual[k*uiWidth+j]);
+#else
+#if RExt__NRCE2_RESIDUAL_ROTATION
+        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+        rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
+#else
+        rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
+#endif
+        uiAbsSum += abs(pcResidual[k*uiStride+j]);
+#endif
+      }
+    }
   }
   else
   {
@@ -3725,7 +3740,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
     Int iTrShiftNeg = -iTransformShift;
     deQuantSample = tmpCoef << iTrShiftNeg;
   }
-  }
+}
 
 #endif // RExt__NRCE2_RESIDUAL_DPCM
 
