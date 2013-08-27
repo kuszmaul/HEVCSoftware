@@ -82,6 +82,8 @@ protected:
   Bool      m_outputInternalColourSpace;                    ///< if true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.
 #endif
   ChromaFormat m_InputChromaFormatIDC;
+
+  Bool      m_printMSEBasedSequencePSNR;
   
   // profile/level
   Profile::Name m_profile;

@@ -90,6 +90,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
   m_cTEncTop.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
 
+  m_cTEncTop.setPrintMSEBasedSequencePSNR(m_printMSEBasedSequencePSNR);
+
   m_cTEncTop.setFrameRate                    ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                  ( m_iSourceWidth );
