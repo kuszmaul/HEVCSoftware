@@ -1158,6 +1158,12 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
     Int    tmpResi   [ MAX_CU_SIZE*MAX_CU_SIZE ];
     Int    resiDiff;
 
+#if RExt__NRCE2_RESIDUAL_ROTATION
+    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+    const UInt lastColumn     = uiWidth  - 1;
+    const UInt lastRow        = uiHeight - 1;
+#endif
+
     UInt uiPos;
     if ( uiChFinalMode == VER_IDX )
     {
@@ -1166,7 +1172,11 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       {
         for ( UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+          uiPos = (rotateResidual ? (((lastRow - uiY) * uiWidth) + (lastColumn - uiX)) : ((uiY * uiWidth) + uiX));
+#else
           uiPos = uiY*uiWidth + uiX;
+#endif
 
           tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ];
 
@@ -1207,7 +1217,11 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       {
         for ( UInt uiY = 0; uiY < uiHeight; uiY++ )
         {
+#if RExt__NRCE2_RESIDUAL_ROTATION
+          uiPos = (rotateResidual ? (((lastRow - uiY) * uiWidth) + (lastColumn - uiX)) : ((uiY * uiWidth) + uiX));
+#else
           uiPos = uiY*uiWidth + uiX;
+#endif
           tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ];
 
           if ( uiX > 0 )
