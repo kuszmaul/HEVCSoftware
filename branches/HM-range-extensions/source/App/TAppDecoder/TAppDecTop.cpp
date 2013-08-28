@@ -292,7 +292,20 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
-          m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
+#if RExt__M0042_NO_DISPLAY_SEI
+          Bool display = true;
+          if( m_decodedNoDisplaySEIEnabled )
+          {
+            SEIMessages noDisplay = getSeisByType(pcPic->getSEIs(), SEI::NO_DISPLAY );
+            const SEINoDisplay *nd = ( noDisplay.size() > 0 ) ? (SEINoDisplay*) *(noDisplay.begin()) : NULL;
+            if( (nd != NULL) && nd->m_noDisplay )
+            {
+              display = false;
+            }
+          }
+          if (display)
+#endif
+            m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
 #if RExt__COLOUR_SPACE_CONVERSIONS
                                          m_outputColourSpaceConvert,
 #else

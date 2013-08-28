@@ -1245,6 +1245,25 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
     }
+#if RExt__M0042_NO_DISPLAY_SEI
+    if( m_pcEncTop->getNoDisplaySEITLayer() )
+    {
+      if( pcSlice->getTLayer() >= m_pcEncTop->getNoDisplaySEITLayer() )
+      {
+        // No display SEI
+        OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
+        m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+        m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+
+        SEINoDisplay seiNoDisplay;
+        seiNoDisplay.m_noDisplay = true; 
+
+        m_seiWriter.writeSEImessage( nalu.m_Bitstream, seiNoDisplay, pcSlice->getSPS() );
+        writeRBSPTrailingBits(nalu.m_Bitstream);
+        accessUnit.push_back(new NALUnitEBSP(nalu));
+      }
+    }
+#endif
 
     /* use the main bitstream buffer for storing the marshalled picture */
     m_pcEntropyCoder->setBitstream(NULL);
