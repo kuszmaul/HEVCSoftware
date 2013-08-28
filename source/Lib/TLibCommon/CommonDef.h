@@ -39,11 +39,13 @@
 #define __COMMONDEF__
 
 #include <algorithm>
+#include <iostream>
+#include <assert.h>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
 #pragma warning( disable : 4018 )
-// disable bool coercion "performance warning"
+// disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
 #include "TypeDef.h"
@@ -55,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "12.0"                 ///< Current software version
+#define NV_VERSION        "11.1_RExt3.0"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -113,7 +115,7 @@
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
-#define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
+#define MAX_DOUBLE                  1.7e+308    ///< max. value of Double-type value
 
 #define MIN_QP                      0
 #define MAX_QP                      51
@@ -123,15 +125,22 @@
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
-extern Int g_bitDepthY;
-extern Int g_bitDepthC;
 
-/** clip x, such that 0 <= x <= #g_maxLumaVal */
-template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
-template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
+extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
 
-/** clip a, such that minVal <= a <= maxVal */
-template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
+template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
+
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
+{
+  if ((a > maxVal) || (a < minVal))
+  {
+    std::cerr << "ERROR: Range check " << minVal << " >= " << a << " <= " << maxVal << " failed" << std::endl;
+    assert(false);
+    exit(1);
+  }
+}  ///< general min/max clip
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -148,6 +157,10 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
+template <typename ValueType> inline ValueType leftShift       (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ( value                                   >> -shift); }
+template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  >> shift) : ( value                                   << -shift); }
+template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ((value + (ValueType(1) << (-shift - 1))) >> -shift); }
+template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (ValueType(1) << (shift - 1))) >> shift) : ( value                                   << -shift); }
 
 // ====================================================================================================================
 // Coding tool configuration
@@ -240,6 +253,7 @@ enum NalUnitType
   NAL_UNIT_FILLER_DATA,             // 38
   NAL_UNIT_PREFIX_SEI,              // 39
   NAL_UNIT_SUFFIX_SEI,              // 40
+
   NAL_UNIT_RESERVED_NVCL41,
   NAL_UNIT_RESERVED_NVCL42,
   NAL_UNIT_RESERVED_NVCL43,
