@@ -60,7 +60,7 @@ protected:
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
-  UInt      m_FrameSkip;                                      ///< number of skipped frames from the beginning
+  UInt      m_FrameSkip;                                   ///< number of skipped frames from the beginning
   Int       m_iSourceWidth;                                   ///< source width in pixel
   Int       m_iSourceHeight;                                  ///< source height in pixel (when interlaced = field height)
   
@@ -76,6 +76,12 @@ protected:
   Int       m_confBottom;
   Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  InputColourSpaceConversion m_inputColourSpaceConvert;       ///< colour space conversion to apply to input video
+  Bool      m_snrInternalColourSpace;                       ///< if true, then no colour space conversion is applied for snr calculation, otherwise inverse of input is applied.
+  Bool      m_outputInternalColourSpace;                    ///< if true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.
+#endif
+  ChromaFormat m_InputChromaFormatIDC;
   
   // profile/level
   Profile::Name m_profile;
@@ -131,18 +137,20 @@ protected:
   UInt      m_uiQuadtreeTUMaxDepthIntra;
   
   // coding tools (bit-depth)
-  Int       m_inputBitDepthY;                               ///< bit-depth of input file (luma component)
-  Int       m_inputBitDepthC;                               ///< bit-depth of input file (chroma component)
-  Int       m_outputBitDepthY;                              ///< bit-depth of output file (luma component)
-  Int       m_outputBitDepthC;                              ///< bit-depth of output file (chroma component)
-  Int       m_internalBitDepthY;                            ///< bit-depth codec operates at in luma (input/output files will be converted)
-  Int       m_internalBitDepthC;                            ///< bit-depth codec operates at in chroma (input/output files will be converted)
+  Int       m_inputBitDepth   [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of input file
+  Int       m_outputBitDepth  [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of output file
+  Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
+
+  //coding tools (chroma format)
+  ChromaFormat m_chromaFormatIDC;
 
   // coding tools (PCM bit-depth)
   Bool      m_bPCMInputBitDepthFlag;                          ///< 0: PCM bit-depth is internal bit-depth. 1: PCM bit-depth is input bit-depth.
 
   // coding tool (lossless)
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_useLossless;                                    ///< flag for using lossless coding
+#endif
   Bool      m_bUseSAO; 
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
@@ -193,6 +201,7 @@ protected:
   UInt*     m_pColumnWidth;
   UInt*     m_pRowHeight;
   Int       m_iWaveFrontSynchro; //< 0: no WPP. >= 1: WPP is enabled, the "Top right" from which inheritance occurs is this LCU offset in the line above the current.
+  Int       m_iWaveFrontFlush; //< enable(1)/disable(0) the CABAC flush at the end of each line of LCUs.
   Int       m_iWaveFrontSubstreams; //< If iWaveFrontSynchro, this is the number of substreams per frame (dependent tiles) or per tile (independent tiles).
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
@@ -240,7 +249,7 @@ protected:
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
   Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
-  
+
   UInt      m_log2ParallelMergeLevel;                         ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                                ///< Max number of merge candidates
 
@@ -267,7 +276,11 @@ protected:
   Char*     m_scalingListFile;                                ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+#else
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#endif
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Bool      m_useStrongIntraSmoothing;                        ///< enable strong intra smoothing for 32x32 blocks where the reference samples are flat

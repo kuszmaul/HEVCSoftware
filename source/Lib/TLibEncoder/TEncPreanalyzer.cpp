@@ -64,13 +64,13 @@ TEncPreanalyzer::~TEncPreanalyzer()
 Void TEncPreanalyzer::xPreanalyze( TEncPic* pcEPic )
 {
   TComPicYuv* pcPicYuv = pcEPic->getPicYuvOrg();
-  const Int iWidth = pcPicYuv->getWidth();
-  const Int iHeight = pcPicYuv->getHeight();
-  const Int iStride = pcPicYuv->getStride();
+  const Int iWidth = pcPicYuv->getWidth(COMPONENT_Y);
+  const Int iHeight = pcPicYuv->getHeight(COMPONENT_Y);
+  const Int iStride = pcPicYuv->getStride(COMPONENT_Y);
 
   for ( UInt d = 0; d < pcEPic->getMaxAQDepth(); d++ )
   {
-    const Pel* pLineY = pcPicYuv->getLumaAddr();
+    const Pel* pLineY = pcPicYuv->getAddr(COMPONENT_Y);
     TEncPicQPAdaptationLayer* pcAQLayer = pcEPic->getAQLayer(d);
     const UInt uiAQPartWidth = pcAQLayer->getAQPartWidth();
     const UInt uiAQPartHeight = pcAQLayer->getAQPartHeight();

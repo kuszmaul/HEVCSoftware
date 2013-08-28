@@ -37,6 +37,8 @@
 
 #include "TEncBinCoderCABACCounter.h"
 #include "TLibCommon/TComRom.h"
+#include "TLibCommon/Debug.h"
+
 
 #if FAST_BIT_EST
 
@@ -71,10 +73,26 @@ UInt TEncBinCABACCounter::getNumWrittenBits()
  */
 Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
-  m_uiBinsCoded += m_binCountIncrement;
+#ifdef DEBUG_ENCODER_SEARCH_BINS
+  const UInt64 startingFracBits = m_fracBits;
+#endif
   
+  m_uiBinsCoded += m_binCountIncrement;
   m_fracBits += rcCtxModel.getEntropyBits( binValue );
   rcCtxModel.update( binValue );
+
+#ifdef DEBUG_ENCODER_SEARCH_BINS
+  if ((g_debugCounter + debugEncoderSearchBinWindow) >= debugEncoderSearchBinTargetLine)
+    std::cout << g_debugCounter << ": coding bin value " << binValue << ", fracBits = [" << startingFracBits << "->" << m_fracBits << "]\n";
+
+  if (g_debugCounter >= debugEncoderSearchBinTargetLine)
+  {
+    char breakPointThis;
+    breakPointThis = 7;
+  }
+  if (g_debugCounter >= (debugEncoderSearchBinTargetLine + debugEncoderSearchBinWindow)) exit(0);
+  g_debugCounter++;
+#endif
 }
 
 /**
