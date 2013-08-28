@@ -3863,8 +3863,30 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   UInt cuPelX   = pcCU->getCUPelX();
   UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
   UInt cuPelY    = pcCU->getCUPelY();
-  Int  maxXsr    = cuPelX % lcuWidth + INTRAMV_LEFTWIDTH;
-  Int  maxYsr    = cuPelY % lcuHeight;
+
+  Int maxXsr;
+  if ( (pcCU->getCULeft()==NULL ||
+        pcCU->getCULeft()->getSlice()==NULL ||
+          (pcCU->getCULeft()->getSCUAddr()+g_auiRasterToZscan[pcCU->getPic()->getNumPartInWidth() - 1 ]
+             < pcCU->getPic()->getCU( pcCU->getAddr() )->getSliceStartCU(0) )
+       )
+      ||
+       (pcCU->getCULeft()==NULL ||
+        pcCU->getCULeft()->getSlice()==NULL ||
+          (pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCULeft()->getAddr() )
+             != pcCU->getPic()->getPicSym()->getTileIdxMap(pcCU->getAddr())
+          )
+       )
+     )
+  {
+    maxXsr    = cuPelX % lcuWidth;
+  }
+  else
+  {
+    maxXsr    = (cuPelX % lcuWidth) + std::min<UInt>(lcuWidth, INTRAMV_LEFTWIDTH);
+  }
+
+  Int maxYsr    = cuPelY % lcuHeight;
 
   srLeft   = -maxXsr;
   srTop    = -maxYsr;
