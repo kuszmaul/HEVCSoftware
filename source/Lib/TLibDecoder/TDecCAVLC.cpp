@@ -324,8 +324,11 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
   if (uiCode != 0)
   {
-    READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
-    pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
+    if (pcPPS->getUseTransformSkip())
+    {
+      READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
+      pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
+    }
 
     READ_FLAG( uiCode, "pps_extension2_flag");
   }

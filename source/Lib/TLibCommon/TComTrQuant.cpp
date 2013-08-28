@@ -97,6 +97,8 @@ TComTrQuant::~TComTrQuant()
 #if ADAPTIVE_QP_SELECTION
 Void TComTrQuant::storeSliceQpNext(TComSlice* pcSlice)
 {
+  // NOTE: RExt - does this work with negative QPs or when some blocks are transquant-bypass enabled?
+
   Int qpBase = pcSlice->getSliceQpBase();
   Int sliceQpused = pcSlice->getSliceQp();
   Int sliceQpnext;
@@ -4132,18 +4134,29 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
 #endif
 
   //  Check whether this function is called only for 4x4 blocks
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  assert(height <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) && width <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) );
+#else
   assert(height == 4 && width == 4);
+#endif
 
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
 
   //  Temporary variables for mode decision
   UInt currentSad, bestSad = MAX_UINT;
   UInt bestRdpcmMode = 0;  
-  TCoeff tempQCoeff[16], tempRecCoeff[16], *tempQCoeffPtr, *tempCoeffPtr;
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  TCoeff tempQCoeff[MAX_TU_SIZE*MAX_TU_SIZE], tempRecCoeff[MAX_TU_SIZE*MAX_TU_SIZE], *tempQCoeffPtr, *tempCoeffPtr;
 #if ADAPTIVE_QP_SELECTION
-  TCoeff tempArlCoeff[16], *arlCoeffPtr;
+  TCoeff tempArlCoeff[MAX_TU_SIZE*MAX_TU_SIZE], *arlCoeffPtr;
 #endif
-  Int deltaU[32*32], tempDeltaU[32*32];
+#else
+  TCoeff tempQCoeff[4*4], tempRecCoeff[4*4], *tempQCoeffPtr, *tempCoeffPtr;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff tempArlCoeff[4*4], *arlCoeffPtr;
+#endif
+#endif
+  Int deltaU[MAX_TU_SIZE*MAX_TU_SIZE], tempDeltaU[MAX_TU_SIZE*MAX_TU_SIZE];
 
   for(int direction = DPCM_OFF; direction < NUMBER_OF_INTER_RDPCM_MODES; direction++)
   {
@@ -4327,7 +4340,11 @@ Void TComTrQuant::xInvInterRdpcm (       TComTU      &rTu,
   UInt height = rect.height;
   UInt width  = rect.width;
 
+#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+  assert(height <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) && width <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) );
+#else
   assert(height == 4 && width == 4);
+#endif
 
   UInt interRdpcmMode = cu->getInterRdpcmMode(compID, absParIdx);
 
