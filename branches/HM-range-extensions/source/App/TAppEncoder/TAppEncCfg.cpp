@@ -193,7 +193,7 @@ strToProfile[] =
   {"main",               Profile::MAIN            },
   {"main10",             Profile::MAIN10          },
   {"main-still-picture", Profile::MAINSTILLPICTURE},
-  {"rext-dev",           Profile::REXTDEV         }
+  {"main-RExt",          Profile::MAINREXT         }
 };
 
 static const struct MapStrToTier

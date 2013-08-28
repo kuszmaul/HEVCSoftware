@@ -871,7 +871,7 @@ Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt ui
   return (rTu.getCU()->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) &&
 #else
   // TODO: RExt - possibly check other sub-layers profile idcs here?
-  return (rTu.getCU()->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::REXTDEV) &&
+  return (rTu.getCU()->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::MAINREXT) &&
 #endif
          rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
          (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
