@@ -175,9 +175,9 @@ public:
         }
         else
         {
-          printf( "\tTotal Frames |  "   "Bitrate     "  "Y-PSNR\n" );
+          printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR\n" );
           //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-          printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf\n",
+          printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
                  getNumPic(), cDelim,
                  getBits() * dScale,
                  getPsnr(COMPONENT_Y) / (Double)getNumPic() );
@@ -209,9 +209,9 @@ public:
           }
           else
           {
-            printf( "\tTotal Frames |  "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+            printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
             //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-            printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+            printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
                    getNumPic(), cDelim,
                    getBits() * dScale,
                    getPsnr(COMPONENT_Y) / (Double)getNumPic(),
