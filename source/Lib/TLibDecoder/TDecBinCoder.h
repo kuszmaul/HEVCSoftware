@@ -41,6 +41,10 @@
 #include "TLibCommon/ContextModel.h"
 #include "TLibCommon/TComBitStream.h"
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+class TComCodingStatisticsClassType;
+#endif
+
 //! \ingroup TLibDecoder
 //! \{
 class TDecBinCABAC;
@@ -54,9 +58,15 @@ public:
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat )  = 0;
+  virtual Void  decodeBinEP       ( UInt& ruiBin                          , const class TComCodingStatisticsClassType &whichStat )  = 0;
+  virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins            , const class TComCodingStatisticsClassType &whichStat )  = 0;
+#else
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel )  = 0;
   virtual Void  decodeBinEP       ( UInt& ruiBin                           )  = 0;
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
+#endif
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;

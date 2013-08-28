@@ -40,7 +40,9 @@
 #include <string>
 #include "TAppDecCfg.h"
 #include "TAppCommon/program_options_lite.h"
-
+#if RExt__COLOUR_SPACE_CONVERSIONS
+#include "TLibCommon/TComChromaFormat.h"
+#endif
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -64,16 +66,24 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_BitstreamFile;
   string cfg_ReconFile;
   string cfg_TargetDecLayerIdSetFile;
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  string outputColourSpaceConvert;
+#endif
 
   po::Options opts;
   opts.addOptions()
+
+
   ("help", do_help, false, "this help text")
   ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream input file name")
   ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name\n"
                                                      "YUV writing is skipped if omitted")
   ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
-  ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
-  ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
+  ("OutputBitDepth,d",  m_outputBitDepth[CHANNEL_TYPE_LUMA],   0, "bit depth of YUV output luma component (default: use 0 for native depth)")
+  ("OutputBitDepthC,d", m_outputBitDepth[CHANNEL_TYPE_CHROMA], 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  ("OutputColourSpaceConvert",  outputColourSpaceConvert,         string(""), "Colour space conversion to apply to input 444 video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(false))
+#endif
   ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
   ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
                                               "\t1: check hash in SEI messages if available in the bitstream\n"
@@ -82,6 +92,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
   ("RespectDefDispWindow,w", m_respectDefDispWindow, 0, "Only output content inside the default display window\n")
   ;
+
   po::setDefaults(opts);
   const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
@@ -95,6 +106,15 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
     po::doHelp(cout, opts);
     return false;
   }
+
+#if RExt__COLOUR_SPACE_CONVERSIONS
+  m_outputColourSpaceConvert = stringToInputColourSpaceConvert(outputColourSpaceConvert, false);
+  if (m_outputColourSpaceConvert>=NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS)
+  {
+    fprintf(stderr, "Bad output colour space conversion string\n");
+    return false;
+  }
+#endif
 
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());

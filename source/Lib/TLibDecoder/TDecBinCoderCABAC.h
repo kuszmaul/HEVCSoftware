@@ -55,10 +55,17 @@ public:
   
   Void  start             ();
   Void  finish            ();
-  
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinEP       ( UInt& ruiBin                          , const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinsEP      ( UInt& ruiBin, Int numBins             , const class TComCodingStatisticsClassType &whichStat );
+#else
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
   Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
+#endif
+
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
