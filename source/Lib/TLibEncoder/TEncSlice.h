@@ -95,24 +95,27 @@ private:
   Double*                 m_pdRdPicLambda;                      ///< array of lambda candidates
   Double*                 m_pdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)
   Int*                    m_piRdPicQp;                          ///< array of picture QP candidates (Int-type)
-  TEncBinCABAC*           m_pcBufferBinCoderCABACs;       ///< line of bin coder CABAC
+  TEncBinCABAC*           m_pcBufferBinCoderCABACs;             ///< line of bin coder CABAC
   TEncSbac*               m_pcBufferSbacCoders;                 ///< line to store temporary contexts
   TEncBinCABAC*           m_pcBufferLowLatBinCoderCABACs;       ///< dependent tiles: line of bin coder CABAC
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
   UInt                    m_uiSliceIdx;
   std::vector<TEncSbac*> CTXMem;
+
+  Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);
+
 public:
   TEncSlice();
   virtual ~TEncSlice();
   
-  Void    create              ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
+  Void    create              ( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
   Void    destroy             ();
   Void    init                ( TEncTop* pcEncTop );
   
   /// preparation of slice encoding (reference marking, QP and lambda)
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
-                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField );
+                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
 #else
