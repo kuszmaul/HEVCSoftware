@@ -31,10 +31,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SEI__
+#define __SEI__
+
 #pragma once
 #include <list>
 #include <vector>
 #include <cstring>
+
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -79,6 +85,8 @@ public:
   virtual PayloadType payloadType() const = 0;
 };
 
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: RExt - new definition
+
 class SEIuserDataUnregistered : public SEI
 {
 public:
@@ -93,8 +101,8 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
+  UChar uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  UInt  userDataLength;
   UChar *userData;
 };
 
@@ -114,7 +122,7 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComDigest m_digest;
 };
 
 class SEIActiveParameterSets : public SEI 
@@ -402,5 +410,7 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+#endif
 
 //! \}

@@ -40,7 +40,7 @@
 //! \ingroup TLibCommon
 //! \{
 
-const UChar TComCABACTables::sm_aucLPSTable[64][4] =
+const UChar TComCABACTables::sm_aucLPSTable[1 << CONTEXT_STATE_BITS][4] =
 {
   { 128, 176, 208, 240},
   { 128, 167, 197, 227},
