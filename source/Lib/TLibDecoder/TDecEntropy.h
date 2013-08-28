@@ -44,6 +44,7 @@
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComPrediction.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
+#include "TLibCommon/TComRectangle.h"
 
 class TDecSbac;
 class TDecCavlc;
@@ -64,13 +65,13 @@ public:
   virtual Void  resetEntropy          ( TComSlice* pcSlice )     = 0;
   virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
-  virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
-  virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
-  virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
+  virtual Void  parseVPS                  ( TComVPS* pcVPS )     = 0;
+  virtual Void  parseSPS                  ( TComSPS* pcSPS )     = 0;
+  virtual Void  parsePPS                  ( TComPPS* pcPPS )     = 0;
 
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)       = 0;
 
-  virtual Void  parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
+  virtual Void parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
   
   virtual Void parseMVPIdx        ( Int& riMVPIdx ) = 0;
   
@@ -86,22 +87,37 @@ public:
   virtual Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
   virtual Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  virtual Void parseIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth ) = 0;
+  virtual Void parseIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth ) = 0;
+#endif
   
   virtual Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx ) = 0;
   virtual Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList ) = 0;
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
   
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
-  virtual Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth ) = 0;
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;
+#else
+  virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID ) = 0;
+#endif
   virtual Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf ) = 0;
   
   virtual Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
   virtual Void parseIPCMInfo     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth) = 0;
 
-  virtual Void parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType ) = 0;
-  virtual Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType) = 0;
+  virtual Void parseCoeffNxN( class TComTU &rTu, ComponentID compID  ) = 0;
+
+  virtual Void parseTransformSkipFlags ( class TComTU &rTu, ComponentID component ) = 0;
+
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  virtual Void parseInterRdpcmMode ( TComTU &rTu, ComponentID compID ) = 0;
+#endif
   
   virtual ~TDecEntropyIf() {}
 };
@@ -112,9 +128,9 @@ class TDecEntropy
 private:
   TDecEntropyIf*  m_pcEntropyDecoderIf;
   TComPrediction* m_pcPrediction;
-  UInt    m_uiBakAbsPartIdx;
-  UInt    m_uiBakChromaOffset;
-  UInt    m_bakAbsPartIdxCU;
+  //UInt    m_uiBakAbsPartIdx;
+  //UInt    m_uiBakChromaOffset;
+  //UInt    m_bakAbsPartIdxCU;
   
 public:
   Void init (TComPrediction* p) {m_pcPrediction = p;}
@@ -127,9 +143,10 @@ public:
   Void    setEntropyDecoder           ( TDecEntropyIf* p );
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
+
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
-  Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-  Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
+  Void    decodeSPS                   ( TComSPS* pcSPS ) { m_pcEntropyDecoderIf->parseSPS(pcSPS); }
+  Void    decodePPS                   ( TComPPS* pcPPS ) { m_pcEntropyDecoderIf->parsePPS(pcPPS); }
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager);         }
 
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
@@ -151,18 +168,24 @@ public:
   
   Void decodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Void decodeIntraMVFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void decodeIntraMV           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#endif
   
   Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
+
   Void updateContextTables    ( SliceType eSliceType, Int iQp ) { m_pcEntropyDecoderIf->updateContextTables( eSliceType, iQp ); }
   
   
 private:
-  Void xDecodeTransform        ( TComDataCU* pcCU, UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP );
+
+  Void xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu );
 
 public:
-  Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP );
-  
+  Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP );
+
 };// END CLASS DEFINITION TDecEntropy
 
 //! \}

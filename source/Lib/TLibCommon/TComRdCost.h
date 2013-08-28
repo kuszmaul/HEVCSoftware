@@ -81,7 +81,7 @@ public:
 
   Bool            bApplyWeight;     // whether weithed prediction is used or not
   wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
-  UInt            uiComp;           // uiComp = 0 (luma Y), 1 (chroma U), 2 (chroma V)
+  ComponentID     compIdx;
 
 #if NS_HAD
   Bool            bUseNSHAD;
@@ -116,20 +116,34 @@ class TComRdCost
 private:
   // for distortion
   
-#if AMP_SAD
-  FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]
-#else  
-  FpDistFunc              m_afpDistortFunc[33]; // [eDFunc]
-#endif  
-  
+  FpDistFunc              m_afpDistortFunc[DF_TOTAL_FUNCTIONS]; // [eDFunc]
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  CostMode                m_costMode;
+#endif
+
 #if WEIGHTED_CHROMA_DISTORTION
-  Double                  m_cbDistortionWeight; 
-  Double                  m_crDistortionWeight; 
+  Double                  m_distortionWeight[MAX_NUM_COMPONENT]; // only chroma values are used.
 #endif
   Double                  m_dLambda;
   Double                  m_sqrtLambda;
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Double                  m_dLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+  Double                  m_dLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+#else
+  Double                  m_dLambdaMotionSAD;
+  Double                  m_dLambdaMotionSSE;
+#endif
+#else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  UInt                    m_uiLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+  UInt                    m_uiLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+#else
   UInt                    m_uiLambdaMotionSAD;
   UInt                    m_uiLambdaMotionSSE;
+#endif
+#endif
   Double                  m_dFrameLambda;
   
   // for motion cost
@@ -141,7 +155,11 @@ private:
   UInt*                   m_puiVerCost;
   UInt*                   m_puiHorCost;
 #endif
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+  Double                  m_dCost;
+#else
   UInt                    m_uiCost;
+#endif
   Int                     m_iCostScale;
 #if !FIX203
   Int                     m_iSearchLimit;
@@ -155,8 +173,7 @@ public:
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   
 #if WEIGHTED_CHROMA_DISTORTION
-  Void    setCbDistortionWeight      ( Double cbDistortionWeight) { m_cbDistortionWeight = cbDistortionWeight; };
-  Void    setCrDistortionWeight      ( Double crDistortionWeight) { m_crDistortionWeight = crDistortionWeight; };
+  Void    setDistortionWeight  ( const ComponentID compID, const Double distortionWeight ) { m_distortionWeight[compID] = distortionWeight; }
 #endif
   Void    setLambda      ( Double dLambda );
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
@@ -166,10 +183,14 @@ public:
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Double  getLambda() { return m_dLambda; }
 #if M0036_RC_IMPROVEMENT
-  Double  getChromaWeight () {return((m_cbDistortionWeight+m_crDistortionWeight)/2.0);}
+  Double  getChromaWeight () { return ((m_distortionWeight[COMPONENT_Cb] + m_distortionWeight[COMPONENT_Cr]) / 2.0); }
 #endif
 #endif
-  
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Void      setCostMode(CostMode   m )    { m_costMode = m; }
+#endif
+
   // Distortion Functions
   Void    init();
   
@@ -191,7 +212,19 @@ public:
   Void    xUninit();
 #endif
   UInt    xGetComponentBits( Int iVal );
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
+#else
+  Void    getMotionCost( Bool bSad, Int iAdd ) { m_dCost = (bSad ? m_dLambdaMotionSAD + iAdd : m_dLambdaMotionSSE + iAdd); }
+#endif
+#else
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_uiLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
+#else
   Void    getMotionCost( Bool bSad, Int iAdd ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); }
+#endif
+#endif
   Void    setPredictor( TComMv& rcMv )
   {
 #if FIX203
@@ -204,13 +237,25 @@ public:
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   __inline UInt getCost( Int x, Int y )
   {
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#if FIX203
+    return UInt((m_dCost * getBits(x, y)) / 65536.0);
+#else
+    return UInt(( m_dCost * (m_puiHorCost[ x * (1<<m_iCostScale) ] + m_puiVerCost[ y * (1<<m_iCostScale) ]) ) / 65536.0);
+#endif
+#else
 #if FIX203
     return m_uiCost * getBits(x, y) >> 16;
 #else
     return (( m_uiCost * (m_puiHorCost[ x * (1<<m_iCostScale) ] + m_puiVerCost[ y * (1<<m_iCostScale) ]) ) >> 16);
 #endif
+#endif
   }
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+  UInt    getCost( UInt b )                 { return UInt(( m_dCost * b ) / 65536.0); }
+#else
   UInt    getCost( UInt b )                 { return ( m_uiCost * b ) >> 16; }
+#endif 
   UInt    getBits( Int x, Int y )          
   {
 #if FIX203
@@ -259,7 +304,7 @@ private:
   
 public:
 #if WEIGHTED_CHROMA_DISTORTION
-  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, TextType eText = TEXT_LUMA, DFunc eDFunc = DF_SSE );
+  UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
 #else
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif

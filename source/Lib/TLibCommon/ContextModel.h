@@ -36,14 +36,15 @@
     \brief    context model class (header)
 */
 
-#ifndef __CONTEXT_MODEL__
-#define __CONTEXT_MODEL__
+#ifndef __CONTEXTMODEL__
+#define __CONTEXTMODEL__
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
 
 #include "CommonDef.h"
+#include "TComRom.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -90,11 +91,13 @@ public:
   
 private:
   UChar         m_ucState;                                                                  ///< internal state variable
-  static const  UChar m_aucNextStateMPS[ 128 ];
-  static const  UChar m_aucNextStateLPS[ 128 ];
-  static const Int m_entropyBits[ 128 ];
+
+  static const  UInt  m_totalStates = (1 << CONTEXT_STATE_BITS) * 2; //*2 for MPS = [0|1]
+  static const  UChar m_aucNextStateMPS[m_totalStates];
+  static const  UChar m_aucNextStateLPS[m_totalStates];
+  static const  Int   m_entropyBits    [m_totalStates];
 #if FAST_BIT_EST
-  static UChar m_nextState[128][2];
+  static UChar m_nextState[m_totalStates][2 /*MPS = [0|1]*/];
 #endif
   UInt          m_binsCoded;
 };

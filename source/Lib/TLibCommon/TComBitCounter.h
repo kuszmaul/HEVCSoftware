@@ -35,8 +35,8 @@
     \brief    Class for counting bits (header)
 */
 
-#ifndef __COMBITCOUNTER__
-#define __COMBITCOUNTER__
+#ifndef __TCOMBITCOUNTER__
+#define __TCOMBITCOUNTER__
 
 #if _MSC_VER > 1000
 #pragma once

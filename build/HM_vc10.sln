@@ -15,6 +15,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibEncoder", "vc10\TLibEnc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibVideoIO", "vc10\TLibVideoIO_vc10.vcxproj", "{5280C25A-D316-4BE7-AE50-29D72108624F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TAppDecoderAnalyser", "vc10\TAppDecoderAnalyser_vc10.vcxproj", "{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TLibDecoderAnalyser", "vc10\TLibDecoderAnalyser_vc10.vcxproj", "{68C1251A-55D8-47C9-9052-62F785BD437A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -79,6 +83,22 @@ Global
 		{5280C25A-D316-4BE7-AE50-29D72108624F}.Release|Win32.Build.0 = Release|Win32
 		{5280C25A-D316-4BE7-AE50-29D72108624F}.Release|x64.ActiveCfg = Release|x64
 		{5280C25A-D316-4BE7-AE50-29D72108624F}.Release|x64.Build.0 = Release|x64
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|Win32.Build.0 = Debug|Win32
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|x64.ActiveCfg = Debug|x64
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Debug|x64.Build.0 = Debug|x64
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|Win32.ActiveCfg = Release|Win32
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|Win32.Build.0 = Release|Win32
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|x64.ActiveCfg = Release|x64
+		{6BB4C8D8-449D-4CC1-A5E1-E98AAF94012F}.Release|x64.Build.0 = Release|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|Win32.Build.0 = Debug|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.ActiveCfg = Debug|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Debug|x64.Build.0 = Debug|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.ActiveCfg = Release|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|Win32.Build.0 = Release|Win32
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.ActiveCfg = Release|x64
+		{68C1251A-55D8-47C9-9052-62F785BD437A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

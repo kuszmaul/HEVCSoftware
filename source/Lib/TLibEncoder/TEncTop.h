@@ -179,14 +179,23 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+  Void encode( Bool bEos,
+               TComPicYuv* pcPicYuvOrg,
+#if RExt__COLOUR_SPACE_CONVERSIONS
+               TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+#endif
+               TComList<TComPicYuv*>& rcListPicYuvRecOut,
+               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg,
+#if RExt__COLOUR_SPACE_CONVERSIONS
+               TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+#endif
+               TComList<TComPicYuv*>& rcListPicYuvRecOut,
+               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
   
-  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField); }
+  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR); }
   
 };
 
