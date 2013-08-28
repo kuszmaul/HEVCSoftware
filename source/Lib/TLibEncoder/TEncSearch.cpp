@@ -2342,11 +2342,16 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   //NOTE: RExt - Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
 #if FULL_NBIT
-  const Double sqrtLambdaAtTestQp= sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0)));
+  const Double sqrtLambdaForFirstPass= (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING && pcCU->getCUTransquantBypass(0)) ?
+                sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0)))
+              : m_pcRdCost->getSqrtLambda();
 #else
-  const Double sqrtLambdaAtTestQp= sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8)) / 3.0)));
+  const Double sqrtLambdaForFirstPass= (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING && pcCU->getCUTransquantBypass(0)) ?
+                sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8)) / 3.0)))
+              : m_pcRdCost->getSqrtLambda();
 #endif
 #endif
+
   //===== set QP and clear Cbf =====
   if ( pcCU->getSlice()->getPPS()->getUseDQP() == true)
   {
@@ -2418,15 +2423,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         iModeBits+=xModeBitsIntra( pcCU, uiMode, uiPartOffset, uiDepth, uiInitTrDepth, CHANNEL_TYPE_LUMA );
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-        Double cost;
-        if (m_pcEncCfg->getUseCostInBits())
-        {
-          cost      = (Double)uiSad + (Double)iModeBits * (pcCU->getCUTransquantBypass(0) ? sqrtLambdaAtTestQp : m_pcRdCost->getSqrtLambda());
-        }
-        else
-        {
-          cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
-        }
+        Double cost      = (Double)uiSad + (Double)iModeBits * sqrtLambdaForFirstPass;
 #else
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
 #endif

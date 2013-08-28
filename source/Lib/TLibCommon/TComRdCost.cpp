@@ -99,9 +99,9 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
     dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-    if (m_useCostInBits)
+    if (m_costMode != COST_STANDARD_LOSSY)
     {
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
     }
     else
     {
@@ -117,9 +117,9 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
     if (eDFunc == DF_SAD)
     {
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      if (m_useCostInBits)
+      if (m_costMode != COST_STANDARD_LOSSY)
       {
-        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
       }
       else
       {
@@ -137,9 +137,9 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
       dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      if (m_useCostInBits)
+      if (m_costMode != COST_STANDARD_LOSSY)
       {
-        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
       }
       else
       {
@@ -200,9 +200,9 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-    if (m_useCostInBits)
+    if (m_costMode != COST_STANDARD_LOSSY)
     {
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
     }
     else
     {
@@ -218,9 +218,9 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     if (eDFunc == DF_SAD)
     {
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      if (m_useCostInBits)
+      if (m_costMode != COST_STANDARD_LOSSY)
       {
-        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits);
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
       }
       else
       {
@@ -238,9 +238,9 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       dRdCost = (Double)(uiBits);
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-      if (m_useCostInBits)
+      if (m_costMode != COST_STANDARD_LOSSY)
       {
-        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits);
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
       }
       else
       {
@@ -343,7 +343,7 @@ Void TComRdCost::init()
   m_afpDistortFunc[DF_HADS16N] = TComRdCost::xGetHADs;
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  m_useCostInBits           = false;
+  m_costMode                = COST_STANDARD_LOSSY;
 #endif
   
 #if !FIX203

@@ -325,7 +325,7 @@ protected:
 #endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Bool      m_useCostInBits;                                  ///< Use cost functions in terms of bits (commonly used for lossless-coding development), rather than cost functions in terms of distortion.
+  CostMode  m_costMode;                                       ///< The cost function to use, primarily when considering lossless coding.
 #endif
 
   TComVPS                    m_cVPS;
@@ -779,8 +779,8 @@ public:
   Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
 #endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Bool      getUseCostInBits                ( )            { return m_useCostInBits; }
-  Void      setUseCostInBits                (Bool   b )    { m_useCostInBits = b; }
+  CostMode  getCostMode                     ( )            { return m_costMode; }
+  Void      setCostMode                     (CostMode m )  { m_costMode = m; }
 #endif
 
   Void setVPS(TComVPS *p) { m_cVPS = *p; }

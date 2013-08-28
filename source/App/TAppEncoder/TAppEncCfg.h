@@ -310,7 +310,7 @@ protected:
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 #endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Bool      m_useCostInBits;                                  ///< Use cost in bits and constant lambda based on QP'=4 for transquant-bypass intra-search pass 1, to give cost independent of QP for losslessly coded blocks.
+  CostMode  m_costMode;                                       ///< Cost mode to use
 #endif
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value

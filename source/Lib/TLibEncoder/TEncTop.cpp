@@ -290,7 +290,7 @@ Void TEncTop::init(Bool isFieldCoding)
   m_cVPS.getTimingInfo()->setTimingInfoPresentFlag       ( false );
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  m_cRdCost.setUseCostInBits(m_useCostInBits);
+  m_cRdCost.setCostMode(m_costMode);
 #endif
 
   // initialize PPS
@@ -772,6 +772,10 @@ Void TEncTop::xInitPPS()
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
     }
   }
+#endif
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  if (m_costMode==COST_SEQUENCE_LEVEL_LOSSLESS || m_costMode==COST_LOSSLESS_CODING) bUseDQP=false;
 #endif
 
   if(bUseDQP)
