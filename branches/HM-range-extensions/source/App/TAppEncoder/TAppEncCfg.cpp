@@ -233,6 +233,22 @@ strToLevel[] =
 #endif
 };
 
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+
+static const struct MapStrToCostMode
+{
+  const Char* str;
+  CostMode    value;
+}
+strToCostMode[] =
+{
+  {"lossy",                     COST_STANDARD_LOSSY},
+  {"sequence_level_lossless",   COST_SEQUENCE_LEVEL_LOSSLESS},
+  {"lossless",                  COST_LOSSLESS_CODING},
+  {"mixed_lossless_lossy",      COST_MIXED_LOSSLESS_LOSSY_CODING}
+};
+#endif
+
 template<typename T, typename P>
 static istream& readStrToEnum(P map[], unsigned long mapLen, istream &in, T &val)
 {
@@ -268,6 +284,13 @@ static inline istream& operator>>(istream &in, Level::Name &level)
 {
   return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
 }
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+static inline istream& operator>>(istream &in, CostMode &mode)
+{
+  return readStrToEnum(strToCostMode, sizeof(strToCostMode)/sizeof(*strToCostMode), in, mode);
+}
+#endif
 
 // ====================================================================================================================
 // Public member functions
@@ -519,7 +542,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
 #endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  ("CostInBits",                     m_useCostInBits,                  false, "Use cost in bits and constant lambda based on QP'=" MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for transquant-bypass intra-search pass 1, to calculate cost independent of QP for losslessly coded intra/intramv blocks (although positive QPs will initialise contexts differently).")
+  ("CostMode",                       m_costMode,             COST_STANDARD_LOSSY, "Use alternative cost functions: choose between 'lossy', 'sequence_level_lossless', 'lossless' (which forces QP to " MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP) ") and 'mixed_lossless_lossy' (which used QP'=" MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for pre-estimates of transquant-bypass blocks).")
 #endif
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
@@ -1632,13 +1655,13 @@ Void TAppEncCfg::xPrintParameter()
   printf("Single significance map context : %s\n", m_useSingleSignificanceMapContext ? "Enabled" : "Disabled");
 #endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  if (m_useCostInBits)
+  switch (m_costMode)
   {
-    printf("Cost function:                  : In bits (with QP'=%d for transquant-bypass intra-search pass 1)", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME);
-  }
-  else
-  {
-    printf("Cost function:                  : Standard\n");
+    case COST_STANDARD_LOSSY:               printf("Cost function:                  : Lossy coding (default)\n"); break;
+    case COST_SEQUENCE_LEVEL_LOSSLESS:      printf("Cost function:                  : Sequence_level_lossless coding\n"); break;
+    case COST_LOSSLESS_CODING:              printf("Cost function:                  : Lossless coding with fixed QP of %d\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP); break;
+    case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                  : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
+    default:                                printf("Cost function:                  : Unknown\n"); break;
   }
 #endif
   #if RATE_CONTROL_LAMBDA_DOMAIN

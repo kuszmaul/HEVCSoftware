@@ -295,6 +295,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   // ------------------------------------------------------------------------------------------------------------------
   // QP setting
   // ------------------------------------------------------------------------------------------------------------------
+
   dQP = m_pcCfg->getQP();
   if(eSliceType!=I_SLICE)
   {
@@ -316,6 +317,16 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     dQP = m_pcRateCtrl->getFrameQP(rpcSlice->isReferenced(), rpcSlice->getPOC());
   }
 #endif
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  if (m_pcCfg->getCostMode()==COST_LOSSLESS_CODING)
+  {
+    dQP=RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP;
+    m_pcCfg->setDeltaQpRD(0);
+  }
+#endif
+
+
   // ------------------------------------------------------------------------------------------------------------------
   // Lambda computation
   // ------------------------------------------------------------------------------------------------------------------

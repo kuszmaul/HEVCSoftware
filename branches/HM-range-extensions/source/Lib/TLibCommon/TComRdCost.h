@@ -119,7 +119,7 @@ private:
   FpDistFunc              m_afpDistortFunc[DF_TOTAL_FUNCTIONS]; // [eDFunc]
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Bool                    m_useCostInBits;
+  CostMode                m_costMode;
 #endif
 
 #if WEIGHTED_CHROMA_DISTORTION
@@ -129,16 +129,16 @@ private:
   Double                  m_sqrtLambda;
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Double                  m_dLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when lossless cost evaluation enabled*/];
-  Double                  m_dLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when lossless cost evaluation enabled*/];
+  Double                  m_dLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+  Double                  m_dLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
 #else
   Double                  m_dLambdaMotionSAD;
   Double                  m_dLambdaMotionSSE;
 #endif
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  UInt                    m_uiLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when lossless cost evaluation enabled*/];
-  UInt                    m_uiLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when lossless cost evaluation enabled*/];
+  UInt                    m_uiLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
+  UInt                    m_uiLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
 #else
   UInt                    m_uiLambdaMotionSAD;
   UInt                    m_uiLambdaMotionSSE;
@@ -188,7 +188,7 @@ public:
 #endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Void      setUseCostInBits                (Bool   b )    { m_useCostInBits = b; }
+  Void      setCostMode(CostMode   m )    { m_costMode = m; }
 #endif
 
   // Distortion Functions
@@ -214,13 +214,13 @@ public:
   UInt    xGetComponentBits( Int iVal );
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[bIsTransquantBypass && m_useCostInBits ?1:0] + iAdd : m_dLambdaMotionSSE[bIsTransquantBypass && m_useCostInBits?1:0] + iAdd); }
+  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
 #else
   Void    getMotionCost( Bool bSad, Int iAdd ) { m_dCost = (bSad ? m_dLambdaMotionSAD + iAdd : m_dLambdaMotionSSE + iAdd); }
 #endif
 #else
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD[bIsTransquantBypass && m_useCostInBits ?1:0] + iAdd : m_uiLambdaMotionSSE[bIsTransquantBypass && m_useCostInBits?1:0] + iAdd); }
+  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_uiLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
 #else
   Void    getMotionCost( Bool bSad, Int iAdd ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); }
 #endif
