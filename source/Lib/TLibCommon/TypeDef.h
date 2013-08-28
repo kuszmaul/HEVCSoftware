@@ -653,7 +653,7 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
-    REXTDEV = 4
+    MAINREXT = 4
   };
 }
 
