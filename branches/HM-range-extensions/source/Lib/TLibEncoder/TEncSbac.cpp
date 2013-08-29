@@ -1264,8 +1264,8 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
   Bool beValid;
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   {
+#if RExt__NRCE2_RESIDUAL_DPCM
     Int uiIntraMode = -1;
     const Bool       bIsLuma = isLuma(compID);
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
@@ -1291,8 +1291,12 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     {
       beValid = false;
 #if RDPCM_INTER_LOSSLESS
-      if ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-           ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+      if ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
+        || ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
+#else
+      if (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
+#endif
         codeInterRdpcmMode( rTu, compID);
 #endif
     }
