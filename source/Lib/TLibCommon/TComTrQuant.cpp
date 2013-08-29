@@ -1662,7 +1662,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
 #else
-    if((!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )
+    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) )
 #endif
     {
       xInterResidueDpcm(rTu, pcResidual, uiStride, temporaryResidual, compID, uiAbsSum);
