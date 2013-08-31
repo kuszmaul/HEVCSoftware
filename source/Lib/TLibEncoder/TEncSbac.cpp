@@ -1279,7 +1279,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     }
 
     Int transformSkip = pcCU->getTransformSkip( uiAbsPartIdx,compID) ? 1 : 0;
-    Bool rdpcm_lossy = ( transformSkip && isIntra && ( (uiIntraMode == HOR_IDX) || (uiIntraMode == VER_IDX) ) ) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA);
+    Bool rdpcm_lossy = ( transformSkip && isIntra && ( (uiIntraMode == HOR_IDX) || (uiIntraMode == VER_IDX) ) ) && pcCU->isRDPCMEnabled(uiAbsPartIdx);
 
     if ( (pcCU->getCUTransquantBypass(uiAbsPartIdx)) || rdpcm_lossy )
 #else
@@ -1288,12 +1288,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     {
       beValid = false;
 #if RDPCM_INTER_LOSSLESS
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
-        || ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-#else
-      if (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
-#endif
+      if ( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
         codeInterRdpcmMode( rTu, compID);
 #endif
     }
@@ -1309,14 +1304,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   {
     codeTransformSkipFlags(rTu, compID);
 #if RDPCM_INTER_LOSSY
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) &&
-        ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-      )
-#else
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && !pcCU->isIntra(uiAbsPartIdx))
-#endif
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && !pcCU->isIntra(uiAbsPartIdx) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes encode the inter RDPCM mode
       codeInterRdpcmMode( rTu, compID);

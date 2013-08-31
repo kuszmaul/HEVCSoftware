@@ -1290,12 +1290,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   {
     beValid = false;
 #if RDPCM_INTER_LOSSLESS
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( ((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-#else
-    if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
-#endif
+    if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
       parseInterRdpcmMode(rTu, compID);
 #endif
   }
@@ -1313,14 +1308,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     parseTransformSkipFlags(rTu, compID);
 #if RDPCM_INTER_LOSSY
     //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the inter RDPCM mode
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( pcCU->getTransformSkip(uiAbsPartIdx, compID) &&
-       ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-         ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-       )
-#else
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )
-#endif
+    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
       parseInterRdpcmMode(rTu, compID);
       if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) > DPCM_OFF)
@@ -1335,12 +1323,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 #if RExt__NRCE2_RESIDUAL_DPCM
   Int uiIntraMode = -1;
   const Bool       bIsLuma = isLuma(compID);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Int isIntra = ( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx) ) ? 1 : 0;  // NOTE: RExt - RDPCM proponents to confirm
-#else
   Int isIntra = pcCU->isIntra(uiAbsPartIdx) ? 1 : 0;
-#endif
-  if ( isIntra && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
+  if ( isIntra && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
   {
     uiIntraMode = pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx );
     uiIntraMode = (uiIntraMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, rTu.GetChromaFormat())) : uiIntraMode;

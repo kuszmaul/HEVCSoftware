@@ -686,11 +686,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   {
 
 #if RExt__NRCE2_RESIDUAL_DPCM
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && (pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx)) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA))// NOTE: RExt - RDPCM proponents to confirm
-#else
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
-#endif
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
       pResi     += uiStride;
       for( UInt uiY = 1; uiY < uiHeight; uiY++ )
@@ -704,11 +700,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     }
 
     pResi = piResi;
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && (pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx)) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )// NOTE: RExt - RDPCM proponents to confirm
-#else
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
-#endif
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {

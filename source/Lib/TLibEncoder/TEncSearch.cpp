@@ -1141,11 +1141,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
 #endif
 
 #if RExt__NRCE2_RESIDUAL_DPCM
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (!pcCU->isIntraMV(uiAbsPartIdx)) && ( (uiChFinalMode == HOR_IDX) || (uiChFinalMode == VER_IDX) ) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) ) // NOTE: RExt - RDPCM proponents to confirm
-#else
-  if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && ( (uiChFinalMode == HOR_IDX) || (uiChFinalMode == VER_IDX) )  && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
-#endif
+  if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && ( (uiChFinalMode == HOR_IDX) || (uiChFinalMode == VER_IDX) ) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
   {
     const UInt uiOrgTrDepth   = rTu.GetTransformDepthRel();
 
@@ -1360,11 +1356,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
     const UInt clipbd=g_bitDepth[chType];
 
 #if RExt__NRCE2_RESIDUAL_DPCM
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && ( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx) ) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) // NOTE: RExt - RDPCM proponents to confirm
-#else
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
-#endif
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       pResi += uiStride;
       for( UInt uiY = 1; uiY < uiHeight; uiY++ )
@@ -1377,11 +1369,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
       }
     }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && ( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx) ) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) ) // NOTE: RExt - RDPCM proponents to confirm
-#else
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA) )
-#endif
+    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
