@@ -329,22 +329,22 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   {
 #endif
 
-  m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
-  m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
+    m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
+    m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
-  if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
-  {
-    m_pcEntropyDecoder->decodeIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
-
-    if(pcCU->getIPCMFlag(uiAbsPartIdx))
+    if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
     {
-      xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
-      return;
-    }
-  }
+      m_pcEntropyDecoder->decodeIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
 
-  // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
-  m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
+      if(pcCU->getIPCMFlag(uiAbsPartIdx))
+      {
+        xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+        return;
+      }
+    }
+
+    // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
+    m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   }
 #endif
