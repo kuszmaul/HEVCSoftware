@@ -323,7 +323,7 @@
 
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
 #define INTRAMV_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraMV, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
-#define INTRAMV_FASTME                                                         0 ///< Fast motion estimation
+#define INTRAMV_FASTME                                                         1 ///< Fast motion estimation
 #endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
