@@ -806,7 +806,11 @@ TEncSearch::xEncSubdivCbfQT(TComTU      &rTu,
   const UInt uiSubdiv             = ( uiTrMode > uiTrDepth ? 1 : 0 );
   const UInt uiLog2LumaTrafoSize  = rTu.GetLog2LumaTrSize();
 
-  if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 ) // NOTE: RExt - N0256 proponents to check
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  if( pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
+#else
+  if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
+#endif
   {
     assert( uiSubdiv );
   }
@@ -4989,11 +4993,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
                                             TComYuv*& rpcYuvResi, TComYuv*& rpcYuvResiBest, TComYuv*& rpcYuvRec,
                                             Bool bSkipRes DEBUG_STRING_FN_DECLARE(sDebug) )
 {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if ( pcCU->isIntra(0) && !pcCU->isIntraMV(0))  
-#else
   if ( pcCU->isIntra(0) )
-#endif
   {
     return;
   }
@@ -5279,7 +5279,11 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
   assert( pcCU->getDepth( 0 ) == pcCU->getDepth( uiAbsPartIdx ) );
   const UInt uiLog2TrSize = rTu.GetLog2LumaTrSize();
 
-  UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )); // NOTE: RExt - N0256 proponents to check
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->isInter(uiAbsPartIdx) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
+#else
+  UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
+#endif
   Bool bCheckFull;
   if ( SplitFlag && uiDepth == pcCU->getDepth(uiAbsPartIdx) && ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) ) )
      bCheckFull = false;
@@ -6073,7 +6077,11 @@ Void TEncSearch::xEncodeResidualQT( const ComponentID compID, TComTU &rTu )
       m_pcEntropyCoder->encodeTransformSubdivFlag( bSubdiv, 5 - uiLog2TrSize );
     }
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    assert( !pcCU->isIntra(uiAbsPartIdx) );
+#else
     assert( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA );
+#endif
 
     const Bool bFirstCbfOfCU = uiCurrTrMode == 0;
 

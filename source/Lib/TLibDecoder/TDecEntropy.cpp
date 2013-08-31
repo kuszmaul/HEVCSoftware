@@ -417,7 +417,11 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
   {
     uiSubdiv = 1;
   }
-  else if( (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ) && (uiDepth == pcCU->getDepth(uiAbsPartIdx)) ) // NOTE: RExt - N0256 proponents to check
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  else if( (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && (pcCU->isInter(uiAbsPartIdx)) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ) && (uiDepth == pcCU->getDepth(uiAbsPartIdx)) )
+#else
+  else if( (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ) && (uiDepth == pcCU->getDepth(uiAbsPartIdx)) )
+#endif
   {
     uiSubdiv = (uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx));
   }
@@ -515,8 +519,12 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
     }
 
     pcCU->setCbfSubParts ( 0, COMPONENT_Y, uiAbsPartIdx, uiDepth );
-    // NOTE: RExt - N0256 proponents to check
+
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if( (!pcCU->isIntra(uiAbsPartIdx)) && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && ((!bChroma) || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 )) ))
+#else
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && ((!bChroma) || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 )) ))
+#endif
     {
       pcCU->setCbfSubParts( 1 << uiTrDepth, COMPONENT_Y, uiAbsPartIdx, uiDepth );
     }
@@ -619,11 +627,7 @@ Void TDecEntropy::decodeQP          ( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
 {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if( pcCU->isIntra(uiAbsPartIdx)  && !pcCU->isIntraMV(uiAbsPartIdx))
-#else
   if( pcCU->isIntra(uiAbsPartIdx) )
-#endif
   {
   }
   else
