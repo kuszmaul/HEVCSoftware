@@ -847,7 +847,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if AMP_ENC_SPEEDUP
           DEBUG_STRING_NEW(sChild)
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+          if ( !rpcBestCU->isInter(0) )
+#else
           if ( rpcBestCU->isIntra(0) )
+#endif
           {
             xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth DEBUG_STRING_PASS_INTO(sChild), NUMBER_OF_PART_SIZES );
           }
@@ -1926,8 +1930,12 @@ Void TEncCu::xLcuCollectARLStats(TComDataCU* rpcCU )
   {
     UInt uiTrIdx = rpcCU->getTransformIdx(i);
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+    if(rpcCU->isInter(i) && rpcCU->getCbf( i, COMPONENT_Y, uiTrIdx ) )
+#else
     if(rpcCU->getPredictionMode(i) == MODE_INTER)
     if( rpcCU->getCbf( i, COMPONENT_Y, uiTrIdx ) )
+#endif
     {
       xTuCollectARLStats(pCoeffY, pArlCoeffY, uiMinNumCoeffInCU, cSum, numSamples);
     }//Note that only InterY is processed. QP rounding is based on InterY data only.

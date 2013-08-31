@@ -591,10 +591,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   PartSize eMode;
 
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if ( pcCU->isIntraMV( uiAbsPartIdx ) )
-  {
-    assert( 0 );
-  }
+  assert( ! pcCU->isIntraMV( uiAbsPartIdx ) );
 #endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS

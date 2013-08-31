@@ -549,7 +549,8 @@ Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );// NOTE: RExt - N0256 proponents to check
+  assert(!pcCU->isIntraMV(uiAbsPartIdx));
+  m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
 #else
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
   m_pcBinIf->encodeBin( iPredMode == MODE_INTER ? 0 : 1, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
@@ -1268,11 +1269,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 #if RExt__NRCE2_RESIDUAL_DPCM
     Int uiIntraMode = -1;
     const Bool       bIsLuma = isLuma(compID);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    Int isIntra = ( pcCU->isIntra(uiAbsPartIdx) && !pcCU->isIntraMV(uiAbsPartIdx) )  ? 1 : 0; // NOTE: RExt - RDPCM proponents to confirm
-#else
     Int isIntra = pcCU->isIntra(uiAbsPartIdx) ? 1 : 0;
-#endif
     if ( isIntra )
     {
       uiIntraMode = pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx );

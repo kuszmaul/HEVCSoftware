@@ -497,8 +497,9 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Bool          isIntraMV ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
-  Bool          isIntra   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
+  Bool          isIntraMV   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
+  Bool          isIntra     ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA ; }
+  Bool          isInter     ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER; }
 #else  
   Bool          isIntra   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
 #endif

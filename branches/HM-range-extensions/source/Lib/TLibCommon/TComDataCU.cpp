@@ -1861,12 +1861,13 @@ UInt TComDataCU::getQuadtreeTULog2MinSizeInCU( UInt absPartIdx )
   PartSize  partSize  = getPartitionSize( absPartIdx );
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
   UInt quadtreeTUMaxDepth = isIntra( absPartIdx ) ? m_pcSlice->getSPS()->getQuadtreeTUMaxDepthIntra() : m_pcSlice->getSPS()->getQuadtreeTUMaxDepthInter();
-  Int intraSplitFlag = ( isIntra( absPartIdx ) && partSize == SIZE_NxN ) ? 1 : 0;// NOTE: RExt - N0256 proponents to check
+  Int intraSplitFlag = ( isIntra( absPartIdx ) && partSize == SIZE_NxN ) ? 1 : 0;
+  Int interSplitFlag = ((quadtreeTUMaxDepth == 1) && isInter( absPartIdx ) && (partSize != SIZE_2Nx2N) );
 #else
   UInt quadtreeTUMaxDepth = getPredictionMode( absPartIdx ) == MODE_INTRA ? m_pcSlice->getSPS()->getQuadtreeTUMaxDepthIntra() : m_pcSlice->getSPS()->getQuadtreeTUMaxDepthInter();
   Int intraSplitFlag = ( getPredictionMode( absPartIdx ) == MODE_INTRA && partSize == SIZE_NxN ) ? 1 : 0;
-#endif
   Int interSplitFlag = ((quadtreeTUMaxDepth == 1) && (getPredictionMode( absPartIdx ) == MODE_INTER) && (partSize != SIZE_2Nx2N) );
+#endif
 
   UInt log2MinTUSizeInCU = 0;
   if (log2CbSize < (m_pcSlice->getSPS()->getQuadtreeTULog2MinSize() + quadtreeTUMaxDepth - 1 + interSplitFlag + intraSplitFlag) )
@@ -2620,9 +2621,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   pcCULeft = getPULeft( uiLeftPartIdx, uiPartIdxLB );
 
   Bool isAvailableA1 = pcCULeft &&
-  pcCULeft->isDiffMER(xP -1, yP+nPSH-1, xP, yP) &&
-  !( uiPUIdx == 1 && (cCurPS == SIZE_Nx2N || cCurPS == SIZE_nLx2N || cCurPS == SIZE_nRx2N) ) &&
-  !pcCULeft->isIntra( uiLeftPartIdx ) ;
+                       pcCULeft->isDiffMER(xP -1, yP+nPSH-1, xP, yP) &&
+                       !( uiPUIdx == 1 && (cCurPS == SIZE_Nx2N || cCurPS == SIZE_nLx2N || cCurPS == SIZE_nRx2N) ) &&
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+                       pcCULeft->isInter( uiLeftPartIdx ) ;
+#else
+                       !pcCULeft->isIntra( uiLeftPartIdx ) ;
+#endif
+
   if ( isAvailableA1 )
   {
     abCandIsInter[iCount] = true;
@@ -2652,9 +2658,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT );
 
   Bool isAvailableB1 = pcCUAbove &&
-  pcCUAbove->isDiffMER(xP+nPSW-1, yP-1, xP, yP) &&
-  !( uiPUIdx == 1 && (cCurPS == SIZE_2NxN || cCurPS == SIZE_2NxnU || cCurPS == SIZE_2NxnD) ) &&
-  !pcCUAbove->isIntra( uiAbovePartIdx );
+                       pcCUAbove->isDiffMER(xP+nPSW-1, yP-1, xP, yP) &&
+                       !( uiPUIdx == 1 && (cCurPS == SIZE_2NxN || cCurPS == SIZE_2NxnU || cCurPS == SIZE_2NxnD) ) &&
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+                       pcCUAbove->isInter( uiAbovePartIdx );
+#else
+                       !pcCUAbove->isIntra( uiAbovePartIdx );
+#endif
+
   if ( isAvailableB1 && (!isAvailableA1 || !pcCULeft->hasEqualMotion( uiLeftPartIdx, pcCUAbove, uiAbovePartIdx ) ) )
   {
     abCandIsInter[iCount] = true;
@@ -2684,8 +2695,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT );
 
   Bool isAvailableB0 = pcCUAboveRight &&
-  pcCUAboveRight->isDiffMER(xP+nPSW, yP-1, xP, yP) &&
-  !pcCUAboveRight->isIntra( uiAboveRightPartIdx );
+                       pcCUAboveRight->isDiffMER(xP+nPSW, yP-1, xP, yP) &&
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+                       pcCUAboveRight->isInter( uiAboveRightPartIdx );
+#else
+                       !pcCUAboveRight->isIntra( uiAboveRightPartIdx );
+#endif
+
   if ( isAvailableB0 && ( !isAvailableB1 || !pcCUAbove->hasEqualMotion( uiAbovePartIdx, pcCUAboveRight, uiAboveRightPartIdx ) ) )
   {
     abCandIsInter[iCount] = true;
@@ -2715,8 +2731,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   pcCULeftBottom = this->getPUBelowLeft( uiLeftBottomPartIdx, uiPartIdxLB );
 
   Bool isAvailableA0 = pcCULeftBottom &&
-  pcCULeftBottom->isDiffMER(xP-1, yP+nPSH, xP, yP) &&
-  !pcCULeftBottom->isIntra( uiLeftBottomPartIdx ) ;
+                       pcCULeftBottom->isDiffMER(xP-1, yP+nPSH, xP, yP) &&
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+                       pcCULeftBottom->isInter( uiLeftBottomPartIdx ) ;
+#else
+                      !pcCULeftBottom->isIntra( uiLeftBottomPartIdx ) ;
+#endif
+
   if ( isAvailableA0 && ( !isAvailableA1 || !pcCULeft->hasEqualMotion( uiLeftPartIdx, pcCULeftBottom, uiLeftBottomPartIdx ) ) )
   {
     abCandIsInter[iCount] = true;
@@ -2748,8 +2769,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     pcCUAboveLeft = getPUAboveLeft( uiAboveLeftPartIdx, uiAbsPartAddr );
 
     Bool isAvailableB2 = pcCUAboveLeft &&
-    pcCUAboveLeft->isDiffMER(xP-1, yP-1, xP, yP) &&
-    !pcCUAboveLeft->isIntra( uiAboveLeftPartIdx );
+                         pcCUAboveLeft->isDiffMER(xP-1, yP-1, xP, yP) &&
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+                         pcCUAboveLeft->isInter( uiAboveLeftPartIdx );
+#else
+                         !pcCUAboveLeft->isIntra( uiAboveLeftPartIdx );
+#endif
+
     if ( isAvailableB2 && ( !isAvailableA1 || !pcCULeft->hasEqualMotion( uiLeftPartIdx, pcCUAboveLeft, uiAboveLeftPartIdx ) )
         && ( !isAvailableB1 || !pcCUAbove->hasEqualMotion( uiAbovePartIdx, pcCUAboveLeft, uiAboveLeftPartIdx ) ) )
     {
@@ -3053,7 +3079,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   UInt idx;
   tmpCU = getPUBelowLeft(idx, uiPartIdxLB);
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  bAddedSmvp = (tmpCU != NULL) && (!tmpCU->isIntra(idx));
+  bAddedSmvp = (tmpCU != NULL) && (tmpCU->isInter(idx));
 #else
   bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
 #endif
@@ -3062,7 +3088,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   {
     tmpCU = getPULeft(idx, uiPartIdxLB);
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    bAddedSmvp = (tmpCU != NULL) && (!tmpCU->isIntra(idx));
+    bAddedSmvp = (tmpCU != NULL) && (tmpCU->isInter(idx));
 #else
     bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
 #endif
@@ -3501,7 +3527,11 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   iCurrPOC = m_pcSlice->getPOC();
   iColPOC = pColCU->getSlice()->getPOC();
 
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  if (!pColCU->isInter(uiAbsPartAddr))
+#else
   if (pColCU->isIntra(uiAbsPartAddr))
+#endif
   {
     return false;
   }
