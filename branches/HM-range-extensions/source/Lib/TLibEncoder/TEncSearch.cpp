@@ -1159,7 +1159,7 @@ Void TEncSearch::xIntraCodingTUBlock( TComYuv*    pcOrgYuv,
     Int    resiDiff;
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
-    const Bool rotateResidual = pcCU->getSlice()->getSPS()->getUseResidualRotation();
+    const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
     const UInt lastColumn     = uiWidth  - 1;
     const UInt lastRow        = uiHeight - 1;
 #endif
