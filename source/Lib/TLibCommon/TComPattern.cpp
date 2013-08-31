@@ -539,7 +539,7 @@ Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isIntra( uiPartAboveLeft ) );  // NOTE: RExt - N0256 proponents to check
+    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isConstrainedIntra( uiPartAboveLeft ) );
 #else
     bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->getPredictionMode( uiPartAboveLeft ) == MODE_INTRA );
 #endif
@@ -566,7 +566,7 @@ Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if ( pcCUAbove && pcCUAbove->isIntra( uiPartAbove ) ) // NOTE: RExt - N0256 proponents to check
+      if ( pcCUAbove && pcCUAbove->isConstrainedIntra( uiPartAbove ) )
 #else
       if ( pcCUAbove && pcCUAbove->getPredictionMode( uiPartAbove ) == MODE_INTRA )
 #endif
@@ -611,7 +611,7 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if ( pcCULeft && pcCULeft->isIntra( uiPartLeft ) ) // NOTE: RExt - N0256 proponents to check
+      if ( pcCULeft && pcCULeft->isConstrainedIntra( uiPartLeft ) )
 #else
       if ( pcCULeft && pcCULeft->getPredictionMode( uiPartLeft ) == MODE_INTRA )
 #endif
@@ -655,7 +655,7 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if ( pcCUAboveRight && pcCUAboveRight->isIntra( uiPartAboveRight ) )  // NOTE: RExt - N0256 proponents to check
+      if ( pcCUAboveRight && pcCUAboveRight->isConstrainedIntra( uiPartAboveRight ) )
 #else
       if ( pcCUAboveRight && pcCUAboveRight->getPredictionMode( uiPartAboveRight ) == MODE_INTRA )
 #endif
@@ -699,7 +699,7 @@ Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, 
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
 #if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if ( pcCUBelowLeft && pcCUBelowLeft->isIntra( uiPartBelowLeft ) ) // NOTE: RExt - N0256 proponents to check
+      if ( pcCUBelowLeft && pcCUBelowLeft->isConstrainedIntra( uiPartBelowLeft ) )
 #else
       if ( pcCUBelowLeft && pcCUBelowLeft->getPredictionMode( uiPartBelowLeft ) == MODE_INTRA )
 #endif
