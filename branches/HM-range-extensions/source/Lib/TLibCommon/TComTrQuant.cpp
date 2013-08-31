@@ -1353,7 +1353,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
 #else
@@ -1478,7 +1478,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
 #else
@@ -1723,7 +1723,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
 #else
     const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
@@ -1876,7 +1876,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
 #else
     const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
@@ -2267,7 +2267,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const UInt uiMaxNumCoeff       = uiWidth * uiHeight;
   assert(compID<MAX_NUM_COMPONENT);
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
   Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
 #else
@@ -3521,7 +3521,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
   Int offset = 0;
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
 #else
@@ -3614,7 +3614,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 
   const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
   Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
 #else
@@ -3944,7 +3944,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
   const UInt log2TrSize = rTu.GetEquivalentLog2TrSize(compID);
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
   TComDataCU *cu = rTu.getCU();
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
   const Int scalingListType = getScalingListType(cu->getPredictionMode(absPartIdx), compID);
 #else
@@ -4026,7 +4026,7 @@ inline Void TComTrQuant::xDequantiseSample(
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
   TComDataCU *cu        = rTu.getCU();
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
   const Int scalingListType = getScalingListType(cu->getPredictionMode(absPartIdx), compID);
 #else

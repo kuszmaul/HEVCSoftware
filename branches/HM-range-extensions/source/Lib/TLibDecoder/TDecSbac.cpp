@@ -94,8 +94,8 @@ TDecSbac::TDecSbac()
 , m_interRdpcmFlagSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 , m_interRdpcmDirSCModel         ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_DIR_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-, m_cIntraMVPredFlagSCModel      (1,              1,                      NUM_INTRAMV_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if RExt__N0256_INTRA_BLOCK_COPY
+, m_cIntraBCPredFlagSCModel      (1,              1,                      NUM_INTRABC_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -161,8 +161,8 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_interRdpcmFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_FLAG);
   m_interRdpcmDirSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_DIR);
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  m_cIntraMVPredFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_INTRAMV_PRED_FLAG );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  m_cIntraBCPredFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #endif
 
   m_uiLastDQpNonZero  = 0;
@@ -219,8 +219,8 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_interRdpcmFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG );
   m_interRdpcmDirSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR );
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  m_cIntraMVPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRAMV_PRED_FLAG );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  m_cIntraBCPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #endif
 
   m_pcTDecBinIf->start();
@@ -453,17 +453,17 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TDecSbac::parseIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {  
   UInt uiSymbol = 0;
 
   {
-    UInt uiCtxIntraMV = pcCU->getCtxIntraMVFlag( uiAbsPartIdx ) ;
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraMVPredFlagSCModel.get( 0, 0, uiCtxIntraMV ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_MOTION_VECTOR)); 
+    UInt uiCtxIntraBC = pcCU->getCtxIntraBCFlag( uiAbsPartIdx ) ;
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, uiCtxIntraBC ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR)); 
   
     DTRACE_CABAC_VL( g_nSymbolCounter++ );
-    DTRACE_CABAC_T( "\tIntraMVFlag" );
+    DTRACE_CABAC_T( "\tIntraBCFlag" );
     DTRACE_CABAC_T( "\tuiSymbol: ");
     DTRACE_CABAC_V( uiSymbol );
     DTRACE_CABAC_T( "\n");
@@ -471,28 +471,28 @@ Void TDecSbac::parseIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
   if ( uiSymbol )
   {
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-    pcCU->setPredModeSubParts( MODE_INTRAMV, uiAbsPartIdx, uiDepth );
+    pcCU->setPredModeSubParts( MODE_INTRABC, uiAbsPartIdx, uiDepth );
     pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );    
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_CHROMA, DC_IDX, uiAbsPartIdx, uiDepth);
   }
 }
 
-Void TDecSbac::parseIntraMV ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {  
 
 
 
   Int mvx = 0, mvy = 0;
   
-  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRAMV);
+  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
 
-  mvx = pcCU->getCUMvField(REF_PIC_LIST_INTRAMV)->getMvd(uiAbsPartIdx).getHor();
-  mvy = pcCU->getCUMvField(REF_PIC_LIST_INTRAMV)->getMvd(uiAbsPartIdx).getVer();
+  mvx = pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
+  mvy = pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
 
   const TComMv cMv(mvx, mvy );
 
-  pcCU->getCUMvField( REF_PIC_LIST_INTRAMV )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 #endif
 
@@ -590,8 +590,8 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  assert( ! pcCU->isIntraMV( uiAbsPartIdx ) );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  assert( ! pcCU->isIntraBC( uiAbsPartIdx ) );
 #endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS

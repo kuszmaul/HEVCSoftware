@@ -154,9 +154,9 @@ public:
   Void codeInterRdpcmMode( TComTU &rTu, const ComponentID compID );
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
 };

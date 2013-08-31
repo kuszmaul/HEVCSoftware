@@ -277,7 +277,7 @@
 #define RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING                           1 ///< 0 = use 4:2:0 and 4:2:2 chroma mapping table (4:4:4 is 1:1); 1 (default) = only use 4:2:0 chroma mapping table (4:2:2 and 4:4:4 are 1:1)
 #define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 #define RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS                         1 ///< 0 = use Luma 32x32 scaling lists for chroma 32x32, 1 (default) = use Chroma 16x16 for Chroma32x32
-#define RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY                             1 ///< 0 = disable intra motion vector block copying, 1 (default) enable intra motion vector block copying (depending on SPS parameter)
+#define RExt__N0256_INTRA_BLOCK_COPY                                           1 ///< 0 = disable intra block copying, 1 (default) enable block copying (depending on SPS parameter)
 #define RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING                              1 ///< 0 = allow any shift in transform skip, 1 (default) = when in extended-precision mode, limit the shift such that a right-shift never occurs
 #define RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE                        1 ///< 0 = do not include PPS transform-skip maximum size; 1 (default) = include PPS transform-skip maximum size
 
@@ -321,9 +321,9 @@
 #define RDPCM_INTER_LOSSY                                                      1  ///< Performs RDPCM on motion compensated residuals in lossy coding
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-#define INTRAMV_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraMV, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
-#define INTRAMV_FASTME                                                         1 ///< Fast motion estimation
+#if RExt__N0256_INTRA_BLOCK_COPY
+#define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
+#define INTRABC_FASTME                                                         1 ///< Fast motion estimation
 #endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
@@ -467,8 +467,8 @@ enum PredMode
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
   NUMBER_OF_PREDICTION_MODES = 2
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  ,MODE_INTRAMV              = 127    ///< intraMV mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
+#if RExt__N0256_INTRA_BLOCK_COPY
+  ,MODE_INTRABC              = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
 #endif
 };
 
@@ -478,8 +478,8 @@ enum RefPicList
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
   NUM_REF_PIC_LIST_01 = 2,
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  REF_PIC_LIST_INTRAMV = 2,
+#if RExt__N0256_INTRA_BLOCK_COPY
+  REF_PIC_LIST_INTRABC = 2,
   NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
 #endif
   REF_PIC_LIST_X = 100  ///< special mark

@@ -130,9 +130,9 @@ public:
   virtual Void codeInterRdpcmMode ( TComTU &rTu, const ComponentID compID ) = 0;
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  virtual Void codeIntraMVFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeIntraMV       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if RExt__N0256_INTRA_BLOCK_COPY
+  virtual Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 
   virtual ~TEncEntropyIf() {}
@@ -200,9 +200,9 @@ public:
 
   Void encodeScalingList       ( TComScalingList* scalingList );
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Void encodeIntraMVFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-  Void encodeIntraMV           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  Void encodeIntraBCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
 private:

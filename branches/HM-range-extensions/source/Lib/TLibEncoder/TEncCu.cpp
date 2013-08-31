@@ -702,10 +702,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-        if (rpcTempCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+        if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
         {
-          xCheckRDCostIntraMV( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug));
+          xCheckRDCostIntraBC( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug));
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
         }
 #endif
@@ -847,7 +847,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if AMP_ENC_SPEEDUP
           DEBUG_STRING_NEW(sChild)
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
           if ( !rpcBestCU->isInter(0) )
 #else
           if ( rpcBestCU->isIntra(0) )
@@ -1174,16 +1174,16 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
-    m_pcEntropyCoder->encodeIntraMVFlag( pcCU, uiAbsPartIdx );
-    if ( pcCU->isIntraMV( uiAbsPartIdx ) )
+    m_pcEntropyCoder->encodeIntraBCFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->isIntraBC( uiAbsPartIdx ) )
     {
-      m_pcEntropyCoder->encodeIntraMV( pcCU, uiAbsPartIdx );
+      m_pcEntropyCoder->encodeIntraBC( pcCU, uiAbsPartIdx );
     }
   }
-  if ( !pcCU->isIntraMV( uiAbsPartIdx ) )
+  if ( !pcCU->isIntraBC( uiAbsPartIdx ) )
   {
 #endif
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
@@ -1204,7 +1204,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
 #endif
 
@@ -1611,10 +1611,10 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if (rpcTempCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
-    m_pcEntropyCoder->encodeIntraMVFlag ( rpcTempCU, 0,       true );
+    m_pcEntropyCoder->encodeIntraBCFlag ( rpcTempCU, 0,       true );
   }
 #endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
@@ -1640,15 +1640,15 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TEncCu::xCheckRDCostIntraMV( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug))
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TEncCu::xCheckRDCostIntraBC( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug))
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );  
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-  rpcTempCU->setPredModeSubParts( MODE_INTRAMV, 0, uiDepth );  
+  rpcTempCU->setPredModeSubParts( MODE_INTRABC, 0, uiDepth );  
 
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
@@ -1657,8 +1657,8 @@ Void TEncCu::xCheckRDCostIntraMV( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DC_IDX, 0, uiDepth );
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, DC_IDX, 0, uiDepth );
 
-  // intra MV search
-  Bool bValid = m_pcPredSearch->predIntraMVSearch ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] DEBUG_STRING_PASS_INTO(sTest), false);
+  // intra BV search
+  Bool bValid = m_pcPredSearch->predIntraBCSearch ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] DEBUG_STRING_PASS_INTO(sTest), false);
   
   if (bValid)
   {
@@ -1705,10 +1705,10 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if (rpcTempCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
-    m_pcEntropyCoder->encodeIntraMVFlag ( rpcTempCU, 0,       true );
+    m_pcEntropyCoder->encodeIntraBCFlag ( rpcTempCU, 0,       true );
   }
 #endif
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
@@ -1930,7 +1930,7 @@ Void TEncCu::xLcuCollectARLStats(TComDataCU* rpcCU )
   {
     UInt uiTrIdx = rpcCU->getTransformIdx(i);
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     if(rpcCU->isInter(i) && rpcCU->getCbf( i, COMPONENT_Y, uiTrIdx ) )
 #else
     if(rpcCU->getPredictionMode(i) == MODE_INTER)
