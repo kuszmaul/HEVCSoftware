@@ -517,6 +517,8 @@ public:
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   Bool          isBipredRestriction( UInt puIdx );
 
+  Bool          isResidualRotated(Int tuSize) { return tuSize == 4 && getSlice()->getSPS()->getUseResidualRotation(); }
+
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
   // -------------------------------------------------------------------------------------------------------------------
