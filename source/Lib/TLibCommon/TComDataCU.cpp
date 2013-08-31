@@ -195,7 +195,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
 
     m_pbIPCMFlag         = (Bool*  )xMalloc(Bool, uiNumPartition);
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -207,7 +207,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   }
   else
   {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -287,7 +287,7 @@ Void TComDataCU::destroy()
       const RefPicList rpl=RefPicList(i);
       if ( m_apiMVPIdx[rpl]       ) { delete[] m_apiMVPIdx[rpl];      m_apiMVPIdx[rpl]      = NULL; }
       if ( m_apiMVPNum[rpl]       ) { delete[] m_apiMVPNum[rpl];      m_apiMVPNum[rpl]      = NULL; }
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     }
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
     {
@@ -492,7 +492,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #endif
     }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -504,7 +504,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   else
   {
     TComDataCU * pcFrom = pcPic->getCU(getAddr());
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -634,7 +634,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
 
   if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU >= getSlice()->getSliceSegmentCurStartCUAddr())
   {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -770,7 +770,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_pcIPCMSample[ch], 0, sizeof(Pel)* (numCoeffY>>componentShift) );
   }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -787,7 +787,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     TComDataCU * bigCU = getPic()->getCU(getAddr());
     Int minui = uiPartOffset;
     minui = -minui;
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -898,7 +898,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_apcCUColocated[rpl] = pcCU->getCUColocated(rpl);
     m_apiMVPIdx[rpl]=pcCU->getMVPIdx(rpl)  + uiPart;
     m_apiMVPNum[rpl]=pcCU->getMVPNum(rpl)  + uiPart;
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
   {
@@ -1034,7 +1034,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_apiMVPIdx[rpl] + uiOffset, pcCU->getMVPIdx(rpl), iSizeInUchar );
     memcpy( m_apiMVPNum[rpl] + uiOffset, pcCU->getMVPNum(rpl), iSizeInUchar );
     m_apcCUColocated[rpl] = pcCU->getCUColocated(rpl);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
   {
@@ -1114,7 +1114,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     const RefPicList rpl=RefPicList(i);
     memcpy( rpcCU->getMVPIdx(rpl) + m_uiAbsIdxInLCU, m_apiMVPIdx[rpl], iSizeInUchar );
     memcpy( rpcCU->getMVPNum(rpl) + m_uiAbsIdxInLCU, m_apiMVPNum[rpl], iSizeInUchar );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
   {
@@ -1198,7 +1198,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     const RefPicList rpl=RefPicList(i);
     memcpy( rpcCU->getMVPIdx(rpl) + uiPartOffset, m_apiMVPIdx[rpl], iSizeInUchar );
     memcpy( rpcCU->getMVPNum(rpl) + uiPartOffset, m_apiMVPNum[rpl], iSizeInUchar );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
   {
@@ -1859,7 +1859,7 @@ UInt TComDataCU::getQuadtreeTULog2MinSizeInCU( UInt absPartIdx )
 {
   UInt log2CbSize = g_aucConvertToBit[getWidth( absPartIdx )] + 2;
   PartSize  partSize  = getPartitionSize( absPartIdx );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   UInt quadtreeTUMaxDepth = isIntra( absPartIdx ) ? m_pcSlice->getSPS()->getQuadtreeTUMaxDepthIntra() : m_pcSlice->getSPS()->getQuadtreeTUMaxDepthInter();
   Int intraSplitFlag = ( isIntra( absPartIdx ) && partSize == SIZE_NxN ) ? 1 : 0;
   Int interSplitFlag = ((quadtreeTUMaxDepth == 1) && isInter( absPartIdx ) && (partSize != SIZE_2Nx2N) );
@@ -1911,8 +1911,8 @@ UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 }
 
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-UInt TComDataCU::getCtxIntraMVFlag( UInt uiAbsPartIdx )
+#if RExt__N0256_INTRA_BLOCK_COPY
+UInt TComDataCU::getCtxIntraBCFlag( UInt uiAbsPartIdx )
 {
   TComDataCU* pcTempCU;
   UInt        uiTempPartIdx;
@@ -1920,11 +1920,11 @@ UInt TComDataCU::getCtxIntraMVFlag( UInt uiAbsPartIdx )
   
   // Get BCBP of left PU
   pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx    = ( pcTempCU ) ? pcTempCU->isIntraMV( uiTempPartIdx ) : 0;
+  uiCtx    = ( pcTempCU ) ? pcTempCU->isIntraBC( uiTempPartIdx ) : 0;
   
   // Get BCBP of above PU
   pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx   += ( pcTempCU ) ? pcTempCU->isIntraMV( uiTempPartIdx ) : 0;
+  uiCtx   += ( pcTempCU ) ? pcTempCU->isIntraBC( uiTempPartIdx ) : 0;
   
   return uiCtx;
 }
@@ -2623,7 +2623,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   Bool isAvailableA1 = pcCULeft &&
                        pcCULeft->isDiffMER(xP -1, yP+nPSH-1, xP, yP) &&
                        !( uiPUIdx == 1 && (cCurPS == SIZE_Nx2N || cCurPS == SIZE_nLx2N || cCurPS == SIZE_nRx2N) ) &&
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
                        pcCULeft->isInter( uiLeftPartIdx ) ;
 #else
                        !pcCULeft->isIntra( uiLeftPartIdx ) ;
@@ -2660,7 +2660,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   Bool isAvailableB1 = pcCUAbove &&
                        pcCUAbove->isDiffMER(xP+nPSW-1, yP-1, xP, yP) &&
                        !( uiPUIdx == 1 && (cCurPS == SIZE_2NxN || cCurPS == SIZE_2NxnU || cCurPS == SIZE_2NxnD) ) &&
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
                        pcCUAbove->isInter( uiAbovePartIdx );
 #else
                        !pcCUAbove->isIntra( uiAbovePartIdx );
@@ -2696,7 +2696,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
   Bool isAvailableB0 = pcCUAboveRight &&
                        pcCUAboveRight->isDiffMER(xP+nPSW, yP-1, xP, yP) &&
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
                        pcCUAboveRight->isInter( uiAboveRightPartIdx );
 #else
                        !pcCUAboveRight->isIntra( uiAboveRightPartIdx );
@@ -2732,7 +2732,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
   Bool isAvailableA0 = pcCULeftBottom &&
                        pcCULeftBottom->isDiffMER(xP-1, yP+nPSH, xP, yP) &&
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
                        pcCULeftBottom->isInter( uiLeftBottomPartIdx ) ;
 #else
                       !pcCULeftBottom->isIntra( uiLeftBottomPartIdx ) ;
@@ -2770,7 +2770,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
     Bool isAvailableB2 = pcCUAboveLeft &&
                          pcCUAboveLeft->isDiffMER(xP-1, yP-1, xP, yP) &&
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
                          pcCUAboveLeft->isInter( uiAboveLeftPartIdx );
 #else
                          !pcCUAboveLeft->isIntra( uiAboveLeftPartIdx );
@@ -3078,7 +3078,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   TComDataCU* tmpCU = NULL;
   UInt idx;
   tmpCU = getPUBelowLeft(idx, uiPartIdxLB);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   bAddedSmvp = (tmpCU != NULL) && (tmpCU->isInter(idx));
 #else
   bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
@@ -3087,7 +3087,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   if (!bAddedSmvp)
   {
     tmpCU = getPULeft(idx, uiPartIdxLB);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     bAddedSmvp = (tmpCU != NULL) && (tmpCU->isInter(idx));
 #else
     bAddedSmvp = (tmpCU != NULL) && (tmpCU->getPredictionMode(idx) != MODE_INTRA);
@@ -3527,7 +3527,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   iCurrPOC = m_pcSlice->getPOC();
   iColPOC = pColCU->getSlice()->getPOC();
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   if (!pColCU->isInter(uiAbsPartAddr))
 #else
   if (pColCU->isIntra(uiAbsPartAddr))
@@ -3650,7 +3650,7 @@ Void TComDataCU::compressMV()
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;
   if (scaleFactor > 0)
   {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)

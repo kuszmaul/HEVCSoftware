@@ -806,7 +806,7 @@ TEncSearch::xEncSubdivCbfQT(TComTU      &rTu,
   const UInt uiSubdiv             = ( uiTrMode > uiTrDepth ? 1 : 0 );
   const UInt uiLog2LumaTrafoSize  = rTu.GetLog2LumaTrSize();
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   if( pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
 #else
   if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
@@ -932,13 +932,13 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
       }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+      if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
       {
-        m_pcEntropyCoder->encodeIntraMVFlag ( pcCU, 0, true );
-        if ( pcCU->isIntraMV( 0 ) )
+        m_pcEntropyCoder->encodeIntraBCFlag ( pcCU, 0, true );
+        if ( pcCU->isIntraBC( 0 ) )
         {
-          m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
+          m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
           return;
         }
       }
@@ -971,8 +971,8 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     }
   }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if( pcCU->isIntraMV( 0 ) )
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if( pcCU->isIntraBC( 0 ) )
   {
     return;
   }
@@ -3732,10 +3732,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 }
 
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 
 // based on predInterSearch()
-Bool TEncSearch::predIntraMVSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes )
+Bool TEncSearch::predIntraBCSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes )
 {
   rpcPredYuv->clear();
   if ( !bUseRes )
@@ -3756,35 +3756,35 @@ Bool TEncSearch::predIntraMVSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv
   Int           uiPartAddr = 0;
   PartSize      ePartSize = pcCU->getPartitionSize( 0 );        
 
-#if INTRAMV_FASTME
+#if INTRABC_FASTME
   if(pcCU->getWidth(0) > 16)
     return false;
 #endif
 
-  xIntraMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost );
+  xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost );
 
-  // store intra MV in REF_PIC_LIST_0
-  cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRAMV);
-  pcCU->getCUMvField( REF_PIC_LIST_INTRAMV )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
+  // store intra BV in REF_PIC_LIST_0
+  cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
+  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
 
   cMvd.setHor(cMv.getHor());
   cMvd.setVer(cMv.getVer());
-  pcCU->getCUMvField(REF_PIC_LIST_INTRAMV )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
+  pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
 
-  // no valid intra MV 
+  // no valid intra BV 
   if (cMv.getHor() == 0 && cMv.getVer() == 0)
   {
     return false;
   }
    
   // motion compensation
-  intraMotionCompensation ( pcCU, rpcPredYuv, iPartIdx );  
+  intraBlockCopy ( pcCU, rpcPredYuv, iPartIdx );  
 
   return true;
 }
 
 // based on xMotionEstimation
-Void TEncSearch::xIntraMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, TComMv* pcMvPred, TComMv& rcMv, UInt& ruiBits, UInt& ruiCost )
+Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, TComMv* pcMvPred, TComMv& rcMv, UInt& ruiBits, UInt& ruiCost )
 {
   UInt          uiPartAddr;
   Int           iRoiWidth;
@@ -3813,7 +3813,7 @@ Void TEncSearch::xIntraMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, In
 
   TComMv      cMvPred = *pcMvPred;
   
-  // assume that intra MV is integer-pel precision
+  // assume that intra BV is integer-pel precision
   xSetIntraSearchRange   ( pcCU, cMvPred, iRoiWidth, iRoiHeight, cMvSrchRngLT, cMvSrchRngRB );
 
   // disable weighted prediction
@@ -3872,7 +3872,7 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   }
   else
   {
-    maxXsr    = (cuPelX % lcuWidth) + std::min<UInt>(lcuWidth, INTRAMV_LEFTWIDTH);
+    maxXsr    = (cuPelX % lcuWidth) + std::min<UInt>(lcuWidth, INTRABC_LEFTWIDTH);
   }
 
   Int maxYsr    = cuPelY % lcuHeight;
@@ -3915,7 +3915,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
-#if INTRAMV_FASTME
+#if INTRABC_FASTME
   setDistParamComp(COMPONENT_Y);
   m_cDistParam.bitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
   m_cDistParam.iRows = 4;//to calculate the sad line by line;
@@ -5113,8 +5113,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
     }
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    else if (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraMV(0) && uiZeroDistortion == uiDistortion)
+#if RExt__N0256_INTRA_BLOCK_COPY
+    else if (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraBC(0) && uiZeroDistortion == uiDistortion)
     {
       const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
       ::memset( pcCU->getTransformIdx()     , 0, uiQPartNum * sizeof(UChar) );
@@ -5267,7 +5267,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv* pcResi,
   assert( pcCU->getDepth( 0 ) == pcCU->getDepth( uiAbsPartIdx ) );
   const UInt uiLog2TrSize = rTu.GetLog2LumaTrSize();
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->isInter(uiAbsPartIdx) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
 #else
   UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
@@ -6065,7 +6065,7 @@ Void TEncSearch::xEncodeResidualQT( const ComponentID compID, TComTU &rTu )
       m_pcEntropyCoder->encodeTransformSubdivFlag( bSubdiv, 5 - uiLog2TrSize );
     }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     assert( !pcCU->isIntra(uiAbsPartIdx) );
 #else
     assert( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA );
@@ -6287,22 +6287,22 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
       m_pcEntropyCoder->encodeCUTransquantBypassFlag(pcCU, 0, true);
     }
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+    if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
     {
-      m_pcEntropyCoder->encodeIntraMVFlag(pcCU, 0, true);
-      if ( pcCU->isIntraMV( 0 ) )
+      m_pcEntropyCoder->encodeIntraBCFlag(pcCU, 0, true);
+      if ( pcCU->isIntraBC( 0 ) )
       {
-        m_pcEntropyCoder->encodeIntraMV( pcCU, 0 );
+        m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
       }
     }
-    if( !pcCU->isIntraMV(0))
+    if( !pcCU->isIntraBC(0))
     {
 #endif
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     }
 #endif
     Bool bDummy = false;

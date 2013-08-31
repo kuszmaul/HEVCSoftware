@@ -704,8 +704,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
     READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext(uiCode != 0);
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraMotionVectors(uiCode != 0);
+#if RExt__N0256_INTRA_BLOCK_COPY
+    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy(uiCode != 0);
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
     READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA, (uiCode != 0));
@@ -1579,13 +1579,13 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
   assert(0);
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TDecCavlc::parseIntraMVFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TDecCavlc::parseIntraBCFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
 {
   assert(0);
 }
 
-Void TDecCavlc::parseIntraMV ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+Void TDecCavlc::parseIntraBC ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
 {
   assert(0);
 }

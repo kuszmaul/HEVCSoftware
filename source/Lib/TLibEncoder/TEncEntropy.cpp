@@ -170,8 +170,8 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if( pcCU->isIntraMV( uiAbsPartIdx ) )
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     return;
   }
@@ -260,7 +260,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     if (cbf[ch]) bHaveACodedBlock=true;
   }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   if( pcCU->isIntra(uiAbsPartIdx) && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
 #else
   if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
@@ -268,7 +268,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
   {
     assert( uiSubdiv );
   }
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   else if( pcCU->isInter(uiAbsPartIdx) && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N) && uiDepth == pcCU->getDepth(uiAbsPartIdx) &&  (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) )
 #else
   else if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N) && uiDepth == pcCU->getDepth(uiAbsPartIdx) &&  (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) )
@@ -346,7 +346,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       DTRACE_CABAC_T( "\n" );
     }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
     if( !pcCU->isIntra(uiAbsPartIdx) && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
 #else
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && (!bChroma || (!pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cb, 0 ) && !pcCU->getCbf( uiAbsPartIdx, COMPONENT_Cr, 0 ) ) ) )
@@ -442,26 +442,26 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TEncEntropy::encodeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TEncEntropy::encodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
   {
     uiAbsPartIdx = 0;
   }
-  m_pcEntropyCoderIf->codeIntraMVFlag( pcCU, uiAbsPartIdx );
+  m_pcEntropyCoderIf->codeIntraBCFlag( pcCU, uiAbsPartIdx );
 }
 
-Void TEncEntropy::encodeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncEntropy::encodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  m_pcEntropyCoderIf->codeIntraMV( pcCU, uiAbsPartIdx );
+  m_pcEntropyCoderIf->codeIntraBC( pcCU, uiAbsPartIdx );
 }
 #endif
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  assert ( !pcCU->isIntraMV( uiAbsPartIdx ) );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  assert ( !pcCU->isIntraBC( uiAbsPartIdx ) );
 #endif
 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
@@ -565,7 +565,7 @@ Void TEncEntropy::encodeInterDirPU( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncEntropy::encodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   assert( pcCU->isInter( uiAbsPartIdx ) );
 #else
   assert( !pcCU->isIntra( uiAbsPartIdx ) );
@@ -592,7 +592,7 @@ Void TEncEntropy::encodeRefFrmIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPic
  */
 Void TEncEntropy::encodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   assert( pcCU->isInter( uiAbsPartIdx ) );
 #else
   assert( !pcCU->isIntra( uiAbsPartIdx ) );

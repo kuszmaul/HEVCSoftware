@@ -203,7 +203,7 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 //Scaling lists  =======================================================================================================
 //======================================================================================================================
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
 static inline Int getScalingListType(const PredMode predMode, const ComponentID compID)
 {

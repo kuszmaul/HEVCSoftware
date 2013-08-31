@@ -163,9 +163,9 @@ public:
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Void codeIntraMVFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraMV             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -228,8 +228,8 @@ private:
   ContextModel3DBuffer m_interRdpcmDirSCModel;
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  ContextModel3DBuffer m_cIntraMVPredFlagSCModel;
+#if RExt__N0256_INTRA_BLOCK_COPY
+  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
 #endif
 };
 

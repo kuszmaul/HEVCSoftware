@@ -1439,8 +1439,8 @@ TComSPS::TComSPS()
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 , m_useExtendedPrecision      (false)
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-, m_useIntraMotionVectors     (false)
+#if RExt__N0256_INTRA_BLOCK_COPY
+, m_useIntraBlockCopy     (false)
 #endif
 , m_useLossless               (false)
 #if RExt__NRCE2_RESIDUAL_ROTATION

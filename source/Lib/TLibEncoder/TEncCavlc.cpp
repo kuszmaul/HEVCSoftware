@@ -545,8 +545,8 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
        || pcSPS->getUseSingleSignificanceMapContext()
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-       || pcSPS->getUseIntraMotionVectors()
+#if RExt__N0256_INTRA_BLOCK_COPY
+       || pcSPS->getUseIntraBlockCopy()
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
        || pcSPS->getUseResidualDPCM(MODE_INTRA)
@@ -567,8 +567,8 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
     WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0), "transform_skip_context_enabled_flag");
 #endif
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    WRITE_FLAG( (pcSPS->getUseIntraMotionVectors() ? 1 : 0),           "intra_block_copy_enabled_flag");
+#if RExt__N0256_INTRA_BLOCK_COPY
+    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),           "intra_block_copy_enabled_flag");
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),       "residual_dpcm_intra_enabled_flag" );
@@ -1256,13 +1256,13 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TEncCavlc::codeIntraMVFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TEncCavlc::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeIntraMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }

@@ -197,8 +197,8 @@ public:
 #endif
                                 );
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Bool predIntraMVSearch        ( TComDataCU* pcCU,
+#if RExt__N0256_INTRA_BLOCK_COPY
+  Bool predIntraBCSearch        ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
@@ -207,7 +207,7 @@ public:
                                   Bool        bUseRes = false
                                 );
 
-  Void xIntraMotionEstimation   ( TComDataCU*   pcCU,
+  Void xIntraBlockCopyEstimation   ( TComDataCU*   pcCU,
                                   TComYuv*      pcYuvOrg,
                                   Int           iPartIdx,                               
                                   TComMv*       pcMvPred,                                    

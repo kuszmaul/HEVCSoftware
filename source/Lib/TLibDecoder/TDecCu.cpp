@@ -313,17 +313,17 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     return;
   }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  if (pcCU->getSlice()->getSPS()->getUseIntraMotionVectors())
+#if RExt__N0256_INTRA_BLOCK_COPY
+  if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
-    m_pcEntropyDecoder->decodeIntraMVFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
+    m_pcEntropyDecoder->decodeIntraBCFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
   }
 
-  if ( pcCU->isIntraMV( uiAbsPartIdx ) )
+  if ( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth ); 
 
-    m_pcEntropyDecoder->decodeIntraMV( pcCU, uiAbsPartIdx, 0, uiDepth );
+    m_pcEntropyDecoder->decodeIntraBC( pcCU, uiAbsPartIdx, 0, uiDepth );
   }
   else
   {
@@ -345,7 +345,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
     // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
     m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   }
 #endif
 
@@ -418,9 +418,9 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    case MODE_INTRAMV:
-      xReconIntraMV( m_ppcCU[uiDepth], uiDepth );
+#if RExt__N0256_INTRA_BLOCK_COPY
+    case MODE_INTRABC:
+      xReconIntraBC( m_ppcCU[uiDepth], uiDepth );
       break;
 #endif
     default:
@@ -464,11 +464,11 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 
 }
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-Void TDecCu::xReconIntraMV( TComDataCU* pcCU, UInt uiDepth )
+#if RExt__N0256_INTRA_BLOCK_COPY
+Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 {
   // intra prediction
-  m_pcPrediction->intraMotionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
+  m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth] );
 
 #if defined DEBUG_STRING && DEBUG_INTER_CODING_PRED
   printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));

@@ -138,8 +138,8 @@ private:
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra motion vector field.
+#if RExt__N0256_INTRA_BLOCK_COPY
+  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra block copying vector field.
 #else
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];     ///< array of motion vectors
 #endif
@@ -324,9 +324,9 @@ public:
   UChar         getInterRdpcmMode      ( ComponentID component, UInt partIdx ) {return m_interRdpcmMode[component][partIdx]; }
   Void          setInterRdpcmModeSubParts  ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setInterRdpcmModeSubParts  ( const UInt rdpcmMode[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+#if RExt__N0256_INTRA_BLOCK_COPY
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( isInter(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-                                                                       ( isIntraMV(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ||
+                                                                       ( isIntraBC(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ||
                                                                        ( isIntra(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)); }
 #else
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( (!isIntra(uiAbsPartIdx)) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
@@ -505,10 +505,10 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  Bool          isIntraMV   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
-  Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
-  Bool          isLoopFilterIntra ( UInt uiPartIdx )     const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRAMV; }
+#if RExt__N0256_INTRA_BLOCK_COPY
+  Bool          isIntraBC   ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
+  Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
+  Bool          isLoopFilterIntra ( UInt uiPartIdx )     const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
   Bool          isIntra     ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA ; }
   Bool          isInter     ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER; }
 #else  
@@ -540,8 +540,8 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  UInt          getCtxIntraMVFlag               ( UInt   uiAbsPartIdx                                 );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  UInt          getCtxIntraBCFlag               ( UInt   uiAbsPartIdx                                 );
 #endif  
 
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];        }

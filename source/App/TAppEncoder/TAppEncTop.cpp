@@ -165,8 +165,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseExtendedPrecision         ( m_useExtendedPrecision );
 #endif
 
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-  m_cTEncTop.setUseIntraMotionVectors        ( m_useIntraMotionVectors );
+#if RExt__N0256_INTRA_BLOCK_COPY
+  m_cTEncTop.setUseIntraBlockCopy        ( m_useIntraBlockCopy );
 #endif
 
   //====== Tool list ========
