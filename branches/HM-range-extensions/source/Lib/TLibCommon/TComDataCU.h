@@ -324,6 +324,15 @@ public:
   UChar         getInterRdpcmMode      ( ComponentID component, UInt partIdx ) {return m_interRdpcmMode[component][partIdx]; }
   Void          setInterRdpcmModeSubParts  ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setInterRdpcmModeSubParts  ( const UInt rdpcmMode[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
+#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
+  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( isInter(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+                                                                       ( isIntraMV(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ||
+                                                                       ( isIntra(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)); }
+#else
+  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( (!isIntra(uiAbsPartIdx)) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
+                                                                       (   isIntra(uiAbsPartIdx)  && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)); }
+#endif
+
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void          setInterRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 #endif

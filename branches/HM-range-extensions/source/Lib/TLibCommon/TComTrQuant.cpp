@@ -1658,12 +1658,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
   {
 #if RDPCM_INTER_LOSSLESS
     TCoeff temporaryResidual[MAX_TU_SIZE * MAX_TU_SIZE];
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-        ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-#else
-    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) )
-#endif
+    if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       xInterResidueDpcm(rTu, pcResidual, uiStride, temporaryResidual, compID, uiAbsSum);
     }
@@ -1739,14 +1734,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
 
 #if RDPCM_INTER_LOSSY
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if( pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 &&
-        ( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-      )
-#else
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 && !pcCU->isIntra(uiAbsPartIdx))
-#endif
+    if( pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       //  Inter coded TU with transform skip: select the best inter RDPCM mode
       xQuantInterRdpcm(rTu, m_plTempCoeff, rpcCoeff, 
@@ -1859,12 +1847,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
       }
     }
 #if RDPCM_INTER_LOSSLESS
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-    if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-        ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-#else
-    if( !pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER) )
-#endif
+    if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       xInterInverseRdpcm(rTu, rpcResidual, uiStride, compID);
     }
@@ -1903,12 +1886,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     {
 
 #if RDPCM_INTER_LOSSY
-#if RExt__N0256_INTRA_MOTION_VECTOR_BLOCK_COPY
-      if( (!pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-          ( pcCU->isIntraMV(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) )
-#else
-      if( !pcCU->isIntra(uiAbsPartIdx)   && pcCU->getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER))
-#endif
+      if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
       {
         //  Undo inter RDPCM before the final shift down for transform skip
         xInvInterRdpcm(rTu, m_plTempCoeff, compID);
