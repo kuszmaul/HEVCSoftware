@@ -98,11 +98,6 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if !M0036_RC_IMPROVEMENT
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-#endif
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -120,9 +115,6 @@ public:
   Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
-#if !M0036_RC_IMPROVEMENT
-  UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
-#endif
   Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
