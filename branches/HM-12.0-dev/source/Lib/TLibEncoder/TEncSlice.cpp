@@ -259,12 +259,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   {
     dQP += pdQPs[ rpcSlice->getPOC() ];
   }
-#if !RATE_CONTROL_LAMBDA_DOMAIN
-  if ( m_pcCfg->getUseRateCtrl())
-  {
-    dQP = m_pcRateCtrl->getFrameQP(rpcSlice->isReferenced(), rpcSlice->getPOC());
-  }
-#endif
   // ------------------------------------------------------------------------------------------------------------------
   // Lambda computation
   // ------------------------------------------------------------------------------------------------------------------
@@ -451,7 +445,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   xStoreWPparam( pPPS->getUseWP(), pPPS->getWPBiPred() );
 }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
 Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 {
   TComSlice* slice = pic->getSlice(0);
@@ -492,111 +485,6 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
   slice   ->setLambda( lambda );
 #endif
 }
-#else
-/**
- - lambda re-computation based on rate control QP
- */
-Void TEncSlice::xLamdaRecalculation(Int changeQP, Int idGOP, Int depth, SliceType eSliceType, TComSPS* pcSPS, TComSlice* pcSlice)
-{
-  Int qp;
-  Double recalQP= (Double)changeQP;
-  Double origQP = (Double)recalQP;
-  Double lambda;
-
-  // pre-compute lambda and QP values for all possible QP candidates
-  for ( Int deltqQpIdx = 0; deltqQpIdx < 2 * m_pcCfg->getDeltaQpRD() + 1; deltqQpIdx++ )
-  {
-    // compute QP value
-    recalQP = origQP + ((deltqQpIdx+1)>>1)*(deltqQpIdx%2 ? -1 : 1);
-
-    // compute lambda value
-    Int    NumberBFrames = ( m_pcCfg->getGOPSize() - 1 );
-    Int    SHIFT_QP = 12;
-    Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)NumberBFrames );
-#if FULL_NBIT
-    Int    bitdepth_luma_qp_scale = 6 * (g_bitDepth - 8);
-#else
-    Int    bitdepth_luma_qp_scale = 0;
-#endif
-    Double qp_temp = (Double) recalQP + bitdepth_luma_qp_scale - SHIFT_QP;
-#if FULL_NBIT
-    Double qp_temp_orig = (Double) recalQP - SHIFT_QP;
-#endif
-    // Case #1: I or P-slices (key-frame)
-    Double dQPFactor = m_pcCfg->getGOPEntry(idGOP).m_QPFactor;
-    if ( eSliceType==I_SLICE )
-    {
-      dQPFactor=0.57*dLambda_scale;
-    }
-    lambda = dQPFactor*pow( 2.0, qp_temp/3.0 );
-
-    if ( depth>0 )
-    {
-#if FULL_NBIT
-      lambda *= Clip3( 2.00, 4.00, (qp_temp_orig / 6.0) ); // (j == B_SLICE && p_cur_frm->layer != 0 )
-#else
-      lambda *= Clip3( 2.00, 4.00, (qp_temp / 6.0) ); // (j == B_SLICE && p_cur_frm->layer != 0 )
-#endif
-    }
-
-    // if hadamard is used in ME process
-    if ( !m_pcCfg->getUseHADME() )
-    {
-      lambda *= 0.95;
-    }
-
-    qp = max( -pcSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( recalQP + 0.5 ) ) );
-
-    m_pdRdPicLambda[deltqQpIdx] = lambda;
-    m_pdRdPicQp    [deltqQpIdx] = recalQP;
-    m_piRdPicQp    [deltqQpIdx] = qp;
-  }
-
-  // obtain dQP = 0 case
-  lambda  = m_pdRdPicLambda[0];
-  recalQP = m_pdRdPicQp    [0];
-  qp      = m_piRdPicQp    [0];
-
-  if( pcSlice->getSliceType( ) != I_SLICE )
-  {
-    lambda *= m_pcCfg->getLambdaModifier( depth );
-  }
-
-  // store lambda
-  m_pcRdCost ->setLambda( lambda );
-#if WEIGHTED_CHROMA_DISTORTION
-  // for RDO
-  // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
-  Double weight = 1.0;
-  Int qpc;
-  Int chromaQPOffset;
-
-  chromaQPOffset = pcSlice->getPPS()->getChromaCbQpOffset() + pcSlice->getSliceQpDeltaCb();
-  qpc = Clip3( 0, 57, qp + chromaQPOffset);
-  weight = pow( 2.0, (qp-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCbDistortionWeight(weight);
-
-  chromaQPOffset = pcSlice->getPPS()->getChromaCrQpOffset() + pcSlice->getSliceQpDeltaCr();
-  qpc = Clip3( 0, 57, qp + chromaQPOffset);
-  weight = pow( 2.0, (qp-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCrDistortionWeight(weight);
-#endif
-
-#if RDOQ_CHROMA_LAMBDA 
-  // for RDOQ
-  m_pcTrQuant->setLambda( lambda, lambda / weight );    
-#else
-  m_pcTrQuant->setLambda( lambda );
-#endif
-
-#if SAO_CHROMA_LAMBDA
-  // For SAO
-  pcSlice   ->setLambda( lambda, lambda / weight );  
-#else
-  pcSlice   ->setLambda( lambda );
-#endif
-}
-#endif
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -636,13 +524,11 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
     return;
   }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_pcCfg->getUseRateCtrl() )
   {
     printf( "\nMultiple QP optimization is not allowed when rate control is enabled." );
     assert(0);
   }
-#endif
   
   TComSlice* pcSlice        = rpcPic->getSlice(getSliceIdx());
   Double     dPicRdCostBest = MAX_DOUBLE;
@@ -968,15 +854,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
 
-#if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl())
-    {
-      if(m_pcRateCtrl->calculateUnitQP())
-      {
-        xLamdaRecalculation(m_pcRateCtrl->getUnitQP(), m_pcRateCtrl->getGOPId(), pcSlice->getDepth(), pcSlice->getSliceType(), pcSlice->getSPS(), pcSlice );
-      }
-    }
-#endif
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )
     {
@@ -1051,7 +928,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       
       ((TEncBinCABAC*)m_pcRDGoOnSbacCoder->getEncBinIf())->setBinCountingEnableFlag(true);
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
       Double oldLambda = m_pcRdCost->getLambda();
       if ( m_pcCfg->getUseRateCtrl() )
       {
@@ -1103,7 +979,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         m_pcRateCtrl->setRCQP( estQP );
         pcCU->getSlice()->setSliceQpBase( estQP );
       }
-#endif
 
       // run CU encoder
       m_pcCuEncoder->compressCU( pcCU );
@@ -1140,7 +1015,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
       }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
       if ( m_pcCfg->getUseRateCtrl() )
       {
 #if !M0036_RC_IMPROVEMENT
@@ -1182,7 +1056,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, m_pcCfg->getLCULevelRC() );
 #endif
       }
-#endif
     }
     // other case: encodeCU is not called
     else
@@ -1204,13 +1077,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     m_uiPicTotalBits += pcCU->getTotalBits();
     m_dPicRdCost     += pcCU->getTotalCost();
     m_uiPicDist      += pcCU->getTotalDistortion();
-#if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl())
-    {
-      m_pcRateCtrl->updateLCUData(pcCU, pcCU->getTotalBits(), pcCU->getQP(0));
-      m_pcRateCtrl->updataRCUnitStatus();
-    }
-#endif
   }
   if ((pcSlice->getPPS()->getNumSubstreams() > 1) && !depSliceSegmentsEnabled)
   {
@@ -1225,12 +1091,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
      CTXMem[0]->loadContexts( m_pppcRDSbacCoder[0][CI_CURR_BEST] );//ctx end of dep.slice
   }
   xRestoreWPparam( pcSlice );
-#if !RATE_CONTROL_LAMBDA_DOMAIN
-  if(m_pcCfg->getUseRateCtrl())
-  {
-    m_pcRateCtrl->updateFrameData(m_uiPicTotalBits);
-  }
-#endif
 }
 
 /**
