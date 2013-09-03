@@ -1097,7 +1097,6 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   finishCU(pcCU,uiAbsPartIdx,uiDepth);
 }
 
-#if RATE_CONTROL_INTRA
 Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg) 
 {
   Int k, i, j, jj;
@@ -1212,7 +1211,6 @@ Int  TEncCu::updateLCUDataISlice(TComDataCU* pcCU, Int LCUIdx, Int width, Int he
   }
   return(iSumHad);
 }
-#endif
 
 /** check RD costs for a CU block encoded with merge
  * \param rpcBestCU

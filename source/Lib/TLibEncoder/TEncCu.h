@@ -123,9 +123,7 @@ public:
 #if !M0036_RC_IMPROVEMENT
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
-#if RATE_CONTROL_INTRA
   Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
-#endif
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 #if AMP_ENC_SPEEDUP
