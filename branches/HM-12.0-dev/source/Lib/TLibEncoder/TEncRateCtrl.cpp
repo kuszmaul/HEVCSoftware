@@ -782,7 +782,6 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures )
   // initial BU bit allocation weight
   for ( Int i=0; i<m_numberOfLCU; i++ )
   {
-#if RC_FIX
     Double alphaLCU, betaLCU;
     if ( m_encRCSeq->getUseLCUSeparateModel() )
     {
@@ -794,10 +793,6 @@ Double TEncRCPic::estimatePicLambda( list<TEncRCPic*>& listPreviousPictures )
       alphaLCU = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
       betaLCU  = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
     }
-#else
-    Double alphaLCU = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_alpha;
-    Double betaLCU  = m_encRCSeq->getLCUPara( m_frameLevel, i ).m_beta;
-#endif
 
     m_LCUs[i].m_bitWeight =  m_LCUs[i].m_numberOfPixel * pow( estLambda/alphaLCU, 1.0/betaLCU );
 
