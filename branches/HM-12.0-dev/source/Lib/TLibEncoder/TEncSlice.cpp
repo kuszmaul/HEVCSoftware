@@ -651,7 +651,6 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
 
 /** \param rpcPic   picture class
  */
-#if RATE_CONTROL_INTRA
 Void TEncSlice::calCostSliceI(TComPic*& rpcPic)
 {
   UInt    uiCUAddr;
@@ -685,7 +684,6 @@ Void TEncSlice::calCostSliceI(TComPic*& rpcPic)
   }
   m_pcRateCtrl->getRCPic()->setTotalIntraCost(iSumHadSlice);
 }
-#endif
 
 Void TEncSlice::compressSlice( TComPic*& rpcPic )
 {
@@ -945,7 +943,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         else
         {
-#if RATE_CONTROL_INTRA
           bpp = m_pcRateCtrl->getRCPic()->getLCUTargetBpp(pcSlice->getSliceType());
           if ( rpcPic->getSlice( 0 )->getSliceType() == I_SLICE)
           {
@@ -956,11 +953,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
             estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
             estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
           }
-#else
-          bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBpp();
-          estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
-          estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
-#endif
 
           estQP     = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, estQP );
 
@@ -1049,12 +1041,8 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         m_pcRdCost->setLambda(oldLambda);
 
-#if RATE_CONTROL_INTRA
-        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, 
+        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda,
           pcCU->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
-#else
-        m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda, m_pcCfg->getLCULevelRC() );
-#endif
       }
     }
     // other case: encodeCU is not called
