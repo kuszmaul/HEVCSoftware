@@ -157,9 +157,7 @@ public:
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
 
   Double  getLambda() { return m_dLambda; }
-#if M0036_RC_IMPROVEMENT
   Double  getChromaWeight () {return((m_cbDistortionWeight+m_crDistortionWeight)/2.0);}
-#endif
   
   // Distortion Functions
   Void    init();
@@ -246,9 +244,6 @@ public:
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
 
-#if !M0036_RC_IMPROVEMENT
-  UInt   getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height );
-#endif
 };// END CLASS DEFINITION TComRdCost
 
 //! \}
