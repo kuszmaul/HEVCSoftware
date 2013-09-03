@@ -46,8 +46,6 @@
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 #endif
 
-#define FIX1071 1 ///< fix for issue #1071
-
 #define MAX_NUM_PICS_IN_SOP           1024
 
 #define MAX_NESTING_NUM_OPS         1024

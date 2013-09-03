@@ -1305,11 +1305,7 @@ public:
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
   
-#if FIX1071
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr = false );
-#else
-  Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
-#endif
   Void      setRefPOCList       ();
   Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }
@@ -1354,11 +1350,7 @@ public:
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
   Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
-#if FIX1071
   Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
-#else
-  Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet);
-#endif
 
   Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
   UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
