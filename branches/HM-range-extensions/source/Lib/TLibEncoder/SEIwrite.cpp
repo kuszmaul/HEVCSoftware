@@ -600,6 +600,6 @@ Void SEIWriter::xWriteByteAlign()
       WRITE_FLAG( 0, "bit_equal_to_zero" );
     }
   }
-};
+}
 
 //! \}
