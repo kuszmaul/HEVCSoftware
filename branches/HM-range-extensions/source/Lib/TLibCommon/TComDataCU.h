@@ -190,7 +190,7 @@ private:
 
   Bool          m_bDecSubCu;          ///< indicates decoder-mode
   Double        m_dTotalCost;         ///< sum of partition RD costs
-  UInt          m_uiTotalDistortion;  ///< sum of partition distortion
+  Distortion    m_uiTotalDistortion;  ///< sum of partition distortion
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
   UInt*         m_sliceStartCU;       ///< Start CU address of current slice
@@ -554,7 +554,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Double&       getTotalCost()                  { return m_dTotalCost;        }
-  UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
+  Distortion&   getTotalDistortion()            { return m_uiTotalDistortion; }
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 

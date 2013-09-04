@@ -64,9 +64,9 @@ TComRdCostWeightPrediction::~TComRdCostWeightPrediction()
 // --------------------------------------------------------------------------------------------------------------------
 /** get weighted SAD cost
  * \param pcDtParam
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
+Distortion TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
 {
   Pel  pred;
   const Pel* piOrg   = pcDtParam->pOrg;
@@ -84,7 +84,7 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
         shift   = wpCur->shift,
         round   = wpCur->round;
 
-  UInt uiSum = 0; //NOTE: RExt - this function adds up to 4096 values - which adds 12 bits to the total depth, hence this is OK up to 20-bit internal depth
+  Distortion uiSum = 0;
 
   for( ; iRows != 0; iRows-- )
   {
@@ -108,9 +108,9 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
 // --------------------------------------------------------------------------------------------------------------------
 /** get weighted SSD cost
  * \param pcDtParam
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
+Distortion TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
 {
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -130,7 +130,7 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
         shift   = wpCur->shift,
         round   = wpCur->round;
 
-  UInt uiSum = 0;
+  Distortion uiSum = 0;
   UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT((pcDtParam->bitDepth-8) << 1);
 
   Int iTemp;
@@ -162,11 +162,12 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
  * \param iStrideOrg
  * \param iStrideCur
  * \param iStep
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xCalcHADs2x2w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCostWeightPrediction::xCalcHADs2x2w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
-  Int satd = 0, diff[4], m[4];
+  Distortion satd = 0;
+  TCoeff diff[4], m[4];
 
   assert( m_xSetDone );
   Pel   pred;
@@ -199,11 +200,13 @@ UInt TComRdCostWeightPrediction::xCalcHADs2x2w( const Pel *piOrg, const Pel *piC
  * \param iStrideOrg
  * \param iStrideCur
  * \param iStep
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xCalcHADs4x4w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCostWeightPrediction::xCalcHADs4x4w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
-  Int k, satd = 0, diff[16], m[16], d[16];
+  Int k;
+  Distortion satd = 0;
+  TCoeff diff[16], m[16], d[16];
 
   assert( m_xSetDone );
   Pel   pred;
@@ -307,12 +310,13 @@ UInt TComRdCostWeightPrediction::xCalcHADs4x4w( const Pel *piOrg, const Pel *piC
  * \param iStrideOrg
  * \param iStrideCur
  * \param iStep
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xCalcHADs8x8w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCostWeightPrediction::xCalcHADs8x8w( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
-  Int k, i, j, jj, sad=0;
-  Int diff[64], m1[8][8], m2[8][8], m3[8][8];
+  Int k, i, j, jj;
+  Distortion sad=0;
+  TCoeff diff[64], m1[8][8], m2[8][8], m3[8][8];
   Int iStep2 = iStep<<1;
   Int iStep3 = iStep2 + iStep;
   Int iStep4 = iStep3 + iStep;
@@ -424,9 +428,9 @@ UInt TComRdCostWeightPrediction::xCalcHADs8x8w( const Pel *piOrg, const Pel *piC
 
 /** get weighted Hadamard cost
  * \param *pcDtParam
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
+Distortion TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
 {
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -438,7 +442,7 @@ UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
   Int  iOffsetOrg = iStrideOrg<<2;
   Int  iOffsetCur = iStrideCur<<2;
 
-  UInt uiSum = 0;
+  Distortion uiSum = 0;
 
   for ( y=0; y<iRows; y+= 4 )
   {
@@ -452,9 +456,9 @@ UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
 
 /** get weighted Hadamard cost
  * \param *pcDtParam
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
+Distortion TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
 {
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -464,7 +468,7 @@ UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
   Int  iStep  = pcDtParam->iStep;
   Int  y;
 
-  UInt uiSum = 0;
+  Distortion uiSum = 0;
 
   if ( iRows == 4 )
   {
@@ -488,9 +492,9 @@ UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
 
 /** get weighted Hadamard cost
  * \param *pcDtParam
- * \returns UInt
+ * \returns Distortion
  */
-UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
+Distortion TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
 {
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -508,7 +512,7 @@ UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
 
   xSetWPscale(wpCur->w, 0, wpCur->shift, wpCur->offset, wpCur->round);
 
-  UInt uiSum = 0;
+  Distortion uiSum = 0;
 
   if( ( iRows % 8 == 0) && (iCols % 8 == 0) )
   {

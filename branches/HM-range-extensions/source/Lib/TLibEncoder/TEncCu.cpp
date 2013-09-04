@@ -1575,7 +1575,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   Bool bSeparateLumaChroma = true; // choose estimation mode
 
-  UInt uiPreCalcDistC      = 0;
+  Distortion uiPreCalcDistC = 0;
   if (rpcBestCU->getPic()->getChromaFormat()==CHROMA_400)
   {
     bSeparateLumaChroma=true;

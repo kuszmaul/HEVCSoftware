@@ -1164,9 +1164,9 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
 // To minimize the distortion only. No rate is considered.
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-Void TComTrQuant::signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
+Void TComTrQuant::signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters )
 #else
-Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters )
+Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters )
 #endif
 {
   const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
@@ -1221,7 +1221,9 @@ Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, 
       UInt signbit = (pQCoef[codingParameters.scan[subPos+firstNZPosInCG]]>0?0:1) ;
       if( signbit!=(absSum&0x1) )  //compare signbit with sum_parity
       {
-        Int minCostInc = MAX_INT,  minPos =-1, finalChange=0, curCost=MAX_INT, curChange=0;
+        TCoeff curCost    = std::numeric_limits<TCoeff>::max();
+        TCoeff minCostInc = std::numeric_limits<TCoeff>::max();
+        Int minPos =-1, finalChange=0, curChange=0;
 
         for( n = (lastCG==1?lastNZPosInCG:groupSize-1) ; n >= 0; --n )
         {
@@ -1238,7 +1240,7 @@ Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, 
               //curChange =-1;
               if(n==firstNZPosInCG && abs(pQCoef[blkPos])==1)
               {
-                curCost=MAX_INT ;
+                curCost = std::numeric_limits<TCoeff>::max();
               }
               else
               {
@@ -1254,7 +1256,7 @@ Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, 
               UInt thisSignBit = (pCoef[blkPos]>=0?0:1);
               if(thisSignBit != signbit )
               {
-                curCost = MAX_INT;
+                curCost = std::numeric_limits<TCoeff>::max();
               }
               else
               {
@@ -1312,7 +1314,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #if ADAPTIVE_QP_SELECTION
                                 TCoeff      *&pArlDes,
 #endif
-                                UInt         &uiAcSum,
+                                TCoeff       &uiAcSum,
                           const ComponentID   compID,
                           const QpParam      &cQP )
 {
@@ -1349,7 +1351,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
 #endif
 
-    Int deltaU[32*32] ;
+    TCoeff deltaU[MAX_TU_SIZE * MAX_TU_SIZE];
 
     const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
@@ -1425,9 +1427,9 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #endif
 
       iLevel = (TCoeff)((tmpLevel + iAdd ) >> iQBits);
-      deltaU[uiBlockPos] = (Int)((tmpLevel - (iLevel<<iQBits) )>> qBits8);
+      deltaU[uiBlockPos] = (TCoeff)((tmpLevel - (iLevel<<iQBits) )>> qBits8);
 
-      uiAcSum += UInt(iLevel);
+      uiAcSum += iLevel;
       iLevel *= iSign;
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       piQCoef[uiBlockPos] = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, iLevel );
@@ -1656,7 +1658,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #if ADAPTIVE_QP_SELECTION
                                       TCoeff       *& rpcArlCoeff,
 #endif
-                                      UInt          & uiAbsSum,
+                                      TCoeff        & uiAbsSum,
                                 const QpParam       & cQP
                               )
 {
@@ -1711,7 +1713,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #else
         rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
 #endif
-        uiAbsSum += abs(pcResidual[k*uiStride+j]);
+        uiAbsSum += TCoeff(abs(pcResidual[k*uiStride+j]));
 #endif
       }
     }
@@ -2231,7 +2233,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 #if ADAPTIVE_QP_SELECTION
                                                             TCoeff      *&piArlDstCoeff,
 #endif
-                                                            UInt         &uiAbsSum,
+                                                            TCoeff       &uiAbsSum,
                                                       const ComponentID   compID,
                                                       const QpParam      &cQP  )
 {
@@ -2294,11 +2296,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   Int rateIncUp   [ MAX_TU_SIZE * MAX_TU_SIZE ];
   Int rateIncDown [ MAX_TU_SIZE * MAX_TU_SIZE ];
   Int sigRateDelta[ MAX_TU_SIZE * MAX_TU_SIZE ];
-  Int deltaU      [ MAX_TU_SIZE * MAX_TU_SIZE ];
-  memset( rateIncUp,    0, sizeof(Int) *  uiMaxNumCoeff );
-  memset( rateIncDown,  0, sizeof(Int) *  uiMaxNumCoeff );
-  memset( sigRateDelta, 0, sizeof(Int) *  uiMaxNumCoeff );
-  memset( deltaU,       0, sizeof(Int) *  uiMaxNumCoeff );
+  TCoeff deltaU   [ MAX_TU_SIZE * MAX_TU_SIZE ];
+  memset( rateIncUp,    0, sizeof(Int   ) *  uiMaxNumCoeff );
+  memset( rateIncDown,  0, sizeof(Int   ) *  uiMaxNumCoeff );
+  memset( sigRateDelta, 0, sizeof(Int   ) *  uiMaxNumCoeff );
+  memset( deltaU,       0, sizeof(TCoeff) *  uiMaxNumCoeff );
 
   const Int iQBits = QUANT_SHIFT + cQP.getBaseQp().per + iTransformShift;                   // Right shift of non-RDOQ quantizer;  level = (coeff*uiQ + offset)>>q_bits
   const Double *const pdErrScale = getErrScaleCoeff(scalingListType, (uiLog2TrSize-2), cQP.getBaseQp().rem);
@@ -2411,7 +2413,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
           sigRateDelta[ uiBlkPos ] = m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 1 ] - m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 0 ];
         }
 
-        deltaU[ uiBlkPos ]        = Int((lLevelDouble - (Intermediate_Int(uiLevel) << iQBits)) >> (iQBits-8));
+        deltaU[ uiBlkPos ]        = TCoeff((lLevelDouble - (Intermediate_Int(uiLevel) << iQBits)) >> (iQBits-8));
 
         if( uiLevel > 0 )
         {
@@ -2633,7 +2635,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   for ( Int scanPos = 0; scanPos < iBestLastIdxP1; scanPos++ )
   {
     Int blkPos = codingParameters.scan[ scanPos ];
-    Int level  = Int(piDstCoeff[ blkPos ]);
+    TCoeff level = piDstCoeff[ blkPos ];
     uiAbsSum += level;
     piDstCoeff[ blkPos ] = ( plSrcCoeff[ blkPos ] < 0 ) ? -level : level;
   }
@@ -3813,7 +3815,7 @@ Void TComTrQuant::xInterResidueDpcm( TComTU      &rTu,
                                      UInt        stride,
                                      TCoeff*     outputResiduals,
                                      ComponentID compID,
-                                     UInt        &absSum)
+                                     TCoeff      &absSum)
 {
 
   const TComRectangle &rect= rTu.getRect(compID);
@@ -3828,7 +3830,8 @@ Void TComTrQuant::xInterResidueDpcm( TComTU      &rTu,
   TCoeff tempResiduals[MAX_TU_SIZE * MAX_TU_SIZE];
   TCoeff *tempResidualsPtr;
   Pel *inputResidualsPtr;
-  UInt currentSad, bestSad = MAX_UINT, bestInterRdpcmMode = NUMBER_OF_INTER_RDPCM_MODES;
+  TCoeff currentSad, bestSad = std::numeric_limits<TCoeff>::max();
+  UInt bestInterRdpcmMode = NUMBER_OF_INTER_RDPCM_MODES;
 
   for(UInt direction = DPCM_OFF; direction < NUMBER_OF_INTER_RDPCM_MODES; direction++)
   {
@@ -3938,7 +3941,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
                                                 ComponentID compID,
                                                 const QpParam     &cQP, 
                                                 Int         quantIdx,
-                                                Int         &deltaU
+                                                TCoeff      &deltaU
                                         )
 {
   const UInt log2TrSize = rTu.GetEquivalentLog2TrSize(compID);
@@ -3958,7 +3961,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
 #endif
 #endif
 
-  int level, signLevel;
+  TCoeff level, signLevel;
   Int64 tmpLevel;
 
 
@@ -3993,7 +3996,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
 
   level = (TCoeff)((tmpLevel + rightShiftOffset ) >> quantiserRightShift);
 
-  deltaU = (Int)((tmpLevel - (level<<quantiserRightShift) )>> qBits8);
+  deltaU = (TCoeff)((tmpLevel - (level<<quantiserRightShift) )>> qBits8);
 
   level *= signLevel;
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
@@ -4152,7 +4155,7 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
 #if ADAPTIVE_QP_SELECTION
                                     TCoeff      *&pArlDes,
 #endif
-                                    UInt         &uiAcSum,
+                                    TCoeff       &uiAcSum,
                                     const ComponentID   compID,
                                     const QpParam      &cQP)
 {
@@ -4174,7 +4177,7 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
 
   //  Temporary variables for mode decision
-  UInt currentSad, bestSad = MAX_UINT;
+  TCoeff currentSad, bestSad = std::numeric_limits<TCoeff>::max();
   UInt bestRdpcmMode = 0;  
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   TCoeff tempQCoeff[MAX_TU_SIZE*MAX_TU_SIZE], tempRecCoeff[MAX_TU_SIZE*MAX_TU_SIZE], *tempQCoeffPtr, *tempCoeffPtr;
@@ -4187,7 +4190,7 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
   TCoeff tempArlCoeff[4*4], *arlCoeffPtr;
 #endif
 #endif
-  Int deltaU[MAX_TU_SIZE*MAX_TU_SIZE], tempDeltaU[MAX_TU_SIZE*MAX_TU_SIZE];
+  TCoeff deltaU[MAX_TU_SIZE*MAX_TU_SIZE], tempDeltaU[MAX_TU_SIZE*MAX_TU_SIZE];
 
   for(int direction = DPCM_OFF; direction < NUMBER_OF_INTER_RDPCM_MODES; direction++)
   {
@@ -4315,7 +4318,8 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
 #if ADAPTIVE_QP_SELECTION
       arlCoeffPtr = tempArlCoeff;
 #endif
-      ::memcpy(deltaU, tempDeltaU, 32*32*sizeof(Int));
+      //NOTE: RExt - deltaU is not used in this function
+      memcpy(deltaU, tempDeltaU, (MAX_TU_SIZE * MAX_TU_SIZE * sizeof(TCoeff)));
       for(int r = 0; r < height; r++)
       {
         for(int c = 0; c < width; c++)

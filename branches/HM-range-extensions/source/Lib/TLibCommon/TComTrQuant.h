@@ -140,7 +140,7 @@ public:
 #if ADAPTIVE_QP_SELECTION
                            TCoeff        *& rpcArlCoeff,
 #endif
-                           UInt&            uiAbsSum,
+                           TCoeff         & uiAbsSum,
                      const QpParam        & cQP
                     );
 
@@ -267,9 +267,9 @@ private:
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
 
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-  Void signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
+  Void signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters );
 #else
-  Void signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, Int* deltaU, const TUEntropyCodingParameters &codingParameters );
+  Void signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters );
 #endif
 
   // quantization
@@ -279,7 +279,7 @@ private:
 #if ADAPTIVE_QP_SELECTION
                      TCoeff      *&pArlDes,
 #endif
-                     UInt         &uiAcSum,
+                     TCoeff       &uiAcSum,
                const ComponentID   compID,
                const QpParam      &cQP );
 
@@ -291,7 +291,7 @@ private:
 #if ADAPTIVE_QP_SELECTION
                                            TCoeff      *&piArlDstCoeff,
 #endif
-                                           UInt         &uiAbsSum,
+                                           TCoeff       &uiAbsSum,
                                      const ComponentID   compID,
                                      const QpParam      &cQP );
 
@@ -363,7 +363,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                     UInt        stride,
                                     TCoeff*     outputResiduals,
                                     ComponentID compID,
-                                    UInt        &absSum
+                                    TCoeff      &absSum
                                   );
 #endif
 #if RDPCM_INTER_LOSSY
@@ -377,7 +377,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                      ComponentID compID,
                                const QpParam     &cQP, 
                                      Int         quantIdx,
-                                     Int         &deltaU
+                                     TCoeff      &deltaU
                               );
   inline Void xDequantiseSample (       TComTU      &rTu,
                                         TCoeff      quantisedResidual, 
@@ -392,7 +392,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
 #if ADAPTIVE_QP_SELECTION
                                 TCoeff       *&pArlDes,
 #endif
-                                UInt         &uiAcSum,
+                                TCoeff       &uiAcSum,
                           const ComponentID  compID,
                           const QpParam      &cQP     
                         );

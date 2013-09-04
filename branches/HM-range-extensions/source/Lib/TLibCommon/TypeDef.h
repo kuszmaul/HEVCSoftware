@@ -718,6 +718,12 @@ typedef       Int             Intermediate_Int;  ///< used as intermediate value
 typedef       UInt            Intermediate_UInt; ///< used as intermediate value in calculations
 #endif
 
+#if FULL_NBIT
+typedef       UInt64          Distortion;        ///< distortion measurement
+#else
+typedef       UInt            Distortion;        ///< distortion measurement
+#endif
+
 /// parameters for adaptive loop filter
 class TComPicSym;
 
