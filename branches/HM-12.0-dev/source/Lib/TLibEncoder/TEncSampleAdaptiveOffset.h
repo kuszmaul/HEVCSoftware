@@ -158,7 +158,7 @@ private: //members
   Int                    m_skipLinesR[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];
   Int                    m_skipLinesB[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];
   
-  Int m_lineBufWidth = 0;
+  Int m_lineBufWidth;
   Char* m_signLineBuf1;
   Char* m_signLineBuf2;
 };
