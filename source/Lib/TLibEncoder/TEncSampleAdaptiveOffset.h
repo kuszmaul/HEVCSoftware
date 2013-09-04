@@ -153,7 +153,7 @@ private: //members
   SAOStatData***         m_preDBFstatData;
 #endif
 #if SAO_ENCODING_CHOICE
-  Double                 m_saoDisabledRate[NUM_SAO_COMPONENTS][4];
+  Double                 m_saoDisabledRate[NUM_SAO_COMPONENTS][MAX_TLAYER];
 #endif
   Int                    m_skipLinesR[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];
   Int                    m_skipLinesB[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];

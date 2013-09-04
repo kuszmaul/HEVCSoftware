@@ -123,9 +123,7 @@ Void TEncSampleAdaptiveOffset::createEncData()
 #endif
 
 #if SAO_ENCODING_CHOICE
-  m_saoDisabledRate[SAO_Y ][0] = m_saoDisabledRate[SAO_Y ][1] = m_saoDisabledRate[SAO_Y ][2] = m_saoDisabledRate[SAO_Y ][3] = 0;
-  m_saoDisabledRate[SAO_Cb][0] = m_saoDisabledRate[SAO_Cb][1] = m_saoDisabledRate[SAO_Cb][2] = m_saoDisabledRate[SAO_Cb][3] = 0;
-  m_saoDisabledRate[SAO_Cr][0] = m_saoDisabledRate[SAO_Cr][1] = m_saoDisabledRate[SAO_Cr][2] = m_saoDisabledRate[SAO_Cr][3] = 0;
+  ::memset(m_saoDisabledRate, 0, sizeof(m_saoDisabledRate));
 #endif
 
   for(Int typeIdc=0; typeIdc < NUM_SAO_NEW_TYPES; typeIdc++)
