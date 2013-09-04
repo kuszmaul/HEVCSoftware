@@ -2286,8 +2286,8 @@ Void reinterlace(Pel* top, Pel* bottom, Pel* dst, UInt stride, UInt width, UInt 
   {
     for (Int x = 0; x < width; x++)
     {
-      dst[x] = isTff ? (UChar) top[x] : (UChar) bottom[x];
-      dst[stride+x] = isTff ? (UChar) bottom[x] : (UChar) top[x];
+      dst[x] = isTff ? top[x] : bottom[x];
+      dst[stride+x] = isTff ? bottom[x] : top[x];
     }
     top += stride;
     bottom += stride;
