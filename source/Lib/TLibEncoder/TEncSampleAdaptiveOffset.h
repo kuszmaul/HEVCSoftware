@@ -110,9 +110,7 @@ public:
   Void destroyEncData();
   Void initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice) ;
   Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, Double lambdaLuma
-#if SAO_CHROMA_LAMBDA
                 , Double lambdaChroma
-#endif
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , Bool isPreDBFSamplesUsed
 #endif
@@ -205,14 +203,10 @@ public:
   Void startSaoEnc( TComPic* pcPic, TEncEntropy* pcEntropyCoder, TEncSbac*** pppcRDSbacCoder, TEncSbac* pcRDGoOnSbacCoder);
   Void endSaoEnc();
   Void resetStats();
-#if SAO_CHROMA_LAMBDA
 #if SAO_ENCODING_CHOICE
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma, Int depth);
 #else
   Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma);
-#endif
-#else
-  Void SAOProcess(SAOParam *pcSaoParam, Double dLambda);
 #endif
 
   Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, Int yCbCr);

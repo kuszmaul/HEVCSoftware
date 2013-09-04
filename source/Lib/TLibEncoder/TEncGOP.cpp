@@ -1493,9 +1493,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             m_pcSAO->SAOProcess(pcPic
               , sliceEnabled
               , pcPic->getSlice(0)->getLambdaLuma()
-#if SAO_CHROMA_LAMBDA
               , pcPic->getSlice(0)->getLambdaChroma()
-#endif
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
               , m_pcCfg->getSaoLcuBoundary()
 #endif
@@ -1513,14 +1511,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
             SAOParam& cSaoParam = *pcSlice->getPic()->getPicSym()->getSaoParam();
             
-#if SAO_CHROMA_LAMBDA
 #if SAO_ENCODING_CHOICE
             m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma(), pcPic->getSlice(0)->getDepth());
 #else
             m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma());
-#endif
-#else
-            m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambda());
 #endif
             m_pcSAO->endSaoEnc();
             m_pcSAO->PCMLFDisableProcess(pcPic);
