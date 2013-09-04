@@ -222,9 +222,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getScalingListPresentFlag() ? 1 : 0,                          "pps_scaling_list_data_present_flag" ); 
   if( pcPPS->getScalingListPresentFlag() )
   {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("PPS\n");
-#endif
     codeScalingList( m_pcSlice->getScalingList() );
   }
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
@@ -454,9 +451,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getScalingListPresentFlag() ? 1 : 0,                          "sps_scaling_list_data_present_flag" ); 
     if(pcSPS->getScalingListPresentFlag())
     {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("SPS\n");
-#endif
       codeScalingList( m_pcSlice->getScalingList() );
     }
   }
@@ -1293,21 +1287,11 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
   UInt listId,sizeId;
   Bool scalingListPredModeFlag;
 
-#if SCALING_LIST_OUTPUT_RESULT
-  Int startBit;
-  Int startTotalBit;
-  startBit = m_pcBitIf->getNumberOfWrittenBits();
-  startTotalBit = m_pcBitIf->getNumberOfWrittenBits();
-#endif
-
     //for each size
     for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
     {
       for(listId = 0; listId < g_scalingListNum[sizeId]; listId++)
       {
-#if SCALING_LIST_OUTPUT_RESULT
-        startBit = m_pcBitIf->getNumberOfWrittenBits();
-#endif
         scalingListPredModeFlag = scalingList->checkPredMode( sizeId, listId );
         WRITE_FLAG( scalingListPredModeFlag, "scaling_list_pred_mode_flag" );
         if(!scalingListPredModeFlag)// Copy Mode
@@ -1318,14 +1302,8 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
         {
           xCodeScalingList(scalingList, sizeId, listId);
         }
-#if SCALING_LIST_OUTPUT_RESULT
-        printf("Matrix [%d][%d] Bit %d\n",sizeId,listId,m_pcBitIf->getNumberOfWrittenBits() - startBit);
-#endif
       }
     }
-#if SCALING_LIST_OUTPUT_RESULT
-  printf("Total Bit %d\n",m_pcBitIf->getNumberOfWrittenBits()-startTotalBit);
-#endif
   return;
 }
 /** code DPCM
