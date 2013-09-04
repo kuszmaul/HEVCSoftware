@@ -70,11 +70,18 @@ TEncSampleAdaptiveOffset::TEncSampleAdaptiveOffset()
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
   m_preDBFstatData = NULL;
 #endif
+  
+  m_lineBufWidth = 0;
+  m_signLineBuf1 = NULL;
+  m_signLineBuf2 = NULL;
 }
 
 TEncSampleAdaptiveOffset::~TEncSampleAdaptiveOffset()
 {
   destroyEncData();
+  
+  if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
+  if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
 
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
@@ -863,19 +870,15 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
                         )
 {
   //static memory
-  static Int lineBufWidth = 0;
-  static Char* signLineBuf1; 
-  static Char* signLineBuf2; 
-  if(lineBufWidth != m_maxCUWidth)
+  if(m_lineBufWidth != m_maxCUWidth)
   {
-    lineBufWidth = m_maxCUWidth;
+    m_lineBufWidth = m_maxCUWidth;
 
-    if(signLineBuf1) delete[] signLineBuf1; signLineBuf1 = NULL;
-    signLineBuf1 = new Char[lineBufWidth+1]; 
+    if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
+    m_signLineBuf1 = new Char[m_lineBufWidth+1]; 
 
-    if(signLineBuf2) delete[] signLineBuf2; signLineBuf2 = NULL;
-    signLineBuf2 = new Char[lineBufWidth+1]; 
-
+    if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
+    m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
 
   Int x,y, startX, startY, endX, endY, edgeType, firstLineStartX, firstLineEndX;
@@ -962,7 +965,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
       {
         diff +=2;
         count+=2;
-        Char *signUpLine = signLineBuf1;
+        Char *signUpLine = m_signLineBuf1;
 
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
         startX = (!isCalculatePreDeblockSamples) ? 0
@@ -1049,8 +1052,8 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
         count+=2;
         Char *signUpLine, *signDownLine, *signTmpLine;
 
-        signUpLine  = signLineBuf1;
-        signDownLine= signLineBuf2;
+        signUpLine  = m_signLineBuf1;
+        signDownLine= m_signLineBuf2;
 
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
         startX = (!isCalculatePreDeblockSamples) ? (isLeftAvail  ? 0 : 1)
@@ -1149,7 +1152,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
       {
         diff +=2;
         count+=2;
-        Char *signUpLine = signLineBuf1+1;
+        Char *signUpLine = m_signLineBuf1+1;
 
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
         startX = (!isCalculatePreDeblockSamples) ? (isLeftAvail  ? 0 : 1)
