@@ -346,9 +346,7 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
   isBelowRightAvail= (isBelowAvail && isRightAvail);
 
   Bool isLoopFiltAcrossTilePPS = getCU(ctu)->getSlice()->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
-  Bool isLoopFiltAcrossSlicePPS= getCU(ctu)->getSlice()->getPPS()->getLoopFilterAcrossSlicesEnabledFlag();
 
-  if(!isLoopFiltAcrossSlicePPS || !isLoopFiltAcrossTilePPS) 
   {
     TComDataCU* ctuCurr  = getCU(ctu);
     TComDataCU* ctuLeft  = isLeftAvail ?getCU(ctu-1):NULL;
@@ -360,7 +358,6 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
     TComDataCU* ctuBelowLeft  = isBelowLeftAvail ? getCU(ctu+m_uiWidthInCU-1):NULL;
     TComDataCU* ctuBelowRight = isBelowRightAvail? getCU(ctu+m_uiWidthInCU+1):NULL;
 
-    if(!isLoopFiltAcrossSlicePPS)
     {
       //left
       if(ctuLeft != NULL)
