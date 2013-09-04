@@ -253,9 +253,7 @@ Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TC
 
 
 Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, Double lambdaLuma
-#if SAO_CHROMA_LAMBDA
                                          , Double lambdaChroma
-#endif
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                                          , Bool isPreDBFSamplesUsed
 #endif
@@ -263,11 +261,7 @@ Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, Dou
 {
   TComPicYuv* orgYuv= pPic->getPicYuvOrg();
   TComPicYuv* resYuv= pPic->getPicYuvRec();
-#if SAO_CHROMA_LAMBDA
   m_labmda[SAO_Y]= lambdaLuma; m_labmda[SAO_Cb]= lambdaChroma; m_labmda[SAO_Cr]= lambdaChroma;
-#else
-  m_labmda[SAO_Y]= m_labmda[SAO_Cb]= m_labmda[SAO_Cr]= lambdaLuma;
-#endif
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);
   srcYuv->setBorderExtension(false);
@@ -2937,7 +2931,6 @@ Void TEncSampleAdaptiveOffset::resetStats()
   }
 }
 
-#if SAO_CHROMA_LAMBDA 
 /** Sample adaptive offset process
  * \param pcSaoParam
  * \param dLambdaLuma
@@ -2947,12 +2940,6 @@ Void TEncSampleAdaptiveOffset::resetStats()
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLuma, Double dLambdaChroma, Int depth)
 #else
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLuma, Double dLambdaChroma)
-#endif
-#else
-/** Sample adaptive offset process
- * \param dLambda
- */
-Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
   if(m_bUseNIF)
