@@ -1297,7 +1297,7 @@ TEncSearch::xIntraCodingChromaBlk( TComDataCU* pcCU,
     m_pcTrQuant->setQPforQuant     ( pcCU->getQP( 0 ), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
 
 #if RDOQ_CHROMA_LAMBDA 
-    m_pcTrQuant->selectLambda      (TEXT_CHROMA);  
+    m_pcTrQuant->selectLambda(eText);
 #endif
     m_pcTrQuant->transformNxN      ( pcCU, piResi, uiStride, pcCoeff, 
 #if ADAPTIVE_QP_SELECTION
@@ -4738,7 +4738,7 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
       m_pcTrQuant->setQPforQuant( pcCU->getQP( 0 ), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
 
 #if RDOQ_CHROMA_LAMBDA 
-      m_pcTrQuant->selectLambda(TEXT_CHROMA); 
+      m_pcTrQuant->selectLambda(TEXT_CHROMA_U);
 #endif
 
       m_pcTrQuant->transformNxN( pcCU, pcResi->getCbAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrU, 
@@ -4749,7 +4749,12 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
 
       curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCrQpOffset() + pcCU->getSlice()->getSliceQpDeltaCr();
       m_pcTrQuant->setQPforQuant( pcCU->getQP( 0 ), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
-      m_pcTrQuant->transformNxN( pcCU, pcResi->getCrAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrV, 
+      
+#if RDOQ_CHROMA_LAMBDA
+      m_pcTrQuant->selectLambda(TEXT_CHROMA_V);
+#endif
+
+      m_pcTrQuant->transformNxN( pcCU, pcResi->getCrAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrV,
 #if ADAPTIVE_QP_SELECTION
                                  pcArlCoeffCurrV, 
 #endif        
@@ -5139,7 +5144,7 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
       m_pcTrQuant->setQPforQuant( pcCU->getQP( 0 ), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
 
 #if RDOQ_CHROMA_LAMBDA 
-      m_pcTrQuant->selectLambda(TEXT_CHROMA); 
+      m_pcTrQuant->selectLambda(TEXT_CHROMA_U);
 #endif
 
       m_pcTrQuant->transformNxN( pcCU, pcResi->getCbAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrU, 
@@ -5149,7 +5154,10 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
         trWidthC, trHeightC, uiAbsSumTransformSkipU, TEXT_CHROMA_U, uiAbsPartIdx, true );
       curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCrQpOffset() + pcCU->getSlice()->getSliceQpDeltaCr();
       m_pcTrQuant->setQPforQuant( pcCU->getQP( 0 ), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
-      m_pcTrQuant->transformNxN( pcCU, pcResi->getCrAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrV, 
+#if RDOQ_CHROMA_LAMBDA
+      m_pcTrQuant->selectLambda(TEXT_CHROMA_V);
+#endif
+      m_pcTrQuant->transformNxN( pcCU, pcResi->getCrAddr(absTUPartIdxC), pcResi->getCStride(), pcCoeffCurrV,
 #if ADAPTIVE_QP_SELECTION
         pcArlCoeffCurrV, 
 #endif        
