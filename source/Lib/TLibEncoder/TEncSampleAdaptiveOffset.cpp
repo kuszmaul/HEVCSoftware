@@ -70,18 +70,11 @@ TEncSampleAdaptiveOffset::TEncSampleAdaptiveOffset()
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
   m_preDBFstatData = NULL;
 #endif
-  
-  m_lineBufWidth = 0;
-  m_signLineBuf1 = NULL;
-  m_signLineBuf2 = NULL;
 }
 
 TEncSampleAdaptiveOffset::~TEncSampleAdaptiveOffset()
 {
   destroyEncData();
-  
-  if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
-  if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
 
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
@@ -869,7 +862,6 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 #endif
                         )
 {
-  //static memory
   if(m_lineBufWidth != m_maxCUWidth)
   {
     m_lineBufWidth = m_maxCUWidth;

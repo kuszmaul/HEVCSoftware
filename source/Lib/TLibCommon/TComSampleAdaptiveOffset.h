@@ -89,6 +89,11 @@ protected:
   Int m_numCTUInWidth;
   Int m_numCTUInHeight;
   Int m_numCTUsPic;
+  
+  
+  Int m_lineBufWidth;
+  Char* m_signLineBuf1;
+  Char* m_signLineBuf2;
 private:
   Bool m_picSAOEnabled[NUM_SAO_COMPONENTS];
   Int*   m_offsetClipTable[NUM_SAO_COMPONENTS];
