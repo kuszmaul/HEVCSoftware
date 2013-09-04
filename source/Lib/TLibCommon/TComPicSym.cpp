@@ -66,7 +66,7 @@ TComPicSym::TComPicSym()
 ,m_puiCUOrderMap(0)
 ,m_puiTileIdxMap(NULL)
 ,m_puiInverseCUOrderMap(NULL)
-{};
+{}
 
 
 Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )

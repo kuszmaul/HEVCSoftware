@@ -229,8 +229,8 @@ namespace df
       Options& parent;
     };
     
-  }; /* namespace: program_options_lite */
-}; /* namespace: df */
+  } /* namespace: program_options_lite */
+} /* namespace: df */
 
 //! \}
 

@@ -314,7 +314,7 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   {
     uiTempY[i] = ( i / uiNumPartInWidth ) * uiMinCUWidth;
   }
-};
+}
 
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];

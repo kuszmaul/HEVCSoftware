@@ -644,7 +644,7 @@ namespace RasterAddress
     // addr / numUnitsPerRow < val
     return addr < val * numUnitsPerRow;
   }
-};
+}
 
 //! \}
 
