@@ -109,8 +109,7 @@ public:
 #endif
   Void destroyEncData();
   Void initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice) ;
-  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, Double lambdaLuma
-                , Double lambdaChroma
+  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , Bool isPreDBFSamplesUsed
 #endif

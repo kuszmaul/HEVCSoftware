@@ -1162,8 +1162,7 @@ private:
   UInt        m_colRefIdx;
   UInt        m_maxNumMergeCand;
 
-  Double      m_dLambdaLuma;
-  Double      m_dLambdaChroma;
+  Double      m_lambdas[3];
 
   Bool        m_abEqualRef  [2][MAX_NUM_REF][MAX_NUM_REF];
   UInt        m_uiTLayer;
@@ -1311,9 +1310,8 @@ public:
   Bool      isInterB        ()                          { return  m_eSliceType == B_SLICE;  }
   Bool      isInterP        ()                          { return  m_eSliceType == P_SLICE;  }
   
-  Void      setLambda( Double d, Double e ) { m_dLambdaLuma = d; m_dLambdaChroma = e;}
-  Double    getLambdaLuma() { return m_dLambdaLuma;        }
-  Double    getLambdaChroma() { return m_dLambdaChroma;        }
+  Void      setLambdas ( const Double lambdas[3] ) { for (Int component = 0; component < 3; component++) m_lambdas[component] = lambdas[component]; }
+  const Double* getLambdas() const { return m_lambdas; }
   
   Void      initEqualRef();
   Bool      isEqualRef  ( RefPicList e, Int iRefIdx1, Int iRefIdx2 )

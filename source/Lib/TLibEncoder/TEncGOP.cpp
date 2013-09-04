@@ -1492,8 +1492,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             m_pcSAO->initRDOCabacCoder(m_pcEncTop->getRDGoOnSbacCoder(), pcSlice);
             m_pcSAO->SAOProcess(pcPic
               , sliceEnabled
-              , pcPic->getSlice(0)->getLambdaLuma()
-              , pcPic->getSlice(0)->getLambdaChroma()
+              , pcPic->getSlice(0)->getLambdas()
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
               , m_pcCfg->getSaoLcuBoundary()
 #endif

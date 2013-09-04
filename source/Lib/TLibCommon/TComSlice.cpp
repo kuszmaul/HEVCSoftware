@@ -70,8 +70,6 @@ TComSlice::TComSlice()
 , m_pcPic                         ( NULL )
 , m_colFromL0Flag                 ( 1 )
 , m_colRefIdx                     ( 0 )
-, m_dLambdaLuma( 0.0 )
-, m_dLambdaChroma( 0.0 )
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
 , m_sliceMode                   ( 0 )
@@ -99,6 +97,11 @@ TComSlice::TComSlice()
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = 0;
   
   initEqualRef();
+  
+  for (Int component = 0; component < 3; component++)
+  {
+    m_lambdas[component] = 0.0;
+  }
   
   for ( Int idx = 0; idx < MAX_NUM_REF; idx++ )
   {
@@ -683,8 +686,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_colFromL0Flag        = pSrc->m_colFromL0Flag;
   m_colRefIdx            = pSrc->m_colRefIdx;
-  m_dLambdaLuma          = pSrc->m_dLambdaLuma;
-  m_dLambdaChroma        = pSrc->m_dLambdaChroma;
+  setLambdas(pSrc->getLambdas());
   for (i = 0; i < 2; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)

@@ -252,8 +252,7 @@ Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TC
 
 
 
-Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, Double lambdaLuma
-                                         , Double lambdaChroma
+Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                                          , Bool isPreDBFSamplesUsed
 #endif
@@ -261,7 +260,7 @@ Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, Dou
 {
   TComPicYuv* orgYuv= pPic->getPicYuvOrg();
   TComPicYuv* resYuv= pPic->getPicYuvRec();
-  m_labmda[SAO_Y]= lambdaLuma; m_labmda[SAO_Cb]= lambdaChroma; m_labmda[SAO_Cr]= lambdaChroma;
+  m_labmda[SAO_Y]= lambdas[0]; m_labmda[SAO_Cb]= lambdas[1]; m_labmda[SAO_Cr]= lambdas[2];
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);
   srcYuv->setBorderExtension(false);

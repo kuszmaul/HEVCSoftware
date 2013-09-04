@@ -331,29 +331,31 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   m_pcRdCost ->setLambda( dLambda );
 // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
-  Double weight = 1.0;
+  Double weight[2] = { 1.0, 1.0 };
   Int qpc;
   Int chromaQPOffset;
 
   chromaQPOffset = rpcSlice->getPPS()->getChromaCbQpOffset() + rpcSlice->getSliceQpDeltaCb();
   qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-  weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCbDistortionWeight(weight);
+  weight[0] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCbDistortionWeight(weight[0]);
 
   chromaQPOffset = rpcSlice->getPPS()->getChromaCrQpOffset() + rpcSlice->getSliceQpDeltaCr();
   qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-  weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCrDistortionWeight(weight);
+  weight[1] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCrDistortionWeight(weight[1]);
 
+  const Double lambdaArray[3] = {dLambda, (dLambda / weight[0]), (dLambda / weight[1])};
+  
 #if RDOQ_CHROMA_LAMBDA 
 // for RDOQ
-  m_pcTrQuant->setLambda( dLambda, dLambda / weight );    
+  m_pcTrQuant->setLambdas( lambdaArray );
 #else
   m_pcTrQuant->setLambda( dLambda );
 #endif
 
 // For SAO
-  rpcSlice   ->setLambda( dLambda, dLambda / weight );  
+  rpcSlice->setLambdas( lambdaArray );
   
 #if HB_LAMBDA_FOR_LDC
   // restore original slice type
@@ -449,29 +451,31 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
   m_pcRdCost ->setLambda( lambda );
   // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
-  Double weight;
+  Double weight[2] = { 1.0, 1.0 };
   Int qpc;
   Int chromaQPOffset;
 
   chromaQPOffset = slice->getPPS()->getChromaCbQpOffset() + slice->getSliceQpDeltaCb();
   qpc = Clip3( 0, 57, sliceQP + chromaQPOffset);
-  weight = pow( 2.0, (sliceQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCbDistortionWeight(weight);
+  weight[0] = pow( 2.0, (sliceQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCbDistortionWeight(weight[0]);
 
   chromaQPOffset = slice->getPPS()->getChromaCrQpOffset() + slice->getSliceQpDeltaCr();
   qpc = Clip3( 0, 57, sliceQP + chromaQPOffset);
-  weight = pow( 2.0, (sliceQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCrDistortionWeight(weight);
+  weight[1] = pow( 2.0, (sliceQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCrDistortionWeight(weight[1]);
 
+  const Double lambdaArray[3] = {lambda, (lambda / weight[0]), (lambda / weight[1])};
+  
 #if RDOQ_CHROMA_LAMBDA 
   // for RDOQ
-  m_pcTrQuant->setLambda( lambda, lambda / weight );
+  m_pcTrQuant->setLambdas( lambdaArray );
 #else
   m_pcTrQuant->setLambda( lambda );
 #endif
 
   // For SAO
-  slice   ->setLambda( lambda, lambda / weight );
+  slice->setLambdas( lambdaArray );
 }
 // ====================================================================================================================
 // Public member functions
@@ -551,28 +555,29 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
     // for RDO
     // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
     Int iQP = m_piRdPicQp    [uiQpIdx];
-    Double weight = 1.0;
+    Double weight[2] = { 1.0, 1.0 };
     Int qpc;
     Int chromaQPOffset;
 
     chromaQPOffset = pcSlice->getPPS()->getChromaCbQpOffset() + pcSlice->getSliceQpDeltaCb();
     qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-    weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-    m_pcRdCost->setCbDistortionWeight(weight);
+    weight[0] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+    m_pcRdCost->setCbDistortionWeight(weight[0]);
 
     chromaQPOffset = pcSlice->getPPS()->getChromaCrQpOffset() + pcSlice->getSliceQpDeltaCr();
     qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-    weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-    m_pcRdCost->setCrDistortionWeight(weight);
+    weight[1] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+    m_pcRdCost->setCrDistortionWeight(weight[1]);
 
+    const Double lambdaArray[3] = {m_pdRdPicLambda[uiQpIdx], (m_pdRdPicLambda[uiQpIdx] / weight[0]), (m_pdRdPicLambda[uiQpIdx] / weight[1])};
 #if RDOQ_CHROMA_LAMBDA 
     // for RDOQ
-    m_pcTrQuant   ->setLambda( m_pdRdPicLambda[uiQpIdx], m_pdRdPicLambda[uiQpIdx] / weight );
+    m_pcTrQuant->setLambdas( lambdaArray );
 #else
     m_pcTrQuant   ->setLambda              ( m_pdRdPicLambda[uiQpIdx] );
 #endif
     // For SAO
-    pcSlice       ->setLambda              ( m_pdRdPicLambda[uiQpIdx], m_pdRdPicLambda[uiQpIdx] / weight ); 
+    pcSlice->setLambdas( lambdaArray );
     
     // try compress
     compressSlice   ( rpcPic );
@@ -601,28 +606,29 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
   m_pcRdCost    ->setLambda              ( m_pdRdPicLambda[uiQpIdxBest] );
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
   Int iQP = m_piRdPicQp    [uiQpIdxBest];
-  Double weight = 1.0;
+  Double weight[2] = { 1.0, 1.0 };
   Int qpc;
   Int chromaQPOffset;
 
   chromaQPOffset = pcSlice->getPPS()->getChromaCbQpOffset() + pcSlice->getSliceQpDeltaCb();
   qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-  weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCbDistortionWeight(weight);
+  weight[0] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCbDistortionWeight(weight[0]);
 
   chromaQPOffset = pcSlice->getPPS()->getChromaCrQpOffset() + pcSlice->getSliceQpDeltaCr();
   qpc = Clip3( 0, 57, iQP + chromaQPOffset);
-  weight = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-  m_pcRdCost->setCrDistortionWeight(weight);
+  weight[1] = pow( 2.0, (iQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+  m_pcRdCost->setCrDistortionWeight(weight[1]);
 
+  const Double lambdaArray[3] = {m_pdRdPicLambda[uiQpIdxBest], (m_pdRdPicLambda[uiQpIdxBest] / weight[0]), (m_pdRdPicLambda[uiQpIdxBest] / weight[1])};
 #if RDOQ_CHROMA_LAMBDA 
   // for RDOQ 
-  m_pcTrQuant   ->setLambda( m_pdRdPicLambda[uiQpIdxBest], m_pdRdPicLambda[uiQpIdxBest] / weight ); 
+  m_pcTrQuant->setLambdas( lambdaArray );
 #else
   m_pcTrQuant   ->setLambda              ( m_pdRdPicLambda[uiQpIdxBest] );
 #endif
   // For SAO
-  pcSlice       ->setLambda              ( m_pdRdPicLambda[uiQpIdxBest], m_pdRdPicLambda[uiQpIdxBest] / weight ); 
+  pcSlice->setLambdas( lambdaArray );
 }
 
 /** \param rpcPic   picture class
@@ -932,7 +938,8 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if RDOQ_CHROMA_LAMBDA
           // set lambda for RDOQ
           Double weight=m_pcRdCost->getChromaWeight();
-          m_pcTrQuant->setLambda( estLambda, estLambda / weight );
+          const Double lambdaArray[3] = { estLambda, (estLambda / weight), (estLambda / weight) };
+          m_pcTrQuant->setLambdas( lambdaArray );
 #else
           m_pcTrQuant->setLambda( estLambda );
 #endif
