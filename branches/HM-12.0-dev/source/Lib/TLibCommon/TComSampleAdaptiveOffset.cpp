@@ -111,12 +111,20 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
     m_offsetClipTable[compIdx] = NULL;
   }
   m_signTable = NULL; 
+
+  
+  m_lineBufWidth = 0;
+  m_signLineBuf1 = NULL;
+  m_signLineBuf2 = NULL;
 }
 
 
 TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
 {
   destroy();
+  
+  if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
+  if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
 
 Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth )
@@ -208,7 +216,7 @@ Void TComSampleAdaptiveOffset::destroy()
 
 Void TComSampleAdaptiveOffset::invertQuantOffsets(Int compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets)
 {
-  static Int codedOffset[MAX_NUM_SAO_CLASSES];
+  Int codedOffset[MAX_NUM_SAO_CLASSES];
 
   ::memcpy(codedOffset, srcOffsets, sizeof(Int)*MAX_NUM_SAO_CLASSES);
   ::memset(dstOffsets, 0, sizeof(Int)*MAX_NUM_SAO_CLASSES);
@@ -351,20 +359,15 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
                                           , Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                                           , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail)
 {
-  //static memory
-  static Int lineBufWidth = 0;
-  static Char* signLineBuf1; 
-  static Char* signLineBuf2; 
-  if(lineBufWidth != m_maxCUWidth)
+  if(m_lineBufWidth != m_maxCUWidth)
   {
-    lineBufWidth = m_maxCUWidth;
-
-    if(signLineBuf1) delete[] signLineBuf1; signLineBuf1 = NULL;
-    signLineBuf1 = new Char[lineBufWidth+1]; 
-
-    if(signLineBuf2) delete[] signLineBuf2; signLineBuf2 = NULL;
-    signLineBuf2 = new Char[lineBufWidth+1]; 
-
+    m_lineBufWidth = m_maxCUWidth;
+    
+    if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
+    m_signLineBuf1 = new Char[m_lineBufWidth+1];
+    
+    if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
+    m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
 
   Int* offsetClip = m_offsetClip[compIdx];
@@ -403,7 +406,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
   case SAO_TYPE_EO_90:
     {
       offset += 2;
-      Char *signUpLine = signLineBuf1;
+      Char *signUpLine = m_signLineBuf1;
 
       startY = isAboveAvail ? 0 : 1;
       endY   = isBelowAvail ? height : height-1;
@@ -443,8 +446,8 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
       offset += 2;
       Char *signUpLine, *signDownLine, *signTmpLine;
 
-      signUpLine  = signLineBuf1;
-      signDownLine= signLineBuf2;
+      signUpLine  = m_signLineBuf1;
+      signDownLine= m_signLineBuf2;
 
       startX = isLeftAvail ? 0 : 1 ;
       endX   = isRightAvail ? width : (width-1);
@@ -507,7 +510,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
   case SAO_TYPE_EO_45:
     {
       offset += 2;
-      Char *signUpLine = signLineBuf1+1;
+      Char *signUpLine = m_signLineBuf1+1;
 
       startX = isLeftAvail ? 0 : 1;
       endX   = isRightAvail ? width : (width -1);
