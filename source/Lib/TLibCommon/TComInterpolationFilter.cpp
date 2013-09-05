@@ -111,7 +111,7 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
   else if ( isFirst )
   {
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    const Int shift = std::max<Int>(4, (IF_INTERNAL_PREC - bitDepth));
+    const Int shift = std::max<Int>(2, (IF_INTERNAL_PREC - bitDepth));
 #else
     Int shift = IF_INTERNAL_PREC - bitDepth;
 #endif
@@ -131,7 +131,7 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
   else
   {
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    const Int shift = std::max<Int>(4, (IF_INTERNAL_PREC - bitDepth));
+    const Int shift = std::max<Int>(2, (IF_INTERNAL_PREC - bitDepth));
 #else
     Int shift = IF_INTERNAL_PREC - bitDepth;
 #endif

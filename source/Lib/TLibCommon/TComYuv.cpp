@@ -340,7 +340,7 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
     const UInt  iDstStride  = getStride(ch);
     const Int   clipbd = g_bitDepth[toChannelType(ch)];
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    const Int   shiftNum = std::max<Int>(4, (IF_INTERNAL_PREC - clipbd)) + 1;
+    const Int   shiftNum = std::max<Int>(2, (IF_INTERNAL_PREC - clipbd)) + 1;
     const Int   offset = ( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS;
 #else
     const Int   shiftNum = IF_INTERNAL_PREC + 1 - clipbd;
