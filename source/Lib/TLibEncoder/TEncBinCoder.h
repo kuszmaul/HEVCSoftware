@@ -35,8 +35,8 @@
     \brief    binary entropy encoder interface
 */
 
-#ifndef __TENC_BIN_CODER__
-#define __TENC_BIN_CODER__
+#ifndef __TENCBINCODER__
+#define __TENCBINCODER__
 
 #include "TLibCommon/ContextModel.h"
 #include "TLibCommon/TComBitStream.h"

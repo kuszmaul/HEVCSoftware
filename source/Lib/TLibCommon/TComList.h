@@ -35,8 +35,8 @@
     \brief    general list class (header)
 */
 
-#ifndef _TCOMLIST_
-#define _TCOMLIST_
+#ifndef __TCOMLIST__
+#define __TCOMLIST__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -58,7 +58,7 @@ using namespace std;
 
 /// list template
 template< class C >
-class TComList : public std::list< C >
+class TComList : public std::list< C > // NOTE: RExt - should not inherit from STL classes
 {
 public:
   typedef typename std::list<C>::iterator TComIterator;
@@ -106,7 +106,7 @@ public:
   
   TComIterator find( const C& rcT ) // leszek
   {
-    return find( this->begin(), this->end(), rcT );
+    return std::list< C >::find( this->begin(), this->end(), rcT );
   }
 };
 

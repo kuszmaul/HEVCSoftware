@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CALCULATE_LAMBDA_MODIFIER_H
-#define CALCULATE_LAMBDA_MODIFIER_H
+#ifndef __GUESSLAMBDAMODIFIERS__
+#define __GUESSLAMBDAMODIFIERS__
 
 #include "RuntimeError.h"
 #include <vector>
