@@ -1157,6 +1157,9 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
     setQPforQuant   ( cQP, pcCU->getQP( 0 ), chType, pcCU->getSlice()->getSPS()->getQpBDOffset(chType), pcCU->getSlice()->getPPS()->getQpOffset(compID)+ pcCU->getSlice()->getSliceChromaQpDelta(compID), chFmt, useTransformSkip );
 
     Int    tmpResi   [ MAX_CU_SIZE*MAX_CU_SIZE ];
+#if defined DEBUG_STRING
+    TCoeff tmpTransformedDequantised  [ MAX_CU_SIZE*MAX_CU_SIZE ];
+#endif
     Int    resiDiff;
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
@@ -1193,7 +1196,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
           m_pcTrQuant->transformSkipQuantOneSample(rTu, compID, resiDiff, pcCoeff, uiPos, cQP);
 
           TCoeff deQuantSample;
-          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos);
+          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[ uiPos ]));
           if (deQuantSample != 0)
           {
             uiAbsSum++;
@@ -1237,7 +1240,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
           m_pcTrQuant->transformSkipQuantOneSample(rTu, compID, resiDiff, pcCoeff, uiPos, cQP);
 
           TCoeff deQuantSample;
-          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos);
+          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[ uiPos ]));
 
           if (deQuantSample != 0)
           {
@@ -1256,6 +1259,18 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
         }
       }
     }
+
+#if defined DEBUG_STRING
+    {
+      std::stringstream ss(stringstream::out);
+      printBlockToStream(ss, (compID==0)?"###InvTran ip Ch0: " : ((compID==1)?"###InvTran ip Ch1: ":"###InvTran ip Ch2: "), pcCoeff, uiWidth, uiHeight, uiWidth);
+      printBlockToStream(ss, "###InvTran deq: ",  tmpTransformedDequantised, uiWidth, uiHeight, uiWidth);
+      printBlockToStream(ss, "###InvTran resi: ", piResi, uiWidth, uiHeight, uiStride);
+      sDebug+=ss.str();
+      sDebug+="(TS)\n";
+    }
+#endif
+
 
   //set the CBF
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -1390,11 +1405,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
 
     if (DEBUG_STRING_CHANNEL_CONDITION(compID))
     {
-#if RExt__NRCE2_RESIDUAL_DPCM
-      ss << "###: SDH = " << SDH << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << " CU: " << pcCU->getAddr() << std::endl;
-#else
-      ss << "###: " << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << " CU: " << pcCU->getAddr() << std::endl;
-#endif
+      ss << "###: " << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << std::endl;
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
         ss << "###: ";
@@ -3772,7 +3783,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv
   cMvd.setVer(cMv.getVer());
   pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
 
-  // no valid intra BV 
+  // no valid intra BV
   if (cMv.getHor() == 0 && cMv.getVer() == 0)
   {
     return false;
@@ -5931,11 +5942,25 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     TComTURecurse tuRecurseChild(rTu, false);
     const UInt uiQPartNumSubdiv = tuRecurseChild.GetAbsPartIdxNumParts();
 
-    DEBUG_STRING_NEW(sSplitString)
+    DEBUG_STRING_NEW(sSplitString[MAX_NUM_COMPONENT])
 
     do
     {
-      xEstimateResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(sSplitString));
+      DEBUG_STRING_NEW(childString)
+      xEstimateResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(childString));
+#ifdef DEBUG_STRING
+      // split the string by component and append to the relevant output (because decoder decodes in channel order, whereas this search searches by TU-order)
+      std::size_t lastPos=0;
+      const std::size_t endStrng=childString.find(debug_reorder_data_token[MAX_NUM_COMPONENT], lastPos);
+      for(UInt ch = 0; ch < numValidComp; ch++)
+      {
+        if (lastPos!=std::string::npos && childString.find(debug_reorder_data_token[ch], lastPos)==lastPos) lastPos+=strlen(debug_reorder_data_token[ch]); // skip leading string
+        std::size_t pos=childString.find(debug_reorder_data_token[ch+1], lastPos);
+        if (pos!=std::string::npos && pos>endStrng) lastPos=endStrng;
+        sSplitString[ch]+=childString.substr(lastPos, (pos==std::string::npos)? std::string::npos : (pos-lastPos) );
+        lastPos=pos;
+      }
+#endif
     }
     while ( tuRecurseChild.nextSection(rTu) ) ;
 
@@ -5977,7 +6002,13 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
       rdCost += dSubdivCost;
       ruiBits += uiSubdivBits;
       ruiDist += uiSubdivDist;
-      DEBUG_STRING_APPEND(sDebug, sSplitString)
+#ifdef DEBUG_STRING
+      for(UInt ch = 0; ch < numValidComp; ch++)
+      {
+        DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[ch])
+        DEBUG_STRING_APPEND(sDebug, sSplitString[ch])
+      }
+#endif
     }
     else
     {
@@ -5993,6 +6024,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
       {
         const ComponentID compID=ComponentID(ch);
 
+        DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[ch])
         if (rTu.ProcessComponentSection(compID))
         {
           DEBUG_STRING_APPEND(sDebug, sSingleStringComp[compID])
@@ -6042,7 +6074,20 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     rdCost  += dSingleCost;
     ruiBits += uiSingleBits;
     ruiDist += uiSingleDist;
+#ifdef DEBUG_STRING
+    for(UInt ch = 0; ch < numValidComp; ch++)
+    {
+      const ComponentID compID=ComponentID(ch);
+      DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[compID])
+
+      if (rTu.ProcessComponentSection(compID))
+      {
+        DEBUG_STRING_APPEND(sDebug, sSingleStringComp[compID])
+      }
+    }
+#endif
   }
+  DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[MAX_NUM_COMPONENT])
 }
 
 
