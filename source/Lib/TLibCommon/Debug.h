@@ -46,6 +46,10 @@
 #include <sstream>
 #include <TLibCommon/CommonDef.h>
 
+#ifdef DEBUG_STRING
+extern const char *debug_reorder_data_token[MAX_NUM_COMPONENT+1];
+#endif
+
 // ---------------------------------------------------------------------------------------------- //
 
 //constant print-out macro

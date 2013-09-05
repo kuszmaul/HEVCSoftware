@@ -1915,10 +1915,8 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #if defined DEBUG_STRING
       if (psDebug)
       {
-        Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
         std::stringstream ss(stringstream::out);
         printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
-        ss << "TransShift=" << iTransformShift << "\n";
         (*psDebug)+=ss.str();
         (*psDebug)+="(TS)\n";
       }
@@ -3593,7 +3591,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
 #endif
 }
 
-Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos )
+Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos DEBUG_STRING_PASS_INTO(TCoeff &transformedDequantisedSample) )
 {
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
@@ -3731,6 +3729,9 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   }
 
   // Inverse transform-skip
+#if defined DEBUG_STRING
+  transformedDequantisedSample = tmpCoef;
+#endif
 
   Int offset;
   if (iTransformShift >= 0)

@@ -850,11 +850,14 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
   {
     const ComponentID compID=ComponentID(ch);
     Pel*    pResi = m_ppcYuvResi[uiDepth]->getAddr(compID);
+    DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[compID])
 
     // NOTE RExt - setQPForQuant was called here, but it has now been placed at the lowest level of decoding.
 
     m_pcTrQuant->invRecurTransformNxN ( compID, pResi, m_ppcYuvResi[uiDepth]->getStride(compID), tuRecur );
   }
+
+  DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[MAX_NUM_COMPONENT])
 }
 
 /** Function for deriving reconstructed luma/chroma samples of a PCM mode CU.

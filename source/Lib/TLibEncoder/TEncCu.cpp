@@ -1643,6 +1643,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if RExt__N0256_INTRA_BLOCK_COPY
 Void TEncCu::xCheckRDCostIntraBC( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug))
 {
+  DEBUG_STRING_NEW(sTest)
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
@@ -1664,6 +1665,25 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU
   {
     m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false DEBUG_STRING_PASS_INTO(sTest) );
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+
+#if defined DEBUG_STRING
+#if defined DEBUG_INTER_CODING_PRED
+    {
+      std::stringstream ss(std::stringstream::out);
+      printBlockToStream(ss, "###inter-pred: ", *(m_ppcPredYuvTemp[uiDepth]));
+      std::string debugTmp;
+      debugTmp=ss.str();
+      sTest=debugTmp+sTest;
+    }
+#endif
+#if defined DEBUG_INTER_CODING_RECON
+    {
+      std::stringstream ss(std::stringstream::out);
+      printBlockToStream(ss, "###inter-reco: ", *(m_ppcRecoYuvTemp[uiDepth]));
+      sTest+=ss.str();
+    }
+#endif
+#endif
   
     xCheckDQP( rpcTempCU );
     xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
