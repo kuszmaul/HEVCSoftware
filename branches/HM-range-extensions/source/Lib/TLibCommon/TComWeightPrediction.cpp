@@ -90,7 +90,7 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
     const Int  offset   = wp0[compID].offset;
     const Int  clipBD   = g_bitDepth[toChannelType(compID)];
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    const Int  shiftNum = std::max<Int>(4, (IF_INTERNAL_PREC - clipBD));
+    const Int  shiftNum = std::max<Int>(2, (IF_INTERNAL_PREC - clipBD));
 #else
     const Int  shiftNum = IF_INTERNAL_PREC - clipBD;
 #endif
@@ -152,7 +152,7 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
     const Int  offset      = wp0[compID].offset;
     const Int  clipBD      = g_bitDepth[toChannelType(compID)];
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-    const Int  shiftNum    = std::max<Int>(4, (IF_INTERNAL_PREC - clipBD));
+    const Int  shiftNum    = std::max<Int>(2, (IF_INTERNAL_PREC - clipBD));
 #else
     const Int  shiftNum    = IF_INTERNAL_PREC - clipBD;
 #endif
