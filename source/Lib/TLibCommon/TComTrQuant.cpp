@@ -4350,10 +4350,10 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
   cu->setInterRdpcmModeSubParts(bestRdpcmMode, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
 #endif
 
-  if(bestRdpcmMode == DPCM_OFF && m_useRDOQTS)
+  if(bestRdpcmMode == DPCM_OFF)
   {
     uiAcSum = 0;
-    xRateDistOptQuant( rTu, pSrc, pDes, 
+    xQuant( rTu, pSrc, pDes,
 #if ADAPTIVE_QP_SELECTION
       pArlDes, 
 #endif
