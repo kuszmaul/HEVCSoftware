@@ -237,6 +237,11 @@ Void TAppDecTop::xInitDecLib()
  */
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 {
+  if (pcListPic->empty())
+  {
+    return;
+  }
+
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
   
@@ -377,7 +382,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
  */
 Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 {
-  if(!pcListPic)
+  if(!pcListPic || pcListPic->empty())
   {
     return;
   }
