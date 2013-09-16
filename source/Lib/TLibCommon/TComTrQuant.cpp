@@ -2178,7 +2178,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
 
   if (iTransformShift >= 0)
   {
-    const Int offset = 1 << (iTransformShift - 1);
+    const TCoeff offset = iTransformShift==0 ? 0 : (1 << (iTransformShift - 1));
 
     for (Int y = 0; y < height; y++)
     {
@@ -3733,10 +3733,9 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   transformedDequantisedSample = tmpCoef;
 #endif
 
-  Int offset;
   if (iTransformShift >= 0)
   {
-    offset = 1 << (iTransformShift - 1);
+    TCoeff offset = iTransformShift==0 ? 0 : (1 << (iTransformShift - 1));
     deQuantSample =  ( tmpCoef + offset ) >> iTransformShift;
   }
   else //for very high bit depths
