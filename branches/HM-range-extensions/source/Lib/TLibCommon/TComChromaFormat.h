@@ -140,7 +140,7 @@ static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
 static inline Bool filterIntraReferenceSamples (const ChannelType chType, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled)
 {
-  return intraReferenceSmoothingDisabled && (isLuma(chType) || (chFmt == CHROMA_444));
+  return (!intraReferenceSmoothingDisabled) && (isLuma(chType) || (chFmt == CHROMA_444));
 }
 #else
 static inline Bool filterIntraReferenceSamples (const ChannelType chType, const ChromaFormat chFmt)
