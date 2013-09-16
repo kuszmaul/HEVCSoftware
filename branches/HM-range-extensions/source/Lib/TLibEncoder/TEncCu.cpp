@@ -1526,10 +1526,10 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
-    UInt SAD = m_pcRdCost->getSADPart( g_bitDepth[CHANNEL_TYPE_LUMA], m_ppcPredYuvTemp[uhDepth]->getAddr(COMPONENT_Y), m_ppcPredYuvTemp[uhDepth]->getStride(COMPONENT_Y),
+    Distortion SAD = m_pcRdCost->getSADPart( g_bitDepth[CHANNEL_TYPE_LUMA], m_ppcPredYuvTemp[uhDepth]->getAddr(COMPONENT_Y), m_ppcPredYuvTemp[uhDepth]->getStride(COMPONENT_Y),
       m_ppcOrigYuv[uhDepth]->getAddr(COMPONENT_Y), m_ppcOrigYuv[uhDepth]->getStride(COMPONENT_Y),
       rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_temporalSAD = (Int)SAD;
+    m_temporalSAD = SAD;
   }
 #endif
 
