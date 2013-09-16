@@ -124,11 +124,11 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       else
       {
         dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
-        dRdCost = (Double)(UInt)floor(dRdCost);
+        dRdCost = (Double)(Distortion)floor(dRdCost);
       }
 #else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
-      dRdCost = (Double)(UInt)floor(dRdCost);
+      dRdCost = (Double)(Distortion)floor(dRdCost);
 #endif
     }
     else
@@ -144,11 +144,11 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       else
       {
         dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
-        dRdCost = (Double)(UInt)floor(dRdCost);
+        dRdCost = (Double)(Distortion)floor(dRdCost);
       }
 #else
       dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
-      dRdCost = (Double)(UInt)floor(dRdCost);
+      dRdCost = (Double)(Distortion)floor(dRdCost);
 #endif
 #endif
     }
@@ -225,11 +225,11 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       else
       {
         dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
-        dRdCost = (Double)(UInt)floor(dRdCost);
+        dRdCost = (Double)(UInt64)floor(dRdCost);
       }
 #else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
-      dRdCost = (Double)(UInt)floor(dRdCost);
+      dRdCost = (Double)(UInt64)floor(dRdCost);
 #endif
     }
     else
@@ -245,11 +245,11 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       else
       {
         dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
-        dRdCost = (Double)(UInt)floor(dRdCost);
+        dRdCost = (Double)(UInt64)floor(dRdCost);
       }
 #else
       dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
-      dRdCost = (Double)(UInt)floor(dRdCost);
+      dRdCost = (Double)(UInt64)floor(dRdCost);
 #endif
 #endif
     }
@@ -611,9 +611,9 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
 }
 
 #if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-UInt TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height )
+Distortion TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height )
 {
-  UInt SAD = 0;
+  Distortion SAD = 0;
   Int shift = DISTORTION_PRECISION_ADJUSTMENT(bitDepth-8);
   for ( Int i=0; i<height; i++ )
   {

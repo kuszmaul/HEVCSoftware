@@ -1020,10 +1020,10 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       if ( m_pcCfg->getUseRateCtrl() )
       {
 #if !M0036_RC_IMPROVEMENT
-        UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
-        Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
-        Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
-        Double MAD = (Double)SAD / (Double)(height * width);
+        Distortion SAD = m_pcCuEncoder->getLCUPredictionSAD();
+        Int height     = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
+        Int width      = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
+        Double MAD     = (Double)SAD / (Double)(height * width);
         MAD = MAD * MAD;
         ( m_pcRateCtrl->getRCPic()->getLCU(uiCUAddr) ).m_MAD = MAD;
 #endif
@@ -1098,10 +1098,10 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       if ( m_pcCfg->getUseRateCtrl() )
       {
 #if !M0036_RC_IMPROVEMENT
-        UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
-        Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
-        Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
-        Double MAD = (Double)SAD / (Double)(height * width);
+        Distortion SAD = m_pcCuEncoder->getLCUPredictionSAD();
+        Int height     = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
+        Int width      = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
+        Double MAD     = (Double)SAD / (Double)(height * width);
         MAD = MAD * MAD;
         ( m_pcRateCtrl->getRCPic()->getLCU(uiCUAddr) ).m_MAD = MAD;
 #endif

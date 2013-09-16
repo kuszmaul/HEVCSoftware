@@ -99,9 +99,9 @@ private:
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
 #if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  UInt                    m_LCUPredictionSAD;
+  Distortion              m_LCUPredictionSAD;
   Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
+  Distortion              m_temporalSAD;
 #endif
 public:
   /// copy parameters from encoder class
@@ -121,7 +121,7 @@ public:
 
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 #if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
+  Distortion getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
 #if RATE_CONTROL_INTRA
   Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
