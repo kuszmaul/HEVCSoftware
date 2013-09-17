@@ -31,10 +31,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SEI__
+#define __SEI__
+
 #pragma once
 #include <list>
 #include <vector>
 #include <cstring>
+
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -71,6 +77,9 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
+#if RExt__M0042_NO_DISPLAY_SEI
+    NO_DISPLAY                           = 135,
+#endif
   };
   
   SEI() {}
@@ -78,6 +87,8 @@ public:
   
   virtual PayloadType payloadType() const = 0;
 };
+
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: RExt - new definition
 
 class SEIuserDataUnregistered : public SEI
 {
@@ -93,8 +104,8 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
+  UChar uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  UInt  userDataLength;
   UChar *userData;
 };
 
@@ -114,7 +125,7 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComDigest m_digest;
 };
 
 class SEIActiveParameterSets : public SEI 
@@ -312,6 +323,21 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
+#if RExt__M0042_NO_DISPLAY_SEI
+class SEINoDisplay : public SEI
+{
+public:
+  PayloadType payloadType() const { return NO_DISPLAY; }
+
+  SEINoDisplay()
+    : m_noDisplay(false)
+  {}
+  virtual ~SEINoDisplay() {}
+
+  Bool m_noDisplay;
+};
+#endif
+
 class SEISOPDescription : public SEI
 {
 public:
@@ -402,5 +428,7 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+#endif
 
 //! \}

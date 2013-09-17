@@ -491,7 +491,7 @@ namespace df
       scanFile(opts, cfgstream);
     }
 
-  };
-};
+  }
+}
 
 //! \}
