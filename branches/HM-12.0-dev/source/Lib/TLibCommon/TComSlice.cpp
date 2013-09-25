@@ -1816,7 +1816,7 @@ Void TComSlice::setDefaultScalingList()
   {
     for(UInt listId=0;listId<g_scalingListNum[sizeId];listId++)
     {
-      getScalingList()->processDefaultMarix(sizeId, listId);
+      getScalingList()->processDefaultMatrix(sizeId, listId);
     }
   }
 }
@@ -1991,7 +1991,7 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
  * \param sizeId size index
  * \param Index of input matrix
  */
-Void TComScalingList::processDefaultMarix(UInt sizeId, UInt listId)
+Void TComScalingList::processDefaultMatrix(UInt sizeId, UInt listId)
 {
   ::memcpy(getScalingListAddress(sizeId, listId),getScalingListDefaultAddress(sizeId,listId),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]));
   setScalingListDC(sizeId,listId,SCALING_LIST_DC);
@@ -2008,7 +2008,7 @@ Void TComScalingList::checkDcOfMatrix()
       //check default matrix?
       if(getScalingListDC(sizeId,listId) == 0)
       {
-        processDefaultMarix(sizeId, listId);
+        processDefaultMatrix(sizeId, listId);
       }
     }
   }
