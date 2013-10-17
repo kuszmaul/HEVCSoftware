@@ -532,7 +532,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         else
         {
-          pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TLA_R);
+          pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TSA_R);
         }
       }
       else if(pcSlice->isStepwiseTemporalLayerSwitchingPointCandidate(rcListPic))
@@ -2109,7 +2109,7 @@ static const Char* nalUnitTypeToString(NalUnitType type)
   {
     case NAL_UNIT_CODED_SLICE_TRAIL_R:    return "TRAIL_R";
     case NAL_UNIT_CODED_SLICE_TRAIL_N:    return "TRAIL_N";
-    case NAL_UNIT_CODED_SLICE_TLA_R:      return "TLA_R";
+    case NAL_UNIT_CODED_SLICE_TSA_R:      return "TSA_R";
     case NAL_UNIT_CODED_SLICE_TSA_N:      return "TSA_N";
     case NAL_UNIT_CODED_SLICE_STSA_R:     return "STSA_R";
     case NAL_UNIT_CODED_SLICE_STSA_N:     return "STSA_N";
