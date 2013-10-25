@@ -55,9 +55,9 @@ TComPic::TComPic()
 , m_bReconstructed                        (false)
 , m_bNeededForOutput                      (false)
 , m_uiCurrSliceIdx                        (0)
+#if !HM_CLEANUP_SAO
 , m_pSliceSUMap                           (NULL)
 , m_pbValidSlice                          (NULL)
-#if !HM_CLEANUP_SAO
 , m_sliceGranularityForNDBFilter          (0)
 , m_bIndependentSliceBoundaryForNDBFilter (false)
 , m_bIndependentTileBoundaryForNDBFilter  (false)

@@ -68,9 +68,9 @@ private:
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
+#if !HM_CLEANUP_SAO
   Int*                  m_pSliceSUMap;
   Bool*                 m_pbValidSlice;
-#if !HM_CLEANUP_SAO
   Int                   m_sliceGranularityForNDBFilter;
   Bool                  m_bIndependentSliceBoundaryForNDBFilter;
   Bool                  m_bIndependentTileBoundaryForNDBFilter;
