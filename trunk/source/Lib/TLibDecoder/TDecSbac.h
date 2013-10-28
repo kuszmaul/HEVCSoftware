@@ -85,8 +85,13 @@ public:
   Void  parseSaoMerge         ( UInt&  ruiVal   );
   Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
   Void  parseSaoUflc              ( UInt uiLength, UInt& ruiVal     );
+#if HM_CLEANUP_SAO
+  Void parseSAOBlkParam (SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail);
+  Void parseSaoSign(UInt& val);
+#else
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, UInt compIdx);
+#endif
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );

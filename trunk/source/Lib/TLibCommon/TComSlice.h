@@ -156,7 +156,7 @@ public:
   Void     setRefMatrixId                 (UInt sizeId, UInt listId, UInt u)   { m_refMatrixId[sizeId][listId] = u;    }     //!< set reference matrix ID
   UInt     getRefMatrixId                 (UInt sizeId, UInt listId)           { return m_refMatrixId[sizeId][listId]; }     //!< get reference matrix ID
   Int*     getScalingListDefaultAddress   (UInt sizeId, UInt listId);                                                        //!< get default matrix coefficient
-  Void     processDefaultMarix            (UInt sizeId, UInt listId);
+  Void     processDefaultMatrix            (UInt sizeId, UInt listId);
   Void     setScalingListDC               (UInt sizeId, UInt listId, UInt u)   { m_scalingListDC[sizeId][listId] = u; }      //!< set DC value
 
   Int      getScalingListDC               (UInt sizeId, UInt listId)           { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
@@ -1162,13 +1162,7 @@ private:
   UInt        m_colRefIdx;
   UInt        m_maxNumMergeCand;
 
-
-#if SAO_CHROMA_LAMBDA
-  Double      m_dLambdaLuma;
-  Double      m_dLambdaChroma;
-#else
-  Double      m_dLambda;
-#endif
+  Double      m_lambdas[3];
 
   Bool        m_abEqualRef  [2][MAX_NUM_REF][MAX_NUM_REF];
   UInt        m_uiTLayer;
@@ -1305,11 +1299,7 @@ public:
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
   
-#if FIX1071
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr = false );
-#else
-  Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
-#endif
   Void      setRefPOCList       ();
   Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }
@@ -1320,14 +1310,8 @@ public:
   Bool      isInterB        ()                          { return  m_eSliceType == B_SLICE;  }
   Bool      isInterP        ()                          { return  m_eSliceType == P_SLICE;  }
   
-#if SAO_CHROMA_LAMBDA  
-  Void      setLambda( Double d, Double e ) { m_dLambdaLuma = d; m_dLambdaChroma = e;}
-  Double    getLambdaLuma() { return m_dLambdaLuma;        }
-  Double    getLambdaChroma() { return m_dLambdaChroma;        }
-#else
-  Void      setLambda( Double d ) { m_dLambda = d; }
-  Double    getLambda() { return m_dLambda;        }
-#endif
+  Void      setLambdas ( const Double lambdas[3] ) { for (Int component = 0; component < 3; component++) m_lambdas[component] = lambdas[component]; }
+  const Double* getLambdas() const { return m_lambdas; }
   
   Void      initEqualRef();
   Bool      isEqualRef  ( RefPicList e, Int iRefIdx1, Int iRefIdx2 )
@@ -1354,11 +1338,7 @@ public:
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
   Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
-#if FIX1071
   Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
-#else
-  Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet);
-#endif
 
   Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
   UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
