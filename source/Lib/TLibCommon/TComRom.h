@@ -119,9 +119,6 @@ extern       UInt*  g_auiSigLastScan[ 3 ][ MAX_CU_DEPTH ];  // raster index from
 
 extern const UInt   g_uiGroupIdx[ 32 ];
 extern const UInt   g_uiMinInGroup[ 10 ];
-
-extern const UInt   g_auiGoRiceRange[5];                  //!< maximum value coded with Rice codes
-extern const UInt   g_auiGoRicePrefixLen[5];              //!< prefix length for each maximum value
   
 extern const UInt   g_sigLastScan8x8[ 3 ][ 4 ];           //!< coefficient group scan order for 8x8 TUs
 extern       UInt   g_sigLastScanCG32x32[ 64 ];
