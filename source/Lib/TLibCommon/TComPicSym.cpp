@@ -66,9 +66,7 @@ TComPicSym::TComPicSym()
 ,m_puiCUOrderMap(0)
 ,m_puiTileIdxMap(NULL)
 ,m_puiInverseCUOrderMap(NULL)
-#if HM_CLEANUP_SAO
 ,m_saoBlkParams(NULL)
-#endif
 {};
 
 
@@ -125,11 +123,7 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     m_puiInverseCUOrderMap[i] = i;
   }
 
-#if HM_CLEANUP_SAO
   m_saoBlkParams = new SAOBlkParam[m_uiNumCUsInFrame];
-#else
-  m_saoParam = NULL;
-#endif
 }
 
 Void TComPicSym::destroy()
@@ -170,19 +164,10 @@ Void TComPicSym::destroy()
   delete [] m_puiInverseCUOrderMap;
   m_puiInverseCUOrderMap = NULL;
 
-#if HM_CLEANUP_SAO
   if(m_saoBlkParams)
   {
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
-#else
-  if (m_saoParam)
-  {
-    TComSampleAdaptiveOffset::freeSaoParam(m_saoParam);
-    delete m_saoParam;
-    m_saoParam = NULL;
-  }
-#endif
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -322,8 +307,6 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
   return uiNxtCUAddr;
 }
 
-
-#if HM_CLEANUP_SAO
 Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
                                                       Bool& isLeftAvail,
                                                       Bool& isRightAvail,
@@ -431,13 +414,6 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
   }
 
 }
-#else
-Void TComPicSym::allocSaoParam(TComSampleAdaptiveOffset *sao)
-{
-  m_saoParam = new SAOParam;
-  sao->allocSaoParam(m_saoParam);
-}
-#endif
 
 TComTile::TComTile()
 {

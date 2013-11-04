@@ -1381,11 +1381,7 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
   else
   {
     m_pcBinIf->encodeBin( 1, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
-#if HM_CLEANUP_SAO
     m_pcBinIf->encodeBinEP( uiCode == 1 ? 0 : 1 );
-#else
-    m_pcBinIf->encodeBinEP( uiCode <= 4 ? 1 : 0 );
-#endif
   }
 }
 /*!
@@ -1588,7 +1584,6 @@ Void  TEncSbac::loadContexts ( TEncSbac* pScr)
   this->xCopyContextsFrom(pScr);
 }
 
-#if HM_CLEANUP_SAO
 Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
 {
   UInt uiSymbol;
@@ -1701,6 +1696,5 @@ Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
     }
   }
 }
-#endif
 
 //! \}
