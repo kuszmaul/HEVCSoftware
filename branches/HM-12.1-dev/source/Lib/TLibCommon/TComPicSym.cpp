@@ -377,24 +377,24 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
       //above-right
       if(ctuAboveRigtht != NULL)
       {
-        Int curSliceStartTS  = getCUOrderMap(ctuCurr->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
-        Int aboveRigthtSliceStartTS = getCUOrderMap(ctuAboveRigtht->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
+        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
+        Int aboveRigthtSliceStartEncOrder = ctuAboveRigtht->getSlice()->getSliceCurStartCUAddr();
 
-        isAboveRightAvail = (curSliceStartTS == aboveRigthtSliceStartTS)?(true):
+        isAboveRightAvail = (curSliceStartEncOrder == aboveRigthtSliceStartEncOrder)?(true):
           (
-          (curSliceStartTS > aboveRigthtSliceStartTS)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          (curSliceStartEncOrder > aboveRigthtSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
           :(ctuAboveRigtht->getSlice()->getLFCrossSliceBoundaryFlag())
           );          
       }
       //below-left
       if(ctuBelowLeft != NULL)
       {
-        Int curSliceStartTS       = getCUOrderMap(ctuCurr->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
-        Int belowLeftSliceStartTS = getCUOrderMap(ctuBelowLeft->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
+        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
+        Int belowLeftSliceStartEncOrder = ctuBelowLeft->getSlice()->getSliceCurStartCUAddr();
 
-        isBelowLeftAvail = (curSliceStartTS == belowLeftSliceStartTS)?(true):
+        isBelowLeftAvail = (curSliceStartEncOrder == belowLeftSliceStartEncOrder)?(true):
           (
-          (curSliceStartTS > belowLeftSliceStartTS)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          (curSliceStartEncOrder > belowLeftSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
           :(ctuBelowLeft->getSlice()->getLFCrossSliceBoundaryFlag())
           );
       }        
