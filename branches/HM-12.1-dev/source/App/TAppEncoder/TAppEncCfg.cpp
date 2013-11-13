@@ -351,8 +351,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("RDOQ",                          m_useRDOQ,                  true )
   ("RDOQTS",                        m_useRDOQTS,                true )
   ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
-  // Entropy coding parameters
-  ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
   
   // Deblocking filter parameters
   ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
@@ -1447,7 +1445,6 @@ Void TAppEncCfg::xPrintParameter()
   printf("TOOL CFG: ");
   printf("IBD:%d ", g_bitDepthY > m_inputBitDepthY || g_bitDepthC > m_inputBitDepthC);
   printf("HAD:%d ", m_bUseHADME           );
-  printf("SRD:%d ", m_bUseSBACRD          );
   printf("RDQ:%d ", m_useRDOQ            );
   printf("RDQTS:%d ", m_useRDOQTS        );
   printf("RDpenalty:%d ", m_rdPenalty  );

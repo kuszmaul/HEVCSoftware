@@ -96,7 +96,6 @@ private:
   // SBAC RD
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
-  Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
 public:
   /// copy parameters from encoder class
