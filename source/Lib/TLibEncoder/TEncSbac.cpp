@@ -924,11 +924,7 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
 
   const UInt absPartIdx   = rTu.GetAbsPartIdxTU(compID);
   const UInt TUDepth      = rTu.GetTransformDepthRel();
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-        UInt uiCtx        = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
-#else
         UInt uiCtx        = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
-#endif
   const UInt contextSet   = toChannelType(compID);
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -1099,20 +1095,13 @@ Void TEncSbac::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
 }
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType, const Bool useAdjustedDepth )
-#else
 Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
-#endif
 {
   // this function is only used to estimate the bits when cbf is 0
   // and will never be called when writing the bistream. do not need to write log
   UInt uiCbf = 0;
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType, useAdjustedDepth );
-#else
   UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType );
-#endif
+
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
 }
 
@@ -1582,9 +1571,128 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
   else
   {
     m_pcBinIf->encodeBin( 1, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
+#if HM_CLEANUP_SAO
+    m_pcBinIf->encodeBinEP( uiCode == 1 ? 0 : 1 );
+#else
     m_pcBinIf->encodeBinEP( uiCode <= 4 ? 1 : 0 );
+#endif
   }
 }
+
+#if HM_CLEANUP_SAO
+Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
+{
+  UInt uiSymbol;
+  if(!sliceEnabled)
+  {
+    assert(ctbParam.modeIdc == SAO_MODE_OFF);
+    return;
+  }
+
+  //type
+  if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+  {
+    //sao_type_idx_luma or sao_type_idx_chroma
+    if(ctbParam.modeIdc == SAO_MODE_OFF)
+    {
+      uiSymbol =0;
+    }
+    else if(ctbParam.typeIdc == SAO_TYPE_BO) //BO
+    {
+      uiSymbol = 1;
+    }
+    else
+    {
+      assert(ctbParam.typeIdc < SAO_TYPE_START_BO); //EO
+      uiSymbol = 2;
+    }
+    codeSaoTypeIdx(uiSymbol); 
+  }
+
+  if(ctbParam.modeIdc == SAO_MODE_NEW)
+  {
+    Int numClasses = (ctbParam.typeIdc == SAO_TYPE_BO)?4:NUM_SAO_EO_CLASSES; 
+    Int offset[4];
+    Int k=0;
+    for(Int i=0; i< numClasses; i++)
+    {
+      if(ctbParam.typeIdc != SAO_TYPE_BO && i == SAO_CLASS_EO_PLAIN)
+      {
+        continue;
+      }
+      Int classIdx = (ctbParam.typeIdc == SAO_TYPE_BO)?(  (ctbParam.typeAuxInfo+i)% NUM_SAO_BO_CLASSES   ):i;
+      offset[k] = ctbParam.offset[classIdx];
+      k++;
+    }
+
+    for(Int i=0; i< 4; i++)
+    {
+      codeSaoMaxUvlc((offset[i]<0)?(-offset[i]):(offset[i]),  g_saoMaxOffsetQVal[compIdx] ); //sao_offset_abs
+    }
+
+
+    if(ctbParam.typeIdc == SAO_TYPE_BO)
+    {
+      for(Int i=0; i< 4; i++)
+      {
+        if(offset[i] != 0)
+        {
+          codeSAOSign((offset[i]< 0)?1:0);
+        }
+      }
+
+      codeSaoUflc(NUM_SAO_BO_CLASSES_LOG2, ctbParam.typeAuxInfo ); //sao_band_position
+    }
+    else //EO
+    {
+      if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+      {
+        assert(ctbParam.typeIdc - SAO_TYPE_START_EO >=0);
+        codeSaoUflc(NUM_SAO_EO_TYPES_LOG2, ctbParam.typeIdc - SAO_TYPE_START_EO ); //sao_eo_class_luma or sao_eo_class_chroma
+      }
+    }
+
+  }
+}
+
+
+Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
+                              , Bool* sliceEnabled
+                              , Bool leftMergeAvail
+                              , Bool aboveMergeAvail
+                              , Bool onlyEstMergeInfo // = false
+                              )
+{
+
+  Bool isLeftMerge = false;
+  Bool isAboveMerge= false;
+
+  if(leftMergeAvail)
+  {
+    isLeftMerge = ((saoBlkParam[COMPONENT_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[COMPONENT_Y].typeIdc == SAO_MERGE_LEFT));
+    codeSaoMerge( isLeftMerge?1:0  ); //sao_merge_left_flag
+  }
+
+  if( aboveMergeAvail && !isLeftMerge)
+  {
+    isAboveMerge = ((saoBlkParam[COMPONENT_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[COMPONENT_Y].typeIdc == SAO_MERGE_ABOVE)); 
+    codeSaoMerge( isAboveMerge?1:0  ); //sao_merge_left_flag
+  }
+
+  if(onlyEstMergeInfo)
+  {
+    return; //only for RDO
+  }
+
+  if(!isLeftMerge && !isAboveMerge) //not merge mode
+  {
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+    {
+      codeSAOOffsetParam(compIdx, saoBlkParam[compIdx], sliceEnabled[compIdx]);
+    }
+  }
+}
+#endif
 
 /*!
  ****************************************************************************

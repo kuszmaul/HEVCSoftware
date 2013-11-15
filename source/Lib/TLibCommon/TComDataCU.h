@@ -54,6 +54,7 @@
 //! \ingroup TLibCommon
 //! \{
 
+#if !HM_CLEANUP_SAO
 // ====================================================================================================================
 // Non-deblocking in-loop filter processing block data structure
 // ====================================================================================================================
@@ -91,6 +92,7 @@ struct NDBFBlockInfo
   NDBFBlockInfo():tileID(0), sliceID(0), startSU(0), endSU(0) {} //!< constructor
   const NDBFBlockInfo& operator= (const NDBFBlockInfo& src);  //!< "=" operator
 };
+#endif
 
 class TComTU; // forward declaration
 
@@ -152,8 +154,10 @@ private:
 
   Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
 
+#if !HM_CLEANUP_SAO
   Int*           m_piSliceSUMap;       ///< pointer of slice ID map
   std::vector<NDBFBlockInfo> m_vNDFBlock;
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
@@ -407,6 +411,7 @@ public:
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 
+#if !HM_CLEANUP_SAO
   /// get slice ID for SU
   Int           getSUSliceID          (UInt uiIdx)              {return m_piSliceSUMap[uiIdx];      }
 
@@ -421,6 +426,7 @@ public:
                                           ,std::vector<Bool>& LFCrossSliceBoundary
                                           ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
                                           ,Bool bIndependentTileBoundaryEnabled );
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -533,11 +539,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
-#else
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
-#endif
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );

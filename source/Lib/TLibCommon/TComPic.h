@@ -76,12 +76,14 @@ private:
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
+#if !HM_CLEANUP_SAO
   Int*                  m_pSliceSUMap;
   Bool*                 m_pbValidSlice;
   Int                   m_sliceGranularityForNDBFilter;
   Bool                  m_bIndependentSliceBoundaryForNDBFilter;
   Bool                  m_bIndependentTileBoundaryForNDBFilter;
   TComPicYuv*           m_pNDBFilterYuvTmp;    //!< temporary picture buffer when non-cross slice/tile boundary in-loop filtering is enabled
+#endif
   Bool                  m_bCheckLTMSB;
 
   Int                   m_numReorderPics[MAX_TLAYER];
@@ -163,6 +165,9 @@ public:
   Window&       getConformanceWindow()  { return m_conformanceWindow; }
   Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
 
+#if HM_CLEANUP_SAO
+  Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
+#else
   Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
                                         ,std::vector<Bool>* LFCrossSliceBoundary
                                         ,Int  numTiles = 1
@@ -176,6 +181,7 @@ public:
   Bool          getIndependentTileBoundaryForNDBFilter         () const            {return m_bIndependentTileBoundaryForNDBFilter; }
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
+#endif
 
   /* field coding parameters*/
 

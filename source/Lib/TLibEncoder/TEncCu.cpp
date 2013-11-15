@@ -96,11 +96,6 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
   }
 
   m_bEncodeDQP = false;
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  m_LCUPredictionSAD = 0;
-  m_addSADDepth      = 0;
-  m_temporalSAD      = 0;
-#endif
 
   // initialize partition order.
   UInt* piTmp = &g_auiZscanToRaster[0];
@@ -235,12 +230,6 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   // initialize CU data
   m_ppcBestCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
   m_ppcTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
-
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  m_addSADDepth      = 0;
-  m_LCUPredictionSAD = 0;
-  m_temporalSAD      = 0;
-#endif
 
   // analysis of CU
   DEBUG_STRING_NEW(sDebug)
@@ -429,20 +418,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_pcEncCfg->getUseRateCtrl() )
   {
     iMinQP = m_pcRateCtrl->getRCQP();
     iMaxQP = m_pcRateCtrl->getRCQP();
   }
-#else
-  if(m_pcEncCfg->getUseRateCtrl())
-  {
-    Int qp = m_pcRateCtrl->getUnitQP();
-    iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
-    iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
-  }
-#endif
 
   // If slice start or slice end is within this cu...
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
@@ -501,14 +481,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = iMinQP;
       }
     }
-
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-    if ( uiDepth <= m_addSADDepth )
-    {
-      m_LCUPredictionSAD += m_temporalSAD;
-      m_addSADDepth = uiDepth;
-    }
-#endif
 
     if(!earlyDetectionSkipMode)
     {
@@ -743,9 +715,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   else if(!(bSliceEnd && bInsidePicture))
   {
     bBoundary = true;
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-    m_addSADDepth++;
-#endif
   }
 
   // copy orginal YUV samples to PCM buffer
@@ -789,20 +758,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMaxQP = iStartQP;
   }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_pcEncCfg->getUseRateCtrl() )
   {
     iMinQP = m_pcRateCtrl->getRCQP();
     iMaxQP = m_pcRateCtrl->getRCQP();
   }
-#else
-  if(m_pcEncCfg->getUseRateCtrl())
-  {
-    Int qp = m_pcRateCtrl->getUnitQP();
-    iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
-    iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
-  }
-#endif
 
   for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
   {
@@ -1217,7 +1177,6 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   finishCU(pcCU,uiAbsPartIdx,uiDepth);
 }
 
-#if RATE_CONTROL_INTRA
 Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
 {
   Int k, i, j, jj;
@@ -1332,7 +1291,6 @@ Int  TEncCu::updateLCUDataISlice(TComDataCU* pcCU, Int LCUIdx, Int width, Int he
   }
   return(iSumHad);
 }
-#endif
 
 /** check RD costs for a CU block encoded with merge
  * \param rpcBestCU
@@ -1520,16 +1478,6 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   if ( !rpcTempCU->getMergeAMP() )
   {
     return;
-  }
-#endif
-
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
-  {
-    Distortion SAD = m_pcRdCost->getSADPart( g_bitDepth[CHANNEL_TYPE_LUMA], m_ppcPredYuvTemp[uhDepth]->getAddr(COMPONENT_Y), m_ppcPredYuvTemp[uhDepth]->getStride(COMPONENT_Y),
-      m_ppcOrigYuv[uhDepth]->getAddr(COMPONENT_Y), m_ppcOrigYuv[uhDepth]->getStride(COMPONENT_Y),
-      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_temporalSAD = SAD;
   }
 #endif
 

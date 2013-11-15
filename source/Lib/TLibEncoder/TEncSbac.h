@@ -104,6 +104,16 @@ public:
   Void  codeSAOSign          ( UInt  uiCode);  //<! code SAO offset sign
   Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
 
+#if HM_CLEANUP_SAO
+  Void codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
+  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
+                    , Bool* sliceEnabled
+                    , Bool leftMergeAvail
+                    , Bool aboveMergeAvail
+                    , Bool onlyEstMergeInfo = false
+                    );
+#endif
+
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
@@ -144,11 +154,7 @@ public:
   Void codeQtCbf               ( TComTU & rTu, const ComponentID compID );
 #endif
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
-#else
   Void codeQtCbfZero           ( TComTU &rTu, const ChannelType chType );
-#endif
   Void codeQtRootCbfZero       ( TComDataCU* pcCU );
   Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
 

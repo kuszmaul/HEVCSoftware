@@ -156,9 +156,6 @@ extern const UChar  g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize
 
 #define CONTEXT_STATE_BITS             6
 #define LAST_SIGNIFICANT_GROUPS       10
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-#define MAXIMUM_GOLOMB_RICE_PARAMETER  5
-#endif
 
 // ====================================================================================================================
 // Scanning order & context mapping table
@@ -168,11 +165,6 @@ extern const UInt   ctxIndMap4x4[4*4];
 
 extern const UInt   g_uiGroupIdx[ MAX_TU_SIZE ];
 extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
-
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-extern const UInt   g_auiGoRiceRange[MAXIMUM_GOLOMB_RICE_PARAMETER];                  //!< maximum value coded with Rice codes
-extern const UInt   g_auiGoRicePrefixLen[MAXIMUM_GOLOMB_RICE_PARAMETER];              //!< prefix length for each maximum value
-#endif
 
 // ====================================================================================================================
 // ADI table

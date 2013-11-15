@@ -2570,11 +2570,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   }
   else
   {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-    ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, channelType, false );
-#else
     ui16CtxCbf   = pcCU->getCtxQtCbf( rTu, channelType );
-#endif
     ui16CtxCbf  += getCBFContextOffset(compID);
     d64BestCost  = d64BlockUncodedCost + xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 0 ] );
     d64BaseCost += xGetICost( m_pcEstBitsSbac->blockCbpBits[ ui16CtxCbf ][ 1 ] );
@@ -2711,11 +2707,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
             {
               Int64 costUp   = rdFactor * ( - deltaU[uiBlkPos] ) + rateIncUp[uiBlkPos];
               Int64 costDown = rdFactor * (   deltaU[uiBlkPos] ) + rateIncDown[uiBlkPos]
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-                               -   ( abs(piDstCoeff[uiBlkPos])==1?((1<<15)+sigRateDelta[uiBlkPos]):0 );
-#else
-                               -   ( abs(piDstCoeff[uiBlkPos])==1?(sigRateDelta[uiBlkPos]):0 );
-#endif
+                               -   ((abs(piDstCoeff[uiBlkPos]) == 1) ? sigRateDelta[uiBlkPos] : 0);
 
               if(lastCG==1 && lastNZPosInCG==n && abs(piDstCoeff[uiBlkPos])==1)
               {
@@ -2981,11 +2973,7 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&                         rd64
   for( Int uiAbsLevel  = uiMaxAbsLevel; uiAbsLevel >= uiMinAbsLevel ; uiAbsLevel-- )
   {
     Double dErr         = Double( lLevelDouble  - ( Intermediate_Int(uiAbsLevel) << iQBits ) );
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-    Double dCurrCost    = dErr * dErr * dTemp + xGetICRateCost( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16AbsGoRice, c1Idx, c2Idx );
-#else
     Double dCurrCost    = dErr * dErr * dTemp + xGetICost( xGetICRate( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16AbsGoRice, c1Idx, c2Idx ) );
-#endif
     dCurrCost          += dCurrCostSig;
 
     if( dCurrCost < rd64CodedCost )
@@ -3006,11 +2994,7 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&                         rd64
  * \param ui16AbsGoRice Rice parameter for coeff_abs_level_minus3
  * \returns cost of given absolute transform level
  */
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-__inline Double TComTrQuant::xGetICRateCost  ( UInt                            uiAbsLevel,
-#else
 __inline Int TComTrQuant::xGetICRate         ( UInt                            uiAbsLevel,
-#endif
                                                UShort                          ui16CtxNumOne,
                                                UShort                          ui16CtxNumAbs,
                                                UShort                          ui16AbsGoRice,
@@ -3018,13 +3002,8 @@ __inline Int TComTrQuant::xGetICRate         ( UInt                            u
                                                UInt                            c2Idx
                                                ) const
 {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-  Double iRate = xGetIEPRate(); // cost of sign bit
-#else
-  Int iRate = xGetIEPRate(); // cost of sign bit
-#endif
-
-  UInt baseLevel  =  (c1Idx < C1FLAG_NUMBER)? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
+  Int  iRate      = Int(xGetIEPRate()); // cost of sign bit
+  UInt baseLevel  = (c1Idx < C1FLAG_NUMBER) ? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
 
   if ( uiAbsLevel >= baseLevel )
   {
@@ -3065,83 +3044,13 @@ __inline Int TComTrQuant::xGetICRate         ( UInt                            u
     iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 1 ];
     iRate += m_pcEstBitsSbac->m_levelAbsBits[ ui16CtxNumAbs ][ 0 ];
   }
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-  else
-  {
-    assert (0);
-  }
-  return xGetICost( iRate );
-#else
   else
   {
     iRate = 0;
   }
-  return  iRate ;
-#endif
+
+  return  iRate;
 }
-
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-__inline Int TComTrQuant::xGetICRate  ( UInt                            uiAbsLevel,
-                                       UShort                          ui16CtxNumOne,
-                                       UShort                          ui16CtxNumAbs,
-                                       UShort                          ui16AbsGoRice,
-                                       UInt                            c1Idx,
-                                       UInt                            c2Idx
-                                       ) const
-{
-  Int iRate = 0;
-
-  UInt baseLevel  =  (c1Idx < C1FLAG_NUMBER)? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
-
-  if ( uiAbsLevel >= baseLevel )
-  {
-    UInt uiSymbol     = uiAbsLevel - baseLevel;
-    UInt uiMaxVlc     = g_auiGoRiceRange[ ui16AbsGoRice ];
-    Bool bExpGolomb   = ( uiSymbol > uiMaxVlc );
-
-    if( bExpGolomb )
-    {
-      uiAbsLevel  = uiSymbol - uiMaxVlc;
-      Int iEGS    = 1;  for( UInt uiMax = 2; uiAbsLevel >= uiMax; uiMax <<= 1, iEGS += 2 );
-      iRate      += iEGS << 15;
-      uiSymbol    = min<UInt>( uiSymbol, ( uiMaxVlc + 1 ) );
-    }
-
-    UShort ui16PrefLen = UShort( uiSymbol >> ui16AbsGoRice ) + 1;
-    UShort ui16NumBins = min<UInt>( ui16PrefLen, g_auiGoRicePrefixLen[ ui16AbsGoRice ] ) + ui16AbsGoRice;
-
-    iRate += ui16NumBins << 15;
-
-    if (c1Idx < C1FLAG_NUMBER)
-    {
-      iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 1 ];
-
-      if (c2Idx < C2FLAG_NUMBER)
-      {
-        iRate += m_pcEstBitsSbac->m_levelAbsBits[ ui16CtxNumAbs ][ 1 ];
-      }
-    }
-  }
-  else if( uiAbsLevel == 0 )
-  {
-    return 0;
-  }
-  else if( uiAbsLevel == 1 )
-  {
-    iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 0 ];
-  }
-  else if( uiAbsLevel == 2 )
-  {
-    iRate += m_pcEstBitsSbac->m_greaterOneBits[ ui16CtxNumOne ][ 1 ];
-    iRate += m_pcEstBitsSbac->m_levelAbsBits[ ui16CtxNumAbs ][ 0 ];
-  }
-  else
-  {
-    assert(0);
-  }
-  return iRate;
-}
-#endif
 
 __inline Double TComTrQuant::xGetRateSigCoeffGroup  ( UShort                    uiSignificanceCoeffGroup,
                                                 UShort                          ui16CtxNumSig ) const
