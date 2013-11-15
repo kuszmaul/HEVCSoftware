@@ -233,7 +233,11 @@ public:
                                   TComMv&      rcMv,
                                   Distortion&  ruiSAD,
                                   Int          iRoiWidth,
-                                  Int          iRoiHeight );
+                                  Int          iRoiHeight
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+                                , TComMv&    mvPred
+#endif
+                                );
   
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,

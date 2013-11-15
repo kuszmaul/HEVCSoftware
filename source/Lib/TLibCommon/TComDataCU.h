@@ -141,6 +141,9 @@ private:
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra block copying vector field.
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+  TComMv         m_lastIntraBCMv;     ///< last Intra Block Copy Mv used
+#endif
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
@@ -346,6 +349,10 @@ public:
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+  TComMv        getLastIntraBCMv() {return m_lastIntraBCMv; }
+  Void          setLastIntraBCMv(TComMv mv ) { m_lastIntraBCMv = mv; }
+#endif
 
   TCoeff*&      getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
@@ -500,6 +507,7 @@ public:
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
   Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
+
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
 

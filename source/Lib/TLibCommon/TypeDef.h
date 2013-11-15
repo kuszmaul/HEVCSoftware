@@ -268,6 +268,7 @@
 #define RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY                             1 ///< 0 = use the DST only for non-block-copy intra, 1 (default) = use the DST for both intra and intra-block-copy
 #define RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION                    1 ///< 0 = allow the use of scaling lists for any TU size, 1 (default) = restrict transform-skip scaling list application to 4x4 only
 #define RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX                                1 ///< 0 = use 3 contexts for intra_bc_flag with prediction from left/above, 1 (default) use 1 context for intra_bc_flag without prediction from left/above
+#define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
 #define RExt__O0185_RESIDUAL_DPCM_FLAGS                                        1 ///< 0 = use one flag for intra RDPCM and one for inter, 1 (default) = use one flag to allow implicit signalling of RDPCM (for intra) and one for explicit signalling (inter and intra-block-copy)
 #define RExt__O0186_DISABLE_NONINTRA_ROTATION                                  1 ///< 0 = allow non-intra rotation, 1 (default) = disabled non-intra (inter,intrabc) rotation.
 
