@@ -173,7 +173,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_DPCM,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_ROTATION,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__N0141_USE_1_TO_1_422_CHROMA_QP_MAPPING,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0188_EXTENDED_PRECISION_PROCESSING,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS,                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0256_INTRA_BLOCK_COPY,                                   settingNameWidth, settingValueWidth);
