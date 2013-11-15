@@ -3881,6 +3881,50 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   pcCU->clipMv        ( rcMvSrchRngRB ); 
 }
 
+
+
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, Int roiWidth, Int roiHeight )
+{
+  UInt uiAbsPartIdx;
+  TComDataCU* pcPredCU;
+
+  UInt partNumX = roiWidth/pcCU->getPic()->getMinCUWidth() + (((relX%pcCU->getPic()->getMinCUWidth()) == 0) ? 0:1);
+  UInt partNumY = roiHeight/pcCU->getPic()->getMinCUHeight() + (((relY%pcCU->getPic()->getMinCUHeight()) == 0) ? 0:1);
+
+
+  for(Int partY = 0; partY < partNumY; partY++)
+  {
+    for(Int partX = 0; partX < partNumX; partX++)
+    {
+      Int currX = relX + partX * pcCU->getPic()->getMinCUWidth();
+      Int currY = relY + partY * pcCU->getPic()->getMinCUHeight();
+
+      assert(currY >= 0);
+
+      if(currX < 0)
+      {
+        pcPredCU = pcCU->getCULeft();
+        currX += pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getNumPartInWidth();
+        uiAbsPartIdx = g_auiRasterToZscan[currX/pcCU->getPic()->getMinCUWidth() + (currY/pcCU->getPic()->getMinCUHeight())*pcCU->getPic()->getNumPartInWidth()];
+        if(pcPredCU->isInter(uiAbsPartIdx))
+          return false;
+      }
+      else
+      {
+        pcPredCU = pcCU->getPic()->getCU( pcCU->getAddr() );
+        uiAbsPartIdx = g_auiRasterToZscan[currX/pcCU->getPic()->getMinCUWidth() + (currY/pcCU->getPic()->getMinCUHeight())*pcCU->getPic()->getNumPartInWidth()];
+        if(pcPredCU->isInter(uiAbsPartIdx))
+          return false;
+      }
+    }
+  }
+
+  return true;
+}
+#endif
+
+
 // based on xPatternSearch
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
 Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD, Int iRoiWidth, Int iRoiHeight, TComMv& mvPred)
@@ -3973,6 +4017,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
      
   for(Int y = max(iSrchRngVerTop, -cuPelY); y <= -iRoiHeight; y++)
   {
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+    if (!isValidIntraBCSearchArea(pcCU, 0 + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+      continue;
+#endif
+
     uiSad = m_pcRdCost->getCost( 0, y);   
     
     for(int r = 0; r < iRoiHeight; )
@@ -4006,6 +4055,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
 
   for(Int x = -iRoiWidth; x >= max(iSrchRngHorLeft, - cuPelX); x-- )
   {
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+    if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, 0 + iRelCUPelY, iRoiWidth, iRoiHeight))
+      continue;
+#endif
+
     uiSad = m_pcRdCost->getCost( x, 0);  
     
     for(int r = 0; r < iRoiHeight; )
@@ -4077,6 +4131,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
           continue;
         }
 
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+          continue;
+#endif
+
         uiSad = m_pcRdCost->getCost( x, y);   
     
         for(int r = 0; r < iRoiHeight; )
@@ -4129,6 +4188,10 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
           continue;
         }
 
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+          continue;
+#endif
         uiSad = m_pcRdCost->getCost( x, y);   
     
         for(int r = 0; r < iRoiHeight; )
@@ -4198,6 +4261,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
             continue;
         }
 
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+          continue;
+#endif
+
         uiSad = m_pcRdCost->getCost( x, y);   
     
         for(int r = 0; r < iRoiHeight; )
@@ -4233,7 +4301,12 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
   piRefY += (iSrchRngVerBottom * iRefStride);
   Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-  
+
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+  Int iRelCUPelX = cuPelX%lcuWidth;
+  Int iRelCUPelY = cuPelY%lcuHeight;
+#endif
+
   for(Int y = iSrchRngVerBottom; y >= iSrchRngVerTop; y--)
   {
     if ( ((Int)(cuPelY + y) < 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
@@ -4242,8 +4315,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
       continue;
     }
 
-  for(Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
-  {
+    for(Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
+    {
 
       if (((Int)(cuPelX + x) < 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
       {
@@ -4260,6 +4333,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU*   pcCU, TComPattern* pcPattern
         if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
           continue;
       }
+
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+      if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+        continue;
+#endif
 
       piRefSrch = piRefY + x;
       m_cDistParam.pCur = piRefSrch;
