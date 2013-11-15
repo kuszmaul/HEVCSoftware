@@ -263,7 +263,6 @@
 
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
 #define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
-#define RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS                         1 ///< 0 = use Luma 32x32 scaling lists for chroma 32x32, 1 (default) = use Chroma 16x16 for Chroma32x32
 #define RExt__N0256_INTRA_BLOCK_COPY                                           1 ///< 0 = disable intra block copying, 1 (default) enable block copying (depending on SPS parameter)
 #define RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING                              1 ///< 0 = allow any shift in transform skip, 1 (default) = when in extended-precision mode, limit the shift such that a right-shift never occurs
 #define RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE                        1 ///< 0 = do not include PPS transform-skip maximum size; 1 (default) = include PPS transform-skip maximum size

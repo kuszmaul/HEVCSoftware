@@ -1847,11 +1847,7 @@ Void TComSlice::setDefaultScalingList()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     for(UInt listId=0;listId<SCALING_LIST_NUM;listId++)
-#else
-    for(UInt listId=0;listId<g_scalingListNum[sizeId];listId++)
-#endif
     {
       getScalingList()->processDefaultMatrix(sizeId, listId);
     }
@@ -1866,11 +1862,7 @@ Bool TComSlice::checkDefaultScalingList()
 
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     for(UInt listId=0;listId<SCALING_LIST_NUM;listId++)
-#else
-    for(UInt listId=0;listId<g_scalingListNum[sizeId];listId++)
-#endif
     {
       if( !memcmp(getScalingList()->getScalingListAddress(sizeId,listId), getScalingList()->getScalingListDefaultAddress(sizeId, listId),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId])) // check value of matrix
      && ((sizeId < SCALING_LIST_16x16) || (getScalingList()->getScalingListDC(sizeId,listId) == 16))) // check DC value
@@ -1879,11 +1871,8 @@ Bool TComSlice::checkDefaultScalingList()
       }
     }
   }
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+
   return (defaultCounter == (SCALING_LIST_NUM * SCALING_LIST_SIZE_NUM )) ? false : true;
-#else
-  return (defaultCounter == (SCALING_LIST_NUM * SCALING_LIST_SIZE_NUM - 4)) ? false : true; // -4 for 32x32
-#endif
 }
 
 /** get scaling matrix from RefMatrixID
@@ -1920,15 +1909,11 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
   for(sizeIdc = 0; sizeIdc < SCALING_LIST_SIZE_NUM; sizeIdc++)
   {
     size = min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeIdc]);
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+
     for(listIdc = 0; listIdc < SCALING_LIST_NUM; listIdc++)
-#else
-    for(listIdc = 0; listIdc < g_scalingListNum[sizeIdc]; listIdc++)
-#endif
     {
       src = getScalingListAddress(sizeIdc, listIdc);
 
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
       if ((sizeIdc==SCALING_LIST_32x32) && (listIdc%(SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) != 0)) // derive chroma32x32 from chroma16x16
       {
         const Int *srcNextSmallerSize = getScalingListAddress(sizeIdc-1, listIdc);
@@ -1940,57 +1925,53 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
       }
       else
       {
-#endif
-      fseek(fp,0,0);
-      do 
-      {
-        ret = fgets(line, LINE_SIZE, fp);
-        if ((ret==NULL)||(strstr(line, MatrixType[sizeIdc][listIdc])==NULL && feof(fp)))
-        {
-          printf("Error: can't read Matrix :: set Default Matrix\n");
-          return true;
-        }
-      }
-      while (strstr(line, MatrixType[sizeIdc][listIdc]) == NULL);
-      for (i=0; i<size; i++)
-      {
-        retval = fscanf(fp, "%d,", &data);
-        if (retval!=1)
-        {
-          printf("Error: can't read Matrix :: set Default Matrix\n");
-          return true;
-        }
-        src[i] = data;
-      }
-      //set DC value for default matrix check
-      setScalingListDC(sizeIdc,listIdc,src[0]);
-
-      if(sizeIdc > SCALING_LIST_8x8)
-      {
         fseek(fp,0,0);
         do 
         {
           ret = fgets(line, LINE_SIZE, fp);
-          if ((ret==NULL)||(strstr(line, MatrixType_DC[sizeIdc][listIdc])==NULL && feof(fp)))
+          if ((ret==NULL)||(strstr(line, MatrixType[sizeIdc][listIdc])==NULL && feof(fp)))
           {
-            printf("Error: can't read DC :: set Default Matrix\n");
+            printf("Error: can't read Matrix :: set Default Matrix\n");
             return true;
           }
         }
-        while (strstr(line, MatrixType_DC[sizeIdc][listIdc]) == NULL);
-        retval = fscanf(fp, "%d,", &data);
-        if (retval!=1)
+        while (strstr(line, MatrixType[sizeIdc][listIdc]) == NULL);
+        for (i=0; i<size; i++)
         {
-          printf("Error: can't read Matrix :: set Default Matrix\n");
-          return true;
+          retval = fscanf(fp, "%d,", &data);
+          if (retval!=1)
+          {
+            printf("Error: can't read Matrix :: set Default Matrix\n");
+            return true;
+          }
+          src[i] = data;
         }
-        //overwrite DC value when size of matrix is larger than 16x16
-        setScalingListDC(sizeIdc,listIdc,data);
-      }
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
-      }
-#endif
+        //set DC value for default matrix check
+        setScalingListDC(sizeIdc,listIdc,src[0]);
 
+        if(sizeIdc > SCALING_LIST_8x8)
+        {
+          fseek(fp,0,0);
+          do 
+          {
+            ret = fgets(line, LINE_SIZE, fp);
+            if ((ret==NULL)||(strstr(line, MatrixType_DC[sizeIdc][listIdc])==NULL && feof(fp)))
+            {
+              printf("Error: can't read DC :: set Default Matrix\n");
+              return true;
+            }
+          }
+          while (strstr(line, MatrixType_DC[sizeIdc][listIdc]) == NULL);
+          retval = fscanf(fp, "%d,", &data);
+          if (retval!=1)
+          {
+            printf("Error: can't read Matrix :: set Default Matrix\n");
+            return true;
+          }
+          //overwrite DC value when size of matrix is larger than 16x16
+          setScalingListDC(sizeIdc,listIdc,data);
+        }
+      }
     }
   }
   fclose(fp);
@@ -2003,18 +1984,10 @@ Void TComScalingList::init()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     for(UInt listId = 0; listId < SCALING_LIST_NUM; listId++)
-#else
-    for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
-#endif
     {
       m_scalingListCoef[sizeId][listId] = new Int [min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId])];
     }
-#if !RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
-    if (g_scalingListNum[sizeId] < 2*MAX_NUM_COMPONENT)
-      m_scalingListCoef[SCALING_LIST_32x32][MAX_NUM_COMPONENT] = m_scalingListCoef[SCALING_LIST_32x32][g_scalingListNum[sizeId] - 1]; // copy address
-#endif
   }
 }
 
@@ -2024,11 +1997,7 @@ Void TComScalingList::destroy()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     for(UInt listId = 0; listId < SCALING_LIST_NUM; listId++)
-#else
-    for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
-#endif
     {
       if(m_scalingListCoef[sizeId][listId]) delete [] m_scalingListCoef[sizeId][listId];
     }
@@ -2051,11 +2020,7 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
     case SCALING_LIST_8x8:
     case SCALING_LIST_16x16:
     case SCALING_LIST_32x32:
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
       src = (listId < (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) ) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
-#else
-      src = (listId < (g_scalingListNum[sizeId]/2) ) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
-#endif
       break;
     default:
       assert(0);
@@ -2081,11 +2046,7 @@ Void TComScalingList::checkDcOfMatrix()
 {
   for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
     for(UInt listId = 0; listId < SCALING_LIST_NUM; listId++)
-#else
-    for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
-#endif
     {
       //check default matrix?
       if(getScalingListDC(sizeId,listId) == 0)
