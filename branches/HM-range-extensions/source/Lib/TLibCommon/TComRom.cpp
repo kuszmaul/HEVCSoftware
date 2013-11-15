@@ -670,19 +670,6 @@ const UInt ctxIndMap4x4[4*4] =
 const UInt g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ MAX_TU_SIZE ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1026
-// Rice parameters for absolute transform levels
-const UInt g_auiGoRiceRange[MAXIMUM_GOLOMB_RICE_PARAMETER] =
-{
-  7, 14, 26, 46, 78
-};
-
-const UInt g_auiGoRicePrefixLen[MAXIMUM_GOLOMB_RICE_PARAMETER] =
-{
-  8, 7, 6, 5, 4
-};
-#endif
-
 const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
   {

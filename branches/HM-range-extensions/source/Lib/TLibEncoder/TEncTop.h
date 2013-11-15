@@ -75,7 +75,7 @@ private:
   
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
-  TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder 
+  //TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder
   TEncCavlc*              m_pcCavlcCoder;                       ///< CAVLC encoder  
   // coding tool
   TComTrQuant             m_cTrQuant;                     ///< transform & quantization class

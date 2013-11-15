@@ -116,17 +116,11 @@ public:
   /// preparation of slice encoding (reference marking, QP and lambda)
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField );
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
-#else
-  Void    xLamdaRecalculation ( Int changeQP, Int idGOP, Int depth, SliceType eSliceType, TComSPS* pcSPS, TComSlice* pcSlice);
-#endif
   // compress and encode slice
   Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
-#if RATE_CONTROL_INTRA
   Void    calCostSliceI       ( TComPic*& rpcPic );
-#endif
   Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams  );
   
   // misc. functions

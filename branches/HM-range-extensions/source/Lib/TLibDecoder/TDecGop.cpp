@@ -111,7 +111,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
 
   //-- For time output for each slice
   long iBeforeTime = clock();
-
+#if !HM_CLEANUP_SAO
   UInt uiStartCUAddr   = pcSlice->getSliceSegmentCurStartCUAddr();
 
   UInt uiSliceStartCuAddr = pcSlice->getSliceCurStartCUAddr();
@@ -119,7 +119,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   {
     m_sliceStartCUAddress.push_back(uiSliceStartCuAddr);
   }
-
+#endif
   m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinCABAC );
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
@@ -146,11 +146,12 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   m_pcEntropyDecoder->setEntropyDecoder ( m_pcSbacDecoder  );
   m_pcEntropyDecoder->setBitstream      ( ppcSubstreams[0] );
   m_pcEntropyDecoder->resetEntropy      (pcSlice);
-
+#if !HM_CLEANUP_SAO
   if(uiSliceStartCuAddr == uiStartCUAddr)
   {
     m_LFCrossSliceBoundaryFlag.push_back( pcSlice->getLFCrossSliceBoundaryFlag());
   }
+#endif
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);
   m_pcSliceDecoder->decompressSlice( ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
   m_pcEntropyDecoder->setBitstream(  ppcSubstreams[uiNumSubstreams-1] );
@@ -178,15 +179,20 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( rpcPic );
-
+#if !HM_CLEANUP_SAO
   if(pcSlice->getSPS()->getUseSAO())
   {
     m_sliceStartCUAddress.push_back(rpcPic->getNumCUsInFrame()* rpcPic->getNumPartInCU());
     rpcPic->createNonDBFilterInfo(m_sliceStartCUAddress, 0, &m_LFCrossSliceBoundaryFlag, rpcPic->getPicSym()->getNumTiles(), bLFCrossTileBoundary);
   }
-
+#endif
   if( pcSlice->getSPS()->getUseSAO() )
   {
+#if HM_CLEANUP_SAO
+    m_pcSAO->reconstructBlkSAOParams(rpcPic, rpcPic->getPicSym()->getSAOBlkParam());
+    m_pcSAO->SAOProcess(rpcPic);
+    m_pcSAO->PCMLFDisableProcess(rpcPic);
+#else
     {
       SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
       saoParam->bSaoFlag[CHANNEL_TYPE_LUMA] = pcSlice->getSaoEnabledFlag();
@@ -197,13 +203,14 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
       m_pcSAO->PCMLFDisableProcess(rpcPic);
       m_pcSAO->destroyPicSaoInfo();
     }
+#endif
   }
-
+#if !HM_CLEANUP_SAO
   if(pcSlice->getSPS()->getUseSAO())
   {
     rpcPic->destroyNonDBFilterInfo();
   }
-
+#endif
   rpcPic->compressMotion();
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced()) c += 32;
@@ -242,8 +249,10 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 
   rpcPic->setOutputMark(true);
   rpcPic->setReconMark(true);
+#if !HM_CLEANUP_SAO
   m_sliceStartCUAddress.clear();
   m_LFCrossSliceBoundaryFlag.clear();
+#endif
 }
 
 /**

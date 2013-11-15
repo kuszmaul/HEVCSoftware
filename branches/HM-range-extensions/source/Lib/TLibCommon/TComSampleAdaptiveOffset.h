@@ -44,6 +44,64 @@
 //! \ingroup TLibCommon
 //! \{
 
+
+#if HM_CLEANUP_SAO
+// ====================================================================================================================
+// Constants
+// ====================================================================================================================
+
+#define MAX_SAO_TRUNCATED_BITDEPTH     10 
+
+// ====================================================================================================================
+// Class definition
+// ====================================================================================================================
+extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT]; 
+
+class TComSampleAdaptiveOffset
+{
+public:
+  TComSampleAdaptiveOffset();
+  virtual ~TComSampleAdaptiveOffset();
+  Void SAOProcess(TComPic* pDecPic);
+  Void create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth );
+  Void destroy();
+  Void reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams);
+  Void PCMLFDisableProcess (TComPic* pcPic);
+protected:
+  Void offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset, Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
+                  , Bool isLeftAvail, Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail);
+  Void invertQuantOffsets(ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets);
+  Void reconstructBlkSAOParam(SAOBlkParam& recParam, std::vector<SAOBlkParam*>& mergeList);
+  Int  getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, std::vector<SAOBlkParam*>& mergeList);
+  Void offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic);
+  Void xPCMRestoration(TComPic* pcPic);
+  Void xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth );
+  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, ComponentID component);
+protected:
+  UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step  
+  Int* m_offsetClip[MAX_NUM_COMPONENT]; //clip table for fast operation
+  Short* m_sign; //sign table for fast operation
+  TComPicYuv*   m_tempPicYuv; //temporary buffer
+  Int m_picWidth;
+  Int m_picHeight;
+  Int m_maxCUWidth;
+  Int m_maxCUHeight;
+  Int m_numCTUInWidth;
+  Int m_numCTUInHeight;
+  Int m_numCTUsPic;
+  
+  
+  Int m_lineBufWidth;
+  Char* m_signLineBuf1;
+  Char* m_signLineBuf2;
+private:
+  Bool m_picSAOEnabled[MAX_NUM_COMPONENT];
+  Int*   m_offsetClipTable[MAX_NUM_COMPONENT];
+  Short* m_signTable;
+
+};
+#else
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
@@ -140,6 +198,8 @@ public:
   Void copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc );
   Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process
 };
+
+#endif
 
 //! \}
 #endif

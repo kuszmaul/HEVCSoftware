@@ -979,11 +979,7 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
 
   const UInt absPartIdx       = rTu.GetAbsPartIdxTU(compID);
   const UInt TUDepth          = rTu.GetTransformDepthRel();
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  const UInt uiCtx            = pcCU->getCtxQtCbf( rTu, toChannelType(compID), false );
-#else
   const UInt uiCtx            = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
-#endif
   const UInt contextSet       = toChannelType(compID);
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -1619,14 +1615,156 @@ Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
     m_pcTDecBinIf->decodeBinEP( uiCode RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SAO) );
     if (uiCode == 0)
     {
+#if HM_CLEANUP_SAO
+      ruiVal = 1;
+#else
       ruiVal = 5;
+#endif
     }
     else
     {
+#if HM_CLEANUP_SAO
+      ruiVal = 2;
+#else
       ruiVal = 1;
+#endif
     }
   }
 }
+
+#if HM_CLEANUP_SAO
+
+Void TDecSbac::parseSaoSign(UInt& val)
+{
+  m_pcTDecBinIf->decodeBinEP ( val RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SAO) ); 
+}
+
+Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
+                                , Bool* sliceEnabled
+                                , Bool leftMergeAvail
+                                , Bool aboveMergeAvail
+                                )
+{
+  UInt uiSymbol;
+
+  Bool isLeftMerge = false;
+  Bool isAboveMerge= false;
+
+  if(leftMergeAvail)
+  {
+    parseSaoMerge(uiSymbol); //sao_merge_left_flag
+    isLeftMerge = (uiSymbol?true:false);
+  }
+
+  if( aboveMergeAvail && !isLeftMerge)
+  {
+    parseSaoMerge(uiSymbol); //sao_merge_up_flag
+    isAboveMerge = (uiSymbol?true:false);
+  }
+
+  if(isLeftMerge || isAboveMerge) //merge mode
+  {
+    saoBlkParam[COMPONENT_Y].modeIdc = saoBlkParam[COMPONENT_Cb].modeIdc = saoBlkParam[COMPONENT_Cr].modeIdc = SAO_MODE_MERGE;
+    saoBlkParam[COMPONENT_Y].typeIdc = saoBlkParam[COMPONENT_Cb].typeIdc = saoBlkParam[COMPONENT_Cr].typeIdc = (isLeftMerge)?SAO_MERGE_LEFT:SAO_MERGE_ABOVE;
+  }
+  else //new or off mode
+  {    
+    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+    {
+      SAOOffset& ctbParam = saoBlkParam[compIdx];
+
+      if(!sliceEnabled[compIdx])
+      {
+        //off
+        ctbParam.modeIdc = SAO_MODE_OFF;
+        continue;
+      }
+
+      //type
+      if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+      {
+        parseSaoTypeIdx(uiSymbol); //sao_type_idx_luma or sao_type_idx_chroma
+
+        assert(uiSymbol ==0 || uiSymbol ==1 || uiSymbol ==2);
+
+        if(uiSymbol ==0) //OFF
+        {
+          ctbParam.modeIdc = SAO_MODE_OFF;
+        }
+        else if(uiSymbol == 1) //BO
+        {
+          ctbParam.modeIdc = SAO_MODE_NEW;
+          ctbParam.typeIdc = SAO_TYPE_START_BO;
+        }
+        else //2, EO
+        {
+          ctbParam.modeIdc = SAO_MODE_NEW;
+          ctbParam.typeIdc = SAO_TYPE_START_EO;
+        }
+
+      }
+      else //Cr, follow Cb SAO type
+      {
+        ctbParam.modeIdc = saoBlkParam[COMPONENT_Cb].modeIdc;
+        ctbParam.typeIdc = saoBlkParam[COMPONENT_Cb].typeIdc;
+      }
+
+      if(ctbParam.modeIdc == SAO_MODE_NEW)
+      {
+        Int offset[4];
+        for(Int i=0; i< 4; i++)
+        {
+          parseSaoMaxUvlc(uiSymbol,  g_saoMaxOffsetQVal[compIdx] ); //sao_offset_abs
+          offset[i] = (Int)uiSymbol;
+        }
+
+        if(ctbParam.typeIdc == SAO_TYPE_START_BO)
+        {
+          for(Int i=0; i< 4; i++)
+          {
+            if(offset[i] != 0)
+            {
+              parseSaoSign(uiSymbol); //sao_offset_sign
+              if(uiSymbol)
+              {
+                offset[i] = -offset[i];
+              }
+            }
+          }
+          parseSaoUflc(NUM_SAO_BO_CLASSES_LOG2, uiSymbol ); //sao_band_position
+          ctbParam.typeAuxInfo = uiSymbol;
+        
+          for(Int i=0; i<4; i++)
+          {
+            ctbParam.offset[(ctbParam.typeAuxInfo+i)%MAX_NUM_SAO_CLASSES] = offset[i];
+          }      
+        
+        }
+        else //EO
+        {
+          ctbParam.typeAuxInfo = 0;
+
+          if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+          {
+            parseSaoUflc(NUM_SAO_EO_TYPES_LOG2, uiSymbol ); //sao_eo_class_luma or sao_eo_class_chroma
+            ctbParam.typeIdc += uiSymbol;
+          }
+          else
+          {
+            ctbParam.typeIdc = saoBlkParam[COMPONENT_Cb].typeIdc;
+          }
+          ctbParam.offset[SAO_CLASS_EO_FULL_VALLEY] = offset[0];
+          ctbParam.offset[SAO_CLASS_EO_HALF_VALLEY] = offset[1];
+          ctbParam.offset[SAO_CLASS_EO_PLAIN      ] = 0;
+          ctbParam.offset[SAO_CLASS_EO_HALF_PEAK  ] = -offset[2];
+          ctbParam.offset[SAO_CLASS_EO_FULL_PEAK  ] = -offset[3];
+        }
+      }
+    }
+  }
+}
+
+#else
 
 inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
 {
@@ -1804,6 +1942,8 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
     }
   }
 }
+
+#endif
 
 /**
  - Initialize our contexts from the nominated source.

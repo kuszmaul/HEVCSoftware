@@ -324,7 +324,7 @@ Void TComDataCU::destroy()
     m_sliceSegmentStartCU=NULL;
   }
 }
-
+#if !HM_CLEANUP_SAO
 const NDBFBlockInfo& NDBFBlockInfo::operator= (const NDBFBlockInfo& src)
 {
   this->tileID = src.tileID;
@@ -343,7 +343,7 @@ const NDBFBlockInfo& NDBFBlockInfo::operator= (const NDBFBlockInfo& src)
   return *this;
 }
 
-
+#endif
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -1832,17 +1832,9 @@ UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
   return uiCtx;
 }
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-UInt TComDataCU::getCtxQtCbf( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
-#else
 UInt TComDataCU::getCtxQtCbf( TComTU &rTu, const ChannelType chType )
-#endif
 {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  const UInt transformDepth = useAdjustedDepth ? rTu.GetTransformDepthRelAdj(chType) : rTu.GetTransformDepthRel();
-#else
   const UInt transformDepth = rTu.GetTransformDepthRel();
-#endif
 
   if (isChroma(chType))
   {
@@ -3732,7 +3724,7 @@ UInt TComDataCU::getSCUAddr()
 {
   return getPic()->getPicSym()->getInverseCUOrderMap(m_uiCUAddr)*(1<<(m_pcSlice->getSPS()->getMaxCUDepth()<<1))+m_uiAbsIdxInLCU;
 }
-
+#if !HM_CLEANUP_SAO
 /** Set neighboring blocks availabilities for non-deblocked filtering
  * \param numLCUInPicWidth number of LCUs in picture width
  * \param numLCUInPicHeight number of LCUs in picture height
@@ -4102,5 +4094,5 @@ Void TComDataCU::setNDBFilterBlockBorderAvailability(UInt numLCUInPicWidth, UInt
   }
 }
 
-
+#endif
 //! \}

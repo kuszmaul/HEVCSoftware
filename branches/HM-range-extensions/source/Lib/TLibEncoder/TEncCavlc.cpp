@@ -230,9 +230,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getScalingListPresentFlag() ? 1 : 0,                          "pps_scaling_list_data_present_flag" );
   if( pcPPS->getScalingListPresentFlag() )
   {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("PPS\n");
-#endif
     codeScalingList( m_pcSlice->getScalingList() );
   }
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
@@ -484,9 +481,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getScalingListPresentFlag() ? 1 : 0,                          "sps_scaling_list_data_present_flag" );
     if(pcSPS->getScalingListPresentFlag())
     {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("SPS\n");
-#endif
       codeScalingList( m_pcSlice->getScalingList() );
     }
   }
@@ -740,7 +734,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
       TComReferencePictureSet* rps = pcSlice->getRPS();
       
-#if FIX1071
       // check for bitstream restriction stating that:
       // If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
       // Ideally this process should not be repeated for each slice in a picture
@@ -751,7 +744,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           assert (!rps->getUsed(picIdx));
         }
       }
-#endif
 
       if(pcSlice->getRPSidx() < 0)
       {
@@ -853,11 +845,15 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if(pcSlice->getSPS()->getUseSAO())
     {
        WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+#if HM_CLEANUP_SAO
+       if (chromaEnabled) WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+#else
        SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
        if (chromaEnabled)
        {
          WRITE_FLAG( (chromaEnabled ? saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA] : false), "slice_sao_chroma_flag" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0.
        }
+#endif
     }
 
     //check if numrefidxes match the defaults. If not, override
@@ -1218,11 +1214,7 @@ Void TEncCavlc::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-Void TEncCavlc::codeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
-#else
 Void TEncCavlc::codeQtCbfZero( TComTU &rTu, const ChannelType chType )
-#endif
 {
   assert(0);
 }
@@ -1408,56 +1400,40 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
   UInt listId,sizeId;
   Bool scalingListPredModeFlag;
 
-#if SCALING_LIST_OUTPUT_RESULT
-  Int startBit;
-  Int startTotalBit;
-  startBit = m_pcBitIf->getNumberOfWrittenBits();
-  startTotalBit = m_pcBitIf->getNumberOfWrittenBits();
+  //for each size
+  for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
+  {
+#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
+    Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
+    for(listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
+#else
+    for(listId = 0; listId < g_scalingListNum[sizeId]; listId++)
 #endif
-
-    //for each size
-    for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
     {
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
-      Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
-      for(listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
-#else
-      for(listId = 0; listId < g_scalingListNum[sizeId]; listId++)
-#endif
+      scalingListPredModeFlag = scalingList->checkPredMode( sizeId, listId );
+      WRITE_FLAG( scalingListPredModeFlag, "scaling_list_pred_mode_flag" );
+      if(!scalingListPredModeFlag)// Copy Mode
       {
-#if SCALING_LIST_OUTPUT_RESULT
-        startBit = m_pcBitIf->getNumberOfWrittenBits();
-#endif
-        scalingListPredModeFlag = scalingList->checkPredMode( sizeId, listId );
-        WRITE_FLAG( scalingListPredModeFlag, "scaling_list_pred_mode_flag" );
-        if(!scalingListPredModeFlag)// Copy Mode
-        {
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
-          if (sizeId == SCALING_LIST_32x32)
-          {
-            // adjust the code, to cope with the missing chroma entries
-            WRITE_UVLC( ((Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId)) / (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES), "scaling_list_pred_matrix_id_delta");
-          }
-          else
-          {
-            WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
-          }
-#else
-          WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
-#endif
-        }
-        else// DPCM Mode
+        if (sizeId == SCALING_LIST_32x32)
         {
-          xCodeScalingList(scalingList, sizeId, listId);
+          // adjust the code, to cope with the missing chroma entries
+          WRITE_UVLC( ((Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId)) / (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES), "scaling_list_pred_matrix_id_delta");
         }
-#if SCALING_LIST_OUTPUT_RESULT
-        printf("Matrix [%d][%d] Bit %d\n",sizeId,listId,m_pcBitIf->getNumberOfWrittenBits() - startBit);
+        else
+        {
+          WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
+        }
+#else
+        WRITE_UVLC( (Int)listId - (Int)scalingList->getRefMatrixId (sizeId,listId), "scaling_list_pred_matrix_id_delta");
 #endif
       }
+      else// DPCM Mode
+      {
+        xCodeScalingList(scalingList, sizeId, listId);
+      }
     }
-#if SCALING_LIST_OUTPUT_RESULT
-  printf("Total Bit %d\n",m_pcBitIf->getNumberOfWrittenBits()-startTotalBit);
-#endif
+  }
   return;
 }
 /** code DPCM

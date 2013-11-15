@@ -102,11 +102,20 @@ Void TEncTop::create ()
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, m_chromaFormatIDC );
   if (m_bUseSAO)
   {
+#if HM_CLEANUP_SAO
+    m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
+    m_cEncSAO.createEncData(getSaoLcuBoundary());
+#else
+    m_cEncSAO.createEncData();
+#endif
+#else
     m_cEncSAO.setSaoLcuBoundary(getSaoLcuBoundary());
     m_cEncSAO.setSaoLcuBasedOptimization(getSaoLcuBasedOptimization());
     m_cEncSAO.setMaxNumOffsetsPerPic(getMaxNumOffsetsPerPic());
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight );
     m_cEncSAO.createEncBuffer();
+#endif
   }
 #if ADAPTIVE_QP_SELECTION
   if (m_bUseAdaptQpSelect)
@@ -117,15 +126,11 @@ Void TEncTop::create ()
 
   m_cLoopFilter.create( g_uiMaxCUDepth );
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
     m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
   }
-#else
-  m_cRateCtrl.create(getIntraPeriod(), getGOPSize(), getFrameRate(), getTargetBitrate(), getQP(), getNumLCUInUnit(), getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, m_chromaFormatIDC);
-#endif
 
   // if SBAC-based RD optimization is used
   if( m_bUseSBACRD )
@@ -218,8 +223,13 @@ Void TEncTop::destroy ()
   m_cCuEncoder.         destroy();
   if (m_cSPS.getUseSAO())
   {
+#if HM_CLEANUP_SAO
+    m_cEncSAO.destroyEncData();
+    m_cEncSAO.destroy();
+#else
     m_cEncSAO.destroy();
     m_cEncSAO.destroyEncBuffer();
+#endif
   }
   m_cLoopFilter.        destroy();
   m_cRateCtrl.          destroy();
@@ -384,12 +394,10 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
     return;
   }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
     m_cRateCtrl.initRCGOP( m_iNumPicRcvd );
   }
-#endif
 
   // compress GOP
 #if RExt__COLOUR_SPACE_CONVERSIONS
@@ -398,12 +406,10 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
   m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false);
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
     m_cRateCtrl.destroyRCGOP();
   }
-#endif
 
   iNumEncoded         = m_iNumPicRcvd;
   m_iNumPicRcvd       = 0;
@@ -450,7 +456,9 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 
       TComPic *pcField;
       xGetNewPicBuffer( pcField );
+#if !HM_CLEANUP_SAO
       pcField->getPicSym()->allocSaoParam(&m_cEncSAO);   // where is this normally?
+#endif
       pcField->setReconMark (false);                     // where is this normally?
 
       if (fieldNum==1)                                   // where is this normally?
@@ -502,7 +510,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
       {
         m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcField ) );
       }
-
     }
     
     if ( m_iNumPicRcvd && ((flush&&fieldNum==1) || (m_iPOCLast/2)==0 || m_iNumPicRcvd==m_iGOPSize ) )
@@ -563,10 +570,12 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics, false );
     }
 
+#if !HM_CLEANUP_SAO
     if (getUseSAO())
     {
       rpcPic->getPicSym()->allocSaoParam(&m_cEncSAO);
     }
+#endif
 
     m_cListPic.pushBack( rpcPic );
   }
@@ -791,14 +800,12 @@ Void TEncTop::xInitPPS()
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
     m_cPPS.setUseDQP(true);
     m_cPPS.setMaxCuDQPDepth( 0 );
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
-#endif
 
   m_cPPS.setQpOffset(COMPONENT_Cb, m_chromaCbQpOffset );
   m_cPPS.setQpOffset(COMPONENT_Cr, m_chromaCrQpOffset );

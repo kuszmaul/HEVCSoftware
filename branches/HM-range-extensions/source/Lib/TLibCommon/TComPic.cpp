@@ -55,12 +55,14 @@ TComPic::TComPic()
 , m_bReconstructed                        (false)
 , m_bNeededForOutput                      (false)
 , m_uiCurrSliceIdx                        (0)
+#if !HM_CLEANUP_SAO
 , m_pSliceSUMap                           (NULL)
 , m_pbValidSlice                          (NULL)
 , m_sliceGranularityForNDBFilter          (0)
 , m_bIndependentSliceBoundaryForNDBFilter (false)
 , m_bIndependentTileBoundaryForNDBFilter  (false)
 , m_pNDBFilterYuvTmp                      (NULL)
+#endif
 , m_bCheckLTMSB                           (false)
 {
   for(UInt i=0; i<NUM_PIC_YUV; i++)
@@ -136,7 +138,14 @@ Void TComPic::compressMotion()
     pcCU->compressMV();
   }
 }
-
+#if HM_CLEANUP_SAO
+Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
+{
+  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCUOrderMap(getCU(currAddr)->getSlice()->getSliceCurStartCUAddr()/getNumPartInCU()));
+  Bool mergeCtbInTile     = (getPicSym()->getTileIdxMap(mergeAddr) == getPicSym()->getTileIdxMap(currAddr));
+  return (mergeCtbInSliceSeg && mergeCtbInTile);
+}
+#else
 /** Create non-deblocked filter information
  * \param pSliceStartAddress array for storing slice start addresses
  * \param numSlices number of slices in picture
@@ -462,6 +471,7 @@ Void TComPic::destroyNonDBFilterInfo()
   }
 
 }
+#endif
 
 
 //! \}

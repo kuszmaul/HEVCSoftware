@@ -84,11 +84,16 @@ public:
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseMVPIdx               ( Int& riMVPIdx          );
   Void  parseSaoMaxUvlc           ( UInt& val, UInt maxSymbol );
-  Void  parseSaoMerge         ( UInt&  ruiVal   );
+  Void  parseSaoMerge             ( UInt&  ruiVal   );
   Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
   Void  parseSaoUflc              ( UInt uiLength, UInt& ruiVal     );
+#if HM_CLEANUP_SAO
+  Void parseSAOBlkParam           (SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail);
+  Void parseSaoSign               (UInt& val);
+#else
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, const ComponentID compIdx);
+#endif
 
 private:
 #if RExt__DECODER_DEBUG_BIT_STATISTICS

@@ -83,10 +83,6 @@ public:
   wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
   ComponentID     compIdx;
 
-#if NS_HAD
-  Bool            bUseNSHAD;
-#endif
-
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
   Int   iSubShift;
@@ -103,9 +99,6 @@ public:
     DistFunc = NULL;
     iSubShift = 0;
     bitDepth = 0;
-#if NS_HAD
-    bUseNSHAD = false;
-#endif
   }
 };
 
@@ -122,9 +115,7 @@ private:
   CostMode                m_costMode;
 #endif
 
-#if WEIGHTED_CHROMA_DISTORTION
   Double                  m_distortionWeight[MAX_NUM_COMPONENT]; // only chroma values are used.
-#endif
   Double                  m_dLambda;
   Double                  m_sqrtLambda;
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
@@ -172,20 +163,14 @@ public:
   Double  calcRdCost  ( UInt   uiBits, Distortion uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   
-#if WEIGHTED_CHROMA_DISTORTION
   Void    setDistortionWeight  ( const ComponentID compID, const Double distortionWeight ) { m_distortionWeight[compID] = distortionWeight; }
-#endif
   Void    setLambda      ( Double dLambda );
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
   
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Double  getLambda() { return m_dLambda; }
-#if M0036_RC_IMPROVEMENT
   Double  getChromaWeight () { return ((m_distortionWeight[COMPONENT_Cb] + m_distortionWeight[COMPONENT_Cr]) / 2.0); }
-#endif
-#endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   Void      setCostMode(CostMode   m )    { m_costMode = m; }
@@ -196,13 +181,8 @@ public:
   
   Void    setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam );
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
-#if NS_HAD
-  Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false, Bool bUseNSHAD=false );
-  Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false, Bool bUseNSHAD=false );
-#else
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
-#endif
   
   Distortion calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
   
@@ -297,21 +277,12 @@ private:
   static Distortion xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-#if NS_HAD
-  static Distortion xCalcHADs16x4     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static Distortion xCalcHADs4x16     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-#endif
+
   
 public:
-#if WEIGHTED_CHROMA_DISTORTION
+  
   Distortion   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
-#else
-  Distortion   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
-#endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-  Distortion   getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height );
-#endif
 };// END CLASS DEFINITION TComRdCost
 
 //! \}

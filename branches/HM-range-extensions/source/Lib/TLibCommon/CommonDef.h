@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "12.0_RExt4.1"                 ///< Current software version
+#define NV_VERSION        "12.1_RExt4.1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -214,7 +214,7 @@ enum NalUnitType
   NAL_UNIT_CODED_SLICE_TRAIL_R,     // 1
   
   NAL_UNIT_CODED_SLICE_TSA_N,       // 2
-  NAL_UNIT_CODED_SLICE_TLA_R,       // 3
+  NAL_UNIT_CODED_SLICE_TSA_R,       // 3
   
   NAL_UNIT_CODED_SLICE_STSA_N,      // 4
   NAL_UNIT_CODED_SLICE_STSA_R,      // 5

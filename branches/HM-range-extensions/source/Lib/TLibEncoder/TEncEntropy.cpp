@@ -56,13 +56,14 @@ Void TEncEntropy::setEntropyCoder ( TEncEntropyIf* e, TComSlice* pcSlice )
 
 Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
 {
+#if !HM_CLEANUP_SAO
   if (pcSlice->getSPS()->getUseSAO())
   {
     SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
     pcSlice->setSaoEnabledFlag       (saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]);
     pcSlice->setSaoEnabledFlagChroma (saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]);
   }
-
+#endif
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
   return;
 }
@@ -637,19 +638,10 @@ Void TEncEntropy::encodeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcEntropyCoderIf->codeQtRootCbf( pcCU, uiAbsPartIdx );
 }
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth )
-{
-  //NOTE: RExt - In HM, this function is called in multiple ways, which may not be intended.
-  //      In xEstimateResidualQT, when coding the chroma channel, it is called with both TrDepth and TrDepthC (adjusted for step-up cases).
-  m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType, useAdjustedDepth );
-}
-#else
 Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType )
 {
   m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType );
 }
-#endif
 
 Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU )
 {
@@ -762,6 +754,7 @@ Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int 
 #endif
 }
 
+#if !HM_CLEANUP_SAO
 /** Encode SAO Offset
  * \param  saoLcuParam SAO LCU paramters
  */
@@ -861,6 +854,8 @@ Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, In
   }
 }
 
+
+#endif
 
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {

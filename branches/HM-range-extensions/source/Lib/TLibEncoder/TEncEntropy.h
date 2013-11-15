@@ -98,11 +98,7 @@ public:
   virtual Void codeQtCbf         ( TComTU &rTu, const ComponentID compID ) = 0;
 #endif
   virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  virtual Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth ) = 0;
-#else
   virtual Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType ) = 0;
-#endif
   virtual Void codeQtRootCbfZero ( TComDataCU* pcCU ) = 0;
   virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiplePU ) = 0;
 
@@ -113,11 +109,15 @@ public:
   virtual Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID ) = 0;
   virtual Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component ) = 0;
+#if HM_CLEANUP_SAO
+  virtual Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false)    =0;
+#else
   virtual Void codeSAOSign          ( UInt code   ) = 0;
   virtual Void codeSaoMaxUvlc       ( UInt code, UInt maxSymbol ) = 0;
   virtual Void codeSaoMerge    ( UInt   uiCode  ) = 0;
   virtual Void codeSaoTypeIdx      ( UInt   uiCode) = 0;
   virtual Void codeSaoUflc         ( UInt uiLength, UInt   uiCode ) = 0;
+#endif
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType) = 0;
 
   virtual Void updateContextTables ( SliceType eSliceType, Int iQp, Bool bExecuteFinish )   = 0;
@@ -187,11 +187,8 @@ public:
 #else
   Void encodeQtCbf             ( TComTU &rTu, const ComponentID compID );
 #endif
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_986
-  Void encodeQtCbfZero         ( TComTU &rTu, const ChannelType chType, const Bool useAdjustedDepth );
-#else
+
   Void encodeQtCbfZero         ( TComTU &rTu, const ChannelType chType );
-#endif
   Void encodeQtRootCbfZero     ( TComDataCU* pcCU );
   Void encodeQtRootCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
@@ -213,8 +210,12 @@ public:
   Void encodeCoeffNxN         ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
 
   Void estimateBit             ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
+#if HM_CLEANUP_SAO
+  Void encodeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail){m_pcEntropyCoderIf->codeSAOBlkParam(saoBlkParam, sliceEnabled, leftMergeAvail, aboveMergeAvail, false);}
+#else
   Void    encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID compID );
   Void    encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
+#endif
   static Int countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize );
 
 };// END CLASS DEFINITION TEncEntropy
