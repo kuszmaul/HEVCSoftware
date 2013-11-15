@@ -153,8 +153,11 @@ public:
                        const QpParam      & cQP
                              DEBUG_STRING_FN_DECLAREP(psDebug));
 
-
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Void invRecurTransformNxN ( const ComponentID compID, TComYuv *pResidual, TComTU &rTu );
+#else
   Void invRecurTransformNxN ( const ComponentID compID, Pel*  rpcResidual, UInt uiStride, TComTU &rTu);
+#endif
 
 
   // Misc functions
@@ -380,6 +383,21 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                           const ComponentID compID
                         );
 
+#endif
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+public:
+  static Void crossComponentDecorrelation(      TComTU      &rTu,
+                                          const ComponentID  compID,
+                                          const Pel         *piResiL,
+                                          const Pel         *piResiC,
+                                                Pel         *piResiT,
+                                          const Int          width,
+                                          const Int          height,
+                                          const Int          strideL,
+                                          const Int          strideC,
+                                          const Int          strideT,
+                                          const Bool         reverse);
 #endif
 
 };// END CLASS DEFINITION TComTrQuant

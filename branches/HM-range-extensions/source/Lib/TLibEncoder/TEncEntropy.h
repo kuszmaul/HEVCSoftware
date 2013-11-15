@@ -106,6 +106,11 @@ public:
   virtual Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
   virtual Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  virtual Void codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID ) = 0;
+#endif
+
   virtual Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID ) = 0;
   virtual Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component ) = 0;
@@ -196,6 +201,10 @@ public:
 
   Void encodeIntraBCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Void encodeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID );
+#endif
 
 private:
   Void xEncodeTransform        ( Bool& bCodeDQP, TComTU &rTu );

@@ -581,8 +581,13 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   //===== reconstruction =====
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
 
-        Pel* pPred      = piPred;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  const Bool useCrossComponentDecorrelation = isChroma(compID) && (pcCU->getCrossComponentDecorrelationAlpha(uiAbsPartIdx, compID) != 0);
+  const Pel* pResiLuma  = pcResiYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
+  const Int  strideLuma = pcResiYuv->getStride( COMPONENT_Y );
+#endif
 
+        Pel* pPred      = piPred;
 #if RExt__NRCE2_RESIDUAL_DPCM
         Pel* pResi      = piResi;
 #else
@@ -699,6 +704,13 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     }
     pResi = piResi;
 #endif // RExt__NRCE2_RESIDUAL_DPCM
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    if( useCrossComponentDecorrelation )
+    {
+      TComTrQuant::crossComponentDecorrelation( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
+    }
+#endif
 
     for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
@@ -835,12 +847,17 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
   for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)
   {
     const ComponentID compID=ComponentID(ch);
+#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
     Pel*    pResi = m_ppcYuvResi[uiDepth]->getAddr(compID);
+#endif
     DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[compID])
 
     // NOTE RExt - setQPForQuant was called here, but it has now been placed at the lowest level of decoding.
-
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    m_pcTrQuant->invRecurTransformNxN ( compID, m_ppcYuvResi[uiDepth], tuRecur );
+#else
     m_pcTrQuant->invRecurTransformNxN ( compID, pResi, m_ppcYuvResi[uiDepth]->getStride(compID), tuRecur );
+#endif
   }
 
   DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[MAX_NUM_COMPONENT])
