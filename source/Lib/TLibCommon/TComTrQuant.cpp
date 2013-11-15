@@ -1530,7 +1530,11 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     }
 #endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+    const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+#else
     const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
+#endif
     const UInt lastColumn     = uiWidth  - 1;
     const UInt lastRow        = uiHeight - 1;
 #endif
@@ -1679,7 +1683,11 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+    const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+#else
     const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
+#endif
     const UInt lastColumn     = uiWidth  - 1;
     const UInt lastRow        = uiHeight - 1;
 #endif
@@ -1909,7 +1917,11 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   }
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+  const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
+#else
   const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
+#endif
   const UInt lastColumn     = width  - 1;
   const UInt lastRow        = height - 1;
 #endif
@@ -1968,7 +1980,11 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
   }
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+  const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
+#else
   const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
+#endif
   const UInt lastColumn     = width  - 1;
   const UInt lastRow        = height - 1;
 #endif
