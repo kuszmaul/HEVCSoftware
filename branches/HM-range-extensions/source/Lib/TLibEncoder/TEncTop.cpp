@@ -849,10 +849,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());
   m_cPPS.setUseTransformSkip( m_useTransformSkip );
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   m_cPPS.setTransformSkipLog2MaxSize( m_transformSkipLog2MaxSize  );
-#endif
-
 
   if (m_sliceSegmentMode)
   {

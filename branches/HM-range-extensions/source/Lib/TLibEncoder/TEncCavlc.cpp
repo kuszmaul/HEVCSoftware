@@ -235,7 +235,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+
   if (pcPPS->getTransformSkipLog2MaxSize()!=2 && pcPPS->getUseTransformSkip())
   {
     WRITE_FLAG( 1, "pps_extension_flag1" );
@@ -246,9 +246,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   {
     WRITE_FLAG( 0, "pps_extension_flag1" );
   }
-#else
-  WRITE_FLAG( 0, "pps_extension_flag" );
-#endif
 }
 
 Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )

@@ -3684,27 +3684,16 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
 #endif
 
   //  Check whether this function is called only for 4x4 blocks
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   assert(height <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) && width <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) );
-#else
-  assert(height == 4 && width == 4);
-#endif
 
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
 
   //  Temporary variables for mode decision
   TCoeff currentSad, bestSad = std::numeric_limits<TCoeff>::max();
   UInt bestRdpcmMode = 0;  
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   TCoeff tempQCoeff[MAX_TU_SIZE*MAX_TU_SIZE], tempRecCoeff[MAX_TU_SIZE*MAX_TU_SIZE], *tempQCoeffPtr, *tempCoeffPtr;
 #if ADAPTIVE_QP_SELECTION
   TCoeff tempArlCoeff[MAX_TU_SIZE*MAX_TU_SIZE], *arlCoeffPtr;
-#endif
-#else
-  TCoeff tempQCoeff[4*4], tempRecCoeff[4*4], *tempQCoeffPtr, *tempCoeffPtr;
-#if ADAPTIVE_QP_SELECTION
-  TCoeff tempArlCoeff[4*4], *arlCoeffPtr;
-#endif
 #endif
   TCoeff deltaU[MAX_TU_SIZE*MAX_TU_SIZE], tempDeltaU[MAX_TU_SIZE*MAX_TU_SIZE];
 
@@ -3891,11 +3880,7 @@ Void TComTrQuant::xInvInterRdpcm (       TComTU      &rTu,
   UInt height = rect.height;
   UInt width  = rect.width;
 
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   assert(height <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) && width <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) );
-#else
-  assert(height == 4 && width == 4);
-#endif
 
   UInt interRdpcmMode = cu->getInterRdpcmMode(compID, absParIdx);
 

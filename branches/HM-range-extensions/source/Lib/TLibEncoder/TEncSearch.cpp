@@ -276,19 +276,13 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
       m_ppcQTTempArlCoeff[ch][layer]  = new TCoeff[(g_uiMaxCUWidth*g_uiMaxCUHeight)>>(csx+csy) ];
 #endif
     }
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
+
     m_pSharedPredTransformSkip[ch] = new    Pel[MAX_TU_SIZE*MAX_TU_SIZE];
     m_pcQTTempTUCoeff[ch]          = new TCoeff[MAX_TU_SIZE*MAX_TU_SIZE];
 #if ADAPTIVE_QP_SELECTION
     m_ppcQTTempTUArlCoeff[ch]      = new TCoeff[MAX_TU_SIZE*MAX_TU_SIZE];
 #endif
-#else
-    m_pSharedPredTransformSkip[ch] = new Pel[MAX_TS_WIDTH*MAX_TS_HEIGHT];
-    m_pcQTTempTUCoeff[ch] = new TCoeff[MAX_TS_WIDTH*MAX_TS_HEIGHT];
-#if ADAPTIVE_QP_SELECTION
-    m_ppcQTTempTUArlCoeff[ch] = new TCoeff[MAX_TS_WIDTH*MAX_TS_HEIGHT];
-#endif
-#endif
+
     m_puhQTTempTransformSkipFlag[ch] = new UChar  [uiNumPartitions];
   }
   m_puhQTTempTrIdx   = new UChar  [uiNumPartitions];
@@ -1502,11 +1496,7 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
   UInt       uiSingleCbf[MAX_NUM_COMPONENT]     = {0,0,0};
   Bool       checkTransformSkip  = pcCU->getSlice()->getPPS()->getUseTransformSkip();
   Int        bestModeId[MAX_NUM_COMPONENT] = { 0, 0, 0};
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   checkTransformSkip           &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize());
-#else
-  checkTransformSkip           &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y));
-#endif
   checkTransformSkip           &= (!pcCU->getCUTransquantBypass(0));
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   checkTransformSkip           &= (!((pcCU->getQP( 0 ) == 0) && (pcCU->getSlice()->getSPS()->getUseLossless())));
@@ -1962,20 +1952,12 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
     const UInt uiFullDepth = rTu.GetTransformDepthTotal();
 
     Bool checkTransformSkip = pcCU->getSlice()->getPPS()->getUseTransformSkip();
-
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
     checkTransformSkip &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Cb), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize());
-#else
-    checkTransformSkip &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Cb));
-#endif
 
     if ( m_pcEncCfg->getUseTransformSkipFast() )
     {
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
       checkTransformSkip &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize());
-#else
-      checkTransformSkip &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y)); // is the current case a 4x4 Luma case, if not no TS. If so, then only TS if at least one corresponding Luma TS is set.
-#endif
+      
       if (checkTransformSkip)
       {
         Int nbLumaSkip = 0;
@@ -5288,13 +5270,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 
       if(rTu.ProcessComponentSection(compID))
       {
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
         checkTransformSkip[compID] = pcCU->getSlice()->getPPS()->getUseTransformSkip() &&
                                      TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) &&
                                      (!pcCU->isLosslessCoded(0));
-#else
-        checkTransformSkip[compID] = pcCU->getSlice()->getPPS()->getUseTransformSkip() && TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(compID)) && (!pcCU->isLosslessCoded(0));
-#endif
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
         const Bool splitIntoSubTUs = rTu.getRect(compID).width != rTu.getRect(compID).height;
