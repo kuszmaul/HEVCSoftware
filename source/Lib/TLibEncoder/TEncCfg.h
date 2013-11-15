@@ -182,10 +182,7 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   Bool      m_useExtendedPrecision;
-#if RExt__N0256_INTRA_BLOCK_COPY
   Bool      m_useIntraBlockCopy;
-#endif
-
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
   
@@ -433,10 +430,8 @@ public:
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
   Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
-#endif
 
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }

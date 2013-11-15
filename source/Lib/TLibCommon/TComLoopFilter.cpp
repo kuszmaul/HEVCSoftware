@@ -426,21 +426,13 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcLCU, DeblockEdge
   }
 
   //-- Set BS for Intra MB : BS = 4 or 3
-#if RExt__N0256_INTRA_BLOCK_COPY
   if ( pcCUP->isLoopFilterIntra(uiPartP) || pcCUQ->isLoopFilterIntra(uiPartQ) )
-#else
-  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) )
-#endif
   {
     uiBs = 2;
   }
 
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
-#if RExt__N0256_INTRA_BLOCK_COPY
   if ( !pcCUP->isLoopFilterIntra(uiPartP) && !pcCUQ->isLoopFilterIntra(uiPartQ) )
-#else
-  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) )
-#endif
   {
     UInt nsPartQ = uiPartQ;
     UInt nsPartP = uiPartP;

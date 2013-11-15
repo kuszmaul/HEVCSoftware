@@ -92,9 +92,7 @@ TEncSbac::TEncSbac()
 , m_interRdpcmFlagSCModel        ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 , m_interRdpcmDirSCModel         ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_DIR_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
 , m_cIntraBCPredFlagSCModel      (1,              1,                      NUM_INTRABC_PRED_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -149,9 +147,7 @@ Void TEncSbac::resetEntropy           ()
   m_interRdpcmFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG);
   m_interRdpcmDirSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR);
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
   m_cIntraBCPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif
 
   // new structure
   m_uiLastQp = iQp;
@@ -211,9 +207,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_interRdpcmFlagSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_INTER_RDPCM_FLAG);
       curCost += m_interRdpcmDirSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_INTER_RDPCM_DIR);
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
       curCost += m_cIntraBCPredFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif
 
       if (curCost < bestCost)
       {
@@ -267,9 +261,7 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_interRdpcmFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG );
   m_interRdpcmDirSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR );
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
   m_cIntraBCPredFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif  
 
   m_pcBinIf->start();
 }
@@ -455,9 +447,7 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if RExt__N0256_INTRA_BLOCK_COPY
   assert( !pcCU->isIntraBC( uiAbsPartIdx ) );
-#endif
 
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
   if ( pcCU->isIntra( uiAbsPartIdx ) )
@@ -548,13 +538,8 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
-#if RExt__N0256_INTRA_BLOCK_COPY
   assert(!pcCU->isIntraBC(uiAbsPartIdx));
   m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
-#else
-  Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
-  m_pcBinIf->encodeBin( iPredMode == MODE_INTER ? 0 : 1, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
-#endif
 }
 
 Void TEncSbac::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
@@ -752,7 +737,6 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
-#if RExt__N0256_INTRA_BLOCK_COPY
 /** code intraBC flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -783,7 +767,6 @@ Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   codeMvd(pcCU, uiAbsPartIdx, REF_PIC_LIST_INTRABC);
 }
-#endif
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

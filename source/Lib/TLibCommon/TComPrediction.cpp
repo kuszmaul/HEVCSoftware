@@ -489,7 +489,6 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
 }
 
 
-#if RExt__N0256_INTRA_BLOCK_COPY
 Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int iPartIdx )
 {
   Int         iWidth;
@@ -505,7 +504,7 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
   
   return;
 }
-#endif
+
 
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
 {
@@ -693,7 +692,6 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   }
 }
 
-#if RExt__N0256_INTRA_BLOCK_COPY
 Void TComPrediction::xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic )
 {
   Int     refStride  = refPic->getStride(compID);
@@ -721,7 +719,6 @@ Void TComPrediction::xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, T
     dst += dstStride;
   }                
 }
-#endif
 
 Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst )
 {

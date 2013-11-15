@@ -263,7 +263,6 @@
 
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
 #define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
-#define RExt__N0256_INTRA_BLOCK_COPY                                           1 ///< 0 = disable intra block copying, 1 (default) enable block copying (depending on SPS parameter)
 #define RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING                              1 ///< 0 = allow any shift in transform skip, 1 (default) = when in extended-precision mode, limit the shift such that a right-shift never occurs
 #define RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE                        1 ///< 0 = do not include PPS transform-skip maximum size; 1 (default) = include PPS transform-skip maximum size
 
@@ -306,10 +305,8 @@
 #define RDPCM_INTER_LOSSY                                                      1  ///< Performs RDPCM on motion compensated residuals in lossy coding
 #endif
 
-#if RExt__N0256_INTRA_BLOCK_COPY
 #define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
 #define INTRABC_FASTME                                                         1 ///< Fast motion estimation
-#endif
 
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
@@ -447,23 +444,19 @@ enum PredMode
 {
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
-  NUMBER_OF_PREDICTION_MODES = 2
-#if RExt__N0256_INTRA_BLOCK_COPY
-  ,MODE_INTRABC              = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
-#endif
+  NUMBER_OF_PREDICTION_MODES = 2,
+  MODE_INTRABC               = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
 };
 
 /// reference list index
 enum RefPicList
 {
-  REF_PIC_LIST_0 = 0,   ///< reference list 0
-  REF_PIC_LIST_1 = 1,   ///< reference list 1
-  NUM_REF_PIC_LIST_01 = 2,
-#if RExt__N0256_INTRA_BLOCK_COPY
-  REF_PIC_LIST_INTRABC = 2,
+  REF_PIC_LIST_0               = 0,   ///< reference list 0
+  REF_PIC_LIST_1               = 1,   ///< reference list 1
+  NUM_REF_PIC_LIST_01          = 2,
+  REF_PIC_LIST_INTRABC         = 2,
   NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
-#endif
-  REF_PIC_LIST_X = 100  ///< special mark
+  REF_PIC_LIST_X               = 100  ///< special mark
 };
 
 /// distortion function index

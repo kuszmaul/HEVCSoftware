@@ -1224,11 +1224,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
-#if RExt__N0256_INTRA_BLOCK_COPY
     Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
-#else
-    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
-#endif
     assert(scalingListType < SCALING_LIST_NUM);
     Int *piQuantCoeff = getQuantCoeff(scalingListType,cQP.getAdjustedQp().rem,uiLog2TrSize-2);
 
@@ -1332,11 +1328,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
 
-#if RExt__N0256_INTRA_BLOCK_COPY
-    Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
-#else
-    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
-#endif
+  Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
   assert(scalingListType < SCALING_LIST_NUM);
   assert ( uiWidth <= m_uiMaxTrSize );
 
@@ -1546,11 +1538,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
-#if RExt__N0256_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
-#else
-    const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
-#endif
 
     assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
 
@@ -1695,11 +1683,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-#if RExt__N0256_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
-#else
-    const Bool useDST = isLuma(compID) && (pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTRA);
-#endif
 
     xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
@@ -2056,11 +2040,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const UInt uiMaxNumCoeff       = uiWidth * uiHeight;
   assert(compID<MAX_NUM_COMPONENT);
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
-#else
-  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
-#endif
   assert(scalingListType < SCALING_LIST_NUM);
 
 #if ADAPTIVE_QP_SELECTION
@@ -3170,11 +3150,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   Int iTransformShift = getTransformShift(toChannelType(compID), rTu.GetEquivalentLog2TrSize(compID));
   Int offset = 0;
 
-#if RExt__N0256_INTRA_BLOCK_COPY
-    Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
-#else
-    Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
-#endif
+  Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
   assert( scalingListType < SCALING_LIST_NUM );
   Int *piQuantCoeff = getQuantCoeff( scalingListType, cQP.getAdjustedQp().rem, (rTu.GetEquivalentLog2TrSize(compID)-2) );
 
@@ -3251,11 +3227,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 
   const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
-#else
-  Int scalingListType = getScalingListType(pcCU->isIntra(uiAbsPartIdx), compID);
-#endif
 
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
@@ -3553,11 +3525,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
   const UInt log2TrSize = rTu.GetEquivalentLog2TrSize(compID);
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
   TComDataCU *cu = rTu.getCU();
-#if RExt__N0256_INTRA_BLOCK_COPY
   const Int scalingListType = getScalingListType(cu->getPredictionMode(absPartIdx), compID);
-#else
-  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), compID);
-#endif
 
   TCoeff level, signLevel;
   Int64 tmpLevel;
@@ -3625,11 +3593,7 @@ inline Void TComTrQuant::xDequantiseSample(
   const UInt absPartIdx = rTu.GetAbsPartIdxTU();
   TComDataCU *cu        = rTu.getCU();
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   const Int scalingListType = getScalingListType(cu->getPredictionMode(absPartIdx), compID);
-#else
-  const Int scalingListType = getScalingListType(cu->isIntra(absPartIdx), compID);
-#endif
 
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;

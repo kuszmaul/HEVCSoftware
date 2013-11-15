@@ -192,18 +192,11 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 //Scaling lists  =======================================================================================================
 //======================================================================================================================
 
-#if RExt__N0256_INTRA_BLOCK_COPY
 static inline Int getScalingListType(const PredMode predMode, const ComponentID compID)
 {
   return ((predMode != MODE_INTER) ? 0 : MAX_NUM_COMPONENT) + compID;
 }
 
-#else
-static inline Int getScalingListType(const Bool isIntra, const ComponentID compID)
-{
-  return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
-}
-#endif
 
 //------------------------------------------------
 
@@ -218,6 +211,7 @@ static inline UInt getScalingListCoeffIdx(const ChromaFormat chFmt, const Compon
     return ( (blkPos & (~(tuWidth-1)))<<1) + (blkPos & (tuWidth-1));
 }
 #endif
+
 
 //======================================================================================================================
 //Context variable selection  ==========================================================================================

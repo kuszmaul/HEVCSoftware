@@ -674,9 +674,7 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
-#if RExt__N0256_INTRA_BLOCK_COPY
   m_cSPS.setUseIntraBlockCopy(m_useIntraBlockCopy);
-#endif
 
   m_cSPS.setUseSAO( m_bUseSAO );
 

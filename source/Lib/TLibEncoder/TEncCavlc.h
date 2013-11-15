@@ -153,11 +153,8 @@ public:
   Void codeInterRdpcmMode( TComTU &rTu, const ComponentID compID );
 #endif
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-
 };
 
 //! \}

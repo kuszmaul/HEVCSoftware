@@ -199,7 +199,6 @@ public:
 #endif
                                 );
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Bool predIntraBCSearch        ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
@@ -235,7 +234,6 @@ public:
                                   Distortion&  ruiSAD,
                                   Int          iRoiWidth,
                                   Int          iRoiHeight );
-#endif
   
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
