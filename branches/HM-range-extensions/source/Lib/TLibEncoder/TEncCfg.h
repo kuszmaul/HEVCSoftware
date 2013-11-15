@@ -183,6 +183,9 @@ protected:
 #endif
   Bool      m_useExtendedPrecision;
   Bool      m_useIntraBlockCopy;
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  Bool      m_useHighPrecisionPredictionWeighting;
+#endif
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
   
@@ -437,6 +440,11 @@ public:
 
   Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
   Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
+  Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
+#endif
 
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }

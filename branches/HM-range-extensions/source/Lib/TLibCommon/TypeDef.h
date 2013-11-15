@@ -271,6 +271,7 @@
 #define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
 #define RExt__O0185_RESIDUAL_DPCM_FLAGS                                        1 ///< 0 = use one flag for intra RDPCM and one for inter, 1 (default) = use one flag to allow implicit signalling of RDPCM (for intra) and one for explicit signalling (inter and intra-block-copy)
 #define RExt__O0186_DISABLE_NONINTRA_ROTATION                                  1 ///< 0 = allow non-intra rotation, 1 (default) = disabled non-intra (inter,intrabc) rotation.
+#define RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING                        1 ///< 0 = do not use high precision prediction weighting (8-bit only), 1 (default) = allow use of high precision prediction weighting, based upon SPS flag.
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -319,6 +320,10 @@
 
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
 #define MAXIMUM_GOLOMB_RICE_PARAMETER                                          7
+#endif
+
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+#define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
 #endif
 
 //------------------------------------------------
