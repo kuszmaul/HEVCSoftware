@@ -138,8 +138,24 @@ protected:
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug) );
-  Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug) );
+
+  Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
+                              TComDataCU *&rpcTempCU,
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                              Double      &cost,
+#endif
+                              PartSize     ePartSize
+                              DEBUG_STRING_FN_DECLARE(sDebug)
+                            );
+
+  Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
+                              TComDataCU*& rpcTempCU
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                            , Bool         bUse1DSearchFor8x8
+#endif
+                              DEBUG_STRING_FN_DECLARE(sDebug)
+                            );
+
   Void  xCheckDQP           ( TComDataCU*  pcCU );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
