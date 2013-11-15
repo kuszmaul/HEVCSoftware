@@ -458,9 +458,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if RExt__NRCE2_RESIDUAL_ROTATION
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
-#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -1627,9 +1625,7 @@ Void TAppEncCfg::xPrintParameter()
 #if RExt__NRCE2_RESIDUAL_ROTATION
   printf("Residual rotation               : %s\n", m_useResidualRotation ? "Enabled" : "Disabled");
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   printf("Single significance map context : %s\n", m_useSingleSignificanceMapContext ? "Enabled" : "Disabled");
-#endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   switch (m_costMode)
   {

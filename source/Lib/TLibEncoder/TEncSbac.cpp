@@ -1814,7 +1814,6 @@ Void TEncSbac::estSignificantMapBit( estBitsSbacStruct* pcEstBitsSbac, Int width
       }
     }
 
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
     //NOTE: RExt - This could be made optional, but would require this function to have knowledge of whether the
     //             TU is transform-skipped or transquant-bypassed and whether the SPS flag is set
     for( UInt bin = 0; bin < 2; bin++ )
@@ -1822,7 +1821,6 @@ Void TEncSbac::estSignificantMapBit( estBitsSbacStruct* pcEstBitsSbac, Int width
       const Int ctxIdx = significanceMapContextSetStart[chType][CONTEXT_TYPE_SINGLE];
       pcEstBitsSbac->significantBits[ contextOffset + ctxIdx ][ bin ] = m_cCUSigSCModel.get( 0, 0, (contextOffset + ctxIdx) ).getEntropyBits( bin );
     }
-#endif
 
     for ( Int ctxIdx = firstCtx; ctxIdx < firstCtx + numCtx; ctxIdx++ )
     {

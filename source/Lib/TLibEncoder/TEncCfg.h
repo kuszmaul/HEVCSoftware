@@ -212,9 +212,7 @@ protected:
 #if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      m_useResidualRotation;
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   Bool      m_useSingleSignificanceMapContext;
-#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
   Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
 #endif
@@ -545,10 +543,8 @@ public:
   Bool getUseResidualRotation                          ()            const { return m_useResidualRotation;  }
   Void setUseResidualRotation                          (const Bool value)  { m_useResidualRotation = value; }
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   Bool getUseSingleSignificanceMapContext              ()            const { return m_useSingleSignificanceMapContext;  }
   Void setUseSingleSignificanceMapContext              (const Bool value)  { m_useSingleSignificanceMapContext = value; }
-#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
   Bool getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
   Void setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }

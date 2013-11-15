@@ -2825,13 +2825,11 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
                                    const Int                        log2BlockHeight,
                                    const ChannelType                chanType)
 {
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   if (codingParameters.firstSignificanceMapContext == significanceMapContextSetStart[chanType][CONTEXT_TYPE_SINGLE])
   {
     //single context mode
     return significanceMapContextSetStart[chanType][CONTEXT_TYPE_SINGLE];
   }
-#endif
 
   const UInt rasterPosition = codingParameters.scan[scanPosition];
   const UInt posY           = rasterPosition >> log2BlockWidth;

@@ -165,7 +165,6 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
 
   //set the significance map context selection parameters
 
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   if (pcCU->getSlice()->getSPS()->getUseSingleSignificanceMapContext()
       && (pcCU->getCUTransquantBypass(uiAbsPartIdx) || (pcCU->getTransformSkip(uiAbsPartIdx, component) != 0)))
   {
@@ -173,7 +172,6 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   }
   else
   {
-#endif
     if ((area.width == 4) && (area.height == 4))
     {
       result.firstSignificanceMapContext = significanceMapContextSetStart[channelType][CONTEXT_TYPE_4x4];
@@ -187,9 +185,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
     {
       result.firstSignificanceMapContext = significanceMapContextSetStart[channelType][CONTEXT_TYPE_NxN];
     }
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   }
-#endif
 
   //------------------------------------------------
 }
