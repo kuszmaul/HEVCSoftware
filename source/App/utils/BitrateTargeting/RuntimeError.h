@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DIRECTORY_LIB_RUNTIME_ERROR_H
-#define DIRECTORY_LIB_RUNTIME_ERROR_H
+#ifndef __RUNTIMEERROR__
+#define __RUNTIMEERROR__
 
 #include <sstream>
 #include <stdexcept>

@@ -13,6 +13,8 @@ all:
 	$(MAKE) -C app/TAppEncoder      MM32=$(M32)
 	$(MAKE) -C utils/annexBbytecount       MM32=$(M32)
 	$(MAKE) -C utils/convert_NtoMbit_YCbCr MM32=$(M32)
+	$(MAKE) -C lib/TLibDecoderAnalyser 	MM32=$(M32)
+	$(MAKE) -C app/TAppDecoderAnalyser      MM32=$(M32)
 
 debug:
 	$(MAKE) -C lib/TLibVideoIO 	debug MM32=$(M32)
@@ -24,6 +26,8 @@ debug:
 	$(MAKE) -C app/TAppEncoder      debug MM32=$(M32)
 	$(MAKE) -C utils/annexBbytecount       debug MM32=$(M32)
 	$(MAKE) -C utils/convert_NtoMbit_YCbCr debug MM32=$(M32)
+	$(MAKE) -C lib/TLibDecoderAnalyser 	debug MM32=$(M32)
+	$(MAKE) -C app/TAppDecoderAnalyser      debug MM32=$(M32)
 
 release:
 	$(MAKE) -C lib/TLibVideoIO 	release MM32=$(M32)
@@ -35,6 +39,8 @@ release:
 	$(MAKE) -C app/TAppEncoder      release MM32=$(M32)
 	$(MAKE) -C utils/annexBbytecount       release MM32=$(M32)
 	$(MAKE) -C utils/convert_NtoMbit_YCbCr release MM32=$(M32)
+	$(MAKE) -C lib/TLibDecoderAnalyser 	release MM32=$(M32)
+	$(MAKE) -C app/TAppDecoderAnalyser      release MM32=$(M32)
 
 clean:
 	$(MAKE) -C lib/TLibVideoIO 	clean MM32=$(M32)
@@ -46,3 +52,6 @@ clean:
 	$(MAKE) -C app/TAppEncoder      clean MM32=$(M32)
 	$(MAKE) -C utils/annexBbytecount       clean MM32=$(M32)
 	$(MAKE) -C utils/convert_NtoMbit_YCbCr clean MM32=$(M32)
+	$(MAKE) -C lib/TLibDecoderAnalyser 	clean MM32=$(M32)
+	$(MAKE) -C app/TAppDecoderAnalyser      clean MM32=$(M32)
+	
