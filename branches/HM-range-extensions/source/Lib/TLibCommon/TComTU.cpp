@@ -216,6 +216,16 @@ UInt TComTU::GetEquivalentLog2TrSize(const ComponentID compID)     const
 }
 
 
+#if RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
+Bool TComTU::useDST(const ComponentID compID)
+{
+        TComDataCU *const pcCU       = getCU();
+  const UInt              absPartIdx = GetAbsPartIdxTU(compID);
+
+  return isLuma(compID) && (pcCU->isIntra(absPartIdx) || pcCU->isIntraBC(absPartIdx));
+}
+#endif
+
 
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
 Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)

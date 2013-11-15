@@ -1569,7 +1569,9 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
+#if !RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
+#endif
 
     assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
 
@@ -1579,7 +1581,11 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     }
     else
     {
+#if RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
+      xT( compID, rTu.useDST(compID), pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+#else
       xT( compID, useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+#endif
     }
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
@@ -1718,7 +1724,9 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
+#if !RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
     const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
+#endif
 
     xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
@@ -1760,7 +1768,11 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     }
     else
     {
+#if RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
+      xIT( compID, rTu.useDST(compID), m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+#else
       xIT( compID, useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
+#endif
 
 #if defined DEBUG_STRING
       if (psDebug)
