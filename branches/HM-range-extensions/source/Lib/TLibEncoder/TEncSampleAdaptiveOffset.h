@@ -131,8 +131,8 @@ private: //methods
                   , Bool isCalculatePreDeblockSamples
 #endif
                   );
-  Void deriveModeNewRDO(Int ctu, std::vector<SAOBlkParam*>& mergeList, Bool* sliceEnabled, SAOStatData*** blkStats, SAOBlkParam& modeParam, Double& modeNormCost, TEncSbac** cabacCoderRDO, Int inCabacLabel);
-  Void deriveModeMergeRDO(Int ctu, std::vector<SAOBlkParam*>& mergeList, Bool* sliceEnabled, SAOStatData*** blkStats, SAOBlkParam& modeParam, Double& modeNormCost, TEncSbac** cabacCoderRDO, Int inCabacLabel);
+  Void deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES], Bool* sliceEnabled, SAOStatData*** blkStats, SAOBlkParam& modeParam, Double& modeNormCost, TEncSbac** cabacCoderRDO, Int inCabacLabel);
+  Void deriveModeMergeRDO(Int ctu, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES], Bool* sliceEnabled, SAOStatData*** blkStats, SAOBlkParam& modeParam, Double& modeNormCost, TEncSbac** cabacCoderRDO, Int inCabacLabel);
   Int64 getDistortion(Int ctu, ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* offsetVal, SAOStatData& statData);
   Void deriveOffsets(Int ctu, ComponentID compIdx, Int typeIdc, SAOStatData& statData, Int* quantOffsets, Int& typeAuxInfo);
   inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 diffSum, Int shift);

@@ -1664,8 +1664,11 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
 
   if(isLeftMerge || isAboveMerge) //merge mode
   {
-    saoBlkParam[COMPONENT_Y].modeIdc = saoBlkParam[COMPONENT_Cb].modeIdc = saoBlkParam[COMPONENT_Cr].modeIdc = SAO_MODE_MERGE;
-    saoBlkParam[COMPONENT_Y].typeIdc = saoBlkParam[COMPONENT_Cb].typeIdc = saoBlkParam[COMPONENT_Cr].typeIdc = (isLeftMerge)?SAO_MERGE_LEFT:SAO_MERGE_ABOVE;
+    for (UInt componentIndex = 0; componentIndex < MAX_NUM_COMPONENT; componentIndex++)
+    {
+      saoBlkParam[componentIndex].modeIdc = SAO_MODE_MERGE;
+      saoBlkParam[componentIndex].typeIdc = (isLeftMerge)?SAO_MERGE_LEFT:SAO_MERGE_ABOVE;
+    }
   }
   else //new or off mode
   {    
