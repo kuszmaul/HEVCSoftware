@@ -36,6 +36,9 @@
 #include <list>
 #include <map>
 
+#ifndef __PROGRAM_OPTIONS_LITE__
+#define __PROGRAM_OPTIONS_LITE__
+
 //! \ingroup TAppCommon
 //! \{
 
@@ -226,7 +229,9 @@ namespace df
       Options& parent;
     };
     
-  }; /* namespace: program_options_lite */
-}; /* namespace: df */
+  } /* namespace: program_options_lite */
+} /* namespace: df */
 
 //! \}
+
+#endif

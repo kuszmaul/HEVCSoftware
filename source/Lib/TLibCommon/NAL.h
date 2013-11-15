@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __NAL__
+#define __NAL__
+
 #include <vector>
 #include <sstream>
 #include "CommonDef.h"
@@ -111,3 +114,5 @@ struct NALUnitEBSP : public NALUnit
 };
 //! \}
 //! \}
+
+#endif

@@ -35,8 +35,8 @@
     \brief    binary entropy encoder of CABAC
 */
 
-#ifndef __TENC_BIN_CODER_CABAC_COUNTER__
-#define __TENC_BIN_CODER_CABAC_COUNTER__
+#ifndef __TENCBINCODERCABACCOUNTER__
+#define __TENCBINCODERCABACCOUNTER__
 
 
 #include "TEncBinCoderCABAC.h"

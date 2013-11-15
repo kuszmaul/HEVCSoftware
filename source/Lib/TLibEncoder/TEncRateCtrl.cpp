@@ -36,6 +36,7 @@
 */
 #include "TEncRateCtrl.h"
 #include "../TLibCommon/TComPic.h"
+#include "../TLibCommon/TComChromaFormat.h"
 
 #include <cmath>
 
@@ -115,6 +116,7 @@ Void TEncRCSeq::create( Int totalFrames, Int targetBitrate, Int frameRate, Int G
     m_alphaUpdate = 0.4;
     m_betaUpdate  = 0.2;
   }
+
   m_averageBits     = (Int)(m_targetBits / totalFrames);
   Int picWidthInBU  = ( m_picWidth  % m_LCUWidth  ) == 0 ? m_picWidth  / m_LCUWidth  : m_picWidth  / m_LCUWidth  + 1;
   Int picHeightInBU = ( m_picHeight % m_LCUHeight ) == 0 ? m_picHeight / m_LCUHeight : m_picHeight / m_LCUHeight + 1;
@@ -756,7 +758,7 @@ Int TEncRCPic::estimatePicQP( Double lambda, list<TEncRCPic*>& listPreviousPictu
   return QP;
 }
 
-Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)
+Double TEncRCPic::getLCUTargetBpp(SliceType eSliceType)  
 {
   Int   LCUIdx    = getLCUCoded();
   Double bpp      = -1.0;
@@ -933,6 +935,7 @@ Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Boo
 
   alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
   beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
+
   TRCParameter rcPara;
   rcPara.m_alpha = alpha;
   rcPara.m_beta  = beta;
@@ -994,6 +997,7 @@ Double TEncRCPic::calAverageLambda()
   return avgLambda;
 }
 
+
 Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, Double averageQP, Double averageLambda, SliceType eSliceType)
 {
   m_picActualHeaderBits = actualHeaderBits;
@@ -1010,6 +1014,7 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
 
   Double alpha = m_encRCSeq->getPicPara( m_frameLevel ).m_alpha;
   Double beta  = m_encRCSeq->getPicPara( m_frameLevel ).m_beta;
+
   if (eSliceType == I_SLICE)
   {
     updateAlphaBetaIntra(&alpha, &beta);
@@ -1029,6 +1034,7 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
 
       alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
       beta  = Clip3( g_RCBetaMinValue,  g_RCBetaMaxValue,  beta  );
+
       TRCParameter rcPara;
       rcPara.m_alpha = alpha;
       rcPara.m_beta  = beta;
@@ -1041,6 +1047,7 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
     alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
     double lnbpp = log( picActualBpp );
     lnbpp = Clip3( -5.0, -0.1, lnbpp );
+
     beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
 
     alpha = Clip3( g_RCAlphaMinValue, g_RCAlphaMaxValue, alpha );
@@ -1254,6 +1261,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
         bitsRatio[2] = 2;
         bitsRatio[3] = 14;
       }
+
       if ( keepHierBits == 2 )
       {
         adaptiveBit = 1;
@@ -1305,6 +1313,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
         bitsRatio[6] = 1;
         bitsRatio[7] = 1;
       }
+
       if ( keepHierBits == 2 )
       {
         adaptiveBit = 2;
@@ -1325,6 +1334,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
       GOPID2Level[i] = 2;
     }
   }
+
   if ( keepHierBits > 0 )
   {
     if ( GOPSize == 4 && isLowdelay )
@@ -1390,4 +1400,3 @@ Void TEncRateCtrl::destroyRCGOP()
   delete m_encRCGOP;
   m_encRCGOP = NULL;
 }
-
