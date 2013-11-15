@@ -3966,7 +3966,7 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
 
 
   //  Get quantiser scale
-  Int *quantiserScale = getQuantCoeff(scalingListType, cQP.getAdjustedQp().rem, log2TrSize);
+  Int *quantiserScale = getQuantCoeff(scalingListType, cQP.getAdjustedQp().rem, log2TrSize-2);
 
   //  Get transform shift
   Int transformShift = getTransformShift(toChannelType(compID), log2TrSize);
