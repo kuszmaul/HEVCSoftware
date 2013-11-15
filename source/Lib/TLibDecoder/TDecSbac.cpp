@@ -1319,6 +1319,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   //--------------------------------------------------------------------------------------------------
 
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  const Bool golombRiceGroupAdaptation    = pcCU->getSlice()->getSPS()->getUseGolombRiceGroupAdaptation();
+  const UInt golombRiceParameterReduction = (pcCU->getCUTransquantBypass(uiAbsPartIdx) || (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)) ? 1 : 2;
+#endif
+
   //select scans
   TUEntropyCodingParameters codingParameters;
   getTUEntropyCodingParameters(codingParameters, rTu, compID);
@@ -1355,7 +1360,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   for( Int iSubSet = iLastScanSet; iSubSet >= 0; iSubSet-- )
   {
     Int  iSubPos   = iSubSet << MLS_CG_SIZE;
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+    uiGoRiceParam  = golombRiceGroupAdaptation ? ((uiGoRiceParam <= golombRiceParameterReduction) ? 0 : (uiGoRiceParam - golombRiceParameterReduction)) : 0;
+#else
     uiGoRiceParam  = 0;
+#endif
     Int numNonZero = 0;
 
     Int lastNZPosInCG  = -1;
@@ -1495,6 +1504,13 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
             absCoeff[ idx ] = uiLevel + baseLevel;
 
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+            if (golombRiceGroupAdaptation)
+            {
+              uiGoRiceParam = std::min<UInt>((uiGoRiceParam + (absCoeff[idx] >> (uiGoRiceParam + 2))), MAXIMUM_GOLOMB_RICE_PARAMETER);
+            }
+            else
+#endif
             if(absCoeff[idx]>3*(1<<uiGoRiceParam))
             {
               uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);

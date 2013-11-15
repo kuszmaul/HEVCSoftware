@@ -1287,6 +1287,11 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
   //--------------------------------------------------------------------------------------------------
 
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  const Bool golombRiceGroupAdaptation    = pcCU->getSlice()->getSPS()->getUseGolombRiceGroupAdaptation();
+  const UInt golombRiceParameterReduction = (pcCU->getCUTransquantBypass(uiAbsPartIdx) || (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)) ? 1 : 2;
+#endif
+
   //select scans
   TUEntropyCodingParameters codingParameters;
   getTUEntropyCodingParameters(codingParameters, rTu, compID);
@@ -1338,7 +1343,11 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   {
     Int numNonZero  = 0;
     Int  iSubPos    = iSubSet << MLS_CG_SIZE;
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+    uiGoRiceParam   = golombRiceGroupAdaptation ? ((uiGoRiceParam <= golombRiceParameterReduction) ? 0 : (uiGoRiceParam - golombRiceParameterReduction)) : 0;
+#else
     uiGoRiceParam   = 0;
+#endif
     UInt coeffSigns = 0;
 
     Int absCoeff[1 << MLS_CG_SIZE];
@@ -1464,9 +1473,16 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
           {
             xWriteCoefRemainExGolomb( absCoeff[ idx ] - baseLevel, uiGoRiceParam );
 
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+            if (golombRiceGroupAdaptation)
+            {
+              uiGoRiceParam = std::min<UInt>((uiGoRiceParam + (absCoeff[idx] >> (uiGoRiceParam + 2))), MAXIMUM_GOLOMB_RICE_PARAMETER);
+            }
+            else
+#endif
             if(absCoeff[idx] > 3*(1<<uiGoRiceParam))
             {
-               uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);
+              uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);
             }
           }
           if(absCoeff[ idx ] >= 2)

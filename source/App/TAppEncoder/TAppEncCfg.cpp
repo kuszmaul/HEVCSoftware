@@ -451,6 +451,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
 #endif
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
+#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -1596,17 +1599,20 @@ Void TAppEncCfg::xPrintParameter()
   printf("GOP size                        : %d\n", m_iGOPSize );
   printf("Internal bit depth              : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("PCM sample bit depth            : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("Extended precision processing   : %s\n", (m_useExtendedPrecision ? "Enabled" : "Disabled") );
-  printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing ? "Enabled" : "Disabled") );
+  printf("Extended precision processing   : %s\n", (m_useExtendedPrecision            ? "Enabled" : "Disabled") );
+  printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing   ? "Enabled" : "Disabled") );
 #if RExt__NRCE2_RESIDUAL_DPCM
-  printf("Intra residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTRA] ? "Enabled" : "Disabled") );
-  printf("Inter residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTER] ? "Enabled" : "Disabled") );
+  printf("Intra residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTRA]     ? "Enabled" : "Disabled") );
+  printf("Inter residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTER]     ? "Enabled" : "Disabled") );
 #endif
-  printf("Intra Block Copying             : %s\n", m_useIntraBlockCopy ? "Enabled" : "Disabled");
+  printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy               ? "Enabled" : "Disabled") );
 #if RExt__NRCE2_RESIDUAL_ROTATION
-  printf("Residual rotation               : %s\n", m_useResidualRotation ? "Enabled" : "Disabled");
+  printf("Residual rotation               : %s\n", (m_useResidualRotation             ? "Enabled" : "Disabled") );
 #endif
-  printf("Single significance map context : %s\n", m_useSingleSignificanceMapContext ? "Enabled" : "Disabled");
+  printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext ? "Enabled" : "Disabled") );
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation    ? "Enabled" : "Disabled") );
+#endif
 #if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   switch (m_costMode)
   {

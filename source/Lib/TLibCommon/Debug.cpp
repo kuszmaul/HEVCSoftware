@@ -174,6 +174,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_DPCM,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_ROTATION,                                  settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
+
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192,                   settingNameWidth, settingValueWidth);

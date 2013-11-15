@@ -541,6 +541,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
        || pcSPS->getUseExtendedPrecision()
        || pcSPS->getDisableIntraReferenceSmoothing()
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+       || pcSPS->getUseGolombRiceGroupAdaptation()
+#endif
     )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
@@ -555,6 +558,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
     WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),            "extended_precision_processing_flag" );
     WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),  "intra_smoothing_disabled_flag" );
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+    WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),    "golomb_rice_group_adaptation_flag" );
+#endif
     WRITE_FLAG( 0, "sps_extension2_flag" );
   }
   else
