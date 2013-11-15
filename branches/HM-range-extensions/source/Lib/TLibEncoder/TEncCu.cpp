@@ -341,6 +341,56 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize
 }
 #endif
 
+
+
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS && INTRABC_FASTME
+// ====================================================================================================================
+// Static function
+// ====================================================================================================================
+/** Calculates the minimum of the H and V luma activity of a CU in the source image.
+ *\param   pcCU
+ *\param   uiAbsPartIdx
+ *\param   ppcOrigYuv
+ *\returns Intermediate_Int
+ *
+*/
+static Intermediate_Int
+CalculateMinimumHVLumaActivity(TComDataCU *pcCU, const UInt uiAbsPartIdx, const TComYuv * const * const ppcOrigYuv)
+{
+  const TComYuv *pOrgYuv = ppcOrigYuv[pcCU->getDepth(uiAbsPartIdx)];
+  const Int      stride  = pOrgYuv->getStride(COMPONENT_Y);
+  const Int      width   = pcCU->getWidth(uiAbsPartIdx);
+  const Int      height  = pcCU->getHeight(uiAbsPartIdx);
+
+  // Get activity
+  Intermediate_Int hAct = 0;
+  const Pel *pY = pOrgYuv->getAddr(COMPONENT_Y, uiAbsPartIdx);
+  for (Int y = 0; y < height; y++)
+  {
+    for (Int x = 1; x < width; x++)
+    {
+      hAct += abs( pY[x] - pY[x - 1]);
+    }
+    pY += stride;
+  }
+
+  Intermediate_Int vAct = 0;
+  pY = pOrgYuv->getAddr(COMPONENT_Y, 0) + stride;
+  for (Int y = 1; y < height; y++)
+  {
+    for (Int x = 0; x < width; x++)
+    {
+      vAct += abs(pY[x] - pY[x - stride]);
+    }
+    pY += stride;
+  }
+
+  return std::min(hAct, vAct);
+}
+#endif
+
+
+
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
@@ -646,18 +696,32 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
         // do normal intra modes
         // speedup for inter frames
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+        Double intraCost = 0.0;
+#endif
+
         if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
            (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
         {
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+          xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+#else
           xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+#endif
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
           {
             if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+              Double tmpIntraCost;
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
+              intraCost = std::min(intraCost, tmpIntraCost);
+#else
               xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
+#endif
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
           }
@@ -677,10 +741,35 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+        Bool bUse1DSearchFor8x8 = false;
+#if INTRABC_FASTME
+        const Bool bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
+
+        if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() &&
+            !bSkipIntraBlockCopySearch &&
+            rpcTempCU->getWidth(0) == 8 &&
+            !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
+        {
+          bUse1DSearchFor8x8 = (CalculateMinimumHVLumaActivity(rpcTempCU, 0, m_ppcOrigYuv) < (168 << (g_bitDepth[0] - 8)));
+        }
+#else // !INTRABC_FASTME
+        const Bool bSkipIntraBlockCopySearch = false;
+#endif // INTRABC_FASTME
+#endif
+
         if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
         {
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+          if (!bSkipIntraBlockCopySearch)
+          {
+            xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8 DEBUG_STRING_PASS_INTO(sDebug));
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          }
+#else
           xCheckRDCostIntraBC( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug));
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+#endif
         }
 
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
@@ -1523,7 +1612,13 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
 }
 
-Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize DEBUG_STRING_FN_DECLARE(sDebug) )
+Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
+                                TComDataCU *&rpcTempCU,
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                Double      &cost,
+#endif
+                                PartSize     eSize
+                                DEBUG_STRING_FN_DECLARE(sDebug) )
 {
   DEBUG_STRING_NEW(sTest)
 
@@ -1600,10 +1695,20 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 
   xCheckDQP( rpcTempCU );
+
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+  cost = rpcTempCU->getTotalCost();
+#endif
+
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
 }
 
-Void TEncCu::xCheckRDCostIntraBC( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug))
+Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
+                                  TComDataCU *&rpcTempCU
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                , Bool         bUse1DSearchFor8x8
+#endif
+                                  DEBUG_STRING_FN_DECLARE(sDebug))
 {
   DEBUG_STRING_NEW(sTest)
   UInt uiDepth = rpcTempCU->getDepth( 0 );
@@ -1621,7 +1726,16 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, DC_IDX, 0, uiDepth );
 
   // intra BV search
-  Bool bValid = m_pcPredSearch->predIntraBCSearch ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] DEBUG_STRING_PASS_INTO(sTest), false);
+  Bool bValid = m_pcPredSearch->predIntraBCSearch ( rpcTempCU,
+                                                    m_ppcOrigYuv[uiDepth],
+                                                    m_ppcPredYuvTemp[uiDepth],
+                                                    m_ppcResiYuvTemp[uiDepth],
+                                                    m_ppcRecoYuvTemp[uiDepth]
+                                                    DEBUG_STRING_PASS_INTO(sTest),
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                                    bUse1DSearchFor8x8,
+#endif
+                                                    false);
   
   if (bValid)
   {

@@ -205,7 +205,10 @@ public:
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv
                                   DEBUG_STRING_FN_DECLARE(sDebug),
-                                  Bool        bUseRes = false
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                  Bool        bUse1DSearchFor8x8,
+#endif
+                                  Bool        bUseRes
                                 );
 
   Void xIntraBlockCopyEstimation( TComDataCU*  pcCU,
@@ -215,6 +218,9 @@ public:
                                   TComMv&      rcMv,
                                   UInt&        ruiBits,
                                   Distortion&  ruiCost
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                , Bool        bUse1DSearchFor8x8
+#endif
                                 );  
 
   Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
@@ -255,6 +261,9 @@ public:
                                   Int          iRoiHeight
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
                                 , TComMv&    mvPred
+#endif
+#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
+                                , Bool         bUse1DSearchFor8x8
 #endif
                                 );
   

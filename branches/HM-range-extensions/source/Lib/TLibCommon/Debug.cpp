@@ -183,6 +183,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0185_RESIDUAL_DPCM_FLAGS,                                settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0186_DISABLE_NONINTRA_ROTATION,                          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING,                settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS,                  settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
