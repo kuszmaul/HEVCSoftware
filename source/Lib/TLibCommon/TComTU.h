@@ -131,10 +131,13 @@ class TComTU
     UInt GetEquivalentLog2TrSize(const ComponentID compID)     const;
     TU_SPLIT_MODE GetSplitMode()                               const { return mSplitMode; }
 
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
-    Bool          isNonTransformedResidualRotated(const ComponentID compID);
+#if RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
+    Bool useDST(const ComponentID compID);
 #endif
 
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+    Bool isNonTransformedResidualRotated(const ComponentID compID);
+#endif
 };
 
 
