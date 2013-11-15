@@ -546,6 +546,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
        || pcSPS->getUseExtendedPrecision()
        || pcSPS->getDisableIntraReferenceSmoothing()
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+       || pcSPS->getUseHighPrecisionPredictionWeighting()
+#endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
        || pcSPS->getUseGolombRiceGroupAdaptation()
 #endif
@@ -568,6 +571,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
     WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
     WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+    WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
+#endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
     WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
 #endif
@@ -1374,8 +1380,12 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
               Int iDeltaWeight = (wp[j].iWeight - (1<<wp[COMPONENT_Cb].uiLog2WeightDenom));
               WRITE_SVLC( iDeltaWeight, "delta_chroma_weight_lX" );            // se(v): delta_chroma_weight_lX
 
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+              Int range=pcSlice->getSPS()->getUseHighPrecisionPredictionWeighting() ? (1<<g_bitDepth[CHANNEL_TYPE_CHROMA])/2 : 128;
+              Int pred = ( range - ( ( range*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
+#else
               Int pred = ( 128 - ( ( 128*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
-
+#endif
               Int iDeltaChroma = (wp[j].iOffset - pred);
               WRITE_SVLC( iDeltaChroma, "delta_chroma_offset_lX" );            // se(v): delta_chroma_offset_lX
             }

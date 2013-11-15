@@ -162,7 +162,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   m_cTEncTop.setUseExtendedPrecision         ( m_useExtendedPrecision );
   m_cTEncTop.setUseIntraBlockCopy            ( m_useIntraBlockCopy );
-
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  m_cTEncTop.setUseHighPrecisionPredictionWeighting( m_useHighPrecisionPredictionWeighting );
+#endif
   //====== Tool list ========
   m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );

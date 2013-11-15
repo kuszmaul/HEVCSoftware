@@ -338,6 +338,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
   ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  ("HighPrecisionPredictionWeighting", m_useHighPrecisionPredictionWeighting, false, "Use high precision option for weighted prediction (not valid in V1 profiles)")
+#endif
 #if RExt__COLOUR_SPACE_CONVERSIONS
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
   ("SNRInternalColourSpace",  m_snrInternalColourSpace,             false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
@@ -1620,6 +1623,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
 #endif
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
+#endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
 #endif

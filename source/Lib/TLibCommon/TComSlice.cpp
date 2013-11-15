@@ -1329,6 +1329,9 @@ Void  TComSlice::resetWpScaling()
  */
 Void  TComSlice::initWpScaling()
 {
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  const Bool bUseHighPrecisionPredictionWeighting = getSPS()->getUseHighPrecisionPredictionWeighting();
+#endif
   for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
@@ -1344,7 +1347,12 @@ Void  TComSlice::initWpScaling()
         }
 
         pwp->w      = pwp->iWeight;
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+        const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (g_bitDepth[toChannelType(ComponentID(yuv))]-8));
+        pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: RExt - This value of the ".o" variable is never used - .o is set immediately before it gets used
+#else
         pwp->o      = pwp->iOffset << (g_bitDepth[toChannelType(ComponentID(yuv))]-8); //NOTE: RExt - This value of the ".o" variable is never used - .o is set immediately before it gets used
+#endif
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }
@@ -1411,6 +1419,9 @@ TComSPS::TComSPS()
 , m_useExtendedPrecision      (false)
 , m_useIntraBlockCopy         (false)
 , m_useLossless               (false)
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+, m_useHighPrecisionPredictionWeighting(false)
+#endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
 , m_useResidualRotation       (false)
 #endif
