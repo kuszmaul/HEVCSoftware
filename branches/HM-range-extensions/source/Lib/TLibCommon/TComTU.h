@@ -130,6 +130,11 @@ class TComTU
     UInt GetLog2LumaTrSize()                                   const { return mLog2TrLumaSize; }
     UInt GetEquivalentLog2TrSize(const ComponentID compID)     const;
     TU_SPLIT_MODE GetSplitMode()                               const { return mSplitMode; }
+
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+    Bool          isNonTransformedResidualRotated(const ComponentID compID);
+#endif
+
 };
 
 

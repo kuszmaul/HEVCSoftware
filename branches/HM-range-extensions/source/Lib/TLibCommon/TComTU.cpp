@@ -214,3 +214,15 @@ UInt TComTU::GetEquivalentLog2TrSize(const ComponentID compID)     const
 {
   return g_aucConvertToBit[ getRect(compID).height ] + 2;
 }
+
+
+
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)
+{
+  // rotation only for 4x4 intra (not intra-bc), and is only used for non-transformed blocks (the latter is not checked here)
+  return    getCU()->getSlice()->getSPS()->getUseResidualRotation()
+         && mRect[compID].width == 4
+         && getCU()->isIntra(GetAbsPartIdxTU());
+}
+#endif

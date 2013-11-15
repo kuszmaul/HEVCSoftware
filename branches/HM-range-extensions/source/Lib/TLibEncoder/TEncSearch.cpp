@@ -1146,7 +1146,11 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
     Int    resiDiff;
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
+    const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+#else
     const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
+#endif
     const UInt lastColumn     = uiWidth  - 1;
     const UInt lastRow        = uiHeight - 1;
 #endif
