@@ -169,10 +169,8 @@ public:
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
@@ -234,9 +232,7 @@ private:
   ContextModel3DBuffer m_interRdpcmDirSCModel;
 #endif
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
-#endif
 };
 
 //! \}

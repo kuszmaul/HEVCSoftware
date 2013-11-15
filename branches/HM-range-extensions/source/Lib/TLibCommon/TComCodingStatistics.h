@@ -88,9 +88,7 @@ enum TComCodingStatisticsType
 #if RExt__NRCE2_RESIDUAL_DPCM
   STATS__INTER_RDPCM_BITS,
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
   STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR,
-#endif
   STATS__NUM_STATS
 };
 
@@ -137,9 +135,7 @@ static inline const Char* getName(TComCodingStatisticsType name)
 #if RExt__NRCE2_RESIDUAL_DPCM
     "INTER_RDPCM_BITS",
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
     "CABAC_BITS__INTRA_BLOCK_COPY_VECTOR",
-#endif
     "TRAILING_BITS"
   };
   assert(STATS__NUM_STATS == sizeof(statNames)/sizeof(Char *) && name < STATS__NUM_STATS);

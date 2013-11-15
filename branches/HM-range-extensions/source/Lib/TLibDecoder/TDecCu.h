@@ -96,15 +96,13 @@ protected:
   Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-#if RExt__N0256_INTRA_BLOCK_COPY
-  Void  xReconIntraBC           ( TComDataCU* pcCU, UInt uiDepth );
-#endif
+  Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
   
-  Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiDepth );
-  Void  xIntraRecBlk            ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
-  Void  xIntraRecQT             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );
+  Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
+  Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
+  Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );
   
-  Void  xReconPCM               ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPCM                ( TComDataCU* pcCU, UInt uiDepth );
 
   Void xDecodeInterTexture      ( TComDataCU* pcCU, UInt uiDepth );
   Void xDecodePCMTexture        ( TComDataCU* pcCU, const UInt uiPartIdx, const Pel *piPCM, Pel* piReco, const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);

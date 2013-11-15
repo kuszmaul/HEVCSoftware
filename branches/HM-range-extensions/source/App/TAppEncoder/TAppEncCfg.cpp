@@ -441,9 +441,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // Coding tools
   ("AMP",                     m_enableAMP,               true,  "Enable asymmetric motion partitions")
-#if RExt__N0256_INTRA_BLOCK_COPY
-  ("IntraBlockCopyEnabled",    m_useIntraBlockCopy,  false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
-#endif
+  ("IntraBlockCopyEnabled",   m_useIntraBlockCopy,  false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
 #if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
@@ -1610,9 +1608,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTRA] ? "Enabled" : "Disabled") );
   printf("Inter residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTER] ? "Enabled" : "Disabled") );
 #endif
-#if RExt__N0256_INTRA_BLOCK_COPY
   printf("Intra Block Copying             : %s\n", m_useIntraBlockCopy ? "Enabled" : "Disabled");
-#endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
   printf("Residual rotation               : %s\n", m_useResidualRotation ? "Enabled" : "Disabled");
 #endif

@@ -313,7 +313,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     return;
   }
 
-#if RExt__N0256_INTRA_BLOCK_COPY
   if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
     m_pcEntropyDecoder->decodeIntraBCFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
@@ -327,8 +326,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   }
   else
   {
-#endif
-
     m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
     m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -345,9 +342,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
     // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
     m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if RExt__N0256_INTRA_BLOCK_COPY
   }
-#endif
 
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
@@ -418,11 +413,9 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
-#if RExt__N0256_INTRA_BLOCK_COPY
     case MODE_INTRABC:
       xReconIntraBC( m_ppcCU[uiDepth], uiDepth );
       break;
-#endif
     default:
       assert(0);
       break;
@@ -464,7 +457,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 
 }
 
-#if RExt__N0256_INTRA_BLOCK_COPY
+
 Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 {
   // intra prediction
@@ -491,10 +484,6 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 #endif
 
 }
-#endif
-
-
-
 
 
 Void
