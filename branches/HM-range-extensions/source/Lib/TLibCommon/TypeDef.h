@@ -263,7 +263,6 @@
 
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
 #define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
-#define RExt__N0188_EXTENDED_PRECISION_PROCESSING                              1 ///*< 0 = use internal precisions as in HEVC version 1, 1 (default) = allow (configured by command line) internal precisions to be increased to accommodate high bit depth video
 #define RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS                         1 ///< 0 = use Luma 32x32 scaling lists for chroma 32x32, 1 (default) = use Chroma 16x16 for Chroma32x32
 #define RExt__N0256_INTRA_BLOCK_COPY                                           1 ///< 0 = disable intra block copying, 1 (default) enable block copying (depending on SPS parameter)
 #define RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING                              1 ///< 0 = allow any shift in transform skip, 1 (default) = when in extended-precision mode, limit the shift such that a right-shift never occurs
@@ -324,10 +323,6 @@
 
 #if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && ((RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS == 0) || (RExt__HIGH_BIT_DEPTH_SUPPORT == 0)))
 #error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS and RExt__HIGH_BIT_DEPTH_SUPPORT
-#endif
-
-#if ((RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING != 0) && (RExt__N0188_EXTENDED_PRECISION_PROCESSING == 0))
-#error ERROR: RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING cannot be enabled without RExt__N0188_EXTENDED_PRECISION_PROCESSING
 #endif
 
 // ====================================================================================================================

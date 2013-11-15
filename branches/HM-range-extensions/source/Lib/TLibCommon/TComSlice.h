@@ -724,10 +724,7 @@ private:
   // Parameter
   Int         m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
   Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
-
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool        m_useExtendedPrecision;
-#endif
 
 #if RExt__N0256_INTRA_BLOCK_COPY
   Bool        m_useIntraBlockCopy;
@@ -865,10 +862,8 @@ public:
   Void      setBitDepth     (ChannelType type, Int u ) { m_uiBitDepth[type] = u;      }
   Int       getQpBDOffset   (ChannelType type) const   { return m_qpBDOffset[type];   }
   Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;      }
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
-#endif
 
 #if RExt__N0256_INTRA_BLOCK_COPY
   Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }

@@ -247,20 +247,12 @@ protected:
 
 private:
   // forward Transform
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Void xT   ( const ComponentID compID, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight );
-#else
-  Void xT   (Int bitDepth, Bool useDST, Pel* pResidual, UInt uiStride, TCoeff* plCoeff, Int iWidth, Int iHeight );
-#endif
 
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Void signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters );
-#else
-  Void signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters );
-#endif
 
   // quantization
   Void xQuant(       TComTU       &rTu,
@@ -328,11 +320,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                  const QpParam      &cQP );
 
   // inverse transform
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Void xIT    ( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
-#else
-  Void xIT    ( Int bitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
-#endif
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );

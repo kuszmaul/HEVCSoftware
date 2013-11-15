@@ -1408,9 +1408,7 @@ TComSPS::TComSPS()
 , m_usePCM                    (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 , m_useExtendedPrecision      (false)
-#endif
 #if RExt__N0256_INTRA_BLOCK_COPY
 , m_useIntraBlockCopy     (false)
 #endif

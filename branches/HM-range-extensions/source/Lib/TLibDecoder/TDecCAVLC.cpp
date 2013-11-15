@@ -565,11 +565,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   assert(uiCode <= 8);
-#else
-  assert(uiCode <= 6);
-#endif
+
   pcSPS->setBitDepth(CHANNEL_TYPE_LUMA, 8 + uiCode);
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
 
@@ -577,11 +574,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if (bChroma)
   {
     READ_UVLC( uiCode,    "bit_depth_chroma_minus8" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     assert(uiCode <= 8);
-#else
-    assert(uiCode <= 6);
-#endif
   }
   pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode); // NOTE: RExt - for 4:0:0, this will be setting the bit depths for chroma to that of luma
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*uiCode) );
@@ -709,9 +702,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA, (uiCode != 0));
     READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER, (uiCode != 0));
 #endif
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision(uiCode != 0);
-#endif
     READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing(uiCode != 0);
     READ_FLAG( uiCode, "sps_extension2_flag");
   }

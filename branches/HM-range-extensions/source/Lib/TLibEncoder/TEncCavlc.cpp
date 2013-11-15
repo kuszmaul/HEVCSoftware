@@ -544,9 +544,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getUseResidualDPCM(MODE_INTRA)
        || pcSPS->getUseResidualDPCM(MODE_INTER)
 #endif
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
        || pcSPS->getUseExtendedPrecision()
-#endif
        || pcSPS->getDisableIntraReferenceSmoothing()
     )
   {
@@ -562,9 +560,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),       "residual_dpcm_intra_enabled_flag" );
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),       "residual_dpcm_inter_enabled_flag" );
 #endif
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),            "extended_precision_processing_flag" );
-#endif
     WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),  "intra_smoothing_disabled_flag" );
     WRITE_FLAG( 0, "sps_extension2_flag" );
   }

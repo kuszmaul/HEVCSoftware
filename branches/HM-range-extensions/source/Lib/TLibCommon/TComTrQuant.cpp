@@ -177,11 +177,7 @@ Void TComTrQuant::clearSliceARLCnt()
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
-#else
-void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, Bool useDST)
-#endif
 {
   UInt i,j,k;
   TCoeff iSum;
@@ -214,11 +210,7 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_FORWARD];
 #endif
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const Int shift_1st = (uiLog2TrSize +  bitDepth + TRANSFORM_MATRIX_SHIFT) - maxTrDynamicRange;
-#else
-  const Int shift_1st = (uiLog2TrSize +  bitDepth + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
-#endif
   const Int shift_2nd = uiLog2TrSize + TRANSFORM_MATRIX_SHIFT;
   const Int add_1st = (shift_1st>0) ? (1<<(shift_1st-1)) : 0;
   const Int add_2nd = 1<<(shift_2nd-1);
@@ -260,11 +252,7 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
-#else
-void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST)
-#endif
 {
   UInt i,j,k;
   TCoeff iSum;
@@ -297,13 +285,9 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
 #endif
 
   const Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + maxTrDynamicRange - 1) - bitDepth;
   const TCoeff clipMinimum = -(1 << maxTrDynamicRange);
   const TCoeff clipMaximum =  (1 << maxTrDynamicRange) - 1;
-#else
-  const Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - bitDepth;
-#endif
   assert(shift_2nd>=0);
   const Int add_1st = 1<<(shift_1st-1);
   const Int add_2nd = (shift_2nd>0) ? (1<<(shift_2nd-1)) : 0;
@@ -318,12 +302,9 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
       {
         iSum += iT[k*uiTrSize+i]*coeff[k*uiTrSize+j];
       }
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
       //NOTE: RExt - Clipping here is not in the standard, but is used to protect the "Pel" data type into which the inverse-transformed samples will be copied
       tmp[i*uiTrSize+j] = Clip3<TCoeff>(clipMinimum, clipMaximum, (iSum + add_1st)>>shift_1st);
-#else
-      tmp[i*uiTrSize+j] = Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_1st)>>shift_1st);
-#endif
     }
   }
 
@@ -337,11 +318,8 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
       {
         iSum += iT[k*uiTrSize+j]*tmp[i*uiTrSize+k];
       }
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
       block[i*uiStride+j] = Clip3<TCoeff>(std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max(), (iSum + add_1st)>>shift_1st);
-#else
-      block[i*uiStride+j] = Pel(Clip3<TCoeff>(TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (iSum + add_2nd)>>shift_2nd));
-#endif
     }
   }
 }
@@ -424,11 +402,7 @@ void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, ou
   }
 }
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMinimum, const TCoeff outputMaximum)  // input tmp, output block
-#else
-void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output block
-#endif
 {
   Int i;
   TCoeff c[4];
@@ -450,11 +424,7 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output
       for (int row = 0; row < 4; row++)
         result += c[row] * g_as_DST_MAT_4[TRANSFORM_INVERSE][row][column]; // use the defined matrix, rather than hard-wired numbers
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       result = Clip3( outputMinimum, outputMaximum, rightShift((result + rnd_factor), shift));
-#else
-      result = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, rightShift((result + rnd_factor), shift));
-#endif
     }
 #else
     // Intermediate Variables
@@ -463,17 +433,10 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output
     c[2] = tmp[  i] - tmp[12+i];
     c[3] = 74* tmp[4+i];
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     block[4*i+0] = Clip3( outputMinimum, outputMaximum, ( 29 * c[0] + 55 * c[1]     + c[3]      + rnd_factor ) >> shift );
     block[4*i+1] = Clip3( outputMinimum, outputMaximum, ( 55 * c[2] - 29 * c[1]     + c[3]      + rnd_factor ) >> shift );
     block[4*i+2] = Clip3( outputMinimum, outputMaximum, ( 74 * (tmp[i] - tmp[8+i]  + tmp[12+i]) + rnd_factor ) >> shift );
     block[4*i+3] = Clip3( outputMinimum, outputMaximum, ( 55 * c[0] + 29 * c[2]     - c[3]      + rnd_factor ) >> shift );
-#else
-    block[4*i+0] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, ( 29 * c[0] + 55 * c[1]     + c[3]      + rnd_factor ) >> shift );
-    block[4*i+1] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, ( 55 * c[2] - 29 * c[1]     + c[3]      + rnd_factor ) >> shift );
-    block[4*i+2] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, ( 74 * (tmp[i] - tmp[8+i]  + tmp[12+i]) + rnd_factor ) >> shift );
-    block[4*i+3] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, ( 55 * c[0] + 29 * c[2]     - c[3]      + rnd_factor ) >> shift );
-#endif
 #endif
   }
 }
@@ -483,11 +446,7 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift)  // input tmp, output
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
-#else
-void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line)
-#endif
 {
   Int j;
   TCoeff E[2],O[2];
@@ -509,17 +468,10 @@ void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 #endif
 
     /* Combining even and odd terms at each hierarchy levels to calculate the final spatial domain vector */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     dst[0] = Clip3( outputMinimum, outputMaximum, (E[0] + O[0] + add)>>shift );
     dst[1] = Clip3( outputMinimum, outputMaximum, (E[1] + O[1] + add)>>shift );
     dst[2] = Clip3( outputMinimum, outputMaximum, (E[1] - O[1] + add)>>shift );
     dst[3] = Clip3( outputMinimum, outputMaximum, (E[0] - O[0] + add)>>shift );
-#else
-    dst[0] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[0] + O[0] + add)>>shift );
-    dst[1] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[1] + O[1] + add)>>shift );
-    dst[2] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[1] - O[1] + add)>>shift );
-    dst[3] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[0] - O[0] + add)>>shift );
-#endif
 
     src   ++;
     dst += 4;
@@ -584,11 +536,7 @@ void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
-#else
-void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line)
-#endif
 {
   Int j,k;
   TCoeff E[4],O[4];
@@ -628,13 +576,8 @@ void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line)
     E[2] = EE[1] - EO[1];
     for (k=0;k<4;k++)
     {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       dst[ k   ] = Clip3( outputMinimum, outputMaximum, (E[k] + O[k] + add)>>shift );
       dst[ k+4 ] = Clip3( outputMinimum, outputMaximum, (E[3-k] - O[3-k] + add)>>shift );
-#else
-      dst[ k   ] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[k] + O[k] + add)>>shift );
-      dst[ k+4 ] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[3-k] - O[3-k] + add)>>shift );
-#endif
     }
     src ++;
     dst += 8;
@@ -722,11 +665,7 @@ void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
-#else
-void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line)
-#endif
 {
   Int j,k;
   TCoeff E[8],O[8];
@@ -783,13 +722,8 @@ void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line)
     }
     for (k=0;k<8;k++)
     {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       dst[k]   = Clip3( outputMinimum, outputMaximum, (E[k] + O[k] + add)>>shift );
       dst[k+8] = Clip3( outputMinimum, outputMaximum, (E[7-k] - O[7-k] + add)>>shift );
-#else
-      dst[k]   = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[k] + O[k] + add)>>shift );
-      dst[k+8] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[7-k] - O[7-k] + add)>>shift );
-#endif
     }
     src ++;
     dst += 16;
@@ -896,11 +830,7 @@ void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
-#else
-void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
-#endif
 {
   Int j,k;
   TCoeff E[16],O[16];
@@ -980,13 +910,8 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
     }
     for (k=0;k<16;k++)
     {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       dst[k]    = Clip3( outputMinimum, outputMaximum, (E[k] + O[k] + add)>>shift );
       dst[k+16] = Clip3( outputMinimum, outputMaximum, (E[15-k] - O[15-k] + add)>>shift );
-#else
-      dst[k]    = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[k] + O[k] + add)>>shift );
-      dst[k+16] = Clip3( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, (E[15-k] - O[15-k] + add)>>shift );
-#endif
     }
     src ++;
     dst += 32;
@@ -999,20 +924,13 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
-#else
-void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST)
-#endif
 {
 #if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_FORWARD];
 #endif
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
   const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  bitDepth + TRANSFORM_MATRIX_SHIFT) - maxTrDynamicRange;
-#else
-  const Int shift_1st = ((g_aucConvertToBit[iWidth] + 2) +  bitDepth + TRANSFORM_MATRIX_SHIFT) - MAX_TR_DYNAMIC_RANGE;
-#endif
   const Int shift_2nd = (g_aucConvertToBit[iHeight] + 2) + TRANSFORM_MATRIX_SHIFT;
 
   assert(shift_1st >= 0);
@@ -1066,23 +984,16 @@ void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
-#else
-void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST)
-#endif
 {
 #if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_INVERSE];
 #endif
+
   Int shift_1st = TRANSFORM_MATRIX_SHIFT + 1; //1 has been added to shift_1st at the expense of shift_2nd
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + maxTrDynamicRange - 1) - bitDepth;
   const TCoeff clipMinimum = -(1 << maxTrDynamicRange);
   const TCoeff clipMaximum =  (1 << maxTrDynamicRange) - 1;
-#else
-  Int shift_2nd = (TRANSFORM_MATRIX_SHIFT + MAX_TR_DYNAMIC_RANGE - 1) - bitDepth;
-#endif
 
   assert(shift_1st >= 0);
   assert(shift_2nd >= 0);
@@ -1091,7 +1002,6 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
   switch (iHeight)
   {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     case 4:
       {
         if ((iWidth == 4) && useDST)    // Check for DCT or DST
@@ -1105,28 +1015,13 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
     case  8: partialButterflyInverse8 ( coeff, tmp, shift_1st, iWidth, clipMinimum, clipMaximum); break;
     case 16: partialButterflyInverse16( coeff, tmp, shift_1st, iWidth, clipMinimum, clipMaximum); break;
     case 32: partialButterflyInverse32( coeff, tmp, shift_1st, iWidth, clipMinimum, clipMaximum); break;
-#else
-    case 4:
-      {
-        if ((iWidth == 4) && useDST)    // Check for DCT or DST
-        {
-          fastInverseDst( coeff, tmp, shift_1st);
-        }
-        else partialButterflyInverse4 ( coeff, tmp, shift_1st, iWidth);
-      }
-      break;
 
-    case  8: partialButterflyInverse8 ( coeff, tmp, shift_1st, iWidth); break;
-    case 16: partialButterflyInverse16( coeff, tmp, shift_1st, iWidth); break;
-    case 32: partialButterflyInverse32( coeff, tmp, shift_1st, iWidth); break;
-#endif
     default:
       assert(0); exit (1); break;
   }
 
   switch (iWidth)
   {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     //NOTE: RExt - Clipping here is not in the standard, but is used to protect the "Pel" data type into which the inverse-transformed samples will be copied
     case 4:
       {
@@ -1141,21 +1036,7 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
     case  8: partialButterflyInverse8 ( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
     case 16: partialButterflyInverse16( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
     case 32: partialButterflyInverse32( tmp, block, shift_2nd, iHeight, std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max()); break;
-#else
-    case 4:
-      {
-        if ((iHeight == 4) && useDST)    // Check for DCT or DST
-        {
-          fastInverseDst( tmp, block, shift_2nd );
-        }
-        else partialButterflyInverse4 ( tmp, block, shift_2nd, iHeight);
-      }
-      break;
 
-    case  8: partialButterflyInverse8 ( tmp, block, shift_2nd, iHeight); break;
-    case 16: partialButterflyInverse16( tmp, block, shift_2nd, iHeight); break;
-    case 32: partialButterflyInverse32( tmp, block, shift_2nd, iHeight); break;
-#endif
     default:
       assert(0); exit (1); break;
   }
@@ -1163,20 +1044,14 @@ void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
 
 // To minimize the distortion only. No rate is considered.
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 Void TComTrQuant::signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters )
-#else
-Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters )
-#endif
 {
   const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
   const UInt height    = codingParameters.heightInGroups << MLS_CG_LOG2_HEIGHT;
   const UInt groupSize = 1 << MLS_CG_SIZE;
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
   Int lastCG = -1;
   Int absSum = 0 ;
@@ -1279,11 +1154,7 @@ Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* delta
           }
         } //CG loop
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         if(pQCoef[minPos] == entropyCodingMaximum || pQCoef[minPos] == entropyCodingMinimum)
-#else
-        if(pQCoef[minPos] == TRANSFORM_MAXIMUM || pQCoef[minPos] == TRANSFORM_MINIMUM)
-#endif
         {
           finalChange = -1;
         }
@@ -1346,10 +1217,8 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     TUEntropyCodingParameters codingParameters;
     getTUEntropyCodingParameters(codingParameters, rTu, compID);
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
     const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
     TCoeff deltaU[MAX_TU_SIZE * MAX_TU_SIZE];
 
@@ -1431,22 +1300,15 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
       uiAcSum += iLevel;
       iLevel *= iSign;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
       piQCoef[uiBlockPos] = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, iLevel );
-#else
-      piQCoef[uiBlockPos] = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, iLevel );
-#endif
     } // for n
 
     if( pcCU->getSlice()->getPPS()->getSignHideFlag() )
     {
       if(uiAcSum>=2)
       {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         signBitHidingHDQ( compID, piQCoef, piCoef, deltaU, codingParameters ) ;
-#else
-        signBitHidingHDQ( piQCoef, piCoef, deltaU, codingParameters ) ;
-#endif
       }
     }
   } //if RDOQ
@@ -1475,10 +1337,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   const UInt numSamplesInBlock=uiWidth*uiHeight;
   assert(compID<MAX_NUM_COMPONENT);
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
 #if RExt__N0256_INTRA_BLOCK_COPY
 #if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
@@ -1526,11 +1386,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
     //iCoeffQ                         = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift
     //(sizeof(Intermediate_Int) * 8)  =              inputBitDepth    +    dequantCoefBits                   - rightShift
     const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
-#endif
+
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
 
@@ -1550,11 +1407,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-        piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
       }
     }
     else
@@ -1571,11 +1424,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-        piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
       }
     }
   }
@@ -1587,11 +1436,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
     //from the dequantisation equation:
     //iCoeffQ                         = Intermediate_Int((Int64(clipQCoef) * scale + iAdd) >> rightShift);
     //(sizeof(Intermediate_Int) * 8)  =                    inputBitDepth   + scaleBits      - rightShift
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
-#endif
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
 
@@ -1603,11 +1448,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
       {
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = (Intermediate_Int(clipQCoef) * scale + iAdd) >> rightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-        piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
       }
     }
     else
@@ -1618,11 +1459,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
       {
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
         iCoeffQ   = (Intermediate_Int(clipQCoef) * scale) << leftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-        piCoef[n] = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
       }
     }
   }
@@ -1739,11 +1576,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     }
     else
     {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       xT( compID, useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
-#else
-      xT( g_bitDepth[toChannelType(compID)], useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
-#endif
     }
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
@@ -1924,11 +1757,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     }
     else
     {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       xIT( compID, useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
-#else
-      xIT( g_bitDepth[toChannelType(compID)], useDST, m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
-#endif
 
 #if defined DEBUG_STRING
       if (psDebug)
@@ -2011,20 +1840,12 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 Void TComTrQuant::xT( const ComponentID compID, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
-#else
-Void TComTrQuant::xT( Int bitDepth, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
-#endif
 {
 #if MATRIX_MULT
   if( iWidth == iHeight)
   {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     xTr(g_bitDepth[toChannelType(compID)], piBlkResi, psCoeff, uiStride, (UInt)iWidth, useDST, g_maxTrDynamicRange[toChannelType(compID)]);
-#else
-    xTr(bitDepth, piBlkResi, psCoeff, uiStride, (UInt)iWidth, useDST);
-#endif
     return;
   }
 #endif
@@ -2038,11 +1859,7 @@ Void TComTrQuant::xT( Int bitDepth, Bool useDST, Pel* piBlkResi, UInt uiStride, 
       block[(y * iWidth) + x] = piBlkResi[(y * uiStride) + x];
     }
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   xTrMxN( g_bitDepth[toChannelType(compID)], block, coeff, iWidth, iHeight, useDST, g_maxTrDynamicRange[toChannelType(compID)] );
-#else
-  xTrMxN( bitDepth, block, coeff, iWidth, iHeight, useDST );
-#endif
 
   memcpy(psCoeff, coeff, (iWidth * iHeight * sizeof(TCoeff)));
 }
@@ -2054,20 +1871,12 @@ Void TComTrQuant::xT( Int bitDepth, Bool useDST, Pel* piBlkResi, UInt uiStride, 
  *  \param iSize transform size (iSize x iSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
-#else
-Void TComTrQuant::xIT( Int bitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
-#endif
 {
 #if MATRIX_MULT
   if( iWidth == iHeight )
   {
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     xITr(g_bitDepth[toChannelType(compID)], plCoef, pResidual, uiStride, (UInt)iWidth, useDST, g_maxTrDynamicRange[toChannelType(compID)]);
-#else
-    xITr(bitDepth, plCoef, pResidual, uiStride, (UInt)iWidth, useDST);
-#endif
     return;
   }
 #endif
@@ -2077,11 +1886,7 @@ Void TComTrQuant::xIT( Int bitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual
 
   memcpy(coeff, plCoef, (iWidth * iHeight * sizeof(TCoeff)));
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   xITrMxN( g_bitDepth[toChannelType(compID)], coeff, block, iWidth, iHeight, useDST, g_maxTrDynamicRange[toChannelType(compID)] );
-#else
-  xITrMxN( bitDepth, coeff, block, iWidth, iHeight, useDST );
-#endif
 
   for (Int y = 0; y < iHeight; y++)
     for (Int x = 0; x < iWidth; x++)
@@ -2652,10 +2457,8 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
     Int absSum = 0 ;
     Int n ;
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
     const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
     for( Int subSet = (uiWidth*uiHeight-1) >> MLS_CG_SIZE; subSet >= 0; subSet-- )
     {
@@ -2755,11 +2558,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
             }
           }
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
           if(piDstCoeff[minPos] == entropyCodingMaximum || piDstCoeff[minPos] == entropyCodingMinimum)
-#else
-          if(piDstCoeff[minPos] == TRANSFORM_MAXIMUM || piDstCoeff[minPos] == TRANSFORM_MINIMUM)
-#endif
           {
             finalChange = -1;
           }
@@ -3489,13 +3288,9 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   iLevel = (TCoeff) ((tmpLevel + iAdd ) >> iQBits);
 
   iLevel *= iSign;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
   pcCoeff[ uiPos ] = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, iLevel );
-#else
-  pcCoeff[ uiPos ] = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, iLevel );
-#endif
 }
 
 Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos DEBUG_STRING_PASS_INTO(TCoeff &transformedDequantisedSample) )
@@ -3535,10 +3330,8 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 #endif
 #endif
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
   /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
    * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
@@ -3553,11 +3346,8 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   if(getUseScalingList())
   {
     const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - dequantCoefBits));
-#endif
+
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
 
@@ -3574,11 +3364,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
       iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
+      tmpCoef   = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
     }
     else
     {
@@ -3591,11 +3377,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
       iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
+      tmpCoef   = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
     }
   }
   else
@@ -3603,11 +3385,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
     const Int scale     =  g_invQuantScales[QP_rem];
     const Int scaleBits =     (IQUANT_SHIFT + 1)   ;
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + rightShift) - scaleBits));
-#endif
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
 
@@ -3616,22 +3394,16 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
       const Intermediate_Int iAdd = 1 << (rightShift - 1);
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
       iCoeffQ   = (Intermediate_Int(clipQCoef) * scale + iAdd) >> rightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
       tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
     else
     {
       const Int leftShift = -rightShift;
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
       iCoeffQ   = (Intermediate_Int(clipQCoef) * scale) << leftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
       tmpCoef = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      tmpCoef = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
   }
 
@@ -3906,15 +3678,13 @@ inline Void TComTrQuant::xQuantiseSample(       TComTU      &rTu,
   deltaU = (TCoeff)((tmpLevel - (level<<quantiserRightShift) )>> qBits8);
 
   level *= signLevel;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
   const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
   quantisedLevel = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, level );
-#else
-  quantisedLevel = Clip3<TCoeff>( TRANSFORM_MINIMUM, TRANSFORM_MAXIMUM, level );
-#endif
-
 }
+
+
 /** Performs HEVC inverse quantisation of one sample. Main purpose of this function is to make the code for "xQuantInterRdpcm" more readable
  * \param[in] rTu current TU where the sample belongs to
  * \param[in] quantisedResidual level of the quantised sample
@@ -3950,10 +3720,8 @@ inline Void TComTrQuant::xDequantiseSample(
 #endif
 #endif
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   const TCoeff transformMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
   const TCoeff transformMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
-#endif
 
   assert(scalingListType < SCALING_LIST_NUM);
 
@@ -3969,11 +3737,7 @@ inline Void TComTrQuant::xDequantiseSample(
   if(getUseScalingList())
   {
     const UInt             dequantCoefBits     = 1 + IQUANT_SHIFT + SCALING_LIST_BITS;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - dequantCoefBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - dequantCoefBits));
-#endif
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
     TCoeff clipQuantisedCoeff;
@@ -3986,11 +3750,7 @@ inline Void TComTrQuant::xDequantiseSample(
 
       clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
       iCoeffQ   = ((Intermediate_Int(clipQuantisedCoeff) * quantiserInverseScale[deQuantIdx]) + iAdd ) >> quantiserRightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
     else
     {
@@ -3998,22 +3758,15 @@ inline Void TComTrQuant::xDequantiseSample(
 
       clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
       iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * quantiserInverseScale[deQuantIdx]) << quantiserLeftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
   }
   else
   {
-    const Int scale     =  g_invQuantScales[QP_rem];
-    const Int scaleBits =     (IQUANT_SHIFT + 1)   ;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+    const Int              scale               = g_invQuantScales[QP_rem];
+    const Int              scaleBits           = IQUANT_SHIFT + 1;
     const UInt             targetInputBitDepth = std::min<UInt>((g_maxTrDynamicRange[toChannelType(compID)] + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - scaleBits));
-#else
-    const UInt             targetInputBitDepth = std::min<UInt>((MAX_TR_DYNAMIC_RANGE + 1), (((sizeof(Intermediate_Int) * 8) + quantiserRightShift) - scaleBits));
-#endif
+
     const Intermediate_Int inputMinimum        = -(1 << (targetInputBitDepth - 1));
     const Intermediate_Int inputMaximum        =  (1 << (targetInputBitDepth - 1)) - 1;
     TCoeff clipQuantisedCoeff;
@@ -4025,11 +3778,7 @@ inline Void TComTrQuant::xDequantiseSample(
 
       clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
       iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * scale + iAdd) >> quantiserRightShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
     else
     {
@@ -4037,11 +3786,7 @@ inline Void TComTrQuant::xDequantiseSample(
 
       clipQuantisedCoeff = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, quantisedResidual));
       iCoeffQ   = (Intermediate_Int(clipQuantisedCoeff) * scale) << quantiserLeftShift;
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
       reconCoeff = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
-#else
-      reconCoeff = TCoeff(Clip3<Intermediate_Int>(TRANSFORM_MINIMUM,TRANSFORM_MAXIMUM,iCoeffQ));
-#endif
     }
   }
 }
