@@ -193,49 +193,16 @@ static inline Int getScaledChromaQP(Int unscaledChromaQP, const ChromaFormat chF
 //======================================================================================================================
 
 #if RExt__N0256_INTRA_BLOCK_COPY
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
 static inline Int getScalingListType(const PredMode predMode, const ComponentID compID)
 {
   return ((predMode != MODE_INTER) ? 0 : MAX_NUM_COMPONENT) + compID;
 }
-#else
-// for a given TU size, there is one list per intra/inter & channel combination (i.e. 6 per TU size), apart from 32x32,
-// because 32x32 Cb/Cr TUs don't exist in 4:2:0
-static inline Int getScalingListType(const PredMode predMode, const UInt log2TUSize, const ComponentID compID)
-{
-#if RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
-  return ((predMode != MODE_INTER) ? 0 : MAX_NUM_COMPONENT) + compID;
-#else
-  const Int base=((predMode != MODE_INTER) ? 0 : MAX_NUM_COMPONENT);
-  const Int numForAdjSizeID=g_scalingListNum[log2TUSize-2];
-
-  return (numForAdjSizeID!=SCALING_LIST_NUM) ? base : base+compID;
-#endif
-}
-#endif
 
 #else
-
-#if RExt__N0192_DERIVED_CHROMA_32x32_SCALING_LISTS
 static inline Int getScalingListType(const Bool isIntra, const ComponentID compID)
 {
   return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
 }
-#else
-// for a given TU size, there is one list per intra/inter & channel combination (i.e. 6 per TU size), apart from 32x32,
-// because 32x32 Cb/Cr TUs don't exist in 4:2:0
-static inline Int getScalingListType(const Bool isIntra, const UInt log2TUSize, const ComponentID compID)
-{
-#if RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA
-  return (isIntra ? 0 : MAX_NUM_COMPONENT) + compID;
-#else
-  const Int base=(isIntra ? 0 : MAX_NUM_COMPONENT);
-  const Int numForAdjSizeID=g_scalingListNum[log2TUSize-2];
-
-  return (numForAdjSizeID!=SCALING_LIST_NUM) ? base : base+compID;
-#endif
-}
-#endif
 #endif
 
 //------------------------------------------------
