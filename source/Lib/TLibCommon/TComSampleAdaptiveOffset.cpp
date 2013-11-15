@@ -131,20 +131,21 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
 {
   destroy();
 
-  m_picWidth = picWidth;    
-  m_picHeight= picHeight;
-  m_maxCUWidth= maxCUWidth; 
-  m_maxCUHeight= maxCUHeight;
+  m_picWidth        = picWidth;
+  m_picHeight       = picHeight;
+  m_chromaFormatIDC = format;
+  m_maxCUWidth      = maxCUWidth; 
+  m_maxCUHeight     = maxCUHeight;
 
-  m_numCTUInWidth = (m_picWidth/m_maxCUWidth) + ((m_picWidth % m_maxCUWidth)?1:0);
-  m_numCTUInHeight= (m_picHeight/m_maxCUHeight) + ((m_picHeight % m_maxCUHeight)?1:0);
-  m_numCTUsPic = m_numCTUInHeight*m_numCTUInWidth;
+  m_numCTUInWidth   = (m_picWidth/m_maxCUWidth) + ((m_picWidth % m_maxCUWidth)?1:0);
+  m_numCTUInHeight  = (m_picHeight/m_maxCUHeight) + ((m_picHeight % m_maxCUHeight)?1:0);
+  m_numCTUsPic      = m_numCTUInHeight*m_numCTUInWidth;
 
   //temporary picture buffer
   if ( !m_tempPicYuv )
   {
     m_tempPicYuv = new TComPicYuv;
-    m_tempPicYuv->create( m_picWidth, m_picHeight, format, m_maxCUWidth, m_maxCUHeight, maxCUDepth );
+    m_tempPicYuv->create( m_picWidth, m_picHeight, m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, maxCUDepth );
   }
 
   //bit-depth related
@@ -238,7 +239,7 @@ Void TComSampleAdaptiveOffset::invertQuantOffsets(ComponentID compIdx, Int typeI
 
 }
 
-Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, std::vector<SAOBlkParam*>& mergeList)
+Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
 {
   Int ctuX = ctu % m_numCTUInWidth;
   Int ctuY = ctu / m_numCTUInWidth;
@@ -283,7 +284,7 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* b
       }
     }
 
-    mergeList.push_back(mergeCandidate);
+    mergeList[mergeType]=mergeCandidate;
     if (mergeCandidate != NULL)
     {
       numValidMergeCandidates++;
@@ -294,9 +295,10 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* b
 }
 
 
-Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, std::vector<SAOBlkParam*>& mergeList)
+Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
 {
-  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
     const ComponentID component = ComponentID(compIdx);
     SAOOffset& offsetParam = recParam[component];
@@ -335,14 +337,16 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
 {
   m_picSAOEnabled[COMPONENT_Y] = m_picSAOEnabled[COMPONENT_Cb] = m_picSAOEnabled[COMPONENT_Cr] = false;
 
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+
   for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
   {
-    std::vector<SAOBlkParam*> mergeList;
+    SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES] = { NULL };
     getMergeList(pic, ctu, saoBlkParams, mergeList);
 
     reconstructBlkSAOParam(saoBlkParams[ctu], mergeList);
 
-    for(Int compIdx=0; compIdx< MAX_NUM_COMPONENT; compIdx++)
+    for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
       if(saoBlkParams[ctu][compIdx].modeIdc != SAO_MODE_OFF)
       {
@@ -606,7 +610,9 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
   Int height = (yPos + m_maxCUHeight > m_picHeight)?(m_picHeight- yPos):m_maxCUHeight;
   Int width  = (xPos + m_maxCUWidth  > m_picWidth )?(m_picWidth - xPos):m_maxCUWidth;
 
-  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
     const ComponentID component = ComponentID(compIdx);
     SAOOffset& ctbOffset = saoblkParam[compIdx];
