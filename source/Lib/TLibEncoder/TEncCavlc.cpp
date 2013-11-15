@@ -250,8 +250,13 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
     }
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    WRITE_FLAG((pcPPS->getUseCrossComponentDecorrelation() ? 1 : 0),      "CROSS_COMPONENT_DECORRELATION_flag" );
+    WRITE_FLAG((pcPPS->getUseCrossComponentDecorrelation() ? 1 : 0),      "cross_component_decorrelation_flag" );
 #endif
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    WRITE_FLAG(0,                                                         "chroma_qp_adjustment_enabled_flag" ); // NOTE: RExt - placeholder for now
+#endif
+
     WRITE_FLAG( 0, "pps_extension_flag2" );
   }
   else

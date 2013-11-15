@@ -330,7 +330,12 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     }
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    READ_FLAG( uiCode, "CROSS_COMPONENT_DECORRELATION_flag"); pcPPS->setUseCrossComponentDecorrelation(uiCode != 0);
+    READ_FLAG( uiCode, "cross_component_decorrelation_flag"); pcPPS->setUseCrossComponentDecorrelation(uiCode != 0);
+#endif
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
+    assert(uiCode == 0);  // NOTE: RExt - placeholder for now
 #endif
 
     READ_FLAG( uiCode, "pps_extension2_flag");
