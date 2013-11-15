@@ -477,15 +477,27 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {  
   Int mvx = 0, mvy = 0;
-  
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+  TComMv mvPred = pcCU->getLastIntraBCMv();
+#endif
+
   parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
 
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+  mvx = mvPred.getHor() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
+  mvy = mvPred.getVer() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
+#else
   mvx = pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
   mvy = pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
+#endif
 
   const TComMv cMv(mvx, mvy );
 
   pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
+  pcCU->setLastIntraBCMv( cMv );
+#endif
+
 }
 
 
