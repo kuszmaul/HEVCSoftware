@@ -287,9 +287,7 @@ protected:
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
-#if RExt__M0042_NO_DISPLAY_SEI
   Int       m_noDisplaySEITLayer;
-#endif
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
@@ -709,10 +707,8 @@ public:
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
-#if RExt__M0042_NO_DISPLAY_SEI
   Void  setNoDisplaySEITLayer(Int b)                     { m_noDisplaySEITLayer = b;    }
   Int   getNoDisplaySEITLayer()                          { return m_noDisplaySEITLayer; }
-#endif
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
   Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }

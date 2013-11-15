@@ -81,11 +81,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
-#if RExt__M0042_NO_DISPLAY_SEI
   case SEI::NO_DISPLAY:
     fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
     break;
-#endif
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
@@ -142,11 +140,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
-#if RExt__M0042_NO_DISPLAY_SEI
   case SEI::NO_DISPLAY:
     xWriteSEINoDisplay(*static_cast<const SEINoDisplay*>(&sei));
     break;
-#endif
   case SEI::TONE_MAPPING_INFO:
     xWriteSEIToneMappingInfo(*static_cast<const SEIToneMappingInfo*>(&sei));
     break;
@@ -520,12 +516,10 @@ Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefr
   xWriteByteAlign();
 }
 
-#if RExt__M0042_NO_DISPLAY_SEI
 Void SEIWriter::xWriteSEINoDisplay(const SEINoDisplay &sei)
 {
   xWriteByteAlign();
 }
-#endif
 
 Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
 {
