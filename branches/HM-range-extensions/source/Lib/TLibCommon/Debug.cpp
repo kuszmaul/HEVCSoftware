@@ -173,7 +173,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_DPCM,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_ROTATION,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__N0275_TRANSFORM_SKIP_SHIFT_CLIPPING,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE,                settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL,                        settingNameWidth, settingValueWidth);
