@@ -185,6 +185,11 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL,                        settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,        settingNameWidth, settingValueWidth);
+
   //------------------------------------------------
 
   std::cout << std::endl;
