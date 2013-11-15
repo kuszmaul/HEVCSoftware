@@ -702,15 +702,11 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag );
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
   m_cSPS.setDisableIntraReferenceSmoothing( m_disableIntraReferenceSmoothing );
-#endif
-
   m_cSPS.setScalingListFlag ( (m_useScalingListId == 0) ? 0 : 1 );
-
   m_cSPS.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
-
   m_cSPS.setVuiParametersPresentFlag(getVuiParametersPresentFlag());
+
   if (m_cSPS.getVuiParametersPresentFlag())
   {
     TComVUI* pcVUI = m_cSPS.getVuiParameters();

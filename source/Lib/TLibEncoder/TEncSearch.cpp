@@ -1097,11 +1097,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   if( default0Save1Load2 != 2 )
 #endif
   {
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
     const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
-#else
-    const Bool bUseFilteredPredictions=TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt);
-#endif
 
     initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions DEBUG_STRING_PASS_INTO(sDebug) );
 
@@ -2248,11 +2244,7 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
   TComTURecurse tuRecurseCU(pcCU, 0);
   TComTURecurse tuRecurseWithPU(tuRecurseCU, false, (uiInitTrDepth==0)?TComTU::DONT_SPLIT : TComTU::QUAD_SPLIT);
   const ChromaFormat chFmt = tuRecurseWithPU.GetChromaFormat();
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
   Bool bFilterEnabled=filterIntraReferenceSamples(CHANNEL_TYPE_CHROMA, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
-#else
-  Bool bFilterEnabled=filterIntraReferenceSamples(CHANNEL_TYPE_CHROMA, chFmt);
-#endif
 
   do
   {
@@ -2286,11 +2278,7 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
       {
         UInt uiMode=mappedModeTable[uiMode_];
         //--- get prediction ---
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Cb, uiMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
-#else
-        const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Cb, uiMode, uiWidth, uiHeight, chFmt);
-#endif
 
         predIntraAng( COMPONENT_Cb, uiMode, piOrgU, uiStride, piPredU, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
         predIntraAng( COMPONENT_Cr, uiMode, piOrgV, uiStride, piPredV, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
@@ -2405,11 +2393,8 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         UInt       uiMode = modeIdx;
         Distortion uiSad  = 0;
 
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
-#else
-        const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt);
-#endif
+
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
 
         // use hadamard transform here

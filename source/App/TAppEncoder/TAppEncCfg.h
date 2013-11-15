@@ -189,10 +189,7 @@ protected:
   UInt      m_pcmLog2MaxSize;                                 ///< log2 of maximum PCM block size
   UInt      m_uiPCMLog2MinSize;                               ///< log2 of minimum PCM block size
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
-
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
   Bool      m_enableIntraReferenceSmoothing;                  ///< flag for enabling(default)/disabling intra reference smoothing/filtering
-#endif
 
   // coding tools (encoder-only parameters)
   Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC

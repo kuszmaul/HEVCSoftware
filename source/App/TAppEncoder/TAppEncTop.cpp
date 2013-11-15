@@ -255,14 +255,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag);
 
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
-  m_cTEncTop.setDisableIntraReferenceSmoothing(!m_enableIntraReferenceSmoothing);
-#endif
-
-  m_cTEncTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
-  m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
-  m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
-  m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
+  m_cTEncTop.setDisableIntraReferenceSmoothing            (!m_enableIntraReferenceSmoothing);
+  m_cTEncTop.setDecodedPictureHashSEIEnabled              (m_decodedPictureHashSEIEnabled);
+  m_cTEncTop.setRecoveryPointSEIEnabled                   ( m_recoveryPointSEIEnabled );
+  m_cTEncTop.setBufferingPeriodSEIEnabled                 ( m_bufferingPeriodSEIEnabled );
+  m_cTEncTop.setPictureTimingSEIEnabled                   ( m_pictureTimingSEIEnabled );
   m_cTEncTop.setToneMappingInfoSEIEnabled                 ( m_toneMappingInfoSEIEnabled );
   m_cTEncTop.setTMISEIToneMapId                           ( m_toneMapId );
   m_cTEncTop.setTMISEIToneMapCancelFlag                   ( m_toneMapCancelFlag );
