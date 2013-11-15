@@ -540,8 +540,15 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       codeVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
+#if RExt__O0142_SPS_EXTENSION_SYNTAX
+  Bool sps_extension_present_flag=false;
+  Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
+
+  sps_extension_flags[SPS_EXT__REXT]= ( false // Remove 'false' once adoption of macro code.
+#else
   //NOTE: RExt - this will be conditional on the selected profile
   if ( false // Remove 'false' once adoption of macro code.
+#endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
        || pcSPS->getUseResidualRotation()
 #endif
@@ -565,36 +572,76 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getUseGolombRiceGroupAdaptation()
 #endif
     )
+#if RExt__O0142_SPS_EXTENSION_SYNTAX
+    ;
+
+  // Other SPS extension flags checked here.
+
+  for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
   {
-    WRITE_FLAG( 1, "sps_extension1_flag" );
-#if RExt__NRCE2_RESIDUAL_ROTATION
-    WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
+    sps_extension_present_flag|=sps_extension_flags[i];
+  }
+
+  WRITE_FLAG( (sps_extension_present_flag?1:0), "sps_extension_present_flag" );
+
+  if (sps_extension_present_flag)
+  {
+    for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
+    {
+      WRITE_FLAG( sps_extension_flags[i]?1:0, "sps_extension_flag[]" );
+    }
+
+    for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++) // loop used so that the order is determined by the enum.
+    {
+      if (sps_extension_flags[i])
+      {
+        switch (SPS_EXTENSION_FLAG_TYPE(i))
+        {
+          case SPS_EXT__REXT:
+
+#else
+  {
+            WRITE_FLAG( 1, "sps_extension1_flag" );
 #endif
-    WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
-    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
+#if RExt__NRCE2_RESIDUAL_ROTATION
+            WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
+#endif
+            WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
+            WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
 #if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "residual_dpcm_explicit_enabled_flag" );
+            WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );
+            WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "residual_dpcm_explicit_enabled_flag" );
 #else
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),            "residual_dpcm_intra_enabled_flag" );
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),            "residual_dpcm_inter_enabled_flag" );
+            WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),            "residual_dpcm_intra_enabled_flag" );
+            WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),            "residual_dpcm_inter_enabled_flag" );
 #endif
 #endif
-    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
-    WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
+            WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
+            WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
-    WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
+            WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
 #endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
+            WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
 #endif
-    WRITE_FLAG( 0, "sps_extension2_flag" );
+#if RExt__O0142_SPS_EXTENSION_SYNTAX
+            break;
+          default:
+            assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
+            break;
+        }
+      }
+    }
+  }
+#else
+            WRITE_FLAG( 0, "sps_extension2_flag" );
   }
   else
   {
-    WRITE_FLAG( 0, "sps_extension1_flag" );
+            WRITE_FLAG( 0, "sps_extension1_flag" );
   }
+#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )

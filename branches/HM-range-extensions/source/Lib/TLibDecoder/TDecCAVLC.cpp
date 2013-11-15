@@ -686,33 +686,73 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
-  //NOTE: RExt - this will be conditional on the selected profile
+#if RExt__O0142_SPS_EXTENSION_SYNTAX
+  Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
+  READ_FLAG( uiCode, "sps_extension_present_flag");
+  if (uiCode)
+  {
+    for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
+    {
+      READ_FLAG( uiCode, "sps_extension_flag[]" );
+      sps_extension_flags[i] = uiCode!=0;
+    }
+
+    Bool bSkipTrailingExtensionBits=false;
+    for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++) // loop used so that the order is determined by the enum.
+    {
+      if (sps_extension_flags[i])
+      {
+        switch (SPS_EXTENSION_FLAG_TYPE(i))
+        {
+          case SPS_EXT__REXT:
+            assert(!bSkipTrailingExtensionBits);
+#else
   READ_FLAG( uiCode, "sps_extension1_flag");
 
   if (uiCode != 0)
   {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-    READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation                    (uiCode != 0);
 #endif
-    READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
-    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
+
+#if RExt__NRCE2_RESIDUAL_ROTATION
+            READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation                    (uiCode != 0);
+#endif
+            READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
+            READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
 #if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
-    READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
-    READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
+            READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
+            READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
 #else
-    READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA,            (uiCode != 0));
-    READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER,            (uiCode != 0));
+            READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA,            (uiCode != 0));
+            READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER,            (uiCode != 0));
 #endif
 #endif
-    READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision                   (uiCode != 0);
-    READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
+            READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision                   (uiCode != 0);
+            READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
-    READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting  (uiCode != 0);
+            READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting  (uiCode != 0);
 #endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
+            READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
+#if RExt__O0142_SPS_EXTENSION_SYNTAX
+            break;
+          default:
+            bSkipTrailingExtensionBits=true;
+            break;
+        }
+      }
+    }
+    if (bSkipTrailingExtensionBits)
+    {
+      while ( xMoreRbspData() )
+      {
+        READ_FLAG( uiCode, "sps_extension_data_flag");
+      }
+    }
+  }
+#else
+
     READ_FLAG( uiCode, "sps_extension2_flag");
   }
 
@@ -723,6 +763,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       READ_FLAG( uiCode, "sps_extension_data_flag");
     }
   }
+#endif
 }
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
