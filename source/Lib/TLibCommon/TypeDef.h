@@ -264,8 +264,6 @@
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
 #define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
 
-#define RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL                                1 ///< 0 = disable definition of level 8.5 (unlimited picture size for still pictures), 1 (default) = enable definition of level 8.5
-
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
@@ -707,9 +705,7 @@ namespace Level
     LEVEL6   = 180,
     LEVEL6_1 = 183,
     LEVEL6_2 = 186,
-#if RExt__MEETINGNOTES_UNLIMITED_SIZE_LEVEL
     LEVEL8_5 = 255,
-#endif
   };
 }
 
