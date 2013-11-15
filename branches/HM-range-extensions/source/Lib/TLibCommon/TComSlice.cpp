@@ -1418,9 +1418,7 @@ TComSPS::TComSPS()
 #if RExt__NRCE2_RESIDUAL_ROTATION
 , m_useResidualRotation       (false)
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
 , m_useSingleSignificanceMapContext(false)
-#endif
 , m_bPCMFilterDisableFlag     (false)
 #if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
 , m_disableIntraReferenceSmoothing(false)

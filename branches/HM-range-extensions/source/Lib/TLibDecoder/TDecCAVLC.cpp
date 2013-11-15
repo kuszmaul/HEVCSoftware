@@ -701,9 +701,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if RExt__NRCE2_RESIDUAL_ROTATION
     READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation(uiCode != 0);
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
     READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext(uiCode != 0);
-#endif
 #if RExt__N0256_INTRA_BLOCK_COPY
     READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy(uiCode != 0);
 #endif

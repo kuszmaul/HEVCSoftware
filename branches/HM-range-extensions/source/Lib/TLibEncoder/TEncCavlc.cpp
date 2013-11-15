@@ -536,9 +536,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__NRCE2_RESIDUAL_ROTATION
        || pcSPS->getUseResidualRotation()
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
        || pcSPS->getUseSingleSignificanceMapContext()
-#endif
 #if RExt__N0256_INTRA_BLOCK_COPY
        || pcSPS->getUseIntraBlockCopy()
 #endif
@@ -558,11 +556,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__NRCE2_RESIDUAL_ROTATION
     WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),             "transform_skip_rotation_enabled_flag");
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
     WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0), "transform_skip_context_enabled_flag");
-#endif
 #if RExt__N0256_INTRA_BLOCK_COPY
-    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),           "intra_block_copy_enabled_flag");
+    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),               "intra_block_copy_enabled_flag");
 #endif
 #if RExt__NRCE2_RESIDUAL_DPCM
     WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),       "residual_dpcm_intra_enabled_flag" );

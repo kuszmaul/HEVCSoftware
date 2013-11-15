@@ -110,9 +110,7 @@ protected:
 #if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      m_useResidualRotation;                            ///< control flag for transform-skip/transquant-bypass residual rotation
 #endif
-#if RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT
   Bool      m_useSingleSignificanceMapContext;                ///< control flag for transform-skip/transquant-bypass single significance map context
-#endif
 #if RExt__NRCE2_RESIDUAL_DPCM
   Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];    ///< control flags for residual DPCM
 #endif
