@@ -87,11 +87,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
-#if RExt__M0042_NO_DISPLAY_SEI
   case SEI::NO_DISPLAY:
     fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
     break;
-#endif
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
@@ -234,12 +232,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIGradualDecodingRefreshInfo;
       xParseSEIGradualDecodingRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize);
       break;
-#if RExt__M0042_NO_DISPLAY_SEI
     case SEI::NO_DISPLAY:
       sei = new SEINoDisplay;
       xParseSEINoDisplay((SEINoDisplay&) *sei, payloadSize);
       break;
-#endif
     case SEI::TONE_MAPPING_INFO:
       sei = new SEIToneMappingInfo;
       xParseSEIToneMappingInfo((SEIToneMappingInfo&) *sei, payloadSize);
@@ -635,13 +631,11 @@ Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInf
   xParseByteAlign();
 }
 
-#if RExt__M0042_NO_DISPLAY_SEI
 Void SEIReader::xParseSEINoDisplay(SEINoDisplay& sei, UInt /*payloadSize*/)
 {
   sei.m_noDisplay = true;
   xParseByteAlign();
 }
-#endif
 
 Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payloadSize*/)
 {

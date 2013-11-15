@@ -306,7 +306,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
-#if RExt__M0042_NO_DISPLAY_SEI
+ 
           Bool display = true;
           if( m_decodedNoDisplaySEIEnabled )
           {
@@ -317,18 +317,20 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
               display = false;
             }
           }
+
           if (display)
-#endif
+          {
             m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
 #if RExt__COLOUR_SPACE_CONVERSIONS
-                                         m_outputColourSpaceConvert,
+                                           m_outputColourSpaceConvert,
 #else
-                                         RGBChannelOrder,
+                                           RGBChannelOrder,
 #endif
-                                         conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
-                                         conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
-                                         conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), NUM_CHROMA_FORMAT, isTff );
+                                           conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                           conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                           conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                           conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), NUM_CHROMA_FORMAT, isTff );
+          }
         }
         
         // update POC of display order

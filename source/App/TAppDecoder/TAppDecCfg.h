@@ -66,9 +66,7 @@ protected:
 
   Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
-#if RExt__M0042_NO_DISPLAY_SEI
   Bool          m_decodedNoDisplaySEIEnabled;         ///< Enable(true)/disable(false) writing only pictures that get displayed based on the no display SEI message
-#endif
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
   
@@ -82,9 +80,7 @@ public:
 #endif
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
-#if RExt__M0042_NO_DISPLAY_SEI
   , m_decodedNoDisplaySEIEnabled(false)
-#endif
   , m_respectDefDispWindow(0)
   {
     for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)

@@ -171,7 +171,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS,               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__M0042_NO_DISPLAY_SEI,                                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_DPCM,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_RESIDUAL_ROTATION,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__NRCE2_SINGLE_SIGNIFICANCE_MAP_CONTEXT,                    settingNameWidth, settingValueWidth);

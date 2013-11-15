@@ -298,9 +298,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDisplayOrientationSEIAngle( m_displayOrientationSEIAngle );
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
   m_cTEncTop.setGradualDecodingRefreshInfoEnabled( m_gradualDecodingRefreshInfoEnabled );
-#if RExt__M0042_NO_DISPLAY_SEI
   m_cTEncTop.setNoDisplaySEITLayer( m_noDisplaySEITLayer );
-#endif
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );

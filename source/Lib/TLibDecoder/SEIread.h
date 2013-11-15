@@ -69,9 +69,7 @@ protected:
   Void xParseSEIDisplayOrientation    (SEIDisplayOrientation &sei, UInt payloadSize);
   Void xParseSEITemporalLevel0Index   (SEITemporalLevel0Index &sei, UInt payloadSize);
   Void xParseSEIGradualDecodingRefreshInfo (SEIGradualDecodingRefreshInfo &sei, UInt payloadSize);
-#if RExt__M0042_NO_DISPLAY_SEI
   Void xParseSEINoDisplay             (SEINoDisplay &sei, UInt payloadSize);
-#endif
   Void xParseSEIToneMappingInfo       (SEIToneMappingInfo& sei, UInt payloadSize);
   Void xParseSEISOPDescription        (SEISOPDescription &sei, UInt payloadSize);
   Void xParseSEIScalableNesting       (SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps);

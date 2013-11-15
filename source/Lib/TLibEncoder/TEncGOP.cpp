@@ -1227,7 +1227,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
     }
-#if RExt__M0042_NO_DISPLAY_SEI
+
     if( m_pcEncTop->getNoDisplaySEITLayer() )
     {
       if( pcSlice->getTLayer() >= m_pcEncTop->getNoDisplaySEITLayer() )
@@ -1245,7 +1245,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         accessUnit.push_back(new NALUnitEBSP(nalu));
       }
     }
-#endif
 
     /* use the main bitstream buffer for storing the marshalled picture */
     m_pcEntropyCoder->setBitstream(NULL);

@@ -77,9 +77,7 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
-#if RExt__M0042_NO_DISPLAY_SEI
     NO_DISPLAY                           = 135,
-#endif
   };
   
   SEI() {}
@@ -323,7 +321,6 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
-#if RExt__M0042_NO_DISPLAY_SEI
 class SEINoDisplay : public SEI
 {
 public:
@@ -336,7 +333,6 @@ public:
 
   Bool m_noDisplay;
 };
-#endif
 
 class SEISOPDescription : public SEI
 {
