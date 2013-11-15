@@ -224,6 +224,25 @@ public:
                                   TComMv&       rcMvSrchRngLT,
                                   TComMv&       rcMvSrchRngRB );
 
+#if RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION
+  Bool xCIPIntraSearchPruning(    TComDataCU*   pcCU,
+                                  Int           relX,
+                                  Int           relY,
+                                  Int           roiWidth,
+                                  Int           roiHeight);
+
+  Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+                                  Int           relX,
+                                  Int           relY,
+                                  Int           roiWidth,
+                                  Int           roiHeight)
+  {
+    return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
+           (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
+           xCIPIntraSearchPruning(pcCU, relX, relY, roiWidth, roiHeight);
+  }
+#endif
+
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
                                   TComPattern* pcPatternKey,
                                   Pel*         piRefY,

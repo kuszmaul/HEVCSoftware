@@ -179,6 +179,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION,            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR,                         settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION,      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0185_RESIDUAL_DPCM_FLAGS,                                settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0186_DISABLE_NONINTRA_ROTATION,                          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING,                settingNameWidth, settingValueWidth);
