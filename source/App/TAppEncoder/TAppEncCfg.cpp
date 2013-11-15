@@ -339,9 +339,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepth[CHANNEL_TYPE_CHROMA],        0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
-#endif
 #if RExt__COLOUR_SPACE_CONVERSIONS
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
   ("SNRInternalColourSpace",  m_snrInternalColourSpace,             false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
@@ -948,7 +946,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_LUMA  ] < 8,                                   "InputBitDepth must be at least 8" );
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_CHROMA] < 8,                                   "InputBitDepthC must be at least 8" );
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING && !RExt__HIGH_BIT_DEPTH_SUPPORT
+#if !RExt__HIGH_BIT_DEPTH_SUPPORT
   if (m_useExtendedPrecision)
   {
     for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
@@ -1544,10 +1542,9 @@ Void TAppEncCfg::xSetGlobal()
   {
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
     g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_inputBitDepth[channelType] : m_internalBitDepth[channelType];
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
     if (m_useExtendedPrecision) g_maxTrDynamicRange[channelType] = std::max<Int>(15, (g_bitDepth[channelType] + 6));
     else                        g_maxTrDynamicRange[channelType] = 15;
-#endif
   }
 }
 
@@ -1607,9 +1604,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("GOP size                        : %d\n", m_iGOPSize );
   printf("Internal bit depth              : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("PCM sample bit depth            : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   printf("Extended precision processing   : %s\n", (m_useExtendedPrecision ? "Enabled" : "Disabled") );
-#endif
   printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing ? "Enabled" : "Disabled") );
 #if RExt__NRCE2_RESIDUAL_DPCM
   printf("Intra residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTRA] ? "Enabled" : "Disabled") );

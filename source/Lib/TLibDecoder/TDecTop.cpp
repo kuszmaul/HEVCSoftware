@@ -302,10 +302,9 @@ Void TDecTop::xActivateParameterSets()
   for (UInt channel = 0; channel < MAX_NUM_CHANNEL_TYPE; channel++)
   {
     g_bitDepth[channel] = sps->getBitDepth(ChannelType(channel));
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
     if (sps->getUseExtendedPrecision()) g_maxTrDynamicRange[channel] = std::max<Int>(15, (g_bitDepth[channel] + 6));
     else                                g_maxTrDynamicRange[channel] = 15;
-#endif
   }
   g_uiMaxCUWidth  = sps->getMaxCUWidth();
   g_uiMaxCUHeight = sps->getMaxCUHeight();

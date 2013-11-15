@@ -89,11 +89,7 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
     const Int  w0       = wp0[compID].w;
     const Int  offset   = wp0[compID].offset;
     const Int  clipBD   = g_bitDepth[toChannelType(compID)];
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const Int  shiftNum = std::max<Int>(2, (IF_INTERNAL_PREC - clipBD));
-#else
-    const Int  shiftNum = IF_INTERNAL_PREC - clipBD;
-#endif
     const Int  shift    = wp0[compID].shift + shiftNum;
     const Int  round    = (enableRounding[compID] && (shift > 0)) ? (1<<(shift-1)) : 0;
     const Int  w1       = wp1[compID].w;
@@ -151,11 +147,7 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
     const Int  w0          = wp0[compID].w;
     const Int  offset      = wp0[compID].offset;
     const Int  clipBD      = g_bitDepth[toChannelType(compID)];
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     const Int  shiftNum    = std::max<Int>(2, (IF_INTERNAL_PREC - clipBD));
-#else
-    const Int  shiftNum    = IF_INTERNAL_PREC - clipBD;
-#endif
     const Int  shift       = wp0[compID].shift + shiftNum;
     const Int  round       = (shift > 0) ? (1<<(shift-1)) : 0;
     const UInt iSrc0Stride = pcYuvSrc0->getStride(compID);

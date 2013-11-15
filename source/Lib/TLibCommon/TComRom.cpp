@@ -316,9 +316,7 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 }
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
 Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
-#endif
 
 Int g_quantScales[SCALING_LIST_REM_NUM] =
 {

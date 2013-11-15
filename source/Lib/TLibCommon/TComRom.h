@@ -100,13 +100,8 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 #define QUANT_SHIFT                14 // Q(4) = 2^14
 #define IQUANT_SHIFT                6
 #define SCALE_BITS                 15 // Inherited from TMuC, pressumably for fractional bit estimates in RDOQ
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
+
 extern Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
-#else
-#define MAX_TR_DYNAMIC_RANGE       15 // Maximum input forward transform dynamic range (excluding sign bit)
-#define TRANSFORM_MAXIMUM          ((1 << MAX_TR_DYNAMIC_RANGE) - 1)
-#define TRANSFORM_MINIMUM          (-(1 << MAX_TR_DYNAMIC_RANGE))
-#endif
 
 #define SQRT2                      11585
 #define SQRT2_SHIFT                13

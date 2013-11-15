@@ -181,10 +181,7 @@ protected:
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
 #endif
-
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      m_useExtendedPrecision;
-#endif
 #if RExt__N0256_INTRA_BLOCK_COPY
   Bool      m_useIntraBlockCopy;
 #endif
@@ -433,10 +430,8 @@ public:
   Bool      getUseAdaptQpSelect             ()           { return   m_bUseAdaptQpSelect; }
 #endif
 
-#if RExt__N0188_EXTENDED_PRECISION_PROCESSING
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
-#endif
 
 #if RExt__N0256_INTRA_BLOCK_COPY
   Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
