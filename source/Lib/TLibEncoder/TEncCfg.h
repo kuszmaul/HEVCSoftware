@@ -201,6 +201,10 @@ protected:
   Bool      m_useFastDecisionForMerge;
   Bool      m_bUseCbfFastMode;
   Bool      m_useEarlySkipDetection;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool      m_useCrossComponentDecorrelation;
+  Bool      m_reconBasedDecorrelationEstimate;
+#endif
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
   UInt      m_transformSkipLog2MaxSize;
@@ -537,6 +541,13 @@ public:
   Bool      getUsePCM                       ()      { return m_usePCM;                 }
   UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool      getUseCrossComponentDecorrelation     ()                const { return m_useCrossComponentDecorrelation;   }
+  Void      setUseCrossComponentDecorrelation     (const Bool value)      { m_useCrossComponentDecorrelation = value;  }
+  Bool      getUseReconBasedDecorrelationEstimate ()                const { return m_reconBasedDecorrelationEstimate;  }
+  Void      setUseReconBasedDecorrelationEstimate (const Bool value)      { m_reconBasedDecorrelationEstimate = value; }
+#endif
 
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }

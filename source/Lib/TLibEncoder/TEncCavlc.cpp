@@ -236,10 +236,22 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
-  if (pcPPS->getTransformSkipLog2MaxSize()!=2 && pcPPS->getUseTransformSkip())
+  if (   (pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+       || pcPPS->getUseCrossComponentDecorrelation()
+#endif
+     )
   {
     WRITE_FLAG( 1, "pps_extension_flag1" );
-    WRITE_UVLC( pcPPS->getTransformSkipLog2MaxSize()-2, "log2_transform_skip_max_size_minus2");
+
+    if (pcPPS->getUseTransformSkip())
+    {
+      WRITE_UVLC( pcPPS->getTransformSkipLog2MaxSize()-2,                 "log2_transform_skip_max_size_minus2");
+    }
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    WRITE_FLAG((pcPPS->getUseCrossComponentDecorrelation() ? 1 : 0),      "CROSS_COMPONENT_DECORRELATION_flag" );
+#endif
     WRITE_FLAG( 0, "pps_extension_flag2" );
   }
   else
@@ -1275,6 +1287,13 @@ Void TEncCavlc::codeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefLis
 {
   assert(0);
 }
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+Void TEncCavlc::codeCrossComponentDecorrelation( TComTU& /*rTu*/, ComponentID /*compID*/ )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

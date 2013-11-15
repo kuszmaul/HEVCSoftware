@@ -77,6 +77,9 @@ TComDataCU::TComDataCU()
   for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
     m_puhCbf[comp]           = NULL;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    m_decorrelationAlpha[comp] = NULL;
+#endif
     m_puhTransformSkip[comp] = NULL;
     m_pcTrCoeff[comp]        = NULL;
 #if ADAPTIVE_QP_SELECTION
@@ -169,6 +172,10 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       const UInt chromaShift = getComponentScaleX(compID, chromaFormatIDC) + getComponentScaleY(compID, chromaFormatIDC);
       const UInt totalSize   = (uiWidth * uiHeight) >> chromaShift;
 
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+      m_decorrelationAlpha[compID] = (Char*  )xMalloc(Char,   uiNumPartition);
+#endif
+
       m_puhTransformSkip[compID] = (UChar* )xMalloc(UChar,  uiNumPartition);
 
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -256,6 +263,9 @@ Void TComDataCU::destroy()
 
     for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+      if ( m_decorrelationAlpha[comp] ) { xFree(m_decorrelationAlpha[comp]); m_decorrelationAlpha[comp] = NULL; }
+#endif
       if ( m_puhTransformSkip[comp]) { xFree(m_puhTransformSkip[comp]); m_puhTransformSkip[comp] = NULL; }
       if ( m_puhCbf[comp]          ) { xFree(m_puhCbf[comp]);           m_puhCbf[comp]           = NULL; }
       if ( m_pcTrCoeff[comp]       ) { xFree(m_pcTrCoeff[comp]);        m_pcTrCoeff[comp]        = NULL; }
@@ -409,6 +419,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_puhTrIdx  [ui] = pcFrom->getTransformIdx(ui);
     for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+      m_decorrelationAlpha[comp][ui] = pcFrom->getCrossComponentDecorrelationAlpha(ui,ComponentID(comp));
+#endif
       m_puhTransformSkip[comp][ui]  = pcFrom->getTransformSkip(ui,ComponentID(comp));
 #if RExt__NRCE2_RESIDUAL_DPCM
       m_interRdpcmMode[comp][ui] = pcFrom->getInterRdpcmMode(ComponentID(comp), ui);
@@ -459,8 +472,11 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_phQP              + firstElement, getSlice()->getSliceQp(),   numElements * sizeof( *m_phQP ) );
     for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
-      memset( m_puhTransformSkip[comp] + firstElement, 0,                      numElements * sizeof( *m_puhTransformSkip[comp]) );
-      memset( m_puhCbf[comp]           + firstElement, 0,                      numElements * sizeof( *m_puhCbf[comp] ) );
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+      memset( m_decorrelationAlpha[comp] + firstElement, 0,                 numElements * sizeof( *m_decorrelationAlpha[comp] ) );
+#endif
+      memset( m_puhTransformSkip[comp] + firstElement, 0,                   numElements * sizeof( *m_puhTransformSkip[comp]) );
+      memset( m_puhCbf[comp]           + firstElement, 0,                   numElements * sizeof( *m_puhCbf[comp] ) );
 #if RExt__NRCE2_RESIDUAL_DPCM
       memset( m_interRdpcmMode[comp]    + firstElement, NUMBER_OF_INTER_RDPCM_MODES,   numElements * sizeof( *m_interRdpcmMode[comp] ) );
 #endif
@@ -593,6 +609,9 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       m_puhTrIdx  [ui]    = 0;
       for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
       {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+        m_decorrelationAlpha[comp][ui] = 0;
+#endif
         m_puhTransformSkip[comp][ui] = 0;
 #if RExt__NRCE2_RESIDUAL_DPCM
         m_interRdpcmMode[comp][ui] = NUMBER_OF_INTER_RDPCM_MODES;
@@ -684,6 +703,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    memset( m_decorrelationAlpha[comp], 0, iSizeInUchar );
+#endif
     memset( m_puhTransformSkip[comp], 0, iSizeInUchar );
     memset( m_puhCbf[comp],           0, iSizeInUchar );
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -724,6 +746,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_puhTrIdx  [ui] = pcCU->getTransformIdx(uiPartOffset+ui);
       for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
       {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+        m_decorrelationAlpha[comp][ui] = pcCU->getCrossComponentDecorrelationAlpha(uiPartOffset+ui, ComponentID(comp));
+#endif
         m_puhTransformSkip[comp][ui] = pcCU->getTransformSkip(uiPartOffset+ui,ComponentID(comp));
         m_puhCbf[comp][ui]=pcCU->m_puhCbf[comp][uiPartOffset+ui];
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -857,10 +882,13 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
-    m_puhTransformSkip[comp] = pcCU->getTransformSkip(ComponentID(comp))  + uiPart;
-    m_puhCbf[comp]           = pcCU->getCbf(ComponentID(comp))            + uiPart;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    m_decorrelationAlpha[comp] = pcCU->getCrossComponentDecorrelationAlpha(ComponentID(comp)) + uiPart;
+#endif
+    m_puhTransformSkip[comp] = pcCU->getTransformSkip(ComponentID(comp))                    + uiPart;
+    m_puhCbf[comp]           = pcCU->getCbf(ComponentID(comp))                              + uiPart;
 #if RExt__NRCE2_RESIDUAL_DPCM
-    m_interRdpcmMode[comp]   = pcCU->getInterRdpcmMode(ComponentID(comp))  + uiPart;
+    m_interRdpcmMode[comp]   = pcCU->getInterRdpcmMode(ComponentID(comp))                   + uiPart;
 #endif
   }
 
@@ -996,6 +1024,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 
   for(UInt comp=0; comp<numValidComp; comp++)
   {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    memcpy( m_decorrelationAlpha[comp] + uiOffset, pcCU->getCrossComponentDecorrelationAlpha(ComponentID(comp)), iSizeInUchar );
+#endif
     memcpy( m_puhTransformSkip[comp] + uiOffset, pcCU->getTransformSkip(ComponentID(comp)),     iSizeInUchar );
     memcpy( m_puhCbf[comp] + uiOffset, pcCU->getCbf(ComponentID(comp))    , iSizeInUchar );
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -1083,6 +1114,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 
   for(UInt comp=0; comp<numValidComp; comp++)
   {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    memcpy( rpcCU->getCrossComponentDecorrelationAlpha(ComponentID(comp)) + m_uiAbsIdxInLCU, m_decorrelationAlpha[comp], iSizeInUchar );
+#endif
     memcpy( rpcCU->getTransformSkip(ComponentID(comp))  + m_uiAbsIdxInLCU, m_puhTransformSkip[comp], iSizeInUchar );
     memcpy( rpcCU->getCbf(ComponentID(comp))     + m_uiAbsIdxInLCU, m_puhCbf[comp], iSizeInUchar );
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -1165,6 +1199,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 
   for(UInt comp=0; comp<numValidComp; comp++)
   {
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+    memcpy( rpcCU->getCrossComponentDecorrelationAlpha(ComponentID(comp)) + uiPartOffset, m_decorrelationAlpha[comp], iSizeInUchar );
+#endif
     memcpy( rpcCU->getTransformSkip(ComponentID(comp) ) + uiPartOffset, m_puhTransformSkip[comp], iSizeInUchar );
     memcpy( rpcCU->getCbf(ComponentID(comp))            + uiPartOffset, m_puhCbf[comp], iSizeInUchar );
 #if RExt__NRCE2_RESIDUAL_DPCM
@@ -2188,6 +2225,13 @@ Void TComDataCU::setTransformSkipPartRange ( UInt useTransformSkip, ComponentID 
 {
   memset((m_puhTransformSkip[compID] + uiAbsPartIdx), useTransformSkip, (sizeof(UChar) * uiCoveredPartIdxes));
 }
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+Void TComDataCU::setCrossComponentDecorrelationAlphaPartRange( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
+{
+  memset((m_decorrelationAlpha[compID] + uiAbsPartIdx), alphaValue, (sizeof(Char) * uiCoveredPartIdxes));
+}
+#endif
 #endif
 
 #if RExt__NRCE2_RESIDUAL_DPCM

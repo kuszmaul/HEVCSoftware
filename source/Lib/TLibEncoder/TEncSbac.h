@@ -163,6 +163,10 @@ public:
   Void codeRefFrmIdx           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd                 ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Void codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID );
+#endif
+
   Void codeDeltaQP             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
@@ -231,8 +235,10 @@ private:
   ContextModel3DBuffer m_interRdpcmFlagSCModel;
   ContextModel3DBuffer m_interRdpcmDirSCModel;
 #endif
-
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  ContextModel3DBuffer m_cCrossComponentDecorrelationSCModel;
+#endif
 };
 
 //! \}

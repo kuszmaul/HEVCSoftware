@@ -991,6 +991,10 @@ private:
   Bool        m_useWeightedBiPred;        // Use of Weighting Bi-Prediction (B_SLICE)
   Bool        m_OutputFlagPresentFlag;   // Indicates the presence of output_flag in slice header
 
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool        m_useCrossComponentDecorrelation;
+#endif
+
   Bool        m_TransquantBypassEnableFlag; // Indicates presence of cu_transquant_bypass_flag in CUs.
   Bool        m_useTransformSkip;
   Int         m_transformSkipLog2MaxSize;
@@ -1062,6 +1066,12 @@ public:
   Bool getWPBiPred                  ()          { return m_useWeightedBiPred;     }
   Void setUseWP                     ( Bool b )  { m_bUseWeightPred = b;     }
   Void setWPBiPred                  ( Bool b )  { m_useWeightedBiPred = b;  }
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool      getUseCrossComponentDecorrelation()         const { return m_useCrossComponentDecorrelation;  }
+  Void      setUseCrossComponentDecorrelation(Bool value)     { m_useCrossComponentDecorrelation = value; }
+#endif
+
   Void      setOutputFlagPresentFlag( Bool b )  { m_OutputFlagPresentFlag = b;    }
   Bool      getOutputFlagPresentFlag()          { return m_OutputFlagPresentFlag; }
   Void      setTransquantBypassEnableFlag( Bool b ) { m_TransquantBypassEnableFlag = b; }

@@ -550,9 +550,13 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
 
       for(UInt ch=COMPONENT_Y; ch<numValidComp; ch++)
       {
-
         const ComponentID compID=ComponentID(ch);
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+        if( rTu.ProcessComponentSection(compID) )
+#else
         if( rTu.ProcessComponentSection(compID) && cbf[compID] )
+#endif
         {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           if (bDebugRQT) printf("Call NxN for chan %d width=%d height=%d cbf=%d\n", compID, rTu.getRect(compID).width, rTu.getRect(compID).height, 1);
@@ -581,7 +585,19 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
           else
           {
 #endif
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+            if(isChroma(compID) && (cbf[COMPONENT_Y] != 0))
+            {
+              m_pcEntropyDecoderIf->parseCrossComponentDecorrelation( rTu, compID );
+            }
+
+            if(cbf[compID] != 0)
+            {
+              m_pcEntropyDecoderIf->parseCoeffNxN( rTu, compID );
+            }
+#else
             m_pcEntropyDecoderIf->parseCoeffNxN( rTu, compID );
+#endif
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
           }
 #endif

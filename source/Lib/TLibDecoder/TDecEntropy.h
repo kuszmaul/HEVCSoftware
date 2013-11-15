@@ -95,6 +95,10 @@ public:
   virtual Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList ) = 0;
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
   
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  virtual Void parseCrossComponentDecorrelation ( class TComTU &rTu, ComponentID compID ) = 0;
+#endif
+
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;

@@ -443,6 +443,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Coding tools
   ("AMP",                     m_enableAMP,               true,  "Enable asymmetric motion partitions")
   ("IntraBlockCopyEnabled",   m_useIntraBlockCopy,  false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  ("CrossComponentDecorrelation",     m_useCrossComponentDecorrelation,  false, "Enable the use of cross-component decorrelation (not valid in V1 profiles)")
+  ("ReconBasedDecorrelationEstimate", m_reconBasedDecorrelationEstimate, false, "When determining the alpha value for cross-component decorrelation, use the decoded residual rather than the pre-transform encoder-side residual")
+#endif
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
@@ -980,6 +984,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  xConfirmPara((m_useCrossComponentDecorrelation && (m_chromaFormatIDC != CHROMA_444)),     "Cross-component prediction is specified for 4:4:4 chroma format only" );
+#endif
+
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
   xConfirmPara ( ( m_profile==Profile::MAIN || m_profile==Profile::MAIN10 || m_profile==Profile::MAINSTILLPICTURE ) && m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
   if (m_transformSkipLog2MaxSize!=2 && m_useTransformSkipFast)
@@ -1623,6 +1632,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
 #endif
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  printf("Cross-component decorrelation   : %s\n", (m_useCrossComponentDecorrelation         ? (m_reconBasedDecorrelationEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
+#endif
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
 #endif
