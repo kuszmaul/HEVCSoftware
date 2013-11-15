@@ -104,9 +104,7 @@ protected:
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)
-#endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      m_useResidualRotation;                            ///< control flag for transform-skip/transquant-bypass residual rotation
 #endif

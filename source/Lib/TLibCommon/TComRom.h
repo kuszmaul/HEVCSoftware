@@ -90,11 +90,6 @@ extern       UInt g_uiMaxCUHeight;
 extern       UInt g_uiMaxCUDepth;
 extern       UInt g_uiAddCUDepth;
 
-#if !RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
-#define MAX_TS_WIDTH  4
-#define MAX_TS_HEIGHT 8
-#endif
-
 extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 
 #define QUANT_SHIFT                14 // Q(4) = 2^14

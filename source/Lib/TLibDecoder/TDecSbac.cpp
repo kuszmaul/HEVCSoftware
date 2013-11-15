@@ -1079,11 +1079,7 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
     return;
   }
 
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(component), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize()))
-#else
-  if (!TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(component)))
-#endif
   {
     return;
   }

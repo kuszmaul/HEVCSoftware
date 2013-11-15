@@ -968,9 +968,7 @@ private:
 
   Bool        m_TransquantBypassEnableFlag; // Indicates presence of cu_transquant_bypass_flag in CUs.
   Bool        m_useTransformSkip;
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   Int         m_transformSkipLog2MaxSize;
-#endif
   Bool        m_dependentSliceSegmentsEnabledFlag;     //!< Indicates the presence of dependent slices
   Bool        m_tilesEnabledFlag;              //!< Indicates the presence of tiles
   Bool        m_entropyCodingSyncEnabledFlag;  //!< Indicates the presence of wavefronts
@@ -1046,10 +1044,8 @@ public:
 
   Bool      getUseTransformSkip       ()         { return m_useTransformSkip;     }
   Void      setUseTransformSkip       ( Bool b ) { m_useTransformSkip  = b;       }
-#if RExt__N0288_SPECIFY_TRANSFORM_SKIP_MAXIMUM_SIZE
   UInt      getTransformSkipLog2MaxSize ()         { return m_transformSkipLog2MaxSize;     }
   Void      setTransformSkipLog2MaxSize ( UInt u ) { m_transformSkipLog2MaxSize  = u;       }
-#endif
 
   Void    setLoopFilterAcrossTilesEnabledFlag  (Bool b)    { m_loopFilterAcrossTilesEnabledFlag = b; }
   Bool    getLoopFilterAcrossTilesEnabledFlag  ()          { return m_loopFilterAcrossTilesEnabledFlag;   }
