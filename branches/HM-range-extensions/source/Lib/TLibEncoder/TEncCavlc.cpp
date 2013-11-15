@@ -547,9 +547,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
        || pcSPS->getUseExtendedPrecision()
 #endif
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
        || pcSPS->getDisableIntraReferenceSmoothing()
-#endif
     )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
@@ -567,9 +565,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),            "extended_precision_processing_flag" );
 #endif
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
     WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),  "intra_smoothing_disabled_flag" );
-#endif
     WRITE_FLAG( 0, "sps_extension2_flag" );
   }
   else

@@ -712,9 +712,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if RExt__N0188_EXTENDED_PRECISION_PROCESSING
     READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision(uiCode != 0);
 #endif
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
     READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing(uiCode != 0);
-#endif
     READ_FLAG( uiCode, "sps_extension2_flag");
   }
 

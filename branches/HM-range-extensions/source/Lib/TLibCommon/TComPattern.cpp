@@ -497,18 +497,11 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
  * The prediction mode index is used to determine whether a smoothed reference sample buffer is returned.
  */
 
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
 Bool TComPrediction::filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled)
-#else
-Bool TComPrediction::filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt)
-#endif
 {
   Bool bFilter;
-#if RExt__N0080_INTRA_REFERENCE_SMOOTHING_DISABLED_FLAG
+
   if (!filterIntraReferenceSamples(toChannelType(compID), chFmt, intraReferenceSmoothingDisabled))
-#else
-  if (!filterIntraReferenceSamples(toChannelType(compID), chFmt))
-#endif
   {
     bFilter=false;
   }
