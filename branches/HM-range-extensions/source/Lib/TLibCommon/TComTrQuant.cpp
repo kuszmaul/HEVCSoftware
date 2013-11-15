@@ -2022,11 +2022,15 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-  UInt       uiGoRiceParam       = 0;
-  Double     d64BlockUncodedCost = 0;
-  const UInt uiLog2BlockWidth    = g_aucConvertToBit[ uiWidth  ] + 2;
-  const UInt uiLog2BlockHeight   = g_aucConvertToBit[ uiHeight ] + 2;
-  const UInt uiMaxNumCoeff       = uiWidth * uiHeight;
+  UInt       uiGoRiceParam                = 0;
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  const Bool golombRiceGroupAdaptation    = pcCU->getSlice()->getSPS()->getUseGolombRiceGroupAdaptation();
+  const UInt golombRiceParameterReduction = (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) ? 1 : 2;
+#endif
+  Double     d64BlockUncodedCost          = 0;
+  const UInt uiLog2BlockWidth             = g_aucConvertToBit[ uiWidth  ] + 2;
+  const UInt uiLog2BlockHeight            = g_aucConvertToBit[ uiHeight ] + 2;
+  const UInt uiMaxNumCoeff                = uiWidth * uiHeight;
   assert(compID<MAX_NUM_COMPONENT);
 
   Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
@@ -2179,7 +2183,14 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         baseLevel = (c1Idx < C1FLAG_NUMBER) ? (2 + (c2Idx < C2FLAG_NUMBER)) : 1;
         if( uiLevel >= baseLevel )
         {
-          if(uiLevel > 3*(1<<uiGoRiceParam))
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+          if (golombRiceGroupAdaptation)
+          {
+            uiGoRiceParam = std::min<UInt>((uiGoRiceParam + (uiLevel >> (uiGoRiceParam + 2))), MAXIMUM_GOLOMB_RICE_PARAMETER);
+          }
+          else
+#endif
+          if (uiLevel > 3*(1<<uiGoRiceParam))
           {
             uiGoRiceParam = min<UInt>((uiGoRiceParam+1), 4);
           }
@@ -2207,9 +2218,14 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
           uiCtxSet          = getContextSetIndex(compID, ((iScanPos - 1) >> MLS_CG_SIZE), (c1 == 0)); //(iScanPos - 1) because we do this **before** entering the final group
           c1                = 1;
           c2                = 0;
-          uiGoRiceParam     = 0;
           c1Idx             = 0;
           c2Idx             = 0;
+
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+          uiGoRiceParam     = golombRiceGroupAdaptation ? ((uiGoRiceParam <= golombRiceParameterReduction) ? 0 : (uiGoRiceParam - golombRiceParameterReduction)) : 0;
+#else
+          uiGoRiceParam     = 0;
+#endif
         }
       }
       else

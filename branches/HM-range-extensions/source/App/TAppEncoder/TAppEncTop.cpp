@@ -191,6 +191,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );
 #endif
   m_cTEncTop.setUseSingleSignificanceMapContext( m_useSingleSignificanceMapContext   );
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  m_cTEncTop.setUseGolombRiceGroupAdaptation ( m_useGolombRiceGroupAdaptation );
+#endif
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
 #if RExt__NRCE2_RESIDUAL_DPCM
   for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)

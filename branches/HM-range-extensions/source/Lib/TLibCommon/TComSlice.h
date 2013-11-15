@@ -734,6 +734,10 @@ private:
 
   Bool        m_useSingleSignificanceMapContext;
 
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool        m_useGolombRiceGroupAdaptation;
+#endif
+
 #if RExt__NRCE2_RESIDUAL_DPCM
   Bool        m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
 #endif
@@ -873,6 +877,11 @@ public:
 
   Bool     getUseSingleSignificanceMapContext()                 const { return m_useSingleSignificanceMapContext;  }
   Void     setUseSingleSignificanceMapContext(const Bool value)       { m_useSingleSignificanceMapContext = value; }
+
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool     getUseGolombRiceGroupAdaptation   ()                 const { return m_useGolombRiceGroupAdaptation;  }
+  Void     setUseGolombRiceGroupAdaptation   (const Bool value)       { m_useGolombRiceGroupAdaptation = value; }
+#endif
 
 #if RExt__NRCE2_RESIDUAL_DPCM
   Bool     getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
