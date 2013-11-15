@@ -196,10 +196,17 @@ Void TAppEncTop::xInitLibCfg()
 #endif
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
 #if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+  for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
+  {
+    m_cTEncTop.setUseResidualDPCM(RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);
+  }
+#else
   for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
   {
     m_cTEncTop.setUseResidualDPCM(PredMode(predictionModeIndex), m_useResidualDPCM[predictionModeIndex]);
   }
+#endif
 #endif
   m_cTEncTop.setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setPCMLog2MinSize          ( m_uiPCMLog2MinSize);

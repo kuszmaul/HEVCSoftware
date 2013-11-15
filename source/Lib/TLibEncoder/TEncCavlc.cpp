@@ -536,8 +536,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getUseSingleSignificanceMapContext()
        || pcSPS->getUseIntraBlockCopy()
 #if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+       || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)
+       || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)
+#else
        || pcSPS->getUseResidualDPCM(MODE_INTRA)
        || pcSPS->getUseResidualDPCM(MODE_INTER)
+#endif
 #endif
        || pcSPS->getUseExtendedPrecision()
        || pcSPS->getDisableIntraReferenceSmoothing()
@@ -548,18 +553,23 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
     WRITE_FLAG( 1, "sps_extension1_flag" );
 #if RExt__NRCE2_RESIDUAL_ROTATION
-    WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),             "transform_skip_rotation_enabled_flag");
+    WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
 #endif
-    WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0), "transform_skip_context_enabled_flag");
-    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),               "intra_block_copy_enabled_flag");
+    WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
+    WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
 #if RExt__NRCE2_RESIDUAL_DPCM
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),       "residual_dpcm_intra_enabled_flag" );
-    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),       "residual_dpcm_inter_enabled_flag" );
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "residual_dpcm_explicit_enabled_flag" );
+#else
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),            "residual_dpcm_intra_enabled_flag" );
+    WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),            "residual_dpcm_inter_enabled_flag" );
 #endif
-    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),            "extended_precision_processing_flag" );
-    WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),  "intra_smoothing_disabled_flag" );
+#endif
+    WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
+    WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),    "golomb_rice_group_adaptation_flag" );
+    WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
 #endif
     WRITE_FLAG( 0, "sps_extension2_flag" );
   }

@@ -688,18 +688,23 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if (uiCode != 0)
   {
 #if RExt__NRCE2_RESIDUAL_ROTATION
-    READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation            (uiCode != 0);
+    READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation                    (uiCode != 0);
 #endif
-    READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext(uiCode != 0);
-    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy              (uiCode != 0);
+    READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
+    READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
 #if RExt__NRCE2_RESIDUAL_DPCM
-    READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA,    (uiCode != 0));
-    READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER,    (uiCode != 0));
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+    READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
+    READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
+#else
+    READ_FLAG( uiCode, "residual_dpcm_intra_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTRA,            (uiCode != 0));
+    READ_FLAG( uiCode, "residual_dpcm_inter_enabled_flag");       pcSPS->setUseResidualDPCM(MODE_INTER,            (uiCode != 0));
 #endif
-    READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision           (uiCode != 0);
-    READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing (uiCode != 0);
+#endif
+    READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision                   (uiCode != 0);
+    READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation   (uiCode != 0);
+    READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
     READ_FLAG( uiCode, "sps_extension2_flag");
   }
