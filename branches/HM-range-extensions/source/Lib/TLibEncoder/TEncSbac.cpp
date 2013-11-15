@@ -748,8 +748,12 @@ Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   UInt uiSymbol = pcCU->isIntraBC( uiAbsPartIdx ) ? 1 : 0;
 
   {
-  UInt uiCtxIntraBC = pcCU->getCtxIntraBCFlag( uiAbsPartIdx );
+#if RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
+    m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ));
+#else
+    UInt uiCtxIntraBC = pcCU->getCtxIntraBCFlag( uiAbsPartIdx );
     m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, uiCtxIntraBC )); 
+#endif
 
     DTRACE_CABAC_VL( g_nSymbolCounter++ );
     DTRACE_CABAC_T( "\tuiSymbol: ");

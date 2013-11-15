@@ -266,6 +266,7 @@
 
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION                    1 ///< 0 = allow the use of scaling lists for any TU size, 1 (default) = restrict transform-skip scaling list application to 4x4 only
+#define RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX                                1 ///< 0 = use 3 contexts for intra_bc_flag with prediction from left/above, 1 (default) use 1 context for intra_bc_flag without prediction from left/above
 #define RExt__O0186_DISABLE_NONINTRA_ROTATION                                  1 ///< 0 = allow non-intra rotation, 1 (default) = disabled non-intra (inter,intrabc) rotation.
 
 //------------------------------------------------

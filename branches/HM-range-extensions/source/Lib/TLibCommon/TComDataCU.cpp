@@ -1865,6 +1865,7 @@ UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
   return getDepth( uiAbsPartIdx );
 }
 
+#if !RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
 UInt TComDataCU::getCtxIntraBCFlag( UInt uiAbsPartIdx )
 {
   TComDataCU* pcTempCU;
@@ -1881,6 +1882,7 @@ UInt TComDataCU::getCtxIntraBCFlag( UInt uiAbsPartIdx )
   
   return uiCtx;
 }
+#endif
 
 UChar TComDataCU::getQtRootCbf( UInt uiIdx )
 {
