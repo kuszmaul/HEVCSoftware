@@ -1730,14 +1730,16 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
   {
     for (UInt componentIndex = 0; componentIndex < MAX_NUM_COMPONENT; componentIndex++)
     {
-      saoBlkParam[componentIndex].modeIdc = SAO_MODE_MERGE;
+      saoBlkParam[componentIndex].modeIdc = (sliceEnabled[componentIndex]) ? SAO_MODE_MERGE : SAO_MODE_OFF;
       saoBlkParam[componentIndex].typeIdc = (isLeftMerge)?SAO_MERGE_LEFT:SAO_MERGE_ABOVE;
     }
   }
   else //new or off mode
   {    
-    for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+    for(Int compId=COMPONENT_Y; compId < MAX_NUM_COMPONENT; compId++)
     {
+      const ComponentID compIdx=ComponentID(compId);
+      const ComponentID firstCompOfChType = getFirstComponentOfChannel(toChannelType(compIdx));
       SAOOffset& ctbParam = saoBlkParam[compIdx];
 
       if(!sliceEnabled[compIdx])
@@ -1748,7 +1750,7 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
       }
 
       //type
-      if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+      if(compIdx == firstCompOfChType)
       {
         parseSaoTypeIdx(uiSymbol); //sao_type_idx_luma or sao_type_idx_chroma
 
@@ -1811,14 +1813,14 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
         {
           ctbParam.typeAuxInfo = 0;
 
-          if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+          if(firstCompOfChType == compIdx)
           {
             parseSaoUflc(NUM_SAO_EO_TYPES_LOG2, uiSymbol ); //sao_eo_class_luma or sao_eo_class_chroma
             ctbParam.typeIdc += uiSymbol;
           }
           else
           {
-            ctbParam.typeIdc = saoBlkParam[COMPONENT_Cb].typeIdc;
+            ctbParam.typeIdc = saoBlkParam[firstCompOfChType].typeIdc;
           }
           ctbParam.offset[SAO_CLASS_EO_FULL_VALLEY] = offset[0];
           ctbParam.offset[SAO_CLASS_EO_HALF_VALLEY] = offset[1];

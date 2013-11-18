@@ -314,12 +314,17 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
     if ( pcSlice->getSPS()->getUseSAO() )
     {
       SAOBlkParam& saoblkParam = (rpcPic->getPicSym()->getSAOBlkParam())[iCUAddr];
-      if (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma())
+      Bool bIsSAOSliceEnabled = false;
+      Bool sliceEnabled[MAX_NUM_COMPONENT];
+      for(Int comp=0; comp < MAX_NUM_COMPONENT; comp++)
       {
-        Bool sliceEnabled[MAX_NUM_COMPONENT];
-        sliceEnabled[COMPONENT_Y] = pcSlice->getSaoEnabledFlag();
-        sliceEnabled[COMPONENT_Cb] = sliceEnabled[COMPONENT_Cr] = isChromaEnabled(rpcPic->getChromaFormat()) && pcSlice->getSaoEnabledFlagChroma();
-
+        ComponentID compId=ComponentID(comp);
+        sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < rpcPic->getNumberValidComponents());
+        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+        saoblkParam[compId].modeIdc = SAO_MODE_OFF;
+      }
+      if (bIsSAOSliceEnabled)
+      {
         Bool leftMergeAvail = false;
         Bool aboveMergeAvail= false;
 
@@ -337,12 +342,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         }
 
         pcSbacDecoder->parseSAOBlkParam( saoblkParam, sliceEnabled, leftMergeAvail, aboveMergeAvail);
-      }
-      else 
-      {
-        saoblkParam[COMPONENT_Y ].modeIdc = SAO_MODE_OFF;
-        saoblkParam[COMPONENT_Cb].modeIdc = SAO_MODE_OFF;
-        saoblkParam[COMPONENT_Cr].modeIdc = SAO_MODE_OFF;
       }
     }
 #else

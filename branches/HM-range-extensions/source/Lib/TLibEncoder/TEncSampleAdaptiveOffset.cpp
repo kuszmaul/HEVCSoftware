@@ -360,6 +360,10 @@ Void TEncSampleAdaptiveOffset::decidePicParams(Bool* sliceEnabled, Int picTempLa
 {
   //decide sliceEnabled[compIdx]
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  for (Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  {
+    sliceEnabled[compIdx] = false;
+  }
 
   for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
@@ -583,11 +587,13 @@ Void TEncSampleAdaptiveOffset::deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[
   Int64 dist[MAX_NUM_COMPONENT], modeDist[MAX_NUM_COMPONENT];
   SAOOffset testOffset[MAX_NUM_COMPONENT];
   Int invQuantOffset[MAX_NUM_SAO_CLASSES];
-
-  modeDist[COMPONENT_Y]= modeDist[COMPONENT_Cb] = modeDist[COMPONENT_Cr] = 0;
+  for(Int comp=0; comp < MAX_NUM_COMPONENT; comp++)
+  {
+    modeDist[comp] = 0;
+  }
 
   //pre-encode merge flags
-  modeParam[COMPONENT_Y ].modeIdc = SAO_MODE_OFF;
+  modeParam[COMPONENT_Y].modeIdc = SAO_MODE_OFF;
   m_pcRDGoOnSbacCoder->load(cabacCoderRDO[inCabacLabel]);
   m_pcRDGoOnSbacCoder->codeSAOBlkParam(modeParam, sliceEnabled, (mergeList[SAO_MERGE_LEFT]!= NULL), (mergeList[SAO_MERGE_ABOVE]!= NULL), true);
   m_pcRDGoOnSbacCoder->store(cabacCoderRDO[SAO_CABACSTATE_BLK_MID]);
@@ -705,11 +711,15 @@ Void TEncSampleAdaptiveOffset::deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192
     m_pcRDGoOnSbacCoder->load(cabacCoderRDO[SAO_CABACSTATE_BLK_MID]);
     m_pcRDGoOnSbacCoder->resetBits();
-    m_pcRDGoOnSbacCoder->codeSAOOffsetParam(COMPONENT_Cb, testOffset[COMPONENT_Cb], sliceEnabled[COMPONENT_Cb]);
-    m_pcRDGoOnSbacCoder->codeSAOOffsetParam(COMPONENT_Cr, testOffset[COMPONENT_Cr], sliceEnabled[COMPONENT_Cr]);
+    Int64 distSum=0;
+    for(UInt componentIndex = COMPONENT_Cb; componentIndex < numberOfComponents; componentIndex++)
+    {
+      m_pcRDGoOnSbacCoder->codeSAOOffsetParam(ComponentID(componentIndex), testOffset[componentIndex], sliceEnabled[componentIndex]);
+      distSum+=dist[componentIndex];
+    }
     Int rate = m_pcRDGoOnSbacCoder->getNumberOfWrittenBits();
 
-    cost = (Double)(dist[COMPONENT_Cb]+ dist[COMPONENT_Cr]) + chromaLambda*((Double)rate);
+    cost = Double(distSum) + chromaLambda*((Double)rate);
 #endif
     if(cost < minCost)
     {
@@ -732,7 +742,12 @@ Void TEncSampleAdaptiveOffset::deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[
   }
 #else
   modeNormCost  = (Double)modeDist[COMPONENT_Y]/m_labmda[COMPONENT_Y];
-  modeNormCost += (Double)(modeDist[COMPONENT_Cb]+ modeDist[COMPONENT_Cr])/chromaLambda; 
+  Int64 modeDistSum=0;
+  for(UInt componentIndex = COMPONENT_Cb; componentIndex < numberOfComponents; componentIndex++)
+  {
+    modeDistSum += modeDist[componentIndex];
+  }
+  modeNormCost += Double(modeDistSum)/chromaLambda;
 #endif
   m_pcRDGoOnSbacCoder->load(cabacCoderRDO[inCabacLabel]);
   m_pcRDGoOnSbacCoder->resetBits();
@@ -747,6 +762,7 @@ Void TEncSampleAdaptiveOffset::deriveModeMergeRDO(Int ctu, SAOBlkParam* mergeLis
 
   Double cost;
   SAOBlkParam testBlkParam;
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
   for(Int mergeType=0; mergeType< NUM_SAO_MERGE_TYPES; mergeType++)
   {
@@ -758,7 +774,7 @@ Void TEncSampleAdaptiveOffset::deriveModeMergeRDO(Int ctu, SAOBlkParam* mergeLis
     testBlkParam = *(mergeList[mergeType]);
     //normalized distortion
     Double normDist=0;
-    for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+    for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
       testBlkParam[compIdx].modeIdc = SAO_MODE_MERGE;
       testBlkParam[compIdx].typeIdc = mergeType;
@@ -796,10 +812,12 @@ Void TEncSampleAdaptiveOffset::deriveModeMergeRDO(Int ctu, SAOBlkParam* mergeLis
 
 Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams)
 {
-  Bool isAllBlksDisabled = false;
-  if(!sliceEnabled[COMPONENT_Y] && !sliceEnabled[COMPONENT_Cb] && !sliceEnabled[COMPONENT_Cr])
+  Bool allBlksDisabled = true;
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  for(Int compId = COMPONENT_Y; compId < numberOfComponents; compId++)
   {
-    isAllBlksDisabled = true;
+    if (sliceEnabled[compId])
+      allBlksDisabled = false;
   }
 
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[ SAO_CABACSTATE_PIC_INIT ]);
@@ -807,7 +825,6 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
   SAOBlkParam modeParam;
   Double minCost, modeCost;
 
-  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149
   Double totalCost = 0;
@@ -815,7 +832,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
 
   for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
   {
-    if(isAllBlksDisabled)
+    if(allBlksDisabled)
     {
       codedParams[ctu].reset();
       continue;
@@ -896,10 +913,10 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
 #if SAO_ENCODING_CHOICE 
   Int picTempLayer = pic->getSlice(0)->getDepth();
   Int numLcusForSAOOff[MAX_NUM_COMPONENT];
-  numLcusForSAOOff[COMPONENT_Y ] = numLcusForSAOOff[COMPONENT_Cb]= numLcusForSAOOff[COMPONENT_Cr]= 0;
 
   for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
+    numLcusForSAOOff[compIdx] = 0;
     for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
     {
       if( reconParams[ctu][compIdx].modeIdc == SAO_MODE_OFF)

@@ -1125,10 +1125,18 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     if(sps->getUseSAO())
     {
+#if HM_CLEANUP_SAO
+      READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag(CHANNEL_TYPE_LUMA, (Bool)uiCode);
+#else
       READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
+#endif
       if (bChroma)
       {
+#if HM_CLEANUP_SAO
+        READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, (Bool)uiCode); // NOTE: RExt - This SE is not present in slice header for 4:0:0 ?
+#else
         READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode); // NOTE: RExt - This SE is not present in slice header for 4:0:0 ?
+#endif
       }
     }
 
@@ -1365,7 +1373,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setDeblockingFilterTcOffsetDiv2  ( 0 );
     }
 
+#if HM_CLEANUP_SAO
+    Bool isSAOEnabled = rpcSlice->getSPS()->getUseSAO() && (rpcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (bChroma && rpcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA))); // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
+#else
     Bool isSAOEnabled = (!rpcSlice->getSPS()->getUseSAO())?(false):(rpcSlice->getSaoEnabledFlag()||(bChroma && rpcSlice->getSaoEnabledFlagChroma())); // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
+#endif
     Bool isDBFEnabled = (!rpcSlice->getDeblockingFilterDisable());
 
     if(rpcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))

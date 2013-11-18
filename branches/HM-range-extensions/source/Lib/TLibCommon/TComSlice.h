@@ -1183,8 +1183,12 @@ class TComSlice
   
 private:
   //  Bitstream writing
+#if HM_CLEANUP_SAO
+  Bool        m_saoEnabledFlag[MAX_NUM_CHANNEL_TYPE];
+#else
   Bool        m_saoEnabledFlag;
   Bool        m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
+#endif
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag 
   Int         m_iPOC;
@@ -1299,10 +1303,15 @@ public:
   Int       getPPSId        () { return m_iPPSId; }
   Void      setPicOutputFlag( Bool b )         { m_PicOutputFlag = b;    }
   Bool      getPicOutputFlag()                 { return m_PicOutputFlag; }
+#if HM_CLEANUP_SAO
+  Void      setSaoEnabledFlag(ChannelType chType, Bool s) {m_saoEnabledFlag[chType] =s; }
+  Bool      getSaoEnabledFlag(ChannelType chType) { return m_saoEnabledFlag[chType]; }
+#else
   Void      setSaoEnabledFlag(Bool s) {m_saoEnabledFlag =s; }
   Bool      getSaoEnabledFlag() { return m_saoEnabledFlag; }
   Void      setSaoEnabledFlagChroma(Bool s) {m_saoEnabledFlagChroma =s; }       //!< set SAO Cb&Cr enabled flag
   Bool      getSaoEnabledFlagChroma() { return m_saoEnabledFlagChroma; }        //!< get SAO Cb&Cr enabled flag
+#endif
   Void      setRPS          ( TComReferencePictureSet *pcRPS ) { m_pcRPS = pcRPS; }
   TComReferencePictureSet*  getRPS          () { return m_pcRPS; }
   TComReferencePictureSet*  getLocalRPS     () { return &m_LocalRPS; }

@@ -62,6 +62,7 @@ static inline UInt        getComponentScaleY        (const ComponentID id, const
 static inline UInt        getNumberValidChannelTypes(const ChromaFormat fmt)                       { return (fmt==CHROMA_400) ? 1 : MAX_NUM_CHANNEL_TYPE;               }
 static inline UInt        getNumberValidComponents  (const ChromaFormat fmt)                       { return (fmt==CHROMA_400) ? 1 : MAX_NUM_COMPONENT;                  }
 static inline Bool        isChromaEnabled           (const ChromaFormat fmt)                       { return  fmt!=CHROMA_400;                                           }
+static inline ComponentID getFirstComponentOfChannel(const ChannelType id)                         { return (isLuma(id) ? COMPONENT_Y : COMPONENT_Cb);                  }
 
 #if RExt__COLOUR_SPACE_CONVERSIONS
 InputColourSpaceConversion stringToInputColourSpaceConvert(const std::string &value, const Bool bIsForward);

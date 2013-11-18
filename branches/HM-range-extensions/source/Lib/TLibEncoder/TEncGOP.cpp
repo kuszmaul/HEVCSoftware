@@ -1550,9 +1550,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               //assign SAO slice header
               for(Int s=0; s< uiNumSlices; s++)
               {
-                pcPic->getSlice(s)->setSaoEnabledFlag(sliceEnabled[COMPONENT_Y]);
+                pcPic->getSlice(s)->setSaoEnabledFlag(CHANNEL_TYPE_LUMA, sliceEnabled[COMPONENT_Y]);
                 assert(sliceEnabled[COMPONENT_Cb] == sliceEnabled[COMPONENT_Cr]);
-                pcPic->getSlice(s)->setSaoEnabledFlagChroma(sliceEnabled[COMPONENT_Cb]);
+                pcPic->getSlice(s)->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, sliceEnabled[COMPONENT_Cb]);
               }
 #else
               m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
