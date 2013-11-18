@@ -327,12 +327,6 @@
 #define MAXIMUM_GOLOMB_RICE_PARAMETER                                          7
 #endif
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-#define CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH             1
-#else
-#define CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH             0
-#endif
-
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
 #define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
 #endif
