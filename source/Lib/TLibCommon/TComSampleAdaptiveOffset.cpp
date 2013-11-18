@@ -335,7 +335,10 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, SAO
 
 Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams)
 {
-  m_picSAOEnabled[COMPONENT_Y] = m_picSAOEnabled[COMPONENT_Cb] = m_picSAOEnabled[COMPONENT_Cr] = false;
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  {
+    m_picSAOEnabled[compIdx] = false;
+  }
 
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
@@ -593,14 +596,13 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
 {
   Bool isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail;
 
-  if( 
-    (saoblkParam[COMPONENT_Y ].modeIdc == SAO_MODE_OFF) &&
-    (saoblkParam[COMPONENT_Cb].modeIdc == SAO_MODE_OFF) &&
-    (saoblkParam[COMPONENT_Cr].modeIdc == SAO_MODE_OFF)
-    )
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  Bool bAllOff=true;
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
-    return;
+    if (saoblkParam[compIdx].modeIdc != SAO_MODE_OFF) bAllOff=false;
   }
+  if (bAllOff) return;
 
   //block boundary availability
   pPic->getPicSym()->deriveLoopFilterBoundaryAvailibility(ctu, isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail);
@@ -609,8 +611,6 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
   Int xPos   = (ctu % m_numCTUInWidth)*m_maxCUWidth;
   Int height = (yPos + m_maxCUHeight > m_picHeight)?(m_picHeight- yPos):m_maxCUHeight;
   Int width  = (xPos + m_maxCUWidth  > m_picWidth )?(m_picWidth - xPos):m_maxCUWidth;
-
-  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
   for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
@@ -628,7 +628,7 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
       Int  blkYPos    = (yPos   >> componentScaleY);
 
       Int  srcStride  = srcYuv->getStride(component);
-      Pel* srcBlk     = srcYuv->getAddr(component) + (yPos >> componentScaleY)*srcStride + (xPos >> componentScaleX);
+      Pel* srcBlk     = srcYuv->getAddr(component) + blkYPos*srcStride + blkXPos;
 
       Int  resStride  = resYuv->getStride(component);
       Pel* resBlk     = resYuv->getAddr(component) + blkYPos*resStride + blkXPos;
@@ -648,10 +648,14 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
 
 Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
 {
-  if(!m_picSAOEnabled[COMPONENT_Y] && !m_picSAOEnabled[COMPONENT_Cb] && !m_picSAOEnabled[COMPONENT_Cr])
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  Bool bAllDisabled=true;
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
-    return;
+    if (m_picSAOEnabled[compIdx]) bAllDisabled=false;
   }
+  if (bAllDisabled) return;
+
   TComPicYuv* resYuv = pDecPic->getPicYuvRec();
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);

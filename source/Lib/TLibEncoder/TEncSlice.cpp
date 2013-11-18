@@ -1200,12 +1200,17 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
 #if HM_CLEANUP_SAO
     if ( pcSlice->getSPS()->getUseSAO() )
     {
-      if (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma())
+      Bool bIsSAOSliceEnabled = false;
+      Bool sliceEnabled[MAX_NUM_COMPONENT];
+      for(Int comp=0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        ComponentID compId=ComponentID(comp);
+        sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < rpcPic->getNumberValidComponents());
+        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+      }
+      if (bIsSAOSliceEnabled)
       {
         SAOBlkParam& saoblkParam = (rpcPic->getPicSym()->getSAOBlkParam())[uiCUAddr];
-        Bool sliceEnabled[MAX_NUM_COMPONENT];
-        sliceEnabled[COMPONENT_Y] = pcSlice->getSaoEnabledFlag();
-        sliceEnabled[COMPONENT_Cb] = sliceEnabled[COMPONENT_Cr] = isChromaEnabled(rpcPic->getChromaFormat()) && pcSlice->getSaoEnabledFlagChroma();
 
         Bool leftMergeAvail = false;
         Bool aboveMergeAvail= false;

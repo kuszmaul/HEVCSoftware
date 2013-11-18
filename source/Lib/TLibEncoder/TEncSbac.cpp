@@ -1629,7 +1629,7 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
 }
 
 #if HM_CLEANUP_SAO
-Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
+Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
 {
   UInt uiSymbol;
   if(!sliceEnabled)
@@ -1637,9 +1637,10 @@ Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEn
     assert(ctbParam.modeIdc == SAO_MODE_OFF);
     return;
   }
+  const Bool bIsFirstCompOfChType = (getFirstComponentOfChannel(toChannelType(compIdx)) == compIdx);
 
   //type
-  if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+  if(bIsFirstCompOfChType)
   {
     //sao_type_idx_luma or sao_type_idx_chroma
     if(ctbParam.modeIdc == SAO_MODE_OFF)
@@ -1694,7 +1695,7 @@ Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEn
     }
     else //EO
     {
-      if(compIdx == COMPONENT_Y || compIdx == COMPONENT_Cb)
+      if(bIsFirstCompOfChType)
       {
         assert(ctbParam.typeIdc - SAO_TYPE_START_EO >=0);
         codeSaoUflc(NUM_SAO_EO_TYPES_LOG2, ctbParam.typeIdc - SAO_TYPE_START_EO ); //sao_eo_class_luma or sao_eo_class_chroma
@@ -1737,7 +1738,7 @@ Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
   {
     for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
-      codeSAOOffsetParam(compIdx, saoBlkParam[compIdx], sliceEnabled[compIdx]);
+      codeSAOOffsetParam(ComponentID(compIdx), saoBlkParam[compIdx], sliceEnabled[compIdx]);
     }
   }
 }

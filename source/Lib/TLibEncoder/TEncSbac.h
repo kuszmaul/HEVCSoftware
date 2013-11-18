@@ -105,7 +105,7 @@ public:
   Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
 
 #if HM_CLEANUP_SAO
-  Void codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
+  Void codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
                     , Bool* sliceEnabled
                     , Bool leftMergeAvail

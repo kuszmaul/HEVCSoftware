@@ -122,9 +122,14 @@ TComSlice::TComSlice()
 
   resetWpScaling();
   initWpAcDcParam();
-  m_saoEnabledFlag = false;
+
 #if HM_CLEANUP_SAO
-  m_saoEnabledFlagChroma = false;
+  for(Int ch=0; ch < MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_saoEnabledFlag[ch] = false;
+  }
+#else
+  m_saoEnabledFlag = false;
 #endif
 }
 
@@ -726,8 +731,15 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*MAX_NUM_COMPONENT );
     }
   }
+#if HM_CLEANUP_SAO
+  for( UInt ch = 0 ; ch < MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_saoEnabledFlag[ch] = pSrc->m_saoEnabledFlag[ch];
+  }
+#else
   m_saoEnabledFlag = pSrc->m_saoEnabledFlag; 
   m_saoEnabledFlagChroma = pSrc->m_saoEnabledFlagChroma;
+#endif
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 

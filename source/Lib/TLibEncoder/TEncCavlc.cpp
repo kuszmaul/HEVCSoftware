@@ -911,10 +911,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
     if(pcSlice->getSPS()->getUseSAO())
     {
-       WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
 #if HM_CLEANUP_SAO
-       if (chromaEnabled) WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+       WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA), "slice_sao_luma_flag" );
+       if (chromaEnabled) WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA), "slice_sao_chroma_flag" );
 #else
+       WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
        SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
        if (chromaEnabled)
        {
@@ -1062,7 +1063,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
     // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
+#if HM_CLEANUP_SAO
+    Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (chromaEnabled && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA)));
+#else
     Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag() || (chromaEnabled && pcSlice->getSaoEnabledFlagChroma()));
+#endif
     Bool isDBFEnabled = (!pcSlice->getDeblockingFilterDisable());
 
     if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))
