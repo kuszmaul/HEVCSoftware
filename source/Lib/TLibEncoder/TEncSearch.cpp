@@ -5854,9 +5854,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
   // code full block
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Double     dSingleCost = MAX_DOUBLE;
-#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
   UInt       uiSingleBitsComp      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
-#endif
   UInt       uiSingleBits                                                                                                  = 0;
   Distortion uiSingleDistComp      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
   Distortion uiSingleDist                                                                                                  = 0;
@@ -5871,9 +5869,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #endif
 #else
   Double     dSingleCost = MAX_DOUBLE;
-#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
   UInt       uiSingleBitsComp[MAX_NUM_COMPONENT] = {0,0,0};
-#endif
   UInt       uiSingleBits = 0;
   Distortion uiSingleDistComp[MAX_NUM_COMPONENT] = {0,0,0};
   Distortion uiSingleDist = 0;
@@ -5904,9 +5900,8 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     pcCU->setTrIdxSubParts( uiTrMode, uiAbsPartIdx, uiDepth );
 
     m_pcEntropyCoder->resetBits();
-#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION && !CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
+
     UInt uiSingleBitsPrev=0;
-#endif
 
     memset( m_pTempPel, 0, sizeof( Pel ) * rTu.getRect(COMPONENT_Y).width * rTu.getRect(COMPONENT_Y).height ); // not necessary needed for inside of recursion (only at the beginning)
 
@@ -5971,338 +5966,6 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #endif
 #endif
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-          const Bool checkCrossComponentDecorrelation =    isChroma(compID)
-                                                        && pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation()
-                                                        && (pcCU->getCbf(subTUAbsPartIdx, COMPONENT_Y, uiTrMode) != 0);
-
-          const Int  decorrelationModesToTest = checkCrossComponentDecorrelation ? 2 : 1;
-          const Int  transformSkipModesToTest = checkTransformSkip[compID]       ? 2 : 1;
-
-          for(Int transformSkipModeId = 0; transformSkipModeId < transformSkipModesToTest; transformSkipModeId++)
-          {
-            Char preCalcAlpha = 0;
-            for(Int decorrelationModeId = 0; decorrelationModeId < decorrelationModesToTest; decorrelationModeId++)
-            {
-              const Bool isOneMode                = (decorrelationModesToTest == 1) && (transformSkipModesToTest == 1);
-              const Bool isFirstMode              = (transformSkipModeId == 0) && (decorrelationModeId == 0);
-              const Bool isLumaAvailable          = uiAbsSum[COMPONENT_Y][0] != 0;
-              const Bool isDecorrelationAvailable = isChroma(compID) && pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation() && isLumaAvailable;
-              const Bool checkDecorrelation       = isDecorrelationAvailable && (decorrelationModeId != 0);
-
-              if( m_bUseSBACRD )
-              {
-                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-              }
-              m_pcRDGoOnSbacCoder->resetBits();
-
-              pcCU->setTransformSkipPartRange(transformSkipModeId, compID, subTUAbsPartIdx, partIdxesPerSubTU);
-              pcCU->setCrossComponentDecorrelationAlphaPartRange((checkDecorrelation ? preCalcAlpha : 0), compID, subTUAbsPartIdx, partIdxesPerSubTU );
-
-              if((compID != COMPONENT_Cr) && m_pcEncCfg->getUseRDOQ())
-              {
-                m_pcEntropyCoder->estimateBit(m_pcTrQuant->m_pcEstBitsSbac, tuCompRect.width, tuCompRect.height, toChannelType(compID));
-              }
-
-              m_pcTrQuant->selectLambda(compID);
-
-              const Int chromaOffset = pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID);
-              const Int bdOffset     = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
-
-              QpParam cQP;
-              setQPforQuant(cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), (transformSkipModeId == 1));
-
-              Pel *pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0);
-              UInt resiStride     = m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID);
-
-              TCoeff bestCoeffComp   [MAX_TU_SIZE*MAX_TU_SIZE];
-              Pel    bestResiComp    [MAX_TU_SIZE*MAX_TU_SIZE];
-
-#if ADAPTIVE_QP_SELECTION
-              TCoeff bestArlCoeffComp[MAX_TU_SIZE*MAX_TU_SIZE];
-#endif
-              TCoeff     currAbsSum   = 0;
-              UInt       currCompBits = 0;
-              Distortion currCompDist = 0;
-              Double     currCompCost = 0;
-              UInt       nonCoeffBits = 0;
-              Distortion nonCoeffDist = 0;
-              Double     nonCoeffCost = 0;
-
-              const Pel *pLumaResi = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( COMPONENT_Y, rTu.getRect( COMPONENT_Y ).x0, rTu.getRect( COMPONENT_Y ).y0 );
-
-              if(!isOneMode && !isFirstMode)
-              {
-                memcpy(bestCoeffComp,    currentCoefficients,    (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
-#if ADAPTIVE_QP_SELECTION
-                memcpy(bestArlCoeffComp, currentARLCoefficients, (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
-#endif
-                for(Int y = 0; y < tuCompRect.height; y++)
-                {
-                  memcpy(&bestResiComp[y * tuCompRect.width], (pcResiCurrComp + (y * resiStride)), (sizeof(Pel) * tuCompRect.width));
-                }
-              }
-
-              if((decorrelationModeId == 0) && (decorrelationModesToTest == 2))
-              {
-                const Bool bUseReconstructedResidualForEstimate = m_pcEncCfg->getUseReconBasedDecorrelationEstimate();
-                const Pel  *const lumaResidualForEstimate       = bUseReconstructedResidualForEstimate ? pLumaResi                                                     : pcResi->getAddrPix(COMPONENT_Y, tuCompRect.x0, tuCompRect.y0);
-                const UInt        lumaResidualStrideForEstimate = bUseReconstructedResidualForEstimate ? m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y) : pcResi->getStride(COMPONENT_Y);
-
-                preCalcAlpha = xCalcCrossComponentDecorrelationAlpha(TUIterator,
-                                                                     compID,
-                                                                     lumaResidualForEstimate,
-                                                                     pcResi->getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                                     tuCompRect.width,
-                                                                     tuCompRect.height,
-                                                                     lumaResidualStrideForEstimate,
-                                                                     pcResi->getStride(compID));
-
-                pcCU->setCrossComponentDecorrelationAlphaPartRange(0, compID, subTUAbsPartIdx, partIdxesPerSubTU);
-              }
-
-              if(isChroma(compID) && checkDecorrelation)
-              {
-                TComTrQuant::crossComponentDecorrelation(TUIterator,
-                                                         compID,
-                                                         pLumaResi,
-                                                         pcResi->getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                         decorrelatedResidualBuffer,
-                                                         tuCompRect.width,
-                                                         tuCompRect.height,
-                                                         m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
-                                                         pcResi->getStride(compID),
-                                                         tuCompRect.width,
-                                                         false);
-
-                m_pcTrQuant->transformNxN(TUIterator, compID, decorrelatedResidualBuffer, tuCompRect.width, currentCoefficients,
-#if ADAPTIVE_QP_SELECTION
-                                          currentARLCoefficients,
-#endif
-                                          currAbsSum, cQP);
-              }
-              else
-              {
-                m_pcTrQuant->transformNxN(TUIterator, compID, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ), pcResi->getStride(compID), currentCoefficients,
-#if ADAPTIVE_QP_SELECTION
-                                          currentARLCoefficients,
-#endif
-                                          currAbsSum, cQP);
-              }
-
-              if(isFirstMode || (currAbsSum == 0))
-              {
-                if(isChroma(compID) && checkDecorrelation)
-                {
-                  TComTrQuant::crossComponentDecorrelation(TUIterator,
-                                                           compID,
-                                                           pLumaResi,
-                                                           m_pTempPel,
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                           tuCompRect.width,
-                                                           tuCompRect.height,
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
-                                                           tuCompRect.width,
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
-                                                           true);
-
-                  nonCoeffDist = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                                                              m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride( compID ), pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                                                              pcResi->getStride(compID), tuCompRect.width, tuCompRect.height, compID); // initialized with zero residual destortion
-                }
-                else
-                { 
-                  nonCoeffDist = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pTempPel, tuCompRect.width, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                                                              pcResi->getStride(compID), tuCompRect.width, tuCompRect.height, compID); // initialized with zero residual destortion
-                }
-
-                if( m_bUseSBACRD )
-                {
-                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                }
-                m_pcEntropyCoder->resetBits();
-                m_pcEntropyCoder->encodeQtCbfZero( TUIterator, toChannelType(compID) );
-
-                if ( isDecorrelationAvailable ) 
-                {
-                  m_pcEntropyCoder->encodeCrossComponentDecorrelation( TUIterator, compID );
-                }
-                nonCoeffBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-                nonCoeffCost = m_pcRdCost->calcRdCost( nonCoeffBits, nonCoeffDist );
-                if( m_bUseSBACRD )
-                {
-                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                }
-                m_pcEntropyCoder->resetBits();
-              }
-
-              if((puiZeroDist != NULL) && isFirstMode)
-              {
-                *puiZeroDist += nonCoeffDist; // initialized with zero residual destortion
-              }
-
-              if( currAbsSum > 0 ) //if non-zero coefficients are present, a residual needs to be derived for further prediction
-              {
-                if( m_bUseSBACRD )
-                {
-                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                }
-                m_pcEntropyCoder->resetBits();
-                m_pcEntropyCoder->encodeQtCbf( TUIterator, compID, true );
-
-                if (isDecorrelationAvailable)
-                {
-                  m_pcEntropyCoder->encodeCrossComponentDecorrelation( TUIterator, compID );
-                }
-
-                m_pcEntropyCoder->encodeCoeffNxN( TUIterator, currentCoefficients, compID );
-                currCompBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-                
-                if( m_bUseSBACRD )
-                {
-                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                }
-                m_pcEntropyCoder->resetBits();
-                pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 );
-
-                setQPforQuant( cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), (transformSkipModeId == 1));
-
-                m_pcTrQuant->invTransformNxN( TUIterator, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), currentCoefficients, cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&(sSingleStringComp[compID]), DEBUG_INTER_CODING_INV_TRAN) );
-
-                if(isChroma(compID) && checkDecorrelation)
-                {
-                  TComTrQuant::crossComponentDecorrelation(TUIterator,
-                                                           compID,
-                                                           pLumaResi,
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                           tuCompRect.width,
-                                                           tuCompRect.height,
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID     ),
-                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID     ),
-                                                           true);
-                }
-
-                currCompDist = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                        m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
-                                                        pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
-                                                        pcResi->getStride(compID),
-                                                        tuCompRect.width, tuCompRect.height, compID);
-
-                if(pcCU->isLosslessCoded(0))
-                {
-                  nonCoeffDist = currCompDist;
-                }
-                else
-                {
-                  currCompCost = m_pcRdCost->calcRdCost(currCompBits, currCompDist);
-                }
-              }
-              else
-              {
-                if (checkDecorrelation)
-                {
-                  currCompBits = nonCoeffBits;
-                  currCompDist = nonCoeffDist;
-                  currCompCost = nonCoeffCost;
-                }
-                else
-                {
-                  currCompCost = isFirstMode ? currCompCost : MAX_DOUBLE;
-                }
-              }
-
-              // evaluate
-              if ((currCompCost < minCost[compID][subTUIndex]) || ((transformSkipModeId == 1) && (currCompCost == minCost[compID][subTUIndex])))
-              {
-#if RExt__NRCE2_RESIDUAL_DPCM
-                bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
-#endif
-                if(isFirstMode)
-                {
-                  if((nonCoeffCost < currCompCost) || (currAbsSum == 0))
-                  {
-                    memset(currentCoefficients, 0, (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
-
-                    currAbsSum   = 0;
-                    currCompBits = nonCoeffBits;
-                    currCompDist = nonCoeffDist;
-                    currCompCost = nonCoeffCost;
-                  }
-                }
-
-                uiAbsSum              [compID][subTUIndex] = currAbsSum;
-                uiSingleDistComp      [compID][subTUIndex] = currCompDist;
-                minCost               [compID][subTUIndex] = currCompCost;
-                uiBestTransformMode   [compID][subTUIndex] = transformSkipModeId;
-                bestDecorrelationAlpha[compID][subTUIndex] = (decorrelationModeId == 1) ? pcCU->getCrossComponentDecorrelationAlpha(subTUAbsPartIdx, compID) : 0;
-
-                if( m_bUseSBACRD )
-                {
-                  m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
-                }
-
-                if (uiAbsSum[compID][subTUIndex] == 0)
-                {
-                  if (isChroma(compID) && checkDecorrelation)
-                  {
-                    TComTrQuant::crossComponentDecorrelation(TUIterator,
-                                                             compID,
-                                                             pLumaResi,
-                                                             m_pTempPel,
-                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
-                                                             tuCompRect.width,
-                                                             tuCompRect.height,
-                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
-                                                             tuCompRect.width,
-                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
-                                                             true);
-                  }
-                  else
-                  {
-                    pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0);
-                    const UInt uiStride = m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID);
-                    for(UInt uiY = 0; uiY < tuCompRect.height; uiY++)
-                    {
-                      memset(pcResiCurrComp, 0, (sizeof(Pel) * tuCompRect.width));
-                      pcResiCurrComp += uiStride;
-                    }
-                  }
-                }
-              }
-              else
-              {
-                // reset
-                memcpy(currentCoefficients,    bestCoeffComp,    (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
-#if ADAPTIVE_QP_SELECTION
-                memcpy(currentARLCoefficients, bestArlCoeffComp, (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
-#endif
-                for (Int y = 0; y < tuCompRect.height; y++)
-                {
-                  memcpy((pcResiCurrComp + (y * resiStride)), &bestResiComp[y * tuCompRect.width], (sizeof(Pel) * tuCompRect.width));
-                }
-              }
-#if RExt__NRCE2_RESIDUAL_DPCM
-              pcCU->setInterRdpcmModePartRange                  (   bestInterRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
-#endif
-              pcCU->setTransformSkipPartRange                   (   uiBestTransformMode      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
-              pcCU->setCbfPartRange                             ((((uiAbsSum                 [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
-              pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha   [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
-
-              if ((preCalcAlpha == 0) && !checkDecorrelation && isChroma(compID))
-              {
-                break;
-              }
-            }
-          }
-
-          if ((checkTransformSkip[compID] || (decorrelationModesToTest > 1)) && m_bUseSBACRD)
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
-          }
-#else
-
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
           pcCU->setTransformSkipPartRange(0, compID, subTUAbsPartIdx, partIdxesPerSubTU);
 #else
@@ -6343,26 +6006,14 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #if RExt__NRCE2_RESIDUAL_DPCM
           bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
 #endif
-          
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-          if( m_bUseSBACRD )
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-          }
-          m_pcEntropyCoder->resetBits();
-#endif
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
           m_pcEntropyCoder->encodeQtCbf( TUIterator, compID, true );
           m_pcEntropyCoder->encodeCoeffNxN( TUIterator, currentCoefficients, compID );
 
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-          uiSingleBitsComp[compID][subTUIndex] = m_pcEntropyCoder->getNumberOfWrittenBits();
-#else
           const UInt newBits=m_pcEntropyCoder->getNumberOfWrittenBits();
           uiSingleBitsComp[compID][subTUIndex]=newBits-uiSingleBitsPrev;
           uiSingleBitsPrev=newBits;
-#endif
 #else
           m_pcEntropyCoder->encodeQtCbf( rTu, compID );
           m_pcEntropyCoder->encodeCoeffNxN( rTu, pcCoeffCurr[compID], compID );
@@ -6370,14 +6021,6 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
           const UInt newBits=m_pcEntropyCoder->getNumberOfWrittenBits();
           uiSingleBitsComp[compID]=newBits-uiSingleBitsPrev;
           uiSingleBitsPrev=newBits;
-#endif
-
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-          if( m_bUseSBACRD )
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-          }
-          m_pcEntropyCoder->resetBits();
 #endif
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -6464,14 +6107,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               const Double dSingleCostComp = m_pcRdCost->calcRdCost( uiSingleBitsComp[compID], uiNonzeroDistComp );
 #endif
 
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-              if( m_bUseSBACRD )
-              {
-                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-              }
-#else
               uiSingleBitsPrev = 0;
-#endif
               m_pcEntropyCoder->resetBits();
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -6481,14 +6117,6 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #endif
               const UInt uiNullBitsComp   = m_pcEntropyCoder->getNumberOfWrittenBits();
               const Double dNullCostComp  = m_pcRdCost->calcRdCost( uiNullBitsComp, uiDistComp );
-
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-              if( m_bUseSBACRD )
-              {
-                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-              }
-              m_pcEntropyCoder->resetBits(); 
-#endif
 
               if( dNullCostComp < dSingleCostComp )
               {
@@ -6528,14 +6156,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
           }
           else if( checkTransformSkip[compID] )
           {
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-            if( m_bUseSBACRD )
-            {
-              m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-            }
-#else
             uiSingleBitsPrev = 0;
-#endif
             m_pcEntropyCoder->resetBits();
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
             m_pcEntropyCoder->encodeQtCbfZero( TUIterator, toChannelType(compID) );
@@ -6547,13 +6168,6 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             minCost[compID][subTUIndex] = m_pcRdCost->calcRdCost( uiNullBitsComp, uiDistComp );
 #else
             minCost[compID] = m_pcRdCost->calcRdCost( uiNullBitsComp, uiDistComp );
-#endif
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-            if( m_bUseSBACRD )
-            {
-              m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-            }
-            m_pcEntropyCoder->resetBits(); 
 #endif
           }
 
@@ -6583,25 +6197,26 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     }
 
     //check transform-skip
-#if !CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
     uiSingleBitsPrev=0;
-#endif
 
     for(UInt ci=0; ci<numValidComp; ci++)
     {
       const ComponentID compID = ComponentID(ci);
+#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
       const ChannelType chType = toChannelType(compID);
-
-      if( checkTransformSkip[compID] && rTu.ProcessComponentSection(compID))
-      {
-#if !CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-        if( m_bUseSBACRD && compID!=COMPONENT_Cr)
 #endif
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+      if(rTu.ProcessComponentSection(compID))
+#else
+      if( checkTransformSkip[compID] && rTu.ProcessComponentSection(compID))
+#endif
+      {
+#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
+        if( m_bUseSBACRD && compID!=COMPONENT_Cr)
         {
           m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
         }
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-        m_pcRDGoOnSbacCoder->resetBits();
 #endif
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
@@ -6622,15 +6237,255 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #if ADAPTIVE_QP_SELECTION
                 TCoeff        *currentARLCoefficients = pcArlCoeffCurr[compID] + subTUBufferOffset;
 #endif
+#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
           const UInt           bestCBFComp            = pcCU->getCbf(subTUAbsPartIdx, compID, uiTrMode);
+#endif
 #else
           const TComRectangle &tuCompRect = rTu.getRect(compID);
                 TCoeff *currentCoefficients = pcCoeffCurr[compID];
 #if ADAPTIVE_QP_SELECTION
                 TCoeff *currentARLCoefficients = pcArlCoeffCurr[compID];
 #endif
+#if !RExt__O0202_CROSS_COMPONENT_DECORRELATION
           const UInt bestCBFComp  = pcCU->getCbf(uiAbsPartIdx, compID, uiTrMode);
 #endif
+#endif
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+          const Bool checkCrossComponentDecorrelation =    isChroma(compID)
+                                                        && pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation()
+                                                        && (pcCU->getCbf(subTUAbsPartIdx, COMPONENT_Y, uiTrMode) != 0);
+
+          const Int  transformSkipModesToTest = checkTransformSkip[compID] ? 2 : 1;
+
+          Char preCalcAlpha = 0;
+
+          for (Int transformSkipModeId = 0; transformSkipModeId < transformSkipModesToTest; transformSkipModeId++)
+          {
+            pcCU->setTransformSkipPartRange(transformSkipModeId, compID, subTUAbsPartIdx, partIdxesPerSubTU);
+
+            const Int firstDecorrelationModeToTest = (transformSkipModeId == 0) ? 1 : 0; //both modes being off was tested earlier
+
+            const Pel *pLumaResi = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( COMPONENT_Y, rTu.getRect( COMPONENT_Y ).x0, rTu.getRect( COMPONENT_Y ).y0 );
+
+            if (checkCrossComponentDecorrelation)
+            {
+              const Bool bUseReconstructedResidualForEstimate = m_pcEncCfg->getUseReconBasedDecorrelationEstimate();
+
+              if ((transformSkipModeId == 0) || bUseReconstructedResidualForEstimate) //only need to recalculate if luma residual may have changed due to transform-skip
+              {
+                const Pel  *const lumaResidualForEstimate       = bUseReconstructedResidualForEstimate ? pLumaResi                                                     : pcResi->getAddrPix(COMPONENT_Y, tuCompRect.x0, tuCompRect.y0);
+                const UInt        lumaResidualStrideForEstimate = bUseReconstructedResidualForEstimate ? m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y) : pcResi->getStride(COMPONENT_Y);
+
+                preCalcAlpha = xCalcCrossComponentDecorrelationAlpha(TUIterator,
+                                                                     compID,
+                                                                     lumaResidualForEstimate,
+                                                                     pcResi->getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
+                                                                     tuCompRect.width,
+                                                                     tuCompRect.height,
+                                                                     lumaResidualStrideForEstimate,
+                                                                     pcResi->getStride(compID));
+              }
+            }
+
+            const Int decorrelationModesToTest = (preCalcAlpha != 0) ? 2 : 1; //NOTE: RExt - preCalcAlpha cannot be anything other than 0 if checkCrossComponentDecorrelation is false
+
+            for (Int decorrelationModeId = firstDecorrelationModeToTest; decorrelationModeId < decorrelationModesToTest; decorrelationModeId++)
+            {
+              const Bool isLumaAvailable          = uiAbsSum[COMPONENT_Y][0] != 0;
+              const Bool isDecorrelationAvailable = isChroma(compID) && pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation() && isLumaAvailable;
+              const Bool checkDecorrelation       = isDecorrelationAvailable && (decorrelationModeId != 0);
+
+              if (compID != COMPONENT_Cr) //NOTE: RExt - This test maintains backwards-compatibility with HM
+              {
+                if (m_bUseSBACRD) 
+                {
+                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
+                }
+
+                uiSingleBitsPrev = 0;
+                m_pcEntropyCoder->resetBits();
+              }
+
+              pcCU->setCrossComponentDecorrelationAlphaPartRange((checkDecorrelation ? preCalcAlpha : 0), compID, subTUAbsPartIdx, partIdxesPerSubTU );
+
+              if ((compID != COMPONENT_Cr) && ((transformSkipModeId == 1) ? m_pcEncCfg->getUseRDOQTS() : m_pcEncCfg->getUseRDOQ()))
+              {
+                m_pcEntropyCoder->estimateBit(m_pcTrQuant->m_pcEstBitsSbac, tuCompRect.width, tuCompRect.height, toChannelType(compID));
+              }
+
+              const Int chromaOffset = pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID);
+              const Int bdOffset     = pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID));
+
+              QpParam cQP;
+              setQPforQuant(cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), (transformSkipModeId == 1));
+
+              Pel *pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0);
+              UInt resiStride     = m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID);
+
+              TCoeff bestCoeffComp   [MAX_TU_SIZE*MAX_TU_SIZE];
+              memcpy(bestCoeffComp,    currentCoefficients,    (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
+
+#if ADAPTIVE_QP_SELECTION
+              TCoeff bestArlCoeffComp[MAX_TU_SIZE*MAX_TU_SIZE];
+              memcpy(bestArlCoeffComp, currentARLCoefficients, (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
+#endif              
+
+              Pel    bestResiComp    [MAX_TU_SIZE*MAX_TU_SIZE];
+              for(Int y = 0; y < tuCompRect.height; y++)
+              {
+                memcpy(&bestResiComp[y * tuCompRect.width], (pcResiCurrComp + (y * resiStride)), (sizeof(Pel) * tuCompRect.width));
+              }
+
+              TCoeff     currAbsSum   = 0;
+              UInt       currCompBits = 0;
+              Distortion currCompDist = 0;
+              Double     currCompCost = 0;
+
+              if(isChroma(compID) && checkDecorrelation)
+              {
+                TComTrQuant::crossComponentDecorrelation(TUIterator,
+                                                         compID,
+                                                         pLumaResi,
+                                                         pcResi->getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
+                                                         decorrelatedResidualBuffer,
+                                                         tuCompRect.width,
+                                                         tuCompRect.height,
+                                                         m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
+                                                         pcResi->getStride(compID),
+                                                         tuCompRect.width,
+                                                         false);
+
+                m_pcTrQuant->transformNxN(TUIterator, compID, decorrelatedResidualBuffer, tuCompRect.width, currentCoefficients,
+#if ADAPTIVE_QP_SELECTION
+                                          currentARLCoefficients,
+#endif
+                                          currAbsSum, cQP);
+              }
+              else
+              {
+                m_pcTrQuant->transformNxN(TUIterator, compID, pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ), pcResi->getStride(compID), currentCoefficients,
+#if ADAPTIVE_QP_SELECTION
+                                          currentARLCoefficients,
+#endif
+                                          currAbsSum, cQP);
+              }
+
+              if (currAbsSum > 0) //if non-zero coefficients are present, a residual needs to be derived for further prediction
+              {
+                m_pcEntropyCoder->encodeQtCbf( TUIterator, compID, true );
+
+                if (isDecorrelationAvailable)
+                {
+                  m_pcEntropyCoder->encodeCrossComponentDecorrelation( TUIterator, compID );
+                }
+
+                m_pcEntropyCoder->encodeCoeffNxN( TUIterator, currentCoefficients, compID );
+
+                const UInt newBits = m_pcEntropyCoder->getNumberOfWrittenBits();
+                currCompBits = newBits - uiSingleBitsPrev;
+                uiSingleBitsPrev = newBits;
+                
+                pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 );
+
+                setQPforQuant( cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), (transformSkipModeId == 1));
+
+                m_pcTrQuant->invTransformNxN( TUIterator, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), currentCoefficients, cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&(sSingleStringComp[compID]), DEBUG_INTER_CODING_INV_TRAN) );
+
+                if(isChroma(compID) && checkDecorrelation)
+                {
+                  TComTrQuant::crossComponentDecorrelation(TUIterator,
+                                                           compID,
+                                                           pLumaResi,
+                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
+                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
+                                                           tuCompRect.width,
+                                                           tuCompRect.height,
+                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
+                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID     ),
+                                                           m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID     ),
+                                                           true);
+                }
+
+                if(pcCU->isLosslessCoded(0))
+                {
+                  currCompCost = m_pcRdCost->calcRdCost(currCompBits, 0);
+                }
+                else
+                {
+                  currCompDist = m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
+                                                          m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
+                                                          pcResi->getAddrPix( compID, tuCompRect.x0, tuCompRect.y0 ),
+                                                          pcResi->getStride(compID),
+                                                          tuCompRect.width, tuCompRect.height, compID);
+
+                  currCompCost = m_pcRdCost->calcRdCost(currCompBits, currCompDist);
+                }
+              }
+
+              // evaluate
+              if ((currAbsSum > 0) && ((currCompCost < minCost[compID][subTUIndex]) || ((transformSkipModeId == 1) && (currCompCost == minCost[compID][subTUIndex]))))
+              {
+#if RExt__NRCE2_RESIDUAL_DPCM
+                bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
+#endif
+
+                uiAbsSum              [compID][subTUIndex] = currAbsSum;
+                uiSingleDistComp      [compID][subTUIndex] = currCompDist;
+                minCost               [compID][subTUIndex] = currCompCost;
+                uiBestTransformMode   [compID][subTUIndex] = transformSkipModeId;
+                bestDecorrelationAlpha[compID][subTUIndex] = (decorrelationModeId == 1) ? pcCU->getCrossComponentDecorrelationAlpha(subTUAbsPartIdx, compID) : 0;
+
+                if (uiAbsSum[compID][subTUIndex] == 0)
+                {
+                  if (isChroma(compID) && checkDecorrelation)
+                  {
+                    TComTrQuant::crossComponentDecorrelation(TUIterator,
+                                                             compID,
+                                                             pLumaResi,
+                                                             m_pTempPel,
+                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0),
+                                                             tuCompRect.width,
+                                                             tuCompRect.height,
+                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(COMPONENT_Y),
+                                                             tuCompRect.width,
+                                                             m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID),
+                                                             true);
+                  }
+                  else
+                  {
+                    pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0);
+                    const UInt uiStride = m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID);
+                    for(UInt uiY = 0; uiY < tuCompRect.height; uiY++)
+                    {
+                      memset(pcResiCurrComp, 0, (sizeof(Pel) * tuCompRect.width));
+                      pcResiCurrComp += uiStride;
+                    }
+                  }
+                }
+              }
+              else
+              {
+                // reset
+                memcpy(currentCoefficients,    bestCoeffComp,    (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
+#if ADAPTIVE_QP_SELECTION
+                memcpy(currentARLCoefficients, bestArlCoeffComp, (sizeof(TCoeff) * tuCompRect.width * tuCompRect.height));
+#endif
+                for (Int y = 0; y < tuCompRect.height; y++)
+                {
+                  memcpy((pcResiCurrComp + (y * resiStride)), &bestResiComp[y * tuCompRect.width], (sizeof(Pel) * tuCompRect.width));
+                }
+              }
+            }
+          }
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+          pcCU->setInterRdpcmModePartRange                  (   bestInterRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
+#endif
+          pcCU->setTransformSkipPartRange                   (   uiBestTransformMode      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCbfPartRange                             ((((uiAbsSum                 [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha   [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+#else
 
           const UInt uiNumSamplesComp     = tuCompRect.width * tuCompRect.height;
           TCoeff uiAbsSumTransformSkipComp;
@@ -6683,20 +6538,10 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #endif
                                      uiAbsSumTransformSkipComp, cQP );
 
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-          if( m_bUseSBACRD )
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-          }
-#endif
-#if !CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
           if (compID!=COMPONENT_Cr) 
-#endif
           { 
             m_pcEntropyCoder->resetBits(); 
-#if !CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
             uiSingleBitsPrev=0; 
-#endif
           }
 
           Distortion uiNonzeroDistComp = 0;
@@ -6711,13 +6556,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             m_pcEntropyCoder->encodeCoeffNxN( rTu, currentCoefficients, compID );
 #endif
 
-#if CROSS_COMPONENT_DECORRELATION_HM_COMPATIBLE_ENCODER_SEARCH
-            const UInt uiTsSingleBitsComp = m_pcEntropyCoder->getNumberOfWrittenBits();
-#else
             const UInt newBits=m_pcEntropyCoder->getNumberOfWrittenBits();
             const UInt uiTsSingleBitsComp=newBits-uiSingleBitsPrev;
             uiSingleBitsPrev=newBits;
-#endif
 
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
             m_pcTrQuant->invTransformNxN( TUIterator, compID, pcResiCurrComp, m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID), currentCoefficients, cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&sSingleStringTS, DEBUG_INTER_CODING_INV_TRAN));
