@@ -43,8 +43,6 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
-
 InputColourSpaceConversion stringToInputColourSpaceConvert(const std::string &value, const Bool bIsForward)
 {
   if (value.empty() || value=="UNCHANGED") return IPCOLOURSPACE_UNCHANGED;
@@ -73,8 +71,6 @@ std::string getListOfColourSpaceConverts(const Bool bIsForward)
     return "UNCHANGED, YCrCbtoYCbCr or GBRtoRGB";
   }
 }
-
-#endif
 
 
 //----------------------------------------------------------------------------------------------------------------------

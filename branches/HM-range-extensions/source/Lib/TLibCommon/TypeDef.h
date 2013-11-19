@@ -243,8 +243,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define RExt__COLOUR_SPACE_CONVERSIONS                                         1 ///< 0 = disable colour space conversion, 1 (default) = enable colour space conversions for the source, reconstruction and decoded images
-
 #define RExt__SQUARE_TRANSFORM_CHROMA_422                                      1 ///< 0 = allow rectangular transforms for chroma 4:2:2, 1 (default) = split rectangular TUs into square sub-TUs prior to prediction for intra and transform for inter
 
 // This can be enabled by the makefile
@@ -440,7 +438,6 @@ enum ComponentID
   MAX_NUM_COMPONENT = 3
 };
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
 enum InputColourSpaceConversion // defined in terms of conversion prior to input of encoder.
 {
   IPCOLOURSPACE_UNCHANGED               = 0,
@@ -449,7 +446,6 @@ enum InputColourSpaceConversion // defined in terms of conversion prior to input
   IPCOLOURSPACE_RGBtoGBR                = 3,
   NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS = 4
 };
-#endif
 
 enum DeblockEdgeDir
 {

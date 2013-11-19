@@ -290,12 +290,6 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       iterPic++;
       TComPic* pcPicBottom = *(iterPic);
       
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-      TComSPS *sps = pcPicTop->getSlice(0)->getSPS();
-
-      const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
-#endif
-
       if ( pcPicTop->getOutputMark() && (numPicsNotYetDisplayed >  pcPicTop->getNumReorderPics(tId) && !(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1)
           && pcPicBottom->getOutputMark() && (numPicsNotYetDisplayed >  pcPicBottom->getNumReorderPics(tId) && (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay<0)))
       {
@@ -321,11 +315,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           if (display)
           {
             m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
-#if RExt__COLOUR_SPACE_CONVERSIONS
                                            m_outputColourSpaceConvert,
-#else
-                                           RGBChannelOrder,
-#endif
                                            conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                            conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                            conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -379,11 +369,6 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     while (iterPic != pcListPic->end())
     {
       pcPic = *(iterPic);
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-      TComSPS *sps = pcPic->getSlice(0)->getSPS();
-
-      const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
-#endif
     
       if ( pcPic->getOutputMark() && (numPicsNotYetDisplayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
       {
@@ -395,11 +380,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
-#if RExt__COLOUR_SPACE_CONVERSIONS
                                          m_outputColourSpaceConvert,
-#else
-                                         RGBChannelOrder,
-#endif
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -458,12 +439,6 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       iterPic++;
       pcPicBottom = *(iterPic);
 
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-      TComSPS *sps = pcPicTop->getSlice(0)->getSPS();
-
-      const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
-#endif
-      
       if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() && !(pcPicTop->getPOC()%2) && (pcPicBottom->getPOC() == pcPicTop->getPOC()+1) )
       {
         // write to file
@@ -473,11 +448,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
           const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
           m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
-#if RExt__COLOUR_SPACE_CONVERSIONS
                                          m_outputColourSpaceConvert,
-#else
-                                         RGBChannelOrder,
-#endif
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
@@ -543,11 +514,6 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
     while (iterPic != pcListPic->end())
     {
       pcPic = *(iterPic);
-  #if RExt__COLOUR_SPACE_CONVERSIONS==0
-      TComSPS *sps = pcPic->getSlice(0)->getSPS();
-
-      const Bool RGBChannelOrder = sps->getVuiParametersPresentFlag() && (sps->getVuiParameters()->getMatrixCoefficients() == MATRIX_COEFFICIENTS_RGB_VALUE);
-  #endif
 
       if ( pcPic->getOutputMark() )
       {
@@ -558,11 +524,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
           const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
-  #if RExt__COLOUR_SPACE_CONVERSIONS
                                          m_outputColourSpaceConvert,
-  #else
-                                         RGBChannelOrder,
-  #endif
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),

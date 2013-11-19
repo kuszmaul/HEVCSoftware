@@ -60,9 +60,7 @@ protected:
   Char*         m_pchReconFile;                         ///< output reconstruction file name
   Int           m_iSkipFrame;                           ///< counter for frames prior to the random access point to skip
   Int           m_outputBitDepth[MAX_NUM_CHANNEL_TYPE]; ///< bit depth used for writing output
-#if RExt__COLOUR_SPACE_CONVERSIONS
   InputColourSpaceConversion m_outputColourSpaceConvert;
-#endif
 
   Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
@@ -75,9 +73,7 @@ public:
   : m_pchBitstreamFile(NULL)
   , m_pchReconFile(NULL) 
   , m_iSkipFrame(0)
-#if RExt__COLOUR_SPACE_CONVERSIONS
   , m_outputColourSpaceConvert(IPCOLOURSPACE_UNCHANGED)
-#endif
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
   , m_decodedNoDisplaySEIEnabled(false)

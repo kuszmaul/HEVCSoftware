@@ -181,17 +181,13 @@ public:
   /// encode several number of pictures until end-of-sequence
   Void encode( Bool bEos,
                TComPicYuv* pcPicYuvOrg,
-#if RExt__COLOUR_SPACE_CONVERSIONS
                TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
-#endif
                TComList<TComPicYuv*>& rcListPicYuvRecOut,
                std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );
 
   /// encode several number of pictures until end-of-sequence
   Void encode( bool bEos, TComPicYuv* pcPicYuvOrg,
-#if RExt__COLOUR_SPACE_CONVERSIONS
                TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
-#endif
                TComList<TComPicYuv*>& rcListPicYuvRecOut,
                std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
   

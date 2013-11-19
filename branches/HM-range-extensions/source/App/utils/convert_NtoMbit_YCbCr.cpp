@@ -108,19 +108,13 @@ Int main(Int argc, const char** argv)
 
   Int pad[2] = {0, 0};
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
   TComPicYuv cPicYuvTrueOrg;
   cPicYuvTrueOrg.create( width, height, chromaFormatIDC, 1, 1, 0 );
-#endif
 
   UInt num_frames_processed = 0;
   while (!input.isEof()) 
   {
-#if RExt__COLOUR_SPACE_CONVERSIONS
     if (! input.read(&frame, &cPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, pad))
-#else
-      if (! input.read(&frame, false, pad))
-#endif
     {
       break;
     }
@@ -136,11 +130,7 @@ Int main(Int argc, const char** argv)
     img[0] = 1;
 #endif
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
     output.write(&frame, IPCOLOURSPACE_UNCHANGED);
-#else
-    output.write(&frame, false);
-#endif
     num_frames_processed++;
     if (num_frames_processed == num_frames)
       break;
@@ -148,9 +138,7 @@ Int main(Int argc, const char** argv)
 
   input.close();
   output.close();
-#if RExt__COLOUR_SPACE_CONVERSIONS
   cPicYuvTrueOrg.destroy();
-#endif
 
   return EXIT_SUCCESS;
 }
