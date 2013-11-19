@@ -247,8 +247,6 @@
 
 #define RExt__SQUARE_TRANSFORM_CHROMA_422                                      1 ///< 0 = allow rectangular transforms for chroma 4:2:2, 1 (default) = split rectangular TUs into square sub-TUs prior to prediction for intra and transform for inter
 
-#define RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA                      0 ///< 0 (default) = Chroma shares the Luma 32x32 ScalingList (ensures compatibility with existing scaling list definition files). 1 = Chroma channels have their own 32x32 ScalingList
-
 // This can be enabled by the makefile
 #ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
