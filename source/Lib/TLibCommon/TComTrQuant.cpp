@@ -185,6 +185,28 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
   const TMatrixCoeff *iT;
   UInt uiLog2TrSize = g_aucConvertToBit[ uiTrSize ] + 2;
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+  if (uiTrSize==4)
+  {
+    iT  = (useDST ? g_as_DST_MAT_4[TRANSFORM_FORWARD][0] : g_aiT4[TRANSFORM_FORWARD][0]);
+  }
+  else if (uiTrSize==8)
+  {
+    iT = g_aiT8[TRANSFORM_FORWARD][0];
+  }
+  else if (uiTrSize==16)
+  {
+    iT = g_aiT16[TRANSFORM_FORWARD][0];
+  }
+  else if (uiTrSize==32)
+  {
+    iT = g_aiT32[TRANSFORM_FORWARD][0];
+  }
+  else
+  {
+    assert(0);
+  }
+#else
   if (uiTrSize==4)
   {
     iT  = (useDST ? g_as_DST_MAT_4[0] : g_aiT4[0]);
@@ -205,6 +227,7 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
   {
     assert(0);
   }
+#endif
 
 #if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_FORWARD];
@@ -259,6 +282,28 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
   TCoeff tmp[MAX_TU_SIZE * MAX_TU_SIZE];
   const TMatrixCoeff *iT;
 
+#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
+  if (uiTrSize==4)
+  {
+    iT  = (useDST ? g_as_DST_MAT_4[TRANSFORM_INVERSE][0] : g_aiT4[TRANSFORM_INVERSE][0]);
+  }
+  else if (uiTrSize==8)
+  {
+    iT = g_aiT8[TRANSFORM_INVERSE][0];
+  }
+  else if (uiTrSize==16)
+  {
+    iT = g_aiT16[TRANSFORM_INVERSE][0];
+  }
+  else if (uiTrSize==32)
+  {
+    iT = g_aiT32[TRANSFORM_INVERSE][0];
+  }
+  else
+  {
+    assert(0);
+  }
+#else
   if (uiTrSize==4)
   {
     iT  = (useDST ? g_as_DST_MAT_4[0] : g_aiT4[0]);
@@ -279,6 +324,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
   {
     assert(0);
   }
+#endif
 
 #if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_INVERSE];
@@ -319,7 +365,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
         iSum += iT[k*uiTrSize+j]*tmp[i*uiTrSize+k];
       }
 
-      block[i*uiStride+j] = Clip3<TCoeff>(std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max(), (iSum + add_1st)>>shift_1st);
+      block[i*uiStride+j] = Clip3<TCoeff>(std::numeric_limits<Pel>::min(), std::numeric_limits<Pel>::max(), (iSum + add_2nd)>>shift_2nd);
     }
   }
 }
