@@ -474,7 +474,9 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 
   // store lambda
   slice->setSliceQp( sliceQP );
+#if ADAPTIVE_QP_SELECTION
   slice->setSliceQpBase ( sliceQP );
+#endif
   setUpLambda(slice, lambda, sliceQP);
 }
 
@@ -897,7 +899,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
 
         m_pcRateCtrl->setRCQP( estQP );
+#if ADAPTIVE_QP_SELECTION
         pcCU->getSlice()->setSliceQpBase( estQP );
+#endif
       }
 
       // run CU encoder
