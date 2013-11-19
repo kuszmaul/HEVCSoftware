@@ -976,7 +976,15 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-  xConfirmPara((m_useCrossComponentDecorrelation && (m_chromaFormatIDC != CHROMA_444)),     "Cross-component prediction is specified for 4:4:4 chroma format only" );
+  if(m_useCrossComponentDecorrelation && (m_chromaFormatIDC != CHROMA_444))
+  {
+      fprintf(stderr, "***************************************************************************\n");
+      fprintf(stderr, "** WARNING: Cross-component decorrelation is specified for 4:4:4         **\n");
+      fprintf(stderr, "**          format only.                                                 **\n");
+      fprintf(stderr, "***************************************************************************\n");
+
+      m_useCrossComponentDecorrelation = false;
+  }
 #endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
