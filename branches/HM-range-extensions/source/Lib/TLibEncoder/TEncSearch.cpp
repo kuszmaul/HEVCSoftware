@@ -2780,7 +2780,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
 #ifdef DEBUG_INTRA_SEARCH_COSTS
         std::cout << "1st pass mode " << uiMode << " SAD = " << uiSad << ", mode bits = " << iModeBits << ", cost = " << cost << "\n";
-        exit(0);
 #endif
 
         CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
