@@ -1326,7 +1326,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 #if RExt__SQUARE_TRANSFORM_CHROMA_422
         const UInt scalingListCoeffIdx = uiBlockPos;
 #else
-        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(chFmt, compID, uiBlockPos, uiWidth, uiHeight);
+        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlockPos, uiWidth, uiHeight);
 #endif
 #if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
         quantisationCoefficient = piQuantCoeff[scalingListCoeffIdx];
@@ -2470,7 +2470,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 #if RExt__SQUARE_TRANSFORM_CHROMA_422
         const UInt scalingListCoeffIdx = uiBlkPos;
 #else
-        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(format, compID, uiBlkPos, uiWidth, uiHeight);
+        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlkPos, uiWidth, uiHeight);
 #endif
         quantisationCoefficient = piQCoef   [scalingListCoeffIdx];
         dTemp                   = pdErrScale[scalingListCoeffIdx];
@@ -2481,7 +2481,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 #if RExt__SQUARE_TRANSFORM_CHROMA_422
       const UInt scalingListCoeffIdx = uiBlkPos;
 #else
-      const UInt scalingListCoeffIdx = getScalingListCoeffIdx(format, compID, uiBlkPos, uiWidth, uiHeight);
+      const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlkPos, uiWidth, uiHeight);
 #endif
       Double dTemp = pdErrScale[scalingListCoeffIdx];
 
@@ -3681,7 +3681,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 #if RExt__SQUARE_TRANSFORM_CHROMA_422
       const Int deQuantIdx = uiPos;
 #else
-      const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, uiPos, uiWidth, uiHeight);
+      const Int deQuantIdx = getScalingListCoeffIdx(chFmt, compID, uiPos, uiWidth, uiHeight);
 #endif
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
@@ -3694,7 +3694,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 #if RExt__SQUARE_TRANSFORM_CHROMA_422
       const Int deQuantIdx = uiPos;
 #else
-      const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, uiPos, uiWidth, uiHeight);
+      const Int deQuantIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiPos, uiWidth, uiHeight);
 #endif
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));

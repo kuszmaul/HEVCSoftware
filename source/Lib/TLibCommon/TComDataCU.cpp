@@ -2237,13 +2237,13 @@ Void TComDataCU::setTransformSkipPartRange ( UInt useTransformSkip, ComponentID 
 {
   memset((m_puhTransformSkip[compID] + uiAbsPartIdx), useTransformSkip, (sizeof(UChar) * uiCoveredPartIdxes));
 }
+#endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TComDataCU::setCrossComponentDecorrelationAlphaPartRange( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
 {
   memset((m_decorrelationAlpha[compID] + uiAbsPartIdx), alphaValue, (sizeof(Char) * uiCoveredPartIdxes));
 }
-#endif
 #endif
 
 #if RExt__NRCE2_RESIDUAL_DPCM
