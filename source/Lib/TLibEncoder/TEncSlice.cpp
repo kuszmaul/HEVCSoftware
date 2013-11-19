@@ -892,7 +892,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
           const Double lambdaArray[MAX_NUM_COMPONENT] = { estLambda, chromaLambda, chromaLambda };
           m_pcTrQuant->setLambdas( lambdaArray );
 #else
-          const Double lambdaArray[MAX_NUM_COMPONENT] = { estLambda, estLambda, estLambda };
           m_pcTrQuant->setLambda( estLambda );
 #endif
         }
