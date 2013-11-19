@@ -164,7 +164,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__COLOUR_SPACE_CONVERSIONS,                                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__SQUARE_TRANSFORM_CHROMA_422,                              settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__INCREASE_NUMBER_OF_SCALING_LISTS_FOR_CHROMA,              settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__DECODER_DEBUG_BIT_STATISTICS,                             settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION,           settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                   settingNameWidth, settingValueWidth);
