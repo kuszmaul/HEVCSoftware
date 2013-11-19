@@ -92,11 +92,7 @@ public:
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   virtual Void codeQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;
-#else
-  virtual Void codeQtCbf         ( TComTU &rTu, const ComponentID compID ) = 0;
-#endif
   virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType ) = 0;
   virtual Void codeQtRootCbfZero ( TComDataCU* pcCU ) = 0;
@@ -184,11 +180,7 @@ public:
   Void encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void encodeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void encodeQtCbf             ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
-#else
-  Void encodeQtCbf             ( TComTU &rTu, const ComponentID compID );
-#endif
 
   Void encodeQtCbfZero         ( TComTU &rTu, const ChannelType chType );
   Void encodeQtRootCbfZero     ( TComDataCU* pcCU );

@@ -1695,11 +1695,7 @@ Void TDecCavlc::parseTransformSubdivFlag( UInt& /*ruiSubdivFlag*/, UInt /*uiLog2
   assert(0);
 }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TDecCavlc::parseQtCbf( TComTU &/*rTu*/, const ComponentID /*compID*/, const Bool /*lowestLevel*/ )
-#else
-Void TDecCavlc::parseQtCbf( TComTU &/*rTu*/, const ComponentID /*compID*/ )
-#endif
 {
   assert(0);
 }

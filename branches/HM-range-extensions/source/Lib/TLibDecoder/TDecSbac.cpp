@@ -1021,11 +1021,7 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
-#else
-Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
-#endif
 {
   TComDataCU* pcCU = rTu.getCU();
 
@@ -1034,7 +1030,6 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
   const UInt uiCtx            = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
   const UInt contextSet       = toChannelType(compID);
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   const UInt width            = rTu.getRect(compID).width;
   const UInt height           = rTu.getRect(compID).height;
   const Bool canQuadSplit     = (width >= (MIN_TU_SIZE * 2)) && (height >= (MIN_TU_SIZE * 2));
@@ -1097,15 +1092,10 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
   }
   else
   {
-#endif
     UInt uiCbf = MAX_UINT;
     m_pcTDecBinIf->decodeBin(uiCbf, m_cCUQtCbfSCModel.get(0, contextSet, uiCtx) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(TComCodingStatisticsClassType(STATS__CABAC_BITS__QT_CBF, g_aucConvertToBit[rTu.getRect(compID).width]+2, compID)));
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
     pcCU->setCbfSubParts((uiCbf << lowestTUDepth), compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#else
-    pcCU->setCbfSubParts((uiCbf << TUDepth), compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
 
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tparseQtCbf()" )
@@ -1119,7 +1109,6 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
     DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
     DTRACE_CABAC_T( "\n" )
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
     lowestTUCBF = uiCbf;
   }
 
@@ -1131,7 +1120,6 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID )
       pcCU->bitwiseOrCbfPartRange((lowestTUCBF << depth), compID, absPartIdx, coveredPartIdxes);
     }
   }
-#endif
 }
 
 
@@ -1168,11 +1156,7 @@ void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   pcCU->setTransformSkipPartRange( useTransformSkip, component, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(component));
-#else
-  pcCU->setTransformSkipSubParts( useTransformSkip, component, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(component));
-#endif
 }
 
 
@@ -2071,59 +2055,35 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
 #if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   if(code == 0)
   {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
     cu->setInterRdpcmModePartRange( RDPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-    cu->setInterRdpcmModeSubParts( RDPCM_OFF, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
   }
   else
   {
     m_pcTDecBinIf->decodeBin(code, m_interRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
     if(code == 0)
     {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
       cu->setInterRdpcmModePartRange( RDPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-      cu->setInterRdpcmModeSubParts( RDPCM_HOR, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
     }
     else
     {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
       cu->setInterRdpcmModePartRange( RDPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-      cu->setInterRdpcmModeSubParts( RDPCM_VER, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
     }
   }
 #else
   if(code == 0)
   {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
     cu->setInterRdpcmModePartRange( DPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-    cu->setInterRdpcmModeSubParts( DPCM_OFF, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
   }
   else
   {
     m_pcTDecBinIf->decodeBin(code, m_interRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
     if(code == 0)
     {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
       cu->setInterRdpcmModePartRange( DPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-      cu->setInterRdpcmModeSubParts( DPCM_HOR, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
     }
     else
     {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
       cu->setInterRdpcmModePartRange( DPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-      cu->setInterRdpcmModeSubParts( DPCM_VER, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
     }
   }
 #endif

@@ -1982,7 +1982,6 @@ Void TComDataCU::setCbfSubParts ( UInt uiCbf, ComponentID compID, UInt uiAbsPart
   setSubPart<UChar>( uiCbf, m_puhCbf[compID], uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TComDataCU::setCbfPartRange ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
 {
   memset((m_puhCbf[compID] + uiAbsPartIdx), uiCbf, (sizeof(UChar) * uiCoveredPartIdxes));
@@ -1997,7 +1996,6 @@ Void TComDataCU::bitwiseOrCbfPartRange( UInt uiCbf, ComponentID compID, UInt uiA
     m_puhCbf[compID][subPartIdx] |= uiCbf;
   }
 }
-#endif
 
 Void TComDataCU::setDepthSubParts( UInt uiDepth, UInt uiAbsPartIdx )
 {
@@ -2232,12 +2230,10 @@ Void TComDataCU::setTransformSkipSubParts( UInt useTransformSkip, ComponentID co
   memset( m_puhTransformSkip[compID] + uiAbsPartIdx, useTransformSkip, sizeof( UChar ) * uiCurrPartNumb );
 }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TComDataCU::setTransformSkipPartRange ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
 {
   memset((m_puhTransformSkip[compID] + uiAbsPartIdx), useTransformSkip, (sizeof(UChar) * uiCoveredPartIdxes));
 }
-#endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TComDataCU::setCrossComponentDecorrelationAlphaPartRange( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
@@ -2264,12 +2260,10 @@ Void TComDataCU::setInterRdpcmModeSubParts( UInt rdpcmMode, ComponentID compID, 
   memset( m_interRdpcmMode[compID] + uiAbsPartIdx, rdpcmMode, sizeof( UChar ) * uiCurrPartNumb );
 }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TComDataCU::setInterRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
 {
   memset((m_interRdpcmMode[compID] + uiAbsPartIdx), rdpcmMode, (sizeof(UChar) * uiCoveredPartIdxes));
 }
-#endif
 #endif
 
 Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth )

@@ -243,8 +243,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define RExt__SQUARE_TRANSFORM_CHROMA_422                                      1 ///< 0 = allow rectangular transforms for chroma 4:2:2, 1 (default) = split rectangular TUs into square sub-TUs prior to prediction for intra and transform for inter
-
 // This can be enabled by the makefile
 #ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)

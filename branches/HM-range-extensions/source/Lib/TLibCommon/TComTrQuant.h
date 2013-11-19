@@ -93,7 +93,7 @@ public:
 private:
 
   QpData baseQp;
-  QpData adjustedQp;
+  QpData adjustedQp; // TODO: RExt - this is no longer required, since baseQp and adjustedQp are the same for square transform blocks.
 
 public:
 

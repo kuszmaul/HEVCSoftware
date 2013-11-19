@@ -343,17 +343,13 @@ public:
                                                                        ( isIntra(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)); }
 #endif
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void          setInterRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
-#endif
 #endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void          setCrossComponentDecorrelationAlphaPartRange ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 #endif
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
-#endif
 
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
 
@@ -381,10 +377,8 @@ public:
   Void          setCbfSubParts        ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth                    );
   Void          setCbfSubParts        ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth    );
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void          setCbfPartRange       ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes      );
   Void          bitwiseOrCbfPartRange ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes      );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for coding tool information

@@ -192,18 +192,6 @@ static inline Int getScalingListType(const PredMode predMode, const ComponentID 
 
 //------------------------------------------------
 
-#if !RExt__SQUARE_TRANSFORM_CHROMA_422
-static inline UInt getScalingListCoeffIdx(const ChromaFormat chFmt, const ComponentID compID, const UInt blkPos, const UInt tuWidth, const UInt tuHeight)
-{
-  if ( tuWidth==tuHeight || isLuma(compID) || chFmt!=CHROMA_422  )
-    return blkPos;
-  else if (tuWidth<tuHeight)
-    return (blkPos << 1);
-  else
-    return ( (blkPos & (~(tuWidth-1)))<<1) + (blkPos & (tuWidth-1));
-}
-#endif
-
 
 //======================================================================================================================
 //Context variable selection  ==========================================================================================
