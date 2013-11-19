@@ -681,14 +681,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
-            rpcTempCU->initEstData( uiDepth, iQP );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
-            rpcTempCU->initEstData( uiDepth, iQP );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
-            rpcTempCU->initEstData( uiDepth, iQP );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
-            rpcTempCU->initEstData( uiDepth, iQP );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
 #endif
           }
