@@ -216,8 +216,6 @@
 
 #define MATRIX_MULT                                       0 // Brute force matrix multiplication instead of partial butterfly
 
-#define REG_DCT 65535
-
 #define AMP_SAD                                           1 ///< dedicated SAD functions for AMP
 #define AMP_ENC_SPEEDUP                                   1 ///< encoder only speed-up by AMP mode skipping
 #if AMP_ENC_SPEEDUP
