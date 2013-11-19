@@ -336,9 +336,7 @@ public:
   Void          setInterRdpcmModeSubParts  ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setInterRdpcmModeSubParts  ( const UInt rdpcmMode[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
-  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( isInter(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)) ||
-                                                                       ( isIntraBC(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)) ||
-                                                                       ( isIntra(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)); }
+  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
 #else
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( isInter(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
                                                                        ( isIntraBC(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ||
