@@ -1154,7 +1154,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   }
 #endif
 
-#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && ( (uiChFinalMode == HOR_IDX) || (uiChFinalMode == VER_IDX) ) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
   {
     const UInt uiOrgTrDepth   = rTu.GetTransformDepthRel();
@@ -1428,7 +1428,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
       }
     }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   }
 #endif
 
@@ -1441,7 +1441,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
     Pel* pRecIPred  = piRecIPred;
     const UInt clipbd=g_bitDepth[chType];
 
-#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
     if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       pResi += uiStride;
@@ -2734,7 +2734,11 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
 
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+        predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiMode) );
+#else
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
+#endif
 
         // use hadamard transform here
         uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );

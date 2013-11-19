@@ -478,7 +478,11 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
       memset( m_puhTransformSkip[comp] + firstElement, 0,                   numElements * sizeof( *m_puhTransformSkip[comp]) );
       memset( m_puhCbf[comp]           + firstElement, 0,                   numElements * sizeof( *m_puhCbf[comp] ) );
 #if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+      memset( m_interRdpcmMode[comp]    + firstElement, NUMBER_OF_RDPCM_MODES, numElements * sizeof( *m_interRdpcmMode[comp] ) );
+#else
       memset( m_interRdpcmMode[comp]    + firstElement, NUMBER_OF_INTER_RDPCM_MODES,   numElements * sizeof( *m_interRdpcmMode[comp] ) );
+#endif
 #endif
     }
     memset( m_pbMergeFlag       + firstElement, false,                    numElements * sizeof( *m_pbMergeFlag ) );
@@ -614,7 +618,11 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
 #endif
         m_puhTransformSkip[comp][ui] = 0;
 #if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+        m_interRdpcmMode[comp][ui] = NUMBER_OF_RDPCM_MODES;
+#else
         m_interRdpcmMode[comp][ui] = NUMBER_OF_INTER_RDPCM_MODES;
+#endif
 #endif
       }
       m_skipFlag[ui]      = false;
@@ -709,7 +717,11 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_puhTransformSkip[comp], 0, iSizeInUchar );
     memset( m_puhCbf[comp],           0, iSizeInUchar );
 #if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+    memset( m_interRdpcmMode[comp]   , NUMBER_OF_RDPCM_MODES, iSizeInUchar );
+#else
     memset( m_interRdpcmMode[comp]   , NUMBER_OF_INTER_RDPCM_MODES, iSizeInUchar );
+#endif
 #endif
   }
 

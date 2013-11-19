@@ -232,7 +232,11 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
                                     const Pel* pSrc,     Int srcStride,
                                           Pel* pTrueDst, Int dstStrideTrue,
                                           UInt uiWidth, UInt uiHeight, ChannelType channelType, ChromaFormat format,
-                                          UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable )
+                                          UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+                                  , const Bool bEnableEdgeFilters
+#endif
+                                  )
 {
   Int width=Int(uiWidth);
   Int height=Int(uiHeight);
@@ -260,7 +264,11 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
     const Int        intraPredAngleMode = (bIsModeVer) ? (Int)dirMode - VER_IDX :  -((Int)dirMode - HOR_IDX);
     const Int        absAngMode         = abs(intraPredAngleMode);
     const Int        signAng            = intraPredAngleMode < 0 ? -1 : 1;
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+    const Bool       edgeFilter         = bEnableEdgeFilters && isLuma(channelType) && (width <= MAXIMUM_INTRA_FILTERED_WIDTH) && (height <= MAXIMUM_INTRA_FILTERED_HEIGHT);
+#else
     const Bool       edgeFilter         = isLuma(channelType) && (width <= MAXIMUM_INTRA_FILTERED_WIDTH) && (height <= MAXIMUM_INTRA_FILTERED_HEIGHT);
+#endif
 
     // Set bitshifts and scale the angle parameter to block size
     static const Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
@@ -388,8 +396,11 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
   }
 }
 
-
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples, const Bool bUseLosslessDPCM )
+#else
 Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples )
+#endif
 {
   const ChromaFormat   format      = rTu.GetChromaFormat();
   const ChannelType    channelType = toChannelType(compID);
@@ -406,7 +417,11 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
   // get starting pixel in block
   const Int sw = (2 * iWidth + 1);
 
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+  if ( bUseLosslessDPCM )
+#else
   if ( UseSampleAdaptiveIntraPrediction(rTu, uiDirMode) )
+#endif
   {
     const Pel *ptrSrc = getPredictorPtr( compID, false );
     // Sample Adaptive intra-Prediction (SAP)
@@ -456,7 +471,15 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
     else
     {
       // Create the prediction
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+            TComDataCU *const pcCU              = rTu.getCU();
+      const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
+      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx));
+
+      xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
+#else
       xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft );
+#endif
 
       if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
       {
@@ -862,7 +885,11 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
 }
 
 /* Static member function */
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode)
+#else
 Bool TComPrediction::UseSampleAdaptiveIntraPrediction(TComTU &rTu, const UInt uiDirMode)
+#endif
 {
 #if RExt__NRCE2_RESIDUAL_DPCM
   return (rTu.getCU()->isRDPCMEnabled(rTu.GetAbsPartIdxTU()) )&&
