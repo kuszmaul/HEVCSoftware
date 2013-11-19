@@ -604,6 +604,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   const Int clipbd = g_bitDepth[toChannelType(compID)];
 
+#if !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   if (TComPrediction::UseSampleAdaptiveIntraPrediction(rTu, uiChFinalMode))
   {
     if ( uiChFinalMode == HOR_IDX )
@@ -675,8 +676,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   }
   else
   {
+#endif
 
-#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
     if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
       pResi     += uiStride;
@@ -748,7 +750,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
         ss << "\n";
 #endif
     }
+#if !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   }
+#endif
 }
 
 

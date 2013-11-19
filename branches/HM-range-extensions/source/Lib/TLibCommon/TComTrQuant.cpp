@@ -1511,119 +1511,130 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 
   uiAbsSum=0;
 
-  //transform and quantise
-  if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+  RDPCMMode rdpcmMode = RDPCM_OFF;
+  rdpcmNxN( rTu, compID, pcResidual, uiStride, cQP, rpcCoeff, uiAbsSum, rdpcmMode );
+
+  if (rdpcmMode == RDPCM_OFF)
   {
-#if RDPCM_INTER_LOSSLESS
-    TCoeff temporaryResidual[MAX_TU_SIZE * MAX_TU_SIZE];
-    if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
+    uiAbsSum = 0;
+#endif
+    //transform and quantise
+    if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
     {
-      xInterResidueDpcm(rTu, pcResidual, uiStride, temporaryResidual, compID, uiAbsSum);
-    }
-    else
-    {
-      for (UInt line = 0; line < uiHeight; line++)
-        for (UInt column = 0; column < uiWidth; column++)
-        {
-          temporaryResidual[(line * uiWidth) + column] = pcResidual[(line * uiStride) + column];
-        }
-    }
+#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+      TCoeff temporaryResidual[MAX_TU_SIZE * MAX_TU_SIZE];
+      if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
+      {
+        xInterResidueDpcm(rTu, pcResidual, uiStride, temporaryResidual, compID, uiAbsSum);
+      }
+      else
+      {
+        for (UInt line = 0; line < uiHeight; line++)
+          for (UInt column = 0; column < uiWidth; column++)
+          {
+            temporaryResidual[(line * uiWidth) + column] = pcResidual[(line * uiStride) + column];
+          }
+      }
 #endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
-    const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+      const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
 #else
-    const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
+      const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
 #endif
-    const UInt lastColumn     = uiWidth  - 1;
-    const UInt lastRow        = uiHeight - 1;
+      const UInt lastColumn     = uiWidth  - 1;
+      const UInt lastRow        = uiHeight - 1;
 #endif
-    for (UInt k = 0; k<uiHeight; k++)
-    {
-      for (UInt j = 0; j<uiWidth; j++)
+      for (UInt k = 0; k<uiHeight; k++)
       {
-#if RDPCM_INTER_LOSSLESS
+        for (UInt j = 0; j<uiWidth; j++)
+        {
+#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
 #if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-        rpcCoeff[coefficientIndex] = temporaryResidual[(k * uiWidth) + j];
+          const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+          rpcCoeff[coefficientIndex] = temporaryResidual[(k * uiWidth) + j];
 #else
-        rpcCoeff[k*uiWidth+j]= temporaryResidual[k*uiWidth+j];
+          rpcCoeff[k*uiWidth+j]= temporaryResidual[k*uiWidth+j];
 #endif
-        uiAbsSum += abs(temporaryResidual[k*uiWidth+j]);
+          uiAbsSum += abs(temporaryResidual[k*uiWidth+j]);
 #else
 #if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-        rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
+          const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
+          rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
 #else
-        rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
+          rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
 #endif
-        uiAbsSum += TCoeff(abs(pcResidual[k*uiStride+j]));
+          uiAbsSum += TCoeff(abs(pcResidual[k*uiStride+j]));
 #endif
+        }
       }
     }
-  }
-  else
-  {
+    else
+    {
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
-    printBlock(pcResidual, uiWidth, uiHeight, uiStride);
+      std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
+      printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
 
 #if !RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
-    const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
+      const Bool useDST = isLuma(compID) && (pcCU->isIntra(uiAbsPartIdx));
 #endif
 
-    assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
+      assert( (pcCU->getSlice()->getSPS()->getMaxTrSize() >= uiWidth) );
 
-    if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)
-    {
-      xTransformSkip( pcResidual, uiStride, m_plTempCoeff, rTu, compID );
-    }
-    else
-    {
+      if(pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)
+      {
+        xTransformSkip( pcResidual, uiStride, m_plTempCoeff, rTu, compID );
+      }
+      else
+      {
 #if RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY
-      xT( compID, rTu.useDST(compID), pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+        xT( compID, rTu.useDST(compID), pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
 #else
-      xT( compID, useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
+        xT( compID, useDST, pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight );
 #endif
-    }
+      }
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
-    printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
+      std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
+      printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-#if RDPCM_INTER_LOSSY
-    if( pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
-    {
-      //  Inter coded TU with transform skip: select the best inter RDPCM mode
-      xQuantInterRdpcm(rTu, m_plTempCoeff, rpcCoeff, 
-#if ADAPTIVE_QP_SELECTION
-        rpcArlCoeff,
-#endif
-        uiAbsSum, compID, cQP);
-    }
-    else
-    {
-#endif
-
-      xQuant( rTu, m_plTempCoeff, rpcCoeff,
-
+#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+      if( pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0 && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
+      {
+        //  Inter coded TU with transform skip: select the best inter RDPCM mode
+        xQuantInterRdpcm(rTu, m_plTempCoeff, rpcCoeff, 
 #if ADAPTIVE_QP_SELECTION
           rpcArlCoeff,
 #endif
-          uiAbsSum, compID, cQP );
-#if RDPCM_INTER_LOSSY
-    }
+          uiAbsSum, compID, cQP);
+      }
+      else
+      {
+#endif
+
+        xQuant( rTu, m_plTempCoeff, rpcCoeff,
+
+#if ADAPTIVE_QP_SELECTION
+            rpcArlCoeff,
+#endif
+            uiAbsSum, compID, cQP );
+#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+      }
 #endif
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
-    std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
-    printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
+      std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
+      printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
+    }
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   }
+#endif
 
-  //set the CBF
+    //set the CBF
 #if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
 #else
@@ -1710,7 +1721,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
       }
     }
-#if RDPCM_INTER_LOSSLESS
+#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
     if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
     {
       xInterInverseRdpcm(rTu, rpcResidual, uiStride, compID);
@@ -1747,7 +1758,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
     {
 
-#if RDPCM_INTER_LOSSY
+#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
       if( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
       {
         //  Undo inter RDPCM before the final shift down for transform skip
@@ -1791,6 +1802,10 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     g_debugCounter++;
 #endif
   }
+
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+  invRdpcmNxN( rTu, compID, rpcResidual, uiStride );
+#endif
 }
 
 Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
@@ -1881,6 +1896,194 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     while (tuRecurseChild.nextSection(rTu));
   }
 }
+
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, const RDPCMMode mode )
+{
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+
+  const Bool bLossless      = pcCU->getCUTransquantBypass( uiAbsPartIdx );
+  const UInt uiWidth        = rTu.getRect(compID).width;
+  const UInt uiHeight       = rTu.getRect(compID).height;
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+  const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
+#endif
+
+  Int reconstructedResi[MAX_TU_SIZE * MAX_TU_SIZE];
+
+  UInt uiX = 0;
+  UInt uiY = 0;
+
+        UInt &majorAxis             = (mode == RDPCM_HOR) ? uiX      : uiY;
+        UInt &minorAxis             = (mode == RDPCM_HOR) ? uiY      : uiX;
+  const UInt  majorAxisLimit        = (mode == RDPCM_HOR) ? uiWidth  : uiHeight;
+  const UInt  minorAxisLimit        = (mode == RDPCM_HOR) ? uiHeight : uiWidth;
+  const UInt  referenceSampleOffset = (mode == RDPCM_HOR) ? 1        : uiWidth;
+
+  uiAbsSum = 0;
+
+  for ( majorAxis = 0; majorAxis < majorAxisLimit; majorAxis++ )
+  {
+    for ( minorAxis = 0; minorAxis < minorAxisLimit; minorAxis++ )
+    {
+      const UInt sampleIndex = (uiY * uiWidth) + uiX;
+#if RExt__NRCE2_RESIDUAL_ROTATION
+      const UInt coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
+#else
+      const UInt coefficientIndex = sampleIndex;
+#endif
+
+      const TCoeff currentSample    = pcResidual[(uiY * uiStride) + uiX];
+      const TCoeff referenceSample  = ((mode != RDPCM_OFF) && (majorAxis > 0)) ? reconstructedResi[sampleIndex - referenceSampleOffset] : 0;
+
+      const TCoeff encoderSideDelta = currentSample - referenceSample;
+
+      TCoeff reconstructedDelta;
+      if ( bLossless )
+      {
+        pcCoeff[coefficientIndex] = encoderSideDelta;
+        reconstructedDelta        = encoderSideDelta;
+      }
+      else
+      {
+        transformSkipQuantOneSample(rTu, compID, encoderSideDelta, pcCoeff, coefficientIndex, cQP);
+        invTrSkipDeQuantOneSample  (rTu, compID, pcCoeff[coefficientIndex], reconstructedDelta, cQP, coefficientIndex DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[coefficientIndex]));
+      }
+
+      uiAbsSum += abs(reconstructedDelta);
+
+      reconstructedResi[sampleIndex] = reconstructedDelta + referenceSample;
+    }
+  }
+}
+
+Void TComTrQuant::rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode )
+{
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+
+  if (!pcCU->isRDPCMEnabled(uiAbsPartIdx) || ((pcCU->getTransformSkip(uiAbsPartIdx, compID) == 0) && !pcCU->getCUTransquantBypass(uiAbsPartIdx)))
+  {
+    rdpcmMode = RDPCM_OFF;
+  }
+  else if ( pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    const ChromaFormat chFmt = pcCU->getPic()->getPicYuvOrg()->getChromaFormat();
+    const ChannelType chType = toChannelType(compID);
+    const UInt uiChPredMode  = pcCU->getIntraDir( chType, uiAbsPartIdx );
+    const UInt uiChCodedMode = (uiChPredMode==DM_CHROMA_IDX && isChroma(compID)) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;
+    const UInt uiChFinalMode = ((chFmt == CHROMA_422)       && isChroma(compID)) ? g_chroma422IntraAngleMappingTable[uiChCodedMode] : uiChCodedMode;
+
+    if (uiChFinalMode == VER_IDX || uiChFinalMode == HOR_IDX)
+    {
+      rdpcmMode = (uiChFinalMode == VER_IDX) ? RDPCM_VER : RDPCM_HOR;
+      applyForwardRDPCM( rTu, compID, pcResidual, uiStride, cQP, pcCoeff, uiAbsSum, rdpcmMode );
+    }
+    else rdpcmMode = RDPCM_OFF;
+  }
+  else // not intra, need to select the best mode
+  {
+    const UInt uiWidth  = rTu.getRect(compID).width;
+    const UInt uiHeight = rTu.getRect(compID).height;
+
+    RDPCMMode bestMode   = NUMBER_OF_RDPCM_MODES;
+    TCoeff    bestAbsSum = std::numeric_limits<TCoeff>::max();
+    TCoeff    bestCoefficients[MAX_TU_SIZE * MAX_TU_SIZE];
+
+    for (UInt modeIndex = 0; modeIndex < NUMBER_OF_RDPCM_MODES; modeIndex++)
+    {
+      const RDPCMMode mode = RDPCMMode(modeIndex);
+
+      TCoeff currAbsSum = 0;
+
+      applyForwardRDPCM( rTu, compID, pcResidual, uiStride, cQP, pcCoeff, currAbsSum, mode );
+
+      if (currAbsSum < bestAbsSum)
+      {
+        bestMode   = mode;
+        bestAbsSum = currAbsSum;
+        if (mode != RDPCM_OFF)
+        {
+          memcpy(bestCoefficients, pcCoeff, (uiWidth * uiHeight * sizeof(TCoeff)));
+        }
+      }
+    }
+
+    rdpcmMode = bestMode;
+    uiAbsSum  = bestAbsSum;
+
+    if (rdpcmMode != RDPCM_OFF) //the TU is re-transformed and quantised if DPCM_OFF is returned, so there is no need to preserve it here
+    {
+      memcpy(pcCoeff, bestCoefficients, (uiWidth * uiHeight * sizeof(TCoeff)));
+    }
+  }
+
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
+  pcCU->setInterRdpcmModePartRange(rdpcmMode, compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
+#else  
+  pcCU->setInterRdpcmModeSubParts(rdpcmMode, compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
+#endif
+}
+
+Void TComTrQuant::invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride )
+{
+  TComDataCU *pcCU=rTu.getCU();
+  const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
+
+  if (pcCU->isRDPCMEnabled( uiAbsPartIdx ) && ((pcCU->getTransformSkip(uiAbsPartIdx, compID ) != 0) || pcCU->getCUTransquantBypass(uiAbsPartIdx)))
+  {
+    const UInt uiWidth  = rTu.getRect(compID).width;
+    const UInt uiHeight = rTu.getRect(compID).height;
+
+    RDPCMMode rdpcmMode = RDPCM_OFF;
+
+    if ( pcCU->isIntra( uiAbsPartIdx ) )
+    {
+      const ChromaFormat chFmt = pcCU->getPic()->getPicYuvRec()->getChromaFormat();
+      const ChannelType chType = toChannelType(compID);
+      const UInt uiChPredMode  = pcCU->getIntraDir( chType, uiAbsPartIdx );
+      const UInt uiChCodedMode = (uiChPredMode==DM_CHROMA_IDX && isChroma(compID)) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;
+      const UInt uiChFinalMode = ((chFmt == CHROMA_422)       && isChroma(compID)) ? g_chroma422IntraAngleMappingTable[uiChCodedMode] : uiChCodedMode;
+
+      if (uiChFinalMode == VER_IDX || uiChFinalMode == HOR_IDX)
+      {
+        rdpcmMode = (uiChFinalMode == VER_IDX) ? RDPCM_VER : RDPCM_HOR;
+      }
+    }
+    else  // not intra case
+    {
+      rdpcmMode = RDPCMMode(pcCU->getInterRdpcmMode( compID, uiAbsPartIdx ));
+    }
+
+    if (rdpcmMode == RDPCM_VER)
+    {
+      pcResidual += uiStride; //start from row 1
+
+      for( UInt uiY = 1; uiY < uiHeight; uiY++ )
+      {
+        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          pcResidual[ uiX ] = pcResidual[ uiX ] + pcResidual [ (Int)uiX - (Int)uiStride ];
+        }
+        pcResidual += uiStride;
+      }
+    }
+    else if (rdpcmMode == RDPCM_HOR)
+    {
+      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+      {
+        for( UInt uiX = 1; uiX < uiWidth; uiX++ )
+        {
+          pcResidual[ uiX ] = pcResidual[ uiX ] + pcResidual [ (Int)uiX-1 ];
+        }
+        pcResidual += uiStride;
+      }
+    }
+  }
+}
+#endif
 
 // ------------------------------------------------------------------------------------------------
 // Logical transform
@@ -3499,7 +3702,7 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 
 #endif // RExt__NRCE2_RESIDUAL_DPCM
 
-#if RDPCM_INTER_LOSSLESS
+#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
 /** Performs inverse RDPCM for inter predicted residuals. It does a recursion step in case of 4:2:2 chroma format
  * \param rTu current TU where the residulas belong to
  * \param stride incremental step to index the residuals array
@@ -3673,7 +3876,7 @@ Void TComTrQuant::xInterResidueDpcm( TComTU      &rTu,
 }
 #endif
 
-#if RDPCM_INTER_LOSSY
+#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
 /** Performs HEVC quantisation of one sample. Main purpose of this function is to make the code for "xQuantInterRdpcm" more readable
  * \param[in] rTu current TU where the sample belongs to
  * \param[in] residual sample value to be quantised

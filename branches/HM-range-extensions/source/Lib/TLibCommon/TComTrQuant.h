@@ -159,6 +159,12 @@ public:
   Void invRecurTransformNxN ( const ComponentID compID, Pel*  rpcResidual, UInt uiStride, TComTU &rTu);
 #endif
 
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+  Void rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode );
+  Void invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride );
+
+  Void applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, const RDPCMMode mode );
+#endif
 
   // Misc functions
 
@@ -338,7 +344,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
 
-#if RDPCM_INTER_LOSSLESS
+#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   Void xInterInverseRdpcm( TComTU &rTu, Pel *&residuals, UInt stride, ComponentID compID );
   Void xInterResidueDpcm          ( TComTU      &rTu, 
                                     Pel*        inputResiduals,
@@ -348,7 +354,7 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
                                     TCoeff      &absSum
                                   );
 #endif
-#if RDPCM_INTER_LOSSY
+#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   //  lossy inter RDPCM functions
   inline Void xQuantiseSample(       TComTU      &rTu, 
                                      TCoeff      residual, 

@@ -1330,7 +1330,12 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     {
       //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes encode the inter RDPCM mode
       codeInterRdpcmMode( rTu, compID);
-      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) > DPCM_OFF)
+
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) != RDPCM_OFF)
+#else
+      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) != DPCM_OFF)
+#endif
       {
         //  Sign data hiding is avoided for horizontal and vertical inter RDPCM modes
         beValid = false;
@@ -2016,6 +2021,28 @@ Void TEncSbac::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
   assert(tuHeight < 4);
 
   UInt interRdpcmMode = cu->getInterRdpcmMode(compID, absPartIdx);
+#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+  if( interRdpcmMode == RDPCM_OFF )
+  {
+    m_pcBinIf->encodeBin (0, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0));      
+  }
+  else if( interRdpcmMode == RDPCM_HOR || interRdpcmMode == RDPCM_VER )
+  {
+    m_pcBinIf->encodeBin (1, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0));
+    if(interRdpcmMode == RDPCM_HOR)
+    {
+      m_pcBinIf->encodeBin ( 0, m_interRdpcmDirSCModel.get(0, toChannelType(compID), 0));
+    }
+    else
+    {
+      m_pcBinIf->encodeBin ( 1, m_interRdpcmDirSCModel.get(0, toChannelType(compID), 0));
+    }
+  }
+  else
+  {
+    assert(0);
+  }
+#else
   if( interRdpcmMode == DPCM_OFF )
   {
     m_pcBinIf->encodeBin (0, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0));      
@@ -2036,6 +2063,7 @@ Void TEncSbac::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
   {
     assert(0);
   }
+#endif
 }
 #endif
 //! \}
