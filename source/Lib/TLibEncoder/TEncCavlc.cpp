@@ -1272,11 +1272,7 @@ Void TEncCavlc::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   assert(0);
 }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TEncCavlc::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
-#else
-Void TEncCavlc::codeQtCbf( TComTU &rTu, const ComponentID compID )
-#endif
 {
   assert(0);
 }

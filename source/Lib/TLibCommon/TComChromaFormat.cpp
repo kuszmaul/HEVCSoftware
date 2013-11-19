@@ -107,11 +107,7 @@ Void setQPforQuant(       QpParam      &result,
     }
 
     //adjustment for chroma 4:2:2
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
     adjustedQp = baseQp;
-#else
-    adjustedQp = ((chFmt == CHROMA_422) && !useTransformSkip) ? (baseQp + 3) : baseQp;
-#endif
   }
 
   //------------------------------------------------

@@ -507,7 +507,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
         Pel* piPred            = pcPredYuv->getAddr( compID, uiAbsPartIdx );
   const ChromaFormat chFmt     = rTu.GetChromaFormat();
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   if (uiWidth != uiHeight)
   {
     //------------------------------------------------
@@ -527,7 +526,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
     return;
   }
-#endif
 
   const UInt uiChPredMode  = pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx );
   const UInt uiChCodedMode = (uiChPredMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;

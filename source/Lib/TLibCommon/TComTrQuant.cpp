@@ -1126,11 +1126,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
       if (enableScalingLists)
       {
 #endif
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
         const UInt scalingListCoeffIdx = uiBlockPos;
-#else
-        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlockPos, uiWidth, uiHeight);
-#endif
 #if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
         quantisationCoefficient = piQuantCoeff[scalingListCoeffIdx];
       }
@@ -1183,9 +1179,6 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
   const TCoeff* piQCoef   = pSrc;
   TCoeff*       piCoef    = pDes;
-#if !RExt__SQUARE_TRANSFORM_CHROMA_422
-  const ChromaFormat fmt=rTu.GetChromaFormat();
-#endif
 
   const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
   const UInt numSamplesInBlock=uiWidth*uiHeight;
@@ -1251,14 +1244,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
       for( Int n = 0; n < numSamplesInBlock; n++ )
       {
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-        const Int deQuantIdx = n;
-#else
-        const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
-#endif
-
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-        iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
+        iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[n]) + iAdd ) >> rightShift;
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
       }
     }
@@ -1268,14 +1255,8 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 
       for( Int n = 0; n < numSamplesInBlock; n++ )
       {
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-        const Int deQuantIdx = n;
-#else
-        const Int deQuantIdx = getScalingListCoeffIdx(fmt, compID, n, uiWidth, uiHeight);
-#endif
-
         clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, piQCoef[n]));
-        iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
+        iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[n]) << leftShift;
         piCoef[n] = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
       }
     }
@@ -1484,11 +1465,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
 
     //set the CBF
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-#else
-  pcCU->setCbfSubParts((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
 }
 
 
@@ -1506,7 +1483,6 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   const UInt uiWidth = rect.width;
   const UInt uiHeight = rect.height;
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   if (uiWidth != uiHeight) //for intra, the TU will have been split above this level, so this condition won't be true, hence this only affects inter
   {
     //------------------------------------------------
@@ -1535,7 +1511,6 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
     return;
   }
-#endif
 
 #if defined DEBUG_STRING
   if (psDebug)
@@ -1869,11 +1844,7 @@ Void TComTrQuant::rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcRes
     }
   }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   pcCU->setInterRdpcmModePartRange(rdpcmMode, compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
-#else  
-  pcCU->setInterRdpcmModeSubParts(rdpcmMode, compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
 }
 
 Void TComTrQuant::invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride )
@@ -2270,25 +2241,14 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
       if (enableScalingLists)
       {
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-        const UInt scalingListCoeffIdx = uiBlkPos;
-#else
-        const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlkPos, uiWidth, uiHeight);
-#endif
-        quantisationCoefficient = piQCoef   [scalingListCoeffIdx];
-        dTemp                   = pdErrScale[scalingListCoeffIdx];
+        quantisationCoefficient = piQCoef   [uiBlkPos];
+        dTemp                   = pdErrScale[uiBlkPos];
       }
 
       Int64 tmpLevel = Int64(abs(plSrcCoeff[ uiBlkPos ])) * quantisationCoefficient;
 #else
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-      const UInt scalingListCoeffIdx = uiBlkPos;
-#else
-      const UInt scalingListCoeffIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiBlkPos, uiWidth, uiHeight);
-#endif
-      Double dTemp = pdErrScale[scalingListCoeffIdx];
-
-      Int64 tmpLevel = Int64(abs(plSrcCoeff[ uiBlkPos ])) * piQCoef[scalingListCoeffIdx];
+      Double dTemp = pdErrScale[uiBlkPos];
+      Int64 tmpLevel = Int64(abs(plSrcCoeff[ uiBlkPos ])) * piQCoef[uiBlkPos];
 #endif
 
       if (applyAdditionalShift) tmpLevel = (tmpLevel + 1) >> 1;
@@ -3331,14 +3291,11 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
 
-#if (!RExt__SQUARE_TRANSFORM_CHROMA_422) || RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
+#if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
   const TComRectangle &rect= rTu.getRect(compID);
 
   const UInt    uiWidth           = rect.width;
   const UInt    uiHeight          = rect.height;
-#if !RExt__SQUARE_TRANSFORM_CHROMA_422
-  const ChromaFormat chFmt        = rTu.GetChromaFormat();
-#endif
 #endif
 
   // transform skip params
@@ -3395,11 +3352,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   if (enableScalingLists)
   {
 #endif
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
     scalingListCoeffIdx = uiPos;
-#else
-    scalingListCoeffIdx = getScalingListCoeffIdx(chFmt, compID, uiPos, uiWidth, uiHeight);
-#endif
 #if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
     quantisationCoefficient = piQuantCoeff[scalingListCoeffIdx];
   }
@@ -3424,14 +3377,11 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
 
-#if (!RExt__SQUARE_TRANSFORM_CHROMA_422) || RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
+#if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
   const TComRectangle &rect= rTu.getRect(compID);
 
   const UInt    uiWidth           = rect.width;
   const UInt    uiHeight          = rect.height;
-#if !RExt__SQUARE_TRANSFORM_CHROMA_422
-  const ChromaFormat chFmt        = rTu.GetChromaFormat();
-#endif
 #endif
 
   const Int QP_per = cQP.getAdjustedQp().per;
@@ -3481,27 +3431,17 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
     if(rightShift > 0)
     {
       const Intermediate_Int iAdd = 1 << (rightShift - 1);
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-      const Int deQuantIdx = uiPos;
-#else
-      const Int deQuantIdx = getScalingListCoeffIdx(chFmt, compID, uiPos, uiWidth, uiHeight);
-#endif
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
-      iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) + iAdd ) >> rightShift;
+      iCoeffQ   = ((Intermediate_Int(clipQCoef) * piDequantCoef[uiPos]) + iAdd ) >> rightShift;
       tmpCoef   = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
     }
     else
     {
       const Int leftShift = -rightShift;
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-      const Int deQuantIdx = uiPos;
-#else
-      const Int deQuantIdx = getScalingListCoeffIdx(rTu.GetChromaFormat(), compID, uiPos, uiWidth, uiHeight);
-#endif
 
       clipQCoef = TCoeff(Clip3<Intermediate_Int>(inputMinimum, inputMaximum, inSample));
-      iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[deQuantIdx]) << leftShift;
+      iCoeffQ   = (Intermediate_Int(clipQCoef) * piDequantCoef[uiPos]) << leftShift;
       tmpCoef   = TCoeff(Clip3<Intermediate_Int>(transformMinimum,transformMaximum,iCoeffQ));
     }
   }
@@ -3717,11 +3657,7 @@ Void TComTrQuant::xInterResidueDpcm( TComTU      &rTu,
   assert(bestInterRdpcmMode != NUMBER_OF_INTER_RDPCM_MODES);
 
   //  Set inter Rdpcm mode and cbf
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   cu->setInterRdpcmModePartRange(bestInterRdpcmMode, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
-#else
-  cu->setInterRdpcmModeSubParts(bestInterRdpcmMode, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
 }
 #endif
 
@@ -3936,9 +3872,6 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
   const TComRectangle &rect = rTu.getRect(compID);
   UInt height = rect.height;
   UInt width  = rect.width;
-#if !RExt__SQUARE_TRANSFORM_CHROMA_422
-  ChromaFormat chromaFormat = cu->getPic()->getChromaFormat();
-#endif
 
   //  Check whether this function is called only for 4x4 blocks
   assert(height <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) && width <= (1<<cu->getSlice()->getPPS()->getTransformSkipLog2MaxSize()) );
@@ -3969,16 +3902,11 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
       {
         for(int c = 0; c < width; c++, samplePosition++)
         {
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-          const Int quantIdx = samplePosition;
-#else
-          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
-#endif
           xQuantiseSample(rTu, tempCoeffPtr[c], tempQCoeffPtr[c], 
 #if ADAPTIVE_QP_SELECTION
             arlCoeffPtr[c], 
 #endif
-            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+            compID, cQP, samplePosition, tempDeltaU[samplePosition]);
           currentSad += abs(tempQCoeffPtr[c]);
         }
         tempCoeffPtr += width;
@@ -3994,18 +3922,13 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
       //  First column: quantisation only
       for(int r = 0, samplePosition = 0; r < height; r++, samplePosition += width)
       {
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-        const Int quantIdx = samplePosition;
-#else
-        const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
-#endif
         xQuantiseSample(rTu, tempCoeffPtr[samplePosition], tempQCoeffPtr[samplePosition], 
 #if ADAPTIVE_QP_SELECTION
           arlCoeffPtr[samplePosition], 
 #endif
-          compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+          compID, cQP, samplePosition, tempDeltaU[samplePosition]);
         currentSad += abs(tempQCoeffPtr[samplePosition]);
-        xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+        xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, samplePosition);
       }
       
       int samplePosition;
@@ -4015,18 +3938,13 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
         for(int r = 0; r < height; r++)
         {
           samplePosition = r*width + c;
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-          const Int quantIdx = samplePosition;
-#else
-          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
-#endif
           xQuantiseSample(rTu, tempCoeffPtr[samplePosition] - tempRecCoeff[samplePosition - 1], tempQCoeff[samplePosition], 
 #if ADAPTIVE_QP_SELECTION
             arlCoeffPtr[samplePosition],
 #endif
-            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+            compID, cQP, samplePosition, tempDeltaU[samplePosition]);
           currentSad += abs(tempQCoeffPtr[samplePosition]);
-          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, samplePosition);
           tempRecCoeff[samplePosition] += tempRecCoeff[samplePosition - 1];
         }
       }
@@ -4053,18 +3971,13 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
         for(int c = 0; c < width; c++)
         {
           samplePosition = r*width + c;
-#if RExt__SQUARE_TRANSFORM_CHROMA_422
-          const Int quantIdx = samplePosition;
-#else
-          const Int quantIdx = getScalingListCoeffIdx(chromaFormat, compID, samplePosition, width, height);
-#endif
           xQuantiseSample(rTu, tempCoeffPtr[samplePosition] - tempRecCoeff[samplePosition - width], tempQCoeffPtr[samplePosition],
 #if ADAPTIVE_QP_SELECTION
             arlCoeffPtr[samplePosition],
 #endif
-            compID, cQP, quantIdx, tempDeltaU[samplePosition]);
+            compID, cQP, samplePosition, tempDeltaU[samplePosition]);
           currentSad += abs(tempQCoeffPtr[samplePosition]);
-          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, quantIdx);
+          xDequantiseSample(rTu, tempQCoeffPtr[samplePosition], tempRecCoeff[samplePosition], compID, cQP, samplePosition);
           tempRecCoeff[samplePosition] += tempRecCoeff[samplePosition - width];
         }
       }
@@ -4105,11 +4018,7 @@ Void TComTrQuant::xQuantInterRdpcm( TComTU       &rTu,
   }
 
   //  Set the best RDPCM in the current CU sata structure
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   cu->setInterRdpcmModePartRange(bestRdpcmMode, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));  
-#else  
-  cu->setInterRdpcmModeSubParts(bestRdpcmMode, compID, absPartIdx, rTu.GetTransformDepthTotalAdj(compID));
-#endif
 
   if(bestRdpcmMode == DPCM_OFF)
   {

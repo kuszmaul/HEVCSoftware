@@ -951,11 +951,7 @@ Void TEncSbac::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
-#else
-Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
-#endif
 {
   TComDataCU* pcCU = rTu.getCU();
 
@@ -964,7 +960,6 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
         UInt uiCtx        = pcCU->getCtxQtCbf( rTu, toChannelType(compID) );
   const UInt contextSet   = toChannelType(compID);
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   const UInt width        = rTu.getRect(compID).width;
   const UInt height       = rTu.getRect(compID).height;
   const Bool canQuadSplit = (width >= (MIN_TU_SIZE * 2)) && (height >= (MIN_TU_SIZE * 2));
@@ -1015,9 +1010,6 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
   else
   {
     const UInt uiCbf = pcCU->getCbf( absPartIdx, compID, lowestTUDepth );
-#else
-    const UInt uiCbf = pcCU->getCbf( absPartIdx, compID, TUDepth );
-#endif
     m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, contextSet, uiCtx ) );
 
 
@@ -1032,9 +1024,7 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID )
     DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
     DTRACE_CABAC_V( rTu.GetAbsPartIdxTU(compID) )
     DTRACE_CABAC_T( "\n" )
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   }
-#endif
 }
 
 

@@ -824,11 +824,7 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
     leftColumn[k]   <<= shift1Dhor;
   }
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   const UInt topRowShift = 0;
-#else
-  const UInt topRowShift = (isChroma(channelType) && (format == CHROMA_422)) ? 1 : 0;
-#endif
 
   // Generate prediction signal
   for (Int y=0;y<height;y++)

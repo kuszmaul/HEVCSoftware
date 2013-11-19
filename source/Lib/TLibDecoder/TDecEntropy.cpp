@@ -446,19 +446,9 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
     {
       if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth - 1 ) )
       {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
         m_pcEntropyDecoderIf->parseQtCbf( rTu, compID, (uiSubdiv == 0) );
-#else
-        m_pcEntropyDecoderIf->parseQtCbf( rTu, compID );
-#endif
       }
     }
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 == 0)
-    else if (rTu.GetSectionNumber() == 0)
-    {
-      pcCU->setCbfSubParts( pcCU->getCbf( uiAbsPartIdx, compID, uiTrDepth - 1 ) << uiTrDepth, compID, rTu.GetAbsPartIdxTU(compID), trDepthTotalAdj );
-    }
-#endif
   }
 
   if( uiSubdiv )
@@ -514,11 +504,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
     }
     else
     {
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
       m_pcEntropyDecoderIf->parseQtCbf( rTu, COMPONENT_Y, true );
-#else
-      m_pcEntropyDecoderIf->parseQtCbf( rTu, COMPONENT_Y );
-#endif
     }
 
 
@@ -562,7 +548,6 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
           if (bDebugRQT) printf("Call NxN for chan %d width=%d height=%d cbf=%d\n", compID, rTu.getRect(compID).width, rTu.getRect(compID).height, 1);
 #endif
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
           if (rTu.getRect(compID).width != rTu.getRect(compID).height)
           {
             //code two sub-TUs
@@ -584,7 +569,6 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
           }
           else
           {
-#endif
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
             if(isChroma(compID) && (cbf[COMPONENT_Y] != 0))
             {
@@ -598,9 +582,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
 #else
             m_pcEntropyDecoderIf->parseCoeffNxN( rTu, compID );
 #endif
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
           }
-#endif
         }
       }
     }
