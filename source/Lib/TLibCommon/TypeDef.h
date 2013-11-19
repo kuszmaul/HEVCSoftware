@@ -254,7 +254,6 @@
 
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   1 ///< 0 = disable feature, 1 (default) = have command line control to optionally cost function for lossless / mixed lossless evaluation.
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
-#define RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS                       1 ///< 0 = use the same set of matrices for both forward and inverse transform, 1 (default) = allow the set of matrices used for the forward transform to be differemt from that used for the inverse transform
 #define RExt__HIGH_PRECISION_FORWARD_TRANSFORM                                 0 ///< 0 (default) use original 6-bit transform matrices for both forward and inverse transform, 1 = use original matrices for inverse transform and high precision matrices for forward transform
 
 #define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
@@ -332,8 +331,8 @@
 // Error checks
 //------------------------------------------------
 
-#if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && ((RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS == 0) || (RExt__HIGH_BIT_DEPTH_SUPPORT == 0)))
-#error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS and RExt__HIGH_BIT_DEPTH_SUPPORT
+#if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && (RExt__HIGH_BIT_DEPTH_SUPPORT == 0))
+#error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__HIGH_BIT_DEPTH_SUPPORT
 #endif
 
 // ====================================================================================================================
@@ -577,14 +576,12 @@ enum StoredResidualType
 };
 #endif
 
-#if RExt__INDEPENDENT_FORWARD_AND_INVERSE_TRANSFORMS
 enum TransformDirection
 {
   TRANSFORM_FORWARD              = 0,
   TRANSFORM_INVERSE              = 1,
   TRANSFORM_NUMBER_OF_DIRECTIONS = 2
 };
-#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
