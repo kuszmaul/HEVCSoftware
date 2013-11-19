@@ -364,11 +364,7 @@ Void TEncTop::deletePicBuffer()
  \retval  rcListBitstreamOut  list of output bitstreams
  \retval  iNumEncoded         number of encoded pictures
  */
-#if RExt__COLOUR_SPACE_CONVERSIONS
 Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
-#else
-Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
-#endif
 {
   if (pcPicYuvOrg != NULL)
   {
@@ -377,9 +373,7 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
 
     xGetNewPicBuffer( pcPicCurr );
     pcPicYuvOrg->copyToPic( pcPicCurr->getPicYuvOrg() );
-#if RExt__COLOUR_SPACE_CONVERSIONS
     pcPicYuvTrueOrg->copyToPic( pcPicCurr->getPicYuvTrueOrg() );
-#endif
 
     // compute image characteristics
     if ( getUseAdaptiveQP() )
@@ -400,11 +394,7 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>
   }
 
   // compress GOP
-#if RExt__COLOUR_SPACE_CONVERSIONS
   m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false, snrCSC);
-#else
-  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false);
-#endif
 
   if ( m_RCEnableRateControl )
   {
@@ -438,11 +428,7 @@ void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt heigh
   
 }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
-#else
-Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
-#endif
 {
   iNumEncoded = 0;
 
@@ -495,14 +481,12 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
                        pcPicYuvOrg->getHeight(component),
                        isTopField);
   
-  #if RExt__COLOUR_SPACE_CONVERSIONS
         separateFields((pcPicYuvTrueOrg->getBuf(component) + pcPicYuvTrueOrg->getMarginX(component) + (pcPicYuvTrueOrg->getMarginY(component) * stride)),
                        pcField->getPicYuvTrueOrg()->getAddr(component),
                        pcPicYuvTrueOrg->getStride(component),
                        pcPicYuvTrueOrg->getWidth(component),
                        pcPicYuvTrueOrg->getHeight(component),
                        isTopField);
-  #endif
       }
 
       // compute image characteristics
@@ -515,11 +499,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     if ( m_iNumPicRcvd && ((flush&&fieldNum==1) || (m_iPOCLast/2)==0 || m_iNumPicRcvd==m_iGOPSize ) )
     {
       // compress GOP
-#if RExt__COLOUR_SPACE_CONVERSIONS
-        m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff, snrCSC);
-#else
-        m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff);
-#endif
+      m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff, snrCSC);
 
       iNumEncoded += m_iNumPicRcvd;
       m_uiNumAllPicCoded += m_iNumPicRcvd;

@@ -48,25 +48,6 @@
 
 using namespace std;
 
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-
-// ====================================================================================================================
-// Constants
-// ====================================================================================================================
-
-static const ComponentID CHANNEL_ORDER[2/*0 = GBR/YUV, 1 = RGB*/][2/*0 = normal, 1 = swap chroma channels*/][MAX_NUM_COMPONENT] =
-{
-  {
-    {COMPONENT_Y, COMPONENT_Cb, COMPONENT_Cr},
-    {COMPONENT_Y, COMPONENT_Cr, COMPONENT_Cb}
-  },
-  {
-    {COMPONENT_Cr, COMPONENT_Y, COMPONENT_Cb},
-    {COMPONENT_Cb, COMPONENT_Y, COMPONENT_Cr}
-  },
-};
-#endif
-
 // ====================================================================================================================
 // Local Functions
 // ====================================================================================================================
@@ -647,17 +628,11 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
  * @param aiPad        source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
-#if RExt__COLOUR_SPACE_CONVERSIONS
 Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, const InputColourSpaceConversion ipcsc, Int aiPad[2], ChromaFormat format )
-#else
-Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2], ChromaFormat format )
-#endif
 {
   // check end-of-file
   if ( isEof() ) return false;
-#if RExt__COLOUR_SPACE_CONVERSIONS
   TComPicYuv *pPicYuv=pPicYuvTrueOrg;
-#endif
   if (format>=NUM_CHROMA_FORMAT) format=pPicYuv->getChromaFormat();
 
   Bool is16bit = false;
@@ -679,21 +654,9 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
   const UInt width444       = width_full444 - pad_h444;
   const UInt height444      = height_full444 - pad_v444;
 
-#if RExt__COLOUR_SPACE_CONVERSIONS ==0
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
-#else
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
-#endif
-#endif
-
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
-#if RExt__COLOUR_SPACE_CONVERSIONS
     const ComponentID compID = ComponentID(comp);
-#else
-    const ComponentID compID = channelOrder[comp];
-#endif
     const ChannelType chType=toChannelType(compID);
 
     const Int desired_bitdepth = m_fileBitdepth[chType] + m_bitdepthShift[chType];
@@ -717,26 +680,15 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
       const UInt csx=getComponentScaleX(compID, pPicYuv->getChromaFormat());
       const UInt csy=getComponentScaleY(compID, pPicYuv->getChromaFormat());
       scalePlane(pPicYuv->getAddr(compID), stride444>>csx, width_full444>>csx, height_full444>>csy, m_bitdepthShift[chType], minval, maxval);
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-      if (getenv("COPY_LUMA_TO_CHROMA_444") && pPicYuv->getChromaFormat()==CHROMA_444 && isChroma(compID))
-      {
-        // copy all the luma data to this plane.
-        ::memcpy ( pPicYuv->getBuf(compID), pPicYuv->getBuf(COMPONENT_Y), sizeof (Pel) * pPicYuv->getStride(COMPONENT_Y) * pPicYuv->getTotalHeight(COMPONENT_Y));
-      }
-#endif
-#endif
     }
   }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
   Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
   for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
   {
     internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
   }
   ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, internalBitDepth, true);
-#endif
 
   return true;
 }
@@ -749,14 +701,8 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuv, Bool RGBChannelOrder, Int aiPad[2
  * @param aiPad       source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
  * @return true for success, false in case of error
  */
-#if RExt__COLOUR_SPACE_CONVERSIONS
 Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversion ipCSC, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )
-#else
-Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )
-#endif
 {
-
-#if RExt__COLOUR_SPACE_CONVERSIONS
   TComPicYuv cPicYuvCSCd;
   if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
   {
@@ -769,7 +715,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, internalBitDepth, false);
   }
   TComPicYuv *pPicYuv=(ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUser : &cPicYuvCSCd;
-#endif
 
   // compute actual YUV frame size excluding padding size
   const Int   iStride444 = pPicYuv->getStride(COMPONENT_Y);
@@ -815,21 +760,9 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     dstPicYuv = pPicYuv;
   }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
-#else
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
-#endif
-#endif
-
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
-#if RExt__COLOUR_SPACE_CONVERSIONS
     const ComponentID compID = ComponentID(comp);
-#else
-    const ComponentID compID = channelOrder[comp];
-#endif
     const ChannelType ch=toChannelType(compID);
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
@@ -846,21 +779,14 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Bool RGBChannelOrder, Int confLeft
     delete dstPicYuv;
   }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
   cPicYuvCSCd.destroy();
-#endif
 
   return retval;
 }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
 Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBottom, const InputColourSpaceConversion ipCSC, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format, const Bool isTff )
-#else
-Bool TVideoIOYuv::write( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, Bool RGBChannelOrder, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format, bool isTff )
-#endif
 {
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
   TComPicYuv cPicYuvTopCSCd;
   TComPicYuv cPicYuvBottomCSCd;
   if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
@@ -877,7 +803,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, Bool
   }
   TComPicYuv *pPicYuvTop    = (ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUserTop    : &cPicYuvTopCSCd;
   TComPicYuv *pPicYuvBottom = (ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUserBottom : &cPicYuvBottomCSCd;
-#endif
   
   Bool is16bit = false;
   Bool nonZeroBitDepthShift=false;
@@ -927,14 +852,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, Bool
     }
   }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS==0
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][(getenv("SWAP_CB_CR_ON_LOADING") != NULL) ? 1 : 0];
-#else
-  const ComponentID *const channelOrder = CHANNEL_ORDER[RGBChannelOrder ? 1 : 0][0];
-#endif
-#endif
-
   Bool retval = true;
 
   assert(dstPicYuvTop->getNumberValidComponents() == dstPicYuvBottom->getNumberValidComponents());
@@ -945,11 +862,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, Bool
 
   for(UInt comp=0; retval && comp<dstPicYuvTop->getNumberValidComponents(); comp++)
   {
-#if RExt__COLOUR_SPACE_CONVERSIONS
     const ComponentID compID = ComponentID(comp);
-#else
-    const ComponentID compID = channelOrder[comp];
-#endif
     const ChannelType ch=toChannelType(compID);
 
     assert(dstPicYuvTop->getComponentScaleX(compID) == dstPicYuvBottom->getComponentScaleX(compID));
@@ -983,15 +896,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, Bool
     delete dstPicYuvBottom;
   }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
   cPicYuvTopCSCd.destroy();
   cPicYuvBottomCSCd.destroy();
-#endif
 
   return retval;
 }
-
-#if RExt__COLOUR_SPACE_CONVERSIONS
 
 static Void
 copyPlane(const TComPicYuv &src, const ComponentID srcPlane, TComPicYuv &dest, const ComponentID destPlane)
@@ -1066,5 +975,3 @@ Void TVideoIOYuv::ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, co
       break;
   }
 }
-
-#endif

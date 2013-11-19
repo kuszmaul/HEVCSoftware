@@ -64,10 +64,8 @@ static inline UInt        getNumberValidComponents  (const ChromaFormat fmt)    
 static inline Bool        isChromaEnabled           (const ChromaFormat fmt)                       { return  fmt!=CHROMA_400;                                           }
 static inline ComponentID getFirstComponentOfChannel(const ChannelType id)                         { return (isLuma(id) ? COMPONENT_Y : COMPONENT_Cb);                  }
 
-#if RExt__COLOUR_SPACE_CONVERSIONS
 InputColourSpaceConversion stringToInputColourSpaceConvert(const std::string &value, const Bool bIsForward);
 std::string getListOfColourSpaceConverts(const Bool bIsForward);
-#endif
 
 //------------------------------------------------
 
