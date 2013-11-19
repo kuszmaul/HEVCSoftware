@@ -388,6 +388,9 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
   for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
     const ComponentID ch=ComponentID(chan);
+#if !DISABLING_CLIP_FOR_BIPREDME
+    const ChannelType chType=toChannelType(ch);
+#endif
   
     const Pel* pSrc  = pcYuvSrc->getAddr(ch, uiPartIdx);
     Pel* pDst  = getAddr(ch, uiPartIdx);
@@ -404,7 +407,7 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
 #if DISABLING_CLIP_FOR_BIPREDME
         pDst[x ] = (pDst[x ]<<1) - pSrc[x ] ;
 #else
-        pDst[x ] = Clip( (pDst[x ]<<1) - pSrc[x ] );
+        pDst[x ] = Clip( (pDst[x ]<<1) - pSrc[x ], chType );
 #endif
       }
       pSrc += iSrcStride;
