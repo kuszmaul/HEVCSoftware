@@ -314,14 +314,17 @@ void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
   this->m_fifo->insert(at, src.m_fifo->begin(), src.m_fifo->end());
 }
 
-Void TComInputBitstream::readOutTrailingBits ()
+UInt TComInputBitstream::readOutTrailingBits ()
 {
+  UInt count=0;
   UInt uiBits = 0;
 
   while ( ( getNumBitsLeft() > 0 ) && (getNumBitsUntilByteAligned()!=0) )
   {
+    count++;
     read ( 1, uiBits );
   }
+  return count;
 }
 
 TComOutputBitstream& TComOutputBitstream::operator= (const TComOutputBitstream& src)
@@ -370,7 +373,7 @@ Void TComInputBitstream::deleteFifo()
   m_fifo = NULL;
 }
 
-Void TComInputBitstream::readByteAlignment()
+UInt TComInputBitstream::readByteAlignment()
 {
   UInt code = 0;
   read( 1, code );
@@ -383,6 +386,7 @@ Void TComInputBitstream::readByteAlignment()
     read( numBits, code );
     assert(code == 0);
   }
+  return numBits+1;
 }
 
 //! \}
