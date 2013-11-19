@@ -86,12 +86,20 @@ Void TEncSampleAdaptiveOffset::createEncData()
 
   //cabac coder for RDO
   m_pppcRDSbacCoder = new TEncSbac* [NUM_SAO_CABACSTATE_LABELS];
+#if FAST_BIT_EST
   m_pppcBinCoderCABAC = new TEncBinCABACCounter* [NUM_SAO_CABACSTATE_LABELS];
+#else
+  m_pppcBinCoderCABAC = new TEncBinCABAC* [NUM_SAO_CABACSTATE_LABELS];
+#endif
 
   for(Int cs=0; cs < NUM_SAO_CABACSTATE_LABELS; cs++)
   {
     m_pppcRDSbacCoder[cs] = new TEncSbac;
+#if FAST_BIT_EST
     m_pppcBinCoderCABAC[cs] = new TEncBinCABACCounter;
+#else
+    m_pppcBinCoderCABAC[cs] = new TEncBinCABAC;
+#endif
     m_pppcRDSbacCoder   [cs]->init( m_pppcBinCoderCABAC [cs] );
   }
 

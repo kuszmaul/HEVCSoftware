@@ -144,7 +144,11 @@ private: //members
   //for RDO
   TEncSbac**             m_pppcRDSbacCoder;           
   TEncSbac*              m_pcRDGoOnSbacCoder;
-  TEncBinCABACCounter**  m_pppcBinCoderCABAC;    
+#if FAST_BIT_EST
+  TEncBinCABACCounter**  m_pppcBinCoderCABAC;
+#else
+  TEncBinCABAC**         m_pppcBinCoderCABAC;
+#endif
   Double                 m_labmda[MAX_NUM_COMPONENT];
 
   //statistics
