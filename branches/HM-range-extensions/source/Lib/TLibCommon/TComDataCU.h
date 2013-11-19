@@ -348,10 +348,10 @@ public:
 #endif
 #endif
 
-#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void          setCrossComponentDecorrelationAlphaPartRange ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 #endif
+#if (RExt__SQUARE_TRANSFORM_CHROMA_422 != 0)
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 #endif
 
