@@ -1731,7 +1731,11 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   const UInt uiWidth        = rTu.getRect(compID).width;
   const UInt uiHeight       = rTu.getRect(compID).height;
 #if RExt__NRCE2_RESIDUAL_ROTATION
+#if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
+#else
+  const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
+#endif
   const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 #endif
 
