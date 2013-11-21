@@ -6138,6 +6138,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 
               QpParam cQP;
               setQPforQuant(cQP, pcCU->getQP( 0 ), toChannelType(compID), bdOffset, chromaOffset, pcCU->getPic()->getChromaFormat(), (transformSkipModeId == 1));
+#if RDOQ_CHROMA_LAMBDA
+              m_pcTrQuant->selectLambda(compID);
+#endif
 
               Pel *pcResiCurrComp = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix(compID, tuCompRect.x0, tuCompRect.y0);
               UInt resiStride     = m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(compID);
