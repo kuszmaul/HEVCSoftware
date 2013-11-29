@@ -100,7 +100,7 @@ Void TComPattern::initPattern (Pel* piY,
 
 
 // NOTE: RExt - this has been kept in this C++ file to allow easier tracking/comparison against HM.
-Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug), Bool bLMmode)
+Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug))
 {
   // NOTE: RExt - This function has been modified for increased flexibility as part of the Square TU 4:2:2 implementation
   const ChannelType chType    = toChannelType(compID);
@@ -157,12 +157,9 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
 
 #ifdef DEBUG_STRING
-    if (DEBUG_INTRA_REF_SAMPLES)
+    if (DebugOptionList::DebugString_Pred.getInt()&DebugStringGetPredModeMask(MODE_INTRA))
     {
-      if (bLMmode)
-        ss << "###: generating LM Ref Samples for channel " << compID << "\n";
-      else
-        ss << "###: generating Ref Samples for channel " << compID << " and " << rTu.getRect(compID).width << " x " << rTu.getRect(compID).height << "\n";
+      ss << "###: generating Ref Samples for channel " << compID << " and " << rTu.getRect(compID).width << " x " << rTu.getRect(compID).height << "\n";
       for (UInt y=0; y<uiROIHeight; y++)
       {
         ss << "###: - ";
@@ -273,12 +270,9 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       *piDestPtr=*piSrcPtr; // far right is not filtered
 
 #ifdef DEBUG_STRING
-    if (DEBUG_INTRA_REF_SAMPLES)
+    if (DebugOptionList::DebugString_Pred.getInt()&DebugStringGetPredModeMask(MODE_INTRA))
     {
-      if (bLMmode)
-        ss << "###: filtered result for LM Ref Samples for channel " << compID <<"\n";
-      else
-        ss << "###: filtered result for channel " << compID <<"\n";
+      ss << "###: filtered result for channel " << compID <<"\n";
       for (UInt y=0; y<uiROIHeight; y++)
       {
         ss << "###: - ";

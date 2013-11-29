@@ -47,7 +47,7 @@
 // Debugging
 // ====================================================================================================================
 
-// #define DEBUG_STRING                 // enable to print out final decision debug info at encoder and decoder:
+// #define DEBUG_STRING                 // enable to print out final decision debug info at encoder and decoder
 // #define DEBUG_ENCODER_SEARCH_BINS    // enable to print out each bin as it is coded during encoder search
 // #define DEBUG_CABAC_BINS             // enable to print out each bin as it is coded during final encode and decode
 // #define DEBUG_INTRA_SEARCH_COSTS     // enable to print out the cost for each mode during encoder search
@@ -62,15 +62,7 @@
   #define DEBUG_STRING_OUTPUT(os, name) os << name;
   #define DEBUG_STRING_APPEND(str1, str2) str1+=str2;
   #define DEBUG_STRING_SWAP(str1, str2) str1.swap(str2);
-  #define DEBUG_STRING_CHANNEL_CONDITION(compID) (compID != COMPONENT_Y)
-  #define DEBUG_INTRA_REF_SAMPLES     0
-  #define DEBUG_RD_COST_INTRA         0
-  #define DEBUG_INTRA_CODING_TU       0
-  #define DEBUG_INTRA_CODING_INV_TRAN 0
-  #define DEBUG_INTER_CODING_INV_TRAN 0
-  #define DEBUG_INTER_CODING_PRED     0
-  #define DEBUG_INTER_CODING_RESI     0
-  #define DEBUG_INTER_CODING_RECON    0
+  #define DEBUG_STRING_CHANNEL_CONDITION(compID) (true)
   #include <sstream>
   #include <iomanip>
 #else

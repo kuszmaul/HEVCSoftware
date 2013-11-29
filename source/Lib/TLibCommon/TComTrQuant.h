@@ -229,7 +229,7 @@ public:
 #if RExt__NRCE2_RESIDUAL_DPCM
   Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
 
-  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos DEBUG_STRING_PASS_INTO(TCoeff &transformedDequantisedSample) );
+  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos );
 #endif
 
 protected:

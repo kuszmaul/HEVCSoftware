@@ -48,7 +48,12 @@ static const UInt settingValueWidth = 3;
 
 #ifdef DEBUG_STRING
 // these strings are used to reorder the debug output so that the encoder and decoder match.
-const char *debug_reorder_data_token[MAX_NUM_COMPONENT+1]={"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"};
+const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1]
+ = {
+     {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"},
+     {"Start of channel 0 intra-bc debug\n", "Start of channel 1 intra-bc debug\n", "Start of channel 2 intra-bc debug\n", "End of intra-bc residual debug\n"}
+   } ;
+const char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -141,14 +146,19 @@ EnvVar::EnvVar(const std::string &sName, const std::string &sDefault, const std:
 
 EnvVar Debug("-- Debugging","","");
 
-EnvVar DebugOptionList::DebugSBAC           ("DEBUG_SBAC",              "0", "Output debug data from SBAC entropy coder (coefficient data etc.)");
-EnvVar DebugOptionList::DebugRQT            ("DEBUG_RQT",               "0", "Output RQT debug data from entropy coder"                         );
-EnvVar DebugOptionList::DebugPred           ("DEBUG_PRED",              "0", "Output prediction debug"                                          );
-EnvVar DebugOptionList::ForceLumaMode       ("FORCE_LUMA_MODE",         "0", "Force a particular intra direction for Luma (0-34)"               );
-EnvVar DebugOptionList::ForceChromaMode     ("FORCE_CHROMA_MODE",       "0", "Force a particular intra direction for chroma (0-5)"              );
-EnvVar DebugOptionList::CopyLumaToChroma444 ("COPY_LUMA_TO_CHROMA_444", "0", "If using 444, copy luma channel to both chroma channels"          );
-EnvVar DebugOptionList::SwapCbCrOnLoading   ("SWAP_CB_CR_ON_LOADING",   "0", "Swaps Cb and Cr channels on loading"                              );
+EnvVar DebugOptionList::DebugSBAC             ("DEBUG_SBAC",        "0", "Output debug data from SBAC entropy coder (coefficient data etc.)"                              );
+EnvVar DebugOptionList::DebugRQT              ("DEBUG_RQT",         "0", "Output RQT debug data from entropy coder"                                                       );
+EnvVar DebugOptionList::DebugPred             ("DEBUG_PRED",        "0", "Output prediction debug"                                                                        );
+EnvVar DebugOptionList::ForceLumaMode         ("FORCE_LUMA_MODE",   "0", "Force a particular intra direction for Luma (0-34)"                                             );
+EnvVar DebugOptionList::ForceChromaMode       ("FORCE_CHROMA_MODE", "0", "Force a particular intra direction for chroma (0-5)"                                            );
 
+#ifdef DEBUG_STRING
+EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen sstructure                       bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter, bit2=intra-bc");
+#endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
 
@@ -431,3 +441,34 @@ Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, TComYuv &src
     ss << pLinePrefix << " --- \n";
   }
 }
+
+#ifdef DEBUG_STRING
+Int DebugStringGetPredModeMask(PredMode mode)
+{
+  return (mode==MODE_INTRA)?1:((mode==MODE_INTER)?2:4);
+}
+
+void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask)
+{
+  if (DebugOptionList::DebugString_Pred.getInt()&predmode_mask)
+  {
+    std::stringstream ss(std::stringstream::out);
+    printBlockToStream(ss, "###inter-pred: ", pred);
+    std::string debugTmp;
+    debugTmp=ss.str();
+    sDebug=debugTmp+sDebug;
+  }
+  if (DebugOptionList::DebugString_Resi.getInt()&predmode_mask)
+  {
+    std::stringstream ss(std::stringstream::out);
+    printBlockToStream(ss, "###inter-resi: ", resi);
+    sDebug+=ss.str();
+  }
+  if (DebugOptionList::DebugString_Reco.getInt()&predmode_mask)
+  {
+    std::stringstream ss(std::stringstream::out);
+    printBlockToStream(ss, "###inter-reco: ", reco);
+    sDebug+=ss.str();
+  }
+}
+#endif

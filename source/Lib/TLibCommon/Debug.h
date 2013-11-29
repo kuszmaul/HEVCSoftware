@@ -47,7 +47,8 @@
 #include <TLibCommon/CommonDef.h>
 
 #ifdef DEBUG_STRING
-extern const char *debug_reorder_data_token[MAX_NUM_COMPONENT+1];
+extern const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1];
+extern const char *partSizeToString[NUMBER_OF_PART_SIZES];
 #endif
 
 // ---------------------------------------------------------------------------------------------- //
@@ -100,8 +101,14 @@ namespace DebugOptionList
   extern EnvVar DebugPred;
   extern EnvVar ForceLumaMode;
   extern EnvVar ForceChromaMode;
-  extern EnvVar CopyLumaToChroma444;
-  extern EnvVar SwapCbCrOnLoading;
+
+#ifdef DEBUG_STRING
+  extern EnvVar DebugString_Structure;
+  extern EnvVar DebugString_Pred;
+  extern EnvVar DebugString_Resi;
+  extern EnvVar DebugString_Reco;
+  extern EnvVar DebugString_InvTran;
+#endif
 }
 
 // ---------------------------------------------------------------------------------------------- //
@@ -249,5 +256,11 @@ std::string lineWrap(const std::string &input, const UInt maximumLineLength);
 std::string indentNewLines(const std::string &input, const UInt indentBy);
 
 // ---------------------------------------------------------------------------------------------- //
+
+#ifdef DEBUG_STRING
+  Int DebugStringGetPredModeMask(PredMode mode);
+  void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask);
+#endif
+
 
 #endif /* __DEBUG__ */

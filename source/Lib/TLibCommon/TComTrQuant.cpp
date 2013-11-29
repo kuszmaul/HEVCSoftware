@@ -1597,7 +1597,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
         std::stringstream ss(stringstream::out);
         printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
         (*psDebug)+=ss.str();
-        (*psDebug)+="(TS)\n";
+        (*psDebug)+="(<- was a Transform-skipped block)\n";
       }
 #endif
     }
@@ -1615,7 +1615,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
         std::stringstream ss(stringstream::out);
         printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
         (*psDebug)+=ss.str();
-        (*psDebug)+="(Non TS)\n";
+        (*psDebug)+="(<- was a Transformed block)\n";
       }
 #endif
     }
@@ -1679,13 +1679,19 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
 #endif
-#if defined DEBUG_STRING && DEBUG_INTER_CODING_INV_TRAN
-      std::string sTemp;
-      invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(&sTemp) );
-      std::cout << sTemp;
-#else
-      invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(0) );
+
+      DEBUG_STRING_NEW(sTemp)
+#ifdef DEBUG_STRING
+      std::string *psDebug=((DebugOptionList::DebugString_InvTran.getInt()&(pcCU->isIntra(absPartIdxTU)?1:(pcCU->isInter(absPartIdxTU)?2:4)))!=0) ? &sTemp : 0;
 #endif
+
+      invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
+
+#ifdef DEBUG_STRING
+      if (psDebug != 0)
+        std::cout << (*psDebug);
+#endif
+
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
     }
 
@@ -1777,7 +1783,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
       else
       {
         transformSkipQuantOneSample(rTu, compID, encoderSideDelta, pcCoeff, coefficientIndex, cQP);
-        invTrSkipDeQuantOneSample  (rTu, compID, pcCoeff[coefficientIndex], reconstructedDelta, cQP, coefficientIndex DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[coefficientIndex]));
+        invTrSkipDeQuantOneSample  (rTu, compID, pcCoeff[coefficientIndex], reconstructedDelta, cQP, coefficientIndex);
       }
 
       uiAbsSum += abs(reconstructedDelta);
@@ -3376,7 +3382,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
   pcCoeff[ uiPos ] = Clip3<TCoeff>( entropyCodingMinimum, entropyCodingMaximum, iLevel );
 }
 
-Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos DEBUG_STRING_PASS_INTO(TCoeff &transformedDequantisedSample) )
+Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos )
 {
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
@@ -3477,9 +3483,6 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   }
 
   // Inverse transform-skip
-#if defined DEBUG_STRING
-  transformedDequantisedSample = tmpCoef;
-#endif
 
   if (iTransformShift >= 0)
   {
