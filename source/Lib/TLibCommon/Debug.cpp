@@ -188,6 +188,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192,                   settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH,          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,        settingNameWidth, settingValueWidth);
 
   //------------------------------------------------

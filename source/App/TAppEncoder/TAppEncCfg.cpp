@@ -987,6 +987,16 @@ Void TAppEncCfg::xCheckParameter()
   }
 #endif
 
+#if RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH
+  if(m_profile == Profile::MAINREXT)
+  {
+      fprintf(stderr, "***************************************************************************\n");
+      fprintf(stderr, "** WARNING: RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH should **\n");
+      fprintf(stderr, "**          be disabled under RExt test conditions.                      **\n");
+      fprintf(stderr, "***************************************************************************\n");
+  }
+#endif
+
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
   xConfirmPara ( ( m_profile==Profile::MAIN || m_profile==Profile::MAIN10 || m_profile==Profile::MAINSTILLPICTURE ) && m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
   if (m_transformSkipLog2MaxSize!=2 && m_useTransformSkipFast)
