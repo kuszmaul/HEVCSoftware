@@ -283,6 +283,7 @@
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148                           0 ///< Maintain backwards compatibility with HM for ticket 1148 (fix for temporal layer calculation when using field coding)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192                           1 ///< Maintain backwards compatibility with HM for ticket 1192 (Enable separate chroma channel lambdas in SAO)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH                  1 ///< Maintain backwards compatibility with HM for additional entropy coder resets in encoder inter search
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 //------------------------------------------------
