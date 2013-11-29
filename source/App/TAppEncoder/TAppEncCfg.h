@@ -158,6 +158,9 @@ protected:
   // coding tools (bit-depth)
   Int       m_inputBitDepth   [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of input file
   Int       m_outputBitDepth  [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of output file
+#if RExt__INPUT_MSB_EXTENSION
+  Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];      ///< bit-depth of input samples after MSB extension
+#endif
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
   Bool      m_useExtendedPrecision;
   Bool      m_useIntraBlockCopy;

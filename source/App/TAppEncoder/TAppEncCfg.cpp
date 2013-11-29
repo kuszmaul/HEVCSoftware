@@ -328,19 +328,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SourceHeight,-hgt",     m_iSourceHeight,                             0, "Source picture height")
   ("InputBitDepth",         m_inputBitDepth[CHANNEL_TYPE_LUMA],          8, "Bit-depth of input file")
   ("OutputBitDepth",        m_outputBitDepth[CHANNEL_TYPE_LUMA],         0, "Bit-depth of output file (default:InternalBitDepth)")
+#if RExt__INPUT_MSB_EXTENSION
+  ("MSBExtendedBitDepth",   m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA],    0, "bit depth of luma component after addition of MSBs of value 0 (used for synthesising High Dynamic Range source material). (default:InputBitDepth)")
+  ("InternalBitDepth",      m_internalBitDepth[CHANNEL_TYPE_LUMA],       0, "Bit-depth the codec operates at. (default:MSBExtendedBitDepth)"
+#else
   ("InternalBitDepth",      m_internalBitDepth[CHANNEL_TYPE_LUMA],       0, "Bit-depth the codec operates at. (default:InputBitDepth)"
+#endif
                                                                             "If different to InputBitDepth, source data will be converted")
   ("InputBitDepthC",        m_inputBitDepth[CHANNEL_TYPE_CHROMA],        0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepth[CHANNEL_TYPE_CHROMA],       0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
-  ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+#if RExt__INPUT_MSB_EXTENSION
+  ("MSBExtendedBitDepthC",  m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA],  0, "As per MSBExtendedBitDepth but for chroma component. (default:MSBExtendedBitDepth)")
+#endif
+  ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:InternalBitDepth)")
   ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   ("HighPrecisionPredictionWeighting", m_useHighPrecisionPredictionWeighting, false, "Use high precision option for weighted prediction (not valid in V1 profiles)")
 #endif
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
-  ("SNRInternalColourSpace",  m_snrInternalColourSpace,             false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
+  ("SNRInternalColourSpace",  m_snrInternalColourSpace,              false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
   ("OutputInternalColourSpace",  m_outputInternalColourSpace,        false, "If true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
-  ("InputChromaFormat",     tmpInputChromaFormat,                       420, "InputChromaFormatIDC")
+  ("InputChromaFormat",     tmpInputChromaFormat,                      420, "InputChromaFormatIDC")
   ("MSEBasedSequencePSNR",  m_printMSEBasedSequencePSNR,             false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
   ("ChromaFormatIDC,-cf",   tmpChromaFormat,                             0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",       m_conformanceMode,                           0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
@@ -729,11 +737,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
 
   /* rules for input, output and internal bitdepths as per help text */
-  if (m_internalBitDepth[CHANNEL_TYPE_LUMA  ] == 0) { m_internalBitDepth[CHANNEL_TYPE_LUMA  ] = m_inputBitDepth   [CHANNEL_TYPE_LUMA  ]; }
-  if (m_internalBitDepth[CHANNEL_TYPE_CHROMA] == 0) { m_internalBitDepth[CHANNEL_TYPE_CHROMA] = m_internalBitDepth[CHANNEL_TYPE_LUMA  ]; }
-  if (m_inputBitDepth   [CHANNEL_TYPE_CHROMA] == 0) { m_inputBitDepth   [CHANNEL_TYPE_CHROMA] = m_inputBitDepth   [CHANNEL_TYPE_LUMA  ]; }
-  if (m_outputBitDepth  [CHANNEL_TYPE_LUMA  ] == 0) { m_outputBitDepth  [CHANNEL_TYPE_LUMA  ] = m_internalBitDepth[CHANNEL_TYPE_LUMA  ]; }
-  if (m_outputBitDepth  [CHANNEL_TYPE_CHROMA] == 0) { m_outputBitDepth  [CHANNEL_TYPE_CHROMA] = m_internalBitDepth[CHANNEL_TYPE_CHROMA]; }
+#if RExt__INPUT_MSB_EXTENSION
+  if (m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] == 0) { m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] = m_inputBitDepth      [CHANNEL_TYPE_LUMA  ]; }
+  if (m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] == 0) { m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] = m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ]; }
+  if (m_internalBitDepth   [CHANNEL_TYPE_LUMA  ] == 0) { m_internalBitDepth   [CHANNEL_TYPE_LUMA  ] = m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ]; }
+#else
+  if (m_internalBitDepth   [CHANNEL_TYPE_LUMA  ] == 0) { m_internalBitDepth   [CHANNEL_TYPE_LUMA  ] = m_inputBitDepth      [CHANNEL_TYPE_LUMA  ]; }
+#endif
+  if (m_internalBitDepth   [CHANNEL_TYPE_CHROMA] == 0) { m_internalBitDepth   [CHANNEL_TYPE_CHROMA] = m_internalBitDepth   [CHANNEL_TYPE_LUMA  ]; }
+  if (m_inputBitDepth      [CHANNEL_TYPE_CHROMA] == 0) { m_inputBitDepth      [CHANNEL_TYPE_CHROMA] = m_inputBitDepth      [CHANNEL_TYPE_LUMA  ]; }
+  if (m_outputBitDepth     [CHANNEL_TYPE_LUMA  ] == 0) { m_outputBitDepth     [CHANNEL_TYPE_LUMA  ] = m_internalBitDepth   [CHANNEL_TYPE_LUMA  ]; }
+  if (m_outputBitDepth     [CHANNEL_TYPE_CHROMA] == 0) { m_outputBitDepth     [CHANNEL_TYPE_CHROMA] = m_internalBitDepth   [CHANNEL_TYPE_CHROMA]; }
   
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
@@ -964,6 +978,11 @@ Void TAppEncCfg::xCheckParameter()
   }
 #endif
 
+#if RExt__INPUT_MSB_EXTENSION
+  xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] < m_inputBitDepth[CHANNEL_TYPE_LUMA  ]), "MSB-extended bit depth for luma channel (--MSBExtendedBitDepth) must be greater than or equal to input bit depth for luma channel (--InputBitDepth)" );
+  xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] < m_inputBitDepth[CHANNEL_TYPE_CHROMA]), "MSB-extended bit depth for chroma channel (--MSBExtendedBitDepthC) must be greater than or equal to input bit depth for chroma channel (--InputBitDepthC)" );
+#endif
+
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
   std::string sTempIPCSC="InputColourSpaceConvert must be empty, "+getListOfColourSpaceConverts(true);
   xConfirmPara( m_inputColourSpaceConvert >= NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS,         sTempIPCSC.c_str() );
@@ -1059,7 +1078,11 @@ Void TAppEncCfg::xCheckParameter()
   {
     for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
     {
+#if RExt__INPUT_MSB_EXTENSION
+      xConfirmPara(((m_MSBExtendedBitDepth[channelType] > m_internalBitDepth[channelType]) && m_bPCMInputBitDepthFlag), "PCM bit depth cannot be greater than internal bit depth (PCMInputBitDepthFlag cannot be used when InputBitDepth or MSBExtendedBitDepth > InternalBitDepth)");
+#else
       xConfirmPara(((m_inputBitDepth[channelType] > m_internalBitDepth[channelType]) && m_bPCMInputBitDepthFlag), "PCM bit depth cannot be greater than internal bit depth (PCMInputBitDepthFlag cannot be used when InputBitDepth > InternalBitDepth)");
+#endif
     }
     xConfirmPara(  m_uiPCMLog2MinSize < 3,                                      "PCMLog2MinSize must be 3 or greater.");
     xConfirmPara(  m_uiPCMLog2MinSize > 5,                                      "PCMLog2MinSize must be 5 or smaller.");
@@ -1561,7 +1584,11 @@ Void TAppEncCfg::xSetGlobal()
   for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
   {
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
+#if RExt__INPUT_MSB_EXTENSION
+    g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[channelType] : m_internalBitDepth[channelType];
+#else
     g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_inputBitDepth[channelType] : m_internalBitDepth[channelType];
+#endif
 
     if (m_useExtendedPrecision) g_maxTrDynamicRange[channelType] = std::max<Int>(15, (g_bitDepth[channelType] + 6));
     else                        g_maxTrDynamicRange[channelType] = 15;
@@ -1622,6 +1649,10 @@ Void TAppEncCfg::xPrintParameter()
 
   printf("QP adaptation                   : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
   printf("GOP size                        : %d\n", m_iGOPSize );
+  printf("Input bit depth                 : (Y:%d, C:%d)\n", m_inputBitDepth[CHANNEL_TYPE_LUMA], m_inputBitDepth[CHANNEL_TYPE_CHROMA] );
+#if RExt__INPUT_MSB_EXTENSION
+  printf("MSB-extended bit depth          : (Y:%d, C:%d)\n", m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA], m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] );
+#endif
   printf("Internal bit depth              : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("PCM sample bit depth            : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("Extended precision processing   : %s\n", (m_useExtendedPrecision                   ? "Enabled" : "Disabled") );
@@ -1676,7 +1707,11 @@ Void TAppEncCfg::xPrintParameter()
   printf("\n");
   
   printf("TOOL CFG: ");
+#if RExt__INPUT_MSB_EXTENSION
+  printf("IBD:%d ", ((g_bitDepth[CHANNEL_TYPE_LUMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA]) || (g_bitDepth[CHANNEL_TYPE_CHROMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA])));
+#else
   printf("IBD:%d ", ((g_bitDepth[CHANNEL_TYPE_LUMA] > m_inputBitDepth[CHANNEL_TYPE_LUMA]) || (g_bitDepth[CHANNEL_TYPE_CHROMA] > m_inputBitDepth[CHANNEL_TYPE_CHROMA])));
+#endif
   printf("HAD:%d ", m_bUseHADME           );
   printf("SRD:%d ", m_bUseSBACRD          );
   printf("RDQ:%d ", m_useRDOQ            );
