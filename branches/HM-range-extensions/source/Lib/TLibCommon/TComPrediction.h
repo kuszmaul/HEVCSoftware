@@ -142,7 +142,6 @@ public:
                               Bool&       bLeft,
                               const ComponentID compID, const Bool bFilterRefSamples
                               DEBUG_STRING_FN_DECLARE(sDebug)
-                              ,Bool        bLMmode = false // using for LM chroma or not
                               );
 
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled);

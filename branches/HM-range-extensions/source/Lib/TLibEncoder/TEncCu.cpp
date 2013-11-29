@@ -1022,7 +1022,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
       }
 
-      xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTempDebug) );                                  // RD compare current larger prediction
+      xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTempDebug) DEBUG_STRING_PASS_INTO(false) ); // RD compare current larger prediction
                                                                                        // with sub partitioned prediction.
     }
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
@@ -1474,23 +1474,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                                                      m_ppcRecoYuvTemp[uhDepth],
                                                      (uiNoResidual != 0) DEBUG_STRING_PASS_INTO(tmpStr) );
 
-#if defined DEBUG_STRING
-#if defined DEBUG_INTER_CODING_PRED
-          {
-            std::stringstream ss(std::stringstream::out);
-            printBlockToStream(ss, "###inter-pred: ", *(m_ppcPredYuvTemp[uhDepth]));
-            std::string debugTmp;
-            debugTmp=ss.str();
-            tmpStr=debugTmp+tmpStr;
-          }
-#endif
-#if defined DEBUG_INTER_CODING_RECON
-          {
-            std::stringstream ss(std::stringstream::out);
-            printBlockToStream(ss, "###inter-reco: ", *(m_ppcRecoYuvTemp[uhDepth]));
-            tmpStr+=ss.str();
-          }
-#endif
+#ifdef DEBUG_STRING
+          DebugInterPredResiReco(tmpStr, *(m_ppcPredYuvTemp[uhDepth]), *(m_ppcResiYuvBest[uhDepth]), *(m_ppcRecoYuvTemp[uhDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
 
           if ((uiNoResidual == 0) && (rpcTempCU->getQtRootCbf(0) == 0))
@@ -1589,23 +1574,8 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false DEBUG_STRING_PASS_INTO(sTest) );
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 
-#if defined DEBUG_STRING
-#if defined DEBUG_INTER_CODING_PRED
-  {
-    std::stringstream ss(std::stringstream::out);
-    printBlockToStream(ss, "###inter-pred: ", *(m_ppcPredYuvTemp[uhDepth]));
-    std::string debugTmp;
-    debugTmp=ss.str();
-    sTest=debugTmp+sTest;
-  }
-#endif
-#if defined DEBUG_INTER_CODING_RECON
-  {
-    std::stringstream ss(std::stringstream::out);
-    printBlockToStream(ss, "###inter-reco: ", *(m_ppcRecoYuvTemp[uhDepth]));
-    sTest+=ss.str();
-  }
-#endif
+#ifdef DEBUG_STRING
+  DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uhDepth]), *(m_ppcResiYuvBest[uhDepth]), *(m_ppcRecoYuvTemp[uhDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
 
   xCheckDQP( rpcTempCU );
@@ -1666,14 +1636,6 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
     m_pcPredSearch->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC DEBUG_STRING_PASS_INTO(sTest) );
 #endif
   }
-
-#if defined DEBUG_STRING && DEBUG_RD_COST_INTRA
-  {
-    std::stringstream ss(stringstream::out);
-    ss <<"###: " << eSize << " LCU " << rpcBestCU->getCUPelX() << ", " << rpcBestCU->getCUPelY() << " width=" << UInt(rpcBestCU->getWidth(0)) << std::endl;
-    sTest+=ss.str();
-  }
-#endif
 
   m_pcEntropyCoder->resetBits();
 
@@ -1756,23 +1718,8 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false DEBUG_STRING_PASS_INTO(sTest) );
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 
-#if defined DEBUG_STRING
-#if defined DEBUG_INTER_CODING_PRED
-    {
-      std::stringstream ss(std::stringstream::out);
-      printBlockToStream(ss, "###inter-pred: ", *(m_ppcPredYuvTemp[uiDepth]));
-      std::string debugTmp;
-      debugTmp=ss.str();
-      sTest=debugTmp+sTest;
-    }
-#endif
-#if defined DEBUG_INTER_CODING_RECON
-    {
-      std::stringstream ss(std::stringstream::out);
-      printBlockToStream(ss, "###inter-reco: ", *(m_ppcRecoYuvTemp[uiDepth]));
-      sTest+=ss.str();
-    }
-#endif
+#ifdef DEBUG_STRING
+    DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
   
     xCheckDQP( rpcTempCU );
@@ -1844,7 +1791,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
  * \param rpcTempCU
  * \returns Void
  */
-Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest))
+Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest) DEBUG_STRING_PASS_INTO(Bool bAddSizeInfo) )
 {
   if( rpcTempCU->getTotalCost() < rpcBestCU->getTotalCost() )
   {
@@ -1870,7 +1817,17 @@ Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UIn
     if( m_bUseSBACRD )  // store temp best CI for next CU coding
       m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]->store(m_pppcRDSbacCoder[uiDepth][CI_NEXT_BEST]);
 
+
+#ifdef DEBUG_STRING
     DEBUG_STRING_SWAP(sParent, sTest)
+    const PredMode predMode=rpcBestCU->getPredictionMode(0);
+    if ((DebugOptionList::DebugString_Structure.getInt()&DebugStringGetPredModeMask(predMode)) && bAddSizeInfo)
+    {
+      std::stringstream ss(stringstream::out);
+      ss <<"###: " << (predMode==MODE_INTRA?"Intra   ":(predMode==MODE_INTER?"Inter   ":"IntraBC ")) << partSizeToString[rpcBestCU->getPartitionSize(0)] << " CU at " << rpcBestCU->getCUPelX() << ", " << rpcBestCU->getCUPelY() << " width=" << UInt(rpcBestCU->getWidth(0)) << std::endl;
+      sParent+=ss.str();
+    }
+#endif
   }
 }
 
