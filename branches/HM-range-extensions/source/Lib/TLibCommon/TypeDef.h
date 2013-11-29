@@ -248,6 +248,8 @@
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
 #endif
 
+#define RExt__INPUT_MSB_EXTENSION                                              1 ///< 0 = the MSB of each sample as it is read from the source is always the MSB of the sample's internal representation, 1 (default) = allow a number (configured by command line) of additional zero MSBs to be added to each sample as it is read in
+
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   1 ///< 0 = disable feature, 1 (default) = have command line control to optionally cost function for lossless / mixed lossless evaluation.
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 

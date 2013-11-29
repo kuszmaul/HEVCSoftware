@@ -98,8 +98,13 @@ Int main(Int argc, const char** argv)
     outputBitDepths[channelTypeIndex] = bitdepth_out;
   }
 
+#if RExt__INPUT_MSB_EXTENSION
+  input.open((char*)filename_in.c_str(), false, inputBitDepths, inputBitDepths, outputBitDepths);
+  output.open((char*)filename_out.c_str(), true, outputBitDepths, outputBitDepths, outputBitDepths);
+#else
   input.open((char*)filename_in.c_str(), false, inputBitDepths, outputBitDepths);
   output.open((char*)filename_out.c_str(), true, outputBitDepths, outputBitDepths);
+#endif
 
   input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
 
