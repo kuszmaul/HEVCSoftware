@@ -57,6 +57,8 @@
 // Class definition
 // ====================================================================================================================
 
+class SEImessages;
+
 /// SBAC decoder class
 class TDecSbac : public TDecEntropyIf
 {
@@ -82,25 +84,33 @@ public:
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseMVPIdx               ( Int& riMVPIdx          );
   Void  parseSaoMaxUvlc           ( UInt& val, UInt maxSymbol );
-  Void  parseSaoMerge         ( UInt&  ruiVal   );
+  Void  parseSaoMerge             ( UInt&  ruiVal   );
   Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
   Void  parseSaoUflc              ( UInt uiLength, UInt& ruiVal     );
 #if HM_CLEANUP_SAO
-  Void parseSAOBlkParam (SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail);
-  Void parseSaoSign(UInt& val);
+  Void parseSAOBlkParam           (SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail);
+  Void parseSaoSign               (UInt& val);
 #else
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
-  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, UInt compIdx);
+  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, const ComponentID compIdx);
 #endif
+
 private:
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, const class TComCodingStatisticsClassType &whichStat );
+  Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat );
+  Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount, const class TComCodingStatisticsClassType &whichStat );
+  Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const class TComCodingStatisticsClassType &whichStat );
+#else
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
+#endif
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
- 
+  
 public:
   
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -114,26 +124,37 @@ public:
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+
+  Void parseIntraBCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void parseIntraBC        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Void parseCrossComponentDecorrelation ( class TComTU &rTu, ComponentID compID );
+#endif
   
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
-  Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
+  Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void parseIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
-  Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, TextType eTType, UInt uiScanIdx );
-  Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType);
+  Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, ComponentID component, UInt uiScanIdx );
+  Void parseCoeffNxN      ( class TComTU &rTu, ComponentID compID  );
+  Void parseTransformSkipFlags ( class TComTU &rTu, ComponentID component );
 
   Void updateContextTables( SliceType eSliceType, Int iQp );
 
   Void  parseScalingList ( TComScalingList* /*scalingList*/ ) {}
+
+#if RExt__NRCE2_RESIDUAL_DPCM
+  Void  parseInterRdpcmMode( TComTU &rTu, ComponentID compID );
+#endif
 
 private:
   UInt m_uiLastDQpNonZero;
@@ -171,6 +192,14 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
+#if RExt__NRCE2_RESIDUAL_DPCM
+  ContextModel3DBuffer m_interRdpcmFlagSCModel;
+  ContextModel3DBuffer m_interRdpcmDirSCModel;
+#endif
+  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  ContextModel3DBuffer m_cCrossComponentDecorrelationSCModel;
+#endif
 };
 
 //! \}
