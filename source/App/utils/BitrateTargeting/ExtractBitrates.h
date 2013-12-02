@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXTRACT_BITRATES_H
-#define EXTRACT_BITRATES_H
+#ifndef __EXTRACTBITRATES__
+#define __EXTRACTBITRATES__
 
 #include "RuntimeError.h"
 #include <vector>

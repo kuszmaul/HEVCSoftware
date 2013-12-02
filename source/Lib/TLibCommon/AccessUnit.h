@@ -38,6 +38,9 @@
 
 #pragma once
 
+#ifndef __ACCESSUNIT__
+#define __ACCESSUNIT__
+
 #include <list>
 #include "NAL.h"
 
@@ -69,3 +72,5 @@ public:
 };
 
 //! \}
+
+#endif
