@@ -69,10 +69,10 @@ TComPicSym::TComPicSym()
 #if HM_CLEANUP_SAO
 ,m_saoBlkParams(NULL)
 #endif
-{};
+{}
 
 
-Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
 {
   UInt i;
 
@@ -108,7 +108,7 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
   for ( i=0; i<m_uiNumCUsInFrame ; i++ )
   {
     m_apcTComDataCU[i] = new TComDataCU;
-    m_apcTComDataCU[i]->create( m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
+    m_apcTComDataCU[i]->create( chromaFormatIDC, m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
 #if ADAPTIVE_QP_SELECTION
       , true
 #endif     
@@ -169,7 +169,7 @@ Void TComPicSym::destroy()
 
   delete [] m_puiInverseCUOrderMap;
   m_puiInverseCUOrderMap = NULL;
-
+  
 #if HM_CLEANUP_SAO
   if(m_saoBlkParams)
   {
@@ -283,7 +283,6 @@ Void TComPicSym::xInitTiles()
     }
     m_puiTileIdxMap[i] = uiRowIdx * (m_iNumColumnsMinus1 + 1) + uiColumnIdx;
   }
-
 }
 
 UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
@@ -321,7 +320,6 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
 
   return uiNxtCUAddr;
 }
-
 
 #if HM_CLEANUP_SAO
 Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,

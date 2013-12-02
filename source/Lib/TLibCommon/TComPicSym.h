@@ -113,7 +113,7 @@ private:
 #endif
 
 public:
-  Void        create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void        create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
   Void        destroy ();
 
   TComPicSym  ();

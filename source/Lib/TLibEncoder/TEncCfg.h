@@ -111,6 +111,8 @@ protected:
   Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
+  Bool      m_printMSEBasedSequencePSNR;
+
   /* profile & level */
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
@@ -158,8 +160,11 @@ protected:
 #if !HM_CLEANUP_SAO
   Bool      m_saoLcuBasedOptimization;
 #endif
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      m_useLossless;
+#endif
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -171,11 +176,16 @@ protected:
 
   Int       m_chromaCbQpOffset;                 //  Chroma Cb QP Offset (0:default)
   Int       m_chromaCrQpOffset;                 //  Chroma Cr Qp Offset (0:default)
+  ChromaFormat m_chromaFormatIDC;
 
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
 #endif
-
+  Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  Bool      m_useHighPrecisionPredictionWeighting;
+#endif
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
   
@@ -191,8 +201,27 @@ protected:
   Bool      m_useFastDecisionForMerge;
   Bool      m_bUseCbfFastMode;
   Bool      m_useEarlySkipDetection;
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool      m_useCrossComponentDecorrelation;
+  Bool      m_reconBasedDecorrelationEstimate;
+#endif
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
+  UInt      m_transformSkipLog2MaxSize;
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  Bool      m_useResidualRotation;
+#endif
+  Bool      m_useSingleSignificanceMapContext;
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool      m_useGolombRiceGroupAdaptation;
+#endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+  Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
+#else
+  Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
+#endif
+#endif
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   
@@ -212,6 +241,7 @@ protected:
   UInt      m_uiPCMBitDepthLuma;
   UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
+  Bool      m_disableIntraReferenceSmoothing;
   Bool      m_loopFilterAcrossTilesEnabledFlag;
   Int       m_iUniformSpacingIdr;
   Int       m_iNumColumnsMinus1;
@@ -259,6 +289,7 @@ protected:
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
+  Int       m_noDisplaySEITLayer;
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
@@ -279,7 +310,16 @@ protected:
   Int       m_RCInitialQP;
   Bool      m_RCForceIntraQP;
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+#else
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#endif
+
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  CostMode  m_costMode;                                       ///< The cost function to use, primarily when considering lossless coding.
+#endif
+
   TComVPS                    m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
@@ -340,6 +380,9 @@ public:
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
   Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
+
+  Bool      getPrintMSEBasedSequencePSNR    ()         const { return m_printMSEBasedSequencePSNR;  }
+  Void      setPrintMSEBasedSequencePSNR    (Bool value)     { m_printMSEBasedSequencePSNR = value; }
   
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -388,16 +431,32 @@ public:
   Void      setChromaCbQpOffset             ( Int   i )      { m_chromaCbQpOffset = i; }
   Void      setChromaCrQpOffset             ( Int   i )      { m_chromaCrQpOffset = i; }
 
+  Void      setChromaFormatIdc              ( ChromaFormat cf ) { m_chromaFormatIDC = cf; }
+  ChromaFormat  getChromaFormatIdc          ( )              { return m_chromaFormatIDC; }
+
 #if ADAPTIVE_QP_SELECTION
   Void      setUseAdaptQpSelect             ( Bool   i ) { m_bUseAdaptQpSelect    = i; }
   Bool      getUseAdaptQpSelect             ()           { return   m_bUseAdaptQpSelect; }
 #endif
 
+  Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
+  Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
+
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+
+#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
+  Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
+  Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
+#endif
+
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
   
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
-  Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
+  Void      setUseLossless                  (Bool   b )      { m_useLossless = b;   }
+#endif
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
@@ -440,8 +499,10 @@ public:
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      getUseLossless                  ()      { return  m_useLossless;  }
+#endif
   
   //==== Tool list ========
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
@@ -468,11 +529,11 @@ public:
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
-  Int      getRDpenalty                  ()      { return m_rdPenalty;  }
+  Int       getRDpenalty                    ()      { return m_rdPenalty;  }
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
-  Bool      getUseCbfFastMode           ()      { return m_bUseCbfFastMode; }
+  Bool      getUseCbfFastMode               ()      { return m_bUseCbfFastMode; }
   Bool      getUseEarlySkipDetection        ()      { return m_useEarlySkipDetection; }
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   }
@@ -481,10 +542,41 @@ public:
   UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
 
+#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
+  Bool      getUseCrossComponentDecorrelation     ()                const { return m_useCrossComponentDecorrelation;   }
+  Void      setUseCrossComponentDecorrelation     (const Bool value)      { m_useCrossComponentDecorrelation = value;  }
+  Bool      getUseReconBasedDecorrelationEstimate ()                const { return m_reconBasedDecorrelationEstimate;  }
+  Void      setUseReconBasedDecorrelationEstimate (const Bool value)      { m_reconBasedDecorrelationEstimate = value; }
+#endif
+
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
+#if RExt__NRCE2_RESIDUAL_ROTATION
+  Bool getUseResidualRotation                          ()            const { return m_useResidualRotation;  }
+  Void setUseResidualRotation                          (const Bool value)  { m_useResidualRotation = value; }
+#endif
+  Bool getUseSingleSignificanceMapContext              ()            const { return m_useSingleSignificanceMapContext;  }
+  Void setUseSingleSignificanceMapContext              (const Bool value)  { m_useSingleSignificanceMapContext = value; }
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool getUseGolombRiceGroupAdaptation                 ()            const { return m_useGolombRiceGroupAdaptation;  }
+  Void setUseGolombRiceGroupAdaptation                 (const Bool value)  { m_useGolombRiceGroupAdaptation = value; }
+#endif
+#if RExt__NRCE2_RESIDUAL_DPCM
+#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+  Bool getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
+  Void setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
+#else
+  Bool getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
+  Void setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
+#endif
+#endif
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
+  UInt getTransformSkipLog2MaxSize                     () const      { return m_transformSkipLog2MaxSize;     }
+  Void setTransformSkipLog2MaxSize                     ( UInt u )    { m_transformSkipLog2MaxSize  = u;       }
+  Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
+  Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }
+
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 
@@ -628,6 +720,8 @@ public:
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
+  Void  setNoDisplaySEITLayer(Int b)                     { m_noDisplaySEITLayer = b;    }
+  Int   getNoDisplaySEITLayer()                          { return m_noDisplaySEITLayer; }
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
   Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
@@ -666,8 +760,18 @@ public:
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
   Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+#else
+  Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
+  Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
+#endif
+#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
+  CostMode  getCostMode                     ( )            { return m_costMode; }
+  Void      setCostMode                     (CostMode m )  { m_costMode = m; }
+#endif
+
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }

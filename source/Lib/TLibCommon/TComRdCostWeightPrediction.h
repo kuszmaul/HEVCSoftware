@@ -70,14 +70,14 @@ protected:
     
   static inline Void  xSetWPscale(Int w0, Int w1, Int shift, Int offset, Int round);
 
-  static UInt xGetSSEw          ( DistParam* pcDtParam );
-  static UInt xGetSADw          ( DistParam* pcDtParam );
-  static UInt xGetHADs4w        ( DistParam* pcDtParam );
-  static UInt xGetHADs8w        ( DistParam* pcDtParam );
-  static UInt xGetHADsw         ( DistParam* pcDtParam );
-  static UInt xCalcHADs2x2w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static UInt xCalcHADs4x4w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static UInt xCalcHADs8x8w     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xGetSSEw          ( DistParam* pcDtParam );
+  static Distortion xGetSADw          ( DistParam* pcDtParam );
+  static Distortion xGetHADs4w        ( DistParam* pcDtParam );
+  static Distortion xGetHADs8w        ( DistParam* pcDtParam );
+  static Distortion xGetHADsw         ( DistParam* pcDtParam );
+  static Distortion xCalcHADs2x2w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xCalcHADs4x4w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xCalcHADs8x8w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   
 };// END CLASS DEFINITION TComRdCostWeightPrediction
 

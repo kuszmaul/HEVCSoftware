@@ -35,8 +35,8 @@
     \brief    context model 3D buffer class (header)
 */
 
-#ifndef _HM_CONTEXT_MODEL_3DBUFFER_H_
-#define _HM_CONTEXT_MODEL_3DBUFFER_H_
+#ifndef __CONTEXTMODEL3DBUFFER__
+#define __CONTEXTMODEL3DBUFFER__
 
 #include <stdio.h>
 #include <assert.h>

@@ -335,11 +335,10 @@ Void TComCUMvField::compress(Char* pePredMode, Int scale)
   for ( Int uiPartIdx = 0; uiPartIdx < m_uiNumPartition; uiPartIdx += N )
   {
     TComMv cMv(0,0); 
-    PredMode predMode = MODE_INTRA;
     Int iRefIdx = 0;
     
     cMv = m_pcMv[ uiPartIdx ];
-    predMode = static_cast<PredMode>( pePredMode[ uiPartIdx ] );
+    PredMode predMode = static_cast<PredMode>( pePredMode[ uiPartIdx ] );
     iRefIdx = m_piRefIdx[ uiPartIdx ];
     for ( Int i = 0; i < N; i++ )
     {
