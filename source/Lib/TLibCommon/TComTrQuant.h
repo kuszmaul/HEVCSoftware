@@ -196,17 +196,11 @@ public:
   Void destroyScalingList                   ();
   Void setErrScaleCoeff    ( UInt list, UInt size, Int qp );
   Double* getErrScaleCoeff              ( UInt list, UInt size, Int qp ) { return m_errScale             [size][list][qp]; };  //!< get Error Scale Coefficent
-#if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
   Double& getErrScaleCoeffNoScalingList ( UInt list, UInt size, Int qp ) { return m_errScaleNoScalingList[size][list][qp]; };  //!< get Error Scale Coefficent
-#endif
   Int* getQuantCoeff                    ( UInt list, Int qp, UInt size ) { return m_quantCoef            [size][list][qp]; };  //!< get Quant Coefficent
   Int* getDequantCoeff                  ( UInt list, Int qp, UInt size ) { return m_dequantCoef          [size][list][qp]; };  //!< get DeQuant Coefficent
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
-#if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
   Bool getUseScalingList   (const UInt width, const UInt height, const Bool isTransformSkip){ return m_scalingListEnabledFlag && (!isTransformSkip || ((width == 4) && (height == 4))); };
-#else
-  Bool getUseScalingList   (){ return m_scalingListEnabledFlag; };
-#endif
   Void setFlatScalingList  (const ChromaFormat format);
   Void xsetFlatScalingList ( UInt list, UInt size, Int qp, const ChromaFormat format);
   Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
@@ -256,9 +250,7 @@ protected:
   Int      *m_quantCoef            [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
   Int      *m_dequantCoef          [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of dequantization matrix coefficient 4x4
   Double   *m_errScale             [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
-#if RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION
   Double    m_errScaleNoScalingList[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
-#endif
 
 private:
   // forward Transform
