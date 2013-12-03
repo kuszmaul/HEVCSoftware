@@ -48,7 +48,7 @@ private:
   // member variables
   Bool            m_weighted_pred_flag;
   Bool            m_weighted_bipred_flag;
-  wpScalingParam  m_wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT];
+  WPScalingParam  m_wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT];
 
   // member functions
 

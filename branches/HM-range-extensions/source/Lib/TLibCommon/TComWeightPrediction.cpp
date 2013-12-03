@@ -63,15 +63,15 @@ TComWeightPrediction::TComWeightPrediction()
  * \param iPartUnitIdx
  * \param iWidth
  * \param iHeight
- * \param wpScalingParam *wp0
- * \param wpScalingParam *wp1
+ * \param WPScalingParam *wp0
+ * \param WPScalingParam *wp1
  * \param TComYuv* rpcYuvDst
  * \returns Void
  */
 Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1,
                                         const UInt iPartUnitIdx,
                                         const UInt uiWidth, const UInt uiHeight,
-                                        const wpScalingParam *wp0, const wpScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma )
+                                        const WPScalingParam *wp0, const WPScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma )
 {
   
   const Bool enableRounding[MAX_NUM_COMPONENT]={ bRoundLuma, true, true };
@@ -129,11 +129,11 @@ Void TComWeightPrediction::addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv*
  * \param iPartUnitIdx
  * \param iWidth
  * \param iHeight
- * \param wpScalingParam *wp0
+ * \param WPScalingParam *wp0
  * \param TComYuv* rpcYuvDst
  * \returns Void
  */
-Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const wpScalingParam *wp0, TComYuv* rpcYuvDst )
+Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const WPScalingParam *wp0, TComYuv* rpcYuvDst )
 {
   const UInt numValidComponent = pcYuvSrc0->getNumberValidComponents();
 
@@ -184,12 +184,12 @@ Void TComWeightPrediction::addWeightUni( const TComYuv* pcYuvSrc0, const UInt iP
  * \param TComDataCU* pcCU
  * \param iRefIdx0
  * \param iRefIdx1
- * \param wpScalingParam *&wp0
- * \param wpScalingParam *&wp1
+ * \param WPScalingParam *&wp0
+ * \param WPScalingParam *&wp1
  * \param ibdi
  * \returns Void
  */
-Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const  Int iRefIdx1, wpScalingParam *&wp0, wpScalingParam *&wp1)
+Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const  Int iRefIdx1, WPScalingParam *&wp0, WPScalingParam *&wp1)
 {
   assert(iRefIdx0 >= 0 || iRefIdx1 >= 0);
   
@@ -248,7 +248,7 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
   }
   else
   {  // Unidir
-    wpScalingParam *pwp = (iRefIdx0>=0) ? wp0 : wp1 ;
+    WPScalingParam *pwp = (iRefIdx0>=0) ? wp0 : wp1 ;
 
     for ( Int yuv=0 ; yuv<numValidComponent ; yuv++ )
     {
@@ -277,7 +277,7 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
 Void TComWeightPrediction::xWeightedPredictionBi( TComDataCU* pcCU, const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const Int iRefIdx0, const Int iRefIdx1,
     const UInt uiPartIdx, const Int iWidth, const Int iHeight, TComYuv* rpcYuvDst )
 {
-  wpScalingParam  *pwp0, *pwp1;
+  WPScalingParam  *pwp0, *pwp1;
   TComPPS         *pps = pcCU->getSlice()->getPPS();
 
   assert(pps->getWPBiPred());
@@ -317,7 +317,7 @@ Void TComWeightPrediction::xWeightedPredictionBi( TComDataCU* pcCU, const TComYu
 Void TComWeightPrediction::xWeightedPredictionUni( TComDataCU* pcCU, const TComYuv* pcYuvSrc, const UInt uiPartAddr, const Int iWidth, const Int iHeight,
                                                    const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iRefIdx_)
 { 
-  wpScalingParam  *pwp, *pwpTmp;
+  WPScalingParam  *pwp, *pwpTmp;
 
   Int iRefIdx=iRefIdx_;
   if ( iRefIdx < 0 )

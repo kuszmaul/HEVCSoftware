@@ -711,13 +711,13 @@ enum CostMode
   COST_MIXED_LOSSLESS_LOSSY_CODING = 3
 };
 
-typedef enum
+enum SPSExtensionFlagIndex
 {
-  SPS_EXT__REXT=0,
-// SPS_EXT__MVHEVC=1,
-// SPS_EXT__SHVC=2,
-  NUM_SPS_EXTENSION_FLAGS=8
-} SPS_EXTENSION_FLAG_TYPE;
+  SPS_EXT__REXT           = 0,
+//SPS_EXT__MVHEVC         = 1, //for use in future versions
+//SPS_EXT__SHVC           = 2, //for use in future versions
+  NUM_SPS_EXTENSION_FLAGS = 8
+};
 
 // ====================================================================================================================
 // Type definition

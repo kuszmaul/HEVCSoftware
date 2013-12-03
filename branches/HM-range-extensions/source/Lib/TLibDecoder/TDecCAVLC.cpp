@@ -705,7 +705,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     {
       if (sps_extension_flags[i])
       {
-        switch (SPS_EXTENSION_FLAG_TYPE(i))
+        switch (SPSExtensionFlagIndex(i))
         {
           case SPS_EXT__REXT:
             assert(!bSkipTrailingExtensionBits);
@@ -1695,7 +1695,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
 */
 Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
 {
-        wpScalingParam *wp;
+        WPScalingParam *wp;
         TComSPS        *sps          = pcSlice->getSPS();
   const ChromaFormat    chFmt        = sps->getChromaFormatIdc();
   const Int             numValidComp = Int(getNumberValidComponents(chFmt));

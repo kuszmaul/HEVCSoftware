@@ -55,7 +55,7 @@ WeightPredAnalysis::WeightPredAnalysis()
     {
       for ( Int comp=0 ; comp<MAX_NUM_COMPONENT ;comp++ )
       {
-        wpScalingParam  *pwp   = &(m_wp[lst][iRefIdx][comp]);
+        WPScalingParam  *pwp   = &(m_wp[lst][iRefIdx][comp]);
         pwp->bPresentFlag      = false;
         pwp->uiLog2WeightDenom = 0;
         pwp->iWeight           = 1;
@@ -75,7 +75,7 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
   //===== calculate AC/DC value =====
   TComPicYuv*   pPic = slice->getPic()->getPicYuvOrg();
 
-  wpACDCParam weightACDCParam[MAX_NUM_COMPONENT];
+  WPACDCParam weightACDCParam[MAX_NUM_COMPONENT];
 
   for(Int componentIndex = 0; componentIndex < pPic->getNumberValidComponents(); componentIndex++)
   {
@@ -156,7 +156,7 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
     {
       for(Int componentIndex = 0; componentIndex < pPic->getNumberValidComponents(); componentIndex++)
       {
-        wpScalingParam  *pwp = &(m_wp[lst][iRefIdx][componentIndex]);
+        WPScalingParam  *pwp = &(m_wp[lst][iRefIdx][componentIndex]);
         iPresentCnt += (Int)pwp->bPresentFlag;
       }
     }
@@ -173,7 +173,7 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
       {
         for(Int componentIndex = 0; componentIndex < pPic->getNumberValidComponents(); componentIndex++)
         {
-          wpScalingParam  *pwp = &(m_wp[lst][iRefIdx][componentIndex]);
+          WPScalingParam  *pwp = &(m_wp[lst][iRefIdx][componentIndex]);
 
           pwp->bPresentFlag      = false;
           pwp->uiLog2WeightDenom = 0;
@@ -234,7 +234,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
 
     for ( Int refIdxTemp = 0; refIdxTemp < slice->getNumRefIdx(eRefPicList); refIdxTemp++ )
     {
-      wpACDCParam *currWeightACDCParam, *refWeightACDCParam;
+      WPACDCParam *currWeightACDCParam, *refWeightACDCParam;
       slice->getWpAcDcParam(currWeightACDCParam);
       slice->getRefPic(eRefPicList, refIdxTemp)->getSlice(0)->getWpAcDcParam(refWeightACDCParam);
 

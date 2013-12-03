@@ -78,7 +78,7 @@ Distortion TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
 
   const ComponentID compIdx = pcDtParam->compIdx;
   assert(compIdx<MAX_NUM_COMPONENT);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
+  WPScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
   Int   w0      = wpCur->w,
         offset  = wpCur->offset,
         shift   = wpCur->shift,
@@ -124,7 +124,7 @@ Distortion TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
 
   const ComponentID compIdx = pcDtParam->compIdx;
   assert(compIdx<MAX_NUM_COMPONENT);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
+  WPScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
   Int   w0      = wpCur->w,
         offset  = wpCur->offset,
         shift   = wpCur->shift,
@@ -508,7 +508,7 @@ Distortion TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
 
   const ComponentID compIdx = pcDtParam->compIdx;
   assert(compIdx<MAX_NUM_COMPONENT);
-  wpScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
+  WPScalingParam  *wpCur    = &(pcDtParam->wpCur[compIdx]);
 
   xSetWPscale(wpCur->w, 0, wpCur->shift, wpCur->offset, wpCur->round);
 

@@ -80,7 +80,7 @@ public:
   Int   bitDepth;
 
   Bool            bApplyWeight;     // whether weithed prediction is used or not
-  wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
+  WPScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
   ComponentID     compIdx;
 
   // (vertical) subsampling shift (for reducing complexity)
