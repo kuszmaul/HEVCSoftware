@@ -110,7 +110,7 @@
 
 #define SBH_THRESHOLD                                     4  ///< I0156: value of the fixed SBH controlling threshold
 
-//NOTE: RExt - See RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION for a command-line controlled alternative mechanism
+//NOTE: RExt - There is a command-line-controlled alternative mechanism in RExt - this macro is kept (for now) for backwards-compatibility reasons
 #define SEQUENCE_LEVEL_LOSSLESS                           0  ///< H0530: used only for sequence or frame-level lossless coding
 
 #define DISABLING_CLIP_FOR_BIPREDME                       1  ///< Ticket #175
@@ -242,7 +242,6 @@
 
 #define RExt__INPUT_MSB_EXTENSION                                              1 ///< 0 = the MSB of each sample as it is read from the source is always the MSB of the sample's internal representation, 1 (default) = allow a number (configured by command line) of additional zero MSBs to be added to each sample as it is read in
 
-#define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   1 ///< 0 = disable feature, 1 (default) = have command line control to optionally cost function for lossless / mixed lossless evaluation.
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
@@ -288,10 +287,8 @@
 #define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
 #define INTRABC_FASTME                                                         1 ///< Fast motion estimation
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME                4 ///< QP' to use for mixed_lossy_lossless coding.
-#endif
 
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
 #define MAXIMUM_GOLOMB_RICE_PARAMETER                                          7
@@ -709,7 +706,6 @@ namespace Level
   };
 }
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
 enum CostMode
 {
   COST_STANDARD_LOSSY              = 0,
@@ -717,8 +713,6 @@ enum CostMode
   COST_LOSSLESS_CODING             = 2,
   COST_MIXED_LOSSLESS_LOSSY_CODING = 3
 };
-#endif
-
 
 typedef enum
 {

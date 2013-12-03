@@ -68,17 +68,9 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       break;
     case DF_SAD:
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
 #else
-      dLambda = m_dLambdaMotionSAD;
-#endif
-#else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#else
-      dLambda = (Double)m_uiLambdaMotionSAD;
-#endif
 #endif
       break;
     case DF_DEFAULT:
@@ -98,7 +90,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
 #if SEQUENCE_LEVEL_LOSSLESS
     dRdCost = (Double)(uiBits);
 #else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
     if (m_costMode != COST_STANDARD_LOSSY)
     {
       dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -107,16 +98,12 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
     {
       dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
     }
-#else
-    dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
-#endif
 #endif
   }
   else
   {
     if (eDFunc == DF_SAD)
     {
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -126,17 +113,12 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
         dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
         dRdCost = (Double)(Distortion)floor(dRdCost);
       }
-#else
-      dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
-      dRdCost = (Double)(Distortion)floor(dRdCost);
-#endif
     }
     else
     {
 #if SEQUENCE_LEVEL_LOSSLESS
       dRdCost = (Double)(uiBits);
 #else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -146,10 +128,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
         dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
         dRdCost = (Double)(Distortion)floor(dRdCost);
       }
-#else
-      dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
-      dRdCost = (Double)(Distortion)floor(dRdCost);
-#endif
 #endif
     }
   }
@@ -169,17 +147,9 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       break;
     case DF_SAD:
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
 #else
-      dLambda = m_dLambdaMotionSAD;
-#endif
-#else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#else
-      dLambda = (Double)m_uiLambdaMotionSAD;
-#endif
 #endif
       break;
     case DF_DEFAULT:
@@ -199,7 +169,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
 #if SEQUENCE_LEVEL_LOSSLESS
     dRdCost = (Double)(uiBits);
 #else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
     if (m_costMode != COST_STANDARD_LOSSY)
     {
       dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -208,16 +177,12 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     {
       dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
     }
-#else
-    dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
-#endif
 #endif
   }
   else
   {
     if (eDFunc == DF_SAD)
     {
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -227,17 +192,12 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
         dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
         dRdCost = (Double)(UInt64)floor(dRdCost);
       }
-#else
-      dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
-      dRdCost = (Double)(UInt64)floor(dRdCost);
-#endif
     }
     else
     {
 #if SEQUENCE_LEVEL_LOSSLESS
       dRdCost = (Double)(uiBits);
 #else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -247,10 +207,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
         dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
         dRdCost = (Double)(UInt64)floor(dRdCost);
       }
-#else
-      dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
-      dRdCost = (Double)(UInt64)floor(dRdCost);
-#endif
 #endif
     }
   }
@@ -263,7 +219,6 @@ Void TComRdCost::setLambda( Double dLambda )
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
 #if FULL_NBIT
@@ -274,11 +229,6 @@ Void TComRdCost::setLambda( Double dLambda )
   m_dLambdaMotionSAD[1] = 65536.0 * sqrt(dLambda);
   m_dLambdaMotionSSE[1] = 65536.0 * dLambda;
 #else
-  m_dLambdaMotionSAD  = 65536.0 * m_sqrtLambda;
-  m_dLambdaMotionSSE  = 65536.0 * m_dLambda;
-#endif
-#else
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_uiLambdaMotionSAD[0] = (UInt)floor(65536.0 * m_sqrtLambda);
   m_uiLambdaMotionSSE[0] = (UInt)floor(65536.0 * m_dLambda   );
 #if FULL_NBIT
@@ -288,10 +238,6 @@ Void TComRdCost::setLambda( Double dLambda )
 #endif
   m_uiLambdaMotionSAD[1] = (UInt)floor(65536.0 * sqrt(dLambda));
   m_uiLambdaMotionSSE[1] = (UInt)floor(65536.0 * dLambda   );
-#else
-  m_uiLambdaMotionSAD = (UInt)floor(65536.0 * m_sqrtLambda);
-  m_uiLambdaMotionSSE = (UInt)floor(65536.0 * m_dLambda   );
-#endif
 #endif
 }
 
@@ -342,24 +288,22 @@ Void TComRdCost::init()
   m_afpDistortFunc[DF_HADS64 ] = TComRdCost::xGetHADs;
   m_afpDistortFunc[DF_HADS16N] = TComRdCost::xGetHADs;
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
-  m_costMode                = COST_STANDARD_LOSSY;
-#endif
+  m_costMode                   = COST_STANDARD_LOSSY;
   
 #if !FIX203
-  m_puiComponentCostOriginP = NULL;
-  m_puiComponentCost        = NULL;
-  m_puiVerCost              = NULL;
-  m_puiHorCost              = NULL;
+  m_puiComponentCostOriginP    = NULL;
+  m_puiComponentCost           = NULL;
+  m_puiVerCost                 = NULL;
+  m_puiHorCost                 = NULL;
 #endif
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
-  m_dCost                   = 0;
+  m_dCost                      = 0;
 #else
-  m_uiCost                  = 0;
+  m_uiCost                     = 0;
 #endif
-  m_iCostScale              = 0;
+  m_iCostScale                 = 0;
 #if !FIX203
-  m_iSearchLimit            = 0xdeaddead;
+  m_iSearchLimit               = 0xdeaddead;
 #endif
 }
 

@@ -306,11 +306,9 @@ protected:
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 #endif
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   CostMode  m_costMode;                                       ///< The cost function to use, primarily when considering lossless coding.
-#endif
 
-  TComVPS                    m_cVPS;
+  TComVPS   m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
@@ -746,10 +744,8 @@ public:
   Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
   Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
 #endif
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   CostMode  getCostMode                     ( )            { return m_costMode; }
   Void      setCostMode                     (CostMode m )  { m_costMode = m; }
-#endif
 
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
