@@ -91,9 +91,7 @@ TEncSbac::TEncSbac()
 , m_explicitRdpcmFlagSCModel           ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel            ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel            ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 , m_cCrossComponentDecorrelationSCModel( 1,             1,                      NUM_CROSS_COMPONENT_DECORRELATION_CTX, m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -147,9 +145,7 @@ Void TEncSbac::resetEntropy           ()
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
-#endif
 
   // new structure
   m_uiLastQp = iQp;
@@ -208,9 +204,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_explicitRdpcmFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
       curCost += m_explicitRdpcmDirSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
       curCost += m_cIntraBCPredFlagSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
       curCost += m_cCrossComponentDecorrelationSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
-#endif
 
       if (curCost < bestCost)
       {
@@ -263,9 +257,7 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG );
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR );
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
-#endif
 
   m_pcBinIf->start();
 }
@@ -875,7 +867,6 @@ Void TEncSbac::codeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList
   return;
 }
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TEncSbac::codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID )
 {
   TComDataCU *pcCU = rTu.getCU();
@@ -911,7 +902,6 @@ Void TEncSbac::codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID 
     DTRACE_CABAC_T( "\n" )
   }
 }
-#endif
 
 Void TEncSbac::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

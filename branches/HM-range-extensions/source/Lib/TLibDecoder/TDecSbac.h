@@ -132,10 +132,8 @@ public:
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void parseCrossComponentDecorrelation ( class TComTU &rTu, ComponentID compID );
-#endif
-  
+
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
@@ -193,9 +191,7 @@ private:
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   ContextModel3DBuffer m_cCrossComponentDecorrelationSCModel;
-#endif
 };
 
 //! \}
