@@ -180,7 +180,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY,                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0067_TRANSFORM_SKIP_SCALING_LIST_RESTRICTION,            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR,                         settingNameWidth, settingValueWidth);
