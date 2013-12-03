@@ -533,10 +533,6 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
-#if !RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
-  UInt          getCtxIntraBCFlag               ( UInt   uiAbsPartIdx                                 );
-#endif
-
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];        }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU]; }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                              }

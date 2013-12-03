@@ -454,12 +454,7 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 {  
   UInt uiSymbol = 0;
 
-#if RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR));
-#else
-  UInt uiCtxIntraBC = pcCU->getCtxIntraBCFlag( uiAbsPartIdx ) ;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, uiCtxIntraBC ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR)); 
-#endif
   
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tIntraBCFlag" );
