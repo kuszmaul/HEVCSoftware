@@ -1556,7 +1556,7 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   return true;
 }
 
-Void TEncCavlc::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
+Void TEncCavlc::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
  {
    assert(0);
  }

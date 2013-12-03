@@ -5597,17 +5597,17 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
   // code full block
   Double     dSingleCost = MAX_DOUBLE;
 #if !(RExt__O0202_CROSS_COMPONENT_DECORRELATION && !RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH)
-  UInt       uiSingleBitsComp      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  UInt       uiSingleBitsComp            [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
 #endif
-  UInt       uiSingleBits                                                                                                  = 0;
-  Distortion uiSingleDistComp      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
-  Distortion uiSingleDist                                                                                                  = 0;
-  TCoeff     uiAbsSum              [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
-  UInt       uiBestTransformMode   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
-  //  Stores the best inter RDPCM mode for a TU encoded without split
-  UInt bestInterRdpcmModeUnSplit   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{3,3}, {3,3}, {3,3}};
+  UInt       uiSingleBits                                                                                                        = 0;
+  Distortion uiSingleDistComp            [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  Distortion uiSingleDist                                                                                                        = 0;
+  TCoeff     uiAbsSum                    [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  UInt       uiBestTransformMode         [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  //  Stores the best explicit RDPCM mode for a TU encoded without split
+  UInt       bestExplicitRdpcmModeUnSplit[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{3,3}, {3,3}, {3,3}};
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-  Char       bestDecorrelationAlpha[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  Char       bestDecorrelationAlpha      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
 #endif
 
   if( m_bUseSBACRD )
@@ -5916,7 +5916,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               // evaluate
               if ((currCompCost < minCost[compID][subTUIndex]) || ((transformSkipModeId == 1) && (currCompCost == minCost[compID][subTUIndex])))
               {
-                bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
+                bestExplicitRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getExplicitRdpcmMode(compID, subTUAbsPartIdx);
 
                 if(isFirstMode)
                 {
@@ -5991,10 +5991,10 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             }
           }
 
-          pcCU->setInterRdpcmModePartRange                  (   bestInterRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
-          pcCU->setTransformSkipPartRange                   (   uiBestTransformMode      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
-          pcCU->setCbfPartRange                             ((((uiAbsSum                 [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
-          pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha   [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setExplicitRdpcmModePartRange               (   bestExplicitRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
+          pcCU->setTransformSkipPartRange                   (   uiBestTransformMode         [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCbfPartRange                             ((((uiAbsSum                    [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
 #else //if !(RExt__O0202_CROSS_COMPONENT_DECORRELATION && !RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH)
 
           pcCU->setTransformSkipPartRange                   (0, compID, subTUAbsPartIdx, partIdxesPerSubTU);
@@ -6034,7 +6034,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
                                      uiAbsSum[compID][subTUIndex], cQP
                                      );
 
-          bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
+          bestExplicitRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getExplicitRdpcmMode(compID, subTUAbsPartIdx);
 
           m_pcEntropyCoder->encodeQtCbf( TUIterator, compID, true );
 
@@ -6437,7 +6437,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               // evaluate
               if (((currAbsSum > 0) || checkDecorrelation) && ((currCompCost < minCost[compID][subTUIndex]) || ((transformSkipModeId == 1) && (currCompCost == minCost[compID][subTUIndex]))))
               {
-                bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
+                bestExplicitRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getExplicitRdpcmMode(compID, subTUAbsPartIdx);
 
                 DEBUG_STRING_SWAP(sSingleStringComp[compID], sSingleStringTest)
 
@@ -6489,10 +6489,10 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             }
           }
 
-          pcCU->setInterRdpcmModePartRange                  (   bestInterRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
-          pcCU->setTransformSkipPartRange                   (   uiBestTransformMode      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
-          pcCU->setCbfPartRange                             ((((uiAbsSum                 [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
-          pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha   [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setExplicitRdpcmModePartRange               (   bestExplicitRdpcmModeUnSplit[compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU);
+          pcCU->setTransformSkipPartRange                   (   uiBestTransformMode         [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCbfPartRange                             ((((uiAbsSum                    [compID][subTUIndex] > 0) ? 1 : 0) << uiTrMode), compID, subTUAbsPartIdx, partIdxesPerSubTU );
+          pcCU->setCrossComponentDecorrelationAlphaPartRange(   bestDecorrelationAlpha      [compID][subTUIndex],                            compID, subTUAbsPartIdx, partIdxesPerSubTU );
 #else
 
           const UInt uiNumSamplesComp     = tuCompRect.width * tuCompRect.height;
@@ -6589,7 +6589,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             uiSingleDistComp[compID][subTUIndex] = uiNonzeroDistComp;
             uiAbsSum[compID][subTUIndex] = uiAbsSumTransformSkipComp;
             uiBestTransformMode[compID][subTUIndex] = 1;
-            bestInterRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getInterRdpcmMode(compID, subTUAbsPartIdx);
+            bestExplicitRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getExplicitRdpcmMode(compID, subTUAbsPartIdx);
 #ifdef DEBUG_STRING
             if ((DebugOptionList::DebugString_InterCodingInvTran.getInt()!=0))
               sSingleStringComp[compID].swap(sSingleStringTS);
@@ -6803,7 +6803,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
             pcCU->setCrossComponentDecorrelationAlphaPartRange(bestDecorrelationAlpha[compID][subTUIndex], compID, uisubTUPartIdx, partIdxesPerSubTU);
 #endif
             pcCU->setTransformSkipPartRange(uiBestTransformMode[compID][subTUIndex], compID, uisubTUPartIdx, partIdxesPerSubTU);
-            pcCU->setInterRdpcmModePartRange(bestInterRdpcmModeUnSplit[compID][subTUIndex], compID, uisubTUPartIdx, partIdxesPerSubTU);            
+            pcCU->setExplicitRdpcmModePartRange(bestExplicitRdpcmModeUnSplit[compID][subTUIndex], compID, uisubTUPartIdx, partIdxesPerSubTU);            
           }
         }
       }

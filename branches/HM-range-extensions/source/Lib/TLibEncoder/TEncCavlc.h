@@ -149,7 +149,7 @@ public:
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
-  Void codeInterRdpcmMode( TComTU &rTu, const ComponentID compID );
+  Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
 
   Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );

@@ -117,10 +117,10 @@ public:
   Void updateContextTables  ( SliceType /*eSliceType*/, Int /*iQp*/ ) { return; }
 
   Void xParsePredWeightTable ( TComSlice* pcSlice );
-  Void  parseScalingList               ( TComScalingList* scalingList );
+  Void  parseScalingList     ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
 
-  Void  parseInterRdpcmMode( TComTU &rTu, ComponentID compID );
+  Void  parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID );
 
 protected:
   Bool  xMoreRbspData();

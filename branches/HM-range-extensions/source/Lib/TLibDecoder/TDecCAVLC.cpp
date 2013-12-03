@@ -1965,7 +1965,7 @@ Bool TDecCavlc::xMoreRbspData()
   return (cnt>0);
 }
 
-Void TDecCavlc::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
+Void TDecCavlc::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
 {
   assert(0);
 }
