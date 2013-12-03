@@ -549,14 +549,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   Bool sps_extension_present_flag=false;
   Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
 
-  sps_extension_flags[SPS_EXT__REXT]= ( false // Remove 'false' once adoption of macro code.
+  sps_extension_flags[SPS_EXT__REXT] = (
 #else
   //NOTE: RExt - this will be conditional on the selected profile
-  if ( false // Remove 'false' once adoption of macro code.
+  if (
 #endif
-#if RExt__NRCE2_RESIDUAL_ROTATION
-       || pcSPS->getUseResidualRotation()
-#endif
+          pcSPS->getUseResidualRotation()
        || pcSPS->getUseSingleSignificanceMapContext()
        || pcSPS->getUseIntraBlockCopy()
        || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)
@@ -601,9 +599,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
             WRITE_FLAG( 1, "sps_extension1_flag" );
 #endif
-#if RExt__NRCE2_RESIDUAL_ROTATION
             WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
-#endif
             WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );

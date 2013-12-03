@@ -193,9 +193,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
   m_cTEncTop.setUseTransformSkip             ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
-#if RExt__NRCE2_RESIDUAL_ROTATION
   m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );
-#endif
   m_cTEncTop.setUseSingleSignificanceMapContext( m_useSingleSignificanceMapContext   );
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   m_cTEncTop.setUseGolombRiceGroupAdaptation ( m_useGolombRiceGroupAdaptation );

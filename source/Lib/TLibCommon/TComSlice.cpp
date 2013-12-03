@@ -1434,9 +1434,7 @@ TComSPS::TComSPS()
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
 , m_useHighPrecisionPredictionWeighting(false)
 #endif
-#if RExt__NRCE2_RESIDUAL_ROTATION
 , m_useResidualRotation       (false)
-#endif
 , m_useSingleSignificanceMapContext(false)
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
 , m_useGolombRiceGroupAdaptation(false)

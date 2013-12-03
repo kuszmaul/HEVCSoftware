@@ -107,9 +107,7 @@ protected:
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)
-#if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      m_useResidualRotation;                            ///< control flag for transform-skip/transquant-bypass residual rotation
-#endif
   Bool      m_useSingleSignificanceMapContext;                ///< control flag for transform-skip/transquant-bypass single significance map context
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];///< control flags for residual DPCM
   Bool      m_enableAMP;

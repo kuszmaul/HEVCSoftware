@@ -1350,26 +1350,21 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     //transform and quantise
     if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
     {
-#if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
       const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
 #else
       const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
 #endif
-      const UInt lastColumn     = uiWidth  - 1;
-      const UInt lastRow        = uiHeight - 1;
-#endif
-      for (UInt k = 0; k<uiHeight; k++)
+      const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
+
+      for (UInt y = 0, coefficientIndex = 0; y<uiHeight; y++)
       {
-        for (UInt j = 0; j<uiWidth; j++)
+        for (UInt x = 0; x<uiWidth; x++, coefficientIndex++)
         {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-          const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-          rpcCoeff[coefficientIndex] = pcResidual[(k * uiStride) + j];
-#else
-          rpcCoeff[k*uiWidth+j]= pcResidual[k*uiStride+j];
-#endif
-          uiAbsSum += TCoeff(abs(pcResidual[k*uiStride+j]));
+          const Pel currentSample = pcResidual[(y * uiStride) + x];
+
+          rpcCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex] = currentSample;
+          uiAbsSum += TCoeff(abs(currentSample));
         }
       }
     }
@@ -1477,26 +1472,18 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
-#if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
     const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
 #else
     const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
 #endif
-    const UInt lastColumn     = uiWidth  - 1;
-    const UInt lastRow        = uiHeight - 1;
-#endif
+    const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 
-    for (UInt k = 0; k<uiHeight; k++)
+    for (UInt y = 0, coefficientIndex = 0; y<uiHeight; y++)
     {
-      for (UInt j = 0; j<uiWidth; j++)
+      for (UInt x = 0; x<uiWidth; x++, coefficientIndex++)
       {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - k) * uiWidth) + (lastColumn - j)) : ((k * uiWidth) + j));
-        rpcResidual[(k * uiStride) + j] = Pel(pcCoeff[coefficientIndex]);
-#else
-        rpcResidual[k*uiStride+j] = Pel(pcCoeff[k*uiWidth+j]);
-#endif
+        rpcResidual[(y * uiStride) + x] = Pel(pcCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex]);
       }
     }
   }
@@ -1673,14 +1660,12 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   const Bool bLossless      = pcCU->getCUTransquantBypass( uiAbsPartIdx );
   const UInt uiWidth        = rTu.getRect(compID).width;
   const UInt uiHeight       = rTu.getRect(compID).height;
-#if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
 #else
   const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
 #endif
   const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
-#endif
 
   Int reconstructedResi[MAX_TU_SIZE * MAX_TU_SIZE];
 
@@ -1699,13 +1684,8 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   {
     for ( minorAxis = 0; minorAxis < minorAxisLimit; minorAxis++ )
     {
-      const UInt sampleIndex = (uiY * uiWidth) + uiX;
-#if RExt__NRCE2_RESIDUAL_ROTATION
-      const UInt coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
-#else
-      const UInt coefficientIndex = sampleIndex;
-#endif
-
+      const UInt   sampleIndex      = (uiY * uiWidth) + uiX;
+      const UInt   coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
       const TCoeff currentSample    = pcResidual[(uiY * uiStride) + uiX];
       const TCoeff referenceSample  = ((mode != RDPCM_OFF) && (majorAxis > 0)) ? reconstructedResi[sampleIndex - referenceSampleOffset] : 0;
 
@@ -1926,8 +1906,8 @@ Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pe
 Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component )
 {
   const TComRectangle &rect = rTu.getRect(component);
-  const Int width = rect.width;
-  const Int height = rect.height;
+  const Int width           = rect.width;
+  const Int height          = rect.height;
 
   Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component));
   if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
@@ -1935,28 +1915,20 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-#if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
 #else
   const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
 #endif
-  const UInt lastColumn     = width  - 1;
-  const UInt lastRow        = height - 1;
-#endif
+  const UInt uiSizeMinus1   = (width * height) - 1;
 
   if (iTransformShift >= 0)
   {
-    for (Int y = 0; y < height; y++)
+    for (UInt y = 0, coefficientIndex = 0; y < height; y++)
     {
-      for(Int x = 0; x < width; x++)
+      for (UInt x = 0; x < width; x++, coefficientIndex++)
       {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
-        psCoeff[coefficientIndex] = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
-#else
-        psCoeff[(y * width) + x]  = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
-#endif
+        psCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex] = TCoeff(piBlkResi[(y * uiStride) + x]) << iTransformShift;
       }
     }
   }
@@ -1965,16 +1937,11 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
     iTransformShift = -iTransformShift;
     const TCoeff offset = 1 << (iTransformShift - 1);
 
-    for (Int y = 0; y < height; y++)
+    for (UInt y = 0, coefficientIndex = 0; y < height; y++)
     {
-      for(Int x = 0; x < width; x++)
+      for (UInt x = 0; x < width; x++, coefficientIndex++)
       {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
-        psCoeff[coefficientIndex] = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
-#else
-        psCoeff[(y * width) + x]  = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
-#endif
+        psCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex] = (TCoeff(piBlkResi[(y * uiStride) + x]) + offset) >> iTransformShift;
       }
     }
   }
@@ -1989,8 +1956,8 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
 Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component )
 {
   const TComRectangle &rect = rTu.getRect(component);
-  const Int width = rect.width;
-  const Int height = rect.height;
+  const Int width           = rect.width;
+  const Int height          = rect.height;
 
   Int iTransformShift = getTransformShift(toChannelType(component), rTu.GetEquivalentLog2TrSize(component));
   if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
@@ -1998,30 +1965,22 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-#if RExt__NRCE2_RESIDUAL_ROTATION
 #if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
 #else
   const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
 #endif
-  const UInt lastColumn     = width  - 1;
-  const UInt lastRow        = height - 1;
-#endif
+  const UInt uiSizeMinus1   = (width * height) - 1;
 
   if (iTransformShift >= 0)
   {
     const TCoeff offset = iTransformShift==0 ? 0 : (1 << (iTransformShift - 1));
 
-    for (Int y = 0; y < height; y++)
+    for (UInt y = 0, coefficientIndex = 0; y < height; y++)
     {
-      for(Int x = 0; x < width; x++)
+      for (UInt x = 0; x < width; x++, coefficientIndex++)
       {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
-        pResidual[(y * uiStride) + x] =  Pel((plCoef[coefficientIndex] + offset) >> iTransformShift);
-#else
-        pResidual[(y * uiStride) + x] =  Pel((plCoef[(y * width) + x]  + offset) >> iTransformShift);
-#endif
+        pResidual[(y * uiStride) + x] =  Pel((plCoef[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex] + offset) >> iTransformShift);
       }
     }
   }
@@ -2029,16 +1988,11 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
   {
     iTransformShift = -iTransformShift;
 
-    for (Int y = 0; y < height; y++)
+    for (UInt y = 0, coefficientIndex = 0; y < height; y++)
     {
-      for(Int x = 0; x < width; x++)
+      for (UInt x = 0; x < width; x++, coefficientIndex++)
       {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-        const UInt coefficientIndex = (rotateResidual ? (((lastRow - y) * width) + (lastColumn - x)) : ((y * width) + x));
-        pResidual[(y * uiStride) + x] = Pel(plCoef[coefficientIndex] << iTransformShift);
-#else
-        pResidual[(y * uiStride) + x] = Pel(plCoef[(y * width) + x]  << iTransformShift);
-#endif
+        pResidual[(y * uiStride) + x] = Pel(plCoef[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex] << iTransformShift);
       }
     }
   }
