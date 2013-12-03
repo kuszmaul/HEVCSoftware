@@ -63,9 +63,9 @@ inline Double xRoundIbdi(Int bitDepth, Double x)
 
 TEncSampleAdaptiveOffset::TEncSampleAdaptiveOffset()
 {
-  m_pppcRDSbacCoder = NULL;           
+  m_pppcRDSbacCoder = NULL;
   m_pcRDGoOnSbacCoder = NULL;
-  m_pppcBinCoderCABAC = NULL;    
+  m_pppcBinCoderCABAC = NULL;
   m_statData = NULL;
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
   m_preDBFstatData = NULL;
@@ -192,7 +192,7 @@ Void TEncSampleAdaptiveOffset::createEncData()
         }
       }
     }
-#endif    
+#endif
   }
 
 }
@@ -246,7 +246,7 @@ Void TEncSampleAdaptiveOffset::destroyEncData()
 #endif
 }
 
-Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice) 
+Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice)
 {
   m_pcRDGoOnSbacCoder = pcRDGoOnSbacCoder;
   m_pcRDGoOnSbacCoder->setSlice(pcSlice);
@@ -280,10 +280,10 @@ Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, con
     addPreDBFStatistics(m_statData);
   }
 #endif
-  //slice on/off 
-  decidePicParams(sliceEnabled, pPic->getSlice(0)->getDepth()); 
+  //slice on/off
+  decidePicParams(sliceEnabled, pPic->getSlice(0)->getDepth());
 
-  //block on/off 
+  //block on/off
   SAOBlkParam* reconParams = new SAOBlkParam[m_numCTUsPic]; //temporary parameter buffer for storing reconstructed SAO parameters
   decideBlkParams(pPic, sliceEnabled, m_statData, srcYuv, resYuv, reconParams, pPic->getPicSym()->getSAOBlkParam());
   delete[] reconParams;
@@ -342,7 +342,7 @@ Void TEncSampleAdaptiveOffset::getStatistics(SAOStatData*** blkStats, TComPicYuv
     for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
       const ComponentID component = ComponentID(compIdx);
-      
+
       const UInt componentScaleX = getComponentScaleX(component, pPic->getChromaFormat());
       const UInt componentScaleY = getComponentScaleY(component, pPic->getChromaFormat());
 
@@ -352,7 +352,7 @@ Void TEncSampleAdaptiveOffset::getStatistics(SAOStatData*** blkStats, TComPicYuv
       Int  orgStride  = orgYuv->getStride(component);
       Pel* orgBlk     = orgYuv->getAddr(component) + ((yPos >> componentScaleY) * orgStride) + (xPos >> componentScaleX);
 
-      getBlkStats(component, blkStats[ctu][component]  
+      getBlkStats(component, blkStats[ctu][component]
                 , srcBlk, orgBlk, srcStride, orgStride, (width  >> componentScaleX), (height >> componentScaleY)
                 , isLeftAvail,  isRightAvail, isAboveAvail, isBelowAvail, isAboveLeftAvail, isAboveRightAvail, isBelowLeftAvail, isBelowRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
@@ -381,14 +381,14 @@ Void TEncSampleAdaptiveOffset::decidePicParams(Bool* sliceEnabled, Int picTempLa
 #if SAO_ENCODING_CHOICE
 #if SAO_ENCODING_CHOICE_CHROMA
     // decide slice-level on/off based on previous results
-    if( (picTempLayer > 0) 
+    if( (picTempLayer > 0)
       && (m_saoDisabledRate[compIdx][picTempLayer-1] > ((compIdx==COMPONENT_Y) ? SAO_ENCODING_RATE : SAO_ENCODING_RATE_CHROMA)) )
     {
       sliceEnabled[compIdx] = false;
     }
 #else
     // decide slice-level on/off based on previous results
-    if( (picTempLayer > 0) 
+    if( (picTempLayer > 0)
       && (m_saoDisabledRate[COMPONENT_Y][0] > SAO_ENCODING_RATE) )
     {
       sliceEnabled[compIdx] = false;
@@ -413,14 +413,14 @@ Int64 TEncSampleAdaptiveOffset::getDistortion(Int ctu, ComponentID compIdx, Int 
         for (Int offsetIdx=0; offsetIdx<NUM_SAO_EO_CLASSES; offsetIdx++)
         {
           dist += estSaoDist( statData.count[offsetIdx], invQuantOffset[offsetIdx], statData.diff[offsetIdx], shift);
-        }        
+        }
       }
       break;
     case SAO_TYPE_BO:
       {
         for (Int offsetIdx=typeAuxInfo; offsetIdx<typeAuxInfo+4; offsetIdx++)
         {
-          Int bandIdx = offsetIdx % NUM_SAO_BO_CLASSES ; 
+          Int bandIdx = offsetIdx % NUM_SAO_BO_CLASSES ;
           dist += estSaoDist( statData.count[bandIdx], invQuantOffset[bandIdx], statData.diff[bandIdx], shift);
         }
       }
@@ -449,14 +449,14 @@ inline Int TEncSampleAdaptiveOffset::estIterOffset(Int typeIdx, Int classIdx, Do
   Double tempCost, tempMinCost;
   Int offsetOutput = 0;
   iterOffset = offsetInput;
-  // Assuming sending quantized value 0 results in zero offset and sending the value zero needs 1 bit. entropy coder can be used to measure the exact rate here. 
-  tempMinCost = lambda; 
+  // Assuming sending quantized value 0 results in zero offset and sending the value zero needs 1 bit. entropy coder can be used to measure the exact rate here.
+  tempMinCost = lambda;
   while (iterOffset != 0)
   {
     // Calculate the bits required for signaling the offset
-    tempRate = (typeIdx == SAO_TYPE_BO) ? (abs((Int)iterOffset)+2) : (abs((Int)iterOffset)+1); 
-    if (abs((Int)iterOffset)==offsetTh) //inclusive 
-    {  
+    tempRate = (typeIdx == SAO_TYPE_BO) ? (abs((Int)iterOffset)+2) : (abs((Int)iterOffset)+1);
+    if (abs((Int)iterOffset)==offsetTh) //inclusive
+    {
       tempRate --;
     }
     // Do the dequantization before distortion calculation
@@ -484,11 +484,11 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
 
   ::memset(quantOffsets, 0, sizeof(Int)*MAX_NUM_SAO_CLASSES);
 
-  //derive initial offsets 
+  //derive initial offsets
   Int numClasses = (typeIdc == SAO_TYPE_BO)?((Int)NUM_SAO_BO_CLASSES):((Int)NUM_SAO_EO_CLASSES);
   for(Int classIdx=0; classIdx< numClasses; classIdx++)
   {
-    if( (typeIdc != SAO_TYPE_BO) && (classIdx==SAO_CLASS_EO_PLAIN)  ) 
+    if( (typeIdc != SAO_TYPE_BO) && (classIdx==SAO_CLASS_EO_PLAIN)  )
     {
       continue; //offset will be zero
     }
@@ -498,8 +498,8 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
       continue; //offset will be zero
     }
 
-    quantOffsets[classIdx] = (Int) xRoundIbdi(bitDepth, (Double)( statData.diff[classIdx]<<(bitDepth-8)) 
-                                                                  / 
+    quantOffsets[classIdx] = (Int) xRoundIbdi(bitDepth, (Double)( statData.diff[classIdx]<<(bitDepth-8))
+                                                                  /
                                                           (Double)( statData.count[classIdx]<< m_offsetStepLog2[compIdx])
                                                );
     quantOffsets[classIdx] = Clip3(-offsetTh, offsetTh, quantOffsets[classIdx]);
@@ -515,8 +515,8 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
       {
         Int64 classDist;
         Double classCost;
-        for(Int classIdx=0; classIdx<NUM_SAO_EO_CLASSES; classIdx++)  
-        {         
+        for(Int classIdx=0; classIdx<NUM_SAO_EO_CLASSES; classIdx++)
+        {
           if(classIdx==SAO_CLASS_EO_FULL_VALLEY && quantOffsets[classIdx] < 0) quantOffsets[classIdx] =0;
           if(classIdx==SAO_CLASS_EO_HALF_VALLEY && quantOffsets[classIdx] < 0) quantOffsets[classIdx] =0;
           if(classIdx==SAO_CLASS_EO_HALF_PEAK   && quantOffsets[classIdx] > 0) quantOffsets[classIdx] =0;
@@ -527,7 +527,7 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
             quantOffsets[classIdx] = estIterOffset( typeIdc, classIdx, m_labmda[compIdx], quantOffsets[classIdx], statData.count[classIdx], statData.diff[classIdx], shift, m_offsetStepLog2[compIdx], classDist , classCost , offsetTh );
           }
         }
-      
+
         typeAuxInfo =0;
       }
       break;
@@ -537,7 +537,7 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
         Double costBOClasses[NUM_SAO_BO_CLASSES];
         ::memset(distBOClasses, 0, sizeof(Int64)*NUM_SAO_BO_CLASSES);
         for(Int classIdx=0; classIdx< NUM_SAO_BO_CLASSES; classIdx++)
-        {         
+        {
           costBOClasses[classIdx]= m_labmda[compIdx];
           if( quantOffsets[classIdx] != 0 ) //iterative adjustment only when derived offset is not zero
           {
@@ -547,7 +547,7 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
 
         //decide the starting band index
         Double minCost = MAX_DOUBLE, cost;
-        for(Int band=0; band< NUM_SAO_BO_CLASSES- 4+ 1; band++) 
+        for(Int band=0; band< NUM_SAO_BO_CLASSES- 4+ 1; band++)
         {
           cost  = costBOClasses[band  ];
           cost += costBOClasses[band+1];
@@ -563,12 +563,12 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(Int ctu, ComponentID compIdx, Int t
         //clear those unused classes
         Int clearQuantOffset[NUM_SAO_BO_CLASSES];
         ::memset(clearQuantOffset, 0, sizeof(Int)*NUM_SAO_BO_CLASSES);
-        for(Int i=0; i< 4; i++) 
+        for(Int i=0; i< 4; i++)
         {
           Int band = (typeAuxInfo+i)%NUM_SAO_BO_CLASSES;
           clearQuantOffset[band] = quantOffsets[band];
         }
-        ::memcpy(quantOffsets, clearQuantOffset, sizeof(Int)*NUM_SAO_BO_CLASSES);        
+        ::memcpy(quantOffsets, clearQuantOffset, sizeof(Int)*NUM_SAO_BO_CLASSES);
       }
       break;
     default:
@@ -664,7 +664,7 @@ Void TEncSampleAdaptiveOffset::deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[
   for(UInt componentIndex = COMPONENT_Cb; componentIndex < numberOfComponents; componentIndex++)
   {
     const ComponentID component = ComponentID(componentIndex);
-    modeParam[component].modeIdc = SAO_MODE_OFF; 
+    modeParam[component].modeIdc = SAO_MODE_OFF;
     modeDist[component]= 0;
     m_pcRDGoOnSbacCoder->codeSAOOffsetParam(component, modeParam[component], sliceEnabled[component]);
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192
@@ -675,7 +675,7 @@ Void TEncSampleAdaptiveOffset::deriveModeNewRDO(Int ctu, SAOBlkParam* mergeList[
   }
 
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192
-  minCost= chromaLambda*((Double)m_pcRDGoOnSbacCoder->getNumberOfWrittenBits()); 
+  minCost= chromaLambda*((Double)m_pcRDGoOnSbacCoder->getNumberOfWrittenBits());
 #else
   minCost= cost;
 #endif
@@ -918,7 +918,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
   }
 #endif
 
-#if SAO_ENCODING_CHOICE 
+#if SAO_ENCODING_CHOICE
   Int picTempLayer = pic->getSlice(0)->getDepth();
   Int numLcusForSAOOff[MAX_NUM_COMPONENT];
 
@@ -943,12 +943,12 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
   {
     m_saoDisabledRate[COMPONENT_Y][0] = (Double)(numLcusForSAOOff[COMPONENT_Y]+numLcusForSAOOff[COMPONENT_Cb]+numLcusForSAOOff[COMPONENT_Cr])/(Double)(m_numCTUsPic*3);
   }
-#endif                                              
+#endif
 #endif
 }
 
 
-Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* statsDataTypes  
+Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* statsDataTypes
                         , Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height
                         , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
@@ -961,7 +961,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
     m_lineBufWidth = m_maxCUWidth;
 
     if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
-    m_signLineBuf1 = new Char[m_lineBufWidth+1]; 
+    m_signLineBuf1 = new Char[m_lineBufWidth+1];
 
     if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
     m_signLineBuf2 = new Char[m_lineBufWidth+1];
@@ -1009,7 +1009,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
           signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
           for (x=startX; x<endX; x++)
           {
-            signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
+            signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]];
             edgeType  =  signRight + signLeft;
             signLeft  = -signRight;
 
@@ -1032,7 +1032,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
               signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
               for (x=startX; x<endX; x++)
               {
-                signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
+                signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]];
                 edgeType  =  signRight + signLeft;
                 signLeft  = -signRight;
 
@@ -1060,7 +1060,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
 #endif
         startY = isAboveAvail ? 0 : 1;
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
-        endX   = (!isCalculatePreDeblockSamples) ? (isRightAvail ? (width - skipLinesR[typeIdx]) : width) 
+        endX   = (!isCalculatePreDeblockSamples) ? (isRightAvail ? (width - skipLinesR[typeIdx]) : width)
                                                  : width
                                                  ;
 #else
@@ -1075,9 +1075,9 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
 
         Pel* srcLineAbove = srcLine - srcStride;
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
-        for (x=startX; x<endX; x++) 
+        for (x=startX; x<endX; x++)
 #else
-        for (x=0; x< endX; x++) 
+        for (x=0; x< endX; x++)
 #endif
         {
           signUpLine[x] = (Char)m_sign[srcLine[x] - srcLineAbove[x]];
@@ -1094,7 +1094,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
           for (x=0; x<endX; x++)
 #endif
           {
-            signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]]; 
+            signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]];
             edgeType  = signDown + signUpLine[x];
             signUpLine[x]= -signDown;
 
@@ -1196,7 +1196,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
             diff [edgeType] += (orgLine[x] - srcLine[x]);
             count[edgeType] ++;
 
-            signDownLine[x+1] = -signDown; 
+            signDownLine[x+1] = -signDown;
           }
           signDownLine[startX] = (Char)m_sign[srcLineBelow[startX] - srcLine[startX-1]];
 
@@ -1300,7 +1300,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
             diff [edgeType] += (orgLine[x] - srcLine[x]);
             count[edgeType] ++;
 
-            signUpLine[x-1] = -signDown; 
+            signUpLine[x-1] = -signDown;
           }
           signUpLine[endX-1] = (Char)m_sign[srcLineBelow[endX-1] - srcLine[endX]];
           srcLine  += srcStride;
@@ -1356,7 +1356,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
 #endif
           {
 
-            Int bandIdx= srcLine[x] >> shiftBits; 
+            Int bandIdx= srcLine[x] >> shiftBits;
             diff [bandIdx] += (orgLine[x] - srcLine[x]);
             count[bandIdx] ++;
           }
@@ -1375,7 +1375,7 @@ Void TEncSampleAdaptiveOffset::getBlkStats(ComponentID compIdx, SAOStatData* sta
             {
               for (x=startX; x< endX; x++)
               {
-                Int bandIdx= srcLine[x] >> shiftBits; 
+                Int bandIdx= srcLine[x] >> shiftBits;
                 diff [bandIdx] += (orgLine[x] - srcLine[x]);
                 count[bandIdx] ++;
               }

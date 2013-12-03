@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -346,7 +346,7 @@ std::string lineWrap(const std::string &input, const UInt maximumLineLength)
     else
     {
       std::string::size_type spacePosition = std::string::npos;
-    
+
       //search backwards for the last space character (must use signed int because lineStartPosition can be 0)
       for (Int currentPosition = Int(searchFromPosition); currentPosition >= Int(lineStartPosition); currentPosition--)
       {
@@ -385,7 +385,7 @@ std::string indentNewLines(const std::string &input, const UInt indentBy)
     if ((++offset) >= result.length()) break; //increment offset so we don't find the same \n again and do no indentation at the end
     result.insert(offset, indentString);
   }
-        
+
   return result;
 }
 

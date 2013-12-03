@@ -735,7 +735,7 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 /** code intraBC flag
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \returns Void
  */
 Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
@@ -753,7 +753,7 @@ Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 /** code intraBC
  * \param pcCU
- * \param uiAbsPartIdx 
+ * \param uiAbsPartIdx
  * \returns Void
  */
 Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
@@ -1614,12 +1614,12 @@ Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool
       assert(ctbParam.typeIdc < SAO_TYPE_START_BO); //EO
       uiSymbol = 2;
     }
-    codeSaoTypeIdx(uiSymbol); 
+    codeSaoTypeIdx(uiSymbol);
   }
 
   if(ctbParam.modeIdc == SAO_MODE_NEW)
   {
-    Int numClasses = (ctbParam.typeIdc == SAO_TYPE_BO)?4:NUM_SAO_EO_CLASSES; 
+    Int numClasses = (ctbParam.typeIdc == SAO_TYPE_BO)?4:NUM_SAO_EO_CLASSES;
     Int offset[4];
     Int k=0;
     for(Int i=0; i< numClasses; i++)
@@ -1683,7 +1683,7 @@ Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
 
   if( aboveMergeAvail && !isLeftMerge)
   {
-    isAboveMerge = ((saoBlkParam[COMPONENT_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[COMPONENT_Y].typeIdc == SAO_MERGE_ABOVE)); 
+    isAboveMerge = ((saoBlkParam[COMPONENT_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[COMPONENT_Y].typeIdc == SAO_MERGE_ABOVE));
     codeSaoMerge( isAboveMerge?1:0  ); //sao_merge_left_flag
   }
 
@@ -1976,7 +1976,7 @@ Void TEncSbac::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
 
   if( explicitRdpcmMode == RDPCM_OFF )
   {
-    m_pcBinIf->encodeBin (0, m_explicitRdpcmFlagSCModel.get (0, toChannelType(compID), 0));      
+    m_pcBinIf->encodeBin (0, m_explicitRdpcmFlagSCModel.get (0, toChannelType(compID), 0));
   }
   else if( explicitRdpcmMode == RDPCM_HOR || explicitRdpcmMode == RDPCM_VER )
   {

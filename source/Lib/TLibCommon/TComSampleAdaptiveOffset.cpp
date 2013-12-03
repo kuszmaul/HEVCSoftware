@@ -44,10 +44,10 @@
 //! \ingroup TLibCommon
 //! \{
 #if HM_CLEANUP_SAO
-UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT]; 
+UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
 SAOOffset::SAOOffset()
-{ 
+{
   reset();
 }
 
@@ -110,9 +110,9 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
   {
     m_offsetClipTable[compIdx] = NULL;
   }
-  m_signTable = NULL; 
+  m_signTable = NULL;
 
-  
+
   m_lineBufWidth = 0;
   m_signLineBuf1 = NULL;
   m_signLineBuf2 = NULL;
@@ -122,7 +122,7 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
 TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
 {
   destroy();
-  
+
   if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
   if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
@@ -134,7 +134,7 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   m_picWidth        = picWidth;
   m_picHeight       = picHeight;
   m_chromaFormatIDC = format;
-  m_maxCUWidth      = maxCUWidth; 
+  m_maxCUWidth      = maxCUWidth;
   m_maxCUHeight     = maxCUHeight;
 
   m_numCTUInWidth   = (m_picWidth/m_maxCUWidth) + ((m_picWidth % m_maxCUWidth)?1:0);
@@ -161,12 +161,12 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   {
     Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))]; //exclusive
     Int maxSampleValue = (1<< bitDepthSample); //exclusive
-    Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]); 
+    Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]);
 
     m_offsetClipTable[compIdx] = new Int[(maxSampleValue + maxOffsetValue -1)+ (maxOffsetValue)+1 ]; //positive & negative range plus 0
     m_offsetClip[compIdx] = &(m_offsetClipTable[compIdx][maxOffsetValue]);
 
-    //assign clipped values 
+    //assign clipped values
     Int* offsetClipPtr = m_offsetClip[compIdx];
     for(Int k=0; k< maxSampleValue; k++)
     {
@@ -189,7 +189,7 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
         m_sign[-k]= -1;
       }
     }
-  }  
+  }
 }
 
 Void TComSampleAdaptiveOffset::destroy()
@@ -360,17 +360,17 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
 }
 
 
-Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset  
+Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset
                                           , Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                                           , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail)
 {
   if(m_lineBufWidth != m_maxCUWidth)
   {
     m_lineBufWidth = m_maxCUWidth;
-    
+
     if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
     m_signLineBuf1 = new Char[m_lineBufWidth+1];
-    
+
     if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
     m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
@@ -396,7 +396,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
         signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
         for (x=startX; x< endX; x++)
         {
-          signRight = (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
+          signRight = (Char)m_sign[srcLine[x] - srcLine[x+1]];
           edgeType =  signRight + signLeft;
           signLeft  = -signRight;
 
@@ -434,7 +434,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 
         for (x=0; x< width; x++)
         {
-          signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]]; 
+          signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]];
           edgeType = signDown + signUpLine[x];
           signUpLine[x]= -signDown;
 
@@ -488,7 +488,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
           edgeType =  signDown + signUpLine[x];
           resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
 
-          signDownLine[x+1] = -signDown; 
+          signDownLine[x+1] = -signDown;
         }
         signDownLine[startX] = (Char)m_sign[srcLineBelow[startX] - srcLine[startX-1]];
 
@@ -550,7 +550,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
           signDown =  (Char)m_sign[srcLine[x] - srcLineBelow[x-1]] ;
           edgeType =  signDown + signUpLine[x];
           resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-          signUpLine[x-1] = -signDown; 
+          signUpLine[x-1] = -signDown;
         }
         signUpLine[endX-1] = (Char)m_sign[srcLineBelow[endX-1] - srcLine[endX]];
         srcLine  += srcStride;

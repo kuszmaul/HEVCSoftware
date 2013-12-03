@@ -74,43 +74,22 @@ typedef struct
 // Class definition
 // ====================================================================================================================
 
-/// QP class
-class QpParam
+/// QP struct
+struct QpParam
 {
-public:
+  Int Qp;
+  Int per;
+  Int rem;
 
-  struct QpData
-  {
-    Int Qp;
-    Int per;
-    Int rem;
+  QpParam(const Int           qpy,
+          const ChannelType   chType,
+          const Int           qpBdOffset,
+          const Int           chromaQPOffset,
+          const ChromaFormat  chFmt );
 
-    QpData( const Int initialQp = MAX_INT, const Int initialPer = MAX_INT, const Int initialRem = MAX_INT )
-      : Qp(initialQp), per(initialPer), rem(initialRem)
-    {}
-  };
+  QpParam(const TComDataCU   &cu, const ComponentID compID);
 
-private:
-
-  QpData baseQp;
-  QpData adjustedQp; // TODO: RExt - this is no longer required, since baseQp and adjustedQp are the same for square transform blocks.
-
-public:
-
-  //get accessors
-
-        QpData &getBaseQp    ()       { return baseQp;     }
-  const QpData &getBaseQp    () const { return baseQp;     }
-
-        QpData &getAdjustedQp()       { return adjustedQp; }
-  const QpData &getAdjustedQp() const { return adjustedQp; }
-
-  //set accessors
-
-  Void setBaseQp     (const QpData &values) { baseQp     = values; }
-  Void setAdjustedQp (const QpData &values) { adjustedQp = values; }
-
-}; // END CLASS DEFINITION QpParam
+}; // END STRUCT DEFINITION QpParam
 
 
 /// transform and quantization class
@@ -123,7 +102,7 @@ public:
   // initialize class
   Void init                 ( UInt  uiMaxTrSize,
                               Bool useRDOQ                = false,
-                              Bool useRDOQTS              = false,  
+                              Bool useRDOQTS              = false,
                               Bool bEnc                   = false,
                               Bool useTransformSkipFast   = false
 #if ADAPTIVE_QP_SELECTION
@@ -307,7 +286,7 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
   __inline Double xGetRateLast         ( const UInt uiPosX, const UInt uiPosY, const ComponentID component ) const;
   __inline Double xGetRateSigCoeffGroup( UShort uiSignificanceCoeffGroup, UShort ui16CtxNumSig             ) const;
   __inline Double xGetRateSigCoef      ( UShort uiSignificance,           UShort ui16CtxNumSig             ) const;
-  __inline Double xGetICost            ( Double dRate                                                      ) const; 
+  __inline Double xGetICost            ( Double dRate                                                      ) const;
   __inline Double xGetIEPRate          (                                                                   ) const;
 
 

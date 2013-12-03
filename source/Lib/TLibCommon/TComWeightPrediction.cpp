@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -82,7 +82,7 @@ Void TComWeightPrediction::addWeightBi( const TComYuv              *pcYuvSrc0,
                                               TComYuv        *const rpcYuvDst,
                                         const Bool                  bRoundLuma )
 {
-  
+
   const Bool enableRounding[MAX_NUM_COMPONENT]={ bRoundLuma, true, true };
 
   const UInt numValidComponent = pcYuvSrc0->getNumberValidComponents();
@@ -174,7 +174,7 @@ Void TComWeightPrediction::addWeightUni( const TComYuv        *const pcYuvSrc0,
     const UInt csy         = pcYuvSrc0->getComponentScaleY(compID);
     const Int  iHeight     = uiHeight>>csx; // TODO: RExt - fix this bug
     const Int  iWidth      = uiWidth>>csy;  // TODO: RExt - fix this bug
-  
+
     for (Int y = iHeight-1; y >= 0; y-- )
     {
       Int x = iWidth-1;
@@ -215,7 +215,7 @@ Void TComWeightPrediction::getWpScaling(       TComDataCU *const pcCU,
                                                WPScalingParam  *&wp1)
 {
   assert(iRefIdx0 >= 0 || iRefIdx1 >= 0);
-  
+
         TComSlice *const pcSlice  = pcCU->getSlice();
   const Bool             wpBiPred = pcCU->getSlice()->getPPS()->getWPBiPred();
   const Bool             bBiDir   = (iRefIdx0>=0 && iRefIdx1>=0);
@@ -354,7 +354,7 @@ Void TComWeightPrediction::xWeightedPredictionUni(       TComDataCU *const pcCU,
                                                    const RefPicList        eRefPicList,
                                                          TComYuv         *&rpcYuvPred,
                                                    const Int               iRefIdx_input)
-{ 
+{
   WPScalingParam  *pwp, *pwpTmp;
 
   Int iRefIdx=iRefIdx_input;

@@ -79,10 +79,10 @@ public:
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
   };
-  
+
   SEI() {}
   virtual ~SEI() {}
-  
+
   virtual PayloadType payloadType() const = 0;
 };
 
@@ -114,7 +114,7 @@ public:
 
   SEIDecodedPictureHash() {}
   virtual ~SEIDecodedPictureHash() {}
-  
+
   enum Method
   {
     MD5,
@@ -126,12 +126,12 @@ public:
   TComDigest m_digest;
 };
 
-class SEIActiveParameterSets : public SEI 
+class SEIActiveParameterSets : public SEI
 {
 public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
-  SEIActiveParameterSets() 
+  SEIActiveParameterSets()
     : activeVPSId            (0)
     , m_fullRandomAccessFlag (false)
     , m_noParamSetUpdateFlag (false)
@@ -139,11 +139,11 @@ public:
   {}
   virtual ~SEIActiveParameterSets() {}
 
-  Int activeVPSId; 
+  Int activeVPSId;
   Bool m_fullRandomAccessFlag;
   Bool m_noParamSetUpdateFlag;
   Int numSpsIdsMinus1;
-  std::vector<Int> activeSeqParamSetId; 
+  std::vector<Int> activeSeqParamSetId;
 };
 
 class SEIBufferingPeriod : public SEI
@@ -389,7 +389,7 @@ typedef std::list<SEI*> SEIMessages;
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
 SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
-/// remove a selection of SEI messages by payload type from the original list and return them in a new list. 
+/// remove a selection of SEI messages by payload type from the original list and return them in a new list.
 SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
 /// delete list of SEI messages (freeing the referenced objects)

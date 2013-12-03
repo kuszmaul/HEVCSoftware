@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -58,18 +58,18 @@ class TComPatternParam
 {
 private:
   Pel*  m_piROIOrigin;
-  
+
 public:
   Int   m_iROIWidth;
   Int   m_iROIHeight;
   Int   m_iPatternStride;
-  
+
   /// return starting position of ROI (ROI = &pattern[AboveOffset][LeftOffset])
   __inline Pel*  getROIOrigin()
   {
     return  m_piROIOrigin;
   }
-  
+
   /// set parameters from Pel buffer for accessing neighbouring pixels
   Void setPatternParamPel (Pel*        piTexture,
                            Int         iRoiWidth,
@@ -85,9 +85,9 @@ private:
   TComPatternParam  m_cPatternY;
 //  TComPatternParam  m_cPatternCb;
   //TComPatternParam  m_cPatternCr;
-    
+
 public:
-  
+
   // ROI & pattern information, (ROI = &pattern[AboveOffset][LeftOffset])
   Pel*  getROIY()                 { return m_cPatternY.getROIOrigin();    }
   Int   getROIYWidth()            { return m_cPatternY.m_iROIWidth;       }
@@ -97,13 +97,13 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // initialization functions
   // -------------------------------------------------------------------------------------------------------------------
-  
+
   /// set parameters from Pel buffers for accessing neighbouring pixels
   Void initPattern            (Pel*        piY,
                                Int         iRoiWidth,
                                Int         iRoiHeight,
                                Int         iStride );
-  
+
 
 
 

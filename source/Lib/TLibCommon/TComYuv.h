@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -55,21 +55,21 @@
 class TComYuv
 {
 private:
-  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   Pel*    m_apiBuf[MAX_NUM_COMPONENT];
 
   // ------------------------------------------------------------------------------------------------------------------
   //  Parameter for general YUV buffer usage
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   UInt     m_iWidth;
   UInt     m_iHeight;
   ChromaFormat m_chromaFormatIDC; ////< Chroma Format
-  
+
   // dims 16x16
   // blkSize=4x4
 
@@ -87,64 +87,64 @@ private:
 
 
 public:
-  
+
                TComYuv                    ();
   virtual     ~TComYuv                    ();
-  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Memory management
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   Void         create                     ( const UInt iWidth, const UInt iHeight, const ChromaFormat chromaFormatIDC );  ///< Create  YUV buffer
   Void         destroy                    ();                             ///< Destroy YUV buffer
   Void         clear                      ();                             ///< clear   YUV buffer
-  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Copy, load, store YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   //  Copy YUV buffer to picture buffer
   Void         copyToPicYuv               ( TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth = 0, const UInt uiPartIdx = 0 ) const ;
   Void         copyToPicComponent         ( const ComponentID id, TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth = 0, const UInt uiPartIdx = 0 ) const ;
-  
+
   //  Copy YUV buffer from picture buffer
   Void         copyFromPicYuv             ( const TComPicYuv* pcPicYuvSrc, const  UInt iCuAddr, const UInt uiAbsZorderIdx );
   Void         copyFromPicComponent       ( const ComponentID id, const TComPicYuv* pcPicYuvSrc, const UInt iCuAddr, const UInt uiAbsZorderIdx );
-  
+
   //  Copy Small YUV buffer to the part of other Big YUV buffer
   Void         copyToPartYuv              ( TComYuv*    pcYuvDst,    const UInt uiDstPartIdx ) const ;
   Void         copyToPartComponent        ( const ComponentID id, TComYuv*    pcYuvDst,    const UInt uiDstPartIdx ) const ;
-  
+
   //  Copy the part of Big YUV buffer to other Small YUV buffer
   Void         copyPartToYuv              ( TComYuv*    pcYuvDst,   const UInt uiSrcPartIdx ) const;
   Void         copyPartToComponent        ( const ComponentID id, TComYuv*    pcYuvDst,    const UInt uiSrcPartIdx ) const;
-  
+
   //  Copy YUV partition buffer to other YUV partition buffer
   Void         copyPartToPartYuv          ( TComYuv*    pcYuvDst, const UInt uiPartIdx, const UInt uiWidth, const UInt uiHeight ) const;
   Void         copyPartToPartComponent    ( const ComponentID id, TComYuv*    pcYuvDst, const UInt uiPartIdx, const UInt uiWidthComponent, const UInt uiHeightComponent ) const;
-  
+
  // Copy YUV partition buffer to other YUV partition buffer for non-square blocks
   Void         copyPartToPartComponentMxN ( const ComponentID id, TComYuv*    pcYuvDst, const TComRectangle &rect ) const;
 
   // ------------------------------------------------------------------------------------------------------------------
   //  Algebraic operation for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   //  Clip(pcYuvSrc0 + pcYuvSrc1) -> m_apiBuf
   Void         addClip                    ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize );
-  
+
   //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
   Void         subtract                   ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize );
-  
+
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
   Void         addAvg                     ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt iWidth, const UInt iHeight );
 
   Void         removeHighFreq             ( const TComYuv* pcYuvSrc, const UInt uiPartIdx, const UInt uiWidth, const UInt uiHeight );
-  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Access function for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   //  Access starting position of YUV buffer
   Pel*         getAddr                    (const ComponentID id)                    { return m_apiBuf[id]; }
   const Pel*   getAddr                    (const ComponentID id) const              { return m_apiBuf[id]; }
@@ -164,7 +164,7 @@ public:
                                                   assert((blkX<getWidth(id) && blkY<getHeight(id)));
                                                   return m_apiBuf[id] + blkX + blkY * getStride(id);
                                               }
-  
+
   //  Access starting position of YUV transform unit buffer
   Pel*         getAddr                    (const ComponentID id, const UInt iTransUnitIdx, const UInt iBlkSizeForComponent)
                                               {
@@ -186,7 +186,7 @@ public:
 //                                                assert((blkX<w && blkY<h));
                                                 return m_apiBuf[id] + blkX + blkY * iBlkSizeForComponent;
                                               }
-  
+
   // Access starting position of YUV transform unit buffer by pix offset for square & non-square blocks
   Pel*         getAddrPix                 (const ComponentID id, const UInt iPixX, const UInt iPixY )       { return m_apiBuf[id] + iPixY * getStride(id) + iPixX; }
   const Pel*   getAddrPix                 (const ComponentID id, const UInt iPixX, const UInt iPixY ) const { return m_apiBuf[id] + iPixY * getStride(id) + iPixX; }

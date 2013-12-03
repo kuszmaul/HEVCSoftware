@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -117,7 +117,7 @@ Int main(Int argc, const char** argv)
   cPicYuvTrueOrg.create( width, height, chromaFormatIDC, 1, 1, 0 );
 
   UInt num_frames_processed = 0;
-  while (!input.isEof()) 
+  while (!input.isEof())
   {
     if (! input.read(&frame, &cPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, pad))
     {
@@ -125,7 +125,7 @@ Int main(Int argc, const char** argv)
     }
 #if 0
     Pel* img = frame.getAddr(COMPONENT_Y);
-    for (Int y = 0; y < height; y++) 
+    for (Int y = 0; y < height; y++)
     {
       for (Int x = 0; x < height; x++)
         img[x] = 0;

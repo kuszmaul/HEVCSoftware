@@ -1653,9 +1653,9 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
-  rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );  
+  rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-  rpcTempCU->setPredModeSubParts( MODE_INTRABC, 0, uiDepth );  
+  rpcTempCU->setPredModeSubParts( MODE_INTRABC, 0, uiDepth );
 
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
@@ -1673,7 +1673,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                                     DEBUG_STRING_PASS_INTO(sTest),
                                                     bUse1DSearchFor8x8,
                                                     false);
-  
+
   if (bValid)
   {
     m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false DEBUG_STRING_PASS_INTO(sTest) );
@@ -1682,7 +1682,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 #ifdef DEBUG_STRING
     DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
-  
+
     xCheckDQP( rpcTempCU );
     xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
   }

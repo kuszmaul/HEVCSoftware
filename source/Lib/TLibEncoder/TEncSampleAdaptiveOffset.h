@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -113,10 +113,10 @@ public:
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , Bool isPreDBFSamplesUsed
 #endif
-                ); 
+                );
 public: //methods
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
-  Void getPreDBFStatistics(TComPic* pPic); 
+  Void getPreDBFStatistics(TComPic* pPic);
 #endif
 private: //methods
   Void getStatistics(SAOStatData*** blkStats, TComPicYuv* orgYuv, TComPicYuv* srcYuv,TComPic* pPic
@@ -142,7 +142,7 @@ private: //methods
 #endif
 private: //members
   //for RDO
-  TEncSbac**             m_pppcRDSbacCoder;           
+  TEncSbac**             m_pppcRDSbacCoder;
   TEncSbac*              m_pcRDGoOnSbacCoder;
 #if FAST_BIT_EST
   TEncBinCABACCounter**  m_pppcBinCoderCABAC;
@@ -176,18 +176,18 @@ private:
 #else
   TEncBinCABAC***   m_pppcBinCoderCABAC;            ///< temporal CABAC state storage for RD computation
 #endif
-  
-  Int64  ***m_iCount;      //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ***m_iOffset;     //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ***m_iOffsetOrg;  //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Int64  ****m_count_PreDblk;      //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ****m_offsetOrg_PreDblk;  //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  **m_iRate;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Int64  **m_iDist;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Double **m_dCost;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Double *m_dCostPartBest; //[MAX_NUM_SAO_PART]; 
-  Int64  *m_iDistOrg;      //[MAX_NUM_SAO_PART]; 
-  Int    *m_iTypePartBest; //[MAX_NUM_SAO_PART]; 
+
+  Int64  ***m_iCount;      //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS];
+  Int64  ***m_iOffset;     //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS];
+  Int64  ***m_iOffsetOrg;  //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE];
+  Int64  ****m_count_PreDblk;      //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS];
+  Int64  ****m_offsetOrg_PreDblk;  //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS];
+  Int64  **m_iRate;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE];
+  Int64  **m_iDist;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE];
+  Double **m_dCost;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE];
+  Double *m_dCostPartBest; //[MAX_NUM_SAO_PART];
+  Int64  *m_iDistOrg;      //[MAX_NUM_SAO_PART];
+  Int    *m_iTypePartBest; //[MAX_NUM_SAO_PART];
   Int     m_iOffsetTh[MAX_NUM_CHANNEL_TYPE];
   Bool    m_bUseSBACRD;
 #if SAO_ENCODING_CHOICE
@@ -214,7 +214,7 @@ public:
 
   Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, ComponentID yCbCr);
   Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda, ComponentID yCbCr);
-  
+
   Void disablePartTree(SAOQTPart *psQTPart, Int iPartIdx);
   Void getSaoStats(SAOQTPart *psQTPart, ComponentID iYCbCr);
   Void calcSaoStatsCu(Int iAddr, Int iPartIdx, ComponentID iYCbCr);

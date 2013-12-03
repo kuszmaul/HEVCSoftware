@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -64,26 +64,26 @@ class TEncSlice
 private:
   // encoder configuration
   TEncCfg*                m_pcCfg;                              ///< encoder configuration class
-  
+
   // pictures
   TComList<TComPic*>*     m_pcListPic;                          ///< list of pictures
   TComPicYuv*             m_apcPicYuvPred;                      ///< prediction picture buffer
   TComPicYuv*             m_apcPicYuvResi;                      ///< residual picture buffer
-  
+
   // processing units
   TEncGOP*                m_pcGOPEncoder;                       ///< GOP encoder
   TEncCu*                 m_pcCuEncoder;                        ///< CU encoder
-  
+
   // encoder search
   TEncSearch*             m_pcPredSearch;                       ///< encoder search class
-  
+
   // coding tools
   TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder
   TEncCavlc*              m_pcCavlcCoder;                       ///< CAVLC encoder
   TEncSbac*               m_pcSbacCoder;                        ///< SBAC encoder
   TEncBinCABAC*           m_pcBinCABAC;                         ///< Bin encoder CABAC
   TComTrQuant*            m_pcTrQuant;                          ///< transform & quantization
-  
+
   // RD optimization
   TComBitCounter*         m_pcBitCounter;                       ///< bit counter
   TComRdCost*             m_pcRdCost;                           ///< RD cost computation
@@ -108,11 +108,11 @@ private:
 public:
   TEncSlice();
   virtual ~TEncSlice();
-  
+
   Void    create              ( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt iMaxCUWidth, UInt iMaxCUHeight, UChar uhTotalDepth );
   Void    destroy             ();
   Void    init                ( TEncTop* pcEncTop );
-  
+
   /// preparation of slice encoding (reference marking, QP and lambda)
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField );
@@ -122,11 +122,11 @@ public:
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
   Void    calCostSliceI       ( TComPic*& rpcPic );
   Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams  );
-  
+
   // misc. functions
   Void    setSearchRange      ( TComSlice* pcSlice  );                                  ///< set ME range adaptively
   UInt64  getTotalBits        ()  { return m_uiPicTotalBits; }
-  
+
   TEncCu*        getCUEncoder() { return m_pcCuEncoder; }                        ///< CU encoder
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }

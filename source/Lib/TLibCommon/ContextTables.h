@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -130,7 +130,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_ABS_FLAG_CTX_LUMA         (NUM_ABS_FLAG_CTX_PER_SET * NUM_CTX_SETS_LUMA)           ///< number of context models for greater than 2 flag of luma
 #define NUM_ABS_FLAG_CTX_CHROMA       (NUM_ABS_FLAG_CTX_PER_SET * NUM_CTX_SETS_CHROMA)         ///< number of context models for greater than 2 flag of chroma
 
-#define NUM_ONE_FLAG_CTX              (NUM_ONE_FLAG_CTX_LUMA + NUM_ONE_FLAG_CTX_CHROMA)        ///< number of context models for greater than 1 flag 
+#define NUM_ONE_FLAG_CTX              (NUM_ONE_FLAG_CTX_LUMA + NUM_ONE_FLAG_CTX_CHROMA)        ///< number of context models for greater than 1 flag
 #define NUM_ABS_FLAG_CTX              (NUM_ABS_FLAG_CTX_LUMA + NUM_ABS_FLAG_CTX_CHROMA)        ///< number of context models for greater than 2 flag
 
 #define FIRST_CTX_SET_CHROMA          (FIRST_CTX_SET_LUMA + NUM_CTX_SETS_LUMA)                 ///< index of first chrominance context set
@@ -157,7 +157,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping
 
-#define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
+#define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1
 
 #define NUM_CROSS_COMPONENT_DECORRELATION_CTX 8
 
@@ -174,114 +174,114 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 static const UChar
 INIT_CU_TRANSQUANT_BYPASS_FLAG[NUMBER_OF_SLICE_TYPES][NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX] =
 {
-  { 154 }, 
-  { 154 }, 
-  { 154 }, 
+  { 154 },
+  { 154 },
+  { 154 },
 };
 
 // initial probability for split flag
-static const UChar 
+static const UChar
 INIT_SPLIT_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SPLIT_FLAG_CTX] =
 {
   { 107,  139,  126, },
-  { 107,  139,  126, }, 
-  { 139,  141,  157, }, 
+  { 107,  139,  126, },
+  { 139,  141,  157, },
 };
 
-static const UChar 
+static const UChar
 INIT_SKIP_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SKIP_FLAG_CTX] =
 {
-  { 197,  185,  201, }, 
-  { 197,  185,  201, }, 
-  { CNU,  CNU,  CNU, }, 
+  { 197,  185,  201, },
+  { 197,  185,  201, },
+  { CNU,  CNU,  CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_MERGE_FLAG_EXT[NUMBER_OF_SLICE_TYPES][NUM_MERGE_FLAG_EXT_CTX] =
 {
-  { 154, }, 
-  { 110, }, 
-  { CNU, }, 
+  { 154, },
+  { 110, },
+  { CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_MERGE_IDX_EXT[NUMBER_OF_SLICE_TYPES][NUM_MERGE_IDX_EXT_CTX] =
 {
-  { 137, }, 
-  { 122, }, 
-  { CNU, }, 
+  { 137, },
+  { 122, },
+  { CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_PART_SIZE[NUMBER_OF_SLICE_TYPES][NUM_PART_SIZE_CTX] =
 {
-  { 154,  139,  CNU,  CNU, }, 
-  { 154,  139,  CNU,  CNU, }, 
-  { 184,  CNU,  CNU,  CNU, }, 
+  { 154,  139,  CNU,  CNU, },
+  { 154,  139,  CNU,  CNU, },
+  { 184,  CNU,  CNU,  CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_CU_AMP_POS[NUMBER_OF_SLICE_TYPES][NUM_CU_AMP_CTX] =
 {
-  { 154, }, 
-  { 154, }, 
-  { CNU, }, 
+  { 154, },
+  { 154, },
+  { CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_PRED_MODE[NUMBER_OF_SLICE_TYPES][NUM_PRED_MODE_CTX] =
 {
-  { 134, }, 
-  { 149, }, 
-  { CNU, }, 
+  { 134, },
+  { 149, },
+  { CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_INTRA_PRED_MODE[NUMBER_OF_SLICE_TYPES][NUM_ADI_CTX] =
 {
-  { 183, }, 
-  { 154, }, 
-  { 184, }, 
+  { 183, },
+  { 154, },
+  { 184, },
 };
 
-static const UChar 
+static const UChar
 INIT_CHROMA_PRED_MODE[NUMBER_OF_SLICE_TYPES][NUM_CHROMA_PRED_CTX] =
 {
-  { 152,  139, }, 
-  { 152,  139, }, 
-  {  63,  139, }, 
+  { 152,  139, },
+  { 152,  139, },
+  {  63,  139, },
 };
 
-static const UChar 
+static const UChar
 INIT_INTER_DIR[NUMBER_OF_SLICE_TYPES][NUM_INTER_DIR_CTX] =
 {
-  {  95,   79,   63,   31,  31, }, 
-  {  95,   79,   63,   31,  31, }, 
-  { CNU,  CNU,  CNU,  CNU, CNU, }, 
+  {  95,   79,   63,   31,  31, },
+  {  95,   79,   63,   31,  31, },
+  { CNU,  CNU,  CNU,  CNU, CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_MVD[NUMBER_OF_SLICE_TYPES][NUM_MV_RES_CTX] =
 {
-  { 169,  198, }, 
-  { 140,  198, }, 
-  { CNU,  CNU, }, 
+  { 169,  198, },
+  { 140,  198, },
+  { CNU,  CNU, },
 };
 
 static const UChar
 INIT_REF_PIC[NUMBER_OF_SLICE_TYPES][NUM_REF_NO_CTX] =
 {
-  { 153,  153 }, 
-  { 153,  153 }, 
-  { CNU,  CNU }, 
+  { 153,  153 },
+  { 153,  153 },
+  { CNU,  CNU },
 };
 
-static const UChar 
+static const UChar
 INIT_DQP[NUMBER_OF_SLICE_TYPES][NUM_DELTA_QP_CTX] =
 {
-  { 154,  154,  154, }, 
-  { 154,  154,  154, }, 
-  { 154,  154,  154, }, 
+  { 154,  154,  154, },
+  { 154,  154,  154, },
+  { 154,  154,  154, },
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ INIT_DQP[NUMBER_OF_SLICE_TYPES][NUM_DELTA_QP_CTX] =
 #define ISLICE_CHROMA_CBF_CONTEXT    94,  138,  182,  CNU,  CNU
 
 
-static const UChar 
+static const UChar
 INIT_QT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_CBF_CTX_SETS * NUM_QT_CBF_CTX_PER_SET] =
 {
   { BSLICE_LUMA_CBF_CONTEXT, BSLICE_CHROMA_CBF_CONTEXT },
@@ -309,12 +309,12 @@ INIT_QT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_CBF_CTX_SETS * NUM_QT_CBF_CTX_PER_SET]
 
 //--------------------------------------------------------------------------------------------------
 
-static const UChar 
+static const UChar
 INIT_QT_ROOT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_ROOT_CBF_CTX] =
 {
-  {  79, }, 
-  {  79, }, 
-  { CNU, }, 
+  {  79, },
+  {  79, },
+  { CNU, },
 };
 
 
@@ -332,7 +332,7 @@ INIT_QT_ROOT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_ROOT_CBF_CTX] =
 #define ISLICE_CHROMA_LAST_POSITION_CONTEXT   108, 123,  63, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
 
 
-static const UChar 
+static const UChar
 INIT_LAST[NUMBER_OF_SLICE_TYPES][NUM_CTX_LAST_FLAG_SETS * NUM_CTX_LAST_FLAG_XY] =
 {
   { BSLICE_LUMA_LAST_POSITION_CONTEXT, BSLICE_CHROMA_LAST_POSITION_CONTEXT },
@@ -343,18 +343,18 @@ INIT_LAST[NUMBER_OF_SLICE_TYPES][NUM_CTX_LAST_FLAG_SETS * NUM_CTX_LAST_FLAG_XY] 
 
 //--------------------------------------------------------------------------------------------------
 
-static const UChar 
+static const UChar
 INIT_SIG_CG_FLAG[NUMBER_OF_SLICE_TYPES][2 * NUM_SIG_CG_FLAG_CTX] =
 {
-  { 121,  140,  
-    61,  154, 
-  }, 
-  { 121,  140, 
-    61,  154, 
-  }, 
-  {  91,  171,  
-    134,  141, 
-  }, 
+  { 121,  140,
+    61,  154,
+  },
+  { 121,  140,
+    61,  154,
+  },
+  {  91,  171,
+    134,  141,
+  },
 };
 
 
@@ -375,7 +375,7 @@ INIT_SIG_CG_FLAG[NUMBER_OF_SLICE_TYPES][2 * NUM_SIG_CG_FLAG_CTX] =
 
 //------------------------------------------------
 
-static const UChar 
+static const UChar
 INIT_SIG_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SIG_FLAG_CTX] =
 {
   { BSLICE_LUMA_SIGNIFICANCE_CONTEXT, BSLICE_CHROMA_SIGNIFICANCE_CONTEXT },
@@ -409,7 +409,7 @@ INIT_SIG_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SIG_FLAG_CTX] =
 
 //------------------------------------------------
 
-static const UChar 
+static const UChar
 INIT_ONE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ONE_FLAG_CTX] =
 {
   { BSLICE_LUMA_ONE_CONTEXT, BSLICE_CHROMA_ONE_CONTEXT },
@@ -417,7 +417,7 @@ INIT_ONE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ONE_FLAG_CTX] =
   { ISLICE_LUMA_ONE_CONTEXT, ISLICE_CHROMA_ONE_CONTEXT },
 };
 
-static const UChar 
+static const UChar
 INIT_ABS_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ABS_FLAG_CTX] =
 {
   { BSLICE_LUMA_ABS_CONTEXT, BSLICE_CHROMA_ABS_CONTEXT },
@@ -428,23 +428,23 @@ INIT_ABS_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ABS_FLAG_CTX] =
 
 //--------------------------------------------------------------------------------------------------
 
-static const UChar 
+static const UChar
 INIT_MVP_IDX[NUMBER_OF_SLICE_TYPES][NUM_MVP_IDX_CTX] =
 {
-  { 168,  CNU, }, 
-  { 168,  CNU, }, 
-  { CNU,  CNU, }, 
+  { 168,  CNU, },
+  { 168,  CNU, },
+  { CNU,  CNU, },
 };
 
-static const UChar 
+static const UChar
 INIT_SAO_MERGE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SAO_MERGE_FLAG_CTX] =
 {
-  { 153,  }, 
-  { 153,  }, 
-  { 153,  }, 
+  { 153,  },
+  { 153,  },
+  { 153,  },
 };
 
-static const UChar 
+static const UChar
 INIT_SAO_TYPE_IDX[NUMBER_OF_SLICE_TYPES][NUM_SAO_TYPE_IDX_CTX] =
 {
 #if FIX827
@@ -453,7 +453,7 @@ INIT_SAO_TYPE_IDX[NUMBER_OF_SLICE_TYPES][NUM_SAO_TYPE_IDX_CTX] =
   { 200, },
 #else
   { 200, },
-  { 185, }, 
+  { 185, },
   { 160, },
 #endif
 };
@@ -475,13 +475,13 @@ INIT_TRANS_SUBDIV_FLAG[NUMBER_OF_SLICE_TYPES][NUM_TRANS_SUBDIV_FLAG_CTX] =
 static const UChar
 INIT_TRANSFORMSKIP_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
 {
-  { 139,  139}, 
-  { 139,  139}, 
-  { 139,  139}, 
+  { 139,  139},
+  { 139,  139},
+  { 139,  139},
 };
 
 static const UChar
-INIT_EXPLICIT_RDPCM_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_FLAG_CTX] = 
+INIT_EXPLICIT_RDPCM_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_FLAG_CTX] =
 {
   {139, 139},
   {139, 139},
@@ -489,15 +489,15 @@ INIT_EXPLICIT_RDPCM_FLAG[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_FLAG_CTX] =
 };
 
 static const UChar
-INIT_EXPLICIT_RDPCM_DIR[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_DIR_CTX] = 
+INIT_EXPLICIT_RDPCM_DIR[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_DIR_CTX] =
 {
   {139, 139},
   {139, 139},
   {CNU, CNU}
 };
 
-static const UChar 
-INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] = 
+static const UChar
+INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] =
 {
   { 185, },
   { 197, },
@@ -507,9 +507,9 @@ INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] =
 static const UChar
 INIT_CROSS_COMPONENT_DECORRELATION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_DECORRELATION_CTX] =
 {
-  { 154, 154, 154, 154, 154, 154, 154, 154 }, 
-  { 154, 154, 154, 154, 154, 154, 154, 154 }, 
-  { 154, 154, 154, 154, 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154, 154, 154, 154, 154 },
+  { 154, 154, 154, 154, 154, 154, 154, 154 },
+  { 154, 154, 154, 154, 154, 154, 154, 154 },
 };
 
 //! \}

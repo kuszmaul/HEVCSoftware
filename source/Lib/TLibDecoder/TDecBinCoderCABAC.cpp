@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -82,7 +82,7 @@ Void
 TDecBinCABAC::finish()
 {
   UInt lastByte;
-  
+
   m_pcTComBitstream->peekPreviousByte( lastByte );
   // Check for proper stop/alignment pattern
   assert( ((lastByte << (8 + m_bitsNeeded)) & 0xff) == 0x80 );
@@ -117,7 +117,7 @@ Void TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
   UInt uiLPS = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) - 4 ];
   m_uiRange -= uiLPS;
   UInt scaledRange = m_uiRange << 7;
-  
+
   if( m_uiValue < scaledRange )
   {
     // MPS path
@@ -126,16 +126,16 @@ Void TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     TComCodingStatistics::UpdateCABACStat(whichStat, m_uiRange+uiLPS, m_uiRange, Int(ruiBin));
 #endif
     rcCtxModel.updateMPS();
-    
+
     if ( scaledRange < ( 256 << 7 ) )
     {
       m_uiRange = scaledRange >> 6;
       m_uiValue += m_uiValue;
-      
+
       if ( ++m_bitsNeeded == 0 )
       {
         m_bitsNeeded = -8;
-        m_uiValue += m_pcTComBitstream->readByte();      
+        m_uiValue += m_pcTComBitstream->readByte();
       }
     }
   }
@@ -150,9 +150,9 @@ Void TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     m_uiValue   = ( m_uiValue - scaledRange ) << numBits;
     m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
-    
+
     m_bitsNeeded += numBits;
-    
+
     if ( m_bitsNeeded >= 0 )
     {
       m_uiValue += m_pcTComBitstream->readByte() << m_bitsNeeded;
@@ -182,13 +182,13 @@ Void TDecBinCABAC::decodeBinEP( UInt& ruiBin )
 #endif
 {
   m_uiValue += m_uiValue;
-  
+
   if ( ++m_bitsNeeded >= 0 )
   {
     m_bitsNeeded = -8;
     m_uiValue += m_pcTComBitstream->readByte();
   }
-  
+
   ruiBin = 0;
   UInt scaledRange = m_uiRange << 7;
   if ( m_uiValue >= scaledRange )
@@ -214,7 +214,7 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
   while ( numBins > 8 )
   {
     m_uiValue = ( m_uiValue << 8 ) + ( m_pcTComBitstream->readByte() << ( 8 + m_bitsNeeded ) );
-    
+
     UInt scaledRange = m_uiRange << 15;
     for ( Int i = 0; i < 8; i++ )
     {
@@ -228,16 +228,16 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
     }
     numBins -= 8;
   }
-  
+
   m_bitsNeeded += numBins;
   m_uiValue <<= numBins;
-  
+
   if ( m_bitsNeeded >= 0 )
   {
     m_uiValue += m_pcTComBitstream->readByte() << m_bitsNeeded;
     m_bitsNeeded -= 8;
   }
-  
+
   UInt scaledRange = m_uiRange << ( numBins + 7 );
   for ( Int i = 0; i < numBins; i++ )
   {
@@ -249,7 +249,7 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
       m_uiValue -= scaledRange;
     }
   }
-  
+
   ruiBin = bins;
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatistics::IncrementStatisticEP(whichStat, origNumBins, Int(ruiBin));
@@ -280,11 +280,11 @@ TDecBinCABAC::decodeBinTrm( UInt& ruiBin )
     {
       m_uiRange = scaledRange >> 6;
       m_uiValue += m_uiValue;
-      
+
       if ( ++m_bitsNeeded == 0 )
       {
         m_bitsNeeded = -8;
-        m_uiValue += m_pcTComBitstream->readByte();      
+        m_uiValue += m_pcTComBitstream->readByte();
       }
     }
   }

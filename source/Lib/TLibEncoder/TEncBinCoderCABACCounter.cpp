@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -76,7 +76,7 @@ Void TEncBinCABACCounter::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 #ifdef DEBUG_ENCODER_SEARCH_BINS
   const UInt64 startingFracBits = m_fracBits;
 #endif
-  
+
   m_uiBinsCoded += m_binCountIncrement;
   m_fracBits += rcCtxModel.getEntropyBits( binValue );
   rcCtxModel.update( binValue );

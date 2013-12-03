@@ -1233,7 +1233,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
 
         SEINoDisplay seiNoDisplay;
-        seiNoDisplay.m_noDisplay = true; 
+        seiNoDisplay.m_noDisplay = true;
 
         m_seiWriter.writeSEImessage( nalu.m_Bitstream, seiNoDisplay, pcSlice->getSPS() );
         writeRBSPTrailingBits(nalu.m_Bitstream);
@@ -1540,7 +1540,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 , m_pcCfg->getSaoLcuBoundary()
 #endif
                 );
-              m_pcSAO->PCMLFDisableProcess(pcPic);   
+              m_pcSAO->PCMLFDisableProcess(pcPic);
 
               //assign SAO slice header
               for(Int s=0; s< uiNumSlices; s++)

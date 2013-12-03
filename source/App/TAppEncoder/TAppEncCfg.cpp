@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -292,7 +292,7 @@ static inline istream& operator>>(istream &in, CostMode &mode)
 Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 {
   Bool do_help = false;
-  
+
   string cfg_InputFile;
   string cfg_BitstreamFile;
   string cfg_ReconFile;
@@ -312,7 +312,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   opts.addOptions()
   ("help", do_help, false, "this help text")
   ("c", po::parseConfigFile, "configuration file name")
-  
+
   // File, I/O and source parameters
   ("InputFile,i",           cfg_InputFile,                           string(""), "Original YUV input file name")
   ("BitstreamFile,b",       cfg_BitstreamFile,                       string(""), "Bitstream output file name")
@@ -356,7 +356,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   //Field coding parameters
   ("FieldCoding", m_isField, false, "Signals if it's a field based coding")
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
-  
+
   // Profile and level
   ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for FDIS main), main10 (for FDIS main10), main-still-picture, rext-dev (for Range Extensions Development profile) or none")
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1, or none")
@@ -374,13 +374,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxCUSize,s",             m_uiMaxCUWidth,             64u, "Maximum CU size")
   ("MaxCUSize,s",             m_uiMaxCUHeight,            64u, "Maximum CU size")
   ("MaxPartitionDepth,h",     m_uiMaxCUDepth,              4u, "CU depth")
-  
+
   ("QuadtreeTULog2MaxSize",   m_uiQuadtreeTULog2MaxSize,   6u, "Maximum TU size in logarithm base 2")
   ("QuadtreeTULog2MinSize",   m_uiQuadtreeTULog2MinSize,   2u, "Minimum TU size in logarithm base 2")
-  
+
   ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u, "Depth of TU tree for intra CUs")
   ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u, "Depth of TU tree for inter CUs")
-  
+
   // Coding structure paramters
   ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
@@ -424,7 +424,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
   // Entropy coding parameters
   ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
-  
+
   // Deblocking filter parameters
   ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
   ("LoopFilterOffsetInPPS",          m_loopFilterOffsetInPPS,          false )
@@ -449,7 +449,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
 #endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
-  ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")   
+  ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
 #if !HM_CLEANUP_SAO
   ("SAOLcuBasedOptimization", m_saoLcuBasedOptimization, true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
@@ -500,8 +500,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIpictureDigest",            m_decodedPictureHashSEIEnabled, 0, "deprecated alias for SEIDecodedPictureHash")
   ("TMVPMode", m_TMVPModeId, 1, "TMVP mode 0: TMVP disable for all slices. 1: TMVP enable for all slices (default) 2: TMVP enable for certain slices only")
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
-  ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
-  ("FDM", m_useFastDecisionForMerge, true, "Fast decision for Merge RD Cost") 
+  ("ECU", m_bUseEarlyCU, false, "Early CU setting")
+  ("FDM", m_useFastDecisionForMerge, true, "Fast decision for Merge RD Cost")
   ("CFM", m_bUseCbfFastMode, false, "Cbf fast mode setting")
   ("ESD", m_useEarlySkipDetection, false, "Early SKIP detection setting")
   ( "RateControl",         m_RCEnableRateControl,   false, "Rate control: enable rate control" )
@@ -614,7 +614,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,               0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
   ;
-  
+
   for(Int i=1; i<MAX_GOP+1; i++) {
     std::ostringstream cOSS;
     cOSS<<"Frame"<<i;
@@ -627,14 +627,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
   }
-  
+
   if (argc == 1 || do_help)
   {
     /* argc == 1: no options have been specified */
     po::doHelp(cout, opts);
     return false;
   }
-  
+
   /*
    * Set any derived parameters
    */
@@ -643,7 +643,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-  
+
   if(m_isField)
   {
     //Frame height
@@ -726,7 +726,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   if (m_inputBitDepth      [CHANNEL_TYPE_CHROMA] == 0) { m_inputBitDepth      [CHANNEL_TYPE_CHROMA] = m_inputBitDepth      [CHANNEL_TYPE_LUMA  ]; }
   if (m_outputBitDepth     [CHANNEL_TYPE_LUMA  ] == 0) { m_outputBitDepth     [CHANNEL_TYPE_LUMA  ] = m_internalBitDepth   [CHANNEL_TYPE_LUMA  ]; }
   if (m_outputBitDepth     [CHANNEL_TYPE_CHROMA] == 0) { m_outputBitDepth     [CHANNEL_TYPE_CHROMA] = m_internalBitDepth   [CHANNEL_TYPE_CHROMA]; }
-  
+
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
@@ -796,25 +796,25 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       break;
     }
   }
-  
+
   // allocate slice-based dQP values
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
   ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
-  
+
   // handling of floating-point QP values
   // if QP is not integer, sequence is split into two sections having QP and QP+1
   m_iQP = (Int)( m_fQP );
   if ( m_iQP < m_fQP )
   {
     Int iSwitchPOC = (Int)( m_framesToBeEncoded - (m_fQP - m_iQP)*m_framesToBeEncoded + 0.5 );
-    
+
     iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
     for ( Int i=iSwitchPOC; i<m_framesToBeEncoded + m_iGOPSize + 1; i++ )
     {
       m_aidQP[i] = 1;
     }
   }
-  
+
   // reading external dQP description from file
   if ( m_pchdQPFile )
   {
@@ -853,7 +853,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
         startOfCodedInterval = strtok(NULL, " .");
         i++;
       }
-    } 
+    }
     else
     {
       m_startOfCodedInterval = NULL;
@@ -895,13 +895,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // check validity of input parameters
   xCheckParameter();
-  
+
   // set global varibles
   xSetGlobal();
-  
+
   // print-out parameters
   xPrintParameter();
-  
+
   return true;
 }
 
@@ -1028,7 +1028,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_uiMaxCUHeight < 16,                                                       "Maximum partition height size should be larger than or equal to 16");
   xConfirmPara( (m_iSourceWidth  % (m_uiMaxCUWidth  >> (m_uiMaxCUDepth-1)))!=0,             "Resulting coded frame width must be a multiple of the minimum CU size");
   xConfirmPara( (m_iSourceHeight % (m_uiMaxCUHeight >> (m_uiMaxCUDepth-1)))!=0,             "Resulting coded frame height must be a multiple of the minimum CU size");
-  
+
   xConfirmPara( m_uiQuadtreeTULog2MinSize < 2,                                        "QuadtreeTULog2MinSize must be 2 or greater.");
   xConfirmPara( m_uiQuadtreeTULog2MaxSize > 5,                                        "QuadtreeTULog2MaxSize must be 5 or smaller.");
   xConfirmPara( m_uiQuadtreeTULog2MaxSize < m_uiQuadtreeTULog2MinSize,                "QuadtreeTULog2MaxSize must be greater than or equal to m_uiQuadtreeTULog2MinSize.");
@@ -1076,7 +1076,7 @@ Void TAppEncCfg::xCheckParameter()
   {
     xConfirmPara( m_sliceSegmentArgument < 1 ,         "SliceSegmentArgument should be larger than or equal to 1" );
   }
-  
+
   Bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
 
@@ -1106,7 +1106,7 @@ Void TAppEncCfg::xCheckParameter()
     if( (ui & 1) == 1)
       xConfirmPara( ui != 1 , "Height should be 2^n");
   }
-  
+
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1)
@@ -1130,7 +1130,7 @@ Void TAppEncCfg::xCheckParameter()
     refList[1] = 1;
   }
   Bool isOK[MAX_GOP];
-  for(Int i=0; i<MAX_GOP; i++) 
+  for(Int i=0; i<MAX_GOP; i++)
   {
     isOK[i]=false;
   }
@@ -1144,7 +1144,7 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( m_GOPList[i].m_temporalId!=0 , "The last frame in each GOP must have temporal ID = 0 " );
     }
   }
-  
+
   if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable) )
   {
     for(Int i=0; i<m_iGOPSize; i++)
@@ -1156,32 +1156,32 @@ Void TAppEncCfg::xCheckParameter()
 
   m_extraRPSs=0;
   //start looping through frames in coding order until we can verify that the GOP structure is correct.
-  while(!verifiedGOP&&!errorGOP) 
+  while(!verifiedGOP&&!errorGOP)
   {
     Int curGOP = (checkGOP-1)%m_iGOPSize;
-    Int curPOC = ((checkGOP-1)/m_iGOPSize)*m_iGOPSize + m_GOPList[curGOP].m_POC;    
-    if(m_GOPList[curGOP].m_POC<0) 
+    Int curPOC = ((checkGOP-1)/m_iGOPSize)*m_iGOPSize + m_GOPList[curGOP].m_POC;
+    if(m_GOPList[curGOP].m_POC<0)
     {
       printf("\nError: found fewer Reference Picture Sets than GOPSize\n");
       errorGOP=true;
     }
-    else 
+    else
     {
       //check that all reference pictures are available, or have a POC < 0 meaning they might be available in the next GOP.
       Bool beforeI = false;
-      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
+      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++)
       {
         Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
         if(absPOC < 0)
         {
           beforeI=true;
         }
-        else 
+        else
         {
           Bool found=false;
-          for(Int j=0; j<numRefs; j++) 
+          for(Int j=0; j<numRefs; j++)
           {
-            if(refList[j]==absPOC) 
+            if(refList[j]==absPOC)
             {
               found=true;
               for(Int k=0; k<m_iGOPSize; k++)
@@ -1207,7 +1207,7 @@ Void TAppEncCfg::xCheckParameter()
       if(!beforeI&&!errorGOP)
       {
         //all ref frames were present
-        if(!isOK[curGOP]) 
+        if(!isOK[curGOP])
         {
           numOK++;
           isOK[curGOP]=true;
@@ -1217,12 +1217,12 @@ Void TAppEncCfg::xCheckParameter()
           }
         }
       }
-      else 
+      else
       {
         //create a new GOPEntry for this frame containing all the reference pictures that were available (POC > 0)
         m_GOPList[m_iGOPSize+m_extraRPSs]=m_GOPList[curGOP];
         Int newRefs=0;
-        for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
+        for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++)
         {
           Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
           if(absPOC>=0)
@@ -1233,7 +1233,7 @@ Void TAppEncCfg::xCheckParameter()
           }
         }
         Int numPrefRefs = m_GOPList[curGOP].m_numRefPicsActive;
-        
+
         for(Int offset = -1; offset>-checkGOP; offset--)
         {
           //step backwards in coding order and include any extra available pictures we might find useful to replace the ones with POC < 0.
@@ -1249,14 +1249,14 @@ Void TAppEncCfg::xCheckParameter()
                 newRef=true;
               }
             }
-            for(Int i=0; i<newRefs; i++) 
+            for(Int i=0; i<newRefs; i++)
             {
               if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[i]==offPOC-curPOC)
               {
                 newRef=false;
               }
             }
-            if(newRef) 
+            if(newRef)
             {
               Int insertPoint=newRefs;
               //this picture can be added, find appropriate place in list and insert it.
@@ -1304,7 +1304,7 @@ Void TAppEncCfg::xCheckParameter()
           Int refPOC = m_GOPList[rIdx].m_POC;
           Int refPics = m_GOPList[rIdx].m_numRefPics;
           Int newIdc=0;
-          for(Int i = 0; i<= refPics; i++) 
+          for(Int i = 0; i<= refPics; i++)
           {
             Int deltaPOC = ((i != refPics)? m_GOPList[rIdx].m_referencePics[i] : 0);  // check if the reference abs POC is >= 0
             Int absPOCref = refPOC+deltaPOC;
@@ -1326,18 +1326,18 @@ Void TAppEncCfg::xCheckParameter()
             m_GOPList[m_iGOPSize+m_extraRPSs].m_refIdc[newIdc]=refIdc;
             newIdc++;
           }
-          m_GOPList[m_iGOPSize+m_extraRPSs].m_interRPSPrediction = 1;  
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_interRPSPrediction = 1;
           m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefIdc = newIdc;
-          m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRPS = refPOC - m_GOPList[m_iGOPSize+m_extraRPSs].m_POC; 
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRPS = refPOC - m_GOPList[m_iGOPSize+m_extraRPSs].m_POC;
         }
         curGOP=m_iGOPSize+m_extraRPSs;
         m_extraRPSs++;
       }
       numRefs=0;
-      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
+      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++)
       {
         Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
-        if(absPOC >= 0) 
+        if(absPOC >= 0)
         {
           refList[numRefs]=absPOC;
           numRefs++;
@@ -1350,7 +1350,7 @@ Void TAppEncCfg::xCheckParameter()
   }
   xConfirmPara(errorGOP,"Invalid GOP structure given");
   m_maxTempLayer = 1;
-  for(Int i=0; i<m_iGOPSize; i++) 
+  for(Int i=0; i<m_iGOPSize; i++)
   {
     if(m_GOPList[i].m_temporalId >= m_maxTempLayer)
     {
@@ -1363,13 +1363,13 @@ Void TAppEncCfg::xCheckParameter()
     m_numReorderPics[i] = 0;
     m_maxDecPicBuffering[i] = 1;
   }
-  for(Int i=0; i<m_iGOPSize; i++) 
+  for(Int i=0; i<m_iGOPSize; i++)
   {
     if(m_GOPList[i].m_numRefPics+1 > m_maxDecPicBuffering[m_GOPList[i].m_temporalId])
     {
       m_maxDecPicBuffering[m_GOPList[i].m_temporalId] = m_GOPList[i].m_numRefPics + 1;
     }
-    Int highestDecodingNumberWithLowerPOC = 0; 
+    Int highestDecodingNumberWithLowerPOC = 0;
     for(Int j=0; j<m_iGOPSize; j++)
     {
       if(m_GOPList[j].m_POC <= m_GOPList[i].m_POC)
@@ -1380,18 +1380,18 @@ Void TAppEncCfg::xCheckParameter()
     Int numReorder = 0;
     for(Int j=0; j<highestDecodingNumberWithLowerPOC; j++)
     {
-      if(m_GOPList[j].m_temporalId <= m_GOPList[i].m_temporalId && 
+      if(m_GOPList[j].m_temporalId <= m_GOPList[i].m_temporalId &&
         m_GOPList[j].m_POC > m_GOPList[i].m_POC)
       {
         numReorder++;
       }
-    }    
+    }
     if(numReorder > m_numReorderPics[m_GOPList[i].m_temporalId])
     {
       m_numReorderPics[m_GOPList[i].m_temporalId] = numReorder;
     }
   }
-  for(Int i=0; i<MAX_TLAYER-1; i++) 
+  for(Int i=0; i<MAX_TLAYER-1; i++)
   {
     // a lower layer can not have higher value of m_numReorderPics than a higher layer
     if(m_numReorderPics[i+1] < m_numReorderPics[i])
@@ -1417,7 +1417,7 @@ Void TAppEncCfg::xCheckParameter()
   }
 
   if(m_vuiParametersPresentFlag && m_bitstreamRestrictionFlag)
-  { 
+  {
     Int PicSizeInSamplesY =  m_iSourceWidth * m_iSourceHeight;
     if(tileFlag)
     {
@@ -1429,14 +1429,14 @@ Void TAppEncCfg::xCheckParameter()
       {
         maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_iNumColumnsMinus1)/(m_iNumColumnsMinus1+1));
         maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_iNumRowsMinus1)/(m_iNumRowsMinus1+1));
-        // if only the last tile-row is one treeblock higher than the others 
+        // if only the last tile-row is one treeblock higher than the others
         // the maxTileHeight becomes smaller if the last row of treeblocks has lower height than the others
         if(!((heightInCU-1)%(m_iNumRowsMinus1+1)))
         {
           maxTileHeight = maxTileHeight - m_uiMaxCUHeight + (m_iSourceHeight % m_uiMaxCUHeight);
-        }     
-        // if only the last tile-column is one treeblock wider than the others 
-        // the maxTileWidth becomes smaller if the last column of treeblocks has lower width than the others   
+        }
+        // if only the last tile-column is one treeblock wider than the others
+        // the maxTileWidth becomes smaller if the last column of treeblocks has lower width than the others
         if(!((widthInCU-1)%(m_iNumColumnsMinus1+1)))
         {
           maxTileWidth = maxTileWidth - m_uiMaxCUWidth + (m_iSourceWidth % m_uiMaxCUWidth);
@@ -1547,15 +1547,15 @@ Void TAppEncCfg::xSetGlobal()
   // set max CU width & height
   g_uiMaxCUWidth  = m_uiMaxCUWidth;
   g_uiMaxCUHeight = m_uiMaxCUHeight;
-  
+
   // compute actual CU depth with respect to config depth and max transform size
   g_uiAddCUDepth  = 0;
   while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + g_uiAddCUDepth )  ) ) g_uiAddCUDepth++;
-  
+
   m_uiMaxCUDepth += g_uiAddCUDepth;
   g_uiAddCUDepth++;
   g_uiMaxCUDepth = m_uiMaxCUDepth;
-  
+
   // set internal bit-depth and constants
   for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
   {
@@ -1666,7 +1666,7 @@ Void TAppEncCfg::xPrintParameter()
 
   printf("Max Num Merge Candidates        : %d\n", m_maxNumMergeCand);
   printf("\n");
-  
+
   printf("TOOL CFG: ");
 #if RExt__INPUT_MSB_EXTENSION
   printf("IBD:%d ", ((g_bitDepth[CHANNEL_TYPE_LUMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA]) || (g_bitDepth[CHANNEL_TYPE_CHROMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA])));
@@ -1729,7 +1729,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
 
   printf("\n\n");
-  
+
   fflush(stdout);
 }
 
@@ -1737,7 +1737,7 @@ Bool confirmPara(Bool bflag, const Char* message)
 {
   if (!bflag)
     return false;
-  
+
   printf("Error: %s\n",message);
   return true;
 }

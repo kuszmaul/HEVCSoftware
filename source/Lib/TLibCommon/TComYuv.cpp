@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -105,13 +105,13 @@ Void TComYuv::copyToPicComponent  ( const ComponentID ch, TComPicYuv* pcPicYuvDs
 {
   const Int iWidth  = getWidth(ch) >>uiPartDepth;
   const Int iHeight = getHeight(ch)>>uiPartDepth;
-  
+
   const Pel* pSrc     = getAddr(ch, uiPartIdx, iWidth);
         Pel* pDst     = pcPicYuvDst->getAddr ( ch, iCuAddr, uiAbsZorderIdx );
-  
+
   const UInt  iSrcStride  = getStride(ch);
   const UInt  iDstStride  = pcPicYuvDst->getStride(ch);
-  
+
   for ( Int y = iHeight; y != 0; y-- )
   {
     ::memcpy( pDst, pSrc, sizeof(Pel)*iWidth);
@@ -133,12 +133,12 @@ Void TComYuv::copyFromPicComponent  ( const ComponentID ch, const TComPicYuv* pc
 {
         Pel* pDst     = getAddr(ch);
   const Pel* pSrc     = pcPicYuvSrc->getAddr ( ch, iCuAddr, uiAbsZorderIdx );
-  
+
   const UInt iDstStride  = getStride(ch);
   const UInt iSrcStride  = pcPicYuvSrc->getStride(ch);
   const Int  iWidth=getWidth(ch);
   const Int  iHeight=getHeight(ch);
-  
+
   for (Int y = iHeight; y != 0; y-- )
   {
     ::memcpy( pDst, pSrc, sizeof(Pel)*iWidth);
@@ -160,12 +160,12 @@ Void TComYuv::copyToPartComponent( const ComponentID ch, TComYuv* pcYuvDst, cons
 {
   const Pel* pSrc     = getAddr(ch);
         Pel* pDst     = pcYuvDst->getAddr( ch, uiDstPartIdx );
-  
+
   const UInt iSrcStride  = getStride(ch);
   const UInt iDstStride  = pcYuvDst->getStride(ch);
   const Int  iWidth=getWidth(ch);
   const Int  iHeight=getHeight(ch);
-  
+
   for (Int y = iHeight; y != 0; y-- )
   {
     ::memcpy( pDst, pSrc, sizeof(Pel)*iWidth);
@@ -187,13 +187,13 @@ Void TComYuv::copyPartToComponent( const ComponentID ch, TComYuv* pcYuvDst, cons
 {
   const Pel* pSrc     = getAddr(ch, uiSrcPartIdx);
         Pel* pDst     = pcYuvDst->getAddr(ch, 0 );
-  
+
   const UInt  iSrcStride  = getStride(ch);
   const UInt  iDstStride  = pcYuvDst->getStride(ch);
-  
+
   const UInt uiHeight = pcYuvDst->getHeight(ch);
   const UInt uiWidth = pcYuvDst->getWidth(ch);
-  
+
   for ( UInt y = uiHeight; y != 0; y-- )
   {
     ::memcpy( pDst, pSrc, sizeof(Pel)*uiWidth);
@@ -218,10 +218,10 @@ Void TComYuv::copyPartToPartComponent  ( const ComponentID ch, TComYuv* pcYuvDst
   if( pSrc == pDst )
   {
     //th not a good idea
-    //th best would be to fix the caller 
+    //th best would be to fix the caller
     return ;
   }
-  
+
   const UInt  iSrcStride = getStride(ch);
   const UInt  iDstStride = pcYuvDst->getStride(ch);
   for ( UInt y = iHeightComponent; y != 0; y-- )
@@ -242,7 +242,7 @@ Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID ch, TComYuv* pcYuv
   if( pSrc == pDst )
   {
     //th not a good idea
-    //th best would be to fix the caller 
+    //th best would be to fix the caller
     return ;
   }
 
@@ -272,7 +272,7 @@ Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const
     const Pel* pSrc0 = pcYuvSrc0->getAddr(ch, uiTrUnitIdx, uiPartWidth );
     const Pel* pSrc1 = pcYuvSrc1->getAddr(ch, uiTrUnitIdx, uiPartWidth );
           Pel* pDst  = getAddr(ch, uiTrUnitIdx, uiPartWidth );
-  
+
     const UInt iSrc0Stride = pcYuvSrc0->getStride(ch);
     const UInt iSrc1Stride = pcYuvSrc1->getStride(ch);
     const UInt iDstStride  = getStride(ch);
@@ -301,7 +301,7 @@ Void TComYuv::subtract( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, cons
     const ComponentID ch=ComponentID(chan);
     const Int uiPartWidth =uiPartSize>>getComponentScaleX(ch);
     const Int uiPartHeight=uiPartSize>>getComponentScaleY(ch);
-  
+
     const Pel* pSrc0 = pcYuvSrc0->getAddr( ch, uiTrUnitIdx, uiPartWidth );
     const Pel* pSrc1 = pcYuvSrc1->getAddr( ch, uiTrUnitIdx, uiPartWidth );
           Pel* pDst  = getAddr( ch, uiTrUnitIdx, uiPartWidth );
@@ -391,15 +391,15 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
 #if !DISABLING_CLIP_FOR_BIPREDME
     const ChannelType chType=toChannelType(ch);
 #endif
-  
+
     const Pel* pSrc  = pcYuvSrc->getAddr(ch, uiPartIdx);
     Pel* pDst  = getAddr(ch, uiPartIdx);
-  
+
     const Int iSrcStride = pcYuvSrc->getStride(ch);
     const Int iDstStride = getStride(ch);
     const Int iWidth  = uiWidth >>getComponentScaleX(ch);
     const Int iHeight = uiHeight>>getComponentScaleY(ch);
-  
+
     for ( Int y = iHeight-1; y >= 0; y-- )
     {
       for ( Int x = iWidth-1; x >= 0; x-- )

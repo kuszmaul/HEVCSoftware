@@ -1,7 +1,7 @@
 /* The copyright in this software is beinOMg made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -103,7 +103,7 @@ TComPrediction::~TComPrediction()
   {
     delete [] m_pLumaRecBuffer;
   }
-  
+
   for (UInt i = 0; i < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; i++)
   {
     for (UInt j = 0; j < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; j++)
@@ -118,7 +118,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 {
   if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] == NULL ) // check if first is null (in which case, nothing initialised yet)
   {
-    Int extWidth  = MAX_CU_SIZE + 16; 
+    Int extWidth  = MAX_CU_SIZE + 16;
     Int extHeight = MAX_CU_SIZE + 1;
 
     for (UInt i = 0; i < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; i++)
@@ -202,7 +202,7 @@ Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt
   {
     pDcVal = pSrc[-1]; // Default DC value already calculated and placed in the prediction array if no neighbors are available
   }
-  
+
   return pDcVal;
 }
 
@@ -276,7 +276,7 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 
     Pel  refAbove[2*MAX_CU_SIZE+1];
     Pel  refLeft[2*MAX_CU_SIZE+1];
-    
+
     // Initialise the Main and Left reference array.
     if (intraPredAngle < 0)
     {
@@ -500,13 +500,13 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
   Int         iHeight;
   UInt        uiPartAddr;
 
-  pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );      
+  pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 
   TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiPartAddr );
-  
+
   for (UInt ch = COMPONENT_Y; ch < pcYuvPred->getNumberValidComponents(); ch++)
-    xPredIntraBCBlk  (ComponentID(ch),  pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );     
-  
+    xPredIntraBCBlk  (ComponentID(ch),  pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+
   return;
 }
 
@@ -617,7 +617,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
     }
     else
     {
-      if ( ( pcCU->getSlice()->getPPS()->getUseWP()       && pcCU->getSlice()->getSliceType() == P_SLICE ) || 
+      if ( ( pcCU->getSlice()->getPPS()->getUseWP()       && pcCU->getSlice()->getSliceType() == P_SLICE ) ||
            ( pcCU->getSlice()->getPPS()->getWPBiPred()    && pcCU->getSlice()->getSliceType() == B_SLICE ) )
       {
         xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, true );
@@ -663,20 +663,20 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
   Int     dstStride  = dstPic->getStride(compID);
   Int shiftHor=(2+refPic->getComponentScaleX(compID));
   Int shiftVer=(2+refPic->getComponentScaleY(compID));
-  
+
   Int     refOffset  = (mv->getHor() >> shiftHor) + (mv->getVer() >> shiftVer) * refStride;
-  
+
   Pel*    ref     = refPic->getAddr(compID, cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;
-  
+
   Pel*    dst = dstPic->getAddr( compID, partAddr );
-  
+
   Int     xFrac  = mv->getHor() & ((1<<shiftHor)-1);
   Int     yFrac  = mv->getVer() & ((1<<shiftVer)-1);
   UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
   UInt    cxHeight = height >> refPic->getComponentScaleY(compID);
-  
+
   const ChromaFormat chFmt = cu->getPic()->getChromaFormat();
-  
+
   if ( yFrac == 0 )
   {
     m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt);
@@ -700,29 +700,29 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 Void TComPrediction::xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic )
 {
   Int     refStride  = refPic->getStride(compID);
-  Int     dstStride  = dstPic->getStride(compID);    
-  
+  Int     dstStride  = dstPic->getStride(compID);
+
   Int mvx = mv->getHor() >>  refPic->getComponentScaleX(compID);
   Int mvy = mv->getVer() >>  refPic->getComponentScaleY(compID);
-    
+
   Int     refOffset  = mvx + mvy * refStride;
-    
-  Pel*    ref = refPic->getAddr( compID, cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;  
-  Pel*    dst = dstPic->getAddr( compID, partAddr ); 
-  
+
+  Pel*    ref = refPic->getAddr( compID, cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refOffset;
+  Pel*    dst = dstPic->getAddr( compID, partAddr );
+
   UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
-  UInt    cxHeight = height >> refPic->getComponentScaleY(compID); 
-    
+  UInt    cxHeight = height >> refPic->getComponentScaleY(compID);
+
   for (Int row = 0; row < cxHeight; row++)
   {
     for (Int col = 0; col < cxWidth; col++)
     {
       dst[col] = ref[col];
     }
-        
+
     ref += refStride;
     dst += dstStride;
-  }                
+  }
 }
 
 Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst )

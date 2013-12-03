@@ -80,21 +80,21 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
     *it_write = *it_read;
   }
   assert(zeroCount == 0);
-  
+
   if (isVclNalUnit)
   {
     // Remove cabac_zero_word from payload if present
     Int n = 0;
-    
+
     while (it_write[-1] == 0x00)
     {
       it_write--;
       n++;
     }
-    
+
     if (n > 0)
     {
-      printf("\nDetected %d instances of cabac_zero_word", n/2);      
+      printf("\nDetected %d instances of cabac_zero_word", n/2);
     }
   }
 
@@ -145,7 +145,7 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
   convertPayloadToRBSP(nalUnitBuf, pcBitstream, (nalUnitBuf[0] & 64) == 0);
-  
+
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
   nalu.m_Bitstream->setEmulationPreventionByteLocation(pcBitstream->getEmulationPreventionByteLocation());
   delete pcBitstream;

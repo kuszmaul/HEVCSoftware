@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -130,11 +130,11 @@ protected:
   Int       m_extraRPSs;
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
-  
+
   Int       m_iQP;                              //  if (AdaptiveQP == OFF)
-  
+
   Int       m_aiPad[2];
-  
+
 
   Int       m_iMaxRefPicNum;                     ///< this is used to mimic the sliding mechanism used by the decoder
                                                  // TODO: We need to have a common sliding mechanism used by both the encoder and decoder
@@ -146,7 +146,7 @@ protected:
   UInt      m_uiQuadtreeTULog2MinSize;
   UInt      m_uiQuadtreeTUMaxDepthInter;
   UInt      m_uiQuadtreeTUMaxDepthIntra;
-  
+
   //====== Loop/Deblock Filter ========
   Bool      m_bLoopFilterDisable;
   Bool      m_loopFilterOffsetInPPS;
@@ -186,7 +186,7 @@ protected:
   Bool      m_useHighPrecisionPredictionWeighting;
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
-  
+
   //====== Tool list ========
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
@@ -212,14 +212,14 @@ protected:
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
-  
+
   Bool      m_bUseConstrainedIntraPred;
   Bool      m_usePCM;
   UInt      m_pcmLog2MaxSize;
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
   Int       m_sliceMode;
-  Int       m_sliceArgument; 
+  Int       m_sliceArgument;
   //====== Dependent Slice ========
   Int       m_sliceSegmentMode;
   Int       m_sliceSegmentArgument;
@@ -250,7 +250,7 @@ protected:
   Bool      m_toneMapPersistenceFlag;
   Int       m_codedDataBitDepth;
   Int       m_targetBitDepth;
-  Int       m_modelId; 
+  Int       m_modelId;
   Int       m_minValue;
   Int       m_maxValue;
   Int       m_sigmoidMidpoint;
@@ -308,7 +308,7 @@ protected:
 
   TComVPS   m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
-  Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
+  Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
   Bool      m_aspectRatioInfoPresentFlag;                     ///< Signals whether aspect_ratio_idc is present
   Int       m_aspectRatioIdc;                                 ///< aspect_ratio_idc
@@ -353,7 +353,7 @@ public:
     delete[] m_puiColumnWidth;
     delete[] m_puiRowHeight;
   }
-  
+
   Void setProfile(Profile::Name profile) { m_profile = profile; }
   Void setLevel(Level::Tier tier, Level::Name level) { m_levelTier = tier; m_level = level; }
 
@@ -369,7 +369,7 @@ public:
 
   Bool      getPrintMSEBasedSequencePSNR    ()         const { return m_printMSEBasedSequencePSNR;  }
   Void      setPrintMSEBasedSequencePSNR    (Bool value)     { m_printMSEBasedSequencePSNR = value; }
-  
+
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }
@@ -379,24 +379,24 @@ public:
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
-  
+
   Void      setQP                           ( Int   i )      { m_iQP = i; }
-  
+
   Void      setPad                          ( Int*  iPad                   )      { for ( Int i = 0; i < 2; i++ ) m_aiPad[i] = iPad[i]; }
-  
+
   Int       getMaxRefPicNum                 ()                              { return m_iMaxRefPicNum;           }
   Void      setMaxRefPicNum                 ( Int iMaxRefPicNum )           { m_iMaxRefPicNum = iMaxRefPicNum;  }
 
-  Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
+  Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              }
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
   Void      setQuadtreeTULog2MinSize        ( UInt  u )      { m_uiQuadtreeTULog2MinSize = u; }
   Void      setQuadtreeTUMaxDepthInter      ( UInt  u )      { m_uiQuadtreeTUMaxDepthInter = u; }
   Void      setQuadtreeTUMaxDepthIntra      ( UInt  u )      { m_uiQuadtreeTUMaxDepthIntra = u; }
-  
+
   Void setUseAMP( Bool b ) { m_useAMP = b; }
-  
+
   //====== Loop/Deblock Filter ========
   Void      setLoopFilterDisable            ( Bool  b )      { m_bLoopFilterDisable       = b; }
   Void      setLoopFilterOffsetInPPS        ( Bool  b )      { m_loopFilterOffsetInPPS      = b; }
@@ -436,7 +436,7 @@ public:
 
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
-  
+
 #if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Void      setUseLossless                  (Bool   b )      { m_useLossless = b;   }
@@ -457,15 +457,15 @@ public:
   Int       getMaxDecPicBuffering           (UInt tlayer) { return m_maxDecPicBuffering[tlayer]; }
   Int       getNumReorderPics               (UInt tlayer) { return m_numReorderPics[tlayer]; }
   Int       getQP                           ()      { return  m_iQP; }
-  
+
   Int       getPad                          ( Int i )      { assert (i < 2 );                      return  m_aiPad[i]; }
-  
+
   //======== Transform =============
   UInt      getQuadtreeTULog2MaxSize        ()      const { return m_uiQuadtreeTULog2MaxSize; }
   UInt      getQuadtreeTULog2MinSize        ()      const { return m_uiQuadtreeTULog2MinSize; }
   UInt      getQuadtreeTUMaxDepthInter      ()      const { return m_uiQuadtreeTUMaxDepthInter; }
   UInt      getQuadtreeTUMaxDepthIntra      ()      const { return m_uiQuadtreeTUMaxDepthIntra; }
-  
+
   //==== Loop/Deblock Filter ========
   Bool      getLoopFilterDisable            ()      { return  m_bLoopFilterDisable;       }
   Bool      getLoopFilterOffsetInPPS        ()      { return m_loopFilterOffsetInPPS; }
@@ -487,7 +487,7 @@ public:
   //====== Lossless ========
   Bool      getUseLossless                  ()      { return  m_useLossless;  }
 #endif
-  
+
   //==== Tool list ========
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
@@ -521,7 +521,7 @@ public:
   Bool      getUseEarlySkipDetection        ()      { return m_useEarlySkipDetection; }
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   }
-  Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   } 
+  Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   }
   Bool      getUsePCM                       ()      { return m_usePCM;                 }
   UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
@@ -751,7 +751,7 @@ public:
   Void      setUseStrongIntraSmoothing ( Bool b ) { m_useStrongIntraSmoothing = b;    }
   Bool      getUseStrongIntraSmoothing ()         { return m_useStrongIntraSmoothing; }
 
-  Void      setActiveParameterSetsSEIEnabled ( Int b )  { m_activeParameterSetsSEIEnabled = b; }  
+  Void      setActiveParameterSetsSEIEnabled ( Int b )  { m_activeParameterSetsSEIEnabled = b; }
   Int       getActiveParameterSetsSEIEnabled ()         { return m_activeParameterSetsSEIEnabled; }
   Bool      getVuiParametersPresentFlag()                 { return m_vuiParametersPresentFlag; }
   Void      setVuiParametersPresentFlag(Bool i)           { m_vuiParametersPresentFlag = i; }
@@ -792,7 +792,7 @@ public:
   Window   &getDefaultDisplayWindow()                     { return m_defaultDisplayWindow; }
   Void      setDefaultDisplayWindow (Int offsetLeft, Int offsetRight, Int offsetTop, Int offsetBottom ) { m_defaultDisplayWindow.setWindow (offsetLeft, offsetRight, offsetTop, offsetBottom); }
   Bool      getFrameFieldInfoPresentFlag()                { return m_frameFieldInfoPresentFlag; }
-  Void      setFrameFieldInfoPresentFlag(Bool i)          { m_frameFieldInfoPresentFlag = i; }  
+  Void      setFrameFieldInfoPresentFlag(Bool i)          { m_frameFieldInfoPresentFlag = i; }
   Bool      getPocProportionalToTimingFlag()              { return m_pocProportionalToTimingFlag; }
   Void      setPocProportionalToTimingFlag(Bool x)        { m_pocProportionalToTimingFlag = x;    }
   Int       getNumTicksPocDiffOneMinus1()                 { return m_numTicksPocDiffOneMinus1;    }
@@ -813,16 +813,16 @@ public:
   Void      setLog2MaxMvLengthHorizontal(Int i)           { m_log2MaxMvLengthHorizontal = i; }
   Int       getLog2MaxMvLengthVertical()                  { return m_log2MaxMvLengthVertical; }
   Void      setLog2MaxMvLengthVertical(Int i)             { m_log2MaxMvLengthVertical = i; }
-  
+
   Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
   Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
-  
+
   Bool getInterlacedSourceFlag() const { return m_interlacedSourceFlag; }
   Void setInterlacedSourceFlag(Bool b) { m_interlacedSourceFlag = b; }
-  
+
   Bool getNonPackedConstraintFlag() const { return m_nonPackedConstraintFlag; }
   Void setNonPackedConstraintFlag(Bool b) { m_nonPackedConstraintFlag = b; }
-  
+
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
 };

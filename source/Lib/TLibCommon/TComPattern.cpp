@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -181,7 +181,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
             Int          stride    = uiROIWidth;
       const Pel         *piSrcPtr  = piAdiTemp                             + (stride * uiTuHeight2); // bottom left
             Pel         *piDestPtr = m_piYuvExt[compID][PRED_BUF_FILTERED] + (stride * uiTuHeight2); // bottom left
-      
+
       //------------------------------------------------
 
       //TODO: RExt - investigate the use of this for chroma (luma only for now to match HM)
@@ -228,7 +228,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
       }
 
       //------------------------------------------------
-      
+
       //top-left
 
       if (useStrongIntraSmoothing)
@@ -340,7 +340,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     // all above units have "unitWidth" samples each, all left/below-left units have "unitHeight" samples each
     const Int  iTotalSamples = (iLeftUnits * unitHeight) + ((iAboveUnits + 1) * unitWidth);
     Pel  piAdiLine[5 * MAX_CU_SIZE];
-    Pel  *piAdiLineTemp; 
+    Pel  *piAdiLineTemp;
     const Bool *pbNeighborFlags;
 
 
@@ -349,7 +349,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     {
       piAdiLine[i] = iDCValue;
     }
-    
+
     // Fill top-left sample
     piRoiTemp = piRoiOrigin - iPicStride - 1;
     piAdiLineTemp = piAdiLine + (iLeftUnits * unitHeight);

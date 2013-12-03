@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -86,7 +86,7 @@ public:
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
   Int   iSubShift;
-  
+
   DistParam()
   {
     pOrg = NULL;
@@ -107,7 +107,7 @@ class TComRdCost
 {
 private:
   // for distortion
-  
+
   FpDistFunc              m_afpDistortFunc[DF_TOTAL_FUNCTIONS]; // [eDFunc]
   CostMode                m_costMode;
   Double                  m_distortionWeight[MAX_NUM_COMPONENT]; // only chroma values are used.
@@ -121,7 +121,7 @@ private:
   UInt                    m_uiLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
 #endif
   Double                  m_dFrameLambda;
-  
+
   // for motion cost
 #if FIX203
   TComMv                  m_mvPredictor;
@@ -140,18 +140,18 @@ private:
 #if !FIX203
   Int                     m_iSearchLimit;
 #endif
-  
+
 public:
   TComRdCost();
   virtual ~TComRdCost();
-  
+
   Double  calcRdCost  ( UInt   uiBits, Distortion uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-  
+
   Void    setDistortionWeight  ( const ComponentID compID, const Double distortionWeight ) { m_distortionWeight[compID] = distortionWeight; }
   Void    setLambda      ( Double dLambda );
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
-  
+
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
 
   Double  getLambda() { return m_dLambda; }
@@ -161,14 +161,14 @@ public:
 
   // Distortion Functions
   Void    init();
-  
+
   Void    setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam );
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
-  
+
   Distortion calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
-  
+
   // for motion cost
 #if !FIX203
   Void    initRateDistortionModel( Int iSubPelSearchLimit );
@@ -210,8 +210,8 @@ public:
   Distortion getCost( UInt b )                 { return Distortion(( m_dCost * b ) / 65536.0); }
 #else
   Distortion getCost( UInt b )                 { return ( m_uiCost * b ) >> 16; }
-#endif 
-  UInt    getBits( Int x, Int y )          
+#endif
+  UInt    getBits( Int x, Int y )
   {
 #if FIX203
     return xGetComponentBits((x << m_iCostScale) - m_mvPredictor.getHor())
@@ -220,9 +220,9 @@ public:
     return m_puiHorCost[ x * (1<<m_iCostScale)] + m_puiVerCost[ y * (1<<m_iCostScale) ];
 #endif
   }
-  
+
 private:
-  
+
   static Distortion xGetSSE           ( DistParam* pcDtParam );
   static Distortion xGetSSE4          ( DistParam* pcDtParam );
   static Distortion xGetSSE8          ( DistParam* pcDtParam );
@@ -230,7 +230,7 @@ private:
   static Distortion xGetSSE32         ( DistParam* pcDtParam );
   static Distortion xGetSSE64         ( DistParam* pcDtParam );
   static Distortion xGetSSE16N        ( DistParam* pcDtParam );
-  
+
   static Distortion xGetSAD           ( DistParam* pcDtParam );
   static Distortion xGetSAD4          ( DistParam* pcDtParam );
   static Distortion xGetSAD8          ( DistParam* pcDtParam );
@@ -238,7 +238,7 @@ private:
   static Distortion xGetSAD32         ( DistParam* pcDtParam );
   static Distortion xGetSAD64         ( DistParam* pcDtParam );
   static Distortion xGetSAD16N        ( DistParam* pcDtParam );
-  
+
 #if AMP_SAD
   static Distortion xGetSAD12         ( DistParam* pcDtParam );
   static Distortion xGetSAD24         ( DistParam* pcDtParam );
@@ -251,9 +251,9 @@ private:
   static Distortion xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
 
-  
+
 public:
-  
+
   Distortion   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
 
 };// END CLASS DEFINITION TComRdCost
