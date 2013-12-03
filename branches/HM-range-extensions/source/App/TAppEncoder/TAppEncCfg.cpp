@@ -454,9 +454,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
   ("ImplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT], false, "Enable implicitly signalled residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
   ("ExplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT], false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
-#if RExt__NRCE2_RESIDUAL_ROTATION
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
-#endif
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
@@ -1653,9 +1651,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Implicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
   printf("Explicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
   printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? "Enabled" : "Disabled") );
-#if RExt__NRCE2_RESIDUAL_ROTATION
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
-#endif
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   printf("Cross-component decorrelation   : %s\n", (m_useCrossComponentDecorrelation         ? (m_reconBasedDecorrelationEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );

@@ -245,8 +245,6 @@
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   1 ///< 0 = disable feature, 1 (default) = have command line control to optionally cost function for lossless / mixed lossless evaluation.
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 
-#define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
-
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0053_O0183_DST_FOR_INTRA_BLOCK_COPY                             1 ///< 0 = use the DST only for non-block-copy intra, 1 (default) = use the DST for both intra and intra-block-copy

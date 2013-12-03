@@ -723,11 +723,7 @@ private:
 #if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Bool        m_useHighPrecisionPredictionWeighting;
 #endif
-
-#if RExt__NRCE2_RESIDUAL_ROTATION
   Bool        m_useResidualRotation;
-#endif
-
   Bool        m_useSingleSignificanceMapContext;
 
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
@@ -867,10 +863,8 @@ public:
   Void      setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
   Bool      getUseSAO                  ()           {return m_bUseSAO;}
 
-#if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      getUseResidualRotation            ()                 const { return m_useResidualRotation;  }
   Void      setUseResidualRotation            (const Bool value)       { m_useResidualRotation = value; }
-#endif
 
   Bool      getUseSingleSignificanceMapContext()                 const { return m_useSingleSignificanceMapContext;  }
   Void      setUseSingleSignificanceMapContext(const Bool value)       { m_useSingleSignificanceMapContext = value; }

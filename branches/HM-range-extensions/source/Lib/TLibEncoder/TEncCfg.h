@@ -208,9 +208,7 @@ protected:
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
   UInt      m_transformSkipLog2MaxSize;
-#if RExt__NRCE2_RESIDUAL_ROTATION
   Bool      m_useResidualRotation;
-#endif
   Bool      m_useSingleSignificanceMapContext;
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   Bool      m_useGolombRiceGroupAdaptation;
@@ -545,10 +543,8 @@ public:
 
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
-#if RExt__NRCE2_RESIDUAL_ROTATION
   Bool getUseResidualRotation                          ()            const { return m_useResidualRotation;  }
   Void setUseResidualRotation                          (const Bool value)  { m_useResidualRotation = value; }
-#endif
   Bool getUseSingleSignificanceMapContext              ()            const { return m_useSingleSignificanceMapContext;  }
   Void setUseSingleSignificanceMapContext              (const Bool value)  { m_useSingleSignificanceMapContext = value; }
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION

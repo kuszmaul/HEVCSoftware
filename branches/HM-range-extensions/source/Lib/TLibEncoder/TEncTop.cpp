@@ -660,10 +660,7 @@ Void TEncTop::xInitSPS()
 #endif
 
   m_cSPS.setUseSAO( m_bUseSAO );
-
-#if RExt__NRCE2_RESIDUAL_ROTATION
   m_cSPS.setUseResidualRotation(m_useResidualRotation);
-#endif
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   m_cSPS.setUseGolombRiceGroupAdaptation(m_useGolombRiceGroupAdaptation);
