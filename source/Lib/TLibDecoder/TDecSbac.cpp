@@ -90,8 +90,8 @@ TDecSbac::TDecSbac()
 , m_cSaoTypeIdxSCModel                       ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel                    ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel            ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
-, m_interRdpcmFlagSCModel                    ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-, m_interRdpcmDirSCModel                     ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_DIR_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+, m_explicitRdpcmFlagSCModel                 ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+, m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 , m_cCrossComponentDecorrelationSCModel      ( 1,             1,                      NUM_CROSS_COMPONENT_DECORRELATION_CTX, m_contextModels + m_numContextModels, m_numContextModels)
@@ -156,8 +156,8 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUTransSubdivFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-  m_interRdpcmFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_FLAG);
-  m_interRdpcmDirSCModel.initBuffer               ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_DIR);
+  m_explicitRdpcmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
+  m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
@@ -213,8 +213,8 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUTransSubdivFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-  m_interRdpcmFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG );
-  m_interRdpcmDirSCModel.initBuffer               ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR );
+  m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG );
+  m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR );
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
@@ -1312,7 +1312,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   {
     beValid = false;
     if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
-      parseInterRdpcmMode(rTu, compID);
+      parseExplicitRdpcmMode(rTu, compID);
   }
   else
   {
@@ -1326,11 +1326,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
   {
     parseTransformSkipFlags(rTu, compID);
-    //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the inter RDPCM mode
+    //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the explicit RDPCM mode
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
-      parseInterRdpcmMode(rTu, compID);
-      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) != RDPCM_OFF)
+      parseExplicitRdpcmMode(rTu, compID);
+      if(pcCU->getExplicitRdpcmMode(compID, uiAbsPartIdx) != RDPCM_OFF)
       {
         //  Sign data hiding is avoided for horizontal and vertical RDPCM modes
         beValid = false;
@@ -2015,11 +2015,11 @@ Void TDecSbac::loadContexts ( TDecSbac* pScr )
   xCopyContextsFrom(pScr);
 }
 
-/** Performs CABAC decoding of the inter RDPCM mode
+/** Performs CABAC decoding of the explicit RDPCM mode
  * \param rTu current TU data structure
  * \param compID component identifier
  */
-Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
+Void TDecSbac::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
 {
   TComDataCU* cu = rTu.getCU();
   const UInt absPartIdx=rTu.GetAbsPartIdxTU(compID);
@@ -2031,25 +2031,25 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
   assert(tuHeight == tuWidth);
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-  const TComCodingStatisticsClassType ctype(STATS__INTER_RDPCM_BITS, g_aucConvertToBit[g_uiMaxCUWidth>>rTu.GetTransformDepthTotal()]+2);
+  const TComCodingStatisticsClassType ctype(STATS__EXPLICIT_RDPCM_BITS, g_aucConvertToBit[g_uiMaxCUWidth>>rTu.GetTransformDepthTotal()]+2);
 #endif
 
-  m_pcTDecBinIf->decodeBin(code, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
+  m_pcTDecBinIf->decodeBin(code, m_explicitRdpcmFlagSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
 
   if(code == 0)
   {
-    cu->setInterRdpcmModePartRange( RDPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+    cu->setExplicitRdpcmModePartRange( RDPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
   }
   else
   {
-    m_pcTDecBinIf->decodeBin(code, m_interRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
+    m_pcTDecBinIf->decodeBin(code, m_explicitRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
     if(code == 0)
     {
-      cu->setInterRdpcmModePartRange( RDPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+      cu->setExplicitRdpcmModePartRange( RDPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
     }
     else
     {
-      cu->setInterRdpcmModePartRange( RDPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
+      cu->setExplicitRdpcmModePartRange( RDPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
     }
   }
 }

@@ -186,7 +186,7 @@ public:
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true  );
   Void updateContextTables           ( SliceType eSliceType, Int iQp  ) { this->updateContextTables( eSliceType, iQp, true); };
 
-  Void codeInterRdpcmMode            ( TComTU &rTu, const ComponentID compID );
+  Void codeExplicitRdpcmMode            ( TComTU &rTu, const ComponentID compID );
 
 
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
@@ -225,8 +225,8 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
-  ContextModel3DBuffer m_interRdpcmFlagSCModel;
-  ContextModel3DBuffer m_interRdpcmDirSCModel;
+  ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
+  ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   ContextModel3DBuffer m_cCrossComponentDecorrelationSCModel;
