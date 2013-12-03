@@ -1147,279 +1147,90 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   }
 #endif
 
-#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-  if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && ( (uiChFinalMode == HOR_IDX) || (uiChFinalMode == VER_IDX) ) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
+  //===== get residual signal =====
   {
-    const UInt uiOrgTrDepth   = rTu.GetTransformDepthRel();
+    // get residual
+    Pel*  pOrg    = piOrg;
+    Pel*  pPred   = piPred;
+    Pel*  pResi   = piResi;
 
-    // quantization params
-    UInt uiAbsSum = 0;
-    if (bIsLuma)
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
-      pcCU->setTrIdxSubParts ( uiTrDepth, uiAbsPartIdx, uiFullDepth );
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
+      }
+
+      pOrg  += uiStride;
+      pResi += uiStride;
+      pPred += uiStride;
     }
-
-    QpParam cQP;
-    setQPforQuant   ( cQP, pcCU->getQP( 0 ), chType, pcCU->getSlice()->getSPS()->getQpBDOffset(chType), pcCU->getSlice()->getPPS()->getQpOffset(compID)+ pcCU->getSlice()->getSliceChromaQpDelta(compID), chFmt, useTransformSkip );
-
-    Pel    tmpResi   [ MAX_CU_SIZE*MAX_CU_SIZE ];
-#if defined DEBUG_STRING
-    TCoeff tmpTransformedDequantised  [ MAX_CU_SIZE*MAX_CU_SIZE ];
-#endif
-    Int    resiDiff;
+  }
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    if (pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation())
+  if (pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation())
+  {
+    if (bUseDecorrelation)
     {
-      if (bUseDecorrelation || (isLuma(compID) && !bUseReconstructedResidualForEstimate))
-      {
-        Pel*  pOrg    = piOrg;
-        Pel*  pPred   = piPred;
-        Pel*  pResi   = tmpResi;
-      
-        for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-        {
-          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-          {
-            pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
-          }
-
-          pOrg  += uiStride;
-          pPred += uiStride;
-          pResi += MAX_CU_SIZE;
-        }
-
-        if( bUseDecorrelation )
-        {
-          if (xCalcCrossComponentDecorrelationAlpha( rTu, compID, lumaResidualForEstimate, tmpResi, uiWidth, uiHeight, MAX_CU_SIZE, MAX_CU_SIZE ) == 0) return;
-        }
-        else //if (isLuma(compID) && !bUseReconstructedResidualForEstimate)
-        {
-          xStoreCrossComponentDecorrelationResult( encoderLumaResidual, piResi, rTu, 0, 0, MAX_CU_SIZE, uiStride );
-        }
-      }
+      if (xCalcCrossComponentDecorrelationAlpha( rTu, compID, lumaResidualForEstimate, piResi, uiWidth, uiHeight, MAX_CU_SIZE, uiStride ) == 0) return;
+      TComTrQuant::crossComponentDecorrelation ( rTu, compID, reconstructedLumaResidual, piResi, piResi, uiWidth, uiHeight, MAX_CU_SIZE, uiStride, uiStride, false );
     }
-    const Int alpha = bUseDecorrelation ? pcCU->getCrossComponentDecorrelationAlpha( uiAbsPartIdx, compID ) : 0;
-#endif
-
-#if RExt__NRCE2_RESIDUAL_ROTATION
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
-    const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
-#else
-    const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
-#endif
-    const UInt lastColumn     = uiWidth  - 1;
-    const UInt lastRow        = uiHeight - 1;
-#endif
-
-    UInt uiPos;
-    if ( uiChFinalMode == VER_IDX )
+    else if (isLuma(compID) && !bUseReconstructedResidualForEstimate)
     {
-
-      for ( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for ( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-          uiPos = (rotateResidual ? (((lastRow - uiY) * uiWidth) + (lastColumn - uiX)) : ((uiY * uiWidth) + uiX));
-#else
-          uiPos = uiY*uiWidth + uiX;
-#endif
-
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-          tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ] - ((alpha * reconstructedLumaResidual[(uiY * MAX_CU_SIZE) + uiX ]) >> 3);
-#else
-          tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ];
-#endif
-
-          if ( uiY > 0 )
-          {
-            resiDiff = tmpResi[ uiY*uiWidth+uiX ] - tmpResi[ (uiY-1)*uiWidth+uiX ];
-          }
-          else
-          {
-            resiDiff = tmpResi[ uiY*uiWidth+uiX ];
-          }
-
-          m_pcTrQuant->transformSkipQuantOneSample(rTu, compID, resiDiff, pcCoeff, uiPos, cQP);
-
-          TCoeff deQuantSample;
-          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[ uiPos ]));
-          if (deQuantSample != 0)
-          {
-            uiAbsSum++;
-          }
-
-          piResi[ uiY*uiStride + uiX ] = Pel(deQuantSample);
-
-          if ( uiY > 0 )
-          {
-            tmpResi[ uiY*uiWidth + uiX] = piResi[ uiY*uiStride + uiX ] + tmpResi[ (uiY-1)*uiWidth + uiX];
-          }
-          else
-          {
-            tmpResi[ uiY*uiWidth + uiX] = piResi[ uiY*uiStride + uiX ];
-          }
-        }
-      }
+      xStoreCrossComponentDecorrelationResult( encoderLumaResidual, piResi, rTu, 0, 0, MAX_CU_SIZE, uiStride );
     }
-    else if ( uiChFinalMode == HOR_IDX )
-    {
-      for ( UInt uiX = 0; uiX < uiWidth; uiX++ )
-      {
-        for ( UInt uiY = 0; uiY < uiHeight; uiY++ )
-        {
-#if RExt__NRCE2_RESIDUAL_ROTATION
-          uiPos = (rotateResidual ? (((lastRow - uiY) * uiWidth) + (lastColumn - uiX)) : ((uiY * uiWidth) + uiX));
+  }
+#endif
+
+  //===== transform and quantization =====
+  //--- init rate estimation arrays for RDOQ ---
+  if( useTransformSkip ? m_pcEncCfg->getUseRDOQTS() : m_pcEncCfg->getUseRDOQ() )
+  {
+    m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, uiWidth, uiHeight, chType );
+  }
+
+  //--- transform and quantization ---
+  TCoeff uiAbsSum = 0;
+  if (bIsLuma)
+  {
+    pcCU       ->setTrIdxSubParts ( uiTrDepth, uiAbsPartIdx, uiFullDepth );
+  }
+
+  QpParam cQP;
+  setQPforQuant   ( cQP, pcCU->getQP( 0 ), chType, pcCU->getSlice()->getSPS()->getQpBDOffset(chType), pcCU->getSlice()->getPPS()->getQpOffset(compID)+ pcCU->getSlice()->getSliceChromaQpDelta(compID), chFmt, useTransformSkip );
+
+#if RDOQ_CHROMA_LAMBDA
+  m_pcTrQuant->selectLambda     (compID);
+#endif
+
+  m_pcTrQuant->transformNxN     ( rTu, compID, piResi, uiStride, pcCoeff,
+#if ADAPTIVE_QP_SELECTION
+    pcArlCoeff,
+#endif
+    uiAbsSum, cQP
+    );
+
+  //--- inverse transform ---
+
+#ifdef DEBUG_STRING
+  if ( (uiAbsSum > 0) || (DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) )
 #else
-          uiPos = uiY*uiWidth + uiX;
+  if ( uiAbsSum > 0 )
 #endif
-
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-          tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ] - ((alpha * reconstructedLumaResidual[(uiY * MAX_CU_SIZE) + uiX]) >> 3);
-#else
-          tmpResi[ uiY*uiWidth+uiX ] = piOrg[ uiY*uiStride+uiX ] - piPred[ uiY*uiStride+uiX ];
-#endif
-
-          if ( uiX > 0 )
-          {
-            resiDiff = tmpResi[ uiY*uiWidth+uiX ] - tmpResi[ uiY*uiWidth+uiX-1 ];
-          }
-          else
-          {
-            resiDiff = tmpResi[ uiY*uiWidth+uiX ];
-          }
-
-          m_pcTrQuant->transformSkipQuantOneSample(rTu, compID, resiDiff, pcCoeff, uiPos, cQP);
-
-          TCoeff deQuantSample;
-          m_pcTrQuant->invTrSkipDeQuantOneSample(rTu, compID, pcCoeff[uiPos], deQuantSample, cQP, uiPos DEBUG_STRING_PASS_INTO(tmpTransformedDequantised[ uiPos ]));
-
-          if (deQuantSample != 0)
-          {
-            uiAbsSum++;
-          }
-
-          piResi[ uiY*uiStride + uiX ] = Pel(deQuantSample);
-          if ( uiX > 0 )
-          {
-            tmpResi[ uiY*uiWidth + uiX] = piResi[ uiY*uiStride + uiX ] + tmpResi[ uiY*uiWidth+uiX-1 ];
-          }
-          else
-          {
-            tmpResi[ uiY*uiWidth + uiX] = piResi[ uiY*uiStride + uiX ];
-          }
-        }
-      }
-    }
-
-#if defined DEBUG_STRING
-    {
-      std::stringstream ss(stringstream::out);
-      printBlockToStream(ss, (compID==0)?"###InvTran ip Ch0: " : ((compID==1)?"###InvTran ip Ch1: ":"###InvTran ip Ch2: "), pcCoeff, uiWidth, uiHeight, uiWidth);
-      printBlockToStream(ss, "###InvTran deq: ",  tmpTransformedDequantised, uiWidth, uiHeight, uiWidth);
-      printBlockToStream(ss, "###InvTran resi: ", piResi, uiWidth, uiHeight, uiStride);
-      sDebug+=ss.str();
-      sDebug+="(TS)\n";
-    }
-#endif
-
-
-  //set the CBF
-    pcCU->setCbfPartRange((((uiAbsSum > 0) ? 1 : 0) << uiOrgTrDepth), compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-
+  {
+    m_pcTrQuant->invTransformNxN ( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&sDebug, (DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask)) );
   }
   else
   {
-#endif // RExt__NRCE2_RESIDUAL_DPCM
-
-    //===== get residual signal =====
+    Pel* pResi = piResi;
+    memset( pcCoeff, 0, sizeof( TCoeff ) * uiWidth * uiHeight );
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
-      // get residual
-      Pel*  pOrg    = piOrg;
-      Pel*  pPred   = piPred;
-      Pel*  pResi   = piResi;
-
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
-        }
-
-        pOrg  += uiStride;
-        pResi += uiStride;
-        pPred += uiStride;
-      }
+      memset( pResi, 0, sizeof( Pel ) * uiWidth );
+      pResi += uiStride;
     }
-
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    if (pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation())
-    {
-      if (bUseDecorrelation)
-      {
-        if (xCalcCrossComponentDecorrelationAlpha( rTu, compID, lumaResidualForEstimate, piResi, uiWidth, uiHeight, MAX_CU_SIZE, uiStride ) == 0) return;
-        TComTrQuant::crossComponentDecorrelation ( rTu, compID, reconstructedLumaResidual, piResi, piResi, uiWidth, uiHeight, MAX_CU_SIZE, uiStride, uiStride, false );
-      }
-      else if (isLuma(compID) && !bUseReconstructedResidualForEstimate)
-      {
-        xStoreCrossComponentDecorrelationResult( encoderLumaResidual, piResi, rTu, 0, 0, MAX_CU_SIZE, uiStride );
-      }
-    }
-#endif
-
-    //===== transform and quantization =====
-    //--- init rate estimation arrays for RDOQ ---
-    if( useTransformSkip ? m_pcEncCfg->getUseRDOQTS() : m_pcEncCfg->getUseRDOQ() )
-    {
-      m_pcEntropyCoder->estimateBit( m_pcTrQuant->m_pcEstBitsSbac, uiWidth, uiHeight, chType );
-    }
-
-    //--- transform and quantization ---
-    TCoeff uiAbsSum = 0;
-    if (bIsLuma)
-    {
-      pcCU       ->setTrIdxSubParts ( uiTrDepth, uiAbsPartIdx, uiFullDepth );
-    }
-
-    QpParam cQP;
-    setQPforQuant   ( cQP, pcCU->getQP( 0 ), chType, pcCU->getSlice()->getSPS()->getQpBDOffset(chType), pcCU->getSlice()->getPPS()->getQpOffset(compID)+ pcCU->getSlice()->getSliceChromaQpDelta(compID), chFmt, useTransformSkip );
-
-#if RDOQ_CHROMA_LAMBDA
-    m_pcTrQuant->selectLambda     (compID);
-#endif
-
-    m_pcTrQuant->transformNxN     ( rTu, compID, piResi, uiStride, pcCoeff,
-#if ADAPTIVE_QP_SELECTION
-      pcArlCoeff,
-#endif
-      uiAbsSum, cQP
-      );
-
-    //--- inverse transform ---
-
-#ifdef DEBUG_STRING
-    if ( (uiAbsSum > 0) || (DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) )
-#else
-    if ( uiAbsSum > 0 )
-#endif
-    {
-      m_pcTrQuant->invTransformNxN ( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO_OPTIONAL(&sDebug, (DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask)) );
-    }
-    else
-    {
-      Pel* pResi = piResi;
-      memset( pcCoeff, 0, sizeof( TCoeff ) * uiWidth * uiHeight );
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        memset( pResi, 0, sizeof( Pel ) * uiWidth );
-        pResi += uiStride;
-      }
-    }
-
-#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   }
-#endif
+
 
   //===== reconstruction =====
   {
@@ -1429,34 +1240,6 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
     Pel* pRecQt     = piRecQt;
     Pel* pRecIPred  = piRecIPred;
     const UInt clipbd=g_bitDepth[chType];
-
-#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
-    {
-      pResi += uiStride;
-      for( UInt uiY = 1; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX - (Int)uiStride ];
-        }
-        pResi += uiStride;
-      }
-    }
-
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
-    {
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 1; uiX < uiWidth; uiX++ )
-        {
-          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX-1 ];
-        }
-        pResi     += uiStride;
-      }
-    }
-    pResi = piResi;
-#endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
     if (pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation())
@@ -2692,11 +2475,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
         const Bool bUseFilter=TComPrediction::filteringIntraReferenceSamples(COMPONENT_Y, uiMode, puRect.width, puRect.height, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
 
-#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiMode) );
-#else
-        predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter );
-#endif
 
         // use hadamard transform here
         uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );

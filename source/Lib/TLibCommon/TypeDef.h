@@ -261,7 +261,6 @@
 #define RExt__O0202_CROSS_COMPONENT_DECORRELATION                              1 ///< 0 = disable cross-component decorrelation system, 1 (default) = allow use of cross-component decorrelation, controlled by PPS flag (and encoder command line)
 #define RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING                        1 ///< 0 = do not use high precision prediction weighting (8-bit only), 1 (default) = allow use of high precision prediction weighting, based upon SPS flag.
 #define RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS                          1 ///< 0 = use original fast search method, 1 (default) = use modified fast search (only has an effect when INTRABC_FASTME is enabled)
-#define RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM                               1 ///< 0 = use residual DPCM for intra and coefficient DPCM for inter and intra-block-copy, 1 (default) = use residual DPCM for both intra and inter
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -370,7 +369,6 @@ typedef       unsigned long long  UInt64;
 // ====================================================================================================================
 
 #if RExt__NRCE2_RESIDUAL_DPCM
-#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
 enum RDPCMMode
 {
   RDPCM_OFF             = 0, 
@@ -378,15 +376,6 @@ enum RDPCMMode
   RDPCM_VER             = 2, 
   NUMBER_OF_RDPCM_MODES = 3
 };
-#else
-enum InterRdpcmMode
-{
-  DPCM_OFF = 0, 
-  DPCM_HOR, 
-  DPCM_VER, 
-  NUMBER_OF_INTER_RDPCM_MODES
-};
-#endif
 
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
 enum RDPCMSignallingMode

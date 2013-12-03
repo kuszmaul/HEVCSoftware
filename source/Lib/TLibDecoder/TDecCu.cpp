@@ -632,162 +632,56 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   const Int clipbd = g_bitDepth[toChannelType(compID)];
 
-#if !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-  if (TComPrediction::UseSampleAdaptiveIntraPrediction(rTu, uiChFinalMode))
-  {
-    if ( uiChFinalMode == HOR_IDX )
-    {
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for(UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          const Int rec = Int(pPred[uiX]) + Int(pResi[ uiX ]);
-          pRecIPred[ uiX ] = pReco [ uiX ] = Pel(ClipBD( rec, clipbd ));
-          if (uiX+1 < uiWidth)
-            pPred[ uiX + 1 ] = Pel(rec); // NOTE: RExt - should this be the clipped version?
-        }
-#ifdef DEBUG_STRING
-        if ((DebugOptionList::DebugString_IntraCodingPredResi.getInt()!=0) && DEBUG_STRING_CHANNEL_CONDITION(compID))
-        {
-          ss << "###: ";
-          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-          {
-            ss << pPred[ uiX ] << ", ";
-          }
-          ss << "  --  ";
-          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-          {
-            ss << pResi[ uiX ] << ", ";
-          }
-          ss << "\n";
-        }
-#endif
-        pPred     += uiStride;
-        pResi     += uiStride;
-        pReco     += uiStride;
-        pRecIPred += uiRecIPredStride;
-      }
-    }
-    else
-    {
-      for (UInt uiY = 0 ; uiY < uiHeight; uiY++ )
-      {
-        for(UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          const Pel rec=pPred[uiX] + pResi[ uiX ];
-          pRecIPred[ uiX ] = pReco [ uiX ] = ClipBD( rec, clipbd );
-          if (uiY+1 < uiHeight)
-            pPred[ uiX + uiStride ] = rec; // NOTE: RExt - should this be the clipped version?
-        }
-#ifdef DEBUG_STRING
-        if ((DebugOptionList::DebugString_IntraCodingPredResi.getInt()!=0) && DEBUG_STRING_CHANNEL_CONDITION(compID))
-        {
-          ss << "###: ";
-          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-          {
-            ss << pPred[ uiX ] << ", ";
-          }
-          ss << "  --  ";
-          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-          {
-            ss << pResi[ uiX ] << ", ";
-          }
-          ss << "\n";
-        }
-#endif
-        pPred     += uiStride;
-        pResi     += uiStride;
-        pReco     += uiStride;
-        pRecIPred += uiRecIPredStride;
-      }
-    }
-  }
-  else
-  {
-#endif
-
-#if RExt__NRCE2_RESIDUAL_DPCM && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == VER_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
-    {
-      pResi     += uiStride;
-      for( UInt uiY = 1; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX - (Int)uiStride ];
-        }
-        pResi     += uiStride;
-      }
-    }
-
-    pResi = piResi;
-    if ( !pcCU->getCUTransquantBypass(uiAbsPartIdx) && useTransformSkip && pcCU->isIntra(uiAbsPartIdx) && (uiChFinalMode == HOR_IDX) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
-    {
-      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-      {
-        for( UInt uiX = 1; uiX < uiWidth; uiX++ )
-        {
-          pResi[ uiX ] = pResi[ uiX ] + pResi [ (Int)uiX-1 ];
-        }
-        pResi     += uiStride;
-      }
-    }
-    pResi = piResi;
-#endif // RExt__NRCE2_RESIDUAL_DPCM
-
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    if( useCrossComponentDecorrelation )
-    {
-      TComTrQuant::crossComponentDecorrelation( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
-    }
+  if( useCrossComponentDecorrelation )
+  {
+    TComTrQuant::crossComponentDecorrelation( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
+  }
 #endif
 
-    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-    {
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
 #ifdef DEBUG_STRING
-      if (bDebugPred || bDebugResi || bDebugReco) ss << "###: ";
+    if (bDebugPred || bDebugResi || bDebugReco) ss << "###: ";
 
-      if (bDebugPred)
-      {
-        ss << " - pred: ";
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          ss << pPred[ uiX ] << ", ";
-        }
-      }
-      if (bDebugResi) ss << " - resi: ";
-#endif
-
+    if (bDebugPred)
+    {
+      ss << " - pred: ";
       for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-#ifdef DEBUG_STRING
-        if (bDebugResi)
-          ss << pResi[ uiX ] << ", ";
-#endif
-        pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
-        pRecIPred[ uiX ] = pReco[ uiX ];
+        ss << pPred[ uiX ] << ", ";
       }
-#ifdef DEBUG_STRING
-      if (bDebugReco)
-      {
-        ss << " - reco: ";
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-        {
-          ss << pReco[ uiX ] << ", ";
-        }
-      }
-
-      if (bDebugPred || bDebugResi || bDebugReco)
-        ss << "\n";
-#endif
-      pPred     += uiStride;
-      pResi     += uiStride;
-      pReco     += uiStride;
-      pRecIPred += uiRecIPredStride;
     }
-#if !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-  }
+    if (bDebugResi) ss << " - resi: ";
 #endif
+
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+#ifdef DEBUG_STRING
+      if (bDebugResi)
+        ss << pResi[ uiX ] << ", ";
+#endif
+      pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
+      pRecIPred[ uiX ] = pReco[ uiX ];
+    }
+#ifdef DEBUG_STRING
+    if (bDebugReco)
+    {
+      ss << " - reco: ";
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        ss << pReco[ uiX ] << ", ";
+      }
+    }
+
+    if (bDebugPred || bDebugResi || bDebugReco)
+      ss << "\n";
+#endif
+    pPred     += uiStride;
+    pResi     += uiStride;
+    pReco     += uiStride;
+    pRecIPred += uiRecIPredStride;
+  }
 }
 
 

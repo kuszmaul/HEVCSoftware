@@ -159,12 +159,10 @@ public:
   Void invRecurTransformNxN ( const ComponentID compID, Pel*  rpcResidual, UInt uiStride, TComTU &rTu);
 #endif
 
-#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
   Void rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode );
   Void invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride );
 
   Void applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, const RDPCMMode mode );
-#endif
 
   // Misc functions
 
@@ -343,53 +341,6 @@ __inline UInt              xGetCodedLevel  ( Double&                         rd6
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
-
-#if RDPCM_INTER_LOSSLESS && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-  Void xInterInverseRdpcm( TComTU &rTu, Pel *&residuals, UInt stride, ComponentID compID );
-  Void xInterResidueDpcm          ( TComTU      &rTu, 
-                                    Pel*        inputResiduals,
-                                    UInt        stride,
-                                    TCoeff*     outputResiduals,
-                                    ComponentID compID,
-                                    TCoeff      &absSum
-                                  );
-#endif
-#if RDPCM_INTER_LOSSY && !RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
-  //  lossy inter RDPCM functions
-  inline Void xQuantiseSample(       TComTU      &rTu, 
-                                     TCoeff      residual, 
-                                     TCoeff      &quantisedLevel,
-#if ADAPTIVE_QP_SELECTION
-                                     TCoeff      &quantisedArlLevel,
-#endif
-                                     ComponentID compID,
-                               const QpParam     &cQP, 
-                                     Int         quantIdx,
-                                     TCoeff      &deltaU
-                              );
-  inline Void xDequantiseSample (       TComTU      &rTu,
-                                        TCoeff      quantisedResidual, 
-                                        TCoeff      &reconCoeff,
-                                        ComponentID compID, 
-                                  const QpParam     &cQP, 
-                                  const Int         deQuantIdx
-                                );
-  Void xQuantInterRdpcm (       TComTU       &rTu,
-                                TCoeff       *pSrc,
-                                TCoeff       *pDes,
-#if ADAPTIVE_QP_SELECTION
-                                TCoeff       *&pArlDes,
-#endif
-                                TCoeff       &uiAcSum,
-                          const ComponentID  compID,
-                          const QpParam      &cQP     
-                        );
-  Void xInvInterRdpcm   (       TComTU      &rTu, 
-                                TCoeff      *reconCoeff,
-                          const ComponentID compID
-                        );
-
-#endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 public:
