@@ -111,11 +111,7 @@ protected:
   Bool      m_useResidualRotation;                            ///< control flag for transform-skip/transquant-bypass residual rotation
 #endif
   Bool      m_useSingleSignificanceMapContext;                ///< control flag for transform-skip/transquant-bypass single significance map context
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];///< control flags for residual DPCM
-#else
-  Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];    ///< control flags for residual DPCM
-#endif
   Bool      m_enableAMP;
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   Bool      m_useGolombRiceGroupAdaptation;                   ///< control flag for partial retention of Golomb-Rice parameter from one group to the next

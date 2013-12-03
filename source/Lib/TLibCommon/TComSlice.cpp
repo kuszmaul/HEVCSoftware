@@ -1467,17 +1467,10 @@ TComSPS::TComSPS()
     m_numReorderPics[i]       = 0;
   }
 
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
     m_useResidualDPCM[signallingModeIndex] = false;
   }
-#else
-  for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
-  {
-    m_useResidualDPCM[predictionModeIndex] = false;
-  }
-#endif
 
   m_scalingList = new TComScalingList;
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));

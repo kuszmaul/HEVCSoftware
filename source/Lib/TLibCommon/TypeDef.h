@@ -255,7 +255,6 @@
 #define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
 #define RExt__O0142_SPS_EXTENSION_SYNTAX                                       1 ///< 0 = use old single-chained SPS syntax, 1 (default) = use array-chained SPS syntax
 #define RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION              1 ///< 0 = allow intra-block-copy to predict from any CU type, 1 (default) = only allow intra-block-copy to predict from intra or intra-bc CU types.
-#define RExt__O0185_RESIDUAL_DPCM_FLAGS                                        1 ///< 0 = use one flag for intra RDPCM and one for inter, 1 (default) = use one flag to allow implicit signalling of RDPCM (for intra) and one for explicit signalling (inter and intra-block-copy)
 #define RExt__O0186_DISABLE_NONINTRA_ROTATION                                  1 ///< 0 = allow non-intra rotation, 1 (default) = disabled non-intra (inter,intrabc) rotation.
 #define RExt__O0202_CROSS_COMPONENT_DECORRELATION                              1 ///< 0 = disable cross-component decorrelation system, 1 (default) = allow use of cross-component decorrelation, controlled by PPS flag (and encoder command line)
 #define RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING                        1 ///< 0 = do not use high precision prediction weighting (8-bit only), 1 (default) = allow use of high precision prediction weighting, based upon SPS flag.
@@ -370,14 +369,12 @@ enum RDPCMMode
   NUMBER_OF_RDPCM_MODES = 3
 };
 
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
 enum RDPCMSignallingMode
 {
   RDPCM_SIGNAL_IMPLICIT            = 0,
   RDPCM_SIGNAL_EXPLICIT            = 1,
   NUMBER_OF_RDPCM_SIGNALLING_MODES = 2
 };
-#endif
 
 /// supported slice type
 enum SliceType

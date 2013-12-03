@@ -668,20 +668,15 @@ Void TEncTop::xInitSPS()
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   m_cSPS.setUseGolombRiceGroupAdaptation(m_useGolombRiceGroupAdaptation);
 #endif
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
+
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
     m_cSPS.setUseResidualDPCM(RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);
   }
-#else
-  for (UInt predictionModeIndex = 0; predictionModeIndex < NUMBER_OF_PREDICTION_MODES; predictionModeIndex++)
-  {
-    m_cSPS.setUseResidualDPCM(PredMode(predictionModeIndex), m_useResidualDPCM[predictionModeIndex]);
-  }
-#endif
 
   m_cSPS.setMaxTLayers( m_maxTempLayer );
   m_cSPS.setTemporalIdNestingFlag( ( m_maxTempLayer == 1 ) ? true : false );
+
   for ( i = 0; i < m_cSPS.getMaxTLayers(); i++ )
   {
     m_cSPS.setMaxDecPicBuffering(m_maxDecPicBuffering[i], i);

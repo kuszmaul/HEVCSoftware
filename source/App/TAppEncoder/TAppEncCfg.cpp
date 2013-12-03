@@ -452,13 +452,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
   ("ImplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT], false, "Enable implicitly signalled residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
   ("ExplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT], false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
-#else
-  ("IntraResidualDPCM",       m_useResidualDPCM[MODE_INTRA], false, "Enable residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
-  ("InterResidualDPCM",       m_useResidualDPCM[MODE_INTER], false, "Enable residual DPCM for inter (not valid in V1 profiles)")
-#endif
 #if RExt__NRCE2_RESIDUAL_ROTATION
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
 #endif
@@ -1655,13 +1650,8 @@ Void TAppEncCfg::xPrintParameter()
   printf("PCM sample bit depth            : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("Extended precision processing   : %s\n", (m_useExtendedPrecision                   ? "Enabled" : "Disabled") );
   printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
   printf("Implicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
   printf("Explicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
-#else
-  printf("Intra residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTRA]            ? "Enabled" : "Disabled") );
-  printf("Inter residual DPCM             : %s\n", (m_useResidualDPCM[MODE_INTER]            ? "Enabled" : "Disabled") );
-#endif
   printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? "Enabled" : "Disabled") );
 #if RExt__NRCE2_RESIDUAL_ROTATION
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
