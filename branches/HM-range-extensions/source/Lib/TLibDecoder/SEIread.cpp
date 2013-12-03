@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  \file     SEIread.cpp
  \brief    reading funtionality for SEI messages
  */
@@ -176,9 +176,9 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIuserDataUnregistered((SEIuserDataUnregistered&) *sei, payloadSize);
       break;
     case SEI::ACTIVE_PARAMETER_SETS:
-      sei = new SEIActiveParameterSets; 
-      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize); 
-      break; 
+      sei = new SEIActiveParameterSets;
+      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize);
+      break;
     case SEI::DECODING_UNIT_INFO:
       if (!sps)
       {
@@ -186,10 +186,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       }
       else
       {
-        sei = new SEIDecodingUnitInfo; 
+        sei = new SEIDecodingUnitInfo;
         xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
       }
-      break; 
+      break;
     case SEI::BUFFERING_PERIOD:
       if (!sps)
       {
@@ -393,7 +393,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
 
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
-  UInt val; 
+  UInt val;
   READ_CODE(4, val, "active_vps_id");      sei.activeVPSId = val;
   READ_FLAG( val, "full_random_access_flag");  sei.m_fullRandomAccessFlag = (val != 0);
   READ_FLAG( val, "no_param_set_update_flag"); sei.m_noParamSetUpdateFlag = (val != 0);
@@ -402,11 +402,11 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
   sei.activeSeqParamSetId.resize(sei.numSpsIdsMinus1 + 1);
   for (Int i=0; i < (sei.numSpsIdsMinus1 + 1); i++)
   {
-    READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val; 
+    READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val;
   }
 
-  UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned(); 
-  
+  UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned();
+
   while(uibits--)
   {
     READ_FLAG(val, "alignment_bit");
@@ -432,7 +432,7 @@ Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*paylo
   READ_FLAG( val, "dpb_output_du_delay_present_flag"); sei.m_dpbOutputDuDelayPresentFlag = (val != 0);
   if(sei.m_dpbOutputDuDelayPresentFlag)
   {
-    READ_CODE(vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, val, "pic_spt_dpb_output_du_delay"); 
+    READ_CODE(vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, val, "pic_spt_dpb_output_du_delay");
     sei.m_picSptDpbOutputDuDelay = val;
   }
   xParseByteAlign();
@@ -453,7 +453,7 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
   }
 
   //read splicing flag and cpb_removal_delay_delta
-  READ_FLAG( code, "concatenation_flag"); 
+  READ_FLAG( code, "concatenation_flag");
   sei.m_concatenationFlag = code;
   READ_CODE( ( pHRD->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_delta_minus1" );
   sei.m_auCpbRemovalDelayDelta = code + 1;
@@ -606,7 +606,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
 {
   UInt val;
   READ_FLAG( val,       "display_orientation_cancel_flag" );       sei.cancelFlag            = val;
-  if( !sei.cancelFlag ) 
+  if( !sei.cancelFlag )
   {
     READ_FLAG( val,     "hor_flip" );                              sei.horFlip               = val;
     READ_FLAG( val,     "ver_flip" );                              sei.verFlip               = val;
@@ -646,10 +646,10 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
 
   if ( !sei.m_toneMapCancelFlag )
   {
-    READ_FLAG( val, "tone_map_persistence_flag" );         sei.m_toneMapPersistenceFlag = val; 
+    READ_FLAG( val, "tone_map_persistence_flag" );         sei.m_toneMapPersistenceFlag = val;
     READ_CODE( 8, val, "coded_data_bit_depth" );           sei.m_codedDataBitDepth = val;
     READ_CODE( 8, val, "target_bit_depth" );               sei.m_targetBitDepth = val;
-    READ_UVLC( val, "model_id" );                          sei.m_modelId = val; 
+    READ_UVLC( val, "model_id" );                          sei.m_modelId = val;
     switch(sei.m_modelId)
     {
     case 0:
@@ -713,7 +713,7 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
         break;
       }
     }//switch model id
-  }// if(!sei.m_toneMapCancelFlag) 
+  }// if(!sei.m_toneMapCancelFlag)
 
   xParseByteAlign();
 }

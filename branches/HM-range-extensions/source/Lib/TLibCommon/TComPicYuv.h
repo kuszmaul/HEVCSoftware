@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -55,19 +55,19 @@
 class TComPicYuv
 {
 private:
-  
+
   // ------------------------------------------------------------------------------------------------
   //  YUV buffer
   // ------------------------------------------------------------------------------------------------
-  
+
   Pel*  m_apiPicBuf[MAX_NUM_COMPONENT];           ///< Buffer (including margin)
-  
+
   Pel*  m_piPicOrg[MAX_NUM_COMPONENT];            ///< m_apiPicBufY + m_iMarginLuma*getStride() + m_iMarginLuma
-  
+
   // ------------------------------------------------------------------------------------------------
   //  Parameter for general YUV buffer usage
   // ------------------------------------------------------------------------------------------------
-  
+
   Int   m_iPicWidth;            ///< Width of picture
   Int   m_iPicHeight;           ///< Height of picture
   ChromaFormat m_chromaFormatIDC; ////< Chroma Format
@@ -77,20 +77,20 @@ private:
 
   Int*  m_cuOffset[MAX_NUM_CHANNEL_TYPE];
   Int*  m_buOffset[MAX_NUM_CHANNEL_TYPE];
-  
+
   Int   m_iMarginX; // margin of Luma channel (chroma's may be smaller, depending on ratio)
   Int   m_iMarginY; // margin of Luma channel (chroma's may be smaller, depending on ratio)
-  
+
   Bool  m_bIsBorderExtended;
-  
+
 public:
                TComPicYuv         ();
   virtual     ~TComPicYuv         ();
-  
+
   // ------------------------------------------------------------------------------------------------
   //  Memory management
   // ------------------------------------------------------------------------------------------------
-  
+
   Void          create            (const Int iPicWidth,
                                    const Int iPicHeight,
                                    const ChromaFormat chromaFormatIDC,
@@ -99,15 +99,15 @@ public:
                                    const UInt uiMaxCUDepth );
 
   Void          destroy           ();
-  
+
   // The following have been removed - Use CHROMA_400 in the above function call.
   //Void  createLuma  ( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uhMaxCUDepth );
   //Void  destroyLuma ();
-  
+
   // ------------------------------------------------------------------------------------------------
   //  Get information of picture
   // ------------------------------------------------------------------------------------------------
-  
+
   Int           getWidth          (const ComponentID id) const { return  m_iPicWidth >> getComponentScaleX(id);   }
   Int           getHeight         (const ComponentID id) const { return  m_iPicHeight >> getComponentScaleY(id);  }
   ChromaFormat  getChromaFormat   ()                     const { return m_chromaFormatIDC; }
@@ -115,21 +115,21 @@ public:
 
   Int           getStride         (const ComponentID id) const { return ((m_iPicWidth     ) + (m_iMarginX  <<1)) >> getComponentScaleX(id); }
   Int           getTotalHeight    (const ComponentID id) const { return ((m_iPicHeight    ) + (m_iMarginY  <<1)) >> getComponentScaleY(id); }
-  
+
   Int           getMarginX        (const ComponentID id) const { return m_iMarginX >> getComponentScaleX(id);  }
   Int           getMarginY        (const ComponentID id) const { return m_iMarginY >> getComponentScaleY(id);  }
-  
+
   // ------------------------------------------------------------------------------------------------
   //  Access function for picture buffer
   // ------------------------------------------------------------------------------------------------
-  
+
   //  Access starting position of picture buffer with margin
   Pel*          getBuf            (const ComponentID ch)       { return  m_apiPicBuf[ch];   }
-  
+
   //  Access starting position of original picture
   Pel*          getAddr           (const ComponentID ch)       { return  m_piPicOrg[ch];   }
   const Pel*    getAddr           (const ComponentID ch) const { return  m_piPicOrg[ch];   }
-  
+
   //  Access starting position of original picture for specific coding unit (CU) or partition unit (PU)
   Pel*          getAddr           (const ComponentID ch, const Int iLCuAddr )       { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ iLCuAddr ]; }
   const Pel*    getAddr           (const ComponentID ch, const Int iLCuAddr ) const { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ iLCuAddr ]; }
@@ -144,16 +144,16 @@ public:
   // ------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------
-  
+
   //  Copy function to picture
   Void          copyToPic         ( TComPicYuv*  pcPicYuvDst ) const ;
-  
+
   //  Extend function of picture buffer
   Void          extendPicBorder   ();
-  
+
   //  Dump picture
   Void          dump              (const Char* pFileName, Bool bAdd = false) const ;
-  
+
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
 };// END CLASS DEFINITION TComPicYuv

@@ -320,7 +320,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
   if ( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
-    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth ); 
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 
     m_pcEntropyDecoder->decodeIntraBC( pcCU, uiAbsPartIdx, 0, uiDepth );
   }
@@ -552,8 +552,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   const UInt uiChCodedMode = (uiChPredMode==DM_CHROMA_IDX && !bIsLuma) ? pcCU->getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, chFmt)) : uiChPredMode;
   const UInt uiChFinalMode = ((chFmt == CHROMA_422)       && !bIsLuma) ? g_chroma422IntraAngleMappingTable[uiChCodedMode] : uiChCodedMode;
 
-  Bool    useTransformSkip  = pcCU->getTransformSkip(uiAbsPartIdx, compID);
-
   //===== init availability pattern =====
   Bool  bAboveAvail = false;
   Bool  bLeftAvail  = false;
@@ -580,14 +578,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   Pel*      piResi            = pcResiYuv->getAddr( compID, uiAbsPartIdx );
   TCoeff*   pcCoeff           = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);//( uiNumCoeffInc * uiAbsPartIdx );
 
-  QpParam cQP;
-  setQPforQuant  ( cQP,
-                   pcCU->getQP(0),
-                   toChannelType(compID),
-                   pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
-                   (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
-                   chFmt,
-                   useTransformSkip );
+  const QpParam cQP(*pcCU, compID);
 
 
   DEBUG_STRING_NEW(sDebug);

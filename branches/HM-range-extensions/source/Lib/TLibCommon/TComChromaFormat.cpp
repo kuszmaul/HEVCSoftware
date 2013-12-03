@@ -75,50 +75,6 @@ std::string getListOfColourSpaceConverts(const Bool bIsForward)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-Void setQPforQuant(       QpParam      &result,
-                    const Int           qpy,
-                    const ChannelType   chType,
-                    const Int           qpBdOffset,
-                    const Int           chromaQPOffset,
-                    const ChromaFormat  chFmt,
-                    const Bool          useTransformSkip )
-{
-  Int baseQp     = MAX_INT;
-  Int adjustedQp = MAX_INT;
-
-  //------------------------------------------------
-
-  if(isLuma(chType))
-  {
-    baseQp     = qpy + qpBdOffset;
-    adjustedQp = baseQp;
-  }
-  else
-  {
-    baseQp = Clip3( -qpBdOffset, (chromaQPMappingTableSize - 1), qpy + chromaQPOffset );
-
-    if(baseQp < 0)
-    {
-      baseQp = baseQp + qpBdOffset;
-    }
-    else
-    {
-      baseQp = getScaledChromaQP(baseQp, chFmt) + qpBdOffset;
-    }
-
-    //adjustment for chroma 4:2:2
-    adjustedQp = baseQp;
-  }
-
-  //------------------------------------------------
-
-  result.setBaseQp    (QpParam::QpData(baseQp,     (baseQp     / 6), (baseQp     % 6)));
-  result.setAdjustedQp(QpParam::QpData(adjustedQp, (adjustedQp / 6), (adjustedQp % 6)));
-}
-
-
-//----------------------------------------------------------------------------------------------------------------------
-
 Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
                                         TComTU                    &rTu,
                                   const ComponentID                component)
@@ -135,7 +91,7 @@ Void getTUEntropyCodingParameters(      TUEntropyCodingParameters &result,
   const ChannelType          channelType     = toChannelType(component);
 
   result.scanType = COEFF_SCAN_TYPE(pcCU->getCoefScanIdx(uiAbsPartIdx, area.width, area.height, component));
-  
+
   //------------------------------------------------
 
   //set the group layout

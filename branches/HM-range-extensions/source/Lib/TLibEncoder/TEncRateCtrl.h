@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -116,7 +116,7 @@ public:
   Int  getFrameRate()                   { return m_frameRate; }
   Int  getGOPSize()                     { return m_GOPSize; }
   Int  getPicWidth()                    { return m_picWidth; }
-  Int  getPicHeight()                   { return m_picHeight; } 
+  Int  getPicHeight()                   { return m_picHeight; }
   Int  getLCUWidth()                    { return m_LCUWidth; }
   Int  getLCUHeight()                   { return m_LCUHeight; }
   Int  getNumberOfLevel()               { return m_numberOfLevel; }
@@ -153,7 +153,7 @@ public:
 private:
   Int m_totalFrames;
   Int m_targetRate;
-  Int m_frameRate; 
+  Int m_frameRate;
   Int m_GOPSize;
   Int m_picWidth;
   Int m_picHeight;
@@ -294,7 +294,7 @@ private:
 
   TRCLCU* m_LCUs;
   Int m_picActualHeaderBits;    // only SH and potential APS
-  Double m_totalCostIntra; 
+  Double m_totalCostIntra;
   Double m_remainingCostIntra;
   Int m_picActualBits;          // the whole picture, including header
   Int m_picQP;                  // in integer form

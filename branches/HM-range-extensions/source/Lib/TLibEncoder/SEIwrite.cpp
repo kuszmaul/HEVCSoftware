@@ -266,7 +266,7 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 
   for (Int i = 0; i < sei.activeSeqParamSetId.size(); i++)
   {
-    WRITE_UVLC(sei.activeSeqParamSetId[i], "active_seq_param_set_id"); 
+    WRITE_UVLC(sei.activeSeqParamSetId[i], "active_seq_param_set_id");
   }
 
   UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
@@ -423,7 +423,7 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
   Int i;
   WRITE_UVLC( sei.m_toneMapId,                    "tone_map_id" );
   WRITE_FLAG( sei.m_toneMapCancelFlag,            "tone_map_cancel_flag" );
-  if( !sei.m_toneMapCancelFlag ) 
+  if( !sei.m_toneMapCancelFlag )
   {
     WRITE_FLAG( sei.m_toneMapPersistenceFlag,     "tone_map_persistence_flag" );
     WRITE_CODE( sei.m_codedDataBitDepth,    8,    "coded_data_bit_depth" );
@@ -570,7 +570,7 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
       }
     }
   }
- 
+
   // byte alignment
   while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )
   {

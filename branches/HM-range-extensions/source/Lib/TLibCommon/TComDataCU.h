@@ -253,7 +253,8 @@ public:
 
   TComPic*        getPic              ()                        { return m_pcPic;           }
   const TComPic*  getPic              ()   const                { return m_pcPic;           }
-  TComSlice*    getSlice              ()                        { return m_pcSlice;         }
+  TComSlice*       getSlice           ()                        { return m_pcSlice;         }
+  const TComSlice* getSlice           ()   const                { return m_pcSlice;         }
   UInt&         getAddr               ()                        { return m_uiCUAddr;        }
   UInt&         getZorderIdxInCU      ()                        { return m_uiAbsIdxInLCU; }
   UInt          getSCUAddr            ();
@@ -303,7 +304,7 @@ public:
   Void          setSizeSubParts       ( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth );
 
   Char*         getQP                 ()                        { return m_phQP;              }
-  Char          getQP                 ( UInt uiIdx )            { return m_phQP[uiIdx];       }
+  Char          getQP                 ( UInt uiIdx ) const      { return m_phQP[uiIdx];       }
   Void          setQP                 ( UInt uiIdx, Char value ){ m_phQP[uiIdx] =  value;     }
   Void          setQPSubParts         ( Int qp,   UInt uiAbsPartIdx, UInt uiDepth );
   Int           getLastValidPartIdx   ( Int iAbsPartIdx );
@@ -463,13 +464,13 @@ public:
   TComDataCU*   getCUColocated              ( RefPicList eRefPicList ) { return m_apcCUColocated[eRefPicList]; }
 
 
-  TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx, 
-                                              UInt uiCurrPartUnitIdx, 
-                                              Bool bEnforceSliceRestriction=true, 
+  TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx,
+                                              UInt uiCurrPartUnitIdx,
+                                              Bool bEnforceSliceRestriction=true,
                                               Bool bEnforceTileRestriction=true );
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx,
-                                              UInt uiCurrPartUnitIdx, 
-                                              Bool bEnforceSliceRestriction=true, 
+                                              UInt uiCurrPartUnitIdx,
+                                              Bool bEnforceSliceRestriction=true,
                                               Bool planarAtLCUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );

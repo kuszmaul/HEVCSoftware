@@ -88,7 +88,7 @@ private:
 
   bool                  m_isTop;
   bool                  m_isField;
-  
+
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.

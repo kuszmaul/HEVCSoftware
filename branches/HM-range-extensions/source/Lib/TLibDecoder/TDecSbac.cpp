@@ -445,11 +445,11 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 }
 
 Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{  
+{
   UInt uiSymbol = 0;
 
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR));
-  
+
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tIntraBCFlag" );
   DTRACE_CABAC_T( "\tuiSymbol: ");
@@ -460,14 +460,14 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
   {
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
     pcCU->setPredModeSubParts( MODE_INTRABC, uiAbsPartIdx, uiDepth );
-    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );    
+    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_CHROMA, DC_IDX, uiAbsPartIdx, uiDepth);
   }
 }
 
 Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{  
+{
   Int mvx = 0, mvy = 0;
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   TComMv mvPred = pcCU->getLastIntraBCMv();
@@ -1044,7 +1044,7 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool low
     {
       UInt uiCbf = MAX_UINT;
       m_pcTDecBinIf->decodeBin(uiCbf, m_cCUQtCbfSCModel.get(0, contextSet, uiCtx) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(TComCodingStatisticsClassType(STATS__CABAC_BITS__QT_CBF, g_aucConvertToBit[rTu.getRect(compID).width]+2, compID)));
-      
+
       const UInt subTUAbsPartIdx = absPartIdx + (subTU * partIdxesPerSubTU);
       pcCU->setCbfPartRange((uiCbf << subTUDepth), compID, subTUAbsPartIdx, partIdxesPerSubTU);
       combinedSubTUCBF |= uiCbf;
@@ -1659,7 +1659,7 @@ Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
 
 Void TDecSbac::parseSaoSign(UInt& val)
 {
-  m_pcTDecBinIf->decodeBinEP ( val RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SAO) ); 
+  m_pcTDecBinIf->decodeBinEP ( val RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__SAO) );
 }
 
 Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
@@ -1694,7 +1694,7 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
     }
   }
   else //new or off mode
-  {    
+  {
     for(Int compId=COMPONENT_Y; compId < MAX_NUM_COMPONENT; compId++)
     {
       const ComponentID compIdx=ComponentID(compId);
@@ -1761,12 +1761,12 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
           }
           parseSaoUflc(NUM_SAO_BO_CLASSES_LOG2, uiSymbol ); //sao_band_position
           ctbParam.typeAuxInfo = uiSymbol;
-        
+
           for(Int i=0; i<4; i++)
           {
             ctbParam.offset[(ctbParam.typeAuxInfo+i)%MAX_NUM_SAO_CLASSES] = offset[i];
-          }      
-        
+          }
+
         }
         else //EO
         {

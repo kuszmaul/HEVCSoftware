@@ -1228,9 +1228,9 @@ TComDataCU* TComDataCU::getPULeft( UInt& uiLPartUnitIdx,
 }
 
 
-TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx, 
-                                    UInt uiCurrPartUnitIdx, 
-                                    Bool bEnforceSliceRestriction, 
+TComDataCU* TComDataCU::getPUAbove( UInt& uiAPartUnitIdx,
+                                    UInt uiCurrPartUnitIdx,
+                                    Bool bEnforceSliceRestriction,
                                     Bool planarAtLCUBoundary,
                                     Bool bEnforceTileRestriction )
 {
@@ -2746,7 +2746,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       dir |= 1;
       pcMvFieldNeighbours[ 2 * uiArrayAddr ].setMvField( cColMv, iRefIdx );
     }
-    
+
     if ( getSlice()->isInterB() )
     {
       bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
@@ -2760,7 +2760,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         pcMvFieldNeighbours[ 2 * uiArrayAddr + 1 ].setMvField( cColMv, iRefIdx );
       }
     }
-    
+
     if (dir != 0)
     {
       puhInterDirNeighbours[uiArrayAddr] = dir;
@@ -3213,11 +3213,11 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
   {
     return false;
   }
-  
+
   if ( pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) >= 0 && m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getPOC() == pcTmpCU->getSlice()->getRefPOC( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ))
   {
     TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
-    
+
     pInfo->m_acMvCand[ pInfo->iN++] = cMvPred;
     return true;
   }

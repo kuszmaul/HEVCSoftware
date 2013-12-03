@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -206,22 +206,22 @@ template <typename ValueType> inline ValueType rightShift_round(const ValueType 
 #define MAX_CHROMA_FORMAT_IDC      3
 
 // TODO: Existing names used for the different NAL unit types can be altered to better reflect the names in the spec.
-//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup 
+//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup
 //       effort can be done without use of macros to alter the names used to indicate the different NAL unit types.
 enum NalUnitType
 {
   NAL_UNIT_CODED_SLICE_TRAIL_N = 0, // 0
   NAL_UNIT_CODED_SLICE_TRAIL_R,     // 1
-  
+
   NAL_UNIT_CODED_SLICE_TSA_N,       // 2
   NAL_UNIT_CODED_SLICE_TSA_R,       // 3
-  
+
   NAL_UNIT_CODED_SLICE_STSA_N,      // 4
   NAL_UNIT_CODED_SLICE_STSA_R,      // 5
 
   NAL_UNIT_CODED_SLICE_RADL_N,      // 6
   NAL_UNIT_CODED_SLICE_RADL_R,      // 7
-  
+
   NAL_UNIT_CODED_SLICE_RASL_N,      // 8
   NAL_UNIT_CODED_SLICE_RASL_R,      // 9
 

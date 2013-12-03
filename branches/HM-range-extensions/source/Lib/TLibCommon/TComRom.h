@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -107,7 +107,7 @@ extern Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
 #define SHIFT_INV_1ST               7 // Shift after first inverse transform stage
 #define SHIFT_INV_2ND              12 // Shift after second inverse transform stage
 
-extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)  
+extern Int g_quantScales[SCALING_LIST_REM_NUM];             // Q(QP%6)
 extern Int g_invQuantScales[SCALING_LIST_REM_NUM];          // IQ(QP%6)
 
 #if RExt__HIGH_PRECISION_FORWARD_TRANSFORM

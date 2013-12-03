@@ -754,7 +754,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
       TComReferencePictureSet* rps = pcSlice->getRPS();
-      
+
       // check for bitstream restriction stating that:
       // If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
       // Ideally this process should not be repeated for each slice in a picture
@@ -1429,7 +1429,7 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
   for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
   {
     Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
- 
+
     for(listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
     {
       scalingListPredModeFlag = scalingList->checkPredMode( sizeId, listId );

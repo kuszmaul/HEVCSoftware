@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
 * License, included below. This software may be subject to other third party
 * and contributor rights, including patent rights, and no such rights are
-* granted under this license.  
+* granted under this license.
 *
 * Copyright (c) 2010-2013, ITU/ISO/IEC
 * All rights reserved.
@@ -58,11 +58,11 @@ Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, con
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   if (length < 10)
   {
-    fprintf( g_hTrace, "%-50s u(%d)  : %u\n", pSymbolName, length, rValue ); 
+    fprintf( g_hTrace, "%-50s u(%d)  : %u\n", pSymbolName, length, rValue );
   }
   else
   {
-    fprintf( g_hTrace, "%-50s u(%d) : %u\n", pSymbolName, length, rValue ); 
+    fprintf( g_hTrace, "%-50s u(%d) : %u\n", pSymbolName, length, rValue );
   }
   fflush ( g_hTrace );
 }
@@ -75,7 +75,7 @@ Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSym
   xReadUvlc (rValue);
 #endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-  fprintf( g_hTrace, "%-50s ue(v) : %u\n", pSymbolName, rValue ); 
+  fprintf( g_hTrace, "%-50s ue(v) : %u\n", pSymbolName, rValue );
   fflush ( g_hTrace );
 }
 
@@ -87,7 +87,7 @@ Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const Char *pSymb
   xReadSvlc (rValue);
 #endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-  fprintf( g_hTrace, "%-50s se(v) : %d\n", pSymbolName, rValue ); 
+  fprintf( g_hTrace, "%-50s se(v) : %d\n", pSymbolName, rValue );
   fflush ( g_hTrace );
 }
 
@@ -99,7 +99,7 @@ Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const Char *pSym
   xReadFlag (rValue);
 #endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-  fprintf( g_hTrace, "%-50s u(1)  : %d\n", pSymbolName, rValue ); 
+  fprintf( g_hTrace, "%-50s u(1)  : %d\n", pSymbolName, rValue );
   fflush ( g_hTrace );
 }
 

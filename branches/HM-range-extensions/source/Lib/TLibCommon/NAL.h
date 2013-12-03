@@ -86,7 +86,7 @@ struct NALUnit
   }
   Bool isSei()
   {
-    return m_nalUnitType == NAL_UNIT_PREFIX_SEI 
+    return m_nalUnitType == NAL_UNIT_PREFIX_SEI
         || m_nalUnitType == NAL_UNIT_SUFFIX_SEI;
   }
 

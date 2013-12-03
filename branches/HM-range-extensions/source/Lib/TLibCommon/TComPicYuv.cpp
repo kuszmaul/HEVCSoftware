@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -58,7 +58,7 @@ TComPicYuv::TComPicYuv()
     m_apiPicBuf[i]    = NULL;   // Buffer (including margin)
     m_piPicOrg[i]     = NULL;    // m_apiPicBufY + m_iMarginLuma*getStride() + m_iMarginLuma
   }
-  
+
   for(UInt i=0; i<MAX_NUM_CHANNEL_TYPE; i++)
   {
     m_cuOffset[i]=0;
@@ -89,7 +89,7 @@ Void TComPicYuv::create( const Int  iPicWidth,    const  Int iPicHeight,    cons
   m_iMarginX          = g_uiMaxCUWidth  + 16; // for 16-byte alignment
   m_iMarginY          = g_uiMaxCUHeight + 16;  // margin for 8-tap filter and infinite padding
   m_bIsBorderExtended = false;
-  
+
   // assign the picture arrays and set up the ptr to the top left of the original picture
   {
     Int chan=0;
@@ -105,7 +105,7 @@ Void TComPicYuv::create( const Int  iPicWidth,    const  Int iPicHeight,    cons
       m_piPicOrg[chan]  = NULL;
     }
   }
-  
+
 
   const Int numCuInWidth  = m_iPicWidth  / m_iLcuWidth  + (m_iPicWidth  % m_iLcuWidth  != 0);
   const Int numCuInHeight = m_iPicHeight / m_iLcuHeight + (m_iPicHeight % m_iLcuHeight != 0);
@@ -212,7 +212,7 @@ Void TComPicYuv::extendPicBorder ()
       ::memcpy( pi - (y+1)*iStride, pi, sizeof(Pel)*(iWidth + (iMarginX<<1)) );
     }
   }
-  
+
   m_bIsBorderExtended = true;
 }
 
@@ -230,7 +230,7 @@ Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
   {
     pFile = fopen (pFileName, "ab");
   }
-  
+
 
   for(Int chan = 0; chan < getNumberValidComponents(); chan++)
   {
@@ -252,7 +252,7 @@ Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
       pi += stride;
     }
   }
-  
+
   fclose(pFile);
 }
 

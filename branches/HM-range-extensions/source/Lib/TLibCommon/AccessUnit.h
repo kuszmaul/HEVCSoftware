@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  \file     AccessUnit.h
  \brief    Access Unit class (header)
  */

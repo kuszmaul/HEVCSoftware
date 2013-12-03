@@ -83,7 +83,7 @@
 // ====================================================================================================================
 
 #define HM_CLEANUP_SAO                                    1  ///< JCTVC-N0230, 1) three SAO encoder-only software bugfixes. 2) new SAO implementation without picture quadtree, fine-grained slice legacies, and other redundancies.
-#if HM_CLEANUP_SAO  
+#if HM_CLEANUP_SAO
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
 #endif
 
@@ -347,9 +347,9 @@ typedef       unsigned long long  UInt64;
 
 enum RDPCMMode
 {
-  RDPCM_OFF             = 0, 
-  RDPCM_HOR             = 1, 
-  RDPCM_VER             = 2, 
+  RDPCM_OFF             = 0,
+  RDPCM_HOR             = 1,
+  RDPCM_VER             = 2,
   NUMBER_OF_RDPCM_MODES = 3
 };
 
@@ -596,7 +596,7 @@ enum SAOMode //mode
   NUM_SAO_MODES
 };
 
-enum SAOModeMergeTypes 
+enum SAOModeMergeTypes
 {
   SAO_MERGE_LEFT =0,
   SAO_MERGE_ABOVE,
@@ -604,14 +604,14 @@ enum SAOModeMergeTypes
 };
 
 
-enum SAOModeNewTypes 
+enum SAOModeNewTypes
 {
   SAO_TYPE_START_EO =0,
   SAO_TYPE_EO_0 = SAO_TYPE_START_EO,
   SAO_TYPE_EO_90,
   SAO_TYPE_EO_135,
   SAO_TYPE_EO_45,
-  
+
   SAO_TYPE_START_BO,
   SAO_TYPE_BO = SAO_TYPE_START_BO,
 
@@ -619,7 +619,7 @@ enum SAOModeNewTypes
 };
 #define NUM_SAO_EO_TYPES_LOG2 2
 
-enum SAOEOClasses 
+enum SAOEOClasses
 {
   SAO_CLASS_EO_FULL_VALLEY = 0,
   SAO_CLASS_EO_HALF_VALLEY = 1,

@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -49,10 +49,10 @@ class TDecBinCABAC : public TDecBinIf
 public:
   TDecBinCABAC ();
   virtual ~TDecBinCABAC();
-  
+
   Void  init              ( TComInputBitstream* pcTComBitstream );
   Void  uninit            ();
-  
+
   Void  start             ();
   Void  finish            ();
 
@@ -67,9 +67,9 @@ public:
 #endif
 
   Void  decodeBinTrm      ( UInt& ruiBin                           );
-  
+
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
-  
+
   Void  copyState         ( TDecBinIf* pcTDecBinIf );
   TDecBinCABAC* getTDecBinCABAC()  { return this; }
 

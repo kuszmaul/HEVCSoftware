@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -94,7 +94,7 @@ const TFilterCoeff TComInterpolationFilter::m_chromaFilter[CHROMA_INTERPOLATION_
 Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast)
 {
   Int row, col;
-  
+
   if ( isFirst == isLast )
   {
     for (row = 0; row < height; row++)
@@ -103,10 +103,10 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
       {
         dst[col] = src[col];
       }
-      
+
       src += srcStride;
       dst += dstStride;
-    }              
+    }
   }
   else if ( isFirst )
   {
@@ -119,10 +119,10 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
         Pel val = leftShift_round(src[col], shift);
         dst[col] = val - (Pel)IF_INTERNAL_OFFS;
       }
-      
+
       src += srcStride;
       dst += dstStride;
-    }          
+    }
   }
   else
   {
@@ -140,10 +140,10 @@ Void TComInterpolationFilter::filterCopy(Int bitDepth, const Pel *src, Int srcSt
         if (val > maxVal) val = maxVal;
         dst[col] = val;
       }
-      
+
       src += srcStride;
       dst += dstStride;
-    }              
+    }
   }
 }
 
@@ -167,7 +167,7 @@ template<Int N, Bool isVertical, Bool isFirst, Bool isLast>
 Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride, Pel *dst, Int dstStride, Int width, Int height, TFilterCoeff const *coeff)
 {
   Int row, col;
-  
+
   Pel c[8];
   c[0] = coeff[0];
   c[1] = coeff[1];
@@ -186,7 +186,7 @@ Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride
     c[6] = coeff[6];
     c[7] = coeff[7];
   }
-  
+
   Int cStride = ( isVertical ) ? srcStride : 1;
   src -= ( N/2 - 1 ) * cStride;
 
@@ -211,13 +211,13 @@ Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride
     offset = (isFirst) ? -IF_INTERNAL_OFFS << shift : 0;
     maxVal = 0;
   }
-  
+
   for (row = 0; row < height; row++)
   {
     for (col = 0; col < width; col++)
     {
       Int sum;
-      
+
       sum  = src[ col + 0 * cStride] * c[0];
       sum += src[ col + 1 * cStride] * c[1];
       if ( N >= 4 )
@@ -233,21 +233,21 @@ Void TComInterpolationFilter::filter(Int bitDepth, Pel const *src, Int srcStride
       if ( N == 8 )
       {
         sum += src[ col + 6 * cStride] * c[6];
-        sum += src[ col + 7 * cStride] * c[7];        
+        sum += src[ col + 7 * cStride] * c[7];
       }
-      
+
       Pel val = ( sum + offset ) >> shift;
       if ( isLast )
       {
         val = ( val < 0 ) ? 0 : val;
-        val = ( val > maxVal ) ? maxVal : val;        
+        val = ( val > maxVal ) ? maxVal : val;
       }
       dst[col] = val;
     }
-    
+
     src += srcStride;
     dst += dstStride;
-  }    
+  }
 }
 
 /**
@@ -308,8 +308,8 @@ Void TComInterpolationFilter::filterVer(Int bitDepth, Pel *src, Int srcStride, P
   }
   else
   {
-    filter<N, true, false, false>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);    
-  }      
+    filter<N, true, false, false>(bitDepth, src, srcStride, dst, dstStride, width, height, coeff);
+  }
 }
 
 // ====================================================================================================================

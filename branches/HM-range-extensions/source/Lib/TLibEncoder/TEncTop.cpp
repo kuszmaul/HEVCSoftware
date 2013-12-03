@@ -419,11 +419,11 @@ void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt heigh
     {
       dstField[x] = org[x];
     }
-    
+
     dstField += stride;
     org += stride*2;
   }
-  
+
 }
 
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
@@ -478,7 +478,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTr
                        pcPicYuvOrg->getWidth(component),
                        pcPicYuvOrg->getHeight(component),
                        isTopField);
-  
+
         separateFields((pcPicYuvTrueOrg->getBuf(component) + pcPicYuvTrueOrg->getMarginX(component) + (pcPicYuvTrueOrg->getMarginY(component) * stride)),
                        pcField->getPicYuvTrueOrg()->getAddr(component),
                        pcPicYuvTrueOrg->getStride(component),
@@ -493,7 +493,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTr
         m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcField ) );
       }
     }
-    
+
     if ( m_iNumPicRcvd && ((flush&&fieldNum==1) || (m_iPOCLast/2)==0 || m_iNumPicRcvd==m_iGOPSize ) )
     {
       // compress GOP
@@ -1020,9 +1020,9 @@ Void TEncTop::xInitRPS(Bool isFieldCoding)
     }
 #endif //INTER_RPS_AUTO
   }
-  //In case of field coding, we need to set special parameters for the first bottom field of the sequence, since it is not specified in the cfg file. 
-  //The position = GOPSize + extraRPSs which is (a priori) unused is reserved for this field in the RPS. 
-  if (isFieldCoding) 
+  //In case of field coding, we need to set special parameters for the first bottom field of the sequence, since it is not specified in the cfg file.
+  //The position = GOPSize + extraRPSs which is (a priori) unused is reserved for this field in the RPS.
+  if (isFieldCoding)
   {
     rps = rpsList->getReferencePictureSet(getGOPSize()+m_extraRPSs);
     rps->setNumberOfPictures(1);

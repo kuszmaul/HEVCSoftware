@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -62,7 +62,7 @@ public:
   ScanGenerator(UInt blockWidth, UInt blockHeight, UInt stride, COEFF_SCAN_TYPE scanType)
     : m_line(0), m_column(0), m_blockWidth(blockWidth), m_blockHeight(blockHeight), m_stride(stride), m_scanType(scanType)
   { }
-  
+
   UInt GetCurrentX() const { return m_column; }
   UInt GetCurrentY() const { return m_line; }
 
@@ -256,7 +256,7 @@ UInt g_auiPUOffset[NUMBER_OF_PART_SIZES] = { 0, 8, 4, 4, 2, 10, 1, 5};
 Void initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx )
 {
   Int iStride = 1 << ( iMaxDepth - 1 );
-  
+
   if ( iDepth == iMaxDepth )
   {
     rpuiCurrIdx[0] = uiStartVal;
@@ -276,10 +276,10 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
 {
   UInt  uiMinCUWidth  = uiMaxCUWidth  >> ( uiMaxDepth - 1 );
   UInt  uiMinCUHeight = uiMaxCUHeight >> ( uiMaxDepth - 1 );
-  
+
   UInt  uiNumPartInWidth  = (UInt)uiMaxCUWidth  / uiMinCUWidth;
   UInt  uiNumPartInHeight = (UInt)uiMaxCUHeight / uiMinCUHeight;
-  
+
   for ( UInt i = 0; i < uiNumPartInWidth*uiNumPartInHeight; i++ )
   {
     g_auiRasterToZscan[ g_auiZscanToRaster[i] ] = i;
@@ -289,16 +289,16 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
 Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
 {
   UInt    i;
-  
+
   UInt* uiTempX = &g_auiRasterToPelX[0];
   UInt* uiTempY = &g_auiRasterToPelY[0];
-  
+
   UInt  uiMinCUWidth  = uiMaxCUWidth  >> ( uiMaxDepth - 1 );
   UInt  uiMinCUHeight = uiMaxCUHeight >> ( uiMaxDepth - 1 );
-  
+
   UInt  uiNumPartInWidth  = uiMaxCUWidth  / uiMinCUWidth;
   UInt  uiNumPartInHeight = uiMaxCUHeight / uiMinCUHeight;
-  
+
   uiTempX[0] = 0; uiTempX++;
   for ( i = 1; i < uiNumPartInWidth; i++ )
   {
@@ -309,7 +309,7 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
     memcpy(uiTempX, uiTempX-uiNumPartInWidth, sizeof(UInt)*uiNumPartInWidth);
     uiTempX += uiNumPartInWidth;
   }
-  
+
   for ( i = 1; i < uiNumPartInWidth*uiNumPartInHeight; i++ )
   {
     uiTempY[i] = ( i / uiNumPartInWidth ) * uiMinCUWidth;
@@ -422,7 +422,7 @@ Int g_invQuantScales[SCALING_LIST_REM_NUM] =
 
 #if RExt__HIGH_PRECISION_FORWARD_TRANSFORM
 const TMatrixCoeff g_aiT4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4]   =
-{ 
+{
   DEFINE_DCT4x4_MATRIX  (16384, 21266,  9224),
   DEFINE_DCT4x4_MATRIX  (   64,    83,    36)
 };
@@ -454,7 +454,7 @@ const TMatrixCoeff g_as_DST_MAT_4[TRANSFORM_NUMBER_OF_DIRECTIONS][4][4] =
 #else
 
 const TMatrixCoeff g_aiT4 [TRANSFORM_NUMBER_OF_DIRECTIONS][4][4]   =
-{ 
+{
   DEFINE_DCT4x4_MATRIX  (   64,    83,    36),
   DEFINE_DCT4x4_MATRIX  (   64,    83,    36)
 };
@@ -586,19 +586,19 @@ const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
   },
   {
     "INTRA8X8_LUMA",
-    "INTRA8X8_CHROMAU", 
-    "INTRA8X8_CHROMAV", 
+    "INTRA8X8_CHROMAU",
+    "INTRA8X8_CHROMAV",
     "INTER8X8_LUMA",
-    "INTER8X8_CHROMAU", 
-    "INTER8X8_CHROMAV"  
+    "INTER8X8_CHROMAU",
+    "INTER8X8_CHROMAV"
   },
   {
     "INTRA16X16_LUMA",
-    "INTRA16X16_CHROMAU", 
-    "INTRA16X16_CHROMAV", 
+    "INTRA16X16_CHROMAU",
+    "INTRA16X16_CHROMAV",
     "INTER16X16_LUMA",
-    "INTER16X16_CHROMAU", 
-    "INTER16X16_CHROMAV"  
+    "INTER16X16_CHROMAU",
+    "INTER16X16_CHROMAV"
   },
   {
    "INTRA32X32_LUMA",
@@ -618,11 +618,11 @@ const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
   },
   {
     "INTRA16X16_LUMA_DC",
-    "INTRA16X16_CHROMAU_DC", 
-    "INTRA16X16_CHROMAV_DC", 
+    "INTRA16X16_CHROMAU_DC",
+    "INTRA16X16_CHROMAV_DC",
     "INTER16X16_LUMA_DC",
-    "INTER16X16_CHROMAU_DC", 
-    "INTER16X16_CHROMAV_DC"  
+    "INTER16X16_CHROMAU_DC",
+    "INTER16X16_CHROMAV_DC"
   },
   {
     "INTRA32X32_LUMA_DC",

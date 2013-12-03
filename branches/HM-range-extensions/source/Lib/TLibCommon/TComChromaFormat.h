@@ -154,17 +154,6 @@ static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle 
 
 //------------------------------------------------
 
-Void setQPforQuant(       class QpParam      &result,
-                    const       Int           qpy,
-                    const       ChannelType   chType,
-                    const       Int           qpBdOffset,
-                    const       Int           chromaQPOffset,
-                    const       ChromaFormat  chFmt,
-                    const       Bool          useTransformSkip );
-
-
-//------------------------------------------------
-
 // NOTE: RExt - Represents scaling through forward transform, although this is not exact for 422 with TransformSkip enabled.
 static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrSize)
 {

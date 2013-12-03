@@ -361,9 +361,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
-  
+
   // set POC for dependent slices in skipped pictures
-  if(m_apcSlicePilot->getDependentSliceSegmentFlag() && m_prevSliceSkipped) 
+  if(m_apcSlicePilot->getDependentSliceSegmentFlag() && m_prevSliceSkipped)
   {
     m_apcSlicePilot->setPOC(m_skippedPOC);
   }
@@ -385,7 +385,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_skippedPOC = m_apcSlicePilot->getPOC();
     return false;
   }
-  
+
   // clear previous slice skipped flag
   m_prevSliceSkipped = false;
 
@@ -433,7 +433,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     Bool isField = false;
     Bool isTff = false;
-    
+
     if(!m_SEIs.empty())
     {
       // Check if any new Picture Timing SEI has arrived
@@ -445,11 +445,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         isTff =  (pictureTiming->m_picStruct == 1);
       }
     }
-    
+
     //Set Field/Frame coding mode
     m_pcPic->setField(isField);
     m_pcPic->setTopField(isTff);
-    
+
     // transfer any SEI messages that have been received to the picture
     pcPic->setSEIs(m_SEIs);
     m_SEIs.clear();
@@ -757,7 +757,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RASL_R:
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
       break;
-    
+
     case NAL_UNIT_EOS:
       m_associatedIRAPType = NAL_UNIT_INVALID;
       m_pocCRA = 0;
@@ -768,11 +768,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       m_prevSliceSkipped = false;
       m_skippedPOC = 0;
       return false;
-      
+
     case NAL_UNIT_ACCESS_UNIT_DELIMITER:
       // TODO: process AU delimiter
       return false;
-      
+
     case NAL_UNIT_EOB:
       return false;
 
@@ -792,7 +792,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
  */
 Bool TDecTop::isSkipPictureForBLA(Int& iPOCLastDisplay)
 {
-  if ((m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_N_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_RADL) && 
+  if ((m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_N_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_RADL) &&
        m_apcSlicePilot->getPOC() < m_pocCRA && (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N))
   {
     iPOCLastDisplay++;

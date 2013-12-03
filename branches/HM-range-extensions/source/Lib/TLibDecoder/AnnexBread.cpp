@@ -134,7 +134,7 @@ _byteStreamNALUnit(
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatistics::SStat &bodyStats=TComCodingStatistics::GetStatisticEP(STATS__NAL_UNIT_TOTAL_BODY);
 #endif
-  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 2) 
+  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 2)
   {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
     uint8_t thebyte=bs.readByte();bodyStats.bits+=8;bodyStats.count++;
@@ -143,7 +143,7 @@ _byteStreamNALUnit(
     nalUnit.push_back(bs.readByte());
 #endif
   }
-  
+
   /* 5. When the current position in the byte stream is:
    *  - not at the end of the byte stream (as determined by unspecified means)
    *  - and the next bytes in the byte stream do not start with a three-byte

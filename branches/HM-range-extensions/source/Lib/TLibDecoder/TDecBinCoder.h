@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -68,7 +68,7 @@ public:
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
 #endif
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
-  
+
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
 
   virtual ~TDecBinIf() {}

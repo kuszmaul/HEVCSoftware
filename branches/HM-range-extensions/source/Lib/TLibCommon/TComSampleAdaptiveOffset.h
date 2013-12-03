@@ -50,12 +50,12 @@
 // Constants
 // ====================================================================================================================
 
-#define MAX_SAO_TRUNCATED_BITDEPTH     10 
+#define MAX_SAO_TRUNCATED_BITDEPTH     10
 
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT]; 
+extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
 class TComSampleAdaptiveOffset
 {
@@ -78,7 +78,7 @@ protected:
   Void xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth );
   Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, ComponentID component);
 protected:
-  UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step  
+  UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
   Int* m_offsetClip[MAX_NUM_COMPONENT]; //clip table for fast operation
   Short* m_sign; //sign table for fast operation
   TComPicYuv*   m_tempPicYuv; //temporary buffer
@@ -89,8 +89,8 @@ protected:
   Int m_numCTUInWidth;
   Int m_numCTUInHeight;
   Int m_numCTUsPic;
-  
-  
+
+
   Int m_lineBufWidth;
   Char* m_signLineBuf1;
   Char* m_signLineBuf2;
