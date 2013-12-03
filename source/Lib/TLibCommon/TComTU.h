@@ -135,9 +135,7 @@ class TComTU
     Bool useDST(const ComponentID compID);
 #endif
 
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
     Bool isNonTransformedResidualRotated(const ComponentID compID);
-#endif
 };
 
 

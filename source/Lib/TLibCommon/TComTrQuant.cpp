@@ -1350,11 +1350,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     //transform and quantise
     if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
     {
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
       const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
-#else
-      const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
-#endif
       const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 
       for (UInt y = 0, coefficientIndex = 0; y<uiHeight; y++)
@@ -1472,11 +1468,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
   if(pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
     const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
-#else
-    const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
-#endif
     const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 
     for (UInt y = 0, coefficientIndex = 0; y<uiHeight; y++)
@@ -1660,11 +1652,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   const Bool bLossless      = pcCU->getCUTransquantBypass( uiAbsPartIdx );
   const UInt uiWidth        = rTu.getRect(compID).width;
   const UInt uiHeight       = rTu.getRect(compID).height;
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
-#else
-  const Bool rotateResidual = pcCU->isResidualRotated(uiWidth);
-#endif
   const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 
   Int reconstructedResi[MAX_TU_SIZE * MAX_TU_SIZE];
@@ -1915,11 +1903,7 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
-#else
-  const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
-#endif
   const UInt uiSizeMinus1   = (width * height) - 1;
 
   if (iTransformShift >= 0)
@@ -1965,11 +1949,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-#if RExt__O0186_DISABLE_NONINTRA_ROTATION
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(component);
-#else
-  const Bool rotateResidual = rTu.getCU()->isResidualRotated(width);
-#endif
   const UInt uiSizeMinus1   = (width * height) - 1;
 
   if (iTransformShift >= 0)
