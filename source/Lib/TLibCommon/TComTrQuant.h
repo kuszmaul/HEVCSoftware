@@ -216,7 +216,7 @@ public:
 
   Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
 
-  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &deQuantSample, const QpParam &cQP, UInt uiPos );
+  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &reconSample, const QpParam &cQP, UInt uiPos );
 
 protected:
 #if ADAPTIVE_QP_SELECTION
@@ -264,7 +264,7 @@ private:
 #if ADAPTIVE_QP_SELECTION
                      TCoeff      *&pArlDes,
 #endif
-                     TCoeff       &uiAcSum,
+                     TCoeff       &uiAbsSum,
                const ComponentID   compID,
                const QpParam      &cQP );
 
@@ -280,39 +280,35 @@ private:
                                      const ComponentID   compID,
                                      const QpParam      &cQP );
 
-__inline UInt              xGetCodedLevel  ( Double&                         rd64CodedCost,
-                                             Double&                         rd64CodedCost0,
-                                             Double&                         rd64CodedCostSig,
-                                             Intermediate_Int                lLevelDouble,
-                                             UInt                            uiMaxAbsLevel,
-                                             UShort                          ui16CtxNumSig,
-                                             UShort                          ui16CtxNumOne,
-                                             UShort                          ui16CtxNumAbs,
-                                             UShort                          ui16AbsGoRice,
-                                             UInt                            c1Idx,
-                                             UInt                            c2Idx,
-                                             Int                             iQBits,
-                                             Double                          dTemp,
-                                             Bool                            bLast        ) const;
+__inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
+                                             Double&          rd64CodedCost0,
+                                             Double&          rd64CodedCostSig,
+                                             Intermediate_Int lLevelDouble,
+                                             UInt             uiMaxAbsLevel,
+                                             UShort           ui16CtxNumSig,
+                                             UShort           ui16CtxNumOne,
+                                             UShort           ui16CtxNumAbs,
+                                             UShort           ui16AbsGoRice,
+                                             UInt             c1Idx,
+                                             UInt             c2Idx,
+                                             Int              iQBits,
+                                             Double           errorScale,
+                                             Bool             bLast        ) const;
 
 
-  __inline Int xGetICRate  ( UInt                            uiAbsLevel,
-                             UShort                          ui16CtxNumOne,
-                             UShort                          ui16CtxNumAbs,
-                             UShort                          ui16AbsGoRice,
-                             UInt                            c1Idx,
-                             UInt                            c2Idx
+  __inline Int xGetICRate  ( UInt   uiAbsLevel,
+                             UShort ui16CtxNumOne,
+                             UShort ui16CtxNumAbs,
+                             UShort ui16AbsGoRice,
+                             UInt   c1Idx,
+                             UInt   c2Idx
                            ) const;
 
-  __inline Double xGetRateLast     ( const UInt                      uiPosX,
-                                     const UInt                      uiPosY,
-                                     const ComponentID               component     ) const;
-  __inline Double xGetRateSigCoeffGroup (  UShort                    uiSignificanceCoeffGroup,
-                                     UShort                          ui16CtxNumSig ) const;
-  __inline Double xGetRateSigCoef (  UShort                          uiSignificance,
-                                     UShort                          ui16CtxNumSig ) const;
-  __inline Double xGetICost        ( Double                          dRate         ) const;
-  __inline Double xGetIEPRate      (                                               ) const;
+  __inline Double xGetRateLast         ( const UInt uiPosX, const UInt uiPosY, const ComponentID component ) const;
+  __inline Double xGetRateSigCoeffGroup( UShort uiSignificanceCoeffGroup, UShort ui16CtxNumSig             ) const;
+  __inline Double xGetRateSigCoef      ( UShort uiSignificance,           UShort ui16CtxNumSig             ) const;
+  __inline Double xGetICost            ( Double dRate                                                      ) const; 
+  __inline Double xGetIEPRate          (                                                                   ) const;
 
 
   // dequantization

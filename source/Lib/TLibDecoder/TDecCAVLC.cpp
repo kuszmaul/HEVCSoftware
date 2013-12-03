@@ -710,16 +710,16 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
           case SPS_EXT__REXT:
             assert(!bSkipTrailingExtensionBits);
 
-            READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation                    (uiCode != 0);
-            READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
-            READ_FLAG( uiCode, "intra_block_copy_enabled_flag");          pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
-            READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
-            READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
-            READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision                   (uiCode != 0);
-            READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
-            READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting  (uiCode != 0);
+            READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");     pcSPS->setUseResidualRotation                    (uiCode != 0);
+            READ_FLAG( uiCode, "transform_skip_context_enabled_flag");      pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
+            READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
+            READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");      pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
+            READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");      pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
+            READ_FLAG( uiCode, "extended_precision_processing_flag");       pcSPS->setUseExtendedPrecision                   (uiCode != 0);
+            READ_FLAG( uiCode, "intra_smoothing_disabled_flag");            pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
+            READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting    (uiCode != 0);
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-            READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
+            READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");        pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
             break;
           default:

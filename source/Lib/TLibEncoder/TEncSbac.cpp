@@ -741,16 +741,14 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
-  UInt uiSymbol = pcCU->isIntraBC( uiAbsPartIdx ) ? 1 : 0;
+  const UInt uiSymbol = pcCU->isIntraBC( uiAbsPartIdx ) ? 1 : 0;
 
-  {
-    m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ));
+  m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ));
 
-    DTRACE_CABAC_VL( g_nSymbolCounter++ );
-    DTRACE_CABAC_T( "\tuiSymbol: ");
-    DTRACE_CABAC_V( uiSymbol );
-    DTRACE_CABAC_T( "\n");
-  }
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
 }
 
 /** code intraBC

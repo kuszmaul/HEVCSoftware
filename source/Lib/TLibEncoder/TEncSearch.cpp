@@ -4202,6 +4202,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
         if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
           continue;
+
         uiSad = m_pcRdCost->getCost( x, y);   
     
         for(int r = 0; r < iRoiHeight; )
@@ -4334,8 +4335,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       Int iTempY = y + (cuPelY%lcuHeight) + iRoiHeight - 1;
       if ((iTempX >= 0) && (iTempY >= 0))
       {
-      Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-        Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+        Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+        Int iTempZscanIdx  = g_auiRasterToZscan[iTempRasterIdx];
         if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
           continue;
       }

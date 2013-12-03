@@ -1356,8 +1356,9 @@ Void  TComSlice::initWpScaling()
           pwp->iOffset = 0;
         }
 
-        pwp->w      = pwp->iWeight;
         const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (g_bitDepth[toChannelType(ComponentID(yuv))]-8));
+
+        pwp->w      = pwp->iWeight;
         pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: RExt - This value of the ".o" variable is never used - .o is set immediately before it gets used
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
@@ -1613,14 +1614,14 @@ TComPPS::TComPPS()
 , m_puiColumnWidth                   (NULL)
 , m_iNumRowsMinus1                   (0)
 , m_puiRowHeight                     (NULL)
-,  m_iNumSubstreams                  (1)
-, m_signHideFlag(0)
+, m_iNumSubstreams                   (1)
+, m_signHideFlag                     (0)
 , m_cabacInitPresentFlag             (false)
 , m_encCABACTableIdx                 (I_SLICE)
 , m_sliceHeaderExtensionPresentFlag  (false)
 , m_loopFilterAcrossSlicesEnabledFlag(false)
-, m_listsModificationPresentFlag(  0)
-, m_numExtraSliceHeaderBits(0)
+, m_listsModificationPresentFlag     (0)
+, m_numExtraSliceHeaderBits          (0)
 {
   m_scalingList = new TComScalingList;
 }
