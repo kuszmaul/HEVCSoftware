@@ -201,7 +201,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseGolombRiceGroupAdaptation ( m_useGolombRiceGroupAdaptation );
 #endif
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
@@ -212,7 +211,6 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_cTEncTop.setUseResidualDPCM(PredMode(predictionModeIndex), m_useResidualDPCM[predictionModeIndex]);
   }
-#endif
 #endif
   m_cTEncTop.setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setPCMLog2MinSize          ( m_uiPCMLog2MinSize);

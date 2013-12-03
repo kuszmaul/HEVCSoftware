@@ -202,10 +202,7 @@ private:
   UInt*         m_sliceStartCU;       ///< Start CU address of current slice
   UInt*         m_sliceSegmentStartCU;///< Start CU address of current slice
   Char          m_codedQP;
-
-#if RExt__NRCE2_RESIDUAL_DPCM
   UChar*        m_interRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the inter RDPCM mode for all TUs belonging to this CU
-#endif
 
 protected:
 
@@ -330,7 +327,6 @@ public:
   Void          setTransformSkipSubParts  ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setTransformSkipSubParts  ( const UInt useTransformSkip[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   UChar*        getInterRdpcmMode      ( ComponentID component ) { return m_interRdpcmMode[component]; }
   UChar         getInterRdpcmMode      ( ComponentID component, UInt partIdx ) {return m_interRdpcmMode[component][partIdx]; }
   Void          setInterRdpcmModeSubParts  ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
@@ -344,7 +340,6 @@ public:
 #endif
 
   Void          setInterRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
-#endif
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void          setCrossComponentDecorrelationAlphaPartRange ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );

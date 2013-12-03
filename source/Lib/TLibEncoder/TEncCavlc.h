@@ -149,9 +149,7 @@ public:
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   Void codeInterRdpcmMode( TComTU &rTu, const ComponentID compID );
-#endif
 
   Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );

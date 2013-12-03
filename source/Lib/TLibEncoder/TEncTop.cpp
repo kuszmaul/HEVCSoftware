@@ -668,7 +668,6 @@ Void TEncTop::xInitSPS()
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   m_cSPS.setUseGolombRiceGroupAdaptation(m_useGolombRiceGroupAdaptation);
 #endif
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
@@ -679,7 +678,6 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setUseResidualDPCM(PredMode(predictionModeIndex), m_useResidualDPCM[predictionModeIndex]);
   }
-#endif
 #endif
 
   m_cSPS.setMaxTLayers( m_maxTempLayer );

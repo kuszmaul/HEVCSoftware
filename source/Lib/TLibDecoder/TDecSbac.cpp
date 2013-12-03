@@ -90,10 +90,8 @@ TDecSbac::TDecSbac()
 , m_cSaoTypeIdxSCModel                       ( 1,             1,                      NUM_SAO_TYPE_IDX_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel                    ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_TRANSFORMSKIP_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel            ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
-#if RExt__NRCE2_RESIDUAL_DPCM
 , m_interRdpcmFlagSCModel                    ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_interRdpcmDirSCModel                     ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_INTER_RDPCM_DIR_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 , m_cCrossComponentDecorrelationSCModel      ( 1,             1,                      NUM_CROSS_COMPONENT_DECORRELATION_CTX, m_contextModels + m_numContextModels, m_numContextModels)
@@ -158,10 +156,8 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUTransSubdivFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-#if RExt__NRCE2_RESIDUAL_DPCM
   m_interRdpcmFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_FLAG);
   m_interRdpcmDirSCModel.initBuffer               ( sliceType, qp, (UChar*)INIT_INTER_RDPCM_DIR);
-#endif
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
@@ -217,10 +213,8 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUTransSubdivFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-#if RExt__NRCE2_RESIDUAL_DPCM
   m_interRdpcmFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_FLAG );
   m_interRdpcmDirSCModel.initBuffer               ( eSliceType, iQp, (UChar*)INIT_INTER_RDPCM_DIR );
-#endif
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
@@ -1317,10 +1311,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if (pcCU->getCUTransquantBypass(uiAbsPartIdx))
   {
     beValid = false;
-#if RDPCM_INTER_LOSSLESS
     if((!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
       parseInterRdpcmMode(rTu, compID);
-#endif
   }
   else
   {
@@ -1334,7 +1326,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   if(pcCU->getSlice()->getPPS()->getUseTransformSkip())
   {
     parseTransformSkipFlags(rTu, compID);
-#if RDPCM_INTER_LOSSY
     //  This TU has coefficients and is transform skipped. Check whether is inter coded and if yes decode the inter RDPCM mode
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
@@ -1345,10 +1336,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
         beValid = false;
       }
     }
-#endif
   }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   Int uiIntraMode = -1;
   const Bool       bIsLuma = isLuma(compID);
   Int isIntra = pcCU->isIntra(uiAbsPartIdx) ? 1 : 0;
@@ -1365,7 +1354,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
       beValid = false;
     }
   }
-#endif
 
   //--------------------------------------------------------------------------------------------------
 
@@ -2027,7 +2015,6 @@ Void TDecSbac::loadContexts ( TDecSbac* pScr )
   xCopyContextsFrom(pScr);
 }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 /** Performs CABAC decoding of the inter RDPCM mode
  * \param rTu current TU data structure
  * \param compID component identifier
@@ -2066,7 +2053,6 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
     }
   }
 }
-#endif
 
 
 //! \}

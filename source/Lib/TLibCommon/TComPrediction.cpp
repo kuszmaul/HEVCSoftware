@@ -865,14 +865,9 @@ Void TComPrediction::xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rp
 /* Static member function */
 Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode)
 {
-#if RExt__NRCE2_RESIDUAL_DPCM
-  return (rTu.getCU()->isRDPCMEnabled(rTu.GetAbsPartIdxTU()) )&&
-#else
-  // TODO: RExt - possibly check other sub-layers profile idcs here?
-  return (rTu.getCU()->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::MAINREXT) &&
-#endif
-         rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
-         (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
+  return (rTu.getCU()->isRDPCMEnabled(rTu.GetAbsPartIdxTU()) ) &&
+          rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
+          (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
 
 //! \}

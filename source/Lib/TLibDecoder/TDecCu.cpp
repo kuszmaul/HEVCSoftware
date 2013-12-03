@@ -613,11 +613,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
         Pel* pPred      = piPred;
-#if RExt__NRCE2_RESIDUAL_DPCM
         Pel* pResi      = piResi;
-#else
-  const Pel* pResi      = piResi;
-#endif
         Pel* pReco      = pcRecoYuv->getAddr( compID, uiAbsPartIdx );
         Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
 

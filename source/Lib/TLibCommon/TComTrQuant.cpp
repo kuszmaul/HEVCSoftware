@@ -3231,7 +3231,6 @@ Void TComTrQuant::destroyScalingList()
   }
 }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP )
 {
   TComDataCU *pcCU=rTu.getCU();
@@ -3431,9 +3430,6 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
     deQuantSample = tmpCoef << iTrShiftNeg;
   }
 }
-
-#endif // RExt__NRCE2_RESIDUAL_DPCM
-
 
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION

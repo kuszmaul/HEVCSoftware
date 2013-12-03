@@ -127,9 +127,7 @@ public:
   virtual Void codeDFFlag (UInt uiCode, const Char *pSymbolName) = 0;
   virtual Void codeDFSvlc (Int iCode, const Char *pSymbolName)   = 0;
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   virtual Void codeInterRdpcmMode ( TComTU &rTu, const ComponentID compID ) = 0;
-#endif
 
   virtual Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
