@@ -720,9 +720,7 @@ private:
   Bool        m_useExtendedPrecision;
   Bool        m_useIntraBlockCopy;
   Bool        m_useLossless;
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Bool        m_useHighPrecisionPredictionWeighting;
-#endif
   Bool        m_useResidualRotation;
   Bool        m_useSingleSignificanceMapContext;
 
@@ -855,10 +853,8 @@ public:
   Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
   Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
   Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
-#endif
 
   Void      setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
   Bool      getUseSAO                  ()           {return m_bUseSAO;}
