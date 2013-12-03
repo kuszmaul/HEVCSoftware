@@ -181,7 +181,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR,                         settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__O0142_SPS_EXTENSION_SYNTAX,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION,      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0202_CROSS_COMPONENT_DECORRELATION,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING,                settingNameWidth, settingValueWidth);

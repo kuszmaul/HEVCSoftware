@@ -545,15 +545,10 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       codeVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
   Bool sps_extension_present_flag=false;
   Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
 
   sps_extension_flags[SPS_EXT__REXT] = (
-#else
-  //NOTE: RExt - this will be conditional on the selected profile
-  if (
-#endif
           pcSPS->getUseResidualRotation()
        || pcSPS->getUseSingleSignificanceMapContext()
        || pcSPS->getUseIntraBlockCopy()
@@ -567,9 +562,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
        || pcSPS->getUseGolombRiceGroupAdaptation()
 #endif
-    )
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
-    ;
+    );
 
   // Other SPS extension flags checked here.
 
@@ -595,10 +588,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
         {
           case SPS_EXT__REXT:
 
-#else
-  {
-            WRITE_FLAG( 1, "sps_extension1_flag" );
-#endif
             WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
@@ -612,7 +601,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
             WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
 #endif
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -621,14 +609,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       }
     }
   }
-#else
-            WRITE_FLAG( 0, "sps_extension2_flag" );
-  }
-  else
-  {
-            WRITE_FLAG( 0, "sps_extension1_flag" );
-  }
-#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )

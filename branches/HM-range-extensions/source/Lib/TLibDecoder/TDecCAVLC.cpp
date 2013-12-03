@@ -691,7 +691,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
   Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
   READ_FLAG( uiCode, "sps_extension_present_flag");
   if (uiCode)
@@ -711,12 +710,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
         {
           case SPS_EXT__REXT:
             assert(!bSkipTrailingExtensionBits);
-#else
-  READ_FLAG( uiCode, "sps_extension1_flag");
-
-  if (uiCode != 0)
-  {
-#endif
 
             READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");   pcSPS->setUseResidualRotation                    (uiCode != 0);
             READ_FLAG( uiCode, "transform_skip_context_enabled_flag");    pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
@@ -731,7 +724,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
             READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -747,19 +739,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       }
     }
   }
-#else
-
-    READ_FLAG( uiCode, "sps_extension2_flag");
-  }
-
-  if (uiCode)
-  {
-    while ( xMoreRbspData() )
-    {
-      READ_FLAG( uiCode, "sps_extension_data_flag");
-    }
-  }
-#endif
 }
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)

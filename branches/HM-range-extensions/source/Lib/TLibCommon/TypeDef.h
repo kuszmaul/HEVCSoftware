@@ -248,7 +248,6 @@
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
-#define RExt__O0142_SPS_EXTENSION_SYNTAX                                       1 ///< 0 = use old single-chained SPS syntax, 1 (default) = use array-chained SPS syntax
 #define RExt__O0155_INTRA_BLOCK_COPY_CONSTRAINED_INTRA_PREDICTION              1 ///< 0 = allow intra-block-copy to predict from any CU type, 1 (default) = only allow intra-block-copy to predict from intra or intra-bc CU types.
 #define RExt__O0202_CROSS_COMPONENT_DECORRELATION                              1 ///< 0 = disable cross-component decorrelation system, 1 (default) = allow use of cross-component decorrelation, controlled by PPS flag (and encoder command line)
 #define RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING                        1 ///< 0 = do not use high precision prediction weighting (8-bit only), 1 (default) = allow use of high precision prediction weighting, based upon SPS flag.
@@ -726,15 +725,13 @@ enum CostMode
 #endif
 
 
-#if RExt__O0142_SPS_EXTENSION_SYNTAX
-  typedef enum
-  {
-    SPS_EXT__REXT=0,
-//  SPS_EXT__MVHEVC=1,
-//  SPS_EXT__SHVC=2,
-    NUM_SPS_EXTENSION_FLAGS=8
-  } SPS_EXTENSION_FLAG_TYPE;
-#endif
+typedef enum
+{
+  SPS_EXT__REXT=0,
+// SPS_EXT__MVHEVC=1,
+// SPS_EXT__SHVC=2,
+  NUM_SPS_EXTENSION_FLAGS=8
+} SPS_EXTENSION_FLAG_TYPE;
 
 // ====================================================================================================================
 // Type definition
