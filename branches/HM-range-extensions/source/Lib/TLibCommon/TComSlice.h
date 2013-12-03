@@ -734,12 +734,7 @@ private:
   Bool        m_useGolombRiceGroupAdaptation;
 #endif
 
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
-#else
-  Bool        m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
-#endif
-
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
   Bool        m_disableIntraReferenceSmoothing;
@@ -869,29 +864,24 @@ public:
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
 #endif
 
-  Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
-  Bool getUseSAO                  ()           {return m_bUseSAO;}
+  Void      setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
+  Bool      getUseSAO                  ()           {return m_bUseSAO;}
 
 #if RExt__NRCE2_RESIDUAL_ROTATION
-  Bool     getUseResidualRotation            ()                 const { return m_useResidualRotation;  }
-  Void     setUseResidualRotation            (const Bool value)       { m_useResidualRotation = value; }
+  Bool      getUseResidualRotation            ()                 const { return m_useResidualRotation;  }
+  Void      setUseResidualRotation            (const Bool value)       { m_useResidualRotation = value; }
 #endif
 
-  Bool     getUseSingleSignificanceMapContext()                 const { return m_useSingleSignificanceMapContext;  }
-  Void     setUseSingleSignificanceMapContext(const Bool value)       { m_useSingleSignificanceMapContext = value; }
+  Bool      getUseSingleSignificanceMapContext()                 const { return m_useSingleSignificanceMapContext;  }
+  Void      setUseSingleSignificanceMapContext(const Bool value)       { m_useSingleSignificanceMapContext = value; }
 
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  Bool     getUseGolombRiceGroupAdaptation   ()                 const { return m_useGolombRiceGroupAdaptation;  }
-  Void     setUseGolombRiceGroupAdaptation   (const Bool value)       { m_useGolombRiceGroupAdaptation = value; }
+  Bool      getUseGolombRiceGroupAdaptation   ()                 const { return m_useGolombRiceGroupAdaptation;  }
+  Void      setUseGolombRiceGroupAdaptation   (const Bool value)       { m_useGolombRiceGroupAdaptation = value; }
 #endif
 
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
-  Bool     getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
-  Void     setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
-#else
-  Bool     getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
-  Void     setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
-#endif
+  Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
+  Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }
   Void      setMaxTLayers( UInt uiMaxTLayers )        { assert( uiMaxTLayers <= MAX_TLAYER ); m_uiMaxTLayers = uiMaxTLayers; }

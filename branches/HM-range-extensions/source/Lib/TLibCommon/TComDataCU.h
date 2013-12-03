@@ -331,15 +331,9 @@ public:
   UChar         getInterRdpcmMode      ( ComponentID component, UInt partIdx ) {return m_interRdpcmMode[component][partIdx]; }
   Void          setInterRdpcmModeSubParts  ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiDepth);
   Void          setInterRdpcmModeSubParts  ( const UInt rdpcmMode[MAX_NUM_COMPONENT], UInt uiAbsPartIdx, UInt uiDepth );
-#if RExt__O0185_RESIDUAL_DPCM_FLAGS
-  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
-#else
-  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return ( isInter(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTER)) ||
-                                                                       ( isIntraBC(uiAbsPartIdx) && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)) ||
-                                                                       ( isIntra(uiAbsPartIdx)   && getSlice()->getSPS()->getUseResidualDPCM(MODE_INTRA)); }
-#endif
-
   Void          setInterRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
+
+  Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void          setCrossComponentDecorrelationAlphaPartRange ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
