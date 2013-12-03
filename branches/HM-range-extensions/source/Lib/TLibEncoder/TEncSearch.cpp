@@ -2405,7 +2405,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
         bMaintainResidual[RESIDUAL_ENCODER_SIDE] = !(m_pcEncCfg->getUseReconBasedDecorrelationEstimate());
 #endif
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   //NOTE: RExt - Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
 #if FULL_NBIT
   const Double sqrtLambdaForFirstPass= (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING && pcCU->getCUTransquantBypass(0)) ?
@@ -2415,7 +2414,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
   const Double sqrtLambdaForFirstPass= (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING && pcCU->getCUTransquantBypass(0)) ?
                 sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (g_bitDepth[CHANNEL_TYPE_LUMA] - 8)) / 3.0)))
               : m_pcRdCost->getSqrtLambda();
-#endif
 #endif
 
   //===== set QP and clear Cbf =====
@@ -2485,11 +2483,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         // NB xModeBitsIntra will not affect the mode for chroma that may have already been pre-estimated.
         iModeBits+=xModeBitsIntra( pcCU, uiMode, uiPartOffset, uiDepth, uiInitTrDepth, CHANNEL_TYPE_LUMA );
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
         Double cost      = (Double)uiSad + (Double)iModeBits * sqrtLambdaForFirstPass;
-#else
-        Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
-#endif
 
 #ifdef DEBUG_INTRA_SEARCH_COSTS
         std::cout << "1st pass mode " << uiMode << " SAD = " << uiSad << ", mode bits = " << iModeBits << ", cost = " << cost << "\n";
@@ -3351,11 +3345,8 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           uiZeroMvdBitsTemp = uiBitsTemp;
           uiZeroMvdBitsTemp += 2; //zero mvd bits
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
           m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-          m_pcRdCost->getMotionCost( 1, 0 );
-#endif
+
           uiZeroMvdCostTemp = uiZeroMvdDistTemp + m_pcRdCost->getCost(uiZeroMvdBitsTemp);
 
           if (uiZeroMvdCostTemp < uiZeroMvdCost)
@@ -3580,11 +3571,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if ZERO_MVD_EST
     if ( (pcCU->getSlice()->isInterB()) && (pcCU->isBipredRestriction(iPartIdx) == false) )
     {
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-      m_pcRdCost->getMotionCost( 1, 0 );
-#endif
 
       for ( Int iL0RefIdxTemp = 0; iL0RefIdxTemp <= pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_0)-1; iL0RefIdxTemp++ )
       for ( Int iL1RefIdxTemp = 0; iL1RefIdxTemp <= pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_1)-1; iL1RefIdxTemp++ )
@@ -3775,11 +3762,8 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       UInt uiMEInterDir = 0;
       TComMvField cMEMvField[2];
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
       m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-      m_pcRdCost->getMotionCost( 1, 0 );
-#endif
+
 #if AMP_MRG
       // calculate ME cost
       Distortion uiMEError = std::numeric_limits<Distortion>::max();
@@ -3955,11 +3939,7 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
 
   TComMv        ZeroMv(0,0);
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-  m_pcRdCost->getMotionCost( 1, 0 );
-#endif
 
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_pcRdCost->setPredictor(mvPred);
@@ -4709,12 +4689,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
 
   if (pcAMVPInfo->iN < 2) return;
 
-
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(0) );
-#else
-  m_pcRdCost->getMotionCost( 1, 0 );
-#endif
   m_pcRdCost->setCostScale ( 0    );
 
   Int iBestMVPIdx = riMVPIdx;
@@ -4792,11 +4767,8 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 
   // calc distortion
 #if ZERO_MVD_EST
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-  m_pcRdCost->getMotionCost( 1, 0 );
-#endif
+
   DistParam cDistParam;
   m_pcRdCost->setDistParam( cDistParam, g_bitDepth[CHANNEL_TYPE_LUMA],
                             pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y),
@@ -4865,11 +4837,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   if ( bBi )  xSetSearchRange   ( pcCU, rcMv   , iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
   else        xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-  m_pcRdCost->getMotionCost( 1, 0 );
-#endif
 
   m_pcRdCost->setPredictor  ( *pcMvPred );
   m_pcRdCost->setCostScale  ( 2 );
@@ -4886,11 +4854,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
   }
 
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-#else
-  m_pcRdCost->getMotionCost( 1, 0 );
-#endif
   m_pcRdCost->setCostScale ( 1 );
 
   xPatternSearchFracDIF( pcCU, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );

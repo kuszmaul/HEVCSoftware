@@ -995,14 +995,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                                  && (rpcBestCU->getTotalBits()>rpcBestCU->getSlice()->getSliceSegmentArgument()<<3);
       if(isEndOfSlice||isEndOfSliceSegment)
       {
-#if RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION
         if (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING)
           rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost() + (1.0 / m_pcRdCost->getLambda());
         else
           rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
-#else
-        rpcBestCU->getTotalCost()=rpcTempCU->getTotalCost()+1;
-#endif
       }
 
       xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTempDebug) DEBUG_STRING_PASS_INTO(false) ); // RD compare current larger prediction
