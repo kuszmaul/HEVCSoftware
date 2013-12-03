@@ -43,29 +43,40 @@
 
 class  WeightPredAnalysis
 {
-  Bool m_weighted_pred_flag;
-  Bool m_weighted_bipred_flag;
+private:
+
+  // member variables
+  Bool            m_weighted_pred_flag;
+  Bool            m_weighted_bipred_flag;
   wpScalingParam  m_wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT];
 
-  Int64   xCalcSADvalueWPSlice(TComSlice *slice, Pel *pOrgPel, Pel *pRefPel, Int iDenom, Int iWeight, Int iOffset);
+  // member functions
 
-  Int64   xCalcACValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC);
-  Int64   xCalcSADvalueWP(Int bitDepth, Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset, const Bool useHighPrecisionPredictionWeighting);
-  Bool    xSelectWP(TComSlice *slice, wpScalingParam weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT], Int iDenom);
-  Bool    xUpdatingWPParameters(TComSlice *slice, wpScalingParam weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT], Int log2Denom);
+  Bool  xSelectWP            (TComSlice *const slice, const Int log2Denom);
+  Bool  xUpdatingWPParameters(TComSlice *const slice, const Int log2Denom);
+
+  Int64 xCalcSADvalueWP      (const Int   bitDepth,
+                              const Pel  *pOrgPel,
+                              const Pel  *pRefPel,
+                              const Int   iWidth,
+                              const Int   iHeight,
+                              const Int   iOrgStride,
+                              const Int   iRefStride,
+                              const Int   iLog2Denom,
+                              const Int   iWeight,
+                              const Int   iOffset,
+                              const Bool  useHighPrecisionPredictionWeighting);
 
 public:
 
   WeightPredAnalysis();
 
   // WP analysis :
-  Bool  xCalcACDCParamSlice(TComSlice *slice);
-  Bool  xEstimateWPParamSlice(TComSlice *slice);
-  Void  xStoreWPparam(Bool weighted_pred_flag, Bool weighted_bipred_flag);
-  Void  xRestoreWPparam(TComSlice *slice);
-  Void  xCheckWPEnable(TComSlice *slice);
+  Void  xCalcACDCParamSlice  (TComSlice *const slice);
+  Void  xEstimateWPParamSlice(TComSlice *const slice);
+  Void  xStoreWPparam        (const Bool weighted_pred_flag, const Bool weighted_bipred_flag);
+  Void  xRestoreWPparam      (TComSlice *const slice);
+  Void  xCheckWPEnable       (TComSlice *const slice);
 };
 
 #endif // __WEIGHTPREDANALYSIS__
-
-
