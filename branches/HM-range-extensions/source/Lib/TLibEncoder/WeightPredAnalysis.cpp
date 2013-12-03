@@ -108,12 +108,8 @@ Bool  WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *slice)
     }
 
 
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
     const Int fixedBitShift=(slice->getSPS()->getUseHighPrecisionPredictionWeighting())?RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION:0;
     weightACDCParam[ch].iDC = (((iOrgDC<<fixedBitShift)+(iSample>>1)) / iSample);
-#else
-    weightACDCParam[ch].iDC = iOrgNormDC;
-#endif
     weightACDCParam[ch].iAC = iOrgAC;
   }
 
@@ -224,9 +220,7 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
 Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT], Int log2Denom)
 {
   const Int numComp = slice->getPic()->getPicYuvOrg()->getNumberValidComponents();
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Bool bUseHighPrecisionWeighting = slice->getSPS()->getUseHighPrecisionPredictionWeighting();
-#endif
 
   Int numPredDir = slice->isInterP() ? 1 : 2;
   assert (numPredDir <= Int(NUM_REF_PIC_LIST_01));
@@ -243,12 +237,8 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
       {
         const ComponentID compID=ComponentID(comp);
         Int bitDepth = g_bitDepth[toChannelType(compID)];
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
         Int range=bUseHighPrecisionWeighting ? (1<<g_bitDepth[toChannelType(compID)])/2 : 128;
         Int realLog2Denom = log2Denom + (bUseHighPrecisionWeighting ? RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION : (bitDepth - 8));
-#else
-        Int realLog2Denom = log2Denom + (bitDepth - 8);
-#endif
         Int realOffset = ((Int)1<<(realLog2Denom-1));
 
         // current frame
@@ -264,7 +254,6 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
         Int offset = (Int)( ((currDC<<log2Denom) - ((Int64)weight * refDC) + (Int64)realOffset) >> realLog2Denom );
 
         // Chroma offset range limination
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
         if(isChroma(compID))
         {
           Int pred = ( range - ( ( range*weight)>>(log2Denom) ) );
@@ -276,30 +265,12 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *slice, wpScalingParam 
         {
           offset = Clip3( -range, range-1, offset);
         }
-#else
-        if(comp)
-        {
-          Int pred = ( 128 - ( ( 128*weight)>>(log2Denom) ) );
-          Int deltaOffset = Clip3( -512, 511, (offset - pred) );    // signed 10bit
-          offset = Clip3( -128, 127, (deltaOffset + pred) );        // signed 8bit
-        }
-        // Luma offset range limitation
-        else
-        {
-          offset = Clip3( -128, 127, offset);
-        }
-#endif
 
         // Weighting factor limitation
         Int defaultWeight = (1<<log2Denom);
         Int deltaWeight = (defaultWeight - weight);
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
         if(deltaWeight >= range || deltaWeight < -range)
           return (false);
-#else
-        if(deltaWeight > 127 || deltaWeight < -128)
-          return (false);
-#endif
 
         m_wp[refList][refIdxTemp][comp].bPresentFlag = true;
         m_wp[refList][refIdxTemp][comp].iWeight = (Int)weight;
@@ -324,9 +295,7 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
   Int iNumPredDir = slice->isInterP() ? 1 : 2;
   assert (iNumPredDir <= Int(NUM_REF_PIC_LIST_01));
 
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   const Bool useHighPrecisionPredictionWeighting = slice->getSPS()->getUseHighPrecisionPredictionWeighting();
-#endif
 
   for ( Int iRefList = 0; iRefList < iNumPredDir; iRefList++ )
   {
@@ -347,13 +316,8 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
         const Int bitDepth = g_bitDepth[toChannelType(compID)];
 
         // calculate SAD costs with/without wp for luma
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
         iSADWP   += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][compID].iWeight, weightPredTable[iRefList][iRefIdxTemp][compID].iOffset, useHighPrecisionPredictionWeighting);
         iSADnoWP += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0, useHighPrecisionPredictionWeighting);
-#else
-        iSADWP   += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][compID].iWeight, weightPredTable[iRefList][iRefIdxTemp][compID].iOffset);
-        iSADnoWP += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
-#endif
       }
 
       Double dRatio = ((Double)iSADWP / (Double)iSADnoWP);
@@ -385,20 +349,13 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTa
  * \param Int iOffset
  * \returns Int64
  */
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
 Int64 WeightPredAnalysis::xCalcSADvalueWP(Int bitDepth, Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset, const Bool useHighPrecisionPredictionWeighting)
-#else
-Int64 WeightPredAnalysis::xCalcSADvalueWP(Int bitDepth, Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset)
-#endif
 {
   Int x, y;
   Int64 iSAD = 0;
   Int64 iSize   = iWidth*iHeight;
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Int64 iRealDenom = useHighPrecisionPredictionWeighting ? iDenom : (iDenom + (bitDepth - 8));
-#else
-  Int64 iRealDenom = iDenom + (bitDepth - 8);
-#endif
+
   for( y = 0; y < iHeight; y++ )
   {
     for( x = 0; x < iWidth; x++ )

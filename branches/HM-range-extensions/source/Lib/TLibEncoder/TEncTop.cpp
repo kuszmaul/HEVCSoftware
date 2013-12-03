@@ -655,9 +655,7 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
   m_cSPS.setUseIntraBlockCopy(m_useIntraBlockCopy);
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   m_cSPS.setUseHighPrecisionPredictionWeighting(m_useHighPrecisionPredictionWeighting);
-#endif
 
   m_cSPS.setUseSAO( m_bUseSAO );
   m_cSPS.setUseResidualRotation(m_useResidualRotation);

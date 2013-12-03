@@ -225,9 +225,7 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
   }
 
   const UInt numValidComponent = pcCU->getPic()->getNumberValidComponents();
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   const Bool bUseHighPrecisionPredictionWeighting = pcSlice->getSPS()->getUseHighPrecisionPredictionWeighting();
-#endif
 
   if ( bBiDir )
   { // Bi-Dir case
@@ -237,14 +235,9 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
 
       wp0[yuv].w      = wp0[yuv].iWeight;
       wp1[yuv].w      = wp1[yuv].iWeight;
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
       const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (bitDepth-8));
       wp0[yuv].o      = wp0[yuv].iOffset * offsetScalingFactor;
       wp1[yuv].o      = wp1[yuv].iOffset * offsetScalingFactor;
-#else
-      wp0[yuv].o      = wp0[yuv].iOffset * (1 << (bitDepth-8));
-      wp1[yuv].o      = wp1[yuv].iOffset * (1 << (bitDepth-8));
-#endif
       wp0[yuv].offset = wp0[yuv].o + wp1[yuv].o;
       wp0[yuv].shift  = wp0[yuv].uiLog2WeightDenom + 1;
       wp0[yuv].round  = (1 << wp0[yuv].uiLog2WeightDenom);
@@ -261,12 +254,8 @@ Void TComWeightPrediction::getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, c
     {
       const Int bitDepth = g_bitDepth[toChannelType(ComponentID(yuv))];
       pwp[yuv].w      = pwp[yuv].iWeight;
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
       const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (bitDepth-8));
       pwp[yuv].offset = pwp[yuv].iOffset * offsetScalingFactor;
-#else
-      pwp[yuv].offset = pwp[yuv].iOffset * (1 << (bitDepth-8));
-#endif
       pwp[yuv].shift  = pwp[yuv].uiLog2WeightDenom;
       pwp[yuv].round  = (pwp[yuv].uiLog2WeightDenom>=1) ? (1 << (pwp[yuv].uiLog2WeightDenom-1)) : (0);
     }

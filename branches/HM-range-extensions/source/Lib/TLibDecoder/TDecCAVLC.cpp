@@ -718,9 +718,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");    pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
             READ_FLAG( uiCode, "extended_precision_processing_flag");     pcSPS->setUseExtendedPrecision                   (uiCode != 0);
             READ_FLAG( uiCode, "intra_smoothing_disabled_flag");          pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
             READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting  (uiCode != 0);
-#endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
             READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");      pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
@@ -1765,14 +1763,9 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
         assert( iDeltaWeight <=  127 );
         wp[COMPONENT_Y].iWeight = (iDeltaWeight + (1<<wp[COMPONENT_Y].uiLog2WeightDenom));
         READ_SVLC( wp[COMPONENT_Y].iOffset, "luma_offset_lX" );       // se(v): luma_offset_l0[i]
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
         Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<g_bitDepth[CHANNEL_TYPE_LUMA])/2 : 128;
         assert( wp[0].iOffset >= -range );
         assert( wp[0].iOffset <   range );
-#else
-        assert( wp[0].iOffset >= -128 );
-        assert( wp[0].iOffset <=  127 );
-#endif
       }
       else
       {
@@ -1783,9 +1776,7 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
       {
         if ( wp[COMPONENT_Cb].bPresentFlag )
         {
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
           Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<g_bitDepth[CHANNEL_TYPE_CHROMA])/2 : 128;
-#endif
           for ( Int j=1 ; j<numValidComp ; j++ )
           {
             Int iDeltaWeight;
@@ -1796,17 +1787,10 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
 
             Int iDeltaChroma;
             READ_SVLC( iDeltaChroma, "delta_chroma_offset_lX" );  // se(v): delta_chroma_offset_l0[i][j]
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
             assert( iDeltaChroma >= -4*range);
             assert( iDeltaChroma <   4*range);
             Int pred = ( range - ( ( range*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
             wp[j].iOffset = Clip3(-range, range-1, (iDeltaChroma + pred) );
-#else
-            assert( iDeltaChroma >= -512 );
-            assert( iDeltaChroma <=  511 );
-            Int pred = ( 128 - ( ( 128*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
-            wp[j].iOffset = Clip3(-128, 127, (iDeltaChroma + pred) );
-#endif
           }
         }
         else

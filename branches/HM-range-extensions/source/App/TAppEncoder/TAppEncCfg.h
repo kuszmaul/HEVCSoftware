@@ -156,9 +156,7 @@ protected:
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
   Bool      m_useExtendedPrecision;
   Bool      m_useIntraBlockCopy;
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   Bool      m_useHighPrecisionPredictionWeighting;
-#endif
 
   //coding tools (chroma format)
   ChromaFormat m_chromaFormatIDC;

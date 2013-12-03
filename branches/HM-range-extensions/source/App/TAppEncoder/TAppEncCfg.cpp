@@ -342,9 +342,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   ("InternalBitDepthC",     m_internalBitDepth[CHANNEL_TYPE_CHROMA],     0, "As per InternalBitDepth but for chroma component. (default:InternalBitDepth)")
   ("ExtendedPrecision",     m_useExtendedPrecision,                  false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   ("HighPrecisionPredictionWeighting", m_useHighPrecisionPredictionWeighting, false, "Use high precision option for weighted prediction (not valid in V1 profiles)")
-#endif
   ("InputColourSpaceConvert",      inputColourSpaceConvert,         string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
   ("SNRInternalColourSpace",  m_snrInternalColourSpace,              false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
   ("OutputInternalColourSpace",  m_outputInternalColourSpace,        false, "If true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
@@ -1656,9 +1654,7 @@ Void TAppEncCfg::xPrintParameter()
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   printf("Cross-component decorrelation   : %s\n", (m_useCrossComponentDecorrelation         ? (m_reconBasedDecorrelationEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
 #endif
-#if RExt__O0235_HIGH_PRECISION_PREDICTION_WEIGHTING
   printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
-#endif
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
 #endif
