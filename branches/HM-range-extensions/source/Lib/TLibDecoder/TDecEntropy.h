@@ -113,9 +113,7 @@ public:
 
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
 
-#if RExt__NRCE2_RESIDUAL_DPCM
   virtual Void parseInterRdpcmMode ( TComTU &rTu, ComponentID compID ) = 0;
-#endif
   
   virtual ~TDecEntropyIf() {}
 };

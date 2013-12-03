@@ -734,12 +734,10 @@ private:
   Bool        m_useGolombRiceGroupAdaptation;
 #endif
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
 #else
   Bool        m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
-#endif
 #endif
 
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -887,14 +885,12 @@ public:
   Void     setUseGolombRiceGroupAdaptation   (const Bool value)       { m_useGolombRiceGroupAdaptation = value; }
 #endif
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool     getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void     setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
 #else
   Bool     getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
   Void     setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
-#endif
 #endif
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }

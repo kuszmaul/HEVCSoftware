@@ -559,14 +559,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
        || pcSPS->getUseSingleSignificanceMapContext()
        || pcSPS->getUseIntraBlockCopy()
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
        || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)
        || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)
 #else
        || pcSPS->getUseResidualDPCM(MODE_INTRA)
        || pcSPS->getUseResidualDPCM(MODE_INTER)
-#endif
 #endif
        || pcSPS->getUseExtendedPrecision()
        || pcSPS->getDisableIntraReferenceSmoothing()
@@ -613,14 +611,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
             WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "residual_dpcm_explicit_enabled_flag" );
 #else
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTRA) ? 1 : 0),            "residual_dpcm_intra_enabled_flag" );
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(MODE_INTER) ? 1 : 0),            "residual_dpcm_inter_enabled_flag" );
-#endif
 #endif
             WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
             WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
@@ -1570,10 +1566,9 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   return true;
 }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 Void TEncCavlc::codeInterRdpcmMode( TComTU &rTu, const ComponentID compID )
  {
    assert(0);
  }
-#endif
+
 //! \}

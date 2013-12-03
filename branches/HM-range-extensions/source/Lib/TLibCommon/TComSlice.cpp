@@ -1467,7 +1467,6 @@ TComSPS::TComSPS()
     m_numReorderPics[i]       = 0;
   }
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
@@ -1478,7 +1477,6 @@ TComSPS::TComSPS()
   {
     m_useResidualDPCM[predictionModeIndex] = false;
   }
-#endif
 #endif
 
   m_scalingList = new TComScalingList;

@@ -215,12 +215,10 @@ protected:
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   Bool      m_useGolombRiceGroupAdaptation;
 #endif
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
 #else
   Bool      m_useResidualDPCM[NUMBER_OF_PREDICTION_MODES];
-#endif
 #endif
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -561,14 +559,12 @@ public:
   Bool getUseGolombRiceGroupAdaptation                 ()            const { return m_useGolombRiceGroupAdaptation;  }
   Void setUseGolombRiceGroupAdaptation                 (const Bool value)  { m_useGolombRiceGroupAdaptation = value; }
 #endif
-#if RExt__NRCE2_RESIDUAL_DPCM
 #if RExt__O0185_RESIDUAL_DPCM_FLAGS
   Bool getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
 #else
   Bool getUseResidualDPCM (const PredMode predictionMode)        const      { return m_useResidualDPCM[predictionMode];  }
   Void setUseResidualDPCM (const PredMode predictionMode, const Bool value) { m_useResidualDPCM[predictionMode] = value; }
-#endif
 #endif
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }

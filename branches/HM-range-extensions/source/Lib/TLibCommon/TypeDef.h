@@ -245,7 +245,6 @@
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_EVALUATION                   1 ///< 0 = disable feature, 1 (default) = have command line control to optionally cost function for lossless / mixed lossless evaluation.
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 
-#define RExt__NRCE2_RESIDUAL_DPCM                                              1 ///< 0 = use residual DPCM for intra lossless coding only, 1 (default) = enable residual DPCM for inter and allow control for intra and inter via sequence parameter set flags
 #define RExt__NRCE2_RESIDUAL_ROTATION                                          1 ///< 0 = process transform-skipped and transquant-bypassed TU coefficients in the same order as transformed TUs, 1 (default) = allow (conditional on sequence-level flag) transform-skipped and transquant-bypassed TUs to be rotated through 180 degrees prior to entropy coding
 
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
@@ -295,11 +294,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x)  0
 #else
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
-#endif
-
-#if RExt__NRCE2_RESIDUAL_DPCM
-#define RDPCM_INTER_LOSSLESS                                                   1  ///< Performs RDPCM on motion compensated residuals in lossless coding
-#define RDPCM_INTER_LOSSY                                                      1  ///< Performs RDPCM on motion compensated residuals in lossy coding
 #endif
 
 #define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
@@ -368,7 +362,6 @@ typedef       unsigned long long  UInt64;
 // Enumeration
 // ====================================================================================================================
 
-#if RExt__NRCE2_RESIDUAL_DPCM
 enum RDPCMMode
 {
   RDPCM_OFF             = 0, 
@@ -384,7 +377,6 @@ enum RDPCMSignallingMode
   RDPCM_SIGNAL_EXPLICIT            = 1,
   NUMBER_OF_RDPCM_SIGNALLING_MODES = 2
 };
-#endif
 #endif
 
 /// supported slice type
