@@ -164,11 +164,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
-#if RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
 #define NUM_INTRABC_PRED_CTX          1
-#else
-#define NUM_INTRABC_PRED_CTX          3
-#endif
 
 
 // ====================================================================================================================
@@ -504,15 +500,9 @@ INIT_EXPLICIT_RDPCM_DIR[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_DIR_CTX] =
 static const UChar 
 INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] = 
 {
-#if RExt__O0073_INTRA_BLOCK_COPY_SINGLE_CTX
   { 185, },
   { 197, },
   { 197, }
-#else
-  { 185,  185,  201, },
-  { 197,  197,  185, },
-  { 197,  197,  185, }
-#endif
 };
 
 #if RExt__O0202_CROSS_COMPONENT_DECORRELATION
