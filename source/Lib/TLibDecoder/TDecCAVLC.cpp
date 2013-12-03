@@ -329,9 +329,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
       pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
     }
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    READ_FLAG( uiCode, "cross_component_decorrelation_flag"); pcPPS->setUseCrossComponentDecorrelation(uiCode != 0);
-#endif
+    READ_FLAG( uiCode, "cross_component_decorrelation_flag");
+    pcPPS->setUseCrossComponentDecorrelation(uiCode != 0);
 
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
@@ -1626,12 +1625,10 @@ Void TDecCavlc::parseMvd( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*ui
   assert(0);
 }
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TDecCavlc::parseCrossComponentDecorrelation( class TComTU& /*rTu*/, ComponentID /*compID*/ )
 {
   assert(0);
 }
-#endif
 
 Void TDecCavlc::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

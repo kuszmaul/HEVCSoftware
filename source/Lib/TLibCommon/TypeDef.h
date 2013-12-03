@@ -247,7 +247,6 @@
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
-#define RExt__O0202_CROSS_COMPONENT_DECORRELATION                              1 ///< 0 = disable cross-component decorrelation system, 1 (default) = allow use of cross-component decorrelation, controlled by PPS flag (and encoder command line)
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -520,14 +519,12 @@ enum MVP_DIR
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 enum StoredResidualType
 {
   RESDIUAL_RECONSTRUCTED          = 0,
   RESIDUAL_ENCODER_SIDE           = 1,
   NUMBER_OF_STORED_RESIDUAL_TYPES = 2
 };
-#endif
 
 enum TransformDirection
 {

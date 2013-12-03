@@ -1600,9 +1600,7 @@ TComPPS::TComPPS()
 , m_chromaCrQpOffset                 (0)
 , m_numRefIdxL0DefaultActive         (1)
 , m_numRefIdxL1DefaultActive         (1)
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 , m_useCrossComponentDecorrelation   (false)
-#endif
 , m_TransquantBypassEnableFlag       (false)
 , m_useTransformSkip                 (false)
 , m_transformSkipLog2MaxSize         (2)

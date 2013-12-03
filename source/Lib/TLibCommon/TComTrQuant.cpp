@@ -1514,12 +1514,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 }
 
 Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                         TComYuv *pResidual,
-#else
-                                        Pel* rpcResidual,
-                                        UInt uiStride,
-#endif
                                         TComTU &rTu)
 {
   if (!rTu.ProcessComponentSection(compID)) return;
@@ -1527,25 +1522,19 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
   TComDataCU* pcCU = rTu.getCU();
   UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
   UInt uiTrMode=rTu.GetTransformDepthRel();
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation()) )
-#else
-  if( !pcCU->getCbf(absPartIdxTU, compID, uiTrMode) )
-#endif
   {
     return;
   }
 
   if( uiTrMode == pcCU->getTransformIdx( absPartIdxTU ) )
   {
-    const TComRectangle &tuRect=rTu.getRect(compID);
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
-    const Int uiStride = pResidual->getStride( compID );
-    Pel *rpcResidual   = pResidual->getAddr( compID );
-#endif
-    UInt uiAddr =  (tuRect.x0 + uiStride*tuRect.y0);
-    Pel* pResi = rpcResidual + uiAddr;
-    TCoeff* rpcCoeff = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
+    const TComRectangle &tuRect      = rTu.getRect(compID);
+    const Int            uiStride    = pResidual->getStride( compID );
+          Pel           *rpcResidual = pResidual->getAddr( compID );
+          UInt           uiAddr      = (tuRect.x0 + uiStride*tuRect.y0);
+          Pel           *pResi       = rpcResidual + uiAddr;
+          TCoeff        *rpcCoeff    = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
     QpParam cQP; // NOTE: RExt - setQPforQuant is now dependent on TS flag (for 4:2:2), and therefore set at the lowest level.
     setQPforQuant( cQP,
@@ -1556,11 +1545,8 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
                    pcCU->getPic()->getChromaFormat(),
                    (pcCU->getTransformSkip(absPartIdxTU, compID)));
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
-#endif
-
       DEBUG_STRING_NEW(sTemp)
 #ifdef DEBUG_STRING
       std::string *psDebug=((DebugOptionList::DebugString_InvTran.getInt()&(pcCU->isIntra(absPartIdxTU)?1:(pcCU->isInter(absPartIdxTU)?2:4)))!=0) ? &sTemp : 0;
@@ -1572,8 +1558,6 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
       if (psDebug != 0)
         std::cout << (*psDebug);
 #endif
-
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
     }
 
     if (isChroma(compID) && (pcCU->getCrossComponentDecorrelationAlpha(absPartIdxTU, compID) != 0))
@@ -1591,18 +1575,13 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
         crossComponentDecorrelation( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
     }
-#endif
   }
   else
   {
     TComTURecurse tuRecurseChild(rTu, false);
     do
     {
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
       invRecurTransformNxN( compID, pResidual, tuRecurseChild );
-#else
-      invRecurTransformNxN( compID, rpcResidual, uiStride, tuRecurseChild );
-#endif
     }
     while (tuRecurseChild.nextSection(rTu));
   }
@@ -3276,7 +3255,6 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 }
 
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TComTrQuant::crossComponentDecorrelation(       TComTU      & rTu,
                                                const ComponentID   compID,
                                                const Pel         * piResiL,
@@ -3318,6 +3296,5 @@ Void TComTrQuant::crossComponentDecorrelation(       TComTU      & rTu,
     pResiT += strideT;
   }
 }
-#endif
 
 //! \}

@@ -155,16 +155,15 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_SAO_MERGE_FLAG_CTX        1       ///< number of context models for SAO merge flags
 #define NUM_SAO_TYPE_IDX_CTX          1       ///< number of context models for SAO type index
 
-#define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping 
+#define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping
+
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 #define NUM_CROSS_COMPONENT_DECORRELATION_CTX 8
-#endif
-
-#define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #define NUM_INTRABC_PRED_CTX          1
+
+#define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 
 // ====================================================================================================================
@@ -505,7 +504,6 @@ INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] =
   { 197, }
 };
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 static const UChar
 INIT_CROSS_COMPONENT_DECORRELATION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_DECORRELATION_CTX] =
 {
@@ -513,7 +511,6 @@ INIT_CROSS_COMPONENT_DECORRELATION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_DE
   { 154, 154, 154, 154, 154, 154, 154, 154 }, 
   { 154, 154, 154, 154, 154, 154, 154, 154 }, 
 };
-#endif
 
 //! \}
 

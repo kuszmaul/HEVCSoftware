@@ -360,11 +360,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
       {
         const ComponentID compID=ComponentID(ch);
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
         if (rTu.ProcessComponentSection(compID))
-#else
-        if (rTu.ProcessComponentSection(compID) && (cbf[compID] != 0))
-#endif
         {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
           if (bDebugRQT) printf("Call NxN for chan %d width=%d height=%d cbf=%d\n", compID, rTu.getRect(compID).width, rTu.getRect(compID).height, 1);
@@ -391,7 +387,6 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
           }
           else
           {
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
             if (isChroma(compID) && (cbf[COMPONENT_Y] != 0))
             {
               m_pcEntropyCoderIf->codeCrossComponentDecorrelation( rTu, compID );
@@ -401,9 +396,6 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
             {
               m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID)), compID );
             }
-#else
-            m_pcEntropyCoderIf->codeCoeffNxN( rTu, (pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID)), compID );
-#endif
           }
         }
       }
@@ -474,12 +466,10 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TEncEntropy::encodeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID )
 {
   m_pcEntropyCoderIf->codeCrossComponentDecorrelation( rTu, compID );
 }
-#endif
 
 /** encode motion information for every PU block
  * \param pcCU

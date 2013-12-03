@@ -129,9 +129,7 @@ public:
   Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID );
-#endif
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 

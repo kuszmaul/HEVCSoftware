@@ -93,9 +93,7 @@ TDecSbac::TDecSbac()
 , m_explicitRdpcmFlagSCModel                 ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 , m_cCrossComponentDecorrelationSCModel      ( 1,             1,                      NUM_CROSS_COMPONENT_DECORRELATION_CTX, m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -159,9 +157,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_explicitRdpcmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
-#endif
 
   m_uiLastDQpNonZero  = 0;
 
@@ -216,9 +212,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG );
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR );
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
-#endif
 
   m_pcTDecBinIf->start();
 }
@@ -898,7 +892,6 @@ Void TDecSbac::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UI
   return;
 }
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
 Void TDecSbac::parseCrossComponentDecorrelation( TComTU &rTu, ComponentID compID )
 {
   TComDataCU *pcCU = rTu.getCU();
@@ -938,7 +931,6 @@ Void TDecSbac::parseCrossComponentDecorrelation( TComTU &rTu, ComponentID compID
     pcCU->setCrossComponentDecorrelationAlphaPartRange( alpha, compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts( compID ) );
   }
 }
-#endif
 
 Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize )
 {

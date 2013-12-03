@@ -80,9 +80,7 @@ private:
   TComYuv*        m_pcQTTempTComYuv;
   TComYuv         m_tmpYuvPred; // To be used in xGetInterPredictionError() to avoid constant memory allocation/deallocation
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Char*           m_phQTTempCrossComponentDecorrelationAlpha[MAX_NUM_COMPONENT];
-#endif
   Pel*            m_pSharedPredTransformSkip[MAX_NUM_COMPONENT];
   TCoeff*         m_pcQTTempTUCoeff[MAX_NUM_COMPONENT];
   UChar*          m_puhQTTempTransformSkipFlag[MAX_NUM_COMPONENT];
@@ -176,9 +174,7 @@ public:
                                   TComYuv*    pcPredYuv, 
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#endif
                                   Distortion& ruiDistC,
                                   Bool        bLumaOnly
                                   DEBUG_STRING_FN_DECLARE(sDebug));
@@ -188,9 +184,7 @@ public:
                                   TComYuv*    pcPredYuv, 
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#endif
                                   Distortion  uiPreCalcDistC
                                   DEBUG_STRING_FN_DECLARE(sDebug));
   
@@ -313,10 +307,8 @@ protected:
   Void  xIntraCodingTUBlock       (       TComYuv*      pcOrgYuv,
                                           TComYuv*      pcPredYuv,
                                           TComYuv*      pcResiYuv,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                           Pel           resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
                                     const Bool          checkDecorrelation,
-#endif
                                           Distortion&   ruiDist,
                                     const ComponentID   compID,
                                           TComTU        &rTu
@@ -328,9 +320,7 @@ protected:
                                     TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,
                                     TComYuv*    pcResiYuv,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                     Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#endif
                                     Distortion& ruiDistY,
                                     Distortion& ruiDistC,
 #if HHI_RQT_INTRA_SPEEDUP
@@ -344,7 +334,6 @@ protected:
                                     TComYuv*     pcRecoYuv,
                                     TComTU &rTu);
 
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
   Void xStoreCrossComponentDecorrelationResult  (       Pel    *pResiLuma,
                                                   const Pel    *pBestLuma,
                                                         TComTU &rTu,
@@ -361,14 +350,11 @@ protected:
                                                   const Int         height,
                                                   const Int         strideL,
                                                   const Int         strideC );
-#endif
   
   Void  xRecurIntraChromaCodingQT ( TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,
                                     TComYuv*    pcResiYuv,
-#if RExt__O0202_CROSS_COMPONENT_DECORRELATION
                                     Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-#endif
                                     Distortion& ruiDist,
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug));
