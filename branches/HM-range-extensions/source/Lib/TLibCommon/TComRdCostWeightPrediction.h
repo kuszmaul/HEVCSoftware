@@ -32,7 +32,7 @@
  */
 
 /** \file     TComRdCostWeightPrediction.h
-    \brief    RD cost computation classes (header)
+    \brief    RD cost computation namespace (header)
 */
 
 #ifndef __TCOMRDCOSTWEIGHTPREDICTION__
@@ -49,48 +49,16 @@ class DistParam;
 class TComPattern;
 
 // ====================================================================================================================
-// Class definition
+// Namespace definition
 // ====================================================================================================================
 
-/// RD cost computation class, with Weighted Prediction
-class TComRdCostWeightPrediction
+/// RD cost computation namespace, with Weighted Prediction
+namespace TComRdCostWeightPrediction
 {
-private:
-  static  Int   m_w0, m_w1; // current wp scaling values
-  static  Int   m_shift;
-  static  Int   m_offset;
-  static  Int   m_round;
-  static  Bool  m_xSetDone;
-
-public:
-  TComRdCostWeightPrediction();
-  virtual ~TComRdCostWeightPrediction();
-  
-protected:
-    
-  static inline Void  xSetWPscale(Int w0, Int w1, Int shift, Int offset, Int round);
-
-  static Distortion xGetSSEw          ( DistParam* pcDtParam );
-  static Distortion xGetSADw          ( DistParam* pcDtParam );
-  static Distortion xGetHADs4w        ( DistParam* pcDtParam );
-  static Distortion xGetHADs8w        ( DistParam* pcDtParam );
-  static Distortion xGetHADsw         ( DistParam* pcDtParam );
-  static Distortion xCalcHADs2x2w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static Distortion xCalcHADs4x4w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static Distortion xCalcHADs8x8w     ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  
-};// END CLASS DEFINITION TComRdCostWeightPrediction
-
-inline Void  TComRdCostWeightPrediction::xSetWPscale(Int w0, Int w1, Int shift, Int offset, Int round)
-{
-  m_w0        = w0;
-  m_w1        = w1;
-  m_shift     = shift;
-  m_offset    = offset;
-  m_round     = round;
-
-  m_xSetDone  = true;
-}
+  Distortion xGetSSEw ( DistParam* pcDtParam );
+  Distortion xGetSADw ( DistParam* pcDtParam );
+  Distortion xGetHADsw( DistParam* pcDtParam );
+}// END NAMESPACE DEFINITION TComRdCostWeightPrediction
 
 #endif // __TCOMRDCOSTWEIGHTPREDICTION__
 

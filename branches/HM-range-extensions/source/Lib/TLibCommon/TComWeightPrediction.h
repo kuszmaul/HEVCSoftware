@@ -55,15 +55,47 @@ class TComWeightPrediction
 public:
   TComWeightPrediction();
 
-  Void  getWpScaling( TComDataCU* pcCU, const Int iRefIdx0, const Int iRefIdx1, WPScalingParam *&wp0 , WPScalingParam *&wp1);
+  Void  getWpScaling(                 TComDataCU     *const pcCU,
+                                const Int                   iRefIdx0,
+                                const Int                   iRefIdx1,
+                                      WPScalingParam      *&wp0,
+                                      WPScalingParam      *&wp1);
 
-  Void  addWeightBi( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const WPScalingParam *wp0, const WPScalingParam *wp1, TComYuv* rpcYuvDst, const Bool bRoundLuma=true );
-  Void  addWeightUni( const TComYuv* pcYuvSrc0, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const  WPScalingParam *wp0, TComYuv* rpcYuvDst );
+  Void addWeightBi(             const TComYuv              *pcYuvSrc0,
+                                const TComYuv              *pcYuvSrc1,
+                                const UInt                  iPartUnitIdx,
+                                const UInt                  uiWidth,
+                                const UInt                  uiHeight,
+                                const WPScalingParam *const wp0,
+                                const WPScalingParam *const wp1,
+                                      TComYuv        *const rpcYuvDst,
+                                const Bool                  bRoundLuma=true );
 
-  Void  xWeightedPredictionUni( TComDataCU* pcCU, const TComYuv* pcYuvSrc, const UInt uiPartAddr, const Int iWidth, const Int iHeight,
-                                const RefPicList eRefPicList, TComYuv*& rpcYuvPred, const Int iRefIdx=-1 );
-  Void  xWeightedPredictionBi( TComDataCU* pcCU, const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const Int iRefIdx0, const Int iRefIdx1,
-                                const UInt uiPartIdx, const Int iWidth, const Int iHeight, TComYuv* rpcYuvDst );
+  Void  addWeightUni(           const TComYuv        *const pcYuvSrc0,
+                                const UInt                  iPartUnitIdx,
+                                const UInt                  uiWidth,
+                                const UInt                  uiHeight,
+                                const WPScalingParam *const wp0,
+                                      TComYuv        *const rpcYuvDst );
+
+  Void  xWeightedPredictionUni(       TComDataCU     *const pcCU,
+                                const TComYuv        *const pcYuvSrc,
+                                const UInt                  uiPartAddr,
+                                const Int                   iWidth,
+                                const Int                   iHeight,
+                                const RefPicList            eRefPicList,
+                                      TComYuv             *&rpcYuvPred,
+                                const Int                   iRefIdx=-1 );
+
+  Void  xWeightedPredictionBi(        TComDataCU     *const pcCU,
+                                const TComYuv        *const pcYuvSrc0,
+                                const TComYuv        *const pcYuvSrc1,
+                                const Int                   iRefIdx0,
+                                const Int                   iRefIdx1,
+                                const UInt                  uiPartIdx,
+                                const Int                   iWidth,
+                                const Int                   iHeight,
+                                      TComYuv              *rpcYuvDst );
 };
 
 #endif 

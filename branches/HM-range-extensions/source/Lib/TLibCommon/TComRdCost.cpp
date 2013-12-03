@@ -543,7 +543,7 @@ Distortion TComRdCost::xGetSAD( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -571,7 +571,7 @@ Distortion TComRdCost::xGetSAD4( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight ) 
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -602,7 +602,7 @@ Distortion TComRdCost::xGetSAD8( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg      = pcDtParam->pOrg;
   const Pel* piCur      = pcDtParam->pCur;
@@ -637,7 +637,7 @@ Distortion TComRdCost::xGetSAD16( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -681,7 +681,7 @@ Distortion TComRdCost::xGetSAD12( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -763,7 +763,7 @@ Distortion TComRdCost::xGetSAD32( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -823,7 +823,7 @@ Distortion TComRdCost::xGetSAD24( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -876,7 +876,7 @@ Distortion TComRdCost::xGetSAD64( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -968,7 +968,7 @@ Distortion TComRdCost::xGetSAD48( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSADw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1048,7 +1048,7 @@ Distortion TComRdCost::xGetSSE( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1081,7 +1081,7 @@ Distortion TComRdCost::xGetSSE4( DistParam* pcDtParam )
   if ( pcDtParam->bApplyWeight )
   {
     assert( pcDtParam->iCols == 4 );
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1114,7 +1114,7 @@ Distortion TComRdCost::xGetSSE8( DistParam* pcDtParam )
   if ( pcDtParam->bApplyWeight )
   {
     assert( pcDtParam->iCols == 8 );
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1150,7 +1150,7 @@ Distortion TComRdCost::xGetSSE16( DistParam* pcDtParam )
   if ( pcDtParam->bApplyWeight )
   {
     assert( pcDtParam->iCols == 16 );
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1194,7 +1194,7 @@ Distortion TComRdCost::xGetSSE16N( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1243,7 +1243,7 @@ Distortion TComRdCost::xGetSSE32( DistParam* pcDtParam )
   if ( pcDtParam->bApplyWeight )
   {
     assert( pcDtParam->iCols == 32 );
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1304,7 +1304,7 @@ Distortion TComRdCost::xGetSSE64( DistParam* pcDtParam )
   if ( pcDtParam->bApplyWeight )
   {
     assert( pcDtParam->iCols == 64 );
-    return xGetSSEw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetSSEw( pcDtParam );
   }
   const Pel* piOrg   = pcDtParam->pOrg;
   const Pel* piCur   = pcDtParam->pCur;
@@ -1610,75 +1610,12 @@ Distortion TComRdCost::xCalcHADs8x8( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int
   return sad;
 }
 
-Distortion TComRdCost::xGetHADs4( DistParam* pcDtParam )
-{
-  if ( pcDtParam->bApplyWeight )
-  {
-    return xGetHADs4w( pcDtParam );
-  }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
-  Int  iRows   = pcDtParam->iRows;
-  Int  iStrideCur = pcDtParam->iStrideCur;
-  Int  iStrideOrg = pcDtParam->iStrideOrg;
-  Int  iStep  = pcDtParam->iStep;
-  Int  y;
-  Int  iOffsetOrg = iStrideOrg<<2;
-  Int  iOffsetCur = iStrideCur<<2;
-  
-  Distortion uiSum = 0;
-  
-  for ( y=0; y<iRows; y+= 4 )
-  {
-    uiSum += xCalcHADs4x4( piOrg, piCur, iStrideOrg, iStrideCur, iStep );
-    piOrg += iOffsetOrg;
-    piCur += iOffsetCur;
-  }
-  
-  return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
-}
-
-Distortion TComRdCost::xGetHADs8( DistParam* pcDtParam )
-{
-  if ( pcDtParam->bApplyWeight )
-  {
-    return xGetHADs8w( pcDtParam );
-  }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
-  Int  iRows   = pcDtParam->iRows;
-  Int  iStrideCur = pcDtParam->iStrideCur;
-  Int  iStrideOrg = pcDtParam->iStrideOrg;
-  Int  iStep  = pcDtParam->iStep;
-  Int  y;
-  
-  Distortion uiSum = 0;
-  
-  if ( iRows == 4 )
-  {
-    uiSum += xCalcHADs4x4( piOrg+0, piCur        , iStrideOrg, iStrideCur, iStep );
-    uiSum += xCalcHADs4x4( piOrg+4, piCur+4*iStep, iStrideOrg, iStrideCur, iStep );
-  }
-  else
-  {
-    Int  iOffsetOrg = iStrideOrg<<3;
-    Int  iOffsetCur = iStrideCur<<3;
-    for ( y=0; y<iRows; y+= 8 )
-    {
-      uiSum += xCalcHADs8x8( piOrg, piCur, iStrideOrg, iStrideCur, iStep );
-      piOrg += iOffsetOrg;
-      piCur += iOffsetCur;
-    }
-  }
-  
-  return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
-}
 
 Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
   {
-    return xGetHADsw( pcDtParam );
+    return TComRdCostWeightPrediction::xGetHADsw( pcDtParam );
   }
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;

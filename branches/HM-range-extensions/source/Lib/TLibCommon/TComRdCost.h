@@ -59,7 +59,7 @@ class TComPattern;
 // ====================================================================================================================
 
 // for function pointer
-typedef Distortion (*FpDistFunc) (DistParam*);
+typedef Distortion (*FpDistFunc) (DistParam*); // TODO: RExt - can this pointer be replaced with a reference? - there are no NULL checks on pointer.
 
 // ====================================================================================================================
 // Class definition
@@ -79,8 +79,8 @@ public:
   FpDistFunc DistFunc;
   Int   bitDepth;
 
-  Bool            bApplyWeight;     // whether weithed prediction is used or not
-  WPScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
+  Bool            bApplyWeight;     // whether weighted prediction is used or not
+  WPScalingParam  *wpCur;           // weighted prediction scaling parameters for current ref
   ComponentID     compIdx;
 
   // (vertical) subsampling shift (for reducing complexity)
@@ -104,7 +104,6 @@ public:
 
 /// RD cost computation class
 class TComRdCost
-  : public TComRdCostWeightPrediction
 {
 private:
   // for distortion
@@ -247,8 +246,6 @@ private:
 
 #endif
 
-  static Distortion xGetHADs4         ( DistParam* pcDtParam );
-  static Distortion xGetHADs8         ( DistParam* pcDtParam );
   static Distortion xGetHADs          ( DistParam* pcDtParam );
   static Distortion xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static Distortion xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
