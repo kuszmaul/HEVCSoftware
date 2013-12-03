@@ -6973,7 +6973,7 @@ Void  TEncSearch::setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicLi
 
   TComSlice       *pcSlice  = pcCU->getSlice();
   TComPPS         *pps      = pcCU->getSlice()->getPPS();
-  wpScalingParam  *wp0 , *wp1;
+  WPScalingParam  *wp0 , *wp1;
 
   m_cDistParam.bApplyWeight = ( pcSlice->getSliceType()==P_SLICE && pps->getUseWP() ) || ( pcSlice->getSliceType()==B_SLICE && pps->getWPBiPred() ) ;
 

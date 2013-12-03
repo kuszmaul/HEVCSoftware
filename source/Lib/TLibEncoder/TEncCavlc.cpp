@@ -578,7 +578,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     {
       if (sps_extension_flags[i])
       {
-        switch (SPS_EXTENSION_FLAG_TYPE(i))
+        switch (SPSExtensionFlagIndex(i))
         {
           case SPS_EXT__REXT:
 
@@ -1333,7 +1333,7 @@ Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height
  */
 Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 {
-  wpScalingParam  *wp;
+  WPScalingParam  *wp;
   const ChromaFormat    format                = pcSlice->getPic()->getChromaFormat();
   const UInt            numberValidComponents = getNumberValidComponents(format);
   const Bool            bChroma               = isChromaEnabled(format); // NOTE: RExt - slice headers can know about the chroma format.

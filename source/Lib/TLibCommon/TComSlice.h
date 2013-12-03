@@ -1121,24 +1121,28 @@ public:
   Void setSliceHeaderExtensionPresentFlag   (Bool val)            { m_sliceHeaderExtensionPresentFlag = val; }
 };
 
-typedef struct
+struct WPScalingParam
 {
   // Explicit weighted prediction parameters parsed in slice header,
   // or Implicit weighted prediction parameters (8 bits depth values).
-  Bool        bPresentFlag;
-  UInt        uiLog2WeightDenom;
-  Int         iWeight;
-  Int         iOffset;
+  Bool bPresentFlag;
+  UInt uiLog2WeightDenom;
+  Int  iWeight;
+  Int  iOffset;
 
   // Weighted prediction scaling values built from above parameters (bitdepth scaled):
-  Int         w, o, offset, shift, round;
-} wpScalingParam;
+  Int  w;
+  Int  o;
+  Int  offset;
+  Int  shift;
+  Int  round;
+};
 
-typedef struct
+struct WPACDCParam
 {
   Int64 iAC;
   Int64 iDC;
-} wpACDCParam;
+};
 
 /// slice header class
 class TComSlice
@@ -1224,8 +1228,8 @@ private:
   UInt        m_sliceSegmentBits;
   Bool        m_bFinalized;
 
-  wpScalingParam  m_weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
-  wpACDCParam    m_weightACDCParam[MAX_NUM_COMPONENT];
+  WPScalingParam  m_weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
+  WPACDCParam    m_weightACDCParam[MAX_NUM_COMPONENT];
 
   std::vector<UInt> m_tileByteLocation;
 
@@ -1421,15 +1425,15 @@ public:
   UInt getSliceSegmentBits              ()                  { return m_sliceSegmentBits;             }
   Void setFinalized                     ( Bool uiVal )      { m_bFinalized = uiVal;                       }
   Bool getFinalized                     ()                  { return m_bFinalized;                        }
-  Void  setWpScaling    ( wpScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*NUM_REF_PIC_LIST_01*MAX_NUM_REF*MAX_NUM_COMPONENT); }
-  Void  getWpScaling    ( RefPicList e, Int iRefIdx, wpScalingParam *&wp);
+  Void  setWpScaling    ( WPScalingParam  wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT] ) { memcpy(m_weightPredTable, wp, sizeof(WPScalingParam)*NUM_REF_PIC_LIST_01*MAX_NUM_REF*MAX_NUM_COMPONENT); }
+  Void  getWpScaling    ( RefPicList e, Int iRefIdx, WPScalingParam *&wp);
 
   Void  resetWpScaling  ();
   Void  initWpScaling   ();
   inline Bool applyWP   () { return( (m_eSliceType==P_SLICE && m_pcPPS->getUseWP()) || (m_eSliceType==B_SLICE && m_pcPPS->getWPBiPred()) ); }
 
-  Void  setWpAcDcParam  ( wpACDCParam wp[MAX_NUM_COMPONENT] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*MAX_NUM_COMPONENT); }
-  Void  getWpAcDcParam  ( wpACDCParam *&wp );
+  Void  setWpAcDcParam  ( WPACDCParam wp[MAX_NUM_COMPONENT] ) { memcpy(m_weightACDCParam, wp, sizeof(WPACDCParam)*MAX_NUM_COMPONENT); }
+  Void  getWpAcDcParam  ( WPACDCParam *&wp );
   Void  initWpAcDcParam ();
   Void setTileLocationCount             ( UInt cnt )               { return m_tileByteLocation.resize(cnt);    }
   UInt getTileLocationCount             ()                         { return (UInt) m_tileByteLocation.size();  }

@@ -728,7 +728,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     for ( UInt n=0 ; n<MAX_NUM_REF ; n++ )
     {
-      memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*MAX_NUM_COMPONENT );
+      memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(WPScalingParam)*MAX_NUM_COMPONENT );
     }
   }
 #if HM_CLEANUP_SAO
@@ -1284,7 +1284,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
  * \param *wp
  * \returns Void
  */
-Void  TComSlice::getWpAcDcParam(wpACDCParam *&wp)
+Void  TComSlice::getWpAcDcParam(WPACDCParam *&wp)
 {
   wp = m_weightACDCParam;
 }
@@ -1304,17 +1304,17 @@ Void  TComSlice::initWpAcDcParam()
 /** get WP tables for weighted pred
  * \param RefPicList
  * \param iRefIdx
- * \param *&wpScalingParam
+ * \param *&WPScalingParam
  * \returns Void
  */
-Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, wpScalingParam *&wp )
+Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, WPScalingParam *&wp )
 {
   assert (e<NUM_REF_PIC_LIST_01);
   wp = m_weightPredTable[e][iRefIdx];
 }
 
 /** reset Default WP tables settings : no weight. 
- * \param wpScalingParam
+ * \param WPScalingParam
  * \returns Void
  */
 Void  TComSlice::resetWpScaling()
@@ -1325,7 +1325,7 @@ Void  TComSlice::resetWpScaling()
     {
       for ( Int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
-        wpScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
+        WPScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
         pwp->bPresentFlag      = false;
         pwp->uiLog2WeightDenom = 0;
         pwp->uiLog2WeightDenom = 0;
@@ -1348,7 +1348,7 @@ Void  TComSlice::initWpScaling()
     {
       for ( Int yuv=0 ; yuv<MAX_NUM_COMPONENT ; yuv++ )
       {
-        wpScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
+        WPScalingParam  *pwp = &(m_weightPredTable[e][i][yuv]);
         if ( !pwp->bPresentFlag )
         {
           // Inferring values not present :
