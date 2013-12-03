@@ -141,18 +141,14 @@ protected:
 
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
                               TComDataCU *&rpcTempCU,
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
                               Double      &cost,
-#endif
                               PartSize     ePartSize
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
 
   Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
-                              TComDataCU*& rpcTempCU
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
-                            , Bool         bUse1DSearchFor8x8
-#endif
+                              TComDataCU*& rpcTempCU,
+                              Bool         bUse1DSearchFor8x8
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
 

@@ -214,9 +214,7 @@ public:
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv
                                   DEBUG_STRING_FN_DECLARE(sDebug),
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
                                   Bool        bUse1DSearchFor8x8,
-#endif
                                   Bool        bUseRes
                                 );
 
@@ -226,10 +224,8 @@ public:
                                   TComMv*      pcMvPred,
                                   TComMv&      rcMv,
                                   UInt&        ruiBits,
-                                  Distortion&  ruiCost
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
-                                , Bool        bUse1DSearchFor8x8
-#endif
+                                  Distortion&  ruiCost,
+                                  Bool         bUse1DSearchFor8x8
                                 );  
 
   Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
@@ -269,9 +265,7 @@ public:
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
                                 , TComMv&    mvPred
 #endif
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
                                 , Bool         bUse1DSearchFor8x8
-#endif
                                 );
   
   /// encode residual and compute rd-cost for inter mode

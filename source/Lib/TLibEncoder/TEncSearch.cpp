@@ -3851,9 +3851,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
                                     TComYuv    *&rpcResiYuv,
                                     TComYuv    *&rpcRecoYuv
                                     DEBUG_STRING_FN_DECLARE(sDebug),
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
                                     Bool         bUse1DSearchFor8x8,
-#endif
                                     Bool         bUseRes )
 {
   rpcPredYuv->clear();
@@ -3879,11 +3877,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     return false;
 #endif
 
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
   xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
-#else
-  xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost );
-#endif
 
   // store intra BV in REF_PIC_LIST_0
   cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
@@ -3918,10 +3912,8 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
                                             TComMv     *pcMvPred,
                                             TComMv     &rcMv,
                                             UInt       &ruiBits,
-                                            Distortion &ruiCost
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
-                                          , Bool        bUse1DSearchFor8x8
-#endif
+                                            Distortion &ruiCost,
+                                            Bool        bUse1DSearchFor8x8
                                            )
 {
   UInt          uiPartAddr;
@@ -3977,20 +3969,11 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   m_pcRdCost->setCostScale  ( 0 );
   
   //  Do integer search  
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, mvPred, bUse1DSearchFor8x8 );
   *pcMvPred = mvPred;
 #else
   xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, bUse1DSearchFor8x8 );
-#endif
-#else
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
-  xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, mvPred );
-  *pcMvPred = mvPred;
-#else
-  xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight );
-#endif
 #endif
 
   //printf("ruiCost = %d\n", ruiCost);
@@ -4123,9 +4106,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
                                     , TComMv      &mvPred
 #endif
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
                                     , Bool         bUse1DSearchFor8x8
-#endif
                                       )
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
@@ -4296,11 +4277,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     return;    
   }
   
-#if RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS
   if(iRoiWidth == 8 && !bUse1DSearchFor8x8)
-#else
-  if(iRoiWidth == 8)
-#endif
   {    
     Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
     Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
