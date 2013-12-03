@@ -1339,11 +1339,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID) && (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx) )
     {
       parseInterRdpcmMode(rTu, compID);
-#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
       if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) != RDPCM_OFF)
-#else
-      if(pcCU->getInterRdpcmMode(compID, uiAbsPartIdx) != DPCM_OFF)
-#endif
       {
         //  Sign data hiding is avoided for horizontal and vertical RDPCM modes
         beValid = false;
@@ -2052,7 +2048,7 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
 #endif
 
   m_pcTDecBinIf->decodeBin(code, m_interRdpcmFlagSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
-#if RExt__MEETINGNOTES_UNIFIED_RESIDUAL_DPCM
+
   if(code == 0)
   {
     cu->setInterRdpcmModePartRange( RDPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
@@ -2069,24 +2065,6 @@ Void TDecSbac::parseInterRdpcmMode( TComTU &rTu, ComponentID compID )
       cu->setInterRdpcmModePartRange( RDPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
     }
   }
-#else
-  if(code == 0)
-  {
-    cu->setInterRdpcmModePartRange( DPCM_OFF, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-  }
-  else
-  {
-    m_pcTDecBinIf->decodeBin(code, m_interRdpcmDirSCModel.get (0, toChannelType(compID), 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype));
-    if(code == 0)
-    {
-      cu->setInterRdpcmModePartRange( DPCM_HOR, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-    }
-    else
-    {
-      cu->setInterRdpcmModePartRange( DPCM_VER, compID, absPartIdx, rTu.GetAbsPartIdxNumParts(compID));
-    }
-  }
-#endif
 }
 #endif
 
