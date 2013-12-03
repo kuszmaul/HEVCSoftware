@@ -249,7 +249,6 @@
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR                                 1 ///< 0 = do not use intra block copy predictor, 1 (default) = use intra block copy predictor
 #define RExt__O0202_CROSS_COMPONENT_DECORRELATION                              1 ///< 0 = disable cross-component decorrelation system, 1 (default) = allow use of cross-component decorrelation, controlled by PPS flag (and encoder command line)
-#define RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS                          1 ///< 0 = use original fast search method, 1 (default) = use modified fast search (only has an effect when INTRABC_FASTME is enabled)
 
 //------------------------------------------------
 // Backwards-compatibility

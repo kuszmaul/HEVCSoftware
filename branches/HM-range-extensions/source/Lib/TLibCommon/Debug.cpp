@@ -182,7 +182,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0202_CROSS_COMPONENT_DECORRELATION,                      settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__O0245_INTRABC_FAST_SEARCH_MODIFICATIONS,                  settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
