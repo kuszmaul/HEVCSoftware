@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -111,6 +111,8 @@ protected:
   Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
+  Bool      m_printMSEBasedSequencePSNR;
+
   /* profile & level */
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
@@ -128,11 +130,11 @@ protected:
   Int       m_extraRPSs;
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
-  
+
   Int       m_iQP;                              //  if (AdaptiveQP == OFF)
-  
+
   Int       m_aiPad[2];
-  
+
 
   Int       m_iMaxRefPicNum;                     ///< this is used to mimic the sliding mechanism used by the decoder
                                                  // TODO: We need to have a common sliding mechanism used by both the encoder and decoder
@@ -144,7 +146,7 @@ protected:
   UInt      m_uiQuadtreeTULog2MinSize;
   UInt      m_uiQuadtreeTUMaxDepthInter;
   UInt      m_uiQuadtreeTUMaxDepthIntra;
-  
+
   //====== Loop/Deblock Filter ========
   Bool      m_bLoopFilterDisable;
   Bool      m_loopFilterOffsetInPPS;
@@ -158,8 +160,11 @@ protected:
 #if !HM_CLEANUP_SAO
   Bool      m_saoLcuBasedOptimization;
 #endif
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      m_useLossless;
+#endif
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -171,14 +176,17 @@ protected:
 
   Int       m_chromaCbQpOffset;                 //  Chroma Cb QP Offset (0:default)
   Int       m_chromaCrQpOffset;                 //  Chroma Cr Qp Offset (0:default)
+  ChromaFormat m_chromaFormatIDC;
 
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
 #endif
-
+  Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
+  Bool      m_useHighPrecisionPredictionWeighting;
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
-  
+
   //====== Tool list ========
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
@@ -191,18 +199,27 @@ protected:
   Bool      m_useFastDecisionForMerge;
   Bool      m_bUseCbfFastMode;
   Bool      m_useEarlySkipDetection;
+  Bool      m_useCrossComponentDecorrelation;
+  Bool      m_reconBasedDecorrelationEstimate;
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
+  UInt      m_transformSkipLog2MaxSize;
+  Bool      m_useResidualRotation;
+  Bool      m_useSingleSignificanceMapContext;
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool      m_useGolombRiceGroupAdaptation;
+#endif
+  Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
-  
+
   Bool      m_bUseConstrainedIntraPred;
   Bool      m_usePCM;
   UInt      m_pcmLog2MaxSize;
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
   Int       m_sliceMode;
-  Int       m_sliceArgument; 
+  Int       m_sliceArgument;
   //====== Dependent Slice ========
   Int       m_sliceSegmentMode;
   Int       m_sliceSegmentArgument;
@@ -212,6 +229,7 @@ protected:
   UInt      m_uiPCMBitDepthLuma;
   UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
+  Bool      m_disableIntraReferenceSmoothing;
   Bool      m_loopFilterAcrossTilesEnabledFlag;
   Int       m_iUniformSpacingIdr;
   Int       m_iNumColumnsMinus1;
@@ -232,7 +250,7 @@ protected:
   Bool      m_toneMapPersistenceFlag;
   Int       m_codedDataBitDepth;
   Int       m_targetBitDepth;
-  Int       m_modelId; 
+  Int       m_modelId;
   Int       m_minValue;
   Int       m_maxValue;
   Int       m_sigmoidMidpoint;
@@ -259,6 +277,7 @@ protected:
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
+  Int       m_noDisplaySEITLayer;
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
@@ -279,10 +298,17 @@ protected:
   Int       m_RCInitialQP;
   Bool      m_RCForceIntraQP;
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
-  TComVPS                    m_cVPS;
+#else
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#endif
+
+  CostMode  m_costMode;                                       ///< The cost function to use, primarily when considering lossless coding.
+
+  TComVPS   m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
-  Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
+  Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
   Bool      m_aspectRatioInfoPresentFlag;                     ///< Signals whether aspect_ratio_idc is present
   Int       m_aspectRatioIdc;                                 ///< aspect_ratio_idc
@@ -327,7 +353,7 @@ public:
     delete[] m_puiColumnWidth;
     delete[] m_puiRowHeight;
   }
-  
+
   Void setProfile(Profile::Name profile) { m_profile = profile; }
   Void setLevel(Level::Tier tier, Level::Name level) { m_levelTier = tier; m_level = level; }
 
@@ -340,7 +366,10 @@ public:
   Void      setConformanceWindow (Int confLeft, Int confRight, Int confTop, Int confBottom ) { m_conformanceWindow.setWindow (confLeft, confRight, confTop, confBottom); }
 
   Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
-  
+
+  Bool      getPrintMSEBasedSequencePSNR    ()         const { return m_printMSEBasedSequencePSNR;  }
+  Void      setPrintMSEBasedSequencePSNR    (Bool value)     { m_printMSEBasedSequencePSNR = value; }
+
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }
@@ -350,24 +379,24 @@ public:
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
-  
+
   Void      setQP                           ( Int   i )      { m_iQP = i; }
-  
+
   Void      setPad                          ( Int*  iPad                   )      { for ( Int i = 0; i < 2; i++ ) m_aiPad[i] = iPad[i]; }
-  
+
   Int       getMaxRefPicNum                 ()                              { return m_iMaxRefPicNum;           }
   Void      setMaxRefPicNum                 ( Int iMaxRefPicNum )           { m_iMaxRefPicNum = iMaxRefPicNum;  }
 
-  Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
+  Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              }
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
   Void      setQuadtreeTULog2MinSize        ( UInt  u )      { m_uiQuadtreeTULog2MinSize = u; }
   Void      setQuadtreeTUMaxDepthInter      ( UInt  u )      { m_uiQuadtreeTUMaxDepthInter = u; }
   Void      setQuadtreeTUMaxDepthIntra      ( UInt  u )      { m_uiQuadtreeTUMaxDepthIntra = u; }
-  
+
   Void setUseAMP( Bool b ) { m_useAMP = b; }
-  
+
   //====== Loop/Deblock Filter ========
   Void      setLoopFilterDisable            ( Bool  b )      { m_bLoopFilterDisable       = b; }
   Void      setLoopFilterOffsetInPPS        ( Bool  b )      { m_loopFilterOffsetInPPS      = b; }
@@ -388,16 +417,30 @@ public:
   Void      setChromaCbQpOffset             ( Int   i )      { m_chromaCbQpOffset = i; }
   Void      setChromaCrQpOffset             ( Int   i )      { m_chromaCrQpOffset = i; }
 
+  Void      setChromaFormatIdc              ( ChromaFormat cf ) { m_chromaFormatIDC = cf; }
+  ChromaFormat  getChromaFormatIdc          ( )              { return m_chromaFormatIDC; }
+
 #if ADAPTIVE_QP_SELECTION
   Void      setUseAdaptQpSelect             ( Bool   i ) { m_bUseAdaptQpSelect    = i; }
   Bool      getUseAdaptQpSelect             ()           { return   m_bUseAdaptQpSelect; }
 #endif
 
+  Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
+  Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
+
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+
+  Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
+  Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
+
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
-  
+
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
-  Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
+  Void      setUseLossless                  (Bool   b )      { m_useLossless = b;   }
+#endif
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
@@ -414,15 +457,15 @@ public:
   Int       getMaxDecPicBuffering           (UInt tlayer) { return m_maxDecPicBuffering[tlayer]; }
   Int       getNumReorderPics               (UInt tlayer) { return m_numReorderPics[tlayer]; }
   Int       getQP                           ()      { return  m_iQP; }
-  
+
   Int       getPad                          ( Int i )      { assert (i < 2 );                      return  m_aiPad[i]; }
-  
+
   //======== Transform =============
   UInt      getQuadtreeTULog2MaxSize        ()      const { return m_uiQuadtreeTULog2MaxSize; }
   UInt      getQuadtreeTULog2MinSize        ()      const { return m_uiQuadtreeTULog2MinSize; }
   UInt      getQuadtreeTUMaxDepthInter      ()      const { return m_uiQuadtreeTUMaxDepthInter; }
   UInt      getQuadtreeTUMaxDepthIntra      ()      const { return m_uiQuadtreeTUMaxDepthIntra; }
-  
+
   //==== Loop/Deblock Filter ========
   Bool      getLoopFilterDisable            ()      { return  m_bLoopFilterDisable;       }
   Bool      getLoopFilterOffsetInPPS        ()      { return m_loopFilterOffsetInPPS; }
@@ -440,9 +483,11 @@ public:
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   //====== Lossless ========
   Bool      getUseLossless                  ()      { return  m_useLossless;  }
-  
+#endif
+
   //==== Tool list ========
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
@@ -468,23 +513,43 @@ public:
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
-  Int      getRDpenalty                  ()      { return m_rdPenalty;  }
+  Int       getRDpenalty                    ()      { return m_rdPenalty;  }
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
-  Bool      getUseCbfFastMode           ()      { return m_bUseCbfFastMode; }
+  Bool      getUseCbfFastMode               ()      { return m_bUseCbfFastMode; }
   Bool      getUseEarlySkipDetection        ()      { return m_useEarlySkipDetection; }
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   }
-  Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   } 
+  Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   }
   Bool      getUsePCM                       ()      { return m_usePCM;                 }
   UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
 
+  Bool      getUseCrossComponentDecorrelation     ()                const { return m_useCrossComponentDecorrelation;   }
+  Void      setUseCrossComponentDecorrelation     (const Bool value)      { m_useCrossComponentDecorrelation = value;  }
+  Bool      getUseReconBasedDecorrelationEstimate ()                const { return m_reconBasedDecorrelationEstimate;  }
+  Void      setUseReconBasedDecorrelationEstimate (const Bool value)      { m_reconBasedDecorrelationEstimate = value; }
+
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }
+  Bool getUseResidualRotation                          ()            const { return m_useResidualRotation;  }
+  Void setUseResidualRotation                          (const Bool value)  { m_useResidualRotation = value; }
+  Bool getUseSingleSignificanceMapContext              ()            const { return m_useSingleSignificanceMapContext;  }
+  Void setUseSingleSignificanceMapContext              (const Bool value)  { m_useSingleSignificanceMapContext = value; }
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+  Bool getUseGolombRiceGroupAdaptation                 ()            const { return m_useGolombRiceGroupAdaptation;  }
+  Void setUseGolombRiceGroupAdaptation                 (const Bool value)  { m_useGolombRiceGroupAdaptation = value; }
+#endif
+  Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
+  Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
+  UInt getTransformSkipLog2MaxSize                     () const      { return m_transformSkipLog2MaxSize;     }
+  Void setTransformSkipLog2MaxSize                     ( UInt u )    { m_transformSkipLog2MaxSize  = u;       }
+  Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
+  Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }
+
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 
@@ -628,6 +693,8 @@ public:
   Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
   Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
+  Void  setNoDisplaySEITLayer(Int b)                     { m_noDisplaySEITLayer = b;    }
+  Int   getNoDisplaySEITLayer()                          { return m_noDisplaySEITLayer; }
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
   Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
@@ -666,8 +733,16 @@ public:
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
   Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
   Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+#else
+  Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
+  Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
+#endif
+  CostMode  getCostMode                     ( )            { return m_costMode; }
+  Void      setCostMode                     (CostMode m )  { m_costMode = m; }
+
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
@@ -676,7 +751,7 @@ public:
   Void      setUseStrongIntraSmoothing ( Bool b ) { m_useStrongIntraSmoothing = b;    }
   Bool      getUseStrongIntraSmoothing ()         { return m_useStrongIntraSmoothing; }
 
-  Void      setActiveParameterSetsSEIEnabled ( Int b )  { m_activeParameterSetsSEIEnabled = b; }  
+  Void      setActiveParameterSetsSEIEnabled ( Int b )  { m_activeParameterSetsSEIEnabled = b; }
   Int       getActiveParameterSetsSEIEnabled ()         { return m_activeParameterSetsSEIEnabled; }
   Bool      getVuiParametersPresentFlag()                 { return m_vuiParametersPresentFlag; }
   Void      setVuiParametersPresentFlag(Bool i)           { m_vuiParametersPresentFlag = i; }
@@ -717,7 +792,7 @@ public:
   Window   &getDefaultDisplayWindow()                     { return m_defaultDisplayWindow; }
   Void      setDefaultDisplayWindow (Int offsetLeft, Int offsetRight, Int offsetTop, Int offsetBottom ) { m_defaultDisplayWindow.setWindow (offsetLeft, offsetRight, offsetTop, offsetBottom); }
   Bool      getFrameFieldInfoPresentFlag()                { return m_frameFieldInfoPresentFlag; }
-  Void      setFrameFieldInfoPresentFlag(Bool i)          { m_frameFieldInfoPresentFlag = i; }  
+  Void      setFrameFieldInfoPresentFlag(Bool i)          { m_frameFieldInfoPresentFlag = i; }
   Bool      getPocProportionalToTimingFlag()              { return m_pocProportionalToTimingFlag; }
   Void      setPocProportionalToTimingFlag(Bool x)        { m_pocProportionalToTimingFlag = x;    }
   Int       getNumTicksPocDiffOneMinus1()                 { return m_numTicksPocDiffOneMinus1;    }
@@ -738,16 +813,16 @@ public:
   Void      setLog2MaxMvLengthHorizontal(Int i)           { m_log2MaxMvLengthHorizontal = i; }
   Int       getLog2MaxMvLengthVertical()                  { return m_log2MaxMvLengthVertical; }
   Void      setLog2MaxMvLengthVertical(Int i)             { m_log2MaxMvLengthVertical = i; }
-  
+
   Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
   Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
-  
+
   Bool getInterlacedSourceFlag() const { return m_interlacedSourceFlag; }
   Void setInterlacedSourceFlag(Bool b) { m_interlacedSourceFlag = b; }
-  
+
   Bool getNonPackedConstraintFlag() const { return m_nonPackedConstraintFlag; }
   Void setNonPackedConstraintFlag(Bool b) { m_nonPackedConstraintFlag = b; }
-  
+
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
 };

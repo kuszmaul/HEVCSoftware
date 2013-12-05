@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXTRACT_BITRATES_H
-#define EXTRACT_BITRATES_H
+#ifndef __EXTRACTBITRATES__
+#define __EXTRACTBITRATES__
 
 #include "RuntimeError.h"
 #include <vector>
@@ -43,10 +43,10 @@ class POCParseException: public RuntimeError
   public:
     POCParseException( const std::string& pocLine ): m_pocLine( pocLine ) { }
     virtual ~POCParseException( ) throw ( ) { }
-  
+
   protected:
     void outputWhat( std::ostream& o ) const { o << "POC parse exception: " << m_pocLine; }
-  
+
   private:
     std::string m_pocLine;
 };
@@ -56,7 +56,7 @@ class NonContiguousQPSetException: public RuntimeError
 {
   public:
     virtual ~NonContiguousQPSetException( ) throw( ) { }
-  
+
   protected:
     void outputWhat( std::ostream& o ) const { o << "Non-contiguous QP set exception"; }
 };

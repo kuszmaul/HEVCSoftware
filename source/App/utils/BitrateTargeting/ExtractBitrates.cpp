@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
@@ -44,21 +44,21 @@ namespace
   class Tally
   {
     public:
-      
+
       /// Contructs a new zeroed tally
       Tally( ): m_sum( 0.0 ), m_numSlices( 0 ) { }
-      
+
       /// Adds to the sum and increments the sample-count
       void add( double in ) { ++m_numSlices; m_sum += in; }
-      
+
       /// \return The calculated average
       double average( ) const { return m_sum / ( double )m_numSlices; }
-    
+
     private:
       double m_sum;
       unsigned long m_numSlices;
   };
-  
+
   /// Ignores all of the the characters up to and including a given character
   /// \param line The line being read from
   /// \param iLine The active input stream
@@ -70,7 +70,7 @@ namespace
       ;
     if( !iLine.good( ) ) throw POCParseException( line );
   }
-  
+
   /// Extracts the average bitrates for each of the temporal layers from the given log
   /// \param i The input stream that represents the log
   /// \return A map that countains the average bitrates for each temporal layer.  Each pair contains the QP value in first and the average bitrate in second.
@@ -78,7 +78,7 @@ namespace
   std::map< unsigned char, double > extractBitratesForQPs( std::istream& i )
   {
     std::map< unsigned char, Tally > tallyMap;
-    
+
     while( i.good( ) )
     {
       // Initialize variables for this line
@@ -86,7 +86,7 @@ namespace
       std::getline( i, line );
       std::istringstream iLine( line );
       if( !iLine.good( ) ) continue;
-      
+
       // Ignore the "POC"
       if( iLine.get( ) != 'P' ) continue;
       if( !iLine.good( ) ) continue;
@@ -94,33 +94,33 @@ namespace
       if( !iLine.good( ) ) continue;
       if( iLine.get( ) != 'C' ) continue;
       if( !iLine.good( ) ) throw POCParseException( line );
-      
+
       ignoreUpTo( line, iLine, '(' );
-      
+
       if( iLine.get( ) != ' ' ) throw POCParseException( line );
       if( !iLine.good( ) ) throw POCParseException( line );
-      
+
       if( 'I' == iLine.get( ) ) continue;
       if( !iLine.good( ) ) throw POCParseException( line );
-      
+
       ignoreUpTo( line, iLine, ' ' );
       ignoreUpTo( line, iLine, ' ' );
-      
+
       // Parse the qpIndex
       long qpIndexLong;
       iLine >> qpIndexLong;
       if( ( long )std::numeric_limits< unsigned char >::max( ) < qpIndexLong ) throw POCParseException( line );
       unsigned char qpIndex( ( unsigned char )qpIndexLong );
       if( !iLine.good( ) ) throw POCParseException( line );
-      
+
       ignoreUpTo( line, iLine, ')' );
       ignoreUpTo( line, iLine, ' ' );
-      
+
       // Parse the number of bits
       unsigned long bitsULong;
       iLine >> bitsULong;
       if( !iLine.good( ) ) throw POCParseException( line );
-      
+
       // Find the tally that corresponds to our QP.  If there is no such tally yet, then add a new one to the map.
       std::map< unsigned char, Tally >::iterator iter( tallyMap.find( qpIndex ) );
       if( tallyMap.end( ) == iter )
@@ -129,10 +129,10 @@ namespace
         iter = tallyMap.find( qpIndex );
       }
       assert( iter != tallyMap.end( ) );
-      
+
       iter->second.add( ( double )bitsULong );
     }
-    
+
     // Populate and return the result based on all of the tallies
     std::map< unsigned char, double > result;
     for( std::map< unsigned char, Tally >::const_iterator iter( tallyMap.begin( ) ); iter != tallyMap.end( ); ++iter )
@@ -146,12 +146,12 @@ namespace
 std::vector< double > extractBitratesForTemporalLayers( std::istream& i )
 {
   std::vector< double > result;
-  
+
   std::map< unsigned char, double > bitratesForQPsMap( extractBitratesForQPs( i ) );
   if( !bitratesForQPsMap.empty( ) )
   {
     unsigned char expectedNextQPIndex( bitratesForQPsMap.begin( )->first );
-    
+
     for( std::map< unsigned char, double >::const_iterator i( bitratesForQPsMap.begin( ) ); i != bitratesForQPsMap.end( ); ++i )
     {
       if( i->first != expectedNextQPIndex ) throw NonContiguousQPSetException( );
@@ -159,6 +159,6 @@ std::vector< double > extractBitratesForTemporalLayers( std::istream& i )
       result.push_back( i->second );
     }
   }
-  
+
   return result;
 }

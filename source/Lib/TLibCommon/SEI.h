@@ -31,10 +31,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SEI__
+#define __SEI__
+
 #pragma once
 #include <list>
 #include <vector>
 #include <cstring>
+
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -71,13 +77,16 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
+    NO_DISPLAY                           = 135,
   };
-  
+
   SEI() {}
   virtual ~SEI() {}
-  
+
   virtual PayloadType payloadType() const = 0;
 };
+
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: RExt - new definition
 
 class SEIuserDataUnregistered : public SEI
 {
@@ -93,8 +102,8 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
+  UChar uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  UInt  userDataLength;
   UChar *userData;
 };
 
@@ -105,7 +114,7 @@ public:
 
   SEIDecodedPictureHash() {}
   virtual ~SEIDecodedPictureHash() {}
-  
+
   enum Method
   {
     MD5,
@@ -114,15 +123,15 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComDigest m_digest;
 };
 
-class SEIActiveParameterSets : public SEI 
+class SEIActiveParameterSets : public SEI
 {
 public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
-  SEIActiveParameterSets() 
+  SEIActiveParameterSets()
     : activeVPSId            (0)
     , m_fullRandomAccessFlag (false)
     , m_noParamSetUpdateFlag (false)
@@ -130,11 +139,11 @@ public:
   {}
   virtual ~SEIActiveParameterSets() {}
 
-  Int activeVPSId; 
+  Int activeVPSId;
   Bool m_fullRandomAccessFlag;
   Bool m_noParamSetUpdateFlag;
   Int numSpsIdsMinus1;
-  std::vector<Int> activeSeqParamSetId; 
+  std::vector<Int> activeSeqParamSetId;
 };
 
 class SEIBufferingPeriod : public SEI
@@ -312,6 +321,19 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
+class SEINoDisplay : public SEI
+{
+public:
+  PayloadType payloadType() const { return NO_DISPLAY; }
+
+  SEINoDisplay()
+    : m_noDisplay(false)
+  {}
+  virtual ~SEINoDisplay() {}
+
+  Bool m_noDisplay;
+};
+
 class SEISOPDescription : public SEI
 {
 public:
@@ -367,7 +389,7 @@ typedef std::list<SEI*> SEIMessages;
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
 SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
-/// remove a selection of SEI messages by payload type from the original list and return them in a new list. 
+/// remove a selection of SEI messages by payload type from the original list and return them in a new list.
 SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
 /// delete list of SEI messages (freeing the referenced objects)
@@ -402,5 +424,7 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+#endif
 
 //! \}

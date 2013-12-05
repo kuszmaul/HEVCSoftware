@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -50,11 +50,12 @@
 // Constants
 // ====================================================================================================================
 
-#define MAX_SAO_TRUNCATED_BITDEPTH     10 
+#define MAX_SAO_TRUNCATED_BITDEPTH     10
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-extern UInt g_saoMaxOffsetQVal[NUM_SAO_COMPONENTS]; 
+extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
 class TComSampleAdaptiveOffset
 {
@@ -62,24 +63,23 @@ public:
   TComSampleAdaptiveOffset();
   virtual ~TComSampleAdaptiveOffset();
   Void SAOProcess(TComPic* pDecPic);
-  Void create( Int picWidth, Int picHeight, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth );
+  Void create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth );
   Void destroy();
   Void reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams);
   Void PCMLFDisableProcess (TComPic* pcPic);
 protected:
-  Void offsetBlock(Int compIdx, Int typeIdx, Int* offset, Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
+  Void offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset, Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                   , Bool isLeftAvail, Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail);
-  Pel* getPicBuf(TComPicYuv* pPicYuv, Int compIdx);
-  Void invertQuantOffsets(Int compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets);
-  Void reconstructBlkSAOParam(SAOBlkParam& recParam, std::vector<SAOBlkParam*>& mergeList);
-  Int  getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, std::vector<SAOBlkParam*>& mergeList);
+  Void invertQuantOffsets(ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets);
+  Void reconstructBlkSAOParam(SAOBlkParam& recParam, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES]);
+  Int  getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES]);
   Void offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic);
   Void xPCMRestoration(TComPic* pcPic);
   Void xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth );
-  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
+  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, ComponentID component);
 protected:
-  UInt m_offsetStepLog2[NUM_SAO_COMPONENTS]; //offset step  
-  Int* m_offsetClip[NUM_SAO_COMPONENTS]; //clip table for fast operation
+  UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
+  Int* m_offsetClip[MAX_NUM_COMPONENT]; //clip table for fast operation
   Short* m_sign; //sign table for fast operation
   TComPicYuv*   m_tempPicYuv; //temporary buffer
   Int m_picWidth;
@@ -89,16 +89,16 @@ protected:
   Int m_numCTUInWidth;
   Int m_numCTUInHeight;
   Int m_numCTUsPic;
-  
-  
+
+
   Int m_lineBufWidth;
   Char* m_signLineBuf1;
   Char* m_signLineBuf2;
+  ChromaFormat m_chromaFormatIDC;
 private:
-  Bool m_picSAOEnabled[NUM_SAO_COMPONENTS];
-  Int*   m_offsetClipTable[NUM_SAO_COMPONENTS];
+  Bool m_picSAOEnabled[MAX_NUM_COMPONENT];
+  Int*   m_offsetClipTable[MAX_NUM_COMPONENT];
   Short* m_signTable;
-
 };
 #else
 
@@ -108,9 +108,10 @@ private:
 
 #define SAO_MAX_DEPTH                 4
 #define SAO_BO_BITS                   5
+#define SAO_EO_TABLE_SIZE             9
 #define LUMA_GROUP_NUM                (1<<SAO_BO_BITS)
-#define MAX_NUM_SAO_OFFSETS           4
 #define MAX_NUM_SAO_CLASS             33
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -122,12 +123,10 @@ protected:
   TComPic*          m_pcPic;
 
   static const UInt m_uiMaxDepth;
-  static const Int m_aiNumCulPartsLevel[5];
-  static const UInt m_auiEoTable[9];
-  Int *m_iOffsetBo;
-  Int *m_iChromaOffsetBo;
-  Int m_iOffsetEo[LUMA_GROUP_NUM];
-
+  static const Int m_aiNumCulPartsLevel[SAO_MAX_DEPTH + 1];
+  static const UInt m_auiEoTable[SAO_EO_TABLE_SIZE]; //NOTE: RExt - This table appears to be larger than needed.
+  Int *m_aiOffsetBo[MAX_NUM_CHANNEL_TYPE];
+  Int  m_iOffsetEo[LUMA_GROUP_NUM];                  //NOTE: RExt - This table appears to be larger than needed.
   Int  m_iPicWidth;
   Int  m_iPicHeight;
   UInt m_uiMaxSplitLevel;
@@ -138,16 +137,12 @@ protected:
   Int  m_iNumTotalParts;
   static const Int m_iNumClass[MAX_NUM_SAO_TYPE];
 
-  UInt m_uiSaoBitIncreaseY;
-  UInt m_uiSaoBitIncreaseC;  //for chroma
+  UInt m_auiSaoBitIncrease[MAX_NUM_CHANNEL_TYPE];
   UInt m_uiQP;
 
-  Pel   *m_pClipTable;
-  Pel   *m_pClipTableBase;
-  Pel   *m_lumaTableBo;
-  Pel   *m_pChromaClipTable;
-  Pel   *m_pChromaClipTableBase;
-  Pel   *m_chromaTableBo;
+  Pel   *m_apClipTable[MAX_NUM_CHANNEL_TYPE];
+  Pel   *m_apClipTableBase[MAX_NUM_CHANNEL_TYPE];
+  Pel   *m_aTableBo[MAX_NUM_CHANNEL_TYPE];
   Int   *m_iUpBuff1;
   Int   *m_iUpBuff2;
   Int   *m_iUpBufft;
@@ -165,7 +160,7 @@ protected:
 
   Void xPCMRestoration        (TComPic* pcPic);
   Void xPCMCURestoration      (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth);
-  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
+  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID);
 public:
   TComSampleAdaptiveOffset         ();
   virtual ~TComSampleAdaptiveOffset();
@@ -175,31 +170,33 @@ public:
 
   Int  convertLevelRowCol2Idx(Int level, Int row, Int col);
 
-  Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, Int iYCbCr);
+  Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, ComponentID ch);
   Void allocSaoParam  (SAOParam* pcSaoParam);
   Void resetSAOParam  (SAOParam *pcSaoParam);
   static Void freeSaoParam   (SAOParam *pcSaoParam);
-  
-  Void SAOProcess(SAOParam* pcSaoParam);
-  Void processSaoCu(Int iAddr, Int iSaoType, Int iYCbCr);
-  Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, Int iYCbCr,Int iAddr = 0);
 
-  Void processSaoCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);  //!< LCU-basd SAO process without slice granularity 
+  Void SAOProcess(SAOParam* pcSaoParam);
+  Void processSaoCu(Int iAddr, Int iSaoType, ComponentID ch);
+  Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, ComponentID ch,Int iAddr = 0) { return pcPicYuv->getAddr(ch, iAddr); }
+
+
+  Void processSaoCuOrg(Int iAddr, Int iPartIdx, ComponentID ch);  //!< LCU-basd SAO process without slice granularity
   Void createPicSaoInfo(TComPic* pcPic);
   Void destroyPicSaoInfo();
-  Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt width, UInt height, Bool* pbBorderAvail, Int iYCbCr);
+  Void processSaoBlock(Pel* pDec, Pel* pRest, Int stride, Int iSaoType, UInt width, UInt height, Bool* pbBorderAvail, ComponentID iYCbCr);
 
   Void resetLcuPart(SaoLcuParam* saoLcuParam);
-  Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, Int yCbCr);
-  Void convertOnePart2SaoUnit(SAOParam *saoParam, UInt partIdx, Int yCbCr);
-  Void processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool oneUnitFlag, Int yCbCr);
+  Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, ComponentID ch);
+  Void convertOnePart2SaoUnit(SAOParam *saoParam, UInt partIdx, ComponentID ch);
+  Void processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool oneUnitFlag, ComponentID ch);
   Void setSaoLcuBoundary (Bool bVal)  {m_saoLcuBoundary = bVal;}
   Bool getSaoLcuBoundary ()           {return m_saoLcuBoundary;}
   Void setSaoLcuBasedOptimization (Bool bVal)  {m_saoLcuBasedOptimization = bVal;}
   Bool getSaoLcuBasedOptimization ()           {return m_saoLcuBasedOptimization;}
+
   Void resetSaoUnit(SaoLcuParam* saoUnit);
   Void copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc );
-  Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process 
+  Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process
 };
 
 #endif

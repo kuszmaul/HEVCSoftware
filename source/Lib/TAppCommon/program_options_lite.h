@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -36,6 +36,9 @@
 #include <list>
 #include <map>
 
+#ifndef __PROGRAM_OPTIONS_LITE__
+#define __PROGRAM_OPTIONS_LITE__
+
 //! \ingroup TAppCommon
 //! \{
 
@@ -45,7 +48,7 @@ namespace df
   namespace program_options_lite
   {
     struct Options;
-    
+
     struct ParseFailure : public std::exception
     {
       ParseFailure(std::string arg0, std::string val0) throw()
@@ -69,7 +72,7 @@ namespace df
     void setDefaults(Options& opts);
     void parseConfigFile(Options& opts, const std::string& filename);
     bool storePair(Options& opts, const std::string& name, const std::string& value);
-    
+
     /** OptionBase: Virtual base class for storing information relating to a
      * specific option This base class describes common elements.  Type specific
      * information should be stored in a derived class. */
@@ -78,18 +81,18 @@ namespace df
       OptionBase(const std::string& name, const std::string& desc)
       : opt_string(name), opt_desc(desc)
       {};
-      
+
       virtual ~OptionBase() {}
-      
+
       /* parse argument arg, to obtain a value for the option */
       virtual void parse(const std::string& arg) = 0;
       /* set the argument to the default value */
       virtual void setDefault() = 0;
-      
+
       std::string opt_string;
       std::string opt_desc;
     };
-    
+
     /** Type specific option storage */
     template<typename T>
     struct Option : public OptionBase
@@ -97,18 +100,18 @@ namespace df
       Option(const std::string& name, T& storage, T default_val, const std::string& desc)
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
       {}
-      
+
       void parse(const std::string& arg);
-      
+
       void setDefault()
       {
         opt_storage = opt_default_val;
       }
-      
+
       T& opt_storage;
       T opt_default_val;
     };
-    
+
     /* Generic parsing */
     template<typename T>
     inline void
@@ -125,7 +128,7 @@ namespace df
         throw ParseFailure(opt_string, arg);
       }
     }
-    
+
     /* string parsing is specialized -- copy the whole string, not just the
      * first word */
     template<>
@@ -134,38 +137,38 @@ namespace df
     {
       opt_storage = arg;
     }
-    
+
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
     {
       typedef void (Func)(Options&, const std::string&);
-      
+
       OptionFunc(const std::string& name, Options& parent_, Func *func_, const std::string& desc)
       : OptionBase(name, desc), parent(parent_), func(func_)
       {}
-      
+
       void parse(const std::string& arg)
       {
         func(parent, arg);
       }
-      
+
       void setDefault()
       {
         return;
       }
-      
+
     private:
       Options& parent;
       void (*func)(Options&, const std::string&);
     };
-    
+
     class OptionSpecific;
     struct Options
     {
       ~Options();
-      
+
       OptionSpecific addOptions();
-      
+
       struct Names
       {
         Names() : opt(0) {};
@@ -180,21 +183,21 @@ namespace df
       };
 
       void addOption(OptionBase *opt);
-      
+
       typedef std::list<Names*> NamesPtrList;
       NamesPtrList opt_list;
-      
+
       typedef std::map<std::string, NamesPtrList> NamesMap;
       NamesMap opt_long_map;
       NamesMap opt_short_map;
     };
-    
+
     /* Class with templated overloaded operator(), for use by Options::addOptions() */
     class OptionSpecific
     {
     public:
       OptionSpecific(Options& parent_) : parent(parent_) {}
-      
+
       /**
        * Add option described by name to the parent Options list,
        *   with storage for the option's value
@@ -208,7 +211,7 @@ namespace df
         parent.addOption(new Option<T>(name, storage, default_val, desc));
         return *this;
       }
-      
+
       /**
        * Add option described by name to the parent Options list,
        *   with desc as an optional help description
@@ -225,8 +228,10 @@ namespace df
     private:
       Options& parent;
     };
-    
-  }; /* namespace: program_options_lite */
-}; /* namespace: df */
+
+  } /* namespace: program_options_lite */
+} /* namespace: df */
 
 //! \}
+
+#endif

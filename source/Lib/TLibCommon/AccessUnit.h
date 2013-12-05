@@ -31,12 +31,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  \file     AccessUnit.h
  \brief    Access Unit class (header)
  */
 
 #pragma once
+
+#ifndef __ACCESSUNIT__
+#define __ACCESSUNIT__
 
 #include <list>
 #include "NAL.h"
@@ -69,3 +72,5 @@ public:
 };
 
 //! \}
+
+#endif

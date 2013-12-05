@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -55,13 +55,47 @@ class TComWeightPrediction
 public:
   TComWeightPrediction();
 
-  Void  getWpScaling( TComDataCU* pcCU, Int iRefIdx0, Int iRefIdx1, wpScalingParam *&wp0 , wpScalingParam *&wp1);
+  Void  getWpScaling(                 TComDataCU     *const pcCU,
+                                const Int                   iRefIdx0,
+                                const Int                   iRefIdx1,
+                                      WPScalingParam      *&wp0,
+                                      WPScalingParam      *&wp1);
 
-  Void  addWeightBi( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, wpScalingParam *wp1, TComYuv* rpcYuvDst, Bool bRound=true );
-  Void  addWeightUni( TComYuv* pcYuvSrc0, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, TComYuv* rpcYuvDst );
+  Void addWeightBi(             const TComYuv              *pcYuvSrc0,
+                                const TComYuv              *pcYuvSrc1,
+                                const UInt                  iPartUnitIdx,
+                                const UInt                  uiWidth,
+                                const UInt                  uiHeight,
+                                const WPScalingParam *const wp0,
+                                const WPScalingParam *const wp1,
+                                      TComYuv        *const rpcYuvDst,
+                                const Bool                  bRoundLuma=true );
 
-  Void  xWeightedPredictionUni( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iRefIdx=-1 );
-  Void  xWeightedPredictionBi( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* rpcYuvDst );
+  Void  addWeightUni(           const TComYuv        *const pcYuvSrc0,
+                                const UInt                  iPartUnitIdx,
+                                const UInt                  uiWidth,
+                                const UInt                  uiHeight,
+                                const WPScalingParam *const wp0,
+                                      TComYuv        *const rpcYuvDst );
+
+  Void  xWeightedPredictionUni(       TComDataCU     *const pcCU,
+                                const TComYuv        *const pcYuvSrc,
+                                const UInt                  uiPartAddr,
+                                const Int                   iWidth,
+                                const Int                   iHeight,
+                                const RefPicList            eRefPicList,
+                                      TComYuv             *&rpcYuvPred,
+                                const Int                   iRefIdx=-1 );
+
+  Void  xWeightedPredictionBi(        TComDataCU     *const pcCU,
+                                const TComYuv        *const pcYuvSrc0,
+                                const TComYuv        *const pcYuvSrc1,
+                                const Int                   iRefIdx0,
+                                const Int                   iRefIdx1,
+                                const UInt                  uiPartIdx,
+                                const Int                   iWidth,
+                                const Int                   iHeight,
+                                      TComYuv              *rpcYuvDst );
 };
 
-#endif 
+#endif

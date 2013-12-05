@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -35,8 +35,8 @@
     \brief    binary entropy encoder interface
 */
 
-#ifndef __TENC_BIN_CODER__
-#define __TENC_BIN_CODER__
+#ifndef __TENCBINCODER__
+#define __TENCBINCODER__
 
 #include "TLibCommon/ContextModel.h"
 #include "TLibCommon/TComBitStream.h"
@@ -70,7 +70,7 @@ public:
   virtual Void  encodeBinTrm      ( UInt  uiBin                            )  = 0;
 
   virtual TEncBinCABAC*   getTEncBinCABAC   ()  { return 0; }
-  
+
   virtual ~TEncBinIf() {}
 };
 

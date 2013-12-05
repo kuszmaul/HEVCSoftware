@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
@@ -37,7 +37,7 @@
 
 #include "TEncBinCoderCABAC.h"
 #include "TLibCommon/TComRom.h"
-
+#include "TLibCommon/Debug.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -99,7 +99,7 @@ Void TEncBinCABAC::finish()
     {
       m_pcTComBitIf->write( 0xff, 8 );
       m_numBufferedBytes--;
-    }    
+    }
   }
   m_pcTComBitIf->write( m_uiLow >> 8, 24 - m_bitsLeft );
 }
@@ -183,43 +183,59 @@ UInt TEncBinCABAC::getNumWrittenBits()
  */
 Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
-  {
-    DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T( "\tstate=" )
-    DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
-    DTRACE_CABAC_T( "\tsymbol=" )
-    DTRACE_CABAC_V( binValue )
-    DTRACE_CABAC_T( "\n" )
-  }
+  //{
+  //  DTRACE_CABAC_VL( g_nSymbolCounter++ )
+  //  DTRACE_CABAC_T( "\tstate=" )
+  //  DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
+  //  DTRACE_CABAC_T( "\tsymbol=" )
+  //  DTRACE_CABAC_V( binValue )
+  //  DTRACE_CABAC_T( "\n" )
+  //}
+
+#ifdef DEBUG_CABAC_BINS
+  const UInt startingRange = m_uiRange;
+#endif
+
   m_uiBinsCoded += m_binCountIncrement;
   rcCtxModel.setBinsCoded( 1 );
-  
+
   UInt  uiLPS   = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) & 3 ];
   m_uiRange    -= uiLPS;
-  
+
   if( binValue != rcCtxModel.getMps() )
   {
     Int numBits = TComCABACTables::sm_aucRenormTable[ uiLPS >> 3 ];
     m_uiLow     = ( m_uiLow + m_uiRange ) << numBits;
     m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
-    
     m_bitsLeft -= numBits;
+    testAndWriteOut();
   }
   else
   {
     rcCtxModel.updateMPS();
-    if ( m_uiRange >= 256 )
+
+    if ( m_uiRange < 256 )
     {
-      return;
+      m_uiLow <<= 1;
+      m_uiRange <<= 1;
+      m_bitsLeft--;
+      testAndWriteOut();
     }
-    
-    m_uiLow <<= 1;
-    m_uiRange <<= 1;
-    m_bitsLeft--;
   }
-  
-  testAndWriteOut();
+
+#ifdef DEBUG_CABAC_BINS
+  if ((g_debugCounter + debugCabacBinWindow) >= debugCabacBinTargetLine)
+    std::cout << g_debugCounter << ": coding bin value " << binValue << ", range = [" << startingRange << "->" << m_uiRange << "]\n";
+
+  if (g_debugCounter >= debugCabacBinTargetLine)
+  {
+    char breakPointThis;
+    breakPointThis = 7;
+  }
+  if (g_debugCounter >= (debugCabacBinTargetLine + debugCabacBinWindow)) exit(0);
+  g_debugCounter++;
+#endif
 }
 
 /**
@@ -229,6 +245,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
  */
 Void TEncBinCABAC::encodeBinEP( UInt binValue )
 {
+  if (false)
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
@@ -242,7 +259,7 @@ Void TEncBinCABAC::encodeBinEP( UInt binValue )
     m_uiLow += m_uiRange;
   }
   m_bitsLeft--;
-  
+
   testAndWriteOut();
 }
 
@@ -255,7 +272,9 @@ Void TEncBinCABAC::encodeBinEP( UInt binValue )
 Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
 {
   m_uiBinsCoded += numBins & -m_binCountIncrement;
-  
+
+  if (false)
+  {
   for ( Int i = 0; i < numBins; i++ )
   {
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
@@ -263,23 +282,24 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
     DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
     DTRACE_CABAC_T( "\n" )
   }
-  
+  }
+
   while ( numBins > 8 )
   {
     numBins -= 8;
-    UInt pattern = binValues >> numBins; 
+    UInt pattern = binValues >> numBins;
     m_uiLow <<= 8;
     m_uiLow += m_uiRange * pattern;
     binValues -= pattern << numBins;
     m_bitsLeft -= 8;
-    
+
     testAndWriteOut();
   }
-  
+
   m_uiLow <<= numBins;
   m_uiLow += m_uiRange * binValues;
   m_bitsLeft -= numBins;
-  
+
   testAndWriteOut();
 }
 
@@ -307,9 +327,9 @@ Void TEncBinCABAC::encodeBinTrm( UInt binValue )
   {
     m_uiLow   <<= 1;
     m_uiRange <<= 1;
-    m_bitsLeft--;    
+    m_bitsLeft--;
   }
-  
+
   testAndWriteOut();
 }
 
@@ -329,7 +349,7 @@ Void TEncBinCABAC::writeOut()
   UInt leadByte = m_uiLow >> (24 - m_bitsLeft);
   m_bitsLeft += 8;
   m_uiLow &= 0xffffffffu >> m_bitsLeft;
-  
+
   if ( leadByte == 0xff )
   {
     m_numBufferedBytes++;
@@ -342,7 +362,7 @@ Void TEncBinCABAC::writeOut()
       UInt byte = m_bufferedByte + carry;
       m_bufferedByte = leadByte & 0xff;
       m_pcTComBitIf->write( byte, 8 );
-      
+
       byte = ( 0xff + carry ) & 0xff;
       while ( m_numBufferedBytes > 1 )
       {
@@ -354,8 +374,8 @@ Void TEncBinCABAC::writeOut()
     {
       m_numBufferedBytes = 1;
       m_bufferedByte = leadByte;
-    }      
-  }    
+    }
+  }
 }
 
 //! \}
