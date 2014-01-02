@@ -447,7 +447,7 @@ public:
   Void    setNumReorderPics(UInt v, UInt tLayer)                { m_numReorderPics[tLayer] = v;    }
   UInt    getNumReorderPics(UInt tLayer)                        { return m_numReorderPics[tLayer]; }
   
-  Void    setMaxDecPicBuffering(UInt v, UInt tLayer)            { m_uiMaxDecPicBuffering[tLayer] = v;    }
+  Void    setMaxDecPicBuffering(UInt v, UInt tLayer)            { assert(tLayer < MAX_TLAYER); m_uiMaxDecPicBuffering[tLayer] = v;    }
   UInt    getMaxDecPicBuffering(UInt tLayer)                    { return m_uiMaxDecPicBuffering[tLayer]; }
   
   Void    setMaxLatencyIncrease(UInt v, UInt tLayer)            { m_uiMaxLatencyIncrease[tLayer] = v;    }
@@ -860,7 +860,7 @@ public:
   Void setScalingList      ( TComScalingList *scalingList);
   TComScalingList* getScalingList ()       { return m_scalingList; }               //!< get ScalingList class pointer in SPS
   UInt getMaxDecPicBuffering  (UInt tlayer)            { return m_uiMaxDecPicBuffering[tlayer]; }
-  Void setMaxDecPicBuffering  ( UInt ui, UInt tlayer ) { m_uiMaxDecPicBuffering[tlayer] = ui;   }
+  Void setMaxDecPicBuffering  ( UInt ui, UInt tlayer ) { assert(tlayer < MAX_TLAYER);  m_uiMaxDecPicBuffering[tlayer] = ui;   }
   UInt getMaxLatencyIncrease  (UInt tlayer)            { return m_uiMaxLatencyIncrease[tlayer];   }
   Void setMaxLatencyIncrease  ( UInt ui , UInt tlayer) { m_uiMaxLatencyIncrease[tlayer] = ui;      }
 
