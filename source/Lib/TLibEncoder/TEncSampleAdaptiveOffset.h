@@ -144,7 +144,7 @@ private: //members
   TEncSbac**             m_pppcRDSbacCoder;           
   TEncSbac*              m_pcRDGoOnSbacCoder;
   TEncBinCABACCounter**  m_pppcBinCoderCABAC;    
-  Double                 m_labmda[NUM_SAO_COMPONENTS];
+  Double                 m_lambda[NUM_SAO_COMPONENTS];
 
   //statistics
   SAOStatData***         m_statData; //[ctu][comp][classes]
