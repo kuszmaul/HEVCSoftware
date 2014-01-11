@@ -222,7 +222,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   SliceType eSliceType;
   
   eSliceType=B_SLICE;
-  eSliceType = (pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+  eSliceType = (pocLast == 0 || (pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
   
   rpcSlice->setSliceType    ( eSliceType );
   
@@ -359,7 +359,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   
 #if HB_LAMBDA_FOR_LDC
   // restore original slice type
-  eSliceType = (pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+  eSliceType = (pocLast == 0 || (pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
   
   rpcSlice->setSliceType        ( eSliceType );
 #endif

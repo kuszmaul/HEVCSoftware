@@ -429,7 +429,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       continue;
     }
     
-    if( getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
+    if( getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
       m_iLastIDR = pocCurr;
     }
@@ -492,7 +492,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceType(P_SLICE);
     }
     // Set the nal unit type
-    pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR));
+    pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
@@ -1017,7 +1017,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if ((SOPcurrPOC + deltaPOC) < m_pcCfg->getFramesToBeEncoded())
         {
           SOPcurrPOC += deltaPOC;
-          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC, m_iLastIDR);
+          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC, m_iLastIDR, isField);
           SOPDescriptionSEI.m_sopDescTemporalId[i] = m_pcCfg->getGOPEntry(j).m_temporalId;
           SOPDescriptionSEI.m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(pcSlice, SOPcurrPOC, j);
           SOPDescriptionSEI.m_sopDescPocDelta[i] = deltaPOC;
@@ -1555,7 +1555,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime );
     
     //In case of field coding, compute the interlaced PSNR for both fields
-    if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)))
+    if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)) && (pcPic->getPOC()%m_iGopSize != 1))
     {
       //get complementary top field
       TComPic* pcPicTop;
@@ -1566,6 +1566,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       pcPicTop = *(iterPic);
       xCalculateInterlacedAddPSNR(pcPicTop, pcPic, pcPicTop->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime );
+    }
+    else if (isField && pcPic->getPOC()!= 0 && (pcPic->getPOC()%m_iGopSize == 0))
+    {
+      //get complementary bottom field
+      TComPic* pcPicBottom;
+      TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
+      while ((*iterPic)->getPOC() != pcPic->getPOC()+1)
+      {
+        iterPic ++;
+      }
+      pcPicBottom = *(iterPic);
+      xCalculateInterlacedAddPSNR(pcPic, pcPicBottom, pcPic->getPicYuvRec(), pcPicBottom->getPicYuvRec(), accessUnit, dEncTime );
     }
     
     if (digestStr)
@@ -2362,13 +2374,13 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgTop, TComPic* pcPicO
  * \returns the nal unit type of the picture
  * This function checks the configuration and returns the appropriate nal_unit_type for the picture.
  */
-NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR)
+NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)
 {
   if (pocCurr == 0)
   {
     return NAL_UNIT_CODED_SLICE_IDR_W_RADL;
   }
-  if (pocCurr % m_pcCfg->getIntraPeriod() == 0)
+  if ((pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
   {
     if (m_pcCfg->getDecodingRefreshType() == 1)
     {
