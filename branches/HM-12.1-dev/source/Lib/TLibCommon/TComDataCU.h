@@ -191,7 +191,7 @@ public:
   Void          destroy               ();
   
   Void          initCU                ( TComPic* pcPic, UInt uiCUAddr );
-  Void          initEstData           ( UInt uiDepth, Int qp );
+  Void          initEstData           ( UInt uiDepth, Int qp, Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
 

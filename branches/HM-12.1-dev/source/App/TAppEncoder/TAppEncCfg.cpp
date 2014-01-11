@@ -387,8 +387,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PCMInputBitDepthFlag",     m_bPCMInputBitDepthFlag,     true)
   ("PCMFilterDisableFlag",     m_bPCMFilterDisableFlag,    false)
 
-  ("LosslessCuEnabled",        m_useLossless, false)
-
   ("WeightedPredP,-wpP",          m_useWeightedPred,               false,      "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",          m_useWeightedBiPred,             false,      "Use weighted (bidirectional) prediction in B slices")
   ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
@@ -426,7 +424,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "RCForceIntraQP",      m_RCForceIntraQP,        false, "Rate control: force intra QP to be equal to initial QP" )
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
-  ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
+  ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
   ("SEIActiveParameterSets",         m_activeParameterSetsSEIEnabled,          0, "Enable generation of active parameter sets SEI messages")
@@ -1346,7 +1344,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_uiDeltaQpRD > 0, "Rate control cannot be used together with slice level multiple-QP optimization!\n" );
   }
 
-  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
+  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce, "CUTransquantBypassFlagForce cannot be 1 when TransquantBypassEnableFlag is 0");
 
   xConfirmPara(m_log2ParallelMergeLevel < 2, "Log2ParallelMergeLevel should be larger than or equal to 2");
   if (m_framePackingSEIEnabled)
@@ -1471,7 +1469,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
   printf("SAO:%d ", (m_bUseSAO)?(1):(0));
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
-  printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
+  if (m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce)
+  {
+    printf("TransQuantBypassEnabled: =1 ");
+  }
+  else
+  {
+    printf("TransQuantBypassEnabled:%d ", (m_TransquantBypassEnableFlag)? 1:0 );
+  }
   printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);
   printf("PME:%d ", m_log2ParallelMergeLevel);

@@ -523,7 +523,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 *- set qp value according to input qp 
 *- set last-coded qp value according to input last-coded qp 
 */
-Void TComDataCU::initEstData( UInt uiDepth, Int qp )
+Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
 {
   m_dTotalCost         = MAX_DOUBLE;
   m_uiTotalDistortion  = 0;
@@ -551,7 +551,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
       m_skipFlag[ui]   = false;
       m_pePartSize[ui] = SIZE_NONE;
       m_pePredMode[ui] = MODE_NONE;
-      m_CUTransquantBypass[ui] = false;
+      m_CUTransquantBypass[ui] = bTransquantBypass;
       m_pbIPCMFlag[ui] = 0;
       m_phQP[ui] = qp;
       m_pbMergeFlag[ui] = 0;
