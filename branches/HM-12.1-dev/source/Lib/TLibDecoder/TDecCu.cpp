@@ -469,30 +469,51 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   //===== get prediction signal =====
   m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
   
-  //===== inverse transform =====
-  m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
-
-  Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)TEXT_LUMA];
-  assert(scalingListType < 6);
-  m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), TEXT_LUMA, pcCU->getLumaIntraDir( uiAbsPartIdx ), piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkip );
-
-  
-  //===== reconstruction =====
-  Pel* pPred      = piPred;
-  Pel* pResi      = piResi;
-  Pel* pReco      = piReco;
-  Pel* pRecIPred  = piRecIPred;
-  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) )
   {
-    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    //===== inverse transform =====
+    m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
+    
+    Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)TEXT_LUMA];
+    assert(scalingListType < 6);
+    m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), TEXT_LUMA, pcCU->getLumaIntraDir( uiAbsPartIdx ), piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkip );
+    
+    
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pResi      = piResi;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
-      pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
-      pRecIPred[ uiX ] = pReco[ uiX ];
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
+        pRecIPred[ uiX ] = pReco[ uiX ];
+      }
+      pPred     += uiStride;
+      pResi     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
     }
-    pPred     += uiStride;
-    pResi     += uiStride;
-    pReco     += uiStride;
-    pRecIPred += uiRecIPredStride;
+  }
+  else
+  {
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for ( Int y = 0; y < uiHeight; y++ )
+    {
+      for ( Int x = 0; x < uiWidth; x++ )
+      {
+        pReco    [ x ] = pPred[ x ];
+        pRecIPred[ x ] = pReco[ x ];
+      }
+      pPred     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+    }
   }
 }
 
@@ -559,38 +580,59 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     m_pcPrediction->predIntraChromaAng( pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );  
   }
 
-  //===== inverse transform =====
-  Int curChromaQpOffset;
-  if(eText == TEXT_CHROMA_U)
+  if ( pcCU->getCbf( uiAbsPartIdx, eText, uiTrDepth ) )
   {
-    curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCbQpOffset() + pcCU->getSlice()->getSliceQpDeltaCb();
+    //===== inverse transform =====
+    Int curChromaQpOffset;
+    if(eText == TEXT_CHROMA_U)
+    {
+      curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCbQpOffset() + pcCU->getSlice()->getSliceQpDeltaCb();
+    }
+    else
+    {
+      curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCrQpOffset() + pcCU->getSlice()->getSliceQpDeltaCr();
+    }
+    m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), eText, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
+    
+    Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eText];
+    assert(scalingListType < 6);
+    m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), eText, REG_DCT, piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkipChroma );
+    
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pResi      = piResi;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+    {
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        pReco    [ uiX ] = ClipC( pPred[ uiX ] + pResi[ uiX ] );
+        pRecIPred[ uiX ] = pReco[ uiX ];
+      }
+      pPred     += uiStride;
+      pResi     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+    }
   }
   else
   {
-    curChromaQpOffset = pcCU->getSlice()->getPPS()->getChromaCrQpOffset() + pcCU->getSlice()->getSliceQpDeltaCr();
-  }
-  m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), eText, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
-
-  Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eText];
-  assert(scalingListType < 6);
-  m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), eText, REG_DCT, piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkipChroma );
-
-  //===== reconstruction =====
-  Pel* pPred      = piPred;
-  Pel* pResi      = piResi;
-  Pel* pReco      = piReco;
-  Pel* pRecIPred  = piRecIPred;
-  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-  {
-    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for ( Int y = 0; y < uiHeight; y++ )
     {
-      pReco    [ uiX ] = ClipC( pPred[ uiX ] + pResi[ uiX ] );
-      pRecIPred[ uiX ] = pReco[ uiX ];
-    }
-    pPred     += uiStride;
-    pResi     += uiStride;
-    pReco     += uiStride;
-    pRecIPred += uiRecIPredStride;
+      for ( Int x = 0; x < uiWidth; x++ )
+      {
+        pReco    [ x ] = pPred[ x ];
+        pRecIPred[ x ] = pReco[ x ];
+      }
+      pPred     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+    }    
   }
 }
 
