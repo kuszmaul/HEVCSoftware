@@ -172,7 +172,11 @@
 typedef       void                Void;
 typedef       bool                Bool;
 
+#ifdef __arm__
+typedef       signed char         Char;
+#else
 typedef       char                Char;
+#endif
 typedef       unsigned char       UChar;
 typedef       short               Short;
 typedef       unsigned short      UShort;
