@@ -309,18 +309,18 @@ Void TDecTop::xActivateParameterSets()
 
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
 {
-  TComPic*&   pcPic         = m_pcPic;
+  TComPic*& pcPic = m_pcPic;
   m_apcSlicePilot->initSlice();
 
   if (m_bFirstSliceInPicture)
   {
-    m_uiSliceIdx     = 0;
+    m_uiSliceIdx = 0;
   }
-  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
-  if (!m_bFirstSliceInPicture)
+  else
   {
     m_apcSlicePilot->copySliceInfo( pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
   }
+  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
 
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   Bool nonReferenceFlag = (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_N ||
