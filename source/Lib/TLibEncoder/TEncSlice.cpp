@@ -247,7 +247,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   dQP = m_pcCfg->getQP();
   if(eSliceType!=I_SLICE)
   {
-    if (!(( m_pcCfg->getMaxDeltaQP() == 0 ) && (dQP == -rpcSlice->getSPS()->getQpBDOffsetY() ) && (rpcSlice->getSPS()->getUseLossless()))) 
+    if (!(( m_pcCfg->getMaxDeltaQP() == 0 ) && (dQP == -rpcSlice->getSPS()->getQpBDOffsetY() ) && (rpcSlice->getPPS()->getTransquantBypassEnableFlag())))
     {
       dQP += m_pcCfg->getGOPEntry(iGOPid).m_QPOffset;
     }
@@ -367,7 +367,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   if (m_pcCfg->getUseRecalculateQPAccordingToLambda())
   {
     dQP = xGetQPValueAccordingToLambda( dLambda );
-    iQP = max( -pSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );    
+    iQP = max( -pSPS->getQpBDOffsetY(), min( MAX_QP, (Int) floor( dQP + 0.5 ) ) );
   }
 
   rpcSlice->setSliceQp          ( iQP );

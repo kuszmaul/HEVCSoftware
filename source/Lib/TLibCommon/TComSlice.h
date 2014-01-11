@@ -715,8 +715,6 @@ private:
   Int         m_qpBDOffsetY;
   Int         m_qpBDOffsetC;
 
-  Bool        m_useLossless;
-
   UInt        m_uiPCMBitDepthLuma;
   UInt        m_uiPCMBitDepthChroma;
   Bool        m_bPCMFilterDisableFlag;
@@ -820,10 +818,6 @@ public:
   // physical transform
   Void setMaxTrSize   ( UInt u ) { m_uiMaxTrSize = u;       }
   UInt getMaxTrSize   ()         { return  m_uiMaxTrSize;   }
-  
-  // Tool list
-  Bool getUseLossless ()         { return m_useLossless; }
-  Void setUseLossless ( Bool b ) { m_useLossless  = b; }
   
   // AMP accuracy
   Int       getAMPAcc   ( UInt uiDepth ) { return m_iAMPAcc[uiDepth]; }

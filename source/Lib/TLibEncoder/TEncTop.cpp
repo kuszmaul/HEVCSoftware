@@ -626,7 +626,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
   
   m_cSPS.setTMVPFlagsPresent(false);
-  m_cSPS.setUseLossless   ( m_useLossless  );
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
   
@@ -711,28 +710,9 @@ Void TEncTop::xInitPPS()
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 
-  Int lowestQP = - m_cSPS.getQpBDOffsetY();
-
-  if(getUseLossless())
+  if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
   {
-    if ((getMaxCuDQPDepth() == 0) && (getMaxDeltaQP() == 0 ) && (getQP() == lowestQP) )
-    {
-      bUseDQP = false;
-    }
-    else
-    {
-      bUseDQP = true;
-    }
-  }
-  else
-  {
-    if(bUseDQP == false)
-    {
-      if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
-      {
-        bUseDQP = true;
-      }
-    }
+    bUseDQP = true;
   }
 
   if(bUseDQP)

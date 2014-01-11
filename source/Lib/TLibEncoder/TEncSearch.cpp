@@ -1418,7 +1418,6 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   Int     bestModeIdUV[2] = {0, 0};
   checkTransformSkip         &= (widthTransformSkip == 4 && heightTransformSkip == 4);
   checkTransformSkip         &= (!pcCU->getCUTransquantBypass(0));
-  checkTransformSkip         &= (!((pcCU->getQP( 0 ) == 0) && (pcCU->getSlice()->getSPS()->getUseLossless())));
   if ( m_pcEncCfg->getUseTransformSkipFast() )
   {
     checkTransformSkip       &= (pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_NxN);
