@@ -69,6 +69,7 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
       {
         break;
       }
+      assert(*it_read <= 0x03);
     }
     zeroCount = (*it_read == 0x00) ? zeroCount+1 : 0;
     *it_write = *it_read;
