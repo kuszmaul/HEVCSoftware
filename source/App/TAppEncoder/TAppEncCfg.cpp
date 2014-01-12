@@ -1180,7 +1180,7 @@ Void TAppEncCfg::xCheckParameter()
     {
       m_maxTempLayer = m_GOPList[i].m_temporalId+1;
     }
-    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P', "Slice type must be equal to B or P");
+    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P'&&m_GOPList[i].m_sliceType!='I', "Slice type must be equal to B or P or I");
   }
   for(Int i=0; i<MAX_TLAYER; i++)
   {
