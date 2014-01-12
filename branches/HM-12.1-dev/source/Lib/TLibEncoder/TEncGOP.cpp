@@ -491,6 +491,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType(P_SLICE);
     }
+    if(pcSlice->getSliceType()==B_SLICE&&m_pcCfg->getGOPEntry(iGOPid).m_sliceType=='I')
+    {
+      pcSlice->setSliceType(I_SLICE);
+    }
+    
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
