@@ -108,6 +108,10 @@ private:
   Int                     m_pocCRA;
   std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
   std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
+#if FIX1172
+  NalUnitType             m_associatedIRAPType;
+  Int                     m_associatedIRAPPOC;
+#endif
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;

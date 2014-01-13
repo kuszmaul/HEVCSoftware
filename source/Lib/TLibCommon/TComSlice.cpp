@@ -574,7 +574,9 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
 Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic*                 rpcPic;
+#if !FIX1172
   setAssociatedIRAPPOC(pocCRA);
+#endif
   Int pocCurr = getPOC(); 
 
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -870,7 +872,11 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
     // Any picture that has PicOutputFlag equal to 1 that precedes an IRAP picture
     // in decoding order shall precede any RADL picture associated with the IRAP
     // picture in output order.
+#if FIX1172
+    if(rpcPic->getReconMark() && rpcPic->getSlice(0)->getPicOutputFlag() == 1) // prevent access of uninitialized variable (AssociatedIRAPPOC)
+#else
     if(rpcPic->getSlice(0)->getPicOutputFlag() == 1)
+#endif
     {
       if((nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N ||
           nalUnitType == NAL_UNIT_CODED_SLICE_RADL_R))
@@ -889,6 +895,10 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
 
     // When a picture is a leading picture, it shall precede, in decoding order,
     // all trailing pictures that are associated with the same IRAP picture.
+#if FIX1172
+    if (rpcPic->getReconMark()) // prevent access of uninitialized variable (AssociatedIRAPPOC)
+    {
+#endif
     if(nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N ||
        nalUnitType == NAL_UNIT_CODED_SLICE_RASL_R ||
        nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N ||
@@ -901,6 +911,9 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
         assert(rpcPic->getPOC() <= this->getAssociatedIRAPPOC());
       }
     }
+#if FIX1172
+    }
+#endif
 
     // Any RASL picture associated with a CRA or BLA picture shall precede any
     // RADL picture associated with the CRA or BLA picture in output order
