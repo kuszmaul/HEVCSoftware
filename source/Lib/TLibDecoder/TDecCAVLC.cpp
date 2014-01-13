@@ -566,6 +566,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setLog2MinCodingBlockSize(log2MinCUSize);
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
   pcSPS->setLog2DiffMaxMinCodingBlockSize(uiCode);
+  
+  if (pcSPS->getPTL()->getGeneralPTL()->getLevelIdc() >= Level::LEVEL5)
+  {
+    assert(log2MinCUSize + pcSPS->getLog2DiffMaxMinCodingBlockSize() >= 5);
+  }
+  
   Int maxCUDepthDelta = uiCode;
   pcSPS->setMaxCUWidth  ( 1<<(log2MinCUSize + maxCUDepthDelta) ); 
   pcSPS->setMaxCUHeight ( 1<<(log2MinCUSize + maxCUDepthDelta) );
