@@ -85,7 +85,7 @@
 #define NUM_ABS_FLAG_CTX_LUMA          4      ///< number of context models for greater than 2 flag of luma
 #define NUM_ABS_FLAG_CTX_CHROMA        2      ///< number of context models for greater than 2 flag of chroma
 
-#define NUM_MVP_IDX_CTX               2       ///< number of context models for MVP index
+#define NUM_MVP_IDX_CTX               1       ///< number of context models for MVP index
 
 #define NUM_SAO_MERGE_FLAG_CTX        1       ///< number of context models for SAO merge flags
 #define NUM_SAO_TYPE_IDX_CTX          1       ///< number of context models for SAO type index
@@ -283,9 +283,9 @@ INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =
 static const UChar 
 INIT_MVP_IDX[3][NUM_MVP_IDX_CTX] =  
 {
-  { 168,  CNU, }, 
-  { 168,  CNU, }, 
-  { CNU,  CNU, }, 
+  { 168 },
+  { 168 },
+  { CNU }, 
 };
 
 static const UChar 
