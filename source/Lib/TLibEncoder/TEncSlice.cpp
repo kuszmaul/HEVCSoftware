@@ -1001,6 +1001,17 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   {
     pcSlice->setNextSlice( true );
   }
+  if(m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_BYTES || m_pcCfg->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES)
+  {
+    if(pcSlice->getSliceCurEndCUAddr()<=pcSlice->getSliceSegmentCurEndCUAddr())
+    {
+       pcSlice->setNextSlice( true );
+    }
+    else
+    {
+       pcSlice->setNextSliceSegment( true );
+    }
+  }
   if( depSliceSegmentsEnabled )
   {
     if (m_pcCfg->getWaveFrontsynchro())
