@@ -54,8 +54,7 @@
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
-#define NUM_PART_SIZE_CTX             3       ///< number of context models for partition size
-#define NUM_CU_AMP_CTX                1       ///< number of context models for partition size (AMP)
+#define NUM_PART_SIZE_CTX             4       ///< number of context models for partition size
 #define NUM_PRED_MODE_CTX             1       ///< number of context models for prediction mode
 
 #define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
@@ -143,20 +142,12 @@ INIT_MERGE_IDX_EXT[3][NUM_MERGE_IDX_EXT_CTX] =
 static const UChar 
 INIT_PART_SIZE[3][NUM_PART_SIZE_CTX] =  
 {
-  { 154,  139,  154 },
-  { 154,  139,  154 },
-  { 184,  CNU,  CNU },
+  { 154,  139,  154,  154 },
+  { 154,  139,  154,  154 },
+  { 184,  CNU,  CNU,  CNU },
 };
 
-static const UChar 
-INIT_CU_AMP_POS[3][NUM_CU_AMP_CTX] =  
-{
-  { 154, }, 
-  { 154, }, 
-  { CNU, }, 
-};
-
-static const UChar 
+static const UChar
 INIT_PRED_MODE[3][NUM_PRED_MODE_CTX] = 
 {
   { 134, }, 

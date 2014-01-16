@@ -205,7 +205,6 @@ private:
   
   ContextModel3DBuffer m_cMVPIdxSCModel;
   
-  ContextModel3DBuffer m_cCUAMPSCModel;
   ContextModel3DBuffer m_cSaoMergeSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
