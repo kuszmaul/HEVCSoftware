@@ -108,6 +108,10 @@ private:
   Int                     m_pocCRA;
   std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
   std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
+#if FIX1172
+  NalUnitType             m_associatedIRAPType;
+  Int                     m_associatedIRAPPOC;
+#endif
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;
@@ -140,7 +144,7 @@ public:
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
+  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }

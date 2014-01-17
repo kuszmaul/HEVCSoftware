@@ -309,7 +309,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
 
-#if HM_CLEANUP_SAO
     if ( pcSlice->getSPS()->getUseSAO() )
     {
       SAOBlkParam& saoblkParam = (rpcPic->getPicSym()->getSAOBlkParam())[iCUAddr];
@@ -344,59 +343,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         saoblkParam[SAO_Cr].modeIdc = SAO_MODE_OFF;
       }
     }
-#else
-    if ( pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma()) )
-    {
-      SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
-      saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
-      if (iCUAddr == iStartCUAddr)
-      {
-        saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
-      }
-      Int numCuInWidth     = saoParam->numCuInWidth;
-      Int cuAddrInSlice = iCUAddr - rpcPic->getPicSym()->getCUOrderMap(pcSlice->getSliceCurStartCUAddr()/rpcPic->getNumPartInCU());
-      Int cuAddrUpInSlice  = cuAddrInSlice - numCuInWidth;
-      Int rx = iCUAddr % numCuInWidth;
-      Int ry = iCUAddr / numCuInWidth;
-      Int allowMergeLeft = 1;
-      Int allowMergeUp   = 1;
-      if (rx!=0)
-      {
-        if (rpcPic->getPicSym()->getTileIdxMap(iCUAddr-1) != rpcPic->getPicSym()->getTileIdxMap(iCUAddr))
-        {
-          allowMergeLeft = 0;
-        }
-      }
-      if (ry!=0)
-      {
-        if (rpcPic->getPicSym()->getTileIdxMap(iCUAddr-numCuInWidth) != rpcPic->getPicSym()->getTileIdxMap(iCUAddr))
-        {
-          allowMergeUp = 0;
-        }
-      }
-      pcSbacDecoder->parseSaoOneLcuInterleaving(rx, ry, saoParam,pcCU, cuAddrInSlice, cuAddrUpInSlice, allowMergeLeft, allowMergeUp);
-    }
-    else if ( pcSlice->getSPS()->getUseSAO() )
-    {
-      Int addr = pcCU->getAddr();
-      SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
-      for (Int cIdx=0; cIdx<3; cIdx++)
-      {
-        SaoLcuParam *saoLcuParam = &(saoParam->saoLcuParam[cIdx][addr]);
-        if ( ((cIdx == 0) && !pcSlice->getSaoEnabledFlag()) || ((cIdx == 1 || cIdx == 2) && !pcSlice->getSaoEnabledFlagChroma()))
-        {
-          saoLcuParam->mergeUpFlag   = 0;
-          saoLcuParam->mergeLeftFlag = 0;
-          saoLcuParam->subTypeIdx    = 0;
-          saoLcuParam->typeIdx       = -1;
-          saoLcuParam->offset[0]     = 0;
-          saoLcuParam->offset[1]     = 0;
-          saoLcuParam->offset[2]     = 0;
-          saoLcuParam->offset[3]     = 0;
-        }
-      }
-    }
-#endif
 
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );
     m_pcCuDecoder->decompressCU ( pcCU );

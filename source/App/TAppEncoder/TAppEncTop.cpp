@@ -144,22 +144,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseAdaptQpSelect             ( m_bUseAdaptQpSelect   );
 #endif
 
-  Int lowestQP;
-  lowestQP =  - 6*(g_bitDepthY - 8); // XXX: check
-
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
-  {
-    m_bUseAdaptiveQP = false;
-  }
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   
   //====== Tool list ========
-  m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
-  m_cTEncTop.setUseLossless                  ( m_useLossless );
   m_cTEncTop.setdQPs                         ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
@@ -219,9 +210,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
-#if !HM_CLEANUP_SAO
-  m_cTEncTop.setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
-#endif
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -294,7 +282,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setInitialQP           ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP        ( m_RCForceIntraQP );
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
-  m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
+  m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
   m_cTEncTop.setUseRecalculateQPAccordingToLambda( m_recalculateQPAccordingToLambda );
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
   m_cTEncTop.setActiveParameterSetsSEIEnabled ( m_activeParameterSetsSEIEnabled ); 

@@ -117,9 +117,7 @@ TComSlice::TComSlice()
   resetWpScaling();
   initWpAcDcParam();
   m_saoEnabledFlag = false;
-#if HM_CLEANUP_SAO
   m_saoEnabledFlagChroma = false;
-#endif
 }
 
 TComSlice::~TComSlice()
@@ -576,7 +574,9 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
 Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic*                 rpcPic;
+#if !FIX1172
   setAssociatedIRAPPOC(pocCRA);
+#endif
   Int pocCurr = getPOC(); 
 
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -848,6 +848,12 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
+#if BUGFIX_INTRAPERIOD
+    if(!rpcPic->getReconMark())
+    {
+      continue;
+    }
+#endif
     if (rpcPic->getPOC() == this->getPOC())
     {
       continue;
@@ -1402,7 +1408,6 @@ TComSPS::TComSPS()
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
 , m_qpBDOffsetC               (  0)
-, m_useLossless               (false)
 , m_uiPCMBitDepthLuma         (  8)
 , m_uiPCMBitDepthChroma       (  8)
 , m_bPCMFilterDisableFlag     (false)
