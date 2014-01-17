@@ -405,8 +405,10 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
       pi1 += iStride1*8;
     }
   }
-  else if ( ( (iWidth % 4) == 0 ) && ( (iHeight % 4) == 0 ) )
+  else
   {
+    assert(iWidth % 4 == 0 && iHeight % 4 == 0);
+    
     for ( y=0; y<iHeight; y+= 4 )
     {
       for ( x=0; x<iWidth; x+= 4 )
@@ -415,18 +417,6 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
       }
       pi0 += iStride0*4;
       pi1 += iStride1*4;
-    }
-  }
-  else
-  {
-    for ( y=0; y<iHeight; y+= 2 )
-    {
-      for ( x=0; x<iWidth; x+= 2 )
-      {
-        uiSum += xCalcHADs8x8( &pi0[x], &pi1[x], iStride0, iStride1, 1 );
-      }
-      pi0 += iStride0*2;
-      pi1 += iStride1*2;
     }
   }
   

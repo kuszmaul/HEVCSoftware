@@ -103,7 +103,6 @@ public:
   Void  codeSAOSign       ( UInt  uiCode);  //<! code SAO offset sign
   Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
 
-#if HM_CLEANUP_SAO
   Void codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
                     , Bool* sliceEnabled
@@ -111,7 +110,6 @@ public:
                     , Bool aboveMergeAvail
                     , Bool onlyEstMergeInfo = false
                     );
-#endif
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -207,7 +205,6 @@ private:
   
   ContextModel3DBuffer m_cMVPIdxSCModel;
   
-  ContextModel3DBuffer m_cCUAMPSCModel;
   ContextModel3DBuffer m_cSaoMergeSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;

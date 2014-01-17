@@ -53,7 +53,6 @@
 // Class definition
 // ====================================================================================================================
 
-#if HM_CLEANUP_SAO
 enum SAOCabacStateLablesRDO //CABAC state labels
 {
   SAO_CABACSTATE_PIC_INIT =0,
@@ -145,7 +144,7 @@ private: //members
   TEncSbac**             m_pppcRDSbacCoder;           
   TEncSbac*              m_pcRDGoOnSbacCoder;
   TEncBinCABACCounter**  m_pppcBinCoderCABAC;    
-  Double                 m_labmda[NUM_SAO_COMPONENTS];
+  Double                 m_lambda[NUM_SAO_COMPONENTS];
 
   //statistics
   SAOStatData***         m_statData; //[ctu][comp][classes]
@@ -158,83 +157,6 @@ private: //members
   Int                    m_skipLinesR[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];
   Int                    m_skipLinesB[NUM_SAO_COMPONENTS][NUM_SAO_NEW_TYPES];
 };
-#else
-
-
-class TEncSampleAdaptiveOffset : public TComSampleAdaptiveOffset
-{
-private:
-  TEncEntropy*      m_pcEntropyCoder;
-  TEncSbac***       m_pppcRDSbacCoder;              ///< for CABAC
-  TEncSbac*         m_pcRDGoOnSbacCoder;
-#if FAST_BIT_EST
-  TEncBinCABACCounter*** m_pppcBinCoderCABAC;            ///< temporal CABAC state storage for RD computation
-#else
-  TEncBinCABAC***   m_pppcBinCoderCABAC;            ///< temporal CABAC state storage for RD computation
-#endif
-  
-  Int64  ***m_iCount;      //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ***m_iOffset;     //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ***m_iOffsetOrg;  //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Int64  ****m_count_PreDblk;      //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  ****m_offsetOrg_PreDblk;  //[LCU][YCbCr][MAX_NUM_SAO_TYPE][MAX_NUM_SAO_CLASS]; 
-  Int64  **m_iRate;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Int64  **m_iDist;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Double **m_dCost;        //[MAX_NUM_SAO_PART][MAX_NUM_SAO_TYPE]; 
-  Double *m_dCostPartBest; //[MAX_NUM_SAO_PART]; 
-  Int64  *m_iDistOrg;      //[MAX_NUM_SAO_PART]; 
-  Int    *m_iTypePartBest; //[MAX_NUM_SAO_PART]; 
-  Int     m_iOffsetThY;
-  Int     m_iOffsetThC;
-  Bool    m_bUseSBACRD;
-#if SAO_ENCODING_CHOICE
-#if SAO_ENCODING_CHOICE_CHROMA
-  Double  m_depthSaoRate[2][4];
-#else
-  Double  m_depth0SaoRate;
-#endif
-#endif
-
-public:
-  TEncSampleAdaptiveOffset         ();
-  virtual ~TEncSampleAdaptiveOffset();
-
-  Void startSaoEnc( TComPic* pcPic, TEncEntropy* pcEntropyCoder, TEncSbac*** pppcRDSbacCoder, TEncSbac* pcRDGoOnSbacCoder);
-  Void endSaoEnc();
-  Void resetStats();
-#if SAO_ENCODING_CHOICE
-  Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma, Int depth);
-#else
-  Void SAOProcess(SAOParam *pcSaoParam, Double dLambda, Double dLambdaChroma);
-#endif
-
-  Void runQuadTreeDecision(SAOQTPart *psQTPart, Int iPartIdx, Double &dCostFinal, Int iMaxLevel, Double dLambda, Int yCbCr);
-  Void rdoSaoOnePart(SAOQTPart *psQTPart, Int iPartIdx, Double dLambda, Int yCbCr);
-  
-  Void disablePartTree(SAOQTPart *psQTPart, Int iPartIdx);
-  Void getSaoStats(SAOQTPart *psQTPart, Int iYCbCr);
-  Void calcSaoStatsCu(Int iAddr, Int iPartIdx, Int iYCbCr);
-  Void calcSaoStatsBlock( Pel* pRecStart, Pel* pOrgStart, Int stride, Int64** ppStats, Int64** ppCount, UInt width, UInt height, Bool* pbBorderAvail, Int iYCbCr);
-  Void calcSaoStatsCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);
-  Void calcSaoStatsCu_BeforeDblk( TComPic* pcPic );
-  Void destroyEncBuffer();
-  Void createEncBuffer();
-  Void assignSaoUnitSyntax(SaoLcuParam* saoLcuParam,  SAOQTPart* saoPart, Bool &oneUnitFlag, Int yCbCr);
-  Void checkMerge(SaoLcuParam * lcuParamCurr,SaoLcuParam * lcuParamCheck, Int dir);
-#if SAO_ENCODING_CHOICE
-  Void rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma, Int depth);
-#else
-  Void rdoSaoUnitAll(SAOParam *saoParam, Double lambda, Double lambdaChroma);
-#endif
-  Void saoComponentParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Int yCbCr, Double lambda, SaoLcuParam *compSaoParam, Double *distortion);
-  Void sao2ChromaParamDist(Int allowMergeLeft, Int allowMergeUp, SAOParam *saoParam, Int addr, Int addrUp, Int addrLeft, Double lambda, SaoLcuParam *crSaoParam, SaoLcuParam *cbSaoParam, Double *distortion);
-  inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 offsetOrg, Int shift);
-  inline Int64 estIterOffset(Int typeIdx, Int classIdx, Double lambda, Int64 offsetInput, Int64 count, Int64 offsetOrg, Int shift, Int bitIncrease, Int *currentDistortionTableBo, Double *currentRdCostTableBo, Int offsetTh );
-  inline Int64 estSaoTypeDist(Int compIdx, Int typeIdx, Int shift, Double lambda, Int *currentDistortionTableBo, Double *currentRdCostTableBo);
-  Void setMaxNumOffsetsPerPic(Int iVal) {m_maxNumOffsetsPerPic = iVal; }
-  Int  getMaxNumOffsetsPerPic() {return m_maxNumOffsetsPerPic; }
-};
-#endif
 //! \}
 
 #endif

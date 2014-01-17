@@ -141,14 +141,10 @@ protected:
   // coding tools (PCM bit-depth)
   Bool      m_bPCMInputBitDepthFlag;                          ///< 0: PCM bit-depth is internal bit-depth. 1: PCM bit-depth is input bit-depth.
 
-  // coding tool (lossless)
-  Bool      m_useLossless;                                    ///< flag for using lossless coding
+  // coding tool (SAO)
   Bool      m_bUseSAO; 
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
-#if !HM_CLEANUP_SAO
-  Bool      m_saoLcuBasedOptimization;                        ///< SAO LCU-based optimization
-#endif
   // coding tools (loop filter)
   Bool      m_bLoopFilterDisable;                             ///< flag for using deblocking filter
   Bool      m_loopFilterOffsetInPPS;                         ///< offset for deblocking filter in 0 = slice header, 1 = PPS
@@ -164,7 +160,6 @@ protected:
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
 
   // coding tools (encoder-only parameters)
-  Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
@@ -259,7 +254,7 @@ protected:
   Char*     m_scalingListFile;                                ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
-  Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Bool      m_useStrongIntraSmoothing;                        ///< enable strong intra smoothing for 32x32 blocks where the reference samples are flat

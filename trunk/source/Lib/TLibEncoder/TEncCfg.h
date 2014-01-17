@@ -155,11 +155,6 @@ protected:
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoLcuBoundary;
-#if !HM_CLEANUP_SAO
-  Bool      m_saoLcuBasedOptimization;
-#endif
-  //====== Lossless ========
-  Bool      m_useLossless;
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -180,7 +175,6 @@ protected:
   Int       m_iQPAdaptationRange;
   
   //====== Tool list ========
-  Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
   Bool      m_useRDOQ;
@@ -279,8 +273,8 @@ protected:
   Int       m_RCInitialQP;
   Bool      m_RCForceIntraQP;
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
-  Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
-  TComVPS                    m_cVPS;
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+  TComVPS   m_cVPS;
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
@@ -396,8 +390,6 @@ public:
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
   
-  //====== Lossless ========
-  Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
@@ -440,11 +432,8 @@ public:
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
-  //====== Lossless ========
-  Bool      getUseLossless                  ()      { return  m_useLossless;  }
   
   //==== Tool list ========
-  Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
@@ -463,7 +452,6 @@ public:
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
-  Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
@@ -507,10 +495,6 @@ public:
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
   Void  setSaoLcuBoundary              (Bool val)      { m_saoLcuBoundary = val; }
   Bool  getSaoLcuBoundary              ()              { return m_saoLcuBoundary; }
-#if !HM_CLEANUP_SAO
-  Void  setSaoLcuBasedOptimization               (Bool val)            { m_saoLcuBasedOptimization = val; }
-  Bool  getSaoLcuBasedOptimization               ()                    { return m_saoLcuBasedOptimization; }
-#endif
   Void  setLFCrossTileBoundaryFlag               ( Bool   val  )       { m_loopFilterAcrossTilesEnabledFlag = val; }
   Bool  getLFCrossTileBoundaryFlag               ()                    { return m_loopFilterAcrossTilesEnabledFlag;   }
   Void  setUniformSpacingIdr           ( Int i )           { m_iUniformSpacingIdr = i; }
@@ -666,8 +650,8 @@ public:
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
-  Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
-  Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+  Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
+  Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
