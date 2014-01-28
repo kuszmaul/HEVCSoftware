@@ -254,11 +254,9 @@ public:
                                   TComMv&      rcMv,
                                   Distortion&  ruiSAD,
                                   Int          iRoiWidth,
-                                  Int          iRoiHeight
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
-                                , TComMv&    mvPred
-#endif
-                                , Bool         bUse1DSearchFor8x8
+                                  Int          iRoiHeight,
+                                  TComMv&      mvPred,
+                                  Bool         bUse1DSearchFor8x8
                                 );
 
   /// encode residual and compute rd-cost for inter mode
