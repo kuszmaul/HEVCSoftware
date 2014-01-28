@@ -188,11 +188,7 @@ Void TAppDecTop::decode()
           if (m_outputBitDepth[channelType] == 0) m_outputBitDepth[channelType] = g_bitDepth[channelType];
         }
 
-#if RExt__INPUT_MSB_EXTENSION
         m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, g_bitDepth ); // write mode
-#else
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, g_bitDepth ); // write mode
-#endif
         openedReconFile = true;
       }
       if ( bNewPicture &&
