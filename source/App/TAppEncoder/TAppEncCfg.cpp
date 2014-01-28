@@ -386,10 +386,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
 
-  // motion options
+  // motion search options
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
+  ("SingleComponentLoopInterSearch", m_singleComponentLoopInterSearch, false, "For inter residual estimation, loop over components once, testing all mode options for each")
   ("HadamardME",              m_bUseHADME,               true, "Hadamard ME for fractional-pel")
   ("ASR",                     m_bUseASR,                false, "Adaptive motion search range")
 
@@ -969,16 +970,6 @@ Void TAppEncCfg::xCheckParameter()
 
       m_useCrossComponentDecorrelation = false;
   }
-
-#if RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH
-  if(m_profile == Profile::MAINREXT)
-  {
-      fprintf(stderr, "***************************************************************************\n");
-      fprintf(stderr, "** WARNING: RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH should **\n");
-      fprintf(stderr, "**          be disabled under RExt test conditions.                      **\n");
-      fprintf(stderr, "***************************************************************************\n");
-  }
-#endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
   xConfirmPara ( ( m_profile==Profile::MAIN || m_profile==Profile::MAIN10 || m_profile==Profile::MAINSTILLPICTURE ) && m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
@@ -1599,6 +1590,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra             : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                    : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range             : %d\n", m_iSearchRange );
+  printf("Inter search component loop     : %s\n", (m_singleComponentLoopInterSearch ? "Single (Non-HM-compatible)" : "Triple (HM-compatible)") );
   printf("Intra period                    : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type           : %d\n", m_iDecodingRefreshType );
   printf("QP                              : %5.2f\n", m_fQP );

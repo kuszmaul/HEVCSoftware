@@ -186,10 +186,11 @@ protected:
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
-  Int      m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
+  Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
