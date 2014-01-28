@@ -342,7 +342,6 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize
 
 
 
-#if INTRABC_FASTME
 // ====================================================================================================================
 // Static function
 // ====================================================================================================================
@@ -386,7 +385,6 @@ CalculateMinimumHVLumaActivity(TComDataCU *pcCU, const UInt uiAbsPartIdx, const 
 
   return std::min(hAct, vAct);
 }
-#endif
 
 
 
@@ -713,20 +711,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
-        Bool bUse1DSearchFor8x8 = false;
-#if INTRABC_FASTME
-        const Bool bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
+        Bool bUse1DSearchFor8x8        = false;
+        Bool bSkipIntraBlockCopySearch = false;
 
-        if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() &&
-            !bSkipIntraBlockCopySearch &&
-            rpcTempCU->getWidth(0) == 8 &&
-            !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
+        if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
         {
-          bUse1DSearchFor8x8 = (CalculateMinimumHVLumaActivity(rpcTempCU, 0, m_ppcOrigYuv) < (168 << (g_bitDepth[0] - 8)));
+          bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
+
+          if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() &&
+              !bSkipIntraBlockCopySearch &&
+              rpcTempCU->getWidth(0) == 8 &&
+              !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
+          {
+            bUse1DSearchFor8x8 = (CalculateMinimumHVLumaActivity(rpcTempCU, 0, m_ppcOrigYuv) < (168 << (g_bitDepth[0] - 8)));
+          }
         }
-#else // !INTRABC_FASTME
-        const Bool bSkipIntraBlockCopySearch = false;
-#endif // INTRABC_FASTME
 
         if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
         {

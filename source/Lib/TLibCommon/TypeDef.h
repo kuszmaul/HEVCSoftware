@@ -273,7 +273,6 @@
 #endif
 
 #define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
-#define INTRABC_FASTME                                                         1 ///< Fast motion estimation
 
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME                4 ///< QP' to use for mixed_lossy_lossless coding.

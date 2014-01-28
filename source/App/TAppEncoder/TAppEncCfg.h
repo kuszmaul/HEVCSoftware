@@ -191,6 +191,7 @@ protected:
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each
+  Bool      m_intraBlockCopyFastSearch;                       ///< Use a restricted search range for intra block-copy motion vectors to reduce the encoding time
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
