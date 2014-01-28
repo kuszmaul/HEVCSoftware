@@ -110,8 +110,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
-        dRdCost = (Double)(Distortion)floor(dRdCost);
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0)); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
       }
     }
     else
@@ -125,8 +124,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
-        dRdCost = (Double)(Distortion)floor(dRdCost);
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
       }
 #endif
     }
@@ -189,8 +187,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)>>16));
-        dRdCost = (Double)(UInt64)floor(dRdCost);
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0)); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
       }
     }
     else
@@ -204,8 +201,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = ((Double)(Int64)uiDistortion + (Double)((Int)((Int64)uiBits * dLambda+.5)));
-        dRdCost = (Double)(UInt64)floor(dRdCost);
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
       }
 #endif
     }

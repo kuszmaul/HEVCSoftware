@@ -135,6 +135,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFastSearch                   ( m_iFastSearch  );
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange            ( m_bipredSearchRange );
+  m_cTEncTop.setSingleComponentLoopInterSearch( m_singleComponentLoopInterSearch );
 
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                   ( m_iMaxDeltaQP  );
