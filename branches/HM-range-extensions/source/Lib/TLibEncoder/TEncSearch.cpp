@@ -3670,10 +3670,8 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   Int          uiPartAddr = 0;
   PartSize     ePartSize  = pcCU->getPartitionSize( 0 );
 
-#if INTRABC_FASTME
-  if(pcCU->getWidth(0) > 16)
+  if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && (pcCU->getWidth(0) > 16))
     return false;
-#endif
 
   xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
 
@@ -3923,52 +3921,86 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
-#if INTRABC_FASTME
-  setDistParamComp(COMPONENT_Y);
-  m_cDistParam.bitDepth  = g_bitDepth[CHANNEL_TYPE_LUMA];
-  m_cDistParam.iRows     = 4;//to calculate the sad line by line;
-  m_cDistParam.iSubShift = 0;
+  if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
+  {
+    setDistParamComp(COMPONENT_Y);
+    m_cDistParam.bitDepth  = g_bitDepth[CHANNEL_TYPE_LUMA];
+    m_cDistParam.iRows     = 4;//to calculate the sad line by line;
+    m_cDistParam.iSubShift = 0;
 
-  Int        iRelCUPelX    = cuPelX % lcuWidth;
-  Int        iRelCUPelY    = cuPelY % lcuHeight;
-  Distortion uiTempSadBest = 0;
+    Int        iRelCUPelX    = cuPelX % lcuWidth;
+    Int        iRelCUPelY    = cuPelY % lcuHeight;
+    Distortion uiTempSadBest = 0;
 
 #if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
-  Int xPred = mvPred.getHor();
-  Int yPred = mvPred.getVer();
+    Int xPred = mvPred.getHor();
+    Int yPred = mvPred.getVer();
 
-  uiSad = std::numeric_limits<Distortion>::max();
+    uiSad = std::numeric_limits<Distortion>::max();
 
-  if ( !( xPred==0 && yPred==0)
-    && !( (yPred < iSrchRngVerTop)  || (yPred > iSrchRngVerBottom) )
-    && !( (xPred < iSrchRngHorLeft) || (xPred > iSrchRngHorRight) )
-    )
-  {
-    Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
-    Int iTempX = xPred + iRelCUPelX + iRoiWidth - 1;
-    Bool validCand = true;
-
-    if ((iTempX >= 0) && (iTempY >= 0))
+    if ( !( xPred==0 && yPred==0)
+      && !( (yPred < iSrchRngVerTop)  || (yPred > iSrchRngVerBottom) )
+      && !( (xPred < iSrchRngHorLeft) || (xPred > iSrchRngHorRight) )
+      )
     {
-      Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-      Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
-      if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
+      Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
+      Int iTempX = xPred + iRelCUPelX + iRoiWidth - 1;
+      Bool validCand = true;
+
+      if ((iTempX >= 0) && (iTempY >= 0))
       {
-        validCand = false;
+        Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+        Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+        if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
+        {
+          validCand = false;
+        }
+      }
+
+      if( validCand )
+      {
+        uiSad = m_pcRdCost->getCost( xPred, yPred);
+
+        for(int r = 0; r < iRoiHeight; )
+        {
+          piRefSrch = piRefY + yPred * iRefStride + r*iRefStride + xPred;
+          m_cDistParam.pCur = piRefSrch;
+          m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+          uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+
+          r += 4;
+        }
+
+        if ( uiSad < uiSadBest )
+        {
+          uiSadBest = uiSad;
+          iBestX    = xPred;
+          iBestY    = yPred;
+        }
+
+        rcMv.set( iBestX, iBestY );
       }
     }
+#endif
 
-    if( validCand )
+
+    for(Int y = max(iSrchRngVerTop, -cuPelY); y <= -iRoiHeight; y++)
     {
-      uiSad = m_pcRdCost->getCost( xPred, yPred);
+      if (!isValidIntraBCSearchArea(pcCU, 0 + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+        continue;
+
+      uiSad = m_pcRdCost->getCost( 0, y);
 
       for(int r = 0; r < iRoiHeight; )
       {
-        piRefSrch = piRefY + yPred * iRefStride + r*iRefStride + xPred;
+        piRefSrch = piRefY + y * iRefStride + r*iRefStride;
         m_cDistParam.pCur = piRefSrch;
         m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
         uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+        if(uiSad > uiSadBest)
+          break;
 
         r += 4;
       }
@@ -3976,251 +4008,289 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       if ( uiSad < uiSadBest )
       {
         uiSadBest = uiSad;
-        iBestX    = xPred;
-        iBestY    = yPred;
+        iBestX    = 0;
+        iBestY    = y;
+        uiTempSadBest = uiSad;
+
+        if(uiSadBest <= 3)
+        {
+          rcMv.set( iBestX, iBestY );
+          ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+          return;
+        }
+      }
+   }
+
+    for(Int x = -iRoiWidth; x >= max(iSrchRngHorLeft, - cuPelX); x-- )
+    {
+      if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, 0 + iRelCUPelY, iRoiWidth, iRoiHeight))
+        continue;
+
+      uiSad = m_pcRdCost->getCost( x, 0);
+
+      for(int r = 0; r < iRoiHeight; )
+      {
+        piRefSrch = piRefY + r*iRefStride + x;
+        m_cDistParam.pCur = piRefSrch;
+        m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+        uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+        if(uiSad > uiSadBest)
+          break;
+
+        r += 4;
       }
 
+      if ( uiSad < uiSadBest )
+      {
+        uiSadBest = uiSad;
+        iBestX    = x;
+        iBestY    = 0;
+        uiTempSadBest = uiSad;
+        if(uiSadBest <= 3)
+        {
+          rcMv.set( iBestX, iBestY );
+          ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+           return;
+        }
+      }
+    }
+
+    if((!iBestX && !iBestY))
+    {
       rcMv.set( iBestX, iBestY );
-    }
-  }
-#endif
-
-
-  for(Int y = max(iSrchRngVerTop, -cuPelY); y <= -iRoiHeight; y++)
-  {
-    if (!isValidIntraBCSearchArea(pcCU, 0 + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-      continue;
-
-    uiSad = m_pcRdCost->getCost( 0, y);
-
-    for(int r = 0; r < iRoiHeight; )
-    {
-      piRefSrch = piRefY + y * iRefStride + r*iRefStride;
-      m_cDistParam.pCur = piRefSrch;
-      m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
-
-      uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-      if(uiSad > uiSadBest)
-        break;
-
-      r += 4;
+      ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+      return;
     }
 
-    if ( uiSad < uiSadBest )
+    if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 32)
     {
-      uiSadBest = uiSad;
-      iBestX    = 0;
-      iBestY    = y;
-      uiTempSadBest = uiSad;
+      rcMv.set( iBestX, iBestY );
+      ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+      return;
+    }
 
-      if(uiSadBest <= 3)
+    if(iRoiWidth == 8 && !bUse1DSearchFor8x8)
+    {
+      Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+      Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+
+      for(Int y = max(iSrchRngVerTop, -cuPelY); y <= iSrchRngVerBottom; y +=2)
+      {
+        if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
+          continue;
+
+        Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
+
+        for(Int x = max(iSrchRngHorLeft, -cuPelX); x <= iSrchRngHorRight; x++)
+        {
+          if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+            continue;
+
+          Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
+
+          if ((iTempX >= 0) && (iTempY >= 0))
+          {
+            Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+            Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+            if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
+            continue;
+          }
+
+          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+            continue;
+
+          uiSad = m_pcRdCost->getCost( x, y);
+
+          for(int r = 0; r < iRoiHeight; )
+          {
+            piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
+            m_cDistParam.pCur = piRefSrch;
+            m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+            uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+            if(uiSad > uiSadBest)
+              break;
+            r += 4;
+          }
+
+          if ( uiSad < uiSadBest )
+          {
+            uiSadBest = uiSad;
+            iBestX    = x;
+            iBestY    = y;
+          }
+        }
+      }
+
+      if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 16)
       {
         rcMv.set( iBestX, iBestY );
         ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
         return;
       }
-    }
- }
 
-  for(Int x = -iRoiWidth; x >= max(iSrchRngHorLeft, - cuPelX); x-- )
-  {
-    if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, 0 + iRelCUPelY, iRoiWidth, iRoiHeight))
-      continue;
+      for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
+      {
+        if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
+          continue;
 
-    uiSad = m_pcRdCost->getCost( x, 0);
+        Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
 
-    for(int r = 0; r < iRoiHeight; )
-    {
-      piRefSrch = piRefY + r*iRefStride + x;
-      m_cDistParam.pCur = piRefSrch;
-      m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+        for(Int x = max(iSrchRngHorLeft, -cuPelX); x <= iSrchRngHorRight; x += 2)
+        {
+          if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+            continue;
 
-      uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-      if(uiSad > uiSadBest)
-        break;
+          Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
 
-      r += 4;
-    }
+          if ((iTempX >= 0) && (iTempY >= 0))
+          {
+            Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+            Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+            if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
+            continue;
+          }
 
-    if ( uiSad < uiSadBest )
-    {
-      uiSadBest = uiSad;
-      iBestX    = x;
-      iBestY    = 0;
-      uiTempSadBest = uiSad;
-      if(uiSadBest <= 3)
+          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+            continue;
+
+          uiSad = m_pcRdCost->getCost( x, y);
+
+          for(int r = 0; r < iRoiHeight; )
+          {
+            piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
+            m_cDistParam.pCur = piRefSrch;
+            m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+            uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+            if(uiSad > uiSadBest)
+              break;
+
+            r += 4;
+          }
+
+          if ( uiSad < uiSadBest )
+          {
+            uiSadBest = uiSad;
+            iBestX    = x;
+            iBestY    = y;
+            if(uiSadBest <= 5)
+            {
+              rcMv.set( iBestX, iBestY );
+              ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+              return;
+            }
+          }
+        }
+      }
+
+      if(uiSadBest >= uiTempSadBest)
       {
         rcMv.set( iBestX, iBestY );
         ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-         return;
+        return;
       }
-    }
-  }
 
-  if((!iBestX && !iBestY))
-  {
-    rcMv.set( iBestX, iBestY );
-    ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-    return;
-  }
-
-  if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 32)
-  {
-    rcMv.set( iBestX, iBestY );
-    ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-    return;
-  }
-
-  if(iRoiWidth == 8 && !bUse1DSearchFor8x8)
-  {
-    Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
-    Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-
-    for(Int y = max(iSrchRngVerTop, -cuPelY); y <= iSrchRngVerBottom; y +=2)
-    {
-      if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
-        continue;
-
-      Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
-
-      for(Int x = max(iSrchRngHorLeft, -cuPelX); x <= iSrchRngHorRight; x++)
+      if((uiSadBest - m_pcRdCost->getCost( iBestX, iBestY)) <= 32)
       {
-        if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
-          continue;
-
-        Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
-
-        if ((iTempX >= 0) && (iTempY >= 0))
-        {
-          Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-          Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
-          if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
-          continue;
-        }
-
-        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-          continue;
-
-        uiSad = m_pcRdCost->getCost( x, y);
-
-        for(int r = 0; r < iRoiHeight; )
-        {
-          piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
-          m_cDistParam.pCur = piRefSrch;
-          m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
-
-          uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-          if(uiSad > uiSadBest)
-            break;
-          r += 4;
-        }
-
-        if ( uiSad < uiSadBest )
-        {
-          uiSadBest = uiSad;
-          iBestX    = x;
-          iBestY    = y;
-        }
+        rcMv.set( iBestX, iBestY );
+        ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+        return;
       }
-    }
 
-    if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 16)
-    {
-      rcMv.set( iBestX, iBestY );
-      ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-      return;
-    }
+      uiTempSadBest = uiSadBest;
 
-    for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
-    {
-      if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
-        continue;
-
-      Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
-
-      for(Int x = max(iSrchRngHorLeft, -cuPelX); x <= iSrchRngHorRight; x += 2)
+      for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
       {
-        if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+        if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
           continue;
 
-        Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
+        Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
 
-        if ((iTempX >= 0) && (iTempY >= 0))
+        for(Int x = (max(iSrchRngHorLeft, -cuPelX) + 1); x <= iSrchRngHorRight; x += 2)
         {
-          Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-          Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
-          if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
-          continue;
-        }
 
-        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-          continue;
+          if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+            continue;
 
-        uiSad = m_pcRdCost->getCost( x, y);
+          Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
 
-        for(int r = 0; r < iRoiHeight; )
-        {
-          piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
-          m_cDistParam.pCur = piRefSrch;
-          m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
-
-          uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-          if(uiSad > uiSadBest)
-            break;
-
-          r += 4;
-        }
-
-        if ( uiSad < uiSadBest )
-        {
-          uiSadBest = uiSad;
-          iBestX    = x;
-          iBestY    = y;
-          if(uiSadBest <= 5)
+          if ((iTempX >= 0) && (iTempY >= 0))
           {
-            rcMv.set( iBestX, iBestY );
-            ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-            return;
+            Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+            Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+            if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
+              continue;
+          }
+
+          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
+            continue;
+
+          uiSad = m_pcRdCost->getCost( x, y);
+
+          for(int r = 0; r < iRoiHeight; )
+          {
+            piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
+            m_cDistParam.pCur = piRefSrch;
+            m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+            uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+            if(uiSad > uiSadBest)
+              break;
+
+            r += 4;
+          }
+
+          if ( uiSad < uiSadBest )
+          {
+            uiSadBest = uiSad;
+            iBestX    = x;
+            iBestY    = y;
+            if(uiSadBest <= 5)
+            {
+              rcMv.set( iBestX, iBestY );
+              ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+              return;
+            }
           }
         }
       }
     }
+  }
+  else //full search
+  {
+    setDistParamComp(COMPONENT_Y);
+    piRefY += (iSrchRngVerBottom * iRefStride);
+    Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+    Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
-    if(uiSadBest >= uiTempSadBest)
+    Int iRelCUPelX = cuPelX%lcuWidth;
+    Int iRelCUPelY = cuPelY%lcuHeight;
+
+    for(Int y = iSrchRngVerBottom; y >= iSrchRngVerTop; y--)
     {
-      rcMv.set( iBestX, iBestY );
-      ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-      return;
-    }
-
-    if((uiSadBest - m_pcRdCost->getCost( iBestX, iBestY)) <= 32)
-    {
-      rcMv.set( iBestX, iBestY );
-      ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-      return;
-    }
-
-    uiTempSadBest = uiSadBest;
-
-    for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
-    {
-      if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
+      if ( ((Int)(cuPelY + y) < 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
+      {
+        piRefY -= iRefStride;
         continue;
+      }
 
-      Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
-
-      for(Int x = (max(iSrchRngHorLeft, -cuPelX) + 1); x <= iSrchRngHorRight; x += 2)
+      for(Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
       {
 
-        if ((x == 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+        if (((Int)(cuPelX + x) < 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
+        {
           continue;
+        }
 
-        Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
 
+        Int iTempX = x + (cuPelX%lcuWidth) + iRoiWidth - 1;
+        Int iTempY = y + (cuPelY%lcuHeight) + iRoiHeight - 1;
         if ((iTempX >= 0) && (iTempY >= 0))
         {
           Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-          Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+          Int iTempZscanIdx  = g_auiRasterToZscan[iTempRasterIdx];
           if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
             continue;
         }
@@ -4228,94 +4298,25 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
           continue;
 
-        uiSad = m_pcRdCost->getCost( x, y);
+        piRefSrch = piRefY + x;
+        m_cDistParam.pCur = piRefSrch;
 
-        for(int r = 0; r < iRoiHeight; )
-        {
-          piRefSrch = piRefY + y * iRefStride + r*iRefStride + x;
-          m_cDistParam.pCur = piRefSrch;
-          m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+        m_cDistParam.bitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
+        uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
-          uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-          if(uiSad > uiSadBest)
-            break;
-
-          r += 4;
-        }
+        uiSad += m_pcRdCost->getCost( x, y);
 
         if ( uiSad < uiSadBest )
         {
           uiSadBest = uiSad;
           iBestX    = x;
           iBestY    = y;
-          if(uiSadBest <= 5)
-          {
-            rcMv.set( iBestX, iBestY );
-            ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-            return;
-          }
         }
       }
-    }
-  }
-#else
-  setDistParamComp(COMPONENT_Y);
-  piRefY += (iSrchRngVerBottom * iRefStride);
-  Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
-  Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
-  Int iRelCUPelX = cuPelX%lcuWidth;
-  Int iRelCUPelY = cuPelY%lcuHeight;
-
-  for(Int y = iSrchRngVerBottom; y >= iSrchRngVerTop; y--)
-  {
-    if ( ((Int)(cuPelY + y) < 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight))
-    {
       piRefY -= iRefStride;
-      continue;
     }
-
-    for(Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
-    {
-
-      if (((Int)(cuPelX + x) < 0) || ((Int) (cuPelX + x + iRoiWidth) >= iPicWidth))
-      {
-        continue;
-      }
-
-
-      Int iTempX = x + (cuPelX%lcuWidth) + iRoiWidth - 1;
-      Int iTempY = y + (cuPelY%lcuHeight) + iRoiHeight - 1;
-      if ((iTempX >= 0) && (iTempY >= 0))
-      {
-        Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
-        Int iTempZscanIdx  = g_auiRasterToZscan[iTempRasterIdx];
-        if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
-          continue;
-      }
-
-      if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-        continue;
-
-      piRefSrch = piRefY + x;
-      m_cDistParam.pCur = piRefSrch;
-
-      m_cDistParam.bitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
-      uiSad = m_cDistParam.DistFunc( &m_cDistParam );
-
-      uiSad += m_pcRdCost->getCost( x, y);
-
-      if ( uiSad < uiSadBest )
-      {
-        uiSadBest = uiSad;
-        iBestX    = x;
-        iBestY    = y;
-      }
-    }
-
-    piRefY -= iRefStride;
   }
-#endif
 
   rcMv.set( iBestX, iBestY );
 

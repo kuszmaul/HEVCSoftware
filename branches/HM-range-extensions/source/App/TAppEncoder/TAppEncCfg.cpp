@@ -435,6 +435,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Coding tools
   ("AMP",                     m_enableAMP,               true,  "Enable asymmetric motion partitions")
   ("IntraBlockCopyEnabled",   m_useIntraBlockCopy,  false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
+  ("IntraBlockCopyFastSearch", m_intraBlockCopyFastSearch, true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
   ("CrossComponentDecorrelation",     m_useCrossComponentDecorrelation,  false, "Enable the use of cross-component decorrelation (not valid in V1 profiles)")
   ("ReconBasedDecorrelationEstimate", m_reconBasedDecorrelationEstimate, false, "When determining the alpha value for cross-component decorrelation, use the decoded residual rather than the pre-transform encoder-side residual")
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
@@ -1611,7 +1612,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
   printf("Implicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
   printf("Explicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
-  printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? "Enabled" : "Disabled") );
+  printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
   printf("Cross-component decorrelation   : %s\n", (m_useCrossComponentDecorrelation         ? (m_reconBasedDecorrelationEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );

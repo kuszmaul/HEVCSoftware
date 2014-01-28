@@ -154,6 +154,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   m_cTEncTop.setUseExtendedPrecision         ( m_useExtendedPrecision );
   m_cTEncTop.setUseIntraBlockCopy            ( m_useIntraBlockCopy );
+  m_cTEncTop.setUseIntraBlockCopyFastSearch  ( m_intraBlockCopyFastSearch );
   m_cTEncTop.setUseHighPrecisionPredictionWeighting( m_useHighPrecisionPredictionWeighting );
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
