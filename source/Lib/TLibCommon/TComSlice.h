@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -451,7 +451,7 @@ public:
   Void    setNumReorderPics(UInt v, UInt tLayer)                { m_numReorderPics[tLayer] = v;    }
   UInt    getNumReorderPics(UInt tLayer)                        { return m_numReorderPics[tLayer]; }
 
-  Void    setMaxDecPicBuffering(UInt v, UInt tLayer)            { m_uiMaxDecPicBuffering[tLayer] = v;    }
+  Void    setMaxDecPicBuffering(UInt v, UInt tLayer)            { assert(tLayer < MAX_TLAYER); m_uiMaxDecPicBuffering[tLayer] = v;    }
   UInt    getMaxDecPicBuffering(UInt tLayer)                    { return m_uiMaxDecPicBuffering[tLayer]; }
 
   Void    setMaxLatencyIncrease(UInt v, UInt tLayer)            { m_uiMaxLatencyIncrease[tLayer] = v;    }
@@ -719,7 +719,6 @@ private:
   Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
   Bool        m_useExtendedPrecision;
   Bool        m_useIntraBlockCopy;
-  Bool        m_useLossless;
   Bool        m_useHighPrecisionPredictionWeighting;
   Bool        m_useResidualRotation;
   Bool        m_useSingleSignificanceMapContext;
@@ -834,12 +833,6 @@ public:
   Void setMaxTrSize   ( UInt u ) { m_uiMaxTrSize = u;       }
   UInt getMaxTrSize   ()         { return  m_uiMaxTrSize;   }
 
-  // Tool list
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  Bool getUseLossless ()         { return m_useLossless; }
-  Void setUseLossless ( Bool b ) { m_useLossless  = b; }
-#endif
-
   // AMP accuracy
   Int       getAMPAcc   ( UInt uiDepth ) { return m_iAMPAcc[uiDepth]; }
   Void      setAMPAcc   ( UInt uiDepth, Int iAccu ) { assert( uiDepth < g_uiMaxCUDepth);  m_iAMPAcc[uiDepth] = iAccu; }
@@ -892,7 +885,7 @@ public:
   Void setScalingList      ( TComScalingList *scalingList);
   TComScalingList* getScalingList ()       { return m_scalingList; }               //!< get ScalingList class pointer in SPS
   UInt getMaxDecPicBuffering  (UInt tlayer)            { return m_uiMaxDecPicBuffering[tlayer]; }
-  Void setMaxDecPicBuffering  ( UInt ui, UInt tlayer ) { m_uiMaxDecPicBuffering[tlayer] = ui;   }
+  Void setMaxDecPicBuffering  ( UInt ui, UInt tlayer ) { assert(tlayer < MAX_TLAYER);  m_uiMaxDecPicBuffering[tlayer] = ui;   }
   UInt getMaxLatencyIncrease  (UInt tlayer)            { return m_uiMaxLatencyIncrease[tlayer];   }
   Void setMaxLatencyIncrease  ( UInt ui , UInt tlayer) { m_uiMaxLatencyIncrease[tlayer] = ui;      }
 
@@ -1150,12 +1143,7 @@ class TComSlice
 
 private:
   //  Bitstream writing
-#if HM_CLEANUP_SAO
   Bool        m_saoEnabledFlag[MAX_NUM_CHANNEL_TYPE];
-#else
-  Bool        m_saoEnabledFlag;
-  Bool        m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
-#endif
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag
   Int         m_iPOC;
@@ -1272,15 +1260,8 @@ public:
   Int       getPPSId        () { return m_iPPSId; }
   Void      setPicOutputFlag( Bool b )         { m_PicOutputFlag = b;    }
   Bool      getPicOutputFlag()                 { return m_PicOutputFlag; }
-#if HM_CLEANUP_SAO
   Void      setSaoEnabledFlag(ChannelType chType, Bool s) {m_saoEnabledFlag[chType] =s; }
   Bool      getSaoEnabledFlag(ChannelType chType) { return m_saoEnabledFlag[chType]; }
-#else
-  Void      setSaoEnabledFlag(Bool s) {m_saoEnabledFlag =s; }
-  Bool      getSaoEnabledFlag() { return m_saoEnabledFlag; }
-  Void      setSaoEnabledFlagChroma(Bool s) {m_saoEnabledFlagChroma =s; }       //!< set SAO Cb&Cr enabled flag
-  Bool      getSaoEnabledFlagChroma() { return m_saoEnabledFlagChroma; }        //!< get SAO Cb&Cr enabled flag
-#endif
   Void      setRPS          ( TComReferencePictureSet *pcRPS ) { m_pcRPS = pcRPS; }
   TComReferencePictureSet*  getRPS          () { return m_pcRPS; }
   TComReferencePictureSet*  getLocalRPS     () { return &m_LocalRPS; }

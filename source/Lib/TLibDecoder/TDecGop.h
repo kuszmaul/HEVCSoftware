@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,11 +82,6 @@ private:
   Double                m_dDecTime;
   Int                   m_decodedPictureHashSEIEnabled;  ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
 
-#if !HM_CLEANUP_SAO
-  //! list that contains the CU address of each slice plus the end address
-  std::vector<Int> m_sliceStartCUAddress;
-  std::vector<Bool> m_LFCrossSliceBoundaryFlag;
-#endif
 public:
   TDecGop();
   virtual ~TDecGop();

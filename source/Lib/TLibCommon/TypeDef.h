@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,10 +82,11 @@
 // Tool Switches
 // ====================================================================================================================
 
-#define HM_CLEANUP_SAO                                    1  ///< JCTVC-N0230, 1) three SAO encoder-only software bugfixes. 2) new SAO implementation without picture quadtree, fine-grained slice legacies, and other redundancies.
-#if HM_CLEANUP_SAO
+#define BUGFIX_INTRAPERIOD                                1
+
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
-#endif
+
+#define FIX1172 1 ///< fix ticket #1172
 
 #define MAX_NUM_PICS_IN_SOP                            1024
 
@@ -117,10 +118,6 @@
 
 #define C1FLAG_NUMBER                                     8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER                                     1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
-
-#if !HM_CLEANUP_SAO
-#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3                  1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
-#endif
 
 #define SAO_ENCODING_CHOICE                               1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
@@ -252,17 +249,10 @@
 // Backwards-compatibility
 //------------------------------------------------
 
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS                      0 ///< Maintain backwards compatibility with HM's transquant lossless encoding methods
-
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
-#if !HM_CLEANUP_SAO
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_987                            0 ///< Maintain backwards compatibility with HM for ticket 987  (SAO mixing quadtree indices and components)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1082                           0 ///< Maintain backwards compatibility with HM for ticket 1082 (SAO bit depth increase (only affects operation at greater than 10-bit)
-#endif
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148                           0 ///< Maintain backwards compatibility with HM for ticket 1148 (fix for temporal layer calculation when using field coding)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1192                           1 ///< Maintain backwards compatibility with HM for ticket 1192 (Enable separate chroma channel lambdas in SAO)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH                  0 ///< Maintain backwards compatibility with HM for additional entropy coder resets in encoder inter search
+#define RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH                  1 ///< Maintain backwards compatibility with HM for additional entropy coder resets in encoder inter search
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 //------------------------------------------------
@@ -310,7 +300,11 @@
 typedef       void                Void;
 typedef       bool                Bool;
 
+#ifdef __arm__
+typedef       signed char         Char;
+#else
 typedef       char                Char;
+#endif
 typedef       unsigned char       UChar;
 typedef       short               Short;
 typedef       unsigned short      UShort;
@@ -586,8 +580,6 @@ enum SliceConstraint
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
 };
 
-#if HM_CLEANUP_SAO
-
 enum SAOMode //mode
 {
   SAO_MODE_OFF = 0,
@@ -640,27 +632,6 @@ enum SAOBOClasses
 
   NUM_SAO_BO_CLASSES = (1<<NUM_SAO_BO_CLASSES_LOG2),
 };
-#else
-
-#define NUM_DOWN_PART 4
-
-enum SAOTypeLen
-{
-  SAO_EO_LEN    = 4,
-  SAO_BO_LEN    = 4,
-  SAO_MAX_BO_CLASSES = 32
-};
-
-enum SAOType
-{
-  SAO_EO_0 = 0,
-  SAO_EO_1,
-  SAO_EO_2,
-  SAO_EO_3,
-  SAO_BO,
-  MAX_NUM_SAO_TYPE
-};
-#endif
 
 namespace Profile
 {
@@ -748,8 +719,6 @@ typedef       UInt            Distortion;        ///< distortion measurement
 /// parameters for adaptive loop filter
 class TComPicSym;
 
-#if HM_CLEANUP_SAO
-
 #define MAX_NUM_SAO_CLASSES  32  //(NUM_SAO_EO_GROUPS > NUM_SAO_BO_GROUPS)?NUM_SAO_EO_GROUPS:NUM_SAO_BO_GROUPS
 
 struct SAOOffset
@@ -779,60 +748,6 @@ private:
 
 };
 
-#else
-typedef struct _SaoQTPart
-{
-  Int         iBestType;
-  Int         iLength;
-  Int         subTypeIdx;                 ///< indicates EO class or BO band position
-  Int         iOffset[MAX_NUM_SAO_OFFSETS];
-  Int         StartCUX;
-  Int         StartCUY;
-  Int         EndCUX;
-  Int         EndCUY;
-
-  Int         PartIdx;
-  Int         PartLevel;
-  Int         PartCol;
-  Int         PartRow;
-
-  Int         DownPartsIdx[NUM_DOWN_PART];
-  Int         UpPartIdx;
-
-  Bool        bSplit;
-
-  //---- encoder only start -----//
-  Bool        bProcessed;
-  Double      dMinCost;
-  Int64       iMinDist;
-  Int         iMinRate;
-  //---- encoder only end -----//
-} SAOQTPart;
-
-typedef struct _SaoLcuParam
-{
-  Bool       mergeUpFlag;
-  Bool       mergeLeftFlag;
-  Int        typeIdx;
-  Int        subTypeIdx;                  ///< indicates EO class or BO band position
-  Int        offset[MAX_NUM_SAO_OFFSETS];
-  Int        partIdx;
-  Int        partIdxTmp;
-  Int        length;
-} SaoLcuParam;
-
-struct SAOParam
-{
-  Bool         bSaoFlag[MAX_NUM_CHANNEL_TYPE];
-  SAOQTPart*   psSaoPart[MAX_NUM_COMPONENT];
-  Int          iMaxSplitLevel;
-  Bool         oneUnitFlag[MAX_NUM_COMPONENT];
-  SaoLcuParam* saoLcuParam[MAX_NUM_COMPONENT];
-  Int          numCuInHeight;
-  Int          numCuInWidth;
-  ~SAOParam();
-};
-#endif
 
 /// parameters for deblocking filter
 typedef struct _LFCUParam

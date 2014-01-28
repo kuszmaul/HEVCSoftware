@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -221,8 +221,6 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
 
   m_pppcRDSbacCoder     = pppcRDSbacCoder;
   m_pcRDGoOnSbacCoder   = pcRDGoOnSbacCoder;
-
-  m_bUseSBACRD          = pppcRDSbacCoder ? true : false;
 
   for (UInt iDir = 0; iDir < MAX_NUM_REF_LIST_ADAPT_SR; iDir++)
   {
@@ -1385,9 +1383,6 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
   Int        bestModeId[MAX_NUM_COMPONENT] = { 0, 0, 0};
   checkTransformSkip           &= TUCompRectHasAssociatedTransformSkipFlag(rTu.getRect(COMPONENT_Y), pcCU->getSlice()->getPPS()->getTransformSkipLog2MaxSize());
   checkTransformSkip           &= (!pcCU->getCUTransquantBypass(0));
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  checkTransformSkip           &= (!((pcCU->getQP( 0 ) == 0) && (pcCU->getSlice()->getSPS()->getUseLossless())));
-#endif
 
   if ( m_pcEncCfg->getUseTransformSkipFast() )
   {
@@ -1399,10 +1394,8 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
     if(checkTransformSkip == true)
     {
       //----- store original entropy coding status -----
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
-      }
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
+
       Distortion singleDistTmp[MAX_NUM_CHANNEL_TYPE]  = { 0, 0 };
       UInt       singleCbfTmp[MAX_NUM_COMPONENT]      = { 0, 0, 0 };
       Double     singleCostTmp                        = 0;
@@ -1458,10 +1451,7 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
           if(bestModeId[COMPONENT_Y] == firstCheckId)
           {
             xStoreIntraResultQT(COMPONENT_Y, bLumaOnly?COMPONENT_Y:COMPONENT_Cr, rTu );
-            if( m_bUseSBACRD)
-            {
-              m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
-            }
+            m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
           }
 
           if (pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation())
@@ -1502,10 +1492,8 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
           if (rTu.ProcessComponentSection(compID))
             pcCU->setCbfSubParts  ( uiSingleCbf[compID] << uiTrDepth, compID, uiAbsPartIdx, rTu.GetTransformDepthTotalAdj(compID) );
         }
-        if(m_bUseSBACRD)
-        {
-          m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
-        }
+
+        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
       }
 
       if( !bLumaOnly )
@@ -1530,7 +1518,7 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
     else
     {
       //----- store original entropy coding status -----
-      if( m_bUseSBACRD && bCheckSplit )
+      if( bCheckSplit )
       {
         m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
       }
@@ -1581,17 +1569,14 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
   if( bCheckSplit )
   {
     //----- store full entropy coding status, load original entropy coding status -----
-    if( m_bUseSBACRD )
+    if( bCheckFull )
     {
-      if( bCheckFull )
-      {
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_TEST ] );
-        m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
-      }
-      else
-      {
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
-      }
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_TEST ] );
+      m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
+    }
+    else
+    {
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
     }
     //----- code splitted block -----
     Double     dSplitCost                         = 0.0;
@@ -1630,10 +1615,8 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
       }
     }
     //----- restore context states -----
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
-    }
+    m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_ROOT ] );
+    
     //----- determine rate and r-d cost -----
     UInt uiSplitBits = xGetIntraBitsQT( rTu, true, !bLumaOnly, false );
     dSplitCost       = m_pcRdCost->calcRdCost( uiSplitBits, uiSplitDist[CHANNEL_TYPE_LUMA] + uiSplitDist[CHANNEL_TYPE_CHROMA] );
@@ -1664,10 +1647,7 @@ TEncSearch::xRecurIntraCodingQT(Bool        bLumaOnly,
     }
 
     //----- set entropy coding status -----
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_TEST ] );
-    }
+    m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiFullDepth ][ CI_QT_TRAFO_TEST ] );
 
     //--- set transform index and Cbf values ---
     pcCU->setTrIdxSubParts( uiTrDepth, uiAbsPartIdx, uiFullDepth );
@@ -1971,10 +1951,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
       DEBUG_STRING_NEW(sDebugBestMode)
 
       //use RDO to decide whether Cr/Cb takes TS
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiFullDepth][CI_QT_TRAFO_ROOT] );
-      }
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[uiFullDepth][CI_QT_TRAFO_ROOT] );
 
       const Bool splitIntoSubTUs = rTu.getRect(compID).width != rTu.getRect(compID).height;
 
@@ -2060,10 +2037,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
               if (!isOneMode && !isLastMode)
               {
                 xStoreIntraResultQT(compID, compID, TUIterator);
-                if( m_bUseSBACRD)
-                {
-                  m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
-                }
+                m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
               }
             }
 
@@ -2079,10 +2053,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
           xLoadIntraResultQT(compID, compID, TUIterator);
           pcCU->setCbfPartRange( singleCbfC << uiTrDepth, compID, subTUAbsPartIdx, partIdxesPerSubTU );
 
-          if(m_bUseSBACRD)
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
-          }
+          m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
         }
 
         DEBUG_STRING_APPEND(sDebug, sDebugBestMode)
@@ -2438,10 +2409,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
       DEBUG_STRING_NEW(sMode)
       // set context models
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
-      }
+      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
 
       // determine residual for partition
       Distortion uiPUDistY = 0;
@@ -2528,10 +2496,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
       DEBUG_STRING_NEW(sModeTree)
 
       // set context models
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
-      }
+      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
 
       // determine residual for partition
       Distortion uiPUDistY = 0;
@@ -2658,10 +2623,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
   }
 
   //===== reset context models =====
-  if(m_bUseSBACRD)
-  {
-    m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
-  }
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
 
   //===== set distortion (rate and r-d costs are determined later) =====
   ruiDistC                   = uiOverallDistC;
@@ -2726,17 +2688,15 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
         for( UInt uiMode = uiMinMode; uiMode < uiMaxMode; uiMode++ )
         {
           //----- restore context models -----
-          if( m_bUseSBACRD )
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
-          }
+          m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
+          
           DEBUG_STRING_NEW(sMode)
           //----- chroma coding -----
           Distortion uiDist = 0;
           pcCU->setIntraDirSubParts  ( CHANNEL_TYPE_CHROMA, uiModeList[uiMode], uiPartOffset, uiDepthCU+uiInitTrDepth );
           xRecurIntraChromaCodingQT       ( pcOrgYuv, pcPredYuv, pcResiYuv, resiLuma, uiDist, tuRecurseWithPU DEBUG_STRING_PASS_INTO(sMode) );
 
-          if( m_bUseSBACRD && pcCU->getSlice()->getPPS()->getUseTransformSkip() )
+          if( pcCU->getSlice()->getPPS()->getUseTransformSkip() )
           {
             m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
           }
@@ -2824,10 +2784,7 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
     }
   }
 
-  if( m_bUseSBACRD )
-  {
-    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
-  }
+  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
 }
 
 
@@ -2919,10 +2876,7 @@ Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcP
 
   dCost = m_pcRdCost->calcRdCost( uiBits, uiDistortion );
 
-  if(m_bUseSBACRD)
-  {
-    m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
-  }
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
 
   pcCU->getTotalBits()       = uiBits;
   pcCU->getTotalCost()       = dCost;
@@ -5099,11 +5053,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
                                                pcYuvOrg->getStride(compID), uiWidth >> csx, uiHeight >> csy, compID);
     }
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
-    }
-
+    m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
     m_pcEntropyCoder->resetBits();
 
     if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
@@ -5119,10 +5069,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     pcCU->getTotalDistortion() = uiDistortion;
     pcCU->getTotalCost()       = m_pcRdCost->calcRdCost( uiBits, uiDistortion );
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_TEMP_BEST]);
-    }
+    m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_TEMP_BEST]);
 
     static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
     pcCU->setCbfSubParts( cbfZero, 0, pcCU->getDepth( 0 ) );
@@ -5167,10 +5114,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     dCost = 0.;
     uiBits = 0;
     uiDistortion = 0;
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_CURR_BEST ] );
-    }
+
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_CURR_BEST ] );
 
     Distortion uiZeroDistortion = 0;
 
@@ -5224,10 +5169,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       xSetResidualQTData( NULL, false, tuLevel0); // Call first time to set coefficients.
     }
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-    }
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
 
     uiBits = 0;
     {
@@ -5273,10 +5215,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       uiDistortionBest = uiDistortion;
       dCostBest        = dCost;
       qpBest           = qp;
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-      }
+
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
     }
   }
 
@@ -5284,12 +5224,10 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
   if( qpMin != qpMax && qpBest != qpMax )
   {
-    if( m_bUseSBACRD )
-    {
-      assert( 0 ); // check
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-    }
-    // copy best cbf and trIdx to pcCU
+    assert( 0 ); // check
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
+
+      // copy best cbf and trIdx to pcCU
     const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
     ::memcpy( pcCU->getTransformIdx(),       m_puhQTTempTrIdx,  uiQPartNum * sizeof(UChar) );
     for(UInt i=0; i<pcCU->getPic()->getNumberValidComponents(); i++)
@@ -5388,10 +5326,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
   UInt       bestExplicitRdpcmModeUnSplit[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{3,3}, {3,3}, {3,3}};
   Char       bestDecorrelationAlpha      [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
 
-  if( m_bUseSBACRD )
-  {
-    m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-  }
+  m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 
   if( bCheckFull )
   {
@@ -5494,10 +5429,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               const Bool isFirstMode       = (transformSkipModeId == 0) && (decorrelationModeId == 0);
               const Bool bUseDecorrelation = decorrelationModeId != 0;
 
-              if( m_bUseSBACRD )
-              {
-                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-              }
+              m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
               m_pcEntropyCoder->resetBits();
 
               pcCU->setTransformSkipPartRange(transformSkipModeId, compID, subTUAbsPartIdx, partIdxesPerSubTU);
@@ -5618,10 +5550,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               {
                 if (isFirstMode)
                 {
-                  if( m_bUseSBACRD )
-                  {
-                    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                  }
+                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
                   m_pcEntropyCoder->resetBits();
                 }
 
@@ -5771,10 +5700,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
           pcCU->setCrossComponentDecorrelationAlphaPartRange(0, compID, subTUAbsPartIdx, partIdxesPerSubTU);
 
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH
-          if (m_bUseSBACRD)
-          {
-            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-          }
+          m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
           m_pcEntropyCoder->resetBits();
           uiSingleBitsPrev = 0;
 #endif
@@ -5870,10 +5796,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
               const Double dSingleCostComp = m_pcRdCost->calcRdCost( uiSingleBitsComp[compID][subTUIndex], uiNonzeroDistComp );
 
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH
-              if (m_bUseSBACRD)
-              {
-                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-              }
+              m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 #endif
 
               uiSingleBitsPrev = 0;
@@ -5908,10 +5831,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
           else if( checkTransformSkip[compID] || isDecorrelationAvailable )
           {
 #if !RExt__BACKWARDS_COMPATIBILITY_HM_ENCODER_INTER_SEARCH
-            if (m_bUseSBACRD)
-            {
-              m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-            }
+            m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 #endif
             uiSingleBitsPrev = 0;
             m_pcEntropyCoder->resetBits();
@@ -6014,11 +5934,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 
               if (compID != COMPONENT_Cr) //NOTE: RExt - This test maintains backwards-compatibility with HM
               {
-                if (m_bUseSBACRD)
-                {
-                  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-                }
-
+                m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
                 uiSingleBitsPrev = 0;
                 m_pcEntropyCoder->resetBits();
               }
@@ -6234,11 +6150,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
       }
     }
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-    }
-
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
     m_pcEntropyCoder->resetBits();
 
     if( uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
@@ -6279,7 +6191,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
   // code sub-blocks
   if( bCheckSplit )
   {
-    if( m_bUseSBACRD && bCheckFull )
+    if( bCheckFull )
     {
       m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
       m_pcRDGoOnSbacCoder->load ( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
@@ -6354,10 +6266,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
       uiCbfAny|=uiYUVCbf;
     }
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
-    }
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
     m_pcEntropyCoder->resetBits();
 
     // when compID isn't a channel, code Cbfs:
@@ -6427,10 +6336,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
         }
       }
 
-      if( m_bUseSBACRD )
-      {
-        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
-      }
+      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_TEST ] );
     }
   }
   else
@@ -6604,11 +6510,8 @@ Void TEncSearch::xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu
 
 UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth, const ChannelType chType )
 {
-  if( m_bUseSBACRD )
-  {
-    // Reload only contexts required for coding intra mode information
-    m_pcRDGoOnSbacCoder->loadIntraDirMode( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST], chType );
-  }
+  // Reload only contexts required for coding intra mode information
+  m_pcRDGoOnSbacCoder->loadIntraDirMode( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST], chType );
 
   // Temporarily set the intra dir being tested, and only
   // for absPartIdx, since encodeIntraDirModeLuma/Chroma only use

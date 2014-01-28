@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,14 +72,6 @@ private:
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
-#if !HM_CLEANUP_SAO
-  Int*                  m_pSliceSUMap;
-  Bool*                 m_pbValidSlice;
-  Int                   m_sliceGranularityForNDBFilter;
-  Bool                  m_bIndependentSliceBoundaryForNDBFilter;
-  Bool                  m_bIndependentTileBoundaryForNDBFilter;
-  TComPicYuv*           m_pNDBFilterYuvTmp;    //!< temporary picture buffer when non-cross slice/tile boundary in-loop filtering is enabled
-#endif
   Bool                  m_bCheckLTMSB;
 
   Int                   m_numReorderPics[MAX_TLAYER];
@@ -161,23 +153,7 @@ public:
   Window&       getConformanceWindow()  { return m_conformanceWindow; }
   Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
 
-#if HM_CLEANUP_SAO
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
-#else
-  Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
-                                        ,std::vector<Bool>* LFCrossSliceBoundary
-                                        ,Int  numTiles = 1
-                                        ,Bool bNDBFilterCrossTileBoundary = true);
-
-  Void          createNonDBFilterInfoLCU(Int tileID, Int sliceID, TComDataCU* pcCU, UInt startSU, UInt endSU, Int sliceGranularyDepth, UInt picWidth, UInt picHeight);
-  Void          destroyNonDBFilterInfo();
-
-  Bool          getValidSlice                                  (Int sliceID) const {return m_pbValidSlice[sliceID];}
-  Bool          getIndependentSliceBoundaryForNDBFilter        () const            {return m_bIndependentSliceBoundaryForNDBFilter;}
-  Bool          getIndependentTileBoundaryForNDBFilter         () const            {return m_bIndependentTileBoundaryForNDBFilter; }
-  TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
-  std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
-#endif
 
   /* field coding parameters*/
 

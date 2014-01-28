@@ -3,7 +3,7 @@
 * and contributor rights, including patent rights, and no such rights are
 * granted under this license.
 *
-* Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -615,6 +615,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setLog2MinCodingBlockSize(log2MinCUSize);
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
   pcSPS->setLog2DiffMaxMinCodingBlockSize(uiCode);
+  
+  if (pcSPS->getPTL()->getGeneralPTL()->getLevelIdc() >= Level::LEVEL5)
+  {
+    assert(log2MinCUSize + pcSPS->getLog2DiffMaxMinCodingBlockSize() >= 5);
+  }
+  
   Int maxCUDepthDelta = uiCode;
   pcSPS->setMaxCUWidth  ( 1<<(log2MinCUSize + maxCUDepthDelta) );
   pcSPS->setMaxCUHeight ( 1<<(log2MinCUSize + maxCUDepthDelta) );
@@ -1092,18 +1098,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     if(sps->getUseSAO())
     {
-#if HM_CLEANUP_SAO
       READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag(CHANNEL_TYPE_LUMA, (Bool)uiCode);
-#else
-      READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
-#endif
+
       if (bChroma)
       {
-#if HM_CLEANUP_SAO
         READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, (Bool)uiCode); // NOTE: RExt - This SE is not present in slice header for 4:0:0 ?
-#else
-        READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode); // NOTE: RExt - This SE is not present in slice header for 4:0:0 ?
-#endif
       }
     }
 
@@ -1340,11 +1339,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setDeblockingFilterTcOffsetDiv2  ( 0 );
     }
 
-#if HM_CLEANUP_SAO
     Bool isSAOEnabled = rpcSlice->getSPS()->getUseSAO() && (rpcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (bChroma && rpcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA))); // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
-#else
-    Bool isSAOEnabled = (!rpcSlice->getSPS()->getUseSAO())?(false):(rpcSlice->getSaoEnabledFlag()||(bChroma && rpcSlice->getSaoEnabledFlagChroma())); // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
-#endif
     Bool isDBFEnabled = (!rpcSlice->getDeblockingFilterDisable());
 
     if(rpcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))

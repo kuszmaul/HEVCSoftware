@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -587,7 +587,18 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   std::string *psDebug=(DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) ? &sDebug : 0;
 #endif
 
-  m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
+  if (pcCU->getCbf(uiAbsPartIdx, compID, rTu.GetTransformDepthRel()) != 0)
+  {
+    m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
+  }
+  else
+  {
+    for (UInt y = 0; y < uiHeight; y++)
+      for (UInt x = 0; x < uiWidth; x++)
+      {
+        piResi[(y * uiStride) + x] = 0;
+      }
+  }
 
 #ifdef DEBUG_STRING
   if (psDebug)

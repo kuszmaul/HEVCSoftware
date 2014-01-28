@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define FIX827 1 ///< Fix for issue #827: CABAC init tables
-#define FIX712 1 ///< Fix for issue #712: CABAC init tables
 
 // ====================================================================================================================
 // Constants
@@ -57,7 +55,6 @@
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
 #define NUM_PART_SIZE_CTX             4       ///< number of context models for partition size
-#define NUM_CU_AMP_CTX                1       ///< number of context models for partition size (AMP)
 #define NUM_PRED_MODE_CTX             1       ///< number of context models for prediction mode
 
 #define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
@@ -141,7 +138,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_QT_CBF_CTX_SETS           2
 
-#define NUM_QT_CBF_CTX_PER_SET        5       ///< number of context models for QT CBF
+#define NUM_QT_CBF_CTX_PER_SET        4       ///< number of context models for QT CBF
 
 #define FIRST_CBF_CTX_LUMA            0       ///< index of first luminance CBF context
 
@@ -150,7 +147,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 //--------------------------------------------------------------------------------------------------
 
-#define NUM_MVP_IDX_CTX               2       ///< number of context models for MVP index
+#define NUM_MVP_IDX_CTX               1       ///< number of context models for MVP index
 
 #define NUM_SAO_MERGE_FLAG_CTX        1       ///< number of context models for SAO merge flags
 #define NUM_SAO_TYPE_IDX_CTX          1       ///< number of context models for SAO type index
@@ -215,17 +212,9 @@ INIT_MERGE_IDX_EXT[NUMBER_OF_SLICE_TYPES][NUM_MERGE_IDX_EXT_CTX] =
 static const UChar
 INIT_PART_SIZE[NUMBER_OF_SLICE_TYPES][NUM_PART_SIZE_CTX] =
 {
-  { 154,  139,  CNU,  CNU, },
-  { 154,  139,  CNU,  CNU, },
-  { 184,  CNU,  CNU,  CNU, },
-};
-
-static const UChar
-INIT_CU_AMP_POS[NUMBER_OF_SLICE_TYPES][NUM_CU_AMP_CTX] =
-{
-  { 154, },
-  { 154, },
-  { CNU, },
+  { 154,  139,  154, 154 },
+  { 154,  139,  154, 154 },
+  { 184,  CNU,  CNU, CNU },
 };
 
 static const UChar
@@ -288,14 +277,14 @@ INIT_DQP[NUMBER_OF_SLICE_TYPES][NUM_DELTA_QP_CTX] =
 
 //Initialisation for CBF
 
-//                                 |---------Luminance---------|
-#define BSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU,  CNU
-#define PSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU,  CNU
-#define ISLICE_LUMA_CBF_CONTEXT     111,  141,  CNU,  CNU,  CNU
-//                                 |--------Chrominance--------|
-#define BSLICE_CHROMA_CBF_CONTEXT   149,   92,  167,  CNU,  CNU
-#define PSLICE_CHROMA_CBF_CONTEXT   149,  107,  167,  CNU,  CNU
-#define ISLICE_CHROMA_CBF_CONTEXT    94,  138,  182,  CNU,  CNU
+//                                 |------Luminance------|
+#define BSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU
+#define PSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU
+#define ISLICE_LUMA_CBF_CONTEXT     111,  141,  CNU,  CNU
+//                                 |-----Chrominance-----|
+#define BSLICE_CHROMA_CBF_CONTEXT   149,   92,  167,  154
+#define PSLICE_CHROMA_CBF_CONTEXT   149,  107,  167,  154
+#define ISLICE_CHROMA_CBF_CONTEXT    94,  138,  182,  154
 
 
 static const UChar
@@ -431,9 +420,9 @@ INIT_ABS_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ABS_FLAG_CTX] =
 static const UChar
 INIT_MVP_IDX[NUMBER_OF_SLICE_TYPES][NUM_MVP_IDX_CTX] =
 {
-  { 168,  CNU, },
-  { 168,  CNU, },
-  { CNU,  CNU, },
+  { 168, },
+  { 168, },
+  { CNU, },
 };
 
 static const UChar
@@ -447,29 +436,17 @@ INIT_SAO_MERGE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SAO_MERGE_FLAG_CTX] =
 static const UChar
 INIT_SAO_TYPE_IDX[NUMBER_OF_SLICE_TYPES][NUM_SAO_TYPE_IDX_CTX] =
 {
-#if FIX827
   { 160, },
   { 185, },
   { 200, },
-#else
-  { 200, },
-  { 185, },
-  { 160, },
-#endif
 };
 
 static const UChar
 INIT_TRANS_SUBDIV_FLAG[NUMBER_OF_SLICE_TYPES][NUM_TRANS_SUBDIV_FLAG_CTX] =
 {
-#if FIX712
   { 224,  167,  122, },
   { 124,  138,   94, },
   { 153,  138,  138, },
-#else
-  { 153,  138,  138, },
-  { 124,  138,   94, },
-  { 224,  167,  122, },
-#endif
 };
 
 static const UChar

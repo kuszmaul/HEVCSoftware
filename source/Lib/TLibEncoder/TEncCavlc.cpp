@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -865,17 +865,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
     if(pcSlice->getSPS()->getUseSAO())
     {
-#if HM_CLEANUP_SAO
        WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA), "slice_sao_luma_flag" );
        if (chromaEnabled) WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA), "slice_sao_chroma_flag" );
-#else
-       WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
-       SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-       if (chromaEnabled)
-       {
-         WRITE_FLAG( (chromaEnabled ? saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA] : false), "slice_sao_chroma_flag" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0.
-       }
-#endif
     }
 
     //check if numrefidxes match the defaults. If not, override
@@ -1017,11 +1008,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
     // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
-#if HM_CLEANUP_SAO
     Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (chromaEnabled && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA)));
-#else
-    Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag() || (chromaEnabled && pcSlice->getSaoEnabledFlagChroma()));
-#endif
     Bool isDBFEnabled = (!pcSlice->getDeblockingFilterDisable());
 
     if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -173,7 +173,7 @@ public:
 
 private:
 
-  Void xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu );
+  Void xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU );
 
 public:
   Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP );

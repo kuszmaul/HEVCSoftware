@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -100,6 +100,10 @@ TEncGOP::TEncGOP()
   m_lastBPSEI         = 0;
   xResetNonNestedSEIPresentFlags();
   xResetNestedSEIPresentFlags();
+#if FIX1172
+  m_associatedIRAPType = NAL_UNIT_CODED_SLICE_IDR_N_LP;
+  m_associatedIRAPPOC  = 0;
+#endif
   return;
 }
 
@@ -438,7 +442,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       continue;
     }
 
-    if( getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
+    if( getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType(pocCurr, m_iLastIDR, isField) == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
       m_iLastIDR = pocCurr;
     }
@@ -500,8 +504,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType(P_SLICE);
     }
+    if(pcSlice->getSliceType()==B_SLICE&&m_pcCfg->getGOPEntry(iGOPid).m_sliceType=='I')
+    {
+      pcSlice->setSliceType(I_SLICE);
+    }
+    
     // Set the nal unit type
-    pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR));
+    pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
@@ -524,6 +533,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
+#if FIX1172
+    if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+    {
+      m_associatedIRAPType = pcSlice->getNalUnitType();
+      m_associatedIRAPPOC = pocCurr;
+    }
+    pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
+    pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
+#endif
 
     if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0) || (pcSlice->isIRAP()))
     {
@@ -532,7 +555,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
 
-    if(pcSlice->getTLayer() > 0)
+    if(pcSlice->getTLayer() > 0 
+      &&  !( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_N     // Check if not a leading picture
+          || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RADL_R
+          || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N
+          || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R )
+        )
     {
       if(pcSlice->isTemporalLayerSwitchingPoint(rcListPic) || pcSlice->getSPS()->getTemporalIdNestingFlag())
       {
@@ -939,18 +967,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice = pcPic->getSlice(0);
 
     // SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
-#if HM_CLEANUP_SAO
     if( pcSlice->getSPS()->getUseSAO() && m_pcCfg->getSaoLcuBoundary() )
     {
       m_pcSAO->getPreDBFStatistics(pcPic);
     }
-#else
-    if( m_pcCfg->getSaoLcuBasedOptimization() && m_pcCfg->getSaoLcuBoundary() )
-    {
-      m_pcSAO->resetStats();
-      m_pcSAO->calcSaoStatsCu_BeforeDblk( pcPic );
-    }
-#endif
 
     //-- Loop filter
     Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
@@ -960,28 +980,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       dblMetric(pcPic, uiNumSlices);
     }
     m_pcLoopFilter->loopFilterPic( pcPic );
-
-#if !HM_CLEANUP_SAO
-    pcSlice = pcPic->getSlice(0);
-    if(pcSlice->getSPS()->getUseSAO())
-    {
-      std::vector<Bool> LFCrossSliceBoundaryFlag;
-      for(Int s=0; s< uiNumSlices; s++)
-      {
-        LFCrossSliceBoundaryFlag.push_back(  ((uiNumSlices==1)?true:pcPic->getSlice(s)->getLFCrossSliceBoundaryFlag()) );
-      }
-      m_storedStartCUAddrForEncodingSlice.resize(uiNumSlices+1);
-      pcPic->createNonDBFilterInfo(m_storedStartCUAddrForEncodingSlice, 0, &LFCrossSliceBoundaryFlag ,pcPic->getPicSym()->getNumTiles() ,bLFCrossTileBoundary);
-    }
-
-
-    pcSlice = pcPic->getSlice(0);
-
-    if(pcSlice->getSPS()->getUseSAO())
-    {
-      m_pcSAO->createPicSaoInfo(pcPic);
-    }
-#endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////// File writing
     // Set entropy coder
@@ -1060,7 +1058,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         if ((SOPcurrPOC + deltaPOC) < m_pcCfg->getFramesToBeEncoded())
         {
           SOPcurrPOC += deltaPOC;
-          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC, m_iLastIDR);
+          SOPDescriptionSEI.m_sopDescVclNaluType[i] = getNalUnitType(SOPcurrPOC, m_iLastIDR, isField);
           SOPDescriptionSEI.m_sopDescTemporalId[i] = m_pcCfg->getGOPEntry(j).m_temporalId;
           SOPDescriptionSEI.m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(pcSlice, SOPcurrPOC, j);
           SOPDescriptionSEI.m_sopDescPocDelta[i] = deltaPOC;
@@ -1530,7 +1528,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             {
               m_pcEntropyCoder->resetEntropy();
               m_pcEntropyCoder->setBitstream( m_pcBitCounter );
-#if HM_CLEANUP_SAO
               Bool sliceEnabled[MAX_NUM_COMPONENT];
               m_pcSAO->initRDOCabacCoder(m_pcEncTop->getRDGoOnSbacCoder(), pcSlice);
               m_pcSAO->SAOProcess(pcPic
@@ -1549,35 +1546,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 assert(sliceEnabled[COMPONENT_Cb] == sliceEnabled[COMPONENT_Cr]);
                 pcPic->getSlice(s)->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, sliceEnabled[COMPONENT_Cb]);
               }
-#else
-              m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
-              SAOParam& cSaoParam = *pcSlice->getPic()->getPicSym()->getSaoParam();
-
-#if SAO_ENCODING_CHOICE
-              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdas(), pcPic->getSlice(0)->getDepth());
-#else
-              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdas());
-#endif
-              m_pcSAO->endSaoEnc();
-              m_pcSAO->PCMLFDisableProcess(pcPic);
-#endif
             }
-#if !HM_CLEANUP_SAO
-#if SAO_RDO
-            m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, pcSlice );
-#endif
-#endif
+
             processingState = ENCODE_SLICE;
-
-#if !HM_CLEANUP_SAO
-            for(Int s=0; s< uiNumSlices; s++)
-            {
-              if (pcSlice->getSPS()->getUseSAO())
-              {
-                pcPic->getSlice(s)->setSaoEnabledFlag((pcSlice->getPic()->getPicSym()->getSaoParam()->bSaoFlag[CHANNEL_TYPE_LUMA]==1)?true:false);
-              }
-            }
-#endif
           }
           break;
         default:
@@ -1588,14 +1559,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           }
         }
       } // end iteration over slices
-
-#if !HM_CLEANUP_SAO
-      if(pcSlice->getSPS()->getUseSAO())
-      {
-        m_pcSAO->destroyPicSaoInfo();
-        pcPic->destroyNonDBFilterInfo();
-      }
-#endif
 
       pcPic->compressMotion();
 
@@ -1664,7 +1627,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
 
       //In case of field coding, compute the interlaced PSNR for both fields
-      if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)))
+      if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)) && (pcPic->getPOC()%m_iGopSize != 1))
       {
         //get complementary top field
 
@@ -1675,6 +1638,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         TComPic* pcPicFirstField = *(iterPic);
         xCalculateInterlacedAddPSNR(pcPicFirstField, pcPic, pcPicFirstField->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
+      }
+      else if (isField && pcPic->getPOC()!= 0 && (pcPic->getPOC()%m_iGopSize == 0))
+      {
+        //get complementary bottom field
+
+        TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
+        while ((*iterPic)->getPOC() != pcPic->getPOC()+1)
+        {
+          iterPic ++;
+        }
+        TComPic* pcPicFirstField = *(iterPic);
+        xCalculateInterlacedAddPSNR(pcPic, pcPicFirstField, pcPic->getPicYuvRec(), pcPicFirstField->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
       }
 
       if (!digestStr.empty())
@@ -1972,18 +1947,6 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
   m_pcEntropyCoder->setEntropyCoder ( m_pcEncTop->getRDGoOnSbacCoder(), pcSlice );
   m_pcEntropyCoder->resetEntropy    ();
   m_pcEntropyCoder->setBitstream    ( m_pcBitCounter );
-#if !HM_CLEANUP_SAO
-  pcSlice = pcPic->getSlice(0);
-  if(pcSlice->getSPS()->getUseSAO())
-  {
-    std::vector<Bool> LFCrossSliceBoundaryFlag(1, true);
-    std::vector<Int>  sliceStartAddress;
-    sliceStartAddress.push_back(0);
-    sliceStartAddress.push_back(pcPic->getNumCUsInFrame()* pcPic->getNumPartInCU());
-    pcPic->createNonDBFilterInfo(sliceStartAddress, 0, &LFCrossSliceBoundaryFlag);
-    pcPic->destroyNonDBFilterInfo();
-  }
-#endif
 
   m_pcEntropyCoder->resetEntropy    ();
   ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -2348,13 +2311,13 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
  * \returns the nal unit type of the picture
  * This function checks the configuration and returns the appropriate nal_unit_type for the picture.
  */
-NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR)
+NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)
 {
   if (pocCurr == 0)
   {
     return NAL_UNIT_CODED_SLICE_IDR_W_RADL;
   }
-  if (pocCurr % m_pcCfg->getIntraPeriod() == 0)
+  if ((pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
   {
     if (m_pcCfg->getDecodingRefreshType() == 1)
     {
