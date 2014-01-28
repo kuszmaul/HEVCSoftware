@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,9 +66,7 @@ TComPicSym::TComPicSym()
 ,m_puiCUOrderMap(0)
 ,m_puiTileIdxMap(NULL)
 ,m_puiInverseCUOrderMap(NULL)
-#if HM_CLEANUP_SAO
 ,m_saoBlkParams(NULL)
-#endif
 {}
 
 
@@ -125,11 +123,7 @@ Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPic
     m_puiInverseCUOrderMap[i] = i;
   }
 
-#if HM_CLEANUP_SAO
   m_saoBlkParams = new SAOBlkParam[m_uiNumCUsInFrame];
-#else
-  m_saoParam = NULL;
-#endif
 }
 
 Void TComPicSym::destroy()
@@ -170,19 +164,10 @@ Void TComPicSym::destroy()
   delete [] m_puiInverseCUOrderMap;
   m_puiInverseCUOrderMap = NULL;
 
-#if HM_CLEANUP_SAO
   if(m_saoBlkParams)
   {
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
-#else
-  if (m_saoParam)
-  {
-    TComSampleAdaptiveOffset::freeSaoParam(m_saoParam);
-    delete m_saoParam;
-    m_saoParam = NULL;
-  }
-#endif
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -321,7 +306,6 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
   return uiNxtCUAddr;
 }
 
-#if HM_CLEANUP_SAO
 Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
                                                       Bool& isLeftAvail,
                                                       Bool& isRightAvail,
@@ -392,27 +376,27 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
       //above-right
       if(ctuAboveRigtht != NULL)
       {
-        Int curSliceStartTS  = getCUOrderMap(ctuCurr->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
-        Int aboveRigthtSliceStartTS = getCUOrderMap(ctuAboveRigtht->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
+        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
+        Int aboveRigthtSliceStartEncOrder = ctuAboveRigtht->getSlice()->getSliceCurStartCUAddr();
 
-        isAboveRightAvail = (curSliceStartTS == aboveRigthtSliceStartTS)?(true):
+        isAboveRightAvail = (curSliceStartEncOrder == aboveRigthtSliceStartEncOrder)?(true):
           (
-          (curSliceStartTS > aboveRigthtSliceStartTS)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          (curSliceStartEncOrder > aboveRigthtSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
           :(ctuAboveRigtht->getSlice()->getLFCrossSliceBoundaryFlag())
-          );
+          );          
       }
       //below-left
       if(ctuBelowLeft != NULL)
       {
-        Int curSliceStartTS       = getCUOrderMap(ctuCurr->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
-        Int belowLeftSliceStartTS = getCUOrderMap(ctuBelowLeft->getSlice()->getSliceCurStartCUAddr()/m_uiNumPartitions);
+        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
+        Int belowLeftSliceStartEncOrder = ctuBelowLeft->getSlice()->getSliceCurStartCUAddr();
 
-        isBelowLeftAvail = (curSliceStartTS == belowLeftSliceStartTS)?(true):
+        isBelowLeftAvail = (curSliceStartEncOrder == belowLeftSliceStartEncOrder)?(true):
           (
-          (curSliceStartTS > belowLeftSliceStartTS)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          (curSliceStartEncOrder > belowLeftSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
           :(ctuBelowLeft->getSlice()->getLFCrossSliceBoundaryFlag())
           );
-      }
+      }        
     }
 
     if(!isLoopFiltAcrossTilePPS)
@@ -429,13 +413,7 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
   }
 
 }
-#else
-Void TComPicSym::allocSaoParam(TComSampleAdaptiveOffset *sao)
-{
-  m_saoParam = new SAOParam;
-  sao->allocSaoParam(m_saoParam);
-}
-#endif
+
 
 TComTile::TComTile()
 {

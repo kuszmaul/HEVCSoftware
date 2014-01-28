@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,14 +56,6 @@ Void TEncEntropy::setEntropyCoder ( TEncEntropyIf* e, TComSlice* pcSlice )
 
 Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
 {
-#if !HM_CLEANUP_SAO
-  if (pcSlice->getSPS()->getUseSAO())
-  {
-    SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-    pcSlice->setSaoEnabledFlag       (saoParam->bSaoFlag[CHANNEL_TYPE_LUMA]);
-    pcSlice->setSaoEnabledFlagChroma (saoParam->bSaoFlag[CHANNEL_TYPE_CHROMA]);
-  }
-#endif
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
   return;
 }
@@ -714,109 +706,6 @@ Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int 
 
   m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, heightAtEntropyCoding, chType );
 }
-
-#if !HM_CLEANUP_SAO
-/** Encode SAO Offset
- * \param  saoLcuParam SAO LCU paramters
- */
-Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, const ComponentID compID )
-{
-  UInt uiSymbol;
-  Int i;
-
-  uiSymbol = saoLcuParam->typeIdx + 1;
-
-  if (compID != COMPONENT_Cr)
-  {
-    m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
-  }
-
-  if (uiSymbol)
-  {
-    if (saoLcuParam->typeIdx < 4 && compID != COMPONENT_Cr)
-    {
-      saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
-    }
-
-    Int offsetTh = 1 << min(g_bitDepth[toChannelType(compID)] - 5,5);
-
-    if( saoLcuParam->typeIdx == SAO_BO )
-    {
-      for( i=0; i< saoLcuParam->length; i++)
-      {
-        UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
-        m_pcEntropyCoderIf->codeSaoMaxUvlc(absOffset, offsetTh-1);
-      }
-      for( i=0; i< saoLcuParam->length; i++)
-      {
-        if (saoLcuParam->offset[i] != 0)
-        {
-          UInt sign = (saoLcuParam->offset[i] < 0) ? 1 : 0 ;
-          m_pcEntropyCoderIf->codeSAOSign(sign);
-        }
-      }
-      uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
-      m_pcEntropyCoderIf->codeSaoUflc(5, uiSymbol);
-    }
-    else if( saoLcuParam->typeIdx < 4 )
-    {
-      m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[0], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[1], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[2], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[3], offsetTh-1);
-
-      if (compID != COMPONENT_Cr)
-      {
-        uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
-        m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
-      }
-    }
-  }
-}
-
-
-/** Encode SAO unit interleaving
-* \param  rx
-* \param  ry
-* \param  pSaoParam
-* \param  pcCU
-* \param  iCUAddrInSlice
-* \param  iCUAddrUpInSlice
-* \param  bLFCrossSliceBoundaryFlag
- */
-
-Void TEncEntropy::encodeSaoUnitInterleaving(ComponentID compID, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
-{
-  if (saoFlag)
-  {
-    if (rx>0 && cuAddrInSlice!=0 && allowMergeLeft)
-    {
-      m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeLeftFlag);
-    }
-    else
-    {
-      saoLcuParam->mergeLeftFlag = 0;
-    }
-    if (saoLcuParam->mergeLeftFlag == 0)
-    {
-      if ( (ry > 0) && (cuAddrUpInSlice>=0) && allowMergeUp )
-      {
-        m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeUpFlag);
-      }
-      else
-      {
-        saoLcuParam->mergeUpFlag = 0;
-      }
-      if (!saoLcuParam->mergeUpFlag)
-      {
-        encodeSaoOffset(saoLcuParam, compID);
-      }
-    }
-  }
-}
-
-
-#endif
 
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {

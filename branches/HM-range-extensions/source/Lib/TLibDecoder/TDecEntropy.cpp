@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -384,7 +384,7 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
 }
 
 
-Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
+Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU )
 {
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
@@ -411,7 +411,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
   }
   else if( (pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && (pcCU->isInter(uiAbsPartIdx)) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ) && (uiDepth == pcCU->getDepth(uiAbsPartIdx)) )
   {
-    uiSubdiv = (uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx));
+    uiSubdiv = (uiLog2TrafoSize >quadtreeTULog2MinSizeInCU);
   }
   else if( uiLog2TrafoSize > pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() )
   {
@@ -421,13 +421,13 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
   {
     uiSubdiv = 0;
   }
-  else if( uiLog2TrafoSize == pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
+  else if( uiLog2TrafoSize == quadtreeTULog2MinSizeInCU )
   {
     uiSubdiv = 0;
   }
   else
   {
-    assert( uiLog2TrafoSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+    assert( uiLog2TrafoSize > quadtreeTULog2MinSizeInCU );
     m_pcEntropyDecoderIf->parseTransformSubdivFlag( uiSubdiv, 5 - uiLog2TrafoSize );
   }
 
@@ -460,7 +460,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu )
 
     do
     {
-      xDecodeTransform( bCodeDQP, tuRecurseChild );
+      xDecodeTransform( bCodeDQP, tuRecurseChild, quadtreeTULog2MinSizeInCU );
       UInt childTUAbsPartIdx=tuRecurseChild.GetAbsPartIdxTU();
       for(UInt ch=0; ch<numValidComponent; ch++)
       {
@@ -628,7 +628,9 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);
 #endif
 
-  xDecodeTransform( bCodeDQP, tuRecurse );
+  Int quadtreeTULog2MinSizeInCU = pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx);
+  
+  xDecodeTransform( bCodeDQP, tuRecurse, quadtreeTULog2MinSizeInCU );
 }
 
 //! \}

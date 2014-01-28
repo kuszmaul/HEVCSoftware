@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,14 +123,10 @@ TComSlice::TComSlice()
   resetWpScaling();
   initWpAcDcParam();
 
-#if HM_CLEANUP_SAO
   for(Int ch=0; ch < MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_saoEnabledFlag[ch] = false;
   }
-#else
-  m_saoEnabledFlag = false;
-#endif
 }
 
 TComSlice::~TComSlice()
@@ -591,7 +587,9 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
 Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic* rpcPic;
+#if !FIX1172
   setAssociatedIRAPPOC(pocCRA);
+#endif
   Int      pocCurr = getPOC();
 
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -724,6 +722,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_sliceSegmentCurEndCUAddr      = pSrc->m_sliceSegmentCurEndCUAddr;
   m_nextSlice                     = pSrc->m_nextSlice;
   m_nextSliceSegment              = pSrc->m_nextSliceSegment;
+
   for ( UInt e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( UInt n=0 ; n<MAX_NUM_REF ; n++ )
@@ -731,15 +730,12 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(WPScalingParam)*MAX_NUM_COMPONENT );
     }
   }
-#if HM_CLEANUP_SAO
+
   for( UInt ch = 0 ; ch < MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_saoEnabledFlag[ch] = pSrc->m_saoEnabledFlag[ch];
   }
-#else
-  m_saoEnabledFlag = pSrc->m_saoEnabledFlag;
-  m_saoEnabledFlagChroma = pSrc->m_saoEnabledFlagChroma;
-#endif
+
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 
@@ -868,6 +864,12 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
+#if BUGFIX_INTRAPERIOD
+    if(!rpcPic->getReconMark())
+    {
+      continue;
+    }
+#endif
     if (rpcPic->getPOC() == this->getPOC())
     {
       continue;
@@ -911,18 +913,18 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
 
     // When a picture is a leading picture, it shall precede, in decoding order,
     // all trailing pictures that are associated with the same IRAP picture.
-    if(nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N ||
-       nalUnitType == NAL_UNIT_CODED_SLICE_RASL_R ||
-       nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N ||
-       nalUnitType == NAL_UNIT_CODED_SLICE_RADL_R)
-    {
-      if(rpcPic->getSlice(0)->getAssociatedIRAPPOC() == this->getAssociatedIRAPPOC())
+      if(nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N ||
+         nalUnitType == NAL_UNIT_CODED_SLICE_RASL_R ||
+         nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N ||
+         nalUnitType == NAL_UNIT_CODED_SLICE_RADL_R)
       {
-        // rpcPic is a picture that preceded the leading in decoding order since it exist in the DPB
-        // rpcPic would violate the constraint if it was a trailing picture
-        assert(rpcPic->getPOC() <= this->getAssociatedIRAPPOC());
+        if(rpcPic->getSlice(0)->getAssociatedIRAPPOC() == this->getAssociatedIRAPPOC())
+        {
+          // rpcPic is a picture that preceded the leading in decoding order since it exist in the DPB
+          // rpcPic would violate the constraint if it was a trailing picture
+          assert(rpcPic->getPOC() <= this->getAssociatedIRAPPOC());
+        }
       }
-    }
 
     // Any RASL picture associated with a CRA or BLA picture shall precede any
     // RADL picture associated with the CRA or BLA picture in output order
@@ -1425,7 +1427,6 @@ TComSPS::TComSPS()
 , m_uiPCMLog2MinSize          (  7)
 , m_useExtendedPrecision      (false)
 , m_useIntraBlockCopy         (false)
-, m_useLossless               (false)
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)

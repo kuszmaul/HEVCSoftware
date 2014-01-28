@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,11 +106,7 @@ private:
   UInt*         m_puiTileIdxMap;       //the map of the tile index relative to LCU raster scan address
   UInt*         m_puiInverseCUOrderMap;
 
-#if HM_CLEANUP_SAO
   SAOBlkParam *m_saoBlkParams;
-#else
-  SAOParam *m_saoParam;
-#endif
 
 public:
   Void        create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
@@ -148,13 +144,8 @@ public:
   Void         xCreateTComTileArray();
   Void         xInitTiles();
   UInt         xCalculateNxtCUAddr( UInt uiCurrCUAddr );
-#if HM_CLEANUP_SAO
   SAOBlkParam* getSAOBlkParam() { return m_saoBlkParams;}
   Void deriveLoopFilterBoundaryAvailibility(Int ctu, Bool& isLeftAvail,Bool& isRightAvail,Bool& isAboveAvail,Bool& isBelowAvail,Bool& isAboveLeftAvail,Bool& isAboveRightAvail,Bool& isBelowLeftAvail,Bool& isBelowRightAvail);
-#else
-  Void allocSaoParam(TComSampleAdaptiveOffset *sao);
-  SAOParam *getSaoParam() { return m_saoParam; }
-#endif
 
 
 };// END CLASS DEFINITION TComPicSym

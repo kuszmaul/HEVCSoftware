@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,46 +53,6 @@
 
 //! \ingroup TLibCommon
 //! \{
-
-#if !HM_CLEANUP_SAO
-// ====================================================================================================================
-// Non-deblocking in-loop filter processing block data structure
-// ====================================================================================================================
-
-/// Non-deblocking filter processing block border tag
-enum NDBFBlockBorderTag
-{
-  SGU_L = 0,
-  SGU_R,
-  SGU_T,
-  SGU_B,
-  SGU_TL,
-  SGU_TR,
-  SGU_BL,
-  SGU_BR,
-  NUM_SGU_BORDER
-};
-
-/// Non-deblocking filter processing block information
-struct NDBFBlockInfo
-{
-  Int   tileID;   //!< tile ID
-  Int   sliceID;  //!< slice ID
-  UInt  startSU;  //!< starting SU z-scan address in LCU
-  UInt  endSU;    //!< ending SU z-scan address in LCU
-  UInt  widthSU;  //!< number of SUs in width
-  UInt  heightSU; //!< number of SUs in height
-  UInt  posX;     //!< top-left X coordinate in picture
-  UInt  posY;     //!< top-left Y coordinate in picture
-  UInt  width;    //!< number of pixels in width
-  UInt  height;   //!< number of pixels in height
-  Bool  isBorderAvailable[NUM_SGU_BORDER];  //!< the border availabilities
-  Bool  allBordersAvailable;
-
-  NDBFBlockInfo():tileID(0), sliceID(0), startSU(0), endSU(0) {} //!< constructor
-  const NDBFBlockInfo& operator= (const NDBFBlockInfo& src);  //!< "=" operator
-};
-#endif
 
 class TComTU; // forward declaration
 
@@ -153,11 +113,6 @@ private:
 #endif
 
   Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
-
-#if !HM_CLEANUP_SAO
-  Int*           m_piSliceSUMap;       ///< pointer of slice ID map
-  std::vector<NDBFBlockInfo> m_vNDFBlock;
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
@@ -399,23 +354,6 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-
-#if !HM_CLEANUP_SAO
-  /// get slice ID for SU
-  Int           getSUSliceID          (UInt uiIdx)              {return m_piSliceSUMap[uiIdx];      }
-
-  /// get the pointer of slice ID map
-  Int*          getSliceSUMap         ()                        {return m_piSliceSUMap;             }
-
-  /// set the pointer of slice ID map
-  Void          setSliceSUMap         (Int *pi)                 {m_piSliceSUMap = pi;               }
-
-  std::vector<NDBFBlockInfo>* getNDBFilterBlocks()      {return &m_vNDFBlock;}
-  Void setNDBFilterBlockBorderAvailability(UInt numLCUInPicWidth, UInt numLCUInPicHeight, UInt numSUInLCUWidth, UInt numSUInLCUHeight, UInt picWidth, UInt picHeight
-                                          ,std::vector<Bool>& LFCrossSliceBoundary
-                                          ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
-                                          ,Bool bIndependentTileBoundaryEnabled );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information

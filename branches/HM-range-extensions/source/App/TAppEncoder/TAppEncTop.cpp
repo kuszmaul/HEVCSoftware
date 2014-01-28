@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -149,28 +149,15 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseAdaptQpSelect             ( m_bUseAdaptQpSelect   );
 #endif
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  Int lowestQP;
-  lowestQP =  - 6*(g_bitDepth[CHANNEL_TYPE_LUMA] - 8); // XXX: check
-
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
-  {
-    m_bUseAdaptiveQP = false;
-  }
-#endif
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   m_cTEncTop.setUseExtendedPrecision         ( m_useExtendedPrecision );
   m_cTEncTop.setUseIntraBlockCopy            ( m_useIntraBlockCopy );
   m_cTEncTop.setUseHighPrecisionPredictionWeighting( m_useHighPrecisionPredictionWeighting );
   //====== Tool list ========
-  m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  m_cTEncTop.setUseLossless                  ( m_useLossless );
-#endif
   m_cTEncTop.setdQPs                         ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
@@ -241,9 +228,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
-#if !HM_CLEANUP_SAO
-  m_cTEncTop.setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
-#endif
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag);
 
@@ -318,11 +302,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setInitialQP           ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP        ( m_RCForceIntraQP );
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
-#else
   m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
-#endif
   m_cTEncTop.setCostMode(m_costMode);
   m_cTEncTop.setUseRecalculateQPAccordingToLambda( m_recalculateQPAccordingToLambda );
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );

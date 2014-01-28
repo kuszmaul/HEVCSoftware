@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -358,7 +358,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
 
   // Profile and level
-  ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for FDIS main), main10 (for FDIS main10), main-still-picture, rext-dev (for Range Extensions Development profile) or none")
+  ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for main), main10 (for main10), main-still-picture, main-RExt (for Range Extensions profile) or none")
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1, or none")
   ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level (main or high only)")
 
@@ -422,8 +422,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("RDOQ",                          m_useRDOQ,                  true )
   ("RDOQTS",                        m_useRDOQTS,                true )
   ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
-  // Entropy coding parameters
-  ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
 
   // Deblocking filter parameters
   ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
@@ -451,9 +449,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
-#if !HM_CLEANUP_SAO
-  ("SAOLcuBasedOptimization", m_saoLcuBasedOptimization, true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
-#endif
   ("SliceMode",               m_sliceMode,                0,    "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
   ("SliceArgument",           m_sliceArgument,            0,    "Depending on SliceMode being:"
                                                                 "\t1: max number of CTUs per slice"
@@ -474,9 +469,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
   ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
   ("IntraReferenceSmoothing", m_enableIntraReferenceSmoothing, true, "0: Disable use of intra reference smoothing. 1: Enable use of intra reference smoothing (not valid in V1 profiles)")
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  ("LosslessCuEnabled", m_useLossless, false)
-#endif
   ("WeightedPredP,-wpP",          m_useWeightedPred,            false,         "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",          m_useWeightedBiPred,          false,         "Use weighted (bidirectional) prediction in B slices")
   ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,       2u,          "Parallel merge estimation region")
@@ -513,11 +505,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "RCForceIntraQP",      m_RCForceIntraQP,        false, "Rate control: force intra QP to be equal to initial QP" )
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
-#else
   ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
-#endif
   ("CostMode",                       m_costMode,             COST_STANDARD_LOSSY, "Use alternative cost functions: choose between 'lossy', 'sequence_level_lossless', 'lossless' (which forces QP to " MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP) ") and 'mixed_lossless_lossy' (which used QP'=" MACRO_TO_STRING(RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for pre-estimates of transquant-bypass blocks).")
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
@@ -1356,7 +1344,7 @@ Void TAppEncCfg::xCheckParameter()
     {
       m_maxTempLayer = m_GOPList[i].m_temporalId+1;
     }
-    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P', "Slice type must be equal to B or P");
+    xConfirmPara(m_GOPList[i].m_sliceType!='B' && m_GOPList[i].m_sliceType!='P' && m_GOPList[i].m_sliceType!='I', "Slice type must be equal to B or P or I");
   }
   for(Int i=0; i<MAX_TLAYER; i++)
   {
@@ -1520,11 +1508,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_uiDeltaQpRD > 0, "Rate control cannot be used together with slice level multiple-QP optimization!\n" );
   }
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
-#else
   xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce, "CUTransquantBypassFlagForce cannot be 1 when TransquantBypassEnableFlag is 0");
-#endif
 
   xConfirmPara(m_log2ParallelMergeLevel < 2, "Log2ParallelMergeLevel should be larger than or equal to 2");
 
@@ -1674,7 +1658,6 @@ Void TAppEncCfg::xPrintParameter()
   printf("IBD:%d ", ((g_bitDepth[CHANNEL_TYPE_LUMA] > m_inputBitDepth[CHANNEL_TYPE_LUMA]) || (g_bitDepth[CHANNEL_TYPE_CHROMA] > m_inputBitDepth[CHANNEL_TYPE_CHROMA])));
 #endif
   printf("HAD:%d ", m_bUseHADME           );
-  printf("SRD:%d ", m_bUseSBACRD          );
   printf("RDQ:%d ", m_useRDOQ            );
   printf("RDQTS:%d ", m_useRDOQTS        );
   printf("RDpenalty:%d ", m_rdPenalty  );
@@ -1702,18 +1685,16 @@ Void TAppEncCfg::xPrintParameter()
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
   printf("SAO:%d ", (m_bUseSAO)?(1):(0));
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
-#if !HM_CLEANUP_SAO
-  printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
-#endif
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
-#else
   if (m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce)
+  {
     printf("TransQuantBypassEnabled: =1");
+  }
   else
+  {
     printf("TransQuantBypassEnabled:%d ", (m_TransquantBypassEnableFlag)? 1:0 );
-#endif
+  }
+
   printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);
   printf("PME:%d ", m_log2ParallelMergeLevel);

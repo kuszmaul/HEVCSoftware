@@ -3,7 +3,8 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-20123
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -102,19 +103,11 @@ Void TEncTop::create ()
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, m_chromaFormatIDC );
   if (m_bUseSAO)
   {
-#if HM_CLEANUP_SAO
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
     m_cEncSAO.createEncData(getSaoLcuBoundary());
 #else
     m_cEncSAO.createEncData();
-#endif
-#else
-    m_cEncSAO.setSaoLcuBoundary(getSaoLcuBoundary());
-    m_cEncSAO.setSaoLcuBasedOptimization(getSaoLcuBasedOptimization());
-    m_cEncSAO.setMaxNumOffsetsPerPic(getMaxNumOffsetsPerPic());
-    m_cEncSAO.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight );
-    m_cEncSAO.createEncBuffer();
 #endif
   }
 #if ADAPTIVE_QP_SELECTION
@@ -132,35 +125,31 @@ Void TEncTop::create ()
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
   }
 
-  // if SBAC-based RD optimization is used
-  if( m_bUseSBACRD )
+  m_pppcRDSbacCoder = new TEncSbac** [g_uiMaxCUDepth+1];
+#if FAST_BIT_EST
+  m_pppcBinCoderCABAC = new TEncBinCABACCounter** [g_uiMaxCUDepth+1];
+#else
+  m_pppcBinCoderCABAC = new TEncBinCABAC** [g_uiMaxCUDepth+1];
+#endif
+
+  for ( Int iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
   {
-    m_pppcRDSbacCoder = new TEncSbac** [g_uiMaxCUDepth+1];
+    m_pppcRDSbacCoder[iDepth] = new TEncSbac* [CI_NUM];
 #if FAST_BIT_EST
-    m_pppcBinCoderCABAC = new TEncBinCABACCounter** [g_uiMaxCUDepth+1];
+    m_pppcBinCoderCABAC[iDepth] = new TEncBinCABACCounter* [CI_NUM];
 #else
-    m_pppcBinCoderCABAC = new TEncBinCABAC** [g_uiMaxCUDepth+1];
+    m_pppcBinCoderCABAC[iDepth] = new TEncBinCABAC* [CI_NUM];
 #endif
 
-    for ( Int iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
+    for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
     {
-      m_pppcRDSbacCoder[iDepth] = new TEncSbac* [CI_NUM];
+      m_pppcRDSbacCoder[iDepth][iCIIdx] = new TEncSbac;
 #if FAST_BIT_EST
-      m_pppcBinCoderCABAC[iDepth] = new TEncBinCABACCounter* [CI_NUM];
+      m_pppcBinCoderCABAC [iDepth][iCIIdx] = new TEncBinCABACCounter;
 #else
-      m_pppcBinCoderCABAC[iDepth] = new TEncBinCABAC* [CI_NUM];
+      m_pppcBinCoderCABAC [iDepth][iCIIdx] = new TEncBinCABAC;
 #endif
-
-      for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
-      {
-        m_pppcRDSbacCoder[iDepth][iCIIdx] = new TEncSbac;
-#if FAST_BIT_EST
-        m_pppcBinCoderCABAC [iDepth][iCIIdx] = new TEncBinCABACCounter;
-#else
-        m_pppcBinCoderCABAC [iDepth][iCIIdx] = new TEncBinCABAC;
-#endif
-        m_pppcRDSbacCoder   [iDepth][iCIIdx]->init( m_pppcBinCoderCABAC [iDepth][iCIIdx] );
-      }
+      m_pppcRDSbacCoder   [iDepth][iCIIdx]->init( m_pppcBinCoderCABAC [iDepth][iCIIdx] );
     }
   }
 }
@@ -190,26 +179,23 @@ Void TEncTop::createWPPCoders(Int iNumSubstreams)
     m_pcRDGoOnSbacCoders[ui].init( &m_pcRDGoOnBinCodersCABAC[ui] );
     m_pcSbacCoders[ui].init( &m_pcBinCoderCABACs[ui] );
   }
-  if( m_bUseSBACRD )
+  m_ppppcRDSbacCoders      = new TEncSbac***    [iNumSubstreams];
+  m_ppppcBinCodersCABAC    = new TEncBinCABAC***[iNumSubstreams];
+  for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
   {
-    m_ppppcRDSbacCoders      = new TEncSbac***    [iNumSubstreams];
-    m_ppppcBinCodersCABAC    = new TEncBinCABAC***[iNumSubstreams];
-    for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
+    m_ppppcRDSbacCoders[ui]  = new TEncSbac** [g_uiMaxCUDepth+1];
+    m_ppppcBinCodersCABAC[ui]= new TEncBinCABAC** [g_uiMaxCUDepth+1];
+
+    for ( Int iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
     {
-      m_ppppcRDSbacCoders[ui]  = new TEncSbac** [g_uiMaxCUDepth+1];
-      m_ppppcBinCodersCABAC[ui]= new TEncBinCABAC** [g_uiMaxCUDepth+1];
+      m_ppppcRDSbacCoders[ui][iDepth]  = new TEncSbac*     [CI_NUM];
+      m_ppppcBinCodersCABAC[ui][iDepth]= new TEncBinCABAC* [CI_NUM];
 
-      for ( Int iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
+      for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
       {
-        m_ppppcRDSbacCoders[ui][iDepth]  = new TEncSbac*     [CI_NUM];
-        m_ppppcBinCodersCABAC[ui][iDepth]= new TEncBinCABAC* [CI_NUM];
-
-        for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
-        {
-          m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx] = new TEncSbac;
-          m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx] = new TEncBinCABAC;
-          m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx]->init( m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx] );
-        }
+        m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx] = new TEncSbac;
+        m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx] = new TEncBinCABAC;
+        m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx]->init( m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx] );
       }
     }
   }
@@ -223,60 +209,51 @@ Void TEncTop::destroy ()
   m_cCuEncoder.         destroy();
   if (m_cSPS.getUseSAO())
   {
-#if HM_CLEANUP_SAO
     m_cEncSAO.destroyEncData();
     m_cEncSAO.destroy();
-#else
-    m_cEncSAO.destroy();
-    m_cEncSAO.destroyEncBuffer();
-#endif
   }
   m_cLoopFilter.        destroy();
   m_cRateCtrl.          destroy();
-  // SBAC RD
-  if( m_bUseSBACRD )
+  Int iDepth;
+  for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
   {
-    Int iDepth;
+    for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
+    {
+      delete m_pppcRDSbacCoder[iDepth][iCIIdx];
+      delete m_pppcBinCoderCABAC[iDepth][iCIIdx];
+    }
+  }
+
+  for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
+  {
+    delete [] m_pppcRDSbacCoder[iDepth];
+    delete [] m_pppcBinCoderCABAC[iDepth];
+  }
+
+  delete [] m_pppcRDSbacCoder;
+  delete [] m_pppcBinCoderCABAC;
+
+  for ( UInt ui = 0; ui < m_iNumSubstreams; ui++ )
+  {
     for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
     {
       for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
       {
-        delete m_pppcRDSbacCoder[iDepth][iCIIdx];
-        delete m_pppcBinCoderCABAC[iDepth][iCIIdx];
+        delete m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx];
+        delete m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx];
       }
     }
 
     for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
     {
-      delete [] m_pppcRDSbacCoder[iDepth];
-      delete [] m_pppcBinCoderCABAC[iDepth];
+      delete [] m_ppppcRDSbacCoders  [ui][iDepth];
+      delete [] m_ppppcBinCodersCABAC[ui][iDepth];
     }
-
-    delete [] m_pppcRDSbacCoder;
-    delete [] m_pppcBinCoderCABAC;
-
-    for ( UInt ui = 0; ui < m_iNumSubstreams; ui++ )
-    {
-      for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
-      {
-        for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
-        {
-          delete m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx];
-          delete m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx];
-        }
-      }
-
-      for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
-      {
-        delete [] m_ppppcRDSbacCoders  [ui][iDepth];
-        delete [] m_ppppcBinCodersCABAC[ui][iDepth];
-      }
-      delete[] m_ppppcRDSbacCoders  [ui];
-      delete[] m_ppppcBinCodersCABAC[ui];
-    }
-    delete[] m_ppppcRDSbacCoders;
-    delete[] m_ppppcBinCodersCABAC;
+    delete[] m_ppppcRDSbacCoders  [ui];
+    delete[] m_ppppcBinCodersCABAC[ui];
   }
+  delete[] m_ppppcRDSbacCoders;
+  delete[] m_ppppcBinCodersCABAC;
   delete[] m_pcSbacCoders;
   delete[] m_pcBinCoderCABACs;
   delete[] m_pcRDGoOnSbacCoders;
@@ -440,9 +417,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTr
 
       TComPic *pcField;
       xGetNewPicBuffer( pcField );
-#if !HM_CLEANUP_SAO
-      pcField->getPicSym()->allocSaoParam(&m_cEncSAO);   // where is this normally?
-#endif
       pcField->setReconMark (false);                     // where is this normally?
 
       if (fieldNum==1)                                   // where is this normally?
@@ -548,13 +522,6 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics, false );
     }
 
-#if !HM_CLEANUP_SAO
-    if (getUseSAO())
-    {
-      rpcPic->getPicSym()->allocSaoParam(&m_cEncSAO);
-    }
-#endif
-
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->setReconMark (false);
@@ -622,9 +589,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
 
   m_cSPS.setTMVPFlagsPresent(false);
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  m_cSPS.setUseLossless   ( m_useLossless  );
-#endif
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
 
@@ -724,33 +688,10 @@ Void TEncTop::xInitPPS()
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  const Int lowestQP = - m_cSPS.getQpBDOffset(CHANNEL_TYPE_LUMA);
-
-  if (getTransquantBypassEnableFlag())
+  if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
   {
-    if ((getMaxCuDQPDepth() == 0) && (getMaxDeltaQP() == 0 ) && (getQP() == lowestQP) )
-    {
-      bUseDQP = false;
-    }
-    else
-    {
-      bUseDQP = true;
-    }
+    bUseDQP = true;
   }
-  else
-  {
-    if(bUseDQP == false)
-    {
-#endif
-      if((getMaxDeltaQP() != 0 )|| getUseAdaptiveQP())
-      {
-        bUseDQP = true;
-      }
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-    }
-  }
-#endif
 
   if (m_costMode==COST_SEQUENCE_LEVEL_LOSSLESS || m_costMode==COST_LOSSLESS_CODING) bUseDQP=false;
 

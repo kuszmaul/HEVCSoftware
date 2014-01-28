@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -405,9 +405,9 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
       for ( Int x = iWidth-1; x >= 0; x-- )
       {
 #if DISABLING_CLIP_FOR_BIPREDME
-        pDst[x ] = (pDst[x ]<<1) - pSrc[x ] ;
+        pDst[x ] = (2 * pDst[x]) - pSrc[x];
 #else
-        pDst[x ] = Clip( (pDst[x ]<<1) - pSrc[x ], chType );
+        pDst[x ] = Clip((2 * pDst[x]) - pSrc[x], chType);
 #endif
       }
       pSrc += iSrcStride;
