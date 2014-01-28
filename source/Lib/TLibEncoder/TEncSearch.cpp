@@ -3679,13 +3679,8 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
   pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
 
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   cMvd.setHor(cMv.getHor() - cMvPred.getHor());
   cMvd.setVer(cMv.getVer() - cMvPred.getVer());
-#else
-  cMvd.setHor(cMv.getHor());
-  cMvd.setVer(cMv.getVer());
-#endif
 
   pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
 
@@ -3745,28 +3740,17 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   // disable weighted prediction
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   TComMv mvPred = pcCU->getLastIntraBCMv();
-#endif
 
   TComMv        ZeroMv(0,0);
 
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
-
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_pcRdCost->setPredictor(mvPred);
-#else
-  m_pcRdCost->setPredictor(ZeroMv);
-#endif
   m_pcRdCost->setCostScale  ( 0 );
 
   //  Do integer search
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, mvPred, bUse1DSearchFor8x8 );
   *pcMvPred = mvPred;
-#else
-  xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, bUse1DSearchFor8x8 );
-#endif
 
   //printf("ruiCost = %d\n", ruiCost);
 
@@ -3819,7 +3803,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   srRight = lcuWidth - cuPelX %lcuWidth - iRoiWidth;
   srBottom = lcuHeight - cuPelY % lcuHeight - iRoiHeight;
 
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
@@ -3831,7 +3814,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   {
     srBottom = iPicHeight%lcuWidth - cuPelY % lcuHeight - iRoiHeight;
   }
-#endif
 
   rcMvSrchRngLT.setHor( srLeft );
   rcMvSrchRngLT.setVer( srTop );
@@ -3894,11 +3876,9 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
                                       TComMv      &rcMv,
                                       Distortion  &ruiSAD,
                                       Int          iRoiWidth,
-                                      Int          iRoiHeight
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
-                                    , TComMv      &mvPred
-#endif
-                                    , Bool         bUse1DSearchFor8x8
+                                      Int          iRoiHeight,
+                                      TComMv      &mvPred,
+                                      Bool         bUse1DSearchFor8x8
                                       )
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
@@ -3932,7 +3912,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     Int        iRelCUPelY    = cuPelY % lcuHeight;
     Distortion uiTempSadBest = 0;
 
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
     Int xPred = mvPred.getHor();
     Int yPred = mvPred.getVer();
 
@@ -3982,8 +3961,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         rcMv.set( iBestX, iBestY );
       }
     }
-#endif
-
 
     for(Int y = max(iSrchRngVerTop, -cuPelY); y <= -iRoiHeight; y++)
     {

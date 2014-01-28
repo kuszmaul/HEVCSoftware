@@ -124,9 +124,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   m_pcSlice            = NULL;
   m_uiNumPartition     = uiNumPartition;
   m_unitSize = unitSize;
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_lastIntraBCMv = TComMv();
-#endif
 
   if ( !bDecSubCu )
   {
@@ -339,9 +337,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcPic->getNumPartInCU();
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_lastIntraBCMv.setZero();
-#endif
 
   for(Int i=0; i<pcPic->getNumPartInCU(); i++)
   {
@@ -630,9 +626,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcCU->getTotalNumPart() >> 2;
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_lastIntraBCMv.setZero();
-#endif
 
   Int iSizeInUchar = sizeof( UChar  ) * m_uiNumPartition;
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
@@ -937,9 +931,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   Int iSizeInUchar  = sizeof( UChar ) * uiNumPartition;
   Int iSizeInBool   = sizeof( Bool  ) * uiNumPartition;
 
-#if RExt__O0122_INTRA_BLOCK_COPY_PREDICTOR
   m_lastIntraBCMv = pcCU->getLastIntraBCMv();
-#endif
 
   Int sizeInChar  = sizeof( Char ) * uiNumPartition;
   memcpy( m_skipFlag   + uiOffset, pcCU->getSkipFlag(),       sizeof( *m_skipFlag )   * uiNumPartition );
