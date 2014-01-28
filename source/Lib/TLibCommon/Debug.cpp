@@ -173,7 +173,6 @@ Void printRExtMacroSettings()
   //setting macros
 
   PRINT_CONSTANT(RExt__DECODER_DEBUG_BIT_STATISTICS,                             settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__INPUT_MSB_EXTENSION,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
 

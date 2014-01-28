@@ -56,20 +56,14 @@ class TVideoIOYuv
 private:
   fstream   m_cHandle;                                      ///< file handle
   Int       m_fileBitdepth[MAX_NUM_CHANNEL_TYPE]; ///< bitdepth of input/output video file
-#if RExt__INPUT_MSB_EXTENSION
   Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];  ///< bitdepth after addition of MSBs (with value 0)
-#endif
   Int       m_bitdepthShift[MAX_NUM_CHANNEL_TYPE];  ///< number of bits to increase or decrease image by before/after write/read
 
 public:
   TVideoIOYuv()           {}
   virtual ~TVideoIOYuv()  {}
 
-#if RExt__INPUT_MSB_EXTENSION
   Void  open  ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
-#else
-  Void  open  ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] ); ///< open or create file
-#endif
   Void  close ();                                           ///< close file
 
   Void skipFrames(UInt numFrames, UInt width, UInt height, ChromaFormat format);

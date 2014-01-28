@@ -106,22 +106,15 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  * \param fileBitDepth     bit-depth array of input/output file data.
  * \param internalBitDepth bit-depth array to scale image data to/from when reading/writing.
  */
-#if RExt__INPUT_MSB_EXTENSION
 Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
-#else
-Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
-#endif
 {
   //NOTE: RExt - files cannot have bit depth greater than 16
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_fileBitdepth       [ch] = std::min<UInt>(fileBitDepth[ch], 16);
-#if RExt__INPUT_MSB_EXTENSION
     m_MSBExtendedBitDepth[ch] = MSBExtendedBitDepth[ch];
     m_bitdepthShift      [ch] = internalBitDepth[ch] - m_MSBExtendedBitDepth[ch];
-#else
-    m_bitdepthShift      [ch] = internalBitDepth[ch] - m_fileBitdepth[ch];
-#endif
+
     if (m_fileBitdepth[ch] > 16)
     {
       if (bWriteMode)
@@ -668,11 +661,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
     const ComponentID compID = ComponentID(comp);
     const ChannelType chType=toChannelType(compID);
 
-#if RExt__INPUT_MSB_EXTENSION
     const Int desired_bitdepth = m_MSBExtendedBitDepth[chType] + m_bitdepthShift[chType];
-#else
-    const Int desired_bitdepth = m_fileBitdepth[chType] + m_bitdepthShift[chType];
-#endif
 
 #if !CLIP_TO_709_RANGE
     const Pel minval = 0;
@@ -699,11 +688,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
   Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
   for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
   {
-#if RExt__INPUT_MSB_EXTENSION
     internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-#else
-    internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
-#endif
   }
   ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, internalBitDepth, true);
 
@@ -727,11 +712,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
     for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
     {
-#if RExt__INPUT_MSB_EXTENSION
       internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-#else
-      internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
-#endif
     }
     ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, internalBitDepth, false);
   }
@@ -764,7 +745,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     {
       const ComponentID compID=ComponentID(comp);
       const ChannelType ch=toChannelType(compID);
-#if RExt__INPUT_MSB_EXTENSION
 #if !CLIP_TO_709_RANGE
       const Pel minval = 0;
       const Pel maxval = (1 << m_MSBExtendedBitDepth[ch]) - 1;
@@ -772,16 +752,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
       const Bool b709Compliance=(-m_bitdepthShift[ch] < 0 && m_MSBExtendedBitDepth[ch] >= 8);     /* ITU-R BT.709 compliant clipping for converting say 10b to 8b */
       const Pel minval = b709Compliance? ((   1 << (m_MSBExtendedBitDepth[ch] - 8))   ) : 0;
       const Pel maxval = b709Compliance? ((0xff << (m_MSBExtendedBitDepth[ch] - 8)) -1) : (1 << m_MSBExtendedBitDepth[ch]) - 1;
-#endif
-#else
-#if !CLIP_TO_709_RANGE
-      const Pel minval = 0;
-      const Pel maxval = (1 << m_fileBitdepth[ch]) - 1;
-#else
-      const Bool b709Compliance=(-m_bitdepthShift[ch] < 0 && m_fileBitdepth[ch] >= 8);     /* ITU-R BT.709 compliant clipping for converting say 10b to 8b */
-      const Pel minval = b709Compliance? ((   1 << (m_fileBitdepth[ch] - 8))   ) : 0;
-      const Pel maxval = b709Compliance? ((0xff << (m_fileBitdepth[ch] - 8)) -1) : (1 << m_fileBitdepth[ch]) - 1;
-#endif
 #endif
 
       scalePlane(dstPicYuv->getAddr(compID), dstPicYuv->getStride(compID), dstPicYuv->getWidth(compID), dstPicYuv->getHeight(compID), -m_bitdepthShift[ch], minval, maxval);
@@ -828,11 +798,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
     Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
     for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
     {
-#if RExt__INPUT_MSB_EXTENSION
       internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-#else
-      internalBitDepth[chType]=m_bitdepthShift[chType]+m_fileBitdepth[chType];
-#endif
     }
     ColourSpaceConvert(*pPicYuvUserTop,    cPicYuvTopCSCd,    ipCSC, internalBitDepth, false);
     ColourSpaceConvert(*pPicYuvUserBottom, cPicYuvBottomCSCd, ipCSC, internalBitDepth, false);
@@ -870,7 +836,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
       {
         const ComponentID compID=ComponentID(comp);
         const ChannelType ch=toChannelType(compID);
-#if RExt__INPUT_MSB_EXTENSION
 #if !CLIP_TO_709_RANGE
         const Pel minval = 0;
         const Pel maxval = (1 << m_MSBExtendedBitDepth[ch]) - 1;
@@ -878,16 +843,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
         const Bool b709Compliance=(-m_bitdepthShift[ch] < 0 && m_MSBExtendedBitDepth[ch] >= 8);     /* ITU-R BT.709 compliant clipping for converting say 10b to 8b */
         const Pel minval = b709Compliance? ((   1 << (m_MSBExtendedBitDepth[ch] - 8))   ) : 0;
         const Pel maxval = b709Compliance? ((0xff << (m_MSBExtendedBitDepth[ch] - 8)) -1) : (1 << m_MSBExtendedBitDepth[ch]) - 1;
-#endif
-#else
-#if !CLIP_TO_709_RANGE
-        const Pel minval = 0;
-        const Pel maxval = (1 << m_fileBitdepth[ch]) - 1;
-#else
-        const Bool b709Compliance=(-m_bitdepthShift[ch] < 0 && m_fileBitdepth[ch] >= 8);     /* ITU-R BT.709 compliant clipping for converting say 10b to 8b */
-        const Pel minval = b709Compliance? ((   1 << (m_fileBitdepth[ch] - 8))   ) : 0;
-        const Pel maxval = b709Compliance? ((0xff << (m_fileBitdepth[ch] - 8)) -1) : (1 << m_fileBitdepth[ch]) - 1;
-#endif
 #endif
 
         scalePlane(dstPicYuv->getAddr(compID), dstPicYuv->getStride(compID), dstPicYuv->getWidth(compID), dstPicYuv->getHeight(compID), -m_bitdepthShift[ch], minval, maxval);
