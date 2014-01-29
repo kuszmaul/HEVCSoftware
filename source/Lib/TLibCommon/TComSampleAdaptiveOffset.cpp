@@ -155,11 +155,13 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, UInt maxCUWi
   }
 
   //look-up table for clipping
+  Int overallMaxSampleValue=0;
   for(Int compIdx =0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
   {
     Int bitDepthSample = (compIdx == SAO_Y)?g_bitDepthY:g_bitDepthC; //exclusive
     Int maxSampleValue = (1<< bitDepthSample); //exclusive
-    Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]); 
+    Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]);
+    if (maxSampleValue>overallMaxSampleValue) overallMaxSampleValue=maxSampleValue;
 
     m_offsetClipTable[compIdx] = new Int[(maxSampleValue + maxOffsetValue -1)+ (maxOffsetValue)+1 ]; //positive & negative range plus 0
     m_offsetClip[compIdx] = &(m_offsetClipTable[compIdx][maxOffsetValue]);
@@ -175,20 +177,17 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, UInt maxCUWi
       *(offsetClipPtr + maxSampleValue+ k) = maxSampleValue-1;
       *(offsetClipPtr -k -1 )              = 0;
     }
-    if(compIdx == SAO_Y) //g_bitDepthY is always larger than or equal to g_bitDepthC
-    {
-      m_signTable = new Short[ 2*(maxSampleValue-1) + 1 ];
-      m_sign = &(m_signTable[maxSampleValue-1]);
+  }
 
-      m_sign[0] = 0;
-      for(Int k=1; k< maxSampleValue; k++)
-      {
-        m_sign[k] = 1;
-        m_sign[-k]= -1;
-      }
-    }
-  }  
+  m_signTable = new Short[ 2*(overallMaxSampleValue-1) + 1 ];
+  m_sign = &(m_signTable[overallMaxSampleValue-1]);
 
+  m_sign[0] = 0;
+  for(Int k=1; k< overallMaxSampleValue; k++)
+  {
+    m_sign[k] = 1;
+    m_sign[-k]= -1;
+  }
 }
 
 Void TComSampleAdaptiveOffset::destroy()
