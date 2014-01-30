@@ -185,6 +185,7 @@ Void printRExtMacroSettings()
 #if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
 #endif
+  PRINT_CONSTANT(RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT,                      settingNameWidth, settingValueWidth);
