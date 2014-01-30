@@ -242,6 +242,7 @@
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 
+#define RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT                                  1 ///< 0 = use serial arithmetic operations to code all EP bins, 1 (default) = allow (configured by command line and SPS flag) the CABAC engine to 256 prior to coding escape codes/sign bits if escape data is present in the current group
 #define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice
 #define RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT                                1 ///< 0 = do not take into account the difference in luma/chroma bit depths, 1 (default) = account for any difference between luma and chroma bit depths
 #define RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP                                 1 ///< 0 = use one context to signal the two largest values for alpha, 1 (default) = use an additional context for signalling the largest value of alpha in cross-component prediction (CCP)

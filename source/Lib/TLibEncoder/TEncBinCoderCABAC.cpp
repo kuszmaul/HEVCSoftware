@@ -252,7 +252,17 @@ Void TEncBinCABAC::encodeBinEP( UInt binValue )
     DTRACE_CABAC_V( binValue )
     DTRACE_CABAC_T( "\n" )
   }
+
   m_uiBinsCoded += m_binCountIncrement;
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  if (m_uiRange == 256)
+  {
+    encodeAlignedBinsEP(binValue, 1);
+    return;
+  }
+#endif
+
   m_uiLow <<= 1;
   if( binValue )
   {
@@ -275,14 +285,22 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
 
   if (false)
   {
-  for ( Int i = 0; i < numBins; i++ )
+    for ( Int i = 0; i < numBins; i++ )
+    {
+      DTRACE_CABAC_VL( g_nSymbolCounter++ )
+      DTRACE_CABAC_T( "\tEPsymbol=" )
+      DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
+      DTRACE_CABAC_T( "\n" )
+    }
+  }
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  if (m_uiRange == 256)
   {
-    DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T( "\tEPsymbol=" )
-    DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
-    DTRACE_CABAC_T( "\n" )
+    encodeAlignedBinsEP(binValues, numBins);
+    return;
   }
-  }
+#endif
 
   while ( numBins > 8 )
   {
@@ -302,6 +320,50 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
 
   testAndWriteOut();
 }
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+Void TEncBinCABAC::align()
+{
+  m_uiRange = 256;
+}
+
+Void TEncBinCABAC::encodeAlignedBinsEP( UInt binValues, Int numBins )
+{
+  Int binsRemaining = numBins;
+
+  assert(m_uiRange == 256); //aligned encode only works when range = 256
+
+  while (binsRemaining > 0)
+  {
+    const UInt binsToCode = std::min<UInt>(binsRemaining, 8); //code bytes if able to take advantage of the system's byte-write function
+    const UInt binMask    = (1 << binsToCode) - 1;
+
+    const UInt newBins = (binValues >> (binsRemaining - binsToCode)) & binMask;
+
+    //The process of encoding an EP bin is the same as that of coding a normal
+    //bin where the symbol ranges for 1 and 0 are both half the range:
+    //
+    //  low = (low + range/2) << 1       (to encode a 1)
+    //  low =  low            << 1       (to encode a 0)
+    //
+    //  i.e.
+    //  low = (low + (bin * range/2)) << 1
+    //
+    //  which is equivalent to:
+    //
+    //  low = (low << 1) + (bin * range)
+    //
+    //  this can be generalised for multiple bins, producing the following expression:
+    //
+    m_uiLow = (m_uiLow << binsToCode) + (newBins << 8); //range is known to be 256
+
+    binsRemaining -= binsToCode;
+    m_bitsLeft    -= binsToCode;
+
+    testAndWriteOut();
+  }
+}
+#endif
 
 /**
  * \brief Encode terminating bin

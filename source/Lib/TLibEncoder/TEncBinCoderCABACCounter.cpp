@@ -129,6 +129,13 @@ Void TEncBinCABACCounter::encodeBinTrm( UInt binValue )
   m_fracBits += ContextModel::getEntropyBitsTrm( binValue );
 }
 
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+Void TEncBinCABACCounter::align()
+{
+  m_fracBits = (m_fracBits + 32767) & (~32767);
+}
+#endif
+
 //! \}
 #endif
 

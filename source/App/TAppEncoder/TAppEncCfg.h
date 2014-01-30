@@ -119,6 +119,9 @@ protected:
   Bool      m_useGolombRiceGroupAdaptation;                   ///< control flag for partial retention of Golomb-Rice parameter from one group to the next
 #endif
 #endif
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  Bool      m_alignCABACBeforeBypass;
+#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
