@@ -186,6 +186,7 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitStream.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComCABACTables.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComChromaFormat.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComCodingStatistics.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDataCU.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
