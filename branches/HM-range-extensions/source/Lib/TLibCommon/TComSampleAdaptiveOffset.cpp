@@ -164,6 +164,8 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
     g_saoMaxOffsetQVal[compIdx] = (1<<(min(bitDepthSample,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; //Table 9-32, inclusive
   }
 
+  Int allComponentMaximumSampleValue = 0;
+
   //look-up table for clipping
   for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
@@ -185,18 +187,18 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
       *(offsetClipPtr + maxSampleValue+ k) = maxSampleValue-1;
       *(offsetClipPtr -k -1 )              = 0;
     }
-    if(compIdx == COMPONENT_Y) //g_bitDepthY is always larger than or equal to g_bitDepthC
-    {
-      m_signTable = new Short[ 2*(maxSampleValue-1) + 1 ];
-      m_sign = &(m_signTable[maxSampleValue-1]);
 
-      m_sign[0] = 0;
-      for(Int k=1; k< maxSampleValue; k++)
-      {
-        m_sign[k] = 1;
-        m_sign[-k]= -1;
-      }
-    }
+    if (maxSampleValue > allComponentMaximumSampleValue) allComponentMaximumSampleValue = maxSampleValue;
+  }
+
+  m_signTable = new Short[ 2*(allComponentMaximumSampleValue-1) + 1 ];
+  m_sign = &(m_signTable[allComponentMaximumSampleValue-1]);
+
+  m_sign[0] = 0;
+  for(Int k=1; k< allComponentMaximumSampleValue; k++)
+  {
+    m_sign[k] = 1;
+    m_sign[-k]= -1;
   }
 }
 
