@@ -180,6 +180,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0222_SAO_OFFSET_BIT_SHIFT,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR,                settingNameWidth, settingValueWidth);
 

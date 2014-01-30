@@ -911,9 +911,22 @@ Void TDecSbac::parseCrossComponentPrediction( TComTU &rTu, ComponentID compID )
 
     if(symbol != 0)
     {
+      // Cross-component prediction alpha is non-zero.
       UInt sign = 0;
+#if RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP
+      m_pcTDecBinIf->decodeBin( symbol, pCtx[1] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+      if (symbol != 0)
+      {
+        // alpha is 2 (symbol=1), 4(symbol=2) or 8(symbol=3).
+        // Read up to two more bits
+        xReadUnaryMaxSymbol( symbol, (pCtx + 2), 1, 2 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+        symbol += 1;
+      }
+      m_pcTDecBinIf->decodeBin( sign, pCtx[4] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+#else
       xReadUnaryMaxSymbol( symbol, (pCtx + 1), 1, 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
       m_pcTDecBinIf->decodeBin( sign, pCtx[3] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+#endif
       alpha = (sign != 0) ? -(1 << symbol) : (1 << symbol);
     }
     DTRACE_CABAC_T( "\tAlpha=" )
