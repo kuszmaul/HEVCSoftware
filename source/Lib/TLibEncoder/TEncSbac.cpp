@@ -460,6 +460,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   assert( !pcCU->isIntraBC( uiAbsPartIdx ) );
 
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
+
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
@@ -539,6 +540,42 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
   }
 }
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  const UInt uiSymbol = pcCU->getPartitionSize(uiAbsPartIdx);
+  if( pcCU->getDepth(uiAbsPartIdx) == g_uiMaxCUDepth - g_uiAddCUDepth )
+  {
+    // size can be 2Nx2N, NxN, 2NxN, Nx2N
+    if( uiSymbol == SIZE_2Nx2N )
+    {
+      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+    }
+    else
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_2NxN ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
+      if( uiSymbol != SIZE_2NxN )
+      {
+        m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 2 ) );
+      }
+    }
+  }
+  else
+  {
+    // size can be 2Nx2N, 2NxN, Nx2N
+    if( uiSymbol == SIZE_2Nx2N )
+    {
+      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+    }
+    else
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 0 : 1 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
+    }
+  }
+}
+#endif
 
 /** code prediction mode
  * \param pcCU
@@ -772,7 +809,18 @@ Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  const UInt iNumPart = pcCU->getNumPartInter( uiAbsPartIdx );
+  const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - pcCU->getDepth(uiAbsPartIdx) ) << 1 ) ) >> 4;
+
+  for(UInt iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++)
+  {
+    codeMvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
+  }
+#else
   codeMvd(pcCU, uiAbsPartIdx, REF_PIC_LIST_INTRABC);
+#endif
 }
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )

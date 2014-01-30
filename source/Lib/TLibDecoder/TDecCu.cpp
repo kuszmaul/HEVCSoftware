@@ -321,8 +321,22 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   if ( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+    m_pcEntropyDecoder->decodePartSizeIntraBC( pcCU, uiAbsPartIdx, uiDepth );
 
+    const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+    const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+    const UInt iNumPart = pcCU->getNumPartInter( uiAbsPartIdx );
+
+    UInt tempOffset = uiAbsPartIdx;
+    for( UInt iPartIdx = 0; iPartIdx < iNumPart ; ++iPartIdx )
+    {
+      m_pcEntropyDecoder->decodeIntraBC( pcCU, tempOffset, iPartIdx, uiDepth );
+      tempOffset += uiPUOffset;
+    }
+#else
     m_pcEntropyDecoder->decodeIntraBC( pcCU, uiAbsPartIdx, 0, uiDepth );
+#endif
   }
   else
   {
@@ -477,7 +491,15 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 {
   // intra prediction
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  const UInt iNumPart = pcCU->getNumPartInter();
+  for( Int iPartIdx = 0 ; iPartIdx < iNumPart ; ++iPartIdx )
+  {
+    m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth], iPartIdx );
+  }
+#else
   m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth] );
+#endif
 
 #ifdef DEBUG_STRING
   const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTRABC);
