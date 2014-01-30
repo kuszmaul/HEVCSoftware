@@ -50,10 +50,6 @@
 #define MACRO_TO_STRING_HELPER(val) #val
 #define MACRO_TO_STRING(val) MACRO_TO_STRING_HELPER(val)
 
-static istream& operator>>(istream &, Level::Name &);
-static istream& operator>>(istream &, Level::Tier &);
-static istream& operator>>(istream &, Profile::Name &);
-
 using namespace std;
 namespace po = df::program_options_lite;
 
@@ -264,22 +260,28 @@ found:
 }
 
 //inline to prevent compiler warnings for "unused static function"
-static inline istream& operator>>(istream &in, Profile::Name &profile)
+namespace Profile
 {
-  return readStrToEnum(strToProfile, sizeof(strToProfile)/sizeof(*strToProfile), in, profile);
+  static inline istream& operator >> (istream &in, Name &profile)
+  {
+    return readStrToEnum(strToProfile, sizeof(strToProfile)/sizeof(*strToProfile), in, profile);
+  }
 }
 
-static inline istream& operator>>(istream &in, Level::Tier &tier)
+namespace Level
 {
-  return readStrToEnum(strToTier, sizeof(strToTier)/sizeof(*strToTier), in, tier);
+  static inline istream& operator >> (istream &in, Tier &tier)
+  {
+    return readStrToEnum(strToTier, sizeof(strToTier)/sizeof(*strToTier), in, tier);
+  }
+
+  static inline istream& operator >> (istream &in, Name &level)
+  {
+    return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
+  }
 }
 
-static inline istream& operator>>(istream &in, Level::Name &level)
-{
-  return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
-}
-
-static inline istream& operator>>(istream &in, CostMode &mode)
+static inline istream& operator >> (istream &in, CostMode &mode)
 {
   return readStrToEnum(strToCostMode, sizeof(strToCostMode)/sizeof(*strToCostMode), in, mode);
 }
