@@ -723,7 +723,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setTilesEnabledFlag( (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0) );
   m_cPPS.setUseWP( m_useWeightedPred );
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
-  m_cPPS.setUseCrossComponentDecorrelation(m_useCrossComponentDecorrelation);
+  m_cPPS.setUseCrossComponentPrediction(m_useCrossComponentPrediction);
   m_cPPS.setOutputFlagPresentFlag( false );
   m_cPPS.setSignHideFlag(getSignHideFlag());
   if ( getDeblockingFilterMetric() )

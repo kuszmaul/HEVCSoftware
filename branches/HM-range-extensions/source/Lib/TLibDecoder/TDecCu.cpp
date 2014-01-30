@@ -608,7 +608,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   //===== reconstruction =====
   const UInt uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride(compID);
 
-  const Bool useCrossComponentDecorrelation = isChroma(compID) && (pcCU->getCrossComponentDecorrelationAlpha(uiAbsPartIdx, compID) != 0);
+  const Bool useCrossComponentPrediction = isChroma(compID) && (pcCU->getCrossComponentPredictionAlpha(uiAbsPartIdx, compID) != 0);
   const Pel* pResiLuma  = pcResiYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
   const Int  strideLuma = pcResiYuv->getStride( COMPONENT_Y );
 
@@ -628,9 +628,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
   const Int clipbd = g_bitDepth[toChannelType(compID)];
 
-  if( useCrossComponentDecorrelation )
+  if( useCrossComponentPrediction )
   {
-    TComTrQuant::crossComponentDecorrelation( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
+    TComTrQuant::crossComponentPrediction( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
   }
 
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )

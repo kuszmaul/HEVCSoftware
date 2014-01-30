@@ -80,7 +80,7 @@ private:
   TComYuv*        m_pcQTTempTComYuv;
   TComYuv         m_tmpYuvPred; // To be used in xGetInterPredictionError() to avoid constant memory allocation/deallocation
 
-  Char*           m_phQTTempCrossComponentDecorrelationAlpha[MAX_NUM_COMPONENT];
+  Char*           m_phQTTempCrossComponentPredictionAlpha[MAX_NUM_COMPONENT];
   Pel*            m_pSharedPredTransformSkip[MAX_NUM_COMPONENT];
   TCoeff*         m_pcQTTempTUCoeff[MAX_NUM_COMPONENT];
   UChar*          m_puhQTTempTransformSkipFlag[MAX_NUM_COMPONENT];
@@ -305,7 +305,7 @@ protected:
                                           TComYuv*      pcPredYuv,
                                           TComYuv*      pcResiYuv,
                                           Pel           resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
-                                    const Bool          checkDecorrelation,
+                                    const Bool          checkCrossCPrediction,
                                           Distortion&   ruiDist,
                                     const ComponentID   compID,
                                           TComTU        &rTu
@@ -331,22 +331,22 @@ protected:
                                     TComYuv*     pcRecoYuv,
                                     TComTU &rTu);
 
-  Void xStoreCrossComponentDecorrelationResult  (       Pel    *pResiLuma,
-                                                  const Pel    *pBestLuma,
-                                                        TComTU &rTu,
-                                                  const Int     xOffset,
-                                                  const Int     yOffset,
-                                                  const Int     strideResi,
-                                                  const Int     strideBest );
+  Void xStoreCrossComponentPredictionResult  (       Pel    *pResiLuma,
+                                               const Pel    *pBestLuma,
+                                                     TComTU &rTu,
+                                               const Int     xOffset,
+                                               const Int     yOffset,
+                                               const Int     strideResi,
+                                               const Int     strideBest );
 
-  Char xCalcCrossComponentDecorrelationAlpha    (       TComTU &rTu,
-                                                  const ComponentID compID,
-                                                  const Pel*        piResiL,
-                                                  const Pel*        piResiC,
-                                                  const Int         width,
-                                                  const Int         height,
-                                                  const Int         strideL,
-                                                  const Int         strideC );
+  Char xCalcCrossComponentPredictionAlpha    (       TComTU &rTu,
+                                               const ComponentID compID,
+                                               const Pel*        piResiL,
+                                               const Pel*        piResiC,
+                                               const Int         width,
+                                               const Int         height,
+                                               const Int         strideL,
+                                               const Int         strideC );
 
   Void  xRecurIntraChromaCodingQT ( TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,

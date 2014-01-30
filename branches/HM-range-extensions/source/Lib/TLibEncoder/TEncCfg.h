@@ -193,8 +193,8 @@ protected:
   Bool      m_useFastDecisionForMerge;
   Bool      m_bUseCbfFastMode;
   Bool      m_useEarlySkipDetection;
-  Bool      m_useCrossComponentDecorrelation;
-  Bool      m_reconBasedDecorrelationEstimate;
+  Bool      m_useCrossComponentPrediction;
+  Bool      m_reconBasedCrossCPredictionEstimate;
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
   UInt      m_transformSkipLog2MaxSize;
@@ -511,10 +511,10 @@ public:
   UInt      getPCMLog2MaxSize               ()      { return m_pcmLog2MaxSize;  }
   UInt      getPCMLog2MinSize               ()      { return  m_uiPCMLog2MinSize;  }
 
-  Bool      getUseCrossComponentDecorrelation     ()                const { return m_useCrossComponentDecorrelation;   }
-  Void      setUseCrossComponentDecorrelation     (const Bool value)      { m_useCrossComponentDecorrelation = value;  }
-  Bool      getUseReconBasedDecorrelationEstimate ()                const { return m_reconBasedDecorrelationEstimate;  }
-  Void      setUseReconBasedDecorrelationEstimate (const Bool value)      { m_reconBasedDecorrelationEstimate = value; }
+  Bool      getUseCrossComponentPrediction        ()                const { return m_useCrossComponentPrediction;   }
+  Void      setUseCrossComponentPrediction        (const Bool value)      { m_useCrossComponentPrediction = value;  }
+  Bool      getUseReconBasedCrossCPredictionEstimate ()                const { return m_reconBasedCrossCPredictionEstimate;  }
+  Void      setUseReconBasedCrossCPredictionEstimate (const Bool value)      { m_reconBasedCrossCPredictionEstimate = value; }
 
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }

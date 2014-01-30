@@ -100,8 +100,8 @@ protected:
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
-  Bool      m_useCrossComponentDecorrelation;                 ///< flag enabling the use of cross-component decorrelation
-  Bool      m_reconBasedDecorrelationEstimate;                ///< causes the alpha calculation in encoder search to be based on the decoded residual rather than the pre-transform encoder-side residual
+  Bool      m_useCrossComponentPrediction;                    ///< flag enabling the use of cross-component prediction
+  Bool      m_reconBasedCrossCPredictionEstimate;             ///< causes the alpha calculation in encoder search to be based on the decoded residual rather than the pre-transform encoder-side residual
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)

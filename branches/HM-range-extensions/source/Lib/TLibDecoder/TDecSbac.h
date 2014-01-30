@@ -127,7 +127,7 @@ public:
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
 
-  Void parseCrossComponentDecorrelation ( class TComTU &rTu, ComponentID compID );
+  Void parseCrossComponentPrediction ( class TComTU &rTu, ComponentID compID );
 
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
@@ -185,7 +185,7 @@ private:
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
-  ContextModel3DBuffer m_cCrossComponentDecorrelationSCModel;
+  ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 };
 
 //! \}
