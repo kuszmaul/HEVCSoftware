@@ -431,6 +431,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraBlockCopyFastSearch", m_intraBlockCopyFastSearch, true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
   ("CrossComponentPrediction", m_useCrossComponentPrediction,  false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate", m_reconBasedCrossCPredictionEstimate, false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  ("SaoLumaOffsetBitShift",   m_saoOffsetBitShift[CHANNEL_TYPE_LUMA], 0u)
+  ("SaoChromaOffsetBitShift", m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA], 0u)
+#endif
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
@@ -937,6 +941,11 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] < m_inputBitDepth[CHANNEL_TYPE_LUMA  ]), "MSB-extended bit depth for luma channel (--MSBExtendedBitDepth) must be greater than or equal to input bit depth for luma channel (--InputBitDepth)" );
   xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] < m_inputBitDepth[CHANNEL_TYPE_CHROMA]), "MSB-extended bit depth for chroma channel (--MSBExtendedBitDepthC) must be greater than or equal to input bit depth for chroma channel (--InputBitDepthC)" );
+
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]   > (m_internalBitDepth[CHANNEL_TYPE_LUMA]-10),   "SaoLumaOffsetBitShift must be in the range of 0 to InternalBitDepth-10, inclusive");
+  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] > (m_internalBitDepth[CHANNEL_TYPE_CHROMA]-10), "SaoChromaOffsetBitShift must be in the range of 0 to InternalBitDepthC-10, inclusive");
+#endif
 
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
   std::string sTempIPCSC="InputColourSpaceConvert must be empty, "+getListOfColourSpaceConverts(true);
@@ -1593,6 +1602,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
   printf("Cross-component prediction      : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
   printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  if (m_bUseSAO)
+  {
+    printf("Sao Luma Offset bit shifts      : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]);
+    printf("Sao Chroma Offset bit shifts    : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA]);
+  }
+#endif
+
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
 #endif

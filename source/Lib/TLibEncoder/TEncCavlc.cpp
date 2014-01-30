@@ -238,7 +238,10 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 
   if (   (pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
        || pcPPS->getUseCrossComponentPrediction()
-     )
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+       || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
+#endif
+  )
   {
     WRITE_FLAG( 1, "pps_extension_flag1" );
 
@@ -251,6 +254,10 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     WRITE_FLAG(0,                                                         "chroma_qp_adjustment_enabled_flag" ); // NOTE: RExt - placeholder for now
+#endif
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+    WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
+    WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "sao_chroma_bit_shift" );
 #endif
 
     WRITE_FLAG( 0, "pps_extension_flag2" );

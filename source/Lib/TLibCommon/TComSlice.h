@@ -956,6 +956,9 @@ private:
   Bool        m_useWeightedBiPred;        // Use of Weighting Bi-Prediction (B_SLICE)
   Bool        m_OutputFlagPresentFlag;   // Indicates the presence of output_flag in slice header
   Bool        m_useCrossComponentPrediction;
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  UInt        m_saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
+#endif
   Bool        m_TransquantBypassEnableFlag; // Indicates presence of cu_transquant_bypass_flag in CUs.
   Bool        m_useTransformSkip;
   Int         m_transformSkipLog2MaxSize;
@@ -1030,6 +1033,11 @@ public:
 
   Bool      getUseCrossComponentPrediction()         const { return m_useCrossComponentPrediction;  }
   Void      setUseCrossComponentPrediction(Bool value)     { m_useCrossComponentPrediction = value; }
+
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  UInt      getSaoOffsetBitShift(ChannelType type) const            { return m_saoOffsetBitShift[type];       }
+  Void      setSaoOffsetBitShift(ChannelType type, UInt uiBitShift) { m_saoOffsetBitShift[type] = uiBitShift; }
+#endif
 
   Void      setOutputFlagPresentFlag( Bool b )  { m_OutputFlagPresentFlag = b;    }
   Bool      getOutputFlagPresentFlag()          { return m_OutputFlagPresentFlag; }
