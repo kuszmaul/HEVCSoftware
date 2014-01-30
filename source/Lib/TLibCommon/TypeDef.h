@@ -241,6 +241,7 @@
 
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
+#define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
 #define RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT                                  1 ///< 0 = use serial arithmetic operations to code all EP bins, 1 (default) = allow (configured by command line and SPS flag) the CABAC engine to 256 prior to coding escape codes/sign bits if escape data is present in the current group
 #define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice

@@ -1576,9 +1576,39 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
-  READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[0..15]");
-  READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[16..31]");
-  READ_CODE(12, uiCode, "XXX_reserved_zero_44bits[32..43]");
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  if (ptl->getProfileIdc() == Profile::MAINREXT)
+  {
+    UInt maxBitDepth=0;
+    READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode)                   maxBitDepth=12;
+    READ_FLAG(    uiCode, "general_max_10bit_constraint_flag" ); if (uiCode && maxBitDepth<10) maxBitDepth=10;
+    READ_FLAG(    uiCode, "general_max_8bit_constraint_flag"  ); if (uiCode && maxBitDepth<8 ) maxBitDepth=8;
+    if (maxBitDepth==0) maxBitDepth=16;
+    ptl->setBitDepthConstraint(maxBitDepth);
+    ChromaFormat chromaFmtConstraint=NUM_CHROMA_FORMAT;
+    READ_FLAG(    uiCode, "general_max_422chroma_constraint_flag"  ); if (uiCode)                                           chromaFmtConstraint=CHROMA_422;
+    READ_FLAG(    uiCode, "general_max_420chroma_constraint_flag"  ); if (uiCode && chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_420;
+    READ_FLAG(    uiCode, "general_max_monochrome_constraint_flag" ); if (uiCode && chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_400;
+    if (chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_444;
+    READ_FLAG(    uiCode, "general_intra_constraint_flag");          ptl->setIntraConstraintFlag(uiCode != 0);
+    READ_FLAG(    uiCode, "general_lower_bit_rate_constraint_flag"); ptl->setLowerBitRateConstraintFlag(uiCode != 0);
+    READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[0..15]");
+    READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[16..31]");
+    READ_CODE(4,  uiCode, "XXX_reserved_zero_36bits[32..35]");
+  }
+  else
+  {
+    ptl->setBitDepthConstraint((ptl->getProfileIdc() == Profile::MAIN10)?10:8);
+    ptl->setChromaFormatConstraint(CHROMA_420);
+    ptl->setIntraConstraintFlag(false);
+    ptl->setLowerBitRateConstraintFlag(true);
+#endif
+    READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[0..15]");
+    READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[16..31]");
+    READ_CODE(12, uiCode, "XXX_reserved_zero_44bits[32..43]");
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  }
+#endif
 }
 
 Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )

@@ -306,6 +306,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  Int tmpConstraintChromaFormat;
+#endif
   string inputColourSpaceConvert;
 
   po::Options opts;
@@ -351,9 +354,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
 
   // Profile and level
-  ("Profile", m_profile,   Profile::NONE, "Profile name to use for encoding. Use main (for main), main10 (for main10), main-still-picture, main-RExt (for Range Extensions profile) or none")
-  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1, or none")
-  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level (main or high only)")
+  ("Profile",               m_profile,             Profile::NONE, "Profile name to use for encoding. Use main (for main), main10 (for main10), main-still-picture, main-RExt (for Range Extensions profile) or none")
+  ("Level",                 m_level,               Level::NONE,   "Level limit to be used, eg 5.1, or none")
+  ("Tier",                  m_levelTier,           Level::MAIN,   "Tier to use for interpretation of --Level (main or high only)")
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  ("MaxBitDepthConstraint",      m_bitDepthConstraint,         0u,    "Bit depth to use for profile-constraint for RExt profiles. 0=use max(InternalBitDepth,InternalBitDepthC)")
+  ("MaxChromaFormatConstraint",  tmpConstraintChromaFormat,    0,     "Chroma-format to use for the profile-constraint for RExt profiles. 0=use ChromaFormatIDC")
+  ("IntraConstraintFlag",        m_intraConstraintFlag,        false, "Value of general_intra_constraint_flag to use for RExt profiles")
+  ("LowerBitRateConstraintFlag", m_lowerBitRateConstraintFlag, true,  "Value of general_lower_bit_constraint_flag to use for RExt profiles")
+#endif
 
   ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
   ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
@@ -723,6 +732,22 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  // manipulate profile constraints
+  m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
+  if (m_bitDepthConstraint == 0)
+  {
+    if (m_profile == Profile::MAINREXT)
+    {
+      m_bitDepthConstraint = (m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
+    }
+    else
+    {
+      m_bitDepthConstraint = (m_profile == Profile::MAIN10?10:8);
+    }
+  }
+#endif
+
   m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
 
   switch (m_conformanceMode)
@@ -928,6 +953,56 @@ Void TAppEncCfg::xCheckParameter()
 
   Bool check_failed = false; /* abort if there is a fatal configuration problem */
 #define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
+
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  {
+    const UInt maxBitDepth=(m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
+    xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
+    xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
+  }
+  if (m_profile==Profile::MAINREXT)
+  {
+    // m_intraConstraintFlag is checked below.
+    xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+    xConfirmPara(m_alignCABACBeforeBypass && m_bitDepthConstraint<16, "AlignCABACBeforeBypass cannot be enabled when bitDepthConstraint value is less than 16.");
+#endif
+  }
+  else
+  {
+    xConfirmPara(m_bitDepthConstraint!=((m_profile==Profile::MAIN10)?10:8), "BitDepthConstraint must be 8 for MAIN profile and 10 for MAIN10 profile.");
+    xConfirmPara(m_chromaFormatConstraint!=CHROMA_420, "ChromaFormatConstraint must be 420 for non main-RExt profiles.");
+    xConfirmPara(m_intraConstraintFlag==true, "IntraConstraintFlag must be false for non main_RExt profiles.");
+    xConfirmPara(m_lowerBitRateConstraintFlag==false, "LowerBitrateConstraintFlag must be true for non main-RExt profiles.");
+
+    xConfirmPara(m_useCrossComponentPrediction==true, "CrossComponentPrediction must not be used for non main-RExt profiles.");
+    xConfirmPara(m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
+    xConfirmPara(m_useResidualRotation==true, "UseResidualRotation must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useSingleSignificanceMapContext==true, "UseSingleSignificanceMapContext must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT]==true, "ImplicitResidualDPCM must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT]==true, "ExplicitResidualDPCM must not be enabled for non main-RExt profiles.");
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+    xConfirmPara(m_useGolombRiceParameterAdaptation==true, "GolombRiceParameterAdaption must not be enabled for non main-RExt profiles.");
+#else
+#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
+    xConfirmPara(m_useGolombRiceGroupAdaptation==true, "GolombRiceGroupAdaption must not be enabled for non main-RExt profiles.");
+#endif
+#endif
+    xConfirmPara(m_useExtendedPrecision==true, "UseExtendedPrecision must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useHighPrecisionPredictionWeighting==true, "UseHighPrecisionPredictionWeighting must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_enableIntraReferenceSmoothing==false, "EnableIntraReferenceSmoothing must be enabled for non main-RExt profiles.");
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    // placeholder for now.
+#endif
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+    // SaoLumaOffsetBitShift and SaoChromaOffsetBitShift will be restricted to the internal bit depth-10, and so do not need to be checked here.
+#endif
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+    xConfirmPara(m_alignCABACBeforeBypass, "AlignCABACBeforeBypass cannot be enabled for non main-RExt profiles.");
+#endif
+  }
+#endif
   // check range of parameters
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_LUMA  ] < 8,                                   "InputBitDepth must be at least 8" );
   xConfirmPara( m_inputBitDepth[CHANNEL_TYPE_CHROMA] < 8,                                   "InputBitDepthC must be at least 8" );
@@ -978,7 +1053,9 @@ Void TAppEncCfg::xCheckParameter()
   }
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
+#if !RExt__O1005V4_CONSTRAINT_FLAGS
   xConfirmPara ( ( m_profile==Profile::MAIN || m_profile==Profile::MAIN10 || m_profile==Profile::MAINSTILLPICTURE ) && m_transformSkipLog2MaxSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
+#endif
   if (m_transformSkipLog2MaxSize!=2 && m_useTransformSkipFast)
   {
     fprintf(stderr, "***************************************************************************\n");
@@ -1099,7 +1176,12 @@ Void TAppEncCfg::xCheckParameter()
     m_GOPList[0].m_POC = 1;
     m_GOPList[0].m_numRefPicsActive = 4;
   }
-
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  else
+  {
+    xConfirmPara( m_intraConstraintFlag, "IntraConstraintFlag cannot be 1 for inter sequences");
+  }
+#endif
   Bool verifiedGOP=false;
   Bool errorGOP=false;
   Int checkGOP=1;

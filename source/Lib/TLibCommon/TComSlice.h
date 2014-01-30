@@ -186,40 +186,60 @@ class ProfileTierLevel
   Bool              m_profileCompatibilityFlag[32];
   Level::Name       m_levelIdc;
 
-  Bool m_progressiveSourceFlag;
-  Bool m_interlacedSourceFlag;
-  Bool m_nonPackedConstraintFlag;
-  Bool m_frameOnlyConstraintFlag;
+  Bool              m_progressiveSourceFlag;
+  Bool              m_interlacedSourceFlag;
+  Bool              m_nonPackedConstraintFlag;
+  Bool              m_frameOnlyConstraintFlag;
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  UInt              m_bitDepthConstraintValue;
+  ChromaFormat      m_chromaFormatConstraintValue;
+  Bool              m_intraConstraintFlag;
+  Bool              m_lowerBitRateConstraintFlag;
+#endif
 
 public:
   ProfileTierLevel();
 
-  Int   getProfileSpace() const   { return m_profileSpace; }
-  Void  setProfileSpace(Int x)    { m_profileSpace = x; }
+  Int  getProfileSpace() const                     { return m_profileSpace; }
+  Void setProfileSpace(Int x)                      { m_profileSpace = x; }
 
-  Level::Tier  getTierFlag()     const   { return m_tierFlag; }
-  Void  setTierFlag(Level::Tier x)       { m_tierFlag = x; }
+  Level::Tier  getTierFlag() const                 { return m_tierFlag; }
+  Void setTierFlag(Level::Tier x)                  { m_tierFlag = x; }
 
-  Profile::Name   getProfileIdc()   const   { return m_profileIdc; }
-  Void  setProfileIdc(Profile::Name x)      { m_profileIdc = x; }
+  Profile::Name   getProfileIdc() const            { return m_profileIdc; }
+  Void setProfileIdc(Profile::Name x)              { m_profileIdc = x; }
 
-  Bool  getProfileCompatibilityFlag(Int i) const    { return m_profileCompatibilityFlag[i]; }
-  Void  setProfileCompatibilityFlag(Int i, Bool x)  { m_profileCompatibilityFlag[i] = x; }
+  Bool getProfileCompatibilityFlag(Int i) const    { return m_profileCompatibilityFlag[i]; }
+  Void setProfileCompatibilityFlag(Int i, Bool x)  { m_profileCompatibilityFlag[i] = x; }
 
-  Level::Name   getLevelIdc()   const   { return m_levelIdc; }
-  Void  setLevelIdc(Level::Name x)      { m_levelIdc = x; }
+  Level::Name   getLevelIdc() const                { return m_levelIdc; }
+  Void setLevelIdc(Level::Name x)                  { m_levelIdc = x; }
 
-  Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
-  Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
+  Bool getProgressiveSourceFlag() const            { return m_progressiveSourceFlag; }
+  Void setProgressiveSourceFlag(Bool b)            { m_progressiveSourceFlag = b; }
 
-  Bool getInterlacedSourceFlag() const { return m_interlacedSourceFlag; }
-  Void setInterlacedSourceFlag(Bool b) { m_interlacedSourceFlag = b; }
+  Bool getInterlacedSourceFlag() const             { return m_interlacedSourceFlag; }
+  Void setInterlacedSourceFlag(Bool b)             { m_interlacedSourceFlag = b; }
 
-  Bool getNonPackedConstraintFlag() const { return m_nonPackedConstraintFlag; }
-  Void setNonPackedConstraintFlag(Bool b) { m_nonPackedConstraintFlag = b; }
+  Bool getNonPackedConstraintFlag() const          { return m_nonPackedConstraintFlag; }
+  Void setNonPackedConstraintFlag(Bool b)          { m_nonPackedConstraintFlag = b; }
 
-  Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
-  Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
+  Bool getFrameOnlyConstraintFlag() const          { return m_frameOnlyConstraintFlag; }
+  Void setFrameOnlyConstraintFlag(Bool b)          { m_frameOnlyConstraintFlag = b; }
+
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  UInt getBitDepthConstraint() const               { return m_bitDepthConstraintValue; }
+  Void setBitDepthConstraint(UInt bitDepth)        { m_bitDepthConstraintValue=bitDepth; }
+
+  ChromaFormat getChromaFormatConstraint() const   { return m_chromaFormatConstraintValue; }
+  Void setChromaFormatConstraint(ChromaFormat fmt) { m_chromaFormatConstraintValue=fmt; }
+
+  Bool getIntraConstraintFlag() const              { return m_intraConstraintFlag; }
+  Void setIntraConstraintFlag(Bool b)              { m_intraConstraintFlag = b; }
+
+  Bool getLowerBitRateConstraintFlag() const       { return m_lowerBitRateConstraintFlag; }
+  Void setLowerBitRateConstraintFlag(Bool b)       { m_lowerBitRateConstraintFlag = b; }
+#endif
 };
 
 

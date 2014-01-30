@@ -549,7 +549,12 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setInterlacedSourceFlag(m_interlacedSourceFlag);
   profileTierLevel.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
   profileTierLevel.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
-
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  profileTierLevel.setBitDepthConstraint(m_bitDepthConstraintValue);
+  profileTierLevel.setChromaFormatConstraint(m_chromaFormatConstraintValue);
+  profileTierLevel.setIntraConstraintFlag(m_intraConstraintFlag);
+  profileTierLevel.setLowerBitRateConstraintFlag(m_lowerBitRateConstraintFlag);
+#endif
   if ((m_profile == Profile::MAIN10) && (g_bitDepth[CHANNEL_TYPE_LUMA] == 8) && (g_bitDepth[CHANNEL_TYPE_CHROMA]))
   {
     /* The above constraint is equal to Profile::MAIN */

@@ -89,6 +89,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setInterlacedSourceFlag(m_interlacedSourceFlag);
   m_cTEncTop.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
   m_cTEncTop.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  m_cTEncTop.setBitDepthConstraintValue      ( m_bitDepthConstraint );
+  m_cTEncTop.setChromaFormatConstraintValue  ( m_chromaFormatConstraint );
+  m_cTEncTop.setIntraConstraintFlag          ( m_intraConstraintFlag );
+  m_cTEncTop.setLowerBitRateConstraintFlag   ( m_lowerBitRateConstraintFlag );
+#endif
+
 
   m_cTEncTop.setPrintMSEBasedSequencePSNR(m_printMSEBasedSequencePSNR);
 
