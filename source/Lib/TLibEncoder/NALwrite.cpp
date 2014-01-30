@@ -86,6 +86,35 @@ void write(ostream& out, OutputNALUnit& nalu)
    */
   vector<uint8_t>& rbsp   = nalu.m_Bitstream.getFIFO();
 
+#if (RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION == 0)
+  // NOTE: RExt - New RBSP emulation prevention 3 method - the original method is OK, if the number of
+  //              insertions is small, but very wasteful for long NAL units with lots of insertions.
+  //              We'll just make a temporary work area.
+  vector<uint8_t> outputBuffer;
+  outputBuffer.resize(rbsp.size()*2+1); //there can never be enough emulation_prevention_three_bytes to require this much space
+  std::size_t outputAmount = 0;
+  int         zeroCount    = 0;
+  for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end(); it++)
+  {
+    const uint8_t v=(*it);
+    if (zeroCount==2 && v<=3)
+    {
+      outputBuffer[outputAmount++]=emulation_prevention_three_byte[0];
+      zeroCount=0;
+    }
+    if (v==0) zeroCount++; else zeroCount=0;
+    outputBuffer[outputAmount++]=v;
+  }
+
+  /* 7.4.1.1
+   * ... when the last byte of the RBSP data is equal to 0x00 (which can
+   * only occur when the RBSP ends in a cabac_zero_word), a final byte equal
+   * to 0x03 is appended to the end of the data.
+   */
+  if (zeroCount>0) outputBuffer[outputAmount++]=emulation_prevention_three_byte[0];
+  out.write((Char*)&(*outputBuffer.begin()), outputAmount);
+#else
+
   for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
   {
     /* 1) find the next emulated 00 00 {00,01,02,03}
@@ -124,6 +153,7 @@ void write(ostream& out, OutputNALUnit& nalu)
   {
     out.write(emulation_prevention_three_byte, 1);
   }
+#endif
 }
 
 /**

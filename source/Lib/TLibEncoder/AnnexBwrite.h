@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __ANNEXBWRITE__
+#define __ANNEXBWRITE__
+
 #include <ostream>
 #include "TLibCommon/AccessUnit.h"
 #include "NALwrite.h"
@@ -84,3 +87,5 @@ static std::vector<UInt> writeAnnexB(std::ostream& out, const AccessUnit& au)
   return annexBsizes;
 }
 //! \}
+
+#endif
