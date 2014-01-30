@@ -202,5 +202,8 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComTU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComCodingStatistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
