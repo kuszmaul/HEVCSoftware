@@ -328,6 +328,34 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
+
+#if RExt__O0099_TIME_CODE_SEI
+  if(m_pcCfg->getTimeCodeSEIEnabled())
+  {
+    SEITimeCode sei_time_code;
+
+    //  Set the time code to some data
+    sei_time_code.numClockTs = 1;
+    sei_time_code.clockTimeStampFlag[0] = 1;
+    sei_time_code.nuitFieldBasedFlag = 0;
+    sei_time_code.countingType = 0;
+    sei_time_code.fullTimeStampFlag = 1;
+    sei_time_code.discontinuityFlag = 0;
+    sei_time_code.cntDroppedFlag = 0;
+    sei_time_code.nFrames = m_pcCfg->getFrameRate();
+    sei_time_code.secondsValue = 0;
+    sei_time_code.minutesValue = 15;
+    sei_time_code.hoursValue = 21;
+    sei_time_code.timeOffsetLength = 5;
+    sei_time_code.timeOffset = -6;
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_time_code, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+  }
+#endif
 }
 
 // ====================================================================================================================

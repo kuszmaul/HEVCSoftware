@@ -96,6 +96,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
+#if RExt__O0099_TIME_CODE_SEI
+  case SEI::TIME_CODE:
+    fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -152,6 +157,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
+#if RExt__O0099_TIME_CODE_SEI
+  case SEI::TIME_CODE:
+    xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
+    break;
+#endif
   default:
     assert(!"Unhandled SEI message");
     break;
@@ -583,6 +593,64 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     writeSEImessage(bs, *(*it), sps);
   }
 }
+
+#if RExt__O0099_TIME_CODE_SEI
+Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
+{
+  WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    WRITE_FLAG(sei.clockTimeStampFlag[i], "clock_time_stamp_flag");
+    if(sei.clockTimeStampFlag[i])
+    {
+      WRITE_FLAG(sei.nuitFieldBasedFlag, "nuit_field_based_flag");
+      WRITE_CODE(sei.countingType, 5, "counting_type");
+      WRITE_FLAG(sei.fullTimeStampFlag, "full_timestamp_flag");
+      WRITE_FLAG(sei.discontinuityFlag, "discontinuity_flag");
+      WRITE_FLAG(sei.cntDroppedFlag, "cnt_dropped_flag");
+      WRITE_CODE(sei.nFrames, 9, "n_frames");
+      if(sei.fullTimeStampFlag)
+      {
+        WRITE_CODE(sei.secondsValue, 6, "seconds_value");
+        WRITE_CODE(sei.minutesValue, 6, "minutes_value");
+        WRITE_CODE(sei.hoursValue, 5, "hours_value");
+      }
+      else
+      {
+        WRITE_FLAG(sei.secondsFlag, "seconds_flag");
+        if(sei.secondsFlag)
+        {
+          WRITE_CODE(sei.secondsValue, 6, "seconds_value");
+          WRITE_FLAG(sei.minutesFlag, "minutes_flag");
+          if(sei.minutesFlag)
+          {
+            WRITE_CODE(sei.minutesValue, 6, "minutes_value");
+            WRITE_FLAG(sei.hoursFlag, "hours_flag");
+            if(sei.hoursFlag)
+              WRITE_CODE(sei.hoursValue, 5, "hours_value");
+          }
+        }
+      }
+      WRITE_CODE(sei.timeOffsetLength, 5, "time_offset_length");
+      if(sei.timeOffsetLength > 0)
+      {
+        if(sei.timeOffset >= 0)
+        {
+          WRITE_CODE((UInt)sei.timeOffset, sei.timeOffsetLength, "time_offset");
+        }
+        else
+        {
+          //  Two's complement conversion
+          UInt offsetValue = ~(sei.timeOffset) + 1;
+          offsetValue |= (1 << (sei.timeOffsetLength-1));
+          WRITE_CODE(offsetValue, sei.timeOffsetLength, "time_offset");
+        }
+      }
+    }
+  }
+  xWriteByteAlign();
+}
+#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

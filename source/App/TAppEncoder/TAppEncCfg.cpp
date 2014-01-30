@@ -604,6 +604,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",            m_decodingUnitInfoSEIEnabled,             0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,               0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
+#if RExt__O0099_TIME_CODE_SEI
+  ("SEITimeCode",                    m_timeCodeSEIEnabled,                 false,  "Control generation of time code information SEI message")
+#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {

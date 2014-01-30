@@ -78,6 +78,9 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
+#if RExt__O0099_TIME_CODE_SEI
+    TIME_CODE                            = 138
+#endif
   };
 
   SEI() {}
@@ -424,6 +427,36 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+#if RExt__O0099_TIME_CODE_SEI
+class SEITimeCode : public SEI
+{
+public:
+  PayloadType payloadType() const { return TIME_CODE; }
+  SEITimeCode() {}
+  virtual ~SEITimeCode(){}
+
+  UInt numClockTs;
+  UInt clockTimeStampFlag[4];
+  UInt nuitFieldBasedFlag;
+  UInt countingType;
+  UInt fullTimeStampFlag;
+  UInt discontinuityFlag;
+  UInt cntDroppedFlag;
+  UInt nFrames;
+
+  UInt secondsValue;
+  UInt minutesValue;
+  UInt hoursValue;
+
+  UInt secondsFlag;
+  UInt minutesFlag;
+  UInt hoursFlag;
+
+  UInt timeOffsetLength;
+  Int  timeOffset;
+};
+#endif
 
 #endif
 

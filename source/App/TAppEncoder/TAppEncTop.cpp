@@ -283,6 +283,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
+#if RExt__O0099_TIME_CODE_SEI
+  m_cTEncTop.setTimeCodeSEIEnabled( m_timeCodeSEIEnabled );
+#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
