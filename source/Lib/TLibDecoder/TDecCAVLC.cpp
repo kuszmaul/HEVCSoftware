@@ -1592,9 +1592,17 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
     if (chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_444;
     READ_FLAG(    uiCode, "general_intra_constraint_flag");          ptl->setIntraConstraintFlag(uiCode != 0);
     READ_FLAG(    uiCode, "general_lower_bit_rate_constraint_flag"); ptl->setLowerBitRateConstraintFlag(uiCode != 0);
+#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
+    READ_FLAG(    uiCode, "general_max_high_tier_constraint_flag");
+    if (!uiCode && ptl->getTierFlag()==Level::MAIN) ptl->setTierFlag (Level::SUPER);
+    READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[0..15]");
+    READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[16..31]");
+    READ_CODE(3,  uiCode, "XXX_reserved_zero_36bits[32..34]");
+#else
     READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[0..15]");
     READ_CODE(16, uiCode, "XXX_reserved_zero_36bits[16..31]");
     READ_CODE(4,  uiCode, "XXX_reserved_zero_36bits[32..35]");
+#endif
   }
   else
   {
