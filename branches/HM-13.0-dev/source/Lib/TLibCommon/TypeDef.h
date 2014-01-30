@@ -43,6 +43,8 @@
 #define BUGFIX_INTRAPERIOD 1
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 
+#define SAO_SGN_FUNC 1
+
 #define FIX1172 1 ///< fix ticket #1172
 
 #define MAX_NUM_PICS_IN_SOP           1024
