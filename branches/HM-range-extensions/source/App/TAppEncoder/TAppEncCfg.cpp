@@ -442,8 +442,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ExplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT], false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  ("GolombRiceParameterAdaptation", m_useGolombRiceParameterAdaptation, false, "Enable the adaptation of the Golomb-Rice parameter over the course of each slice")
+#else
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
+#endif
 #endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
@@ -1553,55 +1557,58 @@ const Char *profileToString(const Profile::Name profile)
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
-  printf("Input          File             : %s\n", m_pchInputFile          );
-  printf("Bitstream      File             : %s\n", m_pchBitstreamFile      );
-  printf("Reconstruction File             : %s\n", m_pchReconFile          );
-  printf("Real     Format                 : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
-  printf("Internal Format                 : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
-  printf("Sequence PSNR output            : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
+  printf("Input          File              : %s\n", m_pchInputFile          );
+  printf("Bitstream      File              : %s\n", m_pchBitstreamFile      );
+  printf("Reconstruction File              : %s\n", m_pchReconFile          );
+  printf("Real     Format                  : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
+  printf("Internal Format                  : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
+  printf("Sequence PSNR output             : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   if (m_isField)
   {
-    printf("Frame/Field                     : Field based coding\n");
-    printf("Field index                     : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
-    printf("Field Order                     : %s field first\n", m_isTopFieldFirst?"Top":"Bottom");
+    printf("Frame/Field                      : Field based coding\n");
+    printf("Field index                      : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+    printf("Field Order                      : %s field first\n", m_isTopFieldFirst?"Top":"Bottom");
 
   }
   else
   {
-    printf("Frame/Field                     : Frame based coding\n");
-    printf("Frame index                     : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
+    printf("Frame/Field                      : Frame based coding\n");
+    printf("Frame index                      : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
   }
-  printf("Profile                         : %s\n", profileToString(m_profile) );
-  printf("CU size / depth                 : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
-  printf("RQT trans. size (min / max)     : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
-  printf("Max RQT depth inter             : %d\n", m_uiQuadtreeTUMaxDepthInter);
-  printf("Max RQT depth intra             : %d\n", m_uiQuadtreeTUMaxDepthIntra);
-  printf("Min PCM size                    : %d\n", 1 << m_uiPCMLog2MinSize);
-  printf("Motion search range             : %d\n", m_iSearchRange );
-  printf("Inter search component loop     : %s\n", (m_singleComponentLoopInterSearch ? "Single (Non-HM-compatible)" : "Triple (HM-compatible)") );
-  printf("Intra period                    : %d\n", m_iIntraPeriod );
-  printf("Decoding refresh type           : %d\n", m_iDecodingRefreshType );
-  printf("QP                              : %5.2f\n", m_fQP );
-  printf("Max dQP signaling depth         : %d\n", m_iMaxCuDQPDepth);
+  printf("Profile                          : %s\n", profileToString(m_profile) );
+  printf("CU size / depth                  : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
+  printf("RQT trans. size (min / max)      : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
+  printf("Max RQT depth inter              : %d\n", m_uiQuadtreeTUMaxDepthInter);
+  printf("Max RQT depth intra              : %d\n", m_uiQuadtreeTUMaxDepthIntra);
+  printf("Min PCM size                     : %d\n", 1 << m_uiPCMLog2MinSize);
+  printf("Motion search range              : %d\n", m_iSearchRange );
+  printf("Inter search component loop      : %s\n", (m_singleComponentLoopInterSearch ? "Single (Non-HM-compatible)" : "Triple (HM-compatible)") );
+  printf("Intra period                     : %d\n", m_iIntraPeriod );
+  printf("Decoding refresh type            : %d\n", m_iDecodingRefreshType );
+  printf("QP                               : %5.2f\n", m_fQP );
+  printf("Max dQP signaling depth          : %d\n", m_iMaxCuDQPDepth);
 
-  printf("Cb QP Offset                    : %d\n", m_cbQpOffset   );
-  printf("Cr QP Offset                    : %d\n", m_crQpOffset);
+  printf("Cb QP Offset                     : %d\n", m_cbQpOffset   );
+  printf("Cr QP Offset                     : %d\n", m_crQpOffset);
 
-  printf("QP adaptation                   : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
-  printf("GOP size                        : %d\n", m_iGOPSize );
-  printf("Input bit depth                 : (Y:%d, C:%d)\n", m_inputBitDepth[CHANNEL_TYPE_LUMA], m_inputBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("MSB-extended bit depth          : (Y:%d, C:%d)\n", m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA], m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("Internal bit depth              : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("PCM sample bit depth            : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("Extended precision processing   : %s\n", (m_useExtendedPrecision                   ? "Enabled" : "Disabled") );
-  printf("Intra reference smoothing       : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
-  printf("Implicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
-  printf("Explicit residual DPCM          : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
-  printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
-  printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
-  printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
-  printf("Cross-component prediction      : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
-  printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
+  printf("QP adaptation                    : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
+  printf("GOP size                         : %d\n", m_iGOPSize );
+  printf("Input bit depth                  : (Y:%d, C:%d)\n", m_inputBitDepth[CHANNEL_TYPE_LUMA], m_inputBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("MSB-extended bit depth           : (Y:%d, C:%d)\n", m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA], m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("Internal bit depth               : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("PCM sample bit depth             : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("Extended precision processing    : %s\n", (m_useExtendedPrecision                   ? "Enabled" : "Disabled") );
+  printf("Intra reference smoothing        : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
+  printf("Implicit residual DPCM           : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
+  printf("Explicit residual DPCM           : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
+  printf("Intra block copying              : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
+  printf("Residual rotation                : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
+  printf("Single significance map context  : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
+  printf("Cross-component prediction       : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
+  printf("High-precision prediction weight : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  printf("Golomb-Rice parameter adaptation : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
+#else
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   if (m_bUseSAO)
   {
@@ -1611,30 +1618,31 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
+  printf("Golomb-Rice aroup adaptation     : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
+#endif
 #endif
   switch (m_costMode)
   {
-    case COST_STANDARD_LOSSY:               printf("Cost function:                  : Lossy coding (default)\n"); break;
-    case COST_SEQUENCE_LEVEL_LOSSLESS:      printf("Cost function:                  : Sequence_level_lossless coding\n"); break;
-    case COST_LOSSLESS_CODING:              printf("Cost function:                  : Lossless coding with fixed QP of %d\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP); break;
-    case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                  : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
-    default:                                printf("Cost function:                  : Unknown\n"); break;
+    case COST_STANDARD_LOSSY:               printf("Cost function:                   : Lossy coding (default)\n"); break;
+    case COST_SEQUENCE_LEVEL_LOSSLESS:      printf("Cost function:                   : Sequence_level_lossless coding\n"); break;
+    case COST_LOSSLESS_CODING:              printf("Cost function:                   : Lossless coding with fixed QP of %d\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP); break;
+    case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                   : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
+    default:                                printf("Cost function:                   : Unknown\n"); break;
   }
 
-  printf("RateControl                     : %d\n", m_RCEnableRateControl );
+  printf("RateControl                      : %d\n", m_RCEnableRateControl );
 
   if(m_RCEnableRateControl)
   {
-    printf("TargetBitrate                   : %d\n", m_RCTargetBitrate );
-    printf("KeepHierarchicalBit             : %d\n", m_RCKeepHierarchicalBit );
-    printf("LCULevelRC                      : %d\n", m_RCLCULevelRC );
-    printf("UseLCUSeparateModel             : %d\n", m_RCUseLCUSeparateModel );
-    printf("InitialQP                       : %d\n", m_RCInitialQP );
-    printf("ForceIntraQP                    : %d\n", m_RCForceIntraQP );
+    printf("TargetBitrate                    : %d\n", m_RCTargetBitrate );
+    printf("KeepHierarchicalBit              : %d\n", m_RCKeepHierarchicalBit );
+    printf("LCULevelRC                       : %d\n", m_RCLCULevelRC );
+    printf("UseLCUSeparateModel              : %d\n", m_RCUseLCUSeparateModel );
+    printf("InitialQP                        : %d\n", m_RCInitialQP );
+    printf("ForceIntraQP                     : %d\n", m_RCForceIntraQP );
   }
 
-  printf("Max Num Merge Candidates        : %d\n", m_maxNumMergeCand);
+  printf("Max Num Merge Candidates         : %d\n", m_maxNumMergeCand);
   printf("\n");
 
   printf("TOOL CFG: ");

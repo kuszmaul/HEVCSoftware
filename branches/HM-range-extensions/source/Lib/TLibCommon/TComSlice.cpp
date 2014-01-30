@@ -1430,8 +1430,12 @@ TComSPS::TComSPS()
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+, m_useGolombRiceParameterAdaptation(false)
+#else
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
 , m_useGolombRiceGroupAdaptation(false)
+#endif
 #endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)

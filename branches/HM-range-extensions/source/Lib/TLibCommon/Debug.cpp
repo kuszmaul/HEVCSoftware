@@ -176,8 +176,11 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION,                settingNameWidth, settingValueWidth);
+#if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
+#endif
 
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP,                         settingNameWidth, settingValueWidth);

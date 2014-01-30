@@ -239,12 +239,17 @@
 
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 
-#define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
+
+#define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice
 #define RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT                                1 ///< 0 = do not take into account the difference in luma/chroma bit depths, 1 (default) = account for any difference between luma and chroma bit depths
 #define RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP                                 1 ///< 0 = use one context to signal the two largest values for alpha, 1 (default) = use an additional context for signalling the largest value of alpha in cross-component prediction (CCP)
 #define RExt__P0222_SAO_OFFSET_BIT_SHIFT                                       1 ///< 0 = do not use SAO offset bit shift, 1 (default) use SAO offset bit shift in non-version 1 profiles.
 #define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
+
+#if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+#define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
+#endif
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -278,8 +283,13 @@
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME                4 ///< QP' to use for mixed_lossy_lossless coding.
 
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+#define RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS                           4
+#define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
+#else
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
 #define MAXIMUM_GOLOMB_RICE_PARAMETER                                          7
+#endif
 #endif
 
 #define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.

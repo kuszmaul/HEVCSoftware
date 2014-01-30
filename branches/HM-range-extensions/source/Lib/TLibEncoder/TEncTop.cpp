@@ -626,8 +626,12 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSAO( m_bUseSAO );
   m_cSPS.setUseResidualRotation(m_useResidualRotation);
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
+#else
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   m_cSPS.setUseGolombRiceGroupAdaptation(m_useGolombRiceGroupAdaptation);
+#endif
 #endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
