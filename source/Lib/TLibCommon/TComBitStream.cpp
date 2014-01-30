@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -242,7 +242,7 @@ Void TComInputBitstream::pseudoRead ( UInt uiNumberOfBits, UInt& ruiBits )
 Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
 {
   assert( uiNumberOfBits <= 32 );
-  
+
   m_numBitsRead += uiNumberOfBits;
 
   /* NB, bits are extracted from the MSB of each byte. */
@@ -314,14 +314,17 @@ void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
   this->m_fifo->insert(at, src.m_fifo->begin(), src.m_fifo->end());
 }
 
-Void TComInputBitstream::readOutTrailingBits ()
+UInt TComInputBitstream::readOutTrailingBits ()
 {
+  UInt count=0;
   UInt uiBits = 0;
 
   while ( ( getNumBitsLeft() > 0 ) && (getNumBitsUntilByteAligned()!=0) )
   {
+    count++;
     read ( 1, uiBits );
   }
+  return count;
 }
 
 TComOutputBitstream& TComOutputBitstream::operator= (const TComOutputBitstream& src)
@@ -370,7 +373,7 @@ Void TComInputBitstream::deleteFifo()
   m_fifo = NULL;
 }
 
-Void TComInputBitstream::readByteAlignment()
+UInt TComInputBitstream::readByteAlignment()
 {
   UInt code = 0;
   read( 1, code );
@@ -383,6 +386,7 @@ Void TComInputBitstream::readByteAlignment()
     read( numBits, code );
     assert(code == 0);
   }
+  return numBits+1;
 }
 
 //! \}
