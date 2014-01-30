@@ -449,6 +449,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
 #endif
 #endif
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  ("AlignCABACBeforeBypass",       m_alignCABACBeforeBypass,          false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data" )
+#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -1612,18 +1615,21 @@ Void TAppEncCfg::xPrintParameter()
 #if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   printf("Golomb-Rice parameter adaptation : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
 #else
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
-  if (m_bUseSAO)
-  {
-    printf("Sao Luma Offset bit shifts      : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]);
-    printf("Sao Chroma Offset bit shifts    : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA]);
-  }
-#endif
-
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   printf("Golomb-Rice aroup adaptation     : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
 #endif
 #endif
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  printf("CABAC bypass bit alignment       : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
+#endif
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  if (m_bUseSAO)
+  {
+    printf("Sao Luma Offset bit shifts       : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]);
+    printf("Sao Chroma Offset bit shifts     : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA]);
+  }
+#endif
+
   switch (m_costMode)
   {
     case COST_STANDARD_LOSSY:               printf("Cost function:                   : Lossy coding (default)\n"); break;

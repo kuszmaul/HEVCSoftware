@@ -179,11 +179,11 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0099_TIME_CODE_SEI,                                      settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT,                          settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION,                settingNameWidth, settingValueWidth);
 #if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
 #endif
-
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT,                      settingNameWidth, settingValueWidth);

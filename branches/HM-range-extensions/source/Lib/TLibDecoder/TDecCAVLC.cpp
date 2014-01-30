@@ -777,6 +777,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");        pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
 #endif
 #endif
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+            READ_FLAG( uiCode, "align_cabac_before_bypass_data_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
+#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;

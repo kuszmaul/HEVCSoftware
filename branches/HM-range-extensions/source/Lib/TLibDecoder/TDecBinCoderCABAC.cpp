@@ -181,6 +181,18 @@ Void TDecBinCABAC::decodeBinEP( UInt& ruiBin, const TComCodingStatisticsClassTyp
 Void TDecBinCABAC::decodeBinEP( UInt& ruiBin )
 #endif
 {
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  if (m_uiRange == 256)
+  {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    decodeAlignedBinsEP(ruiBin, 1, whichStat);
+#else
+    decodeAlignedBinsEP(ruiBin, 1);
+#endif
+    return;
+  }
+#endif
+
   m_uiValue += m_uiValue;
 
   if ( ++m_bitsNeeded >= 0 )
@@ -207,6 +219,18 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins, const TComCodingStat
 Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
 #endif
 {
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  if (m_uiRange == 256)
+  {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    decodeAlignedBinsEP(ruiBin, numBins, whichStat);
+#else
+    decodeAlignedBinsEP(ruiBin, numBins);
+#endif
+    return;
+  }
+#endif
+
   UInt bins = 0;
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   Int origNumBins=numBins;
@@ -254,8 +278,62 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatistics::IncrementStatisticEP(whichStat, origNumBins, Int(ruiBin));
 #endif
-
 }
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+Void TDecBinCABAC::align()
+{
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::UpdateCABACStat(STATS__CABAC_EP_BIT_ALIGNMENT, m_uiRange, 256, 0);
+#endif
+  m_uiRange = 256;
+}
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+Void TDecBinCABAC::decodeAlignedBinsEP( UInt& ruiBins, Int numBins, const class TComCodingStatisticsClassType &whichStat )
+#else
+Void TDecBinCABAC::decodeAlignedBinsEP( UInt& ruiBins, Int numBins )
+#endif
+{
+  Int binsRemaining = numBins;
+  ruiBins = 0;
+
+  assert(m_uiRange == 256); //aligned decode only works when range = 256
+
+  while (binsRemaining > 0)
+  {
+    const UInt binsToRead = std::min<UInt>(binsRemaining, 8); //read bytes if able to take advantage of the system's byte-read function
+    const UInt binMask    = (1 << binsToRead) - 1;
+
+    //The MSB of m_uiValue is known to be 0 because range is 256. Therefore:
+    // > The comparison against the symbol range of 128 is simply a test on the next-most-significant bit
+    // > "Subtracting" the symbol range if the decoded bin is 1 simply involves clearing that bit.
+    //
+    //As a result, the required bins are simply the <binsToRead> next-most-significant bits of m_uiValue
+    //(m_uiValue is stored MSB-aligned in a 16-bit buffer - hence the shift of 15)
+    //
+    //   m_uiValue = |0|V|V|V|V|V|V|V|V|B|B|B|B|B|B|B|        (V = usable bit, B = potential buffered bit (buffer refills when m_bitsNeeded >= 0))
+    //
+    const UInt newBins = (m_uiValue >> (15 - binsToRead)) & binMask;
+
+    ruiBins   = (ruiBins   << binsToRead) | newBins;
+    m_uiValue = (m_uiValue << binsToRead) & 0x7FFF;
+
+    binsRemaining -= binsToRead;
+    m_bitsNeeded  += binsToRead;
+
+    if (m_bitsNeeded >= 0)
+    {
+      m_uiValue    |= m_pcTComBitstream->readByte() << m_bitsNeeded;
+      m_bitsNeeded -= 8;
+    }
+  }
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  TComCodingStatistics::IncrementStatisticEP(whichStat, numBins, Int(ruiBins));
+#endif
+}
+#endif
 
 Void
 TDecBinCABAC::decodeBinTrm( UInt& ruiBin )

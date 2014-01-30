@@ -57,13 +57,23 @@ public:
   Void  finish            ();
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-  Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat );
-  Void  decodeBinEP       ( UInt& ruiBin                          , const class TComCodingStatisticsClassType &whichStat );
-  Void  decodeBinsEP      ( UInt& ruiBin, Int numBins             , const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBin          ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinEP        ( UInt& ruiBin                          , const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinsEP       ( UInt& ruiBin, Int numBins             , const class TComCodingStatisticsClassType &whichStat );
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  Void  decodeAlignedBinsEP( UInt& ruiBins, Int numBins            , const class TComCodingStatisticsClassType &whichStat );
+#endif
 #else
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
   Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  Void  decodeAlignedBinsEP( UInt& ruiBins, Int numBins             );
+#endif
+#endif
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  Void  align             ();
 #endif
 
   Void  decodeBinTrm      ( UInt& ruiBin                           );

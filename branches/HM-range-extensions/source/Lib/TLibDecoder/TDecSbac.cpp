@@ -1298,19 +1298,25 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   //set parameters
 
-  const ChannelType  chType            = toChannelType(compID);
-  const UInt         uiLog2BlockWidth  = g_aucConvertToBit[ uiWidth  ] + 2;
-  const UInt         uiLog2BlockHeight = g_aucConvertToBit[ uiHeight ] + 2;
-  const UInt         uiMaxNumCoeff     = uiWidth * uiHeight;
-  const UInt         uiMaxNumCoeffM1   = uiMaxNumCoeff - 1;
+  const ChannelType  chType                 = toChannelType(compID);
+  const UInt         uiLog2BlockWidth       = g_aucConvertToBit[ uiWidth  ] + 2;
+  const UInt         uiLog2BlockHeight      = g_aucConvertToBit[ uiHeight ] + 2;
+  const UInt         uiMaxNumCoeff          = uiWidth * uiHeight;
+  const UInt         uiMaxNumCoeffM1        = uiMaxNumCoeff - 1;
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
+#endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatisticsClassType ctype_group(STATS__CABAC_BITS__SIG_COEFF_GROUP_FLAG, uiLog2BlockWidth, compID);
   TComCodingStatisticsClassType ctype_map(STATS__CABAC_BITS__SIG_COEFF_MAP_FLAG, uiLog2BlockWidth, compID);
   TComCodingStatisticsClassType ctype_gt1(STATS__CABAC_BITS__GT1_FLAG, uiLog2BlockWidth, compID);
   TComCodingStatisticsClassType ctype_gt2(STATS__CABAC_BITS__GT2_FLAG, uiLog2BlockWidth, compID);
+#if !RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   TComCodingStatisticsClassType ctype_signs(STATS__CABAC_BITS__SIGN_BIT, uiLog2BlockWidth, compID);
   TComCodingStatisticsClassType ctype_escs(STATS__CABAC_BITS__ESCAPE_BITS, uiLog2BlockWidth, compID);
+#endif
 #endif
 
   Bool beValid;
@@ -1424,6 +1430,10 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << MLS_CG_SIZE;
 
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+    Bool escapeDataPresentInGroup = false;
+#endif
+
     Int pos[1 << MLS_CG_SIZE];
 
     if( iScanPosSig == (Int) uiScanPosLast )
@@ -1514,6 +1524,12 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
           {
             firstC2FlagIdx = idx;
           }
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+          else //if a greater-than-one has been encountered already this group
+          {
+            escapeDataPresentInGroup = true;
+          }
+#endif
         }
         else if( (c1 < 3) && (c1 > 0) )
         {
@@ -1529,8 +1545,30 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
         {
           m_pcTDecBinIf->decodeBin( uiBin, baseCtxMod[0] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype_gt2) );
           absCoeff[ firstC2FlagIdx ] = uiBin + 2;
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+          if (uiBin != 0)
+          {
+            escapeDataPresentInGroup = true;
+          }
+#endif
         }
       }
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+      escapeDataPresentInGroup = escapeDataPresentInGroup || (numNonZero > C1FLAG_NUMBER);
+
+      const Bool alignGroup = escapeDataPresentInGroup && alignCABACBeforeBypass;
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+      TComCodingStatisticsClassType ctype_signs((alignGroup ? STATS__CABAC_BITS__ALIGNED_SIGN_BIT    : STATS__CABAC_BITS__SIGN_BIT   ), uiLog2BlockWidth, compID);
+      TComCodingStatisticsClassType ctype_escs ((alignGroup ? STATS__CABAC_BITS__ALIGNED_ESCAPE_BITS : STATS__CABAC_BITS__ESCAPE_BITS), uiLog2BlockWidth, compID);
+#endif
+
+      if (alignGroup)
+      {
+        m_pcTDecBinIf->align();
+      }
+#endif
 
       UInt coeffSigns;
       if ( signHidden && beValid )
@@ -1545,7 +1583,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
       }
 
       Int iFirstCoeff2 = 1;
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+      if (escapeDataPresentInGroup)
+#else
       if (c1 == 0 || numNonZero > C1FLAG_NUMBER)
+#endif
       {
         for( Int idx = 0; idx < numNonZero; idx++ )
         {

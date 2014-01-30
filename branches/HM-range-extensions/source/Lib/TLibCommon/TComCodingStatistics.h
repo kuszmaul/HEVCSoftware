@@ -88,6 +88,11 @@ enum TComCodingStatisticsType
   STATS__TRAILING_BITS,
   STATS__EXPLICIT_RDPCM_BITS,
   STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR,
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+  STATS__CABAC_EP_BIT_ALIGNMENT,
+  STATS__CABAC_BITS__ALIGNED_SIGN_BIT,
+  STATS__CABAC_BITS__ALIGNED_ESCAPE_BITS,
+#endif
   STATS__NUM_STATS
 };
 
@@ -132,13 +137,24 @@ static inline const Char* getName(TComCodingStatisticsType name)
     "CABAC_PCM_ALIGN_BITS",
     "CABAC_PCM_CODE_BITS",
     "BYTE_ALIGNMENT_BITS",
+    "TRAILING_BITS",
     "EXPLICIT_RDPCM_BITS",
-    "CABAC_BITS__INTRA_BLOCK_COPY_VECTOR",
-    "TRAILING_BITS"
+    "CABAC_BITS__INTRA_BLOCK_COPY_VECTOR"
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+   ,"CABAC_EP_BIT_ALIGNMENT",
+    "CABAC_BITS__ALIGNED_SIGN_BIT",
+    "CABAC_BITS__ALIGNED_ESCAPE_BITS"
+#endif
   };
   assert(STATS__NUM_STATS == sizeof(statNames)/sizeof(Char *) && name < STATS__NUM_STATS);
   return statNames[name];
 }
+
+#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
+static inline Bool isAlignedBins(TComCodingStatisticsType statT) { return statT==STATS__CABAC_BITS__ALIGNED_SIGN_BIT || statT==STATS__CABAC_BITS__ALIGNED_ESCAPE_BITS; }
+#else
+static inline Bool isAlignedBins(TComCodingStatisticsType statT) { return false; }
+#endif
 
 static const UInt CODING_STATS_NUM_WIDTHS=7;
 static const UInt CODING_STATS_NUM_SUBCLASSES=CODING_STATS_NUM_WIDTHS*(1+MAX_NUM_COMPONENT+MAX_NUM_CHANNEL_TYPE);
