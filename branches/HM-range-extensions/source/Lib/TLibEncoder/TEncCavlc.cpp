@@ -1142,9 +1142,32 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[0..15]");
-  WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[16..31]");
-  WRITE_CODE(0 , 12, "XXX_reserved_zero_44bits[32..43]");
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  if (ptl->getProfileIdc() == Profile::MAINREXT)
+  {
+    const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
+    WRITE_FLAG(bitDepthConstraint<=12, "general_max_12bit_constraint_flag");
+    WRITE_FLAG(bitDepthConstraint<=10, "general_max_10bit_constraint_flag");
+    WRITE_FLAG(bitDepthConstraint<= 8, "general_max_8bit_constraint_flag");
+    const ChromaFormat chromaFmtConstraint=ptl->getChromaFormatConstraint();
+    WRITE_FLAG(chromaFmtConstraint==CHROMA_422||chromaFmtConstraint==CHROMA_420||chromaFmtConstraint==CHROMA_400, "general_max_422chroma_constraint_flag");
+    WRITE_FLAG(chromaFmtConstraint==CHROMA_420||chromaFmtConstraint==CHROMA_400,                                  "general_max_420chroma_constraint_flag");
+    WRITE_FLAG(chromaFmtConstraint==CHROMA_400,                                                                   "general_max_monochrome_constraint_flag");
+    WRITE_FLAG(ptl->getIntraConstraintFlag(),        "general_intra_constraint_flag");
+    WRITE_FLAG(ptl->getLowerBitRateConstraintFlag(), "general_lower_bit_rate_constraint_flag");
+    WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[0..15]");
+    WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[16..31]");
+    WRITE_CODE(0 ,  4, "XXX_reserved_zero_36bits[32..35]");
+  }
+  else
+  {
+#endif
+    WRITE_CODE(0x0000 , 16, "XXX_reserved_zero_44bits[0..15]");
+    WRITE_CODE(0x0000 , 16, "XXX_reserved_zero_44bits[16..31]");
+    WRITE_CODE(0x000  , 12, "XXX_reserved_zero_44bits[32..43]");
+#if RExt__O1005V4_CONSTRAINT_FLAGS
+  }
+#endif
 }
 
 /**
