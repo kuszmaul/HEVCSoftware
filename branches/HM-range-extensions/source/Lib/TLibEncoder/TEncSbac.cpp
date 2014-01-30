@@ -885,11 +885,23 @@ Void TEncSbac::codeCrossComponentPrediction( TComTU &rTu, ComponentID compID )
     if (alpha != 0)
     {
       static const Int log2AbsAlphaMinus1Table[8] = { 0, 1, 1, 2, 2, 2, 3, 3 };
-
       assert(abs(alpha) <= 8);
 
+#if RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP
+      if (abs(alpha)>1)
+      {
+        m_pcBinIf->encodeBin(1, pCtx[1]);
+        xWriteUnaryMaxSymbol( log2AbsAlphaMinus1Table[abs(alpha) - 1] - 1, (pCtx + 2), 1, 2 );
+      }
+      else
+      {
+        m_pcBinIf->encodeBin(0, pCtx[1]);
+      }
+      m_pcBinIf->encodeBin( ((alpha < 0) ? 1 : 0), pCtx[4] );
+#else
       xWriteUnaryMaxSymbol( log2AbsAlphaMinus1Table[abs(alpha) - 1], (pCtx + 1), 1, 3 );
       m_pcBinIf->encodeBin( ((alpha < 0) ? 1 : 0), pCtx[3] );
+#endif
     }
     DTRACE_CABAC_T( "\tAlpha=" )
     DTRACE_CABAC_V( pcCU->getCrossComponentPredictionAlpha( uiAbsPartIdx, compID ) )
