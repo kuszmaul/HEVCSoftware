@@ -66,6 +66,39 @@
 	\end{longtable}
 }
 
+\newenvironment{OptionTableNoShorthand}[1]{%
+	\footnotesize
+	\def\arraystretch{1.8}
+	\clearOptions
+	\begin{longtable}{l<{\makecell[tl]{\optOption}}%
+	                  c<{\makecell[tc]{\optDefault}}%
+	                  >{\def\arraystretch{1.0}}p{0.5\textwidth}<{\clearOptions}}
+	\caption{#1} \\
+	\hspace*{12em}&\hspace*{8em}&\kill
+	\hline
+	 \thead{Option} &
+	 \thead{Default} &
+	 \thead{Description} \\
+	\hline
+	\endfirsthead
+	\caption[]{#1 (Continued)} \\
+	\hspace*{12em}&\hspace*{8em}&\kill
+	\hline
+	 \thead{Option} &
+	 \thead{Default} &
+	 \thead{Description} \\
+	\hline
+	\endhead
+	 \multicolumn{3}{r}{Continued...}\\
+	 \hline
+	\endfoot
+	 \hline
+	\endlastfoot
+}{%
+	\hline
+	\end{longtable}
+}
+
 \newenvironment{MacroTable}[1]{%
 	\footnotesize
 	\def\arraystretch{1.3}
@@ -943,7 +976,7 @@ value delta for the picture with POC value $n$.
 Specifies whether QP values for non-I frames will be calculated on the
 fly based on statistics of previously coded frames.
 \\
-\Option{RecalculateQPAccordingToLambda} &
+\Option{RecalculateQP...} \Option{AccordingToLambda} &
 \ShortOption{\None} &
 \Default{false} &
 Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case.
@@ -1346,39 +1379,32 @@ Rate control: force intra QP to be equal to initial QP or not.
 %%
 %% VUI parameters
 %%
-\begin{OptionTable}{VUI parameters}
-\Option{VuiParametersPresent} &
-\ShortOption{-vui} &
+\begin{OptionTableNoShorthand}{VUI parameters}
+\Option{VuiParametersPresent} \Option{-vui} &
 \Default{false} &
 Enable generation of vui_parameters().
 \\
 \Option{AspectRatioInfoPresent} &
-\ShortOption{} &
 \Default{false} &
 Signals whether aspect_ratio_idc is present.
 \\
 \Option{AspectRatioIdc} &
-\ShortOption{} &
 \Default{0} &
 aspect_ratio_idc
 \\
 \Option{SarWidth} &
-\ShortOption{} &
 \Default{0} &
 Specifies the horizontal size of the sample aspect ratio.
 \\
 \Option{SarHeight} &
-\ShortOption{} &
 \Default{0} &
 Specifies the vertical size of the sample aspect ratio.
 \\
 \Option{OverscanInfoPresent} &
-\ShortOption{} &
 \Default{false} &
 Signals whether overscan_info_present_flag is present.
 \\
 \Option{OverscanAppropriate} &
-\ShortOption{} &
 \Default{false} &
 Indicates whether cropped decoded pictures are suitable for display using overscan.
 \par
@@ -1388,17 +1414,14 @@ Indicates whether cropped decoded pictures are suitable for display using oversc
 \end{tabular}
 \\
 \Option{VideoSignalTypePresent} &
-\ShortOption{} &
 \Default{false} &
 Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present.
 \\
 \Option{VideoFormat} &
-\ShortOption{} &
 \Default{5} &
 Indicates representation of pictures.
 \\
 \Option{VideoFullRange} &
-\ShortOption{} &
 \Default{false} &
 Indicates the black level and range of luma and chroma signals.
 \par
@@ -1408,48 +1431,39 @@ Indicates the black level and range of luma and chroma signals.
 \end{tabular}
 \\
 \Option{ColourDescriptionPresent} &
-\ShortOption{} &
 \Default{false} &
 Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present.
 \\
 \Option{ColourPrimaries} &
-\ShortOption{} &
 \Default{2} &
 Indicates chromaticity coordinates of the source primaries.
 \\
 \Option{TransferCharateristics} &
-\ShortOption{} &
 \Default{2} &
 Indicates the opto-electronic transfer characteristics of the source.
 \\
 \Option{MatrixCoefficients} &
-\ShortOption{} &
 \Default{2} &
 Describes the matrix coefficients used in deriving luma and chroma from RGB primaries.
 \\
 \Option{ChromaLocInfoPresent} &
-\ShortOption{} &
 \Default{false} &
 Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present.
 \\
 \Option{ChromaSampleLocTypeTopField} &
-\ShortOption{} &
 \Default{0} &
 Specifies the location of chroma samples for top field.
 \\
 \Option{ChromaSampleLocTypeBottomField} &
-\ShortOption{} &
 \Default{0} &
 Specifies the location of chroma samples for bottom field.
 \\
 \Option{NeutralChromaIndication} &
-\ShortOption{} &
 \Default{false} &
 Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1).
 \\
 
 \Option{DefaultDisplayWindowFlag} &
-\ShortOption{\None} &
 \Default{0} &
 Indicates the presence of the Default Window parameters.
 \par
@@ -1463,7 +1477,6 @@ Indicates the presence of the Default Window parameters.
 \Option{DefDispWinRightOffset}%
 \Option{DefDispWinTopOffset}%
 \Option{DefDispWinBottomOffset} &
-\ShortOption{\None} &
 \Default{0} &
 Specifies the horizontal and vertical offset to be applied to the
 input video from the conformance window in luma samples.
@@ -1471,53 +1484,45 @@ Must be a multiple of the chroma resolution (e.g. a multiple of two for 4:2:0).
 \\
 
 \Option{BitstreamRestriction} &
-\ShortOption{} &
 \Default{false} &
 Signals whether bitstream restriction parameters are present.
 \\
 \Option{TilesFixedStructure} &
-\ShortOption{} &
 \Default{false} &
 Indicates that each active picture parameter set has the same values of the syntax elements related to tiles.
 \\
 \Option{MotionVectorsOverPicBoundaries} &
-\ShortOption{} &
 \Default{false} &
 Indicates that no samples outside the picture boundaries are used for inter prediction.
 \\
 \Option{MaxBytesPerPicDenom} &
-\ShortOption{} &
 \Default{2} &
 Indicates a number of bytes not exceeded by the sum of the sizes of the VCL NAL units associated with any coded picture.
 \\
 \Option{MaxBitsPerMinCuDenom} &
-\ShortOption{} &
 \Default{1} &
 Indicates an upper bound for the number of bits of coding_unit() data.
 \\
 \Option{Log2MaxMvLengthHorizontal} &
-\ShortOption{} &
 \Default{15} &
 Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units.
 \\
 \Option{Log2MaxMvLengthVertical} &
-\ShortOption{} &
 \Default{15} &
 Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units.
 \\
-\end{OptionTable}
+\end{OptionTableNoShorthand}
 
 %%
 %% SEI messages
 %%
-\begin{OptionTable}{SEI messages}
+\begin{OptionTableNoShorthand}{SEI messages}
 \Option{SEIDecodedPictureHash} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the calculation and insertion of the Decoded picture hash
 SEI messages.
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.35\textwidth}}
   0 & Disabled \\
   1 & Transmits MD5 in SEI message and writes the value to the encoder
       log \\
@@ -1528,61 +1533,52 @@ SEI messages.
 \end{tabular}
 \\
 \Option{SEIpictureDigest} &
-\ShortOption{\None} &
 \Default{0} &
 Deprecated alias for SEIDecodedPictureHash.
 Do not use anymore.
 \\
 \Option{SEIRecoveryPoint} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Recovery point
 SEI messages.
 \\
 \Option{SEIActiveParameterSets} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Active parameter sets
 SEI messages.
 \\
 \Option{SEIBufferingPeriod} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Buffering period
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
 SEIBufferingPeriod requires SEIActiveParameterSets to be enabled.
 \\
 \Option{SEIPictureTiming} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Picture timing
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \\
 \Option{SEIDecodingUnitInfo} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Decoding unit information
 SEI messages. This option has no effect if VuiParametersPresent is disabled.
 \\
 \Option{SEIGradualDecodingRefreshInfo} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Gradual decoding refresh information
 SEI messages.
 \\
 \Option{SEITemporalLevel0Index} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Temporal level zero index
 SEI messages.
 \\
 \Option{SEIDisplayOrientation} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Display orientation
 SEI messages.
 \par
-\begin{tabular}{cp{0.30\textwidth}}
+\begin{tabular}{cp{0.20\textwidth}}
   0 & Disabled \\
   N: $0 < N < (2^{16} - 1)$ & Enable display orientation SEI message with 
   \mbox{anticlockwise_rotation = N} 
@@ -1590,17 +1586,15 @@ SEI messages.
 \end{tabular}
 \\
 \Option{SEIFramePacking} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Frame packing arrangement SEI messages.
 \\
 \Option{SEIFramePackingType} &
-\ShortOption{\None} &
 \Default{0} &
 Indicates the arrangement type in the Frame packing arrangement SEI message.
 This option has no effect if SEIFramePacking is disabled.
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.35\textwidth}}
   0 & Checkerboard \\
   1 & Line Alternate \\
   2 & Column Alternate \\
@@ -1612,68 +1606,58 @@ This option has no effect if SEIFramePacking is disabled.
 \end{tabular}
 \\
 \Option{SEIFramePackingInterpretation} &
-\ShortOption{\None} &
 \Default{0} &
 Indicates the constituent frames relationship in the Frame packing arrangement SEI message. 
 This option has no effect if SEIFramePacking is disabled.
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.35\textwidth}}
   0 & Unspecified \\
   1 & Frame 0 is associated with the left view of a stereo pair \\
   2 & Frame 0 is associated with the right view of a stereo pair \\
 \end{tabular}
 \\
 \Option{SEIFramePackingQuincunx} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the quincunx_sampling signalling in the
 Frame packing arrangement SEI messages. This option has no
 effect if SEIFramePacking is disabled.
 \\
 \Option{SEIFramePackingId} &
-\ShortOption{\None} &
 \Default{0} &
 Indicates the session number in the Frame packing arrangement
 SEI messages. This option has no effect if SEIFramePacking is
 disabled.
 \\
 \Option{SEIToneMappingInfo} &
-\ShortOption{\None} &
 \Default{0} &
 Enables or disables the insertion of the Tone Mapping SEI message.
 \\
 \Option{SEIToneMapId} &
-\ShortOption{\None} &
 \Default{0} &
 Specifies Id of Tone Mapping SEI message for a given session.
 \\
 \Option{SEIToneMapCancelFlag} &
-\ShortOption{\None} &
 \Default{0} &
 Indicates that Tone Mapping SEI message cancels the persistance or follows.
 \\
 \Option{SEIToneMapPersistenceFlag} &
-\ShortOption{\None} &
 \Default{1} &
 Specifies the persistence of the Tone Mapping SEI message.
 \\
 \Option{SEIToneMapCodedDataBitDepth} &
-\ShortOption{\None} &
 \Default{10} &
 Specifies Coded Data BitDepth of Tone Mapping SEI messages.
 \\
 \Option{SEIToneMapTargetBitDepth} &
-\ShortOption{\None} &
 \Default{8} &
 Specifies Output BitDepth of Tome mapping function.
 \\
 \Option{SEIToneMapModelId} &
-\ShortOption{\None} &
 \Default{0} &
 Specifies Model utilized for mapping coded data into 
 target_bit_depth range.
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.35\textwidth}}
   0 & linear mapping with clipping \\
   1 & sigmoidal mapping \\
   2 & user-defined table mapping \\
@@ -1682,61 +1666,73 @@ target_bit_depth range.
 \end{tabular}
 \\
 \Option{SEIToneMapMinValue} &
-\ShortOption{\None} &
 \Default{0} &
 Specifies the minimum value in mode 0.
 \\
 \Option{SEIToneMapMaxValue} &
-\ShortOption{\None} &
 \Default{1023} &
 Specifies the maxmum value in mode 0.
 \\
 \Option{SEIToneMapSigmoidMidpoint} &
-\ShortOption{\None} &
 \Default{512} &
 Specifies the centre point in mode 1.
 \\
 \Option{SEIToneMapSigmoidWidth} &
-\ShortOption{\None} &
 \Default{960} &
 Specifies the distance between 5% and 95% values of 
 the target_bit_depth in mode 1.
 \\
 \Option{SEIToneMapStartOfCodedInterval} &
-\ShortOption{\None} &
 \Default{\None} &
 Array of user-defined mapping table. 
 Default table can be set to the following:
 \par
-\begin{tabular}{cp{0.45\textwidth}}
+\begin{tabular}{cp{0.35\textwidth}}
 0 12 24 36 48 60 72 84 96 108 120 132 144 156 168 180 
+\\
 192 192 196 204 208 216 220 228 232 240 248 252 260 264 
+\\
 272 276 284 292 292 296 300 304 308 312 320 324 328 332 
+\\
 336 344 348 352 356 360 368 372 376 380 384 388 396 400 
+\\
 404 408 412 420 424 428 432 436 444 444 444 448 452 456 
+\\
 460 464 468 472 476 476 480 484 488 492 496 500 504 508 
+\\
 508 512 516 520 524 528 532 536 540 540 544 548 552 556 
+\\
 560 564 568 572 572 576 580 584 588 592 596 600 604 604 
+\\
 608 612 616 620 624 628 632 636 636 640 644 648 652 656 
+\\
 660 664 668 672 672 672 676 680 680 684 688 692 692 696 
+\\
 700 704 704 708 712 716 716 720 724 724 728 732 736 736 
+\\
 740 744 748 748 752 756 760 760 764 768 768 772 776 780 
+\\
 780 784 788 792 792 796 800 804 804 808 812 812 816 820 
+\\
 824 824 828 832 836 836 840 844 848 848 852 856 860 860 
+\\
 860 864 864 868 872 872 876 880 880 884 884 888 892 892 
+\\
 896 900 900 904 908 908 912 912 916 920 920 924 928 928 
+\\
 932 936 936 940 940 944 948 948 952 956 956 960 964 964 
+\\
 968 968 972 976 976 980 984 984 988 992 992 996 996 1000 
+\\
 1004 1004 1008 1012 1012 1016 1020 1024
+\\
 \end{tabular}
 \\
 \Option{SEIToneMapNumPivots} &
-\ShortOption{\None} &
 \Default{5} &
 Specifies the number of pivot points in mode 3.
 \\
 \Option{SEIToneMapCodedPivotValue} &
-\ShortOption{\None} &
 \Default{\None} &
 Array of coded pivot point in mode 3.
 Default table can be set to the following:
@@ -1746,7 +1742,6 @@ Default table can be set to the following:
 \end{tabular}
 \\
 \Option{SEIToneMapTargetPivotValue} &
-\ShortOption{\None} &
 \Default{\None} &
 Array of target pivot point in mode 3.
 Default table can be set to the following:
@@ -1755,57 +1750,47 @@ Default table can be set to the following:
 48 73 111 168 215
 \end{tabular}
 \\
-\Option{SEIToneMapCameraIsoSpeedIdc} &
-\ShortOption{\None} &
+\Option{SEIToneMap...} \Option{CameraIsoSpeedIdc} &
 \Default{0} &
 Indicates the camera ISO speed for daylight illumination.
 \\
-\Option{SEIToneMapCameraIsoSpeedValue} &
-\ShortOption{\None} &
+\Option{SEIToneMap...} \Option{CameraIsoSpeedValue} &
 \Default{420} &
 Specifies the camera ISO speed for daylight illumination of Extended_ISO.
 \\
-\Option{SEIToneMapExposureCompensationValueSignFlag} &
-\ShortOption{\None} &
+\Option{SEIToneMapExposure...} \Option{CompensationValueSignFlag} &
 \Default{0} &
 Specifies the sign of ExposureCompensationValue.
 \\
-\Option{SEIToneMapExposureCompensationValueNumerator} &
-\ShortOption{\None} &
+\Option{SEIToneMapExposure...} \Option{CompensationValueNumerator} &
 \Default{0} &
 Specifies the numerator of ExposureCompensationValue.
 \\
-\Option{SEIToneMapExposureCompensationValueDenomIdc} &
-\ShortOption{\None} &
+\Option{SEIToneMapExposure...} \Option{CompensationValueDenomIdc} &
 \Default{2} &
 Specifies the denominator of ExposureCompensationValue.
 \\
-\Option{SEIToneMapRefScreenLuminanceWhite} &
-\ShortOption{\None} &
+\Option{SEIToneMapRef...} \Option{ScreenLuminanceWhite} &
 \Default{350} &
 Specifies reference screen brightness setting in units of candela per square metre.
 \\
-\Option{SEIToneMapExtendedRangeWhiteLevel} &
-\ShortOption{\None} &
+\Option{SEIToneMapExtended...} \Option{RangeWhiteLevel} &
 \Default{800} &
 Indicates the luminance dynamic range.
 \\
-\Option{SEIToneMapNominalBlackLevelLumaCodeValue} &
-\ShortOption{\None} &
+\Option{SEIToneMapNominal...} \Option{BlackLevelLumaCodeValue} &
 \Default{16} &
 Specifies luma sample value of the nominal black level assigned decoded pictures.
 \\
-\Option{SEIToneMapNominalWhiteLevelLumaCodeValue} &
-\ShortOption{\None} &
+\Option{SEIToneMapNominal...} \Option{WhiteLevelLumaCodeValue} &
 \Default{235} &
 Specifies luma sample value of the nominal white level assigned decoded pictures.
 \\
-\Option{SEIToneMapExtendedWhiteLevelLumaCodeValue} &
-\ShortOption{\None} &
+\Option{SEIToneMapExtended...} \Option{WhiteLevelLumaCodeValue} &
 \Default{300} &
 Specifies luma sample value of the extended dynamic range assigned decoded pictures.
 \\
-\end{OptionTable}
+\end{OptionTableNoShorthand}
 
 %%
 %%
@@ -1903,11 +1888,211 @@ MAX_CHROMA_FORMAT_IDC &
 Numerous constants that guard individual adoptions are defined within
 \url{source/Lib/TLibCommon/TypeDef.h}.
 
+\clearpage
+\subsection{Range Extensions encoder parameters}
+
+The Range Extension software provides the following additional options.
+%%
+%% All range extensions options
+%%
+\begin{OptionTableNoShorthand}{Range Extensions file, I/O and source parameters}
+\Option{MSBExtendedBitDepth}%
+\Option{MSBExtendedBitDepthC}%
+ &
+\Default{0}%
+\Default{0} &
+Extends the input video by adding MSBs of value 0. When 0, no extension is applied and the InputBitDepth is used.
+
+The MSBExtendedBitDepth becomes the effective file InputBitDepth for subsequent processing.
+\\
+
+\Option{InputColourSpaceConvert} &
+\Default{""} &
+The colour space conversion to apply to input video. Permitted values are:
+\par
+\begin{tabular}{lp{0.3\textwidth}}
+  UNCHANGED & No colour space conversion is applied \\
+  YCbCrToYCrCb & Swap the second and third components \\
+  YCbCrtoYYY & Set the second and third components to the values in the first \\
+  RGBtoGBR & Reorder the three components \\
+\end{tabular}
+
+If no value is specified, no colour space conversion is applied. The list may eventually also include RGB to YCbCr or YCgCo conversions.
+\\
+
+\Option{SNRInternalColourSpace} &
+\Default{false} &
+When this is set true, then no colour space conversion is applied prior to PSNR calculation, otherwise the inverse of InputColourSpaceConvert is applied.
+\\
+
+\Option{OutputInternalColourSpace} &
+\Default{false} &
+When this is set true, then no colour space conversion is applied to the reconstructed video, otherwise the inverse of InputColourSpaceConvert is applied.
+\\
+
+\Option{InputChromaFormat} &
+\Default{420} &
+Specifies the chroma format used in the input file. Permitted values are 400, 420, 422 or 444.
+\\
+
+\Option{ChromaFormatIDC}
+\Option{-cf} &
+\Default{0} &
+Specifies the chroma format to use for processing. Permitted values are 400, 420, 422 or 444; the value of 0 indicates that the value of InputChromaFormat should be used instead.
+\\
+
+\Option{MSEBasedSequencePSNR} &
+\Default{0} &
+When 0, the PSNR output is a linear average of the frame PSNRs; when 1, additional PSNRs are output which are formed from the average MSE of all the frames. The latter is useful when coding near-losslessly, where occasional frames become lossless.
+\\
+
+\end{OptionTableNoShorthand}
+
+\begin{OptionTableNoShorthand}{Range Extensions profiles and constraints}
+
+\Option{Profile} &
+\Default{\None} &
+The Profile option of HM has been extended to include "main-RExt"
+\\
+
+\Option{MaxBitDepthConstraint} &
+\Default{0} &
+Specifies the value to use to derive the general_max_bit_depth constraint flags for RExt profiles; when 0, use $\max(InternalBitDepth, InternalBitDepthC)$
+\\
+
+\Option{MaxChromaFormatConstraint} &
+\Default{0} &
+Specifies the chroma-format to use for the general profile constraints for RExt profiles; when 0, use the value of ChromaFormatIDC.
+\\
+
+\Option{IntraConstraintFlag} &
+\Default{0} &
+Specifies the value of general_intra_constraint_flag to use for RExt profiles.
+\\
+
+\Option{LowerBitRateConstraintFlag} &
+\Default{0} &
+Specifies the value of general_lower_bit_constraint_flag to use for RExt profiles.
+\\
+
+\end{OptionTableNoShorthand}
+
+
+\begin{OptionTableNoShorthand}{Range Extensions tool parameters}
+
+\Option{CostMode} &
+\Default{lossy} &
+Specifies the cost mode to use.
+\par
+\begin{tabular}{lp{0.3\textwidth}}
+  lossy                   & $cost=distortion+\lambda \times bits$ \\
+  sequence_level_lossless & $cost=distortion / \lambda + bits$. \\
+  lossless                & As with sequence_level_lossless, but QP is also set to 0 (this will be deprecated in the future) \\
+  mixed_lossless_lossy    & As with sequence_level_lossless, but QP'=4 is used for pre-estimates of transquant-bypass blocks \\
+\end{tabular}
+\\
+
+
+\Option{ExtendedPrecision} &
+\Default{false} &
+Specifies the use of extended_precision_processing flag. Note that unless the HIGH_BIT_DEPTH_SUPPORT macro in TypeDef.h is enabled, all internal bit depths must be 8 when the ExtendedPrecision setting is enabled.
+\\
+
+\Option{HighPrecisionPredictionWeighting} &
+\Default{false} &
+Specifies the value of high_precision_prediction_weighting_flag.
+\\
+
+\Option{SingleComponentLoopInterSearch} &
+\Default{false} &
+When true, specifies the use of the single-component loop inter search, rather than the multi-pass approach. It is hoped that this option can be removed in a future revision.
+\\
+
+\Option{IntraBlockCopyEnabled} &
+\Default{false} &
+When true, specifies the use of the intra block copy tool.
+\\
+
+\Option{IntraBlockCopyFastSearch} &
+\Default{true} &
+When true, specifies the use of restricted searching for intra block copy motion vectors to reduce the encoding time.
+\\
+
+\Option{CrossComponentPrediction} &
+\Default{true} &
+When true, specifies the use of the cross component prediction tool.
+\\
+
+\Option{ReconBasedCrossCPredictionEstimate} &
+\Default{false} &
+If true, then when determining the alpha value for cross-component prediction, use the reconstructed residual rather than the pre-transform encoder-side residual
+\\
+
+\Option{SaoLumaOffsetBitShift}
+\Option{SaoChromaOffsetBitShift}&
+\Default{0}
+\Default{0} &
+Specifies the shift to apply to the SAO parameters.
+\\
+
+\Option{TransformSkipLog2MaxSize} &
+\Default{2} &
+Specifies the maximum TU size for which transform-skip can be used; the minimum value is 2.
+\\
+
+\Option{ImplicitResidualDPCM} &
+\Default{false} &
+When true, specifies the use of the implicitly signalled residual RDPCM tool (for intra)
+\\
+
+\Option{ExplicitResidualDPCM} &
+\Default{false} &
+When true, specifies the use of the explicitly signalled residual RDPCM tool (for intra-block-copy and inter)
+\\
+
+\Option{ResidualRotation} &
+\Default{false} &
+When true, specifies the use of the residual rotation tool
+\\
+
+\Option{SingleSignificanceMapContext} &
+\Default{false} &
+When true, specifies the use of a single significance map context for transform-skipped and transquant-bypassed TUs.
+\\
+
+\Option{GolombRiceParameterAdaptation} &
+\Default{false} &
+When true, enable the adaptation of the Golomb-Rice parameter over the course of each slice.
+\\
+
+\Option{AlignCABACBeforeBypass} &
+\Default{false} &
+When true, align the CABAC engine to a defined fraction of a bit prior to coding bypass data (including sign bits) when coeff_abs_level_remaining syntax elements are present in the group.
+\\
+
+\Option{IntraReferenceSmoothing} &
+\Default{true} &
+When true, enable intra reference smoothing.
+\\
+
+\Option{SEINoDisplay} &
+\Default{0} &
+When non-zero, generate no-display SEI message for temporal layer N or higher.
+\\
+
+\Option{SEITimeCode} &
+\Default{false} &
+When true, generate time code SEI messages.
+\\
+\end{OptionTableNoShorthand}
+
+
 %%
 %%
 %%
 \clearpage
 \section{Using the decoder}
+\subsection{Using the HM decoder}
 \begin{verbatim}
 TAppDecoder -b str.bin -o dec.yuv [options]
 \end{verbatim}
@@ -1988,6 +2173,28 @@ Video region to be output by the decoder.
 \\
 
 \end{OptionTable}
+\clearpage
+\subsection{Using the RExt decoder}
+
+\begin{OptionTableNoShorthand}{Additional RExt decoder options}
+\Option{OutputColourSpaceConvert} &
+\Default{""} &
+Specifies the colour space conversion to apply to 444 video. Permitted values are:
+\par
+\begin{tabular}{lp{0.45\textwidth}}
+  UNCHANGED   & No colour space conversion is applied \\
+  YCrCbToYCbCr & Swap the second and third components \\
+  GBRtoRGB     & Reorder the three components \\
+\end{tabular}
+If no value is specified, no colour space conversion is applied. The list may eventually also include RGB to YCbCr or YCgCo conversions.\\
+\\
+
+\Option{SEINoDisplay} &
+\Default{false} &
+When true, do not output frames for which there is an SEI NoDisplay message.
+\\
+
+\end{OptionTableNoShorthand}
 
 
 \end{document}
