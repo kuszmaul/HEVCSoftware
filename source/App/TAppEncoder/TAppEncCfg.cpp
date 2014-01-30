@@ -429,8 +429,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AMP",                     m_enableAMP,               true,  "Enable asymmetric motion partitions")
   ("IntraBlockCopyEnabled",   m_useIntraBlockCopy,  false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
   ("IntraBlockCopyFastSearch", m_intraBlockCopyFastSearch, true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
-  ("CrossComponentDecorrelation",     m_useCrossComponentDecorrelation,  false, "Enable the use of cross-component decorrelation (not valid in V1 profiles)")
-  ("ReconBasedDecorrelationEstimate", m_reconBasedDecorrelationEstimate, false, "When determining the alpha value for cross-component decorrelation, use the decoded residual rather than the pre-transform encoder-side residual")
+  ("CrossComponentPrediction", m_useCrossComponentPrediction,  false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
+  ("ReconBasedCrossCPredictionEstimate", m_reconBasedCrossCPredictionEstimate, false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
   ("TransformSkip",           m_useTransformSkip,        false, "Intra transform skipping")
   ("TransformSkipFast",       m_useTransformSkipFast,    false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize", m_transformSkipLog2MaxSize,  2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
@@ -949,14 +949,13 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
 
-  if(m_useCrossComponentDecorrelation && (m_chromaFormatIDC != CHROMA_444))
+  if(m_useCrossComponentPrediction && (m_chromaFormatIDC != CHROMA_444))
   {
-      fprintf(stderr, "***************************************************************************\n");
-      fprintf(stderr, "** WARNING: Cross-component decorrelation is specified for 4:4:4         **\n");
-      fprintf(stderr, "**          format only.                                                 **\n");
-      fprintf(stderr, "***************************************************************************\n");
+      fprintf(stderr, "****************************************************************************\n");
+      fprintf(stderr, "** WARNING: Cross-component prediction is specified for 4:4:4 format only **\n");
+      fprintf(stderr, "****************************************************************************\n");
 
-      m_useCrossComponentDecorrelation = false;
+      m_useCrossComponentPrediction = false;
   }
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
@@ -1592,7 +1591,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra Block Copying             : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
   printf("Residual rotation               : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
   printf("Single significance map context : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
-  printf("Cross-component decorrelation   : %s\n", (m_useCrossComponentDecorrelation         ? (m_reconBasedDecorrelationEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
+  printf("Cross-component prediction      : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
   printf("High-precision prediction weight: %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
 #if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
   printf("Golomb-Rice Group Adaptation    : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );

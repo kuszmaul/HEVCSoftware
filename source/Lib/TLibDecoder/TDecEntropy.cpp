@@ -567,7 +567,7 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const I
           {
             if(isChroma(compID) && (cbf[COMPONENT_Y] != 0))
             {
-              m_pcEntropyDecoderIf->parseCrossComponentDecorrelation( rTu, compID );
+              m_pcEntropyDecoderIf->parseCrossComponentPrediction( rTu, compID );
             }
 
             if(cbf[compID] != 0)

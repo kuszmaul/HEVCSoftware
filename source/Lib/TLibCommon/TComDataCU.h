@@ -95,7 +95,7 @@ private:
   Bool*          m_skipFlag;           ///< array of skip flags
   Char*          m_pePartSize;         ///< array of partition sizes
   Char*          m_pePredMode;         ///< array of prediction modes
-  Char*          m_decorrelationAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component decorrelation alpha values
+  Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
   Char*          m_phQP;               ///< array of QP values
   UChar*         m_puhTrIdx;           ///< array of transform indices
@@ -240,8 +240,8 @@ public:
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
-  Char*         getCrossComponentDecorrelationAlpha( ComponentID compID )             { return m_decorrelationAlpha[compID];         }
-  Char          getCrossComponentDecorrelationAlpha( UInt uiIdx, ComponentID compID ) { return m_decorrelationAlpha[compID][uiIdx];  }
+  Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
+  Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
 
   Bool*         getCUTransquantBypass ()                        { return m_CUTransquantBypass;        }
   Bool          getCUTransquantBypass( UInt uiIdx )             { return m_CUTransquantBypass[uiIdx]; }
@@ -283,7 +283,7 @@ public:
 
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
 
-  Void          setCrossComponentDecorrelationAlphaPartRange ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
+  Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );

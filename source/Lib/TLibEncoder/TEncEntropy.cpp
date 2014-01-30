@@ -381,7 +381,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
           {
             if (isChroma(compID) && (cbf[COMPONENT_Y] != 0))
             {
-              m_pcEntropyCoderIf->codeCrossComponentDecorrelation( rTu, compID );
+              m_pcEntropyCoderIf->codeCrossComponentPrediction( rTu, compID );
             }
 
             if (cbf[compID] != 0)
@@ -458,9 +458,9 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 
-Void TEncEntropy::encodeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID )
+Void TEncEntropy::encodeCrossComponentPrediction( TComTU &rTu, ComponentID compID )
 {
-  m_pcEntropyCoderIf->codeCrossComponentDecorrelation( rTu, compID );
+  m_pcEntropyCoderIf->codeCrossComponentPrediction( rTu, compID );
 }
 
 /** encode motion information for every PU block

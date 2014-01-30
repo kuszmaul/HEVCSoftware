@@ -173,8 +173,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseFastDecisionForMerge      ( m_useFastDecisionForMerge  );
   m_cTEncTop.setUseCbfFastMode               ( m_bUseCbfFastMode  );
   m_cTEncTop.setUseEarlySkipDetection        ( m_useEarlySkipDetection );
-  m_cTEncTop.setUseCrossComponentDecorrelation( m_useCrossComponentDecorrelation );
-  m_cTEncTop.setUseReconBasedDecorrelationEstimate( m_reconBasedDecorrelationEstimate );
+  m_cTEncTop.setUseCrossComponentPrediction  ( m_useCrossComponentPrediction );
+  m_cTEncTop.setUseReconBasedCrossCPredictionEstimate( m_reconBasedCrossCPredictionEstimate );
   m_cTEncTop.setUseTransformSkip             ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
   m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );

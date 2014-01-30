@@ -103,7 +103,7 @@ public:
   virtual Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
   virtual Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )      = 0;
 
-  virtual Void codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID ) = 0;
+  virtual Void codeCrossComponentPrediction( TComTU &rTu, ComponentID compID ) = 0;
 
   virtual Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID ) = 0;
@@ -182,7 +182,7 @@ public:
   Void encodeIntraBCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
-  Void encodeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID );
+  Void encodeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 
 private:
   Void xEncodeTransform        ( Bool& bCodeDQP, TComTU &rTu );

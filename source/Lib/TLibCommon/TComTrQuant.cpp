@@ -1546,7 +1546,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
   TComDataCU* pcCU = rTu.getCU();
   UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
   UInt uiTrMode=rTu.GetTransformDepthRel();
-  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation()) )
+  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction()) )
   {
     return;
   }
@@ -1581,7 +1581,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
 #endif
     }
 
-    if (isChroma(compID) && (pcCU->getCrossComponentDecorrelationAlpha(absPartIdxTU, compID) != 0))
+    if (isChroma(compID) && (pcCU->getCrossComponentPredictionAlpha(absPartIdxTU, compID) != 0))
     {
       const Pel *piResiLuma = pResidual->getAddr( COMPONENT_Y );
       const Int  strideLuma = pResidual->getStride( COMPONENT_Y );
@@ -1593,7 +1593,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
         pResi = rpcResidual + uiAddr;
         const Pel *pResiLuma = piResiLuma + uiAddr;
 
-        crossComponentDecorrelation( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
+        crossComponentPrediction( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
     }
   }
@@ -3261,24 +3261,24 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
 }
 
 
-Void TComTrQuant::crossComponentDecorrelation(       TComTU      & rTu,
-                                               const ComponentID   compID,
-                                               const Pel         * piResiL,
-                                               const Pel         * piResiC,
-                                                     Pel         * piResiT,
-                                               const Int           width,
-                                               const Int           height,
-                                               const Int           strideL,
-                                               const Int           strideC,
-                                               const Int           strideT,
-                                               const Bool          reverse )
+Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
+                                            const ComponentID   compID,
+                                            const Pel         * piResiL,
+                                            const Pel         * piResiC,
+                                                  Pel         * piResiT,
+                                            const Int           width,
+                                            const Int           height,
+                                            const Int           strideL,
+                                            const Int           strideC,
+                                            const Int           strideT,
+                                            const Bool          reverse )
 {
   const Pel *pResiL = piResiL;
   const Pel *pResiC = piResiC;
         Pel *pResiT = piResiT;
 
   TComDataCU *pCU = rTu.getCU();
-  const Char alpha = pCU->getCrossComponentDecorrelationAlpha( rTu.GetAbsPartIdxTU( compID ), compID );
+  const Char alpha = pCU->getCrossComponentPredictionAlpha( rTu.GetAbsPartIdxTU( compID ), compID );
 
   for( Int y = 0; y < height; y++ )
   {

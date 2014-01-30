@@ -103,7 +103,7 @@ public:
   Void parseRefFrmIdx       ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd             ( TComDataCU* pcCU, UInt uiAbsPartAddr,UInt uiPartIdx,    UInt uiDepth, RefPicList eRefList );
 
-  Void parseCrossComponentDecorrelation( class TComTU &rTu, ComponentID compID );
+  Void parseCrossComponentPrediction( class TComTU &rTu, ComponentID compID );
 
   Void parseDeltaQP         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCoeffNxN        ( class TComTU &rTu, ComponentID compID );

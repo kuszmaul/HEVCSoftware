@@ -92,7 +92,7 @@ TDecSbac::TDecSbac()
 , m_explicitRdpcmFlagSCModel                 ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCrossComponentDecorrelationSCModel      ( 1,             1,                      NUM_CROSS_COMPONENT_DECORRELATION_CTX, m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -155,7 +155,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_explicitRdpcmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-  m_cCrossComponentDecorrelationSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
+  m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
 
   m_uiLastDQpNonZero  = 0;
 
@@ -209,7 +209,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG );
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR );
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-  m_cCrossComponentDecorrelationSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_DECORRELATION );
+  m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
 
   m_pcTDecBinIf->start();
 }
@@ -884,11 +884,11 @@ Void TDecSbac::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UI
   return;
 }
 
-Void TDecSbac::parseCrossComponentDecorrelation( TComTU &rTu, ComponentID compID )
+Void TDecSbac::parseCrossComponentPrediction( TComTU &rTu, ComponentID compID )
 {
   TComDataCU *pcCU = rTu.getCU();
 
-  if( isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentDecorrelation() ) return;
+  if( isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction() ) return;
 
   const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
 
@@ -898,15 +898,15 @@ Void TDecSbac::parseCrossComponentDecorrelation( TComTU &rTu, ComponentID compID
     UInt symbol = 0;
 
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
-    DTRACE_CABAC_T("\tparseCrossComponentDecorrelation()")
+    DTRACE_CABAC_T("\tparseCrossComponentPrediction()")
     DTRACE_CABAC_T( "\tAddr=" )
     DTRACE_CABAC_V( compID )
     DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
     DTRACE_CABAC_V( uiAbsPartIdx )
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-    TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__CROSS_COMPONENT_DECORRELATION, (g_aucConvertToBit[rTu.getRect(compID).width] + 2), compID);
+    TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__CROSS_COMPONENT_PREDICTION, (g_aucConvertToBit[rTu.getRect(compID).width] + 2), compID);
 #endif
-    ContextModel *pCtx = m_cCrossComponentDecorrelationSCModel.get(0, 0) + ((compID == COMPONENT_Cr) ? (NUM_CROSS_COMPONENT_DECORRELATION_CTX >> 1) : 0);
+    ContextModel *pCtx = m_cCrossComponentPredictionSCModel.get(0, 0) + ((compID == COMPONENT_Cr) ? (NUM_CROSS_COMPONENT_PREDICTION_CTX >> 1) : 0);
     m_pcTDecBinIf->decodeBin( symbol, pCtx[0] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
 
     if(symbol != 0)
@@ -920,7 +920,7 @@ Void TDecSbac::parseCrossComponentDecorrelation( TComTU &rTu, ComponentID compID
     DTRACE_CABAC_V( alpha )
     DTRACE_CABAC_T( "\n" )
 
-    pcCU->setCrossComponentDecorrelationAlphaPartRange( alpha, compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts( compID ) );
+    pcCU->setCrossComponentPredictionAlphaPartRange( alpha, compID, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts( compID ) );
   }
 }
 

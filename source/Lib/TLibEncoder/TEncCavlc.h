@@ -121,7 +121,7 @@ public:
   Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
-  Void codeCrossComponentDecorrelation( TComTU &rTu, ComponentID compID );
+  Void codeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 

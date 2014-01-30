@@ -95,7 +95,7 @@ public:
   virtual Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList ) = 0;
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
 
-  virtual Void parseCrossComponentDecorrelation ( class TComTU &rTu, ComponentID compID ) = 0;
+  virtual Void parseCrossComponentPrediction ( class TComTU &rTu, ComponentID compID ) = 0;
 
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
   virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;

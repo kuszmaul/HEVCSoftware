@@ -304,17 +304,17 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );
 
 public:
-  static Void crossComponentDecorrelation(      TComTU      &rTu,
-                                          const ComponentID  compID,
-                                          const Pel         *piResiL,
-                                          const Pel         *piResiC,
-                                                Pel         *piResiT,
-                                          const Int          width,
-                                          const Int          height,
-                                          const Int          strideL,
-                                          const Int          strideC,
-                                          const Int          strideT,
-                                          const Bool         reverse);
+  static Void crossComponentPrediction(      TComTU      &rTu,
+                                       const ComponentID  compID,
+                                       const Pel         *piResiL,
+                                       const Pel         *piResiC,
+                                             Pel         *piResiT,
+                                       const Int          width,
+                                       const Int          height,
+                                       const Int          strideL,
+                                       const Int          strideC,
+                                       const Int          strideT,
+                                       const Bool         reverse);
 
 };// END CLASS DEFINITION TComTrQuant
 
