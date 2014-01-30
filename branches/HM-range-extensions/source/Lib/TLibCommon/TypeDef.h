@@ -241,6 +241,7 @@
 
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
+#define RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT                                1 ///< 0 = do not take into account the difference in luma/chroma bit depths, 1 (default) = account for any difference between luma and chroma bit depths
 #define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
 
 //------------------------------------------------
