@@ -469,7 +469,9 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 
   if ( uiSymbol )
   {
+#if !RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+#endif
     pcCU->setPredModeSubParts( MODE_INTRABC, uiAbsPartIdx, uiDepth );
     pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
@@ -663,6 +665,43 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 }
+
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+/** parse partition size for IBC
+* \param pcCU
+* \param uiAbsPartIdx
+* \param uiDepth
+* \returns Void
+*/
+Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+ const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__PART_SIZE, g_aucConvertToBit[g_uiMaxCUWidth>>uiDepth]+2);
+#endif
+
+  UInt uiMaxNumBits = 2;
+
+  if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+  {
+    uiMaxNumBits++;
+  }
+
+  UInt uiSymbol;
+  UInt uiMode = 0;
+
+  for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
+  {
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+    if ( uiSymbol )
+    {
+      break;
+    }
+    uiMode++;
+  }
+
+  pcCU->setPartSizeSubParts( (PartSize)uiMode, uiAbsPartIdx, uiDepth ) ;
+}
+#endif
 
 /** parse prediction mode
  * \param pcCU

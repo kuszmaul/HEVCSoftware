@@ -187,7 +187,6 @@ public:
                                   Distortion  uiPreCalcDistC
                                   DEBUG_STRING_FN_DECLARE(sDebug));
 
-
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -223,6 +222,9 @@ public:
 
   Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
                                   TComMv&       cMvPred,
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+                                  UInt          uiPartAddr,
+#endif
                                   Int           iRoiWidth,
                                   Int           iRoiHeight,
                                   TComMv&       rcMvSrchRngLT,
@@ -246,6 +248,9 @@ public:
   }
 
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+                                  UInt         uiPartAddr,
+#endif
                                   TComPattern* pcPatternKey,
                                   Pel*         piRefY,
                                   Int          iRefStride,

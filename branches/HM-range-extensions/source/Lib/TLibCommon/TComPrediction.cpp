@@ -504,12 +504,53 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
 
   TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiPartAddr );
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  xPredIntraBCBlk( COMPONENT_Y, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+
+  if( pcYuvPred->getChromaFormat() != CHROMA_400 )
+  {
+    if( pcCU->getWidth(0) == 8 && pcCU->getPartitionSize(0) != SIZE_2Nx2N && pcYuvPred->getChromaFormat() != CHROMA_444 )
+    {
+      // the chroma PU will be smaller than 4x4, so join with neighbouring chroma PU(s) to form a bigger block
+      // chroma PUs will use the luma MV from the bottom right most of the merged chroma PUs.
+
+      Int iLeftWidth;
+      if( ( pcCU->getCULeft() == NULL ||
+            pcCU->getCULeft()->getSlice() == NULL ||
+            ( pcCU->getCULeft()->getSCUAddr() + g_auiRasterToZscan[ pcCU->getPic()->getNumPartInWidth() - 1 ]
+              < pcCU->getPic()->getCU( pcCU->getAddr() )->getSliceStartCU(0) )
+          )
+          ||
+          ( pcCU->getCULeft() == NULL ||
+            pcCU->getCULeft()->getSlice() == NULL ||
+            ( pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCULeft()->getAddr() )
+              != pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getAddr() )
+            )
+          )
+        )
+        iLeftWidth = 0;
+      else
+        iLeftWidth = std::min<UInt>( pcCU->getSlice()->getSPS()->getMaxCUWidth(), INTRABC_LEFTWIDTH );
+
+      Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
+      Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );
+
+      UInt uiMvSrcAddr = ( pcYuvPred->getChromaFormat() == CHROMA_422 && iPartIdx < ( pcCU->getNumPartInter() >> 1 ) ? 1 : 3 );
+      cMv = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiMvSrcAddr );
+      cMv.setHor( std::max<Int>( iBoundaryX, cMv.getHor() ) ); // Boundary is negative, hence max
+      cMv.setVer( std::max<Int>( iBoundaryY, cMv.getVer() ) );
+    }
+
+    xPredIntraBCBlk( COMPONENT_Cb, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+    xPredIntraBCBlk( COMPONENT_Cr, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+  }
+#else
   for (UInt ch = COMPONENT_Y; ch < pcYuvPred->getNumberValidComponents(); ch++)
     xPredIntraBCBlk  (ComponentID(ch),  pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+#endif
 
   return;
 }
-
 
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
 {

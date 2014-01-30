@@ -924,6 +924,9 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeIntraBCFlag ( pcCU, 0, true );
         if ( pcCU->isIntraBC( 0 ) )
         {
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+          m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, 0 );
+#endif
           m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
           return;
         }
@@ -3668,6 +3671,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   }
   rpcRecoYuv->clear();
 
+#if !RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   TComMvField  cMEMvField;
 
   TComMv       cZeroMv(0,0);
@@ -3677,31 +3681,57 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   UInt         uiBits     = 0;
   Int          iPartIdx   = 0;
   Int          uiPartAddr = 0;
+#endif
   PartSize     ePartSize  = pcCU->getPartitionSize( 0 );
 
   if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && (pcCU->getWidth(0) > 16))
     return false;
 
-  xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
-
-  // store intra BV in REF_PIC_LIST_0
-  cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
-  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
-
-  cMvd.setHor(cMv.getHor() - cMvPred.getHor());
-  cMvd.setVer(cMv.getVer() - cMvPred.getVer());
-
-  pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
-
-  // no valid intra BV
-  if (cMv.getHor() == 0 && cMv.getVer() == 0)
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  const Int iNumPart = pcCU->getNumPartInter();
+  for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
-    return false;
-  }
+    Int iDummyWidth, iDummyHeight;
+    UInt uiPartAddr = 0;
+    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iDummyWidth, iDummyHeight );
 
+    TComMvField cMEMvField;
+    TComMv      cMv, cMvd, cMvPred;
+    Distortion  uiCost;
+    UInt        uiBits = 0;
+#endif
+    xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
+
+    // store intra BV in REF_PIC_LIST_0
+    cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
+    pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
+
+    cMvd.setHor(cMv.getHor() - cMvPred.getHor());
+    cMvd.setVer(cMv.getVer() - cMvPred.getVer());
+
+    pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
+
+    // no valid intra BV
+    if (cMv.getHor() == 0 && cMv.getVer() == 0)
+    {
+      return false;
+    }
+
+#if !RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   // motion compensation
   intraBlockCopy ( pcCU, rpcPredYuv, iPartIdx );
+#endif
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  }
+#endif
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  // motion compensation
+  for( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++ )
+  {
+    intraBlockCopy ( pcCU, rpcPredYuv, iPartIdx );
+  }
+#endif
   return true;
 }
 
@@ -3744,12 +3774,20 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   TComMv      cMvPred = *pcMvPred;
 
   // assume that intra BV is integer-pel precision
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  xSetIntraSearchRange   ( pcCU, cMvPred, uiPartAddr, iRoiWidth, iRoiHeight, cMvSrchRngLT, cMvSrchRngRB );
+#else
   xSetIntraSearchRange   ( pcCU, cMvPred, iRoiWidth, iRoiHeight, cMvSrchRngLT, cMvSrchRngRB );
+#endif
 
   // disable weighted prediction
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  TComMv mvPred = ( iPartIdx == 0 ? pcCU->getLastIntraBCMv() : pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( uiPartAddr - (pcCU->getTotalNumPart() >> 2) ) );
+#else
   TComMv mvPred = pcCU->getLastIntraBCMv();
+#endif
 #if RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR
   if (mvPred.getHor()==0 && mvPred.getVer()==0)
   {
@@ -3764,7 +3802,11 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   m_pcRdCost->setCostScale  ( 0 );
 
   //  Do integer search
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  xIntraPatternSearch      ( pcCU, uiPartAddr, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, mvPred, bUse1DSearchFor8x8 );
+#else
   xIntraPatternSearch      ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, mvPred, bUse1DSearchFor8x8 );
+#endif
   *pcMvPred = mvPred;
 
   //printf("ruiCost = %d\n", ruiCost);
@@ -3776,17 +3818,28 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
 }
 
 // based on xSetSearchRange
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt uiPartAddr, Int iRoiWidth, Int iRoiHeight, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
+#else
 Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iRoiWidth, Int iRoiHeight, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
+#endif
 {
   TComMv cTmpMvPred = cMvPred;
   pcCU->clipMv( cTmpMvPred );
 
   Int srLeft, srRight, srTop, srBottom;
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  const UInt lcuWidth = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+  const UInt cuPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartAddr ] ];
+  const UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+  const UInt cuPelY    = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartAddr ] ];
+#else
   UInt lcuWidth = pcCU->getSlice()->getSPS()->getMaxCUWidth();
   UInt cuPelX   = pcCU->getCUPelX();
   UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
   UInt cuPelY    = pcCU->getCUPelY();
+#endif
 
   Int maxXsr;
   if ( (pcCU->getCULeft()==NULL ||
@@ -3883,6 +3936,9 @@ Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, I
 
 // based on xPatternSearch
 Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+                                      UInt         uiPartAddr,
+#endif
                                       TComPattern *pcPatternKey,
                                       Pel         *piRefY,
                                       Int          iRefStride,
@@ -3896,22 +3952,29 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
                                       Bool         bUse1DSearchFor8x8
                                       )
 {
-  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
-  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
-  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
-  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
+  const Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
+  const Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
+  const Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
+  const Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
 
-  UInt  lcuWidth  = pcCU->getSlice()->getSPS()->getMaxCUWidth();
-  UInt  lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+  const UInt  lcuWidth          = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+  const UInt  lcuHeight         = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  const Int   puPelOffsetX      = g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartAddr ] ];
+  const Int   puPelOffsetY      = g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartAddr ] ];
+  const Int   cuPelX            = pcCU->getCUPelX() + puPelOffsetX;  // Point to the location of PU
+  const Int   cuPelY            = pcCU->getCUPelY() + puPelOffsetY;
+#else
   Int  cuPelX     = pcCU->getCUPelX();
   Int  cuPelY     = pcCU->getCUPelY();
+#endif
 
   Distortion  uiSad;
   Distortion  uiSadBest = std::numeric_limits<Distortion>::max();
   Int         iBestX    = 0;
   Int         iBestY    = 0;
 
-  Pel*  piRefSrch;
+  Pel*        piRefSrch;
 
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
@@ -3938,7 +4001,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       )
     {
       Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
-      Int iTempX = xPred + iRelCUPelX + iRoiWidth - 1;
+      Int iTempX = xPred + iRelCUPelX + iRoiWidth  - 1;
       Bool validCand = true;
 
       if ((iTempX >= 0) && (iTempY >= 0))
@@ -3977,7 +4040,12 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
     }
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+    const Int boundY = (0 - iRoiHeight - puPelOffsetY);
+    for(Int y = max(iSrchRngVerTop, 0 - cuPelY) ; y <= boundY ; ++y )
+#else
     for(Int y = max(iSrchRngVerTop, -cuPelY); y <= -iRoiHeight; y++)
+#endif
     {
       if (!isValidIntraBCSearchArea(pcCU, 0 + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
         continue;
@@ -4013,7 +4081,12 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
    }
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+    const Int boundX = max(iSrchRngHorLeft, - cuPelX);
+    for(Int x = 0 - iRoiWidth - puPelOffsetX ; x >= boundX ; --x )
+#else
     for(Int x = -iRoiWidth; x >= max(iSrchRngHorLeft, - cuPelX); x-- )
+#endif
     {
       if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, 0 + iRelCUPelY, iRoiWidth, iRoiHeight))
         continue;
@@ -4062,7 +4135,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       return;
     }
 
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+    if( pcCU->getWidth(0) < 16 && !bUse1DSearchFor8x8 )
+#else
     if(iRoiWidth == 8 && !bUse1DSearchFor8x8)
+#endif
     {
       Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
       Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
@@ -6584,6 +6661,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
       m_pcEntropyCoder->encodeIntraBCFlag(pcCU, 0, true);
       if ( pcCU->isIntraBC( 0 ) )
       {
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+        m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, 0 );
+#endif
         m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
       }
     }

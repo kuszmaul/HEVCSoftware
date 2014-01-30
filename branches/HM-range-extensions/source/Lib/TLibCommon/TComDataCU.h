@@ -356,7 +356,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
-  UChar         getNumPartInter       ();
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  UChar         getNumPartInter       ( const UInt uiAbsPartIdx = 0 );
+#else
+  UChar         getNumPartInter       ( );
+#endif
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -429,7 +433,6 @@ public:
 
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
-
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for modes
