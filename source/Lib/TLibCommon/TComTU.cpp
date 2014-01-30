@@ -231,3 +231,26 @@ Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)
          && mRect[compID].width == 4
          && getCU()->isIntra(GetAbsPartIdxTU());
 }
+
+
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+UInt TComTU::getGolombRiceStatisticsIndex(const ComponentID compID)
+{
+        TComDataCU *const pcCU             = getCU();
+  const UInt              absPartIdx       = GetAbsPartIdxTU(compID);
+  const Bool              transformSkip    = pcCU->getTransformSkip(absPartIdx, compID);
+  const Bool              transquantBypass = pcCU->getCUTransquantBypass(absPartIdx);
+
+  //--------
+
+  const UInt channelTypeOffset    =  isChroma(compID)                   ? 2 : 0;
+  const UInt nonTransformedOffset = (transformSkip || transquantBypass) ? 1 : 0;
+
+  //--------
+
+  const UInt selectedIndex = channelTypeOffset + nonTransformedOffset;
+  assert(selectedIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS);
+
+  return selectedIndex;
+}
+#endif

@@ -133,6 +133,10 @@ class TComTU
 
     Bool useDST(const ComponentID compID);
     Bool isNonTransformedResidualRotated(const ComponentID compID);
+
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+    UInt getGolombRiceStatisticsIndex(const ComponentID compID);
+#endif
 };
 
 

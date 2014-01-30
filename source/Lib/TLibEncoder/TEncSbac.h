@@ -224,6 +224,10 @@ private:
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
+
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
+#endif
 };
 
 //! \}

@@ -68,6 +68,10 @@ typedef struct
 
   Int blockCbpBits[NUM_QT_CBF_CTX_SETS * NUM_QT_CBF_CTX_PER_SET][2 /*Flag = [0|1]*/];
   Int blockRootCbpBits[4][2 /*Flag = [0|1]*/];
+
+#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
+  Int golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
+#endif
 } estBitsSbacStruct;
 
 // ====================================================================================================================
