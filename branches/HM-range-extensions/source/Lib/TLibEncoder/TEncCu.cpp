@@ -862,6 +862,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth );
 #endif
 
+          // NOTE: RExt - (0,0) is used as an indicator that IntraBC has not been used within the CU.
           if( pcSubBestPartCU->getLastIntraBCMv().getHor() != 0 || pcSubBestPartCU->getLastIntraBCMv().getVer() != 0 )
           {
             lastIntraBCMv = pcSubBestPartCU->getLastIntraBCMv();

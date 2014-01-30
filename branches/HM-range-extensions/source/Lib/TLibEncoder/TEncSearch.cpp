@@ -3741,6 +3741,12 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
   TComMv mvPred = pcCU->getLastIntraBCMv();
+#if RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR
+  if (mvPred.getHor()==0 && mvPred.getVer()==0)
+  {
+    mvPred.setHor(-Short(pcCU->getWidth(iPartIdx)));
+  }
+#endif
 
   TComMv        ZeroMv(0,0);
 
