@@ -1619,7 +1619,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   const Bool rotateResidual = rTu.isNonTransformedResidualRotated(compID);
   const UInt uiSizeMinus1   = (uiWidth * uiHeight) - 1;
 
-  Int reconstructedResi[MAX_TU_SIZE * MAX_TU_SIZE];
+  Pel reconstructedResi[MAX_TU_SIZE * MAX_TU_SIZE];
 
   UInt uiX = 0;
   UInt uiY = 0;
@@ -1636,14 +1636,14 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   {
     for ( minorAxis = 0; minorAxis < minorAxisLimit; minorAxis++ )
     {
-      const UInt   sampleIndex      = (uiY * uiWidth) + uiX;
-      const UInt   coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
-      const TCoeff currentSample    = pcResidual[(uiY * uiStride) + uiX];
-      const TCoeff referenceSample  = ((mode != RDPCM_OFF) && (majorAxis > 0)) ? reconstructedResi[sampleIndex - referenceSampleOffset] : 0;
+      const UInt sampleIndex      = (uiY * uiWidth) + uiX;
+      const UInt coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
+      const Pel  currentSample    = pcResidual[(uiY * uiStride) + uiX];
+      const Pel  referenceSample  = ((mode != RDPCM_OFF) && (majorAxis > 0)) ? reconstructedResi[sampleIndex - referenceSampleOffset] : 0;
 
-      const TCoeff encoderSideDelta = currentSample - referenceSample;
+      const Pel  encoderSideDelta = currentSample - referenceSample;
 
-      TCoeff reconstructedDelta;
+      Pel reconstructedDelta;
       if ( bLossless )
       {
         pcCoeff[coefficientIndex] = encoderSideDelta;
@@ -1655,7 +1655,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
         invTrSkipDeQuantOneSample  (rTu, compID, pcCoeff[coefficientIndex], reconstructedDelta, cQP, coefficientIndex);
       }
 
-      uiAbsSum += abs(reconstructedDelta);
+      uiAbsSum += abs(pcCoeff[coefficientIndex]);
 
       reconstructedResi[sampleIndex] = reconstructedDelta + referenceSample;
     }
@@ -3128,7 +3128,7 @@ Void TComTrQuant::destroyScalingList()
 }
 
 
-Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP )
+Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Pel resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP )
 {
         TComDataCU    *pcCU                           = rTu.getCU();
   const UInt           uiAbsPartIdx                   = rTu.GetAbsPartIdxTU();
@@ -3184,7 +3184,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, I
 }
 
 
-Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, TCoeff &reconSample, const QpParam &cQP, UInt uiPos )
+Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TCoeff inSample, Pel &reconSample, const QpParam &cQP, UInt uiPos )
 {
         TComDataCU    *pcCU               = rTu.getCU();
   const UInt           uiAbsPartIdx       = rTu.GetAbsPartIdxTU();
@@ -3268,12 +3268,12 @@ Void TComTrQuant::invTrSkipDeQuantOneSample( TComTU &rTu, ComponentID compID, TC
   if (iTransformShift >= 0)
   {
     const TCoeff offset = iTransformShift==0 ? 0 : (1 << (iTransformShift - 1));
-    reconSample =  ( dequantisedSample + offset ) >> iTransformShift;
+    reconSample =  Pel(( dequantisedSample + offset ) >> iTransformShift);
   }
   else //for very high bit depths
   {
     const Int iTrShiftNeg = -iTransformShift;
-    reconSample = dequantisedSample << iTrShiftNeg;
+    reconSample = Pel(dequantisedSample << iTrShiftNeg);
   }
 }
 

@@ -197,9 +197,9 @@ public:
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
 
-  Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Int resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
+  Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Pel resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
 
-  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, TCoeff &reconSample, const QpParam &cQP, UInt uiPos );
+  Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, Pel &reconSample, const QpParam &cQP, UInt uiPos );
 
 protected:
 #if ADAPTIVE_QP_SELECTION
