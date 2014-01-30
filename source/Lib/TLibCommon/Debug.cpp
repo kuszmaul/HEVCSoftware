@@ -178,6 +178,7 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR,                settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
