@@ -244,6 +244,7 @@
 #define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice
 #define RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT                                1 ///< 0 = do not take into account the difference in luma/chroma bit depths, 1 (default) = account for any difference between luma and chroma bit depths
 #define RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP                                 1 ///< 0 = use one context to signal the two largest values for alpha, 1 (default) = use an additional context for signalling the largest value of alpha in cross-component prediction (CCP)
+#define RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT                              1 ///< 0 = use chained PPS extensions, 1 (default) = use 8 bits to indicate presence of different PPS extensions, followed by the respective extension data.
 #define RExt__P0222_SAO_OFFSET_BIT_SHIFT                                       1 ///< 0 = do not use SAO offset bit shift, 1 (default) use SAO offset bit shift in non-version 1 profiles.
 #define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
 
@@ -698,6 +699,16 @@ enum SPSExtensionFlagIndex
 //SPS_EXT__SHVC           = 2, //for use in future versions
   NUM_SPS_EXTENSION_FLAGS = 8
 };
+
+#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
+enum PPSExtensionFlagIndex
+{
+  PPS_EXT__REXT           = 0,
+//PPS_EXT__MVHEVC         = 1, //for use in future versions
+//PPS_EXT__SHVC           = 2, //for use in future versions
+  NUM_PPS_EXTENSION_FLAGS = 8
+};
+#endif
 
 // ====================================================================================================================
 // Type definition

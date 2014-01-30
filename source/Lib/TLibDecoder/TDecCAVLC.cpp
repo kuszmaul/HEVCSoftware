@@ -319,31 +319,69 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "slice_segment_header_extension_present_flag");
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
 
+#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
+  READ_FLAG( uiCode, "pps_extension_present_flag");
+  if (uiCode)
+  {
+    Bool pps_extension_flags[NUM_PPS_EXTENSION_FLAGS];
+    for(Int i=0; i<NUM_PPS_EXTENSION_FLAGS; i++)
+    {
+      READ_FLAG( uiCode, "pps_extension_flag[]" );
+      pps_extension_flags[i] = uiCode!=0;
+    }
+
+    Bool bSkipTrailingExtensionBits=false;
+    for(Int i=0; i<NUM_PPS_EXTENSION_FLAGS; i++) // loop used so that the order is determined by the enum.
+    {
+      if (pps_extension_flags[i])
+      {
+        switch (PPSExtensionFlagIndex(i))
+        {
+          case PPS_EXT__REXT:
+            assert(!bSkipTrailingExtensionBits);
+#else
   READ_FLAG( uiCode, "pps_extension1_flag");
 
   if (uiCode != 0)
   {
-    if (pcPPS->getUseTransformSkip())
-    {
-      READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
-      pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
-    }
+#endif
+            if (pcPPS->getUseTransformSkip())
+            {
+              READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
+              pcPPS->setTransformSkipLog2MaxSize(uiCode+2);
+            }
 
-    READ_FLAG( uiCode, "cross_component_prediction_flag");
-    pcPPS->setUseCrossComponentPrediction(uiCode != 0);
+            READ_FLAG( uiCode, "cross_component_prediction_flag");
+            pcPPS->setUseCrossComponentPrediction(uiCode != 0);
 
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
-    READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
-    assert(uiCode == 0);  // NOTE: RExt - placeholder for now
+            READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
+            assert(uiCode == 0);  // NOTE: RExt - placeholder for now
 #endif
 
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
-    READ_UVLC( uiCode, "sao_luma_bit_shift");
-    pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_LUMA, uiCode);
-    READ_UVLC( uiCode, "sao_chroma_bit_shift");
-    pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
+            READ_UVLC( uiCode, "sao_luma_bit_shift");
+            pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_LUMA, uiCode);
+            READ_UVLC( uiCode, "sao_chroma_bit_shift");
+            pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
 #endif
-
+#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
+            break;
+          default:
+            bSkipTrailingExtensionBits=true;
+            break;
+        }
+      }
+    }
+    if (bSkipTrailingExtensionBits)
+    {
+      while ( xMoreRbspData() )
+      {
+        READ_FLAG( uiCode, "pps_extension_data_flag");
+      }
+    }
+  }
+#else
     READ_FLAG( uiCode, "pps_extension2_flag");
   }
 
@@ -354,6 +392,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
       READ_FLAG( uiCode, "pps_extension_data_flag");
     }
   }
+#endif
 }
 
 Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
@@ -703,10 +742,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     parseVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
-  Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
   READ_FLAG( uiCode, "sps_extension_present_flag");
   if (uiCode)
   {
+    Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS];
     for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
     {
       READ_FLAG( uiCode, "sps_extension_flag[]" );
