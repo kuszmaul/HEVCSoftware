@@ -175,6 +175,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseEarlySkipDetection        ( m_useEarlySkipDetection );
   m_cTEncTop.setUseCrossComponentPrediction  ( m_useCrossComponentPrediction );
   m_cTEncTop.setUseReconBasedCrossCPredictionEstimate( m_reconBasedCrossCPredictionEstimate );
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  m_cTEncTop.setSaoOffsetBitShift            ( CHANNEL_TYPE_LUMA  , m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]   );
+  m_cTEncTop.setSaoOffsetBitShift            ( CHANNEL_TYPE_CHROMA, m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] );
+#endif
   m_cTEncTop.setUseTransformSkip             ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
   m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );

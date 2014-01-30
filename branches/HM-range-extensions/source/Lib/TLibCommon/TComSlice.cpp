@@ -1625,6 +1625,12 @@ TComPPS::TComPPS()
 , m_numExtraSliceHeaderBits          (0)
 {
   m_scalingList = new TComScalingList;
+#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_saoOffsetBitShift[ch] = 0;
+  }
+#endif
 }
 
 TComPPS::~TComPPS()
