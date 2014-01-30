@@ -514,6 +514,18 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
       // the chroma PU will be smaller than 4x4, so join with neighbouring chroma PU(s) to form a bigger block
       // chroma PUs will use the luma MV from the bottom right most of the merged chroma PUs.
 
+      // Clipping of the MVs is applied.
+      //   The reason for this is illustrated in the following example:
+      //    NxN split of an 8x8 CU for 4:2:0.
+      //    The 4 MVs are valid for the respective areas for the 4 luma 4x4 blocks.
+      //    However, the bottom left MV is being applied to the top-left chroma values as well.
+      //       The bottom left MV may reach outside the current slice/tile when applied to the
+      //       top-left chroma samples.
+      //       Clipping prevents this from occurring.
+
+#if RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64
+      Int iLeftWidth = pcCU->getIntraBCSearchAreaWidth();
+#else
       Int iLeftWidth;
       if( ( pcCU->getCULeft() == NULL ||
             pcCU->getCULeft()->getSlice() == NULL ||
@@ -531,6 +543,7 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
         iLeftWidth = 0;
       else
         iLeftWidth = std::min<UInt>( pcCU->getSlice()->getSPS()->getMaxCUWidth(), INTRABC_LEFTWIDTH );
+#endif
 
       Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
       Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );

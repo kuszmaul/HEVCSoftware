@@ -3589,5 +3589,30 @@ UInt TComDataCU::getSCUAddr()
   return ( getPic()->getPicSym()->getInverseCUOrderMap(m_uiCUAddr) << ( m_pcSlice->getSPS()->getMaxCUDepth() << 1 ) ) + m_uiAbsIdxInLCU;
 }
 
+#if RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64
+UInt TComDataCU::getIntraBCSearchAreaWidth()
+{
+  const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();
+  const UInt        zScanSliceStartCU = getPic()->getCU( getAddr() )->getSliceStartCU(0);
+  const UInt        zScanPartsPerLCU  = g_auiRasterToZscan[getPic()->getNumPartInWidth() - 1 ];
+  const TComPicSym &picSym            = *getPic()->getPicSym();
+  const UInt        currentTileIdx    = picSym.getTileIdxMap(getAddr());
+
+  UInt width = 0;
+
+  for(TComDataCU *pTestCU=getCULeft();
+      width<INTRABC_LEFTWIDTH && pTestCU!=NULL && pTestCU->getSlice()!=NULL;
+      pTestCU=pTestCU->getCULeft(), width+=lcuWidth)
+  {
+    if (   ( (pTestCU->getSCUAddr() + zScanPartsPerLCU) < zScanSliceStartCU ) // NOTE: RExt - could the following be used instead (because a slice will start at an LCU boundary: (pTestCU->getSCUAddr() < zScanSliceStartCU)
+        || ( picSym.getTileIdxMap( pTestCU->getAddr() ) != currentTileIdx )
+       )
+    {
+      break;
+    }
+  }
+  return std::min<UInt>(width, INTRABC_LEFTWIDTH);
+}
+#endif
 
 //! \}

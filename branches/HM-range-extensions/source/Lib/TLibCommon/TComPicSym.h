@@ -136,7 +136,7 @@ public:
   TComTile*    getTComTile  ( UInt tileIdx )                         { return *(m_apcTComTile + tileIdx); }
   Void         setCUOrderMap( Int encCUOrder, Int cuAddr )           { *(m_puiCUOrderMap + encCUOrder) = cuAddr; }
   UInt         getCUOrderMap( Int encCUOrder )                       { return *(m_puiCUOrderMap + (encCUOrder>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : encCUOrder)); }
-  UInt         getTileIdxMap( Int i )                                { return *(m_puiTileIdxMap + i); }
+  UInt         getTileIdxMap( Int i ) const                          { return *(m_puiTileIdxMap + i); }
   Void         setInverseCUOrderMap( Int cuAddr, Int encCUOrder )    { *(m_puiInverseCUOrderMap + cuAddr) = encCUOrder; }
   UInt         getInverseCUOrderMap( Int cuAddr )                    { return *(m_puiInverseCUOrderMap + (cuAddr>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : cuAddr)); }
   UInt         getPicSCUEncOrder( UInt SCUAddr );

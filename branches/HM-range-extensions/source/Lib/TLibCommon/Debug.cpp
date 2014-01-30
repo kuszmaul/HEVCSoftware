@@ -193,6 +193,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__P0222_SAO_OFFSET_BIT_SHIFT,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR,                settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64,                    settingNameWidth, settingValueWidth);
+
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,        settingNameWidth, settingValueWidth);

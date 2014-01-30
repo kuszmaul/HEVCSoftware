@@ -252,6 +252,7 @@
 #define RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT                              1 ///< 0 = use chained PPS extensions, 1 (default) = use 8 bits to indicate presence of different PPS extensions, followed by the respective extension data.
 #define RExt__P0222_SAO_OFFSET_BIT_SHIFT                                       1 ///< 0 = do not use SAO offset bit shift, 1 (default) use SAO offset bit shift in non-version 1 profiles.
 #define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
+#define RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64                            1 ///< 0 = use one LCU to the left of the current LCU as search area, 1 (default) use an area of (64,LCU_height) to the left of the current LCU.
 
 #if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
 #define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group

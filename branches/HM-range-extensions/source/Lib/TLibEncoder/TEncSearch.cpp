@@ -3841,6 +3841,9 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   UInt cuPelY    = pcCU->getCUPelY();
 #endif
 
+#if RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64
+  Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth();
+#else
   Int maxXsr;
   if ( (pcCU->getCULeft()==NULL ||
         pcCU->getCULeft()->getSlice()==NULL ||
@@ -3862,6 +3865,7 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int i
   {
     maxXsr    = (cuPelX % lcuWidth) + std::min<UInt>(lcuWidth, INTRABC_LEFTWIDTH);
   }
+#endif
 
   Int maxYsr    = cuPelY % lcuHeight;
 
