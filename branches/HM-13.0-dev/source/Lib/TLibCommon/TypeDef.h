@@ -47,6 +47,8 @@
 
 #define FIX1172 1 ///< fix ticket #1172
 
+#define SETTING_PIC_OUTPUT_MARK     1
+
 #define MAX_NUM_PICS_IN_SOP           1024
 
 #define MAX_NESTING_NUM_OPS         1024
