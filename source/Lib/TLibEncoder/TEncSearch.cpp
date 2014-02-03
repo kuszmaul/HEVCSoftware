@@ -5659,27 +5659,19 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
                                                           pcResi->getStride(compID),
                                                           tuCompRect.width, tuCompRect.height, compID);
 
-                  if(pcCU->isLosslessCoded(0))
-                  {
-                    nonCoeffDist = currCompDist;
-                  }
-                  else
-                  {
-                    currCompCost = m_pcRdCost->calcRdCost(currCompBits, currCompDist);
-                  }
+                  currCompCost = m_pcRdCost->calcRdCost(currCompBits, currCompDist);
+                  
+                  if (pcCU->isLosslessCoded(0)) nonCoeffCost = MAX_DOUBLE;
+                }
+                else if ((transformSkipModeId == 1) && !bUseCrossCPrediction) //NOTE: RExt - if the CBF (i.e. currAbsSum) is 0, this mode combination gives the same result as when transformSkipModeId = 0 (Not coding-efficiency-affecting - maybe remove test in later revision)
+                {
+                  currCompCost = MAX_DOUBLE;
                 }
                 else
                 {
-                  if (bUseCrossCPrediction)
-                  {
-                    currCompBits = nonCoeffBits;
-                    currCompDist = nonCoeffDist;
-                    currCompCost = nonCoeffCost;
-                  }
-                  else
-                  {
-                    currCompCost = isFirstMode ? currCompCost : MAX_DOUBLE;
-                  }
+                  currCompBits = nonCoeffBits;
+                  currCompDist = nonCoeffDist;
+                  currCompCost = nonCoeffCost;
                 }
 
                 // evaluate
@@ -5687,7 +5679,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
                 {
                   bestExplicitRdpcmModeUnSplit[compID][subTUIndex] = pcCU->getExplicitRdpcmMode(compID, subTUAbsPartIdx);
 
-                  if(isFirstMode)
+                  if(isFirstMode) //check for forced null
                   {
                     if((nonCoeffCost < currCompCost) || (currAbsSum == 0))
                     {
