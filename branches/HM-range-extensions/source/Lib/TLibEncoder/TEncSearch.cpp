@@ -1890,7 +1890,7 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
 #if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
       const Pel scaledResiL = rightShift( pResiL[ uiX ], diffBitDepth );
       SSxy += ( scaledResiL * pResiC[ uiX ] );
-      SSxx += ( scaledResiL * pResiL[ uiX ] );
+      SSxx += ( scaledResiL * scaledResiL   );
 #else
       SSxy += ( pResiL[ uiX ] * pResiC[ uiX ] );
       SSxx += ( pResiL[ uiX ] * pResiL[ uiX ] );
