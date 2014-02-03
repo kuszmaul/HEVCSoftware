@@ -15,11 +15,17 @@ SRC_DIR4		=
 USER_INC_DIRS	= -I$(SRC_DIR) 
 USER_LIB_DIRS	=
 
+ifeq ($(HIGHBITDEPTH), 1)
+HBD=HighBitDepth
+else
+HBD=
+endif
+
 # intermediate directory for object files
-OBJ_DIR				= ./objects
+OBJ_DIR				= ./objects$(HBD)
 
 # set executable name
-PRJ_NAME			= TAppDecoderAnalyser
+PRJ_NAME			= TAppDecoderAnalyser$(HBD)
 
 # defines to set
 DEFS				= -DMSYS_LINUX -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DMSYS_UNIX_LARGEFILE -DRExt__DECODER_DEBUG_BIT_STATISTICS=1
@@ -40,15 +46,15 @@ STAT_LIBS			= -lpthread
 DYN_LIBS			=
 
 
-DYN_DEBUG_LIBS		= -lTLibDecoderAnalyserd -lTLibCommond -lTLibVideoIOd -lTAppCommond
-DYN_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderAnalyserd.a $(LIB_DIR)/libTLibCommond.a $(LIB_DIR)/libTLibVideoIOd.a $(LIB_DIR)/libTAppCommond.a
-STAT_DEBUG_LIBS		= -lTLibDecoderAnalyserStaticd -lTLibCommonStaticd -lTLibVideoIOStaticd -lTAppCommonStaticd
-STAT_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderAnalyserStaticd.a $(LIB_DIR)/libTLibCommonStaticd.a $(LIB_DIR)/libTLibVideoIOStaticd.a $(LIB_DIR)/libTAppCommonStaticd.a
+DYN_DEBUG_LIBS		= -lTLibDecoderAnalyser$(HBD)d -lTLibCommon$(HBD)d -lTLibVideoIO$(HBD)d -lTAppCommon$(HBD)d
+DYN_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderAnalyser$(HBD)d.a $(LIB_DIR)/libTLibCommon$(HBD)d.a $(LIB_DIR)/libTLibVideoIO$(HBD)d.a $(LIB_DIR)/libTAppCommon$(HBD)d.a
+STAT_DEBUG_LIBS		= -lTLibDecoderAnalyser$(HBD)Staticd -lTLibCommon$(HBD)Staticd -lTLibVideoIO$(HBD)Staticd -lTAppCommon$(HBD)Staticd
+STAT_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderAnalyser$(HBD)Staticd.a $(LIB_DIR)/libTLibCommon$(HBD)Staticd.a $(LIB_DIR)/libTLibVideoIO$(HBD)Staticd.a $(LIB_DIR)/libTAppCommon$(HBD)Staticd.a
 
-DYN_RELEASE_LIBS	= -lTLibDecoderAnalyser -lTLibCommon -lTLibVideoIO -lTAppCommon
-DYN_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderAnalyser.a $(LIB_DIR)/libTLibCommon.a $(LIB_DIR)/libTLibVideoIO.a $(LIB_DIR)/libTAppCommon.a
-STAT_RELEASE_LIBS	= -lTLibDecoderAnalyserStatic -lTLibCommonStatic -lTLibVideoIOStatic -lTAppCommonStatic
-STAT_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderAnalyserStatic.a $(LIB_DIR)/libTLibCommonStatic.a $(LIB_DIR)/libTLibVideoIOStatic.a $(LIB_DIR)/libTAppCommonStatic.a
+DYN_RELEASE_LIBS	= -lTLibDecoderAnalyser$(HBD) -lTLibCommon$(HBD) -lTLibVideoIO$(HBD) -lTAppCommon$(HBD)
+DYN_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderAnalyser$(HBD).a $(LIB_DIR)/libTLibCommon$(HBD).a $(LIB_DIR)/libTLibVideoIO$(HBD).a $(LIB_DIR)/libTAppCommon$(HBD).a
+STAT_RELEASE_LIBS	= -lTLibDecoderAnalyser$(HBD)Static -lTLibCommon$(HBD)Static -lTLibVideoIO$(HBD)Static -lTAppCommon$(HBD)Static
+STAT_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderAnalyser$(HBD)Static.a $(LIB_DIR)/libTLibCommon$(HBD)Static.a $(LIB_DIR)/libTLibVideoIO$(HBD)Static.a $(LIB_DIR)/libTAppCommon$(HBD)Static.a
 
 
 # name of the base makefile
