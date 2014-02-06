@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -40,11 +40,10 @@
 #include "TAppEncTop.h"
 #include "TAppCommon/program_options_lite.h"
 
-using namespace std;
-namespace po = df::program_options_lite;
-
 //! \ingroup TAppEncoder
 //! \{
+
+#include "../Lib/TLibCommon/Debug.h"
 
 // ====================================================================================================================
 // Main function
@@ -60,7 +59,7 @@ int main(int argc, char* argv[])
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
-  fprintf( stdout, "\n" );
+  fprintf( stdout, "\n\n" );
 
   // create application encoder class
   cTAppEncTop.create();
@@ -71,24 +70,35 @@ int main(int argc, char* argv[])
     if(!cTAppEncTop.parseCfg( argc, argv ))
     {
       cTAppEncTop.destroy();
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+      EnvVar::printEnvVar();
+#endif
       return 1;
     }
   }
-  catch (po::ParseFailure& e)
+  catch (df::program_options_lite::ParseFailure &e)
   {
-    cerr << "Error parsing option \""<< e.arg <<"\" with argument \""<< e.val <<"\"." << endl;
+    std::cerr << "Error parsing option \""<< e.arg <<"\" with argument \""<< e.val <<"\"." << std::endl;
     return 1;
   }
 
+#if RExt__PRINT_MACRO_VALUES
+  printRExtMacroSettings();
+#endif
+
+#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+  EnvVar::printEnvVarInUse();
+#endif
+
   // starting time
-  double dResult;
+  Double dResult;
   long lBefore = clock();
 
   // call encoding function
   cTAppEncTop.encode();
 
   // ending time
-  dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
+  dResult = (Double)(clock()-lBefore) / CLOCKS_PER_SEC;
   printf("\n Total Time: %12.3f sec.\n", dResult);
 
   // destroy application encoder class
