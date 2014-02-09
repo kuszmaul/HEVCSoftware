@@ -99,6 +99,12 @@ private:
   Bool                    m_bFirstSliceInSequence;
   Bool                    m_prevSliceSkipped;
   Int                     m_skippedPOC;
+#if SETTING_NO_OUT_PIC_PRIOR  
+  Bool                    m_bFirstSliceInBitstream;
+  Int                     m_lastPOCNoOutputPriorPics;
+  Bool                    m_isNoOutputPriorPics;
+  Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
+#endif
 
 public:
   TDecTop();
@@ -111,10 +117,15 @@ public:
 
   Void  init();
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
-  
   Void  deletePicBuffer();
 
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
+#if SETTING_NO_OUT_PIC_PRIOR  
+  Void  checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic);
+
+  Bool  getIsNoOutputPriorPics () { return m_isNoOutputPriorPics; }
+
+#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

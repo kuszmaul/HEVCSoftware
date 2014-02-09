@@ -164,6 +164,12 @@ Void TAppDecTop::decode()
       }
       loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
     }
+#if SETTING_NO_OUT_PIC_PRIOR
+    if (bNewPicture && m_cTDecTop.getIsNoOutputPriorPics())
+    {
+      m_cTDecTop.checkNoOutputPriorPics( pcListPic );
+    }
+#endif
 
     if( pcListPic )
     {

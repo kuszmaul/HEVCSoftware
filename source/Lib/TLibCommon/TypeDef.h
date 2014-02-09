@@ -48,6 +48,8 @@
 #define FIX1172 1 ///< fix ticket #1172
 
 #define SETTING_PIC_OUTPUT_MARK     1
+#define SETTING_NO_OUT_PIC_PRIOR    1
+#define FIX_EMPTY_PAYLOAD_NAL       1
 
 #define MAX_NUM_PICS_IN_SOP           1024
 

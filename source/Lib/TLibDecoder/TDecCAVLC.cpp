@@ -752,7 +752,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   READ_FLAG( firstSliceSegmentInPic, "first_slice_segment_in_pic_flag" );
   if( rpcSlice->getRapPicFlag())
   { 
-    READ_FLAG( uiCode, "no_output_of_prior_pics_flag" );  //ignored
+    READ_FLAG( uiCode, "no_output_of_prior_pics_flag" );  //ignored -- updated already
+#if SETTING_NO_OUT_PIC_PRIOR
+    rpcSlice->setNoOutputPriorPicsFlag(uiCode ? true : false);
+#else
+    rpcSlice->setNoOutputPicPrior( false );
+#endif
   }
   READ_UVLC (    uiCode, "slice_pic_parameter_set_id" );  rpcSlice->setPPSId(uiCode);
   pps = parameterSetManager->getPrefetchedPPS(uiCode);
@@ -886,6 +891,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         else
         {
           uiCode = 0;
+       
         }
         *rps = *(sps->getRPSList()->getReferencePictureSet(uiCode));
       }
