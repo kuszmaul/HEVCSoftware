@@ -1152,6 +1152,12 @@ private:
   TComTrQuant* m_pcTrQuant;
 #endif  
   UInt        m_colFromL0Flag;  // collocated picture from List0 flag
+
+#if SETTING_NO_OUT_PIC_PRIOR
+  Bool        m_noOutputPriorPicsFlag;
+  Bool        m_noRaslOutputFlag;
+  Bool        m_handleCraAsBlaFlag;
+#endif
   
   UInt        m_colRefIdx;
   UInt        m_maxNumMergeCand;
@@ -1336,6 +1342,17 @@ public:
 
   Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
   UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
+
+#if SETTING_NO_OUT_PIC_PRIOR
+  Void setNoOutputPriorPicsFlag              ( Bool val )         { m_noOutputPriorPicsFlag = val;                    }
+  Bool getNoOutputPriorPicsFlag              ()                   { return m_noOutputPriorPicsFlag;                   }
+
+  Void setNoRaslOutputFlag              ( Bool val )         { m_noRaslOutputFlag = val;                    }
+  Bool getNoRaslOutputFlag              ()                   { return m_noRaslOutputFlag;                   }
+
+  Void setHandleCraAsBlaFlag              ( Bool val )         { m_handleCraAsBlaFlag = val;                    }
+  Bool getHandleCraAsBlaFlag              ()                   { return m_handleCraAsBlaFlag;                   }
+#endif
 
   Void setSliceMode                     ( UInt uiMode )     { m_sliceMode = uiMode;                     }
   UInt getSliceMode                     ()                  { return m_sliceMode;                       }

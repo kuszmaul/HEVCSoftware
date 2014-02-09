@@ -1319,6 +1319,25 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             uiOneBitstreamPerSliceLength = 0; // start of a new slice
           }
           m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+
+#if SETTING_NO_OUT_PIC_PRIOR
+          if (pcSlice->isIRAP())
+          {
+            if (pcSlice->getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getNalUnitType() <= NAL_UNIT_CODED_SLICE_IDR_N_LP)
+            {
+              pcSlice->setNoRaslOutputFlag(true);
+            }
+            //the inference for NoOutputPriorPicsFlag
+            if (!m_bFirst && pcSlice->isIRAP() && pcSlice->getNoRaslOutputFlag())
+            {
+              if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)
+              {
+                pcSlice->setNoOutputPriorPicsFlag(true);
+              }
+            }
+          }
+#endif
+
           tmpBitsBeforeWriting = m_pcEntropyCoder->getNumberOfWrittenBits();
           m_pcEntropyCoder->encodeSliceHeader(pcSlice);
           actualHeadBits += ( m_pcEntropyCoder->getNumberOfWrittenBits() - tmpBitsBeforeWriting );

@@ -69,6 +69,11 @@ TComSlice::TComSlice()
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
 , m_colFromL0Flag                 ( 1 )
+#if SETTING_NO_OUT_PIC_PRIOR
+, m_noOutputPriorPicsFlag         ( false )
+, m_noRaslOutputFlag              ( false )
+, m_handleCraAsBlaFlag              ( false )
+#endif
 , m_colRefIdx                     ( 0 )
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
