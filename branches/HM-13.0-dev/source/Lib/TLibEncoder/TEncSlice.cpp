@@ -447,7 +447,9 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
 
   // store lambda
   slice->setSliceQp( sliceQP );
+#if ADAPTIVE_QP_SELECTION
   slice->setSliceQpBase ( sliceQP );
+#endif
   m_pcRdCost ->setLambda( lambda );
   // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -928,7 +930,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       }
 
       m_pcRateCtrl->setRCQP( estQP );
+#if ADAPTIVE_QP_SELECTION
       pcCU->getSlice()->setSliceQpBase( estQP );
+#endif
     }
 
     // run CU encoder
