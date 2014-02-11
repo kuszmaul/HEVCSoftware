@@ -4453,16 +4453,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     
     m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-#if 0 // check
-    {
-      m_pcEntropyCoder->resetBits();
-      m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0) );
-      const UInt uiBitsForCoeff = m_pcEntropyCoder->getNumberOfWrittenBits();
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-      if( uiBitsForCoeff != uiBits )
-        assert( 0 );
-    }
-#endif
+    
     uiBits = 0;
     {
       TComYuv *pDummy = NULL;
