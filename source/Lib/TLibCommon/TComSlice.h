@@ -223,9 +223,9 @@ public:
 class TComPTL
 {
   ProfileTierLevel m_generalPTL;
-  ProfileTierLevel m_subLayerPTL[6];      // max. value of max_sub_layers_minus1 is 6
-  Bool m_subLayerProfilePresentFlag[6];
-  Bool m_subLayerLevelPresentFlag[6];
+  ProfileTierLevel m_subLayerPTL    [MAX_TLAYER-1];      // max. value of max_sub_layers_minus1 is MAX_TLAYER-1 (= 6)
+  Bool m_subLayerProfilePresentFlag [MAX_TLAYER-1];
+  Bool m_subLayerLevelPresentFlag   [MAX_TLAYER-1];
 
 public:
   TComPTL();
