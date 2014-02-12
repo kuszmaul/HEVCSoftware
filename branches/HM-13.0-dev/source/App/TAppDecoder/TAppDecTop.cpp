@@ -190,9 +190,10 @@ Void TAppDecTop::decode()
         xWriteOutput( pcListPic, nalu.m_temporalId );
       }
 #if SETTING_NO_OUT_PIC_PRIOR
-      if (bNewPicture && m_cTDecTop.getIsNoOutputPriorPics())
+      if ( (bNewPicture || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA) && m_cTDecTop.getNoOutputPriorPicsFlag() )
       {
         m_cTDecTop.checkNoOutputPriorPics( pcListPic );
+        m_cTDecTop.setNoOutputPriorPicsFlag (false);
       }
 #endif
 #endif
@@ -207,7 +208,11 @@ Void TAppDecTop::decode()
       }
       if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
-        xFlushOutput( pcListPic );        
+#if FIX_OUTPUT_EOS
+        xWriteOutput( pcListPic, nalu.m_temporalId );
+#else
+        xFlushOutput( pcListPic );
+#endif
       }
       // write reconstruction to file -- for additional bumping as defined in C.5.2.3
 #if FIX_WRITING_OUTPUT

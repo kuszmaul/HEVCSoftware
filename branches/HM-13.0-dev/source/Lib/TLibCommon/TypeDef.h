@@ -51,6 +51,7 @@
 #define SETTING_NO_OUT_PIC_PRIOR    1
 #define FIX_EMPTY_PAYLOAD_NAL       1
 #define FIX_WRITING_OUTPUT          1
+#define FIX_OUTPUT_EOS              1
 
 #define MAX_NUM_PICS_IN_SOP           1024
 
