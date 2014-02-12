@@ -123,8 +123,8 @@ public:
 #if SETTING_NO_OUT_PIC_PRIOR  
   Void  checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic);
 
-  Bool  getIsNoOutputPriorPics () { return m_isNoOutputPriorPics; }
-
+  Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
+  Void  setNoOutputPriorPicsFlag (bool val) { m_isNoOutputPriorPics = val; }
 #endif
 
 protected:

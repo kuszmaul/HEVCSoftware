@@ -205,12 +205,11 @@ Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic)
 {
   if (!rpcListPic || !m_isNoOutputPriorPics) return;
 
-  TComPic*& pcPicTmp = m_pcPic;
   TComList<TComPic*>::iterator  iterPic   = rpcListPic->begin();
 
   while (iterPic != rpcListPic->end())
   {
-    pcPicTmp = *(iterPic++);
+    TComPic*& pcPicTmp = *(iterPic++);
     if (m_lastPOCNoOutputPriorPics != pcPicTmp->getPOC())
     {
       pcPicTmp->setOutputMark(false);
