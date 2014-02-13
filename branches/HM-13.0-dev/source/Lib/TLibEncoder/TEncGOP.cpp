@@ -2097,7 +2097,9 @@ static const Char* nalUnitTypeToString(NalUnitType type)
     case NAL_UNIT_CODED_SLICE_IDR_N_LP:   return "IDR_N_LP";
     case NAL_UNIT_CODED_SLICE_CRA:        return "CRA";
     case NAL_UNIT_CODED_SLICE_RADL_R:     return "RADL_R";
+    case NAL_UNIT_CODED_SLICE_RADL_N:     return "RADL_N";
     case NAL_UNIT_CODED_SLICE_RASL_R:     return "RASL_R";
+    case NAL_UNIT_CODED_SLICE_RASL_N:     return "RASL_N";
     case NAL_UNIT_VPS:                    return "VPS";
     case NAL_UNIT_SPS:                    return "SPS";
     case NAL_UNIT_PPS:                    return "PPS";
