@@ -53,6 +53,8 @@
 #define FIX_WRITING_OUTPUT          1
 #define FIX_OUTPUT_EOS              1
 
+#define FIX_POC_CRA_NORASL_OUTPUT   1
+
 #define MAX_NUM_PICS_IN_SOP           1024
 
 #define MAX_NESTING_NUM_OPS         1024
