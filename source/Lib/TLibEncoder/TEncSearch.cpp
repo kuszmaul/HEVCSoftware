@@ -2394,7 +2394,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
                            Bool        bLumaOnly )
 {
   UInt    uiDepth        = pcCU->getDepth(0);
-  UInt    uiNumPU        = pcCU->getNumPartInter();
+  UInt    uiNumPU        = pcCU->getNumPartitions();
   UInt    uiInitTrDepth  = pcCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1;
   UInt    uiWidth        = pcCU->getWidth (0) >> uiInitTrDepth;
   UInt    uiHeight       = pcCU->getHeight(0) >> uiInitTrDepth;
@@ -3080,7 +3080,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
   TComMv        cMvBi[2];
   TComMv        cMvTemp[2][33];
   
-  Int           iNumPart    = pcCU->getNumPartInter();
+  Int           iNumPart    = pcCU->getNumPartitions();
   Int           iNumPredDir = pcCU->getSlice()->isInterP() ? 1 : 2;
   
   TComMv        cMvPred[2][33];
