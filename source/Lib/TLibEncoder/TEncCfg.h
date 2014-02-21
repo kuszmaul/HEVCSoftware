@@ -234,6 +234,8 @@ protected:
   Int       m_numPivots;
   Int       m_cameraIsoSpeedIdc;
   Int       m_cameraIsoSpeedValue;
+  Int       m_exposureIndexIdc;
+  Int       m_exposureIndexValue;
   Int       m_exposureCompensationValueSignFlag;
   Int       m_exposureCompensationValueNumerator;
   Int       m_exposureCompensationValueDenomIdc;
@@ -580,6 +582,10 @@ public:
   Int   getTMISEICameraIsoSpeedIdc()                         {  return m_cameraIsoSpeedIdc;  }
   Void  setTMISEICameraIsoSpeedValue(Int b)                  {  m_cameraIsoSpeedValue = b;  }
   Int   getTMISEICameraIsoSpeedValue()                       {  return m_cameraIsoSpeedValue;  }
+  Void  setTMISEIExposureIndexIdc(Int b)                     {  m_exposureIndexIdc = b;  }
+  Int   getTMISEIExposurIndexIdc()                           {  return m_exposureIndexIdc;  }
+  Void  setTMISEIExposureIndexValue(Int b)                   {  m_exposureIndexValue = b;  }
+  Int   getTMISEIExposurIndexValue()                         {  return m_exposureIndexValue;  }
   Void  setTMISEIExposureCompensationValueSignFlag(Int b)    {  m_exposureCompensationValueSignFlag = b;  }
   Int   getTMISEIExposureCompensationValueSignFlag()         {  return m_exposureCompensationValueSignFlag;  }
   Void  setTMISEIExposureCompensationValueNumerator(Int b)   {  m_exposureCompensationValueNumerator = b;  }

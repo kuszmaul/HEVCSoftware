@@ -468,6 +468,11 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
         {
           WRITE_CODE( sei.m_cameraIsoSpeedValue,    32,    "camera_iso_speed_value" );
         }
+        WRITE_CODE( sei.m_exposureIndexIdc,     8,    "exposure_index_idc" );
+        if( sei.m_exposureIndexIdc == 255) //Extended_ISO
+        {
+          WRITE_CODE( sei.m_exposureIndexValue,     32,    "exposure_index_value" );
+        }
         WRITE_FLAG( sei.m_exposureCompensationValueSignFlag,           "exposure_compensation_value_sign_flag" );
         WRITE_CODE( sei.m_exposureCompensationValueNumerator,     16,  "exposure_compensation_value_numerator" );
         WRITE_CODE( sei.m_exposureCompensationValueDenomIdc,      16,  "exposure_compensation_value_denom_idc" );
