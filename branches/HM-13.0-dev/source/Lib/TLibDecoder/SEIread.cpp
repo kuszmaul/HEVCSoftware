@@ -669,10 +669,15 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
       }
     case 4:
       {
-        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedValue = val;
-        if( sei.m_cameraIsoSpeedValue == 255) //Extended_ISO
+        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedIdc = val;
+        if( sei.m_cameraIsoSpeedIdc == 255) //Extended_ISO
         {
           READ_CODE( 32,   val,   "camera_iso_speed_value" );            sei.m_cameraIsoSpeedValue = val;
+        }
+        READ_CODE( 8, val, "exposure_index_idc" );                       sei.m_exposureIndexIdc = val;
+        if( sei.m_exposureIndexIdc == 255) //Extended_ISO
+        {
+          READ_CODE( 32,   val,   "exposure_index_value" );              sei.m_exposureIndexValue = val;
         }
         READ_FLAG( val, "exposure_compensation_value_sign_flag" );       sei.m_exposureCompensationValueSignFlag = val;
         READ_CODE( 16, val, "exposure_compensation_value_numerator" );   sei.m_exposureCompensationValueNumerator = val;

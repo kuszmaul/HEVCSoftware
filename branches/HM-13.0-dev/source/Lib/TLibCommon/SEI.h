@@ -352,6 +352,8 @@ public:
   std::vector<Int> m_targetPivotValue;
   Int    m_cameraIsoSpeedIdc;
   Int    m_cameraIsoSpeedValue;
+  Int    m_exposureIndexIdc;
+  Int    m_exposureIndexValue;
   Int    m_exposureCompensationValueSignFlag;
   Int    m_exposureCompensationValueNumerator;
   Int    m_exposureCompensationValueDenomIdc;
