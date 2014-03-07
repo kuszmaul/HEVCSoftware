@@ -74,6 +74,9 @@ TEncGOP::TEncGOP()
   m_iGopSize            = 0;
   m_iNumPicCoded        = 0; //Niko
   m_bFirst              = true;
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  m_iLastRecoveryPicPOC = 0;
+#endif
   
   m_pcCfg               = NULL;
   m_pcSliceEncoder      = NULL;
@@ -542,10 +545,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
 #endif
     
+#if ALLOW_RECOVERY_POINT_AS_RAP
+    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || pcSlice->isIRAP())
+    {
+      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP(), m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3);
+    }
+#else
     if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0) || (pcSlice->isIRAP()))
     {
       pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP());
     }
+#endif
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
     
     if(pcSlice->getTLayer() > 0 
@@ -1203,6 +1213,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       sei_recovery_point.m_recoveryPocCnt    = 0;
       sei_recovery_point.m_exactMatchingFlag = ( pcSlice->getPOC() == 0 ) ? (true) : (false);
       sei_recovery_point.m_brokenLinkFlag    = false;
+#if ALLOW_RECOVERY_POINT_AS_RAP
+      if(m_pcCfg->getDecodingRefreshType() == 3)
+      {
+        m_iLastRecoveryPicPOC = pocCurr;
+      }
+#endif
       
       m_seiWriter.writeSEImessage( nalu.m_Bitstream, sei_recovery_point, pcSlice->getSPS() );
       writeRBSPTrailingBits(nalu.m_Bitstream);
@@ -2432,7 +2448,11 @@ NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)
   {
     return NAL_UNIT_CODED_SLICE_IDR_W_RADL;
   }
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  if(m_pcCfg->getDecodingRefreshType() != 3 && (pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
+#else
   if ((pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
+#endif
   {
     if (m_pcCfg->getDecodingRefreshType() == 1)
     {
