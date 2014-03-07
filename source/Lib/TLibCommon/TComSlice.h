@@ -1337,8 +1337,13 @@ public:
   Void applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComReferencePictureSet *RPSList);
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
+  Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
+#else
   Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
   Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
+#endif
 
   Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
   UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
