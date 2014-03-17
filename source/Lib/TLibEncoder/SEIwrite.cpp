@@ -96,6 +96,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+    fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
+#endif
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
     fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
@@ -157,6 +160,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+  case SEI::CHROMA_SAMPLING_FILTER_HINT:
+    xWriteSEIChromaSamplingFilterHint(*static_cast<const SEIChromaSamplingFilterHint*>(&sei)/*, sps*/);
+    break;
+#endif
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
     xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
@@ -649,6 +657,96 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
     }
   }
   xWriteByteAlign();
+}
+#endif
+
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
+{
+  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  WRITE_CODE(sei.m_verChromaFilterIdc, 8, "ver_chroma_filter_idc");
+  WRITE_CODE(sei.m_horChromaFilterIdc, 8, "hor_chroma_filter_idc");
+  WRITE_FLAG(sei.m_verFilteringProcessFlag, "ver_filtering_process_flag");
+  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  {
+    writeUserDefinedCoefficients(sei);
+  }
+  //}
+  xWriteByteAlign();
+}
+
+// write hardcoded chroma filter coefficients in the SEI messages
+Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &sei)
+{
+  Int const iNumVerticalFilters = 3;
+  Int verticalTapLength_minus1[iNumVerticalFilters] = {5,3,3};
+  Int* userVerticalCoefficients[iNumVerticalFilters];
+  for(Int i = 0; i < iNumVerticalFilters; i ++)
+  {
+    userVerticalCoefficients[i] = (Int*)malloc( (verticalTapLength_minus1[i]+1) * sizeof(Int));
+  }
+  userVerticalCoefficients[0][0] = -3;
+  userVerticalCoefficients[0][1] = 13;
+  userVerticalCoefficients[0][2] = 31;
+  userVerticalCoefficients[0][3] = 23;
+  userVerticalCoefficients[0][4] = 3;
+  userVerticalCoefficients[0][5] = -3;
+
+  userVerticalCoefficients[1][0] = -1;
+  userVerticalCoefficients[1][1] = 25;
+  userVerticalCoefficients[1][2] = 247;
+  userVerticalCoefficients[1][3] = -15;
+
+  userVerticalCoefficients[2][0] = -20;
+  userVerticalCoefficients[2][1] = 186;
+  userVerticalCoefficients[2][2] = 100;
+  userVerticalCoefficients[2][3] = -10;
+  
+  Int const iNumHorizontalFilters = 1;
+  Int horizontalTapLength_minus1[iNumHorizontalFilters] = {3};
+  Int* userHorizontalCoefficients[iNumHorizontalFilters];
+  for(Int i = 0; i < iNumHorizontalFilters; i ++)
+  {
+    userHorizontalCoefficients[i] = (Int*)malloc( (horizontalTapLength_minus1[i]+1) * sizeof(Int));
+  }
+  userHorizontalCoefficients[0][0] = 1;
+  userHorizontalCoefficients[0][1] = 6;
+  userHorizontalCoefficients[0][2] = 1;
+
+  WRITE_UVLC(3, "target_format_idc");
+  WRITE_FLAG(0, "prefect_reconstruction_flag");
+  if(sei.m_verChromaFilterIdc == 1)
+  {
+    WRITE_UVLC(iNumVerticalFilters, "num_vertical_filters");
+    if(iNumVerticalFilters > 0)
+    {
+      for(Int i = 0; i < iNumVerticalFilters; i ++)
+      {
+        WRITE_UVLC(verticalTapLength_minus1[i], "ver_tap_length_minus_1");
+        for(Int j = 0; j < verticalTapLength_minus1[i]; j ++)
+        {
+          WRITE_SVLC(userVerticalCoefficients[i][j], "ver_filter_coeff");
+        }
+      }
+    }
+  }
+  if(sei.m_horChromaFilterIdc == 1)
+  {
+    WRITE_UVLC(iNumHorizontalFilters, "num_horizontal_filters");
+    if(iNumHorizontalFilters > 0)
+    {
+      for(Int i = 0; i < iNumHorizontalFilters; i ++)
+      {
+        WRITE_UVLC(horizontalTapLength_minus1[i], "hor_tap_length_minus_1");
+        for(Int j = 0; j < horizontalTapLength_minus1[i]; j ++)
+        {
+          WRITE_SVLC(userHorizontalCoefficients[i][j], "hor_filter_coeff");
+        }
+      }
+    }
+  }
 }
 #endif
 

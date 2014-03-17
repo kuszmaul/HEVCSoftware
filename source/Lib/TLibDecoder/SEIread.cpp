@@ -258,6 +258,20 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEITimeCode;
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize);
       break;
+#endif   
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+    case SEI::CHROMA_SAMPLING_FILTER_HINT:
+      //NOTE: RExt - Made unconditional on SPS to be consistent with the working text P1005
+      //if (!sps)
+      //{
+      //  printf ("Warning: Found Chroma Sampling Filter Hint SEI message, but no active SPS is available. Ignoring.\n");
+      //}
+      //else
+      //{
+      sei = new SEIChromaSamplingFilterHint;
+      xParseSEIChromaSamplingFilterHint((SEIChromaSamplingFilterHint&) *sei, payloadSize/*, sps*/);
+      //}
+      break;
 #endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
@@ -854,6 +868,107 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
     }
   }
   xParseByteAlign();
+}
+#endif
+
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt /*payloadSize*//*, TComSPS* sps*/)
+{
+  UInt uiCode;
+
+  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  READ_CODE(8, uiCode, "ver_chroma_filter_idc"); sei.m_verChromaFilterIdc = uiCode;
+  READ_CODE(8, uiCode, "hor_chroma_filter_idc"); sei.m_horChromaFilterIdc = uiCode;
+  READ_FLAG(uiCode, "ver_filtering_process_flag"); sei.m_verFilteringProcessFlag = uiCode;
+  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  {
+    READ_UVLC(uiCode, "target_format_idc"); sei.m_targetFormatIdc = uiCode;
+    READ_FLAG(uiCode, "perfect_reconstruction_flag"); sei.m_perfectReconstructionFlag = uiCode;
+    if(sei.m_verChromaFilterIdc == 1)
+    {
+      READ_UVLC(uiCode, "num_vertical_filters"); sei.m_numVerticalFilters = uiCode;
+      if(sei.m_numVerticalFilters > 0)
+      {
+        sei.m_verTapLengthMinus1 = (Int*)malloc(sei.m_numVerticalFilters * sizeof(Int));
+        sei.m_verFilterCoeff = (Int**)malloc(sei.m_numVerticalFilters * sizeof(Int*));
+        for(Int i = 0; i < sei.m_numVerticalFilters; i ++)
+        {
+          READ_UVLC(uiCode, "ver_tap_length_minus_1"); sei.m_verTapLengthMinus1[i] = uiCode; 
+          sei.m_verFilterCoeff[i] = (Int*)malloc(sei.m_verTapLengthMinus1[i] * sizeof(Int));
+          for(Int j = 0; j < sei.m_verTapLengthMinus1[i]; j ++)
+          {
+            READ_SVLC(sei.m_verFilterCoeff[i][j], "ver_filter_coeff");
+          }
+        }
+      }
+    }
+    if(sei.m_horChromaFilterIdc == 1)
+    {
+      READ_UVLC(uiCode, "num_horizontal_filters"); sei.m_numHorizontalFilters = uiCode;
+      if(sei.m_numHorizontalFilters  > 0)
+      {
+        sei.m_horTapLengthMinus1 = (Int*)malloc(sei.m_numHorizontalFilters * sizeof(Int));
+        sei.m_horFilterCoeff = (Int**)malloc(sei.m_numHorizontalFilters * sizeof(Int*));
+        for(Int i = 0; i < sei.m_numHorizontalFilters; i ++)
+        {
+          READ_UVLC(uiCode, "hor_tap_length_minus_1"); sei.m_horTapLengthMinus1[i] = uiCode;
+          sei.m_horFilterCoeff[i] = (Int*)malloc(sei.m_horTapLengthMinus1[i] * sizeof(Int));
+          for(Int j = 0; j < sei.m_horTapLengthMinus1[i]; j ++)
+          {
+            READ_SVLC(sei.m_horFilterCoeff[i][j], "hor_filter_coeff");
+          }
+        }
+      }
+    }
+  }
+  //}
+
+  //// DEBUG
+  //printf("summary of chroma sampling filter sei message:\n");
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  //  printf("ver_chroma_filter_idc = %d\n", sei.m_verChromaFilterIdc);
+  //  printf("hor_chroma_filter_idc = %d\n", sei.m_horChromaFilterIdc);
+  //  printf("ver_filtering_process_flag = %d\n", sei.m_verFilteringProcessFlag);
+  //  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  //  {
+  //    printf("target_format_idc = %d\n", sei.m_targetFormatIdc);
+  //    printf("perfect_reconstruction_flag = %d\n", sei.m_perfectReconstructionFlag);
+  //    if(sei.m_verChromaFilterIdc == 1)
+  //    {
+  //      printf("num_vertical_filters = %d\n", sei.m_numVerticalFilters);
+  //      for(Int i = 0; i < sei.m_numVerticalFilters; i ++)
+  //      {
+  //        printf("ver_tap_length_minus_1[%d] = %d\n", i, sei.m_verTapLengthMinus1[i]);
+  //        for(Int j = 0; j < sei.m_verTapLengthMinus1[i]; j ++)
+  //        {
+  //          printf("ver_filter_coeff[%d][%d] = %d\n", i, j, sei.m_verFilterCoeff[i][j]);
+  //        }
+  //      }
+  //    }
+  //    if(sei.m_horChromaFilterIdc == 1)
+  //    {
+  //      printf("num_horizontal_filters = %d\n", sei.m_numHorizontalFilters);
+  //      if(sei.m_numHorizontalFilters  > 0)
+  //      {
+  //        for(Int i = 0; i < sei.m_numHorizontalFilters; i ++)
+  //        {
+  //          printf("hor_tap_length_minus_1[%d] = %d\n", i, sei.m_horTapLengthMinus1[i]);
+  //          for(Int j = 0; j < sei.m_horTapLengthMinus1[i]; j ++)
+  //          {
+  //            printf("hor_filter_coeff[%d][%d] = %d\n", i, j, sei.m_horFilterCoeff[i][j]);
+  //          }
+  //        }
+  //      }
+  //    }
+  //  }
+  //}
+  //else
+  //{
+  //  printf("ChromaLocInfoPresentFlag = false\nNo message read\n");
+  //}
 }
 #endif
 

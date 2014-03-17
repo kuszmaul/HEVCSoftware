@@ -239,6 +239,11 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Bool      m_toneMappingInfoSEIEnabled;
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+  Bool      m_chromaSamplingFilterSEIenabled;
+  Int       m_chromaSamplingHorFilterIdc;
+  Int       m_chromaSamplingVerFilterIdc;
+#endif
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
   Bool      m_toneMapPersistenceFlag;
