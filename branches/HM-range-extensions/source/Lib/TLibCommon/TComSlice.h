@@ -416,6 +416,20 @@ public:
   Void setNumTicksPocDiffOneMinus1          (Int x       ) { m_numTicksPocDiffOneMinus1 = x;               }
 };
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+struct ChromaQpAdj
+{
+  union
+  {
+    struct {
+      Int CbOffset;
+      Int CrOffset;
+    } comp;
+    Int offset[2]; /* two chroma components */
+  } u;
+};
+#endif
+
 class TComVPS
 {
 private:
@@ -984,6 +998,14 @@ private:
   UInt        m_uiMaxCuDQPDepth;
   UInt        m_uiMinCuDQPSize;
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  /* Chroma QP Adjustments*/
+  Int         m_MaxCuChromaQpAdjDepth;
+  Int         m_MinCuChromaQpAdjSize;
+  Int         m_ChromaQpAdjTableSize;
+  ChromaQpAdj m_ChromaQpAdjTable[7];
+#endif
+
   Int         m_chromaCbQpOffset;
   Int         m_chromaCrQpOffset;
 
@@ -1058,6 +1080,22 @@ public:
 
   Void      setQpOffset(ComponentID compID, Int i ) { if (compID==COMPONENT_Cb) m_chromaCbQpOffset = i; else if (compID==COMPONENT_Cr) m_chromaCrQpOffset = i; else assert(0); }
   Int       getQpOffset(ComponentID compID) const { return (compID==COMPONENT_Y) ? 0 : (compID==COMPONENT_Cb ? m_chromaCbQpOffset : m_chromaCrQpOffset ); }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Void      setMaxCuChromaQpAdjDepth ( UInt u ) { m_MaxCuChromaQpAdjDepth = u; }
+  UInt      getMaxCuChromaQpAdjDepth ()         { return m_MaxCuChromaQpAdjDepth; }
+  Void      setMinCuChromaQpAdjSize ( UInt u ) { m_MinCuChromaQpAdjSize = u; }
+  UInt      getMinCuChromaQpAdjSize ()         { return m_MinCuChromaQpAdjSize; }
+  Void      clearChromaQpAdjTable() { m_ChromaQpAdjTableSize = 0; }
+  Int       getChromaQpAdjTableSize() { return m_ChromaQpAdjTableSize; }
+  const ChromaQpAdj& getChromaQpAdjTableAt( Int idx ) const { return m_ChromaQpAdjTable[idx]; }
+  Void      setChromaQpAdjTableAt( Int idx, Int cbOffset, Int crOffset )
+  {
+    m_ChromaQpAdjTable[idx].u.comp.CbOffset = cbOffset;
+    m_ChromaQpAdjTable[idx].u.comp.CrOffset = crOffset;
+    m_ChromaQpAdjTableSize = max(m_ChromaQpAdjTableSize, idx);
+  }
+#endif
 
   Void      setNumRefIdxL0DefaultActive(UInt ui)    { m_numRefIdxL0DefaultActive=ui;     }
   UInt      getNumRefIdxL0DefaultActive()           { return m_numRefIdxL0DefaultActive; }
@@ -1211,6 +1249,9 @@ private:
 #if ADAPTIVE_QP_SELECTION
   Int         m_iSliceQpBase;
 #endif
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Bool        m_ChromaQpAdjEnabled;
+#endif
   Bool        m_deblockingFilterDisable;
   Bool        m_deblockingFilterOverrideFlag;      //< offsets for deblocking filter inherit from PPS
   Int         m_deblockingFilterBetaOffsetDiv2;    //< beta offset for deblocking filter
@@ -1335,6 +1376,9 @@ public:
 #endif
   Int       getSliceQpDelta ()                         const { return  m_iSliceQpDelta;      }
   Int       getSliceChromaQpDelta (ComponentID compID) const { return  isLuma(compID) ? 0 : m_iSliceChromaQpDelta[compID]; }
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Bool      getUseChromaQpAdj()                        const { return m_ChromaQpAdjEnabled; }
+#endif
   Bool      getDeblockingFilterDisable()               const { return  m_deblockingFilterDisable; }
   Bool      getDeblockingFilterOverrideFlag()          const { return  m_deblockingFilterOverrideFlag; }
   Int       getDeblockingFilterBetaOffsetDiv2()        const { return  m_deblockingFilterBetaOffsetDiv2; }
@@ -1372,6 +1416,9 @@ public:
 #endif
   Void      setSliceQpDelta     ( Int i )                       { m_iSliceQpDelta     = i;      }
   Void      setSliceChromaQpDelta( ComponentID compID, Int i )  { m_iSliceChromaQpDelta[compID] = isLuma(compID) ? 0 : i;  }
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Void      setUseChromaQpAdj   ( Bool b )                      { m_ChromaQpAdjEnabled = b;     }
+#endif
   Void      setDeblockingFilterDisable( Bool b )                { m_deblockingFilterDisable= b;      }
   Void      setDeblockingFilterOverrideFlag( Bool b )           { m_deblockingFilterOverrideFlag = b; }
   Void      setDeblockingFilterBetaOffsetDiv2( Int i )          { m_deblockingFilterBetaOffsetDiv2 = i; }

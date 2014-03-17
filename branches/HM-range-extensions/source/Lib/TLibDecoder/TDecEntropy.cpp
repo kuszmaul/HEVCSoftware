@@ -389,8 +389,11 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   pcSubCU->getCUMvField( eRefList )->setAllMv(cMv, ePartSize, uiPartAddr, 0, uiPartIdx);
 }
 
-
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, Bool& isChromaQpAdjCoded, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU )
+#else
 Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU )
+#endif
 {
   TComDataCU *pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
@@ -466,7 +469,11 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const I
 
     do
     {
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+      xDecodeTransform( bCodeDQP, isChromaQpAdjCoded, tuRecurseChild, quadtreeTULog2MinSizeInCU );
+#else
       xDecodeTransform( bCodeDQP, tuRecurseChild, quadtreeTULog2MinSizeInCU );
+#endif
       UInt childTUAbsPartIdx=tuRecurseChild.GetAbsPartIdxTU();
       for(UInt ch=0; ch<numValidComponent; ch++)
       {
@@ -516,12 +523,25 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const I
 
     // transform_unit begin
     UInt cbf[MAX_NUM_COMPONENT]={0,0,0};
-    Bool validCbf=false;
-    const UInt uiTrIdx=rTu.GetTransformDepthRel();
+    Bool validCbf       = false;
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    Bool validChromaCbf = false;
+#endif
+    const UInt uiTrIdx = rTu.GetTransformDepthRel();
+
     for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)
     {
-      cbf[ch] = pcCU->getCbf( uiAbsPartIdx, ComponentID(ch), uiTrIdx );
-      if (cbf[ch]) validCbf=true;
+      const ComponentID compID = ComponentID(ch);
+
+      cbf[compID] = pcCU->getCbf( uiAbsPartIdx, compID, uiTrIdx );
+
+      if (cbf[compID] != 0)
+      {
+        validCbf = true;
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+        if (isChroma(compID)) validChromaCbf = true;
+#endif
+      }
     }
 
     if ( validCbf )
@@ -537,6 +557,17 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const I
           bCodeDQP = false;
         }
       }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+      if ( pcCU->getSlice()->getUseChromaQpAdj() )
+      {
+        if ( validChromaCbf && isChromaQpAdjCoded && !pcCU->getCUTransquantBypass(rTu.GetAbsPartIdxCU()) )
+        {
+          decodeChromaQpAdjustment( pcCU, rTu.GetAbsPartIdxCU() );
+          isChromaQpAdjCoded = false;
+        }
+      }
+#endif
 
       const UInt numValidComp=pcCU->getPic()->getNumberValidComponents();
 
@@ -596,6 +627,16 @@ Void TDecEntropy::decodeQP          ( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TDecEntropy::decodeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  if ( pcCU->getSlice()->getUseChromaQpAdj() )
+  {
+    m_pcEntropyDecoderIf->parseChromaQpAdjustment( pcCU, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
+  }
+}
+#endif
+
 
 /** decode coefficients
  * \param pcCU
@@ -605,7 +646,11 @@ Void TDecEntropy::decodeQP          ( TComDataCU* pcCU, UInt uiAbsPartIdx )
  * \param uiHeight
  * \returns Void
  */
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
+#else
 Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
+#endif
 {
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
@@ -636,7 +681,11 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
   Int quadtreeTULog2MinSizeInCU = pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx);
   
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  xDecodeTransform( bCodeDQP, isChromaQpAdjCoded, tuRecurse, quadtreeTULog2MinSizeInCU );
+#else
   xDecodeTransform( bCodeDQP, tuRecurse, quadtreeTULog2MinSizeInCU );
+#endif
 }
 
 //! \}

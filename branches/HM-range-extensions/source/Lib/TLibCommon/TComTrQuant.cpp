@@ -101,10 +101,22 @@ QpParam::QpParam(const Int           qpy,
 
 QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
 {
+  Int chromaQpOffset = 0;
+
+  if (isChroma(compID))
+  {
+    chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
+    chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[int(compID)-1];
+#endif
+  }
+
   *this = QpParam(cu.getQP( 0 ),
                   toChannelType(compID),
                   cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
-                  cu.getSlice()->getPPS()->getQpOffset(compID) + cu.getSlice()->getSliceChromaQpDelta(compID),
+                  chromaQpOffset,
                   cu.getPic()->getChromaFormat());
 }
 
@@ -1560,11 +1572,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *rpcCoeff    = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
-    const QpParam cQP(pcCU->getQP( 0 ),
-                      toChannelType(compID),
-                      pcCU->getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
-                      (pcCU->getSlice()->getPPS()->getQpOffset(compID) + pcCU->getSlice()->getSliceChromaQpDelta(compID)),
-                      pcCU->getPic()->getChromaFormat());
+    const QpParam cQP(*pcCU, compID);
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {

@@ -356,7 +356,27 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
             READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
-            assert(uiCode == 0);  // NOTE: RExt - placeholder for now
+            if (uiCode == 0)
+            {
+              pcPPS->clearChromaQpAdjTable();
+              pcPPS->setMaxCuChromaQpAdjDepth(0);
+            }
+            else
+            {
+              READ_UVLC(uiCode, "diff_cu_chroma_qp_adjustment_depth"); pcPPS->setMaxCuChromaQpAdjDepth(uiCode);
+              UInt tableSizeMinus1 = 0;
+              READ_UVLC(tableSizeMinus1, "chroma_qp_adjustment_table_size_minus1");
+              /* skip zero index */
+              for (Int chromaQpAdjustmentIndex = 1; chromaQpAdjustmentIndex <= (tableSizeMinus1 + 1); chromaQpAdjustmentIndex++)
+              {
+                Int cbOffset;
+                Int crOffset;
+                READ_SVLC(cbOffset, "cb_qp_adjustnemt[i]");
+                READ_SVLC(crOffset, "cr_qp_adjustnemt[i]");
+                pcPPS->setChromaQpAdjTableAt(chromaQpAdjustmentIndex, cbOffset, crOffset);
+              }
+              assert(pcPPS->getChromaQpAdjTableSize() == tableSizeMinus1 + 1);
+            }
 #endif
 
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
@@ -1355,6 +1375,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    if (rpcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
+    {
+      READ_FLAG(uiCode, "slice_chroma_qp_adjustment_enabled_flag"); rpcSlice->setUseChromaQpAdj(uiCode != 0);
+    }
+#endif
+
     if (rpcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
       if(rpcSlice->getPPS()->getDeblockingFilterOverrideEnabledFlag())
@@ -1742,6 +1769,13 @@ Void TDecCavlc::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   pcCU->setQPSubParts( qp, uiAbsQpCUPartIdx, uiQpCUDepth );
 }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TDecCavlc::parseChromaQpAdjustment( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+#endif
 
 Void TDecCavlc::parseCoeffNxN( TComTU &/*rTu*/, ComponentID /*compID*/ )
 {

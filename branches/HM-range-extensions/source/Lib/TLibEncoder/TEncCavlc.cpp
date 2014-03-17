@@ -246,6 +246,9 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #endif
              ( pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
           || pcPPS->getUseCrossComponentPrediction()
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+          || ( pcPPS->getChromaQpAdjTableSize() > 0 )
+#endif
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
           || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
 #endif
@@ -289,7 +292,18 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
             WRITE_FLAG((pcPPS->getUseCrossComponentPrediction() ? 1 : 0),         "cross_component_prediction_flag" );
 
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
-            WRITE_FLAG(0,                                                         "chroma_qp_adjustment_enabled_flag" ); // NOTE: RExt - placeholder for now
+            WRITE_FLAG(UInt(pcPPS->getChromaQpAdjTableSize() > 0),                "chroma_qp_adjustment_enabled_flag" );
+            if (pcPPS->getChromaQpAdjTableSize() > 0)
+            {
+              WRITE_UVLC(pcPPS->getMaxCuChromaQpAdjDepth(),                       "diff_cu_chroma_qp_adjustment_depth");
+              WRITE_UVLC(pcPPS->getChromaQpAdjTableSize() - 1,                    "chroma_qp_adjustment_table_size_minus1");
+              /* skip zero index */
+              for (Int chromaQpAdjustmentIndex = 1; chromaQpAdjustmentIndex <= pcPPS->getChromaQpAdjTableSize(); chromaQpAdjustmentIndex++)
+              {
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CbOffset,     "cb_qp_adjustnemt[i]");
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CrOffset,     "cr_qp_adjustnemt[i]");
+              }
+            }
 #endif
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
@@ -1057,6 +1071,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if (numberValidComponents > COMPONENT_Cr) { WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr), "slice_qp_delta_cr" ); }
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+    if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
+    {
+      WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "slice_chroma_qp_adjustment_enabled_flag");
+    }
+#endif
+
     if (pcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
       if (pcSlice->getPPS()->getDeblockingFilterOverrideEnabledFlag() )
@@ -1406,6 +1428,13 @@ Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   return;
 }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TEncCavlc::codeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeCoeffNxN    ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID )
 {

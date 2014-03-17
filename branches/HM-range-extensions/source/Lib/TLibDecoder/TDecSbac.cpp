@@ -93,6 +93,10 @@ TDecSbac::TDecSbac()
 , m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+, m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+, m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -156,6 +160,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
   m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
+  m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+#endif
 
   m_uiLastDQpNonZero  = 0;
 
@@ -217,6 +225,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR );
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
+  m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+#endif
 
 #if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
@@ -1059,6 +1071,33 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   pcCU->setCodedQP(qp);
 }
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+/** parse chroma qp adjustment, converting to the internal table representation.
+ * \returns Void
+ */
+Void TDecSbac::parseChromaQpAdjustment( TComDataCU* cu, UInt absPartIdx, UInt depth )
+{
+  UInt symbol;
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__CHROMA_QP_ADJUSTMENT, g_aucConvertToBit[g_uiMaxCUWidth>>depth]+2, CHANNEL_TYPE_CHROMA);
+#endif
+
+  Int tableSize = cu->getSlice()->getPPS()->getChromaQpAdjTableSize();
+
+  /* cu_chroma_qp_adjustment_flag */
+  m_pcTDecBinIf->decodeBin( symbol, m_ChromaQpAdjFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+
+  if (symbol && tableSize > 1) {
+    /* cu_chroma_qp_adjustment_idc */
+    xReadUnaryMaxSymbol( symbol,  &m_ChromaQpAdjIdcSCModel.get( 0, 0, 0 ), 0, tableSize - 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
+    symbol++;
+  }
+  /* NB, symbol = 0 if outer flag is not set,
+   *              1 if outer flag is set and there is no inner flag
+   *              1+ otherwise */
+  cu->setChromaQpAdjSubParts( symbol, absPartIdx, depth );
+}
+#endif
 
 Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
 {

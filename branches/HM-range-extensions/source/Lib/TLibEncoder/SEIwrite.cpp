@@ -800,25 +800,22 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
 Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
 {
+  WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
+  WRITE_CODE( sei.displayPrimaries[0][1],  16,  "display_primaries_y[0]" );
+ 
+  WRITE_CODE( sei.displayPrimaries[1][0],  16,  "display_primaries_x[1]" );
+  WRITE_CODE( sei.displayPrimaries[1][1],  16,  "display_primaries_y[1]" );
+ 
+  WRITE_CODE( sei.displayPrimaries[2][0],  16,  "display_primaries_x[2]" );
+  WRITE_CODE( sei.displayPrimaries[2][1],  16,  "display_primaries_y[2]" );
 
-    WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
-    WRITE_CODE( sei.displayPrimaries[0][1],  16,  "display_primaries_y[0]" );
- 
-    WRITE_CODE( sei.displayPrimaries[1][0],  16,  "display_primaries_x[1]" );
-    WRITE_CODE( sei.displayPrimaries[1][1],  16,  "display_primaries_y[1]" );
- 
-    WRITE_CODE( sei.displayPrimaries[2][0],  16,  "display_primaries_x[2]" );
-    WRITE_CODE( sei.displayPrimaries[2][1],  16,  "display_primaries_y[2]" );
+  WRITE_CODE( sei.displayWhitePoint[0],    16,  "white_point_x" );
+  WRITE_CODE( sei.displayWhitePoint[1],    16,  "white_point_y" );
     
+  WRITE_CODE( sei.maxDisplayLuminance,     32,  "max_display_mastering_luminance" );
+  WRITE_CODE( sei.minDisplayLuminance,     32,  "min_display_mastering_luminance" );
     
-    
-    WRITE_CODE( sei.displayWhitePoint[0],  16,  "white_point_x" );
-    WRITE_CODE( sei.displayWhitePoint[1],  16,  "white_point_y" );
-    
-    WRITE_CODE( sei.maxDisplayLuminance,  32,  "max_display_mastering_luminance" );
-    WRITE_CODE( sei.minDisplayLuminance,  32,  "min_display_mastering_luminance" );
-    
-    xWriteByteAlign();
+  xWriteByteAlign();
 }
 #endif
 

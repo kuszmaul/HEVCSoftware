@@ -724,12 +724,31 @@ Void TEncTop::xInitPPS()
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_cPPS.setMaxCuChromaQpAdjDepth(m_maxCUChromaQpAdjustmentDepth);
+
+  if ( m_maxCUChromaQpAdjustmentDepth != 0 )
+  {
+    //m_cPPS.setMaxCuChromaQpAdjDepth( m_cPPS.getSPS()->getMaxCUDepth() );
+    m_cPPS.setChromaQpAdjTableAt(1, 6, 6);
+    /* todo, insert table entries from command line (NB, 0 should not be touched) */
+  }
+  else
+  {
+    m_cPPS.clearChromaQpAdjTable();
+  }
+#endif
+
   if ( m_RCEnableRateControl )
   {
     m_cPPS.setUseDQP(true);
     m_cPPS.setMaxCuDQPDepth( 0 );
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_cPPS.setMinCuChromaQpAdjSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuChromaQpAdjDepth()) );
+#endif
 
   m_cPPS.setQpOffset(COMPONENT_Cb, m_chromaCbQpOffset );
   m_cPPS.setQpOffset(COMPONENT_Cr, m_chromaCrQpOffset );
