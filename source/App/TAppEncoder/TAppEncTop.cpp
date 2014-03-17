@@ -301,6 +301,20 @@ Void TAppEncTop::xInitLibCfg()
 #if RExt__O0099_TIME_CODE_SEI
   m_cTEncTop.setTimeCodeSEIEnabled( m_timeCodeSEIEnabled );
 #endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  m_cTEncTop.setKneeSEIEnabled              ( m_kneeSEIEnabled );
+  m_cTEncTop.setKneeSEIId                   ( m_kneeSEIId );
+  m_cTEncTop.setKneeSEICancelFlag           ( m_kneeSEICancelFlag );
+  m_cTEncTop.setKneeSEIPersistenceFlag      ( m_kneeSEIPersistenceFlag );
+  m_cTEncTop.setKneeSEIMappingFlag          ( m_kneeSEIMappingFlag );
+  m_cTEncTop.setKneeSEIInputDrange          ( m_kneeSEIInputDrange );
+  m_cTEncTop.setKneeSEIInputDispLuminance   ( m_kneeSEIInputDispLuminance );
+  m_cTEncTop.setKneeSEIOutputDrange         ( m_kneeSEIOutputDrange );
+  m_cTEncTop.setKneeSEIOutputDispLuminance  ( m_kneeSEIOutputDispLuminance );
+  m_cTEncTop.setKneeSEINumKneePointsMinus1  ( m_kneeSEINumKneePointsMinus1 );
+  m_cTEncTop.setKneeSEIInputKneePoint       ( m_kneeSEIInputKneePoint );
+  m_cTEncTop.setKneeSEIOutputKneePoint      ( m_kneeSEIOutputKneePoint );
+#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );

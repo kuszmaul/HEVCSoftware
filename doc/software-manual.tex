@@ -1790,6 +1790,62 @@ Specifies luma sample value of the nominal white level assigned decoded pictures
 \Default{300} &
 Specifies luma sample value of the extended dynamic range assigned decoded pictures.
 \\
+\Option{SEIKneeFunctionInfo} &
+\Default{0} &
+Enables or disables the insertion of the Knee function SEI messages.
+\\
+\Option{SEIKneeFunctionId} &
+\Default{0} &
+Specifies Id of Knee function SEI message for a given session.
+\\
+\Option{SEIKneeFunctionCancelFlag} &
+\Default{0} &
+Indicates that Knee function SEI message cancels the persistance or follows.
+\\
+\Option{SEIKneeFunctionPersistenceFlag} &
+\Default{1} &
+Specifies the persistence of the Knee function SEI message.
+\\
+\Option{SEIKneeFunctionMappingFlag} &
+\Default{false} &
+Specifies the mapping mode of the Knee function SEI message.
+\\
+\Option{SEIKneeFunctionInputDrange} &
+\Default{1000} &
+Specifies the peak luminance level for the input picture of Knee function SEI messages.
+\\
+\Option{SEIKneeFunctionInputDispLuminance} &
+\Default{100} &
+Specifies the expected display brightness for the input picture of Knee function SEI messages.
+\\
+\Option{SEIKneeFunctionOutputDrange} &
+\Default{4000} &
+Specifies the peak luminance level for the output picture of Knee function SEI messages.
+\\
+\Option{SEIKneeFunctionOutputDispLuminance} &
+\Default{800} &
+Specifies the expected display brightness for the output picture of Knee function SEI messages.
+\\
+\Option{SEIKneeFunctionNumKneePointsMinus1} &
+\Default{2} &
+Specifies the number of knee points - 1.
+\\
+\Option{SEIKneeFunctionInputKneePointValue} &
+\Default{} &
+Array of input knee point. Default table can be set to the following:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+600 800 900
+\end{tabular}
+\\
+\Option{SEIKneeFunctionOutputKneePointValue} &
+\Default{} &
+Array of output knee point. Default table can be set to the following:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+100 250 450
+\end{tabular}
+\\
 \end{OptionTableNoShorthand}
 
 %%

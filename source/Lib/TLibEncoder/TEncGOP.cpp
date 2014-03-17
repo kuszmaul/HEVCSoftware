@@ -190,7 +190,6 @@ SEIDisplayOrientation* TEncGOP::xCreateSEIDisplayOrientation()
   seiDisplayOrientation->anticlockwiseRotation = m_pcCfg->getDisplayOrientationSEIAngle();
   return seiDisplayOrientation;
 }
-
 SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
 {
   SEIToneMappingInfo *seiToneMappingInfo = new SEIToneMappingInfo();
@@ -276,6 +275,39 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   }
   return seiToneMappingInfo;
 }
+
+#if RExt__P0050_KNEE_FUNCTION_SEI
+SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
+{
+  SEIKneeFunctionInfo *seiKneeFunctionInfo = new SEIKneeFunctionInfo();
+  seiKneeFunctionInfo->m_kneeId = m_pcCfg->getKneeSEIId();
+  seiKneeFunctionInfo->m_kneeCancelFlag = m_pcCfg->getKneeSEICancelFlag();
+  if ( !seiKneeFunctionInfo->m_kneeCancelFlag )
+  {
+    seiKneeFunctionInfo->m_kneePersistenceFlag = m_pcCfg->getKneeSEIPersistenceFlag();
+    seiKneeFunctionInfo->m_kneeMappingFlag = m_pcCfg->getKneeSEIMappingFlag();
+    seiKneeFunctionInfo->m_kneeInputDrange = m_pcCfg->getKneeSEIInputDrange();
+    seiKneeFunctionInfo->m_kneeInputDispLuminance = m_pcCfg->getKneeSEIInputDispLuminance();
+    seiKneeFunctionInfo->m_kneeOutputDrange = m_pcCfg->getKneeSEIOutputDrange();
+    seiKneeFunctionInfo->m_kneeOutputDispLuminance = m_pcCfg->getKneeSEIOutputDispLuminance();
+
+    seiKneeFunctionInfo->m_kneeNumKneePointsMinus1 = m_pcCfg->getKneeSEINumKneePointsMinus1();
+    Int* piInputKneePoint  = m_pcCfg->getKneeSEIInputKneePoint();
+    Int* piOutputKneePoint = m_pcCfg->getKneeSEIOutputKneePoint();
+    if(piInputKneePoint&&piOutputKneePoint)
+    {
+      seiKneeFunctionInfo->m_kneeInputKneePoint.resize(seiKneeFunctionInfo->m_kneeNumKneePointsMinus1+1);
+      seiKneeFunctionInfo->m_kneeOutputKneePoint.resize(seiKneeFunctionInfo->m_kneeNumKneePointsMinus1+1);
+      for(Int i=0; i<=seiKneeFunctionInfo->m_kneeNumKneePointsMinus1; i++)
+      {
+        seiKneeFunctionInfo->m_kneeInputKneePoint[i] = piInputKneePoint[i];
+        seiKneeFunctionInfo->m_kneeOutputKneePoint[i] = piOutputKneePoint[i];
+       }
+    }
+  }
+  return seiKneeFunctionInfo;
+}
+#endif
 
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 SEIChromaSamplingFilterHint* TEncGOP::xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIndex)
@@ -409,6 +441,19 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     m_seiWriter.writeSEImessage(nalu.m_Bitstream, sei_time_code, sps);
     writeRBSPTrailingBits(nalu.m_Bitstream);
     accessUnit.push_back(new NALUnitEBSP(nalu));
+  }
+#endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  if(m_pcCfg->getKneeSEIEnabled())
+  {
+    SEIKneeFunctionInfo *sei = xCreateSEIKneeFunctionInfo();
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
   }
 #endif
 }

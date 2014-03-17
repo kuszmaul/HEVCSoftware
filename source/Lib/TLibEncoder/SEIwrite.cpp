@@ -106,6 +106,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
     break;
 #endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  case SEI::KNEE_FUNCTION_INFO:
+    fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -170,6 +175,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
     xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
+    break;
+#endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  case SEI::KNEE_FUNCTION_INFO:
+    xWriteSEIKneeFunctionInfo(*static_cast<const SEIKneeFunctionInfo*>(&sei));
     break;
 #endif
   default:
@@ -749,6 +759,30 @@ Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &
       }
     }
   }
+}
+#endif
+
+#if RExt__P0050_KNEE_FUNCTION_SEI
+Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
+{
+  WRITE_UVLC( sei.m_kneeId, "knee_function_id" );
+  WRITE_FLAG( sei.m_kneeCancelFlag, "knee_function_cancel_flag" ); 
+  if ( !sei.m_kneeCancelFlag )
+  {
+    WRITE_FLAG( sei.m_kneePersistenceFlag, "knee_function_persistence_flag" );
+    WRITE_FLAG( sei.m_kneeMappingFlag, "mapping_flag" );
+    WRITE_CODE( (UInt)sei.m_kneeInputDrange , 32,  "input_d_range" );
+    WRITE_CODE( (UInt)sei.m_kneeInputDispLuminance, 32,  "input_disp_luminance" );
+    WRITE_CODE( (UInt)sei.m_kneeOutputDrange, 32,  "output_d_range" );
+    WRITE_CODE( (UInt)sei.m_kneeOutputDispLuminance, 32,  "output_disp_luminance" );
+    WRITE_UVLC( sei.m_kneeNumKneePointsMinus1, "num_knee_points_minus1" );
+    for(Int i = 0; i <= sei.m_kneeNumKneePointsMinus1; i++ )
+    {
+      WRITE_CODE( (UInt)sei.m_kneeInputKneePoint[i], 10,"input_knee_point" );
+      WRITE_CODE( (UInt)sei.m_kneeOutputKneePoint[i], 10, "output_knee_point" );
+    }
+  }
+  xWriteByteAlign();
 }
 #endif
 

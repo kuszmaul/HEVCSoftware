@@ -76,6 +76,9 @@ protected:
   Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
   Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
 #endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
+#endif
   Void xWriteByteAlign();
 };
 
