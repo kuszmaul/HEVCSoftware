@@ -76,6 +76,10 @@ TAppEncCfg::TAppEncCfg()
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
   m_targetPivotValue = NULL;
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  m_masteringDisplayPrimaries = NULL;
+  m_masteringDisplayWhitePoint = NULL;
+#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -99,6 +103,21 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_targetPivotValue;
     m_targetPivotValue = NULL;
   }
+
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  if( m_masteringDisplayPrimaries )
+  {
+    delete[] m_masteringDisplayPrimaries;
+    m_masteringDisplayPrimaries = NULL;
+  }
+    
+  if( m_masteringDisplayPrimaries )
+  {
+    delete[] m_masteringDisplayWhitePoint;
+    m_masteringDisplayWhitePoint = NULL;
+  }
+#endif
+    
   free(m_pchInputFile);
   free(m_pchBitstreamFile);
   free(m_pchReconFile);
@@ -311,6 +330,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if RExt__P0050_KNEE_FUNCTION_SEI
   string cfg_kneeSEIInputKneePointValue;
   string cfg_kneeSEIOutputKneePointValue;
+#endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  string cfg_DisplayPrimariesCode;
+  string cfg_DisplayWhitePointCode;
 #endif
 
   Int tmpChromaFormat;
@@ -653,6 +676,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIKneeFunctionInputKneePointValue",  cfg_kneeSEIInputKneePointValue,     string("600 800 900"), "Array of input knee point")
   ("SEIKneeFunctionOutputKneePointValue", cfg_kneeSEIOutputKneePointValue,    string("100 250 450"), "Array of output knee point")
 #endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  ("SEIMasteringDisplayColourVolume", m_masteringDisplayColourVolumeSEIEnabled,                 false,  "Control generation of mastering display colour volume SEI messages")
+  ("SEIMasteringDisplayMaxLuminance", m_masteringDisplayMaxLuminance,  10000u, "Specifies the mastering display maximum luminance value in units of candela per square metre (32-bit code value)")
+  ("SEIMasteringDisplayMinLuminance", m_masteringDisplayMinLuminance,  0u, "Specifies the mastering display minumum luminance value in units of candela per square metre (32-bit code value)")
+  ("SEIMasteringDisplayPrimaries",    cfg_DisplayPrimariesCode,   string("0 65535 0 0 65535 0"), "Mastering display primaries for all three colour planes in CIE xy coordinates (16-bit unsigned code value)")
+  ("SEIMasteringDisplayWhitePoint",   cfg_DisplayWhitePointCode,  string("21823 21823"), "Mastering display white point CIE xy coordinates (e.g. 0.333 = 16-bit unsigned code value: 21823)")
+#endif
+    
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -886,6 +917,39 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   m_iWaveFrontSubstreams = m_iWaveFrontSynchro ? (m_iSourceHeight + m_uiMaxCUHeight - 1) / m_uiMaxCUHeight : 1;
 
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  if( m_masteringDisplayColourVolumeSEIEnabled )
+  {
+    Char* pcDisplayPrimariesValue = cfg_DisplayPrimariesCode.empty() ? NULL: strdup(cfg_DisplayPrimariesCode.c_str());
+    Char* pcDisplayWhitePointValue = cfg_DisplayWhitePointCode.empty() ? NULL: strdup(cfg_DisplayWhitePointCode.c_str());
+
+    m_masteringDisplayPrimaries = new UShort[6];
+    m_masteringDisplayWhitePoint = new UShort[2];
+    
+    char *displayPrimaryValue = strtok( pcDisplayPrimariesValue, " .");
+    int idx = 0;
+      
+    while( displayPrimaryValue != NULL && idx < 6)
+    {
+      m_masteringDisplayPrimaries[idx] = atoi( displayPrimaryValue );
+      displayPrimaryValue = strtok(NULL, " .");
+      idx++;
+    }
+
+      
+    char *displayWhitePointValue = strtok( pcDisplayWhitePointValue, " .");
+    idx = 0;
+      
+    while( displayWhitePointValue != NULL && idx < 2)
+    {
+      m_masteringDisplayWhitePoint[idx] = atoi( displayWhitePointValue );
+      displayWhitePointValue = strtok(NULL, " .");
+      idx++;
+    }
+      
+  }
+#endif 
+    
   if( m_toneMappingInfoSEIEnabled && !m_toneMapCancelFlag )
   {
     Char* pcStartOfCodedInterval = cfg_startOfCodedInterval.empty() ? NULL: strdup(cfg_startOfCodedInterval.c_str());

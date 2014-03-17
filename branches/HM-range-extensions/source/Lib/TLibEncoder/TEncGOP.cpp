@@ -456,6 +456,35 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
 #endif
+    
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  if(m_pcCfg->getMasteringDisplayColourVolumeSEIEnabled())
+  {
+    SEIMasteringDisplayColourVolume mdcv;
+      
+    UShort *displayPrimaries = m_pcCfg->getMasteringDisplayPrimaries();
+    UShort *displayWhitePoint =m_pcCfg->getMasteringDisplayWhitePoint();
+      
+    for( int xy = 0; xy < 2; xy++ )
+    {
+      mdcv.displayWhitePoint[xy] = displayWhitePoint[xy];
+
+      for(int cc=0; cc< 3; cc++){
+        mdcv.displayPrimaries[cc][xy] = displayPrimaries[cc*2 + xy];
+       }
+    }
+    mdcv.maxDisplayLuminance = m_pcCfg->getMasteringDisplayMaxLuminance();
+    mdcv.minDisplayLuminance = m_pcCfg->getMasteringDisplayMinLuminance();
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, mdcv, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+      
+  }
+
+#endif
 }
 
 // ====================================================================================================================
