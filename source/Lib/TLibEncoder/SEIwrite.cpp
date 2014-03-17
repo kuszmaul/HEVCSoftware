@@ -97,7 +97,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+  case SEI::CHROMA_SAMPLING_FILTER_HINT:
     fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
+    break;
 #endif
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
