@@ -79,6 +79,9 @@ protected:
 #if RExt__P0050_KNEE_FUNCTION_SEI
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
 #endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
+#endif
   Void xWriteByteAlign();
 };
 

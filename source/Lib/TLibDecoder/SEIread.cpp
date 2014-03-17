@@ -104,7 +104,12 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     break;
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
-    fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
+      fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
+      break;
+#endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+    fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
 #endif
 #if RExt__P0050_KNEE_FUNCTION_SEI
@@ -282,6 +287,12 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     case SEI::KNEE_FUNCTION_INFO:
       sei = new SEIKneeFunctionInfo;
       xParseSEIKneeFunctionInfo((SEIKneeFunctionInfo&) *sei, payloadSize);
+      break;
+#endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+      sei = new SEIMasteringDisplayColourVolume;
+      xParseSEIMasteringDisplayColourVolume((SEIMasteringDisplayColourVolume&) *sei, payloadSize);
       break;
 #endif
     default:
@@ -1006,6 +1017,31 @@ Void SEIReader::xParseSEIKneeFunctionInfo(SEIKneeFunctionInfo& sei, UInt payload
       READ_CODE( 10, val, "output_knee_point" );          sei.m_kneeOutputKneePoint[i] = val;
     }
   }
+}
+#endif
+
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourVolume& sei, UInt payloadSize)
+{
+  UInt code;
+ 
+  READ_CODE( 16, code, "display_primaries_x[0]" ); sei.displayPrimaries[0][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[0]" ); sei.displayPrimaries[0][1] = code;
+    
+  READ_CODE( 16, code, "display_primaries_x[1]" ); sei.displayPrimaries[1][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[1]" ); sei.displayPrimaries[1][1] = code;
+    
+  READ_CODE( 16, code, "display_primaries_x[2]" ); sei.displayPrimaries[2][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[2]" ); sei.displayPrimaries[2][1] = code;
+    
+    
+  READ_CODE( 16, code, "white_point_x" ); sei.displayWhitePoint[0] = code;
+  READ_CODE( 16, code, "white_point_y" ); sei.displayWhitePoint[1] = code;
+    
+  READ_CODE( 32, code, "max_display_mastering_luminance" ); sei.maxDisplayLuminance = code;
+  READ_CODE( 32, code, "min_display_mastering_luminance" ); sei.minDisplayLuminance = code;
+ 
+  xParseByteAlign();
 }
 #endif
 

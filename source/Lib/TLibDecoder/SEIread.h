@@ -82,6 +82,9 @@ protected:
 #if RExt__P0050_KNEE_FUNCTION_SEI
   Void xParseSEIKneeFunctionInfo      (SEIKneeFunctionInfo& sei, UInt payloadSize);
 #endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+  Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei, UInt payloadSize);
+#endif
   Void xParseByteAlign();
 };
 

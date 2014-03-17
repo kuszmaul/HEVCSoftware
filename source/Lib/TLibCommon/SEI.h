@@ -87,6 +87,9 @@ public:
 #if RExt__O0099_TIME_CODE_SEI
     TIME_CODE                            = 138,
 #endif
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+    MASTERING_DISPLAY_COLOUR_VOLUME       = 139
+#endif
   };
 
   SEI() {}
@@ -453,6 +456,21 @@ public:
   Int   m_numHorizontalFilters;
   Int*  m_horTapLengthMinus1;
   Int** m_horFilterCoeff;
+};
+#endif
+
+#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
+class SEIMasteringDisplayColourVolume : public SEI
+{
+public:
+    PayloadType payloadType() const { return MASTERING_DISPLAY_COLOUR_VOLUME; }
+    SEIMasteringDisplayColourVolume() {}
+    virtual ~SEIMasteringDisplayColourVolume(){}
+    
+    UShort displayPrimaries[3][2];
+    UShort displayWhitePoint[2];
+    UInt maxDisplayLuminance;
+    UInt minDisplayLuminance;
 };
 #endif
 
