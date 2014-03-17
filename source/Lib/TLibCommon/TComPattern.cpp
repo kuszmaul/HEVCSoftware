@@ -120,6 +120,8 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   const Int  iAboveUnits      = iTUWidthInUnits  << 1;
   const Int  iLeftUnits       = iTUHeightInUnits << 1;
 
+  assert(iTUHeightInUnits > 0 && iTUWidthInUnits > 0);
+
   const Int  iPartIdxStride   = pcCU->getPic()->getNumPartInWidth(); //NOTE: RExt - despite the name "TComPic::getNumPartInWidth", this gets the number of parts in an **LCU** width, not the picture width
   const UInt uiPartIdxLT      = pcCU->getZorderIdxInCU() + uiZorderIdxInPart;
   const UInt uiPartIdxRT      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] +   iTUWidthInUnits  - 1                   ];
@@ -184,7 +186,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       //------------------------------------------------
 
-      //TODO: RExt - investigate the use of this for chroma (luma only for now to match HM)
       Bool useStrongIntraSmoothing = isLuma(chType) && pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing();
 
       const Pel bottomLeft = piAdiTemp[stride * uiTuHeight2];

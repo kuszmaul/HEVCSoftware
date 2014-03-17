@@ -1760,6 +1760,8 @@ Void TAppEncCfg::xSetGlobal()
   g_uiAddCUDepth  = 0;
   while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + g_uiAddCUDepth )  ) ) g_uiAddCUDepth++;
 
+  g_uiAddCUDepth+=getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // NOTE: RExt - if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
+
   m_uiMaxCUDepth += g_uiAddCUDepth;
   g_uiAddCUDepth++;
   g_uiMaxCUDepth = m_uiMaxCUDepth;

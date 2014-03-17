@@ -38,6 +38,7 @@
 #include "TLibCommon/CommonDef.h"
 #include "TEncTop.h"
 #include "TEncPic.h"
+#include "TLibCommon/TComChromaFormat.h"
 #if FAST_BIT_EST
 #include "TLibCommon/ContextModel.h"
 #endif
@@ -586,7 +587,7 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setLog2MinCodingBlockSize(log2MinCUSize);
-  m_cSPS.setLog2DiffMaxMinCodingBlockSize(m_cSPS.getMaxCUDepth()-g_uiAddCUDepth);
+  m_cSPS.setLog2DiffMaxMinCodingBlockSize(m_cSPS.getMaxCUDepth()-g_uiAddCUDepth-getMaxCUDepthOffset(m_cSPS.getChromaFormatIdc(), m_cSPS.getQuadtreeTULog2MinSize()));
 
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
   m_cSPS.setUsePCM        ( m_usePCM           );

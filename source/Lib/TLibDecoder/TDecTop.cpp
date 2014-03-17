@@ -307,7 +307,7 @@ Void TDecTop::xActivateParameterSets()
   g_uiMaxCUWidth  = sps->getMaxCUWidth();
   g_uiMaxCUHeight = sps->getMaxCUHeight();
   g_uiMaxCUDepth  = sps->getMaxCUDepth();
-  g_uiAddCUDepth  = max (0, sps->getLog2MinCodingBlockSize() - (Int)sps->getQuadtreeTULog2MinSize() );
+  g_uiAddCUDepth  = max (0, sps->getLog2MinCodingBlockSize() - (Int)sps->getQuadtreeTULog2MinSize() + (Int)getMaxCUDepthOffset(sps->getChromaFormatIdc(), sps->getQuadtreeTULog2MinSize()));
 
   for (Int i = 0; i < sps->getLog2DiffMaxMinCodingBlockSize(); i++)
   {

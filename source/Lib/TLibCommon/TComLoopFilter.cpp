@@ -215,12 +215,18 @@ Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiD
   UInt PartIdxIncr = DEBLOCK_SMALLEST_BLOCK / uiPelsInPart ? DEBLOCK_SMALLEST_BLOCK / uiPelsInPart : 1 ;
 
   UInt uiSizeInPU = pcPic->getNumPartInWidth()>>(uiDepth);
-  const ChromaFormat chFmt=pcCU->getPic()->getChromaFormat();
+  const ChromaFormat chFmt=pcPic->getChromaFormat();
+  const UInt shiftFactor  = edgeDir == EDGE_VER ? pcPic->getComponentScaleX(COMPONENT_Cb) : pcPic->getComponentScaleY(COMPONENT_Cb);
   const Bool bAlwaysDoChroma=chFmt==CHROMA_444;
+
   for ( Int iEdge = 0; iEdge < uiSizeInPU ; iEdge+=PartIdxIncr)
   {
     xEdgeFilterLuma     ( pcCU, uiAbsZorderIdx, uiDepth, edgeDir, iEdge );
-    if ( chFmt!=CHROMA_400 && (bAlwaysDoChroma || (uiPelsInPart>DEBLOCK_SMALLEST_BLOCK) || (iEdge % ( (DEBLOCK_SMALLEST_BLOCK<<1)/uiPelsInPart ) ) == 0 ) )
+    if ( chFmt!=CHROMA_400 && (bAlwaysDoChroma ||
+                               (uiPelsInPart>DEBLOCK_SMALLEST_BLOCK) ||
+                               (iEdge % ( (DEBLOCK_SMALLEST_BLOCK<<shiftFactor)/uiPelsInPart ) ) == 0
+                              )
+       )
     {
       xEdgeFilterChroma   ( pcCU, uiAbsZorderIdx, uiDepth, edgeDir, iEdge );
     }
@@ -754,8 +760,15 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         Pel* piTmpSrcChroma = (chromaIdx == 0) ? piTmpSrcCb : piTmpSrcCr;
 
         iQP = ((iQP_P + iQP_Q + 1) >> 1) + chromaQPOffset;
-        if      (iQP >= chromaQPMappingTableSize) iQP -=6;
-        else if (iQP >= 0                       ) iQP = getScaledChromaQP(iQP, pcPicYuvRec->getChromaFormat());
+        if (iQP >= chromaQPMappingTableSize)
+        {
+          if (pcPicYuvRec->getChromaFormat()==CHROMA_420) iQP -=6;
+          else if (iQP>51) iQP=51;
+        }
+        else if (iQP >= 0 )
+        {
+          iQP = getScaledChromaQP(iQP, pcPicYuvRec->getChromaFormat());
+        }
 
         Int iBitdepthScale = 1 << (g_bitDepth[CHANNEL_TYPE_CHROMA]-8);
 
