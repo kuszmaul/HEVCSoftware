@@ -78,8 +78,11 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+    CHROMA_SAMPLING_FILTER_HINT          = 137,
+#endif
 #if RExt__O0099_TIME_CODE_SEI
-    TIME_CODE                            = 138
+    TIME_CODE                            = 138,
 #endif
   };
 
@@ -386,6 +389,47 @@ public:
   Int    m_nominalWhiteLevelLumaCodeValue;
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
+
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+class SEIChromaSamplingFilterHint : public SEI
+{
+public:
+  PayloadType payloadType() const {return CHROMA_SAMPLING_FILTER_HINT;}
+  SEIChromaSamplingFilterHint() {}
+  virtual ~SEIChromaSamplingFilterHint() {
+    if(m_verChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numVerticalFilters; i ++)
+      {
+        free(m_verFilterCoeff[i]);
+      }
+      free(m_verFilterCoeff);
+      free(m_verTapLengthMinus1);
+    }
+    if(m_horChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numHorizontalFilters; i ++)
+      {
+        free(m_horFilterCoeff[i]);
+      }
+      free(m_horFilterCoeff);
+      free(m_horTapLengthMinus1);
+    }
+  }
+
+  Int   m_verChromaFilterIdc;
+  Int   m_horChromaFilterIdc;
+  Bool  m_verFilteringProcessFlag;
+  Int   m_targetFormatIdc;
+  Bool  m_perfectReconstructionFlag;
+  Int   m_numVerticalFilters;
+  Int*  m_verTapLengthMinus1;
+  Int** m_verFilterCoeff;
+  Int   m_numHorizontalFilters;
+  Int*  m_horTapLengthMinus1;
+  Int** m_horFilterCoeff;
+};
+#endif
 
 typedef std::list<SEI*> SEIMessages;
 

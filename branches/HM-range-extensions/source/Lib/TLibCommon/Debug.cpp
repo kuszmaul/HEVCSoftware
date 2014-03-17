@@ -177,6 +177,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                         settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET,                       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI,                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O0099_TIME_CODE_SEI,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O1005V4_CONSTRAINT_FLAGS,                                 settingNameWidth, settingValueWidth);
 

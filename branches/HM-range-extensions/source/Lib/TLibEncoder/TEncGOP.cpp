@@ -277,6 +277,61 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+SEIChromaSamplingFilterHint* TEncGOP::xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIndex)
+{
+  SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint = new SEIChromaSamplingFilterHint();
+  seiChromaSamplingFilterHint->m_verChromaFilterIdc = iVerFilterIndex;
+  seiChromaSamplingFilterHint->m_horChromaFilterIdc = iHorFilterIndex;
+  seiChromaSamplingFilterHint->m_verFilteringProcessFlag = 1;
+  seiChromaSamplingFilterHint->m_targetFormatIdc = 3;
+  seiChromaSamplingFilterHint->m_perfectReconstructionFlag = false;
+  if(seiChromaSamplingFilterHint->m_verChromaFilterIdc == 1)
+  {
+    seiChromaSamplingFilterHint->m_numVerticalFilters = 1;
+    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int));
+    seiChromaSamplingFilterHint->m_verFilterCoeff =    (Int**)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int*));
+    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numVerticalFilters; i ++)
+    {
+      seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] = 0;
+      seiChromaSamplingFilterHint->m_verFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] * sizeof(Int));
+      for(Int j = 0; j < seiChromaSamplingFilterHint->m_verTapLengthMinus1[i]; j ++)
+      {
+        seiChromaSamplingFilterHint->m_verFilterCoeff[i][j] = 0;
+      }
+    }
+  }
+  else
+  {
+    seiChromaSamplingFilterHint->m_numVerticalFilters = 0;
+    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = NULL;
+    seiChromaSamplingFilterHint->m_verFilterCoeff = NULL;
+  }
+  if(seiChromaSamplingFilterHint->m_horChromaFilterIdc == 1)
+  {
+    seiChromaSamplingFilterHint->m_numHorizontalFilters = 1;
+    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int));
+    seiChromaSamplingFilterHint->m_horFilterCoeff = (Int**)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int*));
+    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numHorizontalFilters; i ++)
+    {
+      seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] = 0;
+      seiChromaSamplingFilterHint->m_horFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] * sizeof(Int));
+      for(Int j = 0; j < seiChromaSamplingFilterHint->m_horTapLengthMinus1[i]; j ++)
+      {
+        seiChromaSamplingFilterHint->m_horFilterCoeff[i][j] = 0;
+      }
+    }
+  }
+  else
+  {
+    seiChromaSamplingFilterHint->m_numHorizontalFilters = 0;
+    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = NULL;
+    seiChromaSamplingFilterHint->m_horFilterCoeff = NULL;
+  }
+  return seiChromaSamplingFilterHint;
+}
+#endif
+
 Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps)
 {
   OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
@@ -1218,6 +1273,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_cpbRemovalDelay = 0;
     }
     m_cpbRemovalDelay ++;
+
+#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
+    if(pcSlice->getSPS()->getVuiParametersPresentFlag() && m_pcCfg->getChromaSamplingFilterHintEnabled() && ( pcSlice->getSliceType() == I_SLICE ))
+    {
+      SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint = xCreateSEIChromaSamplingFilterHint(m_pcCfg->getChromaLocInfoPresentFlag(), m_pcCfg->getChromaSamplingHorFilterIdc(), m_pcCfg->getChromaSamplingVerFilterIdc());
+
+      OutputNALUnit naluTmp(NAL_UNIT_PREFIX_SEI); 
+      m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+      m_pcEntropyCoder->setBitstream(&naluTmp.m_Bitstream);
+      m_seiWriter.writeSEImessage(naluTmp.m_Bitstream, *seiChromaSamplingFilterHint, pcSlice->getSPS()); 
+      writeRBSPTrailingBits(naluTmp.m_Bitstream);
+      accessUnit.push_back(new NALUnitEBSP(naluTmp));
+      delete seiChromaSamplingFilterHint;
+    }
+#endif
     if( ( m_pcEncTop->getRecoveryPointSEIEnabled() ) && ( pcSlice->getSliceType() == I_SLICE ) )
     {
       if( m_pcEncTop->getGradualDecodingRefreshInfoEnabled() && !pcSlice->getRapPicFlag() )
