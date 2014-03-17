@@ -294,6 +294,20 @@ protected:
 #if RExt__O0099_TIME_CODE_SEI
   Bool      m_timeCodeSEIEnabled;
 #endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  Bool      m_kneeSEIEnabled;
+  Int       m_kneeSEIId;
+  Bool      m_kneeSEICancelFlag;
+  Bool      m_kneeSEIPersistenceFlag;
+  Bool      m_kneeSEIMappingFlag;
+  Int       m_kneeSEIInputDrange;
+  Int       m_kneeSEIInputDispLuminance;
+  Int       m_kneeSEIOutputDrange;
+  Int       m_kneeSEIOutputDispLuminance;
+  Int       m_kneeSEINumKneePointsMinus1;
+  Int*      m_kneeSEIInputKneePoint;
+  Int*      m_kneeSEIOutputKneePoint;
+#endif
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -721,6 +735,32 @@ public:
 #if RExt__O0099_TIME_CODE_SEI
   Void         setTimeCodeSEIEnabled(Bool b)                  { m_timeCodeSEIEnabled = b; }
   Bool         getTimeCodeSEIEnabled()                        { return m_timeCodeSEIEnabled; }
+#endif
+#if RExt__P0050_KNEE_FUNCTION_SEI
+  Void  setKneeSEIEnabled(Int b)                          { m_kneeSEIEnabled = b; }
+  Bool  getKneeSEIEnabled()                               { return m_kneeSEIEnabled; }
+  Void  setKneeSEIId(Int b)                               { m_kneeSEIId = b; }
+  Int   getKneeSEIId()                                    { return m_kneeSEIId; }
+  Void  setKneeSEICancelFlag(Bool b)                      { m_kneeSEICancelFlag=b; }
+  Bool  getKneeSEICancelFlag()                            { return m_kneeSEICancelFlag; }
+  Void  setKneeSEIPersistenceFlag(Bool b)                 { m_kneeSEIPersistenceFlag = b; }
+  Bool  getKneeSEIPersistenceFlag()                       { return m_kneeSEIPersistenceFlag; }
+  Void  setKneeSEIMappingFlag(Bool b)                     { m_kneeSEIMappingFlag = b; }
+  Bool  getKneeSEIMappingFlag()                           { return m_kneeSEIMappingFlag; }
+  Void  setKneeSEIInputDrange(Int b)                      { m_kneeSEIInputDrange = b; }
+  Int   getKneeSEIInputDrange()                           { return m_kneeSEIInputDrange; }
+  Void  setKneeSEIInputDispLuminance(Int b)               { m_kneeSEIInputDispLuminance = b; }
+  Int   getKneeSEIInputDispLuminance()                    { return m_kneeSEIInputDispLuminance; }
+  Void  setKneeSEIOutputDrange(Int b)                     { m_kneeSEIOutputDrange = b; }
+  Int   getKneeSEIOutputDrange()                          { return m_kneeSEIOutputDrange; }
+  Void  setKneeSEIOutputDispLuminance(Int b)              { m_kneeSEIOutputDispLuminance = b; }
+  Int   getKneeSEIOutputDispLuminance()                   { return m_kneeSEIOutputDispLuminance; }
+  Void  setKneeSEINumKneePointsMinus1(Int b)              { m_kneeSEINumKneePointsMinus1 = b; }
+  Int   getKneeSEINumKneePointsMinus1()                   { return m_kneeSEINumKneePointsMinus1; }
+  Void  setKneeSEIInputKneePoint(Int *p)                  { m_kneeSEIInputKneePoint = p; }
+  Int*  getKneeSEIInputKneePoint()                        { return m_kneeSEIInputKneePoint; }
+  Void  setKneeSEIOutputKneePoint(Int *p)                 { m_kneeSEIOutputKneePoint = p; }
+  Int*  getKneeSEIOutputKneePoint()                       { return m_kneeSEIOutputKneePoint; }
 #endif
   Void         setUseWP               ( Bool b )              { m_useWeightedPred   = b;    }
   Void         setWPBiPred            ( Bool b )              { m_useWeightedBiPred = b;    }

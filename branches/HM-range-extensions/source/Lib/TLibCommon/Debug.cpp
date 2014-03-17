@@ -188,6 +188,7 @@ Void printRExtMacroSettings()
 #endif
   PRINT_CONSTANT(RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS,            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444,                      settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__P0050_KNEE_FUNCTION_SEI,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP,                         settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT,                      settingNameWidth, settingValueWidth);

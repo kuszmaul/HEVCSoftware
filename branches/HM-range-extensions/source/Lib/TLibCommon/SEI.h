@@ -68,6 +68,9 @@ public:
     FILM_GRAIN_CHARACTERISTICS           = 19,
     POST_FILTER_HINT                     = 22,
     TONE_MAPPING_INFO                    = 23,
+#ifdef RExt__P0050_KNEE_FUNCTION_SEI
+    KNEE_FUNCTION_INFO                   = 24,
+#endif
     FRAME_PACKING                        = 45,
     DISPLAY_ORIENTATION                  = 47,
     SOP_DESCRIPTION                      = 128,
@@ -389,6 +392,28 @@ public:
   Int    m_nominalWhiteLevelLumaCodeValue;
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
+
+#if RExt__P0050_KNEE_FUNCTION_SEI
+class SEIKneeFunctionInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return KNEE_FUNCTION_INFO; }
+  SEIKneeFunctionInfo() {}
+  virtual ~SEIKneeFunctionInfo() {}
+
+  Int   m_kneeId;
+  Bool  m_kneeCancelFlag;
+  Bool  m_kneePersistenceFlag;
+  Bool  m_kneeMappingFlag;
+  Int   m_kneeInputDrange;
+  Int   m_kneeInputDispLuminance;
+  Int   m_kneeOutputDrange;
+  Int   m_kneeOutputDispLuminance;
+  Int   m_kneeNumKneePointsMinus1;
+  std::vector<Int> m_kneeInputKneePoint;
+  std::vector<Int> m_kneeOutputKneePoint;
+};
+#endif
 
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 class SEIChromaSamplingFilterHint : public SEI
