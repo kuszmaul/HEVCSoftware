@@ -119,6 +119,10 @@ public:
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
   Void  deletePicBuffer();
 
+  
+  TComSPS* getActiveSPS() { return m_parameterSetManagerDecoder.getActiveSPS(); }
+
+
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 #if SETTING_NO_OUT_PIC_PRIOR  
   Void  checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic);

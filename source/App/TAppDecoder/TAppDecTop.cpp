@@ -274,13 +274,34 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
-  
+  Int dpbFullness = 0;
+  TComSPS* activeSPS = m_cTDecTop.getActiveSPS();
+  UInt numReorderPicsHighestTid;
+  UInt maxDecPicBufferingHighestTid;
+  UInt maxNrSublayers = activeSPS->getMaxTLayers();
+
+  if(m_iMaxTemporalLayer == -1 || m_iMaxTemporalLayer >= maxNrSublayers)
+  {
+    numReorderPicsHighestTid = activeSPS->getNumReorderPics(maxNrSublayers-1);
+    maxDecPicBufferingHighestTid =  activeSPS->getMaxDecPicBuffering(maxNrSublayers-1); 
+  }
+  else
+  {
+    numReorderPicsHighestTid = activeSPS->getNumReorderPics(m_iMaxTemporalLayer);
+    maxDecPicBufferingHighestTid = activeSPS->getMaxDecPicBuffering(m_iMaxTemporalLayer); 
+  }
+
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
     if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
       numPicsNotYetDisplayed++;
+      dpbFullness++;
+    }
+    else if(pcPic->getSlice( 0 )->isReferenced())
+    {
+      dpbFullness++;
     }
     iterPic++;
   }
@@ -302,8 +323,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       iterPic++;
       TComPic* pcPicBottom = *(iterPic);
       
-      if ( pcPicTop->getOutputMark() && (numPicsNotYetDisplayed >  pcPicTop->getNumReorderPics(tId) && !(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1)
-          && pcPicBottom->getOutputMark() && (numPicsNotYetDisplayed >  pcPicBottom->getNumReorderPics(tId) && (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay<0)))
+      if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() &&
+          (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid) &&
+          (!(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1) &&
+          (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay < 0))
       {
         // write to file
         numPicsNotYetDisplayed = numPicsNotYetDisplayed-2;
@@ -365,10 +388,16 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     {
       pcPic = *(iterPic);
       
-      if ( pcPic->getOutputMark() && (numPicsNotYetDisplayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
+      if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay &&
+        (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid))
       {
         // write to file
         numPicsNotYetDisplayed--;
+        if(pcPic->getSlice(0)->isReferenced() == false)
+        {
+          dpbFullness--;
+        }
+
         if ( m_pchReconFile )
         {
           const Window &conf = pcPic->getConformanceWindow();
