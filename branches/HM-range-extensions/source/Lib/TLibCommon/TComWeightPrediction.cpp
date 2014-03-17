@@ -105,8 +105,8 @@ Void TComWeightPrediction::addWeightBi( const TComYuv              *pcYuvSrc0,
     const Int  w1          = wp1[compID].w;
     const UInt csx         = pcYuvSrc0->getComponentScaleX(compID);
     const UInt csy         = pcYuvSrc0->getComponentScaleY(compID);
-    const Int  iHeight     = uiHeight>>csx; // TODO: RExt - fix this bug
-    const Int  iWidth      = uiWidth>>csy;  // TODO: RExt - fix this bug
+    const Int  iHeight     = uiHeight>>csy;
+    const Int  iWidth      = uiWidth>>csx;
 
     const UInt iSrc0Stride = pcYuvSrc0->getStride(compID);
     const UInt iSrc1Stride = pcYuvSrc1->getStride(compID);
@@ -172,8 +172,8 @@ Void TComWeightPrediction::addWeightUni( const TComYuv        *const pcYuvSrc0,
     const UInt iDstStride  = rpcYuvDst->getStride(compID);
     const UInt csx         = pcYuvSrc0->getComponentScaleX(compID);
     const UInt csy         = pcYuvSrc0->getComponentScaleY(compID);
-    const Int  iHeight     = uiHeight>>csx; // TODO: RExt - fix this bug
-    const Int  iWidth      = uiWidth>>csy;  // TODO: RExt - fix this bug
+    const Int  iHeight     = uiHeight>>csy;
+    const Int  iWidth      = uiWidth>>csx;
 
     for (Int y = iHeight-1; y >= 0; y-- )
     {

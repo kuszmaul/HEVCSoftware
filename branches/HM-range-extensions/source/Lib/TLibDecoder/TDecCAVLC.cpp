@@ -38,6 +38,7 @@
 #include "TDecCAVLC.h"
 #include "SEIread.h"
 #include "TDecSlice.h"
+#include "TLibCommon/TComChromaFormat.h"
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 #include "TLibCommon/TComCodingStatistics.h"
 #endif
@@ -699,7 +700,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_UVLC( uiCode, "max_transform_hierarchy_depth_intra" );    pcSPS->setQuadtreeTUMaxDepthIntra( uiCode+1 );
 
   Int addCuDepth = max (0, log2MinCUSize - (Int)pcSPS->getQuadtreeTULog2MinSize() );
-  pcSPS->setMaxCUDepth( maxCUDepthDelta + addCuDepth );
+  pcSPS->setMaxCUDepth( maxCUDepthDelta + addCuDepth  + getMaxCUDepthOffset(pcSPS->getChromaFormatIdc(), pcSPS->getQuadtreeTULog2MinSize()) );
 
   READ_FLAG( uiCode, "scaling_list_enabled_flag" );                 pcSPS->setScalingListFlag ( uiCode );
   if(pcSPS->getScalingListFlag())
@@ -992,7 +993,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
     //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
-    //TODO: RExt - interpret colour_plane_id
     // assert (sps->getChromaFormatIdc() == 1 );
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)

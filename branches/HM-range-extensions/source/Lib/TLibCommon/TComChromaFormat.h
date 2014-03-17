@@ -131,6 +131,14 @@ static inline UInt getChromasCorrespondingPULumaIdx(const UInt lumaLCUIdx, const
   return enable4ChromaPUsInIntraNxNCU(chFmt) ? lumaLCUIdx : lumaLCUIdx & (~((1<<(2*g_uiAddCUDepth))-1)); //(lumaLCUIdx/numParts)*numParts;
 }
 
+//------------------------------------------------
+
+// If chroma format is 4:2:2 and a chroma-square-sub-tu is possible for the smallest TU, then increase the depth by 1 to allow for more parts.
+
+static inline UInt getMaxCUDepthOffset(const ChromaFormat chFmt, const UInt quadtreeTULog2MinSize)
+{
+  return (chFmt==CHROMA_422 && quadtreeTULog2MinSize>2) ? 1 : 0;
+}
 
 //======================================================================================================================
 //Intra prediction  ====================================================================================================
