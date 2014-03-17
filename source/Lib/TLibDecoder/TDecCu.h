@@ -68,6 +68,9 @@ private:
   TDecEntropy*        m_pcEntropyDecoder;
 
   Bool                m_bDecodeDQP;
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Bool                m_IsChromaQpAdjCoded;
+#endif
 
 public:
   TDecCu();
@@ -111,6 +114,11 @@ protected:
 
   Bool getdQPFlag               ()                        { return m_bDecodeDQP;        }
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Bool getIsChromaQpAdjCoded    ()                        { return m_IsChromaQpAdjCoded;        }
+  Void setIsChromaQpAdjCoded    ( Bool b )                { m_IsChromaQpAdjCoded = b;           }
+#endif
+
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
 };
 

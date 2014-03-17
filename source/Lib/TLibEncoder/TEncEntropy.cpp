@@ -230,8 +230,11 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
 }
 
-
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, Bool& codeChromaQpAdj, TComTU &rTu )
+#else
 Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
+#endif
 {
 //pcCU, absPartIdxCU, uiAbsPartIdx, uiDepth+1, uiTrIdx+1, quadrant,
   TComDataCU *pcCU=rTu.getCU();
@@ -250,12 +253,25 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
   const UInt uiLog2TrafoSize = rTu.GetLog2LumaTrSize();
 
 
-  UInt cbf[MAX_NUM_COMPONENT]={0,0,0};
-  Bool bHaveACodedBlock=false;
+  UInt cbf[MAX_NUM_COMPONENT] = {0,0,0};
+  Bool bHaveACodedBlock       = false;
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Bool bHaveACodedChromaBlock = false;
+#endif
+
   for(UInt ch=0; ch<numValidComponent; ch++)
   {
-    cbf[ch] = pcCU->getCbf( uiAbsPartIdx, ComponentID(ch) , uiTrIdx );
-    if (cbf[ch]) bHaveACodedBlock=true;
+    const ComponentID compID = ComponentID(ch);
+
+    cbf[compID] = pcCU->getCbf( uiAbsPartIdx, compID , uiTrIdx );
+    
+    if (cbf[ch] != 0)
+    {
+      bHaveACodedBlock = true;
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+      if (isChroma(compID)) bHaveACodedChromaBlock = true;
+#endif
+    }
   }
 
   if( pcCU->isIntra(uiAbsPartIdx) && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN && uiDepth == pcCU->getDepth(uiAbsPartIdx) )
@@ -315,7 +331,11 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
     TComTURecurse tuRecurseChild(rTu, true);
     do
     {
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+      xEncodeTransform( bCodeDQP, codeChromaQpAdj, tuRecurseChild );
+#else
       xEncodeTransform( bCodeDQP, tuRecurseChild );
+#endif
     }
     while (tuRecurseChild.nextSection(rTu));
   }
@@ -353,6 +373,18 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, TComTU &rTu )
           bCodeDQP = false;
         }
       }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+      if ( pcCU->getSlice()->getUseChromaQpAdj() )
+      {
+        if ( bHaveACodedChromaBlock && codeChromaQpAdj && !pcCU->getCUTransquantBypass(rTu.GetAbsPartIdxCU()) )
+        {
+          encodeChromaQpAdjustment( pcCU, rTu.GetAbsPartIdxCU() );
+          codeChromaQpAdj = false;
+        }
+      }
+#endif
+
       const UInt numValidComp=pcCU->getPic()->getNumberValidComponents();
 
       for(UInt ch=COMPONENT_Y; ch<numValidComp; ch++)
@@ -630,6 +662,20 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   }
 }
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+/** encode chroma qp adjustment
+ * \returns Void
+ */
+Void TEncEntropy::encodeChromaQpAdjustment( TComDataCU* cu, UInt absPartIdx, Bool inRd )
+{
+  if( inRd )
+  {
+    absPartIdx = 0;
+  }
+
+  m_pcEntropyCoderIf->codeChromaQpAdjustment( cu, absPartIdx );
+}
+#endif
 
 // texture
 
@@ -640,7 +686,11 @@ Void TEncEntropy::encodeQP( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
  * \param uiWidth
  * \param uiHeight
  */
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& codeChromaQpAdj )
+#else
 Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP )
+#endif
 {
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   const Bool bDebugRQT=g_bFinalEncode && DebugOptionList::DebugRQT.getInt()!=0;
@@ -673,7 +723,11 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);
 #endif
 
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  xEncodeTransform( bCodeDQP, codeChromaQpAdj, tuRecurse );
+#else
   xEncodeTransform( bCodeDQP, tuRecurse );
+#endif
 }
 
 Void TEncEntropy::encodeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID)

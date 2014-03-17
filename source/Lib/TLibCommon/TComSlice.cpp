@@ -56,6 +56,9 @@ TComSlice::TComSlice()
 #if ADAPTIVE_QP_SELECTION
 , m_iSliceQpBase                  ( 0 )
 #endif
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+, m_ChromaQpAdjEnabled            ( false )
+#endif
 , m_deblockingFilterDisable       ( false )
 , m_deblockingFilterOverrideFlag  ( false )
 , m_deblockingFilterBetaOffsetDiv2( 0 )
@@ -650,6 +653,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_iSliceQp             = pSrc->m_iSliceQp;
 #if ADAPTIVE_QP_SELECTION
   m_iSliceQpBase         = pSrc->m_iSliceQpBase;
+#endif
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_ChromaQpAdjEnabled = pSrc->m_ChromaQpAdjEnabled;
 #endif
   m_deblockingFilterDisable   = pSrc->m_deblockingFilterDisable;
   m_deblockingFilterOverrideFlag = pSrc->m_deblockingFilterOverrideFlag;
@@ -1605,6 +1611,11 @@ TComPPS::TComPPS()
 , m_pcSPS                            (NULL)
 , m_uiMaxCuDQPDepth                  (0)
 , m_uiMinCuDQPSize                   (0)
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+, m_MaxCuChromaQpAdjDepth            (0)
+, m_MinCuChromaQpAdjSize             (0)
+, m_ChromaQpAdjTableSize             (0)
+#endif
 , m_chromaCbQpOffset                 (0)
 , m_chromaCrQpOffset                 (0)
 , m_numRefIdxL0DefaultActive         (1)
@@ -1637,6 +1648,10 @@ TComPPS::TComPPS()
   {
     m_saoOffsetBitShift[ch] = 0;
   }
+#endif
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  m_ChromaQpAdjTable[0].u.comp.CbOffset = 0;
+  m_ChromaQpAdjTable[0].u.comp.CrOffset = 0;
 #endif
 }
 

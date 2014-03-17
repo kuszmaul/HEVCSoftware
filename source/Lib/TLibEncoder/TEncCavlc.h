@@ -127,6 +127,9 @@ public:
   Void codeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Void codeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
   Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );

@@ -293,6 +293,9 @@ Void TDecTop::xActivateParameterSets()
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumColumnsMinus1() + 1) : 1);
   pps->setMinCuDQPSize( sps->getMaxCUWidth() >> ( pps->getMaxCuDQPDepth()) );
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  pps->setMinCuChromaQpAdjSize( sps->getMaxCUWidth() >> ( pps->getMaxCuChromaQpAdjDepth()) );
+#endif
 
   for (UInt channel = 0; channel < MAX_NUM_CHANNEL_TYPE; channel++)
   {

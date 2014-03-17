@@ -173,6 +173,9 @@ protected:
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
   Int       m_iMaxCuDQPDepth;                   //  Max. depth for a minimum CuDQP (0:default)
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Int       m_maxCUChromaQpAdjustmentDepth;
+#endif
 
   Int       m_chromaCbQpOffset;                 //  Chroma Cb QP Offset (0:default)
   Int       m_chromaCrQpOffset;                 //  Chroma Cr Qp Offset (0:default)
@@ -449,6 +452,11 @@ public:
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
   Void      setMaxCuDQPDepth                ( Int   i )      { m_iMaxCuDQPDepth = i; }
+
+#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+  Int       getMaxCUChromaQpAdjustmentDepth ()         const { return m_maxCUChromaQpAdjustmentDepth;  }
+  Void      setMaxCUChromaQpAdjustmentDepth (Int value)      { m_maxCUChromaQpAdjustmentDepth = value; }
+#endif
 
   Void      setChromaCbQpOffset             ( Int   i )      { m_chromaCbQpOffset = i; }
   Void      setChromaCrQpOffset             ( Int   i )      { m_chromaCrQpOffset = i; }
