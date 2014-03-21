@@ -542,11 +542,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
-    READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1");
+    READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1[i]");
     pcSPS->setMaxDecPicBuffering( uiCode + 1, i);
-    READ_UVLC ( uiCode, "sps_num_reorder_pics" );
+    READ_UVLC ( uiCode, "sps_num_reorder_pics[i]" );
     pcSPS->setNumReorderPics(uiCode, i);
-    READ_UVLC ( uiCode, "sps_max_latency_increase_plus1");
+    READ_UVLC ( uiCode, "sps_max_latency_increase_plus1[i]");
     pcSPS->setMaxLatencyIncrease( uiCode, i );
 
     if (!subLayerOrderingInfoPresentFlag)
