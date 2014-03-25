@@ -365,8 +365,81 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   UInt *accumBitsDU = NULL;
   UInt *accumNalsDU = NULL;
   SEIDecodingUnitInfo decodingUnitInfoSEI;
+#if EFFICIENT_FIELD_IRAP
+  Int IRAPGOPid = -1;
+  Bool IRAPtoReorder = false;
+  Bool swapIRAPForward = false;
+  if(isField)
+  {
+    Int pocCurr;
+    for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
+    {
+      // determine actual POC
+      if(iPOCLast == 0) //case first frame or first top field
+      {
+        pocCurr=0;
+      }
+      else if(iPOCLast == 1 && isField) //case first bottom field, just like the first frame, the poc computation is not right anymore, we set the right value
+      {
+        pocCurr = 1;
+      }
+      else
+      {
+        pocCurr = iPOCLast - iNumPicRcvd + m_pcCfg->getGOPEntry(iGOPid).m_POC - isField;
+      }
+
+      // check if POC corresponds to IRAP
+      NalUnitType tmpUnitType = getNalUnitType(pocCurr, m_iLastIDR, isField);
+      if(tmpUnitType >= NAL_UNIT_CODED_SLICE_BLA_W_LP && tmpUnitType <= NAL_UNIT_CODED_SLICE_CRA) // if picture is an IRAP
+      {
+        if(pocCurr%2 == 0 && iGOPid < m_iGopSize-1 && m_pcCfg->getGOPEntry(iGOPid).m_POC == m_pcCfg->getGOPEntry(iGOPid+1).m_POC-1)
+        { // if top field and following picture in enc order is associated bottom field
+          IRAPGOPid = iGOPid;
+          IRAPtoReorder = true;
+          swapIRAPForward = true; 
+          break;
+        }
+        if(pocCurr%2 != 0 && iGOPid > 0 && m_pcCfg->getGOPEntry(iGOPid).m_POC == m_pcCfg->getGOPEntry(iGOPid-1).m_POC+1)
+        {
+          // if picture is an IRAP remember to process it first
+          IRAPGOPid = iGOPid;
+          IRAPtoReorder = true;
+          swapIRAPForward = false; 
+          break;
+        }
+      }
+    }
+  }
+#endif
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
+#if EFFICIENT_FIELD_IRAP
+    if(IRAPtoReorder)
+    {
+      if(swapIRAPForward)
+      {
+        if(iGOPid == IRAPGOPid)
+        {
+          iGOPid = IRAPGOPid +1;
+        }
+        else if(iGOPid == IRAPGOPid +1)
+        {
+          iGOPid = IRAPGOPid;
+        }
+      }
+      else
+      {
+        if(iGOPid == IRAPGOPid -1)
+        {
+          iGOPid = IRAPGOPid;
+        }
+        else if(iGOPid == IRAPGOPid)
+        {
+          iGOPid = IRAPGOPid -1;
+        }
+      }
+    }
+#endif
     UInt uiColDir = 1;
     //-- For time output for each slice
     long iBeforeTime = clock();
@@ -436,6 +509,35 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     
     if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
+#if EFFICIENT_FIELD_IRAP
+      if(IRAPtoReorder)
+      {
+        if(swapIRAPForward)
+        {
+          if(iGOPid == IRAPGOPid)
+          {
+            iGOPid = IRAPGOPid +1;
+            IRAPtoReorder = false;
+          }
+          else if(iGOPid == IRAPGOPid +1)
+          {
+            iGOPid --;
+          }
+        }
+        else
+        {
+          if(iGOPid == IRAPGOPid)
+          {
+            iGOPid = IRAPGOPid -1;
+          }
+          else if(iGOPid == IRAPGOPid -1)
+          {
+            iGOPid = IRAPGOPid;
+            IRAPtoReorder = false;
+          }
+        }
+      }
+#endif
       continue;
     }
     
@@ -526,10 +628,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
     
-    // Do decoding refresh marking if any
-    pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
-    m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
-    pcSlice->getRPS()->setNumberOfLongtermPictures(0);
+#if EFFICIENT_FIELD_IRAP
 #if FIX1172
     if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
       || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
@@ -544,9 +643,35 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
     pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
 #endif
+#endif
+    // Do decoding refresh marking if any
+    pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
+    m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
+    pcSlice->getRPS()->setNumberOfLongtermPictures(0);
+#if EFFICIENT_FIELD_IRAP
+#else
+#if FIX1172
+    if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
+      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+    {
+      m_associatedIRAPType = pcSlice->getNalUnitType();
+      m_associatedIRAPPOC = pocCurr;
+    }
+    pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
+    pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
+#endif
+#endif
     
 #if ALLOW_RECOVERY_POINT_AS_RAP
-    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || pcSlice->isIRAP())
+    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || (pcSlice->isIRAP()) 
+#if EFFICIENT_FIELD_IRAP
+      || (isField && pcSlice->getAssociatedIRAPType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getAssociatedIRAPType() <= NAL_UNIT_CODED_SLICE_CRA && pcSlice->getAssociatedIRAPPOC() == pcSlice->getPOC()+1)
+#endif
+      )
     {
       pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP(), m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3);
     }
@@ -1107,6 +1232,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
       pictureTimingSEI.m_picDpbOutputDelay = pcSlice->getSPS()->getNumReorderPics(0) + pcSlice->getPOC() - m_totalCoded;
+#if EFFICIENT_FIELD_IRAP
+      if(IRAPGOPid > 0 && IRAPGOPid < m_iGopSize)
+      {
+        // if pictures have been swapped there is likely one more picture delay on their tid. Very rough approximation
+        pictureTimingSEI.m_picDpbOutputDelay ++;
+      }
+#endif
       Int factor = pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getTickDivisorMinus2() + 2;
       pictureTimingSEI.m_picDpbOutputDuDelay = factor * pictureTimingSEI.m_picDpbOutputDelay;
       if( m_pcCfg->getDecodingUnitInfoSEIEnabled() )
@@ -1861,6 +1993,36 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     fflush(stdout);
     
     delete[] pcSubstreamsOut;
+
+#if EFFICIENT_FIELD_IRAP
+    if(IRAPtoReorder)
+    {
+      if(swapIRAPForward)
+      {
+        if(iGOPid == IRAPGOPid)
+        {
+          iGOPid = IRAPGOPid +1;
+          IRAPtoReorder = false;
+        }
+        else if(iGOPid == IRAPGOPid +1)
+        {
+          iGOPid --;
+        }
+      }
+      else
+      {
+        if(iGOPid == IRAPGOPid)
+        {
+          iGOPid = IRAPGOPid -1;
+        }
+        else if(iGOPid == IRAPGOPid -1)
+        {
+          iGOPid = IRAPGOPid;
+          IRAPtoReorder = false;
+        }
+      }
+    }
+#endif
   }
   delete pcBitstreamRedirect;
   
@@ -2448,6 +2610,14 @@ NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)
   {
     return NAL_UNIT_CODED_SLICE_IDR_W_RADL;
   }
+#if EFFICIENT_FIELD_IRAP
+  if(isField && pocCurr == 1)
+  {
+    // to avoid the picture becoming an IRAP
+    return NAL_UNIT_CODED_SLICE_TRAIL_R;
+  }
+#endif
+
 #if ALLOW_RECOVERY_POINT_AS_RAP
   if(m_pcCfg->getDecodingRefreshType() != 3 && (pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
 #else
