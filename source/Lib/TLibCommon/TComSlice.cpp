@@ -605,9 +605,33 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       pocCRA = pocCurr;
     }
+#if EFFICIENT_FIELD_IRAP
+    bRefreshPending = true;
+#endif
   }
   else // CRA or No DR
   {
+#if EFFICIENT_FIELD_IRAP
+    if(getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL)
+    {
+      if (bRefreshPending==true && pocCurr > m_iLastIDR) // IDR reference marking pending 
+      {
+        TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
+        while (iterPic != rcListPic.end())
+        {
+          rpcPic = *(iterPic);
+          if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
+          {
+            rpcPic->getSlice(0)->setReferenced(false);
+          }
+          iterPic++;
+        }
+        bRefreshPending = false; 
+      }
+    }
+    else
+    {
+#endif
     if (bRefreshPending==true && pocCurr > pocCRA) // CRA reference marking pending 
     {
       TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
@@ -622,6 +646,9 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
       }
       bRefreshPending = false; 
     }
+#if EFFICIENT_FIELD_IRAP
+    }
+#endif
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
     {
       bRefreshPending = true; 
@@ -1019,7 +1046,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     }
     // mark the picture as "unused for reference" if it is not in
     // the Reference Picture Set
-    if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)    
+    if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {            
       rpcPic->getSlice( 0 )->setReferenced( false );
       rpcPic->setUsedByCurr(0);
@@ -1312,13 +1339,37 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
       }
     }
   }
+#if EFFICIENT_FIELD_IRAP
+  Bool useNewRPS = false;
+  // if current picture is complimentary field associated to IRAP, add the IRAP to its RPS. 
+  if(m_pcPic->isField())
+  {
+    TComList<TComPic*>::iterator iterPic = rcListPic.begin();
+    while ( iterPic != rcListPic.end())
+    {
+      rpcPic = *(iterPic++);
+      if(rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
+      {
+        pcRPS->setDeltaPOC(k, 1);
+        pcRPS->setUsed(k, true);
+        nrOfPositivePictures++;
+        k ++;
+        useNewRPS = true;
+      }
+    }
+  }
+#endif
   pcRPS->setNumberOfNegativePictures(nrOfNegativePictures);
   pcRPS->setNumberOfPositivePictures(nrOfPositivePictures);
   pcRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
   // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the
   // inter RPS prediction with.  Here we just use the reference used by pReferencePictureSet.
   // If pReferencePictureSet is not inter_RPS_predicted, then inter_RPS_prediction is for the current RPS also disabled.
-  if (!pReferencePictureSet->getInterRPSPrediction())
+  if (!pReferencePictureSet->getInterRPSPrediction()
+#if EFFICIENT_FIELD_IRAP
+    || useNewRPS
+#endif
+    )
   {
     pcRPS->setInterRPSPrediction(false);
     pcRPS->setNumRefIdc(0);

@@ -40,6 +40,7 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define EFFICIENT_FIELD_IRAP            1
 #define ALLOW_RECOVERY_POINT_AS_RAP     1
 #define BUGFIX_INTRAPERIOD 1
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
