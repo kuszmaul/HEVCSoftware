@@ -229,10 +229,17 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
       }
     }
 #if FIX_FIELD_DEPTH  
+#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
+    if(poc != 0)
+    {
+#endif
     if(isField && rpcSlice->getPOC()%2 == 1)
     {
       depth ++;
     }
+#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
+  }
+#endif
 #endif
   }
   
