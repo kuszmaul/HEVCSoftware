@@ -40,6 +40,8 @@
 
 //! \ingroup TLibCommon
 //! \{
+
+#define FIX_FIELD_DEPTH                 1
 #define EFFICIENT_FIELD_IRAP            1
 #define ALLOW_RECOVERY_POINT_AS_RAP     1
 #define BUGFIX_INTRAPERIOD 1
