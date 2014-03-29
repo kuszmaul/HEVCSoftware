@@ -267,18 +267,7 @@ Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
   {
     WRITE_UVLC(sei.activeSeqParameterSetId[i], "active_seq_parameter_set_id"); 
   }
-
-  UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
-  UInt uiAlignedBits = ( 8 - (uiBits&7) ) % 8;  
-  if(uiAlignedBits) 
-  {
-    WRITE_FLAG(1, "alignment_bit" );
-    uiAlignedBits--; 
-    while(uiAlignedBits--)
-    {
-      WRITE_FLAG(0, "alignment_bit" );
-    }
-  }
+  xWriteByteAlign();
 }
 
 Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps)
