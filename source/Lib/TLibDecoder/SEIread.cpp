@@ -399,11 +399,8 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
   }
 
   UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned(); 
-  
-  while(uibits--)
-  {
-    READ_FLAG(val, "alignment_bit");
-  }
+
+  xParseByteAlign();
 }
 
 Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*payloadSize*/, TComSPS *sps)
