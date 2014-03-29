@@ -256,16 +256,16 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 
 Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 {
-  WRITE_CODE(sei.activeVPSId,     4, "active_vps_id");
-  WRITE_FLAG(sei.m_fullRandomAccessFlag, "full_random_access_flag");
-  WRITE_FLAG(sei.m_noParamSetUpdateFlag, "no_param_set_update_flag");
-  WRITE_UVLC(sei.numSpsIdsMinus1,    "num_sps_ids_minus1");
+  WRITE_CODE(sei.activeVPSId,     4,         "active_video_parameter_set_id");
+  WRITE_FLAG(sei.m_selfContainedCvsFlag,     "self_contained_cvs_flag");
+  WRITE_FLAG(sei.m_noParameterSetUpdateFlag, "no_parameter_set_update_flag");
+  WRITE_UVLC(sei.numSpsIdsMinus1,            "num_sps_ids_minus1");
 
-  assert (sei.activeSeqParamSetId.size() == (sei.numSpsIdsMinus1 + 1));
+  assert (sei.activeSeqParameterSetId.size() == (sei.numSpsIdsMinus1 + 1));
 
-  for (Int i = 0; i < sei.activeSeqParamSetId.size(); i++)
+  for (Int i = 0; i < sei.activeSeqParameterSetId.size(); i++)
   {
-    WRITE_UVLC(sei.activeSeqParamSetId[i], "active_seq_param_set_id"); 
+    WRITE_UVLC(sei.activeSeqParameterSetId[i], "active_seq_parameter_set_id"); 
   }
 
   UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
