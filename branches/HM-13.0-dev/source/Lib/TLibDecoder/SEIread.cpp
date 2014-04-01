@@ -398,8 +398,6 @@ Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /
     READ_UVLC(val, "active_seq_parameter_set_id");      sei.activeSeqParameterSetId[i] = val; 
   }
 
-  UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned(); 
-
   xParseByteAlign();
 }
 
