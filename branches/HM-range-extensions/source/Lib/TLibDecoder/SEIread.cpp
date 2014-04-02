@@ -102,11 +102,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
       fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
       break;
-#endif
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
@@ -259,12 +257,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIScalableNesting;
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
       break;
-#if RExt__O0099_TIME_CODE_SEI
     case SEI::TIME_CODE:
       sei = new SEITimeCode;
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize);
       break;
-#endif   
     case SEI::CHROMA_SAMPLING_FILTER_HINT:
       //NOTE: RExt - Made unconditional on SPS to be consistent with the working text P1005
       //if (!sps)
@@ -825,7 +821,6 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
 
 }
 
-#if RExt__O0099_TIME_CODE_SEI
 Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
 {
   UInt code;
@@ -881,7 +876,6 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
   }
   xParseByteAlign();
 }
-#endif
 
 Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt /*payloadSize*//*, TComSPS* sps*/)
 {

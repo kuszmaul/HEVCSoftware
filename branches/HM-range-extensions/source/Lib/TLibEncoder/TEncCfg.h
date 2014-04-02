@@ -284,9 +284,7 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
-#if RExt__O0099_TIME_CODE_SEI
   Bool      m_timeCodeSEIEnabled;
-#endif
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
@@ -720,10 +718,8 @@ public:
   Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
   Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
   Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
-#if RExt__O0099_TIME_CODE_SEI
   Void         setTimeCodeSEIEnabled(Bool b)                  { m_timeCodeSEIEnabled = b; }
   Bool         getTimeCodeSEIEnabled()                        { return m_timeCodeSEIEnabled; }
-#endif
   Void  setKneeSEIEnabled(Int b)                          { m_kneeSEIEnabled = b; }
   Bool  getKneeSEIEnabled()                               { return m_kneeSEIEnabled; }
   Void  setKneeSEIId(Int b)                               { m_kneeSEIId = b; }

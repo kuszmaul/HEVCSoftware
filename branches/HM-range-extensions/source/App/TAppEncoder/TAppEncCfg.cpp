@@ -640,9 +640,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",            m_decodingUnitInfoSEIEnabled,             0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,               0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
-#if RExt__O0099_TIME_CODE_SEI
   ("SEITimeCode",                    m_timeCodeSEIEnabled,                 false,  "Control generation of time code information SEI message")
-#endif
   ("SEIKneeFunctionInfo",                 m_kneeSEIEnabled,               false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                   m_kneeSEIId,                        0, "Specifies Id of Knee function SEI message for a given session")
   ("SEIKneeFunctionCancelFlag",           m_kneeSEICancelFlag,            false, "Indicates that Knee function SEI message cancels the persistance or follows")

@@ -412,7 +412,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
 
-#if RExt__O0099_TIME_CODE_SEI
   if(m_pcCfg->getTimeCodeSEIEnabled())
   {
     SEITimeCode sei_time_code;
@@ -438,7 +437,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     writeRBSPTrailingBits(nalu.m_Bitstream);
     accessUnit.push_back(new NALUnitEBSP(nalu));
   }
-#endif
 
   if(m_pcCfg->getKneeSEIEnabled())
   {

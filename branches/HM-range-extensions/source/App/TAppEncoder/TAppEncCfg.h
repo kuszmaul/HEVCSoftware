@@ -276,9 +276,7 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
-#if RExt__O0099_TIME_CODE_SEI
   Bool      m_timeCodeSEIEnabled;
-#endif
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
