@@ -243,7 +243,6 @@
 #endif
 
 #define RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET                               1 ///< 0 = use one set of chroma Qp offsets for each slice, 1 (default) = allow multiple sets to be sent and a set selected for each CU
-#define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
 //------------------------------------------------
 // Backwards-compatibility

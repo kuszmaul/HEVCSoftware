@@ -121,12 +121,10 @@ protected:
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;
   Bool m_frameOnlyConstraintFlag;
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   UInt              m_bitDepthConstraintValue;
   ChromaFormat      m_chromaFormatConstraintValue;
   Bool              m_intraConstraintFlag;
   Bool              m_lowerBitRateConstraintFlag;
-#endif
 
   //====== Coding Structure ========
   UInt      m_uiIntraPeriod;
@@ -874,7 +872,6 @@ public:
   Bool         getFrameOnlyConstraintFlag() const             { return m_frameOnlyConstraintFlag; }
   Void         setFrameOnlyConstraintFlag(Bool b)             { m_frameOnlyConstraintFlag = b; }
 
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   UInt         getBitDepthConstraintValue() const             { return m_bitDepthConstraintValue; }
   Void         setBitDepthConstraintValue(UInt v)             { m_bitDepthConstraintValue=v; }
 
@@ -886,7 +883,6 @@ public:
 
   Bool         getLowerBitRateConstraintFlag() const          { return m_lowerBitRateConstraintFlag; }
   Void         setLowerBitRateConstraintFlag(Bool b)          { m_lowerBitRateConstraintFlag=b; }
-#endif
   Bool      getChromaSamplingFilterHintEnabled()              { return m_chromaSamplingFilterHintEnabled;}
   Void      setChromaSamplingFilterHintEnabled(Bool i)        { m_chromaSamplingFilterHintEnabled = i;}
   Int       getChromaSamplingHorFilterIdc()                   { return m_chromaSamplingHorFilterIdc;}
