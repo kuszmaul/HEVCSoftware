@@ -320,7 +320,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "slice_segment_header_extension_present_flag");
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
 
-#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
   READ_FLAG( uiCode, "pps_extension_present_flag");
   if (uiCode)
   {
@@ -340,12 +339,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
         {
           case PPS_EXT__REXT:
             assert(!bSkipTrailingExtensionBits);
-#else
-  READ_FLAG( uiCode, "pps_extension1_flag");
 
-  if (uiCode != 0)
-  {
-#endif
             if (pcPPS->getUseTransformSkip())
             {
               READ_UVLC( uiCode, "log2_transform_skip_max_size_minus2");
@@ -386,7 +380,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             READ_UVLC( uiCode, "sao_chroma_bit_shift");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
 #endif
-#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -402,18 +395,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
       }
     }
   }
-#else
-    READ_FLAG( uiCode, "pps_extension2_flag");
-  }
-
-  if (uiCode)
-  {
-    while ( xMoreRbspData() )
-    {
-      READ_FLAG( uiCode, "pps_extension_data_flag");
-    }
-  }
-#endif
 }
 
 Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
