@@ -374,12 +374,10 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             }
 #endif
 
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
             READ_UVLC( uiCode, "sao_luma_bit_shift");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_LUMA, uiCode);
             READ_UVLC( uiCode, "sao_chroma_bit_shift");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
-#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;

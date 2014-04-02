@@ -108,9 +108,7 @@ protected:
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
   Bool      m_useCrossComponentPrediction;                    ///< flag enabling the use of cross-component prediction
   Bool      m_reconBasedCrossCPredictionEstimate;             ///< causes the alpha calculation in encoder search to be based on the decoded residual rather than the pre-transform encoder-side residual
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   UInt      m_saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];        ///< number of bits for the upward bit shift operation on the decoded SAO offsets
-#endif
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)

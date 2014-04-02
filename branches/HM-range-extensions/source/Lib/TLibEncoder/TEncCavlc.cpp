@@ -245,9 +245,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
           || ( pcPPS->getChromaQpAdjTableSize() > 0 )
 #endif
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
           || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
-#endif
      )
     ;
 
@@ -296,10 +294,8 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
               }
             }
 #endif
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "sao_chroma_bit_shift" );
-#endif
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.

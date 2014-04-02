@@ -104,11 +104,7 @@ Void TEncTop::create ()
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, m_chromaFormatIDC );
   if (m_bUseSAO)
   {
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_saoOffsetBitShift[CHANNEL_TYPE_LUMA], m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] );
-#else
-    m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#endif
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
     m_cEncSAO.createEncData(getSaoLcuBoundary());
 #else
@@ -752,10 +748,8 @@ Void TEncTop::xInitPPS()
   m_cPPS.setUseWP( m_useWeightedPred );
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setUseCrossComponentPrediction(m_useCrossComponentPrediction);
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   m_cPPS.setSaoOffsetBitShift(CHANNEL_TYPE_LUMA,   m_saoOffsetBitShift[CHANNEL_TYPE_LUMA  ]);
   m_cPPS.setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA]);
-#endif
   m_cPPS.setOutputFlagPresentFlag( false );
   m_cPPS.setSignHideFlag(getSignHideFlag());
   if ( getDeblockingFilterMetric() )

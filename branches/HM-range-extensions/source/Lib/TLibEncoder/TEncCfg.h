@@ -204,9 +204,7 @@ protected:
   Bool      m_useEarlySkipDetection;
   Bool      m_useCrossComponentPrediction;
   Bool      m_reconBasedCrossCPredictionEstimate;
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   UInt      m_saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
-#endif
   Bool      m_useTransformSkip;
   Bool      m_useTransformSkipFast;
   UInt      m_transformSkipLog2MaxSize;
@@ -556,9 +554,7 @@ public:
   Void      setUseCrossComponentPrediction        (const Bool value)      { m_useCrossComponentPrediction = value;  }
   Bool      getUseReconBasedCrossCPredictionEstimate ()                const { return m_reconBasedCrossCPredictionEstimate;  }
   Void      setUseReconBasedCrossCPredictionEstimate (const Bool value)      { m_reconBasedCrossCPredictionEstimate = value; }
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   Void      setSaoOffsetBitShift(ChannelType type, UInt uiBitShift)          { m_saoOffsetBitShift[type] = uiBitShift; }
-#endif
 
   Bool getUseTransformSkip                             ()      { return m_useTransformSkip;        }
   Void setUseTransformSkip                             ( Bool b ) { m_useTransformSkip  = b;       }

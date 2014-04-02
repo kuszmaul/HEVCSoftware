@@ -321,11 +321,7 @@ Void TDecTop::xActivateParameterSets()
 
   m_cSAO.destroy();
 
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getChromaFormatIdc(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxCUDepth(), pps->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA), pps->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) );
-#else
-  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getChromaFormatIdc(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxCUDepth() );
-#endif
   m_cLoopFilter.create( sps->getMaxCUDepth() );
 }
 
