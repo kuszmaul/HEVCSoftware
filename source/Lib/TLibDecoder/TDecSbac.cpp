@@ -488,12 +488,10 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
 {
   Int mvx = 0, mvy = 0;
   TComMv mvPred = pcCU->getLastIntraBCMv();
-#if RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR
   if (mvPred.getHor()==0 && mvPred.getVer()==0)
   {
     mvPred.setHor(-Short(pcCU->getWidth(uiAbsPartIdx)));
   }
-#endif
   parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
 
   mvx = mvPred.getHor() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();

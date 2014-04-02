@@ -247,7 +247,6 @@
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 #define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
-#define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
 #define RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64                            1 ///< 0 = use one LCU to the left of the current LCU as search area, 1 (default) use an area of (64,LCU_height) to the left of the current LCU.
 
 //------------------------------------------------
