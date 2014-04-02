@@ -77,9 +77,7 @@ protected:
   Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
 #endif
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
-#endif
   Void xWriteByteAlign();
 };
 

@@ -109,11 +109,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::KNEE_FUNCTION_INFO:
     fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
-#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -183,11 +181,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::KNEE_FUNCTION_INFO:
     xWriteSEIKneeFunctionInfo(*static_cast<const SEIKneeFunctionInfo*>(&sei));
     break;
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
     break;
-#endif
   default:
     assert(!"Unhandled SEI message");
     break;
@@ -791,7 +787,6 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 }
 
 
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
 Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
 {
   WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
@@ -811,7 +806,6 @@ Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayC
     
   xWriteByteAlign();
 }
-#endif
 
 
 Void SEIWriter::xWriteByteAlign()

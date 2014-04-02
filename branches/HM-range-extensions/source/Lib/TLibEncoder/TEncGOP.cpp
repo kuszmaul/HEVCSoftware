@@ -454,7 +454,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
     
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   if(m_pcCfg->getMasteringDisplayColourVolumeSEIEnabled())
   {
     SEIMasteringDisplayColourVolume mdcv;
@@ -480,8 +479,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
       
   }
-
-#endif
 }
 
 // ====================================================================================================================
