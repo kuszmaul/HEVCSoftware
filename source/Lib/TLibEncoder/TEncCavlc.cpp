@@ -236,14 +236,10 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
-#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
   Bool pps_extension_present_flag=false;
   Bool pps_extension_flags[NUM_PPS_EXTENSION_FLAGS]={false};
 
   pps_extension_flags[PPS_EXT__REXT] = (
-#else
-  if (
-#endif
              ( pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
           || pcPPS->getUseCrossComponentPrediction()
 #if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
@@ -253,7 +249,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
           || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
 #endif
      )
-#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
     ;
 
   // Other PPS extension flags checked here.
@@ -279,10 +274,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
         switch (PPSExtensionFlagIndex(i))
         {
           case PPS_EXT__REXT:
-#else
-  {
-    WRITE_FLAG( 1, "pps_extension_flag1" );
-#endif
 
             if (pcPPS->getUseTransformSkip())
             {
@@ -309,7 +300,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "sao_chroma_bit_shift" );
 #endif
-#if RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.
@@ -318,14 +308,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
       } // if flag present
     } // loop over PPS flags
   } // pps_extension_present_flag is non-zero
-#else
-    WRITE_FLAG( 0, "pps_extension_flag2" );
-  }
-  else
-  {
-    WRITE_FLAG( 0, "pps_extension_flag1" );
-  }
-#endif
 }
 
 Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
