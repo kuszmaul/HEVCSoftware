@@ -3627,7 +3627,6 @@ UInt TComDataCU::getSCUAddr()
   return ( getPic()->getPicSym()->getInverseCUOrderMap(m_uiCUAddr) << ( m_pcSlice->getSPS()->getMaxCUDepth() << 1 ) ) + m_uiAbsIdxInLCU;
 }
 
-#if RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64
 UInt TComDataCU::getIntraBCSearchAreaWidth()
 {
   const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();
@@ -3651,6 +3650,5 @@ UInt TComDataCU::getIntraBCSearchAreaWidth()
   }
   return std::min<UInt>(width, INTRABC_LEFTWIDTH);
 }
-#endif
 
 //! \}
