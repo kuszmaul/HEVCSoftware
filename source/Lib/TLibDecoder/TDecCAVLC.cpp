@@ -791,13 +791,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "extended_precision_processing_flag");       pcSPS->setUseExtendedPrecision                   (uiCode != 0);
             READ_FLAG( uiCode, "intra_smoothing_disabled_flag");            pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
             READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting    (uiCode != 0);
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
             READ_FLAG( uiCode, "golomb_rice_parameter_adaptation_flag");    pcSPS->setUseGolombRiceParameterAdaptation       (uiCode != 0);
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-            READ_FLAG( uiCode, "golomb_rice_group_adaptation_flag");        pcSPS->setUseGolombRiceGroupAdaptation           (uiCode != 0);
-#endif
-#endif
             READ_FLAG( uiCode, "align_cabac_before_bypass_data_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
             break;
           default:

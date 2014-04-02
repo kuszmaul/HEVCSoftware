@@ -118,13 +118,7 @@ protected:
   Bool      m_useSingleSignificanceMapContext;                ///< control flag for transform-skip/transquant-bypass single significance map context
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];///< control flags for residual DPCM
   Bool      m_enableAMP;
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  Bool      m_useGolombRiceGroupAdaptation;                   ///< control flag for partial retention of Golomb-Rice parameter from one group to the next
-#endif
-#endif
   Bool      m_alignCABACBeforeBypass;
 
   // coding quality

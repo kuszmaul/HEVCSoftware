@@ -194,13 +194,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseTransformSkipFast         ( m_useTransformSkipFast  );
   m_cTEncTop.setUseResidualRotation          ( m_useResidualRotation   );
   m_cTEncTop.setUseSingleSignificanceMapContext( m_useSingleSignificanceMapContext   );
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   m_cTEncTop.setUseGolombRiceParameterAdaptation( m_useGolombRiceParameterAdaptation );
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  m_cTEncTop.setUseGolombRiceGroupAdaptation ( m_useGolombRiceGroupAdaptation );
-#endif
-#endif
   m_cTEncTop.setAlignCABACBeforeBypass       ( m_alignCABACBeforeBypass );
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
