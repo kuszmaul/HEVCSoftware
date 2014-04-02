@@ -486,13 +486,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ExplicitResidualDPCM",    m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT], false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   ("GolombRiceParameterAdaptation", m_useGolombRiceParameterAdaptation, false, "Enable the adaptation of the Golomb-Rice parameter over the course of each slice")
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
-#endif
-#endif
   ("AlignCABACBeforeBypass",       m_alignCABACBeforeBypass,          false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data" )
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
@@ -1113,13 +1107,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_useSingleSignificanceMapContext==true, "UseSingleSignificanceMapContext must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT]==true, "ImplicitResidualDPCM must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT]==true, "ExplicitResidualDPCM must not be enabled for non main-RExt profiles.");
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
     xConfirmPara(m_useGolombRiceParameterAdaptation==true, "GolombRiceParameterAdaption must not be enabled for non main-RExt profiles.");
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    xConfirmPara(m_useGolombRiceGroupAdaptation==true, "GolombRiceGroupAdaption must not be enabled for non main-RExt profiles.");
-#endif
-#endif
     xConfirmPara(m_useExtendedPrecision==true, "UseExtendedPrecision must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useHighPrecisionPredictionWeighting==true, "UseHighPrecisionPredictionWeighting must not be enabled for non main-RExt profiles.");
@@ -1841,13 +1829,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Single significance map context   : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
   printf("Cross-component prediction        : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
   printf("High-precision prediction weight  : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   printf("Golomb-Rice parameter adaptation  : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  printf("Golomb-Rice aroup adaptation      : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
-#endif
-#endif
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   if (m_bUseSAO)

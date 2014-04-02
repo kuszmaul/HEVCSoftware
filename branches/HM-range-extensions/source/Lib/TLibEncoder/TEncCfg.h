@@ -212,13 +212,7 @@ protected:
   UInt      m_transformSkipLog2MaxSize;
   Bool      m_useResidualRotation;
   Bool      m_useSingleSignificanceMapContext;
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   Bool      m_useGolombRiceParameterAdaptation;
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  Bool      m_useGolombRiceGroupAdaptation;
-#endif
-#endif
   Bool      m_alignCABACBeforeBypass;
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
@@ -576,15 +570,8 @@ public:
   Void setUseResidualRotation                          (const Bool value)  { m_useResidualRotation = value; }
   Bool getUseSingleSignificanceMapContext              ()            const { return m_useSingleSignificanceMapContext;  }
   Void setUseSingleSignificanceMapContext              (const Bool value)  { m_useSingleSignificanceMapContext = value; }
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   Bool getUseGolombRiceParameterAdaptation             ()                 const { return m_useGolombRiceParameterAdaptation;  }
   Void setUseGolombRiceParameterAdaptation             (const Bool value)       { m_useGolombRiceParameterAdaptation = value; }
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  Bool getUseGolombRiceGroupAdaptation                 ()            const { return m_useGolombRiceGroupAdaptation;  }
-  Void setUseGolombRiceGroupAdaptation                 (const Bool value)  { m_useGolombRiceGroupAdaptation = value; }
-#endif
-#endif
   Bool getAlignCABACBeforeBypass                       ()       const      { return m_alignCABACBeforeBypass;  }
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }

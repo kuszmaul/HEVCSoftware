@@ -233,7 +233,6 @@ Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)
 }
 
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
 UInt TComTU::getGolombRiceStatisticsIndex(const ComponentID compID)
 {
         TComDataCU *const pcCU             = getCU();
@@ -253,4 +252,3 @@ UInt TComTU::getGolombRiceStatisticsIndex(const ComponentID compID)
 
   return selectedIndex;
 }
-#endif

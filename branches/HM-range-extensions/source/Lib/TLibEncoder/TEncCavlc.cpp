@@ -620,13 +620,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getUseExtendedPrecision()
        || pcSPS->getDisableIntraReferenceSmoothing()
        || pcSPS->getUseHighPrecisionPredictionWeighting()
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
        || pcSPS->getUseGolombRiceParameterAdaptation()
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-       || pcSPS->getUseGolombRiceGroupAdaptation()
-#endif
-#endif
        || pcSPS->getAlignCABACBeforeBypass()
     );
 
@@ -662,13 +656,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
             WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
             WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
             WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "golomb_rice_parameter_adaptation_flag" );
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-            WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
-#endif
-#endif
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "align_cabac_before_bypass_data_flag" );
             break;
           default:

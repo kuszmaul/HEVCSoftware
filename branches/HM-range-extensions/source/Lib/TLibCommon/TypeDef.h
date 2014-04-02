@@ -247,7 +247,6 @@
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 #define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
-#define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice
 #define RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS                    1 ///< 0 = only use 2Nx2N PU structures for IntraBC, 1 (default) = use Nx2N/2NxN/NxN intra block copy (with no reference to reconstructed samples within the current CU).
 #define RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444                              1 ///< 0 = do not enable additional tier for 16bit 444, 1 (default) = enable use of additional tier for 16bit 444
 #define RExt__P0050_KNEE_FUNCTION_SEI                                          1 ///< 0 = disable code that allows use of knee function SEI messsages, 1 (default) = enable code that allows use of knee function SEI messsages
@@ -258,10 +257,6 @@
 #define RExt__P0222_SAO_OFFSET_BIT_SHIFT                                       1 ///< 0 = do not use SAO offset bit shift, 1 (default) use SAO offset bit shift in non-version 1 profiles.
 #define RExt__P0304_NEG_WIDTH_INITIAL_INTRABC_PREDICTOR                        1 ///< 0 = use (0,0) as initial intra bc predictor, 1 (default) = use (-W,0) as the initial intra bc predictor.
 #define RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64                            1 ///< 0 = use one LCU to the left of the current LCU as search area, 1 (default) use an area of (64,LCU_height) to the left of the current LCU.
-
-#if !RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
-#define RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION                            1 ///< 0 = use original HM Golomb-Rice parameter update method, 1 (default) = allow Golomb-Rice parameter for a coefficient group to be based on that of the previous group
-#endif
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -295,14 +290,8 @@
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
 #define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME                4 ///< QP' to use for mixed_lossy_lossless coding.
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
 #define RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS                           4
 #define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-#define MAXIMUM_GOLOMB_RICE_PARAMETER                                          7
-#endif
-#endif
 
 #define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
 

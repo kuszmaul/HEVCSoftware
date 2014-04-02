@@ -170,12 +170,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   // new structure
   m_uiLastQp          = qp;
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
     m_golombRiceAdaptationStatistics[statisticIndex] = 0;
   }
-#endif
 
   m_pcTDecBinIf->start();
 }
@@ -230,12 +228,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
 #endif
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
     m_golombRiceAdaptationStatistics[statisticIndex] = 0;
   }
-#endif
 
   m_pcTDecBinIf->start();
 }
@@ -1440,15 +1436,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   //--------------------------------------------------------------------------------------------------
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   const Bool  bUseGolombRiceParameterAdaptation = pcCU->getSlice()->getSPS()->getUseGolombRiceParameterAdaptation();
         UInt &currentGolombRiceStatistic        = m_golombRiceAdaptationStatistics[rTu.getGolombRiceStatisticsIndex(compID)];
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-  const Bool golombRiceGroupAdaptation    = pcCU->getSlice()->getSPS()->getUseGolombRiceGroupAdaptation();
-  const UInt golombRiceParameterReduction = (pcCU->getCUTransquantBypass(uiAbsPartIdx) || (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0)) ? 1 : 2;
-#endif
-#endif
 
   //select scans
   TUEntropyCodingParameters codingParameters;
@@ -1486,16 +1475,8 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
   for( Int iSubSet = iLastScanSet; iSubSet >= 0; iSubSet-- )
   {
     Int  iSubPos   = iSubSet << MLS_CG_SIZE;
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
     uiGoRiceParam  = currentGolombRiceStatistic / RExt__GOLOMB_RICE_INCREMENT_DIVISOR;
     Bool updateGolombRiceStatistics = bUseGolombRiceParameterAdaptation; //leave the statistics at 0 when not using the adaptation system
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-    uiGoRiceParam  = golombRiceGroupAdaptation ? ((uiGoRiceParam <= golombRiceParameterReduction) ? 0 : (uiGoRiceParam - golombRiceParameterReduction)) : 0;
-#else
-    uiGoRiceParam  = 0;
-#endif
-#endif
     Int numNonZero = 0;
 
     Int lastNZPosInCG  = -1;
@@ -1659,7 +1640,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
             absCoeff[ idx ] = uiLevel + baseLevel;
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
             if (absCoeff[idx] > (3 << uiGoRiceParam))
             {
               uiGoRiceParam = bUseGolombRiceParameterAdaptation ? (uiGoRiceParam + 1) : (std::min<UInt>((uiGoRiceParam + 1), 4));
@@ -1680,19 +1660,6 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
               updateGolombRiceStatistics = false;
             }
-#else
-#if RExt__ORCE2_A1_GOLOMB_RICE_GROUP_ADAPTATION
-            if (golombRiceGroupAdaptation)
-            {
-              uiGoRiceParam = std::min<UInt>((uiGoRiceParam + (absCoeff[idx] >> (uiGoRiceParam + 2))), MAXIMUM_GOLOMB_RICE_PARAMETER);
-            }
-            else
-#endif
-            if(absCoeff[idx]>3*(1<<uiGoRiceParam))
-            {
-              uiGoRiceParam = min<UInt>(uiGoRiceParam+ 1, 4);
-            }
-#endif
           }
 
           if(absCoeff[ idx ] >= 2)
@@ -1952,9 +1919,7 @@ Void TDecSbac::xCopyFrom( TDecSbac* pSrc )
   m_uiLastQp           = pSrc->m_uiLastQp;
   xCopyContextsFrom( pSrc );
 
-#if RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION
   memcpy(m_golombRiceAdaptationStatistics, pSrc->m_golombRiceAdaptationStatistics, (sizeof(UInt) * RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS));
-#endif
 }
 
 Void TDecSbac::load ( TDecSbac* pScr )
