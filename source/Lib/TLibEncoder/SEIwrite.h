@@ -69,9 +69,7 @@ protected:
   Void xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei);
   Void xWriteSEISOPDescription(const SEISOPDescription& sei);
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps);
-#if RExt__O0099_TIME_CODE_SEI
   Void xWriteSEITimeCode(const SEITimeCode& sei);
-#endif
   Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
   Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);

@@ -80,9 +80,7 @@ public:
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
     CHROMA_SAMPLING_FILTER_HINT          = 137,
-#if RExt__O0099_TIME_CODE_SEI
     TIME_CODE                            = 138,
-#endif
     MASTERING_DISPLAY_COLOUR_VOLUME      = 139
   };
 
@@ -503,7 +501,6 @@ public:
   SEIMessages m_nestedSEIs;
 };
 
-#if RExt__O0099_TIME_CODE_SEI
 class SEITimeCode : public SEI
 {
 public:
@@ -531,7 +528,6 @@ public:
   UInt timeOffsetLength;
   Int  timeOffset;
 };
-#endif
 
 #endif
 

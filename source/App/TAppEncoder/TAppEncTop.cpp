@@ -290,9 +290,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
-#if RExt__O0099_TIME_CODE_SEI
   m_cTEncTop.setTimeCodeSEIEnabled( m_timeCodeSEIEnabled );
-#endif
   m_cTEncTop.setKneeSEIEnabled              ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                   ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag           ( m_kneeSEICancelFlag );
