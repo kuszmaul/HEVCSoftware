@@ -522,27 +522,7 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
       //       top-left chroma samples.
       //       Clipping prevents this from occurring.
 
-#if RExt__P_MEETINGNOTES_INTRABC_SEARCH_LEFT_64
       Int iLeftWidth = pcCU->getIntraBCSearchAreaWidth();
-#else
-      Int iLeftWidth;
-      if( ( pcCU->getCULeft() == NULL ||
-            pcCU->getCULeft()->getSlice() == NULL ||
-            ( pcCU->getCULeft()->getSCUAddr() + g_auiRasterToZscan[ pcCU->getPic()->getNumPartInWidth() - 1 ]
-              < pcCU->getPic()->getCU( pcCU->getAddr() )->getSliceStartCU(0) )
-          )
-          ||
-          ( pcCU->getCULeft() == NULL ||
-            pcCU->getCULeft()->getSlice() == NULL ||
-            ( pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCULeft()->getAddr() )
-              != pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getAddr() )
-            )
-          )
-        )
-        iLeftWidth = 0;
-      else
-        iLeftWidth = std::min<UInt>( pcCU->getSlice()->getSPS()->getMaxCUWidth(), INTRABC_LEFTWIDTH );
-#endif
 
       Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
       Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );
