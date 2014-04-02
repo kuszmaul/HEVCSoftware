@@ -106,11 +106,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
     break;
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   case SEI::KNEE_FUNCTION_INFO:
     fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
@@ -182,11 +180,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
     xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
     break;
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   case SEI::KNEE_FUNCTION_INFO:
     xWriteSEIKneeFunctionInfo(*static_cast<const SEIKneeFunctionInfo*>(&sei));
     break;
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
@@ -772,7 +768,6 @@ Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &
 }
 #endif
 
-#if RExt__P0050_KNEE_FUNCTION_SEI
 Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 {
   WRITE_UVLC( sei.m_kneeId, "knee_function_id" );
@@ -794,7 +789,6 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
   }
   xWriteByteAlign();
 }
-#endif
 
 
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI

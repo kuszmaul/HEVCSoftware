@@ -171,12 +171,8 @@ protected:
   SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
   SEIFramePacking*        xCreateSEIFramePacking();
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
-
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
-
-#if RExt__P0050_KNEE_FUNCTION_SEI
   SEIKneeFunctionInfo*    xCreateSEIKneeFunctionInfo();
-#endif
 
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   SEIChromaSamplingFilterHint* xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIdc);

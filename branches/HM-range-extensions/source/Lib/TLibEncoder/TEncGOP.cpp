@@ -276,7 +276,6 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
-#if RExt__P0050_KNEE_FUNCTION_SEI
 SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
 {
   SEIKneeFunctionInfo *seiKneeFunctionInfo = new SEIKneeFunctionInfo();
@@ -307,7 +306,6 @@ SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
   }
   return seiKneeFunctionInfo;
 }
-#endif
 
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 SEIChromaSamplingFilterHint* TEncGOP::xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIndex)
@@ -443,7 +441,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
   }
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
+
   if(m_pcCfg->getKneeSEIEnabled())
   {
     SEIKneeFunctionInfo *sei = xCreateSEIKneeFunctionInfo();
@@ -455,7 +453,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#endif
     
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   if(m_pcCfg->getMasteringDisplayColourVolumeSEIEnabled())

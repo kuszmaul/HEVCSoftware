@@ -79,9 +79,7 @@ protected:
 #if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   Void xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/);
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   Void xParseSEIKneeFunctionInfo      (SEIKneeFunctionInfo& sei, UInt payloadSize);
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei, UInt payloadSize);
 #endif

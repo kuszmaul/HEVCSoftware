@@ -297,7 +297,6 @@ Void TAppEncTop::xInitLibCfg()
 #if RExt__O0099_TIME_CODE_SEI
   m_cTEncTop.setTimeCodeSEIEnabled( m_timeCodeSEIEnabled );
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   m_cTEncTop.setKneeSEIEnabled              ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                   ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag           ( m_kneeSEICancelFlag );
@@ -310,7 +309,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEINumKneePointsMinus1  ( m_kneeSEINumKneePointsMinus1 );
   m_cTEncTop.setKneeSEIInputKneePoint       ( m_kneeSEIInputKneePoint );
   m_cTEncTop.setKneeSEIOutputKneePoint      ( m_kneeSEIOutputKneePoint );
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   m_cTEncTop.setMasteringDisplayColourVolumeSEIEnabled( m_masteringDisplayColourVolumeSEIEnabled );
   m_cTEncTop.setMasteringDisplayMaxLuminance( m_masteringDisplayMaxLuminance );
