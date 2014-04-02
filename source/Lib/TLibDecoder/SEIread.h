@@ -80,9 +80,7 @@ protected:
   Void xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/);
 #endif
   Void xParseSEIKneeFunctionInfo      (SEIKneeFunctionInfo& sei, UInt payloadSize);
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei, UInt payloadSize);
-#endif
   Void xParseByteAlign();
 };
 

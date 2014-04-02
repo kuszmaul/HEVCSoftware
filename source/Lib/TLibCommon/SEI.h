@@ -85,9 +85,7 @@ public:
 #if RExt__O0099_TIME_CODE_SEI
     TIME_CODE                            = 138,
 #endif
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
-    MASTERING_DISPLAY_COLOUR_VOLUME       = 139
-#endif
+    MASTERING_DISPLAY_COLOUR_VOLUME      = 139
   };
 
   SEI() {}
@@ -455,7 +453,6 @@ public:
 };
 #endif
 
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
 class SEIMasteringDisplayColourVolume : public SEI
 {
 public:
@@ -468,7 +465,6 @@ public:
     UInt maxDisplayLuminance;
     UInt minDisplayLuminance;
 };
-#endif
 
 typedef std::list<SEI*> SEIMessages;
 

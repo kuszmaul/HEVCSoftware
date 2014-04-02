@@ -247,7 +247,6 @@
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 #define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
-#define RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI                        1 ///< 0 = disable code that allows use of mastering display colour volume SEI messsages, 1 (default) = enable code that allows use of mastering display colour volume SEI messsages
 #define RExt__P0154_ADDITIONAL_CONTEXT_FOR_CCP                                 1 ///< 0 = use one context to signal the two largest values for alpha, 1 (default) = use an additional context for signalling the largest value of alpha in cross-component prediction (CCP)
 #define RExt__P0166_MODIFIED_PPS_EXTENSION_FORMAT                              1 ///< 0 = use chained PPS extensions, 1 (default) = use 8 bits to indicate presence of different PPS extensions, followed by the respective extension data.
 #define RExt__P0222_SAO_OFFSET_BIT_SHIFT                                       1 ///< 0 = do not use SAO offset bit shift, 1 (default) use SAO offset bit shift in non-version 1 profiles.

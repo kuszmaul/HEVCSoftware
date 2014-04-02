@@ -107,11 +107,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
       fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
       break;
 #endif
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
-#endif
   case SEI::KNEE_FUNCTION_INFO:
     fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
@@ -285,12 +283,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIKneeFunctionInfo;
       xParseSEIKneeFunctionInfo((SEIKneeFunctionInfo&) *sei, payloadSize);
       break;
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
     case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
       sei = new SEIMasteringDisplayColourVolume;
       xParseSEIMasteringDisplayColourVolume((SEIMasteringDisplayColourVolume&) *sei, payloadSize);
       break;
-#endif
     default:
       for (UInt i = 0; i < payloadSize; i++)
       {
@@ -1015,7 +1011,6 @@ Void SEIReader::xParseSEIKneeFunctionInfo(SEIKneeFunctionInfo& sei, UInt payload
   }
 }
 
-#if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
 Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourVolume& sei, UInt payloadSize)
 {
   UInt code;
@@ -1038,7 +1033,6 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
  
   xParseByteAlign();
 }
-#endif
 
 Void SEIReader::xParseByteAlign()
 {
