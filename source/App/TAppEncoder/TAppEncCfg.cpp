@@ -216,9 +216,7 @@ strToTier[] =
 {
   {"main", Level::MAIN},
   {"high", Level::HIGH},
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
   {"super", Level::SUPER},
-#endif
 };
 
 static const struct MapStrToLevel
@@ -1084,18 +1082,12 @@ Void TAppEncCfg::xCheckParameter()
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_bitDepthConstraint<16, "AlignCABACBeforeBypass cannot be enabled when bitDepthConstraint value is less than 16.");
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     xConfirmPara(m_alignCABACBeforeBypass && m_levelTier!=Level::SUPER, "AlignCABACBeforeBypass cannot be enabled when Tier is not Super.");
-#endif
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     xConfirmPara(m_levelTier==Level::SUPER && (m_bitDepthConstraint!=16 || m_chromaFormatConstraint!=CHROMA_444), "Super tier can only be used for 444 16-bit Profile.");
-#endif
   }
   else
   {
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     xConfirmPara(m_levelTier==Level::SUPER, "Tier cannot be Super for non main-RExt profiles.");
-#endif
     xConfirmPara(m_bitDepthConstraint!=((m_profile==Profile::MAIN10)?10:8), "BitDepthConstraint must be 8 for MAIN profile and 10 for MAIN10 profile.");
     xConfirmPara(m_chromaFormatConstraint!=CHROMA_420, "ChromaFormatConstraint must be 420 for non main-RExt profiles.");
     xConfirmPara(m_intraConstraintFlag==true, "IntraConstraintFlag must be false for non main_RExt profiles.");
