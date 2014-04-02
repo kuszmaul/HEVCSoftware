@@ -765,9 +765,7 @@ private:
 #endif
 #endif
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   Bool        m_alignCABACBeforeBypass;
-#endif
 
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -913,10 +911,8 @@ public:
 #endif
 #endif
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-#endif
 
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }

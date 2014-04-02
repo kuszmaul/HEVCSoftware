@@ -70,10 +70,8 @@ public:
   Void  encodeBinsEP      ( UInt  binValues, Int numBins              );
   Void  encodeBinTrm      ( UInt  binValue                            );
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   Void  align             ();
   Void  encodeAlignedBinsEP( UInt  binValues, Int numBins             );
-#endif
 
   TEncBinCABAC* getTEncBinCABAC()  { return this; }
 

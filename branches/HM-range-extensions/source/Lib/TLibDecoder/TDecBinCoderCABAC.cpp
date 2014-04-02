@@ -181,7 +181,6 @@ Void TDecBinCABAC::decodeBinEP( UInt& ruiBin, const TComCodingStatisticsClassTyp
 Void TDecBinCABAC::decodeBinEP( UInt& ruiBin )
 #endif
 {
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   if (m_uiRange == 256)
   {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -191,7 +190,6 @@ Void TDecBinCABAC::decodeBinEP( UInt& ruiBin )
 #endif
     return;
   }
-#endif
 
   m_uiValue += m_uiValue;
 
@@ -219,7 +217,6 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins, const TComCodingStat
 Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
 #endif
 {
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   if (m_uiRange == 256)
   {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -229,7 +226,6 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
 #endif
     return;
   }
-#endif
 
   UInt bins = 0;
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -280,7 +276,6 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
 #endif
 }
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
 Void TDecBinCABAC::align()
 {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -333,7 +328,6 @@ Void TDecBinCABAC::decodeAlignedBinsEP( UInt& ruiBins, Int numBins )
   TComCodingStatistics::IncrementStatisticEP(whichStat, numBins, Int(ruiBins));
 #endif
 }
-#endif
 
 Void
 TDecBinCABAC::decodeBinTrm( UInt& ruiBin )

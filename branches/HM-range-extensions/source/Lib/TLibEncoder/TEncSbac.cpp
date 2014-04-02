@@ -1357,10 +1357,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   const ChannelType  chType                 = toChannelType(compID);
   const UInt         uiLog2BlockWidth       = g_aucConvertToBit[ uiWidth  ] + 2;
   const UInt         uiLog2BlockHeight      = g_aucConvertToBit[ uiHeight ] + 2;
-
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
-#endif
 
   Bool beValid;
 
@@ -1489,9 +1486,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     Int lastNZPosInCG  = -1;
     Int firstNZPosInCG = 1 << MLS_CG_SIZE;
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
     Bool escapeDataPresentInGroup = false;
-#endif
 
     if( iScanPosSig == scanPosLast )
     {
@@ -1575,12 +1570,10 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
           {
             firstC2FlagIdx = idx;
           }
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
           else //if a greater-than-one has been encountered already this group
           {
             escapeDataPresentInGroup = true;
           }
-#endif
         }
         else if( (c1 < 3) && (c1 > 0) )
         {
@@ -1595,23 +1588,19 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
         {
           UInt symbol = absCoeff[ firstC2FlagIdx ] > 2;
           m_pcBinIf->encodeBin( symbol, baseCtxMod[0] );
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
           if (symbol != 0)
           {
             escapeDataPresentInGroup = true;
           }
-#endif
         }
       }
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
       escapeDataPresentInGroup = escapeDataPresentInGroup || (numNonZero > C1FLAG_NUMBER);
 
       if (escapeDataPresentInGroup && alignCABACBeforeBypass)
       {
         m_pcBinIf->align();
       }
-#endif
 
       if( beValid && signHidden )
       {
@@ -1623,11 +1612,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
       }
 
       Int iFirstCoeff2 = 1;
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
       if (escapeDataPresentInGroup)
-#else
-      if (c1 == 0 || numNonZero > C1FLAG_NUMBER)
-#endif
       {
         for ( Int idx = 0; idx < numNonZero; idx++ )
         {

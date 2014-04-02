@@ -219,9 +219,7 @@ protected:
   Bool      m_useGolombRiceGroupAdaptation;
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   Bool      m_alignCABACBeforeBypass;
-#endif
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -587,10 +585,8 @@ public:
   Void setUseGolombRiceGroupAdaptation                 (const Bool value)  { m_useGolombRiceGroupAdaptation = value; }
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   Bool getAlignCABACBeforeBypass                       ()       const      { return m_alignCABACBeforeBypass;  }
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
-#endif
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }

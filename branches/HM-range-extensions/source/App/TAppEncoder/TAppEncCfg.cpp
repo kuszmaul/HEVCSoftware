@@ -493,9 +493,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GolombRiceGroupAdaptation",    m_useGolombRiceGroupAdaptation,    false, "Enable the partial retention of the Golomb-Rice parameter value from one coefficient group to the next")
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   ("AlignCABACBeforeBypass",       m_alignCABACBeforeBypass,          false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data" )
-#endif
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -1091,11 +1089,9 @@ Void TAppEncCfg::xCheckParameter()
   {
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
     xConfirmPara(m_alignCABACBeforeBypass && m_bitDepthConstraint<16, "AlignCABACBeforeBypass cannot be enabled when bitDepthConstraint value is less than 16.");
 #if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     xConfirmPara(m_alignCABACBeforeBypass && m_levelTier!=Level::SUPER, "AlignCABACBeforeBypass cannot be enabled when Tier is not Super.");
-#endif
 #endif
 #if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     xConfirmPara(m_levelTier==Level::SUPER && (m_bitDepthConstraint!=16 || m_chromaFormatConstraint!=CHROMA_444), "Super tier can only be used for 444 16-bit Profile.");
@@ -1134,9 +1130,7 @@ Void TAppEncCfg::xCheckParameter()
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
     // SaoLumaOffsetBitShift and SaoChromaOffsetBitShift will be restricted to the internal bit depth-10, and so do not need to be checked here.
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
     xConfirmPara(m_alignCABACBeforeBypass, "AlignCABACBeforeBypass cannot be enabled for non main-RExt profiles.");
-#endif
   }
 #endif
   // check range of parameters
@@ -1854,9 +1848,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Golomb-Rice aroup adaptation      : %s\n", (m_useGolombRiceGroupAdaptation           ? "Enabled" : "Disabled") );
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
-#endif
 #if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   if (m_bUseSAO)
   {

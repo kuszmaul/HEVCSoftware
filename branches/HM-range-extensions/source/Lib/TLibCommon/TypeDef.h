@@ -247,7 +247,6 @@
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 #define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
-#define RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT                                  1 ///< 0 = use serial arithmetic operations to code all EP bins, 1 (default) = allow (configured by command line and SPS flag) the CABAC engine to 256 prior to coding escape codes/sign bits if escape data is present in the current group
 #define RExt__PRCE2_A1_GOLOMB_RICE_PARAMETER_ADAPTATION                        1 ///< 0 = use original HM Golomb-Rice parameter update method (or method as in ORCE2_A1), 1 (default) = adapt the initial Golomb-Rice parameter over the course of each slice
 #define RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS                    1 ///< 0 = only use 2Nx2N PU structures for IntraBC, 1 (default) = use Nx2N/2NxN/NxN intra block copy (with no reference to reconstructed samples within the current CU).
 #define RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444                              1 ///< 0 = do not enable additional tier for 16bit 444, 1 (default) = enable use of additional tier for 16bit 444

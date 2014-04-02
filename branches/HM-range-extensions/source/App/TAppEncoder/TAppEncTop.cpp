@@ -201,9 +201,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseGolombRiceGroupAdaptation ( m_useGolombRiceGroupAdaptation );
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   m_cTEncTop.setAlignCABACBeforeBypass       ( m_alignCABACBeforeBypass );
-#endif
   m_cTEncTop.setTransformSkipLog2MaxSize     ( m_transformSkipLog2MaxSize  );
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {

@@ -69,9 +69,7 @@ public:
   virtual Void  encodeBinsEP      ( UInt  uiBins, Int numBins              )  = 0;
   virtual Void  encodeBinTrm      ( UInt  uiBin                            )  = 0;
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   virtual Void  align             ()                                          = 0;
-#endif
 
   virtual TEncBinCABAC*   getTEncBinCABAC   ()  { return 0; }
 
