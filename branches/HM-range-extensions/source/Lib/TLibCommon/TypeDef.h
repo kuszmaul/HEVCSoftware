@@ -247,7 +247,6 @@
 #define RExt__O0099_TIME_CODE_SEI                                              1 ///< 0 = disable use of time code SEI message, 1 (default) = implement time code SEI message
 #define RExt__O1005V4_CONSTRAINT_FLAGS                                         1 ///< 0 = do not add the additional constraint flags, 1 (default) = implement the additional constraint flags in the profile_tier_level syntax element
 
-#define RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444                              1 ///< 0 = do not enable additional tier for 16bit 444, 1 (default) = enable use of additional tier for 16bit 444
 #define RExt__P0050_KNEE_FUNCTION_SEI                                          1 ///< 0 = disable code that allows use of knee function SEI messsages, 1 (default) = enable code that allows use of knee function SEI messsages
 #define RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT                                1 ///< 0 = do not take into account the difference in luma/chroma bit depths, 1 (default) = account for any difference between luma and chroma bit depths
 #define RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI                        1 ///< 0 = disable code that allows use of mastering display colour volume SEI messsages, 1 (default) = enable code that allows use of mastering display colour volume SEI messsages
@@ -660,9 +659,7 @@ namespace Level
   {
     MAIN = 0,
     HIGH = 1,
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     SUPER = 2,
-#endif
   };
 
   enum Name

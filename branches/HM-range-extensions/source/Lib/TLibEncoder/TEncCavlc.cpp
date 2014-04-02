@@ -1136,11 +1136,7 @@ Void TEncCavlc::codePTL( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubL
 Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
 {
   WRITE_CODE( ptl->getProfileSpace(), 2 ,     "XXX_profile_space[]");
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
   WRITE_FLAG( ptl->getTierFlag()==Level::HIGH, "XXX_tier_flag[]"    );
-#else
-  WRITE_FLAG( Int(ptl->getTierFlag  ()),      "XXX_tier_flag[]"    );
-#endif
   WRITE_CODE( Int(ptl->getProfileIdc()), 5 ,  "XXX_profile_idc[]"  );
   for(Int j = 0; j < 32; j++)
   {
@@ -1165,16 +1161,10 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
     WRITE_FLAG(chromaFmtConstraint==CHROMA_400,                                                                   "general_max_monochrome_constraint_flag");
     WRITE_FLAG(ptl->getIntraConstraintFlag(),        "general_intra_constraint_flag");
     WRITE_FLAG(ptl->getLowerBitRateConstraintFlag(), "general_lower_bit_rate_constraint_flag");
-#if RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444
     WRITE_FLAG(ptl->getTierFlag()<Level::SUPER, "general_max_high_tier_constraint_flag");
     WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[0..15]");
     WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[16..31]");
     WRITE_CODE(0 ,  3, "XXX_reserved_zero_36bits[32..34]");
-#else
-    WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[0..15]");
-    WRITE_CODE(0 , 16, "XXX_reserved_zero_36bits[16..31]");
-    WRITE_CODE(0 ,  4, "XXX_reserved_zero_36bits[32..35]");
-#endif
   }
   else
   {
