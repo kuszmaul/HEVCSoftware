@@ -80,10 +80,8 @@ private:
 
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Bool                    m_CodeChromaQpAdjFlag;
   Int                     m_ChromaQpAdjIdc;
-#endif
 
   //  Access channel
   TEncCfg*                m_pcEncCfg;
@@ -167,10 +165,8 @@ protected:
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Bool getCodeChromaQpAdjFlag() { return m_CodeChromaQpAdjFlag; }
   Void setCodeChromaQpAdjFlag( Bool b ) { m_CodeChromaQpAdjFlag = b; }
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions

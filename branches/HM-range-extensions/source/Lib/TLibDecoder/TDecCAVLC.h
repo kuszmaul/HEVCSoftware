@@ -107,9 +107,7 @@ public:
   Void parseCrossComponentPrediction( class TComTU &rTu, ComponentID compID );
 
   Void parseDeltaQP         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void parseChromaQpAdjustment( TComDataCU* cu, UInt absPartIdx, UInt depth);
-#endif
 
   Void parseCoeffNxN        ( class TComTU &rTu, ComponentID compID );
 

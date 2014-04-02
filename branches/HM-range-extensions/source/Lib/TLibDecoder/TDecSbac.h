@@ -135,9 +135,7 @@ public:
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
 
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void parseChromaQpAdjustment( TComDataCU* cu, UInt absPartIdx, UInt depth );
-#endif
 
   Void parseIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
@@ -191,10 +189,8 @@ private:
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
-#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

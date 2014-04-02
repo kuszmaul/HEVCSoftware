@@ -429,9 +429,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DeltaQpRD,-dqr",m_uiDeltaQpRD,       0u, "max dQp offset for slice")
   ("MaxDeltaQP,d",  m_iMaxDeltaQP,        0, "max dQp offset for block")
   ("MaxCuDQPDepth,-dqd",  m_iMaxCuDQPDepth,        0, "max depth for a minimum CuDQP")
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   ("MaxCUChromaQpAdjustmentDepth",  m_maxCUChromaQpAdjustmentDepth, 0, "Maximum depth for CU chroma Qp adjustment - set 0 to disable")
-#endif
 
   ("CbQpOffset,-cbqpofs",  m_cbQpOffset,        0, "Chroma Cb QP Offset")
   ("CrQpOffset,-crqpofs",  m_crQpOffset,        0, "Chroma Cr QP Offset")
@@ -1074,9 +1072,6 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useHighPrecisionPredictionWeighting==true, "UseHighPrecisionPredictionWeighting must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_enableIntraReferenceSmoothing==false, "EnableIntraReferenceSmoothing must be enabled for non main-RExt profiles.");
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
-    // placeholder for now.
-#endif
     xConfirmPara(m_alignCABACBeforeBypass, "AlignCABACBeforeBypass cannot be enabled for non main-RExt profiles.");
   }
 
@@ -1765,9 +1760,7 @@ Void TAppEncCfg::xPrintParameter()
 
   printf("Cb QP Offset                      : %d\n", m_cbQpOffset   );
   printf("Cr QP Offset                      : %d\n", m_crQpOffset);
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   printf("Max CU chroma QP adjustment depth : %d\n", m_maxCUChromaQpAdjustmentDepth);
-#endif
   printf("QP adaptation                     : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
   printf("GOP size                          : %d\n", m_iGOPSize );
   printf("Input bit depth                   : (Y:%d, C:%d)\n", m_inputBitDepth[CHANNEL_TYPE_LUMA], m_inputBitDepth[CHANNEL_TYPE_CHROMA] );

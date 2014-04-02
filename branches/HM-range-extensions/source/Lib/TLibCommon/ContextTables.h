@@ -62,10 +62,8 @@
 #define NUM_CHROMA_PRED_CTX           2       ///< number of context models for intra prediction (chroma)
 #define NUM_INTER_DIR_CTX             5       ///< number of context models for inter prediction direction
 #define NUM_MV_RES_CTX                2       ///< number of context models for motion vector difference
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
 #define NUM_CHROMA_QP_ADJ_FLAG_CTX    1       ///< number of context models for chroma_qp_adjustment_flag
 #define NUM_CHROMA_QP_ADJ_IDC_CTX     1       ///< number of context models for chroma_qp_adjustment_idc
-#endif
 
 #define NUM_REF_NO_CTX                2       ///< number of context models for reference index
 #define NUM_TRANS_SUBDIV_FLAG_CTX     3       ///< number of context models for transform subdivision flags
@@ -277,7 +275,6 @@ INIT_DQP[NUMBER_OF_SLICE_TYPES][NUM_DELTA_QP_CTX] =
   { 154,  154,  154, },
 };
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
 static const UChar
 INIT_CHROMA_QP_ADJ_FLAG[NUMBER_OF_SLICE_TYPES][NUM_CHROMA_QP_ADJ_FLAG_CTX] =
 {
@@ -293,7 +290,6 @@ INIT_CHROMA_QP_ADJ_IDC[NUMBER_OF_SLICE_TYPES][NUM_CHROMA_QP_ADJ_IDC_CTX] =
   { 154, },
   { 154, },
 };
-#endif
 
 //--------------------------------------------------------------------------------------------------
 

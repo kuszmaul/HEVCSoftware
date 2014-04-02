@@ -103,9 +103,7 @@ public:
   virtual Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf ) = 0;
 
   virtual Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   virtual Void parseChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
 
   virtual Void parseIPCMInfo     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth) = 0;
 
@@ -172,28 +170,18 @@ public:
   Void decodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
   Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void decodeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   Void updateContextTables    ( SliceType eSliceType, Int iQp ) { m_pcEntropyDecoderIf->updateContextTables( eSliceType, iQp ); }
 
 
 private:
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void xDecodeTransform        ( Bool& bCodeDQP, Bool& isChromaQpAdjCoded, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU );
-#else
-  Void xDecodeTransform        ( Bool& bCodeDQP, TComTU &rTu, const Int quadtreeTULog2MinSizeInCU );
-#endif
 
 public:
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void decodeCoeff             ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded );
-#else
-  Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP );
-#endif
 
 };// END CLASS DEFINITION TDecEntropy
 
