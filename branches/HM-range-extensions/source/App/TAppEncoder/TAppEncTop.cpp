@@ -275,11 +275,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMISEINominalBlackLevelLumaCodeValue      ( m_nominalBlackLevelLumaCodeValue );
   m_cTEncTop.setTMISEINominalWhiteLevelLumaCodeValue      ( m_nominalWhiteLevelLumaCodeValue );
   m_cTEncTop.setTMISEIExtendedWhiteLevelLumaCodeValue     ( m_extendedWhiteLevelLumaCodeValue );
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   m_cTEncTop.setChromaSamplingFilterHintEnabled           ( m_chromaSamplingFilterSEIenabled );
   m_cTEncTop.setChromaSamplingHorFilterIdc                ( m_chromaSamplingHorFilterIdc );
   m_cTEncTop.setChromaSamplingVerFilterIdc                ( m_chromaSamplingVerFilterIdc );
-#endif
   m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
   m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
   m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );

@@ -96,11 +96,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   case SEI::CHROMA_SAMPLING_FILTER_HINT:
     fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
     break;
-#endif
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
     fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
@@ -168,11 +166,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   case SEI::CHROMA_SAMPLING_FILTER_HINT:
     xWriteSEIChromaSamplingFilterHint(*static_cast<const SEIChromaSamplingFilterHint*>(&sei)/*, sps*/);
     break;
-#endif
 #if RExt__O0099_TIME_CODE_SEI
   case SEI::TIME_CODE:
     xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
@@ -674,7 +670,6 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
 }
 #endif
 
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
 {
   //NOTE: RExt - Made unconditional to be consistent with the working text P1005
@@ -762,7 +757,6 @@ Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &
     }
   }
 }
-#endif
 
 Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 {

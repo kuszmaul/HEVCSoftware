@@ -606,7 +606,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapNominalBlackLevelLumaCodeValue",        m_nominalBlackLevelLumaCodeValue,          16, "Specifies luma sample value of the nominal black level assigned decoded pictures")
   ("SEIToneMapNominalWhiteLevelLumaCodeValue",        m_nominalWhiteLevelLumaCodeValue,         235, "Specifies luma sample value of the nominal white level assigned decoded pictures")
   ("SEIToneMapExtendedWhiteLevelLumaCodeValue",       m_extendedWhiteLevelLumaCodeValue,        300, "Specifies luma sample value of the extended dynamic range assigned decoded pictures")
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   ("SEIChromaSamplingFilterHint",                     m_chromaSamplingFilterSEIenabled,       false, "Control generation of the chroma sampling filter hint SEI message")
   ("SEIChromaSamplingHorizontalFilterType",           m_chromaSamplingHorFilterIdc,               2, "Defines the Index of the chroma sampling horizontal filter\n"
                                                                                                      "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
@@ -616,7 +615,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                                      "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
                                                                                                      "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI messasge"
                                                                                                      "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
-#endif  
   ("SEIFramePacking",                m_framePackingSEIEnabled,                 0, "Control generation of frame packing SEI messages")
   ("SEIFramePackingType",            m_framePackingSEIType,                    0, "Define frame packing arrangement\n"
                                                                                   "\t0: checkerboard - pixels alternatively represent either frames\n"

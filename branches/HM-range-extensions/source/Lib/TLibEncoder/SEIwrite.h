@@ -72,10 +72,8 @@ protected:
 #if RExt__O0099_TIME_CODE_SEI
   Void xWriteSEITimeCode(const SEITimeCode& sei);
 #endif
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
   Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
-#endif
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
   Void xWriteByteAlign();

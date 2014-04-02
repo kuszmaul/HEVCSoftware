@@ -173,10 +173,7 @@ protected:
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
   SEIKneeFunctionInfo*    xCreateSEIKneeFunctionInfo();
-
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   SEIChromaSamplingFilterHint* xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIdc);
-#endif
 
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
   Int xGetFirstSeiLocation (AccessUnit &accessUnit);
