@@ -3273,9 +3273,7 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
 
   TComDataCU *pCU = rTu.getCU();
   const Char alpha = pCU->getCrossComponentPredictionAlpha( rTu.GetAbsPartIdxTU( compID ), compID );
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
   const Int diffBitDepth = pCU->getSlice()->getSPS()->getDifferentialLumaChromaBitDepth();
-#endif
 
   for( Int y = 0; y < height; y++ )
   {
@@ -3283,22 +3281,14 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
     {
       for( Int x = 0; x < width; x++ )
       {
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
         pResiT[x] = pResiC[x] + (( alpha * rightShift( pResiL[x], diffBitDepth) ) >> 3);
-#else
-        pResiT[x] = pResiC[x] + (( alpha * pResiL[x] ) >> 3);
-#endif
       }
     }
     else
     {
       for( Int x = 0; x < width; x++ )
       {
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
         pResiT[x] = pResiC[x] - (( alpha * rightShift(pResiL[x], diffBitDepth) ) >> 3);
-#else
-        pResiT[x] = pResiC[x] - (( alpha * pResiL[x] ) >> 3);
-#endif
       }
     }
 

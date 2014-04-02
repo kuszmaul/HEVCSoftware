@@ -1873,9 +1873,7 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
 
         TComDataCU *pCU = rTu.getCU();
   const Int  absPartIdx = rTu.GetAbsPartIdxTU( compID );
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
   const Int diffBitDepth = pCU->getSlice()->getSPS()->getDifferentialLumaChromaBitDepth();
-#endif
 
   Char alpha = 0;
   Int SSxy  = 0;
@@ -1885,14 +1883,9 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   {
     for( UInt uiX = 0; uiX < width; uiX++ )
     {
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
       const Pel scaledResiL = rightShift( pResiL[ uiX ], diffBitDepth );
       SSxy += ( scaledResiL * pResiC[ uiX ] );
       SSxx += ( scaledResiL * scaledResiL   );
-#else
-      SSxy += ( pResiL[ uiX ] * pResiC[ uiX ] );
-      SSxx += ( pResiL[ uiX ] * pResiL[ uiX ] );
-#endif
     }
 
     pResiL += strideL;

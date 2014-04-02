@@ -871,9 +871,7 @@ public:
   // Bit-depth
   Int       getBitDepth     (ChannelType type)         { return m_uiBitDepth[type];   }
   Void      setBitDepth     (ChannelType type, Int u ) { m_uiBitDepth[type] = u;      }
-#if RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT
   Int       getDifferentialLumaChromaBitDepth() const  { return Int(m_uiBitDepth[CHANNEL_TYPE_LUMA]) - Int(m_uiBitDepth[CHANNEL_TYPE_CHROMA]); }
-#endif
   Int       getQpBDOffset   (ChannelType type) const   { return m_qpBDOffset[type];   }
   Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;      }
   Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
