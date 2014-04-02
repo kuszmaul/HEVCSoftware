@@ -1443,9 +1443,7 @@ TComSPS::TComSPS()
 , m_useGolombRiceGroupAdaptation(false)
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
 , m_alignCABACBeforeBypass    (false)
-#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)

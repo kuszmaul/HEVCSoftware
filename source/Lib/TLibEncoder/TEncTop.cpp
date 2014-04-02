@@ -639,9 +639,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseGolombRiceGroupAdaptation(m_useGolombRiceGroupAdaptation);
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
-#endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {

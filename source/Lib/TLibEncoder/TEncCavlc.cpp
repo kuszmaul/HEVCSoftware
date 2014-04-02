@@ -627,9 +627,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getUseGolombRiceGroupAdaptation()
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
        || pcSPS->getAlignCABACBeforeBypass()
-#endif
     );
 
   // Other SPS extension flags checked here.
@@ -671,9 +669,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseGolombRiceGroupAdaptation() ? 1 : 0),         "golomb_rice_group_adaptation_flag" );
 #endif
 #endif
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "align_cabac_before_bypass_data_flag" );
-#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.

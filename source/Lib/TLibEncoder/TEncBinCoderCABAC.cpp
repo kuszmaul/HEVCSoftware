@@ -255,13 +255,11 @@ Void TEncBinCABAC::encodeBinEP( UInt binValue )
 
   m_uiBinsCoded += m_binCountIncrement;
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   if (m_uiRange == 256)
   {
     encodeAlignedBinsEP(binValue, 1);
     return;
   }
-#endif
 
   m_uiLow <<= 1;
   if( binValue )
@@ -294,13 +292,11 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
     }
   }
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   if (m_uiRange == 256)
   {
     encodeAlignedBinsEP(binValues, numBins);
     return;
   }
-#endif
 
   while ( numBins > 8 )
   {
@@ -321,7 +317,6 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
   testAndWriteOut();
 }
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
 Void TEncBinCABAC::align()
 {
   m_uiRange = 256;
@@ -363,7 +358,6 @@ Void TEncBinCABAC::encodeAlignedBinsEP( UInt binValues, Int numBins )
     testAndWriteOut();
   }
 }
-#endif
 
 /**
  * \brief Encode terminating bin

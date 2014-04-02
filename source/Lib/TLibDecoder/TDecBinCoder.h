@@ -68,9 +68,7 @@ public:
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
 #endif
 
-#if RExt__PRCE1_B3_CABAC_EP_BIT_ALIGNMENT
   virtual Void  align             ()                                          = 0;
-#endif
 
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
 
