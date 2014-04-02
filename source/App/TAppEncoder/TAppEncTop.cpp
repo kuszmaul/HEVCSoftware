@@ -144,11 +144,7 @@ Void TAppEncTop::xInitLibCfg()
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                   ( m_iMaxDeltaQP  );
   m_cTEncTop.setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
-
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   m_cTEncTop.setMaxCUChromaQpAdjustmentDepth ( m_maxCUChromaQpAdjustmentDepth );
-#endif
-
   m_cTEncTop.setChromaCbQpOffset             ( m_cbQpOffset     );
   m_cTEncTop.setChromaCrQpOffset             ( m_crQpOffset  );
 

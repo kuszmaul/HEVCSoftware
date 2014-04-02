@@ -161,9 +161,7 @@ public:
   Void codeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 
   Void codeDeltaQP             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Void codeChromaQpAdjustment  ( TComDataCU* cu, UInt absPartIdx );
-#endif
 
   Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
@@ -229,10 +227,8 @@ private:
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
-#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

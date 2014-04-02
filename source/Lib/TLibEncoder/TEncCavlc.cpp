@@ -242,9 +242,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   pps_extension_flags[PPS_EXT__REXT] = (
              ( pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
           || pcPPS->getUseCrossComponentPrediction()
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
           || ( pcPPS->getChromaQpAdjTableSize() > 0 )
-#endif
           || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
      )
     ;
@@ -280,7 +278,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 
             WRITE_FLAG((pcPPS->getUseCrossComponentPrediction() ? 1 : 0),         "cross_component_prediction_flag" );
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
             WRITE_FLAG(UInt(pcPPS->getChromaQpAdjTableSize() > 0),                "chroma_qp_adjustment_enabled_flag" );
             if (pcPPS->getChromaQpAdjTableSize() > 0)
             {
@@ -293,7 +290,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
                 WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CrOffset,     "cr_qp_adjustnemt[i]");
               }
             }
-#endif
+
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "sao_chroma_bit_shift" );
             break;
@@ -1034,12 +1031,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "slice_chroma_qp_adjustment_enabled_flag");
     }
-#endif
 
     if (pcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
@@ -1375,12 +1370,10 @@ Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
 Void TEncCavlc::codeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#endif
 
 Void TEncCavlc::codeCoeffNxN    ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID )
 {

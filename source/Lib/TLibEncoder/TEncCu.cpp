@@ -96,10 +96,8 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
   }
 
   m_bEncodeDQP          = false;
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   m_CodeChromaQpAdjFlag = false;
   m_ChromaQpAdjIdc      = 0;
-#endif
 
   // initialize partition order.
   UInt* piTmp = &g_auiZscanToRaster[0];
@@ -259,12 +257,10 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU )
     setdQPFlag(true);
   }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   if ( pcCU->getSlice()->getUseChromaQpAdj() )
   {
     setCodeChromaQpAdjFlag(true);
   }
-#endif
 
   // Encode CU data
   xEncodeCU( pcCU, 0, 0 );
@@ -492,7 +488,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = lowestQP;
       }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
       m_ChromaQpAdjIdc = 0;
       if (pcSlice->getUseChromaQpAdj())
       {
@@ -504,7 +499,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         int lgMinCuSize = pcSlice->getSPS()->getLog2MinCodingBlockSize();
         m_ChromaQpAdjIdc = ((uiLPelX >> lgMinCuSize) + (uiTPelY >> lgMinCuSize)) % (pcSlice->getPPS()->getChromaQpAdjTableSize() + 1);
       }
-#endif
 
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
@@ -1199,12 +1193,12 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       setdQPFlag(true);
     }
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
+
     if( (g_uiMaxCUWidth>>uiDepth) == pcCU->getSlice()->getPPS()->getMinCuChromaQpAdjSize() && pcCU->getSlice()->getUseChromaQpAdj())
     {
       setCodeChromaQpAdjFlag(true);
     }
-#endif
+
     for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++, uiAbsPartIdx+=uiQNumParts )
     {
       uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
@@ -1223,12 +1217,10 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     setdQPFlag(true);
   }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuChromaQpAdjSize() && pcCU->getSlice()->getUseChromaQpAdj())
   {
     setCodeChromaQpAdjFlag(true);
   }
-#endif
 
   if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
   {
@@ -1281,13 +1273,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Bool codeChromaQpAdj = getCodeChromaQpAdjFlag();
   m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, bCodeDQP, codeChromaQpAdj );
   setCodeChromaQpAdjFlag( codeChromaQpAdj );
-#else
-  m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, bCodeDQP );
-#endif
   setdQPFlag( bCodeDQP );
 
   // --- write terminating bit ---
@@ -1461,9 +1449,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           // set MC parameters
           rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setCUTransquantBypassSubParts( bTransquantBypassFlag, 0, uhDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
           rpcTempCU->setChromaQpAdjSubParts( bTransquantBypassFlag ? 0 : m_ChromaQpAdjIdc, 0, uhDepth );
-#endif
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
@@ -1557,9 +1543,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uhDepth );
-#endif
 
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
@@ -1600,9 +1584,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
-#endif
 
   Bool bSeparateLumaChroma = true; // choose estimation mode
 
@@ -1650,13 +1632,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
   m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP, codeChromaQpAdjFlag );
   setCodeChromaQpAdjFlag( codeChromaQpAdjFlag );
-#else
-  m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP );
-#endif
   setdQPFlag( bCodeDQP );
 
   m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
@@ -1689,9 +1667,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DC_IDX, 0, uiDepth );
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, DC_IDX, 0, uiDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
-#endif
 
   // intra BV search
   Bool bValid = m_pcPredSearch->predIntraBCSearch ( rpcTempCU,
@@ -1740,9 +1716,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
-#endif
 
   m_pcPredSearch->IPCMSearch( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth]);
 

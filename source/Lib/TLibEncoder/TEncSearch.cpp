@@ -6573,12 +6573,8 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     }
 
     Bool codeDeltaQp = false;
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     Bool codeChromaQpAdj = false;
     m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), codeDeltaQp, codeChromaQpAdj );
-#else
-    m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), codeDeltaQp );
-#endif
 
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }

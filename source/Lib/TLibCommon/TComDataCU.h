@@ -98,9 +98,7 @@ private:
   Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
   Char*          m_phQP;               ///< array of QP values
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed)
-#endif
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
@@ -269,12 +267,10 @@ public:
   Void          setCodedQP            ( Char qp )               { m_codedQP = qp;             }
   Char          getCodedQP            ()                        { return m_codedQP;           }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
   UChar*        getChromaQpAdj        ()                        { return m_ChromaQpAdj;       }
   UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  }
   Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   }
   Void          setChromaQpAdjSubParts( UChar val, Int absPartIdx, Int depth );
-#endif
 
   Bool          isLosslessCoded       ( UInt absPartIdx );
 

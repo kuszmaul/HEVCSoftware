@@ -349,7 +349,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             READ_FLAG( uiCode, "cross_component_prediction_flag");
             pcPPS->setUseCrossComponentPrediction(uiCode != 0);
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
             READ_FLAG( uiCode, "chroma_qp_adjustment_enabled_flag");
             if (uiCode == 0)
             {
@@ -372,7 +371,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               }
               assert(pcPPS->getChromaQpAdjTableSize() == tableSizeMinus1 + 1);
             }
-#endif
 
             READ_UVLC( uiCode, "sao_luma_bit_shift");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_LUMA, uiCode);
@@ -1346,12 +1344,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     if (rpcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       READ_FLAG(uiCode, "slice_chroma_qp_adjustment_enabled_flag"); rpcSlice->setUseChromaQpAdj(uiCode != 0);
     }
-#endif
 
     if (rpcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
@@ -1729,12 +1725,10 @@ Void TDecCavlc::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setQPSubParts( qp, uiAbsQpCUPartIdx, uiQpCUDepth );
 }
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
 Void TDecCavlc::parseChromaQpAdjustment( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
-#endif
 
 Void TDecCavlc::parseCoeffNxN( TComTU &/*rTu*/, ComponentID /*compID*/ )
 {

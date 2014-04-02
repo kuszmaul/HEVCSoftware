@@ -108,9 +108,7 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
     chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
     chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
 
-#if RExt__O0044_CU_ADAPTIVE_CHROMA_QP_OFFSET
     chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[int(compID)-1];
-#endif
   }
 
   *this = QpParam(cu.getQP( 0 ),
