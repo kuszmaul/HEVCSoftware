@@ -190,12 +190,10 @@ class ProfileTierLevel
   Bool              m_interlacedSourceFlag;
   Bool              m_nonPackedConstraintFlag;
   Bool              m_frameOnlyConstraintFlag;
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   UInt              m_bitDepthConstraintValue;
   ChromaFormat      m_chromaFormatConstraintValue;
   Bool              m_intraConstraintFlag;
   Bool              m_lowerBitRateConstraintFlag;
-#endif
 
 public:
   ProfileTierLevel();
@@ -227,7 +225,6 @@ public:
   Bool getFrameOnlyConstraintFlag() const          { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b)          { m_frameOnlyConstraintFlag = b; }
 
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   UInt getBitDepthConstraint() const               { return m_bitDepthConstraintValue; }
   Void setBitDepthConstraint(UInt bitDepth)        { m_bitDepthConstraintValue=bitDepth; }
 
@@ -239,7 +236,6 @@ public:
 
   Bool getLowerBitRateConstraintFlag() const       { return m_lowerBitRateConstraintFlag; }
   Void setLowerBitRateConstraintFlag(Bool b)       { m_lowerBitRateConstraintFlag = b; }
-#endif
 };
 
 

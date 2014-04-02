@@ -87,12 +87,10 @@ protected:
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   UInt          m_bitDepthConstraint;
   ChromaFormat  m_chromaFormatConstraint;
   Bool          m_intraConstraintFlag;
   Bool          m_lowerBitRateConstraintFlag;
-#endif
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;

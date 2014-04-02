@@ -1126,7 +1126,6 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   if (ptl->getProfileIdc() == Profile::MAINREXT)
   {
     const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
@@ -1146,13 +1145,10 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   }
   else
   {
-#endif
     WRITE_CODE(0x0000 , 16, "XXX_reserved_zero_44bits[0..15]");
     WRITE_CODE(0x0000 , 16, "XXX_reserved_zero_44bits[16..31]");
     WRITE_CODE(0x000  , 12, "XXX_reserved_zero_44bits[32..43]");
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   }
-#endif
 }
 
 /**

@@ -1574,7 +1574,6 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   if (ptl->getProfileIdc() == Profile::MAINREXT)
   {
     UInt maxBitDepth=0;
@@ -1602,13 +1601,10 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
     ptl->setChromaFormatConstraint(CHROMA_420);
     ptl->setIntraConstraintFlag(false);
     ptl->setLowerBitRateConstraintFlag(true);
-#endif
     READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[0..15]");
     READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[16..31]");
     READ_CODE(12, uiCode, "XXX_reserved_zero_44bits[32..43]");
-#if RExt__O1005V4_CONSTRAINT_FLAGS
   }
-#endif
 }
 
 Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )
