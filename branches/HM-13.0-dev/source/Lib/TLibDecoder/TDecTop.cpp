@@ -385,6 +385,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         m_apcSlicePilot->setNoOutputPriorPicsFlag(true);
       }
     }
+    else
+    {
+      m_apcSlicePilot->setNoOutputPriorPicsFlag(false);
+    }
 
     if(m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)
     {
