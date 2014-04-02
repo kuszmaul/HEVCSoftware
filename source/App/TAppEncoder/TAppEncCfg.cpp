@@ -325,10 +325,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_startOfCodedInterval;
   string cfg_codedPivotValue;
   string cfg_targetPivotValue;
-#if RExt__P0050_KNEE_FUNCTION_SEI
   string cfg_kneeSEIInputKneePointValue;
   string cfg_kneeSEIOutputKneePointValue;
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   string cfg_DisplayPrimariesCode;
   string cfg_DisplayWhitePointCode;
@@ -655,7 +653,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if RExt__O0099_TIME_CODE_SEI
   ("SEITimeCode",                    m_timeCodeSEIEnabled,                 false,  "Control generation of time code information SEI message")
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   ("SEIKneeFunctionInfo",                 m_kneeSEIEnabled,               false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                   m_kneeSEIId,                        0, "Specifies Id of Knee function SEI message for a given session")
   ("SEIKneeFunctionCancelFlag",           m_kneeSEICancelFlag,            false, "Indicates that Knee function SEI message cancels the persistance or follows")
@@ -668,7 +665,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIKneeFunctionNumKneePointsMinus1",  m_kneeSEINumKneePointsMinus1,       2, "Specifies the number of knee points - 1")
   ("SEIKneeFunctionInputKneePointValue",  cfg_kneeSEIInputKneePointValue,     string("600 800 900"), "Array of input knee point")
   ("SEIKneeFunctionOutputKneePointValue", cfg_kneeSEIOutputKneePointValue,    string("100 250 450"), "Array of output knee point")
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   ("SEIMasteringDisplayColourVolume", m_masteringDisplayColourVolumeSEIEnabled,                 false,  "Control generation of mastering display colour volume SEI messages")
   ("SEIMasteringDisplayMaxLuminance", m_masteringDisplayMaxLuminance,  10000u, "Specifies the mastering display maximum luminance value in units of candela per square metre (32-bit code value)")
@@ -1001,7 +997,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_targetPivotValue = NULL;
     }
   }
-#if RExt__P0050_KNEE_FUNCTION_SEI
+
   if( m_kneeSEIEnabled && !m_kneeSEICancelFlag )
   {
     Char* pcInputKneePointValue  = cfg_kneeSEIInputKneePointValue.empty()  ? NULL : strdup(cfg_kneeSEIInputKneePointValue.c_str());
@@ -1026,7 +1022,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       i++;
     }
   }
-#endif
 
   // check validity of input parameters
   xCheckParameter();
@@ -1679,7 +1674,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_nominalBlackLevelLumaCodeValue >= m_nominalWhiteLevelLumaCodeValue, "SEIToneMapNominalWhiteLevelLumaCodeValue shall be greater than SEIToneMapNominalBlackLevelLumaCodeValue");
     xConfirmPara( m_extendedWhiteLevelLumaCodeValue < m_nominalWhiteLevelLumaCodeValue, "SEIToneMapExtendedWhiteLevelLumaCodeValue shall be greater than or equal to SEIToneMapNominalWhiteLevelLumaCodeValue");
   }
-#if RExt__P0050_KNEE_FUNCTION_SEI
+
   if (m_kneeSEIEnabled && !m_kneeSEICancelFlag)
   {
     xConfirmPara( m_kneeSEINumKneePointsMinus1 < 0 || m_kneeSEINumKneePointsMinus1 > 998, "SEIKneeFunctionNumKneePointsMinus1 must be in the range of 0 to 998");
@@ -1692,7 +1687,7 @@ Void TAppEncCfg::xCheckParameter()
       }
     }
   }
-#endif
+
   if ( m_RCEnableRateControl )
   {
     if ( m_RCForceIntraQP )

@@ -289,7 +289,6 @@ protected:
 #if RExt__O0099_TIME_CODE_SEI
   Bool      m_timeCodeSEIEnabled;
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
@@ -302,7 +301,6 @@ protected:
   Int       m_kneeSEINumKneePointsMinus1;
   Int*      m_kneeSEIInputKneePoint;
   Int*      m_kneeSEIOutputKneePoint;
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI 
   Bool      m_masteringDisplayColourVolumeSEIEnabled;
   UInt      m_masteringDisplayMaxLuminance;
@@ -734,7 +732,6 @@ public:
   Void         setTimeCodeSEIEnabled(Bool b)                  { m_timeCodeSEIEnabled = b; }
   Bool         getTimeCodeSEIEnabled()                        { return m_timeCodeSEIEnabled; }
 #endif
-#if RExt__P0050_KNEE_FUNCTION_SEI
   Void  setKneeSEIEnabled(Int b)                          { m_kneeSEIEnabled = b; }
   Bool  getKneeSEIEnabled()                               { return m_kneeSEIEnabled; }
   Void  setKneeSEIId(Int b)                               { m_kneeSEIId = b; }
@@ -759,7 +756,6 @@ public:
   Int*  getKneeSEIInputKneePoint()                        { return m_kneeSEIInputKneePoint; }
   Void  setKneeSEIOutputKneePoint(Int *p)                 { m_kneeSEIOutputKneePoint = p; }
   Int*  getKneeSEIOutputKneePoint()                       { return m_kneeSEIOutputKneePoint; }
-#endif
 #if RExt__P0084_MASTERING_DISPLAY_COLOUR_VOLUME_SEI
   Void  setMasteringDisplayColourVolumeSEIEnabled(Bool b)      { m_masteringDisplayColourVolumeSEIEnabled = b; }
   Bool  getMasteringDisplayColourVolumeSEIEnabled()            { return m_masteringDisplayColourVolumeSEIEnabled; }
