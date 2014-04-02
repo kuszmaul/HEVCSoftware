@@ -181,7 +181,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0099_TIME_CODE_SEI,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__O1005V4_CONSTRAINT_FLAGS,                                 settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS,            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0044_ADDITIONAL_TIER_FOR_16BIT_444,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0050_KNEE_FUNCTION_SEI,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__P0066_CCP_MIXED_BIT_DEPTH_SUPPORT,                        settingNameWidth, settingValueWidth);

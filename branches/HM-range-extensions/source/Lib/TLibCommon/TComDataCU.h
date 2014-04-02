@@ -369,11 +369,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   UChar         getNumPartInter       ( const UInt uiAbsPartIdx = 0 );
-#else
-  UChar         getNumPartInter       ( );
-#endif
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
 
   // -------------------------------------------------------------------------------------------------------------------
