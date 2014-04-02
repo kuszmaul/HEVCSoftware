@@ -127,11 +127,7 @@ TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
   if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
 
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
 Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth, UInt lumaBitShift, UInt chromaBitShift )
-#else
-Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth )
-#endif
 {
   destroy();
 
@@ -156,11 +152,7 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))];
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
     m_offsetStepLog2  [compIdx] = isLuma(ComponentID(compIdx))? lumaBitShift : chromaBitShift;
-#else
-    m_offsetStepLog2  [compIdx] = max(bitDepthSample - MAX_SAO_TRUNCATED_BITDEPTH, 0);
-#endif
     g_saoMaxOffsetQVal[compIdx] = (1<<(min(bitDepthSample,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; //Table 9-32, inclusive
   }
 

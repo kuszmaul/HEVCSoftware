@@ -62,11 +62,7 @@ public:
   TComSampleAdaptiveOffset();
   virtual ~TComSampleAdaptiveOffset();
   Void SAOProcess(TComPic* pDecPic);
-#if RExt__P0222_SAO_OFFSET_BIT_SHIFT
   Void create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth, UInt lumaBitShift, UInt chromaBitShift );
-#else
-  Void create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth );
-#endif
   Void destroy();
   Void reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams);
   Void PCMLFDisableProcess (TComPic* pcPic);
