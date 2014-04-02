@@ -265,7 +265,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize);
       break;
 #endif   
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
     case SEI::CHROMA_SAMPLING_FILTER_HINT:
       //NOTE: RExt - Made unconditional on SPS to be consistent with the working text P1005
       //if (!sps)
@@ -278,7 +277,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIChromaSamplingFilterHint((SEIChromaSamplingFilterHint&) *sei, payloadSize/*, sps*/);
       //}
       break;
-#endif
     case SEI::KNEE_FUNCTION_INFO:
       sei = new SEIKneeFunctionInfo;
       xParseSEIKneeFunctionInfo((SEIKneeFunctionInfo&) *sei, payloadSize);
@@ -885,7 +883,6 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
 }
 #endif
 
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt /*payloadSize*//*, TComSPS* sps*/)
 {
   UInt uiCode;
@@ -984,7 +981,6 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
   //  printf("ChromaLocInfoPresentFlag = false\nNo message read\n");
   //}
 }
-#endif
 
 Void SEIReader::xParseSEIKneeFunctionInfo(SEIKneeFunctionInfo& sei, UInt payloadSize){
   Int i;

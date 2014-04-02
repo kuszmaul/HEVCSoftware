@@ -76,9 +76,7 @@ protected:
 #if RExt__O0099_TIME_CODE_SEI
   Void xParseSEITimeCode              (SEITimeCode& sei, UInt payloadSize);
 #endif
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
   Void xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/);
-#endif
   Void xParseSEIKneeFunctionInfo      (SEIKneeFunctionInfo& sei, UInt payloadSize);
   Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei, UInt payloadSize);
   Void xParseByteAlign();

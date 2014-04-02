@@ -79,9 +79,7 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
     CHROMA_SAMPLING_FILTER_HINT          = 137,
-#endif
 #if RExt__O0099_TIME_CODE_SEI
     TIME_CODE                            = 138,
 #endif
@@ -412,7 +410,6 @@ public:
   std::vector<Int> m_kneeOutputKneePoint;
 };
 
-#if RExt__O0079_CHROMA_SAMPLING_FILTER_HINT_SEI
 class SEIChromaSamplingFilterHint : public SEI
 {
 public:
@@ -451,7 +448,6 @@ public:
   Int*  m_horTapLengthMinus1;
   Int** m_horFilterCoeff;
 };
-#endif
 
 class SEIMasteringDisplayColourVolume : public SEI
 {
