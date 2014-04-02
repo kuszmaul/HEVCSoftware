@@ -2188,19 +2188,11 @@ Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx
   memset( m_puhHeight + uiAbsPartIdx, uiHeight, sizeof(UChar)*uiCurrPartNumb );
 }
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
 UChar TComDataCU::getNumPartInter(const UInt uiAbsPartIdx)
-#else
-UChar TComDataCU::getNumPartInter()
-#endif
 {
   UChar iNumPart = 0;
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   switch ( m_pePartSize[uiAbsPartIdx] )
-#else
-  switch ( m_pePartSize[0] )
-#endif
   {
     case SIZE_2Nx2N:    iNumPart = 1; break;
     case SIZE_2NxN:     iNumPart = 2; break;

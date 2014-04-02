@@ -1280,12 +1280,10 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   assert(0);
 }
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
 Void TEncCavlc::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#endif
 
 Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

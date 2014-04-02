@@ -199,12 +199,10 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
 Void TEncEntropy::encodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codePartSizeIntraBC( pcCU, uiAbsPartIdx );
 }
-#endif
 
 /** Encode I_PCM information.
  * \param pcCU pointer to CU

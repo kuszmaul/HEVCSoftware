@@ -152,10 +152,8 @@ protected:
   Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
                               TComDataCU*& rpcTempCU,
                               Bool         bUse1DSearchFor8x8
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
                              ,PartSize     eSize
                              ,Double&      rdCost
-#endif
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
 

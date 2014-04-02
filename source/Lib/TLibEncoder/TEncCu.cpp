@@ -754,7 +754,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           if (!bSkipIntraBlockCopySearch)
           {
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
             Double adIntraBcCost[NUMBER_OF_PART_SIZES] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
             xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2Nx2N, adIntraBcCost[SIZE_2Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -806,10 +805,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
               }
             }
-#else
-            xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8 DEBUG_STRING_PASS_INTO(sDebug));
-            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#endif
           }
         }
 
@@ -823,11 +818,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     // If Intra BC keep last coded Mv
     if( rpcBestCU->getPredictionMode(0) == MODE_INTRABC )
     {
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
       rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
-#else
-      rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv(0) );
-#endif
     }
 
     m_pcEntropyCoder->resetBits();
@@ -1261,9 +1252,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_pcEntropyCoder->encodeIntraBCFlag( pcCU, uiAbsPartIdx );
     if ( pcCU->isIntraBC( uiAbsPartIdx ) )
     {
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
       m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, uiAbsPartIdx );
-#endif
       m_pcEntropyCoder->encodeIntraBC( pcCU, uiAbsPartIdx );
     }
   }
@@ -1685,11 +1674,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 
 Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                   TComDataCU *&rpcTempCU,
-                                  Bool         bUse1DSearchFor8x8
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
-                                 ,PartSize     eSize
-                                 ,Double      &rdCost
-#endif
+                                  Bool         bUse1DSearchFor8x8,
+                                  PartSize     eSize,
+                                  Double      &rdCost
                                   DEBUG_STRING_FN_DECLARE(sDebug))
 {
   DEBUG_STRING_NEW(sTest)
@@ -1697,11 +1684,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
-#else
-  rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-#endif
   rpcTempCU->setPredModeSubParts( MODE_INTRABC, 0, uiDepth );
 
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DC_IDX, 0, uiDepth );
@@ -1724,9 +1707,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   {
     m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false DEBUG_STRING_PASS_INTO(sTest) );
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
     rdCost = rpcTempCU->getTotalCost();
-#endif
 
 #ifdef DEBUG_STRING
     DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
@@ -1735,12 +1716,10 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     xCheckDQP( rpcTempCU );
     xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
   }
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   else
   {
     rdCost = MAX_DOUBLE;
   }
-#endif
 }
 
 /** Check R-D costs for a CU with PCM mode.

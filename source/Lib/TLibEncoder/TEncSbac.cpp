@@ -550,7 +550,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
   }
 }
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+
 Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   const UInt uiSymbol = pcCU->getPartitionSize(uiAbsPartIdx);
@@ -585,7 +585,6 @@ Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
     }
   }
 }
-#endif
 
 /** code prediction mode
  * \param pcCU
@@ -819,7 +818,6 @@ Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   const UInt iNumPart = pcCU->getNumPartInter( uiAbsPartIdx );
   const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - pcCU->getDepth(uiAbsPartIdx) ) << 1 ) ) >> 4;
@@ -828,9 +826,6 @@ Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
   {
     codeMvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
   }
-#else
-  codeMvd(pcCU, uiAbsPartIdx, REF_PIC_LIST_INTRABC);
-#endif
 }
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )

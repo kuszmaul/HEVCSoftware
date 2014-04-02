@@ -477,9 +477,6 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 
   if ( uiSymbol )
   {
-#if !RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
-    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-#endif
     pcCU->setPredModeSubParts( MODE_INTRABC, uiAbsPartIdx, uiDepth );
     pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
     pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
@@ -674,7 +671,6 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 }
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
 /** parse partition size for IBC
 * \param pcCU
 * \param uiAbsPartIdx
@@ -709,7 +705,6 @@ Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 
   pcCU->setPartSizeSubParts( (PartSize)uiMode, uiAbsPartIdx, uiDepth ) ;
 }
-#endif
 
 /** parse prediction mode
  * \param pcCU
