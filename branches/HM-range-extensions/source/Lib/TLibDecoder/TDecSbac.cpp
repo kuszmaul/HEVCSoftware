@@ -1075,6 +1075,7 @@ Void TDecSbac::parseChromaQpAdjustment( TComDataCU* cu, UInt absPartIdx, UInt de
    *              1 if outer flag is set and there is no inner flag
    *              1+ otherwise */
   cu->setChromaQpAdjSubParts( symbol, absPartIdx, depth );
+  cu->setCodedChromaQpAdj(symbol);
 }
 
 Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
