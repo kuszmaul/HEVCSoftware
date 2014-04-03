@@ -1348,6 +1348,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_FLAG(uiCode, "slice_chroma_qp_adjustment_enabled_flag"); rpcSlice->setUseChromaQpAdj(uiCode != 0);
     }
+    else rpcSlice->setUseChromaQpAdj(false);
 
     if (rpcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
