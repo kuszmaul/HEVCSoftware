@@ -191,7 +191,7 @@ public:
                TComList<TComPicYuv*>& rcListPicYuvRecOut,
                std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
 
-  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR); }
+  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, m_printSequenceMSE); }
 
 };
 

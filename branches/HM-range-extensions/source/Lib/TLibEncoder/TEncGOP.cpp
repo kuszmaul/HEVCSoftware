@@ -482,7 +482,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
 // ====================================================================================================================
 Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic,
                            TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP,
-                           Bool isField, Bool isTff, const InputColourSpaceConversion snr_conversion )
+                           Bool isField, Bool isTff, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE )
 {
   TComPic*        pcPic;
   TComPicYuv*     pcPicYuvRecOut;
@@ -1785,7 +1785,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         accessUnit.insert(it, new NALUnitEBSP(nalu));
       }
 
-      xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
+      xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
 
       //In case of field coding, compute the interlaced PSNR for both fields
       if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)) && (pcPic->getPOC()%m_iGopSize != 1))
@@ -1798,7 +1798,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           iterPic ++;
         }
         TComPic* pcPicFirstField = *(iterPic);
-        xCalculateInterlacedAddPSNR(pcPicFirstField, pcPic, pcPicFirstField->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
+        xCalculateInterlacedAddPSNR(pcPicFirstField, pcPic, pcPicFirstField->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
       }
       else if (isField && pcPic->getPOC()!= 0 && (pcPic->getPOC()%m_iGopSize == 0))
       {
@@ -1810,7 +1810,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           iterPic ++;
         }
         TComPic* pcPicFirstField = *(iterPic);
-        xCalculateInterlacedAddPSNR(pcPic, pcPicFirstField, pcPic->getPicYuvRec(), pcPicFirstField->getPicYuvRec(), accessUnit, dEncTime, snr_conversion );
+        xCalculateInterlacedAddPSNR(pcPic, pcPicFirstField, pcPic->getPicYuvRec(), pcPicFirstField->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
       }
 
       if (!digestStr.empty())
@@ -2045,7 +2045,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   assert ( (m_iNumPicCoded == iNumPicRcvd) );
 }
 
-Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR)
+Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR, const Bool printSequenceMSE)
 {
   assert (uiNumAllPicCoded == m_gcAnalyzeAll.getNumPic());
 
@@ -2060,24 +2060,24 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
 
   //-- all
   printf( "\n\nSUMMARY --------------------------------------------------------\n" );
-  m_gcAnalyzeAll.printOut('a', chFmt, printMSEBasedSNR);
+  m_gcAnalyzeAll.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE);
 
   printf( "\n\nI Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeI.printOut('i', chFmt, printMSEBasedSNR);
+  m_gcAnalyzeI.printOut('i', chFmt, printMSEBasedSNR, printSequenceMSE);
 
   printf( "\n\nP Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeP.printOut('p', chFmt, printMSEBasedSNR);
+  m_gcAnalyzeP.printOut('p', chFmt, printMSEBasedSNR, printSequenceMSE);
 
   printf( "\n\nB Slices--------------------------------------------------------\n" );
-  m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR);
+  m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummaryOut(chFmt);
+  m_gcAnalyzeAll.printSummaryOut(chFmt, printSequenceMSE);
 #endif
 #if _SUMMARY_PIC_
-  m_gcAnalyzeI.printSummary(chFmt,'I');
-  m_gcAnalyzeP.printSummary(chFmt,'P');
-  m_gcAnalyzeB.printSummary(chFmt,'B');
+  m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE,'I');
+  m_gcAnalyzeP.printSummary(chFmt, printSequenceMSE,'P');
+  m_gcAnalyzeB.printSummary(chFmt, printSequenceMSE,'B');
 #endif
 
   if(isField)
@@ -2088,7 +2088,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     // NOTE: RExt - prior to the above statement, the interlace analyser does not contain the correct total number of bits.
 
     printf( "\n\nSUMMARY INTERLACED ---------------------------------------------\n" );
-    m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR);
+    m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
     m_gcAnalyzeAll_in.printSummaryOut(chFmt);
@@ -2262,7 +2262,7 @@ static const Char* nalUnitTypeToString(NalUnitType type)
 }
 #endif
 
-Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion )
+Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion, const Bool printFrameMSE )
 {
   Double  dPSNR[MAX_NUM_COMPONENT];
 
@@ -2369,6 +2369,10 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 #endif
 
   printf(" [Y %6.4lf dB    U %6.4lf dB    V %6.4lf dB]", dPSNR[COMPONENT_Y], dPSNR[COMPONENT_Cb], dPSNR[COMPONENT_Cr] );
+  if (printFrameMSE)
+  {
+    printf(" [Y MSE %6.4lf  U MSE %6.4lf  V MSE %6.4lf]", MSEyuvframe[COMPONENT_Y], MSEyuvframe[COMPONENT_Cb], MSEyuvframe[COMPONENT_Cr] );
+  }
   printf(" [ET %5.0f ]", dEncTime );
 
   for (Int iRefList = 0; iRefList < 2; iRefList++)
@@ -2386,7 +2390,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 
 Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic* pcPicOrgSecondField,
                                            TComPicYuv* pcPicRecFirstField, TComPicYuv* pcPicRecSecondField,
-                                           const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion )
+                                           const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion, const Bool printFrameMSE )
 {
   Double  dPSNR[MAX_NUM_COMPONENT];
   TComPic    *apcPicOrgFields[2]={pcPicOrgFirstField, pcPicOrgSecondField};
@@ -2460,6 +2464,10 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
   m_gcAnalyzeAll_in.addResult (dPSNR, (Double)uibits, MSEyuvframe);
 
   printf("\n                                      Interlaced frame %d: [Y %6.4lf dB    U %6.4lf dB    V %6.4lf dB]", pcPicOrgSecondField->getPOC()/2 , dPSNR[COMPONENT_Y], dPSNR[COMPONENT_Cb], dPSNR[COMPONENT_Cr] );
+  if (printFrameMSE)
+  {
+    printf(" [Y MSE %6.4lf  U MSE %6.4lf  V MSE %6.4lf]", MSEyuvframe[COMPONENT_Y], MSEyuvframe[COMPONENT_Cb], MSEyuvframe[COMPONENT_Cr] );
+  }
 
   for(UInt fieldNum=0; fieldNum<2; fieldNum++)
   {

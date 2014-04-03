@@ -357,6 +357,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("OutputInternalColourSpace",  m_outputInternalColourSpace,        false, "If true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
   ("InputChromaFormat",     tmpInputChromaFormat,                      420, "InputChromaFormatIDC")
   ("MSEBasedSequencePSNR",  m_printMSEBasedSequencePSNR,             false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
+  ("PrintFrameMSE",         m_printFrameMSE,                         false, "0 (default) emit only bit count and PSNRs for each frame, 1 = also emit MSE values")
+  ("PrintSequenceMSE",      m_printSequenceMSE,                      false, "0 (default) emit only bit rate and PSNRs for the whole sequence, 1 = also emit MSE values")
   ("ChromaFormatIDC,-cf",   tmpChromaFormat,                             0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",       m_conformanceMode,                           0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
   ("HorizontalPadding,-pdx",m_aiPad[0],                                  0, "Horizontal source padding for conformance window mode 2")
@@ -1733,6 +1735,8 @@ Void TAppEncCfg::xPrintParameter()
   printf("Real     Format                   : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format                   : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Sequence PSNR output              : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
+  printf("Sequence MSE output               : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
+  printf("Frame MSE output                  : %s\n", (m_printFrameMSE    ? "Enabled" : "Disabled") );
   if (m_isField)
   {
     printf("Frame/Field                       : Field based coding\n");
