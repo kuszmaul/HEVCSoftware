@@ -40,10 +40,24 @@
 
 //! \ingroup TLibCommon
 //! \{
+#define HARMONIZE_GOP_FIRST_FIELD_COUPLE  1
+#define FIX_FIELD_DEPTH                 1
+#define EFFICIENT_FIELD_IRAP            1
+#define ALLOW_RECOVERY_POINT_AS_RAP     1
 #define BUGFIX_INTRAPERIOD 1
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 
+#define SAO_SGN_FUNC 1
+
 #define FIX1172 1 ///< fix ticket #1172
+
+#define SETTING_PIC_OUTPUT_MARK     1
+#define SETTING_NO_OUT_PIC_PRIOR    1
+#define FIX_EMPTY_PAYLOAD_NAL       1
+#define FIX_WRITING_OUTPUT          1
+#define FIX_OUTPUT_EOS              1
+
+#define FIX_POC_CRA_NORASL_OUTPUT   1
 
 #define MAX_NUM_PICS_IN_SOP           1024
 

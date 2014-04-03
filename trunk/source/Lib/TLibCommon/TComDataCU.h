@@ -347,7 +347,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
-  UChar         getNumPartInter       ();
+  UChar         getNumPartitions       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
   
   // -------------------------------------------------------------------------------------------------------------------
