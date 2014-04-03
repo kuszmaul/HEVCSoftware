@@ -100,10 +100,10 @@ public:
   }
 
 
-  Double calculateCombinedSNR(const ChromaFormat chFmt)
+  Void calculateCombinedValues(const ChromaFormat chFmt, Double &PSNRyuv, Double &MSEyuv)
   {
-    Double MSEyuv = 0;
-    Int    scale  = 0;
+    MSEyuv    = 0;
+    Int scale = 0;
 
     Int maximumBitDepth = g_bitDepth[0];
     for (UInt channelTypeIndex = 1; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
@@ -128,12 +128,11 @@ public:
     }
 
     MSEyuv /= Double(scale);  // i.e. divide by 6 for 4:2:0, 8 for 4:2:2 etc.
-    Double PSNRyuv = (MSEyuv==0 ? 999.99 : 10*log10((maxval*maxval)/MSEyuv));
-    return PSNRyuv;
+    PSNRyuv = (MSEyuv==0 ? 999.99 : 10*log10((maxval*maxval)/MSEyuv));
   }
 
 
-  Void    printOut ( Char cDelim, const ChromaFormat chFmt, const Bool printMSEBasedSNR )
+  Void    printOut ( Char cDelim, const ChromaFormat chFmt, const Bool printMSEBasedSNR, const Bool printSequenceMSE )
   {
     Double dFps     =   m_dFrmRate; //--CFG_KDY
     Double dScale   = dFps / 1000 / (Double)m_uiNumPic;
@@ -162,12 +161,23 @@ public:
       case CHROMA_400:
         if (printMSEBasedSNR)
         {
-          printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR\n" );
+          printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR" );
+
+          if (printSequenceMSE) printf( "    Y-MSE\n" );
+          else printf("\n");
+
           //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-          printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
+          printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf",
                  getNumPic(), cDelim,
                  getBits() * dScale,
                  getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+
+          if (printSequenceMSE)
+          {
+            printf( "  %8.4lf\n", m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic() );
+          }
+          else printf("\n");
+
           printf( "From MSE:\t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
                  getNumPic(), cDelim,
                  getBits() * dScale,
@@ -175,30 +185,59 @@ public:
         }
         else
         {
-          printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR\n" );
+          printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR" );
+
+          if (printSequenceMSE) printf( "    Y-MSE\n" );
+          else printf("\n");
+
           //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-          printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf\n",
+          printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf",
                  getNumPic(), cDelim,
                  getBits() * dScale,
                  getPsnr(COMPONENT_Y) / (Double)getNumPic() );
+
+          if (printSequenceMSE)
+          {
+            printf( "  %8.4lf\n", m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic() );
+          }
+          else printf("\n");
         }
         break;
       case CHROMA_420:
       case CHROMA_422:
       case CHROMA_444:
         {
-          Double PSNRyuv = calculateCombinedSNR(chFmt);
+          Double PSNRyuv = MAX_DOUBLE;
+          Double MSEyuv  = MAX_DOUBLE;
+          
+          calculateCombinedValues(chFmt, PSNRyuv, MSEyuv);
+
           if (printMSEBasedSNR)
           {
-            printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+            printf( "         \tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR " );
+
+            if (printSequenceMSE) printf( " Y-MSE     "  "U-MSE     "  "V-MSE    "  "YUV-MSE \n" );
+            else printf("\n");
+
             //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-            printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+            printf( "Average: \t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf",
                    getNumPic(), cDelim,
                    getBits() * dScale,
                    getPsnr(COMPONENT_Y) / (Double)getNumPic(),
                    getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
                    getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
                    PSNRyuv );
+
+            if (printSequenceMSE)
+            {
+              printf( "  %8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                     m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic(),
+                     m_MSEyuvframe[COMPONENT_Cb] / (Double)getNumPic(),
+                     m_MSEyuvframe[COMPONENT_Cr] / (Double)getNumPic(),
+                     MSEyuv );
+            }
+            else printf("\n");
+
             printf( "From MSE:\t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
                    getNumPic(), cDelim,
                    getBits() * dScale,
@@ -209,15 +248,29 @@ public:
           }
           else
           {
-            printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR \n" );
+            printf( "\tTotal Frames |   "   "Bitrate     "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR    "  "YUV-PSNR " );
+            
+            if (printSequenceMSE) printf( " Y-MSE     "  "U-MSE     "  "V-MSE    "  "YUV-MSE \n" );
+            else printf("\n");
+
             //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-            printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+            printf( "\t %8d    %c "          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf",
                    getNumPic(), cDelim,
                    getBits() * dScale,
                    getPsnr(COMPONENT_Y) / (Double)getNumPic(),
                    getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
                    getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
                    PSNRyuv );
+
+            if (printSequenceMSE)
+            {
+              printf( "  %8.4lf  "   "%8.4lf  "    "%8.4lf  "   "%8.4lf\n",
+                     m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic(),
+                     m_MSEyuvframe[COMPONENT_Cb] / (Double)getNumPic(),
+                     m_MSEyuvframe[COMPONENT_Cr] / (Double)getNumPic(),
+                     MSEyuv );
+            }
+            else printf("\n");
           }
         }
         break;
@@ -229,7 +282,7 @@ public:
   }
 
 
-  Void    printSummary(const ChromaFormat chFmt, Char ch='T')
+  Void    printSummary(const ChromaFormat chFmt, const Bool printSequenceMSE, Char ch='T')
   {
     FILE* pFile = NULL;
 
@@ -266,13 +319,28 @@ public:
       case CHROMA_422:
       case CHROMA_444:
         {
-          Double PSNRyuv = calculateCombinedSNR(chFmt);
-          fprintf(pFile, "%f\t %f\t %f\t %f\t %f\n",
+          Double PSNRyuv = MAX_DOUBLE;
+          Double MSEyuv  = MAX_DOUBLE;
+          
+          calculateCombinedValues(chFmt, PSNRyuv, MSEyuv);
+
+          fprintf(pFile, "%f\t %f\t %f\t %f\t %f",
               getBits() * dScale,
               getPsnr(COMPONENT_Y) / (Double)getNumPic(),
               getPsnr(COMPONENT_Cb) / (Double)getNumPic(),
               getPsnr(COMPONENT_Cr) / (Double)getNumPic(),
               PSNRyuv );
+
+          if (printSequenceMSE)
+          {
+            fprintf(pFile, "%f\t %f\t %f\t %f\n",
+                m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic(),
+                m_MSEyuvframe[COMPONENT_Cb] / (Double)getNumPic(),
+                m_MSEyuvframe[COMPONENT_Cr] / (Double)getNumPic(),
+                MSEyuv );
+          }
+          else fprintf(pFile, "\n");
+
           break;
         }
 

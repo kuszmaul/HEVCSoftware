@@ -94,7 +94,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setIntraConstraintFlag          ( m_intraConstraintFlag );
   m_cTEncTop.setLowerBitRateConstraintFlag   ( m_lowerBitRateConstraintFlag );
 
-  m_cTEncTop.setPrintMSEBasedSequencePSNR(m_printMSEBasedSequencePSNR);
+  m_cTEncTop.setPrintMSEBasedSequencePSNR    (m_printMSEBasedSequencePSNR);
+  m_cTEncTop.setPrintFrameMSE                (m_printFrameMSE);
+  m_cTEncTop.setPrintSequenceMSE             (m_printSequenceMSE);
 
   m_cTEncTop.setFrameRate                    ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );

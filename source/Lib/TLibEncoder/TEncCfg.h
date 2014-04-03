@@ -112,6 +112,8 @@ protected:
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
   Bool      m_printMSEBasedSequencePSNR;
+  Bool      m_printFrameMSE;
+  Bool      m_printSequenceMSE;
 
   /* profile & level */
   Profile::Name m_profile;
@@ -385,6 +387,12 @@ public:
 
   Bool      getPrintMSEBasedSequencePSNR    ()         const { return m_printMSEBasedSequencePSNR;  }
   Void      setPrintMSEBasedSequencePSNR    (Bool value)     { m_printMSEBasedSequencePSNR = value; }
+
+  Bool      getPrintFrameMSE                ()         const { return m_printFrameMSE;              }
+  Void      setPrintFrameMSE                (Bool value)     { m_printFrameMSE = value;             }
+
+  Bool      getPrintSequenceMSE             ()         const { return m_printSequenceMSE;           }
+  Void      setPrintSequenceMSE             (Bool value)     { m_printSequenceMSE = value;          }
 
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }

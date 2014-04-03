@@ -82,6 +82,8 @@ protected:
   ChromaFormat m_InputChromaFormatIDC;
 
   Bool      m_printMSEBasedSequencePSNR;
+  Bool      m_printFrameMSE;
+  Bool      m_printSequenceMSE;
 
   // profile/level
   Profile::Name m_profile;
