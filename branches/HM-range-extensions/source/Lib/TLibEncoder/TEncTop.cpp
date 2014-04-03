@@ -712,15 +712,15 @@ Void TEncTop::xInitPPS()
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
   }
 
-  m_cPPS.setMaxCuChromaQpAdjDepth(m_maxCUChromaQpAdjustmentDepth);
-
-  if ( m_maxCUChromaQpAdjustmentDepth != 0 )
+  if ( m_maxCUChromaQpAdjustmentDepth >= 0 )
   {
+    m_cPPS.setMaxCuChromaQpAdjDepth(m_maxCUChromaQpAdjustmentDepth);
     m_cPPS.setChromaQpAdjTableAt(1, 6, 6);
     /* todo, insert table entries from command line (NB, 0 should not be touched) */
   }
   else
   {
+    m_cPPS.setMaxCuChromaQpAdjDepth(0);
     m_cPPS.clearChromaQpAdjTable();
   }
 
