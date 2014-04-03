@@ -429,7 +429,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DeltaQpRD,-dqr",m_uiDeltaQpRD,       0u, "max dQp offset for slice")
   ("MaxDeltaQP,d",  m_iMaxDeltaQP,        0, "max dQp offset for block")
   ("MaxCuDQPDepth,-dqd",  m_iMaxCuDQPDepth,        0, "max depth for a minimum CuDQP")
-  ("MaxCUChromaQpAdjustmentDepth",  m_maxCUChromaQpAdjustmentDepth, 0, "Maximum depth for CU chroma Qp adjustment - set 0 to disable")
+  ("MaxCUChromaQpAdjustmentDepth",  m_maxCUChromaQpAdjustmentDepth, -1, "Maximum depth for CU chroma Qp adjustment - set less than 0 to disable")
 
   ("CbQpOffset,-cbqpofs",  m_cbQpOffset,        0, "Chroma Cb QP Offset")
   ("CrQpOffset,-crqpofs",  m_crQpOffset,        0, "Chroma Cr QP Offset")
