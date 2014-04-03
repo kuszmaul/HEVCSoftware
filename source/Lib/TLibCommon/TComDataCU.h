@@ -99,6 +99,7 @@ private:
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
   Char*          m_phQP;               ///< array of QP values
   UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed)
+  UInt           m_codedChromaQpAdj;
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
@@ -271,6 +272,8 @@ public:
   UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  }
   Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   }
   Void          setChromaQpAdjSubParts( UChar val, Int absPartIdx, Int depth );
+  Void          setCodedChromaQpAdj   ( Char qp )               { m_codedChromaQpAdj = qp;    }
+  Char          getCodedChromaQpAdj   ()                        { return m_codedChromaQpAdj;  }
 
   Bool          isLosslessCoded       ( UInt absPartIdx );
 
