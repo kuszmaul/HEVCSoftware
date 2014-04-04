@@ -227,12 +227,18 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   // depth computation based on GOP size
   Int depth;
   {
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148
-    Int poc = rpcSlice->getPOC()%m_pcCfg->getGOPSize();
+#if FIX_FIELD_DEPTH    
+    Int poc = rpcSlice->getPOC();
+    if(isField)
+    {
+      poc = (poc/2) % (m_pcCfg->getGOPSize()/2);
+    }
+    else
+    {
+      poc = poc % m_pcCfg->getGOPSize();   
+    }
 #else
-    Int poc=rpcSlice->getPOC();
-    if (isField) poc/=2;
-    poc = poc%m_pcCfg->getGOPSize();
+    Int poc = rpcSlice->getPOC()%m_pcCfg->getGOPSize();
 #endif
 
     if ( poc == 0 )
@@ -257,17 +263,45 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
         depth++;
       }
     }
-  }
 
-#if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1148
-  if (isField && depth>0) depth-=1;
+#if FIX_FIELD_DEPTH  
+#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
+    if(poc != 0)
+    {
 #endif
+      if (isField && ((rpcSlice->getPOC() % 2) == 1))
+      {
+        depth ++;
+      }
+#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
+    }
+#endif
+#endif
+  }
 
   // slice type
   SliceType eSliceType;
 
   eSliceType=B_SLICE;
-  eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+#if EFFICIENT_FIELD_IRAP
+  if(!(isField && pocLast == 1))
+  {
+#endif // EFFICIENT_FIELD_IRAP
+#if ALLOW_RECOVERY_POINT_AS_RAP
+    if(m_pcCfg->getDecodingRefreshType() == 3)
+    {
+      eSliceType = (pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0             || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+    }
+    else
+    {
+#endif
+      eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+#if ALLOW_RECOVERY_POINT_AS_RAP
+    }
+#endif
+#if EFFICIENT_FIELD_IRAP
+  }
+#endif
 
   rpcSlice->setSliceType    ( eSliceType );
 
@@ -383,7 +417,26 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
 
 #if HB_LAMBDA_FOR_LDC
   // restore original slice type
-  eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+
+#if EFFICIENT_FIELD_IRAP
+  if(!(isField && pocLast == 1))
+  {
+#endif // EFFICIENT_FIELD_IRAP
+#if ALLOW_RECOVERY_POINT_AS_RAP
+    if(m_pcCfg->getDecodingRefreshType() == 3)
+    {
+      eSliceType = (pocLast == 0 || (pocCurr)                     % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+    }
+    else
+    {
+#endif
+      eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+#if ALLOW_RECOVERY_POINT_AS_RAP
+    }
+#endif
+#if EFFICIENT_FIELD_IRAP
+  }
+#endif // EFFICIENT_FIELD_IRAP
 
   rpcSlice->setSliceType        ( eSliceType );
 #endif

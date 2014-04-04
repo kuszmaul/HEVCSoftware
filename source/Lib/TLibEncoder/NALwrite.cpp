@@ -115,6 +115,11 @@ void write(ostream& out, OutputNALUnit& nalu)
   out.write((Char*)&(*outputBuffer.begin()), outputAmount);
 #else
 
+  if (rbsp.size() == 0)
+  {
+    return;
+  }
+  
   for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
   {
     /* 1) find the next emulated 00 00 {00,01,02,03}

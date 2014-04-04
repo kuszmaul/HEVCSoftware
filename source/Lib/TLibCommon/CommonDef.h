@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "13.0_RExt6.2"                 ///< Current software version
+#define NV_VERSION        "14.0_RExt6.2_rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -182,7 +182,7 @@ template <typename ValueType> inline ValueType rightShift_round(const ValueType 
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
 // Explicit temporal layer QP offset
-#define MAX_TLAYER                  8           ///< max number of temporal layer
+#define MAX_TLAYER                  7           ///< max number of temporal layer
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode

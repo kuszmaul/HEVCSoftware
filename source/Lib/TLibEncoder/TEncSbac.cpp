@@ -811,7 +811,7 @@ Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
-  const UInt iNumPart = pcCU->getNumPartInter( uiAbsPartIdx );
+  const UInt iNumPart = pcCU->getNumPartitions( uiAbsPartIdx );
   const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - pcCU->getDepth(uiAbsPartIdx) ) << 1 ) ) >> 4;
 
   for(UInt iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++)

@@ -67,7 +67,7 @@ public:
   , m_FutureBytes(0)
   , m_Input(istream)
   {
-    istream.exceptions(std::istream::eofbit);
+    istream.exceptions(std::istream::eofbit | std::istream::badbit);
   }
 
   /**

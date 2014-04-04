@@ -242,9 +242,9 @@ public:
 class TComPTL
 {
   ProfileTierLevel m_generalPTL;
-  ProfileTierLevel m_subLayerPTL[6];    // max. value of max_sub_layers_minus1 is 6
-  Bool m_subLayerProfilePresentFlag[6]; //TODO: RExt - magic number
-  Bool m_subLayerLevelPresentFlag[6];
+  ProfileTierLevel m_subLayerPTL    [MAX_TLAYER-1];      // max. value of max_sub_layers_minus1 is MAX_TLAYER-1 (= 6)
+  Bool m_subLayerProfilePresentFlag [MAX_TLAYER-1];
+  Bool m_subLayerLevelPresentFlag   [MAX_TLAYER-1];
 
 public:
   TComPTL();
@@ -1244,6 +1244,12 @@ private:
 #endif
   UInt        m_colFromL0Flag;  // collocated picture from List0 flag
 
+#if SETTING_NO_OUT_PIC_PRIOR
+  Bool        m_noOutputPriorPicsFlag;
+  Bool        m_noRaslOutputFlag;
+  Bool        m_handleCraAsBlaFlag;
+#endif
+
   UInt        m_colRefIdx;
   UInt        m_maxNumMergeCand;
 
@@ -1428,10 +1434,26 @@ public:
   Void applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComReferencePictureSet *RPSList);
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
-  Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
-  Void      createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
-  Void setMaxNumMergeCand               (UInt val )         { m_maxNumMergeCand = val;                    }
-  UInt getMaxNumMergeCand               ()                  { return m_maxNumMergeCand;                   }
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  Int  checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
+  Void createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
+#else
+  Int  checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
+  Void createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
+#endif
+  Void setMaxNumMergeCand               (UInt val )          { m_maxNumMergeCand = val;                 }
+  UInt getMaxNumMergeCand               ()                   { return m_maxNumMergeCand;                }
+
+#if SETTING_NO_OUT_PIC_PRIOR
+  Void setNoOutputPriorPicsFlag         ( Bool val )         { m_noOutputPriorPicsFlag = val;           }
+  Bool getNoOutputPriorPicsFlag         ()                   { return m_noOutputPriorPicsFlag;          }
+
+  Void setNoRaslOutputFlag              ( Bool val )         { m_noRaslOutputFlag = val;                }
+  Bool getNoRaslOutputFlag              ()                   { return m_noRaslOutputFlag;               }
+
+  Void setHandleCraAsBlaFlag            ( Bool val )         { m_handleCraAsBlaFlag = val;              }
+  Bool getHandleCraAsBlaFlag            ()                   { return m_handleCraAsBlaFlag;             }
+#endif
 
   Void setSliceMode                     ( UInt uiMode )     { m_sliceMode = uiMode;                     }
   UInt getSliceMode                     ()                  { return m_sliceMode;                       }
