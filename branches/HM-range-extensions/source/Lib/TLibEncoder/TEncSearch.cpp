@@ -3042,7 +3042,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
   TComMv       cMvBi[2];
   TComMv       cMvTemp[2][33];
 
-  Int          iNumPart    = pcCU->getNumPartInter();
+  Int          iNumPart    = pcCU->getNumPartitions();
   Int          iNumPredDir = pcCU->getSlice()->isInterP() ? 1 : 2;
 
   TComMv       cMvPred[2][33];
@@ -3667,7 +3667,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && (pcCU->getWidth(0) > 16))
     return false;
 
-  const Int iNumPart = pcCU->getNumPartInter();
+  const Int iNumPart = pcCU->getNumPartitions();
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
     Int iDummyWidth, iDummyHeight;

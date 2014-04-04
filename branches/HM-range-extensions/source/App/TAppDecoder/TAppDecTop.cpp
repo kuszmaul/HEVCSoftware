@@ -178,6 +178,14 @@ Void TAppDecTop::decode()
       }
       loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
     }
+#if !FIX_WRITING_OUTPUT
+#if SETTING_NO_OUT_PIC_PRIOR
+    if (bNewPicture && m_cTDecTop.getIsNoOutputPriorPics())
+    {
+      m_cTDecTop.checkNoOutputPriorPics( pcListPic );
+    }
+#endif
+#endif
 
     if( pcListPic )
     {
@@ -191,6 +199,20 @@ Void TAppDecTop::decode()
         m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, g_bitDepth ); // write mode
         openedReconFile = true;
       }
+#if FIX_WRITING_OUTPUT
+      // write reconstruction to file
+      if( bNewPicture )
+      {
+        xWriteOutput( pcListPic, nalu.m_temporalId );
+      }
+#if SETTING_NO_OUT_PIC_PRIOR
+      if ( (bNewPicture || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA) && m_cTDecTop.getNoOutputPriorPicsFlag() )
+      {
+        m_cTDecTop.checkNoOutputPriorPics( pcListPic );
+        m_cTDecTop.setNoOutputPriorPicsFlag (false);
+      }
+#endif
+#endif
       if ( bNewPicture &&
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
@@ -202,10 +224,18 @@ Void TAppDecTop::decode()
       }
       if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
+#if FIX_OUTPUT_EOS
+        xWriteOutput( pcListPic, nalu.m_temporalId );
+#else
         xFlushOutput( pcListPic );
+#endif
       }
-      // write reconstruction to file
+      // write reconstruction to file -- for additional bumping as defined in C.5.2.3
+#if FIX_WRITING_OUTPUT
+      if(!bNewPicture && nalu.m_nalUnitType >= NAL_UNIT_CODED_SLICE_TRAIL_N && nalu.m_nalUnitType <= NAL_UNIT_RESERVED_VCL31)
+#else
       if(bNewPicture)
+#endif
       {
         xWriteOutput( pcListPic, nalu.m_temporalId );
       }
@@ -260,6 +290,22 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
+  Int dpbFullness = 0;
+  TComSPS* activeSPS = m_cTDecTop.getActiveSPS();
+  UInt numReorderPicsHighestTid;
+  UInt maxDecPicBufferingHighestTid;
+  UInt maxNrSublayers = activeSPS->getMaxTLayers();
+
+  if(m_iMaxTemporalLayer == -1 || m_iMaxTemporalLayer >= maxNrSublayers)
+  {
+    numReorderPicsHighestTid = activeSPS->getNumReorderPics(maxNrSublayers-1);
+    maxDecPicBufferingHighestTid =  activeSPS->getMaxDecPicBuffering(maxNrSublayers-1); 
+  }
+  else
+  {
+    numReorderPicsHighestTid = activeSPS->getNumReorderPics(m_iMaxTemporalLayer);
+    maxDecPicBufferingHighestTid = activeSPS->getMaxDecPicBuffering(m_iMaxTemporalLayer); 
+  }
 
   while (iterPic != pcListPic->end())
   {
@@ -267,6 +313,11 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
        numPicsNotYetDisplayed++;
+      dpbFullness++;
+    }
+    else if(pcPic->getSlice( 0 )->isReferenced())
+    {
+      dpbFullness++;
     }
     iterPic++;
   }
@@ -290,8 +341,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       iterPic++;
       TComPic* pcPicBottom = *(iterPic);
 
-      if ( pcPicTop->getOutputMark() && (numPicsNotYetDisplayed >  pcPicTop->getNumReorderPics(tId) && !(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1)
-          && pcPicBottom->getOutputMark() && (numPicsNotYetDisplayed >  pcPicBottom->getNumReorderPics(tId) && (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay<0)))
+      if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() &&
+          (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid) &&
+          (!(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1) &&
+          (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay < 0))
       {
         // write to file
         numPicsNotYetDisplayed = numPicsNotYetDisplayed-2;
@@ -370,10 +423,16 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     {
       pcPic = *(iterPic);
 
-      if ( pcPic->getOutputMark() && (numPicsNotYetDisplayed >  pcPic->getNumReorderPics(tId) && pcPic->getPOC() > m_iPOCLastDisplay))
+      if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay &&
+        (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid))
       {
         // write to file
          numPicsNotYetDisplayed--;
+        if(pcPic->getSlice(0)->isReferenced() == false)
+        {
+          dpbFullness--;
+        }
+
         if ( m_pchReconFile )
         {
           const Window &conf    = pcPic->getConformanceWindow();

@@ -137,7 +137,7 @@
 	\email{dflynn@blackberry.com}
 	\and
 	Karsten S\"uhring
-	\email{Karsten.Suehring@hhi.fraunhofer.de}
+	\email{karsten.suehring@hhi.fraunhofer.de}
 }
 
 \jctvcmeeting{}
@@ -150,7 +150,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 13.0
+for the HEVC project. It applies to version 14.0
 of the software.
 \end{abstract}
 
@@ -209,6 +209,9 @@ Linux                & build/linux/makefile \\
 \hline
 \end{tabular}
 \end{table}
+
+For encoding large picture sizes (like UHDTV) it is strongly advised to build 64-bit
+binaries and to use a 64-bit OS. This will allow the software to use more than 2GB of RAM.
 
 %%%%
 %%%%
@@ -1595,14 +1598,9 @@ Indicates the arrangement type in the Frame packing arrangement SEI message.
 This option has no effect if SEIFramePacking is disabled.
 \par
 \begin{tabular}{cp{0.35\textwidth}}
-  0 & Checkerboard \\
-  1 & Line Alternate \\
-  2 & Column Alternate \\
   3 & Side by Side \\
   4 & Top Bottom \\
   5 & Frame Alternate \\
-  6 & 2D Image \\
-  7 & Tile Format \\
 \end{tabular}
 \\
 \Option{SEIFramePackingInterpretation} &
@@ -1755,8 +1753,16 @@ Default table can be set to the following:
 Indicates the camera ISO speed for daylight illumination.
 \\
 \Option{SEIToneMap...} \Option{CameraIsoSpeedValue} &
-\Default{420} &
+\Default{400} &
 Specifies the camera ISO speed for daylight illumination of Extended_ISO.
+\\
+\Option{SEIToneMap...} \Option{ExposureIndexIdc} &
+\Default{0} &
+Indicates the exposure index setting of the camera.
+\\
+\Option{SEIToneMap...} \Option{ExposureIndexValue} &
+\Default{400} &
+Specifies the exposure index setting of the cameran of Extended_ISO.
 \\
 \Option{SEIToneMapExposure...} \Option{CompensationValueSignFlag} &
 \Default{0} &

@@ -426,24 +426,19 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
 
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
-  UInt val;
-  READ_CODE(4, val, "active_vps_id");      sei.activeVPSId = val;
-  READ_FLAG( val, "full_random_access_flag");  sei.m_fullRandomAccessFlag = (val != 0);
-  READ_FLAG( val, "no_param_set_update_flag"); sei.m_noParamSetUpdateFlag = (val != 0);
-  READ_UVLC(   val, "num_sps_ids_minus1"); sei.numSpsIdsMinus1 = val;
+  UInt val; 
+  READ_CODE(4, val, "active_video_parameter_set_id");   sei.activeVPSId = val; 
+  READ_FLAG(   val, "self_contained_cvs_flag");         sei.m_selfContainedCvsFlag     = (val != 0);
+  READ_FLAG(   val, "no_parameter_set_update_flag");    sei.m_noParameterSetUpdateFlag = (val != 0);
+  READ_UVLC(   val, "num_sps_ids_minus1");              sei.numSpsIdsMinus1 = val;
 
-  sei.activeSeqParamSetId.resize(sei.numSpsIdsMinus1 + 1);
+  sei.activeSeqParameterSetId.resize(sei.numSpsIdsMinus1 + 1);
   for (Int i=0; i < (sei.numSpsIdsMinus1 + 1); i++)
   {
-    READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val;
+    READ_UVLC(val, "active_seq_parameter_set_id");      sei.activeSeqParameterSetId[i] = val; 
   }
 
-  UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned();
-
-  while(uibits--)
-  {
-    READ_FLAG(val, "alignment_bit");
-  }
+  xParseByteAlign();
 }
 
 Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*payloadSize*/, TComSPS *sps)

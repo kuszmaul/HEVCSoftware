@@ -69,6 +69,11 @@ TComSlice::TComSlice()
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
 , m_colFromL0Flag                 ( 1 )
+#if SETTING_NO_OUT_PIC_PRIOR
+, m_noOutputPriorPicsFlag         ( false )
+, m_noRaslOutputFlag              ( false )
+, m_handleCraAsBlaFlag              ( false )
+#endif
 , m_colRefIdx                     ( 0 )
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
@@ -614,23 +619,50 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       pocCRA = pocCurr;
     }
+#if EFFICIENT_FIELD_IRAP
+    bRefreshPending = true;
+#endif
   }
   else // CRA or No DR
   {
-    if (bRefreshPending==true && pocCurr > pocCRA) // CRA reference marking pending
+#if EFFICIENT_FIELD_IRAP
+    if(getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL)
     {
-      TComList<TComPic*>::iterator iterPic = rcListPic.begin();
-      while (iterPic != rcListPic.end())
+      if (bRefreshPending==true && pocCurr > m_iLastIDR) // IDR reference marking pending 
       {
-        rpcPic = *(iterPic);
-        if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
+        TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
+        while (iterPic != rcListPic.end())
         {
-          rpcPic->getSlice(0)->setReferenced(false);
+          rpcPic = *(iterPic);
+          if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
+          {
+            rpcPic->getSlice(0)->setReferenced(false);
+          }
+          iterPic++;
         }
-        iterPic++;
+        bRefreshPending = false; 
       }
-      bRefreshPending = false;
     }
+    else
+    {
+#endif
+      if (bRefreshPending==true && pocCurr > pocCRA) // CRA reference marking pending
+      {
+        TComList<TComPic*>::iterator iterPic = rcListPic.begin();
+        while (iterPic != rcListPic.end())
+        {
+          rpcPic = *(iterPic);
+          if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
+          {
+            rpcPic->getSlice(0)->setReferenced(false);
+          }
+          iterPic++;
+        }
+        bRefreshPending = false;
+      }
+#if EFFICIENT_FIELD_IRAP
+    }
+#endif
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
     {
       bRefreshPending = true;
@@ -880,7 +912,11 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
     // Any picture that has PicOutputFlag equal to 1 that precedes an IRAP picture
     // in decoding order shall precede the IRAP picture in output order.
     // (Note that any picture following in output order would be present in the DPB)
+#if SETTING_NO_OUT_PIC_PRIOR
+    if(rpcPic->getSlice(0)->getPicOutputFlag() == 1 && !this->getNoOutputPriorPicsFlag())
+#else
     if(rpcPic->getSlice(0)->getPicOutputFlag() == 1)
+#endif
     {
       if(nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP    ||
          nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP    ||
@@ -1051,8 +1087,16 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
 
 /** Function for applying picture marking based on the Reference Picture Set in pReferencePictureSet.
 */
+#if ALLOW_RECOVERY_POINT_AS_RAP
+Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess, Bool bUseRecoveryPoint)
+#else
 Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess)
+#endif
 {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  Int atLeastOneUnabledByRecoveryPoint = 0;
+  Int atLeastOneFlushedByPreviousIDR = 0;
+#endif
   TComPic* rpcPic;
   Int i, isAvailable;
   Int atLeastOneLost = 0;
@@ -1073,7 +1117,18 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
       {
         if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()) == pReferencePictureSet->getPOC(i) && rpcPic->getSlice(0)->isReferenced())
         {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+          if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
+          {
+            isAvailable = 0;
+          }
+          else
+          {
+            isAvailable = 1;
+          }
+#else
           isAvailable = 1;
+#endif
         }
       }
       else
@@ -1083,7 +1138,18 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
         Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
         if(rpcPic->getIsLongTerm() && curPoc == refPoc && rpcPic->getSlice(0)->isReferenced())
         {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+          if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
+          {
+            isAvailable = 0;
+          }
+          else
+          {
+            isAvailable = 1;
+          }
+#else
           isAvailable = 1;
+#endif
         }
       }
     }
@@ -1106,9 +1172,22 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 
         if (rpcPic->getSlice(0)->isReferenced() && curPoc == refPoc)
         {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+          if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
+          {
+            isAvailable = 0;
+          }
+          else
+          {
+            isAvailable = 1;
+            rpcPic->setIsLongTerm(1);
+            break;
+          }
+#else
           isAvailable = 1;
           rpcPic->setIsLongTerm(1);
           break;
+#endif
         }
       }
     }
@@ -1136,6 +1215,16 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
+#if ALLOW_RECOVERY_POINT_AS_RAP
+      else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
+      {
+        atLeastOneUnabledByRecoveryPoint = 1;
+      }
+      else if(bUseRecoveryPoint && (this->getAssociatedIRAPType()==NAL_UNIT_CODED_SLICE_IDR_N_LP || this->getAssociatedIRAPType()==NAL_UNIT_CODED_SLICE_IDR_W_RADL))
+      {
+        atLeastOneFlushedByPreviousIDR = 1;
+      }
+#endif
     }
   }
   // loop through all short-term pictures in the Reference Picture Set
@@ -1151,7 +1240,18 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 
       if(!rpcPic->getIsLongTerm() && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i) && rpcPic->getSlice(0)->isReferenced())
       {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+        if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
+        {
+          isAvailable = 0;
+        }
+        else
+        {
+          isAvailable = 1;
+        }
+#else
         isAvailable = 1;
+#endif
       }
     }
     // report that a picture is lost if it is in the Reference Picture Set
@@ -1178,8 +1278,25 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
+#if ALLOW_RECOVERY_POINT_AS_RAP
+      else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
+      {
+        atLeastOneUnabledByRecoveryPoint = 1;
+      }
+      else if(bUseRecoveryPoint && (this->getAssociatedIRAPType()==NAL_UNIT_CODED_SLICE_IDR_N_LP || this->getAssociatedIRAPType()==NAL_UNIT_CODED_SLICE_IDR_W_RADL))
+      {
+        atLeastOneFlushedByPreviousIDR = 1;
+      }
+#endif
     }
   }
+
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  if(atLeastOneUnabledByRecoveryPoint || atLeastOneFlushedByPreviousIDR)
+  {
+    return -1;
+  }    
+#endif
   if(atLeastOneLost)
   {
     return iPocLost+1;
@@ -1196,7 +1313,11 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
+#if ALLOW_RECOVERY_POINT_AS_RAP
+Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess, Bool bUseRecoveryPoint)
+#else
 Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP)
+#endif
 {
   TComPic* rpcPic;
   Int i, j;
@@ -1222,6 +1343,9 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         // and should be added to the explicit Reference Picture Set
         pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
         pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
+#if ALLOW_RECOVERY_POINT_AS_RAP
+        pcRPS->setUsed(k, pcRPS->getUsed(k) && !(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess) ); 
+#endif
 
         if(pcRPS->getDeltaPOC(k) < 0)
         {
@@ -1235,13 +1359,38 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
       }
     }
   }
+
+#if EFFICIENT_FIELD_IRAP
+  Bool useNewRPS = false;
+  // if current picture is complimentary field associated to IRAP, add the IRAP to its RPS. 
+  if(m_pcPic->isField())
+  {
+    TComList<TComPic*>::iterator iterPic = rcListPic.begin();
+    while ( iterPic != rcListPic.end())
+    {
+      rpcPic = *(iterPic++);
+      if(rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
+      {
+        pcRPS->setDeltaPOC(k, 1);
+        pcRPS->setUsed(k, true);
+        nrOfPositivePictures++;
+        k ++;
+        useNewRPS = true;
+      }
+    }
+  }
+#endif
   pcRPS->setNumberOfNegativePictures(nrOfNegativePictures);
   pcRPS->setNumberOfPositivePictures(nrOfPositivePictures);
   pcRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
   // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the
   // inter RPS prediction with.  Here we just use the reference used by pReferencePictureSet.
   // If pReferencePictureSet is not inter_RPS_predicted, then inter_RPS_prediction is for the current RPS also disabled.
-  if (!pReferencePictureSet->getInterRPSPrediction())
+  if (!pReferencePictureSet->getInterRPSPrediction()
+#if EFFICIENT_FIELD_IRAP
+    || useNewRPS
+#endif
+    )
   {
     pcRPS->setInterRPSPrediction(false);
     pcRPS->setNumRefIdc(0);

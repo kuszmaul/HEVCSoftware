@@ -56,6 +56,13 @@
 // ====================================================================================================================
 extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
+#if SAO_SGN_FUNC
+template <typename T> int sgn(T val) 
+{
+  return (T(0) < val) - (val < T(0));
+}
+#endif
+
 class TComSampleAdaptiveOffset
 {
 public:
@@ -79,7 +86,9 @@ protected:
 protected:
   UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
   Int* m_offsetClip[MAX_NUM_COMPONENT]; //clip table for fast operation
+#if !SAO_SGN_FUNC
   Short* m_sign; //sign table for fast operation
+#endif
   TComPicYuv*   m_tempPicYuv; //temporary buffer
   Int m_picWidth;
   Int m_picHeight;
@@ -97,7 +106,9 @@ protected:
 private:
   Bool m_picSAOEnabled[MAX_NUM_COMPONENT];
   Int*   m_offsetClipTable[MAX_NUM_COMPONENT];
+#if !SAO_SGN_FUNC
   Short* m_signTable;
+#endif
 };
 
 //! \}

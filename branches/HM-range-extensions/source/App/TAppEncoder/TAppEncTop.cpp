@@ -262,6 +262,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMISEITargetPivotValue                    ( m_targetPivotValue );
   m_cTEncTop.setTMISEICameraIsoSpeedIdc                   ( m_cameraIsoSpeedIdc );
   m_cTEncTop.setTMISEICameraIsoSpeedValue                 ( m_cameraIsoSpeedValue );
+  m_cTEncTop.setTMISEIExposureIndexIdc                    ( m_exposureIndexIdc );
+  m_cTEncTop.setTMISEIExposureIndexValue                  ( m_exposureIndexValue );
   m_cTEncTop.setTMISEIExposureCompensationValueSignFlag   ( m_exposureCompensationValueSignFlag );
   m_cTEncTop.setTMISEIExposureCompensationValueNumerator  ( m_exposureCompensationValueNumerator );
   m_cTEncTop.setTMISEIExposureCompensationValueDenomIdc   ( m_exposureCompensationValueDenomIdc );
