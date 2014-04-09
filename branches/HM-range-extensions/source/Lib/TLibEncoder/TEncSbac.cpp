@@ -389,7 +389,11 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
  * \param ruiGoRiceParam reference to Rice parameter
  * \returns Void
  */
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType )
+#else
 Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
+#endif
 {
   Int codeNumber  = (Int)symbol;
   UInt length;
@@ -400,6 +404,40 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
     m_pcBinIf->encodeBinsEP( (1<<(length+1))-2 , length+1);
     m_pcBinIf->encodeBinsEP((codeNumber%(1<<rParam)),rParam);
   }
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  else if (useLimitedPrefixLength)
+  {
+    const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType]));
+
+    UInt prefixLength = 0;
+    UInt suffixLength = MAX_UINT;
+    UInt codeValue    = (symbol >> rParam) - COEF_REMAIN_BIN_REDUCTION;
+
+    if (codeValue >= ((1 << maximumPrefixLength) - 1))
+    {
+      prefixLength = maximumPrefixLength;
+      suffixLength = g_maxTrDynamicRange[channelType] - rParam;
+    }
+    else
+    {
+      while (codeValue > ((2 << prefixLength) - 2))
+      {
+        prefixLength++;
+      }
+
+      suffixLength = prefixLength + 1; //+1 for the separator bit
+    }
+
+    const UInt suffix = codeValue - ((1 << prefixLength) - 1);
+
+    const UInt totalPrefixLength = prefixLength + COEF_REMAIN_BIN_REDUCTION;
+    const UInt prefix            = (1 << totalPrefixLength) - 1;
+    const UInt rParamBitMask     = (1 << rParam) - 1;
+
+    m_pcBinIf->encodeBinsEP(  prefix,                                        totalPrefixLength      ); //prefix
+    m_pcBinIf->encodeBinsEP(((suffix << rParam) | (symbol & rParamBitMask)), (suffixLength + rParam)); //separator, suffix, and rParam bits
+  }
+#endif
   else
   {
     length = rParam;
@@ -1328,9 +1366,15 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
   //set parameters
 
-  const ChannelType  chType                 = toChannelType(compID);
-  const UInt         uiLog2BlockWidth       = g_aucConvertToBit[ uiWidth  ] + 2;
-  const UInt         uiLog2BlockHeight      = g_aucConvertToBit[ uiHeight ] + 2;
+  const ChannelType  chType            = toChannelType(compID);
+  const UInt         uiLog2BlockWidth  = g_aucConvertToBit[ uiWidth  ] + 2;
+  const UInt         uiLog2BlockHeight = g_aucConvertToBit[ uiHeight ] + 2;
+
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  const ChannelType  channelType       = toChannelType(compID);
+  const Bool         extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+#endif
+
   const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
 
   Bool beValid;
@@ -1434,9 +1478,9 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
   for( Int iSubSet = iLastScanSet; iSubSet >= 0; iSubSet-- )
   {
-    Int numNonZero  = 0;
-    Int  iSubPos    = iSubSet << MLS_CG_SIZE;
-    uiGoRiceParam   = currentGolombRiceStatistic / RExt__GOLOMB_RICE_INCREMENT_DIVISOR;
+    Int numNonZero = 0;
+    Int  iSubPos   = iSubSet << MLS_CG_SIZE;
+    uiGoRiceParam  = currentGolombRiceStatistic / RExt__GOLOMB_RICE_INCREMENT_DIVISOR;
     Bool updateGolombRiceStatistics = bUseGolombRiceParameterAdaptation; //leave the statistics at 0 when not using the adaptation system
     UInt coeffSigns = 0;
 
@@ -1580,7 +1624,12 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
           if( absCoeff[ idx ] >= baseLevel)
           {
             const UInt escapeCodeValue = absCoeff[idx] - baseLevel;
+
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+            xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam, extendedPrecision, channelType );
+#else
             xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam );
+#endif
 
             if (absCoeff[idx] > (3 << uiGoRiceParam))
             {
@@ -1603,6 +1652,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
               updateGolombRiceStatistics = false;
             }
           }
+
           if(absCoeff[ idx ] >= 2)
           {
             iFirstCoeff2 = 0;

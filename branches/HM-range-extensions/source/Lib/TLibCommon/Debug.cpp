@@ -179,6 +179,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,        settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX,     settingNameWidth, settingValueWidth);
+
   //------------------------------------------------
 
   std::cout << std::endl;

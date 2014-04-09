@@ -335,20 +335,46 @@ Void TDecSbac::xReadUnarySymbol( UInt& ruiSymbol, ContextModel* pcSCModel, Int i
  * \returns Void
  */
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX 
+Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat )
+#else
 Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const class TComCodingStatisticsClassType &whichStat )
+#endif
+#else
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType )
 #else
 Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
 #endif
+#endif
 {
-
   UInt prefix   = 0;
   UInt codeWord = 0;
-  do
+
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  if (useLimitedPrefixLength)
   {
-    prefix++;
-    m_pcTDecBinIf->decodeBinEP( codeWord RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+    const UInt longestPossiblePrefix = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType])) + COEF_REMAIN_BIN_REDUCTION;
+
+    do
+    {
+      prefix++;
+      m_pcTDecBinIf->decodeBinEP( codeWord RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+    }
+    while((codeWord != 0) && (prefix < longestPossiblePrefix));
   }
-  while( codeWord);
+  else
+  {
+#endif
+    do
+    {
+      prefix++;
+      m_pcTDecBinIf->decodeBinEP( codeWord RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+    }
+    while( codeWord);
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  }
+#endif
 
   codeWord  = 1 - codeWord;
   prefix -= codeWord;
@@ -359,6 +385,19 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam )
     m_pcTDecBinIf->decodeBinsEP(codeWord,rParam RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
     rSymbol = (prefix<<rParam) + codeWord;
   }
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  else if (useLimitedPrefixLength)
+  {
+    const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType]));
+
+    const UInt prefixLength = prefix - COEF_REMAIN_BIN_REDUCTION;
+    const UInt suffixLength = (prefixLength == maximumPrefixLength) ? (g_maxTrDynamicRange[channelType] - rParam) : prefixLength;
+
+    m_pcTDecBinIf->decodeBinsEP(codeWord, (suffixLength + rParam) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
+
+    rSymbol = codeWord + ((((1 << prefixLength) - 1) + COEF_REMAIN_BIN_REDUCTION) << rParam);
+  }
+#endif
   else
   {
     m_pcTDecBinIf->decodeBinsEP(codeWord,prefix-COEF_REMAIN_BIN_REDUCTION+rParam RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
@@ -1355,11 +1394,17 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
 
   //set parameters
 
-  const ChannelType  chType                 = toChannelType(compID);
-  const UInt         uiLog2BlockWidth       = g_aucConvertToBit[ uiWidth  ] + 2;
-  const UInt         uiLog2BlockHeight      = g_aucConvertToBit[ uiHeight ] + 2;
-  const UInt         uiMaxNumCoeff          = uiWidth * uiHeight;
-  const UInt         uiMaxNumCoeffM1        = uiMaxNumCoeff - 1;
+  const ChannelType  chType            = toChannelType(compID);
+  const UInt         uiLog2BlockWidth  = g_aucConvertToBit[ uiWidth  ] + 2;
+  const UInt         uiLog2BlockHeight = g_aucConvertToBit[ uiHeight ] + 2;
+  const UInt         uiMaxNumCoeff     = uiWidth * uiHeight;
+  const UInt         uiMaxNumCoeffM1   = uiMaxNumCoeff - 1;
+
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+  const ChannelType  channelType       = toChannelType(compID);
+  const Bool         extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+#endif
+
   const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
@@ -1619,7 +1664,11 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
           if( absCoeff[ idx ] == baseLevel)
           {
             UInt uiLevel;
+#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
+            xReadCoefRemainExGolomb( uiLevel, uiGoRiceParam, extendedPrecision, channelType RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype_escs) );
+#else
             xReadCoefRemainExGolomb( uiLevel, uiGoRiceParam RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype_escs) );
+#endif
 
             absCoeff[ idx ] = uiLevel + baseLevel;
 
