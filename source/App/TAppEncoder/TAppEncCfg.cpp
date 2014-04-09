@@ -200,7 +200,11 @@ strToProfile[] =
   {"main",               Profile::MAIN            },
   {"main10",             Profile::MAIN10          },
   {"main-still-picture", Profile::MAINSTILLPICTURE},
-  {"main-RExt",          Profile::MAINREXT         }
+  {"main-RExt",          Profile::MAINREXT        }
+#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
+  ,{"high-RExt",         Profile::HIGHREXT        }
+  ,{"main-SCC",          Profile::MAINSCC         }
+#endif
 };
 
 static const struct MapStrToTier
@@ -212,7 +216,9 @@ strToTier[] =
 {
   {"main", Level::MAIN},
   {"high", Level::HIGH},
+#if !RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   {"super", Level::SUPER},
+#endif
 };
 
 static const struct MapStrToLevel
@@ -382,7 +388,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxBitDepthConstraint",      m_bitDepthConstraint,         0u,    "Bit depth to use for profile-constraint for RExt profiles. 0=use max(InternalBitDepth,InternalBitDepthC)")
   ("MaxChromaFormatConstraint",  tmpConstraintChromaFormat,    0,     "Chroma-format to use for the profile-constraint for RExt profiles. 0=use ChromaFormatIDC")
   ("IntraConstraintFlag",        m_intraConstraintFlag,        false, "Value of general_intra_constraint_flag to use for RExt profiles")
-  ("LowerBitRateConstraintFlag", m_lowerBitRateConstraintFlag, true,  "Value of general_lower_bit_constraint_flag to use for RExt profiles")
+  ("LowerBitRateConstraintFlag", m_lowerBitRateConstraintFlag, true,  "Value of general_lower_bit_rate_constraint_flag to use for RExt profiles")
 
   ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
   ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
@@ -474,7 +480,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ResidualRotation",        m_useResidualRotation,         false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
   ("SingleSignificanceMapContext", m_useSingleSignificanceMapContext, false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
   ("GolombRiceParameterAdaptation", m_useGolombRiceParameterAdaptation, false, "Enable the adaptation of the Golomb-Rice parameter over the course of each slice")
-  ("AlignCABACBeforeBypass",       m_alignCABACBeforeBypass,          false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data" )
+  ("AlignCABACBeforeBypass",       m_alignCABACBeforeBypass,          false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data. Must be 1 in high bit rate profile, 0 otherwise" )
   ("SAO",                     m_bUseSAO,                 true,  "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",     m_maxNumOffsetsPerPic,     2048,  "Max number of SAO offset per picture (Default: 2048)")
   ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
@@ -777,11 +783,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
+  // NOTE: RExt - consider adjusting the auto-constraints so that they are guaranteed to produce a legal combination
+
   // manipulate profile constraints
   m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
   if (m_bitDepthConstraint == 0)
   {
+#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
+    if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT || m_profile == Profile::MAINSCC )
+#else
     if (m_profile == Profile::MAINREXT)
+#endif
     {
       m_bitDepthConstraint = (m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
     }
@@ -1056,17 +1068,29 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
+#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
+  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT || m_profile==Profile::MAINSCC)
+#else
   if (m_profile==Profile::MAINREXT)
+#endif
   {
+    // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
+#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
+    xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
+    xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
+#else
     xConfirmPara(m_alignCABACBeforeBypass && m_bitDepthConstraint<16, "AlignCABACBeforeBypass cannot be enabled when bitDepthConstraint value is less than 16.");
     xConfirmPara(m_alignCABACBeforeBypass && m_levelTier!=Level::SUPER, "AlignCABACBeforeBypass cannot be enabled when Tier is not Super.");
     xConfirmPara(m_levelTier==Level::SUPER && (m_bitDepthConstraint!=16 || m_chromaFormatConstraint!=CHROMA_444), "Super tier can only be used for 444 16-bit Profile.");
+#endif
   }
   else
   {
+#if !RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
     xConfirmPara(m_levelTier==Level::SUPER, "Tier cannot be Super for non main-RExt profiles.");
+#endif
     xConfirmPara(m_bitDepthConstraint!=((m_profile==Profile::MAIN10)?10:8), "BitDepthConstraint must be 8 for MAIN profile and 10 for MAIN10 profile.");
     xConfirmPara(m_chromaFormatConstraint!=CHROMA_420, "ChromaFormatConstraint must be 420 for non main-RExt profiles.");
     xConfirmPara(m_intraConstraintFlag==true, "IntraConstraintFlag must be false for non main_RExt profiles.");
