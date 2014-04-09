@@ -181,6 +181,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH,                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,          settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS,                     settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                   settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,        settingNameWidth, settingValueWidth);
