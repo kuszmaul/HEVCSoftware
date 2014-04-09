@@ -393,9 +393,9 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
       uiSad += uiTempSad >>  m_cDistParam.iSubShift;
       while(m_cDistParam.iSubShift > 0)
       {
-        isubShift = m_cDistParam.iSubShift -1;
-        m_cDistParam.pOrg    = pcPatternKey->getROIY() + (pcPatternKey->getPatternLStride() << isubShift);
-        m_cDistParam.pCur    = piRefSrch + (rcStruct.iYStride << isubShift);
+        isubShift         = m_cDistParam.iSubShift -1;
+        m_cDistParam.pOrg = pcPatternKey->getROIY() + (pcPatternKey->getPatternLStride() << isubShift);
+        m_cDistParam.pCur = piRefSrch + (rcStruct.iYStride << isubShift);
         uiTempSad = m_cDistParam.DistFunc( &m_cDistParam );
         uiSad += uiTempSad >>  m_cDistParam.iSubShift;
         if(((uiSad << isubShift) + uiBitCost) > rcStruct.uiBestSad)
@@ -3947,6 +3947,106 @@ Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, I
   return true;
 }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+Void TEncSearch::xIntraBCSearchMVCandUpdate(Distortion  uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand)
+{
+  int j = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1;
+
+  if(uiSad < uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+  {
+    for(int t = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1; t >= 0; t--)
+    {
+      if(uiSad < uiSadBestCand[t])
+        j = t;
+    }
+
+    for(int k = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1;k > j; k--)
+    {
+      uiSadBestCand[k]=uiSadBestCand[k-1];
+
+      cMVCand[k].set(cMVCand[k-1].getHor(),cMVCand[k-1].getVer());
+    }
+    uiSadBestCand[j]= uiSad;
+    cMVCand[j].set(x,y);
+  }  
+}
+
+Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
+                                              Int         iRoiWidth,
+                                              Int         iRoiHeight,
+                                              Int         cuPelX,
+                                              Int         cuPelY,
+                                              Distortion* uiSadBestCand, 
+                                              TComMv*     cMVCand, 
+                                              UInt        uiPartOffset
+                                            )
+{
+  Int iBestCandIdx = 0;
+  Distortion  uiSadBest = std::numeric_limits<Distortion>::max();
+  Distortion  uiTempSad, uiUVSad;
+  Pel* pRef;
+  Pel* pOrg;
+  Int iRefStride, iOrgStride;
+  Int iWidth, iHeight;
+  Int iMvx, iMvy;
+
+  Double fYWeight, fUVWeight;
+  Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+  Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+
+  fYWeight =  1.0;
+  fUVWeight = 1.0;
+
+  for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
+  {
+    if((!cMVCand[iCand].getHor()) && (!cMVCand[iCand].getVer())) 
+      continue;
+
+    if(((Int) (cuPelY + cMVCand[iCand].getVer() + iRoiHeight) >= iPicHeight) || ((cuPelY + cMVCand[iCand].getVer()) < 0))
+      continue;
+
+    if(((Int) (cuPelX + cMVCand[iCand].getHor() + iRoiWidth) >= iPicWidth) || ((cuPelX + cMVCand[iCand].getHor()) < 0))
+      continue;
+
+    uiTempSad = uiSadBestCand[iCand] - m_pcRdCost->getCost( cMVCand[iCand].getHor(), cMVCand[iCand].getVer());
+    uiTempSad = (UInt)((Double)(uiTempSad) * fYWeight) + m_pcRdCost->getCost( cMVCand[iCand].getHor(), cMVCand[iCand].getVer());
+
+    for (UInt ch = COMPONENT_Cb; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
+    {
+      uiUVSad = 0;
+
+      pRef = pcCU->getPic()->getPicYuvRec()->getAddr(ComponentID(ch), pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartOffset);
+      pOrg = pcCU->getPic()->getPicYuvOrg()->getAddr(ComponentID(ch), pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartOffset);
+      iRefStride = pcCU->getPic()->getPicYuvRec()->getStride(ComponentID(ch));
+      iOrgStride = pcCU->getPic()->getPicYuvOrg()->getStride(ComponentID(ch));
+      iWidth = iRoiWidth >> pcCU->getPic()->getComponentScaleX(ComponentID(ch));
+      iHeight = iRoiHeight >> pcCU->getPic()->getComponentScaleY(ComponentID(ch));
+      iMvx = cMVCand[iCand].getHor() >> pcCU->getPic()->getComponentScaleX(ComponentID(ch));
+      iMvy = cMVCand[iCand].getVer() >> pcCU->getPic()->getComponentScaleY(ComponentID(ch));
+
+      pRef = pRef + iMvy * iRefStride + iMvx;
+
+      for(int row = 0; row < iHeight; row++)
+      {
+        for(int col = 0; col < iWidth; col++)
+        {
+          uiUVSad += abs(pRef[row * iRefStride + col] - pOrg[row * iOrgStride + col]);
+        }
+      }
+
+      uiTempSad += (UInt)((Double)(uiUVSad) * fUVWeight);
+    }
+
+    if(uiTempSad < uiSadBest)
+    {
+      uiSadBest = uiTempSad;
+      iBestCandIdx = iCand;
+    }
+  }
+
+  return iBestCandIdx;
+}
+#endif
 
 // based on xPatternSearch
 Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
@@ -3977,11 +4077,28 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   const Int   cuPelY            = pcCU->getCUPelY() + puPelOffsetY;
 
   Distortion  uiSad;
-  Distortion  uiSadBest = std::numeric_limits<Distortion>::max();
-  Int         iBestX    = 0;
-  Int         iBestY    = 0;
+  Distortion  uiSadBest         = std::numeric_limits<Distortion>::max();
+  Int         iBestX            = 0;
+  Int         iBestY            = 0;
 
   Pel*        piRefSrch;
+
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+  Int         iBestCandIdx = 0;
+  UInt        uiPartOffset = 0;
+  Distortion  uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
+  TComMv      cMVCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
+
+#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
+  uiPartOffset = uiPartAddr;
+#endif
+
+  for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
+  {
+    uiSadBestCand[iCand] = std::numeric_limits<Distortion>::max();
+    cMVCand[iCand].set(0,0);
+  }
+#endif
 
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
@@ -4084,17 +4201,34 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
         uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+        if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+#else
         if(uiSad > uiSadBest)
+#endif
           break;
 
         r += 4;
       }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+      xIntraBCSearchMVCandUpdate(uiSad, 0, y, uiSadBestCand, cMVCand);
+      uiTempSadBest = uiSadBestCand[0];
+      if(uiSadBestCand[0] <= 3)
+      {
+        iBestX = cMVCand[0].getHor();
+        iBestY = cMVCand[0].getVer();
+        uiSadBest = uiSadBestCand[0];
+        rcMv.set( iBestX, iBestY );
+        ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+        return;
+      }
+#else
       if ( uiSad < uiSadBest )
       {
-        uiSadBest = uiSad;
-        iBestX    = 0;
-        iBestY    = y;
+        uiSadBest     = uiSad;
+        iBestX        = 0;
+        iBestY        = y;
         uiTempSadBest = uiSad;
 
         if(uiSadBest <= 3)
@@ -4104,6 +4238,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           return;
         }
       }
+#endif
     }
 
     const Int boundX = max(iSrchRngHorLeft, - cuPelX);
@@ -4125,27 +4260,63 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
         uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+        if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+#else
         if(uiSad > uiSadBest)
+#endif
           break;
 
         r += 4;
       }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+      xIntraBCSearchMVCandUpdate(uiSad, x, 0, uiSadBestCand, cMVCand);
+      uiTempSadBest = uiSadBestCand[0];
+      if(uiSadBestCand[0] <= 3)
+      {
+        iBestX = cMVCand[0].getHor();
+        iBestY = cMVCand[0].getVer();
+        uiSadBest = uiSadBestCand[0];
+        rcMv.set( iBestX, iBestY );
+        ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+        return;
+      }
+#else
       if ( uiSad < uiSadBest )
       {
-        uiSadBest = uiSad;
-        iBestX    = x;
-        iBestY    = 0;
+        uiSadBest     = uiSad;
+        iBestX        = x;
+        iBestY        = 0;
         uiTempSadBest = uiSad;
+
         if(uiSadBest <= 3)
         {
           rcMv.set( iBestX, iBestY );
           ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
-           return;
+          return;
         }
       }
+#endif
+
     }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+    iBestX = cMVCand[0].getHor();
+    iBestY = cMVCand[0].getVer();
+    uiSadBest = uiSadBestCand[0];  
+    if((!iBestX && !iBestY) || (uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 32))
+    {
+      //chroma refine
+      iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+      iBestX       = cMVCand[iBestCandIdx].getHor();
+      iBestY       = cMVCand[iBestCandIdx].getVer();
+      uiSadBest    = uiSadBestCand[iBestCandIdx]; 
+      rcMv.set( iBestX, iBestY );
+      ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+      return; 
+    }
+#else
     if((!iBestX && !iBestY))
     {
       rcMv.set( iBestX, iBestY );
@@ -4159,6 +4330,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
       return;
     }
+#endif
 
     if( pcCU->getWidth(0) < 16 && !bUse1DSearchFor8x8 )
     {
@@ -4184,7 +4356,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
             Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
             if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
-            continue;
+              continue;
           }
 
 #if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
@@ -4203,26 +4375,53 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+#else
             if(uiSad > uiSadBest)
+#endif
               break;
             r += 4;
           }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+          xIntraBCSearchMVCandUpdate(uiSad, x, y, uiSadBestCand, cMVCand);
+#else
           if ( uiSad < uiSadBest )
           {
             uiSadBest = uiSad;
             iBestX    = x;
             iBestY    = y;
           }
+#endif
+
         }
       }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+      iBestX = cMVCand[0].getHor();
+      iBestY = cMVCand[0].getVer();
+      uiSadBest = uiSadBestCand[0];
+      if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 16)
+      {
+        //chroma refine
+        iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+        iBestX       = cMVCand[iBestCandIdx].getHor();
+        iBestY       = cMVCand[iBestCandIdx].getVer();
+        uiSadBest    = uiSadBestCand[iBestCandIdx]; 
+        rcMv.set( iBestX, iBestY );
+        ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+        return;
+      }
+#else
       if(uiSadBest - m_pcRdCost->getCost( iBestX, iBestY) <= 16)
       {
         rcMv.set( iBestX, iBestY );
         ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
         return;
       }
+#endif
+
 
       for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
       {
@@ -4243,7 +4442,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
             Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
             if(iTempZscanIdx >= pcCU->getZorderIdxInCU())
-            continue;
+              continue;
           }
 
 #if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
@@ -4262,12 +4461,30 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+#else
             if(uiSad > uiSadBest)
+#endif
               break;
 
             r += 4;
           }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+          xIntraBCSearchMVCandUpdate(uiSad, x, y, uiSadBestCand, cMVCand);
+          if(uiSadBestCand[0] <= 5)
+          {
+            //chroma refine & return
+            iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+            iBestX       = cMVCand[iBestCandIdx].getHor();
+            iBestY       = cMVCand[iBestCandIdx].getVer();
+            uiSadBest    = uiSadBestCand[iBestCandIdx]; 
+            rcMv.set( iBestX, iBestY );
+            ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+            return;
+          }
+#else
           if ( uiSad < uiSadBest )
           {
             uiSadBest = uiSad;
@@ -4280,9 +4497,30 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               return;
             }
           }
+#endif
+
         }
       }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+      iBestX = cMVCand[0].getHor();
+      iBestY = cMVCand[0].getVer();
+      uiSadBest = uiSadBestCand[0];
+
+      if((uiSadBest >= uiTempSadBest) || ((uiSadBest - m_pcRdCost->getCost( iBestX, iBestY)) <= 32))
+      {
+        //chroma refine
+        iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+        iBestX       = cMVCand[iBestCandIdx].getHor();
+        iBestY       = cMVCand[iBestCandIdx].getVer();
+        uiSadBest    = uiSadBestCand[iBestCandIdx]; 
+        rcMv.set( iBestX, iBestY );
+        ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+        return; 
+      }
+
+      uiTempSadBest = uiSadBestCand[0];
+#else
       if(uiSadBest >= uiTempSadBest)
       {
         rcMv.set( iBestX, iBestY );
@@ -4298,6 +4536,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
 
       uiTempSadBest = uiSadBest;
+#endif
+
 
       for(Int y = (max(iSrchRngVerTop, -cuPelY) + 1); y <= iSrchRngVerBottom; y += 2)
       {
@@ -4338,12 +4578,30 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+#else
             if(uiSad > uiSadBest)
+#endif
               break;
 
             r += 4;
           }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+          xIntraBCSearchMVCandUpdate(uiSad, x, y, uiSadBestCand, cMVCand);
+          if(uiSadBestCand[0] <= 5)
+          {
+            //chroma refine & return
+            iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+            iBestX       = cMVCand[iBestCandIdx].getHor();
+            iBestY       = cMVCand[iBestCandIdx].getVer();
+            uiSadBest    = uiSadBestCand[iBestCandIdx]; 
+            rcMv.set( iBestX, iBestY );
+            ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+            return;  
+          }
+#else
           if ( uiSad < uiSadBest )
           {
             uiSadBest = uiSad;
@@ -4356,6 +4614,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               return;
             }
           }
+#endif
+
         }
       }
     }
@@ -4430,9 +4690,18 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     }
   }
 
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+  iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+  iBestX       = cMVCand[iBestCandIdx].getHor();
+  iBestY       = cMVCand[iBestCandIdx].getVer();
+  uiSadBest    = uiSadBestCand[iBestCandIdx];  
+  rcMv.set( iBestX, iBestY );
+  ruiSAD       = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+#else
   rcMv.set( iBestX, iBestY );
 
   ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY);
+#endif
 
   return;
 }

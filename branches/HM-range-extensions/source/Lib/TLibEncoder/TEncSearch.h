@@ -245,6 +245,20 @@ public:
            xCIPIntraSearchPruning(pcCU, relX, relY, roiWidth, roiHeight);
   }
 
+
+#if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
+  Void xIntraBCSearchMVCandUpdate(Distortion uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand);
+  
+  Int xIntraBCSearchMVChromaRefine( TComDataCU *pcCU,
+                                    Int         iRoiWidth,
+                                    Int         iRoiHeight,
+                                    Int         cuPelX,
+                                    Int         cuPelY,
+                                    Distortion* uiSadBestCand, 
+                                    TComMv*     cMVCand, 
+                                    UInt        uiPartAddr);
+#endif
+
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
                                   UInt         uiPartAddr,
                                   TComPattern* pcPatternKey,
