@@ -524,7 +524,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ECU", m_bUseEarlyCU, false, "Early CU setting")
   ("FDM", m_useFastDecisionForMerge, true, "Fast decision for Merge RD Cost")
   ("CFM", m_bUseCbfFastMode, false, "Cbf fast mode setting")
+#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
+  ("ESD", m_useEarlySkipDetection, true, "Early SKIP detection setting")
+#else
   ("ESD", m_useEarlySkipDetection, false, "Early SKIP detection setting")
+#endif 
   ( "RateControl",         m_RCEnableRateControl,   false, "Rate control: enable rate control" )
   ( "TargetBitrate",       m_RCTargetBitrate,           0, "Rate control: target bitrate" )
   ( "KeepHierarchicalBit", m_RCKeepHierarchicalBit,     0, "Rate control: 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation" )

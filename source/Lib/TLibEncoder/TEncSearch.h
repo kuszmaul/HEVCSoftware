@@ -453,6 +453,17 @@ protected:
                                     TComMv&      rcMv,
                                     Distortion&  ruiSAD );
 
+#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
+  Void xTZSearchSelective         ( TComDataCU*  pcCU,
+                                    TComPattern* pcPatternKey,
+                                    Pel*         piRefY,
+                                    Int          iRefStride,
+                                    TComMv*      pcMvSrchRngLT,
+                                    TComMv*      pcMvSrchRngRB,
+                                    TComMv&      rcMv,
+                                    Distortion&  ruiSAD );
+#endif
+
   Void xSetSearchRange            ( TComDataCU*  pcCU,
                                     TComMv&      cMvPred,
                                     Int          iSrchRng,
