@@ -259,6 +259,7 @@
 #define RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX             1 ///< 0 = use unmodified exponential-Golomb coding for all escape-escape values, 1 (default) = when using extended-precision processing, use a modified prefix system where the prefix length is limited to mitigate worst-case code length
 #define RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY                       1 ///< 0 = allow merged PUs to overlap due to motion vector clipping and stray outside the constrained intra area, 1 = restrict the search area such that the bottom-right PU's motion vector must be valid for all PUs with which it is merged
 #define RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH                          1 ///< 0 = use only diamond or full search for inter prediction estimation, 1 (default) = additionally allow the use of a selective inter prediction search
+#define RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM                                1 ///< 0 = use original +1/3 or +1/6 rounding for RDPCM, 1 (default) = use +1/2 rounding for RDPCM
 
 //------------------------------------------------
 // Backwards-compatibility
