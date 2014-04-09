@@ -256,7 +256,8 @@
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #endif
 
-#define RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX                         1 ///< 0 = use unmodified exponential-Golomb coding for all escape-escape values, 1 (default) = when using extended-precision processing, use a modified prefix system where the prefix length is limited to mitigate worst-case code length
+#define RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX             1 ///< 0 = use unmodified exponential-Golomb coding for all escape-escape values, 1 (default) = when using extended-precision processing, use a modified prefix system where the prefix length is limited to mitigate worst-case code length
+#define RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY                       1 ///< 0 = allow merged PUs to overlap due to motion vector clipping and stray outside the constrained intra area, 1 = restrict the search area such that the bottom-right PU's motion vector must be valid for all PUs with which it is merged
 
 //------------------------------------------------
 // Backwards-compatibility

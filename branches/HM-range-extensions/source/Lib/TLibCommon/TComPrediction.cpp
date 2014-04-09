@@ -522,15 +522,18 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
       //       top-left chroma samples.
       //       Clipping prevents this from occurring.
 
+#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
       Int iLeftWidth = pcCU->getIntraBCSearchAreaWidth();
-
       Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
       Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );
+#endif
 
       UInt uiMvSrcAddr = ( pcYuvPred->getChromaFormat() == CHROMA_422 && iPartIdx < ( pcCU->getNumPartitions() >> 1 ) ? 1 : 3 );
       cMv = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiMvSrcAddr );
+#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
       cMv.setHor( std::max<Int>( iBoundaryX, cMv.getHor() ) ); // Boundary is negative, hence max
       cMv.setVer( std::max<Int>( iBoundaryY, cMv.getVer() ) );
+#endif
     }
 
     xPredIntraBCBlk( COMPONENT_Cb, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
