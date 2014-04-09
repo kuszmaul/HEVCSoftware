@@ -454,7 +454,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("dQPFile,m",                     cfg_dQPFile,           string(""), "dQP file name")
   ("RDOQ",                          m_useRDOQ,                  true )
   ("RDOQTS",                        m_useRDOQTS,                true )
-  ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
+  ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disabled  1:RD-penalty  2:maximum RD-penalty")
 
   // Deblocking filter parameters
   ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
@@ -536,7 +536,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ESD", m_useEarlySkipDetection, false, "Early SKIP detection setting")
 #endif 
   ( "RateControl",         m_RCEnableRateControl,   false, "Rate control: enable rate control" )
-  ( "TargetBitrate",       m_RCTargetBitrate,           0, "Rate control: target bitrate" )
+  ( "TargetBitrate",       m_RCTargetBitrate,           0, "Rate control: target bit-rate" )
   ( "KeepHierarchicalBit", m_RCKeepHierarchicalBit,     0, "Rate control: 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation" )
   ( "LCULevelRateControl", m_RCLCULevelRC,           true, "Rate control: true: LCU level RC; false: picture level RC" )
   ( "RCLCUSeparateModel",  m_RCUseLCUSeparateModel,  true, "Rate control: use LCU level separate R-lambda model" )
@@ -587,10 +587,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIPictureTiming",               m_pictureTimingSEIEnabled,                0, "Control generation of picture timing SEI messages")
   ("SEIToneMappingInfo",                       m_toneMappingInfoSEIEnabled,    false, "Control generation of Tone Mapping SEI messages")
   ("SEIToneMapId",                             m_toneMapId,                        0, "Specifies Id of Tone Mapping SEI message for a given session")
-  ("SEIToneMapCancelFlag",                     m_toneMapCancelFlag,            false, "Indicates that Tone Mapping SEI message cancels the persistance or follows")
+  ("SEIToneMapCancelFlag",                     m_toneMapCancelFlag,            false, "Indicates that Tone Mapping SEI message cancels the persistence or follows")
   ("SEIToneMapPersistenceFlag",                m_toneMapPersistenceFlag,        true, "Specifies the persistence of the Tone Mapping SEI message")
   ("SEIToneMapCodedDataBitDepth",              m_toneMapCodedDataBitDepth,         8, "Specifies Coded Data BitDepth of Tone Mapping SEI messages")
-  ("SEIToneMapTargetBitDepth",                 m_toneMapTargetBitDepth,            8, "Specifies Output BitDepth of Tome mapping function")
+  ("SEIToneMapTargetBitDepth",                 m_toneMapTargetBitDepth,            8, "Specifies Output BitDepth of Tone mapping function")
   ("SEIToneMapModelId",                        m_toneMapModelId,                   0, "Specifies Model utilized for mapping coded data into target_bit_depth range\n"
                                                                                       "\t0:  linear mapping with clipping\n"
                                                                                       "\t1:  sigmoidal mapping\n"
@@ -598,7 +598,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                       "\t3:  piece-wise linear mapping\n"
                                                                                       "\t4:  luminance dynamic range information ")
   ("SEIToneMapMinValue",                              m_toneMapMinValue,                          0, "Specifies the minimum value in mode 0")
-  ("SEIToneMapMaxValue",                              m_toneMapMaxValue,                       1023, "Specifies the maxmum value in mode 0")
+  ("SEIToneMapMaxValue",                              m_toneMapMaxValue,                       1023, "Specifies the maximum value in mode 0")
   ("SEIToneMapSigmoidMidpoint",                       m_sigmoidMidpoint,                        512, "Specifies the centre point in mode 1")
   ("SEIToneMapSigmoidWidth",                          m_sigmoidWidth,                           960, "Specifies the distance between 5% and 95% values of the target_bit_depth in mode 1")
   ("SEIToneMapStartOfCodedInterval",                  cfg_startOfCodedInterval,          string(""), "Array of user-defined mapping table")
@@ -608,7 +608,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapCameraIsoSpeedIdc",                     m_cameraIsoSpeedIdc,                        0, "Indicates the camera ISO speed for daylight illumination")
   ("SEIToneMapCameraIsoSpeedValue",                   m_cameraIsoSpeedValue,                    400, "Specifies the camera ISO speed for daylight illumination of Extended_ISO")
   ("SEIToneMapExposureIndexIdc",                      m_exposureIndexIdc,                         0, "Indicates the exposure index setting of the camera")
-  ("SEIToneMapExposureIndexValue",                    m_exposureIndexValue,                     400, "Specifies the exposure index setting of the cameran of Extended_ISO")
+  ("SEIToneMapExposureIndexValue",                    m_exposureIndexValue,                     400, "Specifies the exposure index setting of the camera of Extended_ISO")
   ("SEIToneMapExposureCompensationValueSignFlag",     m_exposureCompensationValueSignFlag,        0, "Specifies the sign of ExposureCompensationValue")
   ("SEIToneMapExposureCompensationValueNumerator",    m_exposureCompensationValueNumerator,       0, "Specifies the numerator of ExposureCompensationValue")
   ("SEIToneMapExposureCompensationValueDenomIdc",     m_exposureCompensationValueDenomIdc,        2, "Specifies the denominator of ExposureCompensationValue")
@@ -620,11 +620,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIChromaSamplingFilterHint",                     m_chromaSamplingFilterSEIenabled,       false, "Control generation of the chroma sampling filter hint SEI message")
   ("SEIChromaSamplingHorizontalFilterType",           m_chromaSamplingHorFilterIdc,               2, "Defines the Index of the chroma sampling horizontal filter\n"
                                                                                                      "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
-                                                                                                     "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI messasge"
+                                                                                                     "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI message"
                                                                                                      "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
   ("SEIChromaSamplingVerticalFilterType",             m_chromaSamplingVerFilterIdc,               2, "Defines the Index of the chroma sampling vertical filter\n"
                                                                                                      "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
-                                                                                                     "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI messasge"
+                                                                                                     "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI message"
                                                                                                      "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
   ("SEIFramePacking",                m_framePackingSEIEnabled,                 0, "Control generation of frame packing SEI messages")
   ("SEIFramePackingType",            m_framePackingSEIType,                    0, "Define frame packing arrangement\n"
@@ -654,7 +654,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEITimeCode",                    m_timeCodeSEIEnabled,                 false,  "Control generation of time code information SEI message")
   ("SEIKneeFunctionInfo",                 m_kneeSEIEnabled,               false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                   m_kneeSEIId,                        0, "Specifies Id of Knee function SEI message for a given session")
-  ("SEIKneeFunctionCancelFlag",           m_kneeSEICancelFlag,            false, "Indicates that Knee function SEI message cancels the persistance or follows")
+  ("SEIKneeFunctionCancelFlag",           m_kneeSEICancelFlag,            false, "Indicates that Knee function SEI message cancels the persistence or follows")
   ("SEIKneeFunctionPersistenceFlag",      m_kneeSEIPersistenceFlag,        true, "Specifies the persistence of the Knee function SEI message")
   ("SEIKneeFunctionMappingFlag",          m_kneeSEIMappingFlag,           false, "Specifies the mapping mode of the Knee function SEI message")
   ("SEIKneeFunctionInputDrange",          m_kneeSEIInputDrange,            1000, "Specifies the peak luminance level for the input picture of Knee function SEI messages")
@@ -1689,7 +1689,7 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( m_kneeSEIOutputKneePoint[i] < 0 || m_kneeSEIOutputKneePoint[i] > 1000, "SEIKneeFunctionInputKneePointValue must be in the range of 0 to 1000");
       if ( i > 0 )
       {
-        xConfirmPara( m_kneeSEIInputKneePoint[i-1] >= m_kneeSEIInputKneePoint[i],  "The i-th SEIKneeFunctionInputKneePointValue must be greather than the (i-1)-th value");
+        xConfirmPara( m_kneeSEIInputKneePoint[i-1] >= m_kneeSEIInputKneePoint[i],  "The i-th SEIKneeFunctionInputKneePointValue must be greater than the (i-1)-th value");
       }
     }
   }
