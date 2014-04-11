@@ -70,22 +70,25 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   opts.addOptions()
 
 
-  ("help", do_help, false, "this help text")
-  ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream input file name")
-  ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name\n"
-                                                     "YUV writing is skipped if omitted")
-  ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
-  ("OutputBitDepth,d",  m_outputBitDepth[CHANNEL_TYPE_LUMA],   0, "bit depth of YUV output luma component (default: use 0 for native depth)")
-  ("OutputBitDepthC,d", m_outputBitDepth[CHANNEL_TYPE_CHROMA], 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
-  ("OutputColourSpaceConvert",  outputColourSpaceConvert,         string(""), "Colour space conversion to apply to input 444 video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(false))
-  ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
-  ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
-                                              "\t1: check hash in SEI messages if available in the bitstream\n"
-                                              "\t0: ignore SEI message")
-  ("SEIpictureDigest", m_decodedPictureHashSEIEnabled, 1, "deprecated alias for SEIDecodedPictureHash")
-  ("SEINoDisplay", m_decodedNoDisplaySEIEnabled, true, "Control handling of decoded no display SEI messages")
-  ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
-  ("RespectDefDispWindow,w", m_respectDefDispWindow, 0, "Only output content inside the default display window\n")
+  ("help",                      do_help,                               false,      "this help text")
+  ("BitstreamFile,b",           cfg_BitstreamFile,                     string(""), "bitstream input file name")
+  ("ReconFile,o",               cfg_ReconFile,                         string(""), "reconstructed YUV output file name\n"
+                                                                                   "YUV writing is skipped if omitted")
+  ("SkipFrames,s",              m_iSkipFrame,                          0,          "number of frames to skip before random access")
+  ("OutputBitDepth,d",          m_outputBitDepth[CHANNEL_TYPE_LUMA],   0,          "bit depth of YUV output luma component (default: use 0 for native depth)")
+  ("OutputBitDepthC,d",         m_outputBitDepth[CHANNEL_TYPE_CHROMA], 0,          "bit depth of YUV output chroma component (default: use 0 for native depth)")
+  ("OutputColourSpaceConvert",  outputColourSpaceConvert,              string(""), "Colour space conversion to apply to input 444 video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(false))
+  ("MaxTemporalLayer,t",        m_iMaxTemporalLayer,                   -1,         "Maximum Temporal Layer to be decoded. -1 to decode all layers")
+  ("SEIDecodedPictureHash",     m_decodedPictureHashSEIEnabled,        1,          "Control handling of decoded picture hash SEI messages\n"
+                                                                                   "\t1: check hash in SEI messages if available in the bitstream\n"
+                                                                                   "\t0: ignore SEI message")
+  ("SEIpictureDigest",          m_decodedPictureHashSEIEnabled,        1,          "deprecated alias for SEIDecodedPictureHash")
+  ("SEINoDisplay",              m_decodedNoDisplaySEIEnabled,          true,       "Control handling of decoded no display SEI messages")
+  ("TarDecLayerIdSetFile,l",    cfg_TargetDecLayerIdSetFile,           string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
+  ("RespectDefDispWindow,w",    m_respectDefDispWindow,                0,          "Only output content inside the default display window\n")
+#if RExt__O0043_BEST_EFFORT_DECODING
+  ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")
+#endif
   ;
 
   po::setDefaults(opts);

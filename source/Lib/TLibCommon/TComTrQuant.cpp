@@ -1844,7 +1844,11 @@ Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pe
 #if MATRIX_MULT
   if( iWidth == iHeight )
   {
+#if RExt__O0043_BEST_EFFORT_DECODING
+    xITr(g_bitDepthInStream[toChannelType(compID)], plCoef, pResidual, uiStride, (UInt)iWidth, useDST, g_maxTrDynamicRange[toChannelType(compID)]);
+#else
     xITr(g_bitDepth[toChannelType(compID)], plCoef, pResidual, uiStride, (UInt)iWidth, useDST, g_maxTrDynamicRange[toChannelType(compID)]);
+#endif
     return;
   }
 #endif
@@ -1854,7 +1858,11 @@ Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pe
 
   memcpy(coeff, plCoef, (iWidth * iHeight * sizeof(TCoeff)));
 
+#if RExt__O0043_BEST_EFFORT_DECODING
+  xITrMxN( g_bitDepthInStream[toChannelType(compID)], coeff, block, iWidth, iHeight, useDST, g_maxTrDynamicRange[toChannelType(compID)] );
+#else
   xITrMxN( g_bitDepth[toChannelType(compID)], coeff, block, iWidth, iHeight, useDST, g_maxTrDynamicRange[toChannelType(compID)] );
+#endif
 
   for (Int y = 0; y < iHeight; y++)
     for (Int x = 0; x < iWidth; x++)

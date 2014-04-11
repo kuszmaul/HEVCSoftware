@@ -1755,7 +1755,11 @@ Void TAppEncCfg::xSetGlobal()
   // set internal bit-depth and constants
   for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
   {
+#if RExt__O0043_BEST_EFFORT_DECODING
+    g_bitDepthInStream[channelType] = g_bitDepth[channelType] = m_internalBitDepth[channelType];
+#else
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
+#endif
     g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[channelType] : m_internalBitDepth[channelType];
 
     if (m_useExtendedPrecision) g_maxTrDynamicRange[channelType] = std::max<Int>(15, (g_bitDepth[channelType] + 6));
