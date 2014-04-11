@@ -42,7 +42,7 @@
 #include "TComPic.h"
 #include "TComYuv.h"
 
-static const UInt settingNameWidth  = 61;
+static const UInt settingNameWidth  = 66;
 static const UInt settingHelpWidth  = 84;
 static const UInt settingValueWidth = 3;
 
