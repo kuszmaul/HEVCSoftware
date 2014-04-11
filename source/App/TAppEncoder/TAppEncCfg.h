@@ -276,6 +276,9 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  Bool      m_tmctsSEIEnabled;
+#endif
   Bool      m_timeCodeSEIEnabled;
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;

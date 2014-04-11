@@ -256,6 +256,8 @@
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #endif
 
+#define RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI      1 ///< 0 = disable code related to Temporal Motion Constrained Tile Sets SEI, 1 (default) = allow coding of Temporal Motion Constrained Tile Sets SEI messages
+
 #define RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX             1 ///< 0 = use unmodified exponential-Golomb coding for all escape-escape values, 1 (default) = when using extended-precision processing, use a modified prefix system where the prefix length is limited to mitigate worst-case code length
 #define RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY                       1 ///< 0 = allow merged PUs to overlap due to motion vector clipping and stray outside the constrained intra area, 1 = restrict the search area such that the bottom-right PU's motion vector must be valid for all PUs with which it is merged
 #define RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH                          1 ///< 0 = use only diamond or full search for inter prediction estimation, 1 (default) = additionally allow the use of a selective inter prediction search
