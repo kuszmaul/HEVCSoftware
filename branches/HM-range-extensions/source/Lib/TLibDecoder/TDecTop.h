@@ -105,6 +105,9 @@ private:
   Bool                    m_isNoOutputPriorPics;
   Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
 #endif
+#if RExt__O0043_BEST_EFFORT_DECODING
+  UInt                    m_forceDecodeBitDepth;
+#endif
 
 public:
   TDecTop();
@@ -129,6 +132,9 @@ public:
 
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
   Void  setNoOutputPriorPicsFlag (bool val) { m_isNoOutputPriorPics = val; }
+#endif
+#if RExt__O0043_BEST_EFFORT_DECODING
+  Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
 #endif
 
 protected:

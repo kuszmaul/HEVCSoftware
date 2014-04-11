@@ -663,6 +663,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     ss << "###: " << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << std::endl;
 #endif
 
+#if RExt__O0043_BEST_EFFORT_DECODING
+  const Int bitDepthDelta = g_bitDepthInStream[toChannelType(compID)] - g_bitDepth[toChannelType(compID)];
+#endif
   const Int clipbd = g_bitDepth[toChannelType(compID)];
 
   if( useCrossComponentPrediction )
@@ -692,7 +695,11 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
       if (bDebugResi)
         ss << pResi[ uiX ] << ", ";
 #endif
+#if RExt__O0043_BEST_EFFORT_DECODING
+      pReco    [ uiX ] = ClipBD( rightShiftEvenRounding<Pel>(pPred[ uiX ] + pResi[ uiX ], bitDepthDelta), clipbd );
+#else
       pReco    [ uiX ] = ClipBD( pPred[ uiX ] + pResi[ uiX ], clipbd );
+#endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
 #ifdef DEBUG_STRING

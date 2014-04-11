@@ -785,9 +785,17 @@ private:
   static const Int   m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
   TComPTL     m_pcPTL;
 
+#if RExt__O0043_BEST_EFFORT_DECODING
+  UInt        m_forceDecodeBitDepth; // 0 = do not force the decoder's bit depth, other = force the decoder's bit depth to this value (best effort decoding)
+#endif
+
 public:
   TComSPS();
   virtual ~TComSPS();
+#if RExt__O0043_BEST_EFFORT_DECODING
+  Void setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
+  UInt getForceDecodeBitDepth()        const { return m_forceDecodeBitDepth;     }
+#endif
 
   Int  getVPSId       ()         { return m_VPSId;          }
   Void setVPSId       (Int i)    { m_VPSId = i;             }

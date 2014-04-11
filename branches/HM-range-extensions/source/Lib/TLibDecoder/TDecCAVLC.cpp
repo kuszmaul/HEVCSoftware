@@ -613,19 +613,42 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
+#if RExt__O0043_BEST_EFFORT_DECODING
+  const UInt forceDecodeBitDepth = pcSPS->getForceDecodeBitDepth();
+  g_bitDepthInStream[CHANNEL_TYPE_LUMA] = 8 + uiCode;
+  if (forceDecodeBitDepth != 0)
+  {
+    uiCode = forceDecodeBitDepth - 8;
+  }
+#endif
   assert(uiCode <= 8);
 
   pcSPS->setBitDepth(CHANNEL_TYPE_LUMA, 8 + uiCode);
+#if RExt__O0043_BEST_EFFORT_DECODING
+  pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_LUMA]-8)) );
+#else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
+#endif
 
   const Bool bChroma=(pcSPS->getChromaFormatIdc() != CHROMA_400);
   if (bChroma)
   {
     READ_UVLC( uiCode,    "bit_depth_chroma_minus8" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0
+#if RExt__O0043_BEST_EFFORT_DECODING
+    g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
+    if (forceDecodeBitDepth != 0)
+    {
+      uiCode = forceDecodeBitDepth - 8;
+    }
+#endif
     assert(uiCode <= 8);
   }
   pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode); // NOTE: RExt - for 4:0:0, this will be setting the bit depths for chroma to that of luma
+#if RExt__O0043_BEST_EFFORT_DECODING
+  pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_CHROMA]-8)) );
+#else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*uiCode) );
+#endif
 
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   assert(uiCode <= 12);

@@ -167,6 +167,13 @@ template <typename ValueType> inline ValueType leftShift       (const ValueType 
 template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  >> shift) : ( value                                   << -shift); }
 template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ((value + (ValueType(1) << (-shift - 1))) >> -shift); }
 template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (ValueType(1) << (shift - 1))) >> shift) : ( value                                   << -shift); }
+#if RExt__O0043_BEST_EFFORT_DECODING
+// when shift = 0, returns value
+// when shift = 1, (value + 0 + value[1]) >> 1
+// when shift = 2, (value + 1 + value[2]) >> 2
+// when shift = 3, (value + 3 + value[3]) >> 3
+template <typename ValueType> inline ValueType rightShiftEvenRounding(const ValueType value, const UInt shift) { return (shift == 0) ? value : ((value + (1<<(shift-1))-1 + ((value>>shift)&1)) >> shift) ; }
+#endif
 
 // ====================================================================================================================
 // Coding tool configuration

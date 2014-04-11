@@ -67,6 +67,9 @@ protected:
   Bool          m_decodedNoDisplaySEIEnabled;         ///< Enable(true)/disable(false) writing only pictures that get displayed based on the no display SEI message
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window
+#if RExt__O0043_BEST_EFFORT_DECODING
+  UInt          m_forceDecodeBitDepth;                ///< if non-zero, force the bit depth at the decoder (best effort decoding)
+#endif
 
 public:
   TAppDecCfg()
@@ -78,6 +81,9 @@ public:
   , m_decodedPictureHashSEIEnabled(0)
   , m_decodedNoDisplaySEIEnabled(false)
   , m_respectDefDispWindow(0)
+#if RExt__O0043_BEST_EFFORT_DECODING
+  , m_forceDecodeBitDepth(0)
+#endif
   {
     for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
       m_outputBitDepth[channelTypeIndex] = 0;

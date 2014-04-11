@@ -178,6 +178,8 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI, settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
+
   PRINT_CONSTANT(RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX,        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY,                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH,                     settingNameWidth, settingValueWidth);
