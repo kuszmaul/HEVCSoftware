@@ -651,6 +651,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",            m_decodingUnitInfoSEIEnabled,             0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,               0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  ("SEITempMotionConstrainedTileSets", m_tmctsSEIEnabled,                  false,  "Control generation of temporal motion constrained tile sets SEI message")
+#endif
   ("SEITimeCode",                    m_timeCodeSEIEnabled,                 false,  "Control generation of time code information SEI message")
   ("SEIKneeFunctionInfo",                 m_kneeSEIEnabled,               false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                   m_kneeSEIId,                        0, "Specifies Id of Knee function SEI message for a given session")
@@ -1715,6 +1718,14 @@ Void TAppEncCfg::xCheckParameter()
   {
     xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
   }
+
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  if((m_iNumColumnsMinus1<=0 && m_iNumRowsMinus1<=0) && m_tmctsSEIEnabled)
+  {
+    printf("SEITempMotionConstrainedTileSets is set to false to disable 'temporal_motion_constrained_tile_sets' SEI because there are no tiles enabled\n");
+    m_tmctsSEIEnabled = false;
+  }
+#endif
 
 #undef xConfirmPara
   if (check_failed)

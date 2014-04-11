@@ -175,6 +175,9 @@ protected:
   SEIFramePacking*        xCreateSEIFramePacking();
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  SEITempMotionConstrainedTileSets* xCreateSEITempMotionConstrainedTileSets ();
+#endif
   SEIKneeFunctionInfo*    xCreateSEIKneeFunctionInfo();
   SEIChromaSamplingFilterHint* xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIdc);
 

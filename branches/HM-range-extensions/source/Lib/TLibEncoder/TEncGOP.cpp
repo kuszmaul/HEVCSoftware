@@ -282,6 +282,41 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+SEITempMotionConstrainedTileSets* TEncGOP::xCreateSEITempMotionConstrainedTileSets ()
+{
+  TComPPS *pps = m_pcEncTop->getPPS();
+  SEITempMotionConstrainedTileSets *sei = new SEITempMotionConstrainedTileSets();
+  if(pps->getTilesEnabledFlag())
+  {
+    sei->m_mc_all_tiles_exact_sample_value_match_flag = false;
+    sei->m_each_tile_one_tile_set_flag                = false;
+    sei->m_limited_tile_set_display_flag              = false;
+    sei->setNumberOfTileSets((pps->getNumColumnsMinus1() + 1) * (pps->getNumRowsMinus1() + 1));
+
+    for(Int i=0; i < sei->getNumberOfTileSets(); i++)
+    {
+      sei->tileSetData(i).m_mcts_id = i;  //depends the application;
+      sei->tileSetData(i).setNumberOfTileRects(1);
+
+      for(Int j=0; j<sei->tileSetData(i).getNumberOfTileRects(); j++)
+      {
+        sei->tileSetData(i).topLeftTileIndex(j)     = i+j;
+        sei->tileSetData(i).bottomRightTileIndex(j) = i+j;
+      }
+
+      sei->tileSetData(i).m_exact_sample_value_match_flag    = false;
+      sei->tileSetData(i).m_mcts_tier_level_idc_present_flag = false;
+    }
+  }
+  else
+  {
+    assert(!"Tile is not enabled");
+  }
+  return sei;
+}
+#endif
+
 SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
 {
   SEIKneeFunctionInfo *seiKneeFunctionInfo = new SEIKneeFunctionInfo();
@@ -417,6 +452,20 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
+
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  if(m_pcCfg->getTMCTSSEIEnabled())
+  {
+    SEITempMotionConstrainedTileSets *sei_tmcts = xCreateSEITempMotionConstrainedTileSets ();
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei_tmcts, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei_tmcts;
+  }
+#endif
 
   if(m_pcCfg->getTimeCodeSEIEnabled())
   {

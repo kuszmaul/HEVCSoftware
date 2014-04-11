@@ -287,6 +287,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  m_cTEncTop.setTMCTSSEIEnabled( m_tmctsSEIEnabled );
+#endif
   m_cTEncTop.setTimeCodeSEIEnabled( m_timeCodeSEIEnabled );
   m_cTEncTop.setKneeSEIEnabled              ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                   ( m_kneeSEIId );

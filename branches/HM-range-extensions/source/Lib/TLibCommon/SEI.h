@@ -79,6 +79,9 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 136,
+#endif
     CHROMA_SAMPLING_FILTER_HINT          = 137,
     TIME_CODE                            = 138,
     MASTERING_DISPLAY_COLOUR_VOLUME      = 139
@@ -530,6 +533,67 @@ public:
   UInt timeOffsetLength;
   Int  timeOffset;
 };
+
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+//definition according to P1005_v1;
+class SEITempMotionConstrainedTileSets: public SEI
+{
+  struct TileSetData
+  {
+    protected:
+      std::vector<Int> m_top_left_tile_index;  //[tileSetIdx][tileIdx];
+      std::vector<Int> m_bottom_right_tile_index;
+
+    public:
+      Int     m_mcts_id;  
+      Bool    m_display_tile_set_flag;
+      Int     m_num_tile_rects_in_set; //_minus1;
+      Bool    m_exact_sample_value_match_flag;
+      Bool    m_mcts_tier_level_idc_present_flag;
+      Bool    m_mcts_tier_flag;
+      Int     m_mcts_level_idc;
+
+      Void setNumberOfTileRects(const Int number)
+      {
+        m_top_left_tile_index    .resize(number);
+        m_bottom_right_tile_index.resize(number);
+      }
+
+      Int  getNumberOfTileRects() const
+      {
+        assert(m_top_left_tile_index.size() == m_bottom_right_tile_index.size());
+        return Int(m_top_left_tile_index.size());
+      }
+
+            Int &topLeftTileIndex    (const Int tileRectIndex)       { return m_top_left_tile_index    [tileRectIndex]; }
+            Int &bottomRightTileIndex(const Int tileRectIndex)       { return m_bottom_right_tile_index[tileRectIndex]; }
+      const Int &topLeftTileIndex    (const Int tileRectIndex) const { return m_top_left_tile_index    [tileRectIndex]; }
+      const Int &bottomRightTileIndex(const Int tileRectIndex) const { return m_bottom_right_tile_index[tileRectIndex]; }
+  };
+
+protected:
+  std::vector<TileSetData> m_tile_set_data;
+
+public:
+
+  Bool    m_mc_all_tiles_exact_sample_value_match_flag;
+  Bool    m_each_tile_one_tile_set_flag;
+  Bool    m_limited_tile_set_display_flag;
+  Int     m_num_sets_in_message; //_minus1;  //[0,255];
+  Bool    m_max_mcs_tier_level_idc_present_flag;
+  Bool    m_max_mcts_tier_flag;
+  Int     m_max_mcts_level_idc;
+
+  PayloadType payloadType() const { return TEMP_MOTION_CONSTRAINED_TILE_SETS; }
+
+  Void setNumberOfTileSets(const Int number)       { m_tile_set_data.resize(number);     }
+  Int  getNumberOfTileSets()                 const { return Int(m_tile_set_data.size()); }
+
+        TileSetData &tileSetData (const Int index)       { return m_tile_set_data[index]; }
+  const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
+
+};
+#endif
 
 #endif
 

@@ -284,6 +284,9 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  Bool      m_tmctsSEIEnabled;
+#endif
   Bool      m_timeCodeSEIEnabled;
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
@@ -300,7 +303,7 @@ protected:
   Bool      m_masteringDisplayColourVolumeSEIEnabled;
   UInt      m_masteringDisplayMaxLuminance;
   UInt      m_masteringDisplayMinLuminance;
-  UShort*  m_masteringDisplayPrimaries;
+  UShort*   m_masteringDisplayPrimaries;
   UShort*   m_masteringDisplayWhitePoint;
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
@@ -720,14 +723,18 @@ public:
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
   Void  setNoDisplaySEITLayer(Int b)                     { m_noDisplaySEITLayer = b;    }
   Int   getNoDisplaySEITLayer()                          { return m_noDisplaySEITLayer; }
-  Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
-  Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
-  Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
-  Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
-  Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
-  Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
-  Void         setTimeCodeSEIEnabled(Bool b)                  { m_timeCodeSEIEnabled = b; }
-  Bool         getTimeCodeSEIEnabled()                        { return m_timeCodeSEIEnabled; }
+  Void  setDecodingUnitInfoSEIEnabled(Int b)             { m_decodingUnitInfoSEIEnabled = b;    }
+  Int   getDecodingUnitInfoSEIEnabled()                  { return m_decodingUnitInfoSEIEnabled; }
+  Void  setSOPDescriptionSEIEnabled(Int b)               { m_SOPDescriptionSEIEnabled = b; }
+  Int   getSOPDescriptionSEIEnabled()                    { return m_SOPDescriptionSEIEnabled; }
+  Void  setScalableNestingSEIEnabled(Int b)              { m_scalableNestingSEIEnabled = b; }
+  Int   getScalableNestingSEIEnabled()                   { return m_scalableNestingSEIEnabled; }
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  Void  setTMCTSSEIEnabled(Bool b)                        { m_tmctsSEIEnabled = b; }
+  Bool  getTMCTSSEIEnabled()                              { return m_tmctsSEIEnabled; }
+#endif
+  Void  setTimeCodeSEIEnabled(Bool b)                     { m_timeCodeSEIEnabled = b; }
+  Bool  getTimeCodeSEIEnabled()                           { return m_timeCodeSEIEnabled; }
   Void  setKneeSEIEnabled(Int b)                          { m_kneeSEIEnabled = b; }
   Bool  getKneeSEIEnabled()                               { return m_kneeSEIEnabled; }
   Void  setKneeSEIId(Int b)                               { m_kneeSEIId = b; }

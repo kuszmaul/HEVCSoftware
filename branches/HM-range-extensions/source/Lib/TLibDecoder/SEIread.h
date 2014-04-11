@@ -73,6 +73,9 @@ protected:
   Void xParseSEIToneMappingInfo       (SEIToneMappingInfo& sei, UInt payloadSize);
   Void xParseSEISOPDescription        (SEISOPDescription &sei, UInt payloadSize);
   Void xParseSEIScalableNesting       (SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps);
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  Void xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedTileSets& sei, UInt payloadSize);
+#endif
   Void xParseSEITimeCode              (SEITimeCode& sei, UInt payloadSize);
   Void xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/);
   Void xParseSEIKneeFunctionInfo      (SEIKneeFunctionInfo& sei, UInt payloadSize);
