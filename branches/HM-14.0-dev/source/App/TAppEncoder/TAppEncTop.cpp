@@ -255,16 +255,16 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
-  m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
-  m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
-  m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
-  if(m_iUniformSpacingIdr==0)
+  m_cTEncTop.setTileUniformSpacingFlag     ( m_tileUniformSpacingFlag );
+  m_cTEncTop.setNumColumnsMinus1           ( m_numTileColumnsMinus1 );
+  m_cTEncTop.setNumRowsMinus1              ( m_numTileRowsMinus1 );
+  if(!m_tileUniformSpacingFlag)
   {
-    m_cTEncTop.setColumnWidth              ( m_pColumnWidth );
-    m_cTEncTop.setRowHeight                ( m_pRowHeight );
+    m_cTEncTop.setColumnWidth              ( m_tileColumnWidth );
+    m_cTEncTop.setRowHeight                ( m_tileRowHeight );
   }
   m_cTEncTop.xCheckGSParameters();
-  Int uiTilesCount          = (m_iNumRowsMinus1+1) * (m_iNumColumnsMinus1+1);
+  Int uiTilesCount          = (m_numTileRowsMinus1+1) * (m_numTileColumnsMinus1+1);
   if(uiTilesCount == 1)
   {
     m_bLFCrossTileBoundaryFlag = true; 
