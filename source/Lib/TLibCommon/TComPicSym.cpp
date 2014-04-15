@@ -100,7 +100,7 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     }
     delete [] m_apcTComSlice;
   }
-  m_apcTComSlice      = new TComSlice*[m_uiNumCUsInFrame*m_uiNumPartitions];  
+  m_apcTComSlice      = new TComSlice*[m_uiNumCUsInFrame];
   m_apcTComSlice[0]   = new TComSlice;
   m_uiNumAllocatedSlice = 1;
   for ( i=0; i<m_uiNumCUsInFrame ; i++ )
@@ -172,6 +172,7 @@ Void TComPicSym::destroy()
 
 Void TComPicSym::allocateNewSlice()
 {
+  assert ((m_uiNumAllocatedSlice + 1) <= m_uiNumCUsInFrame);
   m_apcTComSlice[m_uiNumAllocatedSlice ++] = new TComSlice;
   if (m_uiNumAllocatedSlice>=2)
   {
