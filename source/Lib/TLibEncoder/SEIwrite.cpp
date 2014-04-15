@@ -35,6 +35,7 @@
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/SEI.h"
 #include "TLibCommon/TComSlice.h"
+#include "TLibCommon/TComPicYuv.h"
 #include "SEIwrite.h"
 
 //! \ingroup TLibEncoder
@@ -80,6 +81,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
+  case SEI::NO_DISPLAY:
+    fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
+    break;
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
@@ -91,6 +95,23 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     break;
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
+    break;
+  case SEI::CHROMA_SAMPLING_FILTER_HINT:
+    fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
+    break;
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
+    fprintf( g_hTrace, "=========== Temporal Motion Constrained Tile Sets SEI message ===========\n");
+    break;
+#endif
+  case SEI::TIME_CODE:
+    fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
+    break;
+  case SEI::KNEE_FUNCTION_INFO:
+    fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
+    break;
+  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+    fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
@@ -107,8 +128,8 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
     xWriteSEIuserDataUnregistered(*static_cast<const SEIuserDataUnregistered*>(&sei));
     break;
   case SEI::ACTIVE_PARAMETER_SETS:
-    xWriteSEIActiveParameterSets(*static_cast<const SEIActiveParameterSets*>(& sei)); 
-    break; 
+    xWriteSEIActiveParameterSets(*static_cast<const SEIActiveParameterSets*>(& sei));
+    break;
   case SEI::DECODING_UNIT_INFO:
     xWriteSEIDecodingUnitInfo(*static_cast<const SEIDecodingUnitInfo*>(& sei), sps);
     break;
@@ -136,6 +157,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
+  case SEI::NO_DISPLAY:
+    xWriteSEINoDisplay(*static_cast<const SEINoDisplay*>(&sei));
+    break;
   case SEI::TONE_MAPPING_INFO:
     xWriteSEIToneMappingInfo(*static_cast<const SEIToneMappingInfo*>(&sei));
     break;
@@ -145,8 +169,26 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
+  case SEI::CHROMA_SAMPLING_FILTER_HINT:
+    xWriteSEIChromaSamplingFilterHint(*static_cast<const SEIChromaSamplingFilterHint*>(&sei)/*, sps*/);
+    break;
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+  case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
+    xWriteSEITempMotionConstrainedTileSets(bs, *static_cast<const SEITempMotionConstrainedTileSets*>(&sei));
+    break;
+#endif
+  case SEI::TIME_CODE:
+    xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
+    break;
+  case SEI::KNEE_FUNCTION_INFO:
+    xWriteSEIKneeFunctionInfo(*static_cast<const SEIKneeFunctionInfo*>(&sei));
+    break;
+  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+    xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
+    break;
   default:
     assert(!"Unhandled SEI message");
+    break;
   }
 }
 
@@ -211,7 +253,7 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
  */
 Void SEIWriter::xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei)
 {
-  for (UInt i = 0; i < 16; i++)
+  for (UInt i = 0; i < ISO_IEC_11578_LEN; i++)
   {
     WRITE_CODE(sei.uuid_iso_iec_11578[i], 8 , "sei.uuid_iso_iec_11578[i]");
   }
@@ -228,28 +270,21 @@ Void SEIWriter::xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei
  */
 Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 {
-  UInt val;
-
-  WRITE_CODE(sei.method, 8, "hash_type");
-
-  for(Int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
+  const Char *traceString="\0";
+  switch (sei.method)
   {
-    if(sei.method == SEIDecodedPictureHash::MD5)
+    case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
+    case SEIDecodedPictureHash::CRC: traceString="picture_crc"; break;
+    case SEIDecodedPictureHash::CHECKSUM: traceString="picture_checksum"; break;
+    default: assert(false); break;
+  }
+
+  if (traceString != 0) //use of this variable is needed to avoid a compiler error with G++ 4.6.1
+  {
+    WRITE_CODE(sei.method, 8, "hash_type");
+    for(UInt i=0; i<UInt(sei.m_digest.hash.size()); i++)
     {
-      for (UInt i = 0; i < 16; i++)
-      {
-        WRITE_CODE(sei.digest[yuvIdx][i], 8, "picture_md5");
-      }
-    }
-    else if(sei.method == SEIDecodedPictureHash::CRC)
-    {
-      val = (sei.digest[yuvIdx][0] << 8)  + sei.digest[yuvIdx][1];
-      WRITE_CODE(val, 16, "picture_crc");
-    }
-    else if(sei.method == SEIDecodedPictureHash::CHECKSUM)
-    {
-      val = (sei.digest[yuvIdx][0] << 24)  + (sei.digest[yuvIdx][1] << 16) + (sei.digest[yuvIdx][2] << 8) + sei.digest[yuvIdx][3];
-      WRITE_CODE(val, 32, "picture_checksum");
+      WRITE_CODE(sei.m_digest.hash[i], 8, traceString);
     }
   }
 }
@@ -411,7 +446,7 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
   Int i;
   WRITE_UVLC( sei.m_toneMapId,                    "tone_map_id" );
   WRITE_FLAG( sei.m_toneMapCancelFlag,            "tone_map_cancel_flag" );
-  if( !sei.m_toneMapCancelFlag ) 
+  if( !sei.m_toneMapCancelFlag )
   {
     WRITE_FLAG( sei.m_toneMapPersistenceFlag,     "tone_map_persistence_flag" );
     WRITE_CODE( sei.m_codedDataBitDepth,    8,    "coded_data_bit_depth" );
@@ -509,6 +544,11 @@ Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefr
   xWriteByteAlign();
 }
 
+Void SEIWriter::xWriteSEINoDisplay(const SEINoDisplay &sei)
+{
+  xWriteByteAlign();
+}
+
 Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
 {
   WRITE_UVLC( sei.m_sopSeqParameterSetId,           "sop_seq_parameter_set_id"               );
@@ -558,7 +598,7 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
       }
     }
   }
- 
+
   // byte alignment
   while ( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0 )
   {
@@ -572,6 +612,254 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
   }
 }
 
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEITempMotionConstrainedTileSets& sei)
+{
+  //UInt code;
+  WRITE_FLAG((sei.m_mc_all_tiles_exact_sample_value_match_flag ? 1 : 0), "mc_all_tiles_exact_sample_value_match_flag"); 
+  WRITE_FLAG((sei.m_each_tile_one_tile_set_flag                ? 1 : 0), "each_tile_one_tile_set_flag"               );
+
+  if(!sei.m_each_tile_one_tile_set_flag)
+  {
+    WRITE_FLAG((sei.m_limited_tile_set_display_flag ? 1 : 0), "limited_tile_set_display_flag");
+    WRITE_UVLC((sei.m_num_sets_in_message - 1),               "num_sets_in_message_minus1"   );
+
+    if(sei.getNumberOfTileSets() > 0)
+    {
+      for(Int i = 0; i < sei.getNumberOfTileSets(); i++)
+      {
+        WRITE_UVLC(sei.tileSetData(i).m_mcts_id, "mcts_id");
+
+        if(sei.m_limited_tile_set_display_flag)
+        { 
+          WRITE_FLAG((sei.tileSetData(i).m_display_tile_set_flag ? 1 : 0), "display_tile_set_flag");  
+        }
+
+        WRITE_UVLC((sei.tileSetData(i).getNumberOfTileRects() - 1), "num_tile_rects_in_set_minus1"); 
+        
+        for(Int j = 0; j < sei.tileSetData(i).getNumberOfTileRects(); j++)
+        {
+          WRITE_UVLC(sei.tileSetData(i).topLeftTileIndex    (j), "top_left_tile_index");  
+          WRITE_UVLC(sei.tileSetData(i).bottomRightTileIndex(j), "bottom_right_tile_index");  
+        }
+
+        if(!sei.m_mc_all_tiles_exact_sample_value_match_flag)
+        {
+          WRITE_FLAG((sei.tileSetData(i).m_exact_sample_value_match_flag ? 1 : 0), "exact_sample_value_match_flag");  
+        }
+
+        WRITE_FLAG((sei.tileSetData(i).m_mcts_tier_level_idc_present_flag ? 1 : 0), "mcts_tier_level_idc_present_flag");
+
+        if(sei.tileSetData(i).m_mcts_tier_level_idc_present_flag)
+        {
+          WRITE_FLAG((sei.tileSetData(i).m_mcts_tier_flag ? 1 : 0), "mcts_tier_flag");
+          WRITE_CODE( sei.tileSetData(i).m_mcts_level_idc, 8,       "mcts_level_idc"); 
+        }
+      }
+    }
+  }
+  else
+  {
+    WRITE_FLAG((sei.m_max_mcs_tier_level_idc_present_flag ? 1 : 0), "max_mcs_tier_level_idc_present_flag");
+
+    if(sei.m_max_mcs_tier_level_idc_present_flag)
+    {
+      WRITE_FLAG((sei.m_max_mcts_tier_flag ? 1 : 0), "max_mcts_tier_flag");  
+      WRITE_CODE( sei.m_max_mcts_level_idc, 8,       "max_mcts_level_idc"); 
+    }
+  }
+  xWriteByteAlign();
+}
+#endif
+
+Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
+{
+  WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    WRITE_FLAG(sei.clockTimeStampFlag[i], "clock_time_stamp_flag");
+    if(sei.clockTimeStampFlag[i])
+    {
+      WRITE_FLAG(sei.nuitFieldBasedFlag, "nuit_field_based_flag");
+      WRITE_CODE(sei.countingType, 5, "counting_type");
+      WRITE_FLAG(sei.fullTimeStampFlag, "full_timestamp_flag");
+      WRITE_FLAG(sei.discontinuityFlag, "discontinuity_flag");
+      WRITE_FLAG(sei.cntDroppedFlag, "cnt_dropped_flag");
+      WRITE_CODE(sei.nFrames, 9, "n_frames");
+      if(sei.fullTimeStampFlag)
+      {
+        WRITE_CODE(sei.secondsValue, 6, "seconds_value");
+        WRITE_CODE(sei.minutesValue, 6, "minutes_value");
+        WRITE_CODE(sei.hoursValue, 5, "hours_value");
+      }
+      else
+      {
+        WRITE_FLAG(sei.secondsFlag, "seconds_flag");
+        if(sei.secondsFlag)
+        {
+          WRITE_CODE(sei.secondsValue, 6, "seconds_value");
+          WRITE_FLAG(sei.minutesFlag, "minutes_flag");
+          if(sei.minutesFlag)
+          {
+            WRITE_CODE(sei.minutesValue, 6, "minutes_value");
+            WRITE_FLAG(sei.hoursFlag, "hours_flag");
+            if(sei.hoursFlag)
+              WRITE_CODE(sei.hoursValue, 5, "hours_value");
+          }
+        }
+      }
+      WRITE_CODE(sei.timeOffsetLength, 5, "time_offset_length");
+      if(sei.timeOffsetLength > 0)
+      {
+        if(sei.timeOffset >= 0)
+        {
+          WRITE_CODE((UInt)sei.timeOffset, sei.timeOffsetLength, "time_offset");
+        }
+        else
+        {
+          //  Two's complement conversion
+          UInt offsetValue = ~(sei.timeOffset) + 1;
+          offsetValue |= (1 << (sei.timeOffsetLength-1));
+          WRITE_CODE(offsetValue, sei.timeOffsetLength, "time_offset");
+        }
+      }
+    }
+  }
+  xWriteByteAlign();
+}
+
+Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
+{
+  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  WRITE_CODE(sei.m_verChromaFilterIdc, 8, "ver_chroma_filter_idc");
+  WRITE_CODE(sei.m_horChromaFilterIdc, 8, "hor_chroma_filter_idc");
+  WRITE_FLAG(sei.m_verFilteringProcessFlag, "ver_filtering_process_flag");
+  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  {
+    writeUserDefinedCoefficients(sei);
+  }
+  //}
+  xWriteByteAlign();
+}
+
+// write hardcoded chroma filter coefficients in the SEI messages
+Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &sei)
+{
+  Int const iNumVerticalFilters = 3;
+  Int verticalTapLength_minus1[iNumVerticalFilters] = {5,3,3};
+  Int* userVerticalCoefficients[iNumVerticalFilters];
+  for(Int i = 0; i < iNumVerticalFilters; i ++)
+  {
+    userVerticalCoefficients[i] = (Int*)malloc( (verticalTapLength_minus1[i]+1) * sizeof(Int));
+  }
+  userVerticalCoefficients[0][0] = -3;
+  userVerticalCoefficients[0][1] = 13;
+  userVerticalCoefficients[0][2] = 31;
+  userVerticalCoefficients[0][3] = 23;
+  userVerticalCoefficients[0][4] = 3;
+  userVerticalCoefficients[0][5] = -3;
+
+  userVerticalCoefficients[1][0] = -1;
+  userVerticalCoefficients[1][1] = 25;
+  userVerticalCoefficients[1][2] = 247;
+  userVerticalCoefficients[1][3] = -15;
+
+  userVerticalCoefficients[2][0] = -20;
+  userVerticalCoefficients[2][1] = 186;
+  userVerticalCoefficients[2][2] = 100;
+  userVerticalCoefficients[2][3] = -10;
+  
+  Int const iNumHorizontalFilters = 1;
+  Int horizontalTapLength_minus1[iNumHorizontalFilters] = {3};
+  Int* userHorizontalCoefficients[iNumHorizontalFilters];
+  for(Int i = 0; i < iNumHorizontalFilters; i ++)
+  {
+    userHorizontalCoefficients[i] = (Int*)malloc( (horizontalTapLength_minus1[i]+1) * sizeof(Int));
+  }
+  userHorizontalCoefficients[0][0] = 1;
+  userHorizontalCoefficients[0][1] = 6;
+  userHorizontalCoefficients[0][2] = 1;
+
+  WRITE_UVLC(3, "target_format_idc");
+  WRITE_FLAG(0, "prefect_reconstruction_flag");
+  if(sei.m_verChromaFilterIdc == 1)
+  {
+    WRITE_UVLC(iNumVerticalFilters, "num_vertical_filters");
+    if(iNumVerticalFilters > 0)
+    {
+      for(Int i = 0; i < iNumVerticalFilters; i ++)
+      {
+        WRITE_UVLC(verticalTapLength_minus1[i], "ver_tap_length_minus_1");
+        for(Int j = 0; j < verticalTapLength_minus1[i]; j ++)
+        {
+          WRITE_SVLC(userVerticalCoefficients[i][j], "ver_filter_coeff");
+        }
+      }
+    }
+  }
+  if(sei.m_horChromaFilterIdc == 1)
+  {
+    WRITE_UVLC(iNumHorizontalFilters, "num_horizontal_filters");
+    if(iNumHorizontalFilters > 0)
+    {
+      for(Int i = 0; i < iNumHorizontalFilters; i ++)
+      {
+        WRITE_UVLC(horizontalTapLength_minus1[i], "hor_tap_length_minus_1");
+        for(Int j = 0; j < horizontalTapLength_minus1[i]; j ++)
+        {
+          WRITE_SVLC(userHorizontalCoefficients[i][j], "hor_filter_coeff");
+        }
+      }
+    }
+  }
+}
+
+Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
+{
+  WRITE_UVLC( sei.m_kneeId, "knee_function_id" );
+  WRITE_FLAG( sei.m_kneeCancelFlag, "knee_function_cancel_flag" ); 
+  if ( !sei.m_kneeCancelFlag )
+  {
+    WRITE_FLAG( sei.m_kneePersistenceFlag, "knee_function_persistence_flag" );
+    WRITE_FLAG( sei.m_kneeMappingFlag, "mapping_flag" );
+    WRITE_CODE( (UInt)sei.m_kneeInputDrange , 32,  "input_d_range" );
+    WRITE_CODE( (UInt)sei.m_kneeInputDispLuminance, 32,  "input_disp_luminance" );
+    WRITE_CODE( (UInt)sei.m_kneeOutputDrange, 32,  "output_d_range" );
+    WRITE_CODE( (UInt)sei.m_kneeOutputDispLuminance, 32,  "output_disp_luminance" );
+    WRITE_UVLC( sei.m_kneeNumKneePointsMinus1, "num_knee_points_minus1" );
+    for(Int i = 0; i <= sei.m_kneeNumKneePointsMinus1; i++ )
+    {
+      WRITE_CODE( (UInt)sei.m_kneeInputKneePoint[i], 10,"input_knee_point" );
+      WRITE_CODE( (UInt)sei.m_kneeOutputKneePoint[i], 10, "output_knee_point" );
+    }
+  }
+  xWriteByteAlign();
+}
+
+
+Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
+{
+  WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
+  WRITE_CODE( sei.displayPrimaries[0][1],  16,  "display_primaries_y[0]" );
+ 
+  WRITE_CODE( sei.displayPrimaries[1][0],  16,  "display_primaries_x[1]" );
+  WRITE_CODE( sei.displayPrimaries[1][1],  16,  "display_primaries_y[1]" );
+ 
+  WRITE_CODE( sei.displayPrimaries[2][0],  16,  "display_primaries_x[2]" );
+  WRITE_CODE( sei.displayPrimaries[2][1],  16,  "display_primaries_y[2]" );
+
+  WRITE_CODE( sei.displayWhitePoint[0],    16,  "white_point_x" );
+  WRITE_CODE( sei.displayWhitePoint[1],    16,  "white_point_y" );
+    
+  WRITE_CODE( sei.maxDisplayLuminance,     32,  "max_display_mastering_luminance" );
+  WRITE_CODE( sei.minDisplayLuminance,     32,  "min_display_mastering_luminance" );
+    
+  xWriteByteAlign();
+}
+
+
 Void SEIWriter::xWriteByteAlign()
 {
   if( m_pcBitIf->getNumberOfWrittenBits() % 8 != 0)
@@ -582,6 +870,6 @@ Void SEIWriter::xWriteByteAlign()
       WRITE_FLAG( 0, "bit_equal_to_zero" );
     }
   }
-};
+}
 
 //! \}

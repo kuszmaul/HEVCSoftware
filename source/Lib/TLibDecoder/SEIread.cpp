@@ -31,9 +31,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** 
+/**
  \file     SEIread.cpp
- \brief    reading functionality for SEI messages
+ \brief    reading funtionality for SEI messages
  */
 
 #include "TLibCommon/CommonDef.h"
@@ -42,6 +42,7 @@
 #include "TLibCommon/TComSlice.h"
 #include "SyntaxElementParser.h"
 #include "SEIread.h"
+#include "TLibCommon/TComPicYuv.h"
 
 //! \ingroup TLibDecoder
 //! \{
@@ -63,7 +64,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     fprintf( g_hTrace, "=========== User Data Unregistered SEI message ===========\n");
     break;
   case SEI::ACTIVE_PARAMETER_SETS:
-    fprintf( g_hTrace, "=========== Active Parameter sets SEI message ===========\n");
+    fprintf( g_hTrace, "=========== Active Parameter Sets SEI message ===========\n");
     break;
   case SEI::BUFFERING_PERIOD:
     fprintf( g_hTrace, "=========== Buffering period SEI message ===========\n");
@@ -86,6 +87,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::REGION_REFRESH_INFO:
     fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
     break;
+  case SEI::NO_DISPLAY:
+    fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
+    break;
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
@@ -97,6 +101,15 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
     break;
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
+    break;
+  case SEI::TIME_CODE:
+      fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
+      break;
+  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+    fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
+    break;
+  case SEI::KNEE_FUNCTION_INFO:
+    fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
@@ -116,6 +129,7 @@ void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const
   do
   {
     xReadSEImessage(seis, nalUnitType, sps);
+
     /* SEI messages are an integer number of bytes, something has failed
     * in the parsing if bitstream not byte-aligned */
     assert(!m_pcBitstream->getNumBitsUntilByteAligned());
@@ -171,9 +185,9 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIuserDataUnregistered((SEIuserDataUnregistered&) *sei, payloadSize);
       break;
     case SEI::ACTIVE_PARAMETER_SETS:
-      sei = new SEIActiveParameterSets; 
-      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize); 
-      break; 
+      sei = new SEIActiveParameterSets;
+      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize);
+      break;
     case SEI::DECODING_UNIT_INFO:
       if (!sps)
       {
@@ -181,10 +195,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       }
       else
       {
-        sei = new SEIDecodingUnitInfo; 
+        sei = new SEIDecodingUnitInfo;
         xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps);
       }
-      break; 
+      break;
     case SEI::BUFFERING_PERIOD:
       if (!sps)
       {
@@ -227,6 +241,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIGradualDecodingRefreshInfo;
       xParseSEIGradualDecodingRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize);
       break;
+    case SEI::NO_DISPLAY:
+      sei = new SEINoDisplay;
+      xParseSEINoDisplay((SEINoDisplay&) *sei, payloadSize);
+      break;
     case SEI::TONE_MAPPING_INFO:
       sei = new SEIToneMappingInfo;
       xParseSEIToneMappingInfo((SEIToneMappingInfo&) *sei, payloadSize);
@@ -238,6 +256,36 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
+      break;
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+    case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
+      sei = new SEITempMotionConstrainedTileSets;
+      xParseSEITempMotionConstraintsTileSets((SEITempMotionConstrainedTileSets&) *sei, payloadSize);
+      break;
+#endif
+    case SEI::TIME_CODE:
+      sei = new SEITimeCode;
+      xParseSEITimeCode((SEITimeCode&) *sei, payloadSize);
+      break;
+    case SEI::CHROMA_SAMPLING_FILTER_HINT:
+      //NOTE: RExt - Made unconditional on SPS to be consistent with the working text P1005
+      //if (!sps)
+      //{
+      //  printf ("Warning: Found Chroma Sampling Filter Hint SEI message, but no active SPS is available. Ignoring.\n");
+      //}
+      //else
+      //{
+      sei = new SEIChromaSamplingFilterHint;
+      xParseSEIChromaSamplingFilterHint((SEIChromaSamplingFilterHint&) *sei, payloadSize/*, sps*/);
+      //}
+      break;
+    case SEI::KNEE_FUNCTION_INFO:
+      sei = new SEIKneeFunctionInfo;
+      xParseSEIKneeFunctionInfo((SEIKneeFunctionInfo&) *sei, payloadSize);
+      break;
+    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
+      sei = new SEIMasteringDisplayColourVolume;
+      xParseSEIMasteringDisplayColourVolume((SEIMasteringDisplayColourVolume&) *sei, payloadSize);
       break;
     default:
       for (UInt i = 0; i < payloadSize; i++)
@@ -269,6 +317,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
         printf ("Unknown suffix SEI message (payloadType = %d) was found!\n", payloadType);
     }
   }
+
   if (sei != NULL)
   {
     seis.push_back(sei);
@@ -325,16 +374,16 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
  */
 Void SEIReader::xParseSEIuserDataUnregistered(SEIuserDataUnregistered &sei, UInt payloadSize)
 {
-  assert(payloadSize >= 16);
+  assert(payloadSize >= ISO_IEC_11578_LEN);
   UInt val;
 
-  for (UInt i = 0; i < 16; i++)
+  for (UInt i = 0; i < ISO_IEC_11578_LEN; i++)
   {
     READ_CODE (8, val, "uuid_iso_iec_11578");
     sei.uuid_iso_iec_11578[i] = val;
   }
 
-  sei.userDataLength = payloadSize - 16;
+  sei.userDataLength = payloadSize - ISO_IEC_11578_LEN;
   if (!sei.userDataLength)
   {
     sei.userData = 0;
@@ -353,43 +402,40 @@ Void SEIReader::xParseSEIuserDataUnregistered(SEIuserDataUnregistered &sei, UInt
  * parse bitstream bs and unpack a decoded picture hash SEI message
  * of payloadSize bytes into sei.
  */
-Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt /*payloadSize*/)
+Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt payloadSize)
 {
+  UInt bytesRead = 0;
+
   UInt val;
   READ_CODE (8, val, "hash_type");
-  sei.method = static_cast<SEIDecodedPictureHash::Method>(val);
-  for(Int yuvIdx = 0; yuvIdx < 3; yuvIdx++)
+  sei.method = static_cast<SEIDecodedPictureHash::Method>(val); bytesRead++;
+
+  const Char *traceString="\0";
+  switch (sei.method)
   {
-    if(SEIDecodedPictureHash::MD5 == sei.method)
+    case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
+    case SEIDecodedPictureHash::CRC: traceString="picture_crc"; break;
+    case SEIDecodedPictureHash::CHECKSUM: traceString="picture_checksum"; break;
+    default: assert(false); break;
+  }
+
+  if (traceString != 0) //use of this variable is needed to avoid a compiler error with G++ 4.6.1
+  {
+    sei.m_digest.hash.clear();
+    for(;bytesRead < payloadSize; bytesRead++)
     {
-      for (UInt i = 0; i < 16; i++)
-      {
-        READ_CODE(8, val, "picture_md5");
-        sei.digest[yuvIdx][i] = val;
-      }
-    }
-    else if(SEIDecodedPictureHash::CRC == sei.method)
-    {
-      READ_CODE(16, val, "picture_crc");
-      sei.digest[yuvIdx][0] = val >> 8 & 0xFF;
-      sei.digest[yuvIdx][1] = val & 0xFF;
-    }
-    else if(SEIDecodedPictureHash::CHECKSUM == sei.method)
-    {
-      READ_CODE(32, val, "picture_checksum");
-      sei.digest[yuvIdx][0] = (val>>24) & 0xff;
-      sei.digest[yuvIdx][1] = (val>>16) & 0xff;
-      sei.digest[yuvIdx][2] = (val>>8)  & 0xff;
-      sei.digest[yuvIdx][3] =  val      & 0xff;
+      READ_CODE (8, val, traceString);
+      sei.m_digest.hash.push_back((unsigned char)val);
     }
   }
 }
+
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
   UInt val; 
   READ_CODE(4, val, "active_video_parameter_set_id");   sei.activeVPSId = val; 
-  READ_FLAG(   val, "self_contained_cvs_flag");         sei.m_selfContainedCvsFlag = val ? true : false;
-  READ_FLAG(   val, "no_parameter_set_update_flag");    sei.m_noParameterSetUpdateFlag = val ? true : false;
+  READ_FLAG(   val, "self_contained_cvs_flag");         sei.m_selfContainedCvsFlag     = (val != 0);
+  READ_FLAG(   val, "no_parameter_set_update_flag");    sei.m_noParameterSetUpdateFlag = (val != 0);
   READ_UVLC(   val, "num_sps_ids_minus1");              sei.numSpsIdsMinus1 = val;
 
   sei.activeSeqParameterSetId.resize(sei.numSpsIdsMinus1 + 1);
@@ -417,10 +463,10 @@ Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*paylo
   {
     sei.m_duSptCpbRemovalDelay = 0;
   }
-  READ_FLAG( val, "dpb_output_du_delay_present_flag"); sei.m_dpbOutputDuDelayPresentFlag = val ? true : false;
+  READ_FLAG( val, "dpb_output_du_delay_present_flag"); sei.m_dpbOutputDuDelayPresentFlag = (val != 0);
   if(sei.m_dpbOutputDuDelayPresentFlag)
   {
-    READ_CODE(vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, val, "pic_spt_dpb_output_du_delay"); 
+    READ_CODE(vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, val, "pic_spt_dpb_output_du_delay");
     sei.m_picSptDpbOutputDuDelay = val;
   }
   xParseByteAlign();
@@ -444,11 +490,13 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
     READ_CODE( pHRD->getCpbRemovalDelayLengthMinus1() + 1, code, "cpb_delay_offset" );      sei.m_cpbDelayOffset = code;
     READ_CODE( pHRD->getDpbOutputDelayLengthMinus1()  + 1, code, "dpb_delay_offset" );      sei.m_dpbDelayOffset = code;
   }
+
   //read splicing flag and cpb_removal_delay_delta
-  READ_FLAG( code, "concatenation_flag"); 
+  READ_FLAG( code, "concatenation_flag");
   sei.m_concatenationFlag = code;
   READ_CODE( ( pHRD->getCpbRemovalDelayLengthMinus1() + 1 ), code, "au_cpb_removal_delay_delta_minus1" );
   sei.m_auCpbRemovalDelayDelta = code + 1;
+
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( pHRD->getNalHrdParametersPresentFlag() ) ) ||
@@ -472,6 +520,7 @@ Void SEIReader::xParseSEIBufferingPeriod(SEIBufferingPeriod& sei, UInt /*payload
   }
   xParseByteAlign();
 }
+
 Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize*/, TComSPS *sps)
 {
   Int i;
@@ -483,8 +532,8 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
   if( vui->getFrameFieldInfoPresentFlag() )
   {
     READ_CODE( 4, code, "pic_struct" );             sei.m_picStruct            = code;
-    READ_CODE( 2, code, "source_scan_type" );       sei.m_sourceScanType = code;
-    READ_FLAG(    code, "duplicate_flag" );         sei.m_duplicateFlag        = ( code == 1 ? true : false );
+    READ_CODE( 2, code, "source_scan_type" );       sei.m_sourceScanType       = code;
+    READ_FLAG(    code, "duplicate_flag" );         sei.m_duplicateFlag        = (code == 1);
   }
 
   if( hrd->getCpbDpbDelaysPresentFlag())
@@ -499,6 +548,7 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
       READ_CODE(hrd->getDpbOutputDelayDuLengthMinus1()+1, code, "pic_dpb_output_du_delay" );
       sei.m_picDpbOutputDuDelay = code;
     }
+
     if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
     {
       READ_UVLC( code, "num_decoding_units_minus1");
@@ -533,8 +583,11 @@ Void SEIReader::xParseSEIPictureTiming(SEIPictureTiming& sei, UInt /*payloadSize
       }
     }
   }
+
   xParseByteAlign();
 }
+
+
 Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize*/)
 {
   Int  iCode;
@@ -544,6 +597,7 @@ Void SEIReader::xParseSEIRecoveryPoint(SEIRecoveryPoint& sei, UInt /*payloadSize
   READ_FLAG( uiCode, "broken_link_flag" );      sei.m_brokenLinkFlag     = uiCode;
   xParseByteAlign();
 }
+
 Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/)
 {
   UInt val;
@@ -554,6 +608,7 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/
   {
     READ_CODE( 7, val, "frame_packing_arrangement_type" );          sei.m_arrangementType = val;
     assert((sei.m_arrangementType > 2) && (sei.m_arrangementType < 6) );
+
     READ_FLAG( val, "quincunx_sampling_flag" );                     sei.m_quincunxSamplingFlag = val;
 
     READ_CODE( 6, val, "content_interpretation_type" );             sei.m_contentInterpretationType = val;
@@ -573,7 +628,7 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/
     }
 
     READ_CODE( 8, val, "frame_packing_arrangement_reserved_byte" );   sei.m_arrangementReservedByte = val;
-    READ_FLAG( val,  "frame_packing_arrangement_persistence_flag" );  sei.m_arrangementPersistenceFlag = val ? true : false;
+    READ_FLAG( val,  "frame_packing_arrangement_persistence_flag" );  sei.m_arrangementPersistenceFlag = (val != 0);
   }
   READ_FLAG( val, "upsampled_aspect_ratio" );                       sei.m_upsampledAspectRatio = val;
 
@@ -584,7 +639,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
 {
   UInt val;
   READ_FLAG( val,       "display_orientation_cancel_flag" );       sei.cancelFlag            = val;
-  if( !sei.cancelFlag ) 
+  if( !sei.cancelFlag )
   {
     READ_FLAG( val,     "hor_flip" );                              sei.horFlip               = val;
     READ_FLAG( val,     "ver_flip" );                              sei.verFlip               = val;
@@ -594,7 +649,7 @@ Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt /*p
   xParseByteAlign();
 }
 
-Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt /*payloadSize*/)
+Void SEIReader::xParseSEITemporalLevel0Index(SEITemporalLevel0Index& sei, UInt payloadSize)
 {
   UInt val;
   READ_CODE ( 8, val, "tl0_idx" );  sei.tl0Idx = val;
@@ -609,6 +664,12 @@ Void SEIReader::xParseSEIGradualDecodingRefreshInfo(SEIGradualDecodingRefreshInf
   xParseByteAlign();
 }
 
+Void SEIReader::xParseSEINoDisplay(SEINoDisplay& sei, UInt /*payloadSize*/)
+{
+  sei.m_noDisplay = true;
+  xParseByteAlign();
+}
+
 Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payloadSize*/)
 {
   Int i;
@@ -618,10 +679,10 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
 
   if ( !sei.m_toneMapCancelFlag )
   {
-    READ_FLAG( val, "tone_map_persistence_flag" );         sei.m_toneMapPersistenceFlag = val; 
+    READ_FLAG( val, "tone_map_persistence_flag" );         sei.m_toneMapPersistenceFlag = val;
     READ_CODE( 8, val, "coded_data_bit_depth" );           sei.m_codedDataBitDepth = val;
     READ_CODE( 8, val, "target_bit_depth" );               sei.m_targetBitDepth = val;
-    READ_UVLC( val, "model_id" );                          sei.m_modelId = val; 
+    READ_UVLC( val, "model_id" );                          sei.m_modelId = val;
     switch(sei.m_modelId)
     {
     case 0:
@@ -664,15 +725,10 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
       }
     case 4:
       {
-        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedIdc = val;
-        if( sei.m_cameraIsoSpeedIdc == 255) //Extended_ISO
+        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedValue = val;
+        if( sei.m_cameraIsoSpeedValue == 255) //Extended_ISO
         {
           READ_CODE( 32,   val,   "camera_iso_speed_value" );            sei.m_cameraIsoSpeedValue = val;
-        }
-        READ_CODE( 8, val, "exposure_index_idc" );                       sei.m_exposureIndexIdc = val;
-        if( sei.m_exposureIndexIdc == 255) //Extended_ISO
-        {
-          READ_CODE( 32,   val,   "exposure_index_value" );              sei.m_exposureIndexValue = val;
         }
         READ_FLAG( val, "exposure_compensation_value_sign_flag" );       sei.m_exposureCompensationValueSignFlag = val;
         READ_CODE( 16, val, "exposure_compensation_value_numerator" );   sei.m_exposureCompensationValueNumerator = val;
@@ -690,7 +746,7 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
         break;
       }
     }//switch model id
-  }// if(!sei.m_toneMapCancelFlag) 
+  }// if(!sei.m_toneMapCancelFlag)
 
   xParseByteAlign();
 }
@@ -766,6 +822,267 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
 
 }
 
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedTileSets& sei, UInt payloadSize)
+{
+  UInt code;
+  READ_FLAG(code, "mc_all_tiles_exact_sample_value_match_flag");  sei.m_mc_all_tiles_exact_sample_value_match_flag = (code != 0);
+  READ_FLAG(code, "each_tile_one_tile_set_flag");                 sei.m_each_tile_one_tile_set_flag                = (code != 0);
+
+  if(!sei.m_each_tile_one_tile_set_flag)
+  {
+    READ_FLAG(code, "limited_tile_set_display_flag");  sei.m_limited_tile_set_display_flag = (code != 0);
+    READ_UVLC(code, "num_sets_in_message_minus1");     sei.setNumberOfTileSets(code + 1);
+
+    if(sei.getNumberOfTileSets() != 0)
+    {
+      for(Int i = 0; i < sei.getNumberOfTileSets(); i++)
+      {
+        READ_UVLC(code, "mcts_id");  sei.tileSetData(i).m_mcts_id = code;
+
+        if(sei.m_limited_tile_set_display_flag)
+        {
+          READ_FLAG(code, "display_tile_set_flag");  sei.tileSetData(i).m_display_tile_set_flag = (code != 1);
+        }
+
+        READ_UVLC(code, "num_tile_rects_in_set_minus1");  sei.tileSetData(i).setNumberOfTileRects(code + 1);
+
+        for(Int j=0; j<sei.tileSetData(i).getNumberOfTileRects(); j++)
+        {
+          READ_UVLC(code, "top_left_tile_index");      sei.tileSetData(i).topLeftTileIndex(j)     = code;
+          READ_UVLC(code, "bottom_right_tile_index");  sei.tileSetData(i).bottomRightTileIndex(j) = code;
+        }
+
+        if(!sei.m_mc_all_tiles_exact_sample_value_match_flag)
+        {
+          READ_FLAG(code, "exact_sample_value_match_flag");   sei.tileSetData(i).m_exact_sample_value_match_flag    = (code != 0);
+        }
+        READ_FLAG(code, "mcts_tier_level_idc_present_flag");  sei.tileSetData(i).m_mcts_tier_level_idc_present_flag = (code != 0);
+
+        if(sei.tileSetData(i).m_mcts_tier_level_idc_present_flag)
+        {
+          READ_FLAG(code,    "mcts_tier_flag"); sei.tileSetData(i).m_mcts_tier_flag = (code != 0);
+          READ_CODE(8, code, "mcts_level_idc"); sei.tileSetData(i).m_mcts_level_idc =  code;
+        }
+      }
+    }
+  }
+  else
+  {
+    READ_FLAG(code, "max_mcs_tier_level_idc_present_flag");  sei.m_max_mcs_tier_level_idc_present_flag = code;
+    if(sei.m_max_mcs_tier_level_idc_present_flag)
+    {
+      READ_FLAG(code, "max_mcts_tier_flag");  sei.m_max_mcts_tier_flag = code;
+      READ_CODE(8, code, "max_mcts_level_idc"); sei.m_max_mcts_level_idc = code;
+    }
+  }
+  xParseByteAlign();
+}
+#endif
+
+Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
+{
+  UInt code;
+  READ_CODE(2, code, "num_clock_ts"); sei.numClockTs = code;
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    READ_FLAG(code, "clock_time_stamp_flag"); sei.clockTimeStampFlag[i] = code;
+    if(sei.clockTimeStampFlag[i])
+    {
+      READ_FLAG(code, "nuit_field_based_flag"); sei.nuitFieldBasedFlag = code;
+      READ_CODE(5, code, "counting_type"); sei.countingType = code;
+      READ_FLAG(code, "full_timestamp_flag"); sei.fullTimeStampFlag = code;
+      READ_FLAG(code, "discontinuity_flag"); sei.discontinuityFlag = code;
+      READ_FLAG(code, "cnt_dropped_flag"); sei.cntDroppedFlag = code;
+      READ_CODE(9, code, "n_frames"); sei.nFrames = code;
+      if(sei.fullTimeStampFlag)
+      {
+        READ_CODE(6, code, "seconds_value"); sei.secondsValue = code;
+        READ_CODE(6, code, "minutes_value"); sei.minutesValue = code;
+        READ_CODE(5, code, "hours_value"); sei.hoursValue = code;
+      }
+      else
+      {
+        READ_FLAG(code, "seconds_flag"); sei.secondsFlag = code;
+        if(sei.secondsFlag)
+        {
+          READ_CODE(6, code, "seconds_value"); sei.secondsValue = code;
+          READ_FLAG(code, "minutes_flag"); sei.minutesFlag = code;
+          if(sei.minutesFlag)
+          {
+            READ_CODE(6, code, "minutes_value"); sei.minutesValue = code;
+            READ_FLAG(code, "hours_flag"); sei.hoursFlag = code;
+            if(sei.hoursFlag)
+              READ_CODE(5, code, "hours_value"); sei.hoursValue = code;
+          }
+        }
+      }
+      READ_CODE(5, code, "time_offset_length"); sei.timeOffsetLength = code;
+      if(sei.timeOffsetLength > 0)
+      {
+        READ_CODE(sei.timeOffsetLength, code, "time_offset");
+        if((code & (1 << (sei.timeOffsetLength-1))) == 0)
+        {
+          sei.timeOffset = code;
+        }
+        else
+        {
+          code &= (1<< (sei.timeOffsetLength-1)) - 1;
+          sei.timeOffset = ~code + 1;
+        }
+      }
+    }
+  }
+  xParseByteAlign();
+}
+
+Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt /*payloadSize*//*, TComSPS* sps*/)
+{
+  UInt uiCode;
+
+  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  READ_CODE(8, uiCode, "ver_chroma_filter_idc"); sei.m_verChromaFilterIdc = uiCode;
+  READ_CODE(8, uiCode, "hor_chroma_filter_idc"); sei.m_horChromaFilterIdc = uiCode;
+  READ_FLAG(uiCode, "ver_filtering_process_flag"); sei.m_verFilteringProcessFlag = uiCode;
+  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  {
+    READ_UVLC(uiCode, "target_format_idc"); sei.m_targetFormatIdc = uiCode;
+    READ_FLAG(uiCode, "perfect_reconstruction_flag"); sei.m_perfectReconstructionFlag = uiCode;
+    if(sei.m_verChromaFilterIdc == 1)
+    {
+      READ_UVLC(uiCode, "num_vertical_filters"); sei.m_numVerticalFilters = uiCode;
+      if(sei.m_numVerticalFilters > 0)
+      {
+        sei.m_verTapLengthMinus1 = (Int*)malloc(sei.m_numVerticalFilters * sizeof(Int));
+        sei.m_verFilterCoeff = (Int**)malloc(sei.m_numVerticalFilters * sizeof(Int*));
+        for(Int i = 0; i < sei.m_numVerticalFilters; i ++)
+        {
+          READ_UVLC(uiCode, "ver_tap_length_minus_1"); sei.m_verTapLengthMinus1[i] = uiCode; 
+          sei.m_verFilterCoeff[i] = (Int*)malloc(sei.m_verTapLengthMinus1[i] * sizeof(Int));
+          for(Int j = 0; j < sei.m_verTapLengthMinus1[i]; j ++)
+          {
+            READ_SVLC(sei.m_verFilterCoeff[i][j], "ver_filter_coeff");
+          }
+        }
+      }
+    }
+    if(sei.m_horChromaFilterIdc == 1)
+    {
+      READ_UVLC(uiCode, "num_horizontal_filters"); sei.m_numHorizontalFilters = uiCode;
+      if(sei.m_numHorizontalFilters  > 0)
+      {
+        sei.m_horTapLengthMinus1 = (Int*)malloc(sei.m_numHorizontalFilters * sizeof(Int));
+        sei.m_horFilterCoeff = (Int**)malloc(sei.m_numHorizontalFilters * sizeof(Int*));
+        for(Int i = 0; i < sei.m_numHorizontalFilters; i ++)
+        {
+          READ_UVLC(uiCode, "hor_tap_length_minus_1"); sei.m_horTapLengthMinus1[i] = uiCode;
+          sei.m_horFilterCoeff[i] = (Int*)malloc(sei.m_horTapLengthMinus1[i] * sizeof(Int));
+          for(Int j = 0; j < sei.m_horTapLengthMinus1[i]; j ++)
+          {
+            READ_SVLC(sei.m_horFilterCoeff[i][j], "hor_filter_coeff");
+          }
+        }
+      }
+    }
+  }
+  //}
+
+  //// DEBUG
+  //printf("summary of chroma sampling filter sei message:\n");
+  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
+  //{
+  //  printf("ver_chroma_filter_idc = %d\n", sei.m_verChromaFilterIdc);
+  //  printf("hor_chroma_filter_idc = %d\n", sei.m_horChromaFilterIdc);
+  //  printf("ver_filtering_process_flag = %d\n", sei.m_verFilteringProcessFlag);
+  //  if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
+  //  {
+  //    printf("target_format_idc = %d\n", sei.m_targetFormatIdc);
+  //    printf("perfect_reconstruction_flag = %d\n", sei.m_perfectReconstructionFlag);
+  //    if(sei.m_verChromaFilterIdc == 1)
+  //    {
+  //      printf("num_vertical_filters = %d\n", sei.m_numVerticalFilters);
+  //      for(Int i = 0; i < sei.m_numVerticalFilters; i ++)
+  //      {
+  //        printf("ver_tap_length_minus_1[%d] = %d\n", i, sei.m_verTapLengthMinus1[i]);
+  //        for(Int j = 0; j < sei.m_verTapLengthMinus1[i]; j ++)
+  //        {
+  //          printf("ver_filter_coeff[%d][%d] = %d\n", i, j, sei.m_verFilterCoeff[i][j]);
+  //        }
+  //      }
+  //    }
+  //    if(sei.m_horChromaFilterIdc == 1)
+  //    {
+  //      printf("num_horizontal_filters = %d\n", sei.m_numHorizontalFilters);
+  //      if(sei.m_numHorizontalFilters  > 0)
+  //      {
+  //        for(Int i = 0; i < sei.m_numHorizontalFilters; i ++)
+  //        {
+  //          printf("hor_tap_length_minus_1[%d] = %d\n", i, sei.m_horTapLengthMinus1[i]);
+  //          for(Int j = 0; j < sei.m_horTapLengthMinus1[i]; j ++)
+  //          {
+  //            printf("hor_filter_coeff[%d][%d] = %d\n", i, j, sei.m_horFilterCoeff[i][j]);
+  //          }
+  //        }
+  //      }
+  //    }
+  //  }
+  //}
+  //else
+  //{
+  //  printf("ChromaLocInfoPresentFlag = false\nNo message read\n");
+  //}
+}
+
+Void SEIReader::xParseSEIKneeFunctionInfo(SEIKneeFunctionInfo& sei, UInt payloadSize){
+  Int i;
+  UInt val;
+  READ_UVLC( val, "knee_function_id" );                   sei.m_kneeId = val;
+  READ_FLAG( val, "knee_function_cancel_flag" );          sei.m_kneeCancelFlag = val;
+  if ( !sei.m_kneeCancelFlag )
+  {
+    READ_FLAG( val, "knee_function_persistence_flag" );   sei.m_kneePersistenceFlag = val;
+    READ_FLAG( val, "mapping_flag" );                     sei.m_kneeMappingFlag = val;
+    READ_CODE( 32, val, "input_d_range" );                sei.m_kneeInputDrange = val;
+    READ_CODE( 32, val, "input_disp_luminance" );         sei.m_kneeInputDispLuminance = val;
+    READ_CODE( 32, val, "output_d_range" );               sei.m_kneeOutputDrange = val;
+    READ_CODE( 32, val, "output_disp_luminance" );        sei.m_kneeOutputDispLuminance = val;
+    READ_UVLC( val, "num_knee_points_minus1" );           sei.m_kneeNumKneePointsMinus1 = val;
+    assert( sei.m_kneeNumKneePointsMinus1 > 0 );
+    sei.m_kneeInputKneePoint.resize(sei.m_kneeNumKneePointsMinus1+1);
+    sei.m_kneeOutputKneePoint.resize(sei.m_kneeNumKneePointsMinus1+1);
+    for(i = 0; i <= sei.m_kneeNumKneePointsMinus1; i++ )
+    {
+      READ_CODE( 10, val, "input_knee_point" );           sei.m_kneeInputKneePoint[i] = val;
+      READ_CODE( 10, val, "output_knee_point" );          sei.m_kneeOutputKneePoint[i] = val;
+    }
+  }
+}
+
+Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourVolume& sei, UInt payloadSize)
+{
+  UInt code;
+ 
+  READ_CODE( 16, code, "display_primaries_x[0]" ); sei.displayPrimaries[0][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[0]" ); sei.displayPrimaries[0][1] = code;
+    
+  READ_CODE( 16, code, "display_primaries_x[1]" ); sei.displayPrimaries[1][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[1]" ); sei.displayPrimaries[1][1] = code;
+    
+  READ_CODE( 16, code, "display_primaries_x[2]" ); sei.displayPrimaries[2][0] = code;
+  READ_CODE( 16, code, "display_primaries_y[2]" ); sei.displayPrimaries[2][1] = code;
+    
+    
+  READ_CODE( 16, code, "white_point_x" ); sei.displayWhitePoint[0] = code;
+  READ_CODE( 16, code, "white_point_y" ); sei.displayWhitePoint[1] = code;
+    
+  READ_CODE( 32, code, "max_display_mastering_luminance" ); sei.maxDisplayLuminance = code;
+  READ_CODE( 32, code, "min_display_mastering_luminance" ); sei.minDisplayLuminance = code;
+ 
+  xParseByteAlign();
+}
+
 Void SEIReader::xParseByteAlign()
 {
   UInt code;
@@ -778,4 +1095,5 @@ Void SEIReader::xParseByteAlign()
     READ_FLAG( code, "bit_equal_to_zero" );         assert( code == 0 );
   }
 }
+
 //! \}

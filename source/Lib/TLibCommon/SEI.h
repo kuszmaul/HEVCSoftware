@@ -31,10 +31,16 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SEI__
+#define __SEI__
+
 #pragma once
 #include <list>
 #include <vector>
 #include <cstring>
+
+#include "TypeDef.h"
+#include "libmd5/MD5.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -62,6 +68,7 @@ public:
     FILM_GRAIN_CHARACTERISTICS           = 19,
     POST_FILTER_HINT                     = 22,
     TONE_MAPPING_INFO                    = 23,
+    KNEE_FUNCTION_INFO                   = 24,
     FRAME_PACKING                        = 45,
     DISPLAY_ORIENTATION                  = 47,
     SOP_DESCRIPTION                      = 128,
@@ -71,13 +78,22 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
+    NO_DISPLAY                           = 135,
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 136,
+#endif
+    CHROMA_SAMPLING_FILTER_HINT          = 137,
+    TIME_CODE                            = 138,
+    MASTERING_DISPLAY_COLOUR_VOLUME      = 139
   };
-  
+
   SEI() {}
   virtual ~SEI() {}
-  
+
   virtual PayloadType payloadType() const = 0;
 };
+
+static const UInt ISO_IEC_11578_LEN=16; // NOTE: RExt - new definition
 
 class SEIuserDataUnregistered : public SEI
 {
@@ -93,8 +109,8 @@ public:
     delete userData;
   }
 
-  UChar uuid_iso_iec_11578[16];
-  UInt userDataLength;
+  UChar uuid_iso_iec_11578[ISO_IEC_11578_LEN];
+  UInt  userDataLength;
   UChar *userData;
 };
 
@@ -105,7 +121,7 @@ public:
 
   SEIDecodedPictureHash() {}
   virtual ~SEIDecodedPictureHash() {}
-  
+
   enum Method
   {
     MD5,
@@ -114,15 +130,15 @@ public:
     RESERVED,
   } method;
 
-  UChar digest[3][16];
+  TComDigest m_digest;
 };
 
-class SEIActiveParameterSets : public SEI 
+class SEIActiveParameterSets : public SEI
 {
 public:
   PayloadType payloadType() const { return ACTIVE_PARAMETER_SETS; }
 
-  SEIActiveParameterSets() 
+  SEIActiveParameterSets()
     : activeVPSId            (0)
     , m_selfContainedCvsFlag (false)
     , m_noParameterSetUpdateFlag (false)
@@ -130,7 +146,7 @@ public:
   {}
   virtual ~SEIActiveParameterSets() {}
 
-  Int activeVPSId; 
+  Int activeVPSId;
   Bool m_selfContainedCvsFlag;
   Bool m_noParameterSetUpdateFlag;
   Int numSpsIdsMinus1;
@@ -312,6 +328,19 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
+class SEINoDisplay : public SEI
+{
+public:
+  PayloadType payloadType() const { return NO_DISPLAY; }
+
+  SEINoDisplay()
+    : m_noDisplay(false)
+  {}
+  virtual ~SEINoDisplay() {}
+
+  Bool m_noDisplay;
+};
+
 class SEISOPDescription : public SEI
 {
 public:
@@ -364,12 +393,84 @@ public:
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
 
+class SEIKneeFunctionInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return KNEE_FUNCTION_INFO; }
+  SEIKneeFunctionInfo() {}
+  virtual ~SEIKneeFunctionInfo() {}
+
+  Int   m_kneeId;
+  Bool  m_kneeCancelFlag;
+  Bool  m_kneePersistenceFlag;
+  Bool  m_kneeMappingFlag;
+  Int   m_kneeInputDrange;
+  Int   m_kneeInputDispLuminance;
+  Int   m_kneeOutputDrange;
+  Int   m_kneeOutputDispLuminance;
+  Int   m_kneeNumKneePointsMinus1;
+  std::vector<Int> m_kneeInputKneePoint;
+  std::vector<Int> m_kneeOutputKneePoint;
+};
+
+class SEIChromaSamplingFilterHint : public SEI
+{
+public:
+  PayloadType payloadType() const {return CHROMA_SAMPLING_FILTER_HINT;}
+  SEIChromaSamplingFilterHint() {}
+  virtual ~SEIChromaSamplingFilterHint() {
+    if(m_verChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numVerticalFilters; i ++)
+      {
+        free(m_verFilterCoeff[i]);
+      }
+      free(m_verFilterCoeff);
+      free(m_verTapLengthMinus1);
+    }
+    if(m_horChromaFilterIdc == 1)
+    {
+      for(Int i = 0; i < m_numHorizontalFilters; i ++)
+      {
+        free(m_horFilterCoeff[i]);
+      }
+      free(m_horFilterCoeff);
+      free(m_horTapLengthMinus1);
+    }
+  }
+
+  Int   m_verChromaFilterIdc;
+  Int   m_horChromaFilterIdc;
+  Bool  m_verFilteringProcessFlag;
+  Int   m_targetFormatIdc;
+  Bool  m_perfectReconstructionFlag;
+  Int   m_numVerticalFilters;
+  Int*  m_verTapLengthMinus1;
+  Int** m_verFilterCoeff;
+  Int   m_numHorizontalFilters;
+  Int*  m_horTapLengthMinus1;
+  Int** m_horFilterCoeff;
+};
+
+class SEIMasteringDisplayColourVolume : public SEI
+{
+public:
+    PayloadType payloadType() const { return MASTERING_DISPLAY_COLOUR_VOLUME; }
+    SEIMasteringDisplayColourVolume() {}
+    virtual ~SEIMasteringDisplayColourVolume(){}
+    
+    UShort displayPrimaries[3][2];
+    UShort displayWhitePoint[2];
+    UInt maxDisplayLuminance;
+    UInt minDisplayLuminance;
+};
+
 typedef std::list<SEI*> SEIMessages;
 
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
 SEIMessages getSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
-/// remove a selection of SEI messages by payload type from the original list and return them in a new list. 
+/// remove a selection of SEI messages by payload type from the original list and return them in a new list.
 SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
 /// delete list of SEI messages (freeing the referenced objects)
@@ -404,5 +505,96 @@ public:
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;
 };
+
+class SEITimeCode : public SEI
+{
+public:
+  PayloadType payloadType() const { return TIME_CODE; }
+  SEITimeCode() {}
+  virtual ~SEITimeCode(){}
+
+  UInt numClockTs;
+  UInt clockTimeStampFlag[4];
+  UInt nuitFieldBasedFlag;
+  UInt countingType;
+  UInt fullTimeStampFlag;
+  UInt discontinuityFlag;
+  UInt cntDroppedFlag;
+  UInt nFrames;
+
+  UInt secondsValue;
+  UInt minutesValue;
+  UInt hoursValue;
+
+  UInt secondsFlag;
+  UInt minutesFlag;
+  UInt hoursFlag;
+
+  UInt timeOffsetLength;
+  Int  timeOffset;
+};
+
+#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
+//definition according to P1005_v1;
+class SEITempMotionConstrainedTileSets: public SEI
+{
+  struct TileSetData
+  {
+    protected:
+      std::vector<Int> m_top_left_tile_index;  //[tileSetIdx][tileIdx];
+      std::vector<Int> m_bottom_right_tile_index;
+
+    public:
+      Int     m_mcts_id;  
+      Bool    m_display_tile_set_flag;
+      Int     m_num_tile_rects_in_set; //_minus1;
+      Bool    m_exact_sample_value_match_flag;
+      Bool    m_mcts_tier_level_idc_present_flag;
+      Bool    m_mcts_tier_flag;
+      Int     m_mcts_level_idc;
+
+      Void setNumberOfTileRects(const Int number)
+      {
+        m_top_left_tile_index    .resize(number);
+        m_bottom_right_tile_index.resize(number);
+      }
+
+      Int  getNumberOfTileRects() const
+      {
+        assert(m_top_left_tile_index.size() == m_bottom_right_tile_index.size());
+        return Int(m_top_left_tile_index.size());
+      }
+
+            Int &topLeftTileIndex    (const Int tileRectIndex)       { return m_top_left_tile_index    [tileRectIndex]; }
+            Int &bottomRightTileIndex(const Int tileRectIndex)       { return m_bottom_right_tile_index[tileRectIndex]; }
+      const Int &topLeftTileIndex    (const Int tileRectIndex) const { return m_top_left_tile_index    [tileRectIndex]; }
+      const Int &bottomRightTileIndex(const Int tileRectIndex) const { return m_bottom_right_tile_index[tileRectIndex]; }
+  };
+
+protected:
+  std::vector<TileSetData> m_tile_set_data;
+
+public:
+
+  Bool    m_mc_all_tiles_exact_sample_value_match_flag;
+  Bool    m_each_tile_one_tile_set_flag;
+  Bool    m_limited_tile_set_display_flag;
+  Int     m_num_sets_in_message; //_minus1;  //[0,255];
+  Bool    m_max_mcs_tier_level_idc_present_flag;
+  Bool    m_max_mcts_tier_flag;
+  Int     m_max_mcts_level_idc;
+
+  PayloadType payloadType() const { return TEMP_MOTION_CONSTRAINED_TILE_SETS; }
+
+  Void setNumberOfTileSets(const Int number)       { m_tile_set_data.resize(number);     }
+  Int  getNumberOfTileSets()                 const { return Int(m_tile_set_data.size()); }
+
+        TileSetData &tileSetData (const Int index)       { return m_tile_set_data[index]; }
+  const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
+
+};
+#endif
+
+#endif
 
 //! \}
