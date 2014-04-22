@@ -331,6 +331,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpInputChromaFormat;
   Int tmpConstraintChromaFormat;
   string inputColourSpaceConvert;
+#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
+  Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
+#endif
 
   po::Options opts;
   opts.addOptions()
@@ -465,8 +468,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraBlockCopyFastSearch",                        m_intraBlockCopyFastSearch,                        true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
   ("CrossComponentPrediction",                        m_useCrossComponentPrediction,                    false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate",              m_reconBasedCrossCPredictionEstimate,             false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
+#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
+  ("SaoLumaOffsetBitShift",                           saoOffsetBitShift[CHANNEL_TYPE_LUMA],                 0, "Specify the luma SAO bit-shift. If negative, automatically calculate a suitable value based upon bit depth and initial QP")
+  ("SaoChromaOffsetBitShift",                         saoOffsetBitShift[CHANNEL_TYPE_CHROMA],               0, "Specify the chroma SAO bit-shift. If negative, automatically calculate a suitable value based upon bit depth and initial QP")
+#else
   ("SaoLumaOffsetBitShift",                           m_saoOffsetBitShift[CHANNEL_TYPE_LUMA],              0u)
   ("SaoChromaOffsetBitShift",                         m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA],            0u)
+#endif
   ("TransformSkip",                                   m_useTransformSkip,                               false, "Intra transform skipping")
   ("TransformSkipFast",                               m_useTransformSkipFast,                           false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize",                        m_transformSkipLog2MaxSize,                          2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
@@ -876,6 +884,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
+#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
+  for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    if (saoOffsetBitShift[ch]<0)
+    {
+      if (m_internalBitDepth[ch]>10)
+      {
+        m_saoOffsetBitShift[ch]=UInt(Clip3<Int>(0, m_internalBitDepth[ch]-10, Int(m_internalBitDepth[ch]-10 + 0.165*m_iQP - 3.22 + 0.5) ) );
+      }
+      else
+      {
+        m_saoOffsetBitShift[ch]=0;
+      }
+    }
+    else
+    {
+      m_saoOffsetBitShift[ch]=UInt(saoOffsetBitShift[ch]);
+    }
+  }
+#endif
+
   // reading external dQP description from file
   if ( m_pchdQPFile )
   {
@@ -1109,8 +1138,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] < m_inputBitDepth[CHANNEL_TYPE_LUMA  ]), "MSB-extended bit depth for luma channel (--MSBExtendedBitDepth) must be greater than or equal to input bit depth for luma channel (--InputBitDepth)" );
   xConfirmPara( (m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] < m_inputBitDepth[CHANNEL_TYPE_CHROMA]), "MSB-extended bit depth for chroma channel (--MSBExtendedBitDepthC) must be greater than or equal to input bit depth for chroma channel (--InputBitDepthC)" );
 
-  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]   > (m_internalBitDepth[CHANNEL_TYPE_LUMA]-10),   "SaoLumaOffsetBitShift must be in the range of 0 to InternalBitDepth-10, inclusive");
-  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] > (m_internalBitDepth[CHANNEL_TYPE_CHROMA]-10), "SaoChromaOffsetBitShift must be in the range of 0 to InternalBitDepthC-10, inclusive");
+  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]   > (m_internalBitDepth[CHANNEL_TYPE_LUMA  ]<10?0:(m_internalBitDepth[CHANNEL_TYPE_LUMA  ]-10)), "SaoLumaOffsetBitShift must be in the range of 0 to InternalBitDepth-10, inclusive");
+  xConfirmPara( m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] > (m_internalBitDepth[CHANNEL_TYPE_CHROMA]<10?0:(m_internalBitDepth[CHANNEL_TYPE_CHROMA]-10)), "SaoChromaOffsetBitShift must be in the range of 0 to InternalBitDepthC-10, inclusive");
 
   xConfirmPara( m_chromaFormatIDC >= NUM_CHROMA_FORMAT,                                     "ChromaFormatIDC must be either 400, 420, 422 or 444" );
   std::string sTempIPCSC="InputColourSpaceConvert must be empty, "+getListOfColourSpaceConverts(true);

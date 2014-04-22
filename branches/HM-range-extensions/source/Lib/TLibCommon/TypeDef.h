@@ -258,6 +258,8 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
+#define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
+
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
 
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 = enable code that allows decoded SEI message to be output (controlled via decoder command line)
