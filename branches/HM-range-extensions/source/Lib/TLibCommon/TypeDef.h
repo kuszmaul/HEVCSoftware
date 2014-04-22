@@ -258,8 +258,6 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH                          1 ///< 0 = use only diamond or full search for inter prediction estimation, 1 (default) = additionally allow the use of a selective inter prediction search
-#define RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM                                1 ///< 0 = use original +1/3 or +1/6 rounding for RDPCM, 1 (default) = use +1/2 rounding for RDPCM
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
 #define RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS                             1 ///< 0 = do not use agreed Version 2 FDIS profile/tier/level definitions, 1 (default) = use agreed Version 2 FDIS profile/tier/level definitions
 
@@ -545,7 +543,6 @@ enum TransformDirection
   TRANSFORM_NUMBER_OF_DIRECTIONS = 2
 };
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 /// supported ME search methods
 enum MESearchMethod
 {
@@ -553,7 +550,6 @@ enum MESearchMethod
   DIAMOND                    = 1,     ///< Fast search
   SELECTIVE                  = 2      ///< Selective search
 };
-#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE

@@ -194,11 +194,7 @@ public:
   Int*    getSliceNSamples(){ return m_sliceNsamples ;}
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
   Void transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const Pel resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint);
-#else
-  Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Pel resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
-#endif
   Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, Pel &reconSample, const QpParam &cQP, UInt uiPos );
 
 protected:
