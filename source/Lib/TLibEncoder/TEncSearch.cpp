@@ -318,7 +318,6 @@ const Bool bStarRefinementStop      = 0;                                        
 const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */  \
 
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 #define SEL_SEARCH_CONFIGURATION                                                                                 \
   const Bool bTestOtherPredictedMV    = 1;                                                                       \
   const Bool bTestZeroVector          = 1;                                                                       \
@@ -333,16 +332,11 @@ const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after
   const Int  uiSearchStep             = 4;                                                                       \
   const Int  iMVDistThresh            = 8;                                                                       \
 
-#endif
 
 
 __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance )
 {
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   Distortion  uiSad = 0;
-#else
-  Distortion  uiSad;
-#endif
 
   Pel*  piRefSrch;
 
@@ -351,10 +345,8 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefSrch, rcStruct.iYStride,  m_cDistParam );
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   if(m_pcEncCfg->getFastSearch() != SELECTIVE)
   {
-#endif
     // fast encoder decision: use subsampled SAD when rows > 8 for integer ME
     if ( m_pcEncCfg->getUseFastEnc() )
     {
@@ -363,15 +355,12 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
         m_cDistParam.iSubShift = 1;
       }
     }
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   }
-#endif
 
   setDistParamComp(COMPONENT_Y);
 
   // distortion
   m_cDistParam.bitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   if(m_pcEncCfg->getFastSearch() == SELECTIVE)
   {
     Int isubShift = 0;
@@ -421,7 +410,6 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   }
   else
   {
-#endif
     uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
     // motion cost
@@ -436,9 +424,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
       rcStruct.uiBestRound    = 0;
       rcStruct.ucPointNr      = ucPointNr;
     }
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   }
-#endif
 }
 
 
@@ -5122,11 +5108,9 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
       break;
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
     case 2:
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
       break;
-#endif
     default:
       break;
   }
@@ -5310,7 +5294,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
 }
 
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
 {
   SEL_SEARCH_CONFIGURATION
@@ -5435,7 +5418,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
   ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
 
 }
-#endif
 
 
 Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,

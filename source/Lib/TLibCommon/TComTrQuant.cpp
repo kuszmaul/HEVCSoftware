@@ -1636,9 +1636,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   const UInt  minorAxisLimit        = (mode == RDPCM_HOR) ? uiHeight : uiWidth;
   const UInt  referenceSampleOffset = (mode == RDPCM_HOR) ? 1        : uiWidth;
 
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
   const Bool bUseHalfRoundingPoint = (mode != RDPCM_OFF);
-#endif
 
   uiAbsSum = 0;
 
@@ -1661,11 +1659,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
       }
       else
       {
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
         transformSkipQuantOneSample(rTu, compID, encoderSideDelta, pcCoeff, coefficientIndex, cQP, bUseHalfRoundingPoint);
-#else
-        transformSkipQuantOneSample(rTu, compID, encoderSideDelta, pcCoeff, coefficientIndex, cQP);
-#endif
         invTrSkipDeQuantOneSample  (rTu, compID, pcCoeff[coefficientIndex], reconstructedDelta, cQP, coefficientIndex);
       }
 
@@ -3143,11 +3137,7 @@ Void TComTrQuant::destroyScalingList()
   }
 }
 
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
 Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const Pel resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint)
-#else
-Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Pel resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP )
-#endif
 {
         TComDataCU    *pcCU                           = rTu.getCU();
   const UInt           uiAbsPartIdx                   = rTu.GetAbsPartIdxTU();
@@ -3172,11 +3162,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, P
   const Int iQBits = QUANT_SHIFT + cQP.per + iTransformShift;
   // NOTE: RExt - QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
   const Int iAdd = ( bUseHalfRoundingPoint ? 256 : (pcCU->getSlice()->getSliceType() == I_SLICE ? 171 : 85) ) << (iQBits - 9);
-#else
-  Int iAdd = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
-#endif
 
   TCoeff transformedCoefficient;
 
