@@ -178,7 +178,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX,        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY,                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH,                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM,                           settingNameWidth, settingValueWidth);
