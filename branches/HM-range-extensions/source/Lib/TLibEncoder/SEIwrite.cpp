@@ -617,7 +617,7 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEIT
   if(!sei.m_each_tile_one_tile_set_flag)
   {
     WRITE_FLAG((sei.m_limited_tile_set_display_flag ? 1 : 0), "limited_tile_set_display_flag");
-    WRITE_UVLC((sei.m_num_sets_in_message - 1),               "num_sets_in_message_minus1"   );
+    WRITE_UVLC((sei.getNumberOfTileSets() - 1),               "num_sets_in_message_minus1"   );
 
     if(sei.getNumberOfTileSets() > 0)
     {
