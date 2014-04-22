@@ -206,6 +206,9 @@ protected:
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      m_intraBlockCopyFullFrameSearch;                  ///< Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks
 #endif
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  Bool      m_useHashBasedME;                                 ///< flag for using hash based inter search
+#endif
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each

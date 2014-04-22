@@ -50,6 +50,9 @@
 #include "TEncSbac.h"
 #include "TEncCfg.h"
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+#include "TLibCommon/TComHash.h"
+#endif 
 
 //! \ingroup TLibEncoder
 //! \{
@@ -133,6 +136,12 @@ protected:
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  RefPicList      m_currRefPicList;
+  Int             m_currRefPicIndex;
+  Bool            m_bSkipFracME;
+#endif
 
 public:
   TEncSearch();
@@ -232,6 +241,54 @@ public:
                                   Distortion&  ruiCost,
                                   Bool         bUse1DSearchFor8x8
                                 );
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  Void addToSortList            ( list<BlockHash>& listBlockHash,
+                                  list<Int>& listCost,
+                                  Int cost,
+                                  const BlockHash& blockHash
+                                );
+
+  Distortion getSAD             ( Pel* pRef,
+                                  Int refStride,
+                                  Pel* pCurr,
+                                  Int currStride,
+                                  Int width,
+                                  Int height
+                                );
+
+  Bool predInterHashSearch      ( TComDataCU* pcCU,
+                                  TComYuv* pcOrg,
+                                  TComYuv*& rpcPredYuv,
+                                  Bool& isPerfectMatch
+                                );
+
+  Bool xHashInterEstimation     ( TComDataCU* pcCU,
+                                  Int width,
+                                  Int height,
+                                  RefPicList& bestRefPicList,
+                                  Int& bestRefIndex,
+                                  TComMv& bestMv,
+                                  TComMv& bestMvd,
+                                  Int& bestMVPIndex,
+                                  Bool& isPerfectMatch
+                                 );
+  
+  Int  xHashInterPredME         ( TComDataCU* pcCU,
+                                  Int width,
+                                  Int height,
+                                  RefPicList currRefPicList,
+                                  Int currRefPicIndex,
+                                  TComMv bestMv[5]
+                                );
+
+  Void selectMatchesInter       ( TComDataCU* pcCU,
+                                  const MapIterator& itBegin,
+                                  Int count,
+                                  list<BlockHash>& vecBlockHash,
+                                  const BlockHash& currBlockHash
+                                 );
+#endif
 
   Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
                                   TComMv&       cMvPred,

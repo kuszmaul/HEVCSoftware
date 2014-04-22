@@ -43,6 +43,9 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+#include "TComHash.h"
+#endif 
 
 //! \ingroup TLibCommon
 //! \{
@@ -84,6 +87,10 @@ private:
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  TComHash              m_hashMap;
+#endif
 
 public:
   TComPic();
@@ -155,6 +162,11 @@ public:
 
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  Void          addPictureToHashMapForInter();
+  TComHash*     getHashMap() { return &m_hashMap; }
+#endif
+
   /* field coding parameters*/
 
    Void              setTopField(bool b)                  {m_isTop = b;}
@@ -174,6 +186,7 @@ public:
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
   const SEIMessages& getSEIs() const { return m_SEIs; }
+
 };// END CLASS DEFINITION TComPic
 
 //! \}

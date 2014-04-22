@@ -142,6 +142,9 @@ Void TAppEncTop::xInitLibCfg()
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   m_cTEncTop.setUseIntraBCFullFrameSearch    ( m_intraBlockCopyFullFrameSearch );
 #endif
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  m_cTEncTop.setUseHashBasedME               ( m_useHashBasedME );
+#endif
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange            ( m_bipredSearchRange );
   m_cTEncTop.setSingleComponentLoopInterSearch( m_singleComponentLoopInterSearch );

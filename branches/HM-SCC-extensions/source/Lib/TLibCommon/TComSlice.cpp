@@ -610,7 +610,16 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+      if (rpcPic->getPOC() != pocCurr)
+      {
+        rpcPic->getSlice(0)->setReferenced(false);
+        rpcPic->getHashMap()->clearAll();
+      }
+#else
       if (rpcPic->getPOC() != pocCurr) rpcPic->getSlice(0)->setReferenced(false);
+#endif
       iterPic++;
     }
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -637,6 +646,9 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+            rpcPic->getHashMap()->clearAll();
+#endif
           }
           iterPic++;
         }
@@ -655,6 +667,9 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+            rpcPic->getHashMap()->clearAll();
+#endif
           }
           iterPic++;
         }
@@ -1067,6 +1082,9 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {
       rpcPic->getSlice( 0 )->setReferenced( false );
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+      rpcPic->getHashMap()->clearAll();
+#endif
       rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }

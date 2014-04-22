@@ -97,7 +97,9 @@ Void TEncTop::create ()
 {
   // initialize global variables
   initROM();
-
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  TComHash::initBlockSizeToIndex();
+#endif
   // create processing unit classes
   m_cGOPEncoder.        create( );
   m_cSliceEncoder.      create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
@@ -533,6 +535,9 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  rpcPic->getHashMap()->clearAll();
+#endif
 }
 
 Void TEncTop::xInitSPS()

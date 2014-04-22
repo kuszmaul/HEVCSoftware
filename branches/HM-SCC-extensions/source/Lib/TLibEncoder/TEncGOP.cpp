@@ -1946,6 +1946,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcPic->compressMotion();
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+    if ( m_pcCfg->getUseHashBasedME() )
+    {
+      if ( m_pcCfg->getGOPEntry(iGOPid).m_refPic )
+      {
+        pcPic->addPictureToHashMapForInter();
+      }
+      else
+      {
+        pcPic->getHashMap()->clearAll();
+      }
+    }
+#endif
+
     //-- For time output for each slice
     Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
 
