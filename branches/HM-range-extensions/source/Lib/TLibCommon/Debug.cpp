@@ -179,7 +179,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS,                        settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,           settingNameWidth, settingValueWidth);

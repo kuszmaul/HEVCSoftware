@@ -259,7 +259,6 @@
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
-#define RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS                             1 ///< 0 = do not use agreed Version 2 FDIS profile/tier/level definitions, 1 (default) = use agreed Version 2 FDIS profile/tier/level definitions
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -665,11 +664,9 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
-    MAINREXT = 4
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
-   ,HIGHREXT = 30 // Placeholder profile for development
+    MAINREXT = 4,
+    HIGHREXT = 30 // Placeholder profile for development
    ,MAINSCC  = 31 // Placeholder profile for development
-#endif
   };
 }
 
@@ -679,9 +676,6 @@ namespace Level
   {
     MAIN = 0,
     HIGH = 1,
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS == 0
-    SUPER = 2,
-#endif
   };
 
   enum Name
@@ -718,9 +712,7 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   SPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -729,9 +721,7 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   PPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 
