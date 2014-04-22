@@ -576,7 +576,6 @@ public:
   Bool    m_mc_all_tiles_exact_sample_value_match_flag;
   Bool    m_each_tile_one_tile_set_flag;
   Bool    m_limited_tile_set_display_flag;
-  Int     m_num_sets_in_message; //_minus1;  //[0,255];
   Bool    m_max_mcs_tier_level_idc_present_flag;
   Bool    m_max_mcts_tier_flag;
   Int     m_max_mcts_level_idc;
