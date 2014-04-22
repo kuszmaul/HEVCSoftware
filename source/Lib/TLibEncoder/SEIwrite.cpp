@@ -99,11 +99,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::CHROMA_SAMPLING_FILTER_HINT:
     fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
     break;
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
   case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
     fprintf( g_hTrace, "=========== Temporal Motion Constrained Tile Sets SEI message ===========\n");
     break;
-#endif
   case SEI::TIME_CODE:
     fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
     break;
@@ -172,11 +170,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::CHROMA_SAMPLING_FILTER_HINT:
     xWriteSEIChromaSamplingFilterHint(*static_cast<const SEIChromaSamplingFilterHint*>(&sei)/*, sps*/);
     break;
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
   case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
     xWriteSEITempMotionConstrainedTileSets(bs, *static_cast<const SEITempMotionConstrainedTileSets*>(&sei));
     break;
-#endif
   case SEI::TIME_CODE:
     xWriteSEITimeCode(*static_cast<const SEITimeCode*>(&sei));
     break;
@@ -612,7 +608,6 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
   }
 }
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
 Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEITempMotionConstrainedTileSets& sei)
 {
   //UInt code;
@@ -670,7 +665,6 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEIT
   }
   xWriteByteAlign();
 }
-#endif
 
 Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
 {
