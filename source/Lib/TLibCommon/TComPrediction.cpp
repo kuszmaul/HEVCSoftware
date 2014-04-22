@@ -516,28 +516,8 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
     {
       // the chroma PU will be smaller than 4x4, so join with neighbouring chroma PU(s) to form a bigger block
       // chroma PUs will use the luma MV from the bottom right most of the merged chroma PUs.
-
-      // Clipping of the MVs is applied.
-      //   The reason for this is illustrated in the following example:
-      //    NxN split of an 8x8 CU for 4:2:0.
-      //    The 4 MVs are valid for the respective areas for the 4 luma 4x4 blocks.
-      //    However, the bottom left MV is being applied to the top-left chroma values as well.
-      //       The bottom left MV may reach outside the current slice/tile when applied to the
-      //       top-left chroma samples.
-      //       Clipping prevents this from occurring.
-
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-      Int iLeftWidth = pcCU->getIntraBCSearchAreaWidth();
-      Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
-      Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );
-#endif
-
       UInt uiMvSrcAddr = ( pcYuvPred->getChromaFormat() == CHROMA_422 && iPartIdx < ( pcCU->getNumPartitions() >> 1 ) ? 1 : 3 );
       cMv = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiMvSrcAddr );
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-      cMv.setHor( std::max<Int>( iBoundaryX, cMv.getHor() ) ); // Boundary is negative, hence max
-      cMv.setVer( std::max<Int>( iBoundaryY, cMv.getVer() ) );
-#endif
     }
 
     xPredIntraBCBlk( COMPONENT_Cb, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );

@@ -258,7 +258,6 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY                       1 ///< 0 = allow merged PUs to overlap due to motion vector clipping and stray outside the constrained intra area, 1 = restrict the search area such that the bottom-right PU's motion vector must be valid for all PUs with which it is merged
 #define RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH                          1 ///< 0 = use only diamond or full search for inter prediction estimation, 1 (default) = additionally allow the use of a selective inter prediction search
 #define RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM                                1 ///< 0 = use original +1/3 or +1/6 rounding for RDPCM, 1 (default) = use +1/2 rounding for RDPCM
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
