@@ -717,9 +717,10 @@ Specifies the type of decoding refresh to apply at the intra frame period
 picture.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
-0 & Applies an I picture (not a clean random access point). \\
-1 & Applies a non-IDR clean random access point (open GOP). \\
-2 & Applies an IDR random access point (closed GOP). \\
+0 & Applies an I picture (not a intra random access point). \\
+1 & Applies a CRA intra random access point (open GOP). \\
+2 & Applies an IDR intra random access point (closed GOP). \\
+3 & Use recovery point SEI messages to indicate random access. \\
 \end{tabular}
 \\
 
