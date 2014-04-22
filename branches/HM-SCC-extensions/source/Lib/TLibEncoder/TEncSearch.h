@@ -56,6 +56,15 @@
 
 class TEncCu;
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+struct IntraBCHashNode
+{
+  Int pos_X;
+  Int pos_Y;
+  IntraBCHashNode * next;
+};
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -87,6 +96,10 @@ private:
   TComYuv         m_pcQTTempTransformSkipTComYuv;
 #if ADAPTIVE_QP_SELECTION
   TCoeff*         m_ppcQTTempTUArlCoeff[MAX_NUM_COMPONENT];
+#endif
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  IntraBCHashNode***      m_pcIntraBCHashTable;                 ///< The hash table used for Intra BC search
 #endif
 
 protected:
@@ -289,6 +302,42 @@ public:
 
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv );
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+
+  Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
+                                Int pos_X,
+                                Int pos_Y,
+                                Int width,
+                                Int height,
+                                Bool isRec
+                              );
+
+  Void xIntraBCHashSearch     ( TComDataCU* pcCU,
+                                TComYuv* pcYuvOrg,
+                                Int iPartIdx,
+                                TComMv* pcMvPred,
+                                TComMv& rcMv,
+                                UInt& ruiBits,
+                                Distortion& ruiCost,
+                                UInt uiIntraBCECost
+                              );
+
+  Void xIntraBCHashTableUpdate( TComDataCU* pcCU,
+                                Bool isRec
+                              );
+
+  Void xClearIntraBCHashTable();
+
+  Void setHashLinklist        ( IntraBCHashNode*& HashLinklist,
+                                UInt uiDepth,
+                                UInt uiHashIdx
+                              );
+
+  IntraBCHashNode* getHashLinklist( UInt uiDepth, Int iHashIdx ) { return m_pcIntraBCHashTable[uiDepth][iHashIdx]; }
+
+#endif
+
 protected:
 
   // -------------------------------------------------------------------------------------------------------------------

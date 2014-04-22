@@ -997,6 +997,11 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         pcCU->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
     }
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+    if(m_pcCfg->getUseIntraBCFullFrameSearch())
+    m_pcPredSearch->xIntraBCHashTableUpdate(pcCU, false);
+#endif
+
     m_uiPicTotalBits += pcCU->getTotalBits();
     m_dPicRdCost     += pcCU->getTotalCost();
     m_uiPicDist      += pcCU->getTotalDistortion();
@@ -1025,6 +1030,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     CTXMem[0]->loadContexts( m_pppcRDSbacCoder[0][CI_CURR_BEST] );//ctx end of dep.slice
   }
   xRestoreWPparam( pcSlice );
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  //clear the hash table used in Intra BC search
+  if(m_pcCfg->getUseIntraBCFullFrameSearch())
+  m_pcPredSearch->xClearIntraBCHashTable();
+#endif
 }
 
 /**

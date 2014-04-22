@@ -130,6 +130,17 @@ TEncSearch::TEncSearch()
 #endif
     m_puhQTTempTransformSkipFlag[ch]               = NULL;
   }
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  m_pcIntraBCHashTable = NULL;
+  m_pcIntraBCHashTable = new IntraBCHashNode**[SCM__Q0248_INTRABC_HASH_DEPTH];
+  for(int i = 0; i < SCM__Q0248_INTRABC_HASH_DEPTH; i++)
+  {
+    m_pcIntraBCHashTable[i] = new IntraBCHashNode*[SCM__Q0248_INTRABC_HASH_TABLESIZE];
+    memset(m_pcIntraBCHashTable[i], 0, SCM__Q0248_INTRABC_HASH_TABLESIZE * sizeof(IntraBCHashNode*));
+  }
+#endif
+
   m_puhQTTempTrIdx                                 = NULL;
   m_pcQTTempTComYuv                                = NULL;
   m_pcEncCfg                                       = NULL;
@@ -191,6 +202,22 @@ TEncSearch::~TEncSearch()
     delete[] m_puhQTTempTransformSkipFlag[ch];
   }
   m_pcQTTempTransformSkipTComYuv.destroy();
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  if(m_pcIntraBCHashTable)
+  {
+    for(int iDepth = 0; iDepth < SCM__Q0248_INTRABC_HASH_DEPTH; iDepth++)
+    {
+      if(m_pcIntraBCHashTable[iDepth])
+      {
+        delete m_pcIntraBCHashTable[iDepth];
+      }
+    }
+    delete m_pcIntraBCHashTable;
+  }
+
+  m_pcIntraBCHashTable = NULL;
+#endif
 
   m_tmpYuvPred.destroy();
 }
@@ -3760,7 +3787,17 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     Distortion  uiCost;
     UInt        uiBits = 0;
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
     xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
+
+    if((pcCU->getWidth(0) == 8) && (ePartSize == SIZE_2Nx2N) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
+    {
+      UInt uiIntraBCECost = uiCost + m_pcRdCost->getCost( cMv.getHor(), cMv.getVer());
+      xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, uiIntraBCECost);
+    }
+#else
+    xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
+#endif
 
     // store intra BV in REF_PIC_LIST_0
     cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
@@ -3869,6 +3906,22 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   const UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
   const UInt cuPelY    = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartAddr ] ];
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  const Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+  const Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+
+  if((pcCU->getWidth(0) == 16) && (pcCU->getPartitionSize(0) == SIZE_2Nx2N) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
+  {
+    srLeft  = -1 * cuPelX;
+    srTop   = -1 * cuPelY;
+
+    srRight = iPicWidth - cuPelX - iRoiWidth;
+    srBottom = lcuHeight - cuPelY % lcuHeight - iRoiHeight;
+  }
+  else
+  {
+#endif
+
   Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth();
   Int maxYsr =  cuPelY % lcuHeight;
 
@@ -3885,8 +3938,14 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   srRight = lcuWidth - cuPelX %lcuWidth - iRoiWidth;
   srBottom = lcuHeight - cuPelY % lcuHeight - iRoiHeight;
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  }
+#endif
+
+#if !SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+#endif 
 
   if( cuPelX + srRight + iRoiWidth > iPicWidth)
   {
@@ -4144,6 +4203,13 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
 #else
       Bool validCand = true;
+#endif
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+      if((iTempX >= lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
+      {
+        validCand = false;
+      }
 #endif
 
       if ((iTempX >= 0) && (iTempY >= 0))
@@ -4706,6 +4772,339 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   return;
 }
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+
+Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, Int width, Int height, Bool isRec)
+{
+  TComPicYuv* HashPic;
+  Pel*        plane;
+  Int         iBitdepth   = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA);
+  Int         iNumComp    = 1;  
+  UInt        uiHashIdx   = 0;  
+  UInt        grad1       = 0;
+  UInt        grad2       = 0;
+  UInt        grad3       = 0;
+  UInt        grad4       = 0;
+  UInt        grad        = 0;
+  UInt        avgDC1      = 0;
+  UInt        avgDC2      = 0;
+  UInt        avgDC3      = 0;
+  UInt        avgDC4      = 0;
+  UInt        avgDC       = 0;
+  UInt        gradX       = 0;
+  UInt        gradY       = 0;
+  Int         iPicWidth   = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+  Int         iPicHeight  = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+  Int         iTotalSamples = width * height * iNumComp;
+
+  assert((pos_X + width) <= iPicWidth);
+  assert((pos_Y + height) <= iPicHeight);
+
+  if(isRec)
+  {
+    HashPic = pcCU->getPic()->getPicYuvRec();
+  }
+  else
+  {
+    HashPic = pcCU->getPic()->getPicYuvOrg();
+  }
+
+  for(Int chan=0; chan < iNumComp; chan++)
+  {
+    const ComponentID compID=ComponentID(chan);
+    Int cxstride = HashPic->getStride(compID);
+    Int cxpos_X = pos_X >> HashPic->getComponentScaleX(compID);
+    Int cxpos_Y = pos_Y >> HashPic->getComponentScaleY(compID);
+    Int cxwidth = width >> HashPic->getComponentScaleX(compID);
+    Int cxheight = height >> HashPic->getComponentScaleY(compID);
+
+    plane = HashPic->getAddr(compID) + cxpos_Y * cxstride + cxpos_X;
+
+    for (UInt y = 1; y < (cxheight >> 1); y++)
+    {
+      for (UInt x = 1; x < (cxwidth >> 1); x++)
+      {
+        avgDC1 += (plane[y*cxstride+x] >> (iBitdepth - 8));
+        gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
+        gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
+        grad1 += (gradX + gradY) >> 1;
+      }
+    }
+
+    for (UInt y = (cxheight >> 1); y < cxheight; y++)
+    {
+      for (UInt x = 1; x < (cxwidth >> 1); x++)
+      {
+        avgDC2 += (plane[y*cxstride+x] >> (iBitdepth - 8));
+        gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
+        gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
+        grad2 += (gradX + gradY) >> 1;
+      }
+    }
+
+    for (UInt y = 1; y < (cxheight >> 1); y++)
+    {
+      for (UInt x = (cxwidth >> 1); x < cxwidth; x++)
+      {
+        avgDC3 += plane[y*cxstride+x] >> (iBitdepth - 8);
+        gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
+        gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
+        grad3 += (gradX + gradY) >> 1;
+      }
+    }
+
+    for (UInt y = (cxheight >> 1); y < cxheight; y++)
+    {
+      for (UInt x = (cxwidth >> 1); x < cxwidth; x++)
+      {
+        avgDC4 += plane[y*cxstride+x] >> (iBitdepth - 8);
+        gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
+        gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
+        grad4 += (gradX + gradY) >> 1;
+      }
+    }
+  }
+
+  avgDC = avgDC1 + avgDC2 + avgDC3 + avgDC4;
+  grad = grad1 + grad2 + grad3 + grad4;
+
+  avgDC1 = (avgDC1 << 2)/(iTotalSamples);
+  avgDC2 = (avgDC2 << 2)/(iTotalSamples);
+  avgDC3 = (avgDC3 << 2)/(iTotalSamples);
+  avgDC4 = (avgDC4 << 2)/(iTotalSamples);
+  avgDC = avgDC/(iTotalSamples);
+
+  grad1 = (grad1 << 2)/(iTotalSamples);
+  grad2 = (grad2 << 2)/(iTotalSamples);
+  grad3 = (grad3 << 2)/(iTotalSamples);
+  grad4 = (grad4 << 2)/(iTotalSamples);
+  grad = grad/(iTotalSamples);
+
+  if(grad < 5)
+  {
+    return -1;
+  }
+
+  avgDC = avgDC >> 5; // 3 bits
+  grad = grad >> 4; // 4 bits
+
+  assert(avgDC < 256);
+  assert(avgDC >= 0);
+
+  avgDC1 = avgDC1>>5;
+  avgDC2 = avgDC2>>5;
+  avgDC3 = avgDC3>>5;
+  avgDC4 = avgDC4>>5;
+
+  uiHashIdx = (avgDC1 << 13) + (avgDC2 << 10) + (avgDC3 << 7) + (avgDC4 << 4) + grad;
+
+  assert(uiHashIdx >= 0);
+  assert(uiHashIdx <= 0XFFFF);
+
+  return uiHashIdx;
+}
+
+Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, TComMv* pcMvPred, TComMv& rcMv, UInt& ruiBits, Distortion& ruiCost, UInt uiIntraBCECost)
+{
+  UInt      uiPartAddr;
+  Int       iRoiWidth;
+  Int       iRoiHeight;
+
+  TComYuv*    pcYuv = pcYuvOrg;
+
+  TComPattern   tmpPattern;
+  TComPattern*  pcPatternKey  = &tmpPattern;
+
+  Double     fWeight     = 1.0;
+
+  Int        iOrgHashIndex;
+
+  pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight ); 
+
+  pcPatternKey->initPattern( pcYuv->getAddr  ( COMPONENT_Y, uiPartAddr ),
+    iRoiWidth,
+    iRoiHeight,
+    pcYuv->getStride(COMPONENT_Y) );
+
+  iOrgHashIndex = xIntraBCHashTableIndex(pcCU, pcCU->getCUPelX(), pcCU->getCUPelY(), iRoiWidth, iRoiHeight, false);
+
+  if(iOrgHashIndex < 0)
+  {
+    return;
+  }
+
+  IntraBCHashNode* HashLinklist = getHashLinklist(0, iOrgHashIndex);  //Intra full frame hash search only for 8x8
+
+  Pel*        piRefY      = pcCU->getPic()->getPicYuvRec()->getAddr( COMPONENT_Y);
+  Int         iRefStride  = pcCU->getPic()->getPicYuvRec()->getStride(COMPONENT_Y);
+
+  // disable weighted prediction
+  setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
+
+  TComMv      ZeroMv(0,0);
+
+  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->setPredictor(*pcMvPred);
+  m_pcRdCost->setCostScale  ( 0 );
+
+  m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
+
+  setDistParamComp(COMPONENT_Y);
+  m_cDistParam.bitDepth  = g_bitDepth[CHANNEL_TYPE_LUMA];
+  m_cDistParam.iRows     = 4;//to calculate the sad line by line;
+  m_cDistParam.iSubShift = 0;
+
+  Int  cuPelX     = pcCU->getCUPelX();
+  Int  cuPelY     = pcCU->getCUPelY();
+
+  Distortion  uiSad;
+  Distortion  uiSadBest = uiIntraBCECost;
+  Int         iBestX    = 0;
+  Int         iBestY    = 0;
+  Int         iTempX;
+  Int         iTempY;
+  Pel*  piRefSrch;
+
+  while(HashLinklist)
+  {
+    iTempX = HashLinklist->pos_X;
+    iTempY = HashLinklist->pos_Y;
+
+    uiSad = 0;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
+
+    for(int r = 0; r < iRoiHeight; )
+    {
+      piRefSrch = piRefY + iTempY * iRefStride + r*iRefStride + iTempX;
+      m_cDistParam.pCur = piRefSrch;
+      m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+      uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+      if(uiSad > uiSadBest)
+        break;
+
+      r += 4;
+    }
+
+    if(uiSad <= 16)
+    {
+      uiSad += m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
+      if(uiSad < uiSadBest)
+      {
+        uiSadBest = uiSad;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
+        iBestX    = iTempX - cuPelX;
+        iBestY    = iTempY - cuPelY;
+        rcMv.set( iBestX, iBestY );
+      }
+      break;
+    }
+
+    uiSad += m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
+
+    if ( uiSad < uiSadBest )
+    {
+      uiSadBest = uiSad;
+      iBestX    = iTempX - cuPelX;
+      iBestY    = iTempY - cuPelY;
+      rcMv.set( iBestX, iBestY );
+    }
+
+    HashLinklist = HashLinklist->next;
+  }
+
+
+  ruiCost = uiSadBest - m_pcRdCost->getCost( rcMv.getHor(), rcMv.getVer());
+
+  UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+
+  ruiBits      += uiMvBits;
+  ruiCost       = (Distortion)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
+
+  return;
+}
+
+Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
+{
+  Int         iRoiWidth = 8;
+  Int         iRoiHeight = 8;
+  Int         cuPelX     = pcCU->getCUPelX();
+  Int         cuPelY     = pcCU->getCUPelY();
+  Int         iTempX;
+  Int         iTempY;
+  Int         iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
+  Int         iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+
+  Int        iOrgHashIndex;
+  IntraBCHashNode* NewHashNode;
+
+
+  for(int j = 0; j < MAX_CU_SIZE; j++)
+  {
+    for(int i = 0; i < MAX_CU_SIZE; i++)
+    {
+      iTempX = cuPelX - iRoiWidth + 1 + i;
+      iTempY = cuPelY - iRoiHeight + 1  + j;
+
+      if((iTempX < 0) || (iTempY < 0) || ((iTempX + iRoiWidth) >= iPicWidth) || ((iTempY + iRoiHeight) >= iPicHeight))
+      {
+        continue;
+      }
+
+      iOrgHashIndex = xIntraBCHashTableIndex(pcCU, iTempX, iTempY, iRoiWidth, iRoiHeight, isRec);
+
+      if(iOrgHashIndex < 0)
+      {
+        continue;
+      }
+
+      NewHashNode = new IntraBCHashNode;
+
+      assert(NewHashNode);
+
+      NewHashNode->pos_X = iTempX;
+      NewHashNode->pos_Y = iTempY;
+      setHashLinklist(NewHashNode, 0, iOrgHashIndex); //Intra full frame hash search only for 8x8
+    }
+  }
+}
+
+Void TEncSearch::xClearIntraBCHashTable()
+{
+  if(m_pcIntraBCHashTable)
+  {
+    for(int iDepth = 0; iDepth < SCM__Q0248_INTRABC_HASH_DEPTH; iDepth++)
+    {
+      if(m_pcIntraBCHashTable[iDepth])
+      {
+        for(int iIdx = 0; iIdx < SCM__Q0248_INTRABC_HASH_TABLESIZE; iIdx++)
+        {
+          if(m_pcIntraBCHashTable[iDepth][iIdx] == NULL)
+            continue;
+          else
+          {
+            while(m_pcIntraBCHashTable[iDepth][iIdx]->next)
+            {
+              IntraBCHashNode* TempNode = m_pcIntraBCHashTable[iDepth][iIdx]->next;
+              m_pcIntraBCHashTable[iDepth][iIdx]->next = m_pcIntraBCHashTable[iDepth][iIdx]->next->next;
+
+              delete TempNode;
+            }
+
+            delete m_pcIntraBCHashTable[iDepth][iIdx];
+
+            m_pcIntraBCHashTable[iDepth][iIdx] = NULL;
+          }
+        }
+      }
+    }
+  }
+}
+
+Void TEncSearch::setHashLinklist(IntraBCHashNode*& HashLinklist, UInt uiDepth, UInt uiHashIdx)
+{ 
+  HashLinklist->next = m_pcIntraBCHashTable[uiDepth][uiHashIdx];
+  m_pcIntraBCHashTable[uiDepth][uiHashIdx] = HashLinklist;  
+}
+#endif
 
 // AMVP
 #if ZERO_MVD_EST
