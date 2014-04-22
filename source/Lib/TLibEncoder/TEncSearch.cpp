@@ -858,6 +858,12 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
 
   for (UInt i = 0; i < 9; i++)
   {
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+    if ( m_bSkipFracME && i > 0 )
+    {
+      break;
+    }
+#endif
     TComMv cMvTest = pcMvRefine[i];
     cMvTest += baseRefMv;
 
@@ -3824,6 +3830,287 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   return true;
 }
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+
+Void TEncSearch::addToSortList( list<BlockHash>& listBlockHash, list<Int>& listCost, Int cost, const BlockHash& blockHash )
+{
+  assert( listBlockHash.size() == listCost.size() );
+  list<BlockHash>::iterator itBlockHash = listBlockHash.begin();
+  list<Int>::iterator itCost = listCost.begin();
+
+  while ( itCost != listCost.end() )
+  {
+    if ( cost < (*itCost) )
+    {
+      listCost.insert( itCost, cost );
+      listBlockHash.insert( itBlockHash, blockHash );
+      return;
+    }
+
+    ++itCost;
+    ++itBlockHash;
+  }
+
+  listCost.push_back( cost );
+  listBlockHash.push_back( blockHash );
+}
+
+Distortion TEncSearch::getSAD( Pel* pRef, Int refStride, Pel* pCurr, Int currStride, Int width, Int height )
+{
+  Distortion dist = 0;
+
+  for ( Int i=0; i<height; i++ )
+  {
+    for ( Int j=0; j<width; j++ )
+    {
+      dist += abs( pRef[j] - pCurr[j] );
+    }
+    pRef += refStride;
+    pCurr += currStride;
+  }
+
+  if ( g_bitDepth[CHANNEL_TYPE_LUMA] == 8 )
+  {
+    return dist;
+  }
+  else
+  {
+    Int shift = DISTORTION_PRECISION_ADJUSTMENT( g_bitDepth[CHANNEL_TYPE_LUMA] - 8 );
+    return dist >> shift;
+  }
+  return 0;
+}
+
+Bool TEncSearch::predInterHashSearch( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv*& rpcPredYuv, Bool& isPerfectMatch )
+{
+  rpcPredYuv->clear();
+  TComMvField  cMEMvField;
+  TComMv       bestMv, bestMvd;
+  RefPicList   bestRefPicList;
+  Int          bestRefIndex;
+  Int          bestMVPIndex;
+  Int          iPartIdx   = 0;
+  Int          uiPartAddr = 0;
+  PartSize     ePartSize  = pcCU->getPartitionSize( 0 );
+
+  //  Clear Motion Field
+  TComMv cMvZero( 0, 0 );
+  pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( TComMvField(), ePartSize, uiPartAddr, 0, iPartIdx );
+  pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( TComMvField(), ePartSize, uiPartAddr, 0, iPartIdx );
+  pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd( cMvZero, ePartSize, uiPartAddr, 0, iPartIdx );
+  pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd( cMvZero, ePartSize, uiPartAddr, 0, iPartIdx );
+
+  pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+  pcCU->setMVPNumSubParts( -1, REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+  pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_1, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+  pcCU->setMVPNumSubParts( -1, REF_PIC_LIST_1, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+
+  if ( xHashInterEstimation( pcCU, pcCU->getWidth( 0 ), pcCU->getHeight( 0 ), bestRefPicList, bestRefIndex, bestMv, bestMvd, bestMVPIndex, isPerfectMatch ) )
+  {
+    pcCU->getCUMvField( bestRefPicList )->setAllMv( bestMv, ePartSize, uiPartAddr, 0, iPartIdx );
+    pcCU->getCUMvField( bestRefPicList )->setAllRefIdx( bestRefIndex, ePartSize, uiPartAddr, 0, iPartIdx );
+    pcCU->getCUMvField( bestRefPicList )->setAllMvd( bestMvd, ePartSize, uiPartAddr, 0, iPartIdx );
+
+    pcCU->setInterDirSubParts( static_cast<Int>(bestRefPicList) + 1, uiPartAddr, iPartIdx, pcCU->getDepth( 0 ) );
+    pcCU->setMVPIdxSubParts( bestMVPIndex, bestRefPicList, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+
+    motionCompensation ( pcCU, rpcPredYuv, REF_PIC_LIST_X, iPartIdx );
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+
+  assert( 0 );
+  return true;
+}
+
+Void TEncSearch::selectMatchesInter( TComDataCU* pcCU, const MapIterator& itBegin, Int count, list<BlockHash>& listBlockHash, const BlockHash& currBlockHash )
+{
+  const Int maxReturnNumber = 5;
+
+  listBlockHash.clear();
+  list<Int> listCost;
+  listCost.clear();
+
+  MapIterator it = itBegin;
+  for ( Int i=0; i<count; i++, it++ )
+  {
+    if ( (*it).hashValue2 != currBlockHash.hashValue2 )  // check having the same second hash values, otherwise, not matched
+    {
+      continue;
+    }
+
+    // as exactly matched, only calculate bits
+    Int currCost = m_pcRdCost->xGetComponentBits( (*it).x - currBlockHash.x ) +
+                   m_pcRdCost->xGetComponentBits( (*it).y - currBlockHash.y );
+
+    if ( listBlockHash.size() < maxReturnNumber )
+    {
+      addToSortList( listBlockHash, listCost, currCost, (*it) );
+    }
+    else if ( !listCost.empty() && currCost < listCost.back( ) )
+    {
+      listCost.pop_back( );
+      listBlockHash.pop_back();
+      addToSortList( listBlockHash, listCost, currCost, (*it) );
+    }
+  }
+}
+
+
+Int TEncSearch::xHashInterPredME( TComDataCU* pcCU, Int width, Int height, RefPicList currRefPicList, Int currRefPicIndex, TComMv bestMv[5] )
+{
+  TComPic* pcPic = pcCU->getPic();
+  Int xPos = pcCU->getCUPelX();
+  Int yPos = pcCU->getCUPelY();
+  UInt hashValue1;
+  UInt hashValue2;
+
+  if ( !TComHash::getBlockHashValue( pcPic->getPicYuvOrg(), width, height, xPos, yPos, hashValue1, hashValue2 ) )
+  {
+    return 0;
+  }
+
+
+  BlockHash currBlockHash;
+  currBlockHash.x = xPos;
+  currBlockHash.y = yPos;
+  currBlockHash.hashValue2 = hashValue2;
+
+  Int count = static_cast<Int>(pcCU->getSlice()->getRefPic( currRefPicList, currRefPicIndex )->getHashMap()->count( hashValue1 ));
+  if ( count == 0 )
+  {
+    return 0;
+  }
+
+  list<BlockHash> listBlockHash;
+  selectMatchesInter( pcCU, pcCU->getSlice()->getRefPic( currRefPicList, currRefPicIndex )->getHashMap()->getFirstIterator( hashValue1 ), count, listBlockHash, currBlockHash );
+
+  if ( listBlockHash.empty() )
+  {
+    return 0;
+  }
+
+  Int totalSize = 0;
+  list<BlockHash>::iterator it = listBlockHash.begin();
+  for ( Int i=0; i<5 && i<listBlockHash.size(); i++, it++ )
+  {
+    bestMv[i].set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+    totalSize++;
+  }
+
+  return totalSize;
+}
+
+Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, RefPicList& bestRefPicList, Int& bestRefIndex, TComMv& bestMv, TComMv& bestMvd, Int& bestMVPIndex, Bool& isPerfectMatch )
+{
+  TComPic* pcPic = pcCU->getPic();
+  Int xPos = pcCU->getCUPelX();
+  Int yPos = pcCU->getCUPelY();
+  UInt hashValue1;
+  UInt hashValue2;
+  Int bestCost = MAX_INT;
+
+  if ( !TComHash::getBlockHashValue( pcPic->getPicYuvOrg(), width, height, xPos, yPos, hashValue1, hashValue2 ) )
+  {
+    return false;
+  }
+
+  BlockHash currBlockHash;
+  currBlockHash.x = xPos;
+  currBlockHash.y = yPos;
+  currBlockHash.hashValue2 = hashValue2;
+
+  Pel* pCurrStart = pcCU->getPic()->getPicYuvOrg()->getAddr( COMPONENT_Y );
+  Int currStride = pcCU->getPic()->getPicYuvOrg()->getStride( COMPONENT_Y );
+  Pel* pCurr = pCurrStart + (currBlockHash.y)*currStride + (currBlockHash.x);
+
+  Int iNumPredDir = pcCU->getSlice()->isInterP() ? 1 : 2;
+  for ( Int iRefList = 0; iRefList < iNumPredDir; iRefList++ )
+  {
+    RefPicList eRefPicList = (iRefList==0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
+    for ( Int iRefIdx = 0; iRefIdx < pcCU->getSlice()->getNumRefIdx( eRefPicList ); iRefIdx++ )
+    {
+      Int bitsOnRefIdx = iRefIdx+1;
+      if ( iRefIdx+1 == pcCU->getSlice()->getNumRefIdx( eRefPicList ) )
+      {
+        bitsOnRefIdx--;
+      }
+      
+      if ( iRefList == 0 || pcCU->getSlice()->getList1IdxToList0Idx( iRefIdx ) < 0 )
+      {
+        Int count = static_cast<Int>( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getHashMap()->count( hashValue1 ) );
+        if ( count == 0 )
+        {
+          continue;
+        }
+
+        list<BlockHash> listBlockHash;
+        selectMatchesInter( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getHashMap()->getFirstIterator( hashValue1 ), count, listBlockHash, currBlockHash );
+
+        if ( listBlockHash.empty() )
+        {
+          continue;
+        }
+
+        AMVPInfo currAMVPInfo;
+        pcCU->fillMvpCand( 0, 0, eRefPicList, iRefIdx, &currAMVPInfo );
+
+        Pel* pRefStart = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getAddr( COMPONENT_Y );
+        Int refStride = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getStride( COMPONENT_Y );
+
+        m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( 0 ) );
+        m_pcRdCost->setCostScale( 2 );
+        list<BlockHash>::iterator it;
+        for ( it = listBlockHash.begin(); it != listBlockHash.end(); ++it )
+        {
+          Int currMVPIdx = 0;
+          if ( currAMVPInfo.iN > 1 )
+          {
+            m_pcRdCost->setPredictor( currAMVPInfo.m_acMvCand[0] );
+            Int bitsMVP0 = m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+            m_pcRdCost->setPredictor( currAMVPInfo.m_acMvCand[1] );
+            Int bitsMVP1 = m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+            if ( bitsMVP1 < bitsMVP0 )
+            {
+              currMVPIdx = 1;
+            }
+          }
+          m_pcRdCost->setPredictor( currAMVPInfo.m_acMvCand[currMVPIdx] );
+
+          Pel* pRef = pRefStart + (*it).y*refStride + (*it).x;
+          Distortion currSad = getSAD( pRef, refStride, pCurr, currStride, width, height );
+          Int bits = bitsOnRefIdx + m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+          Distortion currCost = currSad + m_pcRdCost->getCost( bits );
+
+          if ( !isPerfectMatch && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
+          {
+            if ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getSlice( 0 )->getSliceQp() <= pcCU->getSlice()->getSliceQp() )
+            {
+              isPerfectMatch = true;
+            }
+          }
+
+          if ( currCost < bestCost )
+          {
+            bestCost = currCost;
+            bestRefPicList = eRefPicList;
+            bestRefIndex = iRefIdx;
+            bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+            bestMvd.set( (*it).x - currBlockHash.x - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), (*it).y - currBlockHash.y - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
+            bestMVPIndex = currMVPIdx;
+          }
+        }
+      }
+    }
+  }
+
+  return (bestCost < MAX_INT);
+}
+#endif
+
 // based on xMotionEstimation
 Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
                                             TComYuv    *pcYuvOrg,
@@ -5439,6 +5726,13 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->setCostScale  ( 2 );
 
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
+
+#if  SCM__Q0248_INTER_ME_HASH_SEARCH
+  m_currRefPicList = eRefPicList;
+  m_currRefPicIndex = iRefIdxPred;
+  m_bSkipFracME = false;
+#endif
+
   //  Do integer search
   if ( !m_iFastSearch || bBi )
   {
@@ -5619,6 +5913,28 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
+  {
+    TComMv otherMvps[5];
+    Int numberOfOtherMvps;
+    numberOfOtherMvps = xHashInterPredME( pcCU, pcCU->getWidth( 0 ), pcCU->getHeight( 0 ), m_currRefPicList, m_currRefPicIndex, otherMvps );
+    for ( Int i=0; i<numberOfOtherMvps; i++ )
+    {
+      xTZSearchHelp( pcPatternKey, cStruct, otherMvps[i].getHor(), otherMvps[i].getVer(), 0, 0 );
+    }
+
+    if ( numberOfOtherMvps > 0 )
+    {
+      // write out best match
+      rcMv.set( cStruct.iBestX, cStruct.iBestY );
+      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+      m_bSkipFracME = true;
+
+      return;
+    }
+  }
+#endif
   // start search
   Int  iDist = 0;
   Int  iStartX = cStruct.iBestX;
@@ -5806,6 +6122,29 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
+  {
+    TComMv otherMvps[5];
+    Int numberOfOtherMvps;
+    numberOfOtherMvps = xHashInterPredME( pcCU, pcCU->getWidth( 0 ), pcCU->getHeight( 0 ), m_currRefPicList, m_currRefPicIndex, otherMvps );
+    for ( Int i=0; i<numberOfOtherMvps; i++ )
+    {
+      xTZSearchHelp( pcPatternKey, cStruct, otherMvps[i].getHor(), otherMvps[i].getVer(), 0, 0 );
+    }
+
+    if ( numberOfOtherMvps > 0 )
+    {
+      // write out best match
+      rcMv.set( cStruct.iBestX, cStruct.iBestY );
+      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+      m_bSkipFracME = true;
+
+      return;
+    }
+  }
+#endif
+
   // Intial search
   iBestX = cStruct.iBestX;
   iBestY = cStruct.iBestY; 
@@ -5901,6 +6240,19 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
                           pcPatternKey->getROIYWidth(),
                           pcPatternKey->getROIYHeight(),
                           iRefStride );
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  if ( m_bSkipFracME )
+  {
+    TComMv baseRefMv( 0, 0 );
+    rcMvHalf.setZero();
+    m_pcRdCost->setCostScale( 0 );
+    xExtDIFUpSamplingH( &cPatternRoi, biPred );
+    rcMvQter = *pcMvInt;   rcMvQter <<= 2;    // for mv-cost
+    ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter );
+    return;
+  }
+#endif
 
   //  Half-pel refinement
   xExtDIFUpSamplingH ( &cPatternRoi, biPred );
@@ -7539,11 +7891,25 @@ Void TEncSearch::xExtDIFUpSamplingH( TComPattern* pattern, Bool biPred )
   const ChromaFormat chFmt = m_filteredBlock[0][0].getChromaFormat();
 
   m_if.filterHor(COMPONENT_Y, srcPtr, srcStride, m_filteredBlockTmp[0].getAddr(COMPONENT_Y), intStride, width+1, height+filterSize, 0, false, chFmt);
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  if ( !m_bSkipFracME )
+  {
+#endif
   m_if.filterHor(COMPONENT_Y, srcPtr, srcStride, m_filteredBlockTmp[2].getAddr(COMPONENT_Y), intStride, width+1, height+filterSize, 2, false, chFmt);
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  }
+#endif
 
   intPtr = m_filteredBlockTmp[0].getAddr(COMPONENT_Y) + halfFilterSize * intStride + 1;
   dstPtr = m_filteredBlock[0][0].getAddr(COMPONENT_Y);
   m_if.filterVer(COMPONENT_Y, intPtr, intStride, dstPtr, dstStride, width+0, height+0, 0, false, true, chFmt);
+
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  if ( m_bSkipFracME )
+  {
+    return;
+  }
+#endif
 
   intPtr = m_filteredBlockTmp[0].getAddr(COMPONENT_Y) + (halfFilterSize-1) * intStride + 1;
   dstPtr = m_filteredBlock[2][0].getAddr(COMPONENT_Y);

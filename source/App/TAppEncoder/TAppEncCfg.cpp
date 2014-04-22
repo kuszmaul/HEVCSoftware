@@ -427,6 +427,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   ("IntraBlockCopyFullFrameSearch", m_intraBlockCopyFullFrameSearch, true, "Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks")
 #endif
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  ("HashBasedME",             m_useHashBasedME,         false, "Hash based inter search")
+#endif
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
   ("SingleComponentLoopInterSearch", m_singleComponentLoopInterSearch, false, "For inter residual estimation, loop over components once, testing all mode options for each")
@@ -1860,6 +1863,7 @@ Void TAppEncCfg::xPrintParameter()
     case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                    : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
     default:                                printf("Cost function:                    : Unknown\n"); break;
   }
+
 #if SCM__GENERAL_CLEANUP
   switch ( m_iFastSearch )
   {
@@ -1873,8 +1877,9 @@ Void TAppEncCfg::xPrintParameter()
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );
 #endif
-
-
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  printf("HashME                            : %d\n", m_useHashBasedME ? 1 : 0 );
+#endif
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );
 

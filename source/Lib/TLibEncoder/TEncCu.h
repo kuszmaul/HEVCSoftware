@@ -156,6 +156,9 @@ protected:
                             );
 
   Void  xCheckDQP           ( TComDataCU*  pcCU );
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch );
+#endif
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );

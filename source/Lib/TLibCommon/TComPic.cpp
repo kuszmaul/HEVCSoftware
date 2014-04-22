@@ -94,6 +94,10 @@ Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UIn
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  m_hashMap.clearAll();
+#endif
+
   return;
 }
 
@@ -116,6 +120,10 @@ Void TComPic::destroy()
     }
   }
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+  m_hashMap.clearAll();
+#endif
+
   deleteSEIs(m_SEIs);
 }
 
@@ -136,5 +144,18 @@ Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
   return (mergeCtbInSliceSeg && mergeCtbInTile);
 }
 
+#if SCM__Q0248_INTER_ME_HASH_SEARCH
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64 );
+}
+#endif 
 
 //! \}
