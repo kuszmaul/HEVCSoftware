@@ -116,11 +116,7 @@ private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
-#else
-  Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
-#endif
 
   Void  xCopyFrom            ( TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( TEncSbac* pSrc );

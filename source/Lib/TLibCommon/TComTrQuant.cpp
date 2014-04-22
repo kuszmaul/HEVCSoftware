@@ -1995,9 +1995,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const ChannelType      channelType      = toChannelType(compID);
   const UInt             uiLog2TrSize     = rTu.GetEquivalentLog2TrSize(compID);
 
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
   const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
 
   /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
    * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
@@ -2137,11 +2135,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         {
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ],
                                                   lLevelDouble, uiMaxAbsLevel, significanceMapContextOffset, uiOneCtx, uiAbsCtx, uiGoRiceParam,
-                                                  c1Idx, c2Idx, iQBits, errorScale, 1
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                                                , extendedPrecision
-                                                , channelType
-#endif
+                                                  c1Idx, c2Idx, iQBits, errorScale, 1, extendedPrecision, channelType
                                                   );
         }
         else
@@ -2150,11 +2144,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
           uiLevel              = xGetCodedLevel( pdCostCoeff[ iScanPos ], pdCostCoeff0[ iScanPos ], pdCostSig[ iScanPos ],
                                                   lLevelDouble, uiMaxAbsLevel, uiCtxSig, uiOneCtx, uiAbsCtx, uiGoRiceParam,
-                                                  c1Idx, c2Idx, iQBits, errorScale, 0
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                                                , extendedPrecision
-                                                , channelType
-#endif
+                                                  c1Idx, c2Idx, iQBits, errorScale, 0, extendedPrecision, channelType
                                                   );
 
           sigRateDelta[ uiBlkPos ] = m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 1 ] - m_pcEstBitsSbac->significantBits[ uiCtxSig ][ 0 ];
@@ -2164,15 +2154,9 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
         if( uiLevel > 0 )
         {
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
           Int rateNow = xGetICRate( uiLevel, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx, extendedPrecision, channelType );
           rateIncUp   [ uiBlkPos ] = xGetICRate( uiLevel+1, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx, extendedPrecision, channelType ) - rateNow;
           rateIncDown [ uiBlkPos ] = xGetICRate( uiLevel-1, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx, extendedPrecision, channelType ) - rateNow;
-#else
-          Int rateNow = xGetICRate( uiLevel, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx );
-          rateIncUp   [ uiBlkPos ] = xGetICRate( uiLevel+1, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx ) - rateNow;
-          rateIncDown [ uiBlkPos ] = xGetICRate( uiLevel-1, uiOneCtx, uiAbsCtx, uiGoRiceParam, c1Idx, c2Idx ) - rateNow;
-#endif
         }
         else // uiLevel == 0
         {
@@ -2692,11 +2676,9 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,
                                             UInt             c2Idx,
                                             Int              iQBits,
                                             Double           errorScale,
-                                            Bool             bLast
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                                           ,Bool             useLimitedPrefixLength
-                                           ,ChannelType      channelType
-#endif
+                                            Bool             bLast,
+                                            Bool             useLimitedPrefixLength,
+                                            ChannelType      channelType
                                             ) const
 {
   Double dCurrCostSig   = 0;
@@ -2725,11 +2707,7 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,
   for( Int uiAbsLevel  = uiMaxAbsLevel; uiAbsLevel >= uiMinAbsLevel ; uiAbsLevel-- )
   {
     Double dErr         = Double( lLevelDouble  - ( Intermediate_Int(uiAbsLevel) << iQBits ) );
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
     Double dCurrCost    = dErr * dErr * errorScale + xGetICost( xGetICRate( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16AbsGoRice, c1Idx, c2Idx, useLimitedPrefixLength, channelType ) );
-#else
-    Double dCurrCost    = dErr * dErr * errorScale + xGetICost( xGetICRate( uiAbsLevel, ui16CtxNumOne, ui16CtxNumAbs, ui16AbsGoRice, c1Idx, c2Idx ) );
-#endif
     dCurrCost          += dCurrCostSig;
 
     if( dCurrCost < rd64CodedCost )
@@ -2755,11 +2733,9 @@ __inline Int TComTrQuant::xGetICRate         ( UInt                            u
                                                UShort                          ui16CtxNumAbs,
                                                UShort                          ui16AbsGoRice,
                                                UInt                            c1Idx,
-                                               UInt                            c2Idx
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                                              ,Bool                            useLimitedPrefixLength
-                                              ,ChannelType                     channelType
-#endif
+                                               UInt                            c2Idx,
+                                               Bool                            useLimitedPrefixLength,
+                                               ChannelType                     channelType
                                                ) const
 {
   Int  iRate      = Int(xGetIEPRate()); // cost of sign bit
@@ -2774,7 +2750,6 @@ __inline Int TComTrQuant::xGetICRate         ( UInt                            u
       length = symbol>>ui16AbsGoRice;
       iRate += (length+1+ui16AbsGoRice)<< 15;
     }
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
     else if (useLimitedPrefixLength)
     {
       const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType]));
@@ -2791,7 +2766,6 @@ __inline Int TComTrQuant::xGetICRate         ( UInt                            u
 
       iRate += (COEF_REMAIN_BIN_REDUCTION + prefixLength + suffixLength + ui16AbsGoRice) << 15;
     }
-#endif
     else
     {
       length = ui16AbsGoRice;
