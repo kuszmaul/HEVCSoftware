@@ -4073,9 +4073,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   Distortion  uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
   TComMv      cMVCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS
   uiPartOffset = uiPartAddr;
-#endif
 
   for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
   {
