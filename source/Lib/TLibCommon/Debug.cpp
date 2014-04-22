@@ -177,6 +177,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION,                       settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
 
