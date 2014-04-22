@@ -79,10 +79,10 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
-    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 136,
-    CHROMA_SAMPLING_FILTER_HINT          = 137,
-    TIME_CODE                            = 138,
-    MASTERING_DISPLAY_COLOUR_VOLUME      = 139
+    TIME_CODE                            = 136,
+    MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 138,
+    CHROMA_SAMPLING_FILTER_HINT          = 139
   };
 
   SEI() {}
