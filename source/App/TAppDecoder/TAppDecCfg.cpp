@@ -89,6 +89,9 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 #if RExt__O0043_BEST_EFFORT_DECODING
   ("ForceDecodeBitDepth",       m_forceDecodeBitDepth,                 0U,         "Force the decoder to operate at a particular bit-depth (best effort decoding)")
 #endif
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+  ("OutputDecodedSEIMessagesFilename",  m_outputDecodedSEIMessagesFilename,    string(""), "When non empty, output decoded SEI messages to the indicated file. If file is '-', then output to stdout\n")
+#endif
   ;
 
   po::setDefaults(opts);
@@ -118,7 +121,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   if (!m_pchBitstreamFile)
   {
-    fprintf(stderr, "No input file specifed, aborting\n");
+    fprintf(stderr, "No input file specified, aborting\n");
     return false;
   }
 
@@ -146,7 +149,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
         }
         if ( layerIdParsed < 0 || layerIdParsed >= MAX_NUM_LAYER_IDS )
         {
-          fprintf(stderr, "Warning! Parsed LayerId %d is not withing allowed range [0,%d]. Ignoring this value.\n", layerIdParsed, MAX_NUM_LAYER_IDS-1 );
+          fprintf(stderr, "Warning! Parsed LayerId %d is not within allowed range [0,%d]. Ignoring this value.\n", layerIdParsed, MAX_NUM_LAYER_IDS-1 );
         }
         else
         {
