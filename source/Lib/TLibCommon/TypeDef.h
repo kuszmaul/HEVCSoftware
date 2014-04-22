@@ -323,11 +323,16 @@
 //------------------------------------------------
 
 #define SCM__GENERAL_CLEANUP                              1
+#define SCM__Q0248_INTRABC_FULLFRAME_SEARCH               1
 
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
 
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+#define SCM__Q0248_INTRABC_HASH_DEPTH                     1  ////< Currently used only for 8x8
+#define SCM__Q0248_INTRABC_HASH_TABLESIZE                 (1 << 16)
+#endif
 
 
 // ====================================================================================================================

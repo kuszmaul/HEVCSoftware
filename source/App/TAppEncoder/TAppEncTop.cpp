@@ -139,6 +139,9 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                   ( m_iFastSearch  );
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  m_cTEncTop.setUseIntraBCFullFrameSearch    ( m_intraBlockCopyFullFrameSearch );
+#endif
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange            ( m_bipredSearchRange );
   m_cTEncTop.setSingleComponentLoopInterSearch( m_singleComponentLoopInterSearch );

@@ -424,6 +424,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #else
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
 #endif
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  ("IntraBlockCopyFullFrameSearch", m_intraBlockCopyFullFrameSearch, true, "Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks")
+#endif
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
   ("SingleComponentLoopInterSearch", m_singleComponentLoopInterSearch, false, "For inter residual estimation, loop over components once, testing all mode options for each")
@@ -1866,6 +1869,12 @@ Void TAppEncCfg::xPrintParameter()
     default: printf( "Motion Estimation                 : Unknown\n" ); break;
   }
 #endif
+
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );
+#endif
+
+
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );
 

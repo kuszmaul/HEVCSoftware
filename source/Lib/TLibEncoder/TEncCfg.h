@@ -170,6 +170,9 @@ protected:
 #else
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
 #endif
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  Bool      m_intraBlockCopyFullFrameSearch;    // Intra block copy full frame search
+#endif
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
   Bool      m_singleComponentLoopInterSearch;
@@ -440,6 +443,9 @@ public:
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  Void      setUseIntraBCFullFrameSearch    ( Bool b )       { m_intraBlockCopyFullFrameSearch = b; }
+#endif
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
   Void      setSingleComponentLoopInterSearch(Bool value)    { m_singleComponentLoopInterSearch = value; }
@@ -512,6 +518,10 @@ public:
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
+#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+  Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopyFullFrameSearch ; }
+#endif
+
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
   Bool      getSingleComponentLoopInterSearch() const { return m_singleComponentLoopInterSearch; }
 
