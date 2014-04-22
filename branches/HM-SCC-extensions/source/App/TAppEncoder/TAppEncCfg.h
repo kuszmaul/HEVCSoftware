@@ -198,7 +198,11 @@ protected:
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
+#if SCM__GENERAL_CLEANUP
+  Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
+#else
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
+#endif
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each

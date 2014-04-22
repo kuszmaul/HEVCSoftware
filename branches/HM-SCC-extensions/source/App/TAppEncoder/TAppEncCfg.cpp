@@ -419,7 +419,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
 
   // motion search options
+#if SCM__GENERAL_CLEANUP
+  ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:TZ search  2:Selective search")
+#else
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
+#endif
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
   ("SingleComponentLoopInterSearch", m_singleComponentLoopInterSearch, false, "For inter residual estimation, loop over components once, testing all mode options for each")
@@ -1178,7 +1182,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iQP <  -6 * (m_internalBitDepth[CHANNEL_TYPE_LUMA] - 8) || m_iQP > 51,    "QP exceeds supported range (-QpBDOffsety to 51)" );
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -6 || m_loopFilterBetaOffsetDiv2 > 6,        "Loop Filter Beta Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
+#if SCM__GENERAL_CLEANUP
+  xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:TZ search  2:Selective search)" );
+#else
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
+#endif
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
@@ -1849,6 +1857,15 @@ Void TAppEncCfg::xPrintParameter()
     case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                    : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
     default:                                printf("Cost function:                    : Unknown\n"); break;
   }
+#if SCM__GENERAL_CLEANUP
+  switch ( m_iFastSearch )
+  {
+    case 0:  printf( "Motion Estimation                 : Full search\n" ); break;
+    case 1:  printf( "Motion Estimation                 : TZ search\n" ); break;
+    case 2:  printf( "Motion Estimation                 : Selective search\n" ); break;
+    default: printf( "Motion Estimation                 : Unknown\n" ); break;
+  }
+#endif
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );
 
