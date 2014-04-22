@@ -284,9 +284,7 @@ protected:
   Int       m_decodingUnitInfoSEIEnabled;
   Int       m_SOPDescriptionSEIEnabled;
   Int       m_scalableNestingSEIEnabled;
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
   Bool      m_tmctsSEIEnabled;
-#endif
   Bool      m_timeCodeSEIEnabled;
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
@@ -637,138 +635,136 @@ public:
       }
     }
   }
-  UInt  getRowHeight                   ( UInt rowIdx )     { return *( m_puiRowHeight + rowIdx ); }
+  UInt  getRowHeight                   ( UInt rowIdx )        { return *( m_puiRowHeight + rowIdx ); }
   Void  xCheckGSParameters();
-  Void  setWaveFrontSynchro(Int iWaveFrontSynchro)       { m_iWaveFrontSynchro = iWaveFrontSynchro; }
-  Int   getWaveFrontsynchro()                            { return m_iWaveFrontSynchro; }
-  Void  setWaveFrontSubstreams(Int iWaveFrontSubstreams) { m_iWaveFrontSubstreams = iWaveFrontSubstreams; }
-  Int   getWaveFrontSubstreams()                         { return m_iWaveFrontSubstreams; }
-  Void  setDecodedPictureHashSEIEnabled(Int b)           { m_decodedPictureHashSEIEnabled = b; }
-  Int   getDecodedPictureHashSEIEnabled()                { return m_decodedPictureHashSEIEnabled; }
-  Void  setBufferingPeriodSEIEnabled(Int b)              { m_bufferingPeriodSEIEnabled = b; }
-  Int   getBufferingPeriodSEIEnabled()                   { return m_bufferingPeriodSEIEnabled; }
-  Void  setPictureTimingSEIEnabled(Int b)                { m_pictureTimingSEIEnabled = b; }
-  Int   getPictureTimingSEIEnabled()                     { return m_pictureTimingSEIEnabled; }
-  Void  setRecoveryPointSEIEnabled(Int b)                { m_recoveryPointSEIEnabled = b; }
-  Int   getRecoveryPointSEIEnabled()                     { return m_recoveryPointSEIEnabled; }
-  Void  setToneMappingInfoSEIEnabled(Bool b)                 {  m_toneMappingInfoSEIEnabled = b;  }
-  Bool  getToneMappingInfoSEIEnabled()                       {  return m_toneMappingInfoSEIEnabled;  }
-  Void  setTMISEIToneMapId(Int b)                            {  m_toneMapId = b;  }
-  Int   getTMISEIToneMapId()                                 {  return m_toneMapId;  }
-  Void  setTMISEIToneMapCancelFlag(Bool b)                   {  m_toneMapCancelFlag=b;  }
-  Bool  getTMISEIToneMapCancelFlag()                         {  return m_toneMapCancelFlag;  }
-  Void  setTMISEIToneMapPersistenceFlag(Bool b)              {  m_toneMapPersistenceFlag = b;  }
-  Bool   getTMISEIToneMapPersistenceFlag()                   {  return m_toneMapPersistenceFlag;  }
-  Void  setTMISEICodedDataBitDepth(Int b)                    {  m_codedDataBitDepth = b;  }
-  Int   getTMISEICodedDataBitDepth()                         {  return m_codedDataBitDepth;  }
-  Void  setTMISEITargetBitDepth(Int b)                       {  m_targetBitDepth = b;  }
-  Int   getTMISEITargetBitDepth()                            {  return m_targetBitDepth;  }
-  Void  setTMISEIModelID(Int b)                              {  m_modelId = b;  }
-  Int   getTMISEIModelID()                                   {  return m_modelId;  }
-  Void  setTMISEIMinValue(Int b)                             {  m_minValue = b;  }
-  Int   getTMISEIMinValue()                                  {  return m_minValue;  }
-  Void  setTMISEIMaxValue(Int b)                             {  m_maxValue = b;  }
-  Int   getTMISEIMaxValue()                                  {  return m_maxValue;  }
-  Void  setTMISEISigmoidMidpoint(Int b)                      {  m_sigmoidMidpoint = b;  }
-  Int   getTMISEISigmoidMidpoint()                           {  return m_sigmoidMidpoint;  }
-  Void  setTMISEISigmoidWidth(Int b)                         {  m_sigmoidWidth = b;  }
-  Int   getTMISEISigmoidWidth()                              {  return m_sigmoidWidth;  }
-  Void  setTMISEIStartOfCodedInterva( Int*  p )              {  m_startOfCodedInterval = p;  }
-  Int*  getTMISEIStartOfCodedInterva()                       {  return m_startOfCodedInterval;  }
-  Void  setTMISEINumPivots(Int b)                            {  m_numPivots = b;  }
-  Int   getTMISEINumPivots()                                 {  return m_numPivots;  }
-  Void  setTMISEICodedPivotValue( Int*  p )                  {  m_codedPivotValue = p;  }
-  Int*  getTMISEICodedPivotValue()                           {  return m_codedPivotValue;  }
-  Void  setTMISEITargetPivotValue( Int*  p )                 {  m_targetPivotValue = p;  }
-  Int*  getTMISEITargetPivotValue()                          {  return m_targetPivotValue;  }
-  Void  setTMISEICameraIsoSpeedIdc(Int b)                    {  m_cameraIsoSpeedIdc = b;  }
-  Int   getTMISEICameraIsoSpeedIdc()                         {  return m_cameraIsoSpeedIdc;  }
-  Void  setTMISEICameraIsoSpeedValue(Int b)                  {  m_cameraIsoSpeedValue = b;  }
-  Int   getTMISEICameraIsoSpeedValue()                       {  return m_cameraIsoSpeedValue;  }
-  Void  setTMISEIExposureIndexIdc(Int b)                     {  m_exposureIndexIdc = b;  }
-  Int   getTMISEIExposurIndexIdc()                           {  return m_exposureIndexIdc;  }
-  Void  setTMISEIExposureIndexValue(Int b)                   {  m_exposureIndexValue = b;  }
-  Int   getTMISEIExposurIndexValue()                         {  return m_exposureIndexValue;  }
-  Void  setTMISEIExposureCompensationValueSignFlag(Int b)    {  m_exposureCompensationValueSignFlag = b;  }
-  Int   getTMISEIExposureCompensationValueSignFlag()         {  return m_exposureCompensationValueSignFlag;  }
-  Void  setTMISEIExposureCompensationValueNumerator(Int b)   {  m_exposureCompensationValueNumerator = b;  }
-  Int   getTMISEIExposureCompensationValueNumerator()        {  return m_exposureCompensationValueNumerator;  }
-  Void  setTMISEIExposureCompensationValueDenomIdc(Int b)    {  m_exposureCompensationValueDenomIdc =b;  }
-  Int   getTMISEIExposureCompensationValueDenomIdc()         {  return m_exposureCompensationValueDenomIdc;  }
-  Void  setTMISEIRefScreenLuminanceWhite(Int b)              {  m_refScreenLuminanceWhite = b;  }
-  Int   getTMISEIRefScreenLuminanceWhite()                   {  return m_refScreenLuminanceWhite;  }
-  Void  setTMISEIExtendedRangeWhiteLevel(Int b)              {  m_extendedRangeWhiteLevel = b;  }
-  Int   getTMISEIExtendedRangeWhiteLevel()                   {  return m_extendedRangeWhiteLevel;  }
-  Void  setTMISEINominalBlackLevelLumaCodeValue(Int b)       {  m_nominalBlackLevelLumaCodeValue = b;  }
-  Int   getTMISEINominalBlackLevelLumaCodeValue()            {  return m_nominalBlackLevelLumaCodeValue;  }
-  Void  setTMISEINominalWhiteLevelLumaCodeValue(Int b)       {  m_nominalWhiteLevelLumaCodeValue = b;  }
-  Int   getTMISEINominalWhiteLevelLumaCodeValue()            {  return m_nominalWhiteLevelLumaCodeValue;  }
-  Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)      {  m_extendedWhiteLevelLumaCodeValue =b;  }
-  Int   getTMISEIExtendedWhiteLevelLumaCodeValue()           {  return m_extendedWhiteLevelLumaCodeValue;  }
-  Void  setFramePackingArrangementSEIEnabled(Int b)      { m_framePackingSEIEnabled = b; }
-  Int   getFramePackingArrangementSEIEnabled()           { return m_framePackingSEIEnabled; }
-  Void  setFramePackingArrangementSEIType(Int b)         { m_framePackingSEIType = b; }
-  Int   getFramePackingArrangementSEIType()              { return m_framePackingSEIType; }
-  Void  setFramePackingArrangementSEIId(Int b)           { m_framePackingSEIId = b; }
-  Int   getFramePackingArrangementSEIId()                { return m_framePackingSEIId; }
-  Void  setFramePackingArrangementSEIQuincunx(Int b)     { m_framePackingSEIQuincunx = b; }
-  Int   getFramePackingArrangementSEIQuincunx()          { return m_framePackingSEIQuincunx; }
-  Void  setFramePackingArrangementSEIInterpretation(Int b)  { m_framePackingSEIInterpretation = b; }
-  Int   getFramePackingArrangementSEIInterpretation()    { return m_framePackingSEIInterpretation; }
-  Void  setDisplayOrientationSEIAngle(Int b)             { m_displayOrientationSEIAngle = b; }
-  Int   getDisplayOrientationSEIAngle()                  { return m_displayOrientationSEIAngle; }
-  Void  setTemporalLevel0IndexSEIEnabled(Int b)          { m_temporalLevel0IndexSEIEnabled = b; }
-  Int   getTemporalLevel0IndexSEIEnabled()               { return m_temporalLevel0IndexSEIEnabled; }
-  Void  setGradualDecodingRefreshInfoEnabled(Int b)      { m_gradualDecodingRefreshInfoEnabled = b;    }
-  Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
-  Void  setNoDisplaySEITLayer(Int b)                     { m_noDisplaySEITLayer = b;    }
-  Int   getNoDisplaySEITLayer()                          { return m_noDisplaySEITLayer; }
-  Void  setDecodingUnitInfoSEIEnabled(Int b)             { m_decodingUnitInfoSEIEnabled = b;    }
-  Int   getDecodingUnitInfoSEIEnabled()                  { return m_decodingUnitInfoSEIEnabled; }
-  Void  setSOPDescriptionSEIEnabled(Int b)               { m_SOPDescriptionSEIEnabled = b; }
-  Int   getSOPDescriptionSEIEnabled()                    { return m_SOPDescriptionSEIEnabled; }
-  Void  setScalableNestingSEIEnabled(Int b)              { m_scalableNestingSEIEnabled = b; }
-  Int   getScalableNestingSEIEnabled()                   { return m_scalableNestingSEIEnabled; }
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
-  Void  setTMCTSSEIEnabled(Bool b)                        { m_tmctsSEIEnabled = b; }
-  Bool  getTMCTSSEIEnabled()                              { return m_tmctsSEIEnabled; }
-#endif
-  Void  setTimeCodeSEIEnabled(Bool b)                     { m_timeCodeSEIEnabled = b; }
-  Bool  getTimeCodeSEIEnabled()                           { return m_timeCodeSEIEnabled; }
-  Void  setKneeSEIEnabled(Int b)                          { m_kneeSEIEnabled = b; }
-  Bool  getKneeSEIEnabled()                               { return m_kneeSEIEnabled; }
-  Void  setKneeSEIId(Int b)                               { m_kneeSEIId = b; }
-  Int   getKneeSEIId()                                    { return m_kneeSEIId; }
-  Void  setKneeSEICancelFlag(Bool b)                      { m_kneeSEICancelFlag=b; }
-  Bool  getKneeSEICancelFlag()                            { return m_kneeSEICancelFlag; }
-  Void  setKneeSEIPersistenceFlag(Bool b)                 { m_kneeSEIPersistenceFlag = b; }
-  Bool  getKneeSEIPersistenceFlag()                       { return m_kneeSEIPersistenceFlag; }
-  Void  setKneeSEIMappingFlag(Bool b)                     { m_kneeSEIMappingFlag = b; }
-  Bool  getKneeSEIMappingFlag()                           { return m_kneeSEIMappingFlag; }
-  Void  setKneeSEIInputDrange(Int b)                      { m_kneeSEIInputDrange = b; }
-  Int   getKneeSEIInputDrange()                           { return m_kneeSEIInputDrange; }
-  Void  setKneeSEIInputDispLuminance(Int b)               { m_kneeSEIInputDispLuminance = b; }
-  Int   getKneeSEIInputDispLuminance()                    { return m_kneeSEIInputDispLuminance; }
-  Void  setKneeSEIOutputDrange(Int b)                     { m_kneeSEIOutputDrange = b; }
-  Int   getKneeSEIOutputDrange()                          { return m_kneeSEIOutputDrange; }
-  Void  setKneeSEIOutputDispLuminance(Int b)              { m_kneeSEIOutputDispLuminance = b; }
-  Int   getKneeSEIOutputDispLuminance()                   { return m_kneeSEIOutputDispLuminance; }
-  Void  setKneeSEINumKneePointsMinus1(Int b)              { m_kneeSEINumKneePointsMinus1 = b; }
-  Int   getKneeSEINumKneePointsMinus1()                   { return m_kneeSEINumKneePointsMinus1; }
-  Void  setKneeSEIInputKneePoint(Int *p)                  { m_kneeSEIInputKneePoint = p; }
-  Int*  getKneeSEIInputKneePoint()                        { return m_kneeSEIInputKneePoint; }
-  Void  setKneeSEIOutputKneePoint(Int *p)                 { m_kneeSEIOutputKneePoint = p; }
-  Int*  getKneeSEIOutputKneePoint()                       { return m_kneeSEIOutputKneePoint; }
-  Void  setMasteringDisplayColourVolumeSEIEnabled(Bool b)      { m_masteringDisplayColourVolumeSEIEnabled = b; }
-  Bool  getMasteringDisplayColourVolumeSEIEnabled()            { return m_masteringDisplayColourVolumeSEIEnabled; }
+  Void  setWaveFrontSynchro(Int iWaveFrontSynchro)            { m_iWaveFrontSynchro = iWaveFrontSynchro; }
+  Int   getWaveFrontsynchro()                                 { return m_iWaveFrontSynchro; }
+  Void  setWaveFrontSubstreams(Int iWaveFrontSubstreams)      { m_iWaveFrontSubstreams = iWaveFrontSubstreams; }
+  Int   getWaveFrontSubstreams()                              { return m_iWaveFrontSubstreams; }
+  Void  setDecodedPictureHashSEIEnabled(Int b)                { m_decodedPictureHashSEIEnabled = b; }
+  Int   getDecodedPictureHashSEIEnabled()                     { return m_decodedPictureHashSEIEnabled; }
+  Void  setBufferingPeriodSEIEnabled(Int b)                   { m_bufferingPeriodSEIEnabled = b; }
+  Int   getBufferingPeriodSEIEnabled()                        { return m_bufferingPeriodSEIEnabled; }
+  Void  setPictureTimingSEIEnabled(Int b)                     { m_pictureTimingSEIEnabled = b; }
+  Int   getPictureTimingSEIEnabled()                          { return m_pictureTimingSEIEnabled; }
+  Void  setRecoveryPointSEIEnabled(Int b)                     { m_recoveryPointSEIEnabled = b; }
+  Int   getRecoveryPointSEIEnabled()                          { return m_recoveryPointSEIEnabled; }
+  Void  setToneMappingInfoSEIEnabled(Bool b)                  { m_toneMappingInfoSEIEnabled = b;  }
+  Bool  getToneMappingInfoSEIEnabled()                        { return m_toneMappingInfoSEIEnabled;  }
+  Void  setTMISEIToneMapId(Int b)                             { m_toneMapId = b;  }
+  Int   getTMISEIToneMapId()                                  { return m_toneMapId;  }
+  Void  setTMISEIToneMapCancelFlag(Bool b)                    { m_toneMapCancelFlag=b;  }
+  Bool  getTMISEIToneMapCancelFlag()                          { return m_toneMapCancelFlag;  }
+  Void  setTMISEIToneMapPersistenceFlag(Bool b)               { m_toneMapPersistenceFlag = b;  }
+  Bool   getTMISEIToneMapPersistenceFlag()                    { return m_toneMapPersistenceFlag;  }
+  Void  setTMISEICodedDataBitDepth(Int b)                     { m_codedDataBitDepth = b;  }
+  Int   getTMISEICodedDataBitDepth()                          { return m_codedDataBitDepth;  }
+  Void  setTMISEITargetBitDepth(Int b)                        { m_targetBitDepth = b;  }
+  Int   getTMISEITargetBitDepth()                             { return m_targetBitDepth;  }
+  Void  setTMISEIModelID(Int b)                               { m_modelId = b;  }
+  Int   getTMISEIModelID()                                    { return m_modelId;  }
+  Void  setTMISEIMinValue(Int b)                              { m_minValue = b;  }
+  Int   getTMISEIMinValue()                                   { return m_minValue;  }
+  Void  setTMISEIMaxValue(Int b)                              { m_maxValue = b;  }
+  Int   getTMISEIMaxValue()                                   { return m_maxValue;  }
+  Void  setTMISEISigmoidMidpoint(Int b)                       { m_sigmoidMidpoint = b;  }
+  Int   getTMISEISigmoidMidpoint()                            { return m_sigmoidMidpoint;  }
+  Void  setTMISEISigmoidWidth(Int b)                          { m_sigmoidWidth = b;  }
+  Int   getTMISEISigmoidWidth()                               { return m_sigmoidWidth;  }
+  Void  setTMISEIStartOfCodedInterva( Int*  p )               { m_startOfCodedInterval = p;  }
+  Int*  getTMISEIStartOfCodedInterva()                        { return m_startOfCodedInterval;  }
+  Void  setTMISEINumPivots(Int b)                             { m_numPivots = b;  }
+  Int   getTMISEINumPivots()                                  { return m_numPivots;  }
+  Void  setTMISEICodedPivotValue( Int*  p )                   { m_codedPivotValue = p;  }
+  Int*  getTMISEICodedPivotValue()                            { return m_codedPivotValue;  }
+  Void  setTMISEITargetPivotValue( Int*  p )                  { m_targetPivotValue = p;  }
+  Int*  getTMISEITargetPivotValue()                           { return m_targetPivotValue;  }
+  Void  setTMISEICameraIsoSpeedIdc(Int b)                     { m_cameraIsoSpeedIdc = b;  }
+  Int   getTMISEICameraIsoSpeedIdc()                          { return m_cameraIsoSpeedIdc;  }
+  Void  setTMISEICameraIsoSpeedValue(Int b)                   { m_cameraIsoSpeedValue = b;  }
+  Int   getTMISEICameraIsoSpeedValue()                        { return m_cameraIsoSpeedValue;  }
+  Void  setTMISEIExposureIndexIdc(Int b)                      { m_exposureIndexIdc = b;  }
+  Int   getTMISEIExposurIndexIdc()                            { return m_exposureIndexIdc;  }
+  Void  setTMISEIExposureIndexValue(Int b)                    { m_exposureIndexValue = b;  }
+  Int   getTMISEIExposurIndexValue()                          { return m_exposureIndexValue;  }
+  Void  setTMISEIExposureCompensationValueSignFlag(Int b)     { m_exposureCompensationValueSignFlag = b;  }
+  Int   getTMISEIExposureCompensationValueSignFlag()          { return m_exposureCompensationValueSignFlag;  }
+  Void  setTMISEIExposureCompensationValueNumerator(Int b)    { m_exposureCompensationValueNumerator = b;  }
+  Int   getTMISEIExposureCompensationValueNumerator()         { return m_exposureCompensationValueNumerator;  }
+  Void  setTMISEIExposureCompensationValueDenomIdc(Int b)     { m_exposureCompensationValueDenomIdc =b;  }
+  Int   getTMISEIExposureCompensationValueDenomIdc()          { return m_exposureCompensationValueDenomIdc;  }
+  Void  setTMISEIRefScreenLuminanceWhite(Int b)               { m_refScreenLuminanceWhite = b;  }
+  Int   getTMISEIRefScreenLuminanceWhite()                    { return m_refScreenLuminanceWhite;  }
+  Void  setTMISEIExtendedRangeWhiteLevel(Int b)               { m_extendedRangeWhiteLevel = b;  }
+  Int   getTMISEIExtendedRangeWhiteLevel()                    { return m_extendedRangeWhiteLevel;  }
+  Void  setTMISEINominalBlackLevelLumaCodeValue(Int b)        { m_nominalBlackLevelLumaCodeValue = b;  }
+  Int   getTMISEINominalBlackLevelLumaCodeValue()             { return m_nominalBlackLevelLumaCodeValue;  }
+  Void  setTMISEINominalWhiteLevelLumaCodeValue(Int b)        { m_nominalWhiteLevelLumaCodeValue = b;  }
+  Int   getTMISEINominalWhiteLevelLumaCodeValue()             { return m_nominalWhiteLevelLumaCodeValue;  }
+  Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)       { m_extendedWhiteLevelLumaCodeValue =b;  }
+  Int   getTMISEIExtendedWhiteLevelLumaCodeValue()            { return m_extendedWhiteLevelLumaCodeValue;  }
+  Void  setFramePackingArrangementSEIEnabled(Int b)           { m_framePackingSEIEnabled = b; }
+  Int   getFramePackingArrangementSEIEnabled()                { return m_framePackingSEIEnabled; }
+  Void  setFramePackingArrangementSEIType(Int b)              { m_framePackingSEIType = b; }
+  Int   getFramePackingArrangementSEIType()                   { return m_framePackingSEIType; }
+  Void  setFramePackingArrangementSEIId(Int b)                { m_framePackingSEIId = b; }
+  Int   getFramePackingArrangementSEIId()                     { return m_framePackingSEIId; }
+  Void  setFramePackingArrangementSEIQuincunx(Int b)          { m_framePackingSEIQuincunx = b; }
+  Int   getFramePackingArrangementSEIQuincunx()               { return m_framePackingSEIQuincunx; }
+  Void  setFramePackingArrangementSEIInterpretation(Int b)    { m_framePackingSEIInterpretation = b; }
+  Int   getFramePackingArrangementSEIInterpretation()         { return m_framePackingSEIInterpretation; }
+  Void  setDisplayOrientationSEIAngle(Int b)                  { m_displayOrientationSEIAngle = b; }
+  Int   getDisplayOrientationSEIAngle()                       { return m_displayOrientationSEIAngle; }
+  Void  setTemporalLevel0IndexSEIEnabled(Int b)               { m_temporalLevel0IndexSEIEnabled = b; }
+  Int   getTemporalLevel0IndexSEIEnabled()                    { return m_temporalLevel0IndexSEIEnabled; }
+  Void  setGradualDecodingRefreshInfoEnabled(Int b)           { m_gradualDecodingRefreshInfoEnabled = b;    }
+  Int   getGradualDecodingRefreshInfoEnabled()                { return m_gradualDecodingRefreshInfoEnabled; }
+  Void  setNoDisplaySEITLayer(Int b)                          { m_noDisplaySEITLayer = b;    }
+  Int   getNoDisplaySEITLayer()                               { return m_noDisplaySEITLayer; }
+  Void  setDecodingUnitInfoSEIEnabled(Int b)                  { m_decodingUnitInfoSEIEnabled = b;    }
+  Int   getDecodingUnitInfoSEIEnabled()                       { return m_decodingUnitInfoSEIEnabled; }
+  Void  setSOPDescriptionSEIEnabled(Int b)                    { m_SOPDescriptionSEIEnabled = b; }
+  Int   getSOPDescriptionSEIEnabled()                         { return m_SOPDescriptionSEIEnabled; }
+  Void  setScalableNestingSEIEnabled(Int b)                   { m_scalableNestingSEIEnabled = b; }
+  Int   getScalableNestingSEIEnabled()                        { return m_scalableNestingSEIEnabled; }
+  Void  setTMCTSSEIEnabled(Bool b)                            { m_tmctsSEIEnabled = b; }
+  Bool  getTMCTSSEIEnabled()                                  { return m_tmctsSEIEnabled; }
+  Void  setTimeCodeSEIEnabled(Bool b)                         { m_timeCodeSEIEnabled = b; }
+  Bool  getTimeCodeSEIEnabled()                               { return m_timeCodeSEIEnabled; }
+  Void  setKneeSEIEnabled(Int b)                              { m_kneeSEIEnabled = b; }
+  Bool  getKneeSEIEnabled()                                   { return m_kneeSEIEnabled; }
+  Void  setKneeSEIId(Int b)                                   { m_kneeSEIId = b; }
+  Int   getKneeSEIId()                                        { return m_kneeSEIId; }
+  Void  setKneeSEICancelFlag(Bool b)                          { m_kneeSEICancelFlag=b; }
+  Bool  getKneeSEICancelFlag()                                { return m_kneeSEICancelFlag; }
+  Void  setKneeSEIPersistenceFlag(Bool b)                     { m_kneeSEIPersistenceFlag = b; }
+  Bool  getKneeSEIPersistenceFlag()                           { return m_kneeSEIPersistenceFlag; }
+  Void  setKneeSEIMappingFlag(Bool b)                         { m_kneeSEIMappingFlag = b; }
+  Bool  getKneeSEIMappingFlag()                               { return m_kneeSEIMappingFlag; }
+  Void  setKneeSEIInputDrange(Int b)                          { m_kneeSEIInputDrange = b; }
+  Int   getKneeSEIInputDrange()                               { return m_kneeSEIInputDrange; }
+  Void  setKneeSEIInputDispLuminance(Int b)                   { m_kneeSEIInputDispLuminance = b; }
+  Int   getKneeSEIInputDispLuminance()                        { return m_kneeSEIInputDispLuminance; }
+  Void  setKneeSEIOutputDrange(Int b)                         { m_kneeSEIOutputDrange = b; }
+  Int   getKneeSEIOutputDrange()                              { return m_kneeSEIOutputDrange; }
+  Void  setKneeSEIOutputDispLuminance(Int b)                  { m_kneeSEIOutputDispLuminance = b; }
+  Int   getKneeSEIOutputDispLuminance()                       { return m_kneeSEIOutputDispLuminance; }
+  Void  setKneeSEINumKneePointsMinus1(Int b)                  { m_kneeSEINumKneePointsMinus1 = b; }
+  Int   getKneeSEINumKneePointsMinus1()                       { return m_kneeSEINumKneePointsMinus1; }
+  Void  setKneeSEIInputKneePoint(Int *p)                      { m_kneeSEIInputKneePoint = p; }
+  Int*  getKneeSEIInputKneePoint()                            { return m_kneeSEIInputKneePoint; }
+  Void  setKneeSEIOutputKneePoint(Int *p)                     { m_kneeSEIOutputKneePoint = p; }
+  Int*  getKneeSEIOutputKneePoint()                           { return m_kneeSEIOutputKneePoint; }
+  Void  setMasteringDisplayColourVolumeSEIEnabled(Bool b)     { m_masteringDisplayColourVolumeSEIEnabled = b; }
+  Bool  getMasteringDisplayColourVolumeSEIEnabled()           { return m_masteringDisplayColourVolumeSEIEnabled; }
   Void  setMasteringDisplayMaxLuminance(UInt u)               { m_masteringDisplayMaxLuminance = u; }
   UInt  getMasteringDisplayMaxLuminance()                     { return m_masteringDisplayMaxLuminance; }
   Void  setMasteringDisplayMinLuminance(UInt u)               { m_masteringDisplayMinLuminance = u; }
   UInt  getMasteringDisplayMinLuminance()                     { return m_masteringDisplayMinLuminance; }
-  Void  setMasteringDisplayPrimaries( UShort* p)             {  m_masteringDisplayPrimaries = p;  }
-  UShort* getMasteringDisplayPrimaries()                      {  return m_masteringDisplayPrimaries;  }
-  Void  setMasteringDisplayWhitePoint( UShort* p )           {  m_masteringDisplayWhitePoint = p;  }
-  UShort* getMasteringDisplayWhitePoint()                    {  return m_masteringDisplayWhitePoint;  }
+  Void  setMasteringDisplayPrimaries( UShort* p)              { m_masteringDisplayPrimaries = p;  }
+  UShort* getMasteringDisplayPrimaries()                      { return m_masteringDisplayPrimaries;  }
+  Void  setMasteringDisplayWhitePoint( UShort* p )            { m_masteringDisplayWhitePoint = p;  }
+  UShort* getMasteringDisplayWhitePoint()                     { return m_masteringDisplayWhitePoint;  }
   Void         setUseWP               ( Bool b )              { m_useWeightedPred   = b;    }
   Void         setWPBiPred            ( Bool b )              { m_useWeightedBiPred = b;    }
   Bool         getUseWP               ()                      { return m_useWeightedPred;   }

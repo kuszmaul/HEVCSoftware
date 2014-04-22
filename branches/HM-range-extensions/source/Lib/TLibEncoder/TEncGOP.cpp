@@ -282,7 +282,6 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
 SEITempMotionConstrainedTileSets* TEncGOP::xCreateSEITempMotionConstrainedTileSets ()
 {
   TComPPS *pps = m_pcEncTop->getPPS();
@@ -315,7 +314,6 @@ SEITempMotionConstrainedTileSets* TEncGOP::xCreateSEITempMotionConstrainedTileSe
   }
   return sei;
 }
-#endif
 
 SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
 {
@@ -453,7 +451,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
   if(m_pcCfg->getTMCTSSEIEnabled())
   {
     SEITempMotionConstrainedTileSets *sei_tmcts = xCreateSEITempMotionConstrainedTileSets ();
@@ -465,7 +462,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei_tmcts;
   }
-#endif
 
   if(m_pcCfg->getTimeCodeSEIEnabled())
   {

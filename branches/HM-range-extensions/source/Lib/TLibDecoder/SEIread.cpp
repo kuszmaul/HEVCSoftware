@@ -257,12 +257,10 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIScalableNesting;
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
       break;
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
       sei = new SEITempMotionConstrainedTileSets;
       xParseSEITempMotionConstraintsTileSets((SEITempMotionConstrainedTileSets&) *sei, payloadSize);
       break;
-#endif
     case SEI::TIME_CODE:
       sei = new SEITimeCode;
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize);
@@ -822,7 +820,6 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
 
 }
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
 Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedTileSets& sei, UInt payloadSize)
 {
   UInt code;
@@ -878,7 +875,6 @@ Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedT
   }
   xParseByteAlign();
 }
-#endif
 
 Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
 {

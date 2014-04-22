@@ -79,9 +79,7 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
     TEMP_MOTION_CONSTRAINED_TILE_SETS    = 136,
-#endif
     CHROMA_SAMPLING_FILTER_HINT          = 137,
     TIME_CODE                            = 138,
     MASTERING_DISPLAY_COLOUR_VOLUME      = 139
@@ -534,7 +532,6 @@ public:
   Int  timeOffset;
 };
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
 //definition according to P1005_v1;
 class SEITempMotionConstrainedTileSets: public SEI
 {
@@ -593,7 +590,6 @@ public:
   const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
 
 };
-#endif
 
 #endif
 
