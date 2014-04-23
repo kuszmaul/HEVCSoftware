@@ -264,6 +264,8 @@
 
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
+#define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------

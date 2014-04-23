@@ -84,11 +84,21 @@ TComPrediction::TComPrediction()
 
 TComPrediction::~TComPrediction()
 {
+#if RExt__FIX_1284
+  destroy();
+}
+
+Void TComPrediction::destroy()
+{
+#endif
   for(UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
     for(UInt buf=0; buf<NUM_PRED_BUF; buf++)
     {
       delete [] m_piYuvExt[ch][buf];
+#if RExt__FIX_1284
+      m_piYuvExt[ch][buf] = NULL;
+#endif
     }
   }
 
@@ -102,7 +112,13 @@ TComPrediction::~TComPrediction()
   if( m_pLumaRecBuffer )
   {
     delete [] m_pLumaRecBuffer;
+#if RExt__FIX_1284
+    m_pLumaRecBuffer = 0;
+#endif
   }
+#if RExt__FIX_1284
+  m_iLumaRecStride = 0;
+#endif
 
   for (UInt i = 0; i < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; i++)
   {
@@ -116,6 +132,14 @@ TComPrediction::~TComPrediction()
 
 Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 {
+#if RExt__FIX_1284
+  // if it has been initialised before, but the chroma format has changed, release the memory and start again.
+  if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] != NULL && m_cYuvPredTemp.getChromaFormat()!=chromaFormatIDC)
+  {
+    destroy();
+  }
+#endif
+
   if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] == NULL ) // check if first is null (in which case, nothing initialised yet)
   {
     Int extWidth  = MAX_CU_SIZE + 16;
