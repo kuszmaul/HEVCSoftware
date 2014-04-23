@@ -333,6 +333,7 @@
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
 #define SCM__Q0248_INTRABC_HASH_DEPTH                     1  ////< Currently used only for 8x8
 #define SCM__Q0248_INTRABC_HASH_TABLESIZE                 (1 << 16)
+#define SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP             1
 #endif
 
 //------------------------------------------------
