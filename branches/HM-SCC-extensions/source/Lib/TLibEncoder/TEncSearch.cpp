@@ -5065,38 +5065,22 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
 {
   TComPicYuv* HashPic;
   Pel*        plane;
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  Int         iBitdepth   = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA);
-#endif 
   Int         iNumComp    = 1;  
   UInt        uiHashIdx   = 0;  
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  UInt        grad1       = 0;
-  UInt        grad2       = 0;
-  UInt        grad3       = 0;
-  UInt        grad4       = 0;
-#endif 
   UInt        grad        = 0;
   UInt        avgDC1      = 0;
   UInt        avgDC2      = 0;
   UInt        avgDC3      = 0;
   UInt        avgDC4      = 0;
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  UInt        avgDC       = 0;
-#endif
   UInt        gradX       = 0;
   UInt        gradY       = 0;
   Int         iPicWidth   = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int         iPicHeight  = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
   Int         iTotalSamples = width * height;
   if(iNumComp == 3)
   {
     iTotalSamples = getTotalSamples(width, height,pcCU->getSlice()->getSPS()->getChromaFormatIdc());
   }
-#else
-  Int         iTotalSamples = width * height * iNumComp;  
-#endif 
 
   assert((pos_X + width) <= iPicWidth);
   assert((pos_Y + height) <= iPicHeight);
@@ -5113,9 +5097,7 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
   for(Int chan=0; chan < iNumComp; chan++)
   {
     const ComponentID compID=ComponentID(chan);
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
     Int iBitdepth   = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID));
-#endif 
     Int cxstride = HashPic->getStride(compID);
     Int cxpos_X = pos_X >> HashPic->getComponentScaleX(compID);
     Int cxpos_Y = pos_Y >> HashPic->getComponentScaleY(compID);
@@ -5131,11 +5113,7 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
         avgDC1 += (plane[y*cxstride+x] >> (iBitdepth - 8));
         gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
         gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
         grad += (gradX + gradY) >> 1;
-#else
-        grad1 += (gradX + gradY) >> 1;
-#endif
       }
     }
 
@@ -5146,11 +5124,7 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
         avgDC2 += (plane[y*cxstride+x] >> (iBitdepth - 8));
         gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
         gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
         grad += (gradX + gradY) >> 1;
-#else
-        grad2 += (gradX + gradY) >> 1;
-#endif 
       }
     }
 
@@ -5161,11 +5135,7 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
         avgDC3 += plane[y*cxstride+x] >> (iBitdepth - 8);
         gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
         gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
         grad += (gradX + gradY) >> 1;
-#else
-        grad3 += (gradX + gradY) >> 1;
-#endif 
       }
     }
 
@@ -5176,33 +5146,15 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
         avgDC4 += plane[y*cxstride+x] >> (iBitdepth - 8);
         gradX = abs(plane[y*cxstride+x] - plane[y*cxstride+x-1]) >> (iBitdepth - 8);
         gradY = abs(plane[y*cxstride+x] - plane[(y-1)*cxstride+x]) >> (iBitdepth - 8);
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
         grad += (gradX + gradY) >> 1;
-#else
-        grad4 += (gradX + gradY) >> 1;
-#endif 
       }
     }
   }
-
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-   avgDC = avgDC1 + avgDC2 + avgDC3 + avgDC4;
-   grad = grad1 + grad2 + grad3 + grad4;
-#endif 
 
   avgDC1 = (avgDC1 << 2)/(iTotalSamples);
   avgDC2 = (avgDC2 << 2)/(iTotalSamples);
   avgDC3 = (avgDC3 << 2)/(iTotalSamples);
   avgDC4 = (avgDC4 << 2)/(iTotalSamples);
-
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  avgDC = avgDC/(iTotalSamples);
-
-  grad1 = (grad1 << 2)/(iTotalSamples);
-  grad2 = (grad2 << 2)/(iTotalSamples);
-  grad3 = (grad3 << 2)/(iTotalSamples);
-  grad4 = (grad4 << 2)/(iTotalSamples);
-#endif 
 
   grad = grad/(iTotalSamples);
 
@@ -5211,36 +5163,15 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
     return -1;
   }
 
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  avgDC = avgDC >> 5; // 3 bits
-#endif 
+  grad   = (grad >> 4) & 0xf; // 4 bits
 
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  grad = (grad >> 4)   & 0xf; // 4 bits
-#else
-  grad = grad >> 4; // 4 bits
-#endif 
-
-#if !SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  assert(avgDC < 256);
-  assert(avgDC >= 0);
-#endif 
-
-#if SCM__INTRABC_FULLFRAME_SEARCH_CLEANUP
-  avgDC1 = (avgDC1>>5) & 0x7;
+  avgDC1 = (avgDC1>>5) & 0x7; // 3 bits 
   avgDC2 = (avgDC2>>5) & 0x7;
   avgDC3 = (avgDC3>>5) & 0x7;
   avgDC4 = (avgDC4>>5) & 0x7;
-#else
-  avgDC1 = avgDC1>>5;
-  avgDC2 = avgDC2>>5;
-  avgDC3 = avgDC3>>5;
-  avgDC4 = avgDC4>>5;
-#endif 
 
   uiHashIdx = (avgDC1 << 13) + (avgDC2 << 10) + (avgDC3 << 7) + (avgDC4 << 4) + grad;
-
-  assert(uiHashIdx >= 0);
+  
   assert(uiHashIdx <= 0XFFFF);
 
   return uiHashIdx;
