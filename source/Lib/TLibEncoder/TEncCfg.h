@@ -165,11 +165,8 @@ protected:
   Bool      m_saoLcuBoundary;
 
   //====== Motion search ========
-#if SCM__GENERAL_CLEANUP
   Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
-#else
-  Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
-#endif
+
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      m_intraBlockCopyFullFrameSearch;    // Intra block copy full frame search
 #endif

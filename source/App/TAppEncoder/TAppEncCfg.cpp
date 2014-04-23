@@ -419,11 +419,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
 
   // motion search options
-#if SCM__GENERAL_CLEANUP
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:TZ search  2:Selective search")
-#else
-  ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
-#endif
+
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   ("IntraBlockCopyFullFrameSearch", m_intraBlockCopyFullFrameSearch, true, "Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks")
 #endif
@@ -1188,11 +1185,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iQP <  -6 * (m_internalBitDepth[CHANNEL_TYPE_LUMA] - 8) || m_iQP > 51,    "QP exceeds supported range (-QpBDOffsety to 51)" );
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -6 || m_loopFilterBetaOffsetDiv2 > 6,        "Loop Filter Beta Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
-#if SCM__GENERAL_CLEANUP
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:TZ search  2:Selective search)" );
-#else
-  xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
-#endif
+
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
@@ -1864,7 +1858,6 @@ Void TAppEncCfg::xPrintParameter()
     default:                                printf("Cost function:                    : Unknown\n"); break;
   }
 
-#if SCM__GENERAL_CLEANUP
   switch ( m_iFastSearch )
   {
     case 0:  printf( "Motion Estimation                 : Full search\n" ); break;
@@ -1872,7 +1865,6 @@ Void TAppEncCfg::xPrintParameter()
     case 2:  printf( "Motion Estimation                 : Selective search\n" ); break;
     default: printf( "Motion Estimation                 : Unknown\n" ); break;
   }
-#endif
 
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );

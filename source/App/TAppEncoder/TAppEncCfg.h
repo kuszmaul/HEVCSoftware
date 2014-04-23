@@ -198,11 +198,8 @@ protected:
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
-#if SCM__GENERAL_CLEANUP
   Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
-#else
-  Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
-#endif
+
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      m_intraBlockCopyFullFrameSearch;                  ///< Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks
 #endif
