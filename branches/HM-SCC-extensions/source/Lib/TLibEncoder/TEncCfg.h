@@ -114,6 +114,9 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+#if SCM__PSNR_CLIPPING
+  Bool      m_printClippedPSNR;
+#endif
 
   /* profile & level */
   Profile::Name m_profile;
@@ -405,6 +408,11 @@ public:
 
   Bool      getPrintSequenceMSE             ()         const { return m_printSequenceMSE;           }
   Void      setPrintSequenceMSE             (Bool value)     { m_printSequenceMSE = value;          }
+
+#if SCM__PSNR_CLIPPING
+  Bool      getPrintClippedPSNR             ()         const { return m_printClippedPSNR;           }
+  Void      setPrintClippedPSNR             (Bool value)     { m_printClippedPSNR = value;          }
+#endif
 
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }

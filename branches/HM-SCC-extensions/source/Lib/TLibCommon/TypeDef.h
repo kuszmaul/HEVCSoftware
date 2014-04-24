@@ -324,6 +324,7 @@
 
 #define SCM__Q0248_INTRABC_FULLFRAME_SEARCH               1
 #define SCM__Q0248_INTER_ME_HASH_SEARCH                   1
+#define SCM__PSNR_CLIPPING                                1
 
 //------------------------------------------------
 // Derived macros

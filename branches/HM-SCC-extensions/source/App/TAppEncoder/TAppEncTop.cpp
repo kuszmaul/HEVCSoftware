@@ -97,6 +97,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPrintMSEBasedSequencePSNR    (m_printMSEBasedSequencePSNR);
   m_cTEncTop.setPrintFrameMSE                (m_printFrameMSE);
   m_cTEncTop.setPrintSequenceMSE             (m_printSequenceMSE);
+#if SCM__PSNR_CLIPPING
+  m_cTEncTop.setPrintClippedPSNR             (m_printClippedPSNR);
+#endif
 
   m_cTEncTop.setFrameRate                    ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
