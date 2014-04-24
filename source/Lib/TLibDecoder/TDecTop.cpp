@@ -45,6 +45,9 @@
 //! \{
 
 TDecTop::TDecTop()
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+  : m_pDecodedSEIOutputStream(NULL)
+#endif
 {
   m_pcPic = 0;
   m_iMaxRefPicNum = 0;
