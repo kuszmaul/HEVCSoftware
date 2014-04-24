@@ -84,6 +84,9 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+#if SCM__PSNR_CLIPPING
+  Bool      m_printClippedPSNR;
+#endif
 
   // profile/level
   Profile::Name m_profile;

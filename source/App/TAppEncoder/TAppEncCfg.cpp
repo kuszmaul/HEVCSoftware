@@ -365,6 +365,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MSEBasedSequencePSNR",  m_printMSEBasedSequencePSNR,             false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
   ("PrintFrameMSE",         m_printFrameMSE,                         false, "0 (default) emit only bit count and PSNRs for each frame, 1 = also emit MSE values")
   ("PrintSequenceMSE",      m_printSequenceMSE,                      false, "0 (default) emit only bit rate and PSNRs for the whole sequence, 1 = also emit MSE values")
+#if SCM__PSNR_CLIPPING
+  ( "PrintClippedPSNR",     m_printClippedPSNR,                      false, "O: (default) print lossless PSNR values as 999.99 dB, 1: clip lossless PSNR according to resolution" )
+#endif
   ("ChromaFormatIDC,-cf",   tmpChromaFormat,                             0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",       m_conformanceMode,                           0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
   ("HorizontalPadding,-pdx",m_aiPad[0],                                  0, "Horizontal source padding for conformance window mode 2")
@@ -1798,6 +1801,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("Sequence PSNR output              : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   printf("Sequence MSE output               : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
   printf("Frame MSE output                  : %s\n", (m_printFrameMSE    ? "Enabled" : "Disabled") );
+#if SCM__PSNR_CLIPPING
+  printf("Print Clipped PSNR                : %s\n", (m_printClippedPSNR ? "Enabled" : "Disabled") );
+#endif
   if (m_isField)
   {
     printf("Frame/Field                       : Field based coding\n");
