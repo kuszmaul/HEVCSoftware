@@ -262,9 +262,10 @@
 
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
 
-#define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 = enable code that allows decoded SEI message to be output (controlled via decoder command line)
+#define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
-#define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
+#define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
+#define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 (default) = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
 
 //------------------------------------------------
 // Backwards-compatibility
