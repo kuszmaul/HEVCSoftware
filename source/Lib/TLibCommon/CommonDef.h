@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -39,11 +39,13 @@
 #define __COMMONDEF__
 
 #include <algorithm>
+#include <iostream>
+#include <assert.h>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
 #pragma warning( disable : 4018 )
-// disable bool coercion "performance warning"
+// disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
 #include "TypeDef.h"
@@ -55,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "14.0"                 ///< Current software version
+#define NV_VERSION        "14.0_RExt7.0_SCM1.0rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -113,7 +115,13 @@
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
-#define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+#define MAX_INTERMEDIATE_INT        MAX_INT64
+#else
+#define MAX_INTERMEDIATE_INT        MAX_INT
+#endif
+
+#define MAX_DOUBLE                  1.7e+308    ///< max. value of Double-type value
 
 #define MIN_QP                      0
 #define MAX_QP                      51
@@ -123,15 +131,22 @@
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
-extern Int g_bitDepthY;
-extern Int g_bitDepthC;
 
-/** clip x, such that 0 <= x <= #g_maxLumaVal */
-template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
-template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
+extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
 
-/** clip a, such that minVal <= a <= maxVal */
-template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
+template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
+template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
+
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
+{
+  if ((a > maxVal) || (a < minVal))
+  {
+    std::cerr << "ERROR: Range check " << minVal << " >= " << a << " <= " << maxVal << " failed" << std::endl;
+    assert(false);
+    exit(1);
+  }
+}  ///< general min/max clip
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -148,6 +163,17 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
+template <typename ValueType> inline ValueType leftShift       (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ( value                                   >> -shift); }
+template <typename ValueType> inline ValueType rightShift      (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  >> shift) : ( value                                   << -shift); }
+template <typename ValueType> inline ValueType leftShift_round (const ValueType value, const Int shift) { return (shift >= 0) ? ( value                                  << shift) : ((value + (ValueType(1) << (-shift - 1))) >> -shift); }
+template <typename ValueType> inline ValueType rightShift_round(const ValueType value, const Int shift) { return (shift >= 0) ? ((value + (ValueType(1) << (shift - 1))) >> shift) : ( value                                   << -shift); }
+#if RExt__O0043_BEST_EFFORT_DECODING
+// when shift = 0, returns value
+// when shift = 1, (value + 0 + value[1]) >> 1
+// when shift = 2, (value + 1 + value[2]) >> 2
+// when shift = 3, (value + 3 + value[3]) >> 3
+template <typename ValueType> inline ValueType rightShiftEvenRounding(const ValueType value, const UInt shift) { return (shift == 0) ? value : ((value + (1<<(shift-1))-1 + ((value>>shift)&1)) >> shift) ; }
+#endif
 
 // ====================================================================================================================
 // Coding tool configuration
@@ -187,22 +213,22 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 #define MAX_CHROMA_FORMAT_IDC      3
 
 // TODO: Existing names used for the different NAL unit types can be altered to better reflect the names in the spec.
-//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup 
+//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup
 //       effort can be done without use of macros to alter the names used to indicate the different NAL unit types.
 enum NalUnitType
 {
   NAL_UNIT_CODED_SLICE_TRAIL_N = 0, // 0
   NAL_UNIT_CODED_SLICE_TRAIL_R,     // 1
-  
+
   NAL_UNIT_CODED_SLICE_TSA_N,       // 2
   NAL_UNIT_CODED_SLICE_TSA_R,       // 3
-  
+
   NAL_UNIT_CODED_SLICE_STSA_N,      // 4
   NAL_UNIT_CODED_SLICE_STSA_R,      // 5
 
   NAL_UNIT_CODED_SLICE_RADL_N,      // 6
   NAL_UNIT_CODED_SLICE_RADL_R,      // 7
-  
+
   NAL_UNIT_CODED_SLICE_RASL_N,      // 8
   NAL_UNIT_CODED_SLICE_RASL_R,      // 9
 
@@ -240,6 +266,7 @@ enum NalUnitType
   NAL_UNIT_FILLER_DATA,             // 38
   NAL_UNIT_PREFIX_SEI,              // 39
   NAL_UNIT_SUFFIX_SEI,              // 40
+
   NAL_UNIT_RESERVED_NVCL41,
   NAL_UNIT_RESERVED_NVCL42,
   NAL_UNIT_RESERVED_NVCL43,
