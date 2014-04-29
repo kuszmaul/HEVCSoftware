@@ -193,6 +193,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION,                       settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__REMOVE_INTRA_BLOCK_COPY,                                     settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__REMOVE_SCC_PROFILING,                                        settingNameWidth, settingValueWidth);
 #if !RExt__REMOVE_INTRA_BLOCK_COPY
   PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
 #endif
