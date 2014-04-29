@@ -114,15 +114,19 @@ public:
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Void parsePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Void parseIntraBCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void parseIntraBC        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#endif
 
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
@@ -186,7 +190,9 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;

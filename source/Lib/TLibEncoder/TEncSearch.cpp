@@ -985,7 +985,7 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
         m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
       }
-
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
       if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
       {
         m_pcEntropyCoder->encodeIntraBCFlag ( pcCU, 0, true );
@@ -996,7 +996,7 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
           return;
         }
       }
-
+#endif
       m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
 
       if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
@@ -1024,10 +1024,12 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     }
   }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   if( pcCU->isIntraBC( 0 ) )
   {
     return;
   }
+#endif
 
   if( bChroma )
   {
@@ -3711,7 +3713,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
   return;
 }
 
-
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 // based on predInterSearch()
 Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
                                     TComYuv    * pcOrgYuv,
@@ -4643,6 +4645,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
   return;
 }
+#endif
 
 
 // AMVP
@@ -5526,7 +5529,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     rpcYuvResiBest->clear(); // Clear the residual image, if we didn't code it.
     for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
     {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      sDebug+=debug_reorder_data_inter_token[i];
+#else
       sDebug+=debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][i];
+#endif
     }
 #endif
 
@@ -5580,7 +5587,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       dZeroCost = dCost + 1;
     }
 
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+    if ( dZeroCost < dCost )
+#else
     if ( (dZeroCost < dCost) || (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraBC(0) && uiZeroDistortion == uiDistortion))
+#endif
     {
       if ( dZeroCost < dCost )
       {
@@ -5604,7 +5615,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       sDebug.clear();
       for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
       {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+        sDebug+=debug_reorder_data_inter_token[i];
+#else
         sDebug+=debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][i];
+#endif
       }
 #endif
     }
@@ -5737,7 +5752,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 
   UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->isInter(uiAbsPartIdx) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
 #ifdef DEBUG_STRING
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   const Bool isIntraBc    = pcCU->isIntraBC(uiAbsPartIdx);
+#endif
   const Int debugPredModeMask = DebugStringGetPredModeMask(pcCU->getPredictionMode(uiAbsPartIdx));
 #endif
 
@@ -6659,11 +6676,20 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #ifdef DEBUG_STRING
       // split the string by component and append to the relevant output (because decoder decodes in channel order, whereas this search searches by TU-order)
       std::size_t lastPos=0;
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      const std::size_t endStrng=childString.find(debug_reorder_data_inter_token[MAX_NUM_COMPONENT], lastPos);
+#else
       const std::size_t endStrng=childString.find(debug_reorder_data_token[isIntraBc?1:0][MAX_NUM_COMPONENT], lastPos);
+#endif
       for(UInt ch = 0; ch < numValidComp; ch++)
       {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+        if (lastPos!=std::string::npos && childString.find(debug_reorder_data_inter_token[ch], lastPos)==lastPos) lastPos+=strlen(debug_reorder_data_inter_token[ch]); // skip leading string
+        std::size_t pos=childString.find(debug_reorder_data_inter_token[ch+1], lastPos);
+#else
         if (lastPos!=std::string::npos && childString.find(debug_reorder_data_token[isIntraBc?1:0][ch], lastPos)==lastPos) lastPos+=strlen(debug_reorder_data_token[isIntraBc?1:0][ch]); // skip leading string
         std::size_t pos=childString.find(debug_reorder_data_token[isIntraBc?1:0][ch+1], lastPos);
+#endif
         if (pos!=std::string::npos && pos>endStrng) lastPos=endStrng;
         sSplitString[ch]+=childString.substr(lastPos, (pos==std::string::npos)? std::string::npos : (pos-lastPos) );
         lastPos=pos;
@@ -6710,7 +6736,11 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 #ifdef DEBUG_STRING
       for(UInt ch = 0; ch < numValidComp; ch++)
       {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+        DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[ch])
+#else
         DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[isIntraBc?1:0][ch])
+#endif
         DEBUG_STRING_APPEND(sDebug, sSplitString[ch])
       }
 #endif
@@ -6729,7 +6759,11 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
       {
         const ComponentID compID=ComponentID(ch);
 
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+        DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[ch])
+#else
         DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[isIntraBc?1:0][ch])
+#endif
         if (rTu.ProcessComponentSection(compID))
         {
           DEBUG_STRING_APPEND(sDebug, sSingleStringComp[compID])
@@ -6771,7 +6805,11 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     for(UInt ch = 0; ch < numValidComp; ch++)
     {
       const ComponentID compID=ComponentID(ch);
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[compID])
+#else
       DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[isIntraBc?1:0][compID])
+#endif
 
       if (rTu.ProcessComponentSection(compID))
       {
@@ -6780,7 +6818,11 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     }
 #endif
   }
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+  DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[MAX_NUM_COMPONENT])
+#else
   DEBUG_STRING_APPEND(sDebug, debug_reorder_data_token[isIntraBc?1:0][MAX_NUM_COMPONENT])
+#endif
 }
 
 
@@ -7022,6 +7064,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
     if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
     {
       m_pcEntropyCoder->encodeIntraBCFlag(pcCU, 0, true);
@@ -7034,10 +7077,13 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 
     if( !pcCU->isIntraBC(0))
     {
-      m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
-      m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
-      m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
+#endif
+    m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+    m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+    m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
     }
+#endif
 
     Bool codeDeltaQp = false;
     Bool codeChromaQpAdj = false;

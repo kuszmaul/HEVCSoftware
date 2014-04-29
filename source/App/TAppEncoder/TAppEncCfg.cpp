@@ -464,8 +464,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // Coding tools
   ("AMP",                                             m_enableAMP,                                       true, "Enable asymmetric motion partitions")
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   ("IntraBlockCopyEnabled",                           m_useIntraBlockCopy,                              false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
   ("IntraBlockCopyFastSearch",                        m_intraBlockCopyFastSearch,                        true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
+#endif
   ("CrossComponentPrediction",                        m_useCrossComponentPrediction,                    false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate",              m_reconBasedCrossCPredictionEstimate,             false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
 #if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
@@ -479,7 +481,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransformSkipFast",                               m_useTransformSkipFast,                           false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize",                        m_transformSkipLog2MaxSize,                          2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
   ("ImplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT],         false, "Enable implicitly signalled residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+  ("ExplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT],         false, "Enable explicitly signalled residual DPCM for inter (not valid in V1 profiles)")
+#else
   ("ExplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT],         false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
+#endif
   ("ResidualRotation",                                m_useResidualRotation,                            false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
   ("SingleSignificanceMapContext",                    m_useSingleSignificanceMapContext,                false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
   ("GolombRiceParameterAdaptation",                   m_useGolombRiceParameterAdaptation,               false, "Enable the adaptation of the Golomb-Rice parameter over the course of each slice")
@@ -1091,7 +1097,9 @@ Void TAppEncCfg::xCheckParameter()
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
     xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
+#endif
   }
   else
   {
@@ -1108,7 +1116,9 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT]==true, "ExplicitResidualDPCM must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useGolombRiceParameterAdaptation==true, "GolombRiceParameterAdaption must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useExtendedPrecision==true, "UseExtendedPrecision must not be enabled for non main-RExt profiles.");
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
     xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for non main-RExt profiles.");
+#endif
     xConfirmPara(m_useHighPrecisionPredictionWeighting==true, "UseHighPrecisionPredictionWeighting must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_enableIntraReferenceSmoothing==false, "EnableIntraReferenceSmoothing must be enabled for non main-RExt profiles.");
     xConfirmPara(m_alignCABACBeforeBypass, "AlignCABACBeforeBypass cannot be enabled for non main-RExt profiles.");
@@ -1831,7 +1841,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra reference smoothing         : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
   printf("Implicit residual DPCM            : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
   printf("Explicit residual DPCM            : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   printf("Intra block copying               : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
+#endif
   printf("Residual rotation                 : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
   printf("Single significance map context   : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
   printf("Cross-component prediction        : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );

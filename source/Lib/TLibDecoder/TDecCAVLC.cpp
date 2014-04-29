@@ -794,7 +794,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
             break;
           case SPS_EXT__SCC:
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
+#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -1673,10 +1675,12 @@ Void TDecCavlc::parsePartSize( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 Void TDecCavlc::parsePartSizeIntraBC( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
+#endif
 
 Void TDecCavlc::parsePredMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
@@ -1706,6 +1710,7 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
   assert(0);
 }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 Void TDecCavlc::parseIntraBCFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
 {
   assert(0);
@@ -1715,6 +1720,7 @@ Void TDecCavlc::parseIntraBC ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
+#endif
 
 Void TDecCavlc::parseInterDir( TComDataCU* /*pcCU*/, UInt& /*ruiInterDir*/, UInt /*uiAbsPartIdx*/ )
 {

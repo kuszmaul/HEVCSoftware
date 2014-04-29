@@ -146,7 +146,7 @@ protected:
                               PartSize     ePartSize
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
-
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
                               TComDataCU*& rpcTempCU,
                               Bool         bUse1DSearchFor8x8
@@ -154,6 +154,7 @@ protected:
                              ,Double&      rdCost
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
+#endif
 
   Void  xCheckDQP           ( TComDataCU*  pcCU );
 

@@ -106,7 +106,9 @@ public:
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -142,9 +144,10 @@ public:
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
   Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
-
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 };
 
 //! \}

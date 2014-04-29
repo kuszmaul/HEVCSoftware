@@ -260,7 +260,11 @@
 
 #define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
 
+#define RExt__REMOVE_INTRA_BLOCK_COPY                                          1 ///< 0 = do not remove intra block copy, 1 (default) = remove intra block copy code (for move to SCCM)
+
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
+#endif
 
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
@@ -293,7 +297,9 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 #define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
+#endif
 
 #if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
 #define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               4
@@ -446,7 +452,9 @@ enum PredMode
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
   NUMBER_OF_PREDICTION_MODES = 2,
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   MODE_INTRABC               = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
+#endif
 };
 
 /// reference list index
@@ -455,8 +463,10 @@ enum RefPicList
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
   NUM_REF_PIC_LIST_01          = 2,
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   REF_PIC_LIST_INTRABC         = 2,
   NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
+#endif
   REF_PIC_LIST_X               = 100  ///< special mark
 };
 
