@@ -621,9 +621,6 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  m_cSPS.setUseIntraBlockCopy(m_useIntraBlockCopy);
-#endif
   m_cSPS.setUseHighPrecisionPredictionWeighting(m_useHighPrecisionPredictionWeighting);
 
   m_cSPS.setUseSAO( m_bUseSAO );

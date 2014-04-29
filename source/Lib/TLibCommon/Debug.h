@@ -47,11 +47,7 @@
 #include <TLibCommon/CommonDef.h>
 
 #ifdef DEBUG_STRING
-#if RExt__REMOVE_INTRA_BLOCK_COPY
 extern const char *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1];
-#else
-extern const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1];
-#endif
 extern const char *partSizeToString[NUMBER_OF_PART_SIZES];
 #endif
 

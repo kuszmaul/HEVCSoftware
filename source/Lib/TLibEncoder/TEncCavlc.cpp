@@ -600,11 +600,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
 #if !RExt__REMOVE_SCC_PROFILING
   sps_extension_flags[SPS_EXT__SCC] = (
-#if RExt__REMOVE_INTRA_BLOCK_COPY
         0 // Not supported in this model.
-#else
-        pcSPS->getUseIntraBlockCopy()
-#endif
     );
 #endif
 
@@ -644,9 +640,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             break;
 #if !RExt__REMOVE_SCC_PROFILING
           case SPS_EXT__SCC:
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-            WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-#endif
             break;
 #endif
           default:
@@ -1262,13 +1255,6 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   assert(0);
 }
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-Void TEncCavlc::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
-#endif
-
 Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1352,18 +1338,6 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-Void TEncCavlc::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
-
-Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
-#endif
 
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

@@ -111,22 +111,8 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-Void TDecEntropy::decodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  m_pcEntropyDecoderIf->parsePartSizeIntraBC( pcCU, uiAbsPartIdx, uiDepth );
-}
-#endif
-
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
 {
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  if( pcCU->isIntraBC( uiAbsPartIdx ) )                                 // Do nothing for IntraBC mode.
-  {
-    return;
-  }
-#endif
-
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
@@ -184,17 +170,6 @@ Void TDecEntropy::decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #endif
 }
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-Void TDecEntropy::decodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{
-  m_pcEntropyDecoderIf->parseIntraBCFlag( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
-}
-
-Void TDecEntropy::decodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{
-  m_pcEntropyDecoderIf->parseIntraBC( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
-}
-#endif
 
 /** decode motion information for every PU block.
  * \param pcCU

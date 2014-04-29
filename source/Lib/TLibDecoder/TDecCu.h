@@ -97,9 +97,6 @@ protected:
   Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
-#endif
 
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
