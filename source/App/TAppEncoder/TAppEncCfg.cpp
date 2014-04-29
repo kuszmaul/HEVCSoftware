@@ -202,9 +202,6 @@ strToProfile[] =
   {"main-still-picture", Profile::MAINSTILLPICTURE},
   {"main-RExt",          Profile::MAINREXT        },
   {"high-RExt",          Profile::HIGHREXT        }
-#if !RExt__REMOVE_SCC_PROFILING
- ,{"main-SCC",           Profile::MAINSCC         }
-#endif
 };
 
 static const struct MapStrToTier
@@ -789,11 +786,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
   if (m_bitDepthConstraint == 0)
   {
-#if RExt__REMOVE_SCC_PROFILING
     if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
-#else
-    if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT || m_profile == Profile::MAINSCC )
-#endif
     {
       m_bitDepthConstraint = (m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
     }
@@ -1089,11 +1082,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
-#if RExt__REMOVE_SCC_PROFILING
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT)
-#else
-  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT || m_profile==Profile::MAINSCC)
-#endif
   {
     // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
