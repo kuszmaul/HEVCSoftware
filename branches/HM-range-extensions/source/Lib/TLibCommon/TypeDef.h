@@ -260,8 +260,6 @@
 
 #define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
 
-#define RExt__REMOVE_SCC_PROFILING                                             1 ///< 0 = do not remove SCC profiling, 1 (default) = remove SCC profiling (for move to SCCM)
-
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
 #define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
@@ -664,9 +662,6 @@ namespace Profile
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
     HIGHREXT = 30 // Placeholder profile for development
-#if !RExt__REMOVE_SCC_PROFILING
-   ,MAINSCC  = 31 // Placeholder profile for development
-#endif
   };
 }
 
@@ -712,9 +707,6 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
-#if !RExt__REMOVE_SCC_PROFILING
-  SPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -723,9 +715,6 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
-#if !RExt__REMOVE_SCC_PROFILING
-  PPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 
