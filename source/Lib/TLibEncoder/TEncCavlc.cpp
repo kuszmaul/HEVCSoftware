@@ -598,6 +598,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getAlignCABACBeforeBypass()
     );
 
+#if !RExt__REMOVE_SCC_PROFILING
   sps_extension_flags[SPS_EXT__SCC] = (
 #if RExt__REMOVE_INTRA_BLOCK_COPY
         0 // Not supported in this model.
@@ -605,6 +606,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
         pcSPS->getUseIntraBlockCopy()
 #endif
     );
+#endif
 
   // Other SPS extension flags checked here.
 
@@ -640,11 +642,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "golomb_rice_parameter_adaptation_flag" );
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "cabac_bypass_alignment_enabled_flag" );
             break;
+#if !RExt__REMOVE_SCC_PROFILING
           case SPS_EXT__SCC:
 #if !RExt__REMOVE_INTRA_BLOCK_COPY
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
 #endif
             break;
+#endif
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
             break;
@@ -1136,7 +1140,11 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
+#if RExt__REMOVE_SCC_PROFILING
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT )
+#else
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#endif
   {
     const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
     WRITE_FLAG(bitDepthConstraint<=12, "general_max_12bit_constraint_flag");

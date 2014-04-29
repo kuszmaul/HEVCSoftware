@@ -261,6 +261,7 @@
 #define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
 
 #define RExt__REMOVE_INTRA_BLOCK_COPY                                          1 ///< 0 = do not remove intra block copy, 1 (default) = remove intra block copy code (for move to SCCM)
+#define RExt__REMOVE_SCC_PROFILING                                             1 ///< 0 = do not remove SCC profiling, 1 (default) = remove SCC profiling (for move to SCCM)
 
 #if !RExt__REMOVE_INTRA_BLOCK_COPY
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
@@ -683,7 +684,9 @@ namespace Profile
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
     HIGHREXT = 30 // Placeholder profile for development
+#if !RExt__REMOVE_SCC_PROFILING
    ,MAINSCC  = 31 // Placeholder profile for development
+#endif
   };
 }
 
@@ -729,7 +732,9 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
+#if !RExt__REMOVE_SCC_PROFILING
   SPS_EXT__SCC            = 6, // place holder
+#endif
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -738,7 +743,9 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
+#if !RExt__REMOVE_SCC_PROFILING
   PPS_EXT__SCC            = 6, // place holder
+#endif
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 

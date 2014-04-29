@@ -201,8 +201,10 @@ strToProfile[] =
   {"main10",             Profile::MAIN10          },
   {"main-still-picture", Profile::MAINSTILLPICTURE},
   {"main-RExt",          Profile::MAINREXT        },
-  {"high-RExt",          Profile::HIGHREXT        },
-  {"main-SCC",           Profile::MAINSCC         }
+  {"high-RExt",          Profile::HIGHREXT        }
+#if !RExt__REMOVE_SCC_PROFILING
+ ,{"main-SCC",           Profile::MAINSCC         }
+#endif
 };
 
 static const struct MapStrToTier
@@ -795,7 +797,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
   if (m_bitDepthConstraint == 0)
   {
+#if RExt__REMOVE_SCC_PROFILING
+    if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
+#else
     if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT || m_profile == Profile::MAINSCC )
+#endif
     {
       m_bitDepthConstraint = (m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
     }
@@ -1091,14 +1097,22 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
+#if RExt__REMOVE_SCC_PROFILING
+  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT)
+#else
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT || m_profile==Profile::MAINSCC)
+#endif
   {
     // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
 #if !RExt__REMOVE_INTRA_BLOCK_COPY
+#if RExt__REMOVE_SCC_PROFILING
+    xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for RExt profiles.");
+#else
     xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
+#endif
 #endif
   }
   else

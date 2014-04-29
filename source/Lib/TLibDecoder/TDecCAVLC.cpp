@@ -793,11 +793,13 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "golomb_rice_parameter_adaptation_flag");    pcSPS->setUseGolombRiceParameterAdaptation       (uiCode != 0);
             READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
             break;
+#if !RExt__REMOVE_SCC_PROFILING
           case SPS_EXT__SCC:
 #if !RExt__REMOVE_INTRA_BLOCK_COPY
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
 #endif
             break;
+#endif
           default:
             bSkipTrailingExtensionBits=true;
             break;
@@ -1604,7 +1606,11 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
+#if RExt__REMOVE_SCC_PROFILING
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT )
+#else
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#endif
   {
     UInt maxBitDepth=0;
     READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode)                   maxBitDepth=12;
