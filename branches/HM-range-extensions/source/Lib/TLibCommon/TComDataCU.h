@@ -103,12 +103,7 @@ private:
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];    ///< array of motion vectors.
-#else
-  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra block copying vector field.
-  TComMv         m_lastIntraBCMv;     ///< last Intra Block Copy Mv used. (0,0) indicates that the vector has not been used within the CU.
-#endif
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
@@ -302,11 +297,6 @@ public:
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  TComMv        getLastIntraBCMv() {return m_lastIntraBCMv; }
-  Void          setLastIntraBCMv(TComMv mv ) { m_lastIntraBCMv = mv; }
-  UInt          getIntraBCSearchAreaWidth();
-#endif
 
   TCoeff*&      getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
@@ -450,11 +440,6 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Bool          isIntraBC          ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRABC;                                            }
-  Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
-  Bool          isLoopFilterIntra  ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
-#endif
   Bool          isIntra            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA;                                              }
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< SKIP (no residual)

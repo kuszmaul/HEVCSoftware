@@ -1577,9 +1577,6 @@ TComSPS::TComSPS()
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
 , m_useExtendedPrecision      (false)
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-, m_useIntraBlockCopy         (false)
-#endif
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)

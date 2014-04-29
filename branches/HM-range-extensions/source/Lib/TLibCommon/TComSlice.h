@@ -746,9 +746,6 @@ private:
   Int         m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
   Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
   Bool        m_useExtendedPrecision;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Bool        m_useIntraBlockCopy;
-#endif
   Bool        m_useHighPrecisionPredictionWeighting;
   Bool        m_useResidualRotation;
   Bool        m_useSingleSignificanceMapContext;
@@ -880,10 +877,6 @@ public:
   Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;      }
   Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
-  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
-#endif
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
 

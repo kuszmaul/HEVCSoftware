@@ -143,9 +143,6 @@ public:
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -168,11 +165,6 @@ public:
   Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
-
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
@@ -228,9 +220,6 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;

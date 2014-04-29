@@ -183,10 +183,6 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   Bool      m_useExtendedPrecision;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Bool      m_useIntraBlockCopy;
-  Bool      m_intraBlockCopyFastSearch;
-#endif
   Bool      m_useHighPrecisionPredictionWeighting;
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -460,14 +456,6 @@ public:
 
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
-
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
-  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
-
-  Bool      getUseIntraBlockCopyFastSearch() const     { return m_intraBlockCopyFastSearch;  }
-  Void      setUseIntraBlockCopyFastSearch(Bool value) { m_intraBlockCopyFastSearch = value; }
-#endif
 
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }

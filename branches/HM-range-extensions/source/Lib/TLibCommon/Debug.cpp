@@ -48,16 +48,8 @@ static const UInt settingValueWidth = 3;
 
 #ifdef DEBUG_STRING
 // these strings are used to reorder the debug output so that the encoder and decoder match.
-#if RExt__REMOVE_INTRA_BLOCK_COPY
 const char *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1]
  = {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"} ;
-#else
-const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1]
- = {
-     {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"},
-     {"Start of channel 0 intra-bc debug\n", "Start of channel 1 intra-bc debug\n", "Start of channel 2 intra-bc debug\n", "End of intra-bc residual debug\n"}
-   } ;
-#endif
 const char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
 #endif
 
@@ -158,19 +150,11 @@ EnvVar DebugOptionList::ForceLumaMode         ("FORCE_LUMA_MODE",   "0", "Force 
 EnvVar DebugOptionList::ForceChromaMode       ("FORCE_CHROMA_MODE", "0", "Force a particular intra direction for chroma (0-5)"                                            );
 
 #ifdef DEBUG_STRING
-#if RExt__REMOVE_INTRA_BLOCK_COPY
 EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen structure                        bit0=intra, bit1=inter");
 EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter");
 EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter");
 EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter");
 EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter");
-#else
-EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen sstructure                       bit0=intra, bit1=inter, bit2=intra-bc");
-EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter, bit2=intra-bc");
-EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter, bit2=intra-bc");
-EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter, bit2=intra-bc");
-EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter, bit2=intra-bc");
-#endif
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -192,11 +176,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION,                       settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__REMOVE_INTRA_BLOCK_COPY,                                     settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__REMOVE_SCC_PROFILING,                                        settingNameWidth, settingValueWidth);
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
-#endif
 
   PRINT_CONSTANT(RExt__FIX_1256,                                                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__FIX_1284,                                                    settingNameWidth, settingValueWidth);
@@ -447,11 +427,7 @@ Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, TComYuv &src
 #ifdef DEBUG_STRING
 Int DebugStringGetPredModeMask(PredMode mode)
 {
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   return (mode==MODE_INTRA)?1:2;
-#else
-  return (mode==MODE_INTRA)?1:((mode==MODE_INTER)?2:4);
-#endif
 }
 
 void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask)

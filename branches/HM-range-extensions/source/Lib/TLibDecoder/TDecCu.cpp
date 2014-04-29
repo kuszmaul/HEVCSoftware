@@ -329,31 +329,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     return;
   }
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-  {
-    m_pcEntropyDecoder->decodeIntraBCFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
-  }
-
-  if ( pcCU->isIntraBC( uiAbsPartIdx ) )
-  {
-    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
-    m_pcEntropyDecoder->decodePartSizeIntraBC( pcCU, uiAbsPartIdx, uiDepth );
-
-    const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
-    const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
-    const UInt iNumPart = pcCU->getNumPartitions( uiAbsPartIdx );
-
-    UInt tempOffset = uiAbsPartIdx;
-    for( UInt iPartIdx = 0; iPartIdx < iNumPart ; ++iPartIdx )
-    {
-      m_pcEntropyDecoder->decodeIntraBC( pcCU, tempOffset, iPartIdx, uiDepth );
-      tempOffset += uiPUOffset;
-    }
-  }
-  else
-  {
-#endif
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -370,9 +345,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  }
-#endif
 
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
@@ -450,11 +422,6 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-    case MODE_INTRABC:
-      xReconIntraBC( m_ppcCU[uiDepth], uiDepth );
-      break;
-#endif
     default:
       assert(0);
       break;
@@ -467,11 +434,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
     PartSize eSize=m_ppcCU[uiDepth]->getPartitionSize(0);
     std::ostream &ss(std::cout);
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     ss <<"###: " << (predMode==MODE_INTRA?"Intra   ":"Inter   ") << partSizeToString[eSize] << " CU at " << m_ppcCU[uiDepth]->getCUPelX() << ", " << m_ppcCU[uiDepth]->getCUPelY() << " width=" << UInt(m_ppcCU[uiDepth]->getWidth(0)) << std::endl;
-#else
-    ss <<"###: " << (predMode==MODE_INTRA?"Intra   ":(predMode==MODE_INTER?"Inter   ":"IntraBC ")) << partSizeToString[eSize] << " CU at " << m_ppcCU[uiDepth]->getCUPelX() << ", " << m_ppcCU[uiDepth]->getCUPelY() << " width=" << UInt(m_ppcCU[uiDepth]->getWidth(0)) << std::endl;
-#endif
   }
 #endif
 
@@ -515,44 +478,6 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 #endif
 
 }
-
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
-{
-  // intra prediction
-  const UInt iNumPart = pcCU->getNumPartitions();
-  for( Int iPartIdx = 0 ; iPartIdx < iNumPart ; ++iPartIdx )
-  {
-    m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth], iPartIdx );
-  }
-
-#ifdef DEBUG_STRING
-  const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTRABC);
-  if (DebugOptionList::DebugString_Pred.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));
-#endif
-
-  // texture recon
-  xDecodeInterTexture( pcCU, uiDepth );
-
-#ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-resi: ", *(m_ppcYuvResi[uiDepth]));
-#endif
-
-  // clip for only non-zero cbp case
-  if  ( pcCU->getQtRootCbf( 0) )
-  {
-    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
-  }
-  else
-  {
-    m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
-  }
-#ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Reco.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-reco: ", *(m_ppcYuvReco[uiDepth]));
-#endif
-
-}
-#endif
 
 
 Void
@@ -823,21 +748,13 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
   for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)
   {
     const ComponentID compID=ComponentID(ch);
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_inter_token[compID])
-#else
-    DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][compID])
-#endif
 
     // NOTE RExt - setQPForQuant was called here, but it has now been placed at the lowest level of decoding.
     m_pcTrQuant->invRecurTransformNxN ( compID, m_ppcYuvResi[uiDepth], tuRecur );
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_inter_token[MAX_NUM_COMPONENT])
-#else
-  DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][MAX_NUM_COMPONENT])
-#endif
 }
 
 /** Function for deriving reconstructed luma/chroma samples of a PCM mode CU.

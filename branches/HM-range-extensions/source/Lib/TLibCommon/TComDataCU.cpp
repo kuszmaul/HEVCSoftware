@@ -125,9 +125,6 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   m_pcSlice            = NULL;
   m_uiNumPartition     = uiNumPartition;
   m_unitSize = unitSize;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  m_lastIntraBCMv = TComMv();
-#endif
 
   if ( !bDecSubCu )
   {
@@ -193,11 +190,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
 
     m_pbIPCMFlag         = (Bool*  )xMalloc(Bool, uiNumPartition);
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].create( uiNumPartition );
     }
@@ -205,11 +198,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   }
   else
   {
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].setNumPartition(uiNumPartition );
     }
@@ -287,11 +276,7 @@ Void TComDataCU::destroy()
       if ( m_apiMVPNum[rpl]       ) { delete[] m_apiMVPNum[rpl];      m_apiMVPNum[rpl]      = NULL; }
     }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       const RefPicList rpl=RefPicList(i);
       m_acCUMvField[rpl].destroy();
@@ -355,9 +340,6 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcPic->getNumPartInCU();
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  m_lastIntraBCMv.setZero();
-#endif
 
   for(Int i=0; i<pcPic->getNumPartInCU(); i++)
   {
@@ -474,11 +456,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #endif
     }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].clearMvField();
     }
@@ -487,11 +465,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   {
     TComDataCU * pcFrom = pcPic->getCU(getAddr());
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].copyFrom(&pcFrom->m_acCUMvField[i],m_uiNumPartition,0);
     }
@@ -617,11 +591,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
 
   if(getPic()->getPicSym()->getInverseCUOrderMap(getAddr())*m_pcPic->getNumPartInCU()+m_uiAbsIdxInLCU >= getSlice()->getSliceSegmentCurStartCUAddr())
   {
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].clearMvField();
     }
@@ -662,9 +632,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcCU->getTotalNumPart() >> 2;
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  m_lastIntraBCMv.setZero();
-#endif
 
   Int iSizeInUchar = sizeof( UChar  ) * m_uiNumPartition;
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
@@ -759,11 +726,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_pcIPCMSample[ch], 0, sizeof(Pel)* (numCoeffY>>componentShift) );
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-  for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
   {
     m_acCUMvField[i].clearMvField();
   }
@@ -777,11 +740,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     Int minui = uiPartOffset;
     minui = -minui;
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       pcCU->m_acCUMvField[i].copyTo(&m_acCUMvField[i],minui,uiPartOffset,m_uiNumPartition);
     }
@@ -891,11 +850,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_apiMVPNum[rpl]=pcCU->getMVPNum(rpl)  + uiPart;
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-  for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
   {
     const RefPicList rpl=RefPicList(i);
     m_acCUMvField[rpl].linkToWithOffset( pcCU->getCUMvField(rpl), uiPart );
@@ -986,10 +941,6 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   Int iSizeInUchar  = sizeof( UChar ) * uiNumPartition;
   Int iSizeInBool   = sizeof( Bool  ) * uiNumPartition;
 
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-  m_lastIntraBCMv = pcCU->getLastIntraBCMv();
-#endif
-
   Int sizeInChar  = sizeof( Char ) * uiNumPartition;
   memcpy( m_skipFlag   + uiOffset, pcCU->getSkipFlag(),       sizeof( *m_skipFlag )   * uiNumPartition );
   memcpy( m_phQP       + uiOffset, pcCU->getQP(),             sizeInChar                        );
@@ -1035,11 +986,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     m_apcCUColocated[rpl] = pcCU->getCUColocated(rpl);
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-  for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
   {
     const RefPicList rpl=RefPicList(i);
     m_acCUMvField[rpl].copyFrom( pcCU->getCUMvField( rpl ), pcCU->getTotalNumPart(), uiOffset );
@@ -1117,11 +1064,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     memcpy( rpcCU->getMVPNum(rpl) + m_uiAbsIdxInLCU, m_apiMVPNum[rpl], iSizeInUchar );
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-  for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
   {
     const RefPicList rpl=RefPicList(i);
     m_acCUMvField[rpl].copyTo( rpcCU->getCUMvField( rpl ), m_uiAbsIdxInLCU );
@@ -1202,11 +1145,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     memcpy( rpcCU->getMVPNum(rpl) + uiPartOffset, m_apiMVPNum[rpl], iSizeInUchar );
   }
 
-#if RExt__REMOVE_INTRA_BLOCK_COPY
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-  for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
   {
     const RefPicList rpl=RefPicList(i);
     m_acCUMvField[rpl].copyTo( rpcCU->getCUMvField( rpl ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
@@ -3576,11 +3515,7 @@ Void TComDataCU::compressMV()
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;
   if (scaleFactor > 0)
   {
-#if RExt__REMOVE_INTRA_BLOCK_COPY
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
-#else
-    for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
-#endif
     {
       m_acCUMvField[i].compress(m_pePredMode, scaleFactor);
     }
@@ -3658,31 +3593,5 @@ UInt TComDataCU::getSCUAddr()
 {
   return ( getPic()->getPicSym()->getInverseCUOrderMap(m_uiCUAddr) << ( m_pcSlice->getSPS()->getMaxCUDepth() << 1 ) ) + m_uiAbsIdxInLCU;
 }
-
-#if !RExt__REMOVE_INTRA_BLOCK_COPY
-UInt TComDataCU::getIntraBCSearchAreaWidth()
-{
-  const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();
-  const UInt        zScanSliceStartCU = getPic()->getCU( getAddr() )->getSliceStartCU(0);
-  const UInt        zScanPartsPerLCU  = g_auiRasterToZscan[getPic()->getNumPartInWidth() - 1 ];
-  const TComPicSym &picSym            = *getPic()->getPicSym();
-  const UInt        currentTileIdx    = picSym.getTileIdxMap(getAddr());
-
-  UInt width = 0;
-
-  for(TComDataCU *pTestCU=getCULeft();
-      width<INTRABC_LEFTWIDTH && pTestCU!=NULL && pTestCU->getSlice()!=NULL;
-      pTestCU=pTestCU->getCULeft(), width+=lcuWidth)
-  {
-    if (   ( (pTestCU->getSCUAddr() + zScanPartsPerLCU) < zScanSliceStartCU ) // NOTE: RExt - could the following be used instead (because a slice will start at an LCU boundary: (pTestCU->getSCUAddr() < zScanSliceStartCU)
-        || ( picSym.getTileIdxMap( pTestCU->getAddr() ) != currentTileIdx )
-       )
-    {
-      break;
-    }
-  }
-  return std::min<UInt>(width, INTRABC_LEFTWIDTH);
-}
-#endif
 
 //! \}
