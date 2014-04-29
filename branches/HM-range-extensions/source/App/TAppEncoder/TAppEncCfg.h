@@ -164,7 +164,9 @@ protected:
   Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];      ///< bit-depth of input samples after MSB extension
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
   Bool      m_useExtendedPrecision;
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Bool      m_useIntraBlockCopy;
+#endif
   Bool      m_useHighPrecisionPredictionWeighting;
 
   //coding tools (chroma format)
@@ -202,7 +204,9 @@ protected:
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Bool      m_intraBlockCopyFastSearch;                       ///< Use a restricted search range for intra block-copy motion vectors to reduce the encoding time
+#endif
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost

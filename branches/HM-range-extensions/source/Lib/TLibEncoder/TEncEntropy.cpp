@@ -163,11 +163,12 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   if( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     return;
   }
-
+#endif
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
 }
 
@@ -199,10 +200,12 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 Void TEncEntropy::encodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codePartSizeIntraBC( pcCU, uiAbsPartIdx );
 }
+#endif
 
 /** Encode I_PCM information.
  * \param pcCU pointer to CU
@@ -441,6 +444,7 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
 Void TEncEntropy::encodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -454,10 +458,13 @@ Void TEncEntropy::encodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codeIntraBC( pcCU, uiAbsPartIdx );
 }
+#endif
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   assert ( !pcCU->isIntraBC( uiAbsPartIdx ) );
+#endif
 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {

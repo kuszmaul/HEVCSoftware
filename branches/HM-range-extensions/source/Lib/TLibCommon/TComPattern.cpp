@@ -562,7 +562,11 @@ Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
   TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isIntra( uiPartAboveLeft ) );
+#else
     bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isConstrainedIntra( uiPartAboveLeft ) );
+#endif
   }
   else
   {
@@ -585,7 +589,11 @@ Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool
     TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      if ( pcCUAbove && pcCUAbove->isIntra( uiPartAbove ) )
+#else
       if ( pcCUAbove && pcCUAbove->isConstrainedIntra( uiPartAbove ) )
+#endif
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -626,7 +634,11 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
     TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      if ( pcCULeft && pcCULeft->isIntra( uiPartLeft ) )
+#else
       if ( pcCULeft && pcCULeft->isConstrainedIntra( uiPartLeft ) )
+#endif
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -666,7 +678,11 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
     TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      if ( pcCUAboveRight && pcCUAboveRight->isIntra( uiPartAboveRight ) )
+#else
       if ( pcCUAboveRight && pcCUAboveRight->isConstrainedIntra( uiPartAboveRight ) )
+#endif
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -706,7 +722,11 @@ Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, 
     TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
+#if RExt__REMOVE_INTRA_BLOCK_COPY
+      if ( pcCUBelowLeft && pcCUBelowLeft->isIntra( uiPartBelowLeft ) )
+#else
       if ( pcCUBelowLeft && pcCUBelowLeft->isConstrainedIntra( uiPartBelowLeft ) )
+#endif
       {
         iNumIntra++;
         *pbValidFlags = true;

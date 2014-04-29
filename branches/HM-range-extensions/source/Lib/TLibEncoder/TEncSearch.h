@@ -200,6 +200,7 @@ public:
 #endif
                                 );
 
+#if !RExt__REMOVE_INTRA_BLOCK_COPY
   Bool predIntraBCSearch        ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*&   rpcPredYuv,
@@ -273,6 +274,7 @@ public:
                                   TComMv&      mvPred,
                                   Bool         bUse1DSearchFor8x8
                                 );
+#endif
 
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
