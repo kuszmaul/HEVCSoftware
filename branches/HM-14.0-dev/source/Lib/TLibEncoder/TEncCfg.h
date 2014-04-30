@@ -106,7 +106,6 @@ protected:
   Int       m_FrameSkip;
   Int       m_iSourceWidth;
   Int       m_iSourceHeight;
-  Int       m_conformanceMode;
   Window    m_conformanceWindow;
   Int       m_framesToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
