@@ -70,11 +70,11 @@ protected:
   bool      m_isField;                                        ///< enable field coding
   bool      m_isTopFieldFirst;
   
-  Int       m_conformanceMode;
-  Int       m_confLeft;
-  Int       m_confRight;
-  Int       m_confTop;
-  Int       m_confBottom;
+  Int       m_conformanceWindowMode;
+  Int       m_confWinLeft;
+  Int       m_confWinRight;
+  Int       m_confWinTop;
+  Int       m_confWinBottom;
   Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   

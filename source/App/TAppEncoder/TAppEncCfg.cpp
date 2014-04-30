@@ -268,13 +268,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
-  ("ConformanceMode",       m_conformanceMode,     0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
-  ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for conformance window mode 2")
-  ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for conformance window mode 2")
-  ("ConfLeft",              m_confLeft,            0, "Left offset for window conformance mode 3")
-  ("ConfRight",             m_confRight,           0, "Right offset for window conformance mode 3")
-  ("ConfTop",               m_confTop,             0, "Top offset for window conformance mode 3")
-  ("ConfBottom",            m_confBottom,          0, "Bottom offset for window conformance mode 3")
+  ("ConformanceMode",       m_conformanceWindowMode,  0, "Deprecated alias of ConformanceWindowMode")
+  ("ConformanceWindowMode", m_conformanceWindowMode,  0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
+  ("HorizontalPadding,-pdx",m_aiPad[0],               0, "Horizontal source padding for conformance window mode 2")
+  ("VerticalPadding,-pdy",  m_aiPad[1],               0, "Vertical source padding for conformance window mode 2")
+  ("ConfLeft",              m_confWinLeft,            0, "Deprecated alias of ConfWinLeft")
+  ("ConfRight",             m_confWinRight,           0, "Deprecated alias of ConfWinRight")
+  ("ConfTop",               m_confWinTop,             0, "Deprecated alias of ConfWinTop")
+  ("ConfBottom",            m_confWinBottom,          0, "Deprecated alias of ConfWinBottom")
+  ("ConfWinLeft",           m_confWinLeft,            0, "Left offset for window conformance mode 3")
+  ("ConfWinRight",          m_confWinRight,           0, "Right offset for window conformance mode 3")
+  ("ConfWinTop",            m_confWinTop,             0, "Top offset for window conformance mode 3")
+  ("ConfWinBottom",         m_confWinBottom,          0, "Bottom offset for window conformance mode 3")
   ("FrameRate,-fr",         m_iFrameRate,          0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
@@ -632,12 +637,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   if (!m_outputBitDepthC) { m_outputBitDepthC = m_internalBitDepthC; }
 
   // TODO:ChromaFmt assumes 4:2:0 below
-  switch (m_conformanceMode)
+  switch (m_conformanceWindowMode)
   {
   case 0:
     {
       // no conformance or padding
-      m_confLeft = m_confRight = m_confTop = m_confBottom = 0;
+      m_confWinLeft = m_confWinRight = m_confWinTop = m_confWinBottom = 0;
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
     }
@@ -647,17 +652,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       Int minCuSize = m_uiMaxCUHeight >> (m_uiMaxCUDepth - 1);
       if (m_iSourceWidth % minCuSize)
       {
-        m_aiPad[0] = m_confRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
-        m_iSourceWidth  += m_confRight;
+        m_aiPad[0] = m_confWinRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
+        m_iSourceWidth  += m_confWinRight;
       }
       if (m_iSourceHeight % minCuSize)
       {
-        m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
-        m_iSourceHeight += m_confBottom;
+        m_aiPad[1] = m_confWinBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
+        m_iSourceHeight += m_confWinBottom;
         if ( m_isField )
         {
-          m_iSourceHeightOrg += m_confBottom << 1;
-          m_aiPad[1] = m_confBottom << 1;
+          m_iSourceHeightOrg += m_confWinBottom << 1;
+          m_aiPad[1] = m_confWinBottom << 1;
         }
       }
       if (m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0)
@@ -677,14 +682,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       //padding
       m_iSourceWidth  += m_aiPad[0];
       m_iSourceHeight += m_aiPad[1];
-      m_confRight  = m_aiPad[0];
-      m_confBottom = m_aiPad[1];
+      m_confWinRight  = m_aiPad[0];
+      m_confWinBottom = m_aiPad[1];
       break;
     }
   case 3:
     {
       // conformance
-      if ((m_confLeft == 0) && (m_confRight == 0) && (m_confTop == 0) && (m_confBottom == 0))
+      if ((m_confWinLeft == 0) && (m_confWinRight == 0) && (m_confWinTop == 0) && (m_confWinBottom == 0))
       {
         fprintf(stderr, "Warning: Conformance window enabled, but all conformance window parameters set to zero\n");
       }
@@ -928,10 +933,10 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_confLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
 
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
@@ -1406,7 +1411,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Input          File          : %s\n", m_pchInputFile          );
   printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
-  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
+  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confWinLeft - m_confWinRight, m_iSourceHeight - m_confWinTop - m_confWinBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   if (m_isField)
   {
