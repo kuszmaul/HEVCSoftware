@@ -938,6 +938,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_confWinTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_confWinBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
 
+  xConfirmPara( m_defaultDisplayWindowFlag && !m_vuiParametersPresentFlag, "VUI needs to be enabled for default display window");
+
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
   while(ui)
