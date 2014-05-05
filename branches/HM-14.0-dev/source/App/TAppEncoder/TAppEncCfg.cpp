@@ -940,6 +940,14 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara( m_defaultDisplayWindowFlag && !m_vuiParametersPresentFlag, "VUI needs to be enabled for default display window");
 
+  if (m_defaultDisplayWindowFlag)
+  {
+    xConfirmPara( m_defDispWinLeftOffset   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinRightOffset  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinTopOffset    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinBottomOffset % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom default display window offset must be an integer multiple of the specified chroma subsampling");
+  }
+
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
   while(ui)
