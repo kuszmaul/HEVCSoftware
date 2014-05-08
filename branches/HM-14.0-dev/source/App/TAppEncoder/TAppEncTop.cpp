@@ -289,6 +289,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
   m_cTEncTop.setActiveParameterSetsSEIEnabled ( m_activeParameterSetsSEIEnabled ); 
   m_cTEncTop.setVuiParametersPresentFlag( m_vuiParametersPresentFlag );
+  m_cTEncTop.setAspectRatioInfoPresentFlag( m_aspectRatioInfoPresentFlag);
   m_cTEncTop.setAspectRatioIdc( m_aspectRatioIdc );
   m_cTEncTop.setSarWidth( m_sarWidth );
   m_cTEncTop.setSarHeight( m_sarHeight );
