@@ -2129,22 +2129,6 @@ Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcLis
   return;
 }
 
-Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut )
-{
-  assert( iNumPicRcvd > 0 );
-  //  Exception for the first frame
-  if ( iPOCLast == 0 )
-  {
-    m_iGopSize    = 1;
-  }
-  else
-    m_iGopSize    = m_pcCfg->getGOPSize();
-  
-  assert (m_iGopSize > 0); 
-
-  return;
-}
-
 Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
                          TComList<TComPicYuv*>&    rcListPicYuvRecOut,
                          Int                       iNumPicRcvd,
