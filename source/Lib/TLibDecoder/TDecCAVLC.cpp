@@ -720,6 +720,11 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       {
         READ_FLAG( uiCode, "cprms_present_flag[i]" );               pcVPS->setCprmsPresentFlag( uiCode == 1 ? true : false, i );
       }
+      else
+      {
+        pcVPS->setCprmsPresentFlag( true, i );
+      }
+
       parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
     }
   }
