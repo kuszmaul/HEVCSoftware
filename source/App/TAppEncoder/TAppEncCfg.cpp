@@ -53,6 +53,41 @@
 using namespace std;
 namespace po = df::program_options_lite;
 
+
+
+enum ExtendedProfileName // this is used for determining profile strings, where multiple profiles map to a single profile idc with various constraint flag combinations
+{
+  NONE = 0,
+  MAIN = 1,
+  MAIN10 = 2,
+  MAINSTILLPICTURE = 3,
+  MAINREXT = 4,
+  HIGHREXT = 30, // Placeholder profile for development
+  // The following are RExt profiles, which would map to the MAINREXT profile idc.
+  // The enumeration indicates the bit-depth constraint in the bottom 2 digits
+  //                           the chroma format in the next digit
+  //                           the intra constraint in the top digit
+  MONOCHROME_12     = 1012,
+  MONOCHROME_16     = 1016,
+  MAIN_12           = 1112,
+  MAIN_422_10       = 1210,
+  MAIN_422_12       = 1212,
+  MAIN_444          = 1308,
+  MAIN_444_10       = 1310,
+  MAIN_444_12       = 1312,
+  MAIN_444_16       = 1316, // non-standard profile definition, used for development purposes
+  MAIN_INTRA        = 2108,
+  MAIN_10_INTRA     = 2110,
+  MAIN_12_INTRA     = 2112,
+  MAIN_422_10_INTRA = 2210,
+  MAIN_422_12_INTRA = 2212,
+  MAIN_444_INTRA    = 2308,
+  MAIN_444_10_INTRA = 2310,
+  MAIN_444_12_INTRA = 2312,
+  MAIN_444_16_INTRA = 2316
+};
+
+
 //! \ingroup TAppEncoder
 //! \{
 
@@ -204,6 +239,55 @@ strToProfile[] =
   {"high-RExt",          Profile::HIGHREXT        }
 };
 
+static const struct MapStrToExtendedProfile
+{
+  const Char* str;
+  ExtendedProfileName value;
+}
+strToExtendedProfile[] =
+{
+    {"none",               NONE             },
+    {"main",               MAIN             },
+    {"main10",             MAIN10           },
+    {"main-still-picture", MAINSTILLPICTURE },
+    {"main-RExt",          MAINREXT         },
+    {"high-RExt",          HIGHREXT         },
+    {"monochrome12",       MONOCHROME_12    },
+    {"monochrome16",       MONOCHROME_16    },
+    {"main12",             MAIN_12          },
+    {"main_422_10",        MAIN_422_10      },
+    {"main_422_12",        MAIN_422_12      },
+    {"main_444",           MAIN_444         },
+    {"main_444_10",        MAIN_444_10      },
+    {"main_444_12",        MAIN_444_12      },
+    {"main_444_16",        MAIN_444_16      },
+    {"main_intra",         MAIN_INTRA       },
+    {"main_10_intra",      MAIN_10_INTRA    },
+    {"main_12_intra",      MAIN_12_INTRA    },
+    {"main_422_10_intra",  MAIN_422_10_INTRA},
+    {"main_422_12_intra",  MAIN_422_12_INTRA},
+    {"main_444_intra",     MAIN_444_INTRA   },
+    {"main_444_10_intra",  MAIN_444_10_INTRA},
+    {"main_444_12_intra",  MAIN_444_12_INTRA},
+    {"main_444_16_intra",  MAIN_444_16_INTRA}
+};
+
+static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/][4/* bit depth constraint 8=0, 10=1, 12=2, 16=3*/][4/*chroma format*/]=
+{
+    {
+        { NONE,          NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
+        { NONE,          NONE,          MAIN_422_10,       MAIN_444_10       }, // 10-bit inter for 400, 420, 422 and 444
+        { MONOCHROME_12, MAIN_12,       MAIN_422_12,       MAIN_444_12       }, // 12-bit inter for 400, 420, 422 and 444
+        { MONOCHROME_16, NONE,          NONE,              MAIN_444_16       }  // 16-bit inter for 400, 420, 422 and 444 (the latter is non standard used for development)
+    },
+    {
+        { NONE,          MAIN_INTRA,    NONE,              MAIN_444_INTRA    }, // 8-bit  intra for 400, 420, 422 and 444
+        { NONE,          MAIN_10_INTRA, MAIN_422_10_INTRA, MAIN_444_10_INTRA }, // 10-bit intra for 400, 420, 422 and 444
+        { NONE,          MAIN_12_INTRA, MAIN_422_12_INTRA, MAIN_444_12_INTRA }, // 12-bit intra for 400, 420, 422 and 444
+        { NONE,          NONE,          NONE,              MAIN_444_16_INTRA }  // 16-bit intra for 400, 420, 422 and 444
+    }
+};
+
 static const struct MapStrToTier
 {
   const Char* str;
@@ -253,6 +337,19 @@ strToCostMode[] =
 };
 
 template<typename T, typename P>
+static std::string enumToString(P map[], unsigned long mapLen, const T val)
+{
+  for (Int i = 0; i < mapLen; i++)
+  {
+    if (val == map[i].value)
+    {
+      return map[i].str;
+    }
+  }
+  return std::string();
+}
+
+template<typename T, typename P>
 static istream& readStrToEnum(P map[], unsigned long mapLen, istream &in, T &val)
 {
   string str;
@@ -281,6 +378,11 @@ namespace Profile
   }
 }
 
+static inline istream& operator >> (istream &in, ExtendedProfileName &profile)
+{
+  return readStrToEnum(strToExtendedProfile, sizeof(strToExtendedProfile)/sizeof(*strToExtendedProfile), in, profile);
+}
+
 namespace Level
 {
   static inline istream& operator >> (istream &in, Tier &tier)
@@ -299,6 +401,63 @@ static inline istream& operator >> (istream &in, CostMode &mode)
   return readStrToEnum(strToCostMode, sizeof(strToCostMode)/sizeof(*strToCostMode), in, mode);
 }
 
+static Void
+automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
+                               const Bool bUsingChromaQPAdjustment,
+                               const Bool bUsingExtendedPrecision,
+                               const Bool bIntraConstraintFlag,
+                               UInt &bitDepthConstraint,
+                               ChromaFormat &chromaFormatConstraint,
+                               const Int  maxBitDepth,
+                               const ChromaFormat chromaFormat)
+{
+  // Try to choose profile, according to table in Q1013.
+  UInt trialBitDepthConstraint=maxBitDepth;
+  if (trialBitDepthConstraint<8) trialBitDepthConstraint=8;
+  else if (trialBitDepthConstraint==9 || trialBitDepthConstraint==11) trialBitDepthConstraint++;
+  else if (trialBitDepthConstraint>12) trialBitDepthConstraint=16;
+
+  // both format and bit depth constraints are unspecified
+  if (bUsingExtendedPrecision || trialBitDepthConstraint==16)
+  {
+    bitDepthConstraint = 16;
+    chromaFormatConstraint = (!bIntraConstraintFlag && chromaFormat==CHROMA_400) ? CHROMA_400 : CHROMA_444;
+  }
+  else if (bUsingGeneralRExtTools)
+  {
+    if (chromaFormat == CHROMA_400 && !bIntraConstraintFlag)
+    {
+      bitDepthConstraint = 16;
+      chromaFormatConstraint = CHROMA_400;
+    }
+    else
+    {
+      bitDepthConstraint = trialBitDepthConstraint;
+      chromaFormatConstraint = CHROMA_444;
+    }
+  }
+  else if (chromaFormat == CHROMA_400)
+  {
+    if (bIntraConstraintFlag)
+    {
+      chromaFormatConstraint = CHROMA_420; // there is no intra 4:0:0 profile.
+      bitDepthConstraint     = trialBitDepthConstraint;
+    }
+    else
+    {
+      chromaFormatConstraint = CHROMA_400;
+      bitDepthConstraint     = 12;
+    }
+  }
+  else
+  {
+    bitDepthConstraint = trialBitDepthConstraint;
+    chromaFormatConstraint = chromaFormat;
+    if (bUsingChromaQPAdjustment && chromaFormat == CHROMA_420) chromaFormatConstraint = CHROMA_422; // 4:2:0 cannot use the chroma qp tool.
+    if (chromaFormatConstraint == CHROMA_422 && bitDepthConstraint == 8) bitDepthConstraint = 10; // there is no 8-bit 4:2:2 profile.
+    if (chromaFormatConstraint == CHROMA_420 && !bIntraConstraintFlag) bitDepthConstraint = 12; // there is no 8 or 10-bit 4:2:0 inter RExt profile.
+  }
+}
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -330,6 +489,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpInputChromaFormat;
   Int tmpConstraintChromaFormat;
   string inputColourSpaceConvert;
+  ExtendedProfileName extendedProfile;
 #if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
 #endif
@@ -379,12 +539,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff",                              m_isTopFieldFirst,                                false, "In case of field based coding, signals whether if it's a top field first or not")
 
   // Profile and level
-  ("Profile",                                         m_profile,                                Profile::NONE, "Profile name to use for encoding. Use main (for main), main10 (for main10), main-still-picture, main-RExt (for Range Extensions profile) or none")
+  ("Profile",                                         extendedProfile,                                   NONE, "Profile name to use for encoding. Use main (for main), main10 (for main10), main-still-picture, main-RExt (for Range Extensions profile), any of the RExt specific profile names, or none")
   ("Level",                                           m_level,                                    Level::NONE, "Level limit to be used, eg 5.1, or none")
   ("Tier",                                            m_levelTier,                                Level::MAIN, "Tier to use for interpretation of --Level (main or high only)")
-  ("MaxBitDepthConstraint",                           m_bitDepthConstraint,                                0u, "Bit depth to use for profile-constraint for RExt profiles. 0=use max(InternalBitDepth,InternalBitDepthC)")
-  ("MaxChromaFormatConstraint",                       tmpConstraintChromaFormat,                            0, "Chroma-format to use for the profile-constraint for RExt profiles. 0=use ChromaFormatIDC")
-  ("IntraConstraintFlag",                             m_intraConstraintFlag,                            false, "Value of general_intra_constraint_flag to use for RExt profiles")
+  ("MaxBitDepthConstraint",                           m_bitDepthConstraint,                                0u, "Bit depth to use for profile-constraint for RExt profiles. 0=automatically choose based upon other parameters")
+  ("MaxChromaFormatConstraint",                       tmpConstraintChromaFormat,                            0, "Chroma-format to use for the profile-constraint for RExt profiles. 0=automatically choose based upon other parameters")
+  ("IntraConstraintFlag",                             m_intraConstraintFlag,                            false, "Value of general_intra_constraint_flag to use for RExt profiles (not used if an explicit RExt sub-profile is specified)")
   ("LowerBitRateConstraintFlag",                      m_lowerBitRateConstraintFlag,                      true, "Value of general_lower_bit_rate_constraint_flag to use for RExt profiles")
 
   ("ProgressiveSource",                               m_progressiveSourceFlag,                          false, "Indicate that source is progressive")
@@ -780,21 +940,69 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
-  // NOTE: RExt - consider adjusting the auto-constraints so that they are guaranteed to produce a legal combination
-
-  // manipulate profile constraints
-  m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
-  if (m_bitDepthConstraint == 0)
+  if (extendedProfile >= 1000 && extendedProfile <= 2316)
   {
-    if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
+    m_profile = Profile::MAINREXT;
+    if (m_bitDepthConstraint != 0 || tmpConstraintChromaFormat != 0)
     {
-      m_bitDepthConstraint = (m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
+      fprintf(stderr, "Error: The bit depth and chroma format constraints are not used when an explicit RExt profile is specified\n");
+      exit(EXIT_FAILURE);
+    }
+    m_bitDepthConstraint     = (extendedProfile%100);
+    m_intraConstraintFlag    = (extendedProfile>=2000);
+    switch ((extendedProfile/100)%10)
+    {
+      case 0:  tmpConstraintChromaFormat=400; break;
+      case 1:  tmpConstraintChromaFormat=420; break;
+      case 2:  tmpConstraintChromaFormat=422; break;
+      default: tmpConstraintChromaFormat=444; break;
+    }
+  }
+  else
+  {
+    m_profile = Profile::Name(extendedProfile);
+  }
+
+  if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
+  {
+    if (m_bitDepthConstraint == 0 && tmpConstraintChromaFormat == 0)
+    {
+      // produce a valid combination, if possible.
+      const Bool bUsingGeneralRExtTools  = m_useResidualRotation                    ||
+                                           m_useSingleSignificanceMapContext        ||
+                                           m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ||
+                                           m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ||
+                                           !m_enableIntraReferenceSmoothing         ||
+                                           m_useGolombRiceParameterAdaptation       ||
+                                           m_transformSkipLog2MaxSize!=2;
+      const Bool bUsingChromaQPAdjustment= m_maxCUChromaQpAdjustmentDepth >= 0;
+      const Bool bUsingExtendedPrecision = m_useExtendedPrecision;
+      m_chromaFormatConstraint = NUM_CHROMA_FORMAT;
+      automaticallySelectRExtProfile(bUsingGeneralRExtTools,
+                                     bUsingChromaQPAdjustment,
+                                     bUsingExtendedPrecision,
+                                     m_intraConstraintFlag,
+                                     m_bitDepthConstraint,
+                                     m_chromaFormatConstraint,
+                                     m_chromaFormatIDC==CHROMA_400 ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]),
+                                     m_chromaFormatIDC);
+    }
+    else if (m_bitDepthConstraint == 0 || tmpConstraintChromaFormat == 0)
+    {
+      fprintf(stderr, "Error: The bit depth and chroma format constraints must either both be specified or both be configured automatically\n");
+      exit(EXIT_FAILURE);
     }
     else
     {
-      m_bitDepthConstraint = (m_profile == Profile::MAIN10?10:8);
+      m_chromaFormatConstraint = numberToChromaFormat(tmpConstraintChromaFormat);
     }
   }
+  else
+  {
+    m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
+    m_bitDepthConstraint = (m_profile == Profile::MAIN10?10:8);
+  }
+
 
   m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
 
@@ -1088,6 +1296,36 @@ Void TAppEncCfg::xCheckParameter()
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
+    if (m_profile == Profile::MAINREXT)
+    {
+      const UInt intraIdx = m_intraConstraintFlag ? 1:0;
+      const UInt bitDepthIdx = (m_bitDepthConstraint == 8 ? 0 : (m_bitDepthConstraint ==10 ? 1 : (m_bitDepthConstraint == 12 ? 2 : (m_bitDepthConstraint == 16 ? 3 : 4 ))));
+      const UInt chromaFormatIdx = UInt(m_chromaFormatConstraint);
+      const Bool bValidProfile = (bitDepthIdx > 3 || chromaFormatIdx>3) ? false : (validRExtProfileNames[intraIdx][bitDepthIdx][chromaFormatIdx] != NONE);
+      xConfirmPara(!bValidProfile, "Invalid intra constraint flag, bit depth constraint flag and chroma format constraint flag combination for a RExt profile");
+      const Bool bUsingGeneralRExtTools  = m_useResidualRotation                    ||
+                                           m_useSingleSignificanceMapContext        ||
+                                           m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ||
+                                           m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ||
+                                           !m_enableIntraReferenceSmoothing         ||
+                                           m_useGolombRiceParameterAdaptation       ||
+                                           m_transformSkipLog2MaxSize!=2;
+      const Bool bUsingChromaQPTool      = m_maxCUChromaQpAdjustmentDepth >= 0;
+      const Bool bUsingExtendedPrecision = m_useExtendedPrecision;
+
+      xConfirmPara((m_chromaFormatConstraint==CHROMA_420 || m_chromaFormatConstraint==CHROMA_400) && bUsingChromaQPTool, "CU Chroma QP adjustment cannot be used for 4:0:0 or 4:2:0 RExt profiles");
+      xConfirmPara(m_bitDepthConstraint != 16 && bUsingExtendedPrecision, "Extended precision can only be used in 16-bit RExt profiles");
+      if (!(m_chromaFormatConstraint == CHROMA_400 && m_bitDepthConstraint == 16) && m_chromaFormatConstraint!=CHROMA_444)
+      {
+        xConfirmPara(bUsingGeneralRExtTools, "Combination of tools and profiles are not possible in the specified RExt profile.");
+      }
+      if (!m_intraConstraintFlag && m_bitDepthConstraint==16 && m_chromaFormatConstraint==CHROMA_444)
+      {
+        fprintf(stderr, "********************************************************************************************************\n");
+        fprintf(stderr, "** WARNING: The RExt constraint flags describe a non standard combination (used for development only) **\n");
+        fprintf(stderr, "********************************************************************************************************\n");
+      }
+    }
   }
   else
   {
@@ -1800,7 +2038,21 @@ Void TAppEncCfg::xPrintParameter()
     printf("Frame/Field                       : Frame based coding\n");
     printf("Frame index                       : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
   }
-  printf("Profile                           : %s\n", profileToString(m_profile) );
+  if (m_profile == Profile::MAINREXT)
+  {
+    const UInt intraIdx = m_intraConstraintFlag ? 1:0;
+    const UInt bitDepthIdx = (m_bitDepthConstraint == 8 ? 0 : (m_bitDepthConstraint ==10 ? 1 : (m_bitDepthConstraint == 12 ? 2 : (m_bitDepthConstraint == 16 ? 3 : 4 ))));
+    const UInt chromaFormatIdx = UInt(m_chromaFormatConstraint);
+    const ExtendedProfileName validProfileName = (bitDepthIdx > 3 || chromaFormatIdx>3) ? NONE : validRExtProfileNames[intraIdx][bitDepthIdx][chromaFormatIdx];
+    std::string rextSubProfile;
+    if (validProfileName!=NONE) rextSubProfile=enumToString(strToExtendedProfile, sizeof(strToExtendedProfile)/sizeof(*strToExtendedProfile), validProfileName);
+    if (rextSubProfile == "main_444_16") rextSubProfile="main_444_16 [NON STANDARD]";
+    printf("Profile                           : %s (%s)\n", profileToString(m_profile), (rextSubProfile.empty())?"INVALID REXT PROFILE":rextSubProfile.c_str() );
+  }
+  else
+  {
+    printf("Profile                           : %s\n", profileToString(m_profile) );
+  }
   printf("CU size / depth                   : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)       : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter               : %d\n", m_uiQuadtreeTUMaxDepthInter);
