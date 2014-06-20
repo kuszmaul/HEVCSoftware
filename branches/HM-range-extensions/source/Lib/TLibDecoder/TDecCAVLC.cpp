@@ -630,20 +630,16 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
 #endif
 
-  const Bool bChroma=(pcSPS->getChromaFormatIdc() != CHROMA_400);
-  if (bChroma)
-  {
-    READ_UVLC( uiCode,    "bit_depth_chroma_minus8" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0
+  READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
 #if RExt__O0043_BEST_EFFORT_DECODING
-    g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
-    if (forceDecodeBitDepth != 0)
-    {
-      uiCode = forceDecodeBitDepth - 8;
-    }
-#endif
-    assert(uiCode <= 8);
+  g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
+  if (forceDecodeBitDepth != 0)
+  {
+    uiCode = forceDecodeBitDepth - 8;
   }
-  pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode); // NOTE: RExt - for 4:0:0, this will be setting the bit depths for chroma to that of luma
+#endif
+  assert(uiCode <= 8);
+  pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode);
 #if RExt__O0043_BEST_EFFORT_DECODING
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_CHROMA]-8)) );
 #else
@@ -718,10 +714,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if( pcSPS->getUsePCM() )
   {
     READ_CODE( 4, uiCode, "pcm_sample_bit_depth_luma_minus1" );          pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_LUMA, 1 + uiCode );
-    if (bChroma)
-    {
-      READ_CODE( 4, uiCode, "pcm_sample_bit_depth_chroma_minus1" );      pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_CHROMA, 1 + uiCode );  // NOTE: RExt - This SE is not in the SPS header for 4:0:0
-    }
+    READ_CODE( 4, uiCode, "pcm_sample_bit_depth_chroma_minus1" );        pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_CHROMA, 1 + uiCode );
     READ_UVLC( uiCode, "log2_min_pcm_luma_coding_block_size_minus3" );   pcSPS->setPCMLog2MinSize (uiCode+3);
     READ_UVLC( uiCode, "log2_diff_max_min_pcm_luma_coding_block_size" ); pcSPS->setPCMLog2MaxSize ( uiCode+pcSPS->getPCMLog2MinSize() );
     READ_FLAG( uiCode, "pcm_loop_filter_disable_flag" );                 pcSPS->setPCMFilterDisableFlag ( uiCode ? true : false );
