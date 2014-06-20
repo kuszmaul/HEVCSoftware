@@ -824,8 +824,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayColourVolume",                 m_masteringDisplayColourVolumeSEIEnabled,         false, "Control generation of mastering display colour volume SEI messages")
   ("SEIMasteringDisplayMaxLuminance",                 m_masteringDisplayMaxLuminance,                  10000u, "Specifies the mastering display maximum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
   ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplayMinLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
-  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode, string("0 65535 0 0 65535 0"), "Mastering display primaries for all three colour planes in CIE xy coordinates (16-bit unsigned code value)")
-  ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,        string("21823 21823"), "Mastering display white point CIE xy coordinates (e.g. 0.333 = 16-bit unsigned code value: 21823)")
+  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode, string("0 50000 0 0 50000 0"), "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
+  ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,        string("16667 16667"), "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
     
   ;
 
