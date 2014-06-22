@@ -327,9 +327,6 @@
 #define SCM__Q0248_INTER_ME_HASH_SEARCH                   1
 #define SCM__PSNR_CLIPPING                                1
 
-#define SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP       1
-
-
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
