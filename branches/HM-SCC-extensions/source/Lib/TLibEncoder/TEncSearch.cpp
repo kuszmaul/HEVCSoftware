@@ -344,24 +344,6 @@ const Bool bStarRefinementDiamond   = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xT
 const Bool bStarRefinementStop      = 0;                                                                      \
 const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */  \
 
-#if !SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
-#define SEL_SEARCH_CONFIGURATION                                                                                 \
-  const Bool bTestOtherPredictedMV    = 1;                                                                       \
-  const Bool bTestZeroVector          = 1;                                                                       \
-  const Bool bEnableRasterSearch      = 1;                                                                       \
-  const Bool bAlwaysRasterSearch      = 0;  /* ===== 1: BETTER but factor 15x slower ===== */                    \
-  const Bool bStarRefinementEnable    = 1;  /* enable either star refinement or raster refinement */             \
-  const Bool bStarRefinementDiamond   = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */         \
-  const Bool bStarRefinementStop      = 0;                                                                       \
-  const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */   \
-  const UInt uiSearchRange            = m_iSearchRange;                                                          \
-  const Int  uiSearchRangeInitial     = m_iSearchRange >> 2;                                                     \
-  const Int  uiSearchStep             = 4;                                                                       \
-  const Int  iMVDistThresh            = 8;                                                                       \
-
-#endif 
-
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
 #define SEL_SEARCH_CONFIGURATION                                                                                 \
   const Bool bTestOtherPredictedMV    = 0;                                                                       \
   const Bool bTestZeroVector          = 1;                                                                       \
@@ -375,8 +357,6 @@ const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after
   const Int  uiSearchRangeInitial     = m_iSearchRange >> 2;                                                     \
   const Int  uiSearchStep             = 4;                                                                       \
   const Int  iMVDistThresh            = 8;                                                                       \
-
-#endif 
 
 __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance )
 {
@@ -664,11 +644,7 @@ __inline Void TEncSearch::xTZ8PointSquareSearch( TComPattern* pcPatternKey, IntT
 
 
 
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
 __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist, Bool bSkipLeftDist2, Bool bSkipTopDist2 )
-#else
-__inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist )
-#endif
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
@@ -685,10 +661,8 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
   const Int iRight      = iStartX + iDist;
   rcStruct.uiBestRound += 1;
 
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
   if( bSkipLeftDist2 || bSkipTopDist2 )
     assert( iDist == 2 );
-#endif
 
   if ( iDist == 1 ) // iDist == 1
   {
@@ -721,16 +695,12 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
       if (  iTop >= iSrchRngVerTop && iLeft >= iSrchRngHorLeft &&
           iRight <= iSrchRngHorRight && iBottom <= iSrchRngVerBottom ) // check border
       {
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
         if( !bSkipTopDist2 )
-#endif
-        xTZSearchHelp( pcPatternKey, rcStruct, iStartX,  iTop,      2, iDist    );
+         xTZSearchHelp( pcPatternKey, rcStruct, iStartX,  iTop,      2, iDist    );
         xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2,  iTop_2,    1, iDist>>1 );
         xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iTop_2,    3, iDist>>1 );
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
         if( !bSkipLeftDist2 )
-#endif
-        xTZSearchHelp( pcPatternKey, rcStruct, iLeft,    iStartY,   4, iDist    );
+         xTZSearchHelp( pcPatternKey, rcStruct, iLeft,    iStartY,   4, iDist    );
         xTZSearchHelp( pcPatternKey, rcStruct, iRight,   iStartY,   5, iDist    );
         xTZSearchHelp( pcPatternKey, rcStruct, iLeft_2,  iBottom_2, 6, iDist>>1 );
         xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iBottom_2, 8, iDist>>1 );
@@ -738,11 +708,7 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
       }
       else // check border
       {
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
         if ( iTop >= iSrchRngVerTop && !bSkipTopDist2 ) // check top
-#else
-        if ( iTop >= iSrchRngVerTop ) // check top
-#endif
         {
           xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
         }
@@ -757,11 +723,7 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
             xTZSearchHelp( pcPatternKey, rcStruct, iRight_2, iTop_2, 3, (iDist>>1) );
           }
         } // check half top
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
         if ( iLeft >= iSrchRngHorLeft && !bSkipLeftDist2 ) // check left
-#else
-        if ( iLeft >= iSrchRngHorLeft ) // check left
-#endif
         {
           xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iStartY, 4, iDist );
         }
@@ -6116,30 +6078,20 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
   iFirstSrchRngHorRight   = ((iBestX + uiSearchRangeInitial) < iSrchRngHorRight)  ? (iBestX + uiSearchRangeInitial) : iSrchRngHorRight;  
   iFirstSrchRngVerBottom  = ((iBestY + uiSearchRangeInitial) < iSrchRngVerBottom) ? (iBestY + uiSearchRangeInitial) : iSrchRngVerBottom;    
 
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
   Bool bFirstVerScan = true;
-#endif
   for ( iStartY = iFirstSrchRngVerTop; iStartY <= iFirstSrchRngVerBottom; iStartY += uiSearchStep )
   {
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
     Bool bFirstHorScan = true;
-#endif
     for ( iStartX = iFirstSrchRngHorLeft; iStartX <= iFirstSrchRngHorRight; iStartX += uiSearchStep )
     {
       xTZSearchHelp( pcPatternKey, cStruct, iStartX, iStartY, 0, 0 );
       xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 1 );
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
       xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 2, !bFirstHorScan, !bFirstVerScan );
       if( bFirstHorScan )
         bFirstHorScan = false;
-#else
-      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 2 );
-#endif
     }
-#if SCM__SELECTIVE_INTER_PREDICTION_SEARCH_SIMP
     if( bFirstVerScan )
       bFirstVerScan = false;
-#endif
   }
 
   Int iMaxMVDistToPred = (abs(cStruct.iBestX - iBestX) > iMVDistThresh || abs(cStruct.iBestY - iBestY) > iMVDistThresh);
