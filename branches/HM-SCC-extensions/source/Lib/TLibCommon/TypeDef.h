@@ -340,7 +340,6 @@
 // Backwards-compatibility
 //------------------------------------------------
 
-#define SCM__BACKWARDS_COMPATIBILITY_HM_TICKET_1281       0 ///< Maintain backwards compatibility with HM for ticket 1281 (1: method as RExt7.0 with performance loss, 0: method as RExt7.1)
 
 // ====================================================================================================================
 // Basic type redefinition

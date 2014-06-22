@@ -4420,9 +4420,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   Distortion  uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
   TComMv      cMVCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
 
-#if !SCM__BACKWARDS_COMPATIBILITY_HM_TICKET_1281
   uiPartOffset = uiPartAddr;
-#endif 
 
   for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
   {
