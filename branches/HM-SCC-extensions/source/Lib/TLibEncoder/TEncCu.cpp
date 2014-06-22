@@ -1528,10 +1528,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         {
           *earlyDetectionSkipMode = true;
         }
-        else
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
-          if(m_pcEncCfg->getFastSearch() != SELECTIVE)
-#endif 
+        else if(m_pcEncCfg->getFastSearch() != SELECTIVE)
         {
           Int absoulte_MV=0;
           for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )

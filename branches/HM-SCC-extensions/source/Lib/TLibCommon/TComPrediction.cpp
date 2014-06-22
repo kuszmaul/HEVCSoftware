@@ -84,11 +84,21 @@ TComPrediction::TComPrediction()
 
 TComPrediction::~TComPrediction()
 {
+#if RExt__FIX_1284
+  destroy();
+}
+
+Void TComPrediction::destroy()
+{
+#endif
   for(UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
     for(UInt buf=0; buf<NUM_PRED_BUF; buf++)
     {
       delete [] m_piYuvExt[ch][buf];
+#if RExt__FIX_1284
+      m_piYuvExt[ch][buf] = NULL;
+#endif
     }
   }
 
@@ -102,7 +112,13 @@ TComPrediction::~TComPrediction()
   if( m_pLumaRecBuffer )
   {
     delete [] m_pLumaRecBuffer;
+#if RExt__FIX_1284
+    m_pLumaRecBuffer = 0;
+#endif
   }
+#if RExt__FIX_1284
+  m_iLumaRecStride = 0;
+#endif
 
   for (UInt i = 0; i < LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS; i++)
   {
@@ -116,6 +132,14 @@ TComPrediction::~TComPrediction()
 
 Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 {
+#if RExt__FIX_1284
+  // if it has been initialised before, but the chroma format has changed, release the memory and start again.
+  if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] != NULL && m_cYuvPredTemp.getChromaFormat()!=chromaFormatIDC)
+  {
+    destroy();
+  }
+#endif
+
   if( m_piYuvExt[COMPONENT_Y][PRED_BUF_UNFILTERED] == NULL ) // check if first is null (in which case, nothing initialised yet)
   {
     Int extWidth  = MAX_CU_SIZE + 16;
@@ -516,28 +540,8 @@ Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int 
     {
       // the chroma PU will be smaller than 4x4, so join with neighbouring chroma PU(s) to form a bigger block
       // chroma PUs will use the luma MV from the bottom right most of the merged chroma PUs.
-
-      // Clipping of the MVs is applied.
-      //   The reason for this is illustrated in the following example:
-      //    NxN split of an 8x8 CU for 4:2:0.
-      //    The 4 MVs are valid for the respective areas for the 4 luma 4x4 blocks.
-      //    However, the bottom left MV is being applied to the top-left chroma values as well.
-      //       The bottom left MV may reach outside the current slice/tile when applied to the
-      //       top-left chroma samples.
-      //       Clipping prevents this from occurring.
-
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-      Int iLeftWidth = pcCU->getIntraBCSearchAreaWidth();
-      Int iBoundaryX = 0 - (Int)( pcCU->getCUPelX() & ( MAX_CU_SIZE - 1 ) ) - iLeftWidth;
-      Int iBoundaryY = 0 - (Int)( pcCU->getCUPelY() & ( MAX_CU_SIZE - 1 ) );
-#endif
-
       UInt uiMvSrcAddr = ( pcYuvPred->getChromaFormat() == CHROMA_422 && iPartIdx < ( pcCU->getNumPartitions() >> 1 ) ? 1 : 3 );
       cMv = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiMvSrcAddr );
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-      cMv.setHor( std::max<Int>( iBoundaryX, cMv.getHor() ) ); // Boundary is negative, hence max
-      cMv.setVer( std::max<Int>( iBoundaryY, cMv.getVer() ) );
-#endif
     }
 
     xPredIntraBCBlk( COMPONENT_Cb, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );

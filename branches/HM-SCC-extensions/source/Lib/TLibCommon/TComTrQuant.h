@@ -194,11 +194,7 @@ public:
   Int*    getSliceNSamples(){ return m_sliceNsamples ;}
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
-#if RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM
   Void transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const Pel resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint);
-#else
-  Void transformSkipQuantOneSample(TComTU &rTu, ComponentID compID, Pel resiDiff, TCoeff* pcCoeff, UInt uiPos, const QpParam &cQP );
-#endif
   Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, Pel &reconSample, const QpParam &cQP, UInt uiPos );
 
 protected:
@@ -276,11 +272,9 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
                                              UInt             c2Idx,
                                              Int              iQBits,
                                              Double           errorScale,
-                                             Bool             bLast
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                                            ,Bool             useLimitedPrefixLength
-                                            ,ChannelType      channelType
-#endif
+                                             Bool             bLast,
+                                             Bool             useLimitedPrefixLength,
+                                             ChannelType      channelType
                                              ) const;
 
 
@@ -289,11 +283,9 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
                              UShort ui16CtxNumAbs,
                              UShort ui16AbsGoRice,
                              UInt   c1Idx,
-                             UInt   c2Idx
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
-                            ,Bool   useLimitedPrefixLength
-                            ,ChannelType channelType
-#endif
+                             UInt   c2Idx,
+                             Bool   useLimitedPrefixLength,
+                             ChannelType channelType
                            ) const;
 
   __inline Double xGetRateLast         ( const UInt uiPosX, const UInt uiPosY, const ComponentID component ) const;

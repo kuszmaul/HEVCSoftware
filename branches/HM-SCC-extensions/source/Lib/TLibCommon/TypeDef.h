@@ -256,15 +256,16 @@
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #endif
 
-#define RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI      1 ///< 0 = disable code related to Temporal Motion Constrained Tile Sets SEI, 1 (default) = allow coding of Temporal Motion Constrained Tile Sets SEI messages
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX             1 ///< 0 = use unmodified exponential-Golomb coding for all escape-escape values, 1 (default) = when using extended-precision processing, use a modified prefix system where the prefix length is limited to mitigate worst-case code length
-#define RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY                       1 ///< 0 = allow merged PUs to overlap due to motion vector clipping and stray outside the constrained intra area, 1 = restrict the search area such that the bottom-right PU's motion vector must be valid for all PUs with which it is merged
-#define RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH                          1 ///< 0 = use only diamond or full search for inter prediction estimation, 1 (default) = additionally allow the use of a selective inter prediction search
-#define RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM                                1 ///< 0 = use original +1/3 or +1/6 rounding for RDPCM, 1 (default) = use +1/2 rounding for RDPCM
+#define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
+
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
-#define RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS                             1 ///< 0 = do not use agreed Version 2 FDIS profile/tier/level definitions, 1 (default) = use agreed Version 2 FDIS profile/tier/level definitions
+
+#define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
+
+#define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
+#define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 (default) = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -575,7 +576,6 @@ enum TransformDirection
   TRANSFORM_NUMBER_OF_DIRECTIONS = 2
 };
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 /// supported ME search methods
 enum MESearchMethod
 {
@@ -583,7 +583,6 @@ enum MESearchMethod
   DIAMOND                    = 1,     ///< Fast search
   SELECTIVE                  = 2      ///< Selective search
 };
-#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
@@ -699,11 +698,9 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
-    MAINREXT = 4
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
-   ,HIGHREXT = 30 // Placeholder profile for development
+    MAINREXT = 4,
+    HIGHREXT = 30 // Placeholder profile for development
    ,MAINSCC  = 31 // Placeholder profile for development
-#endif
   };
 }
 
@@ -713,9 +710,6 @@ namespace Level
   {
     MAIN = 0,
     HIGH = 1,
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS == 0
-    SUPER = 2,
-#endif
   };
 
   enum Name
@@ -752,9 +746,7 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   SPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -763,9 +755,7 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   PPS_EXT__SCC            = 6, // place holder
-#endif
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 

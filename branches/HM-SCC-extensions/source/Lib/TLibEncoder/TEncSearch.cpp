@@ -345,7 +345,6 @@ const Bool bStarRefinementStop      = 0;                                        
 const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */  \
 
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 #define SEL_SEARCH_CONFIGURATION                                                                                 \
   const Bool bTestOtherPredictedMV    = 1;                                                                       \
   const Bool bTestZeroVector          = 1;                                                                       \
@@ -360,16 +359,11 @@ const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after
   const Int  uiSearchStep             = 4;                                                                       \
   const Int  iMVDistThresh            = 8;                                                                       \
 
-#endif
 
 
 __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance )
 {
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   Distortion  uiSad = 0;
-#else
-  Distortion  uiSad;
-#endif
 
   Pel*  piRefSrch;
 
@@ -378,10 +372,8 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefSrch, rcStruct.iYStride,  m_cDistParam );
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   if(m_pcEncCfg->getFastSearch() != SELECTIVE)
   {
-#endif
     // fast encoder decision: use subsampled SAD when rows > 8 for integer ME
     if ( m_pcEncCfg->getUseFastEnc() )
     {
@@ -390,15 +382,12 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
         m_cDistParam.iSubShift = 1;
       }
     }
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   }
-#endif
 
   setDistParamComp(COMPONENT_Y);
 
   // distortion
   m_cDistParam.bitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   if(m_pcEncCfg->getFastSearch() == SELECTIVE)
   {
     Int isubShift = 0;
@@ -448,7 +437,6 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   }
   else
   {
-#endif
     uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
     // motion cost
@@ -463,9 +451,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
       rcStruct.uiBestRound    = 0;
       rcStruct.ucPointNr      = ucPointNr;
     }
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
   }
-#endif
 }
 
 
@@ -4212,12 +4198,10 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth();
   Int maxYsr =  cuPelY % lcuHeight;
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
   const ChromaFormat format = pcCU->getPic()->getChromaFormat();
 
   if ((format == CHROMA_420) || (format == CHROMA_422)) maxXsr &= ~0x4;
   if ((format == CHROMA_420)                          ) maxYsr &= ~0x4;
-#endif
 
   srLeft   = -maxXsr;
   srTop    = -maxYsr;
@@ -4435,9 +4419,9 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   Distortion  uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
   TComMv      cMVCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
 
-#if RExt__PRCE3_D2_INTRABC_ADDITIONAL_PU_CONFIGURATIONS || !SCM__BACKWARDS_COMPATIBILITY_HM_TICKET_1281
+#if !SCM__BACKWARDS_COMPATIBILITY_HM_TICKET_1281
   uiPartOffset = uiPartAddr;
-#endif
+#endif 
 
   for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
   {
@@ -4449,7 +4433,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
   const Int        iRelCUPelX    = cuPelX % lcuWidth;
   const Int        iRelCUPelY    = cuPelY % lcuHeight;
   
@@ -4459,7 +4442,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   const Int chromaROIHeightInPixels = (((format == CHROMA_420)                          ) && (iRoiHeight == 4) && ((iRelCUPelY & 0x4) != 0)) ? (iRoiHeight * 2) : iRoiHeight;
   const Int chromaROIStartXInPixels = iRelCUPelX + iRoiWidth  - chromaROIWidthInPixels;
   const Int chromaROIStartYInPixels = iRelCUPelY + iRoiHeight - chromaROIHeightInPixels;
-#endif
 
   if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
   {
@@ -4468,10 +4450,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     m_cDistParam.iRows     = 4;//to calculate the sad line by line;
     m_cDistParam.iSubShift = 0;
 
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-    const Int        iRelCUPelX    = cuPelX % lcuWidth;
-    const Int        iRelCUPelY    = cuPelY % lcuHeight;
-#endif
     Distortion uiTempSadBest = 0;
 
     const Int xPred = mvPred.getHor();
@@ -4486,11 +4464,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     {
       Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
       Int iTempX = xPred + iRelCUPelX + iRoiWidth  - 1;
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
       Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
-#else
-      Bool validCand = true;
-#endif
+
 
 #if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
       if((iTempX >= lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
@@ -4538,11 +4513,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     const Int boundY = (0 - iRoiHeight - puPelOffsetY);
     for(Int y = max(iSrchRngVerTop, 0 - cuPelY) ; y <= boundY ; ++y )
     {
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
       if (!isValidIntraBCSearchArea(pcCU, 0 + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-      if (!isValidIntraBCSearchArea(pcCU, 0 + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
         continue;
 
       uiSad = m_pcRdCost->getCost( 0, y);
@@ -4597,11 +4568,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     const Int boundX = max(iSrchRngHorLeft, - cuPelX);
     for(Int x = 0 - iRoiWidth - puPelOffsetX ; x >= boundX ; --x )
     {
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
       if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, 0 + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-      if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, 0 + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
         continue;
 
       uiSad = m_pcRdCost->getCost( x, 0);
@@ -4712,11 +4679,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
           if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
             continue;
 
           uiSad = m_pcRdCost->getCost( x, y);
@@ -4798,11 +4761,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
           if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
             continue;
 
           uiSad = m_pcRdCost->getCost( x, y);
@@ -4915,11 +4874,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
           if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-          if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
             continue;
 
           uiSad = m_pcRdCost->getCost( x, y);
@@ -4980,11 +4935,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
     Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
-#if !RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-    Int iRelCUPelX = cuPelX%lcuWidth;
-    Int iRelCUPelY = cuPelY%lcuHeight;
-#endif
-
     for(Int y = iSrchRngVerBottom; y >= iSrchRngVerTop; y--)
     {
       if ( ((Int)(cuPelY + y) < 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight)) //NOTE: RExt - is this still necessary?
@@ -5001,13 +4951,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           continue;
         }
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
-        Int iTempX = x + iRelCUPelX + iRoiWidth - 1; //NOTE: RExt - code tidy
+        Int iTempX = x + iRelCUPelX + iRoiWidth - 1;
         Int iTempY = y + iRelCUPelY + iRoiHeight - 1;
-#else
-        Int iTempX = x + (cuPelX%lcuWidth) + iRoiWidth - 1;
-        Int iTempY = y + (cuPelY%lcuHeight) + iRoiHeight - 1;
-#endif
         if ((iTempX >= 0) && (iTempY >= 0))
         {
           Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
@@ -5016,11 +4961,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             continue;
         }
 
-#if RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY
         if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
-#else
-        if(!isValidIntraBCSearchArea(pcCU, x + iRelCUPelX, y + iRelCUPelY, iRoiWidth, iRoiHeight))
-#endif
           continue;
 
         piRefSrch = piRefY + x;
@@ -5847,11 +5788,9 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
       break;
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
     case 2:
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
       break;
-#endif
     default:
       break;
   }
@@ -6057,7 +5996,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
 }
 
 
-#if RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH
 Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
 {
   SEL_SEARCH_CONFIGURATION
@@ -6205,7 +6143,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
   ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
 
 }
-#endif
 
 
 Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,

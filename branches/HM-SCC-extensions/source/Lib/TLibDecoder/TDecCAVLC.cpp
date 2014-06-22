@@ -785,26 +785,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
             READ_FLAG( uiCode, "transform_skip_rotation_enabled_flag");     pcSPS->setUseResidualRotation                    (uiCode != 0);
             READ_FLAG( uiCode, "transform_skip_context_enabled_flag");      pcSPS->setUseSingleSignificanceMapContext        (uiCode != 0);
-#if !RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
-            READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
-#endif
             READ_FLAG( uiCode, "residual_dpcm_implicit_enabled_flag");      pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT, (uiCode != 0));
             READ_FLAG( uiCode, "residual_dpcm_explicit_enabled_flag");      pcSPS->setUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT, (uiCode != 0));
             READ_FLAG( uiCode, "extended_precision_processing_flag");       pcSPS->setUseExtendedPrecision                   (uiCode != 0);
             READ_FLAG( uiCode, "intra_smoothing_disabled_flag");            pcSPS->setDisableIntraReferenceSmoothing         (uiCode != 0);
             READ_FLAG( uiCode, "high_precision_prediction_weighting_flag"); pcSPS->setUseHighPrecisionPredictionWeighting    (uiCode != 0);
             READ_FLAG( uiCode, "golomb_rice_parameter_adaptation_flag");    pcSPS->setUseGolombRiceParameterAdaptation       (uiCode != 0);
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
             READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
-#else
-            READ_FLAG( uiCode, "align_cabac_before_bypass_data_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
-#endif
             break;
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
           case SPS_EXT__SCC:
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
             break;
-#endif
           default:
             bSkipTrailingExtensionBits=true;
             break;
@@ -1611,11 +1602,7 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#else
-  if (ptl->getProfileIdc() == Profile::MAINREXT)
-#endif
   {
     UInt maxBitDepth=0;
     READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode)                   maxBitDepth=12;
@@ -1629,14 +1616,8 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
     READ_FLAG(    uiCode, "general_max_monochrome_constraint_flag" ); if (uiCode && chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_400;
     if (chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_444;
     READ_FLAG(    uiCode, "general_intra_constraint_flag");          ptl->setIntraConstraintFlag(uiCode != 0);
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
     READ_FLAG(    uiCode, "general_one_picture_only_constraint_flag");
     READ_FLAG(    uiCode, "general_lower_bit_rate_constraint_flag"); ptl->setLowerBitRateConstraintFlag(uiCode != 0);
-#else
-    READ_FLAG(    uiCode, "general_lower_bit_rate_constraint_flag"); ptl->setLowerBitRateConstraintFlag(uiCode != 0);
-    READ_FLAG(    uiCode, "general_max_high_tier_constraint_flag");
-    if (!uiCode && ptl->getTierFlag()==Level::MAIN) ptl->setTierFlag (Level::SUPER);
-#endif
     READ_CODE(16, uiCode, "XXX_reserved_zero_35bits[0..15]");
     READ_CODE(16, uiCode, "XXX_reserved_zero_35bits[16..31]");
     READ_CODE(3,  uiCode, "XXX_reserved_zero_35bits[32..34]");
