@@ -79,12 +79,10 @@ public:
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
     NO_DISPLAY                           = 135,
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
-    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 136,
-#endif
-    CHROMA_SAMPLING_FILTER_HINT          = 137,
-    TIME_CODE                            = 138,
-    MASTERING_DISPLAY_COLOUR_VOLUME      = 139
+    TIME_CODE                            = 136,
+    MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 138,
+    CHROMA_SAMPLING_FILTER_HINT          = 139
   };
 
   SEI() {}
@@ -173,8 +171,8 @@ public:
 
   UInt m_bpSeqParameterSetId;
   Bool m_rapCpbParamsPresentFlag;
-  Bool m_cpbDelayOffset;
-  Bool m_dpbDelayOffset;
+  UInt m_cpbDelayOffset;
+  UInt m_dpbDelayOffset;
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];
@@ -534,7 +532,6 @@ public:
   Int  timeOffset;
 };
 
-#if RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI
 //definition according to P1005_v1;
 class SEITempMotionConstrainedTileSets: public SEI
 {
@@ -579,7 +576,6 @@ public:
   Bool    m_mc_all_tiles_exact_sample_value_match_flag;
   Bool    m_each_tile_one_tile_set_flag;
   Bool    m_limited_tile_set_display_flag;
-  Int     m_num_sets_in_message; //_minus1;  //[0,255];
   Bool    m_max_mcs_tier_level_idc_present_flag;
   Bool    m_max_mcts_tier_flag;
   Int     m_max_mcts_level_idc;
@@ -593,7 +589,6 @@ public:
   const TileSetData &tileSetData (const Int index) const { return m_tile_set_data[index]; }
 
 };
-#endif
 
 #endif
 

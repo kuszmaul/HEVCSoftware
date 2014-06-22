@@ -176,16 +176,12 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__N0383_P0051_P0172_TEMPORAL_MOTION_CONSTRAINED_TILE_SETS_SEI, settingNameWidth, settingValueWidth);
-
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION,                       settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX,        settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q0075_CONSTRAINED_420_422_INTRA_BLOCK_COPY,                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q0147_SELECTIVE_INTER_PREDICTION_SEARCH,                     settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q0148_MODIFIED_ROUNDING_FOR_RDPCM,                           settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS,                        settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__FIX_1256,                                                    settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__FIX_1284,                                                    settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,           settingNameWidth, settingValueWidth);

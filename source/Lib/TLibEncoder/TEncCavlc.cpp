@@ -589,9 +589,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   sps_extension_flags[SPS_EXT__REXT] = (
           pcSPS->getUseResidualRotation()
        || pcSPS->getUseSingleSignificanceMapContext()
-#if !RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
-       || pcSPS->getUseIntraBlockCopy()
-#endif
        || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)
        || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)
        || pcSPS->getUseExtendedPrecision()
@@ -601,11 +598,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getAlignCABACBeforeBypass()
     );
 
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
     );
-#endif
 
   // Other SPS extension flags checked here.
 
@@ -633,26 +628,17 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
             WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
-#if !RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
-            WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-#endif
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "residual_dpcm_implicit_enabled_flag" );
             WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "residual_dpcm_explicit_enabled_flag" );
             WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
             WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
             WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
             WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "golomb_rice_parameter_adaptation_flag" );
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "cabac_bypass_alignment_enabled_flag" );
-#else
-            WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "align_cabac_before_bypass_data_flag" );
-#endif
             break;
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
             break;
-#endif
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
             break;
@@ -1144,11 +1130,7 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#else
-  if (ptl->getProfileIdc() == Profile::MAINREXT)
-#endif
   {
     const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
     WRITE_FLAG(bitDepthConstraint<=12, "general_max_12bit_constraint_flag");
@@ -1159,13 +1141,8 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
     WRITE_FLAG(chromaFmtConstraint==CHROMA_420||chromaFmtConstraint==CHROMA_400,                                  "general_max_420chroma_constraint_flag");
     WRITE_FLAG(chromaFmtConstraint==CHROMA_400,                                                                   "general_max_monochrome_constraint_flag");
     WRITE_FLAG(ptl->getIntraConstraintFlag(),        "general_intra_constraint_flag");
-#if RExt__Q_MEETINGNOTES_PROFILES_TIERS_LEVELS
     WRITE_FLAG(0,                                    "general_one_picture_only_constraint_flag");
     WRITE_FLAG(ptl->getLowerBitRateConstraintFlag(), "general_lower_bit_rate_constraint_flag");
-#else
-    WRITE_FLAG(ptl->getLowerBitRateConstraintFlag(), "general_lower_bit_rate_constraint_flag");
-    WRITE_FLAG(ptl->getTierFlag()<Level::SUPER, "general_max_high_tier_constraint_flag");
-#endif
     WRITE_CODE(0 , 16, "XXX_reserved_zero_35bits[0..15]");
     WRITE_CODE(0 , 16, "XXX_reserved_zero_35bits[16..31]");
     WRITE_CODE(0 ,  3, "XXX_reserved_zero_35bits[32..34]");

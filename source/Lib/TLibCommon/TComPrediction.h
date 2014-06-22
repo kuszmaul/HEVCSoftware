@@ -100,6 +100,9 @@ protected:
 
   Void xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
+#if RExt__FIX_1284
+  Void destroy();
+#endif
 
 public:
   TComPrediction();

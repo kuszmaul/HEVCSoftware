@@ -389,11 +389,7 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
  * \param ruiGoRiceParam reference to Rice parameter
  * \returns Void
  */
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
 Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType )
-#else
-Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
-#endif
 {
   Int codeNumber  = (Int)symbol;
   UInt length;
@@ -404,7 +400,6 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
     m_pcBinIf->encodeBinsEP( (1<<(length+1))-2 , length+1);
     m_pcBinIf->encodeBinsEP((codeNumber%(1<<rParam)),rParam);
   }
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
   else if (useLimitedPrefixLength)
   {
     const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType]));
@@ -437,7 +432,6 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
     m_pcBinIf->encodeBinsEP(  prefix,                                        totalPrefixLength      ); //prefix
     m_pcBinIf->encodeBinsEP(((suffix << rParam) | (symbol & rParamBitMask)), (suffixLength + rParam)); //separator, suffix, and rParam bits
   }
-#endif
   else
   {
     length = rParam;
@@ -1370,10 +1364,8 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   const UInt         uiLog2BlockWidth  = g_aucConvertToBit[ uiWidth  ] + 2;
   const UInt         uiLog2BlockHeight = g_aucConvertToBit[ uiHeight ] + 2;
 
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
   const ChannelType  channelType       = toChannelType(compID);
   const Bool         extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
 
   const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
 
@@ -1625,11 +1617,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
           {
             const UInt escapeCodeValue = absCoeff[idx] - baseLevel;
 
-#if RExt__Q0073_Q0131_ESCAPE_EXPONENTIAL_GOLOMB_LIMITED_PREFIX
             xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam, extendedPrecision, channelType );
-#else
-            xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam );
-#endif
 
             if (absCoeff[idx] > (3 << uiGoRiceParam))
             {
