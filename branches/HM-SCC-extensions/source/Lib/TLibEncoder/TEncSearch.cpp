@@ -210,10 +210,10 @@ TEncSearch::~TEncSearch()
     {
       if(m_pcIntraBCHashTable[iDepth])
       {
-        delete m_pcIntraBCHashTable[iDepth];
+        delete[]  m_pcIntraBCHashTable[iDepth];
       }
     }
-    delete m_pcIntraBCHashTable;
+    delete[] m_pcIntraBCHashTable;
   }
 
   m_pcIntraBCHashTable = NULL;
