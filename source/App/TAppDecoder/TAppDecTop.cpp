@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -44,6 +44,9 @@
 #include "TAppDecTop.h"
 #include "TLibDecoder/AnnexBread.h"
 #include "TLibDecoder/NALread.h"
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+#include "TLibCommon/TComCodingStatistics.h"
+#endif
 
 //! \ingroup TAppDecoder
 //! \{
@@ -101,6 +104,18 @@ Void TAppDecTop::decode()
 
   InputByteStream bytestream(bitstreamFile);
 
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+  if (!m_outputDecodedSEIMessagesFilename.empty() && m_outputDecodedSEIMessagesFilename!="-")
+  {
+    m_seiMessageFileStream.open(m_outputDecodedSEIMessagesFilename.c_str(), std::ios::out);
+    if (!m_seiMessageFileStream.is_open() || !m_seiMessageFileStream.good())
+    {
+      fprintf(stderr, "\nUnable to open file `%s' for writing decoded SEI messages\n", m_outputDecodedSEIMessagesFilename.c_str());
+      exit(EXIT_FAILURE);
+    }
+  }
+#endif
+
   // create & initialize internal classes
   xCreateDecLib();
   xInitDecLib  ();
@@ -109,14 +124,19 @@ Void TAppDecTop::decode()
   // main decoder loop
   Bool openedReconFile = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
   Bool loopFiltered = false;
-  
+
   while (!!bitstreamFile)
   {
     /* location serves to work around a design fault in the decoder, whereby
      * the process of reading a new slice that is the first slice of a new frame
      * requires the TDecTop::decode() method to be called again with the same
      * nal unit. */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+    TComCodingStatistics::TComCodingStatisticsData backupStats(TComCodingStatistics::GetStatistics());
+    streampos location = bitstreamFile.tellg() - streampos(bytestream.GetNumBufferedBytes());
+#else
     streampos location = bitstreamFile.tellg();
+#endif
     AnnexBStats stats = AnnexBStats();
 
     vector<uint8_t> nalUnit;
@@ -151,8 +171,14 @@ Void TAppDecTop::decode()
            * need for the annexB parser to read three extra bytes.
            * [1] except for the first NAL unit in the file
            *     (but bNewPicture doesn't happen then) */
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+          bitstreamFile.seekg(location);
+          bytestream.reset();
+          TComCodingStatistics::SetStatistics(backupStats);
+#else
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
+#endif
         }
       }
     }
@@ -177,10 +203,12 @@ Void TAppDecTop::decode()
     {
       if ( m_pchReconFile && !openedReconFile )
       {
-        if (!m_outputBitDepthY) { m_outputBitDepthY = g_bitDepthY; }
-        if (!m_outputBitDepthC) { m_outputBitDepthC = g_bitDepthC; }
+        for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
+        {
+          if (m_outputBitDepth[channelType] == 0) m_outputBitDepth[channelType] = g_bitDepth[channelType];
+        }
 
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
+        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, g_bitDepth ); // write mode
         openedReconFile = true;
       }
 #if FIX_WRITING_OUTPUT
@@ -225,11 +253,11 @@ Void TAppDecTop::decode()
       }
     }
   }
-  
+
   xFlushOutput( pcListPic );
   // delete buffers
   m_cTDecTop.deletePicBuffer();
-  
+
   // destroy internal classes
   xDestroyDecLib();
 }
@@ -250,7 +278,7 @@ Void TAppDecTop::xDestroyDecLib()
   {
     m_cTVideoIOYuvReconFile. close();
   }
-  
+
   // destroy decoder class
   m_cTDecTop.destroy();
 }
@@ -260,6 +288,16 @@ Void TAppDecTop::xInitDecLib()
   // initialize decoder class
   m_cTDecTop.init();
   m_cTDecTop.setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
+#if RExt__O0043_BEST_EFFORT_DECODING
+  m_cTDecTop.setForceDecodeBitDepth(m_forceDecodeBitDepth);
+#endif
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+  if (!m_outputDecodedSEIMessagesFilename.empty())
+  {
+    std::ostream &os=m_seiMessageFileStream.is_open() ? m_seiMessageFileStream : std::cout;
+    m_cTDecTop.setDecodedSEIMessageOutputStream(&os);
+  }
+#endif
 }
 
 /** \param pcListPic list of pictures to be written to file
@@ -296,7 +334,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     TComPic* pcPic = *(iterPic);
     if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay)
     {
-      numPicsNotYetDisplayed++;
+       numPicsNotYetDisplayed++;
       dpbFullness++;
     }
     else if(pcPic->getSlice( 0 )->isReferenced())
@@ -305,12 +343,14 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     }
     iterPic++;
   }
-  iterPic   = pcListPic->begin();
+
+  iterPic = pcListPic->begin();
+
   if (numPicsNotYetDisplayed>2)
   {
     iterPic++;
   }
-  
+
   TComPic* pcPic = *(iterPic);
   if (numPicsNotYetDisplayed>2 && pcPic->isField()) //Field Decoding
   {
@@ -322,7 +362,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       TComPic* pcPicTop = *(iterPic);
       iterPic++;
       TComPic* pcPicBottom = *(iterPic);
-      
+
       if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() &&
           (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid) &&
           (!(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1) &&
@@ -335,25 +375,41 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
-          m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
-                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
-                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
-                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                        conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), isTff );
+
+          Bool display = true;
+          if( m_decodedNoDisplaySEIEnabled )
+          {
+            SEIMessages noDisplay = getSeisByType(pcPic->getSEIs(), SEI::NO_DISPLAY );
+            const SEINoDisplay *nd = ( noDisplay.size() > 0 ) ? (SEINoDisplay*) *(noDisplay.begin()) : NULL;
+            if( (nd != NULL) && nd->m_noDisplay )
+            {
+              display = false;
+            }
+          }
+
+          if (display)
+          {
+            m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
+                                           m_outputColourSpaceConvert,
+                                           conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                           conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                           conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                           conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), NUM_CHROMA_FORMAT, isTff );
+          }
         }
-        
+
         // update POC of display order
         m_iPOCLastDisplay = pcPicBottom->getPOC();
-        
+
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPicTop->getSlice(0)->isReferenced() && pcPicTop->getReconMark() == true )
         {
 #if !DYN_REF_FREE
           pcPicTop->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPicTop->getPicYuvRec()->setBorderExtension( false );
-          
+
 #else
           pcPicTop->destroy();
           pcListPic->erase( iterPic );
@@ -365,10 +421,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         {
 #if !DYN_REF_FREE
           pcPicBottom->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPicBottom->getPicYuvRec()->setBorderExtension( false );
-          
+
 #else
           pcPicBottom->destroy();
           pcListPic->erase( iterPic );
@@ -384,15 +440,16 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   else if (!pcPic->isField()) //Frame Decoding
   {
     iterPic = pcListPic->begin();
+
     while (iterPic != pcListPic->end())
     {
       pcPic = *(iterPic);
-      
+
       if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay &&
         (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid))
       {
         // write to file
-        numPicsNotYetDisplayed--;
+         numPicsNotYetDisplayed--;
         if(pcPic->getSlice(0)->isReferenced() == false)
         {
           dpbFullness--;
@@ -400,27 +457,29 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
         if ( m_pchReconFile )
         {
-          const Window &conf = pcPic->getConformanceWindow();
+          const Window &conf    = pcPic->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
-                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
-                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
-                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                        conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
+                                         m_outputColourSpaceConvert,
+                                         conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                         conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                         conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
         }
-        
+
         // update POC of display order
         m_iPOCLastDisplay = pcPic->getPOC();
-        
+
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
         {
 #if !DYN_REF_FREE
           pcPic->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPic->getPicYuvRec()->setBorderExtension( false );
-          
+
 #else
           pcPic->destroy();
           pcListPic->erase( iterPic );
@@ -430,7 +489,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         }
         pcPic->setOutputMark(false);
       }
-      
+
       iterPic++;
     }
   }
@@ -446,10 +505,10 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
     return;
   }
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
-  
+
   iterPic   = pcListPic->begin();
   TComPic* pcPic = *(iterPic);
-  
+
   if (pcPic->isField()) //Field Decoding
   {
     TComList<TComPic*>::iterator endPic   = pcListPic->end();
@@ -460,7 +519,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       pcPicTop = *(iterPic);
       iterPic++;
       pcPicBottom = *(iterPic);
-      
+
       if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() && !(pcPicTop->getPOC()%2) && (pcPicBottom->getPOC() == pcPicTop->getPOC()+1) )
       {
         // write to file
@@ -470,24 +529,25 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
           const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
           m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
-                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
-                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
-                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                        conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), isTff );
+                                         m_outputColourSpaceConvert,
+                                         conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                         conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                         conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(), NUM_CHROMA_FORMAT, isTff );
         }
-        
+
         // update POC of display order
         m_iPOCLastDisplay = pcPicBottom->getPOC();
-        
+
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPicTop->getSlice(0)->isReferenced() && pcPicTop->getReconMark() == true )
         {
 #if !DYN_REF_FREE
           pcPicTop->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPicTop->getPicYuvRec()->setBorderExtension( false );
-          
+
 #else
           pcPicTop->destroy();
           pcListPic->erase( iterPic );
@@ -499,10 +559,10 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         {
 #if !DYN_REF_FREE
           pcPicBottom->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPicBottom->getPicYuvRec()->setBorderExtension( false );
-          
+
 #else
           pcPicBottom->destroy();
           pcListPic->erase( iterPic );
@@ -512,7 +572,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         }
         pcPicTop->setOutputMark(false);
         pcPicBottom->setOutputMark(false);
-        
+
 #if !DYN_REF_FREE
         if(pcPicTop)
         {
@@ -535,50 +595,52 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
     while (iterPic != pcListPic->end())
     {
       pcPic = *(iterPic);
-      
+
       if ( pcPic->getOutputMark() )
       {
         // write to file
         if ( m_pchReconFile )
         {
-          const Window &conf = pcPic->getConformanceWindow();
+          const Window &conf    = pcPic->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
-                                        conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
-                                        conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
-                                        conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                        conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
+                                         m_outputColourSpaceConvert,
+                                         conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
+                                         conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
+                                         conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
         }
-        
+
         // update POC of display order
         m_iPOCLastDisplay = pcPic->getPOC();
-        
+
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
         {
-#if !DYN_REF_FREE
+  #if !DYN_REF_FREE
           pcPic->setReconMark(false);
-          
+
           // mark it should be extended later
           pcPic->getPicYuvRec()->setBorderExtension( false );
-          
-#else
+
+  #else
           pcPic->destroy();
           pcListPic->erase( iterPic );
           iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
           continue;
-#endif
+  #endif
         }
         pcPic->setOutputMark(false);
       }
-#if !DYN_REF_FREE
-      if(pcPic)
+  #if !DYN_REF_FREE
+      if(pcPic != NULL)
       {
         pcPic->destroy();
         delete pcPic;
         pcPic = NULL;
       }
-#endif    
+  #endif
       iterPic++;
     }
   }

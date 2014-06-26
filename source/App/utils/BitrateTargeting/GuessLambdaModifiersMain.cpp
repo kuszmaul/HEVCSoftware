@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -49,16 +49,16 @@ int main( int argc, char** ppArgv )
   try
   {
     if( argc != 3 ) throw WrongNumberOfArgumentsException( );
-    
+
     std::string initialAdjustmentParameterString( ppArgv[ 1 ] );
     std::istringstream initialAdjustmentParameterIstream( initialAdjustmentParameterString );
-    
+
     std::string targetBitratesString( ppArgv[ 2 ] );
     std::istringstream targetBitratesIstream( targetBitratesString );
-    
+
     guessLambdaModifiers( std::cout, initialAdjustmentParameterIstream, targetBitratesIstream, std::cin );
     return 0;
-  
+
   }
   catch( std::exception& e )
   {
