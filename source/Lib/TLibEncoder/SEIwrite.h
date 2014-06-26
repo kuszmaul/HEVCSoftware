@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __SEIWRITE__
+#define __SEIWRITE__
+
 #include "SyntaxElementWriter.h"
 #include "TLibCommon/SEI.h"
 
@@ -62,10 +65,19 @@ protected:
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
   Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);
+  Void xWriteSEINoDisplay(const SEINoDisplay &sei);
   Void xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei);
   Void xWriteSEISOPDescription(const SEISOPDescription& sei);
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps);
+  Void xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEITempMotionConstrainedTileSets& sei);
+  Void xWriteSEITimeCode(const SEITimeCode& sei);
+  Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
+  Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);
+  Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
+  Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
   Void xWriteByteAlign();
 };
 
 //! \}
+
+#endif
