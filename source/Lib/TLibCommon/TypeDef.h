@@ -49,6 +49,8 @@
 
 #define SAO_SGN_FUNC 1
 
+#define TILE_SIZE_CHECK 1
+
 #define FIX1172 1 ///< fix ticket #1172
 
 #define SETTING_PIC_OUTPUT_MARK     1
