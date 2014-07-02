@@ -1412,6 +1412,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
 
 #if SETTING_NO_OUT_PIC_PRIOR
+          pcSlice->setNoRaslOutputFlag(false);
           if (pcSlice->isIRAP())
           {
             if (pcSlice->getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getNalUnitType() <= NAL_UNIT_CODED_SLICE_IDR_N_LP)
@@ -1419,6 +1420,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               pcSlice->setNoRaslOutputFlag(true);
             }
             //the inference for NoOutputPriorPicsFlag
+            // KJS: This cannot happen at the encoder
             if (!m_bFirst && pcSlice->isIRAP() && pcSlice->getNoRaslOutputFlag())
             {
               if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)
