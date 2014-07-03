@@ -272,6 +272,7 @@
 
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticker 1298 (output value clipping missing from HM RDOQ)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 //------------------------------------------------
