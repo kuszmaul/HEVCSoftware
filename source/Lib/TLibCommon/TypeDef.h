@@ -815,6 +815,22 @@ struct TComDigest
 
 struct TComSEITimeSet
 {
+  TComSEITimeSet() : clockTimeStampFlag(false),
+                     numUnitFieldBasedFlag(false),
+                     countingType(0),
+                     fullTimeStampFlag(false),
+                     discontinuityFlag(false),
+                     cntDroppedFlag(false),
+                     numberOfFrames(0),
+                     secondsValue(0),
+                     minutesValue(0),
+                     hoursValue(0),
+                     secondsFlag(false),
+                     minutesFlag(false),
+                     hoursFlag(false),
+                     timeOffsetLength(0),
+                     timeOffsetValue(0)
+  { }
   Bool clockTimeStampFlag;
   Bool numUnitFieldBasedFlag;
   Int  countingType;
