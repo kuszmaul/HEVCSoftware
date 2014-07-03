@@ -81,14 +81,9 @@ public:
     NO_DISPLAY                           = 135,
     TIME_CODE                            = 136,
     MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
     SEGM_RECT_FRAME_PACKING              = 138,
     TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
     CHROMA_SAMPLING_FILTER_HINT          = 140
-#else
-    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 138,
-    CHROMA_SAMPLING_FILTER_HINT          = 139
-#endif
   };
 
   SEI() {}
@@ -283,7 +278,6 @@ public:
   Bool m_arrangementPersistenceFlag;
   Bool m_upsampledAspectRatio;
 };
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
 
 class SEISegmentedRectFramePacking : public SEI
 {
@@ -297,7 +291,6 @@ public:
   Int  m_contentInterpretationType;
   Bool m_arrangementPersistenceFlag;
 };
-#endif
 
 class SEIDisplayOrientation : public SEI
 {

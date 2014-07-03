@@ -71,9 +71,7 @@ protected:
   Void xParseSEIPictureTiming                 (SEIPictureTiming& sei,                 UInt payloadSize, TComSPS *sps, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIRecoveryPoint                 (SEIRecoveryPoint& sei,                 UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIFramePacking                  (SEIFramePacking& sei,                  UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   Void xParseSEISegmentedRectFramePacking     (SEISegmentedRectFramePacking& sei,     UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
-#endif
   Void xParseSEIDisplayOrientation            (SEIDisplayOrientation &sei,            UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
   Void xParseSEITemporalLevel0Index           (SEITemporalLevel0Index &sei,           UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIRegionRefreshInfo             (SEIGradualDecodingRefreshInfo &sei,    UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
@@ -102,9 +100,7 @@ protected:
   Void xParseSEIPictureTiming                (SEIPictureTiming& sei,                 UInt payloadSize, TComSPS *sps);
   Void xParseSEIRecoveryPoint                (SEIRecoveryPoint& sei,                 UInt payloadSize);
   Void xParseSEIFramePacking                 (SEIFramePacking& sei,                  UInt payloadSize);
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   Void xParseSEISegmentedRectFramePacking    (SEISegmentedRectFramePacking& sei,     UInt payloadSize);
-#endif
   Void xParseSEIDisplayOrientation           (SEIDisplayOrientation &sei,            UInt payloadSize);
   Void xParseSEITemporalLevel0Index          (SEITemporalLevel0Index &sei,           UInt payloadSize);
   Void xParseSEIGradualDecodingRefreshInfo   (SEIGradualDecodingRefreshInfo &sei,    UInt payloadSize);
