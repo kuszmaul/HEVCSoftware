@@ -1731,6 +1731,126 @@ Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedT
 }
 #endif
 
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
+{
+  UInt code;
+  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
+  sei_read_code( pDecodedMessageOutputStream, 2, code, "num_clock_ts"); sei.numClockTs = code;
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    TComSEITimeSet currentTimeSet;
+    sei_read_flag( pDecodedMessageOutputStream, code, "clock_time_stamp_flag[i]"); currentTimeSet.clockTimeStampFlag = code;
+    if(currentTimeSet.clockTimeStampFlag)
+    {
+      sei_read_flag( pDecodedMessageOutputStream, code, "nuit_field_based_flag"); currentTimeSet.numUnitFieldBasedFlag = code;
+      sei_read_code( pDecodedMessageOutputStream, 5, code, "counting_type"); currentTimeSet.countingType = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "full_timestamp_flag"); currentTimeSet.fullTimeStampFlag = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "discontinuity_flag"); currentTimeSet.discontinuityFlag = code;
+      sei_read_flag( pDecodedMessageOutputStream, code, "cnt_dropped_flag"); currentTimeSet.cntDroppedFlag = code;
+      sei_read_code( pDecodedMessageOutputStream, 9, code, "n_frames"); currentTimeSet.numberOfFrames = code;
+      if(currentTimeSet.fullTimeStampFlag)
+      {
+        sei_read_code( pDecodedMessageOutputStream, 6, code, "seconds_value"); currentTimeSet.secondsValue = code;
+        sei_read_code( pDecodedMessageOutputStream, 6, code, "minutes_value"); currentTimeSet.minutesValue = code;
+        sei_read_code( pDecodedMessageOutputStream, 5, code, "hours_value"); currentTimeSet.hoursValue = code;
+      }
+      else
+      {
+        sei_read_flag( pDecodedMessageOutputStream, code, "seconds_flag"); currentTimeSet.secondsFlag = code;
+        if(currentTimeSet.secondsFlag)
+        {
+          sei_read_code( pDecodedMessageOutputStream, 6, code, "seconds_value"); currentTimeSet.secondsValue = code;
+          sei_read_flag( pDecodedMessageOutputStream, code, "minutes_flag"); currentTimeSet.minutesFlag = code;
+          if(currentTimeSet.minutesFlag)
+          {
+            sei_read_code( pDecodedMessageOutputStream, 6, code, "minutes_value"); currentTimeSet.minutesValue = code;
+            sei_read_flag( pDecodedMessageOutputStream, code, "hours_flag"); currentTimeSet.hoursFlag = code;
+            if(currentTimeSet.hoursFlag)
+              sei_read_code( pDecodedMessageOutputStream, 5, code, "hours_value"); currentTimeSet.hoursValue = code;
+          }
+        }
+      }
+      sei_read_code( pDecodedMessageOutputStream, 5, code, "time_offset_length"); currentTimeSet.timeOffsetLength = code;
+      if(currentTimeSet.timeOffsetLength > 0)
+      {
+        sei_read_code( pDecodedMessageOutputStream, currentTimeSet.timeOffsetLength, code, "time_offset_value");
+        if((code & (1 << (currentTimeSet.timeOffsetLength-1))) == 0)
+        {
+          currentTimeSet.timeOffsetValue = code;
+        }
+        else
+        {
+          code &= (1<< (currentTimeSet.timeOffsetLength-1)) - 1;
+          currentTimeSet.timeOffsetValue = ~code + 1;
+        }
+      }
+    }
+    sei.timeSetArray[i] = currentTimeSet;
+  }
+  xParseByteAlign();
+}
+#else
+Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
+{
+  UInt code;
+  READ_CODE(2, code, "num_clock_ts"); sei.numClockTs = code;
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    TComSEITimeSet currentTimeSet;
+    READ_FLAG(code, "clock_time_stamp_flag[i]"); currentTimeSet.clockTimeStampFlag = code;
+    if(sei.clockTimeStampFlag)
+    {
+      READ_FLAG(code, "nuit_field_based_flag"); currentTimeSet.numUnitFieldBasedFlag = code;
+      READ_CODE(5, code, "counting_type"); currentTimeSet.countingType = code;
+      READ_FLAG(code, "full_timestamp_flag"); currentTimeSet.fullTimeStampFlag = code;
+      READ_FLAG(code, "discontinuity_flag"); currentTimeSet.discontinuityFlag = code;
+      READ_FLAG(code, "cnt_dropped_flag"); currentTimeSet.cntDroppedFlag = code;
+      READ_CODE(9, code, "n_frames"); currentTimeSet.nFrames = code;
+      if(currentTimeSet.fullTimeStampFlag)
+      {
+        READ_CODE(6, code, "seconds_value"); currentTimeSet.secondsValue = code;
+        READ_CODE(6, code, "minutes_value"); currentTimeSet.minutesValue = code;
+        READ_CODE(5, code, "hours_value"); currentTimeSet.hoursValue = code;
+      }
+      else
+      {
+        READ_FLAG(code, "seconds_flag"); currentTimeSet.secondsFlag = code;
+        if(currentTimeSet.secondsFlag)
+        {
+          READ_CODE(6, code, "seconds_value"); currentTimeSet.secondsValue = code;
+          READ_FLAG(code, "minutes_flag"); currentTimeSet.minutesFlag = code;
+          if(currentTimeSet.minutesFlag)
+          {
+            READ_CODE(6, code, "minutes_value"); currentTimeSet.minutesValue = code;
+            READ_FLAG(code, "hours_flag"); currentTimeSet.hoursFlag = code;
+            if(currentTimeSet.hoursFlag)
+              READ_CODE(5, code, "hours_value"); currentTimeSet.hoursValue = code;
+          }
+        }
+      }
+      READ_CODE(5, code, "time_offset_length"); currentTimeSet.timeOffsetLength = code;
+      if(sei.timeOffsetLength > 0)
+      {
+        READ_CODE(sei.timeOffsetLength, code, "time_offset_value");
+        if((code & (1 << (currentTimeSet.timeOffsetLength-1))) == 0)
+        {
+          currentTimeSet.timeOffsetValue = code;
+        }
+        else
+        {
+          code &= (1<< (currentTimeSet.timeOffsetLength-1)) - 1;
+          currentTimeSet.timeOffsetValue = ~code + 1;
+        }
+      }
+    }
+    sei.timeSetArray[i] currentTimeSet;
+  }
+  xParseByteAlign();
+}
+#endif
+#else
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
 Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1845,7 +1965,7 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
   xParseByteAlign();
 }
 #endif
-
+#endif
 
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
 Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/, std::ostream *pDecodedMessageOutputStream)

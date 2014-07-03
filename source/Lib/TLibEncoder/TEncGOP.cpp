@@ -490,7 +490,12 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
   if(m_pcCfg->getTimeCodeSEIEnabled())
   {
     SEITimeCode sei_time_code;
-
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+    //  Set data as per command line options
+    sei_time_code.numClockTs = m_pcCfg->getNumberOfTimesets();
+    for(int i = 0; i < sei_time_code.numClockTs; i++)
+      sei_time_code.timeSetArray[i] = m_pcCfg->getTimeSet(i);
+#else
     //  Set the time code to some data
     sei_time_code.numClockTs = 1;
     sei_time_code.clockTimeStampFlag[0] = 1;
@@ -505,6 +510,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     sei_time_code.hoursValue = 21;
     sei_time_code.timeOffsetLength = 5;
     sei_time_code.timeOffset = -6;
+#endif
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
     m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
