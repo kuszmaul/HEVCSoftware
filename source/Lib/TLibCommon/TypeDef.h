@@ -832,6 +832,14 @@ struct TComSEITimeSet
   Int  timeOffsetValue;
 };
 
+struct TComSEIMasteringDisplay
+{
+  Bool      colourVolumeSEIEnabled;
+  UInt      maxLuminance;
+  UInt      minLuminance;
+  UShort    primaries[3][2];
+  UShort    whitePoint[2];
+};
 //! \}
 
 #endif

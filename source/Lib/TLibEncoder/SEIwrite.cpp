@@ -49,75 +49,7 @@ Void  xTraceSEIHeader()
 
 Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 {
-  switch (payloadType)
-  {
-  case SEI::DECODED_PICTURE_HASH:
-    fprintf( g_hTrace, "=========== Decoded picture hash SEI message ===========\n");
-    break;
-  case SEI::USER_DATA_UNREGISTERED:
-    fprintf( g_hTrace, "=========== User Data Unregistered SEI message ===========\n");
-    break;
-  case SEI::ACTIVE_PARAMETER_SETS:
-    fprintf( g_hTrace, "=========== Active Parameter sets SEI message ===========\n");
-    break;
-  case SEI::BUFFERING_PERIOD:
-    fprintf( g_hTrace, "=========== Buffering period SEI message ===========\n");
-    break;
-  case SEI::PICTURE_TIMING:
-    fprintf( g_hTrace, "=========== Picture timing SEI message ===========\n");
-    break;
-  case SEI::RECOVERY_POINT:
-    fprintf( g_hTrace, "=========== Recovery point SEI message ===========\n");
-    break;
-  case SEI::FRAME_PACKING:
-    fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
-    break;
-  case SEI::SEGM_RECT_FRAME_PACKING:
-    fprintf( g_hTrace, "=========== Segmented Rectangular Frame Packing Arrangement SEI message ===========\n");
-    break;
-  case SEI::DISPLAY_ORIENTATION:
-    fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
-    break;
-  case SEI::TEMPORAL_LEVEL0_INDEX:
-    fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
-    break;
-  case SEI::REGION_REFRESH_INFO:
-    fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
-    break;
-  case SEI::NO_DISPLAY:
-    fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
-    break;
-  case SEI::DECODING_UNIT_INFO:
-    fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
-    break;
-  case SEI::TONE_MAPPING_INFO:
-    fprintf( g_hTrace, "=========== Tone Mapping Info SEI message ===========\n");
-    break;
-  case SEI::SOP_DESCRIPTION:
-    fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
-    break;
-  case SEI::SCALABLE_NESTING:
-    fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
-    break;
-  case SEI::CHROMA_SAMPLING_FILTER_HINT:
-    fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
-    break;
-  case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
-    fprintf( g_hTrace, "=========== Temporal Motion Constrained Tile Sets SEI message ===========\n");
-    break;
-  case SEI::TIME_CODE:
-    fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
-    break;
-  case SEI::KNEE_FUNCTION_INFO:
-    fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
-    break;
-  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
-    fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
-    break;
-  default:
-    fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
-    break;
-  }
+  fprintf( g_hTrace, "=========== %s SEI message ===========\n", SEI::getSEIMessageString(payloadType));
 }
 #endif
 
@@ -853,20 +785,20 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 
 Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
 {
-  WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
-  WRITE_CODE( sei.displayPrimaries[0][1],  16,  "display_primaries_y[0]" );
- 
-  WRITE_CODE( sei.displayPrimaries[1][0],  16,  "display_primaries_x[1]" );
-  WRITE_CODE( sei.displayPrimaries[1][1],  16,  "display_primaries_y[1]" );
- 
-  WRITE_CODE( sei.displayPrimaries[2][0],  16,  "display_primaries_x[2]" );
-  WRITE_CODE( sei.displayPrimaries[2][1],  16,  "display_primaries_y[2]" );
+  WRITE_CODE( sei.values.primaries[0][0],  16,  "display_primaries_x[0]" );
+  WRITE_CODE( sei.values.primaries[0][1],  16,  "display_primaries_y[0]" );
 
-  WRITE_CODE( sei.displayWhitePoint[0],    16,  "white_point_x" );
-  WRITE_CODE( sei.displayWhitePoint[1],    16,  "white_point_y" );
+  WRITE_CODE( sei.values.primaries[1][0],  16,  "display_primaries_x[1]" );
+  WRITE_CODE( sei.values.primaries[1][1],  16,  "display_primaries_y[1]" );
+
+  WRITE_CODE( sei.values.primaries[2][0],  16,  "display_primaries_x[2]" );
+  WRITE_CODE( sei.values.primaries[2][1],  16,  "display_primaries_y[2]" );
+
+  WRITE_CODE( sei.values.whitePoint[0],    16,  "white_point_x" );
+  WRITE_CODE( sei.values.whitePoint[1],    16,  "white_point_y" );
     
-  WRITE_CODE( sei.maxDisplayLuminance,     32,  "max_display_mastering_luminance" );
-  WRITE_CODE( sei.minDisplayLuminance,     32,  "min_display_mastering_luminance" );
+  WRITE_CODE( sei.values.maxLuminance,     32,  "max_display_mastering_luminance" );
+  WRITE_CODE( sei.values.minLuminance,     32,  "min_display_mastering_luminance" );
     
   xWriteByteAlign();
 }

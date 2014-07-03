@@ -135,11 +135,7 @@ protected:
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
 #endif
-  Bool      m_masteringDisplayColourVolumeSEIEnabled;
-  UInt      m_masteringDisplayMaxLuminance;
-  UInt      m_masteringDisplayMinLuminance;
-  UShort*   m_masteringDisplayPrimaries;
-  UShort*   m_masteringDisplayWhitePoint;
+  TComSEIMasteringDisplay m_masteringDisplay;
 
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation

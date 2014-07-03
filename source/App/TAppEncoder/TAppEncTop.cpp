@@ -305,11 +305,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEINumKneePointsMinus1                        ( m_kneeSEINumKneePointsMinus1 );
   m_cTEncTop.setKneeSEIInputKneePoint                             ( m_kneeSEIInputKneePoint );
   m_cTEncTop.setKneeSEIOutputKneePoint                            ( m_kneeSEIOutputKneePoint );
-  m_cTEncTop.setMasteringDisplayColourVolumeSEIEnabled            ( m_masteringDisplayColourVolumeSEIEnabled );
-  m_cTEncTop.setMasteringDisplayMaxLuminance                      ( m_masteringDisplayMaxLuminance );
-  m_cTEncTop.setMasteringDisplayMinLuminance                      ( m_masteringDisplayMinLuminance );
-  m_cTEncTop.setMasteringDisplayPrimaries                         ( m_masteringDisplayPrimaries );
-  m_cTEncTop.setMasteringDisplayWhitePoint                        ( m_masteringDisplayWhitePoint );
+  m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
 
   m_cTEncTop.setUniformSpacingIdr                                 ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1                                  ( m_iNumColumnsMinus1 );
