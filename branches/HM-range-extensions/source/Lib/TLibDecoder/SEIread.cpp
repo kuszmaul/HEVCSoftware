@@ -1723,7 +1723,6 @@ Void SEIReader::xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedT
 }
 #endif
 
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
 Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1841,122 +1840,6 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
   }
   xParseByteAlign();
 }
-#endif
-#else
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
-Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
-{
-  UInt code;
-  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
-  sei_read_code( pDecodedMessageOutputStream, 2, code, "num_clock_ts"); sei.numClockTs = code;
-  for(int i = 0; i < sei.numClockTs; i++)
-  {
-    sei_read_flag( pDecodedMessageOutputStream, code, "clock_time_stamp_flag[i]"); sei.clockTimeStampFlag[i] = code;
-    if(sei.clockTimeStampFlag[i])
-    {
-      sei_read_flag( pDecodedMessageOutputStream, code, "nuit_field_based_flag"); sei.nuitFieldBasedFlag = code;
-      sei_read_code( pDecodedMessageOutputStream, 5, code, "counting_type"); sei.countingType = code;
-      sei_read_flag( pDecodedMessageOutputStream, code, "full_timestamp_flag"); sei.fullTimeStampFlag = code;
-      sei_read_flag( pDecodedMessageOutputStream, code, "discontinuity_flag"); sei.discontinuityFlag = code;
-      sei_read_flag( pDecodedMessageOutputStream, code, "cnt_dropped_flag"); sei.cntDroppedFlag = code;
-      sei_read_code( pDecodedMessageOutputStream, 9, code, "n_frames"); sei.nFrames = code;
-      if(sei.fullTimeStampFlag)
-      {
-        sei_read_code( pDecodedMessageOutputStream, 6, code, "seconds_value"); sei.secondsValue = code;
-        sei_read_code( pDecodedMessageOutputStream, 6, code, "minutes_value"); sei.minutesValue = code;
-        sei_read_code( pDecodedMessageOutputStream, 5, code, "hours_value"); sei.hoursValue = code;
-      }
-      else
-      {
-        sei_read_flag( pDecodedMessageOutputStream, code, "seconds_flag"); sei.secondsFlag = code;
-        if(sei.secondsFlag)
-        {
-          sei_read_code( pDecodedMessageOutputStream, 6, code, "seconds_value"); sei.secondsValue = code;
-          sei_read_flag( pDecodedMessageOutputStream, code, "minutes_flag"); sei.minutesFlag = code;
-          if(sei.minutesFlag)
-          {
-            sei_read_code( pDecodedMessageOutputStream, 6, code, "minutes_value"); sei.minutesValue = code;
-            sei_read_flag( pDecodedMessageOutputStream, code, "hours_flag"); sei.hoursFlag = code;
-            if(sei.hoursFlag)
-              sei_read_code( pDecodedMessageOutputStream, 5, code, "hours_value"); sei.hoursValue = code;
-          }
-        }
-      }
-      sei_read_code( pDecodedMessageOutputStream, 5, code, "time_offset_length"); sei.timeOffsetLength = code;
-      if(sei.timeOffsetLength > 0)
-      {
-        sei_read_code( pDecodedMessageOutputStream, sei.timeOffsetLength, code, "time_offset");
-        if((code & (1 << (sei.timeOffsetLength-1))) == 0)
-        {
-          sei.timeOffset = code;
-        }
-        else
-        {
-          code &= (1<< (sei.timeOffsetLength-1)) - 1;
-          sei.timeOffset = ~code + 1;
-        }
-      }
-    }
-  }
-  xParseByteAlign();
-}
-#else
-Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize)
-{
-  UInt code;
-  READ_CODE(2, code, "num_clock_ts"); sei.numClockTs = code;
-  for(int i = 0; i < sei.numClockTs; i++)
-  {
-    READ_FLAG(code, "clock_time_stamp_flag"); sei.clockTimeStampFlag[i] = code;
-    if(sei.clockTimeStampFlag[i])
-    {
-      READ_FLAG(code, "nuit_field_based_flag"); sei.nuitFieldBasedFlag = code;
-      READ_CODE(5, code, "counting_type"); sei.countingType = code;
-      READ_FLAG(code, "full_timestamp_flag"); sei.fullTimeStampFlag = code;
-      READ_FLAG(code, "discontinuity_flag"); sei.discontinuityFlag = code;
-      READ_FLAG(code, "cnt_dropped_flag"); sei.cntDroppedFlag = code;
-      READ_CODE(9, code, "n_frames"); sei.nFrames = code;
-      if(sei.fullTimeStampFlag)
-      {
-        READ_CODE(6, code, "seconds_value"); sei.secondsValue = code;
-        READ_CODE(6, code, "minutes_value"); sei.minutesValue = code;
-        READ_CODE(5, code, "hours_value"); sei.hoursValue = code;
-      }
-      else
-      {
-        READ_FLAG(code, "seconds_flag"); sei.secondsFlag = code;
-        if(sei.secondsFlag)
-        {
-          READ_CODE(6, code, "seconds_value"); sei.secondsValue = code;
-          READ_FLAG(code, "minutes_flag"); sei.minutesFlag = code;
-          if(sei.minutesFlag)
-          {
-            READ_CODE(6, code, "minutes_value"); sei.minutesValue = code;
-            READ_FLAG(code, "hours_flag"); sei.hoursFlag = code;
-            if(sei.hoursFlag)
-              READ_CODE(5, code, "hours_value"); sei.hoursValue = code;
-          }
-        }
-      }
-      READ_CODE(5, code, "time_offset_length"); sei.timeOffsetLength = code;
-      if(sei.timeOffsetLength > 0)
-      {
-        READ_CODE(sei.timeOffsetLength, code, "time_offset");
-        if((code & (1 << (sei.timeOffsetLength-1))) == 0)
-        {
-          sei.timeOffset = code;
-        }
-        else
-        {
-          code &= (1<< (sei.timeOffsetLength-1)) - 1;
-          sei.timeOffset = ~code + 1;
-        }
-      }
-    }
-  }
-  xParseByteAlign();
-}
-#endif
 #endif
 
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES

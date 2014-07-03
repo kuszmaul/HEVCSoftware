@@ -280,10 +280,8 @@ protected:
   Int       m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   Int       m_timeCodeSEINumTs;
   TComSEITimeSet m_timeSetArray[MAX_TIMECODE_SEI_SETS];
-#endif
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
