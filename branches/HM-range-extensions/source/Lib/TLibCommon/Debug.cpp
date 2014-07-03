@@ -175,7 +175,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__FIX_1284,                                                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL,                          settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
