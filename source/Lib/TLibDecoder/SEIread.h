@@ -55,13 +55,8 @@ class SEIReader: public SyntaxElementParser
 public:
   SEIReader() {};
   virtual ~SEIReader() {};
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps, std::ostream *pDecodedMessageOutputStream);
-#else
-  Void parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
-#endif
 protected:
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   Void xReadSEImessage                        (SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps, std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIuserDataUnregistered          (SEIuserDataUnregistered &sei,          UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIActiveParameterSets           (SEIActiveParameterSets  &sei,          UInt payloadSize,               std::ostream *pDecodedMessageOutputStream);
@@ -89,31 +84,6 @@ protected:
   Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
   Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const Char *pSymbolName);
   Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
-
-#else
-  Void xReadSEImessage                       (SEIMessages& seis, const NalUnitType nalUnitType, TComSPS *sps);
-  Void xParseSEIuserDataUnregistered         (SEIuserDataUnregistered &sei,          UInt payloadSize);
-  Void xParseSEIActiveParameterSets          (SEIActiveParameterSets  &sei,          UInt payloadSize);
-  Void xParseSEIDecodingUnitInfo             (SEIDecodingUnitInfo& sei,              UInt payloadSize, TComSPS *sps);
-  Void xParseSEIDecodedPictureHash           (SEIDecodedPictureHash& sei,            UInt payloadSize);
-  Void xParseSEIBufferingPeriod              (SEIBufferingPeriod& sei,               UInt payloadSize, TComSPS *sps);
-  Void xParseSEIPictureTiming                (SEIPictureTiming& sei,                 UInt payloadSize, TComSPS *sps);
-  Void xParseSEIRecoveryPoint                (SEIRecoveryPoint& sei,                 UInt payloadSize);
-  Void xParseSEIFramePacking                 (SEIFramePacking& sei,                  UInt payloadSize);
-  Void xParseSEISegmentedRectFramePacking    (SEISegmentedRectFramePacking& sei,     UInt payloadSize);
-  Void xParseSEIDisplayOrientation           (SEIDisplayOrientation &sei,            UInt payloadSize);
-  Void xParseSEITemporalLevel0Index          (SEITemporalLevel0Index &sei,           UInt payloadSize);
-  Void xParseSEIGradualDecodingRefreshInfo   (SEIGradualDecodingRefreshInfo &sei,    UInt payloadSize);
-  Void xParseSEINoDisplay                    (SEINoDisplay &sei,                     UInt payloadSize);
-  Void xParseSEIToneMappingInfo              (SEIToneMappingInfo& sei,               UInt payloadSize);
-  Void xParseSEISOPDescription               (SEISOPDescription &sei,                UInt payloadSize);
-  Void xParseSEIScalableNesting              (SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps);
-  Void xParseSEITempMotionConstraintsTileSets(SEITempMotionConstrainedTileSets& sei, UInt payloadSize);
-  Void xParseSEITimeCode                     (SEITimeCode& sei,                      UInt payloadSize);
-  Void xParseSEIChromaSamplingFilterHint     (SEIChromaSamplingFilterHint& sei,      UInt payloadSize/*, TComSPS* sps*/);
-  Void xParseSEIKneeFunctionInfo             (SEIKneeFunctionInfo& sei,              UInt payloadSize);
-  Void xParseSEIMasteringDisplayColourVolume (SEIMasteringDisplayColourVolume& sei,  UInt payloadSize);
-#endif
   Void xParseByteAlign();
 };
 

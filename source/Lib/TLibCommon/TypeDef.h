@@ -258,8 +258,6 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
-
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
