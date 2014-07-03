@@ -962,12 +962,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                                                "\t0: unspecified\n"
                                                                                                                "\t1: stereo pair, frame0 represents left view\n"
                                                                                                                "\t2: stereo pair, frame0 represents right view")
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   ("SEISegmentedRectFramePacking",                    m_segmentedRectFramePackingSEIEnabled,                0, "Controls generation of segmented rectangular frame packing SEI messages")
   ("SEISegmentedRectFramePackingCancel",              m_segmentedRectFramePackingSEICancel,             false, "If equal to 1, cancels the persistence of any previous SRFPA SEI message")
   ("SEISegmentedRectFramePackingType",                m_segmentedRectFramePackingSEIType,                   0, "Specifies the arrangement of the frames in the reconstructed picture")
   ("SEISegmentedRectFramePackingPersistence",         m_segmentedRectFramePackingSEIPersistence,        false, "If equal to 0, the SEI applies to the current frame only")
-#endif
   ("SEIDisplayOrientation",                           m_displayOrientationSEIAngle,                         0, "Control generation of display orientation SEI messages\n"
                                                                                                                "\tN: 0 < N < (2^16 - 1) enable display orientation SEI message with anticlockwise_rotation = N and display_orientation_repetition_period = 1\n"
                                                                                                                "\t0: disable")
@@ -2167,13 +2165,11 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
   }
 
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   if (m_segmentedRectFramePackingSEIEnabled)
   {
     xConfirmPara(m_framePackingSEIEnabled > 0 , "SEISegmentedRectFramePacking must be 0 when SEIFramePacking is 1");
   }
 
-#endif
   if((m_iNumColumnsMinus1<=0 && m_iNumRowsMinus1<=0) && m_tmctsSEIEnabled)
   {
     printf("SEITempMotionConstrainedTileSets is set to false to disable 'temporal_motion_constrained_tile_sets' SEI because there are no tiles enabled\n");

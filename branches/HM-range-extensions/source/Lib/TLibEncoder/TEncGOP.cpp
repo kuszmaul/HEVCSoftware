@@ -184,7 +184,6 @@ SEIFramePacking* TEncGOP::xCreateSEIFramePacking()
   return seiFramePacking;
 }
 
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
 SEISegmentedRectFramePacking* TEncGOP::xCreateSEISegmentedRectFramePacking()
 {
   SEISegmentedRectFramePacking *seiSegmentedRectFramePacking = new SEISegmentedRectFramePacking();
@@ -193,7 +192,6 @@ SEISegmentedRectFramePacking* TEncGOP::xCreateSEISegmentedRectFramePacking()
   seiSegmentedRectFramePacking->m_arrangementPersistenceFlag = m_pcCfg->getSegmentedRectFramePackingArrangementSEIPersistence();
   return seiSegmentedRectFramePacking;
 }
-#endif
 
 SEIDisplayOrientation* TEncGOP::xCreateSEIDisplayOrientation()
 {
@@ -438,7 +436,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   if(m_pcCfg->getSegmentedRectFramePackingArrangementSEIEnabled())
   {
     SEISegmentedRectFramePacking *sei = xCreateSEISegmentedRectFramePacking ();
@@ -450,7 +447,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#endif
   if (m_pcCfg->getDisplayOrientationSEIAngle())
   {
     SEIDisplayOrientation *sei = xCreateSEIDisplayOrientation();

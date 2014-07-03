@@ -267,12 +267,10 @@ protected:
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   Int       m_segmentedRectFramePackingSEIEnabled;
   Bool      m_segmentedRectFramePackingSEICancel;
   Int       m_segmentedRectFramePackingSEIType;
   Bool      m_segmentedRectFramePackingSEIPersistence;
-#endif
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;

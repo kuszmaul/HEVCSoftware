@@ -83,9 +83,7 @@ const char *getSEIMessageString(SEI::PayloadType payloadType)
     case SEI::NO_DISPLAY:                           return "No display";
     case SEI::TIME_CODE:                            return "Time code";
     case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
     case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
-#endif
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
     case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
     default:                                        return "Unknown";
@@ -167,11 +165,9 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
   case SEI::SEGM_RECT_FRAME_PACKING:
     fprintf( g_hTrace, "=========== Segmented Rectangular Frame Packing Arrangement SEI message ===========\n");
     break;
-#endif
   case SEI::KNEE_FUNCTION_INFO:
     fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
@@ -387,7 +383,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIFramePacking((SEIFramePacking&) *sei, payloadSize);
 #endif
       break;
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
     case SEI::SEGM_RECT_FRAME_PACKING:
       sei = new SEISegmentedRectFramePacking;
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
@@ -396,7 +391,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEISegmentedRectFramePacking((SEISegmentedRectFramePacking&) *sei, payloadSize);
 #endif
       break;
-#endif
     case SEI::DISPLAY_ORIENTATION:
       sei = new SEIDisplayOrientation;
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
@@ -1185,7 +1179,6 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/
 }
 #endif
 
-#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
 Void SEIReader::xParseSEISegmentedRectFramePacking(SEISegmentedRectFramePacking& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
@@ -1211,7 +1204,6 @@ Void SEIReader::xParseSEISegmentedRectFramePacking(SEISegmentedRectFramePacking&
 
   xParseByteAlign();
 }
-#endif
 #endif
 
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES

@@ -258,7 +258,6 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__Q0256_RECTANGULAR_REGION_FPA_SEI                                 1 ///< 0 = do not enable code to support SEI message, 1 (default) = enable code to support encoding and decoding of the rectangular region SEI message.
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
 #define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
