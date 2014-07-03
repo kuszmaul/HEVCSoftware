@@ -645,9 +645,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpConstraintChromaFormat;
   string inputColourSpaceConvert;
   ExtendedProfileName extendedProfile;
-#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
-#endif
 
 #if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   SMultiValueInput<Bool> cfg_timeCodeSeiTimeStampFlag        (0,  1, 0, MAX_TIMECODE_SEI_SETS); // minval, maxval (incl), min_entries, max_entries (incl)
@@ -798,13 +796,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AMP",                                             m_enableAMP,                                       true, "Enable asymmetric motion partitions")
   ("CrossComponentPrediction",                        m_useCrossComponentPrediction,                    false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate",              m_reconBasedCrossCPredictionEstimate,             false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
-#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
   ("SaoLumaOffsetBitShift",                           saoOffsetBitShift[CHANNEL_TYPE_LUMA],                 0, "Specify the luma SAO bit-shift. If negative, automatically calculate a suitable value based upon bit depth and initial QP")
   ("SaoChromaOffsetBitShift",                         saoOffsetBitShift[CHANNEL_TYPE_CHROMA],               0, "Specify the chroma SAO bit-shift. If negative, automatically calculate a suitable value based upon bit depth and initial QP")
-#else
-  ("SaoLumaOffsetBitShift",                           m_saoOffsetBitShift[CHANNEL_TYPE_LUMA],              0u)
-  ("SaoChromaOffsetBitShift",                         m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA],            0u)
-#endif
   ("TransformSkip",                                   m_useTransformSkip,                               false, "Intra transform skipping")
   ("TransformSkipFast",                               m_useTransformSkipFast,                           false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize",                        m_transformSkipLog2MaxSize,                          2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
@@ -1288,7 +1281,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
-#if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     if (saoOffsetBitShift[ch]<0)
@@ -1307,7 +1299,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_saoOffsetBitShift[ch]=UInt(saoOffsetBitShift[ch]);
     }
   }
-#endif
 
   // reading external dQP description from file
   if ( m_pchdQPFile )
