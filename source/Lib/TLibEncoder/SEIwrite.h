@@ -62,6 +62,9 @@ protected:
   TComSPS *m_pSPS;
   Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
   Void xWriteSEIFramePacking(const SEIFramePacking& sei);
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+  Void xWriteSEISegmentedRectFramePacking(const SEISegmentedRectFramePacking& sei);
+#endif
   Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
   Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
   Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);

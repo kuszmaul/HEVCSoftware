@@ -175,6 +175,7 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION,                       settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__Q0256_RECTANGULAR_REGION_FPA_SEI,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__FIX_1256,                                                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__FIX_1284,                                                    settingNameWidth, settingValueWidth);
