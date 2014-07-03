@@ -140,11 +140,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_QT_CBF_CTX_SETS           2
 
-#if RExt__FIX_1256
 #define NUM_QT_CBF_CTX_PER_SET        5       ///< number of context models for QT CBF
-#else
-#define NUM_QT_CBF_CTX_PER_SET        4       ///< number of context models for QT CBF
-#endif
 
 #define FIRST_CBF_CTX_LUMA            0       ///< index of first luminance CBF context
 
@@ -297,7 +293,6 @@ INIT_CHROMA_QP_ADJ_IDC[NUMBER_OF_SLICE_TYPES][NUM_CHROMA_QP_ADJ_IDC_CTX] =
 
 //Initialisation for CBF
 
-#if RExt__FIX_1256
 //                                 |---------Luminance---------|
 #define BSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU,  CNU
 #define PSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU,  CNU
@@ -306,16 +301,6 @@ INIT_CHROMA_QP_ADJ_IDC[NUMBER_OF_SLICE_TYPES][NUM_CHROMA_QP_ADJ_IDC_CTX] =
 #define BSLICE_CHROMA_CBF_CONTEXT   149,   92,  167,  154,  154
 #define PSLICE_CHROMA_CBF_CONTEXT   149,  107,  167,  154,  154
 #define ISLICE_CHROMA_CBF_CONTEXT    94,  138,  182,  154,  154
-#else
-//                                 |------Luminance------|
-#define BSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU
-#define PSLICE_LUMA_CBF_CONTEXT     153,  111,  CNU,  CNU
-#define ISLICE_LUMA_CBF_CONTEXT     111,  141,  CNU,  CNU
-//                                 |-----Chrominance-----|
-#define BSLICE_CHROMA_CBF_CONTEXT   149,   92,  167,  154
-#define PSLICE_CHROMA_CBF_CONTEXT   149,  107,  167,  154
-#define ISLICE_CHROMA_CBF_CONTEXT    94,  138,  182,  154
-#endif
 
 
 static const UChar
