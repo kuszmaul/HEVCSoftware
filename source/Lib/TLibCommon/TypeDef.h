@@ -260,7 +260,6 @@
 
 #define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
 
-#define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
 #define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 (default) = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
 #define RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL                               1 ///< 0 = disable the command line control for the time code SEI message, 1 (default) = enable the command line control for the time code SEI message.
 
