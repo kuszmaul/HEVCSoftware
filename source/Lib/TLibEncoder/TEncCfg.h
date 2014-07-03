@@ -288,10 +288,8 @@ protected:
   Int       m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   Int       m_timeCodeSEINumTs;
   TComSEITimeSet   m_timeSetArray[MAX_TIMECODE_SEI_SETS];
-#endif
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
@@ -739,13 +737,11 @@ public:
   Bool  getTMCTSSEIEnabled()                                         { return m_tmctsSEIEnabled; }
   Void  setTimeCodeSEIEnabled(Bool b)                                { m_timeCodeSEIEnabled = b; }
   Bool  getTimeCodeSEIEnabled()                                      { return m_timeCodeSEIEnabled; }
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   Void  setNumberOfTimeSets(int value)                               { m_timeCodeSEINumTs = value; }
   Int   getNumberOfTimesets()                                        { return m_timeCodeSEINumTs; }
   Void  setTimeSet(TComSEITimeSet element, int index)                { m_timeSetArray[index] = element; }
   TComSEITimeSet &getTimeSet(int index)                              { return m_timeSetArray[index]; }
   const TComSEITimeSet &getTimeSet(int index) const                  { return m_timeSetArray[index]; }
-#endif
   Void  setKneeSEIEnabled(Int b)                                     { m_kneeSEIEnabled = b; }
   Bool  getKneeSEIEnabled()                                          { return m_kneeSEIEnabled; }
   Void  setKneeSEIId(Int b)                                          { m_kneeSEIId = b; }

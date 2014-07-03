@@ -647,7 +647,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ExtendedProfileName extendedProfile;
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
 
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   SMultiValueInput<Bool> cfg_timeCodeSeiTimeStampFlag        (0,  1, 0, MAX_TIMECODE_SEI_SETS); // minval, maxval (incl), min_entries, max_entries (incl)
   SMultiValueInput<Bool> cfg_timeCodeSeiNumUnitFieldBasedFlag(0,  1, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiCountingType         (0,  6, 0, MAX_TIMECODE_SEI_SETS);
@@ -663,7 +662,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   SMultiValueInput<Bool> cfg_timeCodeSeiHoursFlag            (0,  1, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetLength     (0, 31, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetValue      (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, MAX_TIMECODE_SEI_SETS);
-#endif
 
   po::Options opts;
   opts.addOptions()
@@ -978,7 +976,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISOPDescription",                               m_SOPDescriptionSEIEnabled,                           0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",                              m_scalableNestingSEIEnabled,                          0, "Control generation of scalable nesting SEI messages")
   ("SEITempMotionConstrainedTileSets",                m_tmctsSEIEnabled,                                false, "Control generation of temporal motion constrained tile sets SEI message")
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   ("SEITimeCodeEnabled",                              m_timeCodeSEIEnabled,                               false, "Control generation of time code information SEI message")
   ("SEITimeCodeNumClockTs",                           m_timeCodeSEINumTs,                                     0, "Number of clock time sets [0..3]")
   ("SEITimeCodeTimeStampFlag",                        cfg_timeCodeSeiTimeStampFlag,          SMultiValueInput<Bool>(), "Time stamp flag associated to each time set")
@@ -996,9 +993,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEITimeCodeHoursFlag",                            cfg_timeCodeSeiHoursFlag,              SMultiValueInput<Bool>(), "Flag to signal hours value presence in each time set")
   ("SEITimeCodeOffsetLength",                         cfg_timeCodeSeiTimeOffsetLength,       SMultiValueInput<Int >(), "Time offset length associated to each time set")
   ("SEITimeCodeTimeOffset",                           cfg_timeCodeSeiTimeOffsetValue,        SMultiValueInput<Int >(), "Time offset associated to each time set")
-#else
-  ("SEITimeCode",                                     m_timeCodeSEIEnabled,                             false, "Control generation of time code information SEI message")
-#endif
   ("SEIKneeFunctionInfo",                             m_kneeSEIEnabled,                                 false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                               m_kneeSEIId,                                          0, "Specifies Id of Knee function SEI message for a given session")
   ("SEIKneeFunctionCancelFlag",                       m_kneeSEICancelFlag,                              false, "Indicates that Knee function SEI message cancels the persistence or follows")
@@ -1431,7 +1425,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   if(m_timeCodeSEIEnabled)
   {
     for(int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
@@ -1453,7 +1446,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_timeSetArray[i].timeOffsetValue       = cfg_timeCodeSeiTimeOffsetValue      .values.size()>i ? cfg_timeCodeSeiTimeOffsetValue      .values [i] : 0;
     }
   }
-#endif
 
   // check validity of input parameters
   xCheckParameter();
@@ -2176,12 +2168,10 @@ Void TAppEncCfg::xCheckParameter()
     m_tmctsSEIEnabled = false;
   }
 
-#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
   if(m_timeCodeSEIEnabled)
   {
     xConfirmPara(m_timeCodeSEINumTs > MAX_TIMECODE_SEI_SETS, "Number of time sets cannot exceed 3");
   }
-#endif
 
 #undef xConfirmPara
   if (check_failed)
