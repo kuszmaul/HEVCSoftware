@@ -39,6 +39,7 @@
 #include <cassert>
 #include <cstring>
 #include <string>
+#include <limits>
 #include "TLibCommon/TComRom.h"
 #include "TAppEncCfg.h"
 #include "TAppCommon/program_options_lite.h"
@@ -401,6 +402,160 @@ static inline istream& operator >> (istream &in, CostMode &mode)
   return readStrToEnum(strToCostMode, sizeof(strToCostMode)/sizeof(*strToCostMode), in, mode);
 }
 
+template <class T>
+struct SMultiValueInput
+{
+  const T              minValIncl;
+  const T              maxValIncl; // Use 0 for unlimited
+  const std::size_t    minNumValuesIncl;
+  const std::size_t    maxNumValuesIncl; // Use 0 for unlimited
+        std::vector<T> values;
+  SMultiValueInput() : minValIncl(0), maxValIncl(0), minNumValuesIncl(0), maxNumValuesIncl(0), values() { }
+  SMultiValueInput(std::vector<T> &defaults) : minValIncl(0), maxValIncl(0), minNumValuesIncl(0), maxNumValuesIncl(0), values(defaults) { }
+  SMultiValueInput(const T &minValue, const T &maxValue, std::size_t minNumberValues=0, std::size_t maxNumberValues=0)
+    : minValIncl(minValue), maxValIncl(maxValue), minNumValuesIncl(minNumberValues), maxNumValuesIncl(maxNumberValues), values()  { }
+  SMultiValueInput<T> &operator=(const std::vector<T> &userValues) { values=userValues; return *this; }
+  SMultiValueInput<T> &operator=(const SMultiValueInput<T> &userValues) { values=userValues.values; return *this; }
+};
+
+static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
+{
+  values.values.clear();
+  string str;
+  in >> str;
+  if (!str.empty())
+  {
+    const char *pStr=str.c_str();
+    // soak up any whitespace
+    for(;isspace(*pStr);pStr++);
+
+    while (*pStr != 0)
+    {
+      char *eptr;
+      unsigned long val=strtoul(pStr, &eptr, 0);
+      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      if (val<values.minValIncl || val>values.maxValIncl)
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+
+      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      values.values.push_back(UInt(val));
+      // soak up any whitespace and up to 1 comma.
+      pStr=eptr;
+      for(;isspace(*pStr);pStr++);
+      if (*pStr == ',') pStr++;
+      for(;isspace(*pStr);pStr++);
+    }
+  }
+  if (values.values.size() < values.minNumValuesIncl)
+  {
+    in.setstate(ios::failbit);
+  }
+  return in;
+}
+
+static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
+{
+  values.values.clear();
+  string str;
+  in >> str;
+  if (!str.empty())
+  {
+    const char *pStr=str.c_str();
+    // soak up any whitespace
+    for(;isspace(*pStr);pStr++);
+
+    while (*pStr != 0)
+    {
+      char *eptr;
+      long val=strtol(pStr, &eptr, 0);
+      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      if (val<values.minValIncl || val>values.maxValIncl)
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+
+      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      values.values.push_back(Int(val));
+      // soak up any whitespace and up to 1 comma.
+      pStr=eptr;
+      for(;isspace(*pStr);pStr++);
+      if (*pStr == ',') pStr++;
+      for(;isspace(*pStr);pStr++);
+    }
+  }
+  if (values.values.size() < values.minNumValuesIncl)
+  {
+    in.setstate(ios::failbit);
+  }
+  return in;
+}
+
+static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
+{
+  values.values.clear();
+  string str;
+  in >> str;
+  if (!str.empty())
+  {
+    const char *pStr=str.c_str();
+    // soak up any whitespace
+    for(;isspace(*pStr);pStr++);
+
+    while (*pStr != 0)
+    {
+      char *eptr;
+      long val=strtol(pStr, &eptr, 0);
+      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      if (val<long(values.minValIncl) || val>long(values.maxValIncl))
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+
+      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
+      {
+        in.setstate(ios::failbit);
+        break;
+      }
+      values.values.push_back(val!=0);
+      // soak up any whitespace and up to 1 comma.
+      pStr=eptr;
+      for(;isspace(*pStr);pStr++);
+      if (*pStr == ',') pStr++;
+      for(;isspace(*pStr);pStr++);
+    }
+  }
+  if (values.values.size() < values.minNumValuesIncl)
+  {
+    in.setstate(ios::failbit);
+  }
+  return in;
+}
+
 static Void
 automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
                                const Bool bUsingChromaQPAdjustment,
@@ -492,6 +647,24 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ExtendedProfileName extendedProfile;
 #if RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
+#endif
+
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  SMultiValueInput<Bool> cfg_timeCodeSeiTimeStampFlag        (0,  1, 0, MAX_TIMECODE_SEI_SETS); // minval, maxval (incl), min_entries, max_entries (incl)
+  SMultiValueInput<Bool> cfg_timeCodeSeiNumUnitFieldBasedFlag(0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiCountingType         (0,  6, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiFullTimeStampFlag    (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiDiscontinuityFlag    (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiCntDroppedFlag       (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiNumberOfFrames       (0,511, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiSecondsValue         (0, 59, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiMinutesValue         (0, 59, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiHoursValue           (0, 23, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiSecondsFlag          (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiMinutesFlag          (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Bool> cfg_timeCodeSeiHoursFlag            (0,  1, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetLength     (0, 31, 0, MAX_TIMECODE_SEI_SETS);
+  SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetValue      (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, MAX_TIMECODE_SEI_SETS);
 #endif
 
   po::Options opts;
@@ -814,7 +987,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISOPDescription",                               m_SOPDescriptionSEIEnabled,                           0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",                              m_scalableNestingSEIEnabled,                          0, "Control generation of scalable nesting SEI messages")
   ("SEITempMotionConstrainedTileSets",                m_tmctsSEIEnabled,                                false, "Control generation of temporal motion constrained tile sets SEI message")
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  ("SEITimeCodeEnabled",                              m_timeCodeSEIEnabled,                               false, "Control generation of time code information SEI message")
+  ("SEITimeCodeNumClockTs",                           m_timeCodeSEINumTs,                                     0, "Number of clock time sets [0..3]")
+  ("SEITimeCodeTimeStampFlag",                        cfg_timeCodeSeiTimeStampFlag,          SMultiValueInput<Bool>(), "Time stamp flag associated to each time set")
+  ("SEITimeCodeFieldBasedFlag",                       cfg_timeCodeSeiNumUnitFieldBasedFlag,  SMultiValueInput<Bool>(), "Field based flag associated to each time set")
+  ("SEITimeCodeCountingType",                         cfg_timeCodeSeiCountingType,           SMultiValueInput<Int >(), "Counting type associated to each time set")
+  ("SEITimeCodeFullTsFlag",                           cfg_timeCodeSeiFullTimeStampFlag,      SMultiValueInput<Bool>(), "Full time stamp flag associated to each time set")
+  ("SEITimeCodeDiscontinuityFlag",                    cfg_timeCodeSeiDiscontinuityFlag,      SMultiValueInput<Bool>(), "Discontinuity flag associated to each time set")
+  ("SEITimeCodeCntDroppedFlag",                       cfg_timeCodeSeiCntDroppedFlag,         SMultiValueInput<Bool>(), "Counter dropped flag associated to each time set")
+  ("SEITimeCodeNumFrames",                            cfg_timeCodeSeiNumberOfFrames,         SMultiValueInput<Int >(), "Number of frames associated to each time set")
+  ("SEITimeCodeSecondsValue",                         cfg_timeCodeSeiSecondsValue,           SMultiValueInput<Int >(), "Seconds value for each time set")
+  ("SEITimeCodeMinutesValue",                         cfg_timeCodeSeiMinutesValue,           SMultiValueInput<Int >(), "Minutes value for each time set")
+  ("SEITimeCodeHoursValue",                           cfg_timeCodeSeiHoursValue,             SMultiValueInput<Int >(), "Hours value for each time set")
+  ("SEITimeCodeSecondsFlag",                          cfg_timeCodeSeiSecondsFlag,            SMultiValueInput<Bool>(), "Flag to signal seconds value presence in each time set")
+  ("SEITimeCodeMinutesFlag",                          cfg_timeCodeSeiMinutesFlag,            SMultiValueInput<Bool>(), "Flag to signal minutes value presence in each time set")
+  ("SEITimeCodeHoursFlag",                            cfg_timeCodeSeiHoursFlag,              SMultiValueInput<Bool>(), "Flag to signal hours value presence in each time set")
+  ("SEITimeCodeOffsetLength",                         cfg_timeCodeSeiTimeOffsetLength,       SMultiValueInput<Int >(), "Time offset length associated to each time set")
+  ("SEITimeCodeTimeOffset",                           cfg_timeCodeSeiTimeOffsetValue,        SMultiValueInput<Int >(), "Time offset associated to each time set")
+#else
   ("SEITimeCode",                                     m_timeCodeSEIEnabled,                             false, "Control generation of time code information SEI message")
+#endif
   ("SEIKneeFunctionInfo",                             m_kneeSEIEnabled,                                 false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                               m_kneeSEIId,                                          0, "Specifies Id of Knee function SEI message for a given session")
   ("SEIKneeFunctionCancelFlag",                       m_kneeSEICancelFlag,                              false, "Indicates that Knee function SEI message cancels the persistence or follows")
@@ -1248,6 +1441,30 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       i++;
     }
   }
+
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  if(m_timeCodeSEIEnabled)
+  {
+    for(int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
+    {
+      m_timeSetArray[i].clockTimeStampFlag    = cfg_timeCodeSeiTimeStampFlag        .values.size()>i ? cfg_timeCodeSeiTimeStampFlag        .values [i] : false;
+      m_timeSetArray[i].numUnitFieldBasedFlag = cfg_timeCodeSeiNumUnitFieldBasedFlag.values.size()>i ? cfg_timeCodeSeiNumUnitFieldBasedFlag.values [i] : 0;
+      m_timeSetArray[i].countingType          = cfg_timeCodeSeiCountingType         .values.size()>i ? cfg_timeCodeSeiCountingType         .values [i] : 0;
+      m_timeSetArray[i].fullTimeStampFlag     = cfg_timeCodeSeiFullTimeStampFlag    .values.size()>i ? cfg_timeCodeSeiFullTimeStampFlag    .values [i] : 0;
+      m_timeSetArray[i].discontinuityFlag     = cfg_timeCodeSeiDiscontinuityFlag    .values.size()>i ? cfg_timeCodeSeiDiscontinuityFlag    .values [i] : 0;
+      m_timeSetArray[i].cntDroppedFlag        = cfg_timeCodeSeiCntDroppedFlag       .values.size()>i ? cfg_timeCodeSeiCntDroppedFlag       .values [i] : 0;
+      m_timeSetArray[i].numberOfFrames        = cfg_timeCodeSeiNumberOfFrames       .values.size()>i ? cfg_timeCodeSeiNumberOfFrames       .values [i] : 0;
+      m_timeSetArray[i].secondsValue          = cfg_timeCodeSeiSecondsValue         .values.size()>i ? cfg_timeCodeSeiSecondsValue         .values [i] : 0;
+      m_timeSetArray[i].minutesValue          = cfg_timeCodeSeiMinutesValue         .values.size()>i ? cfg_timeCodeSeiMinutesValue         .values [i] : 0;
+      m_timeSetArray[i].hoursValue            = cfg_timeCodeSeiHoursValue           .values.size()>i ? cfg_timeCodeSeiHoursValue           .values [i] : 0;
+      m_timeSetArray[i].secondsFlag           = cfg_timeCodeSeiSecondsFlag          .values.size()>i ? cfg_timeCodeSeiSecondsFlag          .values [i] : 0;
+      m_timeSetArray[i].minutesFlag           = cfg_timeCodeSeiMinutesFlag          .values.size()>i ? cfg_timeCodeSeiMinutesFlag          .values [i] : 0;
+      m_timeSetArray[i].hoursFlag             = cfg_timeCodeSeiHoursFlag            .values.size()>i ? cfg_timeCodeSeiHoursFlag            .values [i] : 0;
+      m_timeSetArray[i].timeOffsetLength      = cfg_timeCodeSeiTimeOffsetLength     .values.size()>i ? cfg_timeCodeSeiTimeOffsetLength     .values [i] : 0;
+      m_timeSetArray[i].timeOffsetValue       = cfg_timeCodeSeiTimeOffsetValue      .values.size()>i ? cfg_timeCodeSeiTimeOffsetValue      .values [i] : 0;
+    }
+  }
+#endif
 
   // check validity of input parameters
   xCheckParameter();
@@ -1971,6 +2188,13 @@ Void TAppEncCfg::xCheckParameter()
     printf("SEITempMotionConstrainedTileSets is set to false to disable 'temporal_motion_constrained_tile_sets' SEI because there are no tiles enabled\n");
     m_tmctsSEIEnabled = false;
   }
+
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  if(m_timeCodeSEIEnabled)
+  {
+    xConfirmPara(m_timeCodeSEINumTs > MAX_TIMECODE_SEI_SETS, "Number of time sets cannot exceed 3");
+  }
+#endif
 
 #undef xConfirmPara
   if (check_failed)

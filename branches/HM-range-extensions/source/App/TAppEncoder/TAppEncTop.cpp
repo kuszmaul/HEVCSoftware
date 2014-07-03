@@ -293,6 +293,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setScalableNestingSEIEnabled                         ( m_scalableNestingSEIEnabled );
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
   m_cTEncTop.setTimeCodeSEIEnabled                                ( m_timeCodeSEIEnabled );
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  m_cTEncTop.setNumberOfTimeSets                                  ( m_timeCodeSEINumTs );
+  for(int i = 0; i < m_timeCodeSEINumTs; i++) { m_cTEncTop.setTimeSet(m_timeSetArray[i], i); }
+#endif
   m_cTEncTop.setKneeSEIEnabled                                    ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                                         ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag                                 ( m_kneeSEICancelFlag );

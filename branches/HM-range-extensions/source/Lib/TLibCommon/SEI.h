@@ -534,6 +534,9 @@ public:
   virtual ~SEITimeCode(){}
 
   UInt numClockTs;
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+  TComSEITimeSet timeSetArray[MAX_TIMECODE_SEI_SETS];
+#else
   UInt clockTimeStampFlag[4];
   UInt nuitFieldBasedFlag;
   UInt countingType;
@@ -552,6 +555,7 @@ public:
 
   UInt timeOffsetLength;
   Int  timeOffset;
+#endif
 };
 
 //definition according to P1005_v1;

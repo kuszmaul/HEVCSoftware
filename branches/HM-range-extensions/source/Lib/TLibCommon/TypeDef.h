@@ -264,6 +264,7 @@
 
 #define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
 #define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 (default) = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
+#define RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL                               1 ///< 0 = disable the command line control for the time code SEI message, 1 (default) = enable the command line control for the time code SEI message.
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -298,6 +299,10 @@
 #define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
 
 #define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
+
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+#define MAX_TIMECODE_SEI_SETS                                                  3 ///< Maximum number of time sets
+#endif
 
 //------------------------------------------------
 // Error checks
@@ -816,6 +821,27 @@ struct TComDigest
     return !(*this == other);
   }
 };
+
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+struct TComSEITimeSet
+{
+  Bool clockTimeStampFlag;
+  Bool numUnitFieldBasedFlag;
+  Int  countingType;
+  Bool fullTimeStampFlag;
+  Bool discontinuityFlag;
+  Bool cntDroppedFlag;
+  Int  numberOfFrames;
+  Int  secondsValue;
+  Int  minutesValue;
+  Int  hoursValue;
+  Bool secondsFlag;
+  Bool minutesFlag;
+  Bool hoursFlag;
+  Int  timeOffsetLength;
+  Int  timeOffsetValue;
+};
+#endif
 
 //! \}
 

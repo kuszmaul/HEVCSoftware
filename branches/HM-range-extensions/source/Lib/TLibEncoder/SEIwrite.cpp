@@ -689,6 +689,64 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEIT
   xWriteByteAlign();
 }
 
+#if RExt__TIME_CODE_SEI_COMMAND_LINE_CONTROL
+Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
+{
+  WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
+  for(int i = 0; i < sei.numClockTs; i++)
+  {
+    const TComSEITimeSet &currentTimeSet = sei.timeSetArray[i];
+    WRITE_FLAG(currentTimeSet.clockTimeStampFlag, "clock_time_stamp_flag");
+    if(currentTimeSet.clockTimeStampFlag)
+    {
+      WRITE_FLAG(currentTimeSet.numUnitFieldBasedFlag, "units_field_based_flag");
+      WRITE_CODE(currentTimeSet.countingType, 5, "counting_type");
+      WRITE_FLAG(currentTimeSet.fullTimeStampFlag, "full_timestamp_flag");
+      WRITE_FLAG(currentTimeSet.discontinuityFlag, "discontinuity_flag");
+      WRITE_FLAG(currentTimeSet.cntDroppedFlag, "cnt_dropped_flag");
+      WRITE_CODE(currentTimeSet.numberOfFrames, 9, "n_frames");
+      if(currentTimeSet.fullTimeStampFlag)
+      {
+        WRITE_CODE(currentTimeSet.secondsValue, 6, "seconds_value");
+        WRITE_CODE(currentTimeSet.minutesValue, 6, "minutes_value");
+        WRITE_CODE(currentTimeSet.hoursValue, 5, "hours_value");
+      }
+      else
+      {
+        WRITE_FLAG(currentTimeSet.secondsFlag, "seconds_flag");
+        if(currentTimeSet.secondsFlag)
+        {
+          WRITE_CODE(currentTimeSet.secondsValue, 6, "seconds_value");
+          WRITE_FLAG(currentTimeSet.minutesFlag, "minutes_flag");
+          if(currentTimeSet.minutesFlag)
+          {
+            WRITE_CODE(currentTimeSet.minutesValue, 6, "minutes_value");
+            WRITE_FLAG(currentTimeSet.hoursFlag, "hours_flag");
+            if(currentTimeSet.hoursFlag)
+              WRITE_CODE(currentTimeSet.hoursValue, 5, "hours_value");
+          }
+        }
+      }
+      WRITE_CODE(currentTimeSet.timeOffsetLength, 5, "time_offset_length");
+      if(currentTimeSet.timeOffsetLength > 0)
+      {
+        if(currentTimeSet.timeOffsetValue >= 0)
+        {
+          WRITE_CODE((UInt)currentTimeSet.timeOffsetValue, currentTimeSet.timeOffsetLength, "time_offset_value");
+        }
+        else
+        {
+          //  Two's complement conversion
+          UInt offsetValue = ~(currentTimeSet.timeOffsetValue) + 1;
+          offsetValue |= (1 << (currentTimeSet.timeOffsetLength-1));
+          WRITE_CODE(offsetValue, currentTimeSet.timeOffsetLength, "time_offset_value");
+        }
+      }
+    }
+  }
+  xWriteByteAlign();
+}
+#else
 Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
 {
   WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
@@ -744,6 +802,7 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
   }
   xWriteByteAlign();
 }
+#endif
 
 Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
 {
