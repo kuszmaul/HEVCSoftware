@@ -97,7 +97,7 @@ Void  xTraceSEIHeader()
 
 Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 {
-  fprintf( g_hTrace, "=========== %s SEI message ===========\n", getSEIMessageString(payloadtype));
+  fprintf( g_hTrace, "=========== %s SEI message ===========\n", getSEIMessageString(payloadType));
 }
 #endif
 
