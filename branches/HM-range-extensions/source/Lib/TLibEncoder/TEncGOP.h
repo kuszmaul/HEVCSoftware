@@ -173,6 +173,9 @@ protected:
 
   SEIActiveParameterSets*           xCreateSEIActiveParameterSets (TComSPS *sps);
   SEIFramePacking*                  xCreateSEIFramePacking();
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+  SEISegmentedRectFramePacking*     xCreateSEISegmentedRectFramePacking();
+#endif
   SEIDisplayOrientation*            xCreateSEIDisplayOrientation();
   SEIToneMappingInfo*               xCreateSEIToneMappingInfo();
   SEITempMotionConstrainedTileSets* xCreateSEITempMotionConstrainedTileSets ();

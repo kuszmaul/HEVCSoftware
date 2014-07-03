@@ -83,6 +83,9 @@ const char *getSEIMessageString(SEI::PayloadType payloadType)
     case SEI::NO_DISPLAY:                           return "No display";
     case SEI::TIME_CODE:                            return "Time code";
     case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+    case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
+#endif
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
     case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
     default:                                        return "Unknown";
@@ -164,6 +167,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
     break;
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+  case SEI::SEGM_RECT_FRAME_PACKING:
+    fprintf( g_hTrace, "=========== Segmented Rectangular Frame Packing Arrangement SEI message ===========\n");
+    break;
+#endif
   case SEI::KNEE_FUNCTION_INFO:
     fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
     break;
@@ -179,25 +187,25 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 Void SEIReader::sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const Char *pSymbolName)
 {
   READ_CODE(uiLength, ruiCode, pSymbolName);
-  if (pOS)      (*pOS) << "  " << std::setw(50) << pSymbolName << ": " << ruiCode << "\n";
+  if (pOS)      (*pOS) << "  " << std::setw(55) << pSymbolName << ": " << ruiCode << "\n";
 }
 
 Void SEIReader::sei_read_uvlc(std::ostream *pOS, UInt& ruiCode, const Char *pSymbolName)
 {
   READ_UVLC(ruiCode, pSymbolName);
-  if (pOS)      (*pOS) << "  " << std::setw(50) << pSymbolName << ": " << ruiCode << "\n";
+  if (pOS)      (*pOS) << "  " << std::setw(55) << pSymbolName << ": " << ruiCode << "\n";
 }
 
 Void SEIReader::sei_read_svlc(std::ostream *pOS, Int& ruiCode, const Char *pSymbolName)
 {
   READ_SVLC(ruiCode, pSymbolName);
-  if (pOS)      (*pOS) << "  " << std::setw(50) << pSymbolName << ": " << ruiCode << "\n";
+  if (pOS)      (*pOS) << "  " << std::setw(55) << pSymbolName << ": " << ruiCode << "\n";
 }
 
 Void SEIReader::sei_read_flag(std::ostream *pOS, UInt& ruiCode, const Char *pSymbolName)
 {
   READ_FLAG(ruiCode, pSymbolName);
-  if (pOS)      (*pOS) << "  " << std::setw(50) << pSymbolName << ": " << (ruiCode?1:0) << "\n";
+  if (pOS)      (*pOS) << "  " << std::setw(55) << pSymbolName << ": " << (ruiCode?1:0) << "\n";
 }
 
 static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMessageOutputStream, UInt payloadSize)
@@ -379,6 +387,16 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEIFramePacking((SEIFramePacking&) *sei, payloadSize);
 #endif
       break;
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+    case SEI::SEGM_RECT_FRAME_PACKING:
+      sei = new SEISegmentedRectFramePacking;
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+      xParseSEISegmentedRectFramePacking((SEISegmentedRectFramePacking&) *sei, payloadSize, pDecodedMessageOutputStream);
+#else
+      xParseSEISegmentedRectFramePacking((SEISegmentedRectFramePacking&) *sei, payloadSize);
+#endif
+      break;
+#endif
     case SEI::DISPLAY_ORIENTATION:
       sei = new SEIDisplayOrientation;
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
@@ -1167,6 +1185,34 @@ Void SEIReader::xParseSEIFramePacking(SEIFramePacking& sei, UInt /*payloadSize*/
 }
 #endif
 
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
+Void SEIReader::xParseSEISegmentedRectFramePacking(SEISegmentedRectFramePacking& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
+{
+  UInt val;
+  output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
+  sei_read_flag( pDecodedMessageOutputStream, val,       "segmented_rect_frame_packing_arrangement_cancel_flag" );       sei.m_arrangementCancelFlag            = val;
+  if( !sei.m_arrangementCancelFlag )
+  {
+    sei_read_code( pDecodedMessageOutputStream, 2, val, "segmented_rect_content_interpretation_type" );                sei.m_contentInterpretationType = val;
+    sei_read_flag( pDecodedMessageOutputStream, val,     "segmented_rect_frame_packing_arrangement_persistence" );                              sei.m_arrangementPersistenceFlag               = val;
+  }
+  xParseByteAlign();
+}
+#else
+Void SEIReader::xParseSEISegmentedRectFramePacking(SEISegmentedRectFramePacking& sei, UInt /*payloadSize*/)
+{
+  UInt val;
+  READ_FLAG( val, "segmented_rect_frame_packing_arrangement_cancel_flag" );    sei.m_arrangementCancelFlag = val;
+  if( sei.m_arrangementCancelFlag == 0 ) {
+    READ_CODE( 2, val, "segmented_rect_content_interpretation_type" );         sei.m_contentInterpretationType = val;
+    READ_FLAG( val, "segmented_rect_frame_packing_arrangement_persistence" );  sei.m_arrangementPersistenceFlag = val;
+  }
+
+  xParseByteAlign();
+}
+#endif
+#endif
 
 #if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
 Void SEIReader::xParseSEIDisplayOrientation(SEIDisplayOrientation& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)

@@ -72,6 +72,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::FRAME_PACKING:
     fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
     break;
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+  case SEI::SEGM_RECT_FRAME_PACKING:
+    fprintf( g_hTrace, "=========== Segmented Rectangular Frame Packing Arrangement SEI message ===========\n");
+    break;
+#endif
   case SEI::DISPLAY_ORIENTATION:
     fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
     break;
@@ -146,6 +151,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::FRAME_PACKING:
     xWriteSEIFramePacking(*static_cast<const SEIFramePacking*>(&sei));
     break;
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+  case SEI::SEGM_RECT_FRAME_PACKING:
+    xWriteSEISegmentedRectFramePacking(*static_cast<const SEISegmentedRectFramePacking*>(&sei));
+    break;
+#endif
   case SEI::DISPLAY_ORIENTATION:
     xWriteSEIDisplayOrientation(*static_cast<const SEIDisplayOrientation*>(&sei));
     break;
@@ -436,6 +446,19 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
 
   xWriteByteAlign();
 }
+
+#if RExt__Q0256_RECTANGULAR_REGION_FPA_SEI
+Void SEIWriter::xWriteSEISegmentedRectFramePacking(const SEISegmentedRectFramePacking& sei)
+{
+  WRITE_FLAG( sei.m_arrangementCancelFlag,          "segmented_rect_frame_packing_arrangement_cancel_flag" );
+  if( sei.m_arrangementCancelFlag == 0 ) {
+    WRITE_CODE( sei.m_contentInterpretationType, 2, "segmented_rect_content_interpretation_type" );
+    WRITE_FLAG( sei.m_arrangementPersistenceFlag,   "segmented_rect_frame_packing_arrangement_persistence" );
+  }
+
+  xWriteByteAlign();
+}
+#endif
 
 Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 {
