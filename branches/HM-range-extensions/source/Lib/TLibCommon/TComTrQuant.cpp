@@ -2042,6 +2042,9 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const Int    defaultQuantisationCoefficient = g_quantScales[cQP.rem];
   const Double defaultErrorScale              = getErrScaleCoeffNoScalingList(scalingListType, (uiLog2TrSize-2), cQP.rem);
 
+  const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
+  const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
+
 #if ADAPTIVE_QP_SELECTION
   Int iQBitsC = iQBits - ARL_C_PRECISION;
   Int iAddC =  1 << (iQBitsC-1);
@@ -2104,7 +2107,11 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         piArlDstCoeff[uiBlkPos]   = (TCoeff)(( lLevelDouble + iAddC) >> iQBitsC );
       }
 #endif
+#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298
       const UInt uiMaxAbsLevel  = UInt((lLevelDouble + (Intermediate_Int(1) << (iQBits - 1))) >> iQBits);
+#else
+      const UInt uiMaxAbsLevel  = std::min<UInt>(UInt(entropyCodingMaximum), UInt((lLevelDouble + (Intermediate_Int(1) << (iQBits - 1))) >> iQBits));
+#endif
 
       const Double dErr         = Double( lLevelDouble );
       pdCostCoeff0[ iScanPos ]  = dErr * dErr * errorScale;
@@ -2384,9 +2391,6 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
     Int lastCG = -1;
     Int absSum = 0 ;
     Int n ;
-
-    const TCoeff entropyCodingMinimum = -(1 << g_maxTrDynamicRange[toChannelType(compID)]);
-    const TCoeff entropyCodingMaximum =  (1 << g_maxTrDynamicRange[toChannelType(compID)]) - 1;
 
     for( Int subSet = (uiWidth*uiHeight-1) >> MLS_CG_SIZE; subSet >= 0; subSet-- )
     {
