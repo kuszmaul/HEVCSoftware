@@ -510,23 +510,11 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
     
-  if(m_pcCfg->getMasteringDisplayColourVolumeSEIEnabled())
+  if(m_pcCfg->getMasteringDisplaySEI().colourVolumeSEIEnabled)
   {
+    const TComSEIMasteringDisplay &seiCfg=m_pcCfg->getMasteringDisplaySEI();
     SEIMasteringDisplayColourVolume mdcv;
-      
-    UShort *displayPrimaries = m_pcCfg->getMasteringDisplayPrimaries();
-    UShort *displayWhitePoint =m_pcCfg->getMasteringDisplayWhitePoint();
-      
-    for( int xy = 0; xy < 2; xy++ )
-    {
-      mdcv.displayWhitePoint[xy] = displayWhitePoint[xy];
-
-      for(int cc=0; cc< 3; cc++){
-        mdcv.displayPrimaries[cc][xy] = displayPrimaries[cc*2 + xy];
-       }
-    }
-    mdcv.maxDisplayLuminance = m_pcCfg->getMasteringDisplayMaxLuminance();
-    mdcv.minDisplayLuminance = m_pcCfg->getMasteringDisplayMinLuminance();
+    mdcv.values = seiCfg;
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
     m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);

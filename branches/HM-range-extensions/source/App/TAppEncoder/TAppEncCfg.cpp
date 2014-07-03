@@ -112,8 +112,6 @@ TAppEncCfg::TAppEncCfg()
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
   m_targetPivotValue = NULL;
-  m_masteringDisplayPrimaries = NULL;
-  m_masteringDisplayWhitePoint = NULL;
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -138,18 +136,6 @@ TAppEncCfg::~TAppEncCfg()
     m_targetPivotValue = NULL;
   }
 
-  if( m_masteringDisplayPrimaries )
-  {
-    delete[] m_masteringDisplayPrimaries;
-    m_masteringDisplayPrimaries = NULL;
-  }
-    
-  if( m_masteringDisplayPrimaries )
-  {
-    delete[] m_masteringDisplayWhitePoint;
-    m_masteringDisplayWhitePoint = NULL;
-  }
-    
   free(m_pchInputFile);
   free(m_pchBitstreamFile);
   free(m_pchReconFile);
@@ -414,6 +400,8 @@ struct SMultiValueInput
   SMultiValueInput(std::vector<T> &defaults) : minValIncl(0), maxValIncl(0), minNumValuesIncl(0), maxNumValuesIncl(0), values(defaults) { }
   SMultiValueInput(const T &minValue, const T &maxValue, std::size_t minNumberValues=0, std::size_t maxNumberValues=0)
     : minValIncl(minValue), maxValIncl(maxValue), minNumValuesIncl(minNumberValues), maxNumValuesIncl(maxNumberValues), values()  { }
+  SMultiValueInput(const T &minValue, const T &maxValue, std::size_t minNumberValues, std::size_t maxNumberValues, const T* defValues, const UInt numDefValues)
+    : minValIncl(minValue), maxValIncl(maxValue), minNumValuesIncl(minNumberValues), maxNumValuesIncl(maxNumberValues), values(defValues, defValues+numDefValues)  { }
   SMultiValueInput<T> &operator=(const std::vector<T> &userValues) { values=userValues; return *this; }
   SMultiValueInput<T> &operator=(const SMultiValueInput<T> &userValues) { values=userValues.values; return *this; }
 };
@@ -629,16 +617,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_BitstreamFile;
   string cfg_ReconFile;
   string cfg_dQPFile;
-  string cfg_ColumnWidth;
-  string cfg_RowHeight;
   string cfg_ScalingListFile;
-  string cfg_startOfCodedInterval;
-  string cfg_codedPivotValue;
-  string cfg_targetPivotValue;
-  string cfg_kneeSEIInputKneePointValue;
-  string cfg_kneeSEIOutputKneePointValue;
-  string cfg_DisplayPrimariesCode;
-  string cfg_DisplayWhitePointCode;
 
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;
@@ -647,7 +626,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ExtendedProfileName extendedProfile;
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
 
-  SMultiValueInput<Bool> cfg_timeCodeSeiTimeStampFlag        (0,  1, 0, MAX_TIMECODE_SEI_SETS); // minval, maxval (incl), min_entries, max_entries (incl)
+  // Multi-value input fields:                                // minval, maxval (incl), min_entries, max_entries (incl) [, default values, number of default values]
+  SMultiValueInput<UInt> cfg_ColumnWidth                     (0, std::numeric_limits<UInt>::max(), 0, std::numeric_limits<UInt>::max());
+  SMultiValueInput<UInt> cfg_RowHeight                       (0, std::numeric_limits<UInt>::max(), 0, std::numeric_limits<UInt>::max());
+  SMultiValueInput<Int>  cfg_startOfCodedInterval            (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
+  SMultiValueInput<Int>  cfg_codedPivotValue                 (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
+  SMultiValueInput<Int>  cfg_targetPivotValue                (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
+
+  const UInt defaultInputKneeCodes[3]  = { 600, 800, 900 };
+  const UInt defaultOutputKneeCodes[3] = { 100, 250, 450 };
+  SMultiValueInput<UInt> cfg_kneeSEIInputKneePointValue      (1,  999, 0, 999, defaultInputKneeCodes,  sizeof(defaultInputKneeCodes )/sizeof(UInt));
+  SMultiValueInput<UInt> cfg_kneeSEIOutputKneePointValue     (0, 1000, 0, 999, defaultOutputKneeCodes, sizeof(defaultOutputKneeCodes)/sizeof(UInt));
+  const Int defaultPrimaryCodes[6]     = { 0,50000, 0,0, 50000,0 };
+  const Int defaultWhitePointCode[2]   = { 16667, 16667 };
+  SMultiValueInput<Int>  cfg_DisplayPrimariesCode            (0, 50000, 3, 3, defaultPrimaryCodes,   sizeof(defaultPrimaryCodes  )/sizeof(Int));
+  SMultiValueInput<Int>  cfg_DisplayWhitePointCode           (0, 50000, 2, 2, defaultWhitePointCode, sizeof(defaultWhitePointCode)/sizeof(Int));
+
+  SMultiValueInput<Bool> cfg_timeCodeSeiTimeStampFlag        (0,  1, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Bool> cfg_timeCodeSeiNumUnitFieldBasedFlag(0,  1, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiCountingType         (0,  6, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Bool> cfg_timeCodeSeiFullTimeStampFlag    (0,  1, 0, MAX_TIMECODE_SEI_SETS);
@@ -833,9 +828,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("Log2ParallelMergeLevel",                          m_log2ParallelMergeLevel,                            2u, "Parallel merge estimation region")
   ("UniformSpacingIdc",                               m_iUniformSpacingIdr,                                 0, "Indicates if the column and row boundaries are distributed uniformly")
   ("NumTileColumnsMinus1",                            m_iNumColumnsMinus1,                                  0, "Number of columns in a picture minus 1")
-  ("ColumnWidthArray",                                cfg_ColumnWidth,                             string(""), "Array containing ColumnWidth values in units of LCU")
+  ("ColumnWidthArray",                                cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing ColumnWidth values in units of LCU")
   ("NumTileRowsMinus1",                               m_iNumRowsMinus1,                                     0, "Number of rows in a picture minus 1")
-  ("RowHeightArray",                                  cfg_RowHeight,                               string(""), "Array containing RowHeight values in units of LCU")
+  ("RowHeightArray",                                  cfg_RowHeight,                            cfg_RowHeight, "Array containing RowHeight values in units of LCU")
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with TR; 2 TRR etc")
   ("ScalingList",                                     m_useScalingListId,                                   0, "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
@@ -921,10 +916,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapMaxValue",                              m_toneMapMaxValue,                                 1023, "Specifies the maximum value in mode 0")
   ("SEIToneMapSigmoidMidpoint",                       m_sigmoidMidpoint,                                  512, "Specifies the centre point in mode 1")
   ("SEIToneMapSigmoidWidth",                          m_sigmoidWidth,                                     960, "Specifies the distance between 5% and 95% values of the target_bit_depth in mode 1")
-  ("SEIToneMapStartOfCodedInterval",                  cfg_startOfCodedInterval,                    string(""), "Array of user-defined mapping table")
+  ("SEIToneMapStartOfCodedInterval",                  cfg_startOfCodedInterval,      cfg_startOfCodedInterval, "Array of user-defined mapping table")
   ("SEIToneMapNumPivots",                             m_numPivots,                                          0, "Specifies the number of pivot points in mode 3")
-  ("SEIToneMapCodedPivotValue",                       cfg_codedPivotValue,                         string(""), "Array of pivot point")
-  ("SEIToneMapTargetPivotValue",                      cfg_targetPivotValue,                        string(""), "Array of pivot point")
+  ("SEIToneMapCodedPivotValue",                       cfg_codedPivotValue,                cfg_codedPivotValue, "Array of pivot point")
+  ("SEIToneMapTargetPivotValue",                      cfg_targetPivotValue,              cfg_targetPivotValue, "Array of pivot point")
   ("SEIToneMapCameraIsoSpeedIdc",                     m_cameraIsoSpeedIdc,                                  0, "Indicates the camera ISO speed for daylight illumination")
   ("SEIToneMapCameraIsoSpeedValue",                   m_cameraIsoSpeedValue,                              400, "Specifies the camera ISO speed for daylight illumination of Extended_ISO")
   ("SEIToneMapExposureIndexIdc",                      m_exposureIndexIdc,                                   0, "Indicates the exposure index setting of the camera")
@@ -976,23 +971,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISOPDescription",                               m_SOPDescriptionSEIEnabled,                           0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",                              m_scalableNestingSEIEnabled,                          0, "Control generation of scalable nesting SEI messages")
   ("SEITempMotionConstrainedTileSets",                m_tmctsSEIEnabled,                                false, "Control generation of temporal motion constrained tile sets SEI message")
-  ("SEITimeCodeEnabled",                              m_timeCodeSEIEnabled,                               false, "Control generation of time code information SEI message")
-  ("SEITimeCodeNumClockTs",                           m_timeCodeSEINumTs,                                     0, "Number of clock time sets [0..3]")
-  ("SEITimeCodeTimeStampFlag",                        cfg_timeCodeSeiTimeStampFlag,          SMultiValueInput<Bool>(), "Time stamp flag associated to each time set")
-  ("SEITimeCodeFieldBasedFlag",                       cfg_timeCodeSeiNumUnitFieldBasedFlag,  SMultiValueInput<Bool>(), "Field based flag associated to each time set")
-  ("SEITimeCodeCountingType",                         cfg_timeCodeSeiCountingType,           SMultiValueInput<Int >(), "Counting type associated to each time set")
-  ("SEITimeCodeFullTsFlag",                           cfg_timeCodeSeiFullTimeStampFlag,      SMultiValueInput<Bool>(), "Full time stamp flag associated to each time set")
-  ("SEITimeCodeDiscontinuityFlag",                    cfg_timeCodeSeiDiscontinuityFlag,      SMultiValueInput<Bool>(), "Discontinuity flag associated to each time set")
-  ("SEITimeCodeCntDroppedFlag",                       cfg_timeCodeSeiCntDroppedFlag,         SMultiValueInput<Bool>(), "Counter dropped flag associated to each time set")
-  ("SEITimeCodeNumFrames",                            cfg_timeCodeSeiNumberOfFrames,         SMultiValueInput<Int >(), "Number of frames associated to each time set")
-  ("SEITimeCodeSecondsValue",                         cfg_timeCodeSeiSecondsValue,           SMultiValueInput<Int >(), "Seconds value for each time set")
-  ("SEITimeCodeMinutesValue",                         cfg_timeCodeSeiMinutesValue,           SMultiValueInput<Int >(), "Minutes value for each time set")
-  ("SEITimeCodeHoursValue",                           cfg_timeCodeSeiHoursValue,             SMultiValueInput<Int >(), "Hours value for each time set")
-  ("SEITimeCodeSecondsFlag",                          cfg_timeCodeSeiSecondsFlag,            SMultiValueInput<Bool>(), "Flag to signal seconds value presence in each time set")
-  ("SEITimeCodeMinutesFlag",                          cfg_timeCodeSeiMinutesFlag,            SMultiValueInput<Bool>(), "Flag to signal minutes value presence in each time set")
-  ("SEITimeCodeHoursFlag",                            cfg_timeCodeSeiHoursFlag,              SMultiValueInput<Bool>(), "Flag to signal hours value presence in each time set")
-  ("SEITimeCodeOffsetLength",                         cfg_timeCodeSeiTimeOffsetLength,       SMultiValueInput<Int >(), "Time offset length associated to each time set")
-  ("SEITimeCodeTimeOffset",                           cfg_timeCodeSeiTimeOffsetValue,        SMultiValueInput<Int >(), "Time offset associated to each time set")
+  ("SEITimeCodeEnabled",                              m_timeCodeSEIEnabled,                             false, "Control generation of time code information SEI message")
+  ("SEITimeCodeNumClockTs",                           m_timeCodeSEINumTs,                                   0, "Number of clock time sets [0..3]")
+  ("SEITimeCodeTimeStampFlag",                        cfg_timeCodeSeiTimeStampFlag,          cfg_timeCodeSeiTimeStampFlag,         "Time stamp flag associated to each time set")
+  ("SEITimeCodeFieldBasedFlag",                       cfg_timeCodeSeiNumUnitFieldBasedFlag,  cfg_timeCodeSeiNumUnitFieldBasedFlag, "Field based flag associated to each time set")
+  ("SEITimeCodeCountingType",                         cfg_timeCodeSeiCountingType,           cfg_timeCodeSeiCountingType,          "Counting type associated to each time set")
+  ("SEITimeCodeFullTsFlag",                           cfg_timeCodeSeiFullTimeStampFlag,      cfg_timeCodeSeiFullTimeStampFlag,     "Full time stamp flag associated to each time set")
+  ("SEITimeCodeDiscontinuityFlag",                    cfg_timeCodeSeiDiscontinuityFlag,      cfg_timeCodeSeiDiscontinuityFlag,     "Discontinuity flag associated to each time set")
+  ("SEITimeCodeCntDroppedFlag",                       cfg_timeCodeSeiCntDroppedFlag,         cfg_timeCodeSeiCntDroppedFlag,        "Counter dropped flag associated to each time set")
+  ("SEITimeCodeNumFrames",                            cfg_timeCodeSeiNumberOfFrames,         cfg_timeCodeSeiNumberOfFrames,        "Number of frames associated to each time set")
+  ("SEITimeCodeSecondsValue",                         cfg_timeCodeSeiSecondsValue,           cfg_timeCodeSeiSecondsValue,          "Seconds value for each time set")
+  ("SEITimeCodeMinutesValue",                         cfg_timeCodeSeiMinutesValue,           cfg_timeCodeSeiMinutesValue,          "Minutes value for each time set")
+  ("SEITimeCodeHoursValue",                           cfg_timeCodeSeiHoursValue,             cfg_timeCodeSeiHoursValue,            "Hours value for each time set")
+  ("SEITimeCodeSecondsFlag",                          cfg_timeCodeSeiSecondsFlag,            cfg_timeCodeSeiSecondsFlag,           "Flag to signal seconds value presence in each time set")
+  ("SEITimeCodeMinutesFlag",                          cfg_timeCodeSeiMinutesFlag,            cfg_timeCodeSeiMinutesFlag,           "Flag to signal minutes value presence in each time set")
+  ("SEITimeCodeHoursFlag",                            cfg_timeCodeSeiHoursFlag,              cfg_timeCodeSeiHoursFlag,             "Flag to signal hours value presence in each time set")
+  ("SEITimeCodeOffsetLength",                         cfg_timeCodeSeiTimeOffsetLength,       cfg_timeCodeSeiTimeOffsetLength,      "Time offset length associated to each time set")
+  ("SEITimeCodeTimeOffset",                           cfg_timeCodeSeiTimeOffsetValue,        cfg_timeCodeSeiTimeOffsetValue,       "Time offset associated to each time set")
   ("SEIKneeFunctionInfo",                             m_kneeSEIEnabled,                                 false, "Control generation of Knee function SEI messages")
   ("SEIKneeFunctionId",                               m_kneeSEIId,                                          0, "Specifies Id of Knee function SEI message for a given session")
   ("SEIKneeFunctionCancelFlag",                       m_kneeSEICancelFlag,                              false, "Indicates that Knee function SEI message cancels the persistence or follows")
@@ -1003,13 +998,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIKneeFunctionOutputDrange",                     m_kneeSEIOutputDrange,                             4000, "Specifies the peak luminance level for the output picture of Knee function SEI messages")
   ("SEIKneeFunctionOutputDispLuminance",              m_kneeSEIOutputDispLuminance,                       800, "Specifies the expected display brightness for the output picture of Knee function SEI messages")
   ("SEIKneeFunctionNumKneePointsMinus1",              m_kneeSEINumKneePointsMinus1,                         2, "Specifies the number of knee points - 1")
-  ("SEIKneeFunctionInputKneePointValue",              cfg_kneeSEIInputKneePointValue,   string("600 800 900"), "Array of input knee point")
-  ("SEIKneeFunctionOutputKneePointValue",             cfg_kneeSEIOutputKneePointValue,  string("100 250 450"), "Array of output knee point")
-  ("SEIMasteringDisplayColourVolume",                 m_masteringDisplayColourVolumeSEIEnabled,         false, "Control generation of mastering display colour volume SEI messages")
-  ("SEIMasteringDisplayMaxLuminance",                 m_masteringDisplayMaxLuminance,                  10000u, "Specifies the mastering display maximum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
-  ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplayMinLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
-  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode, string("0 50000 0 0 50000 0"), "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
-  ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,        string("16667 16667"), "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
+  ("SEIKneeFunctionInputKneePointValue",              cfg_kneeSEIInputKneePointValue,   cfg_kneeSEIInputKneePointValue, "Array of input knee point")
+  ("SEIKneeFunctionOutputKneePointValue",             cfg_kneeSEIOutputKneePointValue, cfg_kneeSEIOutputKneePointValue, "Array of output knee point")
+  ("SEIMasteringDisplayColourVolume",                 m_masteringDisplay.colourVolumeSEIEnabled,         false, "Control generation of mastering display colour volume SEI messages")
+  ("SEIMasteringDisplayMaxLuminance",                 m_masteringDisplay.maxLuminance,                  10000u, "Specifies the mastering display maximum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
+  ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplay.minLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
+  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
+  ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
     
   ;
 
@@ -1052,29 +1047,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_framesToBeEncoded *= 2;
   }
 
-  Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
-  Char* pRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
   {
-    char *columnWidth;
-    int  i=0;
-    m_pColumnWidth = new UInt[m_iNumColumnsMinus1];
-    columnWidth = strtok(pColumnWidth, " ,-");
-    while(columnWidth!=NULL)
+    if (cfg_ColumnWidth.values.size() > m_iNumColumnsMinus1)
     {
-      if( i>=m_iNumColumnsMinus1 )
-      {
-        printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
-        exit( EXIT_FAILURE );
-      }
-      *( m_pColumnWidth + i ) = atoi( columnWidth );
-      columnWidth = strtok(NULL, " ,-");
-      i++;
+      printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
+      exit( EXIT_FAILURE );
     }
-    if( i<m_iNumColumnsMinus1 )
+    else if (cfg_ColumnWidth.values.size() < m_iNumColumnsMinus1)
     {
       printf( "The width of some columns is not defined.\n" );
       exit( EXIT_FAILURE );
+    }
+    else
+    {
+      m_pColumnWidth = new UInt[m_iNumColumnsMinus1];
+      for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
+        m_pColumnWidth[i]=cfg_ColumnWidth.values[i];
     }
   }
   else
@@ -1084,26 +1073,22 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
   {
-    char *rowHeight;
-    int  i=0;
-    m_pRowHeight = new UInt[m_iNumRowsMinus1];
-    rowHeight = strtok(pRowHeight, " ,-");
-    while(rowHeight!=NULL)
+    if (cfg_RowHeight.values.size() > m_iNumRowsMinus1)
     {
-      if( i>=m_iNumRowsMinus1 )
-      {
-        printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
-        exit( EXIT_FAILURE );
-      }
-      *( m_pRowHeight + i ) = atoi( rowHeight );
-      rowHeight = strtok(NULL, " ,-");
-      i++;
+      printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
+      exit( EXIT_FAILURE );
     }
-    if( i<m_iNumRowsMinus1 )
+    else if (cfg_RowHeight.values.size() < m_iNumRowsMinus1)
     {
       printf( "The height of some rows is not defined.\n" );
       exit( EXIT_FAILURE );
-   }
+    }
+    else
+    {
+      m_pRowHeight = new UInt[m_iNumRowsMinus1];
+      for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
+        m_pRowHeight[i]=cfg_RowHeight.values[i];
+    }
   }
   else
   {
@@ -1311,54 +1296,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   m_iWaveFrontSubstreams = m_iWaveFrontSynchro ? (m_iSourceHeight + m_uiMaxCUHeight - 1) / m_uiMaxCUHeight : 1;
 
-  if( m_masteringDisplayColourVolumeSEIEnabled )
+  if( m_masteringDisplay.colourVolumeSEIEnabled )
   {
-    Char* pcDisplayPrimariesValue = cfg_DisplayPrimariesCode.empty() ? NULL: strdup(cfg_DisplayPrimariesCode.c_str());
-    Char* pcDisplayWhitePointValue = cfg_DisplayWhitePointCode.empty() ? NULL: strdup(cfg_DisplayWhitePointCode.c_str());
-
-    m_masteringDisplayPrimaries = new UShort[6];
-    m_masteringDisplayWhitePoint = new UShort[2];
-    
-    char *displayPrimaryValue = strtok( pcDisplayPrimariesValue, " .");
-    int idx = 0;
-      
-    while( displayPrimaryValue != NULL && idx < 6)
+    for(UInt idx=0; idx<6; idx++)
     {
-      m_masteringDisplayPrimaries[idx] = atoi( displayPrimaryValue );
-      displayPrimaryValue = strtok(NULL, " .");
-      idx++;
+      m_masteringDisplay.primaries[idx/2][idx%2] = UShort((cfg_DisplayPrimariesCode.values.size() > idx) ? cfg_DisplayPrimariesCode.values[idx] : 0);
     }
-
-      
-    char *displayWhitePointValue = strtok( pcDisplayWhitePointValue, " .");
-    idx = 0;
-      
-    while( displayWhitePointValue != NULL && idx < 2)
+    for(UInt idx=0; idx<2; idx++)
     {
-      m_masteringDisplayWhitePoint[idx] = atoi( displayWhitePointValue );
-      displayWhitePointValue = strtok(NULL, " .");
-      idx++;
+      m_masteringDisplay.whitePoint[idx] = UShort((cfg_DisplayWhitePointCode.values.size() > idx) ? cfg_DisplayWhitePointCode.values[idx] : 0);
     }
   }
     
   if( m_toneMappingInfoSEIEnabled && !m_toneMapCancelFlag )
   {
-    Char* pcStartOfCodedInterval = cfg_startOfCodedInterval.empty() ? NULL: strdup(cfg_startOfCodedInterval.c_str());
-    Char* pcCodedPivotValue = cfg_codedPivotValue.empty() ? NULL: strdup(cfg_codedPivotValue.c_str());
-    Char* pcTargetPivotValue = cfg_targetPivotValue.empty() ? NULL: strdup(cfg_targetPivotValue.c_str());
-    if( m_toneMapModelId == 2 && pcStartOfCodedInterval )
+    if( m_toneMapModelId == 2 && !cfg_startOfCodedInterval.values.empty() )
     {
-      char *startOfCodedInterval;
-      UInt num = 1u<< m_toneMapTargetBitDepth;
+      const UInt num = 1u<< m_toneMapTargetBitDepth;
       m_startOfCodedInterval = new Int[num];
-      ::memset( m_startOfCodedInterval, 0, sizeof(Int)*num );
-      startOfCodedInterval = strtok(pcStartOfCodedInterval, " .");
-      int i = 0;
-      while( startOfCodedInterval && ( i < num ) )
+      for(UInt i=0; i<num; i++)
       {
-        m_startOfCodedInterval[i] = atoi( startOfCodedInterval );
-        startOfCodedInterval = strtok(NULL, " .");
-        i++;
+        m_startOfCodedInterval[i] = cfg_startOfCodedInterval.values.size() > i ? cfg_startOfCodedInterval.values[i] : 0;
       }
     }
     else
@@ -1367,29 +1325,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     }
     if( ( m_toneMapModelId == 3 ) && ( m_numPivots > 0 ) )
     {
-      if( pcCodedPivotValue && pcTargetPivotValue )
+      if( !cfg_codedPivotValue.values.empty() && !cfg_targetPivotValue.values.empty() )
       {
-        char *codedPivotValue;
-        char *targetPivotValue;
-        m_codedPivotValue = new Int[m_numPivots];
+        m_codedPivotValue  = new Int[m_numPivots];
         m_targetPivotValue = new Int[m_numPivots];
-        ::memset( m_codedPivotValue, 0, sizeof(Int)*( m_numPivots ) );
-        ::memset( m_targetPivotValue, 0, sizeof(Int)*( m_numPivots ) );
-        codedPivotValue = strtok(pcCodedPivotValue, " .");
-        int i=0;
-        while(codedPivotValue&&i<m_numPivots)
+        for(UInt i=0; i<m_numPivots; i++)
         {
-          m_codedPivotValue[i] = atoi( codedPivotValue );
-          codedPivotValue = strtok(NULL, " .");
-          i++;
-        }
-        i=0;
-        targetPivotValue = strtok(pcTargetPivotValue, " .");
-        while(targetPivotValue&&i<m_numPivots)
-        {
-          m_targetPivotValue[i]= atoi( targetPivotValue );
-          targetPivotValue = strtok(NULL, " .");
-          i++;
+          m_codedPivotValue[i]  = cfg_codedPivotValue.values.size()  > i ? cfg_codedPivotValue.values [i] : 0;
+          m_targetPivotValue[i] = cfg_targetPivotValue.values.size() > i ? cfg_targetPivotValue.values[i] : 0;
         }
       }
     }
@@ -1402,26 +1345,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   if( m_kneeSEIEnabled && !m_kneeSEICancelFlag )
   {
-    Char* pcInputKneePointValue  = cfg_kneeSEIInputKneePointValue.empty()  ? NULL : strdup(cfg_kneeSEIInputKneePointValue.c_str());
-    Char* pcOutputKneePointValue = cfg_kneeSEIOutputKneePointValue.empty() ? NULL : strdup(cfg_kneeSEIOutputKneePointValue.c_str());
     assert ( m_kneeSEINumKneePointsMinus1 >= 0 && m_kneeSEINumKneePointsMinus1 < 999 );
-    m_kneeSEIInputKneePoint = new Int[m_kneeSEINumKneePointsMinus1+1];
+    m_kneeSEIInputKneePoint  = new Int[m_kneeSEINumKneePointsMinus1+1];
     m_kneeSEIOutputKneePoint = new Int[m_kneeSEINumKneePointsMinus1+1];
-    char *InputVal = strtok(pcInputKneePointValue, " .,");
-    Int i=0;
-    while( InputVal && i<(m_kneeSEINumKneePointsMinus1+1) )
+    for(Int i=0; i<(m_kneeSEINumKneePointsMinus1+1); i++)
     {
-      m_kneeSEIInputKneePoint[i] = (UInt) atoi( InputVal );
-      InputVal = strtok(NULL, " .,");
-      i++;
-    }
-    char *OutputVal = strtok(pcOutputKneePointValue, " .,");
-    i=0;
-    while( OutputVal && i<(m_kneeSEINumKneePointsMinus1+1) )
-    {
-      m_kneeSEIOutputKneePoint[i] = (UInt) atoi( OutputVal );
-      OutputVal = strtok(NULL, " .,");
-      i++;
+      m_kneeSEIInputKneePoint[i]  = cfg_kneeSEIInputKneePointValue.values.size()  > i ? cfg_kneeSEIInputKneePointValue.values[i]  : 1;
+      m_kneeSEIOutputKneePoint[i] = cfg_kneeSEIOutputKneePointValue.values.size() > i ? cfg_kneeSEIOutputKneePointValue.values[i] : 0;
     }
   }
 

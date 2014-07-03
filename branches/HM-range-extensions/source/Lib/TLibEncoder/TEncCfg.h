@@ -302,11 +302,7 @@ protected:
   Int       m_kneeSEINumKneePointsMinus1;
   Int*      m_kneeSEIInputKneePoint;
   Int*      m_kneeSEIOutputKneePoint;
-  Bool      m_masteringDisplayColourVolumeSEIEnabled;
-  UInt      m_masteringDisplayMaxLuminance;
-  UInt      m_masteringDisplayMinLuminance;
-  UShort*   m_masteringDisplayPrimaries;
-  UShort*   m_masteringDisplayWhitePoint;
+  TComSEIMasteringDisplay m_masteringDisplay;
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -766,16 +762,8 @@ public:
   Int*  getKneeSEIInputKneePoint()                                   { return m_kneeSEIInputKneePoint; }
   Void  setKneeSEIOutputKneePoint(Int *p)                            { m_kneeSEIOutputKneePoint = p; }
   Int*  getKneeSEIOutputKneePoint()                                  { return m_kneeSEIOutputKneePoint; }
-  Void  setMasteringDisplayColourVolumeSEIEnabled(Bool b)            { m_masteringDisplayColourVolumeSEIEnabled = b; }
-  Bool  getMasteringDisplayColourVolumeSEIEnabled()                  { return m_masteringDisplayColourVolumeSEIEnabled; }
-  Void  setMasteringDisplayMaxLuminance(UInt u)                      { m_masteringDisplayMaxLuminance = u; }
-  UInt  getMasteringDisplayMaxLuminance()                            { return m_masteringDisplayMaxLuminance; }
-  Void  setMasteringDisplayMinLuminance(UInt u)                      { m_masteringDisplayMinLuminance = u; }
-  UInt  getMasteringDisplayMinLuminance()                            { return m_masteringDisplayMinLuminance; }
-  Void  setMasteringDisplayPrimaries( UShort* p)                     { m_masteringDisplayPrimaries = p;  }
-  UShort* getMasteringDisplayPrimaries()                             { return m_masteringDisplayPrimaries;  }
-  Void  setMasteringDisplayWhitePoint( UShort* p )                   { m_masteringDisplayWhitePoint = p;  }
-  UShort* getMasteringDisplayWhitePoint()                            { return m_masteringDisplayWhitePoint;  }
+  Void  setMasteringDisplaySEI(const TComSEIMasteringDisplay &src)   { m_masteringDisplay = src; }
+  const TComSEIMasteringDisplay &getMasteringDisplaySEI() const      { return m_masteringDisplay; }
   Void         setUseWP               ( Bool b )                     { m_useWeightedPred   = b;    }
   Void         setWPBiPred            ( Bool b )                     { m_useWeightedBiPred = b;    }
   Bool         getUseWP               ()                             { return m_useWeightedPred;   }

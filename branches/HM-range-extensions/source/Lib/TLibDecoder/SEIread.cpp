@@ -49,43 +49,6 @@
 //! \ingroup TLibDecoder
 //! \{
 
-const char *getSEIMessageString(SEI::PayloadType payloadType)
-{
-  switch (payloadType)
-  {
-    case SEI::BUFFERING_PERIOD:                     return "Buffering period";
-    case SEI::PICTURE_TIMING:                       return "Picture timing";
-    case SEI::PAN_SCAN_RECT:                        return "Pan-scan rectangle";                   // not decoded
-    case SEI::FILLER_PAYLOAD:                       return "Filler payload";                       // not decoded
-    case SEI::USER_DATA_REGISTERED_ITU_T_T35:       return "User data registered";                 // not decoded
-    case SEI::USER_DATA_UNREGISTERED:               return "User data unregistered";
-    case SEI::RECOVERY_POINT:                       return "Recovery point";
-    case SEI::SCENE_INFO:                           return "Scene information";                    // not decoded
-    case SEI::FULL_FRAME_SNAPSHOT:                  return "Picture snapshot";                     // not decoded
-    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_START: return "Progressive refinement segment start"; // not decoded
-    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_END:   return "Progressive refinement segment end";   // not decoded
-    case SEI::FILM_GRAIN_CHARACTERISTICS:           return "Film grain characteristics";           // not decoded
-    case SEI::POST_FILTER_HINT:                     return "Post filter hint";                     // not decoded
-    case SEI::TONE_MAPPING_INFO:                    return "Tone mapping information";
-    case SEI::KNEE_FUNCTION_INFO:                   return "Knee function information";
-    case SEI::FRAME_PACKING:                        return "Frame packing arrangement";
-    case SEI::DISPLAY_ORIENTATION:                  return "Display orientation";
-    case SEI::SOP_DESCRIPTION:                      return "Structure of pictures information";
-    case SEI::ACTIVE_PARAMETER_SETS:                return "Active parameter sets";
-    case SEI::DECODING_UNIT_INFO:                   return "Decoding unit information";
-    case SEI::TEMPORAL_LEVEL0_INDEX:                return "Temporal sub-layer zero index";
-    case SEI::DECODED_PICTURE_HASH:                 return "Decoded picture hash";
-    case SEI::SCALABLE_NESTING:                     return "Scalable nesting";
-    case SEI::REGION_REFRESH_INFO:                  return "Region refresh information";
-    case SEI::NO_DISPLAY:                           return "No display";
-    case SEI::TIME_CODE:                            return "Time code";
-    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
-    case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
-    case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
-    case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
-    default:                                        return "Unknown";
-  }
-}
 
 #if ENC_DEC_TRACE
 Void  xTraceSEIHeader()
@@ -95,7 +58,7 @@ Void  xTraceSEIHeader()
 
 Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 {
-  fprintf( g_hTrace, "=========== %s SEI message ===========\n", getSEIMessageString(payloadType));
+  fprintf( g_hTrace, "=========== %s SEI message ===========\n", SEI::getSEIMessageString(payloadType));
 }
 #endif
 
@@ -127,7 +90,7 @@ static inline Void output_sei_message_header(SEI &sei, std::ostream *pDecodedMes
 {
   if (pDecodedMessageOutputStream)
   {
-    std::string seiMessageHdr(getSEIMessageString(sei.payloadType())); seiMessageHdr+=" SEI message";
+    std::string seiMessageHdr(SEI::getSEIMessageString(sei.payloadType())); seiMessageHdr+=" SEI message";
     (*pDecodedMessageOutputStream) << std::setfill('-') << std::setw(seiMessageHdr.size()) << "-" << std::setfill(' ') << "\n" << seiMessageHdr << "\n";
   }
 }
@@ -202,11 +165,11 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
     {
     case SEI::USER_DATA_UNREGISTERED:
       sei = new SEIuserDataUnregistered;
-      xParseSEIuserDataUnregistered((SEIuserDataUnregistered&) *sei, payloadSize, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      xParseSEIuserDataUnregistered((SEIuserDataUnregistered&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
     case SEI::ACTIVE_PARAMETER_SETS:
       sei = new SEIActiveParameterSets;
-      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      xParseSEIActiveParameterSets((SEIActiveParameterSets&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
     case SEI::DECODING_UNIT_INFO:
       if (!sps)
@@ -216,7 +179,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       else
       {
         sei = new SEIDecodingUnitInfo;
-        xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+        xParseSEIDecodingUnitInfo((SEIDecodingUnitInfo&) *sei, payloadSize, sps, pDecodedMessageOutputStream);
       }
       break;
     case SEI::BUFFERING_PERIOD:
@@ -227,7 +190,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       else
       {
         sei = new SEIBufferingPeriod;
-        xParseSEIBufferingPeriod((SEIBufferingPeriod&) *sei, payloadSize, sps, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+        xParseSEIBufferingPeriod((SEIBufferingPeriod&) *sei, payloadSize, sps, pDecodedMessageOutputStream);
       }
       break;
     case SEI::PICTURE_TIMING:
@@ -238,7 +201,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       else
       {
         sei = new SEIPictureTiming;
-        xParseSEIPictureTiming((SEIPictureTiming&)*sei, payloadSize, sps, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+        xParseSEIPictureTiming((SEIPictureTiming&)*sei, payloadSize, sps, pDecodedMessageOutputStream);
       }
       break;
     case SEI::RECOVERY_POINT:
@@ -255,7 +218,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       break;
     case SEI::DISPLAY_ORIENTATION:
       sei = new SEIDisplayOrientation;
-      xParseSEIDisplayOrientation((SEIDisplayOrientation&) *sei, payloadSize, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      xParseSEIDisplayOrientation((SEIDisplayOrientation&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
     case SEI::TEMPORAL_LEVEL0_INDEX:
       sei = new SEITemporalLevel0Index;
@@ -263,7 +226,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       break;
     case SEI::REGION_REFRESH_INFO:
       sei = new SEIGradualDecodingRefreshInfo;
-      xParseSEIRegionRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      xParseSEIRegionRefreshInfo((SEIGradualDecodingRefreshInfo&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
     case SEI::NO_DISPLAY:
       sei = new SEINoDisplay;
@@ -279,7 +242,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       break;
     case SEI::SCALABLE_NESTING:
       sei = new SEIScalableNesting;
-      xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps, pDecodedMessageOutputStream); // missing XXXXXXXXXXXXXXXXXXXXXXXXXXX
+      xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps, pDecodedMessageOutputStream);
       break;
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
       sei = new SEITempMotionConstrainedTileSets;
@@ -333,7 +296,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
         break;
       case SEI::DECODED_PICTURE_HASH:
         sei = new SEIDecodedPictureHash;
-        xParseSEIDecodedPictureHash((SEIDecodedPictureHash&) *sei, payloadSize, pDecodedMessageOutputStream); // done
+        xParseSEIDecodedPictureHash((SEIDecodedPictureHash&) *sei, payloadSize, pDecodedMessageOutputStream);
         break;
       default:
         for (UInt i = 0; i < payloadSize; i++)
@@ -455,7 +418,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
     default: assert(false); break;
   }
 
-  if (pDecodedMessageOutputStream) (*pDecodedMessageOutputStream) << "  " << std::setw(50) << traceString << ": " << std::hex << std::setfill('0');
+  if (pDecodedMessageOutputStream) (*pDecodedMessageOutputStream) << "  " << std::setw(55) << traceString << ": " << std::hex << std::setfill('0');
 
   sei.m_digest.hash.clear();
   for(;bytesRead < payloadSize; bytesRead++)
@@ -1098,21 +1061,21 @@ Void SEIReader::xParseSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourV
   UInt code;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[0]" ); sei.displayPrimaries[0][0] = code;
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[0]" ); sei.displayPrimaries[0][1] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[0]" ); sei.values.primaries[0][0] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[0]" ); sei.values.primaries[0][1] = code;
 
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[1]" ); sei.displayPrimaries[1][0] = code;
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[1]" ); sei.displayPrimaries[1][1] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[1]" ); sei.values.primaries[1][0] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[1]" ); sei.values.primaries[1][1] = code;
 
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[2]" ); sei.displayPrimaries[2][0] = code;
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[2]" ); sei.displayPrimaries[2][1] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_x[2]" ); sei.values.primaries[2][0] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "display_primaries_y[2]" ); sei.values.primaries[2][1] = code;
 
 
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "white_point_x" ); sei.displayWhitePoint[0] = code;
-  sei_read_code( pDecodedMessageOutputStream, 16, code, "white_point_y" ); sei.displayWhitePoint[1] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "white_point_x" ); sei.values.whitePoint[0] = code;
+  sei_read_code( pDecodedMessageOutputStream, 16, code, "white_point_y" ); sei.values.whitePoint[1] = code;
 
-  sei_read_code( pDecodedMessageOutputStream, 32, code, "max_display_mastering_luminance" ); sei.maxDisplayLuminance = code;
-  sei_read_code( pDecodedMessageOutputStream, 32, code, "min_display_mastering_luminance" ); sei.minDisplayLuminance = code;
+  sei_read_code( pDecodedMessageOutputStream, 32, code, "max_display_mastering_luminance" ); sei.values.maxLuminance = code;
+  sei_read_code( pDecodedMessageOutputStream, 32, code, "min_display_mastering_luminance" ); sei.values.minLuminance = code;
 
   xParseByteAlign();
 }

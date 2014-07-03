@@ -89,6 +89,8 @@ public:
   SEI() {}
   virtual ~SEI() {}
 
+  static const char *getSEIMessageString(SEI::PayloadType payloadType);
+
   virtual PayloadType payloadType() const = 0;
 };
 
@@ -472,10 +474,7 @@ public:
     SEIMasteringDisplayColourVolume() {}
     virtual ~SEIMasteringDisplayColourVolume(){}
     
-    UShort displayPrimaries[3][2];
-    UShort displayWhitePoint[2];
-    UInt maxDisplayLuminance;
-    UInt minDisplayLuminance;
+    TComSEIMasteringDisplay values;
 };
 
 typedef std::list<SEI*> SEIMessages;
