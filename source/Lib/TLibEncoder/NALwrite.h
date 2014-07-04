@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __NALWRITE__
+#define __NALWRITE__
+
 #include <ostream>
 
 #include "TLibCommon/TypeDef.h"
@@ -83,3 +86,5 @@ inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit& nalu)
 void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc);
 
 //! \}
+
+#endif
