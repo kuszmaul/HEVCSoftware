@@ -254,8 +254,11 @@ Void TComPicSym::initTiles(TComPPS *pps)
   const Int profileIdc = pps->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc();
   if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10)
   {
-    minHeight = 64  / g_uiMaxCUHeight;
-    minWidth  = 256 / g_uiMaxCUWidth;
+    if (pps->getTilesEnabledFlag())
+    {
+      minHeight = 64  / g_uiMaxCUHeight;
+      minWidth  = 256 / g_uiMaxCUWidth;
+    }
   }
   for(Int row=0; row < numRows; row++)
   {
