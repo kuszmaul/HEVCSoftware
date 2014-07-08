@@ -108,9 +108,7 @@ private:
 #if RExt__O0043_BEST_EFFORT_DECODING
   UInt                    m_forceDecodeBitDepth;
 #endif
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   std::ostream           *m_pDecodedSEIOutputStream;
-#endif
 
 public:
   TDecTop();
@@ -139,9 +137,7 @@ public:
 #if RExt__O0043_BEST_EFFORT_DECODING
   Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
 #endif
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   Void  setDecodedSEIMessageOutputStream(std::ostream *pOpStream) { m_pDecodedSEIOutputStream = pOpStream; }
-#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

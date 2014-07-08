@@ -45,9 +45,7 @@
 //! \{
 
 TDecTop::TDecTop()
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   : m_pDecodedSEIOutputStream(NULL)
-#endif
 {
   m_pcPic = 0;
   m_iMaxRefPicNum = 0;
@@ -765,19 +763,11 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType 
 {
   if(nalUnitType == NAL_UNIT_SUFFIX_SEI)
   {
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
     m_seiReader.parseSEImessage( bs, m_pcPic->getSEIs(), nalUnitType, m_parameterSetManagerDecoder.getActiveSPS(), m_pDecodedSEIOutputStream );
-#else
-    m_seiReader.parseSEImessage( bs, m_pcPic->getSEIs(), nalUnitType, m_parameterSetManagerDecoder.getActiveSPS() );
-#endif
   }
   else
   {
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
     m_seiReader.parseSEImessage( bs, m_SEIs, nalUnitType, m_parameterSetManagerDecoder.getActiveSPS(), m_pDecodedSEIOutputStream );
-#else
-    m_seiReader.parseSEImessage( bs, m_SEIs, nalUnitType, m_parameterSetManagerDecoder.getActiveSPS() );
-#endif
 
     SEIMessages activeParamSets = getSeisByType(m_SEIs, SEI::ACTIVE_PARAMETER_SETS);
     if (activeParamSets.size()>0)

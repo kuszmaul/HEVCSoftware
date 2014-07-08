@@ -70,9 +70,7 @@ protected:
 #if RExt__O0043_BEST_EFFORT_DECODING
   UInt          m_forceDecodeBitDepth;                ///< if non-zero, force the bit depth at the decoder (best effort decoding)
 #endif
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   std::string   m_outputDecodedSEIMessagesFilename;   ///< filename to output decoded SEI messages to. If '-', then use stdout. If empty, do not output details.
-#endif
 
 public:
   TAppDecCfg()

@@ -138,11 +138,7 @@ protected:
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
 #endif
-  Bool      m_masteringDisplayColourVolumeSEIEnabled;
-  UInt      m_masteringDisplayMaxLuminance;
-  UInt      m_masteringDisplayMinLuminance;
-  UShort*   m_masteringDisplayPrimaries;
-  UShort*   m_masteringDisplayWhitePoint;
+  TComSEIMasteringDisplay m_masteringDisplay;
 
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
@@ -279,6 +275,10 @@ protected:
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
+  Int       m_segmentedRectFramePackingSEIEnabled;
+  Bool      m_segmentedRectFramePackingSEICancel;
+  Int       m_segmentedRectFramePackingSEIType;
+  Bool      m_segmentedRectFramePackingSEIPersistence;
   Int       m_displayOrientationSEIAngle;
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
@@ -288,6 +288,8 @@ protected:
   Int       m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
+  Int       m_timeCodeSEINumTs;
+  TComSEITimeSet m_timeSetArray[MAX_TIMECODE_SEI_SETS];
   Bool      m_kneeSEIEnabled;
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;

@@ -84,3 +84,43 @@ Void deleteSEIs (SEIMessages &seiList)
   }
   seiList.clear();
 }
+
+
+// Static member
+const char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
+{
+  switch (payloadType)
+  {
+    case SEI::BUFFERING_PERIOD:                     return "Buffering period";
+    case SEI::PICTURE_TIMING:                       return "Picture timing";
+    case SEI::PAN_SCAN_RECT:                        return "Pan-scan rectangle";                   // not currently decoded
+    case SEI::FILLER_PAYLOAD:                       return "Filler payload";                       // not currently decoded
+    case SEI::USER_DATA_REGISTERED_ITU_T_T35:       return "User data registered";                 // not currently decoded
+    case SEI::USER_DATA_UNREGISTERED:               return "User data unregistered";
+    case SEI::RECOVERY_POINT:                       return "Recovery point";
+    case SEI::SCENE_INFO:                           return "Scene information";                    // not currently decoded
+    case SEI::FULL_FRAME_SNAPSHOT:                  return "Picture snapshot";                     // not currently decoded
+    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_START: return "Progressive refinement segment start"; // not currently decoded
+    case SEI::PROGRESSIVE_REFINEMENT_SEGMENT_END:   return "Progressive refinement segment end";   // not currently decoded
+    case SEI::FILM_GRAIN_CHARACTERISTICS:           return "Film grain characteristics";           // not currently decoded
+    case SEI::POST_FILTER_HINT:                     return "Post filter hint";                     // not currently decoded
+    case SEI::TONE_MAPPING_INFO:                    return "Tone mapping information";
+    case SEI::KNEE_FUNCTION_INFO:                   return "Knee function information";
+    case SEI::FRAME_PACKING:                        return "Frame packing arrangement";
+    case SEI::DISPLAY_ORIENTATION:                  return "Display orientation";
+    case SEI::SOP_DESCRIPTION:                      return "Structure of pictures information";
+    case SEI::ACTIVE_PARAMETER_SETS:                return "Active parameter sets";
+    case SEI::DECODING_UNIT_INFO:                   return "Decoding unit information";
+    case SEI::TEMPORAL_LEVEL0_INDEX:                return "Temporal sub-layer zero index";
+    case SEI::DECODED_PICTURE_HASH:                 return "Decoded picture hash";
+    case SEI::SCALABLE_NESTING:                     return "Scalable nesting";
+    case SEI::REGION_REFRESH_INFO:                  return "Region refresh information";
+    case SEI::NO_DISPLAY:                           return "No display";
+    case SEI::TIME_CODE:                            return "Time code";
+    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
+    case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
+    case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
+    case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
+    default:                                        return "Unknown";
+  }
+}

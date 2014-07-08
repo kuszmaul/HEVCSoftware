@@ -1934,6 +1934,7 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
 Void TDecSbac::xCopyContextsFrom( TDecSbac* pSrc )
 {
   memcpy(m_contextModels, pSrc->m_contextModels, m_numContextModels*sizeof(m_contextModels[0]));
+  memcpy(m_golombRiceAdaptationStatistics, pSrc->m_golombRiceAdaptationStatistics, (sizeof(UInt) * RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS));
 }
 
 Void TDecSbac::xCopyFrom( TDecSbac* pSrc )
@@ -1943,7 +1944,6 @@ Void TDecSbac::xCopyFrom( TDecSbac* pSrc )
   m_uiLastQp           = pSrc->m_uiLastQp;
   xCopyContextsFrom( pSrc );
 
-  memcpy(m_golombRiceAdaptationStatistics, pSrc->m_golombRiceAdaptationStatistics, (sizeof(UInt) * RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS));
 }
 
 Void TDecSbac::load ( TDecSbac* pScr )

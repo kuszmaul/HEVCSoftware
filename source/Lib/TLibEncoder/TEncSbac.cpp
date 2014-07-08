@@ -2090,6 +2090,7 @@ Void TEncSbac::estSignificantCoefficientsBit( estBitsSbacStruct* pcEstBitsSbac, 
 Void TEncSbac::xCopyContextsFrom( TEncSbac* pSrc )
 {
   memcpy(m_contextModels, pSrc->m_contextModels, m_numContextModels*sizeof(m_contextModels[0]));
+  memcpy(m_golombRiceAdaptationStatistics, pSrc->m_golombRiceAdaptationStatistics, (sizeof(UInt) * RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS));
 }
 
 Void  TEncSbac::loadContexts ( TEncSbac* pScr)

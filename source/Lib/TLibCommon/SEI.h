@@ -81,12 +81,15 @@ public:
     NO_DISPLAY                           = 135,
     TIME_CODE                            = 136,
     MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
-    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 138,
-    CHROMA_SAMPLING_FILTER_HINT          = 139
+    SEGM_RECT_FRAME_PACKING              = 138,
+    TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
+    CHROMA_SAMPLING_FILTER_HINT          = 140
   };
 
   SEI() {}
   virtual ~SEI() {}
+
+  static const char *getSEIMessageString(SEI::PayloadType payloadType);
 
   virtual PayloadType payloadType() const = 0;
 };
@@ -249,6 +252,7 @@ public:
   Bool m_exactMatchingFlag;
   Bool m_brokenLinkFlag;
 };
+
 class SEIFramePacking : public SEI
 {
 public:
@@ -275,6 +279,19 @@ public:
   Int  m_arrangementReservedByte;
   Bool m_arrangementPersistenceFlag;
   Bool m_upsampledAspectRatio;
+};
+
+class SEISegmentedRectFramePacking : public SEI
+{
+public:
+  PayloadType payloadType() const { return SEGM_RECT_FRAME_PACKING; }
+
+  SEISegmentedRectFramePacking() {}
+  virtual ~SEISegmentedRectFramePacking() {}
+
+  Bool m_arrangementCancelFlag;
+  Int  m_contentInterpretationType;
+  Bool m_arrangementPersistenceFlag;
 };
 
 class SEIDisplayOrientation : public SEI
@@ -457,10 +474,7 @@ public:
     SEIMasteringDisplayColourVolume() {}
     virtual ~SEIMasteringDisplayColourVolume(){}
     
-    UShort displayPrimaries[3][2];
-    UShort displayWhitePoint[2];
-    UInt maxDisplayLuminance;
-    UInt minDisplayLuminance;
+    TComSEIMasteringDisplay values;
 };
 
 typedef std::list<SEI*> SEIMessages;
@@ -512,24 +526,7 @@ public:
   virtual ~SEITimeCode(){}
 
   UInt numClockTs;
-  UInt clockTimeStampFlag[4];
-  UInt nuitFieldBasedFlag;
-  UInt countingType;
-  UInt fullTimeStampFlag;
-  UInt discontinuityFlag;
-  UInt cntDroppedFlag;
-  UInt nFrames;
-
-  UInt secondsValue;
-  UInt minutesValue;
-  UInt hoursValue;
-
-  UInt secondsFlag;
-  UInt minutesFlag;
-  UInt hoursFlag;
-
-  UInt timeOffsetLength;
-  Int  timeOffset;
+  TComSEITimeSet timeSetArray[MAX_TIMECODE_SEI_SETS];
 };
 
 //definition according to P1005_v1;
