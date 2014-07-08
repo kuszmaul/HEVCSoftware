@@ -178,6 +178,7 @@ protected:
 
   SEIActiveParameterSets*           xCreateSEIActiveParameterSets (TComSPS *sps);
   SEIFramePacking*                  xCreateSEIFramePacking();
+  SEISegmentedRectFramePacking*     xCreateSEISegmentedRectFramePacking();
   SEIDisplayOrientation*            xCreateSEIDisplayOrientation();
   SEIToneMappingInfo*               xCreateSEIToneMappingInfo();
   SEITempMotionConstrainedTileSets* xCreateSEITempMotionConstrainedTileSets ();

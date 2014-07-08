@@ -104,7 +104,6 @@ Void TAppDecTop::decode()
 
   InputByteStream bytestream(bitstreamFile);
 
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   if (!m_outputDecodedSEIMessagesFilename.empty() && m_outputDecodedSEIMessagesFilename!="-")
   {
     m_seiMessageFileStream.open(m_outputDecodedSEIMessagesFilename.c_str(), std::ios::out);
@@ -114,7 +113,6 @@ Void TAppDecTop::decode()
       exit(EXIT_FAILURE);
     }
   }
-#endif
 
   // create & initialize internal classes
   xCreateDecLib();
@@ -291,13 +289,11 @@ Void TAppDecTop::xInitDecLib()
 #if RExt__O0043_BEST_EFFORT_DECODING
   m_cTDecTop.setForceDecodeBitDepth(m_forceDecodeBitDepth);
 #endif
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   if (!m_outputDecodedSEIMessagesFilename.empty())
   {
     std::ostream &os=m_seiMessageFileStream.is_open() ? m_seiMessageFileStream : std::cout;
     m_cTDecTop.setDecodedSEIMessageOutputStream(&os);
   }
-#endif
 }
 
 /** \param pcListPic list of pictures to be written to file

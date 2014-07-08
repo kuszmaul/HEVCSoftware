@@ -49,72 +49,7 @@ Void  xTraceSEIHeader()
 
 Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 {
-  switch (payloadType)
-  {
-  case SEI::DECODED_PICTURE_HASH:
-    fprintf( g_hTrace, "=========== Decoded picture hash SEI message ===========\n");
-    break;
-  case SEI::USER_DATA_UNREGISTERED:
-    fprintf( g_hTrace, "=========== User Data Unregistered SEI message ===========\n");
-    break;
-  case SEI::ACTIVE_PARAMETER_SETS:
-    fprintf( g_hTrace, "=========== Active Parameter sets SEI message ===========\n");
-    break;
-  case SEI::BUFFERING_PERIOD:
-    fprintf( g_hTrace, "=========== Buffering period SEI message ===========\n");
-    break;
-  case SEI::PICTURE_TIMING:
-    fprintf( g_hTrace, "=========== Picture timing SEI message ===========\n");
-    break;
-  case SEI::RECOVERY_POINT:
-    fprintf( g_hTrace, "=========== Recovery point SEI message ===========\n");
-    break;
-  case SEI::FRAME_PACKING:
-    fprintf( g_hTrace, "=========== Frame Packing Arrangement SEI message ===========\n");
-    break;
-  case SEI::DISPLAY_ORIENTATION:
-    fprintf( g_hTrace, "=========== Display Orientation SEI message ===========\n");
-    break;
-  case SEI::TEMPORAL_LEVEL0_INDEX:
-    fprintf( g_hTrace, "=========== Temporal Level Zero Index SEI message ===========\n");
-    break;
-  case SEI::REGION_REFRESH_INFO:
-    fprintf( g_hTrace, "=========== Gradual Decoding Refresh Information SEI message ===========\n");
-    break;
-  case SEI::NO_DISPLAY:
-    fprintf( g_hTrace, "=========== No Display SEI message ===========\n");
-    break;
-  case SEI::DECODING_UNIT_INFO:
-    fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
-    break;
-  case SEI::TONE_MAPPING_INFO:
-    fprintf( g_hTrace, "=========== Tone Mapping Info SEI message ===========\n");
-    break;
-  case SEI::SOP_DESCRIPTION:
-    fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
-    break;
-  case SEI::SCALABLE_NESTING:
-    fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
-    break;
-  case SEI::CHROMA_SAMPLING_FILTER_HINT:
-    fprintf( g_hTrace, "=========== Chroma Sampling Filter Hint SEI message ===========\n");
-    break;
-  case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
-    fprintf( g_hTrace, "=========== Temporal Motion Constrained Tile Sets SEI message ===========\n");
-    break;
-  case SEI::TIME_CODE:
-    fprintf( g_hTrace, "=========== Time Code SEI message ===========\n");
-    break;
-  case SEI::KNEE_FUNCTION_INFO:
-    fprintf( g_hTrace, "=========== Knee Function Information SEI message ===========\n");
-    break;
-  case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
-    fprintf( g_hTrace, "=========== Mastering Display Colour Volume SEI message ===========\n");
-    break;
-  default:
-    fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
-    break;
-  }
+  fprintf( g_hTrace, "=========== %s SEI message ===========\n", SEI::getSEIMessageString(payloadType));
 }
 #endif
 
@@ -145,6 +80,9 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
     break;
   case SEI::FRAME_PACKING:
     xWriteSEIFramePacking(*static_cast<const SEIFramePacking*>(&sei));
+    break;
+  case SEI::SEGM_RECT_FRAME_PACKING:
+    xWriteSEISegmentedRectFramePacking(*static_cast<const SEISegmentedRectFramePacking*>(&sei));
     break;
   case SEI::DISPLAY_ORIENTATION:
     xWriteSEIDisplayOrientation(*static_cast<const SEIDisplayOrientation*>(&sei));
@@ -437,6 +375,17 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
   xWriteByteAlign();
 }
 
+Void SEIWriter::xWriteSEISegmentedRectFramePacking(const SEISegmentedRectFramePacking& sei)
+{
+  WRITE_FLAG( sei.m_arrangementCancelFlag,          "segmented_rect_frame_packing_arrangement_cancel_flag" );
+  if( sei.m_arrangementCancelFlag == 0 ) {
+    WRITE_CODE( sei.m_contentInterpretationType, 2, "segmented_rect_content_interpretation_type" );
+    WRITE_FLAG( sei.m_arrangementPersistenceFlag,   "segmented_rect_frame_packing_arrangement_persistence" );
+  }
+
+  xWriteByteAlign();
+}
+
 Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 {
   Int i;
@@ -671,50 +620,51 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
   WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
   for(int i = 0; i < sei.numClockTs; i++)
   {
-    WRITE_FLAG(sei.clockTimeStampFlag[i], "clock_time_stamp_flag");
-    if(sei.clockTimeStampFlag[i])
+    const TComSEITimeSet &currentTimeSet = sei.timeSetArray[i];
+    WRITE_FLAG(currentTimeSet.clockTimeStampFlag, "clock_time_stamp_flag");
+    if(currentTimeSet.clockTimeStampFlag)
     {
-      WRITE_FLAG(sei.nuitFieldBasedFlag, "nuit_field_based_flag");
-      WRITE_CODE(sei.countingType, 5, "counting_type");
-      WRITE_FLAG(sei.fullTimeStampFlag, "full_timestamp_flag");
-      WRITE_FLAG(sei.discontinuityFlag, "discontinuity_flag");
-      WRITE_FLAG(sei.cntDroppedFlag, "cnt_dropped_flag");
-      WRITE_CODE(sei.nFrames, 9, "n_frames");
-      if(sei.fullTimeStampFlag)
+      WRITE_FLAG(currentTimeSet.numUnitFieldBasedFlag, "units_field_based_flag");
+      WRITE_CODE(currentTimeSet.countingType, 5, "counting_type");
+      WRITE_FLAG(currentTimeSet.fullTimeStampFlag, "full_timestamp_flag");
+      WRITE_FLAG(currentTimeSet.discontinuityFlag, "discontinuity_flag");
+      WRITE_FLAG(currentTimeSet.cntDroppedFlag, "cnt_dropped_flag");
+      WRITE_CODE(currentTimeSet.numberOfFrames, 9, "n_frames");
+      if(currentTimeSet.fullTimeStampFlag)
       {
-        WRITE_CODE(sei.secondsValue, 6, "seconds_value");
-        WRITE_CODE(sei.minutesValue, 6, "minutes_value");
-        WRITE_CODE(sei.hoursValue, 5, "hours_value");
+        WRITE_CODE(currentTimeSet.secondsValue, 6, "seconds_value");
+        WRITE_CODE(currentTimeSet.minutesValue, 6, "minutes_value");
+        WRITE_CODE(currentTimeSet.hoursValue, 5, "hours_value");
       }
       else
       {
-        WRITE_FLAG(sei.secondsFlag, "seconds_flag");
-        if(sei.secondsFlag)
+        WRITE_FLAG(currentTimeSet.secondsFlag, "seconds_flag");
+        if(currentTimeSet.secondsFlag)
         {
-          WRITE_CODE(sei.secondsValue, 6, "seconds_value");
-          WRITE_FLAG(sei.minutesFlag, "minutes_flag");
-          if(sei.minutesFlag)
+          WRITE_CODE(currentTimeSet.secondsValue, 6, "seconds_value");
+          WRITE_FLAG(currentTimeSet.minutesFlag, "minutes_flag");
+          if(currentTimeSet.minutesFlag)
           {
-            WRITE_CODE(sei.minutesValue, 6, "minutes_value");
-            WRITE_FLAG(sei.hoursFlag, "hours_flag");
-            if(sei.hoursFlag)
-              WRITE_CODE(sei.hoursValue, 5, "hours_value");
+            WRITE_CODE(currentTimeSet.minutesValue, 6, "minutes_value");
+            WRITE_FLAG(currentTimeSet.hoursFlag, "hours_flag");
+            if(currentTimeSet.hoursFlag)
+              WRITE_CODE(currentTimeSet.hoursValue, 5, "hours_value");
           }
         }
       }
-      WRITE_CODE(sei.timeOffsetLength, 5, "time_offset_length");
-      if(sei.timeOffsetLength > 0)
+      WRITE_CODE(currentTimeSet.timeOffsetLength, 5, "time_offset_length");
+      if(currentTimeSet.timeOffsetLength > 0)
       {
-        if(sei.timeOffset >= 0)
+        if(currentTimeSet.timeOffsetValue >= 0)
         {
-          WRITE_CODE((UInt)sei.timeOffset, sei.timeOffsetLength, "time_offset");
+          WRITE_CODE((UInt)currentTimeSet.timeOffsetValue, currentTimeSet.timeOffsetLength, "time_offset_value");
         }
         else
         {
           //  Two's complement conversion
-          UInt offsetValue = ~(sei.timeOffset) + 1;
-          offsetValue |= (1 << (sei.timeOffsetLength-1));
-          WRITE_CODE(offsetValue, sei.timeOffsetLength, "time_offset");
+          UInt offsetValue = ~(currentTimeSet.timeOffsetValue) + 1;
+          offsetValue |= (1 << (currentTimeSet.timeOffsetLength-1));
+          WRITE_CODE(offsetValue, currentTimeSet.timeOffsetLength, "time_offset_value");
         }
       }
     }
@@ -835,20 +785,20 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
 
 Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
 {
-  WRITE_CODE( sei.displayPrimaries[0][0],  16,  "display_primaries_x[0]" );
-  WRITE_CODE( sei.displayPrimaries[0][1],  16,  "display_primaries_y[0]" );
- 
-  WRITE_CODE( sei.displayPrimaries[1][0],  16,  "display_primaries_x[1]" );
-  WRITE_CODE( sei.displayPrimaries[1][1],  16,  "display_primaries_y[1]" );
- 
-  WRITE_CODE( sei.displayPrimaries[2][0],  16,  "display_primaries_x[2]" );
-  WRITE_CODE( sei.displayPrimaries[2][1],  16,  "display_primaries_y[2]" );
+  WRITE_CODE( sei.values.primaries[0][0],  16,  "display_primaries_x[0]" );
+  WRITE_CODE( sei.values.primaries[0][1],  16,  "display_primaries_y[0]" );
 
-  WRITE_CODE( sei.displayWhitePoint[0],    16,  "white_point_x" );
-  WRITE_CODE( sei.displayWhitePoint[1],    16,  "white_point_y" );
+  WRITE_CODE( sei.values.primaries[1][0],  16,  "display_primaries_x[1]" );
+  WRITE_CODE( sei.values.primaries[1][1],  16,  "display_primaries_y[1]" );
+
+  WRITE_CODE( sei.values.primaries[2][0],  16,  "display_primaries_x[2]" );
+  WRITE_CODE( sei.values.primaries[2][1],  16,  "display_primaries_y[2]" );
+
+  WRITE_CODE( sei.values.whitePoint[0],    16,  "white_point_x" );
+  WRITE_CODE( sei.values.whitePoint[1],    16,  "white_point_y" );
     
-  WRITE_CODE( sei.maxDisplayLuminance,     32,  "max_display_mastering_luminance" );
-  WRITE_CODE( sei.minDisplayLuminance,     32,  "min_display_mastering_luminance" );
+  WRITE_CODE( sei.values.maxLuminance,     32,  "max_display_mastering_luminance" );
+  WRITE_CODE( sei.values.minLuminance,     32,  "min_display_mastering_luminance" );
     
   xWriteByteAlign();
 }

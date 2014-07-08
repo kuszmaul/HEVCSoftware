@@ -630,20 +630,16 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
 #endif
 
-  const Bool bChroma=(pcSPS->getChromaFormatIdc() != CHROMA_400);
-  if (bChroma)
-  {
-    READ_UVLC( uiCode,    "bit_depth_chroma_minus8" ); // NOTE: RExt - This SE is not in the SPS header for 4:0:0
+  READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
 #if RExt__O0043_BEST_EFFORT_DECODING
-    g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
-    if (forceDecodeBitDepth != 0)
-    {
-      uiCode = forceDecodeBitDepth - 8;
-    }
-#endif
-    assert(uiCode <= 8);
+  g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
+  if (forceDecodeBitDepth != 0)
+  {
+    uiCode = forceDecodeBitDepth - 8;
   }
-  pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode); // NOTE: RExt - for 4:0:0, this will be setting the bit depths for chroma to that of luma
+#endif
+  assert(uiCode <= 8);
+  pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode);
 #if RExt__O0043_BEST_EFFORT_DECODING
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_CHROMA]-8)) );
 #else
@@ -718,10 +714,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if( pcSPS->getUsePCM() )
   {
     READ_CODE( 4, uiCode, "pcm_sample_bit_depth_luma_minus1" );          pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_LUMA, 1 + uiCode );
-    if (bChroma)
-    {
-      READ_CODE( 4, uiCode, "pcm_sample_bit_depth_chroma_minus1" );      pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_CHROMA, 1 + uiCode );  // NOTE: RExt - This SE is not in the SPS header for 4:0:0
-    }
+    READ_CODE( 4, uiCode, "pcm_sample_bit_depth_chroma_minus1" );        pcSPS->setPCMBitDepth    ( CHANNEL_TYPE_CHROMA, 1 + uiCode );
     READ_UVLC( uiCode, "log2_min_pcm_luma_coding_block_size_minus3" );   pcSPS->setPCMLog2MinSize (uiCode+3);
     READ_UVLC( uiCode, "log2_diff_max_min_pcm_luma_coding_block_size" ); pcSPS->setPCMLog2MaxSize ( uiCode+pcSPS->getPCMLog2MinSize() );
     READ_FLAG( uiCode, "pcm_loop_filter_disable_flag" );                 pcSPS->setPCMFilterDisableFlag ( uiCode ? true : false );
@@ -1604,17 +1597,16 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
 
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
   {
-    UInt maxBitDepth=0;
-    READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode)                   maxBitDepth=12;
-    READ_FLAG(    uiCode, "general_max_10bit_constraint_flag" ); if (uiCode && maxBitDepth<10) maxBitDepth=10;
-    READ_FLAG(    uiCode, "general_max_8bit_constraint_flag"  ); if (uiCode && maxBitDepth<8 ) maxBitDepth=8;
-    if (maxBitDepth==0) maxBitDepth=16;
+    UInt maxBitDepth=16;
+    READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode) maxBitDepth=12;
+    READ_FLAG(    uiCode, "general_max_10bit_constraint_flag" ); if (uiCode) maxBitDepth=10;
+    READ_FLAG(    uiCode, "general_max_8bit_constraint_flag"  ); if (uiCode) maxBitDepth=8;
     ptl->setBitDepthConstraint(maxBitDepth);
-    ChromaFormat chromaFmtConstraint=NUM_CHROMA_FORMAT;
-    READ_FLAG(    uiCode, "general_max_422chroma_constraint_flag"  ); if (uiCode)                                           chromaFmtConstraint=CHROMA_422;
-    READ_FLAG(    uiCode, "general_max_420chroma_constraint_flag"  ); if (uiCode && chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_420;
-    READ_FLAG(    uiCode, "general_max_monochrome_constraint_flag" ); if (uiCode && chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_400;
-    if (chromaFmtConstraint==NUM_CHROMA_FORMAT) chromaFmtConstraint=CHROMA_444;
+    ChromaFormat chromaFmtConstraint=CHROMA_444;
+    READ_FLAG(    uiCode, "general_max_422chroma_constraint_flag"  ); if (uiCode) chromaFmtConstraint=CHROMA_422;
+    READ_FLAG(    uiCode, "general_max_420chroma_constraint_flag"  ); if (uiCode) chromaFmtConstraint=CHROMA_420;
+    READ_FLAG(    uiCode, "general_max_monochrome_constraint_flag" ); if (uiCode) chromaFmtConstraint=CHROMA_400;
+    ptl->setChromaFormatConstraint(chromaFmtConstraint);
     READ_FLAG(    uiCode, "general_intra_constraint_flag");          ptl->setIntraConstraintFlag(uiCode != 0);
     READ_FLAG(    uiCode, "general_one_picture_only_constraint_flag");
     READ_FLAG(    uiCode, "general_lower_bit_rate_constraint_flag"); ptl->setLowerBitRateConstraintFlag(uiCode != 0);

@@ -261,8 +261,8 @@ static Bool readPlane(Pel* dst,
     {
       // set chrominance data to mid-range: (1<<(fileBitDepth-1))
       const Pel value=Pel(1<<(fileBitDepth-1));
-      for (UInt y = 0; y < full_height_dest; y++)
-        for (UInt x = 0; x < full_width_dest; x++, dst+=stride_dest)
+      for (UInt y = 0; y < full_height_dest; y++, dst+=stride_dest)
+        for (UInt x = 0; x < full_width_dest; x++)
           dst[x] = value;
     }
 

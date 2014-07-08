@@ -65,9 +65,7 @@ private:
 
   // for output control
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
-#if RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES
   std::ofstream                   m_seiMessageFileStream;         ///< Used for outputing SEI messages.
-#endif
 
 public:
   TAppDecTop();

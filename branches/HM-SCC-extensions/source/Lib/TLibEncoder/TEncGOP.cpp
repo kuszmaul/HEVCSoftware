@@ -191,6 +191,15 @@ SEIFramePacking* TEncGOP::xCreateSEIFramePacking()
   return seiFramePacking;
 }
 
+SEISegmentedRectFramePacking* TEncGOP::xCreateSEISegmentedRectFramePacking()
+{
+  SEISegmentedRectFramePacking *seiSegmentedRectFramePacking = new SEISegmentedRectFramePacking();
+  seiSegmentedRectFramePacking->m_arrangementCancelFlag = m_pcCfg->getSegmentedRectFramePackingArrangementSEICancel();
+  seiSegmentedRectFramePacking->m_contentInterpretationType = m_pcCfg->getSegmentedRectFramePackingArrangementSEIType();
+  seiSegmentedRectFramePacking->m_arrangementPersistenceFlag = m_pcCfg->getSegmentedRectFramePackingArrangementSEIPersistence();
+  return seiSegmentedRectFramePacking;
+}
+
 SEIDisplayOrientation* TEncGOP::xCreateSEIDisplayOrientation()
 {
   SEIDisplayOrientation *seiDisplayOrientation = new SEIDisplayOrientation();
@@ -434,6 +443,17 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
+  if(m_pcCfg->getSegmentedRectFramePackingArrangementSEIEnabled())
+  {
+    SEISegmentedRectFramePacking *sei = xCreateSEISegmentedRectFramePacking ();
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps);
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
+  }
   if (m_pcCfg->getDisplayOrientationSEIAngle())
   {
     SEIDisplayOrientation *sei = xCreateSEIDisplayOrientation();
@@ -473,21 +493,10 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
   if(m_pcCfg->getTimeCodeSEIEnabled())
   {
     SEITimeCode sei_time_code;
-
-    //  Set the time code to some data
-    sei_time_code.numClockTs = 1;
-    sei_time_code.clockTimeStampFlag[0] = 1;
-    sei_time_code.nuitFieldBasedFlag = 0;
-    sei_time_code.countingType = 0;
-    sei_time_code.fullTimeStampFlag = 1;
-    sei_time_code.discontinuityFlag = 0;
-    sei_time_code.cntDroppedFlag = 0;
-    sei_time_code.nFrames = m_pcCfg->getFrameRate();
-    sei_time_code.secondsValue = 0;
-    sei_time_code.minutesValue = 15;
-    sei_time_code.hoursValue = 21;
-    sei_time_code.timeOffsetLength = 5;
-    sei_time_code.timeOffset = -6;
+    //  Set data as per command line options
+    sei_time_code.numClockTs = m_pcCfg->getNumberOfTimesets();
+    for(int i = 0; i < sei_time_code.numClockTs; i++)
+      sei_time_code.timeSetArray[i] = m_pcCfg->getTimeSet(i);
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
     m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
@@ -508,23 +517,11 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
     
-  if(m_pcCfg->getMasteringDisplayColourVolumeSEIEnabled())
+  if(m_pcCfg->getMasteringDisplaySEI().colourVolumeSEIEnabled)
   {
+    const TComSEIMasteringDisplay &seiCfg=m_pcCfg->getMasteringDisplaySEI();
     SEIMasteringDisplayColourVolume mdcv;
-      
-    UShort *displayPrimaries = m_pcCfg->getMasteringDisplayPrimaries();
-    UShort *displayWhitePoint =m_pcCfg->getMasteringDisplayWhitePoint();
-      
-    for( int xy = 0; xy < 2; xy++ )
-    {
-      mdcv.displayWhitePoint[xy] = displayWhitePoint[xy];
-
-      for(int cc=0; cc< 3; cc++){
-        mdcv.displayPrimaries[cc][xy] = displayPrimaries[cc*2 + xy];
-       }
-    }
-    mdcv.maxDisplayLuminance = m_pcCfg->getMasteringDisplayMaxLuminance();
-    mdcv.minDisplayLuminance = m_pcCfg->getMasteringDisplayMinLuminance();
+    mdcv.values = seiCfg;
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
     m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);

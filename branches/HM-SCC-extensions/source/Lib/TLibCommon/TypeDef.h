@@ -258,14 +258,7 @@
 
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-#define RExt__Q0044_SAO_OFFSET_BIT_SHIFT_ADAPTATION                            1 ///< 0 = do not enable code to suggest SAO offset bit shift, 1 (default) = enable code suggesting SAO offset bit shift when shift is set to a negative value.
-
 #define RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT                  1 ///< 0 = use luma SAD only when evaluating intra block copy motion vector candidates, 1 (default) = form an ordered list of the best motion vector candidates based on luma SAD and then select from among them based on chroma SAD
-
-#define RExt__ALLOW_OUTPUT_DECODED_SEI_MESSAGES                                1 ///< 0 = disable code that allows decoded SEI messages to be output, 1 (default) = enable code that allows decoded SEI message to be output (controlled via decoder command line)
-
-#define RExt__FIX_1256                                                         1 ///< 0 = disable fix for ticket 1256, 1 (default) = enable fix for ticket 1256 - reversal of change-set r3776 (merged in 3803) in the main HM branch where number of chroma CBF contexts were reduced from 5 to 4.
-#define RExt__FIX_1284                                                         1 ///< 0 = disable fix for ticket 1284, 1 (default) = enable fix for ticket 1284 for decoding multiple CVS streams with different chroma formats
 
 //------------------------------------------------
 // Backwards-compatibility
@@ -273,6 +266,7 @@
 
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticker 1298 (output value clipping missing from HM RDOQ)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 //------------------------------------------------
@@ -306,6 +300,8 @@
 #define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
 
 #define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
+
+#define MAX_TIMECODE_SEI_SETS                                                  3 ///< Maximum number of time sets
 
 //------------------------------------------------
 // Error checks
@@ -857,6 +853,49 @@ struct TComDigest
   }
 };
 
+struct TComSEITimeSet
+{
+  TComSEITimeSet() : clockTimeStampFlag(false),
+                     numUnitFieldBasedFlag(false),
+                     countingType(0),
+                     fullTimeStampFlag(false),
+                     discontinuityFlag(false),
+                     cntDroppedFlag(false),
+                     numberOfFrames(0),
+                     secondsValue(0),
+                     minutesValue(0),
+                     hoursValue(0),
+                     secondsFlag(false),
+                     minutesFlag(false),
+                     hoursFlag(false),
+                     timeOffsetLength(0),
+                     timeOffsetValue(0)
+  { }
+  Bool clockTimeStampFlag;
+  Bool numUnitFieldBasedFlag;
+  Int  countingType;
+  Bool fullTimeStampFlag;
+  Bool discontinuityFlag;
+  Bool cntDroppedFlag;
+  Int  numberOfFrames;
+  Int  secondsValue;
+  Int  minutesValue;
+  Int  hoursValue;
+  Bool secondsFlag;
+  Bool minutesFlag;
+  Bool hoursFlag;
+  Int  timeOffsetLength;
+  Int  timeOffsetValue;
+};
+
+struct TComSEIMasteringDisplay
+{
+  Bool      colourVolumeSEIEnabled;
+  UInt      maxLuminance;
+  UInt      minLuminance;
+  UShort    primaries[3][2];
+  UShort    whitePoint[2];
+};
 //! \}
 
 #endif
