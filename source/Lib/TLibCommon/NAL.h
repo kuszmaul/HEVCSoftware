@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __NAL__
+#define __NAL__
+
 #include <vector>
 #include <sstream>
 #include "CommonDef.h"
@@ -83,7 +86,7 @@ struct NALUnit
   }
   Bool isSei()
   {
-    return m_nalUnitType == NAL_UNIT_PREFIX_SEI 
+    return m_nalUnitType == NAL_UNIT_PREFIX_SEI
         || m_nalUnitType == NAL_UNIT_SUFFIX_SEI;
   }
 
@@ -111,3 +114,5 @@ struct NALUnitEBSP : public NALUnit
 };
 //! \}
 //! \}
+
+#endif
