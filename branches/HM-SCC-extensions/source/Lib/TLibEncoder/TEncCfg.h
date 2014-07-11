@@ -114,9 +114,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
-#if SCM__PSNR_CLIPPING
   Bool      m_printClippedPSNR;
-#endif
 
   /* profile & level */
   Profile::Name m_profile;
@@ -169,13 +167,8 @@ protected:
 
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
-
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      m_intraBlockCopyFullFrameSearch;    // Intra block copy full frame search
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   Bool      m_useHashBasedME;                   //  Hash based inter search 
-#endif
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
   Bool      m_singleComponentLoopInterSearch;
@@ -409,10 +402,8 @@ public:
   Bool      getPrintSequenceMSE             ()         const { return m_printSequenceMSE;           }
   Void      setPrintSequenceMSE             (Bool value)     { m_printSequenceMSE = value;          }
 
-#if SCM__PSNR_CLIPPING
   Bool      getPrintClippedPSNR             ()         const { return m_printClippedPSNR;           }
   Void      setPrintClippedPSNR             (Bool value)     { m_printClippedPSNR = value;          }
-#endif
 
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -451,12 +442,9 @@ public:
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Void      setUseIntraBCFullFrameSearch    ( Bool b )       { m_intraBlockCopyFullFrameSearch = b; }
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
+
   Void      setUseHashBasedME               ( Bool b )       { m_useHashBasedME = b; }
-#endif
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
   Void      setSingleComponentLoopInterSearch(Bool value)    { m_singleComponentLoopInterSearch = value; }
@@ -529,12 +517,9 @@ public:
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopyFullFrameSearch ; }
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
+
   Bool      getUseHashBasedME               ()      { return m_useHashBasedME; }
-#endif
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
   Bool      getSingleComponentLoopInterSearch() const { return m_singleComponentLoopInterSearch; }
 

@@ -438,10 +438,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool isAddLowestQP = false;
 
   const UInt numberValidComponents = rpcBestCU->getPic()->getNumberValidComponents();
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   Bool isPerfectMatch = false;
   Bool terminateAllFurtherRDO = false;
-#endif
 
   if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
   {
@@ -519,7 +517,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
         if ( m_pcEncCfg->getUseHashBasedME() )
         {
         xCheckRDCostHashInter( rpcBestCU, rpcTempCU, isPerfectMatch );
@@ -533,7 +530,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
         }
-#endif
+
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
@@ -552,11 +549,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
     }
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
     if(!earlyDetectionSkipMode && !terminateAllFurtherRDO)
-#else
-    if(!earlyDetectionSkipMode)
-#endif 
     {
       for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
       {
@@ -910,11 +903,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
     // further split
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
     if( !terminateAllFurtherRDO && bSubBranch && (uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth) )
-#else
-    if( bSubBranch && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
-#endif
     {
       UChar       uhNextDepth         = uiDepth+1;
       TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
@@ -1725,7 +1714,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   }
 }
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
 Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch )
 {
   isPerfectMatch = false;
@@ -1744,7 +1732,7 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
   }
 }
-#endif
+
 
 /** Check R-D costs for a CU with PCM mode.
  * \param rpcBestCU pointer to best mode CU data structure

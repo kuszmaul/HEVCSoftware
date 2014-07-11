@@ -40,8 +40,6 @@
 
 // Include files
 #include "CommonDef.h"
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
-
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include <vector>
@@ -127,7 +125,5 @@ private:
 };
 
 //! \}
-
-#endif // SCM__Q0248_INTER_ME_HASH_SEARCH
 
 #endif // __TCOMHASH__

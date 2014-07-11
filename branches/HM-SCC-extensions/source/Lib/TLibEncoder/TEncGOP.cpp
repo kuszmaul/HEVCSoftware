@@ -145,13 +145,11 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_lastBPSEI          = 0;
   m_totalCoded         = 0;
 
-#if SCM__PSNR_CLIPPING
   for ( Int i=0; i < ( m_pcCfg->getChromaFormatIdc() == CHROMA_400 ? 1 : MAX_NUM_COMPONENT ); i++ )
   {
     m_hasLosslessPSNR[i] = false;
     m_losslessPSNR[i] = 999.99;
   }
-#endif
 }
 
 SEIActiveParameterSets* TEncGOP::xCreateSEIActiveParameterSets (TComSPS *sps)
@@ -1946,7 +1944,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcPic->compressMotion();
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
     if ( m_pcCfg->getUseHashBasedME() )
     {
       if ( m_pcCfg->getGOPEntry(iGOPid).m_refPic )
@@ -1958,7 +1955,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcPic->getHashMap()->clearAll();
       }
     }
-#endif
+
 
     //-- For time output for each slice
     Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
@@ -2316,7 +2313,6 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
 {
   assert (uiNumAllPicCoded == m_gcAnalyzeAll.getNumPic());
 
-#if SCM__PSNR_CLIPPING
   if ( m_pcCfg->getPrintClippedPSNR() )
   {
     for ( Int i=0; i< (m_pcCfg->getChromaFormatIdc() == CHROMA_400 ? 1 : MAX_NUM_COMPONENT); i++ )
@@ -2327,7 +2323,6 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
       }
     }
   }
-#endif
 
   //--CFG_KDY
   const Int rateMultiplier=(isField?2:1);
@@ -2588,7 +2583,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     }
     const Int maxval = 255 << (g_bitDepth[toChannelType(ch)] - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize;
-#if SCM__PSNR_CLIPPING
+
     if ( m_pcCfg->getPrintClippedPSNR() )
     {
       if ( uiSSDtemp == 0 )
@@ -2613,9 +2608,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     {
       dPSNR[ch] = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
     }
-#else
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
-#endif
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize);
   }
 
@@ -2762,7 +2754,7 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     }
     const Int maxval = 255 << (g_bitDepth[toChannelType(ch)] - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize*2;
-#if SCM__PSNR_CLIPPING
+
     if ( m_pcCfg->getPrintClippedPSNR() )
     {
       if ( uiSSDtemp == 0 )
@@ -2787,9 +2779,6 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     {
       dPSNR[ch] = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
     }
-#else
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
-#endif
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize*2);
   }
 
