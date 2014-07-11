@@ -84,9 +84,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
-#if SCM__PSNR_CLIPPING
   Bool      m_printClippedPSNR;
-#endif
 
   // profile/level
   Profile::Name m_profile;
@@ -198,13 +196,8 @@ protected:
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
   Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
-
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   Bool      m_intraBlockCopyFullFrameSearch;                  ///< Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   Bool      m_useHashBasedME;                                 ///< flag for using hash based inter search
-#endif
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_singleComponentLoopInterSearch;                 ///< For inter residual estimation, loop over components once, testing all mode options for each

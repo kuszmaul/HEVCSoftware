@@ -319,23 +319,13 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM__Q0248_INTRABC_FULLFRAME_SEARCH               1
-#define SCM__Q0248_INTER_ME_HASH_SEARCH                   1
-#define SCM__PSNR_CLIPPING                                1
-
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
-#define SCM__Q0248_INTRABC_HASH_DEPTH                     1  ////< Currently used only for 8x8
-#define SCM__Q0248_INTRABC_HASH_TABLESIZE                 (1 << 16)
-#endif
-
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
-
 
 // ====================================================================================================================
 // Basic type redefinition

@@ -43,9 +43,7 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
 #include "TComHash.h"
-#endif 
 
 //! \ingroup TLibCommon
 //! \{
@@ -88,9 +86,7 @@ private:
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   TComHash              m_hashMap;
-#endif
 
 public:
   TComPic();
@@ -162,10 +158,8 @@ public:
 
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   Void          addPictureToHashMapForInter();
   TComHash*     getHashMap() { return &m_hashMap; }
-#endif
 
   /* field coding parameters*/
 

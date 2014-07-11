@@ -49,24 +49,22 @@
 #include "TEncEntropy.h"
 #include "TEncSbac.h"
 #include "TEncCfg.h"
-
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
 #include "TLibCommon/TComHash.h"
-#endif 
 
 //! \ingroup TLibEncoder
 //! \{
 
 class TEncCu;
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
+#define INTRABC_HASH_DEPTH                     1  ////< Currently used only for 8x8
+#define INTRABC_HASH_TABLESIZE                (1 << 16)
+
 struct IntraBCHashNode
 {
   Int pos_X;
   Int pos_Y;
   IntraBCHashNode * next;
 };
-#endif
 
 // ====================================================================================================================
 // Class definition
@@ -101,9 +99,7 @@ private:
   TCoeff*         m_ppcQTTempTUArlCoeff[MAX_NUM_COMPONENT];
 #endif
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   IntraBCHashNode***      m_pcIntraBCHashTable;                 ///< The hash table used for Intra BC search
-#endif
 
 protected:
   // interface to option
@@ -137,11 +133,9 @@ protected:
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   RefPicList      m_currRefPicList;
   Int             m_currRefPicIndex;
   Bool            m_bSkipFracME;
-#endif
 
 public:
   TEncSearch();
@@ -242,7 +236,6 @@ public:
                                   Bool         bUse1DSearchFor8x8
                                 );
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   Void addToSortList            ( list<BlockHash>& listBlockHash,
                                   list<Int>& listCost,
                                   Int cost,
@@ -288,7 +281,6 @@ public:
                                   list<BlockHash>& vecBlockHash,
                                   const BlockHash& currBlockHash
                                  );
-#endif
 
   Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
                                   TComMv&       cMvPred,
@@ -360,8 +352,6 @@ public:
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv );
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
-
   Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
                                 Int pos_X,
                                 Int pos_Y,
@@ -393,7 +383,6 @@ public:
 
   IntraBCHashNode* getHashLinklist( UInt uiDepth, Int iHashIdx ) { return m_pcIntraBCHashTable[uiDepth][iHashIdx]; }
 
-#endif
 
 protected:
 

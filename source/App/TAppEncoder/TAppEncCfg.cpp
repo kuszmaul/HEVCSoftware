@@ -689,9 +689,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MSEBasedSequencePSNR",                            m_printMSEBasedSequencePSNR,                      false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
   ("PrintFrameMSE",                                   m_printFrameMSE,                                  false, "0 (default) emit only bit count and PSNRs for each frame, 1 = also emit MSE values")
   ("PrintSequenceMSE",                                m_printSequenceMSE,                               false, "0 (default) emit only bit rate and PSNRs for the whole sequence, 1 = also emit MSE values")
-#if SCM__PSNR_CLIPPING                                                                                                                            
-  ( "PrintClippedPSNR",                               m_printClippedPSNR,                               false, "0: (default) print lossless PSNR values as 999.99 dB, 1: clip lossless PSNR according to resolution" )
-#endif                                                                 
+  ("PrintClippedPSNR",                                m_printClippedPSNR,                               false, "0: (default) print lossless PSNR values as 999.99 dB, 1: clip lossless PSNR according to resolution" )
   ("ChromaFormatIDC,-cf",                             tmpChromaFormat,                                      0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",                                 m_conformanceMode,                                    0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
   ("HorizontalPadding,-pdx",                          m_aiPad[0],                                           0, "Horizontal source padding for conformance window mode 2")
@@ -747,12 +745,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // motion search options
   ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:TZ search  2:Selective search")
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   ("IntraBlockCopyFullFrameSearch",                   m_intraBlockCopyFullFrameSearch,                   true, "Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks")
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   ("HashBasedME",                                     m_useHashBasedME,                                 false, "Hash based inter search")
-#endif
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
   ("SingleComponentLoopInterSearch",                  m_singleComponentLoopInterSearch,                 false, "For inter residual estimation, loop over components once, testing all mode options for each")
@@ -2187,9 +2181,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Sequence PSNR output              : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   printf("Sequence MSE output               : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
   printf("Frame MSE output                  : %s\n", (m_printFrameMSE    ? "Enabled" : "Disabled") );
-#if SCM__PSNR_CLIPPING
   printf("Print Clipped PSNR                : %s\n", (m_printClippedPSNR ? "Enabled" : "Disabled") );
-#endif
   if (m_isField)
   {
     printf("Frame/Field                       : Field based coding\n");
@@ -2272,12 +2264,8 @@ Void TAppEncCfg::xPrintParameter()
     default: printf( "Motion Estimation                 : Unknown\n" ); break;
   }
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   printf("HashME                            : %d\n", m_useHashBasedME ? 1 : 0 );
-#endif
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );
 

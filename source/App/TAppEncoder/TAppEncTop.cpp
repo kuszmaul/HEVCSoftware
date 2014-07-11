@@ -97,9 +97,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPrintMSEBasedSequencePSNR                         ( m_printMSEBasedSequencePSNR);
   m_cTEncTop.setPrintFrameMSE                                     ( m_printFrameMSE);
   m_cTEncTop.setPrintSequenceMSE                                  ( m_printSequenceMSE);
-#if SCM__PSNR_CLIPPING
   m_cTEncTop.setPrintClippedPSNR                          (m_printClippedPSNR);
-#endif
   m_cTEncTop.setFrameRate                                         ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                                         ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                                       ( m_iSourceWidth );
@@ -141,12 +139,8 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   m_cTEncTop.setUseIntraBCFullFrameSearch                 ( m_intraBlockCopyFullFrameSearch );
-#endif
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   m_cTEncTop.setUseHashBasedME                            ( m_useHashBasedME );
-#endif
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );
   m_cTEncTop.setSingleComponentLoopInterSearch                    ( m_singleComponentLoopInterSearch );

@@ -131,15 +131,13 @@ TEncSearch::TEncSearch()
     m_puhQTTempTransformSkipFlag[ch]               = NULL;
   }
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   m_pcIntraBCHashTable = NULL;
-  m_pcIntraBCHashTable = new IntraBCHashNode**[SCM__Q0248_INTRABC_HASH_DEPTH];
-  for(int i = 0; i < SCM__Q0248_INTRABC_HASH_DEPTH; i++)
+  m_pcIntraBCHashTable = new IntraBCHashNode**[INTRABC_HASH_DEPTH];
+  for(int i = 0; i < INTRABC_HASH_DEPTH; i++)
   {
-    m_pcIntraBCHashTable[i] = new IntraBCHashNode*[SCM__Q0248_INTRABC_HASH_TABLESIZE];
-    memset(m_pcIntraBCHashTable[i], 0, SCM__Q0248_INTRABC_HASH_TABLESIZE * sizeof(IntraBCHashNode*));
+    m_pcIntraBCHashTable[i] = new IntraBCHashNode*[INTRABC_HASH_TABLESIZE];
+    memset(m_pcIntraBCHashTable[i], 0, INTRABC_HASH_TABLESIZE * sizeof(IntraBCHashNode*));
   }
-#endif
 
   m_puhQTTempTrIdx                                 = NULL;
   m_pcQTTempTComYuv                                = NULL;
@@ -203,10 +201,9 @@ TEncSearch::~TEncSearch()
   }
   m_pcQTTempTransformSkipTComYuv.destroy();
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   if(m_pcIntraBCHashTable)
   {
-    for(int iDepth = 0; iDepth < SCM__Q0248_INTRABC_HASH_DEPTH; iDepth++)
+    for(int iDepth = 0; iDepth < INTRABC_HASH_DEPTH; iDepth++)
     {
       if(m_pcIntraBCHashTable[iDepth])
       {
@@ -217,7 +214,7 @@ TEncSearch::~TEncSearch()
   }
 
   m_pcIntraBCHashTable = NULL;
-#endif
+
 
   m_tmpYuvPred.destroy();
 }
@@ -845,12 +842,10 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
 
   for (UInt i = 0; i < 9; i++)
   {
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
     if ( m_bSkipFracME && i > 0 )
     {
       break;
     }
-#endif
     TComMv cMvTest = pcMvRefine[i];
     cMvTest += baseRefMv;
 
@@ -3780,7 +3775,6 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     Distortion  uiCost;
     UInt        uiBits = 0;
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
     xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
 
     if((pcCU->getWidth(0) == 8) && (ePartSize == SIZE_2Nx2N) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
@@ -3788,9 +3782,6 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
       UInt uiIntraBCECost = uiCost + m_pcRdCost->getCost( cMv.getHor(), cMv.getVer());
       xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, uiIntraBCECost);
     }
-#else
-    xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, &cMvPred, cMv, uiBits, uiCost, bUse1DSearchFor8x8 );
-#endif
 
     // store intra BV in REF_PIC_LIST_0
     cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
@@ -3816,8 +3807,6 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
 
   return true;
 }
-
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
 
 Void TEncSearch::addToSortList( list<BlockHash>& listBlockHash, list<Int>& listCost, Int cost, const BlockHash& blockHash )
 {
@@ -4096,7 +4085,6 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
 
   return (bestCost < MAX_INT);
 }
-#endif
 
 // based on xMotionEstimation
 Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
@@ -4180,7 +4168,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   const UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
   const UInt cuPelY    = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartAddr ] ];
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   const Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   const Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
@@ -4194,8 +4181,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   }
   else
   {
-#endif
-
   Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth();
   Int maxYsr =  cuPelY % lcuHeight;
 
@@ -4209,15 +4194,8 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
 
   srRight = lcuWidth - cuPelX %lcuWidth - iRoiWidth;
   srBottom = lcuHeight - cuPelY % lcuHeight - iRoiHeight;
-
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
   }
-#endif
 
-#if !SCM__Q0248_INTRABC_FULLFRAME_SEARCH
-  Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
-  Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-#endif 
 
   if( cuPelX + srRight + iRoiWidth > iPicWidth)
   {
@@ -4466,12 +4444,10 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
 
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
       if((iTempX >= lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
       {
         validCand = false;
       }
-#endif
 
       if ((iTempX >= 0) && (iTempY >= 0))
       {
@@ -4999,7 +4975,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   return;
 }
 
-#if SCM__Q0248_INTRABC_FULLFRAME_SEARCH
 
 Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, Int width, Int height, Bool isRec)
 {
@@ -5284,11 +5259,11 @@ Void TEncSearch::xClearIntraBCHashTable()
 {
   if(m_pcIntraBCHashTable)
   {
-    for(int iDepth = 0; iDepth < SCM__Q0248_INTRABC_HASH_DEPTH; iDepth++)
+    for(int iDepth = 0; iDepth < INTRABC_HASH_DEPTH; iDepth++)
     {
       if(m_pcIntraBCHashTable[iDepth])
       {
-        for(int iIdx = 0; iIdx < SCM__Q0248_INTRABC_HASH_TABLESIZE; iIdx++)
+        for(int iIdx = 0; iIdx < INTRABC_HASH_TABLESIZE; iIdx++)
         {
           if(m_pcIntraBCHashTable[iDepth][iIdx] == NULL)
             continue;
@@ -5317,7 +5292,7 @@ Void TEncSearch::setHashLinklist(IntraBCHashNode*& HashLinklist, UInt uiDepth, U
   HashLinklist->next = m_pcIntraBCHashTable[uiDepth][uiHashIdx];
   m_pcIntraBCHashTable[uiDepth][uiHashIdx] = HashLinklist;  
 }
-#endif
+
 
 // AMVP
 #if ZERO_MVD_EST
@@ -5653,11 +5628,9 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
 
-#if  SCM__Q0248_INTER_ME_HASH_SEARCH
   m_currRefPicList = eRefPicList;
   m_currRefPicIndex = iRefIdxPred;
   m_bSkipFracME = false;
-#endif
 
   //  Do integer search
   if ( !m_iFastSearch || bBi )
@@ -5837,7 +5810,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
   {
     TComMv otherMvps[5];
@@ -5858,7 +5830,7 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
       return;
     }
   }
-#endif
+
   // start search
   Int  iDist = 0;
   Int  iStartX = cStruct.iBestX;
@@ -6045,7 +6017,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
   {
     TComMv otherMvps[5];
@@ -6066,7 +6037,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
       return;
     }
   }
-#endif
 
   // Intial search
   iBestX = cStruct.iBestX;
@@ -6169,7 +6139,7 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
                           pcPatternKey->getROIYHeight(),
                           iRefStride );
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
+
   if ( m_bSkipFracME )
   {
     TComMv baseRefMv( 0, 0 );
@@ -6180,7 +6150,7 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
     ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter );
     return;
   }
-#endif
+
 
   //  Half-pel refinement
   xExtDIFUpSamplingH ( &cPatternRoi, biPred );
@@ -7819,25 +7789,20 @@ Void TEncSearch::xExtDIFUpSamplingH( TComPattern* pattern, Bool biPred )
   const ChromaFormat chFmt = m_filteredBlock[0][0].getChromaFormat();
 
   m_if.filterHor(COMPONENT_Y, srcPtr, srcStride, m_filteredBlockTmp[0].getAddr(COMPONENT_Y), intStride, width+1, height+filterSize, 0, false, chFmt);
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   if ( !m_bSkipFracME )
   {
-#endif
-  m_if.filterHor(COMPONENT_Y, srcPtr, srcStride, m_filteredBlockTmp[2].getAddr(COMPONENT_Y), intStride, width+1, height+filterSize, 2, false, chFmt);
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
+   m_if.filterHor(COMPONENT_Y, srcPtr, srcStride, m_filteredBlockTmp[2].getAddr(COMPONENT_Y), intStride, width+1, height+filterSize, 2, false, chFmt);
   }
-#endif
+
 
   intPtr = m_filteredBlockTmp[0].getAddr(COMPONENT_Y) + halfFilterSize * intStride + 1;
   dstPtr = m_filteredBlock[0][0].getAddr(COMPONENT_Y);
   m_if.filterVer(COMPONENT_Y, intPtr, intStride, dstPtr, dstStride, width+0, height+0, 0, false, true, chFmt);
 
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
   if ( m_bSkipFracME )
   {
     return;
   }
-#endif
 
   intPtr = m_filteredBlockTmp[0].getAddr(COMPONENT_Y) + (halfFilterSize-1) * intStride + 1;
   dstPtr = m_filteredBlock[2][0].getAddr(COMPONENT_Y);

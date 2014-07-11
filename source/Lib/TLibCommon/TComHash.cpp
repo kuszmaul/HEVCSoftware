@@ -36,8 +36,6 @@
 */
 
 #include "CommonDef.h"
-
-#if SCM__Q0248_INTER_ME_HASH_SEARCH
 #include "TComHash.h"
 
 //! \ingroup TLibCommon
@@ -495,6 +493,6 @@ UShort TComHash::getCRCValue4( UChar* p, Int length )
   return m_crcCalculator4.getCRC();
 }
 
-#endif
+
 
 //! \}
