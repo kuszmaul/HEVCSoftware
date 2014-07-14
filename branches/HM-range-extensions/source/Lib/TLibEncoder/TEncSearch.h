@@ -121,6 +121,10 @@ protected:
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
 
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+  TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
+#endif
+
 public:
   TEncSearch();
   virtual ~TEncSearch();
@@ -391,7 +395,11 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD );
+                                    Distortion&  ruiSAD
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+                                   ,const TComMv *pIntegerMv2Nx2NPred
+#endif
+                                    );
 
   Void xTZSearchSelective         ( TComDataCU*  pcCU,
                                     TComPattern* pcPatternKey,
@@ -400,7 +408,11 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD );
+                                    Distortion&  ruiSAD
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+                                   ,const TComMv *pIntegerMv2Nx2NPred
+#endif
+                                    );
 
   Void xSetSearchRange            ( TComDataCU*  pcCU,
                                     TComMv&      cMvPred,
@@ -415,7 +427,11 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD );
+                                    Distortion&  ruiSAD
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+                                  , const TComMv* pIntegerMv2Nx2NPred
+#endif
+                                  );
 
   Void xPatternSearch             ( TComPattern* pcPatternKey,
                                     Pel*         piRefY,
