@@ -264,6 +264,7 @@
 // Backwards-compatibility
 //------------------------------------------------
 
+#define RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT                      1 ///< 0 = disable change to chroma resampling filter hint SEI, 1 (default) enable change to chroma resampling filter hint SEI.
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticker 1298 (output value clipping missing from HM RDOQ)
