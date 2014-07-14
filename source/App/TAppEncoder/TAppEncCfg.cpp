@@ -72,6 +72,9 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
   //                           the intra constraint in the top digit
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+  MONOCHROME_8      = 1008,
+#endif
   MONOCHROME_12     = 1012,
   MONOCHROME_16     = 1016,
   MAIN_12           = 1112,
@@ -247,6 +250,9 @@ strToExtendedProfile[] =
 #else
     {"high-RExt",          HIGHREXT         },
 #endif
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+    {"monochrome",         MONOCHROME_8     },
+#endif
     {"monochrome12",       MONOCHROME_12    },
     {"monochrome16",       MONOCHROME_16    },
     {"main12",             MAIN_12          },
@@ -270,7 +276,11 @@ strToExtendedProfile[] =
 static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/][4/* bit depth constraint 8=0, 10=1, 12=2, 16=3*/][4/*chroma format*/]=
 {
     {
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+        { MONOCHROME_8,  NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
+#else
         { NONE,          NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
+#endif
         { NONE,          NONE,          MAIN_422_10,       MAIN_444_10       }, // 10-bit inter for 400, 420, 422 and 444
         { MONOCHROME_12, MAIN_12,       MAIN_422_12,       MAIN_444_12       }, // 12-bit inter for 400, 420, 422 and 444
         { MONOCHROME_16, NONE,          NONE,              MAIN_444_16       }  // 16-bit inter for 400, 420, 422 and 444 (the latter is non standard used for development)
@@ -597,7 +607,11 @@ automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
     else
     {
       chromaFormatConstraint = CHROMA_400;
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+      bitDepthConstraint     = trialBitDepthConstraint == 8 ? 8 : 12;
+#else
       bitDepthConstraint     = 12;
+#endif
     }
   }
   else
