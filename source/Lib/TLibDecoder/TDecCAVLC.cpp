@@ -1496,6 +1496,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       prevEntryPointOffset = curEntryPointOffset;
     }
 
+#if !RExt__R0128_HIGH_THROUGHPUT_PROFILE
     if ( pps->getTilesEnabledFlag() )
     {
       rpcSlice->setTileLocationCount( numEntryPointOffsets );
@@ -1507,9 +1508,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         prevPos += entryPointOffset[ idx ];
       }
     }
-    else if ( pps->getEntropyCodingSyncEnabledFlag() )
+    else
+#endif
+    if ( pps->getEntropyCodingSyncEnabledFlag() )
     {
-    Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
+      Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
       rpcSlice->allocSubstreamSizes(numSubstreams);
       UInt *pSubstreamSizes       = rpcSlice->getSubstreamSizes();
       for (Int idx=0; idx<numSubstreams-1; idx++)
@@ -1524,6 +1527,19 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
       }
     }
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+    else if ( pps->getTilesEnabledFlag() )
+    {
+      rpcSlice->setTileLocationCount( numEntryPointOffsets );
+
+      UInt prevPos = 0;
+      for (Int idx=0; idx<rpcSlice->getTileLocationCount(); idx++)
+      {
+        rpcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
+        prevPos += entryPointOffset[ idx ];
+      }
+    }
+#endif
 
     if (entryPointOffset)
     {
@@ -1596,7 +1612,11 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT )
+#else
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT )
+#endif
   {
     UInt maxBitDepth=16;
     READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode) maxBitDepth=12;
