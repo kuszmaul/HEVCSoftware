@@ -150,7 +150,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 14.0
+for the HEVC project. It applies to version 15.0
 of the software.
 \end{abstract}
 
@@ -560,17 +560,17 @@ to be specified if non-equal luma and chroma bit-depth processing is
 required.
 \\
 
-\Option{ConformanceMode} &
+\Option{ConformanceWindowMode} &
 \ShortOption{\None} &
 \Default{0} &
-Specifies the conformance mode (cropping/padding parameters) to be applied to the input
-video. The following modes are available:
+Specifies how the parameters related to the conformance window are interpreted (cropping/padding).
+The following modes are available:
 \par
 \begin{tabular}{cp{0.45\textwidth}}
 0 & No cropping / padding \\
 1 & Automatic padding to the next minimum CU size \\
 2 & Padding according to parameters HorizontalPadding and VerticalPadding \\
-3 & Cropping according to parameters ConfLeft, ConfRight, ConfTop and ConfBottom \\
+3 & Cropping according to parameters ConfWinLeft, ConfWinRight, ConfWinTop and ConfWinBottom \\
 \end{tabular}
 \\
 
@@ -584,10 +584,10 @@ video in luma samples.  Must be a multiple of the chroma resolution
 (e.g. a multiple of two for 4:2:0).
 \\
 
-\Option{ConfLeft}%
-\Option{ConfRight}%
-\Option{ConfTop}%
-\Option{ConfBottom} &
+\Option{ConfWinLeft}%
+\Option{ConfWinRight}%
+\Option{ConfWinTop}%
+\Option{ConfWinBottom} &
 \ShortOption{\None} &
 \Default{0} &
 Specifies the horizontal and vertical cropping to be applied to the
@@ -750,9 +750,10 @@ Specifies the type of decoding refresh to apply at the intra frame period
 picture.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
-0 & Applies an I picture (not a clean random access point). \\
-1 & Applies a non-IDR clean random access point (open GOP). \\
-2 & Applies an IDR random access point (closed GOP). \\
+0 & Applies an I picture (not a intra random access point). \\
+1 & Applies a CRA intra random access point (open GOP). \\
+2 & Applies an IDR intra random access point (closed GOP). \\
+3 & Use recovery point SEI messages to indicate random access. \\
 \end{tabular}
 \\
 
@@ -1057,6 +1058,18 @@ beginning of each line of CTBs in order to produce a bitstream that can
 be encoded or decoded using one or more cores.
 \\
 
+\Option{TileUniformSpacing} &
+\ShortOption{\None} &
+\Default{0} &
+Controls the mode used to determine per row and column tile sizes.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ 0 & Each tile column width and tile row height is explicitly set
+     by TileColumnWidthArray and TileRowHeightArray respectively \\
+ 1 & Tile columns and tile rows are uniformly spaced. \\
+\end{tabular}
+\\
+
 \Option{NumTileColumnsMinus1}%
 \Option{NumTileRowsMinus1} &
 \ShortOption{\None} &
@@ -1066,20 +1079,8 @@ $\mathrm{NumTileColumnsMinus1} + 1 \times \mathrm{NumTileRowsMinus1} + 1$
 columns and rows.
 \\
 
-\Option{UniformSpacingIdc} &
-\ShortOption{\None} &
-\Default{0} &
-Controls the mode used to determine per row and column tile sizes.
-\par
-\begin{tabular}{cp{0.45\textwidth}}
- 0 & Each tile column width and tile row height is explicitly set
-     by ColumnWidthArray and RowHeightArray respectively \\
- 1 & Tile columns and tile rows are uniformly spaced. \\
-\end{tabular}
-\\
-
-\Option{ColumnWidthArray}%
-\Option{RowHeightArray} &
+\Option{TileColumnWidthArray}%
+\Option{TileRowHeightArray} &
 \ShortOption{\None} &
 \Default{\NotSet} &
 Specifies a space or comma separated list of widths and heights,

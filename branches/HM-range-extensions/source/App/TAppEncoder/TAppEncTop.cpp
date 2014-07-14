@@ -102,7 +102,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFrameSkip                                         ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                                       ( m_iSourceWidth );
   m_cTEncTop.setSourceHeight                                      ( m_iSourceHeight );
-  m_cTEncTop.setConformanceWindow                                 ( m_confLeft, m_confRight, m_confTop, m_confBottom );
+  m_cTEncTop.setConformanceWindow                                 ( m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom );
   m_cTEncTop.setFramesToBeEncoded                                 ( m_framesToBeEncoded );
 
   //====== Coding Structure ========
@@ -141,7 +141,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );
-  m_cTEncTop.setSingleComponentLoopInterSearch                    ( m_singleComponentLoopInterSearch );
 
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                                        ( m_iMaxDeltaQP  );
@@ -307,16 +306,16 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEIOutputKneePoint                            ( m_kneeSEIOutputKneePoint );
   m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
 
-  m_cTEncTop.setUniformSpacingIdr                                 ( m_iUniformSpacingIdr );
-  m_cTEncTop.setNumColumnsMinus1                                  ( m_iNumColumnsMinus1 );
-  m_cTEncTop.setNumRowsMinus1                                     ( m_iNumRowsMinus1 );
-  if(m_iUniformSpacingIdr==0)
+  m_cTEncTop.setTileUniformSpacingFlag                            ( m_tileUniformSpacingFlag );
+  m_cTEncTop.setNumColumnsMinus1                                  ( m_numTileColumnsMinus1 );
+  m_cTEncTop.setNumRowsMinus1                                     ( m_numTileRowsMinus1 );
+  if(!m_tileUniformSpacingFlag)
   {
-    m_cTEncTop.setColumnWidth                                     ( m_pColumnWidth );
-    m_cTEncTop.setRowHeight                                       ( m_pRowHeight );
+    m_cTEncTop.setColumnWidth                                     ( m_tileColumnWidth );
+    m_cTEncTop.setRowHeight                                       ( m_tileRowHeight );
   }
   m_cTEncTop.xCheckGSParameters();
-  Int uiTilesCount          = (m_iNumRowsMinus1+1) * (m_iNumColumnsMinus1+1);
+  Int uiTilesCount = (m_numTileRowsMinus1+1) * (m_numTileColumnsMinus1+1);
   if(uiTilesCount == 1)
   {
     m_bLFCrossTileBoundaryFlag = true;
@@ -342,6 +341,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseStrongIntraSmoothing                           ( m_useStrongIntraSmoothing );
   m_cTEncTop.setActiveParameterSetsSEIEnabled                     ( m_activeParameterSetsSEIEnabled );
   m_cTEncTop.setVuiParametersPresentFlag                          ( m_vuiParametersPresentFlag );
+  m_cTEncTop.setAspectRatioInfoPresentFlag                        ( m_aspectRatioInfoPresentFlag);
   m_cTEncTop.setAspectRatioIdc                                    ( m_aspectRatioIdc );
   m_cTEncTop.setSarWidth                                          ( m_sarWidth );
   m_cTEncTop.setSarHeight                                         ( m_sarHeight );
@@ -581,7 +581,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 
       if (m_pchReconFile)
       {
-        m_cTVideoIOYuvReconFile.write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confLeft, m_confRight, m_confTop, m_confBottom, NUM_CHROMA_FORMAT, m_isTopFieldFirst );
+        m_cTVideoIOYuvReconFile.write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, NUM_CHROMA_FORMAT, m_isTopFieldFirst );
       }
 
       const AccessUnit& auTop = *(iterBitstream++);
@@ -610,7 +610,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
       if (m_pchReconFile)
       {
-        m_cTVideoIOYuvReconFile.write( pcPicYuvRec, ipCSC, m_confLeft, m_confRight, m_confTop, m_confBottom );
+        m_cTVideoIOYuvReconFile.write( pcPicYuvRec, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom );
       }
 
       const AccessUnit& au = *(iterBitstream++);
