@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -63,16 +63,16 @@ class TEncCavlc : public SyntaxElementWriter, public TEncEntropyIf
 public:
   TEncCavlc();
   virtual ~TEncCavlc();
-  
+
 protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
 
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
-  
+
 public:
-  
+
   Void  resetEntropy          ();
   Void  determineCabacInitIdx  () {};
 
@@ -93,40 +93,44 @@ public:
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast );
   Void  codeSliceFinish         ();
-  
+
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
- 
+
+  Void codeAlfCtrlFlag   ( ComponentID component, UInt code ) {printf("Not supported\n"); assert(0);}
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  
+
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
+
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
-  Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
+  Void codeQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeQtCbfZero     ( TComDataCU* pcCU, TextType eType, UInt uiTrDepth );
+  Void codeQtCbfZero     ( TComTU &rTu, const ChannelType chType );
   Void codeQtRootCbfZero ( TComDataCU* pcCU );
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeRefFrmIdx     ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  
-  Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
-  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void codeTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, TextType eTType );
 
-  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
-  
+  Void codeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
+
+  Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
+  Void codeCoeffNxN      ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
+  Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
+
+  Void estBit            ( estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, ChannelType chType );
+
   Void xCodePredWeightTable          ( TComSlice* pcSlice );
   Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }
   Void updateContextTables           ( SliceType eSliceType, Int iQp  )                          { return;   }
@@ -136,6 +140,7 @@ public:
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
+  Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
 };
 
 //! \}

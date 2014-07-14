@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -51,11 +51,11 @@ Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const Char *p
     fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
     if( length<10 )
     {
-      fprintf( g_hTrace, "%-50s u(%d)  : %d\n", pSymbolName, length, value ); 
+      fprintf( g_hTrace, "%-50s u(%d)  : %d\n", pSymbolName, length, value );
     }
     else
     {
-      fprintf( g_hTrace, "%-50s u(%d) : %d\n", pSymbolName, length, value ); 
+      fprintf( g_hTrace, "%-50s u(%d) : %d\n", pSymbolName, length, value );
     }
   }
 }
@@ -66,7 +66,7 @@ Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const Char *pSymbolName)
   if( g_HLSTraceEnable )
   {
     fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-    fprintf( g_hTrace, "%-50s ue(v) : %d\n", pSymbolName, value ); 
+    fprintf( g_hTrace, "%-50s ue(v) : %d\n", pSymbolName, value );
   }
 }
 
@@ -76,7 +76,7 @@ Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const Char *pSymbolName)
   if( g_HLSTraceEnable )
   {
     fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-    fprintf( g_hTrace, "%-50s se(v) : %d\n", pSymbolName, value ); 
+    fprintf( g_hTrace, "%-50s se(v) : %d\n", pSymbolName, value );
   }
 }
 
@@ -86,7 +86,7 @@ Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const Char *pSymbolName)
   if( g_HLSTraceEnable )
   {
     fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-    fprintf( g_hTrace, "%-50s u(1)  : %d\n", pSymbolName, value ); 
+    fprintf( g_hTrace, "%-50s u(1)  : %d\n", pSymbolName, value );
   }
 }
 
@@ -103,9 +103,9 @@ Void SyntaxElementWriter::xWriteUvlc     ( UInt uiCode )
 {
   UInt uiLength = 1;
   UInt uiTemp = ++uiCode;
-  
+
   assert ( uiTemp );
-  
+
   while( 1 != uiTemp )
   {
     uiTemp >>= 1;
@@ -119,7 +119,7 @@ Void SyntaxElementWriter::xWriteUvlc     ( UInt uiCode )
 Void SyntaxElementWriter::xWriteSvlc     ( Int iCode )
 {
   UInt uiCode;
-  
+
   uiCode = xConvertToUInt( iCode );
   xWriteUvlc( uiCode );
 }

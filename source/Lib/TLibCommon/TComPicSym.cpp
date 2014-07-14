@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -67,31 +67,31 @@ TComPicSym::TComPicSym()
 ,m_puiTileIdxMap(NULL)
 ,m_puiInverseCUOrderMap(NULL)
 ,m_saoBlkParams(NULL)
-{};
+{}
 
 
-Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
 {
   UInt i;
 
   m_uhTotalDepth      = uiMaxDepth;
   m_uiNumPartitions   = 1<<(m_uhTotalDepth<<1);
-  
+
   m_uiMaxCUWidth      = uiMaxWidth;
   m_uiMaxCUHeight     = uiMaxHeight;
-  
+
   m_uiMinCUWidth      = uiMaxWidth  >> m_uhTotalDepth;
   m_uiMinCUHeight     = uiMaxHeight >> m_uhTotalDepth;
-  
+
   m_uiNumPartInWidth  = m_uiMaxCUWidth  / m_uiMinCUWidth;
   m_uiNumPartInHeight = m_uiMaxCUHeight / m_uiMinCUHeight;
-  
+
   m_uiWidthInCU       = ( iPicWidth %m_uiMaxCUWidth  ) ? iPicWidth /m_uiMaxCUWidth  + 1 : iPicWidth /m_uiMaxCUWidth;
   m_uiHeightInCU      = ( iPicHeight%m_uiMaxCUHeight ) ? iPicHeight/m_uiMaxCUHeight + 1 : iPicHeight/m_uiMaxCUHeight;
-  
+
   m_uiNumCUsInFrame   = m_uiWidthInCU * m_uiHeightInCU;
   m_apcTComDataCU     = new TComDataCU*[m_uiNumCUsInFrame];
-  
+
   if (m_uiNumAllocatedSlice>0)
   {
     for ( i=0; i<m_uiNumAllocatedSlice ; i++ )
@@ -106,10 +106,10 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
   for ( i=0; i<m_uiNumCUsInFrame ; i++ )
   {
     m_apcTComDataCU[i] = new TComDataCU;
-    m_apcTComDataCU[i]->create( m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
+    m_apcTComDataCU[i]->create( chromaFormatIDC, m_uiNumPartitions, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
 #if ADAPTIVE_QP_SELECTION
       , true
-#endif     
+#endif
       );
   }
 
@@ -137,7 +137,7 @@ Void TComPicSym::destroy()
     delete [] m_apcTComSlice;
   }
   m_apcTComSlice = NULL;
-  
+
   for (Int i = 0; i < m_uiNumCUsInFrame; i++)
   {
     m_apcTComDataCU[i]->destroy();
@@ -184,8 +184,8 @@ Void TComPicSym::clearSliceBuffer()
 }
 
 UInt TComPicSym::getPicSCUEncOrder( UInt SCUAddr )
-{ 
-  return getInverseCUOrderMap(SCUAddr/m_uiNumPartitions)*m_uiNumPartitions + SCUAddr%m_uiNumPartitions; 
+{
+  return getInverseCUOrderMap(SCUAddr/m_uiNumPartitions)*m_uiNumPartitions + SCUAddr%m_uiNumPartitions;
 }
 
 UInt TComPicSym::getPicSCUAddr( UInt SCUEncOrder )
@@ -252,7 +252,7 @@ Void TComPicSym::initTiles(TComPPS *pps)
   Int minWidth  = 1;
   Int minHeight = 1;
   const Int profileIdc = pps->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc();
-  if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10)
+  if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10) //TODO: RExt - add more profiles...
   {
     if (pps->getTilesEnabledFlag())
     {
@@ -330,7 +330,7 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
 {
   UInt  uiNxtCUAddr;
   UInt  uiTileIdx;
-  
+
   //get the tile index for the current LCU
   uiTileIdx = this->getTileIdxMap(uiCurrCUAddr);
 
@@ -346,7 +346,7 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
     {
       uiNxtCUAddr = this->getTComTile(uiTileIdx+1)->getFirstCUAddr();
     }
-  } 
+  }
   else //the current LCU is not the last LCU of the tile
   {
     if( uiCurrCUAddr % m_uiWidthInCU == this->getTComTile(uiTileIdx)->getRightEdgePosInCU() )  //the current LCU is on the rightmost edge of the tile
@@ -456,7 +456,7 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
     }
 
     if(!isLoopFiltAcrossTilePPS)
-    {      
+    {
       isLeftAvail      = (!isLeftAvail      ) ?false:(getTileIdxMap( ctuLeft->getAddr()         ) == getTileIdxMap( ctu ));
       isAboveAvail     = (!isAboveAvail     ) ?false:(getTileIdxMap( ctuAbove->getAddr()        ) == getTileIdxMap( ctu ));
       isRightAvail     = (!isRightAvail     ) ?false:(getTileIdxMap( ctuRight->getAddr()        ) == getTileIdxMap( ctu ));
@@ -470,13 +470,13 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
 
 }
 
+
 TComTile::TComTile()
 : m_uiTileWidth         (0)
 , m_uiTileHeight        (0)
 , m_uiRightEdgePosInCU  (0)
 , m_uiBottomEdgePosInCU (0)
 , m_uiFirstCUAddr       (0)
-
 {
 }
 

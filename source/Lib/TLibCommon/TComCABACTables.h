@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -35,10 +35,11 @@
     \brief    static class for CABAC tables
 */
 
-#ifndef __TCOM_CABAC_TABLES__
-#define __TCOM_CABAC_TABLES__
+#ifndef __TCOMCABACTABLES__
+#define __TCOMCABACTABLES__
 
 #include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComRom.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -50,7 +51,7 @@
 class TComCABACTables
 {
 public:
-  const static UChar  sm_aucLPSTable[64][4];
+  const static UChar  sm_aucLPSTable[1 << CONTEXT_STATE_BITS][4];
   const static UChar  sm_aucRenormTable[32];
 };
 
