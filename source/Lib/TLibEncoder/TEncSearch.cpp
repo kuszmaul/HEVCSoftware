@@ -4036,7 +4036,24 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   else
   {
     rcMv = *pcMvPred;
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+    const TComMv *pIntegerMv2Nx2NPred=0;
+    if (pcCU->getPartitionSize(0) != SIZE_2Nx2N || pcCU->getDepth(0) != 0)
+    {
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT == 2
+      const Profile::Name profileIdc=pcCU->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc(); // TODO: RExt - temporary profile check to ensure backwards compatibility with HM.
+      if (profileIdc != Profile::MAIN && profileIdc != Profile::MAIN10 && profileIdc != Profile::MAINSTILLPICTURE)
+#endif
+      pIntegerMv2Nx2NPred = &(m_integerMv2Nx2N[eRefPicList][iRefIdxPred]);
+    }
+    xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, pIntegerMv2Nx2NPred );
+    if (pcCU->getPartitionSize(0) == SIZE_2Nx2N)
+    {
+      m_integerMv2Nx2N[eRefPicList][iRefIdxPred] = rcMv;
+    }
+#else
     xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
+#endif
   }
 
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
@@ -4140,8 +4157,19 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 
 
 
-
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+Void TEncSearch::xPatternSearchFast( TComDataCU*   pcCU,
+                                     TComPattern*  pcPatternKey,
+                                     Pel*          piRefY,
+                                     Int           iRefStride,
+                                     TComMv*       pcMvSrchRngLT,
+                                     TComMv*       pcMvSrchRngRB,
+                                     TComMv       &rcMv,
+                                     Distortion   &ruiSAD,
+                                     const TComMv* pIntegerMv2Nx2NPred )
+#else
 Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
+#endif
 {
   assert (MD_LEFT < NUM_MV_PREDICTORS);
   pcCU->getMvPredLeft       ( m_acMvPredictors[MD_LEFT] );
@@ -4153,11 +4181,19 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
   switch ( m_iFastSearch )
   {
     case 1:
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+      xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
+#else
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
+#endif
       break;
 
     case 2:
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+      xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
+#else
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
+#endif
       break;
     default:
       break;
@@ -4167,7 +4203,19 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
 
 
 
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
+                            TComPattern* pcPatternKey,
+                            Pel*         piRefY,
+                            Int          iRefStride,
+                            TComMv*      pcMvSrchRngLT,
+                            TComMv*      pcMvSrchRngRB,
+                            TComMv      &rcMv,
+                            Distortion  &ruiSAD,
+                            const TComMv* pIntegerMv2Nx2NPred )
+#else
 Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
+#endif
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
@@ -4205,6 +4253,29 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
   {
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
+
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+  if (pIntegerMv2Nx2NPred != 0)
+  {
+    TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
+    integerMv2Nx2NPred <<= 2;
+    pcCU->clipMv( integerMv2Nx2NPred );
+    integerMv2Nx2NPred >>= 2;
+    xTZSearchHelp(pcPatternKey, cStruct, integerMv2Nx2NPred.getHor(), integerMv2Nx2NPred.getVer(), 0, 0);
+
+    // reset search range
+    TComMv cMvSrchRngLT;
+    TComMv cMvSrchRngRB;
+    Int iSrchRng = m_iSearchRange;
+    TComMv currBestMv(cStruct.iBestX, cStruct.iBestY );
+    currBestMv <<= 2;
+    xSetSearchRange( pcCU, currBestMv, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
+    iSrchRngHorLeft   = cMvSrchRngLT.getHor();
+    iSrchRngHorRight  = cMvSrchRngRB.getHor();
+    iSrchRngVerTop    = cMvSrchRngLT.getVer();
+    iSrchRngVerBottom = cMvSrchRngRB.getVer();
+  }
+#endif
 
   // start search
   Int  iDist = 0;
@@ -4342,7 +4413,19 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
 }
 
 
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
+                                     TComPattern*  pcPatternKey,
+                                     Pel*          piRefY,
+                                     Int           iRefStride,
+                                     TComMv*       pcMvSrchRngLT,
+                                     TComMv*       pcMvSrchRngRB,
+                                     TComMv       &rcMv,
+                                     Distortion   &ruiSAD,
+                                     const TComMv* pIntegerMv2Nx2NPred )
+#else
 Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
+#endif
 {
   SEL_SEARCH_CONFIGURATION
 
@@ -4392,7 +4475,30 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
-  // Intial search
+#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
+  if ( pIntegerMv2Nx2NPred != 0 )
+  {
+    TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
+    integerMv2Nx2NPred <<= 2;
+    pcCU->clipMv( integerMv2Nx2NPred );
+    integerMv2Nx2NPred >>= 2;
+    xTZSearchHelp(pcPatternKey, cStruct, integerMv2Nx2NPred.getHor(), integerMv2Nx2NPred.getVer(), 0, 0);
+
+    // reset search range
+    TComMv cMvSrchRngLT;
+    TComMv cMvSrchRngRB;
+    Int iSrchRng = m_iSearchRange;
+    TComMv currBestMv(cStruct.iBestX, cStruct.iBestY );
+    currBestMv <<= 2;
+    xSetSearchRange( pcCU, currBestMv, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
+    iSrchRngHorLeft   = cMvSrchRngLT.getHor();
+    iSrchRngHorRight  = cMvSrchRngRB.getHor();
+    iSrchRngVerTop    = cMvSrchRngLT.getVer();
+    iSrchRngVerBottom = cMvSrchRngRB.getVer();
+  }
+#endif
+
+  // Initial search
   iBestX = cStruct.iBestX;
   iBestY = cStruct.iBestY; 
   iFirstSrchRngHorLeft    = ((iBestX - uiSearchRangeInitial) > iSrchRngHorLeft)   ? (iBestX - uiSearchRangeInitial) : iSrchRngHorLeft;
