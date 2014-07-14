@@ -264,6 +264,7 @@
 // Backwards-compatibility
 //------------------------------------------------
 
+#define RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING                     1 ///< 0 = disable change to use of Hadamard in lossless coding, 1 (default) = enable change to the use of Hadamard in lossless coding.
 #define RExt__R0105_MOTION_ESTIMATION_STARTING_POINT                           2 ///< 0 = disable change to motion estimation starting point (HM compatible), 1 = enable change to motion estimation starting point, 2 (temporary default) = enable, but only if profile is not a version 1 profile (for backwards compatibility reasons)
 #define RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT                      1 ///< 0 = disable change to chroma resampling filter hint SEI, 1 (default) = enable change to chroma resampling filter hint SEI.
 

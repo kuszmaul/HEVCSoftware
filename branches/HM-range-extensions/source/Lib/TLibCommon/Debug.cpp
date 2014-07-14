@@ -174,6 +174,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING,                settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__R0105_MOTION_ESTIMATION_STARTING_POINT,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT,                 settingNameWidth, settingValueWidth);
 

@@ -802,7 +802,11 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
 
 Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
                                            TComMv baseRefMv,
-                                           Int iFrac, TComMv& rcMvFrac )
+                                           Int iFrac, TComMv& rcMvFrac
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+                                          ,Bool bAllowUseOfHadamard
+#endif
+                                         )
 {
   Distortion  uiDist;
   Distortion  uiDistBest  = std::numeric_limits<Distortion>::max();
@@ -811,7 +815,11 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
   Pel*  piRefPos;
   Int iRefStride = m_filteredBlock[0][0].getStride(COMPONENT_Y);
 
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  m_pcRdCost->setDistParam( pcPatternKey, m_filteredBlock[0][0].getAddr(COMPONENT_Y), iRefStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() && bAllowUseOfHadamard );
+#else
   m_pcRdCost->setDistParam( pcPatternKey, m_filteredBlock[0][0].getAddr(COMPONENT_Y), iRefStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
+#endif
 
   const TComMv* pcMvRefine = (iFrac == 2 ? s_acMvRefineH : s_acMvRefineQ);
 
@@ -2251,6 +2259,15 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
             Distortion  uiMinSAD           = std::numeric_limits<Distortion>::max();
       const UInt        mappedModeTable[4] = {PLANAR_IDX,DC_IDX,HOR_IDX,VER_IDX};
 
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+      DistParam distParamU, distParamV;
+      const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
+      m_pcRdCost->setDistParam(distParamU, g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgU, uiStride, piPredU, uiStride, uiWidth, uiHeight, bUseHadamard);
+      m_pcRdCost->setDistParam(distParamV, g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgV, uiStride, piPredV, uiStride, uiWidth, uiHeight, bUseHadamard);
+      distParamU.bApplyWeight = false;
+      distParamV.bApplyWeight = false;
+#endif
+
       for( UInt uiMode_  = uiMinMode; uiMode_ < uiMaxMode; uiMode_++ )
       {
         UInt uiMode=mappedModeTable[uiMode_];
@@ -2261,8 +2278,13 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
         predIntraAng( COMPONENT_Cr, uiMode, piOrgV, uiStride, piPredV, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
 
         //--- get SAD ---
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+        Distortion uiSAD  = distParamU.DistFunc(&distParamU);
+        uiSAD            += distParamV.DistFunc(&distParamV);
+#else
         Distortion uiSAD  = m_pcRdCost->calcHAD( g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgU, uiStride, piPredU, uiStride, uiWidth, uiHeight );
         uiSAD            += m_pcRdCost->calcHAD( g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgV, uiStride, piPredV, uiStride, uiWidth, uiHeight );
+#endif
         //--- check ---
         if( uiSAD < uiMinSAD )
         {
@@ -2373,7 +2395,12 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
       Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
       Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
       UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
-
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+      DistParam distParam;
+      const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
+      m_pcRdCost->setDistParam(distParam, g_bitDepth[CHANNEL_TYPE_LUMA], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height, bUseHadamard);
+      distParam.bApplyWeight = false;
+#endif
       for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
       {
         UInt       uiMode = modeIdx;
@@ -2384,7 +2411,11 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiMode) );
 
         // use hadamard transform here
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+        uiSad+=distParam.DistFunc(&distParam);
+#else
         uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );
+#endif
 
         UInt   iModeBits = 0;
 
@@ -2941,7 +2972,7 @@ Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcP
 
 
 
-Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, Distortion& ruiErr, Bool bHadamard )
+Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, Distortion& ruiErr, Bool /*bHadamard*/ )
 {
   motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
 
@@ -2954,10 +2985,18 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 
   cDistParam.bApplyWeight = false;
 
+
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  m_pcRdCost->setDistParam( cDistParam, g_bitDepth[CHANNEL_TYPE_LUMA],
+                            pcYuvOrg->getAddr( COMPONENT_Y, uiAbsPartIdx ), pcYuvOrg->getStride(COMPONENT_Y),
+                            m_tmpYuvPred .getAddr( COMPONENT_Y, uiAbsPartIdx ), m_tmpYuvPred .getStride(COMPONENT_Y),
+                            iWidth, iHeight, m_pcEncCfg->getUseHADME() && (pcCU->getCUTransquantBypass(iPartIdx) != 0) );
+#else
   m_pcRdCost->setDistParam( cDistParam, g_bitDepth[CHANNEL_TYPE_LUMA],
                             pcYuvOrg->getAddr( COMPONENT_Y, uiAbsPartIdx ), pcYuvOrg->getStride(COMPONENT_Y),
                             m_tmpYuvPred .getAddr( COMPONENT_Y, uiAbsPartIdx ), m_tmpYuvPred .getStride(COMPONENT_Y),
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() );
+#endif
 
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
@@ -4059,7 +4098,12 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setCostScale ( 1 );
 
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  const Bool bIsLosslessCoded = pcCU->getCUTransquantBypass() != 0;
+  xPatternSearchFracDIF( bIsLosslessCoded, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
+#else
   xPatternSearchFracDIF( pcCU, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
+#endif
 
   m_pcRdCost->setCostScale( 0 );
   rcMv <<= 2;
@@ -4574,7 +4618,12 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
 }
 
 
-Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
+Void TEncSearch::xPatternSearchFracDIF(
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+                                       Bool         bIsLosslessCoded,
+#else
+                                       TComDataCU*  pcCU,
+#endif
                                        TComPattern* pcPatternKey,
                                        Pel*         piRefY,
                                        Int          iRefStride,
@@ -4598,7 +4647,11 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
 
   rcMvHalf = *pcMvInt;   rcMvHalf <<= 1;    // for mv-cost
   TComMv baseRefMv(0, 0);
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 2, rcMvHalf, !bIsLosslessCoded );
+#else
   ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 2, rcMvHalf   );
+#endif
 
   m_pcRdCost->setCostScale( 0 );
 
@@ -4608,7 +4661,11 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU*  pcCU,
 
   rcMvQter = *pcMvInt;   rcMvQter <<= 1;    // for mv-cost
   rcMvQter += rcMvHalf;  rcMvQter <<= 1;
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter, !bIsLosslessCoded );
+#else
   ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter );
+#endif
 }
 
 
