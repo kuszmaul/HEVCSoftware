@@ -727,7 +727,9 @@ Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &
   userHorizontalCoefficients[0][2] = 1;
 
   WRITE_UVLC(3, "target_format_idc");
+#if !RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT
   WRITE_FLAG(0, "prefect_reconstruction_flag");
+#endif
   if(sei.m_verChromaFilterIdc == 1)
   {
     WRITE_UVLC(iNumVerticalFilters, "num_vertical_filters");
