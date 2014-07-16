@@ -1585,12 +1585,24 @@ Void TAppEncCfg::xCheckParameter()
 
   if(m_useCrossComponentPrediction && (m_chromaFormatIDC != CHROMA_444))
   {
-      fprintf(stderr, "****************************************************************************\n");
-      fprintf(stderr, "** WARNING: Cross-component prediction is specified for 4:4:4 format only **\n");
-      fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: Cross-component prediction is specified for 4:4:4 format only **\n");
+    fprintf(stderr, "****************************************************************************\n");
 
-      m_useCrossComponentPrediction = false;
+    m_useCrossComponentPrediction = false;
   }
+
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  if ( m_CUTransquantBypassFlagForce && m_bUseHADME )
+  {
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: --HadamardME has been disabled due to the enabling of         **\n");
+    fprintf(stderr, "**          --CUTransquantBypassFlagForce                                 **\n");
+    fprintf(stderr, "****************************************************************************\n");
+
+    m_bUseHADME = false; // this has been disabled so that the lambda is calculated slightly differently for lossless modes (as a result of JCTVC-R0104).
+  }
+#endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
 
