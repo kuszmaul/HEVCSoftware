@@ -196,21 +196,21 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getEntropyCodingSyncEnabledFlag() ? 1 : 0, "entropy_coding_sync_enabled_flag" );
   if( pcPPS->getTilesEnabledFlag() )
   {
-    WRITE_UVLC( pcPPS->getNumColumnsMinus1(),                                    "num_tile_columns_minus1" );
-    WRITE_UVLC( pcPPS->getNumRowsMinus1(),                                       "num_tile_rows_minus1" );
-    WRITE_FLAG( pcPPS->getUniformSpacingFlag(),                                  "uniform_spacing_flag" );
-    if( pcPPS->getUniformSpacingFlag() == 0 )
+    WRITE_UVLC( pcPPS->getNumTileColumnsMinus1(),                                    "num_tile_columns_minus1" );
+    WRITE_UVLC( pcPPS->getTileNumRowsMinus1(),                                       "num_tile_rows_minus1" );
+    WRITE_FLAG( pcPPS->getTileUniformSpacingFlag(),                                  "uniform_spacing_flag" );
+    if( !pcPPS->getTileUniformSpacingFlag() )
     {
-      for(UInt i=0; i<pcPPS->getNumColumnsMinus1(); i++)
+      for(UInt i=0; i<pcPPS->getNumTileColumnsMinus1(); i++)
       {
-        WRITE_UVLC( pcPPS->getColumnWidth(i)-1,                                  "column_width_minus1" );
+        WRITE_UVLC( pcPPS->getTileColumnWidth(i)-1,                                  "column_width_minus1" );
       }
-      for(UInt i=0; i<pcPPS->getNumRowsMinus1(); i++)
+      for(UInt i=0; i<pcPPS->getTileNumRowsMinus1(); i++)
       {
-        WRITE_UVLC( pcPPS->getRowHeight(i)-1,                                    "row_height_minus1" );
+        WRITE_UVLC( pcPPS->getTileRowHeight(i)-1,                                    "row_height_minus1" );
       }
     }
-    if(pcPPS->getNumColumnsMinus1() !=0 || pcPPS->getNumRowsMinus1() !=0)
+    if(pcPPS->getNumTileColumnsMinus1() !=0 || pcPPS->getTileNumRowsMinus1() !=0)
     {
       WRITE_FLAG( pcPPS->getLoopFilterAcrossTilesEnabledFlag()?1 : 0,          "loop_filter_across_tiles_enabled_flag");
     }
@@ -352,10 +352,10 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
   WRITE_FLAG(defaultDisplayWindow.getWindowEnabledFlag(),       "default_display_window_flag");
   if( defaultDisplayWindow.getWindowEnabledFlag() )
   {
-    WRITE_UVLC(defaultDisplayWindow.getWindowLeftOffset(),      "def_disp_win_left_offset");
-    WRITE_UVLC(defaultDisplayWindow.getWindowRightOffset(),     "def_disp_win_right_offset");
-    WRITE_UVLC(defaultDisplayWindow.getWindowTopOffset(),       "def_disp_win_top_offset");
-    WRITE_UVLC(defaultDisplayWindow.getWindowBottomOffset(),    "def_disp_win_bottom_offset");
+    WRITE_UVLC(defaultDisplayWindow.getWindowLeftOffset()  / TComSPS::getWinUnitX(pcSPS->getChromaFormatIdc()), "def_disp_win_left_offset");
+    WRITE_UVLC(defaultDisplayWindow.getWindowRightOffset() / TComSPS::getWinUnitX(pcSPS->getChromaFormatIdc()), "def_disp_win_right_offset");
+    WRITE_UVLC(defaultDisplayWindow.getWindowTopOffset()   / TComSPS::getWinUnitY(pcSPS->getChromaFormatIdc()), "def_disp_win_top_offset");
+    WRITE_UVLC(defaultDisplayWindow.getWindowBottomOffset()/ TComSPS::getWinUnitY(pcSPS->getChromaFormatIdc()), "def_disp_win_bottom_offset");
   }
   TimingInfo *timingInfo = pcVUI->getTimingInfo();
   WRITE_FLAG(timingInfo->getTimingInfoPresentFlag(),          "vui_timing_info_present_flag");
@@ -1124,7 +1124,11 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#else
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#endif
   {
     const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
     WRITE_FLAG(bitDepthConstraint<=12, "general_max_12bit_constraint_flag");
@@ -1163,6 +1167,7 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   UInt numEntryPointOffsets = 0, offsetLenMinus1 = 0, maxOffset = 0;
   Int  numZeroSubstreamsAtStartOfSlice  = 0;
   UInt *entryPointOffset = NULL;
+#if !RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if ( pSlice->getPPS()->getTilesEnabledFlag() )
   {
     numEntryPointOffsets = pSlice->getTileLocationCount();
@@ -1184,9 +1189,11 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
       }
     }
   }
-  else if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
+  else
+#endif
+  if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
   {
-    UInt* pSubstreamSizes               = pSlice->getSubstreamSizes();
+    UInt* pSubstreamSizes                 = pSlice->getSubstreamSizes();
     Int maxNumParts                       = pSlice->getPic()->getNumPartInCU();
     numZeroSubstreamsAtStartOfSlice       = pSlice->getSliceSegmentCurStartCUAddr()/maxNumParts/pSlice->getPic()->getFrameWidthInCU();
     Int  numZeroSubstreamsAtEndOfSlice    = pSlice->getPic()->getFrameHeightInCU()-1 - ((pSlice->getSliceSegmentCurEndCUAddr()-1)/maxNumParts/pSlice->getPic()->getFrameWidthInCU());
@@ -1202,6 +1209,29 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
       }
     }
   }
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  else if ( pSlice->getPPS()->getTilesEnabledFlag() )
+  {
+    numEntryPointOffsets = pSlice->getTileLocationCount();
+    entryPointOffset     = new UInt[numEntryPointOffsets];
+    for (Int idx=0; idx<pSlice->getTileLocationCount(); idx++)
+    {
+      if ( idx == 0 )
+      {
+        entryPointOffset [ idx ] = pSlice->getTileLocation( 0 );
+      }
+      else
+      {
+        entryPointOffset [ idx ] = pSlice->getTileLocation( idx ) - pSlice->getTileLocation( idx-1 );
+      }
+
+      if ( entryPointOffset[ idx ] > maxOffset )
+      {
+        maxOffset = entryPointOffset[ idx ];
+      }
+    }
+  }
+#endif
   // Determine number of bits "offsetLenMinus1+1" required for entry point information
   offsetLenMinus1 = 0;
   while (maxOffset >= (1u << (offsetLenMinus1 + 1)))

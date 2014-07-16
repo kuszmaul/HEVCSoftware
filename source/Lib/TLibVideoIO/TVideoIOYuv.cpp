@@ -725,6 +725,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
   Bool is16bit = false;
   Bool nonZeroBitDepthShift=false;
 
+  if ((width444 == 0) || (height444 == 0))
+  {
+    printf ("\nWarning: writing %d x %d luma sample output picture!", width444, height444);
+  }
+
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     if (m_fileBitdepth[ch] > 8) is16bit=true;
@@ -873,6 +878,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
 
     const UInt width444   = dstPicYuvTop->getWidth(COMPONENT_Y)  - (confLeft + confRight);
     const UInt height444  = dstPicYuvTop->getHeight(COMPONENT_Y) - ((confTop + confBottom + 1) >> 1); //height of one field
+
+    if ((width444 == 0) || (height444 == 0))
+    {
+      printf ("\nWarning: writing %d x %d luma sample output picture!", width444, height444);
+    }
 
     const UInt csx = dstPicYuvTop->getComponentScaleX(compID);
     const UInt csy = dstPicYuvTop->getComponentScaleY(compID);

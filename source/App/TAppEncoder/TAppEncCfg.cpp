@@ -63,12 +63,19 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   MAIN10 = 2,
   MAINSTILLPICTURE = 3,
   MAINREXT = 4,
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  HIGHTHROUGHPUTREXT = 5, // Placeholder profile for development
+#else
   HIGHREXT = 30, // Placeholder profile for development
+#endif
   MAINSCC  = 31, // Placeholder profile for development
   // The following are RExt profiles, which would map to the MAINREXT profile idc.
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
   //                           the intra constraint in the top digit
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+  MONOCHROME_8      = 1008,
+#endif
   MONOCHROME_12     = 1012,
   MONOCHROME_16     = 1016,
   MAIN_12           = 1112,
@@ -105,8 +112,6 @@ TAppEncCfg::TAppEncCfg()
 , m_snrInternalColourSpace(false)
 , m_outputInternalColourSpace(false)
 , m_pchdQPFile()
-, m_pColumnWidth()
-, m_pRowHeight()
 , m_scalingListFile()
 {
   m_aidQP = NULL;
@@ -141,8 +146,6 @@ TAppEncCfg::~TAppEncCfg()
   free(m_pchBitstreamFile);
   free(m_pchReconFile);
   free(m_pchdQPFile);
-  free(m_pColumnWidth);
-  free(m_pRowHeight);
   free(m_scalingListFile);
 }
 
@@ -219,13 +222,17 @@ static const struct MapStrToProfile
 }
 strToProfile[] =
 {
-  {"none",               Profile::NONE            },
-  {"main",               Profile::MAIN            },
-  {"main10",             Profile::MAIN10          },
-  {"main-still-picture", Profile::MAINSTILLPICTURE},
-  {"main-RExt",          Profile::MAINREXT        },
-  {"high-RExt",          Profile::HIGHREXT        },
-  {"main-SCC",           Profile::MAINSCC         }
+  {"none",                 Profile::NONE            },
+  {"main",                 Profile::MAIN            },
+  {"main10",               Profile::MAIN10          },
+  {"main-still-picture",   Profile::MAINSTILLPICTURE},
+  {"main-RExt",            Profile::MAINREXT        },
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT  },
+#else
+  {"high-RExt",            Profile::HIGHREXT        },
+#endif
+  {"main-SCC",             Profile::MAINSCC         }
 };
 
 static const struct MapStrToExtendedProfile
@@ -240,8 +247,15 @@ strToExtendedProfile[] =
     {"main10",             MAIN10           },
     {"main-still-picture", MAINSTILLPICTURE },
     {"main-RExt",          MAINREXT         },
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+    {"high-throughput-RExt", HIGHTHROUGHPUTREXT },
+#else
     {"high-RExt",          HIGHREXT         },
+#endif
     {"main-SCC",           MAINSCC          },
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+    {"monochrome",         MONOCHROME_8     },
+#endif
     {"monochrome12",       MONOCHROME_12    },
     {"monochrome16",       MONOCHROME_16    },
     {"main12",             MAIN_12          },
@@ -265,7 +279,11 @@ strToExtendedProfile[] =
 static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/][4/* bit depth constraint 8=0, 10=1, 12=2, 16=3*/][4/*chroma format*/]=
 {
     {
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+        { MONOCHROME_8,  NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
+#else
         { NONE,          NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
+#endif
         { NONE,          NONE,          MAIN_422_10,       MAIN_444_10       }, // 10-bit inter for 400, 420, 422 and 444
         { MONOCHROME_12, MAIN_12,       MAIN_422_12,       MAIN_444_12       }, // 12-bit inter for 400, 420, 422 and 444
         { MONOCHROME_16, NONE,          NONE,              MAIN_444_16       }  // 16-bit inter for 400, 420, 422 and 444 (the latter is non standard used for development)
@@ -592,7 +610,11 @@ automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
     else
     {
       chromaFormatConstraint = CHROMA_400;
+#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
+      bitDepthConstraint     = trialBitDepthConstraint == 8 ? 8 : 12;
+#else
       bitDepthConstraint     = 12;
+#endif
     }
   }
   else
@@ -691,13 +713,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PrintSequenceMSE",                                m_printSequenceMSE,                               false, "0 (default) emit only bit rate and PSNRs for the whole sequence, 1 = also emit MSE values")
   ("PrintClippedPSNR",                                m_printClippedPSNR,                               false, "0: (default) print lossless PSNR values as 999.99 dB, 1: clip lossless PSNR according to resolution" )
   ("ChromaFormatIDC,-cf",                             tmpChromaFormat,                                      0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
-  ("ConformanceMode",                                 m_conformanceMode,                                    0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
+  ("ConformanceMode",                                 m_conformanceWindowMode,                              0, "Deprecated alias of ConformanceWindowMode")
+  ("ConformanceWindowMode",                           m_conformanceWindowMode,                              0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
   ("HorizontalPadding,-pdx",                          m_aiPad[0],                                           0, "Horizontal source padding for conformance window mode 2")
   ("VerticalPadding,-pdy",                            m_aiPad[1],                                           0, "Vertical source padding for conformance window mode 2")
-  ("ConfLeft",                                        m_confLeft,                                           0, "Left offset for window conformance mode 3")
-  ("ConfRight",                                       m_confRight,                                          0, "Right offset for window conformance mode 3")
-  ("ConfTop",                                         m_confTop,                                            0, "Top offset for window conformance mode 3")
-  ("ConfBottom",                                      m_confBottom,                                         0, "Bottom offset for window conformance mode 3")
+  ("ConfLeft",                                        m_confWinLeft,                                        0, "Deprecated alias of ConfWinLeft")
+  ("ConfRight",                                       m_confWinRight,                                       0, "Deprecated alias of ConfWinRight")
+  ("ConfTop",                                         m_confWinTop,                                         0, "Deprecated alias of ConfWinTop")
+  ("ConfBottom",                                      m_confWinBottom,                                      0, "Deprecated alias of ConfWinBottom")
+  ("ConfWinLeft",                                     m_confWinLeft,                                        0, "Left offset for window conformance mode 3")
+  ("ConfWinRight",                                    m_confWinRight,                                       0, "Right offset for window conformance mode 3")
+  ("ConfWinTop",                                      m_confWinTop,                                         0, "Top offset for window conformance mode 3")
+  ("ConfWinBottom",                                   m_confWinBottom,                                      0, "Bottom offset for window conformance mode 3")
   ("FrameRate,-fr",                                   m_iFrameRate,                                         0, "Frame rate")
   ("FrameSkip,-fs",                                   m_FrameSkip,                                         0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",                             m_framesToBeEncoded,                                  0, "Number of frames to be encoded (default=all)")
@@ -749,7 +776,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("HashBasedME",                                     m_useHashBasedME,                                 false, "Hash based inter search")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
-  ("SingleComponentLoopInterSearch",                  m_singleComponentLoopInterSearch,                 false, "For inter residual estimation, loop over components once, testing all mode options for each")
   ("HadamardME",                                      m_bUseHADME,                                       true, "Hadamard ME for fractional-pel")
   ("ASR",                                             m_bUseASR,                                        false, "Adaptive motion search range")
 
@@ -834,11 +860,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("WeightedPredP,-wpP",                              m_useWeightedPred,                                false, "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",                              m_useWeightedBiPred,                              false, "Use weighted (bidirectional) prediction in B slices")
   ("Log2ParallelMergeLevel",                          m_log2ParallelMergeLevel,                            2u, "Parallel merge estimation region")
-  ("UniformSpacingIdc",                               m_iUniformSpacingIdr,                                 0, "Indicates if the column and row boundaries are distributed uniformly")
-  ("NumTileColumnsMinus1",                            m_iNumColumnsMinus1,                                  0, "Number of columns in a picture minus 1")
-  ("ColumnWidthArray",                                cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing ColumnWidth values in units of LCU")
-  ("NumTileRowsMinus1",                               m_iNumRowsMinus1,                                     0, "Number of rows in a picture minus 1")
-  ("RowHeightArray",                                  cfg_RowHeight,                            cfg_RowHeight, "Array containing RowHeight values in units of LCU")
+    //deprecated copies of renamed tile parameters
+  ("UniformSpacingIdc",                               m_tileUniformSpacingFlag,                         false,      "deprecated alias of TileUniformSpacing")
+  ("ColumnWidthArray",                                cfg_ColumnWidth,                        cfg_ColumnWidth, "deprecated alias of TileColumnWidthArray")
+  ("RowHeightArray",                                  cfg_RowHeight,                            cfg_RowHeight, "deprecated alias of TileRowHeightArray")
+
+  ("TileUniformSpacing",                              m_tileUniformSpacingFlag,                         false,      "Indicates that tile columns and rows are distributed uniformly")
+  ("NumTileColumnsMinus1",                            m_numTileColumnsMinus1,                               0,          "Number of tile columns in a picture minus 1")
+  ("NumTileRowsMinus1",                               m_numTileRowsMinus1,                                  0,          "Number of rows in a picture minus 1")
+  ("TileColumnWidthArray",                            cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing tile column width values in units of LCU")
+  ("TileRowHeightArray",                              cfg_RowHeight,                            cfg_RowHeight, "Array containing tile row height values in units of LCU")
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with TR; 2 TRR etc")
   ("ScalingList",                                     m_useScalingListId,                                   0, "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
@@ -884,7 +915,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VideoFullRange",                                  m_videoFullRangeFlag,                             false, "Indicates the black level and range of luma and chroma signals")
   ("ColourDescriptionPresent",                        m_colourDescriptionPresentFlag,                   false, "Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present")
   ("ColourPrimaries",                                 m_colourPrimaries,                                    2, "Indicates chromaticity coordinates of the source primaries")
-  ("TransferCharateristics",                          m_transferCharacteristics,                            2, "Indicates the opto-electronic transfer characteristics of the source")
+  ("TransferCharacteristics",                         m_transferCharacteristics,                            2, "Indicates the opto-electronic transfer characteristics of the source")
   ("MatrixCoefficients",                              m_matrixCoefficients,                                 2, "Describes the matrix coefficients used in deriving luma and chroma from RGB primaries")
   ("ChromaLocInfoPresent",                            m_chromaLocInfoPresentFlag,                       false, "Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present")
   ("ChromaSampleLocTypeTopField",                     m_chromaSampleLocTypeTopField,                        0, "Specifies the location of chroma samples for top field")
@@ -1055,52 +1086,52 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_framesToBeEncoded *= 2;
   }
 
-  if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
+  if( !m_tileUniformSpacingFlag && m_numTileColumnsMinus1 > 0 )
   {
-    if (cfg_ColumnWidth.values.size() > m_iNumColumnsMinus1)
+    if (cfg_ColumnWidth.values.size() > m_numTileColumnsMinus1)
     {
       printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
       exit( EXIT_FAILURE );
     }
-    else if (cfg_ColumnWidth.values.size() < m_iNumColumnsMinus1)
+    else if (cfg_ColumnWidth.values.size() < m_numTileColumnsMinus1)
     {
       printf( "The width of some columns is not defined.\n" );
       exit( EXIT_FAILURE );
     }
     else
     {
-      m_pColumnWidth = new UInt[m_iNumColumnsMinus1];
+      m_tileColumnWidth.resize(m_numTileColumnsMinus1);
       for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
-        m_pColumnWidth[i]=cfg_ColumnWidth.values[i];
+        m_tileColumnWidth[i]=cfg_ColumnWidth.values[i];
     }
   }
   else
   {
-    m_pColumnWidth = NULL;
+    m_tileColumnWidth.clear();
   }
 
-  if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
+  if( !m_tileUniformSpacingFlag && m_numTileRowsMinus1 > 0 )
   {
-    if (cfg_RowHeight.values.size() > m_iNumRowsMinus1)
+    if (cfg_RowHeight.values.size() > m_numTileRowsMinus1)
     {
       printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
       exit( EXIT_FAILURE );
     }
-    else if (cfg_RowHeight.values.size() < m_iNumRowsMinus1)
+    else if (cfg_RowHeight.values.size() < m_numTileRowsMinus1)
     {
       printf( "The height of some rows is not defined.\n" );
       exit( EXIT_FAILURE );
     }
     else
     {
-      m_pRowHeight = new UInt[m_iNumRowsMinus1];
+      m_tileRowHeight.resize(m_numTileRowsMinus1);
       for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
-        m_pRowHeight[i]=cfg_RowHeight.values[i];
+        m_tileRowHeight[i]=cfg_RowHeight.values[i];
     }
   }
   else
   {
-    m_pRowHeight = NULL;
+    m_tileRowHeight.clear();
   }
 
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
@@ -1140,7 +1171,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_profile = Profile::Name(extendedProfile);
   }
 
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (m_profile == Profile::HIGHTHROUGHPUTREXT )
+  {
+    if (m_bitDepthConstraint == 0) m_bitDepthConstraint = 16;
+    m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? CHROMA_444 : numberToChromaFormat(tmpConstraintChromaFormat);
+  }
+  else if (m_profile == Profile::MAINREXT)
+#else
   if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
+#endif
   {
     if (m_bitDepthConstraint == 0 && tmpConstraintChromaFormat == 0)
     {
@@ -1183,12 +1223,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
 
-  switch (m_conformanceMode)
+  switch (m_conformanceWindowMode)
   {
   case 0:
     {
       // no conformance or padding
-      m_confLeft = m_confRight = m_confTop = m_confBottom = 0;
+      m_confWinLeft = m_confWinRight = m_confWinTop = m_confWinBottom = 0;
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
     }
@@ -1198,17 +1238,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       Int minCuSize = m_uiMaxCUHeight >> (m_uiMaxCUDepth - 1);
       if (m_iSourceWidth % minCuSize)
       {
-        m_aiPad[0] = m_confRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
-        m_iSourceWidth  += m_confRight;
+        m_aiPad[0] = m_confWinRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
+        m_iSourceWidth  += m_confWinRight;
       }
       if (m_iSourceHeight % minCuSize)
       {
-        m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
-        m_iSourceHeight += m_confBottom;
+        m_aiPad[1] = m_confWinBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
+        m_iSourceHeight += m_confWinBottom;
         if ( m_isField )
         {
-          m_iSourceHeightOrg += m_confBottom << 1;
-          m_aiPad[1] = m_confBottom << 1;
+          m_iSourceHeightOrg += m_confWinBottom << 1;
+          m_aiPad[1] = m_confWinBottom << 1;
         }
       }
       if (m_aiPad[0] % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0)
@@ -1228,14 +1268,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       //padding
       m_iSourceWidth  += m_aiPad[0];
       m_iSourceHeight += m_aiPad[1];
-      m_confRight  = m_aiPad[0];
-      m_confBottom = m_aiPad[1];
+      m_confWinRight  = m_aiPad[0];
+      m_confWinBottom = m_aiPad[1];
       break;
     }
   case 3:
     {
       // conformance
-      if ((m_confLeft == 0) && (m_confRight == 0) && (m_confTop == 0) && (m_confBottom == 0))
+      if ((m_confWinLeft == 0) && (m_confWinRight == 0) && (m_confWinTop == 0) && (m_confWinBottom == 0))
       {
         fprintf(stderr, "Warning: Conformance window enabled, but all conformance window parameters set to zero\n");
       }
@@ -1432,12 +1472,20 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT || m_profile==Profile::MAINSCC)
+#else
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT || m_profile==Profile::MAINSCC)
+#endif
   {
     // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+    xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHTHROUGHPUTREXT, "AlignCABACBeforeBypass must not be enabled unless the high throughput profile is being used.");
+#else
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
+#endif
     xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
     if (m_profile == Profile::MAINREXT)
     {
@@ -1469,6 +1517,14 @@ Void TAppEncCfg::xCheckParameter()
         fprintf(stderr, "********************************************************************************************************\n");
       }
     }
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+    else if (m_profile == Profile::HIGHTHROUGHPUTREXT)
+    {
+      xConfirmPara( m_chromaFormatConstraint != CHROMA_444, "chroma format constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
+      xConfirmPara( m_bitDepthConstraint     != 16,         "bit depth constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
+      xConfirmPara( m_intraConstraintFlag    != 1,          "intra constraint flag must be 1 in the High Throughput 4:4:4 16-bit Intra profile.");
+    }
+#endif
   }
   else
   {
@@ -1539,12 +1595,24 @@ Void TAppEncCfg::xCheckParameter()
 
   if(m_useCrossComponentPrediction && (m_chromaFormatIDC != CHROMA_444))
   {
-      fprintf(stderr, "****************************************************************************\n");
-      fprintf(stderr, "** WARNING: Cross-component prediction is specified for 4:4:4 format only **\n");
-      fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: Cross-component prediction is specified for 4:4:4 format only **\n");
+    fprintf(stderr, "****************************************************************************\n");
 
-      m_useCrossComponentPrediction = false;
+    m_useCrossComponentPrediction = false;
   }
+
+#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
+  if ( m_CUTransquantBypassFlagForce && m_bUseHADME )
+  {
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: --HadamardME has been disabled due to the enabling of         **\n");
+    fprintf(stderr, "**          --CUTransquantBypassFlagForce                                 **\n");
+    fprintf(stderr, "****************************************************************************\n");
+
+    m_bUseHADME = false; // this has been disabled so that the lambda is calculated slightly differently for lossless modes (as a result of JCTVC-R0104).
+  }
+#endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
 
@@ -1628,8 +1696,15 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_sliceSegmentArgument < 1 ,         "SliceSegmentArgument should be larger than or equal to 1" );
   }
 
-  Bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
+  Bool tileFlag = (m_numTileColumnsMinus1 > 0 || m_numTileRowsMinus1 > 0 );
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (m_profile!=Profile::HIGHTHROUGHPUTREXT)
+  {
+    xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together, except in the High Throughput Intra 4:4:4 16 profile");
+  }
+#else
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
+#endif
 
   xConfirmPara( m_iSourceWidth  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_iSourceHeight % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
@@ -1637,10 +1712,20 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_aiPad[0] % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_aiPad[1] % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_confLeft   % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confRight  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confTop    % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confBottom % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinLeft   % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinRight  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinTop    % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinBottom % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+
+  xConfirmPara( m_defaultDisplayWindowFlag && !m_vuiParametersPresentFlag, "VUI needs to be enabled for default display window");
+
+  if (m_defaultDisplayWindowFlag)
+  {
+    xConfirmPara( m_defDispWinLeftOffset   % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Left default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinRightOffset  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Right default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinTopOffset    % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Top default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinBottomOffset % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Bottom default display window offset must be an integer multiple of the specified chroma subsampling");
+  }
 
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
@@ -1980,50 +2065,50 @@ Void TAppEncCfg::xCheckParameter()
       Int maxTileHeight = 0;
       Int widthInCU = (m_iSourceWidth % m_uiMaxCUWidth) ? m_iSourceWidth/m_uiMaxCUWidth + 1: m_iSourceWidth/m_uiMaxCUWidth;
       Int heightInCU = (m_iSourceHeight % m_uiMaxCUHeight) ? m_iSourceHeight/m_uiMaxCUHeight + 1: m_iSourceHeight/m_uiMaxCUHeight;
-      if(m_iUniformSpacingIdr)
+      if(m_tileUniformSpacingFlag)
       {
-        maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_iNumColumnsMinus1)/(m_iNumColumnsMinus1+1));
-        maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_iNumRowsMinus1)/(m_iNumRowsMinus1+1));
+        maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_numTileColumnsMinus1)/(m_numTileColumnsMinus1+1));
+        maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_numTileRowsMinus1)/(m_numTileRowsMinus1+1));
         // if only the last tile-row is one treeblock higher than the others
         // the maxTileHeight becomes smaller if the last row of treeblocks has lower height than the others
-        if(!((heightInCU-1)%(m_iNumRowsMinus1+1)))
+        if(!((heightInCU-1)%(m_numTileRowsMinus1+1)))
         {
           maxTileHeight = maxTileHeight - m_uiMaxCUHeight + (m_iSourceHeight % m_uiMaxCUHeight);
         }
         // if only the last tile-column is one treeblock wider than the others
         // the maxTileWidth becomes smaller if the last column of treeblocks has lower width than the others
-        if(!((widthInCU-1)%(m_iNumColumnsMinus1+1)))
+        if(!((widthInCU-1)%(m_numTileColumnsMinus1+1)))
         {
           maxTileWidth = maxTileWidth - m_uiMaxCUWidth + (m_iSourceWidth % m_uiMaxCUWidth);
         }
       }
       else // not uniform spacing
       {
-        if(m_iNumColumnsMinus1<1)
+        if(m_numTileColumnsMinus1<1)
         {
           maxTileWidth = m_iSourceWidth;
         }
         else
         {
           Int accColumnWidth = 0;
-          for(Int col=0; col<(m_iNumColumnsMinus1); col++)
+          for(Int col=0; col<(m_numTileColumnsMinus1); col++)
           {
-            maxTileWidth = m_pColumnWidth[col]>maxTileWidth ? m_pColumnWidth[col]:maxTileWidth;
-            accColumnWidth += m_pColumnWidth[col];
+            maxTileWidth = m_tileColumnWidth[col]>maxTileWidth ? m_tileColumnWidth[col]:maxTileWidth;
+            accColumnWidth += m_tileColumnWidth[col];
           }
           maxTileWidth = (widthInCU-accColumnWidth)>maxTileWidth ? m_uiMaxCUWidth*(widthInCU-accColumnWidth):m_uiMaxCUWidth*maxTileWidth;
         }
-        if(m_iNumRowsMinus1<1)
+        if(m_numTileRowsMinus1<1)
         {
           maxTileHeight = m_iSourceHeight;
         }
         else
         {
           Int accRowHeight = 0;
-          for(Int row=0; row<(m_iNumRowsMinus1); row++)
+          for(Int row=0; row<(m_numTileRowsMinus1); row++)
           {
-            maxTileHeight = m_pRowHeight[row]>maxTileHeight ? m_pRowHeight[row]:maxTileHeight;
-            accRowHeight += m_pRowHeight[row];
+            maxTileHeight = m_tileRowHeight[row]>maxTileHeight ? m_tileRowHeight[row]:maxTileHeight;
+            accRowHeight += m_tileRowHeight[row];
           }
           maxTileHeight = (heightInCU-accRowHeight)>maxTileHeight ? m_uiMaxCUHeight*(heightInCU-accRowHeight):m_uiMaxCUHeight*maxTileHeight;
         }
@@ -2103,7 +2188,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_framePackingSEIEnabled > 0 , "SEISegmentedRectFramePacking must be 0 when SEIFramePacking is 1");
   }
 
-  if((m_iNumColumnsMinus1<=0 && m_iNumRowsMinus1<=0) && m_tmctsSEIEnabled)
+  if((m_numTileColumnsMinus1 <= 0) && (m_numTileRowsMinus1 <= 0) && m_tmctsSEIEnabled)
   {
     printf("SEITempMotionConstrainedTileSets is set to false to disable 'temporal_motion_constrained_tile_sets' SEI because there are no tiles enabled\n");
     m_tmctsSEIEnabled = false;
@@ -2176,7 +2261,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Input          File               : %s\n", m_pchInputFile          );
   printf("Bitstream      File               : %s\n", m_pchBitstreamFile      );
   printf("Reconstruction File               : %s\n", m_pchReconFile          );
-  printf("Real     Format                   : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
+  printf("Real     Format                   : %dx%d %dHz\n", m_iSourceWidth - m_confWinLeft - m_confWinRight, m_iSourceHeight - m_confWinTop - m_confWinBottom, m_iFrameRate );
   printf("Internal Format                   : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Sequence PSNR output              : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   printf("Sequence MSE output               : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
@@ -2215,7 +2300,6 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra               : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                      : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range               : %d\n", m_iSearchRange );
-  printf("Inter search component loop       : %s\n", (m_singleComponentLoopInterSearch ? "Single (Non-HM-compatible)" : "Triple (HM-compatible)") );
   printf("Intra period                      : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type             : %d\n", m_iDecodingRefreshType );
   printf("QP                                : %5.2f\n", m_fQP );
