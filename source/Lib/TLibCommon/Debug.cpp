@@ -184,6 +184,8 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT,                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__MEETING_NOTES_MONOCHROME_PROFILE,                            settingNameWidth, settingValueWidth);
 
+  PRINT_CONSTANT(SCM__R0102_HASH_ME_FIX,                                            settingNameWidth, settingValueWidth);
+
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,           settingNameWidth, settingValueWidth);
