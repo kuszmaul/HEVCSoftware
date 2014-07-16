@@ -326,6 +326,7 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
+#define SCM__R0102_HASH_ME_FIX                                                 1 ///< 0 = no hash ME fix as proposed in R0102, 1 (default) = enable hash ME fix as proposed in R0102.
 
 //------------------------------------------------
 // Derived macros
