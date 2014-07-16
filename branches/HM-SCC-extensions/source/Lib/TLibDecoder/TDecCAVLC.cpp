@@ -255,40 +255,39 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
   if( pcPPS->getTilesEnabledFlag() )
   {
-    READ_UVLC ( uiCode, "num_tile_columns_minus1" );                pcPPS->setNumColumnsMinus1( uiCode );
-    READ_UVLC ( uiCode, "num_tile_rows_minus1" );                   pcPPS->setNumRowsMinus1( uiCode );
-    READ_FLAG ( uiCode, "uniform_spacing_flag" );                   pcPPS->setUniformSpacingFlag( uiCode );
+    READ_UVLC ( uiCode, "num_tile_columns_minus1" );                pcPPS->setNumTileColumnsMinus1( uiCode );  
+    READ_UVLC ( uiCode, "num_tile_rows_minus1" );                   pcPPS->setNumTileRowsMinus1( uiCode );  
+    READ_FLAG ( uiCode, "uniform_spacing_flag" );                   pcPPS->setTileUniformSpacingFlag( uiCode == 1 );
 
-    if( !pcPPS->getUniformSpacingFlag())
+    const UInt tileColumnsMinus1 = pcPPS->getNumTileColumnsMinus1();
+    const UInt tileRowsMinus1    = pcPPS->getTileNumRowsMinus1();
+ 
+    if ( !pcPPS->getTileUniformSpacingFlag())
     {
-      const UInt numColumnsMinus1 = pcPPS->getNumColumnsMinus1();
-      if (numColumnsMinus1>0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
+      if (tileColumnsMinus1 > 0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
       {
-        UInt* columnWidth = (UInt*)malloc(numColumnsMinus1*sizeof(UInt));
-        for(UInt i=0; i<numColumnsMinus1; i++)
-        {
-          READ_UVLC( uiCode, "column_width_minus1" );
+        std::vector<Int> columnWidth(tileColumnsMinus1);
+        for(UInt i = 0; i < tileColumnsMinus1; i++)
+        { 
+          READ_UVLC( uiCode, "column_width_minus1" );  
           columnWidth[i] = uiCode+1;
         }
-        pcPPS->setColumnWidth(columnWidth);
-        free(columnWidth);
+        pcPPS->setTileColumnWidth(columnWidth);
       }
 
-      const UInt numRowsMinus1 = pcPPS->getNumRowsMinus1();
-      if (numRowsMinus1>0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
+      if (tileRowsMinus1 > 0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
       {
-        UInt* rowHeight = (UInt*)malloc(numRowsMinus1*sizeof(UInt));
-        for(UInt i=0; i<numRowsMinus1; i++)
+        std::vector<Int> rowHeight (tileRowsMinus1);
+        for(UInt i = 0; i < tileRowsMinus1; i++)
         {
           READ_UVLC( uiCode, "row_height_minus1" );
           rowHeight[i] = uiCode + 1;
         }
-        pcPPS->setRowHeight(rowHeight);
-        free(rowHeight);
+        pcPPS->setTileRowHeight(rowHeight);
       }
     }
 
-    if(pcPPS->getNumColumnsMinus1() !=0 || pcPPS->getNumRowsMinus1() !=0)
+    if ((tileColumnsMinus1 + tileRowsMinus1) != 0)
     {
       READ_FLAG ( uiCode, "loop_filter_across_tiles_enabled_flag" );   pcPPS->setLoopFilterAcrossTilesEnabledFlag( uiCode ? true : false );
     }
@@ -875,6 +874,11 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       {
         READ_FLAG( uiCode, "cprms_present_flag[i]" );               pcVPS->setCprmsPresentFlag( uiCode == 1 ? true : false, i );
       }
+      else
+      {
+        pcVPS->setCprmsPresentFlag( true, i );
+      }
+
       parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
     }
   }
@@ -1495,6 +1499,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       prevEntryPointOffset = curEntryPointOffset;
     }
 
+#if !RExt__R0128_HIGH_THROUGHPUT_PROFILE
     if ( pps->getTilesEnabledFlag() )
     {
       rpcSlice->setTileLocationCount( numEntryPointOffsets );
@@ -1506,9 +1511,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         prevPos += entryPointOffset[ idx ];
       }
     }
-    else if ( pps->getEntropyCodingSyncEnabledFlag() )
+    else
+#endif
+    if ( pps->getEntropyCodingSyncEnabledFlag() )
     {
-    Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
+      Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
       rpcSlice->allocSubstreamSizes(numSubstreams);
       UInt *pSubstreamSizes       = rpcSlice->getSubstreamSizes();
       for (Int idx=0; idx<numSubstreams-1; idx++)
@@ -1523,6 +1530,19 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
       }
     }
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+    else if ( pps->getTilesEnabledFlag() )
+    {
+      rpcSlice->setTileLocationCount( numEntryPointOffsets );
+
+      UInt prevPos = 0;
+      for (Int idx=0; idx<rpcSlice->getTileLocationCount(); idx++)
+      {
+        rpcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
+        prevPos += entryPointOffset[ idx ];
+      }
+    }
+#endif
 
     if (entryPointOffset)
     {
@@ -1595,7 +1615,11 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#else
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
+#endif
   {
     UInt maxBitDepth=16;
     READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode) maxBitDepth=12;
