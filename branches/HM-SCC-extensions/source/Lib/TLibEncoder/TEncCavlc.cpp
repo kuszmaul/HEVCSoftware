@@ -594,6 +594,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+        || pcSPS->getUseColorTrans()
+#endif
     );
 
   // Other SPS extension flags checked here.
@@ -632,6 +635,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             break;
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+            WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
+#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -1370,6 +1376,14 @@ Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TEncCavlc::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
 
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

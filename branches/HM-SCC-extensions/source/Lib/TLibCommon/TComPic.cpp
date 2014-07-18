@@ -61,6 +61,9 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+#if SCM__R0147_RGB_YUV_RD_ENC
+  m_apcPicYuvCSC = NULL;
+#endif
 }
 
 TComPic::~TComPic()
@@ -119,6 +122,15 @@ Void TComPic::destroy()
   }
 
   m_hashMap.clearAll();
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
+  }
+#endif
+
 
   deleteSEIs(m_SEIs);
 }

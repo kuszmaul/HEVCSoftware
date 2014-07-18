@@ -144,6 +144,9 @@ public:
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -229,6 +232,9 @@ private:
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
+#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

@@ -164,8 +164,24 @@ Void TEncSlice::init( TEncTop* pcEncTop )
 Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_pcRdCost->setRGBFormatFlag               (  slice->getSPS()->getRGBFormatFlag() );
+  m_pcRdCost->setUseColorTrans               (  slice->getSPS()->getUseColorTrans() ); 
+  m_pcRdCost->setUseLossless                 (  slice->getSPS()->getUseLossless() );
+#endif
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
+
+#if SCM__R0147_RGB_YUV_RD_ENC
+  Int map[52] =
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 3, 3, 4,
+    4, 5, 5, 6, 6, 6, 6, 6, 6, 6,
+    6, 6
+  };
+#endif
 
   // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -176,6 +192,12 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+#if SCM__R0147_RGB_YUV_RD_ENC 
+    if(slice->getSPS()->getRGBFormatFlag() && slice->getSPS()->getUseColorTrans())
+    {
+      tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
+    }
+#endif
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
     dLambdas[compIdx]=dLambda/tmpWeight;
   }
@@ -813,6 +835,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if( pcSlice->getSPS()->getUseColorTrans () && pcSlice->getSPS()->getRGBFormatFlag() ) 
+  {
+    rpcPic->getPicYuvResi()->DefaultConvertPix( rpcPic->getPicYuvOrg() );
+  }
+#endif
   // for every CU in slice
   UInt uiEncCUOrder;
   for( uiEncCUOrder = uiStartCUAddr/rpcPic->getNumPartInCU();
@@ -934,7 +962,13 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if ADAPTIVE_QP_SELECTION
       pcCU->getSlice()->setSliceQpBase( estQP );
 #endif
-    }
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if( pcSlice->getSPS()->getUseColorTrans () && pcSlice->getSPS()->getRGBFormatFlag() && rpcPic->getPicYuvCSC() )
+  {
+    rpcPic->releaseCSCBuffer();
+  }
+#endif
+}
 
     // run CU encoder
     m_pcCuEncoder->compressCU( pcCU );

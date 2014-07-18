@@ -78,6 +78,10 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  TComYuv**               m_ppcNoCorrYuv;   
+#endif
+
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
   Bool                    m_CodeChromaQpAdjFlag;
@@ -144,12 +148,28 @@ protected:
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
-                              TComDataCU *&rpcTempCU,
-                              Double      &cost,
-                              PartSize     ePartSize
-                              DEBUG_STRING_FN_DECLARE(sDebug)
-                            );
+    TComDataCU *&rpcTempCU,
+    Double      &cost,
+    PartSize     ePartSize
+    DEBUG_STRING_FN_DECLARE(sDebug)
+    ,Bool         bRGBIntraModeReuse = false
+    );
+
+  Void  xCheckRDCostIntraCSC ( TComDataCU *&rpcBestCU,
+    TComDataCU *&rpcTempCU,
+    Double      &cost,
+    PartSize    ePartSize
+    );
+#else
+  Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
+    TComDataCU *&rpcTempCU,
+    Double      &cost,
+    PartSize     ePartSize
+    DEBUG_STRING_FN_DECLARE(sDebug)
+    );
+#endif
 
   Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
                               TComDataCU*& rpcTempCU,

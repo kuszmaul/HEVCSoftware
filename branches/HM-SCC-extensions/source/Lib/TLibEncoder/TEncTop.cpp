@@ -535,6 +535,15 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
   rpcPic->getHashMap()->clearAll();
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if( getRGBFormatFlag() && getUseColorTrans() )
+  {
+    if( rpcPic->getPicYuvCSC() == NULL )
+    {
+      rpcPic->allocateCSCBuffer( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+    }
+  }
+#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -631,6 +640,11 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_cSPS.setRGBFormatFlag               (       m_bRGBformat         );
+  m_cSPS.setUseColorTrans               (       m_useColorTrans      ); 
+  m_cSPS.setUseLossless                 (       m_useLL              );
+#endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {

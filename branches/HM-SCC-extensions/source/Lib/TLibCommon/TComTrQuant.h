@@ -146,6 +146,9 @@ public:
 #if RDOQ_CHROMA_LAMBDA
   Void setLambdas(const Double lambdas[MAX_NUM_COMPONENT]) { for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_lambdas[component] = lambdas[component]; }
   Void selectLambda(const ComponentID compIdx) { m_dLambda = m_lambdas[compIdx]; }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void adjustBitDepthandLambdaForColorTrans(Int delta_QP);
+#endif
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif

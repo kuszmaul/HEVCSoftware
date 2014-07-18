@@ -88,6 +88,9 @@ public:
 
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  virtual Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;

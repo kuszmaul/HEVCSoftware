@@ -132,6 +132,9 @@ public:
 
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void  parseColorTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
+#endif
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
 
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -191,6 +194,9 @@ private:
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
+#endif 
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

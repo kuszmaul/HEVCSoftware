@@ -140,7 +140,11 @@ private:
 #if !FIX203
   Int                     m_iSearchLimit;
 #endif
-
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool                    m_bRGBformat;
+  Bool                    m_useColorTrans;
+  Bool                    m_useLL;
+#endif
 public:
   TComRdCost();
   virtual ~TComRdCost();
@@ -256,6 +260,15 @@ public:
 
   Distortion   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool      getRGBFormatFlag                  ()                 const { return m_bRGBformat;   } 
+  Void      setRGBFormatFlag                  (const Bool value)       { m_bRGBformat = value;  } 
+  Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
+  Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
+  Bool      getUseLossless                    ()                 const { return m_useLL;}
+  Void      setUseLossless                    (const Bool value)       { m_useLL= value;}
+  Void adjustLambdaForColorTrans(Int delta_QP);
+#endif
 };// END CLASS DEFINITION TComRdCost
 
 //! \}

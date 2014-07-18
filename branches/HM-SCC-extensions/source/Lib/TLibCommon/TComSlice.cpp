@@ -1591,6 +1591,10 @@ TComSPS::TComSPS()
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+, m_bRGBformat                (false)
+, m_useColorTrans             (false)
+#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
