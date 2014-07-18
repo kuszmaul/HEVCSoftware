@@ -100,6 +100,9 @@ public:
 
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
   virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  virtual Void  parseColorTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag ) = 0;
+#endif
   virtual Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf ) = 0;
 
   virtual Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;

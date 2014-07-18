@@ -156,6 +156,9 @@ public:
 
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
+#if SCM__R0147_RGB_YUV_RD_ENC
+  Void          DefaultConvertPix(TComPicYuv* pcSrcPicYuv);
+#endif
 };// END CLASS DEFINITION TComPicYuv
 
 

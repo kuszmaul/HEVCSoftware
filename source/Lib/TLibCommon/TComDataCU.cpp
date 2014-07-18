@@ -68,6 +68,10 @@ TComDataCU::TComDataCU()
   m_ChromaQpAdj        = NULL;
   m_pbMergeFlag        = NULL;
   m_puhMergeIndex      = NULL;
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_ColorTransform     = NULL;
+#endif
   for(UInt i=0; i<MAX_NUM_CHANNEL_TYPE; i++)
   {
     m_puhIntraDir[i]     = NULL;
@@ -140,6 +144,9 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     memset( m_pePartSize, NUMBER_OF_PART_SIZES,uiNumPartition * sizeof( *m_pePartSize ) );
     m_pePredMode         = new Char[ uiNumPartition ];
     m_CUTransquantBypass = new Bool[ uiNumPartition ];
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    m_ColorTransform     = new Bool[ uiNumPartition ];
+#endif
 
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
@@ -240,6 +247,9 @@ Void TComDataCU::destroy()
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir        = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag        = NULL; }
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex      = NULL; }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    if ( m_ColorTransform     ) { delete[] m_ColorTransform;    m_ColorTransform     = NULL; }
+#endif
 
     for (UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
     {
@@ -380,6 +390,10 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_puhWidth  [ui] = pcFrom->getWidth(ui);
     m_puhHeight [ui] = pcFrom->getHeight(ui);
     m_puhTrIdx  [ui] = pcFrom->getTransformIdx(ui);
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    m_ColorTransform[ui]     = pcFrom->getColorTransform(ui);
+#endif
+
     for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
       m_crossComponentPredictionAlpha[comp][ui] = pcFrom->getCrossComponentPredictionAlpha(ui,ComponentID(comp));
@@ -421,6 +435,11 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_puhTrIdx          + firstElement, 0,                          numElements * sizeof( *m_puhTrIdx ) );
     memset( m_puhWidth          + firstElement, g_uiMaxCUWidth,             numElements * sizeof( *m_puhWidth ) );
     memset( m_puhHeight         + firstElement, g_uiMaxCUHeight,            numElements * sizeof( *m_puhHeight ) );
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    memset( m_ColorTransform    + firstElement, false,                      numElements * sizeof( *m_ColorTransform) );
+#endif
+
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
     {
       const RefPicList rpl=RefPicList(i);
@@ -569,6 +588,9 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
         m_explicitRdpcmMode            [comp][ui] = NUMBER_OF_RDPCM_MODES;
       }
       m_skipFlag[ui]      = false;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+      m_ColorTransform[ui] = false;
+#endif
       m_pePartSize[ui]    = NUMBER_OF_PART_SIZES;
       m_pePredMode[ui]    = NUMBER_OF_PREDICTION_MODES;
       m_CUTransquantBypass[ui] = bTransquantBypass;
@@ -613,7 +635,62 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
   }
 }
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TComDataCU::initRQTData( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopySrc, Bool bResetIntraMode, Bool bResetTUSplit )
+{
+  assert( uiDepth == getDepth(0) );
 
+  if( bCopySrc ) 
+    copyPartFrom(pSrcCU, 0, uiDepth);
+
+  m_dTotalCost         = MAX_DOUBLE;
+  m_uiTotalDistortion  = 0;
+  m_uiTotalBits        = 0;
+  m_uiTotalBins        = 0;
+  UChar uhWidth        = g_uiMaxCUWidth  >> uiDepth;
+  UChar uhHeight       = g_uiMaxCUHeight >> uiDepth;
+
+  for (UInt ui = 0; ui < m_uiNumPartition; ui++)
+  {
+    if( getPic()->getPicSym()->getInverseCUOrderMap(getAddr()) * m_pcPic->getNumPartInCU() + m_uiAbsIdxInLCU + ui >= getSlice()->getSliceSegmentCurStartCUAddr() )
+    {
+      if(bResetIntraMode)
+      {
+        for (UInt ch = 0; ch < MAX_NUM_CHANNEL_TYPE; ch++)
+          m_puhIntraDir[ch][ui] = ((ch==0) ? DC_IDX : 0);
+      }
+
+      if(bResetTUSplit)
+        m_puhTrIdx  [ui] = 0;
+
+      m_ColorTransform[ui] = 0;
+
+      for(UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        m_puhCbf[comp][ui]             = 0;
+        m_puhTransformSkip[comp][ui]   = 0;
+        m_crossComponentPredictionAlpha[comp][ui] = 0;
+        m_explicitRdpcmMode[comp][ui]  = NUMBER_OF_RDPCM_MODES;
+      }
+    }
+  }
+
+  if( getPic()->getPicSym()->getInverseCUOrderMap(getAddr()) * m_pcPic->getNumPartInCU() + m_uiAbsIdxInLCU >= getSlice()->getSliceSegmentCurStartCUAddr() )
+  {
+    const UInt numCoeffY = uhWidth * uhHeight;
+    for (UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      const ComponentID component = ComponentID(comp);
+      const UInt numCoeff = numCoeffY >> ( getPic()->getComponentScaleX(component) + getPic()->getComponentScaleY(component) );
+
+      memset( m_pcTrCoeff[comp],    0, numCoeff * sizeof( TCoeff ) );
+#if ADAPTIVE_QP_SELECTION
+      memset( m_pcArlCoeff[comp],   0, numCoeff * sizeof( TCoeff ) );
+#endif
+    }
+  }
+}
+#endif
 // initialize Sub partition
 Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp )
 {
@@ -669,6 +746,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    m_ColorTransform[ui] = false;
+#endif
     m_pePartSize[ui] = NUMBER_OF_PART_SIZES;
     m_pePredMode[ui] = NUMBER_OF_PREDICTION_MODES;
     m_CUTransquantBypass[ui] = false;
@@ -708,6 +788,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_phQP[ui] = pcCU->m_phQP[uiPartOffset+ui];
       m_pbMergeFlag[ui]=pcCU->m_pbMergeFlag[uiPartOffset+ui];
       m_puhMergeIndex[ui]=pcCU->m_puhMergeIndex[uiPartOffset+ui];
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+      m_ColorTransform[ui] = pcCU->getColorTransform(uiPartOffset+ui);
+#endif
       for (UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
       {
         m_puhIntraDir[ch][ui] = pcCU->m_puhIntraDir[ch][uiPartOffset+ui];
@@ -808,6 +892,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_uiCUPelY           = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
   m_skipFlag=pcCU->getSkipFlag()          + uiPart;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_ColorTransform     = pcCU->getColorTransform() + uiPart;
+#endif
 
   m_phQP=pcCU->getQP()                    + uiPart;
   m_ChromaQpAdj = pcCU->getChromaQpAdj()  + uiPart;
@@ -956,6 +1043,10 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  memcpy( m_ColorTransform + uiOffset, pcCU->getColorTransform(), sizeof( *m_ColorTransform ) * uiNumPartition  );
+#endif
+
   for (UInt ch=0; ch<numValidChan; ch++)
   {
     memcpy( m_puhIntraDir[ch]   + uiOffset, pcCU->getIntraDir(ChannelType(ch)), iSizeInUchar );
@@ -1033,6 +1124,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   Int sizeInChar  = sizeof( Char ) * m_uiNumPartition;
 
   memcpy( rpcCU->getSkipFlag() + m_uiAbsIdxInLCU, m_skipFlag, sizeof( *m_skipFlag ) * m_uiNumPartition );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  memcpy( rpcCU->getColorTransform() + m_uiAbsIdxInLCU, m_ColorTransform, sizeof( *m_ColorTransform ) * m_uiNumPartition  );
+#endif
 
   memcpy( rpcCU->getQP() + m_uiAbsIdxInLCU, m_phQP, sizeInChar  );
 
@@ -1115,6 +1209,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   Int sizeInChar  = sizeof( Char ) * uiQNumPart;
 
   memcpy( rpcCU->getSkipFlag()       + uiPartOffset, m_skipFlag,   sizeof( *m_skipFlag )   * uiQNumPart );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  memcpy( rpcCU->getColorTransform() + uiPartOffset, m_ColorTransform, sizeof( *m_ColorTransform ) * uiQNumPart );
+#endif
 
   memcpy( rpcCU->getQP() + uiPartOffset, m_phQP, sizeInChar );
   memcpy( rpcCU->getPartitionSize()  + uiPartOffset, m_pePartSize, sizeof( *m_pePartSize ) * uiQNumPart );
@@ -2151,6 +2248,14 @@ Void TComDataCU::setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID com
 {
   memset((m_explicitRdpcmMode[compID] + uiAbsPartIdx), rdpcmMode, (sizeof(UChar) * uiCoveredPartIdxes));
 }
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TComDataCU::setColorTransformSubParts( Bool colorTransform, UInt uiAbsPartIdx, UInt uiDepth)
+{
+  assert( sizeof( *m_ColorTransform) == 1 );
+  memset( m_ColorTransform + uiAbsPartIdx, colorTransform, m_pcPic->getNumPartInCU() >> (uiDepth << 1) );
+}
+#endif
 
 Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth )
 {

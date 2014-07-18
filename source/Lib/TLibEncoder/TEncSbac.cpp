@@ -93,6 +93,9 @@ TEncSbac::TEncSbac()
 , m_cCrossComponentPredictionSCModel   ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+, m_cCUColorTransformFlagSCModel       ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -148,6 +151,9 @@ Void TEncSbac::resetEntropy           ()
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION  );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_cCUColorTransformFlagSCModel.initBuffer                  ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
+#endif
 
   // new structure
   m_uiLastQp = iQp;
@@ -213,6 +219,9 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cCrossComponentPredictionSCModel.calcCost   ( curSliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+      curCost += m_cCUColorTransformFlagSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_COLOR_TRANS );
+#endif
 
       if (curCost < bestCost)
       {
@@ -267,6 +276,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS        );
+#endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -1216,6 +1228,18 @@ Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
 
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
 }
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TEncSbac::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Bool uiFlag = pcCU->getColorTransform(uiAbsPartIdx)== true? 1: 0;
+  UInt uiCtx = 0;
+  if(pcCU->getSlice()->getSPS()->getUseColorTrans())
+  {
+    m_pcBinIf->encodeBin( uiFlag , m_cCUColorTransformFlagSCModel.get( 0, 0, uiCtx ) );
+  }
+}
+#endif
 
 Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU )
 {

@@ -81,7 +81,6 @@
 // ====================================================================================================================
 // Tool Switches
 // ====================================================================================================================
-
 #define HARMONIZE_GOP_FIRST_FIELD_COUPLE                  1
 #define FIX_FIELD_DEPTH                                   1
 #define EFFICIENT_FIELD_IRAP                              1
@@ -326,11 +325,18 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0102_HASH_ME_FIX                                                 1 ///< 0 = no hash ME fix as proposed in R0102, 1 (default) = enable hash ME fix as proposed in R0102.
+#define SCM__R0102_HASH_ME_FIX                                       1 ///< 0 = no hash ME fix as proposed in R0102, 1 (default) = enable hash ME fix as proposed in R0102.
+#define SCM__R0147_ADAPTIVE_COLOR_TRANSFORM                          1 ////< 0 = no CU-level Adaptive Color-space Transform, 1 (default) = enable CU-level Adaptive Color-space Transform
 
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+#define SCM__R0147_RGB_YUV_RD_ENC                                     1  ///< non-normative tools for RGB coding
+#define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS                          -5
+#define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V                        -3
+#endif
 
 //------------------------------------------------
 // Backwards-compatibility

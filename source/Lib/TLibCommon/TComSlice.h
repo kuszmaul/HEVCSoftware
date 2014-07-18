@@ -752,6 +752,11 @@ private:
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool        m_bRGBformat;
+  Bool        m_useColorTrans;
+  Bool        m_useLL;
+#endif
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
@@ -897,6 +902,14 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool      getRGBFormatFlag                  ()                 const { return m_bRGBformat;   } 
+  Void      setRGBFormatFlag                  (const Bool value)       { m_bRGBformat = value;  } 
+  Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
+  Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
+  Bool      getUseLossless                    ()                 const { return m_useLL;}
+  Void      setUseLossless                    (const Bool value)       { m_useLL= value;}
+#endif
 
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
