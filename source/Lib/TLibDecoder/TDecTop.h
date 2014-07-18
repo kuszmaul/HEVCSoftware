@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -65,15 +65,15 @@ class TDecTop
 {
 private:
   Int                     m_iMaxRefPicNum;
-  
+
   NalUnitType             m_associatedIRAPType; ///< NAL unit type of the associated IRAP picture
   Int                     m_pocCRA;            ///< POC number of the latest CRA picture
   Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
 
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
-  ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
+  ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets
   TComSlice*              m_apcSlicePilot;
-  
+
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
 
   // functional classes
@@ -105,11 +105,15 @@ private:
   Bool                    m_isNoOutputPriorPics;
   Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
 #endif
+#if RExt__O0043_BEST_EFFORT_DECODING
+  UInt                    m_forceDecodeBitDepth;
+#endif
+  std::ostream           *m_pDecodedSEIOutputStream;
 
 public:
   TDecTop();
   virtual ~TDecTop();
-  
+
   Void  create  ();
   Void  destroy ();
 
@@ -130,6 +134,10 @@ public:
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
   Void  setNoOutputPriorPicsFlag (bool val) { m_isNoOutputPriorPics = val; }
 #endif
+#if RExt__O0043_BEST_EFFORT_DECODING
+  Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
+#endif
+  Void  setDecodedSEIMessageOutputStream(std::ostream *pOpStream) { m_pDecodedSEIOutputStream = pOpStream; }
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
