@@ -165,9 +165,9 @@ Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-  m_pcRdCost->setRGBFormatFlag               (  slice->getSPS()->getRGBFormatFlag() );
-  m_pcRdCost->setUseColorTrans               (  slice->getSPS()->getUseColorTrans() ); 
-  m_pcRdCost->setUseLossless                 (  slice->getSPS()->getUseLossless() );
+  m_pcRdCost->setRGBFormatFlag               (  m_pcCfg->getRGBFormatFlag() );
+  m_pcRdCost->setUseColorTrans               (  slice->getSPS()->getUseColorTrans() );
+  m_pcRdCost->setUseLossless                 (  m_pcCfg->getUseLossless() );
 #endif
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
@@ -193,7 +193,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
 #if SCM__R0147_RGB_YUV_RD_ENC 
-    if(slice->getSPS()->getRGBFormatFlag() && slice->getSPS()->getUseColorTrans())
+    if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColorTrans())
     {
       tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
     }
@@ -836,7 +836,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
   }
 #if SCM__R0147_RGB_YUV_RD_ENC
-  if( pcSlice->getSPS()->getUseColorTrans () && pcSlice->getSPS()->getRGBFormatFlag() ) 
+  if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() ) 
   {
     rpcPic->getPicYuvResi()->DefaultConvertPix( rpcPic->getPicYuvOrg() );
   }
@@ -963,7 +963,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       pcCU->getSlice()->setSliceQpBase( estQP );
 #endif
 #if SCM__R0147_RGB_YUV_RD_ENC
-  if( pcSlice->getSPS()->getUseColorTrans () && pcSlice->getSPS()->getRGBFormatFlag() && rpcPic->getPicYuvCSC() )
+  if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() && rpcPic->getPicYuvCSC() )
   {
     rpcPic->releaseCSCBuffer();
   }

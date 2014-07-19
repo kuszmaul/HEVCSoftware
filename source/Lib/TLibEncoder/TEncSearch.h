@@ -514,13 +514,13 @@ protected:
                                     DEBUG_STRING_FN_DECLARE(sDebug));
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void  xRecurIntraCodingQTCSC    ( TComYuv*     pcOrgYuv,
-                                    TComYuv*     pcPredYuv, 
-                                    TComYuv*     pcResiYuv, 
-                                    Distortion&  uiPUDistY, 
+                                    TComYuv*     pcPredYuv,
+                                    TComYuv*     pcResiYuv,
+                                    Distortion&  uiPUDistY,
                                     Distortion&  uiPUDistC,
                                     Double&      dPUCost,
-                                    TComTU&      rTu 
-                                   ,Bool         bTestMaxTUSize 
+                                    TComTU&      rTu
+                                   ,Bool         bTestMaxTUSize
                                   );
 #endif
   Void  xSetIntraResultChromaQT   ( TComYuv*    pcRecoYuv, TComTU &rTu);

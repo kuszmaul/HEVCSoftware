@@ -74,7 +74,7 @@
 #define NUM_EXPLICIT_RDPCM_FLAG_CTX   1       ///< number of context models for the flag which specifies whether to use RDPCM on inter coded residues
 #define NUM_EXPLICIT_RDPCM_DIR_CTX    1       ///< number of context models for the flag which specifies which RDPCM direction is used on inter coded residues
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-#define NUM_COLOR_TRANS_CTX           1      
+#define NUM_COLOR_TRANS_CTX           1
 #endif
 
 //--------------------------------------------------------------------------------------------------
@@ -331,9 +331,9 @@ INIT_QT_ROOT_CBF[NUMBER_OF_SLICE_TYPES][NUM_QT_ROOT_CBF_CTX] =
 static const UChar
 INIT_COLOR_TRANS[NUMBER_OF_SLICE_TYPES][NUM_COLOR_TRANS_CTX] =
 {
-  { CNU, },
-  { CNU, },
-  { CNU, },
+  { 154, },
+  { 154, },
+  { 154, },
 };
 #endif
 

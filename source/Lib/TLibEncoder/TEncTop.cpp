@@ -641,9 +641,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-  m_cSPS.setRGBFormatFlag               (       m_bRGBformat         );
-  m_cSPS.setUseColorTrans               (       m_useColorTrans      ); 
-  m_cSPS.setUseLossless                 (       m_useLL              );
+  m_cSPS.setUseColorTrans               (       m_useColorTrans      );
 #endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)

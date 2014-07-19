@@ -494,7 +494,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     if(pcCU->getColorTransform( 0 ))
     {
       m_ppcYuvResi[uiDepth]->convert(0, 0, pcCU->getWidth( 0 ), false, pcCU->isLosslessCoded(0));
@@ -738,11 +738,11 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   }
 }
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-Void 
-  TDecCu::xIntraRecBlk     (       TComYuv*    pcRecoYuv,
-  TComYuv*    pcPredYuv,
-  TComYuv*    pcResiYuv,
-  TComTU     &rTu)
+Void
+TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
+                      TComYuv*    pcPredYuv,
+                      TComYuv*    pcResiYuv,
+                      TComTU     &rTu)
 {
   TComDataCU         *pcCU        = rTu.getCU();
   const UInt         uiAbsPartIdx = rTu.GetAbsPartIdxTU();
@@ -790,11 +790,13 @@ Void
     }
     else
     {
-      for (UInt y = 0; y < uiHeight; y++)
-        for (UInt x = 0; x < uiWidth; x++)
+      for ( UInt y = 0; y < uiHeight; y++ )
+      {
+        for ( UInt x = 0; x < uiWidth; x++ )
         {
           piResi[(y * uiStride) + x] = 0;
         }
+      }
     }
     const Bool useCrossComponentPrediction = isChroma(compID) && (pcCU->getCrossComponentPredictionAlpha(uiAbsPartIdx, compID) != 0);
     if( useCrossComponentPrediction ) 
@@ -941,10 +943,10 @@ TDecCu::xIntraRecQT(TComYuv*    pcRecoYuv,
 }
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 Void
-  TDecCu::xIntraRecQT(TComYuv*    pcRecoYuv,
-  TComYuv*    pcPredYuv,
-  TComYuv*    pcResiYuv, 
-  TComTU      &rTu)
+TDecCu::xIntraRecQT(TComYuv*    pcRecoYuv,
+                    TComYuv*    pcPredYuv,
+                    TComYuv*    pcResiYuv, 
+                    TComTU      &rTu)
 {
   UInt uiTrDepth    = rTu.GetTransformDepthRel();
   TComDataCU *pcCU  = rTu.getCU();
