@@ -325,9 +325,9 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0102_HASH_ME_FIX                                       1 ///< 0 = no hash ME fix as proposed in R0102, 1 (default) = enable hash ME fix as proposed in R0102.
+#define SCM__R0102_HASH_ME_FIX                                       1 ////< 0 = no hash ME fix as proposed in R0102, 1 (default) = enable hash ME fix as proposed in R0102.
 #define SCM__R0147_ADAPTIVE_COLOR_TRANSFORM                          1 ////< 0 = no CU-level Adaptive Color-space Transform, 1 (default) = enable CU-level Adaptive Color-space Transform
-
+#define SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT                   1 ////< 0 = no chroma refinement for intraBC hash search, 1 (default) = enable chroma refinement for intraBC hash search
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
@@ -337,6 +337,10 @@
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS                          -5
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V                        -3
 #endif
+
+#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
+#define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4
+#endif 
 
 //------------------------------------------------
 // Backwards-compatibility
