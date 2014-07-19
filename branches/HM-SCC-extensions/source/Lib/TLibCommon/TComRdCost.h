@@ -267,7 +267,7 @@ public:
   Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
   Bool      getUseLossless                    ()                 const { return m_useLL;}
   Void      setUseLossless                    (const Bool value)       { m_useLL= value;}
-  Void adjustLambdaForColorTrans(Int delta_QP);
+  Void      adjustLambdaForColorTrans         (Int delta_QP);
 #endif
 };// END CLASS DEFINITION TComRdCost
 

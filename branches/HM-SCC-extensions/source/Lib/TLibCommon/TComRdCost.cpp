@@ -215,11 +215,11 @@ Void TComRdCost::setLambda( Double dLambda )
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-  if(getUseColorTrans()&&!getUseLossless()) 
+  if(getUseColorTrans()&&!getUseLossless())
   {
     m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS/3.0));
   }
-#endif  
+#endif
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;

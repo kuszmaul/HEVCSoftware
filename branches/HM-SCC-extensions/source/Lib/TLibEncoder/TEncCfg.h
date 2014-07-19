@@ -212,9 +212,7 @@ protected:
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-  Bool      m_bRGBformat; 
-#endif
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool      m_bRGBformat;
   Bool      m_useColorTrans;
   Bool      m_useLL;
 #endif
@@ -583,7 +581,7 @@ public:
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
-  Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; } 
+  Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
   Bool getUseColorTrans                                ()            const { return                  m_useColorTrans;}
   Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}

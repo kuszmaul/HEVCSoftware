@@ -645,8 +645,8 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setCbfSubParts( cbfZero, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM 
-      pcCU->setColorTransformSubParts(0, uiAbsPartIdx, uiDepth); 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+      pcCU->setColorTransformSubParts(0, uiAbsPartIdx, uiDepth);
 #endif
       return;
     }
@@ -659,7 +659,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     {
       m_pcEntropyDecoderIf->parseColorTransformFlag(uiAbsPartIdx, uiFlag );
     }
-    pcCU->setColorTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth); 
+    pcCU->setColorTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
 #endif
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);

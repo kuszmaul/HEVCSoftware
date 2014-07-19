@@ -595,7 +595,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-        || pcSPS->getUseColorTrans()
+     || pcSPS->getUseColorTrans()
 #endif
     );
 
