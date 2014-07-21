@@ -431,7 +431,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth )
 #endif
 {
+#if SCM__R0309_INTRABC_BVP
+  TComMv lastIntraBCMv[2];
+  for(Int i=0; i<2; i++)
+  {
+    lastIntraBCMv[i] = rpcBestCU->getLastIntraBCMv(i);
+  }
+#else
   TComMv lastIntraBCMv = rpcBestCU->getLastIntraBCMv();
+#endif 
   TComPic* pcPic = rpcBestCU->getPic();
   DEBUG_STRING_NEW(sDebug)
 
@@ -962,7 +970,45 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     // If Intra BC keep last coded Mv
     if( rpcBestCU->getPredictionMode(0) == MODE_INTRABC )
     {
+#if SCM__R0309_INTRABC_BVP
+      if( rpcBestCU->getPartitionSize( 0 ) == SIZE_2Nx2N)
+      {
+        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) != rpcBestCU->getLastIntraBCMv(0))
+        {
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(0), 1 );
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
+        }
+      }
+      else if(rpcBestCU->getPartitionSize( 0 ) == SIZE_2NxN || rpcBestCU->getPartitionSize( 0 ) == SIZE_Nx2N)
+      {
+        // Part 0
+        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( 0 ) != rpcBestCU->getLastIntraBCMv())
+        {
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1);
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( 0 ) );
+        }
+        // Part 1
+        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) != rpcBestCU->getLastIntraBCMv())
+        {
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1);
+          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
+        }
+      }
+      else
+      {
+        // NxN
+        for(Int part=0; part<4; part++)
+        {
+          if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 4 + part ) != rpcBestCU->getLastIntraBCMv())
+          {
+            rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1 );
+            rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 4 + part ) );
+          }
+        }
+      }
+#else
       rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
+#endif 
     }
 
     m_pcEntropyCoder->resetBits();
@@ -1049,9 +1095,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         pcSubBestPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
         pcSubTempPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
 
+#if SCM__R0309_INTRABC_BVP
+        for(Int i=0; i<2; i++)
+        {
+          pcSubBestPartCU->setLastIntraBCMv( lastIntraBCMv[i], i );
+          pcSubTempPartCU->setLastIntraBCMv( lastIntraBCMv[i], i );
+        }
+#else
         pcSubBestPartCU->setLastIntraBCMv( lastIntraBCMv );
         pcSubTempPartCU->setLastIntraBCMv( lastIntraBCMv );
-
+#endif 
         Bool bInSlice = pcSubBestPartCU->getSCUAddr()+pcSubBestPartCU->getTotalNumPart()>pcSlice->getSliceSegmentCurStartCUAddr()&&pcSubBestPartCU->getSCUAddr()<pcSlice->getSliceSegmentCurEndCUAddr();
         if(bInSlice && ( pcSubBestPartCU->getCUPelX() < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( pcSubBestPartCU->getCUPelY() < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
         {
@@ -1083,7 +1136,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           // NOTE: RExt - (0,0) is used as an indicator that IntraBC has not been used within the CU.
           if( pcSubBestPartCU->getLastIntraBCMv().getHor() != 0 || pcSubBestPartCU->getLastIntraBCMv().getVer() != 0 )
           {
+#if SCM__R0309_INTRABC_BVP
+            for(Int i=0; i<2; i++)
+            {
+              lastIntraBCMv[i] = pcSubBestPartCU->getLastIntraBCMv(i);
+            }
+#else
             lastIntraBCMv = pcSubBestPartCU->getLastIntraBCMv();
+#endif 
           }
 
           rpcTempCU->copyPartFrom( pcSubBestPartCU, uiPartUnitIdx, uhNextDepth );         // Keep best part data to current temporary data.

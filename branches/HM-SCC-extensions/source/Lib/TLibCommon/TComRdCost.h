@@ -125,6 +125,9 @@ private:
   // for motion cost
 #if FIX203
   TComMv                  m_mvPredictor;
+#if SCM__R0309_INTRABC_BVP
+  TComMv                  m_mvPredictors[2];
+#endif
 #else
   UInt*                   m_puiComponentCostOriginP;
   UInt*                   m_puiComponentCost;
@@ -193,6 +196,68 @@ public:
     m_puiVerCost = m_puiComponentCost - rcMv.getVer();
 #endif
   }
+
+#if SCM__R0309_INTRABC_BVP
+  Void    setPredictors( TComMv* pcMv )
+  {
+#if FIX203
+    for(Int i=0; i<2; i++)
+    {
+      m_mvPredictors[i] = pcMv[i];
+    }
+#else
+    m_puiHorCost = m_puiComponentCost - rcMv.getHor();
+    m_puiVerCost = m_puiComponentCost - rcMv.getVer();
+#endif
+  }
+
+  __inline Distortion getCostMultiplePreds( Int x, Int y )
+  {
+    return m_uiCost * getBitsMultiplePreds(x, y) >> 16;
+  }
+
+  UInt    getBitsMultiplePreds( Int x, Int y )
+  {
+    Int rmvH[2];
+    Int rmvV[2];
+    rmvH[0] = x - m_mvPredictors[0].getHor();
+    rmvH[1] = x - m_mvPredictors[1].getHor();
+
+    rmvV[0] = y - m_mvPredictors[0].getVer();
+    rmvV[1] = y - m_mvPredictors[1].getVer();
+
+    Int absCand[2];
+    absCand[0] = abs(rmvH[0])+abs(rmvV[0]);
+    absCand[1] = abs(rmvH[1])+abs(rmvV[1]);
+
+
+    if(absCand[0] < absCand[1] )
+    {
+      return getIComponentBits(rmvH[0]) + getIComponentBits(rmvV[0]);
+    }
+    else
+    {
+      return getIComponentBits(rmvH[1]) + getIComponentBits(rmvV[1]);
+    }
+  }
+
+  UInt getIComponentBits( Int iVal )
+  {
+    if( !iVal ) return 1;
+
+    UInt uiLength = 1;
+    UInt uiTemp   = ( iVal <= 0) ? (-iVal<<1)+1: (iVal<<1);
+
+    while ( 1 != uiTemp )
+    {
+      uiTemp >>= 1;
+      uiLength += 2;
+    }
+
+    return uiLength;
+  }
+#endif
+
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   __inline Distortion getCost( Int x, Int y )
   {

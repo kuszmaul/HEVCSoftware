@@ -342,6 +342,10 @@
 #define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4
 #endif 
 
+#define SCM__R0309_INTRABC_BVP                                        1 ////< 0 = disable BVP improvements as proposed in R0309, 1 (default) = enable BVP improvements as proposed in R0309
+#define SCM__R0081_CODE_SIMPLIFICATION                                1 ////< code simplification as proposed in R0081
+#define SCM__R0081_BUGFIX                                             1 ////< Bug fix as proposed in R0081
+
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
@@ -485,8 +489,13 @@ enum RefPicList
 {
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
+#if !SCM__R0309_INTRABC_BVP
   NUM_REF_PIC_LIST_01          = 2,
+#endif 
   REF_PIC_LIST_INTRABC         = 2,
+#if SCM__R0309_INTRABC_BVP
+  NUM_REF_PIC_LIST_01          = 3,
+#endif 
   NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
   REF_PIC_LIST_X               = 100  ///< special mark
 };
