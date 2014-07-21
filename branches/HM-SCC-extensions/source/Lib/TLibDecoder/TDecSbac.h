@@ -123,10 +123,12 @@ public:
 
   Void parseIntraBCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void parseIntraBC        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-
-  Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
-  Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
-  Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+#if SCM__R0186_INTRABC_BVD
+  Void parseIntraBCBvd     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+#endif
+  Void parseInterDir       ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
+  Void parseRefFrmIdx      ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
+  Void parseMvd            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
 
   Void parseCrossComponentPrediction ( class TComTU &rTu, ComponentID compID );
 
@@ -196,7 +198,10 @@ private:
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
-#endif 
+#endif
+#if SCM__R0186_INTRABC_BVD
+  ContextModel3DBuffer m_cIntraBCBVDSCModel;
+#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

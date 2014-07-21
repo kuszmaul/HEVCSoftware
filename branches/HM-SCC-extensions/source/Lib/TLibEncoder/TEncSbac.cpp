@@ -96,6 +96,9 @@ TEncSbac::TEncSbac()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 , m_cCUColorTransformFlagSCModel       ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if SCM__R0186_INTRABC_BVD
+, m_cIntraBCBVDSCModel                 (1,              1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -153,6 +156,9 @@ Void TEncSbac::resetEntropy           ()
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
+#endif
+#if SCM__R0186_INTRABC_BVD
+  m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
 #endif
 
   // new structure
@@ -222,6 +228,9 @@ Void TEncSbac::determineCabacInitIdx()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
       curCost += m_cCUColorTransformFlagSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_COLOR_TRANS );
 #endif
+#if SCM__R0186_INTRABC_BVD
+      curCost += m_cIntraBCBVDSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_INTRABC_BVD );
+#endif
 
       if (curCost < bestCost)
       {
@@ -278,6 +287,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
+#endif
+#if SCM__R0186_INTRABC_BVD
+  m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
 #endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
@@ -860,13 +872,62 @@ Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   for(UInt iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++)
   {
+#if SCM__R0186_INTRABC_BVD
+    codeIntraBCBvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
+#else
     codeMvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
+#endif 
 #if SCM__R0309_INTRABC_BVP
     Int iSymbol = pcCU->getMVPIdx(REF_PIC_LIST_INTRABC, uiAbsPartIdx + iPartIdx * uiPUOffset);
     xWriteUnaryMaxSymbol(iSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1);
 #endif
   }
 }
+
+#if SCM__R0186_INTRABC_BVD
+Void TEncSbac::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{ 
+  const TComCUMvField* pcCUMvField = pcCU->getCUMvField( eRefList );
+  
+  const Int iHor = pcCUMvField->getMvd( uiAbsPartIdx ).getHor();
+  const Int iVer = pcCUMvField->getMvd( uiAbsPartIdx ).getVer();
+
+  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
+  
+  m_pcBinIf->encodeBin( iHor != 0 ? 1 : 0, *pCtx );
+  
+  pCtx++;
+  m_pcBinIf->encodeBin( iVer != 0 ? 1 : 0, *pCtx );
+  
+  const Bool bHorAbsGr0 = iHor != 0;
+  const Bool bVerAbsGr0 = iVer != 0;
+  const UInt uiHorAbs   = 0 > iHor ? -iHor : iHor;
+  const UInt uiVerAbs   = 0 > iVer ? -iVer : iVer;
+  
+  if( bHorAbsGr0 )
+  {
+    xWriteEpExGolomb( uiHorAbs-1, SCM__R0186_INTRABC_BVD_CODING_EGORDER );
+    m_pcBinIf->encodeBinEP( 0 > iHor ? 1 : 0 );
+  }
+  
+  if( bVerAbsGr0 )
+  {
+    xWriteEpExGolomb( uiVerAbs-1, SCM__R0186_INTRABC_BVD_CODING_EGORDER );
+    m_pcBinIf->encodeBinEP( 0 > iVer ? 1 : 0 );
+  }
+  return;
+}
+
+Void  TEncSbac::estBvdBin0Cost(Int *Bin0Cost)
+{
+  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
+  Bin0Cost[0] = pCtx->getEntropyBits(0);
+  Bin0Cost[1] = pCtx->getEntropyBits(1);
+  pCtx++;
+  Bin0Cost[2] = pCtx->getEntropyBits(0);
+  Bin0Cost[3] = pCtx->getEntropyBits(1);
+}
+#endif
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

@@ -1735,6 +1735,13 @@ Void TDecCavlc::parseIntraBC ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+#if SCM__R0186_INTRABC_BVD
+Void TDecCavlc::parseIntraBCBvd( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiPartIdx*/, UInt /*uiDepth*/, RefPicList /*eRefList*/ )
+{
+  assert(0);
+}
+#endif
+
 Void TDecCavlc::parseInterDir( TComDataCU* /*pcCU*/, UInt& /*ruiInterDir*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
