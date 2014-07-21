@@ -515,6 +515,36 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   Int mvx = 0, mvy = 0;
+#if SCM__R0309_INTRABC_BVP
+  TComMv      MvPred[2], MvLast[2];
+  UInt        uiMvpIdx;
+  UInt        uiSymbol;
+
+  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
+  
+  MvLast[0] = pcCU->getLastIntraBCMv(0);
+  MvLast[1] = pcCU->getLastIntraBCMv(1);
+  
+  pcCU->getIntraBCMVPs(uiAbsPartIdx, MvPred, MvLast);
+
+  xReadUnaryMaxSymbol(uiSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVP_IDX) );
+
+  uiMvpIdx = uiSymbol;
+
+  assert((uiMvpIdx == 0) || (uiMvpIdx == 1));
+
+  mvx = MvPred[uiMvpIdx].getHor() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
+  mvy = MvPred[uiMvpIdx].getVer() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
+
+  const TComMv cMv(mvx, mvy );
+
+  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
+  if( pcCU->getLastIntraBCMv() != cMv)
+  {
+    pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
+    pcCU->setLastIntraBCMv( cMv );
+  }
+#else
   TComMv mvPred = pcCU->getLastIntraBCMv();
   if (mvPred.getHor()==0 && mvPred.getVer()==0)
   {
@@ -529,6 +559,7 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
 
   pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
   pcCU->setLastIntraBCMv( cMv );
+#endif 
 }
 
 

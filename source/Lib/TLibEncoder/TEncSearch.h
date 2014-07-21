@@ -267,7 +267,9 @@ public:
                                   Int          iPartIdx,
                                   TComMv*      pcMvPred,
                                   TComMv&      rcMv,
+#if !SCM__R0081_CODE_SIMPLIFICATION
                                   UInt&        ruiBits,
+#endif
                                   Distortion&  ruiCost,
                                   Bool         bUse1DSearchFor8x8
                                 );
@@ -368,7 +370,11 @@ public:
                                   Distortion&  ruiSAD,
                                   Int          iRoiWidth,
                                   Int          iRoiHeight,
+#if SCM__R0309_INTRABC_BVP
+                                  TComMv*      mvPreds,
+#else
                                   TComMv&      mvPred,
+#endif 
                                   Bool         bUse1DSearchFor8x8
                                 );
 
@@ -404,8 +410,10 @@ public:
                                 Int iPartIdx,
                                 TComMv* pcMvPred,
                                 TComMv& rcMv,
+#if !SCM__R0081_CODE_SIMPLIFICATION
                                 UInt& ruiBits,
                                 Distortion& ruiCost,
+#endif
                                 UInt uiIntraBCECost
                               );
 
