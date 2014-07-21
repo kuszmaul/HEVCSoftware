@@ -5325,6 +5325,10 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
 #endif 
   m_pcRdCost->setCostScale  ( 0 );
 
+#if SCM__R0186_INTRABC_BVD
+  m_pcEntropyCoder->m_pcEntropyCoderIf->estBvdBin0Cost( m_pcRdCost->getMvdBin0CostPtr());  
+#endif
+
   //  Do integer search
 #if SCM__R0309_INTRABC_BVP
   xIntraPatternSearch      ( pcCU, uiPartAddr, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, pcMvPred, bUse1DSearchFor8x8 );
@@ -5341,7 +5345,11 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   for(UInt idx = 0; idx < 2; idx++)
   {
     m_pcRdCost->setPredictor( pcMvPred[idx] );
+#if SCM__R0186_INTRABC_BVD
+    uiMvBits = m_pcRdCost->getBvBits( rcMv.getHor(), rcMv.getVer() );
+#else
     uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+#endif 
 
     if( uiMvBits < uiMvBitsBest)
     {
@@ -6561,6 +6569,9 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setPredictor(*pcMvPred);
   m_pcRdCost->setCostScale  ( 0 );
+#if SCM__R0186_INTRABC_BVD
+  m_pcEntropyCoder->m_pcEntropyCoderIf->estBvdBin0Cost( m_pcRdCost->getMvdBin0CostPtr());  
+#endif
 
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
@@ -6673,7 +6684,11 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   for(UInt idx = 0; idx < 2; idx++)
   {
     m_pcRdCost->setPredictor( pcMvPred[idx] );
+#if SCM__R0186_INTRABC_BVD
+    uiMvBits = m_pcRdCost->getBvBits( rcMv.getHor(), rcMv.getVer() );
+#else
     uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+#endif 
 
     if( uiMvBits < uiMvBitsBest)
     {

@@ -1383,7 +1383,12 @@ Void TEncCavlc::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 #endif
-
+#if SCM__R0186_INTRABC_BVD
+Void TEncCavlc::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

@@ -102,7 +102,9 @@ public:
 
   Void parseIntraBCFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void parseIntraBC         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-
+#if SCM__R0186_INTRABC_BVD
+  Void parseIntraBCBvd      ( TComDataCU* pcCU, UInt uiAbsPartAddr,UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+#endif
   Void parseInterDir        ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx       ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd             ( TComDataCU* pcCU, UInt uiAbsPartAddr,UInt uiPartIdx,    UInt uiDepth, RefPicList eRefList );

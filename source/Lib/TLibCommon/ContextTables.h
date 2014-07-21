@@ -165,6 +165,10 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_INTRABC_PRED_CTX          1
 
+#if SCM__R0186_INTRABC_BVD
+#define NUM_INTRABC_BVD_CTX           2
+#endif
+
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 
@@ -510,6 +514,17 @@ INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] =
   { 197, },
   { 197, }
 };
+
+#if SCM__R0186_INTRABC_BVD
+static const UChar 
+INIT_INTRABC_BVD[NUMBER_OF_SLICE_TYPES][NUM_INTRABC_BVD_CTX] = 
+{
+  {154,154 },
+  {154,154 },
+  {154,154 },
+};
+#endif
+
 
 static const UChar
 INIT_CROSS_COMPONENT_PREDICTION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_PREDICTION_CTX] =

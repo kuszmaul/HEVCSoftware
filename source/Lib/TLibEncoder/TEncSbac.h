@@ -172,6 +172,10 @@ public:
 
   Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM__R0186_INTRABC_BVD
+  Void codeIntraBCBvd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void estBvdBin0Cost          (Int *Bin0Cost);
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
@@ -234,6 +238,9 @@ private:
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
+#endif
+#if SCM__R0186_INTRABC_BVD
+  ContextModel3DBuffer m_cIntraBCBVDSCModel;
 #endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
