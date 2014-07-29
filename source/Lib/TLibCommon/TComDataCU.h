@@ -149,34 +149,18 @@ private:
   Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
-#if PALETTE_MODE
-  Pel*      m_piSPoint[MAX_NUM_COMPONENT];  ///< 0: run mode; 1: copy mode
-  Pel*      m_piLevel[MAX_NUM_COMPONENT];  ///< in run mode, it is the sample index in palette; in PCM mode, it is the abs sample value;
-  Pel*      m_piRun[MAX_NUM_COMPONENT];  ///< Number of consecurive ones, only signaled for run mode
-  Pel*      m_piEscapeFlag[MAX_NUM_COMPONENT];
-  Pel*      m_piPixelPredFlag[MAX_NUM_COMPONENT];
-
+#if SCM__R0348_PALETTE_MODE
+  UChar*        m_piSPoint[MAX_NUM_COMPONENT];          ///< 0: left run mode; 1: above run mode
   Bool*      m_pbPLTModeFlag;          ///< array of intra_pcm flags
   Pel*      m_piPLT[MAX_NUM_COMPONENT];    ///< Palette
-  UChar *     m_puhPLTSize[MAX_NUM_COMPONENT];
-  Pel*      m_bPrevPLTReusedFlag[MAX_NUM_COMPONENT]; ///< Palette
-#if PLT_CU_ESCAPE_FLAG
+  UChar*        m_bPrevPLTReusedFlag[MAX_NUM_COMPONENT]; ///< Palette
   UChar *     m_puhPLTEscape[MAX_NUM_COMPONENT];
-#endif
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
   Pel*      m_piLastPLTInLcuFinal[MAX_NUM_COMPONENT]; ///< Palette
   UChar      m_uhLastPLTSizeFinal[MAX_NUM_COMPONENT];
-#if PLT_SHARING
   UChar      m_uhLastPLTUsedSizeFinal[MAX_NUM_COMPONENT];
-#endif
-#endif
-#if PLT_SHARING
   Bool*     m_pbPLTSharingModeFlag;
-#endif
-#if PLT_IDX_ADAPT_SCAN
   Bool*         m_pbPLTScanRotationModeFlag;
   Bool*         m_pbPLTScanTraverseModeFlag;
-#endif
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
@@ -421,59 +405,45 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#if PALETTE_MODE
-  Pel*      getSPoint(ComponentID component) { return m_piSPoint[component]; }
-  Pel*      getLevel(ComponentID component) { return m_piLevel[component]; }
-  Pel*      getRun(ComponentID component) { return m_piRun[component]; }
-  Pel*      getEscapeFlag(ComponentID component) { return m_piEscapeFlag[component]; }
-  Pel*      getPixelPredFlag(ComponentID component) { return m_piPixelPredFlag[component]; }
+#if SCM__R0348_PALETTE_MODE
+  UChar*        getSPoint             (ComponentID component)   { return m_piSPoint[component];      }
+  Pel*          getLevel              (ComponentID component)   { return m_pcIPCMSample[component];  }
+  TCoeff*       getRun                (ComponentID component)   { return m_pcTrCoeff[component];     }
   Bool*      getPLTModeFlag()              { return m_pbPLTModeFlag; }
   Bool      getPLTModeFlag(UInt uiIdx)        { return m_pbPLTModeFlag[uiIdx]; }
   Void      setRLModeFlag(UInt uiIdx, Bool b)    { m_pbPLTModeFlag[uiIdx] = b; }
   Void      setPLTModeFlagSubParts(Bool bRLModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
   Pel*    getPLT(UChar ucCh) { return m_piPLT[ucCh]; }
-  Pel*    getPLT(UChar ucCh, UInt uiIdx) { return m_piPLT[ucCh] + uiIdx*MAX_PLT_SIZE; }
-  Pel     getPLT(UChar ucCh, UInt uiIdx, UInt uiPLTIdx) { return m_piPLT[ucCh][uiIdx*MAX_PLT_SIZE + uiPLTIdx]; }
-  Void    setPLT(UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx)   { m_piPLT[ucCh][uiIdx*MAX_PLT_SIZE + uiPLTIdx] = uiValue; }
+  Pel*          getPLT(UChar ucCh, UInt uiIdx)  { return m_piPLT[ucCh] + (uiIdx >> 2) * MAX_PLT_SIZE; }
+  Pel           getPLT(UChar ucCh, UInt uiIdx, UInt uiPLTIdx)   { return m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx]; }
+  Void          setPLT(UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx)   { m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx] = uiValue; }
   Void    setPLTSubParts(UChar ucCh, Pel uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
 
 
-  UChar*       getPLTSize(UChar ucCh)              { return m_puhPLTSize[ucCh]; }
-  UChar       getPLTSize(UChar ucCh, UInt uiIdx)        { return m_puhPLTSize[ucCh][uiIdx]; }
-  Void       setPLTSize(UChar ucCh, UInt uiIdx, Bool b)    { m_puhPLTSize[ucCh][uiIdx] = b; }
+  UChar*        getPLTSize            (UChar ucCh)                          { return m_puhTransformSkip[ucCh];               }
+  UChar         getPLTSize            (UChar ucCh, UInt uiIdx )             { return m_puhTransformSkip[ucCh][uiIdx];        }
+  Void          setPLTSize            (UChar ucCh, UInt uiIdx, Bool b )     { m_puhTransformSkip[ucCh][uiIdx] = b;           }
   Void       setPLTSizeSubParts(UChar ucCh, UChar ucRLDictSize, UInt uiAbsPartIdx, UInt uiDepth);
-#if PLT_CU_ESCAPE_FLAG
+
   UChar*     getPLTEscape(UChar ucCh)              { return m_puhPLTEscape[ucCh]; }
   UChar       getPLTEscape(UChar ucCh, UInt uiIdx)        { return m_puhPLTEscape[ucCh][uiIdx]; }
   Void       setPLTEscape(UChar ucCh, UInt uiIdx, Bool b)    { m_puhPLTEscape[ucCh][uiIdx] = b; }
   Void       setPLTEscapeSubParts(UChar ucCh, UChar ucUseEscape, UInt uiAbsPartIdx, UInt uiDepth);
-#endif
 
-  Pel*    getPrevPLTReusedFlag(UChar ucCh) { return m_bPrevPLTReusedFlag[ucCh]; }
-  Pel*        getPrevPLTReusedFlag(UChar ucCh, UInt uiIdx) { return m_bPrevPLTReusedFlag[ucCh] + uiIdx*PALETTE_PREDICTION_SIZE; }
-  Pel         getPrevPLTReusedFlag(UChar ucCh, UInt uiIdx, UInt uiPLTIdx) { return m_bPrevPLTReusedFlag[ucCh][uiIdx*PALETTE_PREDICTION_SIZE + uiPLTIdx]; }
-  Void        setPrevPLTReusedFlag(UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx)     { m_bPrevPLTReusedFlag[ucCh][uiIdx*PALETTE_PREDICTION_SIZE + uiPLTIdx] = uiValue; }
-  Void    setPrevPLTReusedFlagSubParts(UChar ucCh, Pel uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
+  UChar*        getPrevPLTReusedFlag(UChar ucCh)              { return m_bPrevPLTReusedFlag[ucCh]; }
+  UChar*        getPrevPLTReusedFlag(UChar ucCh, UInt uiIdx)  { return m_bPrevPLTReusedFlag[ucCh] + (uiIdx >> 2) * MAX_PLT_PRED_SIZE; }
+  UChar         getPrevPLTReusedFlag(UChar ucCh, UInt uiIdx, UInt uiPLTIdx) { return m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx]; }
+  Void          setPrevPLTReusedFlag(UChar ucCh, UInt uiIdx, UChar uiValue, UInt uiPLTIdx)     { m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = uiValue; }
+  Void          setPrevPLTReusedFlagSubParts(UChar ucCh, UChar uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
 
-#if PLT_SHARING
   Bool*         getPLTSharingModeFlag      ()                        { return m_pbPLTSharingModeFlag;        }
   Bool          getPLTSharingModeFlag      (UInt uiIdx)              { return m_pbPLTSharingModeFlag[uiIdx]; }
   Void          setPLTSharingModeFlag      (UInt uiIdx, Bool b)      { m_pbPLTSharingModeFlag[uiIdx] = b;    }
   Void          setPLTSharingFlagSubParts  (Bool bPLTSharingFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#endif
-#if PLT_SHARING
   Pel*    getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev, UInt &uiPLTUsedSizePrev);
-#else
-  Pel*    getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev);
-#endif
-#if PLT_IDX_ADAPT_SCAN
 UInt getCtxScanRotationModeFlag( UInt uiAbsPartIdx);
-#endif
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
   UChar    getLastPLTInLcuUsedSizeFinal(UChar ucCh)  { return m_uhLastPLTUsedSizeFinal[ucCh]; }
   Void    setLastPLTInLcuUsedSizeFinal(UChar ucCh, UChar uh)   { m_uhLastPLTUsedSizeFinal[ucCh] = uh; }
-#endif
 
   UChar    getLastPLTInLcuSizeFinal(UChar ucCh)  { return m_uhLastPLTSizeFinal[ucCh]; }
   Void    setLastPLTInLcuSizeFinal(UChar ucCh, UChar uh)   { m_uhLastPLTSizeFinal[ucCh] = uh; }
@@ -481,22 +451,12 @@ UInt getCtxScanRotationModeFlag( UInt uiAbsPartIdx);
   Pel*    getLastPLTInLcuFinal(UChar ucCh) { return m_piLastPLTInLcuFinal[ucCh]; }
   Pel     getLastPLTInLcuFinal(UChar ucCh, UInt uiPLTIdx) { return m_piLastPLTInLcuFinal[ucCh][uiPLTIdx]; }
   Void    setLastPLTInLcuFinal(UChar ucCh, Pel uiValue, UInt uiPLTIdx) { m_piLastPLTInLcuFinal[ucCh][uiPLTIdx] = uiValue; }
-#if PLT_STUFFING
   Void    saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UInt numValidComp );
-#endif
-#endif
   Void xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3]);
-#if PLT_TBC || PLT_ESC_TBC
   Int xCalcMaxVals(TComDataCU *pcCU, ComponentID compID);
-#endif
-#if PLT_IDX_ADAPT_SCAN
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
   Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }
   Void          setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
-  Bool          getPLTScanTraverseModeFlag (UInt uiIdx )             { return m_pbPLTScanTraverseModeFlag[uiIdx]; }
-  Bool*         getPLTScanTraverseModeFlag ()                        { return m_pbPLTScanTraverseModeFlag;        }
-  Void          setPLTScanTraverseModeFlagSubParts (Bool bPLTScanTraverseModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#endif
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -605,10 +565,9 @@ UInt getCtxScanRotationModeFlag( UInt uiAbsPartIdx);
 
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   UInt      getCtxEscapeFlag          ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pEscapeFlag  );
-  UInt      getCtxPixelPredFlag        ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pPixelPredFlag  );  
-  UInt      getCtxSPoint            ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pSPoint    );
+  UInt          getCtxSPoint                    ( UInt   uiAbsPartIdx, UInt uiIdx,  UChar *SPoint    );
 #endif
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );

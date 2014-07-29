@@ -123,7 +123,7 @@ public:
         break;
 
       //------------------------------------------------
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
       case SCAN_TRAV:
         {
           if (m_line%2==0)
@@ -177,7 +177,7 @@ Void initROM()
   }
 
   // initialise scan orders
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
   for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
   {
     for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
@@ -260,7 +260,7 @@ Void destroyROM()
   {
     for (UInt scanOrderIndex = 0; scanOrderIndex < SCAN_NUMBER_OF_TYPES; scanOrderIndex++)
     {
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
       for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
       {
         for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
@@ -585,13 +585,8 @@ Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE] = {8, 8}; // In the encoder, thi
 #endif
 Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};    // PCM bit-depth
 
-#if PALETTE_MODE
-#if CANON_PALETTE_ENCODER
+#if SCM__R0348_PALETTE_MODE
 UChar g_uhPLTQuant[52] = { 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 8, 9, 9,10,11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 24, 23, 25, 26, 28, 29, 31, 32, 34, 36, 37, 39, 41, 42, 45 };
-#else
-UChar g_uhPLTQuant[52] = { 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 19, 20, 20, 21, 23, 24, 26, 27, 29, 30, 32, 34, 35, 37, 39, 41, 43 };
-#endif
-#if PLT_TBC || PLT_ESC_TBC
 UChar g_uhPLTTBC[257] = { 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
                           4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
                           5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
@@ -602,7 +597,6 @@ UChar g_uhPLTTBC[257] = { 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 
                           7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
                           7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
                           7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8};
-#endif
 #endif
 // ====================================================================================================================
 // Misc.
@@ -623,7 +617,7 @@ UInt64 g_nSymbolCounter = 0;
 // ====================================================================================================================
 
 // scanning order table
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
 UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
 #else
 UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];

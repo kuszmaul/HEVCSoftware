@@ -89,9 +89,11 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
   return;
 }
 
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+  if (pcCU->getSlice()->getSPS()->getUsePLTMode())
+  {
   if( bRD )
   {
     uiAbsPartIdx = 0;
@@ -100,14 +102,6 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
   m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
   if (pcCU->getPLTModeFlag(uiAbsPartIdx))
   {
-    ChromaFormat cCF = pcCU->getPic()->getSlice(0)->getSPS()->getChromaFormatIdc();
-    if (cCF !=CHROMA_444)
-    {
-      m_pcEntropyCoderIf->codePLTModeSyntax(pcCU, uiAbsPartIdx, 1);
-      m_pcEntropyCoderIf->codePLTModeSyntax(pcCU, uiAbsPartIdx, 2);
-    }
-    else
-    {
       m_pcEntropyCoderIf->codePLTModeSyntax(pcCU, uiAbsPartIdx, 3);
     }
   }
@@ -187,30 +181,17 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
   if ( pcCU->getSlice()->isIntra() )
   {
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
     if(pcCU->isIntra( uiAbsPartIdx ))
     {
       encodePLTModeInfo (pcCU, uiAbsPartIdx); 
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
       if (pcCU->getPLTModeFlag(uiAbsPartIdx))
       {
-#if PLT_STUFFING
         if (!bRD)
         {
           pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
         }
-#else
-        for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-        {
-          pcCU->setLastPLTInLcuSizeFinal(comp, pcCU->getPLTSize(comp, uiAbsPartIdx));
-          for (Int i = 0; i < MAX_PLT_SIZE; i++)
-          {
-            pcCU->setLastPLTInLcuFinal(comp, pcCU->getPLT(comp, uiAbsPartIdx, i), i);
-          }
         }
-#endif
-      }
-#endif
     }
 #endif
     return;
@@ -222,31 +203,17 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
-
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if(pcCU->isIntra( uiAbsPartIdx ))
   {
     encodePLTModeInfo (pcCU, uiAbsPartIdx); 
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
     if (pcCU->getPLTModeFlag(uiAbsPartIdx))
     {
-#if PLT_STUFFING
       if (!bRD)
       {
         pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
       }
-#else
-      for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-      {
-        pcCU->setLastPLTInLcuSizeFinal(comp, pcCU->getPLTSize(comp, uiAbsPartIdx));
-        for (Int i = 0; i < MAX_PLT_SIZE; i++)
-        {
-          pcCU->setLastPLTInLcuFinal(comp, pcCU->getPLT(comp, uiAbsPartIdx, i), i);
-        }
-      }
-#endif
     }
-#endif
   }
 #endif
 }
@@ -276,12 +243,6 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiAbsPartIdx = 0;
   }
 
-#if PALETTE_MODE && !PLT_BUGFIX
-  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -305,12 +266,6 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
-#if PALETTE_MODE && !PLT_BUGFIX
-  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
   if( bRD )
   {
     uiAbsPartIdx = 0;

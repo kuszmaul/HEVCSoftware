@@ -835,21 +835,23 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
+#if SCM__R0348_PALETTE_MODE
+#if PLT_SHARING_BUGFIX
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+#else
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+#endif
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp < MAX_NUM_COMPONENT; comp++)
+  {
+    memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
+  }
+#endif
 #if SCM__R0147_RGB_YUV_RD_ENC
   if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() ) 
   {
     rpcPic->getPicYuvResi()->DefaultConvertPix( rpcPic->getPicYuvOrg() );
-  }
-#endif
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
-  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
-#endif
-  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
-  Pel lastPLT[MAX_NUM_COMPONENT][PALETTE_PREDICTION_SIZE];
-  for(UChar comp=0; comp < MAX_NUM_COMPONENT; comp++)
-  {
-    memset(lastPLT[comp], 0, sizeof(Pel) * PALETTE_PREDICTION_SIZE);
   }
 #endif
   // for every CU in slice
@@ -862,8 +864,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
 
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if WPP_TILE_PLT_RESETTING
+#if SCM__R0348_PALETTE_MODE
     Bool resetPltPredictor = false;
 
     if( uiCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr() && !resetPltPredictor )
@@ -877,27 +878,22 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
 
     if( resetPltPredictor )
-#else
-    if( pcCU->getCUPelX() == 0 )
-#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
-#if PLT_SHARING
+#if PLT_SHARING_BUGFIX
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+#else
         lastPLTUsedSize[comp] = 0;
 #endif
         lastPLTSize[comp] = 0;
       }
     }
-#endif
-#if PLT_STUFFING
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
-#if PLT_SHARING
       pcCU->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
-#endif
       pcCU->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
-      for (UInt idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
       {
         pcCU->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
@@ -961,10 +957,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
       }
 
-#if WPP_TILE_PLT_RESETTING
+#if SCM__R0348_PALETTE_MODE
       for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
-#if PLT_SHARING
+#if PLT_SHARING_BUGFIX
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+#else
         lastPLTUsedSize[comp] = 0;
 #endif
         lastPLTSize[comp] = 0;
@@ -1034,12 +1032,8 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 }
 
     // run CU encoder
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
+#if SCM__R0348_PALETTE_MODE
     m_pcCuEncoder->compressCU(pcCU, lastPLTSize, lastPLTUsedSize, lastPLT);
-#else
-    m_pcCuEncoder->compressCU(pcCU, lastPLTSize, lastPLT);
-#endif
 #else
     m_pcCuEncoder->compressCU( pcCU );
 #endif
@@ -1100,22 +1094,24 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       m_pcRateCtrl->getRCPic()->updateAfterLCU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda,
         pcCU->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
     }
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
+#if SCM__R0348_PALETTE_MODE
+#if PLT_SHARING_BUGFIX
+    if (pcCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
+#else
     if (pcCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y))
+#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
         lastPLTUsedSize[comp] = pcCU->getLastPLTInLcuUsedSizeFinal(comp);
       }
     }
-#endif
     if (pcCU->getLastPLTInLcuSizeFinal(COMPONENT_Y))
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
         lastPLTSize[comp] = pcCU->getLastPLTInLcuSizeFinal(comp);
-        for (Int idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
         {
           lastPLT[comp][idx] = pcCU->getLastPLTInLcuFinal(comp, idx);
         }
@@ -1260,12 +1256,14 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
       pcSbacCoders[uiSubStrm].loadContexts( CTXMem[0] );
     }
   }
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
+#if SCM__R0348_PALETTE_MODE
+#if PLT_SHARING_BUGFIX
+  UChar lastPLTUsedSize[3] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+#else
   UChar lastPLTUsedSize[3] = { 0, 0, 0 };
 #endif
   UChar lastPLTSize[3] = { 0, 0, 0 };
-  Pel lastPLT[3][PALETTE_PREDICTION_SIZE];
+  Pel lastPLT[3][MAX_PLT_PRED_SIZE];
 #endif
   UInt uiEncCUOrder;
   for( uiEncCUOrder = uiStartCUAddr /rpcPic->getNumPartInCU();
@@ -1338,10 +1336,12 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
           sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
         }
 
-#if WPP_TILE_PLT_RESETTING
+#if SCM__R0348_PALETTE_MODE
         for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-#if PLT_SHARING
+#if PLT_SHARING_BUGFIX
+          lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+#else
           lastPLTUsedSize[comp] = 0;
 #endif
           lastPLTSize[comp] = 0;
@@ -1367,10 +1367,9 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
     }
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
+#if SCM__R0348_PALETTE_MODE
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
-#if WPP_TILE_PLT_RESETTING
       Bool resetPltPredictor = false;
 
       if( uiCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr() && !resetPltPredictor )
@@ -1384,21 +1383,18 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
       }
 
       if( resetPltPredictor )
-#else
-      if (pcCU->getCUPelX() == 0)
-#endif
       {
-#if PLT_SHARING
+#if PLT_SHARING_BUGFIX
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+#else
         lastPLTUsedSize[comp] = 0;
 #endif
         lastPLTSize[comp] = 0;
       }
 
-#if PLT_SHARING
       pcCU->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
-#endif
       pcCU->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
-      for (UInt idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
       {
         pcCU->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
@@ -1454,22 +1450,24 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
+#if SCM__R0348_PALETTE_MODE
+#if PLT_SHARING_BUGFIX
+    if (pcCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
+#else
     if (pcCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y))
+#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
         lastPLTUsedSize[comp] = pcCU->getLastPLTInLcuUsedSizeFinal(comp);
       }
     }
-#endif
     if (pcCU->getLastPLTInLcuSizeFinal(COMPONENT_Y))
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
         lastPLTSize[comp] = pcCU->getLastPLTInLcuSizeFinal(comp);
-        for (Int idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
         {
           lastPLT[comp][idx] = pcCU->getLastPLTInLcuFinal(comp, idx);
         }

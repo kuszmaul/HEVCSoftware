@@ -216,6 +216,9 @@ protected:
   Bool      m_useColorTrans;
   Bool      m_useLL;
 #endif
+#if SCM__R0348_PALETTE_MODE
+  Bool      m_usePaletteMode;
+#endif
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -586,6 +589,10 @@ public:
   Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
+#endif
+#if SCM__R0348_PALETTE_MODE
+  Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
+  Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
 #endif
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }

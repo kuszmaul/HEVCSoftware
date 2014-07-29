@@ -148,6 +148,9 @@ private:
   Bool                    m_useColorTrans;
   Bool                    m_useLL;
 #endif
+#if SCM__R0348_PALETTE_MODE
+  Bool                    m_usePaletteMode;
+#endif
 #if SCM__R0186_INTRABC_BVD
  Int                      m_mvdBin0Cost[4];
 #endif

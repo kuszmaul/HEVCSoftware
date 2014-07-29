@@ -115,12 +115,8 @@ public:
   Void  destroy             ();
 
   /// CU analysis function
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_SHARING
-  Void  compressCU(TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][PALETTE_PREDICTION_SIZE]);
-#else
-  Void  compressCU(TComDataCU*& rpcCU, UChar* lastPLTSize, Pel lastPLT[][PALETTE_PREDICTION_SIZE]);
-#endif
+#if SCM__R0348_PALETTE_MODE
+  Void  compressCU(TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE]);
 #else
   Void  compressCU          ( TComDataCU*&  rpcCU );
 #endif
@@ -191,12 +187,8 @@ protected:
   Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
-#if PALETTE_MODE
-  Void  xCheckPLTMode     ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU
-#if PLT_SHARING
-                            ,Bool bCheckPLTSharingMode = false
-#endif                          
-                          );
+#if SCM__R0348_PALETTE_MODE
+  Void  xCheckPLTMode       (TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool bCheckPLTSharingMode);
 #endif
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
   Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );
