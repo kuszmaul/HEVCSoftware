@@ -98,13 +98,10 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
-#if PALETTE_MODE   
+#if SCM__R0348_PALETTE_MODE   
   Void codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
-#if PLT_IDX_ADAPT_SCAN
   Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 #endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );

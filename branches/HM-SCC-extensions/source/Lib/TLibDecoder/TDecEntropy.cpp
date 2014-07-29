@@ -57,7 +57,7 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
 
 Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;
@@ -72,39 +72,17 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+  if (pcCU->getSlice()->getSPS()->getUsePLTMode())
+  {
   m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
   if (pcCU->getPLTModeFlag(uiAbsPartIdx))
   {
-    ChromaFormat cCF = pcCU->getPic()->getSlice(0)->getSPS()->getChromaFormatIdc();
-    if (cCF == CHROMA_444)
-    {
       m_pcEntropyDecoderIf->parsePLTModeSyntax(pcCU, uiAbsPartIdx, uiDepth, 3);
-    }
-    else
-    {
-      m_pcEntropyDecoderIf->parsePLTModeSyntax(pcCU, uiAbsPartIdx, uiDepth, 1);
-      if (cCF != CHROMA_400)
-      {
-        m_pcEntropyDecoderIf->parsePLTModeSyntax(pcCU, uiAbsPartIdx, uiDepth, 2);
-      }
-    }
-#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
-#if PLT_STUFFING
     pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
-#else
-    for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-    {
-      pcCU->setLastPLTInLcuSizeFinal(comp, pcCU->getPLTSize(comp, uiAbsPartIdx));
-      for (Int i = 0; i < MAX_PLT_SIZE; i++)
-      {
-        pcCU->setLastPLTInLcuFinal(comp, pcCU->getPLT(comp, uiAbsPartIdx, i), i);
-      }
     }
-#endif
-#endif
   }
 }
 
@@ -146,7 +124,7 @@ Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if (pcCU->isIntra(uiAbsPartIdx))
   {
    decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
@@ -156,7 +134,7 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if (pcCU->getPLTModeFlag(uiAbsPartIdx))
   {
     return;
@@ -176,7 +154,7 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   {
     return;
   }
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;
@@ -218,7 +196,7 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     return;
   }
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;

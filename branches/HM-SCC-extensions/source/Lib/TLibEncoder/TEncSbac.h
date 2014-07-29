@@ -115,18 +115,12 @@ public:
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
-#if PALETTE_MODE
-  Void  xWriteFLCwCTX        ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMaxLength );
+#if SCM__R0348_PALETTE_MODE
+  Void  xEncodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
   Void  xEncodeRun           ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
-  Int   xEncodeOnes( UInt uiRun, Int TxLevel, Int GRParam);
-#if PLT_TBC || PLT_ESC_TBC
-  Void  xWriteTruncBinCode   ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMaxSymbol );
-  Void  xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, Pel *pEscapeFlag = 0, Pel *pSPoint = 0, Int iWidth = 0);
-#endif
-#if PLT_IDX_ADAPT_SCAN
+  Void  xWriteTruncBinCode      (UInt uiSymbol, UInt uiMaxSymbol );
+  Void  xWritePLTIndex          (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
   Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 #endif
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
@@ -137,16 +131,6 @@ private:
   Void codeDFFlag( UInt /*uiCode*/, const Char* /*pSymbolName*/ )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
   Void codeDFSvlc( Int /*iCode*/, const Char* /*pSymbolName*/ )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
 
-#if PALETTE_MODE
-  UInt getIdxScanPos( UInt uiIdx )
-  {
-#if PLT_IDX_ADAPT_SCAN
-    return m_puiScanOrder[uiIdx];
-#else
-    return uiIdx;
-#endif
-  };
-#endif
 protected:
   TComBitIf*    m_pcBitIf;
   TComSlice*    m_pcSlice;
@@ -159,12 +143,10 @@ protected:
 
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   Void codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);  
-#if PLT_SHARING
   Void codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 #endif
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -227,7 +209,7 @@ public:
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
   UInt                 m_uiLastQp;
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
   UInt* m_puiScanOrder;
 #endif
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
@@ -265,7 +247,14 @@ private:
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
-
+#if SCM__R0348_PALETTE_MODE
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
+#endif
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
@@ -273,25 +262,6 @@ private:
 #endif
 #if SCM__R0186_INTRABC_BVD
   ContextModel3DBuffer m_cIntraBCBVDSCModel;
-#endif
-#if PALETTE_MODE
-  ContextModel3DBuffer m_PLTModeFlagSCModel;
-  ContextModel3DBuffer m_SPointSCModel;
-  ContextModel3DBuffer m_EscapeFlagSCModel;
-  ContextModel3DBuffer m_PixelPredFlagSCModel;
-  ContextModel3DBuffer m_PixelPredBinSCModel;
-  ContextModel3DBuffer m_PixelBinSCModel;
-#if PLT_CU_ESCAPE_FLAG
-  ContextModel3DBuffer m_SignalEscapeSCModel;
-#endif
-  ContextModel3DBuffer m_cCopyTopRunSCModel;
-  ContextModel3DBuffer m_cRunSCModel;
-#if PLT_SHARING
-  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
-#endif
-#if PLT_IDX_ADAPT_SCAN
-  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
-#endif
 #endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];

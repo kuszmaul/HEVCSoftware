@@ -1047,7 +1047,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   ("ColorTransform",                                  m_useColorTrans,                                   false, "Enable the color transform (not valid in V1 profiles")
 #endif
-    
+#if SCM__R0348_PALETTE_MODE
+  ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
+#endif   
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -1625,6 +1627,25 @@ Void TAppEncCfg::xCheckParameter()
     fprintf(stderr, "***************************************************************************\n");
 
     m_useColorTrans = false;
+  }
+#endif
+
+#if SCM__R0348_PALETTE_MODE
+  if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Palette mode is specified for 4:4:4 format only **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_usePaletteMode = false;
+  }
+  if (m_usePaletteMode && m_profile != Profile::MAINSCC)
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Palette mode can be used in SCC profile only    **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_usePaletteMode = false;
   }
 #endif
 
@@ -2354,6 +2375,9 @@ Void TAppEncCfg::xPrintParameter()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   printf("Adaptive color transform          : %s\n", (m_useColorTrans                          ? "Enabled" : "Disabled") );
 #endif
+#if SCM__R0348_PALETTE_MODE
+  printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled"));
+#endif
   if (m_bUseSAO)
   {
     printf("Sao Luma Offset bit shifts        : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]);
@@ -2448,7 +2472,13 @@ Void TAppEncCfg::xPrintParameter()
 
   printf(" SignBitHidingFlag:%d ", m_signHideFlag);
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
-
+#if SCM__R0348_PALETTE_MODE
+  if (m_usePaletteMode)
+  {
+    printf(" MaxPLTSize:%d", MAX_PLT_SIZE);
+    printf(" MaxPLTPredictorSize:%d", MAX_PLT_PRED_SIZE);
+  }
+#endif
   printf("\n\n");
 
   fflush(stdout);

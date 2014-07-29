@@ -72,13 +72,10 @@ private:
   static const UChar m_aucIntraFilter[MAX_NUM_CHANNEL_TYPE][MAX_INTRA_FILTER_DEPTHS];
 
 protected:
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   Int        m_iPLTErrLimit;
   Pel        m_cIndexBlock[MAX_CU_SIZE * MAX_CU_SIZE];
-  Pel        m_cIndexBlockChroma[MAX_CU_SIZE * MAX_CU_SIZE];
-#if PLT_IDX_ADAPT_SCAN
   UInt*     m_puiScanOrder;
-#endif
 #endif
   Pel*      m_piYuvExt[MAX_NUM_COMPONENT][NUM_PRED_BUF];
   Int       m_iYuvExtSize;
@@ -148,37 +145,20 @@ public:
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled);
 
   static Bool UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode);
-#if PALETTE_MODE
-#if CANON_PALETTE_ENCODER
-  Void  derivePLT( TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost );
-#endif
-  Void  derivePLT   (TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc [3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
-  Void  derivePLTLuma(TComDataCU* pcCU, Pel *Palette, Pel* pSrc, UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
-  Void  derivePLTChroma(TComDataCU* pcCU, Pel *Palette[2], Pel* pSrc[2], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
-  Void  deriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, Pel* pSPoint, Pel * pEscapeFlag, Pel* pPixelPredFlag,  Pel *pRecoValue[], Pel *pPixelRec[], Pel* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
-  Bool  CalRun(Pel* pValue, Pel * pEscapeFlag, UInt uiStartPos, UInt uiTotal, UInt &uiRun, Bool bChroma = false);
-  Bool  CalCopy(Pel* pValue, Pel *pEscapeFlag, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, Bool bChroma = false);
-
-  Bool  CalcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel * pEscapeFlag,  Pel*paPixelValue[3], Pel*paRecoValue[3], UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
-  Void  deriveRunLuma (TComDataCU* pcCU, Pel* pOrg ,  Pel *pPalette ,  Pel* pValue, Pel* pSPoint, Pel * pEscapeFlag, Pel* pPixelPredFlag,  Pel *pPixelRec, Pel* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
-  Void  deriveRunChroma (TComDataCU* pcCU, Pel* pOrg [2],  Pel *pPalette [2],  Pel* pValue[2], Pel* pSPoint, Pel * pEscapeFlag, Pel* pPixelPredFlag, Pel *pPixelRec[2], Pel* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);  
-  Bool  CalcPixelPredLuma(TComDataCU* pcCU, Pel* pOrg, Pel *pPalette, Pel* pValue, Pel * pEscapeFlag,   Pel*paRecoValue, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
-  Bool  CalcPixelPredChroma(TComDataCU* pcCU, Pel* pOrg [2], Pel *pPalette[2], Pel* pValue[2], Pel * pEscapeFlag,   Pel*paRecoValue[2], UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
-
-  Void  preCalcPLTIndexLuma(TComDataCU* pcCU, Pel *Palette, Pel* pSrc, UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
-  Void  preCalcPLTIndexChroma(TComDataCU* pcCU, Pel *Palette[2], Pel* pSrc[2], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
+#if SCM__R0348_PALETTE_MODE
+  Void  derivePLTLossy(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost );
+  Void  derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc [3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
+  Void  deriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
+  Bool  calLeftRun(Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun);
+  Bool  calAboveRun(Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun);
+  Void  calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel*paRecoValue[3], 
+                      UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
   Void  preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize);
 
   Void  reorderPLT(TComDataCU* pcCU, Pel *Palette[3], UInt uiNumComp);
   Void  setPLTErrLimit ( Int iPLTErrLimit ) {  m_iPLTErrLimit = iPLTErrLimit;  }
   Int   getPLTErrLimit ( ) {return m_iPLTErrLimit;}
-#if PLT_IDX_ADAPT_SCAN
   Void   rotationScan                ( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bool isInverse );
-#endif
-  inline UInt getIdxScanPos( UInt uiIdx );
-#if PLT_IDX_ADAPT_SCAN
-  Pel *getIndexBlock(Int bChroma) { return (bChroma?  m_cIndexBlockChroma : m_cIndexBlock);};
-#endif
 #endif
 };
 

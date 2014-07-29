@@ -98,12 +98,12 @@ protected:
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   Void xReconPLTMode        ( TComDataCU* pcCU, UInt uiDepth );
-  Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, Pel* pEscapeFlag, Pel *pPixelValue, Pel *pPixelPredFlag, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
   Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
-  Void xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, Pel* pEscapeFlag, Pel *pPixelValue, Pel *pPixelPredFlag, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
+  Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
+  Void xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
 #endif
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );

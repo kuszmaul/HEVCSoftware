@@ -81,13 +81,10 @@ public:
 
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   virtual Void codePLTModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp) = 0;
-#if PLT_IDX_ADAPT_SCAN
   virtual Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
 #endif
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -167,7 +164,7 @@ public:
   Void encodePPS               ( TComPPS* pcPPS );
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if PALETTE_MODE
+#if SCM__R0348_PALETTE_MODE
   Void encodePLTModeInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

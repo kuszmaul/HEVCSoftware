@@ -125,6 +125,9 @@ protected:
   Bool      m_useColorTrans;
   Bool      m_useLL;
 #endif
+#if SCM__R0348_PALETTE_MODE
+  Bool      m_usePaletteMode;
+#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)

@@ -128,6 +128,12 @@
 
 #define NOT_VALID                   -1
 
+#if PLT_SHARING_BUGFIX
+#define PLT_SIZE_INVALID            0xff
+#if PLT_SIZE_INVALID <= MAX_PLT_SIZE  
+#error "PLT_SIZE_INVALID" should be greater than "MAX_PLT_SIZE".
+#endif
+#endif
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================

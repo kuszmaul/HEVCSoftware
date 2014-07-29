@@ -1594,6 +1594,9 @@ TComSPS::TComSPS()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 , m_useColorTrans             (false)
 #endif
+#if SCM__R0348_PALETTE_MODE
+, m_usePaletteMode            (false)
+#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)

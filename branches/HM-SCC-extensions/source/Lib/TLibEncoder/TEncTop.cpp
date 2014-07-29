@@ -643,7 +643,9 @@ Void TEncTop::xInitSPS()
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cSPS.setUseColorTrans               (       m_useColorTrans      );
 #endif
-
+#if SCM__R0348_PALETTE_MODE
+  m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
+#endif
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
     m_cSPS.setUseResidualDPCM(RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);

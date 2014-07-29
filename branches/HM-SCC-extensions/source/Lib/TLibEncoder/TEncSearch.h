@@ -139,16 +139,12 @@ protected:
 #if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
 #endif
-#if PLT_IDX_ADAPT_SCAN
+#if SCM__R0348_PALETTE_MODE
   Bool m_bBestScanRotationMode;
-  Bool m_bBestScanTraverseMode;
-#endif
-#if PLT_IDX_ADAPT_SCAN
   Pel* m_paOriginalLevel;
   Pel* m_paBestLevel[MAX_NUM_COMPONENT];
-  Pel* m_paBestSPoint;
-  Pel* m_paBestRun;
-  Pel* m_paBestEscapeFlag;
+  UChar*          m_paBestSPoint;
+  TCoeff*         m_paBestRun;
 #endif
 public:
   TEncSearch();
@@ -406,19 +402,9 @@ public:
 
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv );
-#if PALETTE_MODE
-  Void PLTSearch  ( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv
-#if PLT_SHARING
-                    ,Bool bCheckPLTSharingMode
-#endif
-                  );
-  Void PLTSearchNon444  ( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv );
-#if PLT_IDX_ADAPT_SCAN
-  Void deriveRunAndCalcBits( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset
-                             , Bool isPLTScanRotationEnabled 
-                             , Bool isPLTScanTraverseEnabled
-                           );
-#endif
+#if SCM__R0348_PALETTE_MODE
+  Void PLTSearch  (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode);
+  Void deriveRunAndCalcBits( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode);
 #endif
 
   Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
