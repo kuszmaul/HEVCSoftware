@@ -171,10 +171,124 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
+#if PALETTE_MODE
+#define NUM_PLTMODE_FLAG_CTX          1 
+#define NUM_SPOINT_CTX                3 
+#define NUM_ESCAPE_FLAG_CTX           3
+#define NUM_PIXEL_PRED_FLAG_CTX       3
+#define NUM_PIXEL_PRED_BIN_CTX        12
+#define NUM_PIXEL_BIN_CTX             12
+#define NUM_TOP_RUN_CTX               3
+#define NUM_RUN_CTX                   3
+#if PLT_CU_ESCAPE_FLAG
+#define NUM_SIGNAL_ESCAPE_CTX             2
+#endif
+#if PLT_SHARING
+#define NUM_PLT_REUSE_FLAG_CTX        1
+#endif
+#if PLT_IDX_ADAPT_SCAN
+#define NUM_SCAN_ROTATION_FLAG_CTX    2
+#endif
+#endif
 
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
+#if PALETTE_MODE
+static const UChar
+INIT_PLTMODE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLTMODE_FLAG_CTX] =
+{
+  { 154 }, 
+  { 154 }, 
+  { 154 }, 
+};
+
+static const UChar
+INIT_SPOINT[NUMBER_OF_SLICE_TYPES][NUM_SPOINT_CTX] =
+{
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+};
+
+static const UChar
+INIT_ESCAPE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_ESCAPE_FLAG_CTX] =
+{
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+};
+#if PLT_CU_ESCAPE_FLAG
+static const UChar
+INIT_SIGNAL_ESCAPE[NUMBER_OF_SLICE_TYPES][NUM_SIGNAL_ESCAPE_CTX] =
+{
+  { 154, 154}, 
+  { 154, 154}, 
+  { 154, 154} 
+};
+#endif
+
+static const UChar
+INIT_PIXEL_PRED_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PIXEL_PRED_FLAG_CTX] =
+{
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+};
+
+static const UChar
+INIT_PIXEL_PRED_BIN[NUMBER_OF_SLICE_TYPES][NUM_PIXEL_PRED_BIN_CTX] =
+{
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+};
+
+static const UChar
+INIT_PIXEL_BIN[NUMBER_OF_SLICE_TYPES][NUM_PIXEL_BIN_CTX] =
+{
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154, 154 }, 
+};
+
+static const UChar
+INIT_TOP_RUN[NUMBER_OF_SLICE_TYPES][NUM_TOP_RUN_CTX] =
+{
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+};
+
+static const UChar
+INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_RUN_CTX] =
+{
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+  { 154, 154, 154 }, 
+};
+
+#if PLT_SHARING
+static const UChar
+  INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =
+{
+  { 154 }, 
+  { 154 }, 
+  { 154 }, 
+};
+#endif
+
+#if PLT_IDX_ADAPT_SCAN
+static const UChar
+INIT_SCAN_ROTATION_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SCAN_ROTATION_FLAG_CTX] =
+{
+  { 154, 154 }, 
+  { 154, 154 }, 
+  { 154, 154 }, 
+};
+#endif
+
+#endif
 
 // initial probability for cu_transquant_bypass flag
 static const UChar

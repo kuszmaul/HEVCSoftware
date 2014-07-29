@@ -35,6 +35,55 @@
     \brief    Define basic types, new types and enumerations
 */
 
+#define PALETTE_MODE                               1
+#if PALETTE_MODE
+#define PLT_PREVIOUS_CU_PALETTE_PREDICTION         1 ///< use previous palette for prediction: JCTVC-P0114
+#define PLT_REMOVE_ESCAPE_FLAG                     1 ///< remove escape flag, JCTVC-P0108
+#if PLT_REMOVE_ESCAPE_FLAG
+#define MAX_PLT_SIZE                               31
+#else
+#define MAX_PLT_SIZE                               32
+#endif
+
+#define SCCE3_AGREEMENTS                            1 ///< 0: SCCE3 agreement, 1: SCCE3 tests
+#if SCCE3_AGREEMENTS
+///{Category A:
+#define PLT_SHARING                                 1 ///< (1) palette sharing
+#define PLT_STUFFING                                1 ///< (2) expanding palette predictor size
+#define QC_GROUPING                                 1 ///< (3) single level binary tree
+#define CANON_PALETTE_ENCODER                       1 ///< (4.1) Canon's encoder from C2
+#define PLT_IMPROVE_GEN                             1 ///< (4.2) 0: SCCE3 base SW method, 1: Improved
+///}
+
+///{Category B:
+///Agreed:
+#define PLT_IDX_ADAPT_SCAN                          4 ///< (1) adaptive scan, 0 : only Horizontal scan, 1: Horizontal+Vertical+Horizontal Traverse+Vertical Traverse, 2: Horizontal+Vertical, 3: Horizontal+Horizontal Traverse, 4: Horizontal Traverse+Vertical Traverse
+#define PLT_TBC_CHECK                               1 ///< (2) index redundancy removal
+#define PLT_TBC                                     1 ///< (3) truncated binary coding for index
+#define PLT_ESC_TBC                                 1 ///< (4) escape color values coded as bypass
+#define PLT_CU_ESCAPE_FLAG                          1 ///< (4) CU level escape pixel present flag
+#if PLT_CU_ESCAPE_FLAG
+#define PLT_CU_ESCAPE_FLAG_BYPASS                   1 ///<     R0051: code CU escape flag in bypass mode
+#endif
+///}
+
+///{Other:
+#define WPP_TILE_PLT_RESETTING                      1 ///< (1) palette resetting for WPP and tiles
+#define PLT_BUGFIX                                  1 ///< (2) bug fixes
+#define PLT_BUGFIX_TU_FOR_PLT_SIZE                  1 ///< (2) bug fixes in R0215
+#define PLT_MEMORY_RED                              1 ///< (3) memory reduction, not implemented yet
+///}
+#endif
+
+
+#if PLT_STUFFING
+#define PALETTE_PREDICTION_SIZE                    64
+#else
+#define PALETTE_PREDICTION_SIZE                    MAX_PLT_SIZE
+#endif
+#include <cstdlib>
+#endif
+
 #ifndef __TYPEDEF__
 #define __TYPEDEF__
 
@@ -608,7 +657,12 @@ enum COEFF_SCAN_TYPE
   SCAN_DIAG = 0,        ///< up-right diagonal scan
   SCAN_HOR  = 1,        ///< horizontal first scan
   SCAN_VER  = 2,        ///< vertical first scan
+#if PLT_IDX_ADAPT_SCAN
+  SCAN_TRAV = 3,
+  SCAN_NUMBER_OF_TYPES = 4
+#else
   SCAN_NUMBER_OF_TYPES = 3
+#endif
 };
 
 enum COEFF_SCAN_GROUP_TYPE
@@ -923,6 +977,98 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
+
+#if PALETTE_MODE
+
+class SortingElement
+{
+public:
+#if PLT_IMPROVE_GEN
+  inline Bool operator<(const SortingElement &other) const 
+  { 
+    return uiCnt > other.uiCnt; 
+  }
+#endif
+  UInt uiCnt;
+  Int uiData[3];
+#if CANON_PALETTE_ENCODER
+  Int uiShift, uiLastCnt, uiSumData[3];
+#endif
+  SortingElement() { uiCnt = 0; uiData[0] = uiData[1] = uiData[2] = 0;
+#if CANON_PALETTE_ENCODER
+    uiShift = 0; uiLastCnt = 0; uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+#endif
+  }
+  Void setAll(UInt ui0, UInt ui1, UInt ui2) {
+#if CANON_PALETTE_ENCODER
+    if( !ui0 && !ui1 && !ui2 )
+    {
+      uiShift = 0; uiLastCnt = 0; uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+    }
+#endif
+    uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
+  }
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return std::abs(uiData[0] - sElement.uiData[0]) <= iErrorLimit && std::abs(uiData[1] - sElement.uiData[1]) <= iErrorLimit && std::abs(uiData[2] - sElement.uiData[2]) <= iErrorLimit;}
+  UInt getSAD(SortingElement sElement) { return std::abs(uiData[0] - sElement.uiData[0]) + std::abs(uiData[1] - sElement.uiData[1]) + std::abs(uiData[2] - sElement.uiData[2]); }
+  Void copyDataFrom(SortingElement sElement) {
+    uiData[0] = sElement.uiData[0]; uiData[1] = sElement.uiData[1]; uiData[2] = sElement.uiData[2];
+#if CANON_PALETTE_ENCODER
+    uiShift = 0; uiLastCnt = 1; uiSumData[0] = uiData[0]; uiSumData[1] = uiData[1]; uiSumData[2] = uiData[2];
+#endif
+  }
+  Void copyAllFrom(SortingElement sElement) {
+    copyDataFrom(sElement); uiCnt = sElement.uiCnt;
+#if CANON_PALETTE_ENCODER
+    uiSumData[0] = sElement.uiSumData[0]; uiSumData[1] = sElement.uiSumData[1]; uiSumData[2] = sElement.uiSumData[2];
+    uiLastCnt = sElement.uiLastCnt; uiShift = sElement.uiShift;
+#endif
+  }
+#if CANON_PALETTE_ENCODER
+  Void addElement(const SortingElement& sElement)
+  {
+    uiCnt++;
+    for(int i=0; i<3; i++) uiSumData[i] += sElement.uiData[i];
+    if( uiCnt>1 && uiCnt==2*uiLastCnt )
+    {
+      UInt uiRnd;
+      if( uiCnt == 2 ) { uiShift = 0; uiRnd   = 1; }
+      else { uiRnd = 1<<uiShift; }
+      uiShift++;
+      for(int i=0; i<3; i++) uiData[i] = (uiSumData[i] + uiRnd ) >> uiShift;
+      uiLastCnt = uiCnt;
+    }
+  }
+#endif
+};
+
+class SortingElementLuma
+{
+public:
+  UInt uiCnt;
+  UInt uiDataLuma; 
+  SortingElementLuma () {uiCnt = 0; uiDataLuma = 0;}
+  inline Void setAll (UInt ui0)  {uiDataLuma = ui0; }
+  inline Bool exactlyEqualData(SortingElementLuma sElement) { return (uiDataLuma == sElement.uiDataLuma); }
+  inline Bool almostEqualData(SortingElementLuma sElement, Int iErrorLimit) { return (std::abs((Int)uiDataLuma -  (Int)sElement.uiDataLuma) <= iErrorLimit); }
+
+  inline Void copyDataFrom (SortingElementLuma sElement) {uiDataLuma = sElement.uiDataLuma;}
+  inline Void copyAllFrom (SortingElementLuma sElement) {copyDataFrom (sElement); uiCnt = sElement.uiCnt; }
+};
+
+class SortingElementChroma
+{
+public:
+  UInt uiCnt;
+  UInt uiData[2]; 
+  SortingElementChroma () {uiCnt = 0; uiData[0] = uiData[1] = 0;}
+  inline Void setAll (UInt ui0, UInt ui1)  {uiData[0] = ui0; uiData[1] = ui1; }
+  inline Bool exactlyEqualData(SortingElementChroma sElement) { return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]); }
+  inline Bool almostEqualData(SortingElementChroma sElement, Int iErrorLimit) { return ((std::abs((Int)uiData[0] -  (Int)sElement.uiData[0]) <= iErrorLimit) && (std::abs((Int)uiData[1] -  (Int)sElement.uiData[1]) <= iErrorLimit)); }
+  inline Void copyDataFrom (SortingElementChroma sElement) {uiData[0] = sElement.uiData[0]; uiData[1] = sElement.uiData[1];}
+  inline Void copyAllFrom (SortingElementChroma sElement) {copyDataFrom (sElement); uiCnt = sElement.uiCnt; }
+};
+
+#endif
 //! \}
 
 #endif

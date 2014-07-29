@@ -96,11 +96,43 @@ private:
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat );
+#if PALETTE_MODE
+  Void  xReadFLCwCTX        (UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxLength, const class TComCodingStatisticsClassType &whichStat);
+  Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat);
+#if PLT_TBC || PLT_ESC_TBC
+  Void  xReadTruncBinCode(UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
+  Void  xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, Pel *pEscapeFlag = 0, Pel *pSPoint = 0, Int iWidth = 0);
+#endif 
+  UInt getIdxScanPos( UInt uiIdx )
+  {
+#if PLT_IDX_ADAPT_SCAN
+    return m_puiScanOrder[uiIdx];
+#else
+    return uiIdx;
+#endif
+  };
+#endif
 #else
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
+#if PALETTE_MODE
+  Void  xReadFLCwCTX        (UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxLength);
+  Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
+#if PLT_TBC || PLT_ESC_TBC
+  Void  xReadTruncBinCode(UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxSymbol);
+  Void  xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, Pel *pEscapeFlag = 0, Pel *pSPoint = 0, Int iWidth = 0);
+#endif
+  UInt getIdxScanPos( UInt uiIdx )
+  {
+#if PLT_IDX_ADAPT_SCAN
+    return m_puiScanOrder[uiIdx];
+#else
+    return uiIdx;
+#endif
+  };
+#endif
 #endif
 private:
   TComInputBitstream* m_pcBitstream;
@@ -110,6 +142,17 @@ public:
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if PALETTE_MODE
+  Void parsePLTModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
+#if PLT_SHARING
+  Void parsePLTSharingModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#if PLT_IDX_ADAPT_SCAN
+  Void parseScanRotationModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanTraverseModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#endif
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
@@ -157,7 +200,9 @@ public:
 private:
   UInt m_uiLastDQpNonZero;
   UInt m_uiLastQp;
-
+#if PLT_IDX_ADAPT_SCAN
+  UInt* m_puiScanOrder;
+#endif
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -204,6 +249,25 @@ private:
 #endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
+#if PALETTE_MODE
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_EscapeFlagSCModel;
+  ContextModel3DBuffer m_PixelPredFlagSCModel;
+  ContextModel3DBuffer m_PixelPredBinSCModel;
+  ContextModel3DBuffer m_PixelBinSCModel;
+#if PLT_CU_ESCAPE_FLAG
+  ContextModel3DBuffer m_SignalEscapeSCModel;
+#endif
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+#if PLT_SHARING
+  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
+#endif
+#if PLT_IDX_ADAPT_SCAN
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;  
+#endif 
+#endif
 };
 
 //! \}
