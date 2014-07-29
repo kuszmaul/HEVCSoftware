@@ -89,6 +89,17 @@ public:
 
   Void parseSkipFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if PALETTE_MODE
+  Void parsePLTModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp);
+#if PLT_SHARING
+  Void parsePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#if PLT_IDX_ADAPT_SCAN
+  Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanTraverseModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#endif
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

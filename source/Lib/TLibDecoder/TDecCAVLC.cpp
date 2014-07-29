@@ -1672,6 +1672,25 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+#if PALETTE_MODE
+Void TDecCavlc::parsePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp)
+{
+  assert(0);
+}
+
+Void TDecCavlc::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+    assert(0);
+}
+
+#if PLT_SHARING
+Void TDecCavlc::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+#endif
+
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
@@ -2070,6 +2089,19 @@ Void TDecCavlc::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
 {
   assert(0);
 }
+
+#if PALETTE_MODE
+#if PLT_IDX_ADAPT_SCAN
+Void TDecCavlc::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+#endif
 
 //! \}
 

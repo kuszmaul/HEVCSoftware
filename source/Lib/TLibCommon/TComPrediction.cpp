@@ -80,6 +80,9 @@ TComPrediction::TComPrediction()
       m_piYuvExt[ch][buf] = NULL;
     }
   }
+#if PALETTE_MODE
+  m_iPLTErrLimit = 3;
+#endif
 }
 
 TComPrediction::~TComPrediction()

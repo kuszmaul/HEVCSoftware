@@ -216,10 +216,63 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       CTXMem[0]->loadContexts(pcSbacDecoder);
     }
   }
+
+#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
+#if PLT_SHARING
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+#endif
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][PALETTE_PREDICTION_SIZE];
+  for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  {
+    memset(lastPLT[comp], 0, sizeof(Pel) * PALETTE_PREDICTION_SIZE);
+  }
+#endif
+
   for( Int iCUAddr = iStartCUAddr; !uiIsLast && iCUAddr < rpcPic->getNumCUsInFrame(); iCUAddr = rpcPic->getPicSym()->xCalculateNxtCUAddr(iCUAddr) )
   {
     pcCU = rpcPic->getCU( iCUAddr );
     pcCU->initCU( rpcPic, iCUAddr );
+
+#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+#if WPP_TILE_PLT_RESETTING
+      Bool resetPltPredictor = false;
+
+      if( iCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr() && !resetPltPredictor )
+      {
+        resetPltPredictor = true;
+      }
+
+      if( pcCU->getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() && !resetPltPredictor )
+      {
+        resetPltPredictor = pcCU->getCUPelX() == 0;
+      }
+
+      if( resetPltPredictor )
+#else
+      if( pcCU->getCUPelX() == 0 )
+#endif
+      {
+#if PLT_SHARING
+        lastPLTUsedSize[comp] = 0;
+#endif
+        lastPLTSize[comp] = 0;
+      }
+
+#if PLT_SHARING
+      pcCU->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+#endif
+
+      pcCU->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+      for (UInt idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+      {
+        pcCU->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
+
     uiTileCol = rpcPic->getPicSym()->getTileIdxMap(iCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1); // what column of tiles are we in?
     uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr();
     uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
@@ -301,6 +354,17 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
             break;
           }
         }
+
+#if WPP_TILE_PLT_RESETTING
+        for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+#if PLT_SHARING
+          lastPLTUsedSize[comp] = 0;
+#endif
+          lastPLTSize[comp] = 0;
+        }
+#endif
+
         m_pcEntropyDecoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
       }
 
@@ -346,7 +410,28 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );
     m_pcCuDecoder->decompressCU ( pcCU );
-
+#if PLT_PREVIOUS_CU_PALETTE_PREDICTION
+#if PLT_SHARING
+    if( pcCU->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pcCU->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+#endif
+    if( pcCU->getLastPLTInLcuSizeFinal( COMPONENT_Y ) )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pcCU->getLastPLTInLcuSizeFinal(comp);
+        for (Int idx = 0; idx < PALETTE_PREDICTION_SIZE; idx++)
+        {
+          lastPLT[comp][idx] = pcCU->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+#endif
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
