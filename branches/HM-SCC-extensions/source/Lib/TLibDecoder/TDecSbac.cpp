@@ -102,12 +102,12 @@ TDecSbac::TDecSbac()
 , m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if SCM__R0348_PALETTE_MODE
-, m_PLTModeFlagSCModel           ( 1,             1,                      NUM_PLTMODE_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
-, m_SPointSCModel                ( 1,             1,                      NUM_SPOINT_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCopyTopRunSCModel      ( 1,             1,                      NUM_TOP_RUN_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cRunSCModel             ( 1,             1,                      NUM_LEFT_RUN_CTX                    , m_contextModels + m_numContextModels, m_numContextModels)
-, m_PLTSharingModeFlagSCModel                 ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-, m_PLTScanRotationModeFlagSCModel ( 1,             1,                    NUM_SCAN_ROTATION_FLAG_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTModeFlagSCModel                       ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+, m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cRunSCModel                              ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTSharingModeFlagSCModel                ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTScanRotationModeFlagSCModel           ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -181,12 +181,12 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
 #endif
 #if SCM__R0348_PALETTE_MODE
-  m_PLTModeFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
-  m_SPointSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_SPOINT );
-  m_cCopyTopRunSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_TOP_RUN);
-  m_cRunSCModel.initBuffer                   ( sliceType, qp, (UChar*)INIT_RUN);
+  m_PLTModeFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
+  m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
+  m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
+  m_cRunSCModel.initBuffer                        ( sliceType, qp, (UChar*)INIT_RUN);
   m_PLTSharingModeFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
-  m_PLTScanRotationModeFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
+  m_PLTScanRotationModeFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
 #endif
   m_uiLastDQpNonZero  = 0;
 
@@ -255,12 +255,12 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD );
 #endif
 #if SCM__R0348_PALETTE_MODE
-  m_PLTModeFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
-  m_SPointSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPOINT );
-  m_cCopyTopRunSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
-  m_cRunSCModel.initBuffer               ( eSliceType, iQp, (UChar*)INIT_RUN);
-  m_PLTSharingModeFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
-  m_PLTScanRotationModeFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
+  m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
+  m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
+  m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
+  m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
+  m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
+  m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
 #endif
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -493,12 +493,11 @@ Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #if SCM__R0348_PALETTE_MODE
 Void TDecSbac::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  UInt uiSymbol; 
+  UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_PLTSharingModeFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
   pcCU->setPLTSharingFlagSubParts(uiSymbol? true: false, uiAbsPartIdx, uiDepth);
 }
 
-#if SCM__R0348_PALETTE_MODE
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xReadTruncBinCode(UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat)
 #else
@@ -573,7 +572,6 @@ Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
   }
   pLevel[uiTraIdx] = uiSymbol;
 }
-#endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void  TDecSbac::xDecodeRun(UInt &ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat)
@@ -684,6 +682,7 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
     }
   }
 }
+
 Void TDecSbac::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
@@ -761,69 +760,69 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         pcCU->setPLTSubParts(comp, pPalette[comp][i], i, uiAbsPartIdx, uiDepth);
       }
     }
-    for(UInt uiIdxPrev = 0; uiIdxPrev < MAX_PLT_PRED_SIZE; uiIdxPrev++)
+    for ( UInt uiIdxPrev = 0; uiIdxPrev < MAX_PLT_PRED_SIZE; uiIdxPrev++ )
+    {
+      if ( uiIdxPrev < uiDictMaxSize )
       {
-        if(uiIdxPrev < uiDictMaxSize)
+        for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-          for(UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++) 
-        {
-            pcCU->setPrevPLTReusedFlagSubParts( comp, 1, uiIdxPrev, uiAbsPartIdx,  uiDepth  );
+          pcCU->setPrevPLTReusedFlagSubParts( comp, 1, uiIdxPrev, uiAbsPartIdx, uiDepth );
         }
       }
-        else
+      else
+      {
+        for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-          for(UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++) 
-        {
-            pcCU->setPrevPLTReusedFlagSubParts( comp, 0, uiIdxPrev, uiAbsPartIdx,  uiDepth  );
+          pcCU->setPrevPLTReusedFlagSubParts( comp, 0, uiIdxPrev, uiAbsPartIdx, uiDepth );
         }
       }
-  }
+    }
   }
   else
   {
-    UChar *bReusedPrev = pcCU->getPrevPLTReusedFlag(compBegin, uiAbsPartIdx);
-  UInt uiNumPLTRceived = 0, uiNumPLTPredicted = 0;
-    memset(bReusedPrev, 0, sizeof(UChar) * uiPLTSizePrev);
-  if( uiPLTSizePrev )
-  {    
-      xDecodePLTPredIndicator(bReusedPrev, uiPLTSizePrev RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-      for (Int uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++)
+    UChar *bReusedPrev = pcCU->getPrevPLTReusedFlag( compBegin, uiAbsPartIdx );
+    UInt uiNumPLTRceived = 0, uiNumPLTPredicted = 0;
+    memset( bReusedPrev, 0, sizeof( UChar ) * uiPLTSizePrev );
+    if ( uiPLTSizePrev )
+    {
+      xDecodePLTPredIndicator( bReusedPrev, uiPLTSizePrev RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
+      for ( Int uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++ )
+      {
+        if ( bReusedPrev[uiIdxPrev] )
         {
-          if( bReusedPrev[uiIdxPrev] )
+          for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
           {
-            for( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
-            {
-              pPalette[comp][uiNumPLTPredicted] = pPalettePrev[comp][uiIdxPrev];
-              pcCU->setPLTSubParts(comp, pPalette[comp][uiNumPLTPredicted], uiNumPLTPredicted, uiAbsPartIdx, uiDepth);
-            }
-            uiNumPLTPredicted++;
+            pPalette[comp][uiNumPLTPredicted] = pPalettePrev[comp][uiIdxPrev];
+            pcCU->setPLTSubParts( comp, pPalette[comp][uiNumPLTPredicted], uiNumPLTPredicted, uiAbsPartIdx, uiDepth );
           }
-    }
-  }
-
-  if(uiNumPLTPredicted < MAX_PLT_SIZE)
-    {
-  for (UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
-  {
-    m_pcTDecBinIf->decodeBinEP(uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
-    if (uiSymbol)
-    {
-      break;
-    }
-    uiNumPLTRceived++;
-  }
+          uiNumPLTPredicted++;
+        }
+      }
     }
 
-  uiDictMaxSize = uiNumPLTRceived + uiNumPLTPredicted;
-  for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
-  {
-    for (UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < uiDictMaxSize; uiPLTIdx++)
+    if ( uiNumPLTPredicted < MAX_PLT_SIZE )
     {
-      m_pcTDecBinIf->decodeBinsEP(uiSymbol, uiSampleBits[comp] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-      pPalette[comp][uiPLTIdx] = uiSymbol;
-      pcCU->setPLTSubParts(comp,  pPalette[comp][uiPLTIdx], uiPLTIdx, uiAbsPartIdx, uiDepth);
+      for ( UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++ )
+      {
+        m_pcTDecBinIf->decodeBinEP( uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
+        if ( uiSymbol )
+        {
+          break;
+        }
+        uiNumPLTRceived++;
+      }
     }
-  }
+
+    uiDictMaxSize = uiNumPLTRceived + uiNumPLTPredicted;
+    for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+    {
+      for ( UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < uiDictMaxSize; uiPLTIdx++ )
+      {
+        m_pcTDecBinIf->decodeBinsEP( uiSymbol, uiSampleBits[comp] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
+        pPalette[comp][uiPLTIdx] = uiSymbol;
+        pcCU->setPLTSubParts( comp, pPalette[comp][uiPLTIdx], uiPLTIdx, uiAbsPartIdx, uiDepth );
+      }
+    }
   }
 
   pcCU->setPLTSizeSubParts(compBegin, uiDictMaxSize, uiAbsPartIdx, uiDepth);
@@ -836,13 +835,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   UInt uiSignalEscape;
   m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
   UInt uiDictIdxBitsExteneded = uiDictIdxBits;
-  if (uiSignalEscape)
+  if ( uiSignalEscape )
   {
-  while ((1 << uiDictIdxBitsExteneded) <= uiDictMaxSize)
-  {
-    uiDictIdxBitsExteneded++;
-  }
-  uiIndexMaxSize++;
+    while ( (1 << uiDictIdxBitsExteneded) <= uiDictMaxSize )
+    {
+      uiDictIdxBitsExteneded++;
+    }
+    uiIndexMaxSize++;
   }
   assert(uiDictMaxSize <= MAX_PLT_SIZE);
 
@@ -914,7 +913,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
   }
   assert (uiIdx == uiTotal);
-
 }
 
 Void TDecSbac::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )

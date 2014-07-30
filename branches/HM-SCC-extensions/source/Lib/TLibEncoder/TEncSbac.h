@@ -116,11 +116,11 @@ private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
 #if SCM__R0348_PALETTE_MODE
-  Void  xEncodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
-  Void  xEncodeRun           ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
-  Void  xWriteTruncBinCode      (UInt uiSymbol, UInt uiMaxSymbol );
-  Void  xWritePLTIndex          (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
-  Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void  xEncodePLTPredIndicator ( UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
+  Void  xEncodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
+  Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
+  Void  xWritePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
@@ -144,9 +144,9 @@ protected:
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if SCM__R0348_PALETTE_MODE
-  Void codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);  
-  Void codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+  Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );

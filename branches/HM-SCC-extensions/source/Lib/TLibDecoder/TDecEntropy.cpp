@@ -75,13 +75,13 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
 #if SCM__R0348_PALETTE_MODE
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  if (pcCU->getSlice()->getSPS()->getUsePLTMode())
+  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
   {
-  m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
-  if (pcCU->getPLTModeFlag(uiAbsPartIdx))
-  {
-      m_pcEntropyDecoderIf->parsePLTModeSyntax(pcCU, uiAbsPartIdx, uiDepth, 3);
-    pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+    m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyDecoderIf->parsePLTModeSyntax( pcCU, uiAbsPartIdx, uiDepth, 3 );
+      pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
     }
   }
 }
@@ -125,9 +125,9 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
 #if SCM__R0348_PALETTE_MODE
-  if (pcCU->isIntra(uiAbsPartIdx))
+  if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
-   decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
+    decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
   }
 #endif
 }

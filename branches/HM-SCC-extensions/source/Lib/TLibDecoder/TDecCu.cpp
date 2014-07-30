@@ -476,7 +476,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
 #endif
 
 #if SCM__R0348_PALETTE_MODE
-  if (m_ppcCU[uiDepth]->getPLTModeFlag(0) == false)
+  if ( m_ppcCU[uiDepth]->getPLTModeFlag(0) == false )
 #endif
   if ( m_ppcCU[uiDepth]->isLosslessCoded(0) && (m_ppcCU[uiDepth]->getIPCMFlag(0) == false))
   {
@@ -877,7 +877,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
     ChromaFormat cCF = pcCU->getPic()->getSlice(0)->getSPS()->getChromaFormatIdc();
     if (cCF !=CHROMA_444)
     {
-      xReconPLTModeLuma  (pcCU, uiDepth);
+      xReconPLTModeLuma   (pcCU, uiDepth);
       xReconPLTModeChroma (pcCU, uiDepth);
     }
     else
@@ -1039,8 +1039,8 @@ Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx
       {
         if ( bLossless )
         {
-            iValue = pPixelValue[uiIdx];
-          }
+          iValue = pPixelValue[uiIdx];
+        }
         else
         {
           QpParam cQP(*pcCU, compID);
@@ -1049,7 +1049,7 @@ Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx
           Int iQPper = iQP / 6;
           Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
           Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
-            iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+          iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
           iValue = Pel(ClipBD<Int>(iValue, g_bitDepth[compID?1:0]));
         }
       }
@@ -1083,8 +1083,8 @@ Void TDecCu::xDecodePLTTexture         ( TComDataCU* pcCU, const UInt uiPartIdx,
       {
         if ( bLossless )
         {
-            iValue = pPixelValue[uiIdx];
-          }
+          iValue = pPixelValue[uiIdx];
+        }
         else
         {
           QpParam cQP(*pcCU, compID);
@@ -1093,7 +1093,7 @@ Void TDecCu::xDecodePLTTexture         ( TComDataCU* pcCU, const UInt uiPartIdx,
           Int iQPper = iQP / 6;
           Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
           Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
-            iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+          iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
           iValue = Pel(ClipBD<Int>(iValue, g_bitDepth[compID?1:0]));
         }
       }
@@ -1139,7 +1139,6 @@ Void  TDecCu::xReconPLTModeLuma(TComDataCU* pcCU, UInt uiDepth)
 
 Void  TDecCu::xReconPLTModeChroma(TComDataCU* pcCU, UInt uiDepth)
 {
-
   Pel  * pLevel, *pPalette, *pRecChannel;
   for (UInt ch = 1; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {

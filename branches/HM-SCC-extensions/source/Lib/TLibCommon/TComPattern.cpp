@@ -42,7 +42,7 @@
 #include "Debug.h"
 #include "TComPrediction.h"
 #if SCM__R0348_PALETTE_MODE
-#include "cmath"
+#include <cmath>
 #include <algorithm>
 #endif
 //! \ingroup TLibCommon

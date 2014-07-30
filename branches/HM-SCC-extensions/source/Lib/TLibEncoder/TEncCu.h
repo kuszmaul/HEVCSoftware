@@ -116,7 +116,7 @@ public:
 
   /// CU analysis function
 #if SCM__R0348_PALETTE_MODE
-  Void  compressCU(TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE]);
+  Void  compressCU          ( TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE] );
 #else
   Void  compressCU          ( TComDataCU*&  rpcCU );
 #endif
@@ -188,7 +188,7 @@ protected:
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
 #if SCM__R0348_PALETTE_MODE
-  Void  xCheckPLTMode       (TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool bCheckPLTSharingMode);
+  Void  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool bCheckPLTSharingMode );
 #endif
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
   Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );

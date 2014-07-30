@@ -99,9 +99,9 @@ public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
 #if SCM__R0348_PALETTE_MODE   
-  Void codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
-  Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );

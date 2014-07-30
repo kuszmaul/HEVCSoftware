@@ -140,9 +140,9 @@ protected:
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
 #endif
 #if SCM__R0348_PALETTE_MODE
-  Bool m_bBestScanRotationMode;
-  Pel* m_paOriginalLevel;
-  Pel* m_paBestLevel[MAX_NUM_COMPONENT];
+  Bool            m_bBestScanRotationMode;
+  Pel*            m_paOriginalLevel;
+  Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
 #endif

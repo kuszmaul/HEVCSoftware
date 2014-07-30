@@ -909,7 +909,7 @@ public:
 #endif
 #if SCM__R0348_PALETTE_MODE
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
-  Void      setUsePLTMode(const Bool value)                           { m_usePaletteMode = value; }
+  Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
 #endif
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }

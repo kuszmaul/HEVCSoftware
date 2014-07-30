@@ -1033,7 +1033,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
     // run CU encoder
 #if SCM__R0348_PALETTE_MODE
-    m_pcCuEncoder->compressCU(pcCU, lastPLTSize, lastPLTUsedSize, lastPLT);
+    m_pcCuEncoder->compressCU( pcCU, lastPLTSize, lastPLTUsedSize, lastPLT );
 #else
     m_pcCuEncoder->compressCU( pcCU );
 #endif

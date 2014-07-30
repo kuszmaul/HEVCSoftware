@@ -82,9 +82,9 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #if SCM__R0348_PALETTE_MODE
-  virtual Void codePLTModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp) = 0;
-  virtual Void codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp) = 0;
+  virtual Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;

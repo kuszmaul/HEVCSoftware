@@ -172,8 +172,8 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #if SCM__R0348_PALETTE_MODE
-#define NUM_PLTMODE_FLAG_CTX          1 
-#define NUM_SPOINT_CTX                3 
+#define NUM_PLTMODE_FLAG_CTX          1
+#define NUM_SPOINT_CTX                3
 #define NUM_TOP_RUN_CTX               3
 #define NUM_LEFT_RUN_CTX              3
 #define NUM_PLT_REUSE_FLAG_CTX        1
@@ -187,51 +187,50 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 static const UChar
 INIT_PLTMODE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLTMODE_FLAG_CTX] =
 {
-  { 154 }, 
-  { 154 }, 
-  { 154 }, 
+  { 154 },
+  { 154 },
+  { 154 },
 };
 
 static const UChar
 INIT_SPOINT[NUMBER_OF_SLICE_TYPES][NUM_SPOINT_CTX] =
 {
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
+  { 154, 154, 154 },
+  { 154, 154, 154 },
+  { 154, 154, 154 },
 };
 
 static const UChar
 INIT_TOP_RUN[NUMBER_OF_SLICE_TYPES][NUM_TOP_RUN_CTX] =
 {
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
+  { 154, 154, 154 },
+  { 154, 154, 154 },
+  { 154, 154, 154 },
 };
 
 static const UChar
 INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
 {
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
-  { 154, 154, 154 }, 
+  { 154, 154, 154 },
+  { 154, 154, 154 },
+  { 154, 154, 154 },
 };
 
 static const UChar
-  INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =
+INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =
 {
-  { 154 }, 
-  { 154 }, 
-  { 154 }, 
+  { 154 },
+  { 154 },
+  { 154 },
 };
 
 static const UChar
 INIT_SCAN_ROTATION_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SCAN_ROTATION_FLAG_CTX] =
 {
-  { 154, 154 }, 
-  { 154, 154 }, 
-  { 154, 154 }, 
+  { 154, 154 },
+  { 154, 154 },
+  { 154, 154 },
 };
-
 #endif
 
 // initial probability for cu_transquant_bypass flag
