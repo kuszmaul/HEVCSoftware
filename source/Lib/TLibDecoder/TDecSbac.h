@@ -108,7 +108,7 @@ private:
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
 #if SCM__R0348_PALETTE_MODE
-  Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
+  Void  xDecodeRun              (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev);
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
   Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
@@ -123,10 +123,10 @@ public:
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #if SCM__R0348_PALETTE_MODE
-  Void parsePLTModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parsePLTModeSyntax ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
-  Void parsePLTSharingModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parseScanRotationModeFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
+  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );

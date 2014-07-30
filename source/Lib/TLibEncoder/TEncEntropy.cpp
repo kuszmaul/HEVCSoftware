@@ -92,22 +92,20 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
 #if SCM__R0348_PALETTE_MODE
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-  if (pcCU->getSlice()->getSPS()->getUsePLTMode())
+  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
   {
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  } 
+    if ( bRD )
+    {
+      uiAbsPartIdx = 0;
+    }
 
-  m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
-  if (pcCU->getPLTModeFlag(uiAbsPartIdx))
-  {
-      m_pcEntropyCoderIf->codePLTModeSyntax(pcCU, uiAbsPartIdx, 3);
+    m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codePLTModeSyntax( pcCU, uiAbsPartIdx, 3 );
     }
   }
 }
-
-
 #endif
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
@@ -182,16 +180,16 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   if ( pcCU->getSlice()->isIntra() )
   {
 #if SCM__R0348_PALETTE_MODE
-    if(pcCU->isIntra( uiAbsPartIdx ))
+    if ( pcCU->isIntra( uiAbsPartIdx ) )
     {
-      encodePLTModeInfo (pcCU, uiAbsPartIdx); 
-      if (pcCU->getPLTModeFlag(uiAbsPartIdx))
+      encodePLTModeInfo( pcCU, uiAbsPartIdx );
+      if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
       {
-        if (!bRD)
+        if ( !bRD )
         {
           pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
         }
-        }
+      }
     }
 #endif
     return;
@@ -206,7 +204,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 #if SCM__R0348_PALETTE_MODE
   if(pcCU->isIntra( uiAbsPartIdx ))
   {
-    encodePLTModeInfo (pcCU, uiAbsPartIdx); 
+    encodePLTModeInfo (pcCU, uiAbsPartIdx);
     if (pcCU->getPLTModeFlag(uiAbsPartIdx))
     {
       if (!bRD)

@@ -1049,7 +1049,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if SCM__R0348_PALETTE_MODE
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
-#endif   
+#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -2376,7 +2376,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Adaptive color transform          : %s\n", (m_useColorTrans                          ? "Enabled" : "Disabled") );
 #endif
 #if SCM__R0348_PALETTE_MODE
-  printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled"));
+  printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled") );
 #endif
   if (m_bUseSAO)
   {

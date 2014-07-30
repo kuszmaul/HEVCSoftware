@@ -246,7 +246,7 @@ Void TEncCu::init( TEncTop* pcEncTop )
 /** \param  rpcCU pointer of CU data class
  */
 #if SCM__R0348_PALETTE_MODE
-Void TEncCu::compressCU(TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE])
+Void TEncCu::compressCU( TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE] )
 #else
 Void TEncCu::compressCU( TComDataCU*& rpcCU )
 #endif
@@ -999,21 +999,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           iQP = iMinQP;
         }
 #if SCM__R0348_PALETTE_MODE
-        if (rpcBestCU->getSlice()->getSPS()->getUsePLTMode())
+        if ( rpcBestCU->getSlice()->getSPS()->getUsePLTMode() )
         {
-          xCheckPLTMode(rpcBestCU, rpcTempCU, false);
-        rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-        Bool bPLTSharingAvail=false;
-        for (UInt ch = 0; ch < numValidComp; ch++)
-          {
-          bPLTSharingAvail = bPLTSharingAvail||(rpcTempCU->getLastPLTInLcuSizeFinal(ch) > 0);
-          }
-        if(bPLTSharingAvail)
-        {
-          xCheckPLTMode (rpcBestCU, rpcTempCU, true);
+          xCheckPLTMode( rpcBestCU, rpcTempCU, false );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-        }        
+
+          Bool bPLTSharingAvail=false;
+          for ( UInt ch = 0; ch < numValidComp; ch++ )
+          {
+            bPLTSharingAvail = bPLTSharingAvail || (rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0);
+          }
+          if ( bPLTSharingAvail )
+          {
+            xCheckPLTMode( rpcBestCU, rpcTempCU, true );
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          }
         }
 #endif
       }
@@ -1092,7 +1092,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   // copy orginal YUV samples to PCM buffer
 #if SCM__R0348_PALETTE_MODE
-  if (rpcBestCU->getPLTModeFlag(0) == false)
+  if( rpcBestCU->getPLTModeFlag(0) == false )
 #endif
   if( rpcBestCU->isLosslessCoded(0) && (rpcBestCU->getIPCMFlag(0) == false))
   {
@@ -2479,9 +2479,6 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
   rpcTempCU->setPLTModeFlagSubParts(true, 0, rpcTempCU->getDepth(0));
 
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TRANSQUANTBYPASS
-  rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uiDepth );
-#endif
   m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
                             m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], bCheckPLTSharingMode);
 

@@ -99,7 +99,7 @@ protected:
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
 #if SCM__R0348_PALETTE_MODE
-  Void xReconPLTMode        ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
   Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);

@@ -949,7 +949,7 @@ enum PLTScanMode
 {
   PLT_SCAN_HORTRAV = 0,
   PLT_SCAN_VERTRAV = 1,
-  NUM_PLT_SCAN = 2
+  NUM_PLT_SCAN     = 2
 };
 
 class SortingElement
@@ -964,7 +964,7 @@ public:
     return uiCnt > other.uiCnt; 
   }
 
-  SortingElement() { 
+  SortingElement() {
     uiCnt = uiShift = uiLastCnt = 0;
     uiData[0] = uiData[1] = uiData[2] = 0;
     uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
@@ -980,8 +980,8 @@ public:
   Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return std::abs(uiData[0] - sElement.uiData[0]) <= iErrorLimit && std::abs(uiData[1] - sElement.uiData[1]) <= iErrorLimit && std::abs(uiData[2] - sElement.uiData[2]) <= iErrorLimit;}
   UInt getSAD(SortingElement sElement) { return std::abs(uiData[0] - sElement.uiData[0]) + std::abs(uiData[1] - sElement.uiData[1]) + std::abs(uiData[2] - sElement.uiData[2]); }
   Void copyDataFrom(SortingElement sElement) {
-    uiData[0] = sElement.uiData[0]; 
-    uiData[1] = sElement.uiData[1]; 
+    uiData[0] = sElement.uiData[0];
+    uiData[1] = sElement.uiData[1];
     uiData[2] = sElement.uiData[2];
     uiShift = 0; uiLastCnt = 1; uiSumData[0] = uiData[0]; uiSumData[1] = uiData[1]; uiSumData[2] = uiData[2];
   }
@@ -994,14 +994,27 @@ public:
   Void addElement(const SortingElement& sElement)
   {
     uiCnt++;
-    for(int i=0; i<3; i++) uiSumData[i] += sElement.uiData[i];
+    for ( int i=0; i<3; i++ )
+    {
+      uiSumData[i] += sElement.uiData[i];
+    }
     if( uiCnt>1 && uiCnt==2*uiLastCnt )
     {
       UInt uiRnd;
-      if( uiCnt == 2 ) { uiShift = 0; uiRnd   = 1; }
-      else { uiRnd = 1<<uiShift; }
+      if( uiCnt == 2 )
+      {
+        uiShift = 0;
+        uiRnd   = 1;
+      }
+      else
+      {
+        uiRnd = 1<<uiShift;
+      }
       uiShift++;
-      for(int i=0; i<3; i++) uiData[i] = (uiSumData[i] + uiRnd ) >> uiShift;
+      for ( int i=0; i<3; i++ )
+      {
+        uiData[i] = (uiSumData[i] + uiRnd) >> uiShift;
+      }
       uiLastCnt = uiCnt;
     }
   }

@@ -90,9 +90,9 @@ public:
   Void parseSkipFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #if SCM__R0348_PALETTE_MODE
-  Void parsePLTModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parsePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp);
-  Void parsePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp);
+  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseScanTraverseModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif

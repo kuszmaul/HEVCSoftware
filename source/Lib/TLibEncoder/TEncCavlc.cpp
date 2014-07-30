@@ -642,7 +642,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
 #endif
 #if SCM__R0348_PALETTE_MODE
-            WRITE_FLAG((pcSPS->getUsePLTMode() ? 1 : 0), "palette_mode_enabled_flag");
+            WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
 #endif
             break;
           default:

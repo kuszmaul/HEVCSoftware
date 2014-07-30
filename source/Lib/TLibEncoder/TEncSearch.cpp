@@ -4119,7 +4119,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
         {
           pcCU->setPrevPLTReusedFlagSubParts(comp, 0, uiIdxPrev, 0, pcCU->getDepth(0));
         }
-      }      
+      }
     }
     pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
   }
@@ -4134,8 +4134,8 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     {
       derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
     }
-  pcCU->setPLTSizeSubParts(0, uiPLTSize,0, pcCU->getDepth(0));
-  reorderPLT (pcCU, paPalette, 3);
+    pcCU->setPLTSizeSubParts(0, uiPLTSize,0, pcCU->getDepth(0));
+    reorderPLT (pcCU, paPalette, 3);
   }
 
   preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);

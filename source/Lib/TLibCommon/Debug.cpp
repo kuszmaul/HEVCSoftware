@@ -186,6 +186,12 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(SCM__R0102_HASH_ME_FIX,                                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0147_ADAPTIVE_COLOR_TRANSFORM,                               settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT,                        settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0309_INTRABC_BVP,                                            settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0081_CODE_SIMPLIFICATION,                                    settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0081_BUGFIX,                                                 settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0186_INTRABC_BVD,                                            settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(SCM__R0348_PALETTE_MODE,                                           settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298,                      settingNameWidth, settingValueWidth);

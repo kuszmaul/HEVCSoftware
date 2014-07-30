@@ -1021,7 +1021,6 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
   Pel pPaletteTemp[3][MAX_PLT_SIZE];
   ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
 
-
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCU(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
@@ -1101,7 +1100,6 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
       }
       uiIdxCurr++;
     }
-
   }
 }
 
@@ -1249,7 +1247,9 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
       if( !bDuplicate ) uiPLTSize++;
     }
     else
+    {
       break;
+    }
   }
 
   delete [] psList;

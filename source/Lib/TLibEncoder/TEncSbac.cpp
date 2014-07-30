@@ -92,12 +92,12 @@ TEncSbac::TEncSbac()
 , m_cIntraBCPredFlagSCModel            ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCrossComponentPredictionSCModel   ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 #if SCM__R0348_PALETTE_MODE
-, m_PLTModeFlagSCModel                 ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
-, m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                         , m_contextModels + m_numContextModels, m_numContextModels)
-, m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
-, m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTModeFlagSCModel                 ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+, m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
@@ -315,19 +315,19 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
 #if SCM__R0186_INTRABC_BVD
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
 #endif
+#if SCM__R0348_PALETTE_MODE
+  m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
+  m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
+  m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN );
+  m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN );
+  m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
+  m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
+#endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
     m_golombRiceAdaptationStatistics[statisticIndex] = 0;
   }
-#if SCM__R0348_PALETTE_MODE
-  m_PLTModeFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
-  m_SPointSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPOINT );
-  m_cCopyTopRunSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_TOP_RUN );
-  m_cRunSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_RUN );
-  m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
-  m_PLTScanRotationModeFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
 
   m_pcBinIf->start();
 }
@@ -440,7 +440,6 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
 }
 
 #if SCM__R0348_PALETTE_MODE
-
 Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
 {
   UInt uiThresh;
@@ -542,27 +541,27 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
       m_pcBinIf->encodeBinEP(numOnesInGroup == 0);
     }
 
-    if (numOnesInGroup)
-{
-      while (uiIdxPrev < lastIdx && uiNumPLTPredicted < MAX_PLT_SIZE)
-  {
-        m_pcBinIf->encodeBinEP((UInt)bReusedPrev[uiIdxPrev]);
+    if ( numOnesInGroup )
+    {
+      while ( uiIdxPrev < lastIdx && uiNumPLTPredicted < MAX_PLT_SIZE )
+      {
+        m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
         uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
         uiIdxPrev++;
-  }
+      }
 
-      if ((numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < MAX_PLT_SIZE)
-  {
-        m_pcBinIf->encodeBinEP((UInt)bReusedPrev[uiIdxPrev]);
+      if ( (numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < MAX_PLT_SIZE )
+      {
+        m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
       }
       uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
       uiIdxPrev++;
 
-      if (!lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE)
-    {
-        m_pcBinIf->encodeBinEP(uiIdxPrev > lastPrevIdx);
+      if ( !lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE )
+      {
+        m_pcBinIf->encodeBinEP( uiIdxPrev > lastPrevIdx );
+      }
     }
-  }
     else
     {
       uiIdxPrev += groupLength;
@@ -591,7 +590,7 @@ Void TEncSbac::xEncodeRun(UInt uiRun, Bool bCopyTopMode, Int GRParam)
   }
 
   UInt uiGr2 = uiRun > 2 ? 1 : 0;
-    m_pcBinIf->encodeBin(uiGr2, cContextModel->get(0, 0, 2));
+  m_pcBinIf->encodeBin(uiGr2, cContextModel->get(0, 0, 2));
 
   if (uiGr2 == 0)
   {
@@ -671,77 +670,77 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
   Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
-  if(!bUsePLTSharingMode)
+  if ( !bUsePLTSharingMode )
   {
-  pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
+    pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev );
     UChar *bReusedPrev;
-  UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
+    UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
 
-  bReusedPrev = pcCU->getPrevPLTReusedFlag(compBegin, uiAbsPartIdx);
+    bReusedPrev = pcCU->getPrevPLTReusedFlag( compBegin, uiAbsPartIdx );
 
-  if( uiPLTSizePrev )
-  {
-      xEncodePLTPredIndicator(bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted);
-  }
-
-  assert(uiDictMaxSize >= uiNumPLTPredicted);
-  if(uiNumPLTPredicted < MAX_PLT_SIZE)
-  {
-    uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
-    for (UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++)
+    if ( uiPLTSizePrev )
     {
-      if( uiNumPLTPredicted + uiPLTIdx < MAX_PLT_SIZE ) 
+      xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted );
+    }
+
+    assert( uiDictMaxSize >= uiNumPLTPredicted );
+    if ( uiNumPLTPredicted < MAX_PLT_SIZE )
+    {
+      uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
+      for ( UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++ )
+      {
+        if ( uiNumPLTPredicted + uiPLTIdx < MAX_PLT_SIZE )
         {
-      m_pcBinIf->encodeBinEP(uiPLTIdx == (uiNumPLTRceived));
+          m_pcBinIf->encodeBinEP( uiPLTIdx == (uiNumPLTRceived) );
+        }
+      }
     }
-  }
-    }
-  for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
-  {
-    pPalette = pcCU->getPLT(comp, uiAbsPartIdx);
-    for (UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < uiDictMaxSize; uiPLTIdx++)
+    for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
     {
-      m_pcBinIf->encodeBinsEP((UInt)pPalette[uiPLTIdx], uiSampleBits[comp]);
+      pPalette = pcCU->getPLT( comp, uiAbsPartIdx );
+      for ( UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < uiDictMaxSize; uiPLTIdx++ )
+      {
+        m_pcBinIf->encodeBinsEP( (UInt)pPalette[uiPLTIdx], uiSampleBits[comp] );
+      }
     }
-  }
   }
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[width]+2][g_aucConvertToBit[height]+2];
   m_pcBinIf->encodeBinEP(uiSignalEscape);
-  while (uiIdx < uiTotal)
+  while ( uiIdx < uiTotal )
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-    uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
-    if (uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
+    uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
+    if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
     {
-        UInt mode = pSPoint[uiTraIdx];
-        if(PLT_ESCAPE == pSPoint[uiTraIdx])
-    {
-          mode = 0;
-        }
-        m_pcBinIf->encodeBin(mode, m_SPointSCModel.get(0, 0, uiCtx));
+      UInt mode = pSPoint[uiTraIdx];
+      if ( PLT_ESCAPE == pSPoint[uiTraIdx] )
+      {
+        mode = 0;
+      }
+      m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
-    if (pSPoint[uiTraIdx] == PLT_ESCAPE)
+    if ( pSPoint[uiTraIdx] == PLT_ESCAPE )
     {
       UInt uiRealLevel = pLevel[uiTraIdx];
       pLevel[uiTraIdx] = uiIndexMaxSize - 1;
-      xWritePLTIndex(uiIdx, pLevel, uiIndexMaxSize, pSPoint, width);
+      xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
       pLevel[uiTraIdx] = uiRealLevel;
-      for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
       {
-        xWriteTruncBinCode((UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1);
+        xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
       }
       uiIdx++;
     }
     else
     {
-      if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
+      if ( pSPoint[uiTraIdx] == PLT_RUN_LEFT )
       {
-        xWritePLTIndex(uiIdx, pLevel, uiIndexMaxSize, pSPoint, width);
+        xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
       }
       uiRun = pRun[uiTraIdx];
-      xEncodeRun(uiRun, pSPoint[uiTraIdx]);
+      xEncodeRun( uiRun, pSPoint[uiTraIdx] );
       uiIdx += uiRun;
       uiIdx++;
     }
