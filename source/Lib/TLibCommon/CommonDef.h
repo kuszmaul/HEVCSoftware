@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "15.0_RExt8.0rc1_SCM1.2"                 ///< Current software version
+#define NV_VERSION        "15.0_RExt8.0_SCM2.0rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
