@@ -294,7 +294,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-#define INTRABC_LEFTWIDTH                                                     64 ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
 
 #if RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT
 #define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               4
@@ -333,6 +332,7 @@
 #define SCM__R0081_BUGFIX                                            1 ///< Bug fix as proposed in R0081
 #define SCM__R0186_INTRABC_BVD                                       1 ///< 0 = disable BVD improvements as proposed in R0186, 1 (default) = enable BVD improvements as proposed in R0186
 #define SCM__R0348_PALETTE_MODE                                      1 ///< 0 = no palette mode, 1 (default) = enable palette mode
+#define SCM__FLEXIBLE_INTRABC_SEARCH                                 1 ///< flexible 1xN IntraBC search range (in terms of CTUs)
 
 //------------------------------------------------
 // Derived macros
@@ -356,7 +356,11 @@
 #include <cstdlib>
 #define MAX_PLT_SIZE                                                  31
 #define MAX_PLT_PRED_SIZE                                             64
-#define PLT_SHARING_BUGFIX                                            1 ///< 1: PLT sharing bug fix; 
+#define PLT_SHARING_BUGFIX                                            1 ///< 1: PLT sharing bug fix 
+#endif
+
+#if !SCM__FLEXIBLE_INTRABC_SEARCH
+#define INTRABC_LEFTWIDTH                                             64  ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
 #endif
 
 //------------------------------------------------

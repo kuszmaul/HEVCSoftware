@@ -1118,8 +1118,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       }
     }
 #endif
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+    if( m_pcCfg->getUseHashBasedIntraBCSearch() )
+#else
     if(m_pcCfg->getUseIntraBCFullFrameSearch())
-     m_pcPredSearch->xIntraBCHashTableUpdate(pcCU, false);
+#endif
+    {
+      m_pcPredSearch->xIntraBCHashTableUpdate(pcCU, false);
+    }
 
     m_uiPicTotalBits += pcCU->getTotalBits();
     m_dPicRdCost     += pcCU->getTotalCost();
@@ -1151,9 +1157,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   xRestoreWPparam( pcSlice );
 
   //clear the hash table used in Intra BC search
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  if( m_pcCfg->getUseHashBasedIntraBCSearch() )
+#else
   if(m_pcCfg->getUseIntraBCFullFrameSearch())
-   m_pcPredSearch->xClearIntraBCHashTable();
-
+#endif
+  {
+    m_pcPredSearch->xClearIntraBCHashTable();
+  }
 }
 
 /**

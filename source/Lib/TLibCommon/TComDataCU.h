@@ -345,7 +345,11 @@ public:
   TComMv        getLastIntraBCMv() {return m_lastIntraBCMv; }
   Void          setLastIntraBCMv(TComMv mv ) { m_lastIntraBCMv = mv; }
 #endif
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  UInt          getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs );
+#else
   UInt          getIntraBCSearchAreaWidth();
+#endif
 
   TCoeff*&      getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
