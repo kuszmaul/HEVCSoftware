@@ -772,7 +772,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // motion search options
   ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:TZ search  2:Selective search")
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  ("HashBasedIntraBlockCopySearchEnabled",            m_useHashBasedIntraBlockCopySearch,               false, "Enable the use of hash based search for intra block copying on 8x8 blocks")
+  ("IntraBlockCopySearchWidthInCTUs",                 m_intraBlockCopySearchWidthInCTUs,                   -1, "Search range for IBC (-1: full frame search)")
+  ("IntraBlockCopyNonHashSearchWidthInCTUs",          m_intraBlockCopyNonHashSearchWidthInCTUs,            1u, "Search range for IBC conventional search method (i.e., fast/full search)")
+#else
   ("IntraBlockCopyFullFrameSearch",                   m_intraBlockCopyFullFrameSearch,                   true, "Use full frame search range for intra block-copy motion vectors, hash based search is applied to 8x8 blocks")
+#endif
   ("HashBasedME",                                     m_useHashBasedME,                                 false, "Hash based inter search")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
@@ -2246,6 +2252,36 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_timeCodeSEINumTs > MAX_TIMECODE_SEI_SETS, "Number of time sets cannot exceed 3");
   }
 
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  if( m_useIntraBlockCopy )
+  {
+    if( m_useHashBasedIntraBlockCopySearch )
+    {
+      xConfirmPara(m_intraBlockCopySearchWidthInCTUs < -1, "IntraBlockCopySearchWidth should be greater than or equal to -1\n");
+      if( m_intraBlockCopySearchWidthInCTUs >= 0 )
+      {
+        xConfirmPara((Int)m_intraBlockCopyNonHashSearchWidthInCTUs > m_intraBlockCopySearchWidthInCTUs, "IntraBlockCopyNonHashSearchWidth should be less than or equal to IntraBlockCopySearchWidth\n");
+        if( m_intraBlockCopySearchWidthInCTUs == (Int)m_intraBlockCopyNonHashSearchWidthInCTUs )
+        {
+          m_useHashBasedIntraBlockCopySearch = false;
+        }
+      }
+    }
+    else
+    {
+      xConfirmPara(m_intraBlockCopySearchWidthInCTUs < 0, "HashBasedIntraBlockCopySearch must be set to 1 to enable IntraBlockCopy full frame search\n");
+      m_intraBlockCopySearchWidthInCTUs = (Int)m_intraBlockCopyNonHashSearchWidthInCTUs;
+    }
+    if( !(m_intraBlockCopySearchWidthInCTUs == -1 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1)
+      || !(m_intraBlockCopySearchWidthInCTUs == 3 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1) )
+    {
+      fprintf(stderr, "***************************************************************************\n");
+      fprintf(stderr, "** WARNING: IntraBC search ranges are not part of CTC/CE test conditions **\n");
+      fprintf(stderr, "***************************************************************************\n");
+    }
+  }
+#endif
+
 #undef xConfirmPara
   if (check_failed)
   {
@@ -2401,7 +2437,24 @@ Void TAppEncCfg::xPrintParameter()
     default: printf( "Motion Estimation                 : Unknown\n" ); break;
   }
 
-  printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  if( m_useIntraBlockCopy )
+  {
+    printf("Hash based IntraBC search         : %s\n", (m_useHashBasedIntraBlockCopySearch ? "Enabled" : "Disabled") );
+    if( m_intraBlockCopySearchWidthInCTUs == -1 )
+    {
+      printf("IntraBC search range              : full frame\n");
+    }
+    else
+    {
+      printf("IntraBC search range              : 1x%d CTU%s\n", m_intraBlockCopySearchWidthInCTUs+1, m_intraBlockCopySearchWidthInCTUs ? "s" : "" );
+    }
+    printf("IntraBC non-hash search range     : 1x%d CTU%s\n", m_intraBlockCopyNonHashSearchWidthInCTUs+1, m_intraBlockCopyNonHashSearchWidthInCTUs ? "s" : "" );
+  }
+#else
+    printf("IntraBCFullFrame                  : %d\n", m_intraBlockCopyFullFrameSearch ? 1 : 0 );
+#endif
+
   printf("HashME                            : %d\n", m_useHashBasedME ? 1 : 0 );
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );

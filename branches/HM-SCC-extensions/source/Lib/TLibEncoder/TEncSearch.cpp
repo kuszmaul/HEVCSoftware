@@ -5197,7 +5197,16 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
 #endif
 #endif
 
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+    if( m_pcEncCfg->getUseHashBasedIntraBCSearch()
+      && pcCU->getWidth(0) == 8
+      && ePartSize == SIZE_2Nx2N
+      && (m_pcEncCfg->getUseHashBasedIntraBCSearch()
+        || pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCSearchWidthInCTUs() ) != pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() ))
+      )
+#else
     if((pcCU->getWidth(0) == 8) && (ePartSize == SIZE_2Nx2N) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
+#endif
     {
 #if SCM__R0081_CODE_SIMPLIFICATION
       UInt uiIntraBCECost = uiCost;
@@ -5687,7 +5696,12 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   }
   else
   {
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  const UInt uiSearchWidthInCTUs = pcCU->getWidth( 0 ) == 8 ? m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() : m_pcEncCfg->getIntraBCSearchWidthInCTUs();
+  Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth( uiSearchWidthInCTUs );
+#else
   Int maxXsr = (cuPelX % lcuWidth) + pcCU->getIntraBCSearchAreaWidth();
+#endif
   Int maxYsr =  cuPelY % lcuHeight;
 
   const ChromaFormat format = pcCU->getPic()->getChromaFormat();
@@ -6871,6 +6885,14 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 
   Int  cuPelX     = pcCU->getCUPelX();
   Int  cuPelY     = pcCU->getCUPelY();
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  const UInt uiMaxCuWidth         = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+  const UInt uiMaxCuHeight        = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+  const UInt uiSearchWidth        = m_pcEncCfg->getUseIntraBCFullFrameSearch() ? 0 : pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCSearchWidthInCTUs() );
+  const UInt uiNonHashSearchWidth = pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() );
+  const UInt uiCtuPelX            = (cuPelX / uiMaxCuWidth) * uiMaxCuWidth;
+  const UInt uiCtuPelY            = (cuPelY / uiMaxCuHeight) * uiMaxCuHeight;
+#endif
 
   Distortion  uiSad;
 
@@ -6893,6 +6915,23 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   {
     iTempX = HashLinklist->pos_X;
     iTempY = HashLinklist->pos_Y;
+
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+    if( !m_pcEncCfg->getUseIntraBCFullFrameSearch() )    // if full frame search is disabled, then apply following constraints on search range
+    {
+      const UInt uiRefCuX    = iTempX/uiMaxCuWidth;
+      const UInt uiRefCuY    = iTempY/uiMaxCuHeight;
+      const UInt uiRefCuPelX = uiRefCuX*uiMaxCuWidth;
+      const UInt uiRefCuPelY = uiRefCuY*uiMaxCuHeight;
+      if( uiRefCuPelX+uiSearchWidth < uiCtuPelX          // don't search left area of IntraBlockCopySearchWidth
+        || uiRefCuPelX+uiNonHashSearchWidth >= uiCtuPelX // don't search in the area that has been already searched in HashBasedIntraBlockCopySearch
+        || uiRefCuPelY != uiCtuPelY )                    // only search current CTU row
+      {
+        HashLinklist = HashLinklist->next;
+        continue;
+      }
+    }
+#endif
 
     uiSad = 0;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
 

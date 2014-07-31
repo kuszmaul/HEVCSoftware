@@ -166,7 +166,13 @@ protected:
 
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Bool      m_useHashBasedIntraBlockCopySearch; // Enable the use of hash based search is applied to 8x8 blocks
+  Int       m_intraBlockCopySearchWidthInCTUs;  // Search range for IBC (-1: full frame search)
+  UInt      m_intraBlockCopyNonHashSearchWidthInCTUs; // IBC search range for conventional non-hash based method (i.e., fast/full search)
+#else
   Bool      m_intraBlockCopyFullFrameSearch;    // Intra block copy full frame search
+#endif
   Bool      m_useHashBasedME;                   //  Hash based inter search 
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
@@ -445,8 +451,13 @@ public:
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Void      setUseHashBasedIntraBCSearch    ( Bool b )       { m_useHashBasedIntraBlockCopySearch = b; }
+  Void      setIntraBCSearchWidthInCTUs     ( Int  i )       { m_intraBlockCopySearchWidthInCTUs = i; }
+  Void      setIntraBCNonHashSearchWidthInCTUs( UInt u )     { m_intraBlockCopyNonHashSearchWidthInCTUs = u; }
+#else
   Void      setUseIntraBCFullFrameSearch    ( Bool b )       { m_intraBlockCopyFullFrameSearch = b; }
-
+#endif
   Void      setUseHashBasedME               ( Bool b )       { m_useHashBasedME = b; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
@@ -519,8 +530,14 @@ public:
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Bool      getUseHashBasedIntraBCSearch    ()      { return m_useHashBasedIntraBlockCopySearch; }
+  Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopySearchWidthInCTUs == -1; }
+  Int       getIntraBCSearchWidthInCTUs     ()      { return m_intraBlockCopySearchWidthInCTUs; }
+  UInt      getIntraBCNonHashSearchWidthInCTUs()    { return m_intraBlockCopyNonHashSearchWidthInCTUs; }
+#else
   Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopyFullFrameSearch ; }
-
+#endif
   Bool      getUseHashBasedME               ()      { return m_useHashBasedME; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
 
