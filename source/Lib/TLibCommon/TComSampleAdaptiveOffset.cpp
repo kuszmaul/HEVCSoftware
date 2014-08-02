@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -43,10 +43,11 @@
 
 //! \ingroup TLibCommon
 //! \{
-UInt g_saoMaxOffsetQVal[NUM_SAO_COMPONENTS];
+
+UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
 SAOOffset::SAOOffset()
-{ 
+{
   reset();
 }
 
@@ -86,7 +87,7 @@ SAOBlkParam::~SAOBlkParam()
 
 Void SAOBlkParam::reset()
 {
-  for(Int compIdx=0; compIdx< 3; compIdx++)
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     offsetParam[compIdx].reset();
   }
@@ -94,7 +95,7 @@ Void SAOBlkParam::reset()
 
 const SAOBlkParam& SAOBlkParam::operator= (const SAOBlkParam& src)
 {
-  for(Int compIdx=0; compIdx< 3; compIdx++)
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     offsetParam[compIdx] = src.offsetParam[compIdx];
   }
@@ -105,14 +106,14 @@ const SAOBlkParam& SAOBlkParam::operator= (const SAOBlkParam& src)
 TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
 {
   m_tempPicYuv = NULL;
-  for(Int compIdx=0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     m_offsetClipTable[compIdx] = NULL;
   }
 #if !SAO_SGN_FUNC
   m_signTable = NULL; 
 #endif
-  
+
   m_lineBufWidth = 0;
   m_signLineBuf1 = NULL;
   m_signLineBuf2 = NULL;
@@ -122,56 +123,55 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
 TComSampleAdaptiveOffset::~TComSampleAdaptiveOffset()
 {
   destroy();
-  
+
   if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
   if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
 }
 
-Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth )
+Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat format, UInt maxCUWidth, UInt maxCUHeight, UInt maxCUDepth, UInt lumaBitShift, UInt chromaBitShift )
 {
   destroy();
 
-  m_picWidth = picWidth;    
-  m_picHeight= picHeight;
-  m_maxCUWidth= maxCUWidth; 
-  m_maxCUHeight= maxCUHeight;
+  m_picWidth        = picWidth;
+  m_picHeight       = picHeight;
+  m_chromaFormatIDC = format;
+  m_maxCUWidth      = maxCUWidth;
+  m_maxCUHeight     = maxCUHeight;
 
-  m_numCTUInWidth = (m_picWidth/m_maxCUWidth) + ((m_picWidth % m_maxCUWidth)?1:0);
-  m_numCTUInHeight= (m_picHeight/m_maxCUHeight) + ((m_picHeight % m_maxCUHeight)?1:0);
-  m_numCTUsPic = m_numCTUInHeight*m_numCTUInWidth;
+  m_numCTUInWidth   = (m_picWidth/m_maxCUWidth) + ((m_picWidth % m_maxCUWidth)?1:0);
+  m_numCTUInHeight  = (m_picHeight/m_maxCUHeight) + ((m_picHeight % m_maxCUHeight)?1:0);
+  m_numCTUsPic      = m_numCTUInHeight*m_numCTUInWidth;
 
   //temporary picture buffer
   if ( !m_tempPicYuv )
   {
     m_tempPicYuv = new TComPicYuv;
-    m_tempPicYuv->create( m_picWidth, m_picHeight, m_maxCUWidth, m_maxCUHeight, maxCUDepth );
+    m_tempPicYuv->create( m_picWidth, m_picHeight, m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, maxCUDepth );
   }
 
   //bit-depth related
-  for(Int compIdx =0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
-    Int bitDepthSample = (compIdx == SAO_Y)?g_bitDepthY:g_bitDepthC;
-    m_offsetStepLog2  [compIdx] = max(bitDepthSample - MAX_SAO_TRUNCATED_BITDEPTH, 0);
+    Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))];
+    m_offsetStepLog2  [compIdx] = isLuma(ComponentID(compIdx))? lumaBitShift : chromaBitShift;
     g_saoMaxOffsetQVal[compIdx] = (1<<(min(bitDepthSample,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; //Table 9-32, inclusive
   }
 
+
 #if !SAO_SGN_FUNC
   //look-up table for clipping
-  Int overallMaxSampleValue=0;
+  Int allComponentMaximumSampleValue = 0;
 #endif
-  for(Int compIdx =0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
-    Int bitDepthSample = (compIdx == SAO_Y)?g_bitDepthY:g_bitDepthC; //exclusive
+    Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))]; //exclusive
     Int maxSampleValue = (1<< bitDepthSample); //exclusive
     Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]);
-#if !SAO_SGN_FUNC
-    if (maxSampleValue>overallMaxSampleValue) overallMaxSampleValue=maxSampleValue;
-#endif
 
     m_offsetClipTable[compIdx] = new Int[(maxSampleValue + maxOffsetValue -1)+ (maxOffsetValue)+1 ]; //positive & negative range plus 0
     m_offsetClip[compIdx] = &(m_offsetClipTable[compIdx][maxOffsetValue]);
 
-    //assign clipped values 
+    //assign clipped values
     Int* offsetClipPtr = m_offsetClip[compIdx];
     for(Int k=0; k< maxSampleValue; k++)
     {
@@ -182,14 +182,18 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, UInt maxCUWi
       *(offsetClipPtr + maxSampleValue+ k) = maxSampleValue-1;
       *(offsetClipPtr -k -1 )              = 0;
     }
+
+#if !SAO_SGN_FUNC
+    if (maxSampleValue > allComponentMaximumSampleValue) allComponentMaximumSampleValue = maxSampleValue;
+#endif
   }
 
 #if !SAO_SGN_FUNC
-  m_signTable = new Short[ 2*(overallMaxSampleValue-1) + 1 ];
-  m_sign = &(m_signTable[overallMaxSampleValue-1]);
+  m_signTable = new Short[ 2*(allComponentMaximumSampleValue-1) + 1 ];
+  m_sign = &(m_signTable[allComponentMaximumSampleValue-1]);
 
   m_sign[0] = 0;
-  for(Int k=1; k< overallMaxSampleValue; k++)
+  for(Int k=1; k< allComponentMaximumSampleValue; k++)
   {
     m_sign[k] = 1;
     m_sign[-k]= -1;
@@ -206,13 +210,14 @@ Void TComSampleAdaptiveOffset::destroy()
     m_tempPicYuv = NULL;
   }
 
-  for(Int compIdx=0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     if(m_offsetClipTable[compIdx])
     {
       delete[] m_offsetClipTable[compIdx]; m_offsetClipTable[compIdx] = NULL;
     }
   }
+
 #if !SAO_SGN_FUNC
   if( m_signTable )
   {
@@ -221,7 +226,7 @@ Void TComSampleAdaptiveOffset::destroy()
 #endif
 }
 
-Void TComSampleAdaptiveOffset::invertQuantOffsets(Int compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets)
+Void TComSampleAdaptiveOffset::invertQuantOffsets(ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets)
 {
   Int codedOffset[MAX_NUM_SAO_CLASSES];
 
@@ -246,7 +251,7 @@ Void TComSampleAdaptiveOffset::invertQuantOffsets(Int compIdx, Int typeIdc, Int 
 
 }
 
-Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, std::vector<SAOBlkParam*>& mergeList)
+Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
 {
   Int ctuX = ctu % m_numCTUInWidth;
   Int ctuY = ctu / m_numCTUInWidth;
@@ -291,7 +296,7 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* b
       }
     }
 
-    mergeList.push_back(mergeCandidate);
+    mergeList[mergeType]=mergeCandidate;
     if (mergeCandidate != NULL)
     {
       numValidMergeCandidates++;
@@ -302,11 +307,13 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* b
 }
 
 
-Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, std::vector<SAOBlkParam*>& mergeList)
+Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
 {
-  for(Int compIdx=0; compIdx< NUM_SAO_COMPONENTS; compIdx++)
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
-    SAOOffset& offsetParam = recParam[compIdx];
+    const ComponentID component = ComponentID(compIdx);
+    SAOOffset& offsetParam = recParam[component];
 
     if(offsetParam.modeIdc == SAO_MODE_OFF)
     {
@@ -317,7 +324,7 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, std
     {
     case SAO_MODE_NEW:
       {
-        invertQuantOffsets(compIdx, offsetParam.typeIdc, offsetParam.typeAuxInfo, offsetParam.offset, offsetParam.offset);
+        invertQuantOffsets(component, offsetParam.typeIdc, offsetParam.typeAuxInfo, offsetParam.offset, offsetParam.offset);
       }
       break;
     case SAO_MODE_MERGE:
@@ -325,7 +332,7 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, std
         SAOBlkParam* mergeTarget = mergeList[offsetParam.typeIdc];
         assert(mergeTarget != NULL);
 
-        offsetParam = (*mergeTarget)[compIdx];
+        offsetParam = (*mergeTarget)[component];
       }
       break;
     default:
@@ -340,16 +347,21 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParam(SAOBlkParam& recParam, std
 
 Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam* saoBlkParams)
 {
-  m_picSAOEnabled[SAO_Y] = m_picSAOEnabled[SAO_Cb] = m_picSAOEnabled[SAO_Cr] = false;
+  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
+  {
+    m_picSAOEnabled[compIdx] = false;
+  }
+
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
   for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
   {
-    std::vector<SAOBlkParam*> mergeList;
+    SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES] = { NULL };
     getMergeList(pic, ctu, saoBlkParams, mergeList);
 
     reconstructBlkSAOParam(saoBlkParams[ctu], mergeList);
 
-    for(Int compIdx=0; compIdx< NUM_SAO_COMPONENTS; compIdx++)
+    for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
       if(saoBlkParams[ctu][compIdx].modeIdc != SAO_MODE_OFF)
       {
@@ -357,22 +369,20 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
       }
     }
   }
-
-
 }
 
 
-Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset  
+Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset
                                           , Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                                           , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail)
 {
   if(m_lineBufWidth != m_maxCUWidth)
   {
     m_lineBufWidth = m_maxCUWidth;
-    
+
     if (m_signLineBuf1) delete[] m_signLineBuf1; m_signLineBuf1 = NULL;
     m_signLineBuf1 = new Char[m_lineBufWidth+1];
-    
+
     if (m_signLineBuf2) delete[] m_signLineBuf2; m_signLineBuf2 = NULL;
     m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
@@ -518,7 +528,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
           edgeType =  signDown + signUpLine[x];
           resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
 
-          signDownLine[x+1] = -signDown; 
+          signDownLine[x+1] = -signDown;
         }
 #if SAO_SGN_FUNC
         signDownLine[startX] = (Char)sgn(srcLineBelow[startX] - srcLine[startX-1]);
@@ -600,7 +610,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
 #endif
           edgeType =  signDown + signUpLine[x];
           resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-          signUpLine[x-1] = -signDown; 
+          signUpLine[x-1] = -signDown;
         }
 #if SAO_SGN_FUNC
         signUpLine[endX-1] = (Char)sgn(srcLineBelow[endX-1] - srcLine[endX]);
@@ -629,7 +639,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
     break;
   case SAO_TYPE_BO:
     {
-      Int shiftBits = ((compIdx == SAO_Y)?g_bitDepthY:g_bitDepthC)- NUM_SAO_BO_CLASSES_LOG2;
+      Int shiftBits = g_bitDepth[toChannelType(compIdx)] - NUM_SAO_BO_CLASSES_LOG2;
       for (y=0; y< height; y++)
       {
         for (x=0; x< width; x++)
@@ -648,22 +658,19 @@ Void TComSampleAdaptiveOffset::offsetBlock(Int compIdx, Int typeIdx, Int* offset
       exit(-1);
     }
   }
-
-
 }
 
 Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic)
 {
   Bool isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail;
 
-  if( 
-    (saoblkParam[SAO_Y ].modeIdc == SAO_MODE_OFF) &&
-    (saoblkParam[SAO_Cb].modeIdc == SAO_MODE_OFF) &&
-    (saoblkParam[SAO_Cr].modeIdc == SAO_MODE_OFF)
-    )
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  Bool bAllOff=true;
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
-    return;
+    if (saoblkParam[compIdx].modeIdc != SAO_MODE_OFF) bAllOff=false;
   }
+  if (bAllOff) return;
 
   //block boundary availability
   pPic->getPicSym()->deriveLoopFilterBoundaryAvailibility(ctu, isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail);
@@ -673,27 +680,28 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
   Int height = (yPos + m_maxCUHeight > m_picHeight)?(m_picHeight- yPos):m_maxCUHeight;
   Int width  = (xPos + m_maxCUWidth  > m_picWidth )?(m_picWidth - xPos):m_maxCUWidth;
 
-  for(Int compIdx= 0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
+    const ComponentID component = ComponentID(compIdx);
     SAOOffset& ctbOffset = saoblkParam[compIdx];
 
     if(ctbOffset.modeIdc != SAO_MODE_OFF)
     {
-      Bool isLuma     = (compIdx == SAO_Y);
-      Int  formatShift= isLuma?0:1;
+      const UInt componentScaleX = getComponentScaleX(component, pPic->getChromaFormat());
+      const UInt componentScaleY = getComponentScaleY(component, pPic->getChromaFormat());
 
-      Int  blkWidth   = (width  >> formatShift);
-      Int  blkHeight  = (height >> formatShift);
-      Int  blkYPos    = (yPos   >> formatShift);
-      Int  blkXPos    = (xPos   >> formatShift);
+      Int  blkWidth   = (width  >> componentScaleX);
+      Int  blkHeight  = (height >> componentScaleY);
+      Int  blkXPos    = (xPos   >> componentScaleX);
+      Int  blkYPos    = (yPos   >> componentScaleY);
 
-      Int  srcStride = isLuma?srcYuv->getStride():srcYuv->getCStride();
-      Pel* srcBlk    = getPicBuf(srcYuv, compIdx)+ (yPos >> formatShift)*srcStride+ (xPos >> formatShift);
+      Int  srcStride  = srcYuv->getStride(component);
+      Pel* srcBlk     = srcYuv->getAddr(component) + blkYPos*srcStride + blkXPos;
 
-      Int  resStride  = isLuma?resYuv->getStride():resYuv->getCStride();
-      Pel* resBlk     = getPicBuf(resYuv, compIdx)+ blkYPos*resStride+ blkXPos;
+      Int  resStride  = resYuv->getStride(component);
+      Pel* resBlk     = resYuv->getAddr(component) + blkYPos*resStride + blkXPos;
 
-      offsetBlock( compIdx, ctbOffset.typeIdc, ctbOffset.offset
+      offsetBlock( component, ctbOffset.typeIdc, ctbOffset.offset
                   , srcBlk, resBlk, srcStride, resStride, blkWidth, blkHeight
                   , isLeftAvail, isRightAvail
                   , isAboveAvail, isBelowAvail
@@ -708,10 +716,14 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv
 
 Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
 {
-  if(!m_picSAOEnabled[SAO_Y] && !m_picSAOEnabled[SAO_Cb] && !m_picSAOEnabled[SAO_Cr])
+  const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
+  Bool bAllDisabled=true;
+  for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
   {
-    return;
+    if (m_picSAOEnabled[compIdx]) bAllDisabled=false;
   }
+  if (bAllDisabled) return;
+
   TComPicYuv* resYuv = pDecPic->getPicYuvRec();
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);
@@ -721,37 +733,6 @@ Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
   } //ctu
 }
 
-
-Pel* TComSampleAdaptiveOffset::getPicBuf(TComPicYuv* pPicYuv, Int compIdx)
-{
-  Pel* pBuf = NULL;
-  switch(compIdx)
-  {
-  case SAO_Y:
-    {
-      pBuf = pPicYuv->getLumaAddr();
-    }
-    break;
-  case SAO_Cb:
-    {
-      pBuf = pPicYuv->getCbAddr();
-    }
-    break;
-  case SAO_Cr:
-    {
-      pBuf = pPicYuv->getCrAddr();
-    }
-    break;
-  default:
-    {
-      printf("Not a legal component ID for SAO\n");
-      assert(0);
-      exit(-1);
-    }
-  }
-
-  return pBuf;
-}
 
 /** PCM LF disable process.
  * \param pcPic picture (TComPic) pointer
@@ -764,7 +745,7 @@ Void TComSampleAdaptiveOffset::PCMLFDisableProcess (TComPic* pcPic)
   xPCMRestoration(pcPic);
 }
 
-/** Picture-level PCM restoration. 
+/** Picture-level PCM restoration.
  * \param pcPic picture (TComPic) pointer
  * \returns Void
  */
@@ -778,12 +759,12 @@ Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
     {
       TComDataCU* pcCU = pcPic->getCU(uiCUAddr);
 
-      xPCMCURestoration(pcCU, 0, 0); 
-    } 
+      xPCMCURestoration(pcCU, 0, 0);
+    }
   }
 }
 
-/** PCM CU restoration. 
+/** PCM CU restoration.
  * \param pcCU pointer to current CU
  * \param uiAbsPartIdx part index
  * \param uiDepth CU depth
@@ -811,78 +792,54 @@ Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZ
   // restore PCM samples
   if ((pcCU->getIPCMFlag(uiAbsZorderIdx)&& pcPic->getSlice(0)->getSPS()->getPCMFilterDisableFlag()) || pcCU->isLosslessCoded( uiAbsZorderIdx))
   {
-    xPCMSampleRestoration (pcCU, uiAbsZorderIdx, uiDepth, TEXT_LUMA    );
-    xPCMSampleRestoration (pcCU, uiAbsZorderIdx, uiDepth, TEXT_CHROMA_U);
-    xPCMSampleRestoration (pcCU, uiAbsZorderIdx, uiDepth, TEXT_CHROMA_V);
+    const UInt numComponents=pcPic->getNumberValidComponents();
+    for(UInt comp=0; comp<numComponents; comp++)
+    {
+      xPCMSampleRestoration (pcCU, uiAbsZorderIdx, uiDepth, ComponentID(comp));
+    }
   }
 }
 
-/** PCM sample restoration. 
+/** PCM sample restoration.
  * \param pcCU pointer to current CU
  * \param uiAbsPartIdx part index
  * \param uiDepth CU depth
  * \param ttText texture component type
  * \returns Void
  */
-Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText)
+Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID)
 {
-  TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
-  Pel* piSrc;
-  Pel* piPcm;
-  UInt uiStride;
-  UInt uiWidth;
-  UInt uiHeight;
-  UInt uiPcmLeftShiftBit; 
-  UInt uiX, uiY;
-  UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
-  UInt uiLumaOffset   = uiMinCoeffSize*uiAbsZorderIdx;
-  UInt uiChromaOffset = uiLumaOffset>>2;
-
-  if( ttText == TEXT_LUMA )
+#if SCM__R0348_PALETTE_MODE
+  if (pcCU->getPLTModeFlag(uiAbsZorderIdx))
   {
-    piSrc = pcPicYuvRec->getLumaAddr( pcCU->getAddr(), uiAbsZorderIdx);
-    piPcm = pcCU->getPCMSampleY() + uiLumaOffset;
-    uiStride  = pcPicYuvRec->getStride();
-    uiWidth  = (g_uiMaxCUWidth >> uiDepth);
-    uiHeight = (g_uiMaxCUHeight >> uiDepth);
-    if ( pcCU->isLosslessCoded(uiAbsZorderIdx) && !pcCU->getIPCMFlag(uiAbsZorderIdx) )
-    {
-      uiPcmLeftShiftBit = 0;
-    }
-    else
-    {
-      uiPcmLeftShiftBit = g_bitDepthY - pcCU->getSlice()->getSPS()->getPCMBitDepthLuma();
-    }
+    return;
+  }
+#endif
+        TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
+        UInt uiPcmLeftShiftBit;
+  const UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
+  const UInt csx=pcPicYuvRec->getComponentScaleX(compID);
+  const UInt csy=pcPicYuvRec->getComponentScaleY(compID);
+  const UInt uiOffset   = (uiMinCoeffSize*uiAbsZorderIdx)>>(csx+csy);
+
+        Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getAddr(), uiAbsZorderIdx);
+  const Pel *piPcm = pcCU->getPCMSample(compID) + uiOffset;
+  const UInt uiStride  = pcPicYuvRec->getStride(compID);
+  const UInt uiWidth  = ((g_uiMaxCUWidth >> uiDepth) >> csx);
+  const UInt uiHeight = ((g_uiMaxCUWidth >> uiDepth) >> csy);
+
+  if ( pcCU->isLosslessCoded(uiAbsZorderIdx) && !pcCU->getIPCMFlag(uiAbsZorderIdx) )
+  {
+    uiPcmLeftShiftBit = 0;
   }
   else
   {
-    if( ttText == TEXT_CHROMA_U )
-    {
-      piSrc = pcPicYuvRec->getCbAddr( pcCU->getAddr(), uiAbsZorderIdx );
-      piPcm = pcCU->getPCMSampleCb() + uiChromaOffset;
-    }
-    else
-    {
-      piSrc = pcPicYuvRec->getCrAddr( pcCU->getAddr(), uiAbsZorderIdx );
-      piPcm = pcCU->getPCMSampleCr() + uiChromaOffset;
-    }
-
-    uiStride = pcPicYuvRec->getCStride();
-    uiWidth  = ((g_uiMaxCUWidth >> uiDepth)/2);
-    uiHeight = ((g_uiMaxCUWidth >> uiDepth)/2);
-    if ( pcCU->isLosslessCoded(uiAbsZorderIdx) && !pcCU->getIPCMFlag(uiAbsZorderIdx) )
-    {
-      uiPcmLeftShiftBit = 0;
-    }
-    else
-    {
-      uiPcmLeftShiftBit = g_bitDepthC - pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
-    }
+    uiPcmLeftShiftBit = g_bitDepth[toChannelType(compID)] - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
   }
 
-  for( uiY = 0; uiY < uiHeight; uiY++ )
+  for(UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
-    for( uiX = 0; uiX < uiWidth; uiX++ )
+    for(UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
       piSrc[uiX] = (piPcm[uiX] << uiPcmLeftShiftBit);
     }

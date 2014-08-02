@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
  * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
@@ -56,31 +56,42 @@
 class TAppDecCfg
 {
 protected:
-  Char*         m_pchBitstreamFile;                   ///< input bitstream file name
-  Char*         m_pchReconFile;                       ///< output reconstruction file name
-  Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
-  Int           m_outputBitDepthY;                     ///< bit depth used for writing output (luma)
-  Int           m_outputBitDepthC;                     ///< bit depth used for writing output (chroma)t
+  Char*         m_pchBitstreamFile;                     ///< input bitstream file name
+  Char*         m_pchReconFile;                         ///< output reconstruction file name
+  Int           m_iSkipFrame;                           ///< counter for frames prior to the random access point to skip
+  Int           m_outputBitDepth[MAX_NUM_CHANNEL_TYPE]; ///< bit depth used for writing output
+  InputColourSpaceConversion m_outputColourSpaceConvert;
 
   Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
-
+  Bool          m_decodedNoDisplaySEIEnabled;         ///< Enable(true)/disable(false) writing only pictures that get displayed based on the no display SEI message
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
-  Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
+  Int           m_respectDefDispWindow;               ///< Only output content inside the default display window
+#if RExt__O0043_BEST_EFFORT_DECODING
+  UInt          m_forceDecodeBitDepth;                ///< if non-zero, force the bit depth at the decoder (best effort decoding)
+#endif
+  std::string   m_outputDecodedSEIMessagesFilename;   ///< filename to output decoded SEI messages to. If '-', then use stdout. If empty, do not output details.
 
 public:
   TAppDecCfg()
   : m_pchBitstreamFile(NULL)
-  , m_pchReconFile(NULL) 
+  , m_pchReconFile(NULL)
   , m_iSkipFrame(0)
-  , m_outputBitDepthY(0)
-  , m_outputBitDepthC(0)
+  , m_outputColourSpaceConvert(IPCOLOURSPACE_UNCHANGED)
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
+  , m_decodedNoDisplaySEIEnabled(false)
   , m_respectDefDispWindow(0)
-  {}
+#if RExt__O0043_BEST_EFFORT_DECODING
+  , m_forceDecodeBitDepth(0)
+#endif
+  {
+    for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+      m_outputBitDepth[channelTypeIndex] = 0;
+  }
+
   virtual ~TAppDecCfg() {}
-  
+
   Bool  parseCfg        ( Int argc, Char* argv[] );   ///< initialize option class from configuration
 };
 
