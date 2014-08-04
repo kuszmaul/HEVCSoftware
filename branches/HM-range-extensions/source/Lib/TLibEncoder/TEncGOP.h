@@ -67,9 +67,6 @@ class TEncTop;
 // Class definition
 // ====================================================================================================================
 
-/// GOP encoder class
-static const UInt MAX_NUM_LONG_TERM_REF_PICS=33;
-
 class TEncGOP
 {
 private:

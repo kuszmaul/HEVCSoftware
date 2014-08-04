@@ -232,6 +232,8 @@
 #define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4 // NOTE: RExt - new definition
 #define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8 // NOTE: RExt - new definition
 
+#define MAX_NUM_LONG_TERM_REF_PICS                       33
+
 
 // ====================================================================================================================
 // RExt control settings
