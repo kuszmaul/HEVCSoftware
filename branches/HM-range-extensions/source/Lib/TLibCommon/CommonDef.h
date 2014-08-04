@@ -94,7 +94,7 @@
 #define NVM_ONOS "[Unk-OS]"
 #endif
 
-#define NVM_BITS          "[%d bit] ", (sizeof(void*) == 8 ? 64 : 32) ///< used for checking 64-bit O/S
+#define NVM_BITS          "[%d bit] ", (sizeof(Void*) == 8 ? 64 : 32) ///< used for checking 64-bit O/S
 
 #ifndef NULL
 #define NULL              0
@@ -138,7 +138,7 @@ template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a)
 template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
 template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
 
-template <typename T> inline void Check3( T minVal, T maxVal, T a)
+template <typename T> inline Void Check3( T minVal, T maxVal, T a)
 {
   if ((a > maxVal) || (a < minVal))
   {

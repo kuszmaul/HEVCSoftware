@@ -1042,7 +1042,7 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowe
 }
 
 
-void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
+Void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
 {
   TComDataCU* pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();

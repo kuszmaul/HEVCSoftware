@@ -242,7 +242,7 @@ class TComCodingStatistics
     TComCodingStatistics() : data()
     { }
 
-    static Void OutputLine(const char *pName, const char sep, UInt width, const char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
+    static Void OutputLine(const Char *pName, const Char sep, UInt width, const Char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
     {
       if (width==0)
         OutputLine(pName, sep, "-", pSubClassStr, sCABAC, sEP);
@@ -251,20 +251,20 @@ class TComCodingStatistics
           sep=='~'?'[':' ', pName, sep, 1<<width, pSubClassStr,
               sCABAC.count, sCABAC.sum, sCABAC.bits, sEP.count, sEP.sum, sEP.bits, sCABAC.bits+sEP.bits, (sCABAC.bits+sEP.bits)/8, sep=='~'?']':' ');
     }
-    static Void OutputLine(const char *pName, const char sep, const char *pWidthString, const char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
+    static Void OutputLine(const Char *pName, const Char sep, const Char *pWidthString, const Char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
     {
       printf("%c%-45s%c  %6s %6s %12lld %12lld %12lld %12lld %12lld %12lld %12lld (%12lld)%c\n",
           sep=='~'?'[':' ', pName, sep, pWidthString, pSubClassStr,
               sCABAC.count, sCABAC.sum, sCABAC.bits, sEP.count, sEP.sum, sEP.bits, sCABAC.bits+sEP.bits, (sCABAC.bits+sEP.bits)/8, sep=='~'?']':' ');
     }
-    static Void OutputLine(const char *pName, const char sep, const char *pWidthString, const char *pSubClassStr,  const SStat &sEP)
+    static Void OutputLine(const Char *pName, const Char sep, const Char *pWidthString, const Char *pSubClassStr,  const SStat &sEP)
     {
       printf("%c%-45s%c  %6s %6s %12s %12s %12s %12lld %12lld %12lld %12lld (%12lld)%c\n",
           sep=='~'?'[':' ', pName, sep, pWidthString, pSubClassStr,
               "", "", "", sEP.count, sEP.sum, sEP.bits, sEP.bits, (sEP.bits)/8, sep=='~'?']':' ');
     }
 
-    static Void OutputDashedLine(const char *pText)
+    static Void OutputDashedLine(const Char *pText)
     {
       printf("--%s",pText);
       UInt tot=0;
@@ -308,7 +308,7 @@ class TComCodingStatistics
       {
         SStat cabacSubTotal, epSubTotal;
         Bool bHadClassifiedEntry=false;
-        const char *pName=getName(TComCodingStatisticsType(i));
+        const Char *pName=getName(TComCodingStatisticsType(i));
 
         for(UInt c=0; c<CODING_STATS_NUM_SUBCLASSES; c++)
         {
@@ -420,7 +420,7 @@ class TComCodingStatistics
     }
 
     static const TComCodingStatisticsData &GetStatistics()         { return GetSingletonInstance().data; }
-    static void SetStatistics(const TComCodingStatisticsData &src) { GetSingletonInstance().data=src; }
+    static Void SetStatistics(const TComCodingStatisticsData &src) { GetSingletonInstance().data=src; }
 
     static SStat &GetStatisticEP(const TComCodingStatisticsClassType &stat) { return GetSingletonInstance().data.statistics_ep[stat.type][stat.subClass]; }
 

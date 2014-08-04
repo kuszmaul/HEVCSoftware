@@ -237,7 +237,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
       Int* ptmp = m_pcCfg->getTMISEIStartOfCodedInterva();
       if(ptmp)
       {
-        for(int i=0; i<num;i++)
+        for(Int i=0; i<num;i++)
         {
           seiToneMappingInfo->m_startOfCodedInterval[i] = ptmp[i];
         }
@@ -253,7 +253,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
       Int* ptmptarget = m_pcCfg->getTMISEITargetPivotValue();
       if(ptmpcoded&&ptmptarget)
       {
-        for(int i=0; i<(seiToneMappingInfo->m_numPivots);i++)
+        for(Int i=0; i<(seiToneMappingInfo->m_numPivots);i++)
         {
           seiToneMappingInfo->m_codedPivotValue[i]=ptmpcoded[i];
           seiToneMappingInfo->m_targetPivotValue[i]=ptmptarget[i];
@@ -488,7 +488,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     SEITimeCode sei_time_code;
     //  Set data as per command line options
     sei_time_code.numClockTs = m_pcCfg->getNumberOfTimesets();
-    for(int i = 0; i < sei_time_code.numClockTs; i++)
+    for(Int i = 0; i < sei_time_code.numClockTs; i++)
       sei_time_code.timeSetArray[i] = m_pcCfg->getTimeSet(i);
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
@@ -643,7 +643,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     UInt uiColDir = 1;
     //-- For time output for each slice
-    long iBeforeTime = clock();
+    clock_t iBeforeTime = clock();
 
     //select uiColDir
     Int iCloseLeft=1, iCloseRight=-1;
@@ -1374,7 +1374,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           accumNalsDU                                  = new UInt[ numDU ];
         }
       }
-      pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
+      pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<Double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
       pictureTimingSEI.m_picDpbOutputDelay = pcSlice->getSPS()->getNumReorderPics(pcSlice->getSPS()->getMaxTLayers()-1) + pcSlice->getPOC() - m_totalCoded;
 #if EFFICIENT_FIELD_IRAP
       if(IRAPGOPid > 0 && IRAPGOPid < m_iGopSize)
@@ -2310,7 +2310,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 // ====================================================================================================================
 
 
-Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField )
+Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Bool isField )
 {
   assert( iNumPicRcvd > 0 );
   //  Exception for the first frames

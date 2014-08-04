@@ -117,7 +117,7 @@ public:
   Void  create  ();
   Void  destroy ();
 
-  void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
+  Void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
 
   Void  init();
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
@@ -132,7 +132,7 @@ public:
   Void  checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic);
 
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
-  Void  setNoOutputPriorPicsFlag (bool val) { m_isNoOutputPriorPics = val; }
+  Void  setNoOutputPriorPicsFlag (Bool val) { m_isNoOutputPriorPics = val; }
 #endif
 #if RExt__O0043_BEST_EFFORT_DECODING
   Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }

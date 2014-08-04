@@ -84,9 +84,9 @@ protected:
 
   // file I/O
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
-  void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
-  void printRateSummary();
-  void printChromaFormat();
+  Void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
+  Void printRateSummary();
+  Void printChromaFormat();
 
 public:
   TAppEncTop();

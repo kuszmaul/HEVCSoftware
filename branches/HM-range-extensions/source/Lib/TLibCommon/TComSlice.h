@@ -1323,7 +1323,7 @@ public:
   Int       getPOC          ()                          { return  m_iPOC;           }
   Int       getSliceQp      ()                          { return  m_iSliceQp;           }
   Bool      getDependentSliceSegmentFlag()             const { return m_dependentSliceSegmentFlag; }
-  void      setDependentSliceSegmentFlag(Bool val)           { m_dependentSliceSegmentFlag = val; }
+  Void      setDependentSliceSegmentFlag(Bool val)           { m_dependentSliceSegmentFlag = val; }
 #if ADAPTIVE_QP_SELECTION
   Int       getSliceQpBase  ()                         const { return  m_iSliceQpBase;       }
 #endif

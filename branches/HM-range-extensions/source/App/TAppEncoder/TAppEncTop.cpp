@@ -291,7 +291,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
   m_cTEncTop.setTimeCodeSEIEnabled                                ( m_timeCodeSEIEnabled );
   m_cTEncTop.setNumberOfTimeSets                                  ( m_timeCodeSEINumTs );
-  for(int i = 0; i < m_timeCodeSEINumTs; i++) { m_cTEncTop.setTimeSet(m_timeSetArray[i], i); }
+  for(Int i = 0; i < m_timeCodeSEINumTs; i++) { m_cTEncTop.setTimeSet(m_timeSetArray[i], i); }
   m_cTEncTop.setKneeSEIEnabled                                    ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                                         ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag                                 ( m_kneeSEICancelFlag );
@@ -623,7 +623,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 /**
  *
  */
-void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& annexBsizes)
+Void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& annexBsizes)
 {
   AccessUnit::const_iterator it_au = au.begin();
   vector<UInt>::const_iterator it_stats = annexBsizes.begin();
@@ -661,7 +661,7 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
   }
 }
 
-void TAppEncTop::printRateSummary()
+Void TAppEncTop::printRateSummary()
 {
   Double time = (Double) m_iFrameRcvd / m_iFrameRate;
   printf("Bytes written to file: %u (%.3f kbps)\n", m_totalBytes, 0.008 * m_totalBytes / time);
@@ -670,7 +670,7 @@ void TAppEncTop::printRateSummary()
 #endif
 }
 
-void TAppEncTop::printChromaFormat()
+Void TAppEncTop::printChromaFormat()
 {
   std::cout << std::setw(43) << "Input ChromaFormatIDC = ";
   switch (m_InputChromaFormatIDC)

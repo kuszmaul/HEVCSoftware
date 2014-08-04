@@ -58,7 +58,7 @@ using namespace std;
  * of std::ios_base::failure is thrown.  The contsnts of stats will
  * be correct at this point.
  */
-static void
+static Void
 _byteStreamNALUnit(
   InputByteStream& bs,
   vector<uint8_t>& nalUnit,

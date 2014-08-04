@@ -1126,7 +1126,7 @@ Void TDecSbac::parseQtCbf( TComTU &rTu, const ComponentID compID, const Bool low
 }
 
 
-void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
+Void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
 {
   TComDataCU* pcCU=rTu.getCU();
   UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU(component);

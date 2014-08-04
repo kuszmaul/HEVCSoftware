@@ -108,7 +108,7 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
     chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
     chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
 
-    chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[int(compID)-1];
+    chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
   }
 
   *this = QpParam(cu.getQP( 0 ),
@@ -233,7 +233,7 @@ Void TComTrQuant::clearSliceARLCnt()
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
+Void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
 {
   UInt i,j,k;
   TCoeff iSum;
@@ -306,7 +306,7 @@ void xTr(Int bitDepth, Pel *block, TCoeff *coeff, UInt uiStride, UInt uiTrSize, 
  *  \param uiTrSize transform size (uiTrSize x uiTrSize)
  *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
  */
-void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
+Void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize, Bool useDST, const Int maxTrDynamicRange)
 {
   UInt i,j,k;
   TCoeff iSum;
@@ -384,7 +384,7 @@ void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
+Void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j;
   TCoeff E[2],O[2];
@@ -410,7 +410,7 @@ void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 
 // Fast DST Algorithm. Full matrix multiplication for DST and Fast DST algorithm
 // give identical results
-void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, output coeff
+Void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, output coeff
 {
   Int i;
   TCoeff c[4];
@@ -426,7 +426,7 @@ void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, ou
     for (Int row = 0; row < 4; row++)
     {
       TCoeff result = 0;
-      for (int column = 0; column < 4; column++)
+      for (Int column = 0; column < 4; column++)
         result += c[column] * g_as_DST_MAT_4[TRANSFORM_FORWARD][row][column]; // use the defined matrix, rather than hard-wired numbers
 
       coeff[(row * 4) + i] = rightShift((result + rnd_factor), shift);
@@ -434,7 +434,7 @@ void fastForwardDst(TCoeff *block, TCoeff *coeff, Int shift)  // input block, ou
   }
 }
 
-void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMinimum, const TCoeff outputMaximum)  // input tmp, output block
+Void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMinimum, const TCoeff outputMaximum)  // input tmp, output block
 {
   Int i;
   TCoeff c[4];
@@ -452,7 +452,7 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMi
       TCoeff &result = block[(i * 4) + column];
 
       result = 0;
-      for (int row = 0; row < 4; row++)
+      for (Int row = 0; row < 4; row++)
         result += c[row] * g_as_DST_MAT_4[TRANSFORM_INVERSE][row][column]; // use the defined matrix, rather than hard-wired numbers
 
       result = Clip3( outputMinimum, outputMaximum, rightShift((result + rnd_factor), shift));
@@ -465,7 +465,7 @@ void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMi
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
+Void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
   Int j;
   TCoeff E[2],O[2];
@@ -495,7 +495,7 @@ void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, con
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
+Void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
   TCoeff E[4],O[4];
@@ -536,7 +536,7 @@ void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
+Void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
   Int j,k;
   TCoeff E[4],O[4];
@@ -577,7 +577,7 @@ void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, con
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
+Void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
   TCoeff E[8],O[8];
@@ -635,7 +635,7 @@ void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
+Void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
   Int j,k;
   TCoeff E[8],O[8];
@@ -689,7 +689,7 @@ void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, co
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
+Void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
   Int j,k;
   TCoeff E[16],O[16];
@@ -762,7 +762,7 @@ void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
  */
-void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
+Void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
   Int j,k;
   TCoeff E[16],O[16];
@@ -833,7 +833,7 @@ void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, co
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
+Void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
 {
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_FORWARD];
 
@@ -891,7 +891,7 @@ void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
 *  \param iWidth input data (width of transform)
 *  \param iHeight input data (height of transform)
 */
-void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
+Void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
 {
   static const Int TRANSFORM_MATRIX_SHIFT = g_transformMatrixShift[TRANSFORM_INVERSE];
 

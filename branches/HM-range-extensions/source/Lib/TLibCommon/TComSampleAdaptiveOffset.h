@@ -57,7 +57,7 @@
 extern UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
 
 #if SAO_SGN_FUNC
-template <typename T> int sgn(T val) 
+template <typename T> Int sgn(T val)
 {
   return (T(0) < val) - (val < T(0));
 }

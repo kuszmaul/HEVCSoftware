@@ -226,10 +226,10 @@ public:
 
   Int    estimatePicQP    ( Double lambda, list<TEncRCPic*>& listPreviousPictures );
   Int    getRefineBitsForIntra(Int orgBits);
-  Double calculateLambdaIntra(double alpha, double beta, double MADPerPixel, double bitsPerPixel);
+  Double calculateLambdaIntra(Double alpha, Double beta, Double MADPerPixel, Double bitsPerPixel);
   Double estimatePicLambda( list<TEncRCPic*>& listPreviousPictures, SliceType eSliceType);
 
-  Void   updateAlphaBetaIntra(double *alpha, double *beta);
+  Void   updateAlphaBetaIntra(Double *alpha, Double *beta);
 
   Double getLCUTargetBpp(SliceType eSliceType);
   Double getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP);
