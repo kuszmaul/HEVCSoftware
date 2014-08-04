@@ -136,7 +136,6 @@ Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
   return (mergeCtbInSliceSeg && mergeCtbInTile);
 }
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
 UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
 {
   const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
@@ -164,7 +163,6 @@ UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressIn
   }
   return uiSubStrm;
 }
-#endif
 
 
 //! \}

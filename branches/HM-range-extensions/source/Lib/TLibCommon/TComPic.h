@@ -155,9 +155,7 @@ public:
 
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   UInt          getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice);
-#endif
 
   /* field coding parameters*/
 

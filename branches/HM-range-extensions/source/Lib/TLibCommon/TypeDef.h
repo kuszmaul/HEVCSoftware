@@ -265,7 +265,6 @@
 //------------------------------------------------
 
 #define RExt__R0105_MOTION_ESTIMATION_STARTING_POINT                           2 ///< 0 = disable change to motion estimation starting point (HM compatible), 1 = enable change to motion estimation starting point, 2 (temporary default) = enable, but only if profile is not a version 1 profile (for backwards compatibility reasons)
-#define RExt__R0128_HIGH_THROUGHPUT_PROFILE                                    1 ///< 0 = disable high throughput profile changes, 1 (default) = enable High Throughput 4:4:4 16 Intra profile changes
 #define RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT                      1 ///< 0 = disable change to chroma resampling filter hint SEI, 1 (default) = enable change to chroma resampling filter hint SEI.
 #define RExt__MEETING_NOTES_MONOCHROME_PROFILE                                 1 ///< 0 = disable change for monochrome (8-bit) profile, 1 (default) = enable change to support monochrome (8-bit) profile.
 
@@ -664,11 +663,7 @@ namespace Profile
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     HIGHTHROUGHPUTREXT = 5
-#else
-    HIGHREXT = 30 // Placeholder profile for development
-#endif
   };
 }
 
