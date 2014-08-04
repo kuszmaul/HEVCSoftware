@@ -987,9 +987,6 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
   if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
   {
     sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "target_format_idc"); sei.m_targetFormatIdc = uiCode;
-#if !RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT
-    sei_read_flag( pDecodedMessageOutputStream, uiCode, "perfect_reconstruction_flag"); sei.m_perfectReconstructionFlag = uiCode;
-#endif
     if(sei.m_verChromaFilterIdc == 1)
     {
       sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "num_vertical_filters"); sei.m_numVerticalFilters = uiCode;
