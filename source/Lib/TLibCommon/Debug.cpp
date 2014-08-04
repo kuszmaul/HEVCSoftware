@@ -175,7 +175,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__R0105_MOTION_ESTIMATION_STARTING_POINT,                      settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__R0128_HIGH_THROUGHPUT_PROFILE,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT,                 settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__MEETING_NOTES_MONOCHROME_PROFILE,                            settingNameWidth, settingValueWidth);
 

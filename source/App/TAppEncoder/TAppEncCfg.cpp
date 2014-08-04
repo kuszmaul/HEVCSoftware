@@ -63,11 +63,7 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   MAIN10 = 2,
   MAINSTILLPICTURE = 3,
   MAINREXT = 4,
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   HIGHTHROUGHPUTREXT = 5, // Placeholder profile for development
-#else
-  HIGHREXT = 30, // Placeholder profile for development
-#endif
   // The following are RExt profiles, which would map to the MAINREXT profile idc.
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
@@ -221,16 +217,12 @@ static const struct MapStrToProfile
 }
 strToProfile[] =
 {
-  {"none",                 Profile::NONE            },
-  {"main",                 Profile::MAIN            },
-  {"main10",               Profile::MAIN10          },
-  {"main-still-picture",   Profile::MAINSTILLPICTURE},
-  {"main-RExt",            Profile::MAINREXT        },
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
-  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT  }
-#else
-  {"high-RExt",            Profile::HIGHREXT        }
-#endif
+  {"none",                 Profile::NONE               },
+  {"main",                 Profile::MAIN               },
+  {"main10",               Profile::MAIN10             },
+  {"main-still-picture",   Profile::MAINSTILLPICTURE   },
+  {"main-RExt",            Profile::MAINREXT           },
+  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT }
 };
 
 static const struct MapStrToExtendedProfile
@@ -245,11 +237,7 @@ strToExtendedProfile[] =
     {"main10",             MAIN10           },
     {"main-still-picture", MAINSTILLPICTURE },
     {"main-RExt",          MAINREXT         },
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     {"high-throughput-RExt", HIGHTHROUGHPUTREXT },
-#else
-    {"high-RExt",          HIGHREXT         },
-#endif
 #if RExt__MEETING_NOTES_MONOCHROME_PROFILE
     {"monochrome",         MONOCHROME_8     },
 #endif
@@ -1163,16 +1151,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_profile = Profile::Name(extendedProfile);
   }
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile == Profile::HIGHTHROUGHPUTREXT )
   {
     if (m_bitDepthConstraint == 0) m_bitDepthConstraint = 16;
     m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? CHROMA_444 : numberToChromaFormat(tmpConstraintChromaFormat);
   }
   else if (m_profile == Profile::MAINREXT)
-#else
-  if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
-#endif
   {
     if (m_bitDepthConstraint == 0 && tmpConstraintChromaFormat == 0)
     {
@@ -1464,20 +1448,12 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT)
-#else
-  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT)
-#endif
   {
     // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHTHROUGHPUTREXT, "AlignCABACBeforeBypass must not be enabled unless the high throughput profile is being used.");
-#else
-    xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
-#endif
     if (m_profile == Profile::MAINREXT)
     {
       const UInt intraIdx = m_intraConstraintFlag ? 1:0;
@@ -1508,14 +1484,12 @@ Void TAppEncCfg::xCheckParameter()
         fprintf(stderr, "********************************************************************************************************\n");
       }
     }
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     else
     {
       xConfirmPara( m_chromaFormatConstraint != CHROMA_444, "chroma format constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
       xConfirmPara( m_bitDepthConstraint     != 16,         "bit depth constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
       xConfirmPara( m_intraConstraintFlag    != 1,          "intra constraint flag must be 1 in the High Throughput 4:4:4 16-bit Intra profile.");
     }
-#endif
   }
   else
   {
@@ -1684,14 +1658,10 @@ Void TAppEncCfg::xCheckParameter()
   }
 
   Bool tileFlag = (m_numTileColumnsMinus1 > 0 || m_numTileRowsMinus1 > 0 );
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile!=Profile::HIGHTHROUGHPUTREXT)
   {
     xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together, except in the High Throughput Intra 4:4:4 16 profile");
   }
-#else
-  xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
-#endif
 
   xConfirmPara( m_iSourceWidth  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_iSourceHeight % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");

@@ -1761,11 +1761,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 uiTotalCodedSize += pcSubstreamsOut[ui].getNumberOfWrittenBits();
 
                 Bool bNextSubstreamInNewTile = ((ui+1) < iNumSubstreams)&& ((ui+1)%uiNumSubstreamsPerTile == 0);
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
                 if (bNextSubstreamInNewTile &&  !pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
-#else
-                if (bNextSubstreamInNewTile)
-#endif
                 {
                   pcSlice->setTileLocation(ui/uiNumSubstreamsPerTile, pcSlice->getTileOffstForMultES()+(uiTotalCodedSize>>3));
                 }
@@ -1782,7 +1778,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
               // Substreams...
               TComOutputBitstream *pcOut = pcBitstreamRedirect;
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
               Int numZeroSubstreamsAtStartOfSlice = 0;
               Int numSubstreamsToCode = pcSlice->getPPS()->getNumSubstreams();
               if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
@@ -1796,20 +1791,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               {
                 pcOut->addSubstream(&pcSubstreamsOut[ui+numZeroSubstreamsAtStartOfSlice]);
               }
-#else
-            Int offs = 0;
-            Int nss = pcSlice->getPPS()->getNumSubstreams();
-            if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
-            {
-              // 1st line present for WPP.
-              offs = pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU()/pcSlice->getPic()->getFrameWidthInCU();
-              nss  = pcSlice->getNumEntryPointOffsets()+1;
-            }
-            for ( UInt ui = 0 ; ui < nss; ui++ )
-            {
-              pcOut->addSubstream(&pcSubstreamsOut[ui+offs]);
-              }
-#endif
             }
 
             UInt boundingAddrSlice, boundingAddrSliceSegment;

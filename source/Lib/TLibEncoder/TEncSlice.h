@@ -104,9 +104,7 @@ private:
   std::vector<TEncSbac*> CTXMem;
 
   Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   Void     calculateBoundingCUAddrForSlice(UInt &uiStartCUAddrSlice, UInt &uiBoundingCUAddrSlice, Bool &bReachedTileBoundary, TComPic*& rpcPic, Bool bEncodeSlice, Int sliceMode, Int sliceArgument, UInt uiSliceCurEndCUAddr);
-#endif
 
 public:
   TEncSlice();
