@@ -264,7 +264,6 @@
 // Backwards-compatibility
 //------------------------------------------------
 
-#define RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING                     1 ///< 0 = disable change to use of Hadamard in lossless coding, 1 (default) = enable change to the use of Hadamard in lossless coding.
 #define RExt__R0105_MOTION_ESTIMATION_STARTING_POINT                           2 ///< 0 = disable change to motion estimation starting point (HM compatible), 1 = enable change to motion estimation starting point, 2 (temporary default) = enable, but only if profile is not a version 1 profile (for backwards compatibility reasons)
 #define RExt__R0128_HIGH_THROUGHPUT_PROFILE                                    1 ///< 0 = disable high throughput profile changes, 1 (default) = enable High Throughput 4:4:4 16 Intra profile changes
 #define RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT                      1 ///< 0 = disable change to chroma resampling filter hint SEI, 1 (default) = enable change to chroma resampling filter hint SEI.
@@ -272,7 +271,7 @@
 
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticker 1298 (output value clipping missing from HM RDOQ)
+#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticket 1298 (output value clipping missing from HM RDOQ)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 
 //------------------------------------------------

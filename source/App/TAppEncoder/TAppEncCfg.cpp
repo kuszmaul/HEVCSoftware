@@ -1592,7 +1592,6 @@ Void TAppEncCfg::xCheckParameter()
     m_useCrossComponentPrediction = false;
   }
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   if ( m_CUTransquantBypassFlagForce && m_bUseHADME )
   {
     fprintf(stderr, "****************************************************************************\n");
@@ -1602,7 +1601,6 @@ Void TAppEncCfg::xCheckParameter()
 
     m_bUseHADME = false; // this has been disabled so that the lambda is calculated slightly differently for lossless modes (as a result of JCTVC-R0104).
   }
-#endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
 

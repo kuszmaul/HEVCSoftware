@@ -145,10 +145,7 @@ protected:
   /// sub-function for motion vector refinement used in fractional-pel accuracy
   Distortion  xPatternRefinement( TComPattern* pcPatternKey,
                                   TComMv baseRefMv,
-                                  Int iFrac, TComMv& rcMvFrac
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
-                                 ,Bool bAllowUseOfHadamard
-#endif
+                                  Int iFrac, TComMv& rcMvFrac, Bool bAllowUseOfHadamard
                                  );
 
   typedef struct
@@ -446,11 +443,7 @@ protected:
                                     Distortion&  ruiSAD );
 
   Void xPatternSearchFracDIF      (
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
                                     Bool         bIsLosslessCoded,
-#else
-                                    TComDataCU*  pcCU,
-#endif
                                     TComPattern* pcPatternKey,
                                     Pel*         piRefY,
                                     Int          iRefStride,
