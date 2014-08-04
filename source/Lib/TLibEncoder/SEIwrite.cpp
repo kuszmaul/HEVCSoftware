@@ -53,7 +53,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 }
 #endif
 
-void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps)
+Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 {
   switch (sei.payloadType())
   {
@@ -618,7 +618,7 @@ Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEIT
 Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
 {
   WRITE_CODE(sei.numClockTs, 2, "num_clock_ts");
-  for(int i = 0; i < sei.numClockTs; i++)
+  for(Int i = 0; i < sei.numClockTs; i++)
   {
     const TComSEITimeSet &currentTimeSet = sei.timeSetArray[i];
     WRITE_FLAG(currentTimeSet.clockTimeStampFlag, "clock_time_stamp_flag");

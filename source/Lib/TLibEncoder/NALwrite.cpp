@@ -61,7 +61,7 @@ TComOutputBitstream bsNALUHeader;
  * write nalu to bytestream out, performing RBSP anti startcode
  * emulation as required.  nalu.m_RBSPayload must be byte aligned.
  */
-void write(ostream& out, OutputNALUnit& nalu)
+Void write(ostream& out, OutputNALUnit& nalu)
 {
   writeNalUnitHeader(out, nalu);
   /* write out rsbp_byte's, inserting any required
@@ -93,7 +93,7 @@ void write(ostream& out, OutputNALUnit& nalu)
   vector<uint8_t> outputBuffer;
   outputBuffer.resize(rbsp.size()*2+1); //there can never be enough emulation_prevention_three_bytes to require this much space
   std::size_t outputAmount = 0;
-  int         zeroCount    = 0;
+  Int         zeroCount    = 0;
   for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end(); it++)
   {
     const uint8_t v=(*it);
@@ -164,7 +164,7 @@ void write(ostream& out, OutputNALUnit& nalu)
 /**
  * Write rbsp_trailing_bits to bs causing it to become byte-aligned
  */
-void writeRBSPTrailingBits(TComOutputBitstream& bs)
+Void writeRBSPTrailingBits(TComOutputBitstream& bs)
 {
   bs.write( 1, 1 );
   bs.writeAlignZero();
@@ -173,7 +173,7 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
 /**
  * Copy NALU from naluSrc to naluDest
  */
-void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
+Void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 {
   naluDest.m_nalUnitType = naluSrc.m_nalUnitType;
   naluDest.m_reservedZero6Bits  = naluSrc.m_reservedZero6Bits;

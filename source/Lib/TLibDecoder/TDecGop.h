@@ -99,7 +99,7 @@ public:
   Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
   Void  filterPicture  (TComPic*& rpcPic );
 
-  void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
+  Void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
 
 };
 

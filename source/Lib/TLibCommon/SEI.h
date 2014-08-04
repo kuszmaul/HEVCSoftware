@@ -89,7 +89,7 @@ public:
   SEI() {}
   virtual ~SEI() {}
 
-  static const char *getSEIMessageString(SEI::PayloadType payloadType);
+  static const Char *getSEIMessageString(SEI::PayloadType payloadType);
 
   virtual PayloadType payloadType() const = 0;
 };
@@ -512,7 +512,7 @@ public:
   Bool  m_allLayersFlag;                             //value valid if m_nestingOpFlag == 0
   UInt  m_nestingNoOpMaxTemporalIdPlus1;             //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
   UInt  m_nestingNumLayersMinus1;                    //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
-  UChar m_nestingLayerId[MAX_NESTING_NUM_LAYER];     //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0. This can e.g. be a static array of 64 unsigned char values
+  UChar m_nestingLayerId[MAX_NESTING_NUM_LAYER];     //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0. This can e.g. be a static array of 64 UChar values
 
   Bool  m_callerOwnsSEIs;
   SEIMessages m_nestedSEIs;

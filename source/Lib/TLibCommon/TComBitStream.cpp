@@ -88,7 +88,7 @@ UInt TComOutputBitstream::getByteStreamLength()
   return UInt(m_fifo->size());
 }
 
-void TComOutputBitstream::clear()
+Void TComOutputBitstream::clear()
 {
   m_fifo->clear();
   m_held_bits = 0;
@@ -305,7 +305,7 @@ Void TComInputBitstream::read (UInt uiNumberOfBits, UInt& ruiBits)
  * insert the contents of the bytealigned (and flushed) bitstream src
  * into this at byte position pos.
  */
-void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
+Void TComOutputBitstream::insertAt(const TComOutputBitstream& src, UInt pos)
 {
   UInt src_bits = src.getNumberOfWrittenBits();
   assert(0 == src_bits % 8);

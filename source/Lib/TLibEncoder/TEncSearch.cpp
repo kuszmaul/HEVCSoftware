@@ -198,7 +198,7 @@ TEncSearch::~TEncSearch()
 
 
 
-void TEncSearch::init(TEncCfg*      pcEncCfg,
+Void TEncSearch::init(TEncCfg*      pcEncCfg,
                       TComTrQuant*  pcTrQuant,
                       Int           iSearchRange,
                       Int           bipredSearchRange,

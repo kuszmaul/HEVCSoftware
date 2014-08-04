@@ -322,9 +322,9 @@ strToCostMode[] =
 };
 
 template<typename T, typename P>
-static std::string enumToString(P map[], unsigned long mapLen, const T val)
+static std::string enumToString(P map[], UInt mapLen, const T val)
 {
-  for (Int i = 0; i < mapLen; i++)
+  for (UInt i = 0; i < mapLen; i++)
   {
     if (val == map[i].value)
     {
@@ -335,12 +335,12 @@ static std::string enumToString(P map[], unsigned long mapLen, const T val)
 }
 
 template<typename T, typename P>
-static istream& readStrToEnum(P map[], unsigned long mapLen, istream &in, T &val)
+static istream& readStrToEnum(P map[], UInt mapLen, istream &in, T &val)
 {
   string str;
   in >> str;
 
-  for (Int i = 0; i < mapLen; i++)
+  for (UInt i = 0; i < mapLen; i++)
   {
     if (str == map[i].str)
     {
@@ -411,14 +411,14 @@ static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      unsigned long val=strtoul(pStr, &eptr, 0);
+      Char *eptr;
+      UInt val=strtoul(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
@@ -435,7 +435,7 @@ static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
         in.setstate(ios::failbit);
         break;
       }
-      values.values.push_back(UInt(val));
+      values.values.push_back(val);
       // soak up any whitespace and up to 1 comma.
       pStr=eptr;
       for(;isspace(*pStr);pStr++);
@@ -457,14 +457,14 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      long val=strtol(pStr, &eptr, 0);
+      Char *eptr;
+      Int val=strtol(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
@@ -481,7 +481,7 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
         in.setstate(ios::failbit);
         break;
       }
-      values.values.push_back(Int(val));
+      values.values.push_back(val);
       // soak up any whitespace and up to 1 comma.
       pStr=eptr;
       for(;isspace(*pStr);pStr++);
@@ -503,20 +503,20 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      long val=strtol(pStr, &eptr, 0);
+      Char *eptr;
+      Int val=strtol(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
         break;
       }
-      if (val<long(values.minValIncl) || val>long(values.maxValIncl))
+      if (val<Int(values.minValIncl) || val>Int(values.maxValIncl))
       {
         in.setstate(ios::failbit);
         break;
@@ -1369,7 +1369,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   if(m_timeCodeSEIEnabled)
   {
-    for(int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
+    for(Int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
     {
       m_timeSetArray[i].clockTimeStampFlag    = cfg_timeCodeSeiTimeStampFlag        .values.size()>i ? cfg_timeCodeSeiTimeStampFlag        .values [i] : false;
       m_timeSetArray[i].numUnitFieldBasedFlag = cfg_timeCodeSeiNumUnitFieldBasedFlag.values.size()>i ? cfg_timeCodeSeiNumUnitFieldBasedFlag.values [i] : 0;
