@@ -1117,7 +1117,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     else
     {
       m_tileRowHeight.resize(m_numTileRowsMinus1);
-      for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
+      for(UInt i=0; i<cfg_RowHeight.values.size(); i++)
         m_tileRowHeight[i]=cfg_RowHeight.values[i];
     }
   }

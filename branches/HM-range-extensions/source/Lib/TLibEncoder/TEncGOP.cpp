@@ -1145,7 +1145,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getPicSym()->initTiles(pcSlice->getPPS());
 
     // Allocate some coders, now we know how many tiles there are.
-    Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
+    const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
 
     //generate the Coding Order Map and Inverse Coding Order Map
     for(p=0, uiEncCUAddr=0; p<pcPic->getPicSym()->getNumberOfCUsInFrame(); p++, uiEncCUAddr = pcPic->getPicSym()->xCalculateNxtCUAddr(uiEncCUAddr))
@@ -1686,7 +1686,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               m_pcEntropyCoder->setEntropyCoder ( m_pcSbacCoder, pcSlice );
               m_pcEntropyCoder->resetEntropy    ();
-              for ( UInt ui = 0 ; ui < pcSlice->getPPS()->getNumSubstreams() ; ui++ )
+              for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
               {
                 m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                 m_pcEntropyCoder->resetEntropy    ();
@@ -1698,7 +1698,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // set entropy coder for writing
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               {
-                for ( UInt ui = 0 ; ui < pcSlice->getPPS()->getNumSubstreams() ; ui++ )
+                for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
                 {
                   m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                   m_pcEntropyCoder->resetEntropy    ();
@@ -1742,10 +1742,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // The final bitstream is either nalu.m_Bitstream or pcBitstreamRedirect;
               UInt* puiSubstreamSizes = pcSlice->getSubstreamSizes();
               UInt uiTotalCodedSize = 0; // for padding calcs.
-              UInt uiNumSubstreamsPerTile = iNumSubstreams;
+              UInt uiNumSubstreamsPerTile = iNumSubstreams; // Only used if wavefronts not enabled.
               if (iNumSubstreams > 1)
               {
-                uiNumSubstreamsPerTile /= pcPic->getPicSym()->getNumTiles();
+                uiNumSubstreamsPerTile /= pcPic->getPicSym()->getNumTiles(); // Only used if wavefronts not enabled.
               }
               for ( UInt ui = 0 ; ui < iNumSubstreams; ui++ )
               {
@@ -1761,13 +1761,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 uiTotalCodedSize += pcSubstreamsOut[ui].getNumberOfWrittenBits();
 
                 Bool bNextSubstreamInNewTile = ((ui+1) < iNumSubstreams)&& ((ui+1)%uiNumSubstreamsPerTile == 0);
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+                if (bNextSubstreamInNewTile &&  !pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
+#else
                 if (bNextSubstreamInNewTile)
+#endif
                 {
                   pcSlice->setTileLocation(ui/uiNumSubstreamsPerTile, pcSlice->getTileOffstForMultES()+(uiTotalCodedSize>>3));
                 }
-                if (ui+1 < pcSlice->getPPS()->getNumSubstreams())
+                if (ui+1 < iNumSubstreams)
                 {
-                  puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits();
+                  puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits() + (pcSubstreamsOut[ui].countStartCodeEmulations()<<3);
                 }
               }
 
@@ -1778,6 +1782,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
               // Substreams...
               TComOutputBitstream *pcOut = pcBitstreamRedirect;
+#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
+              Int numZeroSubstreamsAtStartOfSlice = 0;
+              Int numSubstreamsToCode = pcSlice->getPPS()->getNumSubstreams();
+              if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
+              {
+                Int  maxNumParts                      = pcPic->getNumPartInCU();
+                numZeroSubstreamsAtStartOfSlice  = pcPic->getSubstreamForLCUAddr(pcSlice->getSliceSegmentCurStartCUAddr()/maxNumParts, false, pcSlice);
+                // 1st line present for WPP.
+                numSubstreamsToCode  = pcSlice->getNumEntryPointOffsets()+1;
+              }
+              for ( UInt ui = 0 ; ui < numSubstreamsToCode; ui++ )
+              {
+                pcOut->addSubstream(&pcSubstreamsOut[ui+numZeroSubstreamsAtStartOfSlice]);
+              }
+#else
             Int offs = 0;
             Int nss = pcSlice->getPPS()->getNumSubstreams();
             if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
@@ -1790,6 +1809,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             {
               pcOut->addSubstream(&pcSubstreamsOut[ui+offs]);
               }
+#endif
             }
 
             UInt boundingAddrSlice, boundingAddrSliceSegment;
