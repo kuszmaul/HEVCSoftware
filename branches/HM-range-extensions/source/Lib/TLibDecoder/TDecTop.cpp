@@ -469,7 +469,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 
   // exit when a new picture is found
+#if FIX_OUTPUT_ORDER_BEHAVIOR
+  if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) )
+#else
   if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) && !m_bFirstSliceInSequence )
+#endif
   {
     if (m_prevPOC >= m_pocRandomAccess)
     {
@@ -783,8 +787,10 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       m_pocCRA = 0;
       m_pocRandomAccess = MAX_INT;
       m_prevPOC = MAX_INT;
+#if !FIX_OUTPUT_ORDER_BEHAVIOR
       m_bFirstSliceInPicture = true;
       m_bFirstSliceInSequence = true;
+#endif
       m_prevSliceSkipped = false;
       m_skippedPOC = 0;
       return false;

@@ -101,6 +101,7 @@
 #define FIX_EMPTY_PAYLOAD_NAL                             1
 #define FIX_WRITING_OUTPUT                                1
 #define FIX_OUTPUT_EOS                                    1
+#define FIX_OUTPUT_ORDER_BEHAVIOR                         1
 
 #define FIX_POC_CRA_NORASL_OUTPUT                         1
 
