@@ -333,7 +333,7 @@ public:
 
           if (printSequenceMSE)
           {
-            fprintf(pFile, "%f\t %f\t %f\t %f\n",
+            fprintf(pFile, "\t %f\t %f\t %f\t %f\n",
                 m_MSEyuvframe[COMPONENT_Y ] / (Double)getNumPic(),
                 m_MSEyuvframe[COMPONENT_Cb] / (Double)getNumPic(),
                 m_MSEyuvframe[COMPONENT_Cr] / (Double)getNumPic(),
