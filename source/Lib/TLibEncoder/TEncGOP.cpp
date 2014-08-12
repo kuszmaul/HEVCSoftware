@@ -2261,7 +2261,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
   m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummaryOut(chFmt, printSequenceMSE);
+  m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE);
 #endif
 #if _SUMMARY_PIC_
   m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE,'I');
@@ -2280,7 +2280,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
-    m_gcAnalyzeAll_in.printSummaryOut(chFmt);
+    m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE);
 #endif
   }
 
