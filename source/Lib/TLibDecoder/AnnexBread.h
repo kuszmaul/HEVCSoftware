@@ -38,6 +38,9 @@
 
 #pragma once
 
+#ifndef __ANNEXBREAD__
+#define __ANNEXBREAD__
+
 #include <stdint.h>
 #include <istream>
 #include <vector>
@@ -71,7 +74,7 @@ public:
    * Reset the internal state.  Must be called if input stream is
    * modified externally to this class
    */
-  void reset()
+  Void reset()
   {
     m_NumFutureBytes = 0;
     m_FutureBytes = 0;
@@ -153,6 +156,10 @@ public:
     return val;
   }
 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  UInt GetNumBufferedBytes() const { return m_NumFutureBytes; }
+#endif
+
 private:
   UInt m_NumFutureBytes; /* number of valid bytes in m_FutureBytes */
   uint32_t m_FutureBytes; /* bytes that have been peeked */
@@ -184,3 +191,5 @@ struct AnnexBStats
 Bool byteStreamNALUnit(InputByteStream& bs, std::vector<uint8_t>& nalUnit, AnnexBStats& stats);
 
 //! \}
+
+#endif
