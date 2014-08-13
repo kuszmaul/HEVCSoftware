@@ -38,6 +38,9 @@
 
 #pragma once
 
+#ifndef __NALREAD__
+#define __NALREAD__
+
 #include "TLibCommon/TypeDef.h"
 #include "TLibCommon/TComBitStream.h"
 #include "TLibCommon/NAL.h"
@@ -57,6 +60,8 @@ struct InputNALUnit : public NALUnit
   TComInputBitstream* m_Bitstream;
 };
 
-void read(InputNALUnit& nalu, std::vector<uint8_t>& nalUnitBuf);
+Void read(InputNALUnit& nalu, std::vector<uint8_t>& nalUnitBuf);
 
 //! \}
+
+#endif
