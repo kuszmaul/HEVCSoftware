@@ -33,6 +33,9 @@
 
 #pragma once
 
+#ifndef __NALWRITE__
+#define __NALWRITE__
+
 #include <ostream>
 
 #include "TLibCommon/TypeDef.h"
@@ -71,8 +74,8 @@ struct OutputNALUnit : public NALUnit
   TComOutputBitstream m_Bitstream;
 };
 
-void write(std::ostream& out, OutputNALUnit& nalu);
-void writeRBSPTrailingBits(TComOutputBitstream& bs);
+Void write(std::ostream& out, OutputNALUnit& nalu);
+Void writeRBSPTrailingBits(TComOutputBitstream& bs);
 
 inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit& nalu)
   : NALUnit(nalu)
@@ -80,6 +83,8 @@ inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit& nalu)
   write(m_nalUnitData, nalu);
 }
 
-void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc);
+Void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc);
 
 //! \}
+
+#endif
