@@ -355,13 +355,6 @@ found:
 }
 
 //inline to prevent compiler warnings for "unused static function"
-namespace Profile
-{
-  static inline istream& operator >> (istream &in, Name &profile)
-  {
-    return readStrToEnum(strToProfile, sizeof(strToProfile)/sizeof(*strToProfile), in, profile);
-  }
-}
 
 static inline istream& operator >> (istream &in, ExtendedProfileName &profile)
 {
