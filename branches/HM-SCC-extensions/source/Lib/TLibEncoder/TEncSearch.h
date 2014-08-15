@@ -225,6 +225,7 @@ public:
                                    TComYuv*    pcPredYuv,
                                    TComYuv*    pcResiYuv,
                                    TComYuv*    pcRecoYuv
+                                   DEBUG_STRING_FN_DECLARE(sDebug)
                                  );
 
   Void  estIntraPredQTWithModeReuse ( TComDataCU* pcCU,
@@ -393,7 +394,7 @@ public:
                                   TComYuv*&   rpcYuvRec,
                                   Bool        bSkipRes
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM 
-                                  ,TComYuv*    pcYuvNoCorrResi = NULL
+                                 ,TComYuv*    pcYuvNoCorrResi
 #endif
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
 
@@ -486,6 +487,7 @@ protected:
                                     const ComponentID   compID,
                                           TComTU        &rTu,
                                           QpParam       &cQP
+                                          DEBUG_STRING_FN_DECLARE(sDebug)
                                   );
 #endif
   Void  xRecurIntraCodingQT       ( Bool        bLumaOnly,
@@ -537,8 +539,9 @@ protected:
                                     Distortion&  uiPUDistY,
                                     Distortion&  uiPUDistC,
                                     Double&      dPUCost,
-                                    TComTU&      rTu
-                                   ,Bool         bTestMaxTUSize
+                                    TComTU&      rTu,
+                                    Bool         bTestMaxTUSize
+                                    DEBUG_STRING_FN_DECLARE(sDebug)
                                   );
 #endif
   Void  xSetIntraResultChromaQT   ( TComYuv*    pcRecoYuv, TComTU &rTu);
@@ -706,11 +709,11 @@ protected:
 
 
   Void xEncodeResidualQT( const ComponentID compID, TComTU &rTu );
-  Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu 
+  Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug)
 #if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     ,TComYuv* pcOrgResi = NULL
 #endif
-  DEBUG_STRING_FN_DECLARE(sDebug) );
+    );
   Void xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth, const ChannelType compID );
