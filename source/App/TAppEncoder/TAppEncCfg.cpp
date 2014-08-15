@@ -2273,7 +2273,7 @@ Void TAppEncCfg::xCheckParameter()
       m_intraBlockCopySearchWidthInCTUs = (Int)m_intraBlockCopyNonHashSearchWidthInCTUs;
     }
     if( !(m_intraBlockCopySearchWidthInCTUs == -1 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1)
-      || !(m_intraBlockCopySearchWidthInCTUs == 3 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1) )
+      && !(m_intraBlockCopySearchWidthInCTUs == 3 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1) )
     {
       fprintf(stderr, "***************************************************************************\n");
       fprintf(stderr, "** WARNING: IntraBC search ranges are not part of CTC/CE test conditions **\n");
