@@ -165,6 +165,7 @@ protected:
                                TComDataCU *&rpcTempCU,
                                Double      &cost,
                                PartSize    ePartSize
+                               DEBUG_STRING_FN_DECLARE(sDebug)
                               );
 #else
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
@@ -184,7 +185,7 @@ protected:
                             );
 
   Void  xCheckDQP           ( TComDataCU*  pcCU );
-  Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch );
+  Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
 #if SCM__R0348_PALETTE_MODE

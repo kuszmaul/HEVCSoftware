@@ -784,9 +784,17 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     Bool  bAboveAvail = false;
     Bool  bLeftAvail  = false;
 
-    const Bool bUseFilteredPredictions = TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing()); 
-    m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions ); 
+    const Bool bUseFilteredPredictions = TComPrediction::filteringIntraReferenceSamples(compID, uiChFinalMode, uiWidth, uiHeight, chFmt, pcCU->getSlice()->getSPS()->getDisableIntraReferenceSmoothing());
+#ifdef DEBUG_STRING
+    std::ostream &ss(std::cout);
+#endif
+    DEBUG_STRING_NEW(sTemp)
+    m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp)  );
     m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0, 0, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
+
+#ifdef DEBUG_STRING
+    ss << sTemp;
+#endif
 
     //===== inverse transform =====
     QpParam cQP(*pcCU, compID);
@@ -797,9 +805,16 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       cQP.rem= cQP.Qp%6;   
       m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
     }
+
+    DEBUG_STRING_NEW( sDebug );
+#ifdef DEBUG_STRING
+    const Int debugPredModeMask=DebugStringGetPredModeMask( MODE_INTRA );
+    std::string *psDebug=(DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) ? &sDebug : 0;
+#endif
+
     if (pcCU->getCbf(uiAbsPartIdx, compID, rTu.GetTransformDepthRel()) != 0)
     {
-      m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP );
+      m_pcTrQuant->invTransformNxN( rTu, compID, piResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
     }
     else
     {
@@ -811,6 +826,12 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
         }
       }
     }
+
+#ifdef DEBUG_STRING
+    if (psDebug)
+      ss << (*psDebug);
+#endif
+
     const Bool useCrossComponentPrediction = isChroma(compID) && (pcCU->getCrossComponentPredictionAlpha(uiAbsPartIdx, compID) != 0);
     if( useCrossComponentPrediction ) 
     {
