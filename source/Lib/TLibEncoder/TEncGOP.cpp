@@ -784,9 +784,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     else if(m_pcEncTop->getUseScalingListId() == SCALING_LIST_FILE_READ)
     {
+      pcSlice->setDefaultScalingList ();
       if(pcSlice->getScalingList()->xParseScalingList(m_pcCfg->getScalingListFile()))
       {
-        pcSlice->setDefaultScalingList ();
+        Bool bParsedScalingList=false; // Use of boolean so that assertion outputs useful string
+        assert(bParsedScalingList);
+        exit(1);
       }
       pcSlice->getScalingList()->checkDcOfMatrix();
       m_pcEncTop->getSPS()->setScalingListPresentFlag(pcSlice->checkDefaultScalingList());

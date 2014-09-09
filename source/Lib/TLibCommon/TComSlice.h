@@ -152,9 +152,10 @@ class TComScalingList
 public:
   TComScalingList();
   virtual ~TComScalingList();
-  Void     setScalingListPresentFlag    (Bool b)                               { m_scalingListPresentFlag = b;    }
-  Bool     getScalingListPresentFlag    ()                                     { return m_scalingListPresentFlag; }
-  Int*     getScalingListAddress          (UInt sizeId, UInt listId)           { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
+  Void     setScalingListPresentFlag      (Bool b)                             { m_scalingListPresentFlag = b;    }
+  Bool     getScalingListPresentFlag      ()                                   { return m_scalingListPresentFlag; }
+  Int*           getScalingListAddress    (UInt sizeId, UInt listId)           { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
+  const Int*     getScalingListAddress    (UInt sizeId, UInt listId) const     { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
   Bool     checkPredMode                  (UInt sizeId, UInt listId);
   Void     setRefMatrixId                 (UInt sizeId, UInt listId, UInt u)   { m_refMatrixId[sizeId][listId] = u;    }     //!< set reference matrix ID
   UInt     getRefMatrixId                 (UInt sizeId, UInt listId)           { return m_refMatrixId[sizeId][listId]; }     //!< get reference matrix ID
@@ -162,7 +163,7 @@ public:
   Void     processDefaultMatrix           (UInt sizeId, UInt listId);
   Void     setScalingListDC               (UInt sizeId, UInt listId, UInt u)   { m_scalingListDC[sizeId][listId] = u; }      //!< set DC value
 
-  Int      getScalingListDC               (UInt sizeId, UInt listId)           { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
+  Int      getScalingListDC               (UInt sizeId, UInt listId) const     { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
   Void     checkDcOfMatrix                ();
   Void     processRefMatrix               (UInt sizeId, UInt listId , UInt refListId );
   Bool     xParseScalingList              (Char* pchFile);
@@ -170,6 +171,7 @@ public:
 private:
   Void     init                    ();
   Void     destroy                 ();
+  Void     outputScalingLists(std::ostream &os) const;
   Int      m_scalingListDC               [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< the DC value of the matrix coefficient for 16x16
   Bool     m_useDefaultScalingMatrixFlag [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< UseDefaultScalingMatrixFlag
   UInt     m_refMatrixId                 [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< RefMatrixID
