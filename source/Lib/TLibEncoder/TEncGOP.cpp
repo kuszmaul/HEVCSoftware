@@ -1279,7 +1279,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       if( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() )
       {
         UInt maxCU = m_pcCfg->getSliceArgument() >> ( pcSlice->getSPS()->getMaxCUDepth() << 1);
-        UInt numDU = ( m_pcCfg->getSliceMode() == 1 ) ? ( pcPic->getNumCUsInFrame() / maxCU ) : ( 0 );
+        UInt numDU = ( m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_LCU ) ? ( pcPic->getNumCUsInFrame() / maxCU ) : ( 0 );
         if( pcPic->getNumCUsInFrame() % maxCU != 0 || numDU == 0 )
         {
           numDU ++;

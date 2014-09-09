@@ -1244,12 +1244,12 @@ private:
   UInt        m_uiTLayer;
   Bool        m_bTLayerSwitchingFlag;
 
-  UInt        m_sliceMode;
+  SliceConstraint m_sliceMode;
   UInt        m_sliceArgument;
   UInt        m_sliceCurStartCUAddr;
   UInt        m_sliceCurEndCUAddr;
   UInt        m_sliceIdx;
-  UInt        m_sliceSegmentMode;
+  SliceConstraint m_sliceSegmentMode;
   UInt        m_sliceSegmentArgument;
   UInt        m_sliceSegmentCurStartCUAddr;
   UInt        m_sliceSegmentCurEndCUAddr;
@@ -1440,8 +1440,8 @@ public:
   Bool getHandleCraAsBlaFlag            ()                   { return m_handleCraAsBlaFlag;             }
 #endif
 
-  Void setSliceMode                     ( UInt uiMode )     { m_sliceMode = uiMode;                     }
-  UInt getSliceMode                     ()                  { return m_sliceMode;                       }
+  Void setSliceMode                     ( SliceConstraint mode ) { m_sliceMode = mode;                  }
+  SliceConstraint getSliceMode          () const            { return m_sliceMode;                       }
   Void setSliceArgument                 ( UInt uiArgument ) { m_sliceArgument = uiArgument;             }
   UInt getSliceArgument                 ()                  { return m_sliceArgument;                   }
   Void setSliceCurStartCUAddr           ( UInt uiAddr )     { m_sliceCurStartCUAddr = uiAddr;           }
@@ -1451,8 +1451,8 @@ public:
   Void setSliceIdx                      ( UInt i)           { m_sliceIdx = i;                           }
   UInt getSliceIdx                      ()                  { return  m_sliceIdx;                       }
   Void copySliceInfo                    (TComSlice *pcSliceSrc);
-  Void setSliceSegmentMode              ( UInt uiMode )     { m_sliceSegmentMode = uiMode;              }
-  UInt getSliceSegmentMode              ()                  { return m_sliceSegmentMode;                }
+  Void setSliceSegmentMode              ( SliceConstraint mode ) { m_sliceSegmentMode = mode;           }
+  SliceConstraint getSliceSegmentMode   () const            { return m_sliceSegmentMode;                }
   Void setSliceSegmentArgument          ( UInt uiArgument ) { m_sliceSegmentArgument = uiArgument;      }
   UInt getSliceSegmentArgument          ()                  { return m_sliceSegmentArgument;            }
   Void setSliceSegmentCurStartCUAddr    ( UInt uiAddr )     { m_sliceSegmentCurStartCUAddr = uiAddr;    }

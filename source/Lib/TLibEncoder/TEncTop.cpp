@@ -789,7 +789,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setUseTransformSkip( m_useTransformSkip );
   m_cPPS.setTransformSkipLog2MaxSize( m_transformSkipLog2MaxSize  );
 
-  if (m_sliceSegmentMode)
+  if (m_sliceSegmentMode != NO_SLICES)
   {
     m_cPPS.setDependentSliceSegmentsEnabledFlag( true );
   }
