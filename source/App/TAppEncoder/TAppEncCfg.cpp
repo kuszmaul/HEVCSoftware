@@ -832,7 +832,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TileColumnWidthArray",                            cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing tile column width values in units of LCU")
   ("TileRowHeightArray",                              cfg_RowHeight,                            cfg_RowHeight, "Array containing tile row height values in units of LCU")
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
-  ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with TR; 2 TRR etc")
+  ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with top-right-right")
   ("ScalingList",                                     m_useScalingListId,                                   0, "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
   ("ScalingListFile",                                 cfg_ScalingListFile,                         string(""), "Scaling list file name")
   ("SignHideFlag,-SBH",                               m_signHideFlag,                                       1)
@@ -943,9 +943,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                                                "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
   ("SEIFramePacking",                                 m_framePackingSEIEnabled,                             0, "Control generation of frame packing SEI messages")
   ("SEIFramePackingType",                             m_framePackingSEIType,                                0, "Define frame packing arrangement\n"
-                                                                                                               "\t0: checkerboard - pixels alternatively represent either frames\n"
-                                                                                                               "\t1: column alternation - frames are interlaced by column\n"
-                                                                                                               "\t2: row alternation - frames are interlaced by row\n"
                                                                                                                "\t3: side by side - frames are displayed horizontally\n"
                                                                                                                "\t4: top bottom - frames are displayed vertically\n"
                                                                                                                "\t5: frame alternation - one frame is alternated with the other")
