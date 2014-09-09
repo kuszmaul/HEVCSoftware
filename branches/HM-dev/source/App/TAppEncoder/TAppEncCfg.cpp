@@ -2055,7 +2055,7 @@ Void TAppEncCfg::xCheckParameter()
     {
       m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/((2*m_iSourceHeight+m_iSourceWidth)*m_uiMaxCUHeight)-4;
     }
-    else if(m_sliceMode == 1)
+    else if(m_sliceMode == FIXED_NUMBER_OF_LCU)
     {
       m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/(m_sliceArgument*m_uiMaxCUWidth*m_uiMaxCUHeight)-4;
     }
@@ -2306,12 +2306,12 @@ Void TAppEncCfg::xPrintParameter()
   printf("TransformSkipFast:%d ", m_useTransformSkipFast       );
   printf("TransformSkipLog2MaxSize:%d ", m_transformSkipLog2MaxSize);
   printf("Slice: M=%d ", m_sliceMode);
-  if (m_sliceMode!=0)
+  if (m_sliceMode!=NO_SLICES)
   {
     printf("A=%d ", m_sliceArgument);
   }
   printf("SliceSegment: M=%d ",m_sliceSegmentMode);
-  if (m_sliceSegmentMode!=0)
+  if (m_sliceSegmentMode!=NO_SLICES)
   {
     printf("A=%d ", m_sliceSegmentArgument);
   }
