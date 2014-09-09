@@ -528,7 +528,7 @@ enum MVP_DIR
 
 enum StoredResidualType
 {
-  RESDIUAL_RECONSTRUCTED          = 0,
+  RESIDUAL_RECONSTRUCTED          = 0,
   RESIDUAL_ENCODER_SIDE           = 1,
   NUMBER_OF_STORED_RESIDUAL_TYPES = 2
 };
