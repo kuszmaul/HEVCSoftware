@@ -332,7 +332,6 @@ SEIKneeFunctionInfo* TEncGOP::xCreateSEIKneeFunctionInfo()
   if ( !seiKneeFunctionInfo->m_kneeCancelFlag )
   {
     seiKneeFunctionInfo->m_kneePersistenceFlag = m_pcCfg->getKneeSEIPersistenceFlag();
-    seiKneeFunctionInfo->m_kneeMappingFlag = m_pcCfg->getKneeSEIMappingFlag();
     seiKneeFunctionInfo->m_kneeInputDrange = m_pcCfg->getKneeSEIInputDrange();
     seiKneeFunctionInfo->m_kneeInputDispLuminance = m_pcCfg->getKneeSEIInputDispLuminance();
     seiKneeFunctionInfo->m_kneeOutputDrange = m_pcCfg->getKneeSEIOutputDrange();

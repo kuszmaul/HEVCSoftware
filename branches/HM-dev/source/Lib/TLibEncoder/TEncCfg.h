@@ -292,7 +292,6 @@ protected:
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
   Bool      m_kneeSEIPersistenceFlag;
-  Bool      m_kneeSEIMappingFlag;
   Int       m_kneeSEIInputDrange;
   Int       m_kneeSEIInputDispLuminance;
   Int       m_kneeSEIOutputDrange;
@@ -713,8 +712,6 @@ public:
   Bool  getKneeSEICancelFlag()                                       { return m_kneeSEICancelFlag; }
   Void  setKneeSEIPersistenceFlag(Bool b)                            { m_kneeSEIPersistenceFlag = b; }
   Bool  getKneeSEIPersistenceFlag()                                  { return m_kneeSEIPersistenceFlag; }
-  Void  setKneeSEIMappingFlag(Bool b)                                { m_kneeSEIMappingFlag = b; }
-  Bool  getKneeSEIMappingFlag()                                      { return m_kneeSEIMappingFlag; }
   Void  setKneeSEIInputDrange(Int b)                                 { m_kneeSEIInputDrange = b; }
   Int   getKneeSEIInputDrange()                                      { return m_kneeSEIInputDrange; }
   Void  setKneeSEIInputDispLuminance(Int b)                          { m_kneeSEIInputDispLuminance = b; }
