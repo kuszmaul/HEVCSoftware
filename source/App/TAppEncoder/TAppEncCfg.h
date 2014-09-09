@@ -280,7 +280,6 @@ protected:
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
   Bool      m_kneeSEIPersistenceFlag;
-  Bool      m_kneeSEIMappingFlag;
   Int       m_kneeSEIInputDrange;
   Int       m_kneeSEIInputDispLuminance;
   Int       m_kneeSEIOutputDrange;

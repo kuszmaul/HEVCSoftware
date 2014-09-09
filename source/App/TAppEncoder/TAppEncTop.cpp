@@ -296,7 +296,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEIId                                         ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag                                 ( m_kneeSEICancelFlag );
   m_cTEncTop.setKneeSEIPersistenceFlag                            ( m_kneeSEIPersistenceFlag );
-  m_cTEncTop.setKneeSEIMappingFlag                                ( m_kneeSEIMappingFlag );
   m_cTEncTop.setKneeSEIInputDrange                                ( m_kneeSEIInputDrange );
   m_cTEncTop.setKneeSEIInputDispLuminance                         ( m_kneeSEIInputDispLuminance );
   m_cTEncTop.setKneeSEIOutputDrange                               ( m_kneeSEIOutputDrange );
