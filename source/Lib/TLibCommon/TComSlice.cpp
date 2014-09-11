@@ -1702,8 +1702,8 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
    Note: only the case of "vps_max_temporal_layers_minus1 = 0" is supported.
 */
   Int i, j;
-  UInt birateValue, cpbSizeValue;
-  UInt ducpbSizeValue;
+  UInt bitrateValue, cpbSizeValue;
+  UInt duCpbSizeValue;
   UInt duBitRateValue = 0;
 
   for( i = 0; i < MAX_TLAYER; i ++ )
@@ -1713,21 +1713,21 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     hrd->setLowDelayHrdFlag( i, 0 );
     hrd->setCpbCntMinus1( i, 0 );
 
-    birateValue  = bitRate;
+    bitrateValue = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
-    ducpbSizeValue = bitRate/numDU;
+    duCpbSizeValue = bitRate/numDU;
     duBitRateValue = bitRate;
 
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
-      hrd->setBitRateValueMinus1( i, j, 0, ( birateValue  - 1 ) );
+      hrd->setBitRateValueMinus1( i, j, 0, ( bitrateValue - 1 ) );
       hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
-      hrd->setDuCpbSizeValueMinus1( i, j, 0, ( ducpbSizeValue - 1 ) );
+      hrd->setDuCpbSizeValueMinus1( i, j, 0, ( duCpbSizeValue - 1 ) );
       hrd->setCbrFlag( i, j, 0, ( j == 0 ) );
 
-      hrd->setBitRateValueMinus1( i, j, 1, ( birateValue  - 1) );
+      hrd->setBitRateValueMinus1( i, j, 1, ( bitrateValue - 1) );
       hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
-      hrd->setDuCpbSizeValueMinus1( i, j, 1, ( ducpbSizeValue - 1 ) );
+      hrd->setDuCpbSizeValueMinus1( i, j, 1, ( duCpbSizeValue - 1 ) );
       hrd->setDuBitRateValueMinus1( i, j, 1, ( duBitRateValue - 1 ) );
       hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
     }
