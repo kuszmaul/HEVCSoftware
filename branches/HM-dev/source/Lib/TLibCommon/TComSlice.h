@@ -306,9 +306,9 @@ public:
   ,m_dpbOutputDelayDuLengthMinus1(0)
   ,m_bitRateScale(0)
   ,m_cpbSizeScale(0)
-  ,m_initialCpbRemovalDelayLengthMinus1(0)
-  ,m_cpbRemovalDelayLengthMinus1(0)
-  ,m_dpbOutputDelayLengthMinus1(0)
+  ,m_initialCpbRemovalDelayLengthMinus1(23)
+  ,m_cpbRemovalDelayLengthMinus1(23)
+  ,m_dpbOutputDelayLengthMinus1(23)
   {}
 
   virtual ~TComHRD() {}
