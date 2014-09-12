@@ -1325,6 +1325,9 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   Int nrOfNegativePictures = 0;
   Int nrOfPositivePictures = 0;
   TComReferencePictureSet* pcRPS = this->getLocalRPS();
+#if EFFICIENT_FIELD_IRAP
+  Bool irapIsInRPS = false;
+#endif
 
   // loop through all pictures in the Reference Picture Set
   for(i=0;i<pReferencePictureSet->getNumberOfPictures();i++)
@@ -1353,6 +1356,12 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         }
         else
         {
+#if EFFICIENT_FIELD_IRAP
+          if(rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
+          {
+            irapIsInRPS = true;
+          }
+#endif
           nrOfPositivePictures++;
         }
         k++;
@@ -1363,7 +1372,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
 #if EFFICIENT_FIELD_IRAP
   Bool useNewRPS = false;
   // if current picture is complimentary field associated to IRAP, add the IRAP to its RPS. 
-  if(m_pcPic->isField())
+  if(m_pcPic->isField() && !irapIsInRPS)
   {
     TComList<TComPic*>::iterator iterPic = rcListPic.begin();
     while ( iterPic != rcListPic.end())
