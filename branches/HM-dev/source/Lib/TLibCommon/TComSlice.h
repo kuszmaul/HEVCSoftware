@@ -1248,13 +1248,13 @@ private:
 
   SliceConstraint m_sliceMode;
   UInt        m_sliceArgument;
-  UInt        m_sliceCurStartCUAddr;
-  UInt        m_sliceCurEndCUAddr;
+  UInt        m_sliceCurStartCtuTsAddr;
+  UInt        m_sliceCurEndCtuTsAddr;
   UInt        m_sliceIdx;
   SliceConstraint m_sliceSegmentMode;
   UInt        m_sliceSegmentArgument;
-  UInt        m_sliceSegmentCurStartCUAddr;
-  UInt        m_sliceSegmentCurEndCUAddr;
+  UInt        m_sliceSegmentCurStartCtuTsAddr;
+  UInt        m_sliceSegmentCurEndCtuTsAddr;
   Bool        m_nextSlice;
   Bool        m_nextSliceSegment;
   UInt        m_sliceBits;
@@ -1446,10 +1446,10 @@ public:
   SliceConstraint getSliceMode          () const            { return m_sliceMode;                       }
   Void setSliceArgument                 ( UInt uiArgument ) { m_sliceArgument = uiArgument;             }
   UInt getSliceArgument                 ()                  { return m_sliceArgument;                   }
-  Void setSliceCurStartCUAddr           ( UInt uiAddr )     { m_sliceCurStartCUAddr = uiAddr;           }
-  UInt getSliceCurStartCUAddr           ()                  { return m_sliceCurStartCUAddr;             }
-  Void setSliceCurEndCUAddr             ( UInt uiAddr )     { m_sliceCurEndCUAddr = uiAddr;             }
-  UInt getSliceCurEndCUAddr             ()                  { return m_sliceCurEndCUAddr;               }
+  Void setSliceCurStartCtuTsAddr        ( UInt ctuTsAddr )  { m_sliceCurStartCtuTsAddr = ctuTsAddr;     } // CTU Tile-scan address (as opposed to raster-scan)
+  UInt getSliceCurStartCtuTsAddr        () const            { return m_sliceCurStartCtuTsAddr;          } // CTU Tile-scan address (as opposed to raster-scan)
+  Void setSliceCurEndCtuTsAddr          ( UInt ctuTsAddr )  { m_sliceCurEndCtuTsAddr = ctuTsAddr;       } // CTU Tile-scan address (as opposed to raster-scan)
+  UInt getSliceCurEndCtuTsAddr          () const            { return m_sliceCurEndCtuTsAddr;            } // CTU Tile-scan address (as opposed to raster-scan)
   Void setSliceIdx                      ( UInt i)           { m_sliceIdx = i;                           }
   UInt getSliceIdx                      ()                  { return  m_sliceIdx;                       }
   Void copySliceInfo                    (TComSlice *pcSliceSrc);
@@ -1457,10 +1457,10 @@ public:
   SliceConstraint getSliceSegmentMode   () const            { return m_sliceSegmentMode;                }
   Void setSliceSegmentArgument          ( UInt uiArgument ) { m_sliceSegmentArgument = uiArgument;      }
   UInt getSliceSegmentArgument          ()                  { return m_sliceSegmentArgument;            }
-  Void setSliceSegmentCurStartCUAddr    ( UInt uiAddr )     { m_sliceSegmentCurStartCUAddr = uiAddr;    }
-  UInt getSliceSegmentCurStartCUAddr    ()                  { return m_sliceSegmentCurStartCUAddr;      }
-  Void setSliceSegmentCurEndCUAddr      ( UInt uiAddr )     { m_sliceSegmentCurEndCUAddr = uiAddr;      }
-  UInt getSliceSegmentCurEndCUAddr      ()                  { return m_sliceSegmentCurEndCUAddr;        }
+  Void setSliceSegmentCurStartCtuTsAddr ( UInt ctuTsAddr )  { m_sliceSegmentCurStartCtuTsAddr = ctuTsAddr; } // CTU Tile-scan address (as opposed to raster-scan)
+  UInt getSliceSegmentCurStartCtuTsAddr () const            { return m_sliceSegmentCurStartCtuTsAddr;      } // CTU Tile-scan address (as opposed to raster-scan)
+  Void setSliceSegmentCurEndCtuTsAddr   ( UInt ctuTsAddr )  { m_sliceSegmentCurEndCtuTsAddr = ctuTsAddr;   } // CTU Tile-scan address (as opposed to raster-scan)
+  UInt getSliceSegmentCurEndCtuTsAddr   () const            { return m_sliceSegmentCurEndCtuTsAddr;        } // CTU Tile-scan address (as opposed to raster-scan)
   Void setNextSlice                     ( Bool b )          { m_nextSlice = b;                           }
   Bool isNextSlice                      ()                  { return m_nextSlice;                        }
   Void setNextSliceSegment              ( Bool b )          { m_nextSliceSegment = b;                    }

@@ -211,19 +211,6 @@ Void TAppEncTop::xInitLibCfg()
   //====== Dependent Slice ========
   m_cTEncTop.setSliceSegmentMode                                  (  (SliceConstraint) m_sliceSegmentMode );
   m_cTEncTop.setSliceSegmentArgument                              ( m_sliceSegmentArgument     );
-  Int iNumPartInCU = 1<<(m_uiMaxCUDepth<<1);
-  if(m_sliceSegmentMode==FIXED_NUMBER_OF_LCU)
-  {
-    m_cTEncTop.setSliceSegmentArgument                            ( m_sliceSegmentArgument * iNumPartInCU );
-  }
-  if(m_sliceMode==FIXED_NUMBER_OF_LCU)
-  {
-    m_cTEncTop.setSliceArgument                                   ( m_sliceArgument * iNumPartInCU );
-  }
-  if(m_sliceMode==FIXED_NUMBER_OF_TILES)
-  {
-    m_cTEncTop.setSliceArgument                                   ( m_sliceArgument );
-  }
 
   if(m_sliceMode == NO_SLICES )
   {

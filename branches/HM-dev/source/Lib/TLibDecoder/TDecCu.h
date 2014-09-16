@@ -84,16 +84,16 @@ public:
   Void  destroy                 ();
 
   /// decode CU information
-  Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast );
+  Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast ); // NOTE: code-tidy - rename to decodeCtu
 
   /// reconstruct CU information
-  Void  decompressCU            ( TComDataCU* pcCU );
+  Void  decompressCU            ( TComDataCU* pcCU ); // NOTE: code-tidy - rename to decompressCtu
 
 protected:
 
   Void xDecodeCU                ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Void xFinishDecodeCU          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
-  Bool xDecodeSliceEnd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
+  Bool xDecodeSliceEnd          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );

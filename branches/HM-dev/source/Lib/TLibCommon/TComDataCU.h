@@ -78,7 +78,7 @@ private:
   // CU description
   // -------------------------------------------------------------------------------------------------------------------
 
-  UInt          m_uiCUAddr;           ///< CU address in a slice
+  UInt          m_uiCUAddr;           ///< CTU (also known as LCU) address in a slice (Raster-scan address, as opposed to tile-scan/encoding order). NOTE: code-tidy - rename to m_ctuRsAddr.
   UInt          m_uiAbsIdxInLCU;      ///< absolute address in a CU. It's Z scan order
   UInt          m_uiCUPelX;           ///< CU position in a pixel (X)
   UInt          m_uiCUPelY;           ///< CU position in a pixel (Y)
@@ -117,10 +117,10 @@ private:
   // neighbour access variables
   // -------------------------------------------------------------------------------------------------------------------
 
-  TComDataCU*   m_pcCUAboveLeft;      ///< pointer of above-left CU
-  TComDataCU*   m_pcCUAboveRight;     ///< pointer of above-right CU
-  TComDataCU*   m_pcCUAbove;          ///< pointer of above CU
-  TComDataCU*   m_pcCULeft;           ///< pointer of left CU
+  TComDataCU*   m_pcCUAboveLeft;      ///< pointer of above-left CTU. NOTE: code-tidy - rename to m_pCtuAboveLeft
+  TComDataCU*   m_pcCUAboveRight;     ///< pointer of above-right CU. NOTE: code-tidy - rename to m_pCtuAboveRight
+  TComDataCU*   m_pcCUAbove;          ///< pointer of above CU.       NOTE: code-tidy - rename to m_pCtuAbove
+  TComDataCU*   m_pcCULeft;           ///< pointer of left CU         NOTE: code-tidy - rename to m_pCtuLeft
   TComDataCU*   m_apcCUColocated[NUM_REF_PIC_LIST_01];  ///< pointer of temporally colocated CU's for both directions
   TComMvField   m_cMvFieldA;          ///< motion vector of position A
   TComMvField   m_cMvFieldB;          ///< motion vector of position B
@@ -151,8 +151,6 @@ private:
   Distortion    m_uiTotalDistortion;  ///< sum of partition distortion
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
-  UInt*         m_sliceStartCU;       ///< Start CU address of current slice
-  UInt*         m_sliceSegmentStartCU;///< Start CU address of current slice
   Char          m_codedQP;
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
 
@@ -163,7 +161,7 @@ protected:
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
-  Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
+  Bool          xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
 
   /// compute required bits to encode MVD (used in AMVP)
   UInt          xGetMvdBits           ( TComMv cMvd );
@@ -189,7 +187,7 @@ public:
     );
   Void          destroy               ();
 
-  Void          initCU                ( TComPic* pcPic, UInt uiCUAddr );
+  Void          initCU                ( TComPic* pcPic, UInt ctuRsAddr ); // NOTE: code-tidy - rename to initCtu
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
@@ -209,11 +207,11 @@ public:
   const TComPic*  getPic              ()   const                { return m_pcPic;           }
   TComSlice*       getSlice           ()                        { return m_pcSlice;         }
   const TComSlice* getSlice           ()   const                { return m_pcSlice;         }
-  UInt&         getAddr               ()                        { return m_uiCUAddr;        }
-  UInt&         getZorderIdxInCU      ()                        { return m_uiAbsIdxInLCU; }
-  UInt          getSCUAddr            ();
-  UInt          getCUPelX             ()                        { return m_uiCUPelX;        }
-  UInt          getCUPelY             ()                        { return m_uiCUPelY;        }
+  UInt&         getAddr               ()                        { return m_uiCUAddr;        }  // NOTE: code-tidy - rename to getCtuRsAddr
+  UInt          getAddr               ()   const                { return m_uiCUAddr;        }  // NOTE: code-tidy - rename to getCtuRsAddr
+  UInt&         getZorderIdxInCU      ()                        { return m_uiAbsIdxInLCU;   }  // NOTE: code-tidy - rename to getZorderIdxInCtu
+  UInt          getCUPelX             () const                  { return m_uiCUPelX;        }
+  UInt          getCUPelY             () const                  { return m_uiCUPelY;        }
 
   UChar*        getDepth              ()                        { return m_puhDepth;        }
   UChar         getDepth              ( UInt uiIdx ) const      { return m_puhDepth[uiIdx]; }
@@ -397,11 +395,18 @@ public:
   // utility functions for neighbouring information
   // -------------------------------------------------------------------------------------------------------------------
 
-  TComDataCU*   getCULeft                   () { return m_pcCULeft;       }
-  TComDataCU*   getCUAbove                  () { return m_pcCUAbove;      }
-  TComDataCU*   getCUAboveLeft              () { return m_pcCUAboveLeft;  }
-  TComDataCU*   getCUAboveRight             () { return m_pcCUAboveRight; }
+  TComDataCU*   getCULeft                   () { return m_pcCULeft;       } // NOTE: code-tidy - rename to getCtuLeft
+  TComDataCU*   getCUAbove                  () { return m_pcCUAbove;      } // NOTE: code-tidy - rename to getCtuAbove
+  TComDataCU*   getCUAboveLeft              () { return m_pcCUAboveLeft;  } // NOTE: code-tidy - rename to getCtuAboveLeft
+  TComDataCU*   getCUAboveRight             () { return m_pcCUAboveRight; } // NOTE: code-tidy - rename to getCtuAboveRight
   TComDataCU*   getCUColocated              ( RefPicList eRefPicList ) { return m_apcCUColocated[eRefPicList]; }
+  Bool          CUIsFromSameSlice           ( const TComDataCU *pCU /* Can be NULL */) const { return ( pCU!=NULL && pCU->getSlice()->getSliceCurStartCtuTsAddr() == getSlice()->getSliceCurStartCtuTsAddr() ); }
+  Bool          CUIsFromSameTile            ( const TComDataCU *pCU /* Can be NULL */) const;
+  Bool          CUIsFromSameSliceAndTile    ( const TComDataCU *pCU /* Can be NULL */) const;
+#if FIX_1323
+  Bool          CUIsFromSameSliceTileAndWavefrontRow( const TComDataCU *pCU /* Can be NULL */) const;
+#endif
+  Bool          isLastSubCUOfCtu(const UInt absPartIdx);
 
 
   TComDataCU*   getPULeft                   ( UInt&  uiLPartUnitIdx,
@@ -464,8 +469,6 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
-  UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];        }
-  UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU]; }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                              }
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for RD cost storage

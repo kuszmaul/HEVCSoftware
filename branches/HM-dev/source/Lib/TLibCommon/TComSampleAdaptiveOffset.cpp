@@ -251,7 +251,7 @@ Void TComSampleAdaptiveOffset::invertQuantOffsets(ComponentID compIdx, Int typeI
 
 }
 
-Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
+Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES]) // NOTE: code-tidy - rename ctu to ctuRsAddr
 {
   Int ctuX = ctu % m_numCTUInWidth;
   Int ctuY = ctu / m_numCTUInWidth;
@@ -354,7 +354,7 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
 
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
-  for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
+  for(Int ctu=0; ctu< m_numCTUsPic; ctu++) // NOTE: code-tidy - rename ctu to ctuRsAddr
   {
     SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES] = { NULL };
     getMergeList(pic, ctu, saoBlkParams, mergeList);
@@ -660,7 +660,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
   }
 }
 
-Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic)
+Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic) // NOTE: code-tidy - rename ctu to ctuRsAddr
 {
   Bool isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail;
 
@@ -727,7 +727,7 @@ Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
   TComPicYuv* resYuv = pDecPic->getPicYuvRec();
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);
-  for(Int ctu= 0; ctu < m_numCTUsPic; ctu++)
+  for(Int ctu= 0; ctu < m_numCTUsPic; ctu++) // NOTE: code-tidy - rename ctu to ctuRsAddr
   {
     offsetCTU(ctu, srcYuv, resYuv, (pDecPic->getPicSym()->getSAOBlkParam())[ctu], pDecPic);
   } //ctu

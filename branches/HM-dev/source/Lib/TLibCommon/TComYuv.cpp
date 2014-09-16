@@ -95,13 +95,13 @@ Void TComYuv::clear()
 
 
 
-Void TComYuv::copyToPicYuv   ( TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const
+Void TComYuv::copyToPicYuv   ( TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const // NOTE: code-tidy - rename iCuAddr to ctuRsAddr
 {
   for(Int ch=0; ch<getNumberValidComponents(); ch++)
     copyToPicComponent  ( ComponentID(ch), pcPicYuvDst, iCuAddr, uiAbsZorderIdx, uiPartDepth, uiPartIdx );
 }
 
-Void TComYuv::copyToPicComponent  ( const ComponentID ch, TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const
+Void TComYuv::copyToPicComponent  ( const ComponentID ch, TComPicYuv* pcPicYuvDst, const UInt iCuAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const // NOTE: code-tidy - rename iCuAddr to ctuRsAddr
 {
   const Int iWidth  = getWidth(ch) >>uiPartDepth;
   const Int iHeight = getHeight(ch)>>uiPartDepth;
@@ -123,13 +123,13 @@ Void TComYuv::copyToPicComponent  ( const ComponentID ch, TComPicYuv* pcPicYuvDs
 
 
 
-Void TComYuv::copyFromPicYuv   ( const TComPicYuv* pcPicYuvSrc, const UInt iCuAddr, const UInt uiAbsZorderIdx )
+Void TComYuv::copyFromPicYuv   ( const TComPicYuv* pcPicYuvSrc, const UInt iCuAddr, const UInt uiAbsZorderIdx ) // NOTE: code-tidy - rename iCuAddr to ctuRsAddr
 {
   for(Int ch=0; ch<getNumberValidComponents(); ch++)
     copyFromPicComponent  ( ComponentID(ch), pcPicYuvSrc, iCuAddr, uiAbsZorderIdx );
 }
 
-Void TComYuv::copyFromPicComponent  ( const ComponentID ch, const TComPicYuv* pcPicYuvSrc, const UInt iCuAddr, const UInt uiAbsZorderIdx )
+Void TComYuv::copyFromPicComponent  ( const ComponentID ch, const TComPicYuv* pcPicYuvSrc, const UInt iCuAddr, const UInt uiAbsZorderIdx ) // NOTE: code-tidy - rename iCuAddr to ctuRsAddr
 {
         Pel* pDst     = getAddr(ch);
   const Pel* pSrc     = pcPicYuvSrc->getAddr ( ch, iCuAddr, uiAbsZorderIdx );

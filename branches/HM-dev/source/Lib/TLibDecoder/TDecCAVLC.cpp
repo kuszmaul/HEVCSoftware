@@ -937,7 +937,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setDependentSliceSegmentFlag(false);
   }
   Int numCTUs = ((sps->getPicWidthInLumaSamples()+sps->getMaxCUWidth()-1)/sps->getMaxCUWidth())*((sps->getPicHeightInLumaSamples()+sps->getMaxCUHeight()-1)/sps->getMaxCUHeight());
-  Int maxParts = (1<<(sps->getMaxCUDepth()<<1));
   UInt sliceSegmentAddress = 0;
   Int bitsSliceSegmentAddress = 0;
   while(numCTUs>(1<<bitsSliceSegmentAddress))
@@ -950,9 +949,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     READ_CODE( bitsSliceSegmentAddress, sliceSegmentAddress, "slice_segment_address" );
   }
   //set uiCode to equal slice start address (or dependent slice start address)
-  Int startCuAddress = maxParts*sliceSegmentAddress;
-  rpcSlice->setSliceSegmentCurStartCUAddr( startCuAddress );
-  rpcSlice->setSliceSegmentCurEndCUAddr(numCTUs*maxParts);
+  rpcSlice->setSliceSegmentCurStartCtuTsAddr( sliceSegmentAddress );// this is actually a Raster-Scan (RS) address, but we do not have the RS->TS conversion table defined yet.
+  rpcSlice->setSliceSegmentCurEndCtuTsAddr(numCTUs);                // Set end as the last CTU of the picture.
 
   if (rpcSlice->getDependentSliceSegmentFlag())
   {
@@ -964,8 +962,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNextSlice          ( true  );
     rpcSlice->setNextSliceSegment ( false );
 
-    rpcSlice->setSliceCurStartCUAddr(startCuAddress);
-    rpcSlice->setSliceCurEndCUAddr(numCTUs*maxParts);
+    rpcSlice->setSliceCurStartCtuTsAddr(sliceSegmentAddress); // this is actually a Raster-Scan (RS) address, but we do not have the RS->TS conversion table defined yet.
+    rpcSlice->setSliceCurEndCtuTsAddr(numCTUs);
   }
 
   if(!rpcSlice->getDependentSliceSegmentFlag())
