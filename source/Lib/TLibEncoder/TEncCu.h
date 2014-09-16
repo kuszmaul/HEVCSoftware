@@ -110,11 +110,11 @@ public:
   /// destroy internal buffers
   Void  destroy             ();
 
-  /// CU analysis function
-  Void  compressCU          ( TComDataCU*&  rpcCU );
+  /// CTU analysis function
+  Void  compressCU          ( TComDataCU*&  rpcCtu ); // NOTE: code-tidy - rename to compressCtu
 
-  /// CU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCU );
+  /// CTU encoding function
+  Void  encodeCU            ( TComDataCU*    pcCtu ); // NOTE: code-tidy - rename to encodeCtu
 
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 

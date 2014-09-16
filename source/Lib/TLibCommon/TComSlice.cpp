@@ -79,13 +79,13 @@ TComSlice::TComSlice()
 , m_bTLayerSwitchingFlag          ( false )
 , m_sliceMode                     ( NO_SLICES )
 , m_sliceArgument                 ( 0 )
-, m_sliceCurStartCUAddr           ( 0 )
-, m_sliceCurEndCUAddr             ( 0 )
+, m_sliceCurStartCtuTsAddr        ( 0 )
+, m_sliceCurEndCtuTsAddr          ( 0 )
 , m_sliceIdx                      ( 0 )
 , m_sliceSegmentMode              ( NO_SLICES )
 , m_sliceSegmentArgument          ( 0 )
-, m_sliceSegmentCurStartCUAddr    ( 0 )
-, m_sliceSegmentCurEndCUAddr      ( 0 )
+, m_sliceSegmentCurStartCtuTsAddr ( 0 )
+, m_sliceSegmentCurEndCtuTsAddr   ( 0 )
 , m_nextSlice                     ( false )
 , m_nextSliceSegment              ( false )
 , m_sliceBits                     ( 0 )
@@ -747,13 +747,13 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_sliceMode                     = pSrc->m_sliceMode;
   m_sliceArgument                 = pSrc->m_sliceArgument;
-  m_sliceCurStartCUAddr           = pSrc->m_sliceCurStartCUAddr;
-  m_sliceCurEndCUAddr             = pSrc->m_sliceCurEndCUAddr;
+  m_sliceCurStartCtuTsAddr        = pSrc->m_sliceCurStartCtuTsAddr;
+  m_sliceCurEndCtuTsAddr          = pSrc->m_sliceCurEndCtuTsAddr;
   m_sliceIdx                      = pSrc->m_sliceIdx;
   m_sliceSegmentMode              = pSrc->m_sliceSegmentMode;
   m_sliceSegmentArgument          = pSrc->m_sliceSegmentArgument;
-  m_sliceSegmentCurStartCUAddr    = pSrc->m_sliceSegmentCurStartCUAddr;
-  m_sliceSegmentCurEndCUAddr      = pSrc->m_sliceSegmentCurEndCUAddr;
+  m_sliceSegmentCurStartCtuTsAddr = pSrc->m_sliceSegmentCurStartCtuTsAddr;
+  m_sliceSegmentCurEndCtuTsAddr   = pSrc->m_sliceSegmentCurEndCtuTsAddr;
   m_nextSlice                     = pSrc->m_nextSlice;
   m_nextSliceSegment              = pSrc->m_nextSliceSegment;
 

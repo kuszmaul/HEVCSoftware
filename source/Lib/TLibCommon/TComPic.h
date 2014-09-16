@@ -107,7 +107,8 @@ public:
   TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
   TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
   Int           getPOC() const        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
-  TComDataCU*&  getCU( UInt uiCUAddr )  { return  m_apcPicSym->getCU( uiCUAddr ); }
+  TComDataCU*&  getCU( UInt ctuRsAddr )  { return  m_apcPicSym->getCU( ctuRsAddr ); } // NOTE: code-tidy - rename to getCtu
+  const TComDataCU* getCU( UInt ctuRsAddr ) const { return  m_apcPicSym->getCU( ctuRsAddr ); } // NOTE: code-tidy - rename to getCtu
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
@@ -117,12 +118,12 @@ public:
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }
   Void          setPicYuvResi( TComPicYuv* pcPicYuv )       { m_pcPicYuvResi = pcPicYuv; }
 
-  UInt          getNumCUsInFrame() const     { return m_apcPicSym->getNumberOfCUsInFrame(); }
-  UInt          getNumPartInWidth() const    { return m_apcPicSym->getNumPartInWidth();     }
-  UInt          getNumPartInHeight() const   { return m_apcPicSym->getNumPartInHeight();    }
-  UInt          getNumPartInCU() const       { return m_apcPicSym->getNumPartition();       }
-  UInt          getFrameWidthInCU() const    { return m_apcPicSym->getFrameWidthInCU();     }
-  UInt          getFrameHeightInCU() const   { return m_apcPicSym->getFrameHeightInCU();    }
+  UInt          getNumCUsInFrame() const     { return m_apcPicSym->getNumberOfCUsInFrame(); } // NOTE: code-tidy - rename to getNumCtusInFrame
+  UInt          getNumPartInWidth() const    { return m_apcPicSym->getNumPartInWidth();     } // NOTE: code-tidy - rename to getNumPartInCtuWidth (or replace with getNumPartInCtuSide)
+  UInt          getNumPartInHeight() const   { return m_apcPicSym->getNumPartInHeight();    } // NOTE: code-tidy - rename to getNumPartInCtuHeight
+  UInt          getNumPartInCU() const       { return m_apcPicSym->getNumPartition();       } // NOTE: code-tidy - rename to getNumPartInCtu
+  UInt          getFrameWidthInCU() const    { return m_apcPicSym->getFrameWidthInCU();     } // NOTE: code-tidy - rename to getFrameWidthInCtus
+  UInt          getFrameHeightInCU() const   { return m_apcPicSym->getFrameHeightInCU();    } // NOTE: code-tidy - rename to getFrameHeightInCtus
   UInt          getMinCUWidth() const        { return m_apcPicSym->getMinCUWidth();         }
   UInt          getMinCUHeight() const       { return m_apcPicSym->getMinCUHeight();        }
 

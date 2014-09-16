@@ -122,7 +122,7 @@ Void TComPic::destroy()
 Void TComPic::compressMotion()
 {
   TComPicSym* pPicSym = getPicSym();
-  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
+  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getNumberOfCUsInFrame(); uiCUAddr++ )
   {
     TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
     pcCU->compressMV();
@@ -131,12 +131,12 @@ Void TComPic::compressMotion()
 
 Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
 {
-  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCUOrderMap(getCU(currAddr)->getSlice()->getSliceCurStartCUAddr()/getNumPartInCU()));
+  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCtuTsToRsAddrMap(getCU(currAddr)->getSlice()->getSliceCurStartCtuTsAddr()));
   Bool mergeCtbInTile     = (getPicSym()->getTileIdxMap(mergeAddr) == getPicSym()->getTileIdxMap(currAddr));
   return (mergeCtbInSliceSeg && mergeCtbInTile);
 }
 
-UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
+UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice) // NOTE: code-tidy - update name of function, parameter and internal variables.
 {
   const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
   UInt uiSubStrm;
@@ -144,7 +144,7 @@ UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressIn
   if (iNumSubstreams > 1) // wavefronts, and possibly tiles being used.
   {
     TComPicSym &picSym=*(getPicSym());
-    const UInt uiLCUAddrRaster = bAddressInRaster?uiLCUAddr : picSym.getCUOrderMap(uiLCUAddr);
+    const UInt uiLCUAddrRaster = bAddressInRaster?uiLCUAddr : picSym.getCtuTsToRsAddrMap(uiLCUAddr);
     const UInt uiWidthInLCUs  = picSym.getFrameWidthInCU();
     const UInt uiTileIndex=picSym.getTileIdxMap(uiLCUAddrRaster);
     const UInt widthInTiles=(picSym.getNumColumnsMinus1()+1);

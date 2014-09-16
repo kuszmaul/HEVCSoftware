@@ -265,7 +265,7 @@ Void TDecTop::xCreateLostPicture(Int iLostPoc)
     }
   }
   cFillPic->setCurrSliceIdx(0);
-  for(Int i=0; i<cFillPic->getNumCUsInFrame(); i++)
+  for(Int i=0; i<cFillPic->getNumCUsInFrame(); i++) // NOTE: code-tidy - rename to ctuRsAddr
   {
     cFillPic->getCU(i)->initCU(cFillPic,i);
   }
@@ -463,14 +463,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_prevSliceSkipped = false;
 
   //we should only get a different poc for a new picture (with CTU address==0)
-  if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (m_apcSlicePilot->getSliceCurStartCUAddr() != 0))
+  if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (m_apcSlicePilot->getSliceCurStartCtuTsAddr() != 0))
   {
     printf ("Warning, the first slice of a picture might have been lost!\n");
   }
 
   // exit when a new picture is found
 #if FIX_OUTPUT_ORDER_BEHAVIOR
-  if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) )
+  if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCtuTsAddr() == 0 && !m_bFirstSliceInPicture) )
 #else
   if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) && !m_bFirstSliceInSequence )
 #endif
@@ -559,26 +559,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   TComSlice*  pcSlice = m_apcSlicePilot;
   Bool bNextSlice     = pcSlice->isNextSlice();
 
-  UInt i;
   pcPic->getPicSym()->initTiles(pcSlice->getPPS());
+  pcPic->getPicSym()->initCtuTsRsAddrMaps();
 
-  //generate the Coding Order Map and Inverse Coding Order Map
-  UInt uiEncCUAddr;
-  for(i=0, uiEncCUAddr=0; i<pcPic->getPicSym()->getNumberOfCUsInFrame(); i++, uiEncCUAddr = pcPic->getPicSym()->xCalculateNxtCUAddr(uiEncCUAddr))
-  {
-    pcPic->getPicSym()->setCUOrderMap(i, uiEncCUAddr);
-    pcPic->getPicSym()->setInverseCUOrderMap(uiEncCUAddr, i);
-  }
-  pcPic->getPicSym()->setCUOrderMap(pcPic->getPicSym()->getNumberOfCUsInFrame(), pcPic->getPicSym()->getNumberOfCUsInFrame());
-  pcPic->getPicSym()->setInverseCUOrderMap(pcPic->getPicSym()->getNumberOfCUsInFrame(), pcPic->getPicSym()->getNumberOfCUsInFrame());
-
-  //convert the start and end CU addresses of the slice and dependent slice into encoding order
-  pcSlice->setSliceSegmentCurStartCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurStartCUAddr()) );
-  pcSlice->setSliceSegmentCurEndCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurEndCUAddr()) );
+  // When decoding the slice header, the stored start and end addresses were actually RS addresses, not TS addresses.
+  // Now, having set up the maps, convert them to the correct form.
+  pcSlice->setSliceSegmentCurStartCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceSegmentCurStartCtuTsAddr()) );
+  pcSlice->setSliceSegmentCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceSegmentCurEndCtuTsAddr()) );
   if(pcSlice->isNextSlice())
   {
-    pcSlice->setSliceCurStartCUAddr(pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceCurStartCUAddr()));
-    pcSlice->setSliceCurEndCUAddr(pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceCurEndCUAddr()));
+    pcSlice->setSliceCurStartCtuTsAddr(pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceCurStartCtuTsAddr()));
+    pcSlice->setSliceCurEndCtuTsAddr(pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceCurEndCtuTsAddr()));
   }
 
   if (m_bFirstSliceInPicture)

@@ -131,12 +131,12 @@ public:
   const Pel*    getAddr           (const ComponentID ch) const { return  m_piPicOrg[ch];   }
 
   //  Access starting position of original picture for specific coding unit (CU) or partition unit (PU)
-  Pel*          getAddr           (const ComponentID ch, const Int iLCuAddr )       { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ iLCuAddr ]; }
-  const Pel*    getAddr           (const ComponentID ch, const Int iLCuAddr ) const { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ iLCuAddr ]; }
-  Pel*          getAddr           (const ComponentID ch, const Int iLCuAddr, const Int uiAbsZorderIdx )
-                                     { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][iLCuAddr] + m_buOffset[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
-  const Pel*    getAddr           (const ComponentID ch, const Int iLCuAddr, const Int uiAbsZorderIdx ) const
-                                     { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][iLCuAddr] + m_buOffset[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
+  Pel*          getAddr           (const ComponentID ch, const Int ctuRSAddr )       { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ ctuRSAddr ]; }
+  const Pel*    getAddr           (const ComponentID ch, const Int ctuRSAddr ) const { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ ctuRSAddr ]; }
+  Pel*          getAddr           (const ComponentID ch, const Int ctuRSAddr, const Int uiAbsZorderIdx )
+                                     { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ctuRSAddr] + m_buOffset[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
+  const Pel*    getAddr           (const ComponentID ch, const Int ctuRSAddr, const Int uiAbsZorderIdx ) const
+                                     { return m_piPicOrg[ch] + m_cuOffset[ch==0?0:1][ctuRSAddr] + m_buOffset[ch==0?0:1][g_auiZscanToRaster[uiAbsZorderIdx]]; }
 
   UInt          getComponentScaleX(const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt          getComponentScaleY(const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }

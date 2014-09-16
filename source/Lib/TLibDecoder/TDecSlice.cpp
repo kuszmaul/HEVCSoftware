@@ -109,8 +109,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 {
   TComDataCU* pcCU;
   UInt        uiIsLast = 0;
-  Int   iStartCUEncOrder = max(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCUAddr()/rpcPic->getNumPartInCU(), rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceSegmentCurStartCUAddr()/rpcPic->getNumPartInCU());
-  Int   iStartCUAddr = rpcPic->getPicSym()->getCUOrderMap(iStartCUEncOrder);
+  // NOTE: code-tidy - rename to startCtuTsAddr
+  const Int   iStartCUEncOrder = max(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCtuTsAddr(), rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceSegmentCurStartCtuTsAddr());
+  // NOTE: code-tidy - rename to startCtuRsAddr
+  const Int   iStartCUAddr = rpcPic->getPicSym()->getCtuTsToRsAddrMap(iStartCUEncOrder);
 
   // decoder don't need prediction & residual frame buffer
   rpcPic->setPicYuvPred( 0 );
@@ -182,7 +184,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
   const Bool depSliceSegmentsEnabled = rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getPPS()->getDependentSliceSegmentsEnabledFlag();
   const UInt startTileIdx=rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr);
   TComTile *pCurrentTile=rpcPic->getPicSym()->getTComTile(startTileIdx);
-  UInt uiTileStartLCU = pCurrentTile->getFirstCUAddr(); // Code tidy
+  UInt uiTileStartLCU = pCurrentTile->getFirstCUAddr(); // NOTE: code-tidy - rename to tileStartLCURsAddr
 
   // The first LCU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForLCUAddr may be higher.
   // This calculates the common offset for all substreams in this slice.
@@ -212,9 +214,11 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       CTXMem[0]->loadContexts(pcSbacDecoder);
     }
   }
-  for( Int iCUAddr = iStartCUAddr; !uiIsLast && iCUAddr < rpcPic->getNumCUsInFrame(); iCUAddr = rpcPic->getPicSym()->xCalculateNxtCUAddr(iCUAddr) )
+
+  // NOTE: code-tidy - rename iCUAddr to ctuRsAddr
+  for( Int iCUAddr = iStartCUAddr ;!uiIsLast && iCUAddr < rpcPic->getNumCUsInFrame(); iCUAddr = rpcPic->getPicSym()->getCtuTsToRsAddrMap(rpcPic->getPicSym()->getCtuRsToTsAddrMap(iCUAddr)+1) )
   {
-    pcCU = rpcPic->getCU( iCUAddr );
+    pcCU = rpcPic->getCU( iCUAddr ); // NOTE: code-tidy - locally scope this (and rename to pcCtu?)
     pcCU->initCU( rpcPic, iCUAddr );
     uiTileCol = rpcPic->getPicSym()->getTileIdxMap(iCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1); // what column of tiles are we in?
     uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr();
@@ -236,14 +240,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         {
           pcCUTR = rpcPic->getCU( iCUAddr - uiWidthInCU + 1 );
         }
-        UInt uiMaxParts = 1<<(pcSlice->getSPS()->getMaxCUDepth()<<1);
-
-        if ( (true/*bEnforceSliceRestriction*/ &&
-             ((pcCUTR==NULL) || (pcCUTR->getSlice()==NULL) ||
-             ((pcCUTR->getSCUAddr()+uiMaxParts-1) < pcSlice->getSliceCurStartCUAddr()) ||
-             ((rpcPic->getPicSym()->getTileIdxMap( pcCUTR->getAddr() ) != rpcPic->getPicSym()->getTileIdxMap(iCUAddr)))
-             ))
-           )
+        if ( (true/*bEnforceSliceRestriction*/ && !pcCU->CUIsFromSameSliceAndTile(pcCUTR)) )
         {
           // TR not available.
         }
@@ -255,11 +252,11 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       }
       pcSbacDecoder->load(&pcSbacDecoders[uiSubStrm]);  //this load is used to simplify the code (avoid to change all the call to pcSbacDecoders)
     }
-
-    if ( (iCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr()) && // 1st in tile.
-         (iCUAddr!=0) && (iCUAddr!=rpcPic->getPicSym()->getPicSCUAddr(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCUAddr())/rpcPic->getNumPartInCU())
-         && (iCUAddr!=rpcPic->getPicSym()->getPicSCUAddr(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceSegmentCurStartCUAddr())/rpcPic->getNumPartInCU())
-         ) // !1st in frame && !1st in slice
+    if ( (iCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr()) // It is first in tile.
+         && (iCUAddr!=0) // !first in frame
+         && (iCUAddr!=rpcPic->getPicSym()->getCtuTsToRsAddrMap(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCtuTsAddr())) // !first in slice
+         && (iCUAddr!=rpcPic->getPicSym()->getCtuTsToRsAddrMap(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceSegmentCurStartCtuTsAddr()))  // !first in slice segment
+         )
     {
       if (pcSlice->getPPS()->getNumSubstreams() > 1)
       {

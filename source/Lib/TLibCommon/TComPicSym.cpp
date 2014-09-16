@@ -63,9 +63,9 @@ TComPicSym::TComPicSym()
 ,m_apcTComDataCU (NULL)
 ,m_iNumColumnsMinus1 (0)
 ,m_iNumRowsMinus1(0)
-,m_puiCUOrderMap(0)
+,m_ctuTsToRsAddrMap(NULL)
 ,m_puiTileIdxMap(NULL)
-,m_puiInverseCUOrderMap(NULL)
+,m_ctuRsToTsAddrMap(NULL)
 ,m_saoBlkParams(NULL)
 {}
 
@@ -113,14 +113,14 @@ Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPic
       );
   }
 
-  m_puiCUOrderMap = new UInt[m_uiNumCUsInFrame+1];
-  m_puiTileIdxMap = new UInt[m_uiNumCUsInFrame];
-  m_puiInverseCUOrderMap = new UInt[m_uiNumCUsInFrame+1];
+  m_ctuTsToRsAddrMap = new UInt[m_uiNumCUsInFrame+1];
+  m_puiTileIdxMap    = new UInt[m_uiNumCUsInFrame];
+  m_ctuRsToTsAddrMap = new UInt[m_uiNumCUsInFrame+1];
 
   for( i=0; i<m_uiNumCUsInFrame; i++ )
   {
-    m_puiCUOrderMap[i] = i;
-    m_puiInverseCUOrderMap[i] = i;
+    m_ctuTsToRsAddrMap[i] = i;
+    m_ctuRsToTsAddrMap[i] = i;
   }
 
   m_saoBlkParams = new SAOBlkParam[m_uiNumCUsInFrame];
@@ -147,14 +147,14 @@ Void TComPicSym::destroy()
   delete [] m_apcTComDataCU;
   m_apcTComDataCU = NULL;
 
-  delete [] m_puiCUOrderMap;
-  m_puiCUOrderMap = NULL;
+  delete [] m_ctuTsToRsAddrMap;
+  m_ctuTsToRsAddrMap = NULL;
 
   delete [] m_puiTileIdxMap;
   m_puiTileIdxMap = NULL;
 
-  delete [] m_puiInverseCUOrderMap;
-  m_puiInverseCUOrderMap = NULL;
+  delete [] m_ctuRsToTsAddrMap;
+  m_ctuRsToTsAddrMap = NULL;
 
   if(m_saoBlkParams)
   {
@@ -183,14 +183,16 @@ Void TComPicSym::clearSliceBuffer()
   m_uiNumAllocatedSlice = 1;
 }
 
-UInt TComPicSym::getPicSCUEncOrder( UInt SCUAddr )
+Void TComPicSym::initCtuTsRsAddrMaps()
 {
-  return getInverseCUOrderMap(SCUAddr/m_uiNumPartitions)*m_uiNumPartitions + SCUAddr%m_uiNumPartitions;
-}
-
-UInt TComPicSym::getPicSCUAddr( UInt SCUEncOrder )
-{
-  return getCUOrderMap(SCUEncOrder/m_uiNumPartitions)*m_uiNumPartitions + SCUEncOrder%m_uiNumPartitions;
+  //generate the Coding Order Map and Inverse Coding Order Map
+  for(Int ctuTsAddr=0, ctuRsAddr=0; ctuTsAddr<getNumberOfCUsInFrame(); ctuTsAddr++, ctuRsAddr = xCalculateNextCtuRSAddr(ctuRsAddr))
+  {
+    setCtuTsToRsAddrMap(ctuTsAddr, ctuRsAddr);
+    setCtuRsToTsAddrMap(ctuRsAddr, ctuTsAddr);
+  }
+  setCtuTsToRsAddrMap(getNumberOfCUsInFrame(), getNumberOfCUsInFrame());
+  setCtuRsToTsAddrMap(getNumberOfCUsInFrame(), getNumberOfCUsInFrame());
 }
 
 Void TComPicSym::initTiles(TComPPS *pps)
@@ -325,14 +327,13 @@ Void TComPicSym::initTiles(TComPPS *pps)
     m_puiTileIdxMap[i] = rowIdx * numCols + columnIdx;
   }
 }
-
-UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
+UInt TComPicSym::xCalculateNextCtuRSAddr( UInt uiCurrCUAddr ) // NOTE: code-tidy - rename uiCurrCUAddr to currCtuRsAddr
 {
-  UInt  uiNxtCUAddr;
+  UInt  uiNxtCUAddr; // NOTE: code-tidy - rename uiNextCUAddr to nextCtuRsAddr
   UInt  uiTileIdx;
 
   //get the tile index for the current LCU
-  uiTileIdx = this->getTileIdxMap(uiCurrCUAddr);
+  uiTileIdx = this->getTileIdxMap(uiCurrCUAddr); // NOTE: code-tidy - remove 'this->'
 
   //get the raster scan address for the next LCU
   if( uiCurrCUAddr % m_uiWidthInCU == this->getTComTile(uiTileIdx)->getRightEdgePosInCU() && uiCurrCUAddr / m_uiWidthInCU == this->getTComTile(uiTileIdx)->getBottomEdgePosInCU() )
@@ -362,7 +363,7 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
   return uiNxtCUAddr;
 }
 
-Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
+Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu, // NOTE: code-tidy - rename to ctuRsAddr
                                                       Bool& isLeftAvail,
                                                       Bool& isRightAvail,
                                                       Bool& isAboveAvail,
@@ -392,7 +393,7 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
     TComDataCU* ctuAbove = isAboveAvail?getCU(ctu-m_uiWidthInCU):NULL;
     TComDataCU* ctuBelow = isBelowAvail?getCU(ctu+m_uiWidthInCU):NULL;
     TComDataCU* ctuAboveLeft  = isAboveLeftAvail ? getCU(ctu-m_uiWidthInCU-1):NULL;
-    TComDataCU* ctuAboveRigtht= isAboveRightAvail? getCU(ctu-m_uiWidthInCU+1):NULL;
+    TComDataCU* ctuAboveRight = isAboveRightAvail? getCU(ctu-m_uiWidthInCU+1):NULL;
     TComDataCU* ctuBelowLeft  = isBelowLeftAvail ? getCU(ctu+m_uiWidthInCU-1):NULL;
     TComDataCU* ctuBelowRight = isBelowRightAvail? getCU(ctu+m_uiWidthInCU+1):NULL;
 
@@ -400,59 +401,58 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
       //left
       if(ctuLeft != NULL)
       {
-        isLeftAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuLeft->getSlice()->getSliceCurStartCUAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isLeftAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuLeft->getSlice()->getSliceCurStartCtuTsAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
       //above
       if(ctuAbove != NULL)
       {
-        isAboveAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuAbove->getSlice()->getSliceCurStartCUAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isAboveAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuAbove->getSlice()->getSliceCurStartCtuTsAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
       //right
       if(ctuRight != NULL)
       {
-        isRightAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuRight->getSlice()->getSliceCurStartCUAddr())?ctuRight->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isRightAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuRight->getSlice()->getSliceCurStartCtuTsAddr())?ctuRight->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
       //below
       if(ctuBelow != NULL)
       {
-        isBelowAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuBelow->getSlice()->getSliceCurStartCUAddr())?ctuBelow->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isBelowAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuBelow->getSlice()->getSliceCurStartCtuTsAddr())?ctuBelow->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
       //above-left
       if(ctuAboveLeft != NULL)
       {
-        isAboveLeftAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuAboveLeft->getSlice()->getSliceCurStartCUAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isAboveLeftAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuAboveLeft->getSlice()->getSliceCurStartCtuTsAddr())?ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
       //below-right
       if(ctuBelowRight != NULL)
       {
-        isBelowRightAvail = (ctuCurr->getSlice()->getSliceCurStartCUAddr() != ctuBelowRight->getSlice()->getSliceCurStartCUAddr())?ctuBelowRight->getSlice()->getLFCrossSliceBoundaryFlag():true;
+        isBelowRightAvail = (ctuCurr->getSlice()->getSliceCurStartCtuTsAddr() != ctuBelowRight->getSlice()->getSliceCurStartCtuTsAddr())?ctuBelowRight->getSlice()->getLFCrossSliceBoundaryFlag():true;
       }
 
-
       //above-right
-      if(ctuAboveRigtht != NULL)
+      if(ctuAboveRight != NULL)
       {
-        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
-        Int aboveRigthtSliceStartEncOrder = ctuAboveRigtht->getSlice()->getSliceCurStartCUAddr();
+        Int curSliceStartTsAddr  = ctuCurr->getSlice()->getSliceCurStartCtuTsAddr();
+        Int aboveRightSliceStartTsAddr = ctuAboveRight->getSlice()->getSliceCurStartCtuTsAddr();
 
-        isAboveRightAvail = (curSliceStartEncOrder == aboveRigthtSliceStartEncOrder)?(true):
+        isAboveRightAvail = (curSliceStartTsAddr == aboveRightSliceStartTsAddr)?(true):
           (
-          (curSliceStartEncOrder > aboveRigthtSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
-          :(ctuAboveRigtht->getSlice()->getLFCrossSliceBoundaryFlag())
-          );          
+          (curSliceStartTsAddr > aboveRightSliceStartTsAddr)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          :(ctuAboveRight->getSlice()->getLFCrossSliceBoundaryFlag())
+          );
       }
       //below-left
       if(ctuBelowLeft != NULL)
       {
-        Int curSliceStartEncOrder  = ctuCurr->getSlice()->getSliceCurStartCUAddr();
-        Int belowLeftSliceStartEncOrder = ctuBelowLeft->getSlice()->getSliceCurStartCUAddr();
+        Int curSliceStartTsAddr       = ctuCurr->getSlice()->getSliceCurStartCtuTsAddr();
+        Int belowLeftSliceStartTsAddr = ctuBelowLeft->getSlice()->getSliceCurStartCtuTsAddr();
 
-        isBelowLeftAvail = (curSliceStartEncOrder == belowLeftSliceStartEncOrder)?(true):
+        isBelowLeftAvail = (curSliceStartTsAddr == belowLeftSliceStartTsAddr)?(true):
           (
-          (curSliceStartEncOrder > belowLeftSliceStartEncOrder)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
+          (curSliceStartTsAddr > belowLeftSliceStartTsAddr)?(ctuCurr->getSlice()->getLFCrossSliceBoundaryFlag())
           :(ctuBelowLeft->getSlice()->getLFCrossSliceBoundaryFlag())
           );
-      }        
+      }
     }
 
     if(!isLoopFiltAcrossTilePPS)
@@ -462,7 +462,7 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
       isRightAvail     = (!isRightAvail     ) ?false:(getTileIdxMap( ctuRight->getAddr()        ) == getTileIdxMap( ctu ));
       isBelowAvail     = (!isBelowAvail     ) ?false:(getTileIdxMap( ctuBelow->getAddr()        ) == getTileIdxMap( ctu ));
       isAboveLeftAvail = (!isAboveLeftAvail ) ?false:(getTileIdxMap( ctuAboveLeft->getAddr()    ) == getTileIdxMap( ctu ));
-      isAboveRightAvail= (!isAboveRightAvail) ?false:(getTileIdxMap( ctuAboveRigtht->getAddr()  ) == getTileIdxMap( ctu ));
+      isAboveRightAvail= (!isAboveRightAvail) ?false:(getTileIdxMap( ctuAboveRight->getAddr()   ) == getTileIdxMap( ctu ));
       isBelowLeftAvail = (!isBelowLeftAvail ) ?false:(getTileIdxMap( ctuBelowLeft->getAddr()    ) == getTileIdxMap( ctu ));
       isBelowRightAvail= (!isBelowRightAvail) ?false:(getTileIdxMap( ctuBelowRight->getAddr()   ) == getTileIdxMap( ctu ));
     }

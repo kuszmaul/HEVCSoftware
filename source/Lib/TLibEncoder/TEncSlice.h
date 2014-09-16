@@ -104,7 +104,7 @@ private:
   std::vector<TEncSbac*> CTXMem;
 
   Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);
-  Void     calculateBoundingCUAddrForSlice(UInt &uiStartCUAddrSlice, UInt &uiBoundingCUAddrSlice, Bool &bReachedTileBoundary, TComPic*& rpcPic, Bool bEncodeSlice, Int sliceMode, Int sliceArgument, UInt uiSliceCurEndCUAddr);
+  Void     calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UInt &boundingCtuTSAddrSlice, Bool &haveReachedTileBoundary, TComPic* pcPic, const Bool encodingSlice, const Int sliceMode, const Int sliceArgument, const UInt uiSliceCurEndCtuTSAddr);
 
 public:
   TEncSlice();
@@ -129,7 +129,7 @@ public:
   UInt64  getTotalBits        ()  { return m_uiPicTotalBits; }
 
   TEncCu*        getCUEncoder() { return m_pcCuEncoder; }                        ///< CU encoder
-  Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
+  Void    xDetermineStartAndBoundingCtuTsAddr  ( UInt& startCtuTsAddr, UInt& boundingCtuTsAddr, TComPic* pcPic, const Bool encodingSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
   Void      initCtxMem( UInt i );
