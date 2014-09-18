@@ -1169,7 +1169,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           pcPic->allocateNewSlice();
           // prepare for next slice
-          const UInt sliceIdx = storedStartCtuTsAddrForEncodingSlice.size()-1;
+          const UInt sliceIdx = (UInt) storedStartCtuTsAddrForEncodingSlice.size()-1;
           pcPic->setCurrSliceIdx                    ( sliceIdx );
           m_pcSliceEncoder->setSliceIdx             ( sliceIdx );
           pcSlice = pcPic->getSlice                 ( sliceIdx );
