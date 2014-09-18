@@ -111,14 +111,14 @@ public:
   Void  destroy             ();
 
   /// CTU analysis function
-  Void  compressCU          ( TComDataCU*&  rpcCtu ); // NOTE: code-tidy - rename to compressCtu
+  Void  compressCtu         ( TComDataCU*  pCtu );
 
   /// CTU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCtu ); // NOTE: code-tidy - rename to encodeCtu
+  Void  encodeCtu           ( TComDataCU*  pCtu );
 
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 
-  Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
+  Int   updateCtuDataISlice ( TComDataCU* pCtu, Int width, Int height );
 
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
@@ -162,19 +162,19 @@ protected:
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
-  Void xLcuCollectARLStats(TComDataCU* rpcCU);
+  Void xCtuCollectARLStats(TComDataCU* pCtu);
   Int  xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
 #endif
 
 #if AMP_ENC_SPEEDUP
 #if AMP_MRG
-  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
 #else
-  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
 #endif
 #endif
 
-  Void  xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv );
+  Void  xFillPCMBuffer     ( TComDataCU* pCU, TComYuv* pOrgYuv );
 };
 
 //! \}

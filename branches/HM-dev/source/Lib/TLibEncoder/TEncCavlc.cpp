@@ -724,7 +724,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   //              separate_colour_plane_flag is 1.
 
   //calculate number of bits required for slice address
-  Int maxSliceSegmentAddress = pcSlice->getPic()->getNumCUsInFrame();
+  Int maxSliceSegmentAddress = pcSlice->getPic()->getNumberOfCtusInFrame();
   Int bitsSliceSegmentAddress = 0;
   while(maxSliceSegmentAddress>(1<<bitsSliceSegmentAddress))
   {
@@ -1149,8 +1149,8 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
   {
     UInt* pSubstreamSizes                 = pSlice->getSubstreamSizes();
-    const Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForLCUAddr(pSlice->getSliceSegmentCurStartCtuTsAddr(), false, pSlice);
-    const Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForLCUAddr(pSlice->getSliceSegmentCurEndCtuTsAddr()-1, false, pSlice);
+    const Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurStartCtuTsAddr(), false, pSlice);
+    const Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurEndCtuTsAddr()-1, false, pSlice);
     numEntryPointOffsets                  = subStreamOfLastSegmentOfSlice-numZeroSubstreamsAtStartOfSlice;
     pSlice->setNumEntryPointOffsets(numEntryPointOffsets);
     entryPointOffset           = new UInt[numEntryPointOffsets];

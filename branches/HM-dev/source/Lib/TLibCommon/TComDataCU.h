@@ -78,8 +78,8 @@ private:
   // CU description
   // -------------------------------------------------------------------------------------------------------------------
 
-  UInt          m_uiCUAddr;           ///< CTU (also known as LCU) address in a slice (Raster-scan address, as opposed to tile-scan/encoding order). NOTE: code-tidy - rename to m_ctuRsAddr.
-  UInt          m_uiAbsIdxInLCU;      ///< absolute address in a CU. It's Z scan order
+  UInt          m_ctuRsAddr;          ///< CTU (also known as LCU) address in a slice (Raster-scan address, as opposed to tile-scan/encoding order).
+  UInt          m_absZIdxInCtu;       ///< absolute address in a CTU. It's Z scan order
   UInt          m_uiCUPelX;           ///< CU position in a pixel (X)
   UInt          m_uiCUPelY;           ///< CU position in a pixel (Y)
   UInt          m_uiNumPartition;     ///< total number of minimum partitions in a CU
@@ -117,10 +117,10 @@ private:
   // neighbour access variables
   // -------------------------------------------------------------------------------------------------------------------
 
-  TComDataCU*   m_pcCUAboveLeft;      ///< pointer of above-left CTU. NOTE: code-tidy - rename to m_pCtuAboveLeft
-  TComDataCU*   m_pcCUAboveRight;     ///< pointer of above-right CU. NOTE: code-tidy - rename to m_pCtuAboveRight
-  TComDataCU*   m_pcCUAbove;          ///< pointer of above CU.       NOTE: code-tidy - rename to m_pCtuAbove
-  TComDataCU*   m_pcCULeft;           ///< pointer of left CU         NOTE: code-tidy - rename to m_pCtuLeft
+  TComDataCU*   m_pCtuAboveLeft;      ///< pointer of above-left CTU.
+  TComDataCU*   m_pCtuAboveRight;     ///< pointer of above-right CTU.
+  TComDataCU*   m_pCtuAbove;          ///< pointer of above CTU.
+  TComDataCU*   m_pCtuLeft;           ///< pointer of left CTU
   TComDataCU*   m_apcCUColocated[NUM_REF_PIC_LIST_01];  ///< pointer of temporally colocated CU's for both directions
   TComMvField   m_cMvFieldA;          ///< motion vector of position A
   TComMvField   m_cMvFieldB;          ///< motion vector of position B
@@ -187,7 +187,7 @@ public:
     );
   Void          destroy               ();
 
-  Void          initCU                ( TComPic* pcPic, UInt ctuRsAddr ); // NOTE: code-tidy - rename to initCtu
+  Void          initCtu               ( TComPic* pcPic, UInt ctuRsAddr );
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
@@ -204,12 +204,12 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   TComPic*        getPic              ()                        { return m_pcPic;           }
-  const TComPic*  getPic              ()   const                { return m_pcPic;           }
+  const TComPic*  getPic              () const                  { return m_pcPic;           }
   TComSlice*       getSlice           ()                        { return m_pcSlice;         }
-  const TComSlice* getSlice           ()   const                { return m_pcSlice;         }
-  UInt&         getAddr               ()                        { return m_uiCUAddr;        }  // NOTE: code-tidy - rename to getCtuRsAddr
-  UInt          getAddr               ()   const                { return m_uiCUAddr;        }  // NOTE: code-tidy - rename to getCtuRsAddr
-  UInt&         getZorderIdxInCU      ()                        { return m_uiAbsIdxInLCU;   }  // NOTE: code-tidy - rename to getZorderIdxInCtu
+  const TComSlice* getSlice           () const                  { return m_pcSlice;         }
+  UInt&         getCtuRsAddr          ()                        { return m_ctuRsAddr;       }
+  UInt          getCtuRsAddr          () const                  { return m_ctuRsAddr;       }
+  UInt          getZorderIdxInCtu     () const                  { return m_absZIdxInCtu;    }
   UInt          getCUPelX             () const                  { return m_uiCUPelX;        }
   UInt          getCUPelY             () const                  { return m_uiCUPelY;        }
 
@@ -261,7 +261,7 @@ public:
   Void          setQPSubParts         ( Int qp,   UInt uiAbsPartIdx, UInt uiDepth );
   Int           getLastValidPartIdx   ( Int iAbsPartIdx );
   Char          getLastCodedQP        ( UInt uiAbsPartIdx );
-  Void          setQPSubCUs           ( Int qp, TComDataCU* pcCU, UInt absPartIdx, UInt depth, Bool &foundNonZeroCbf );
+  Void          setQPSubCUs           ( Int qp, UInt absPartIdx, UInt depth, Bool &foundNonZeroCbf );
   Void          setCodedQP            ( Char qp )               { m_codedQP = qp;             }
   Char          getCodedQP            ()                        { return m_codedQP;           }
 
@@ -296,12 +296,12 @@ public:
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
 
-  TCoeff*&      getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
+  TCoeff*       getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
 #if ADAPTIVE_QP_SELECTION
-  TCoeff*&      getArlCoeff           ( ComponentID component ) { return m_pcArlCoeff[component]; }
+  TCoeff*       getArlCoeff           ( ComponentID component ) { return m_pcArlCoeff[component]; }
 #endif
-  Pel*&         getPCMSample          ( ComponentID component ) { return m_pcIPCMSample[component]; }
+  Pel*          getPCMSample          ( ComponentID component ) { return m_pcIPCMSample[component]; }
 
   UChar         getCbf    ( UInt uiIdx, ComponentID eType )                  { return m_puhCbf[eType][uiIdx];  }
   UChar*        getCbf    ( ComponentID eType )                              { return m_puhCbf[eType];         }
@@ -331,7 +331,7 @@ public:
   Void          setMergeIndex         ( UInt uiIdx, UInt uiMergeIndex ) { m_puhMergeIndex[uiIdx] = uiMergeIndex;  }
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
-  Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
+  Void          setSubPart            ( T bParameter, T* pbBaseCtu, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
@@ -395,10 +395,10 @@ public:
   // utility functions for neighbouring information
   // -------------------------------------------------------------------------------------------------------------------
 
-  TComDataCU*   getCULeft                   () { return m_pcCULeft;       } // NOTE: code-tidy - rename to getCtuLeft
-  TComDataCU*   getCUAbove                  () { return m_pcCUAbove;      } // NOTE: code-tidy - rename to getCtuAbove
-  TComDataCU*   getCUAboveLeft              () { return m_pcCUAboveLeft;  } // NOTE: code-tidy - rename to getCtuAboveLeft
-  TComDataCU*   getCUAboveRight             () { return m_pcCUAboveRight; } // NOTE: code-tidy - rename to getCtuAboveRight
+  TComDataCU*   getCtuLeft                  () { return m_pCtuLeft;       }
+  TComDataCU*   getCtuAbove                 () { return m_pCtuAbove;      }
+  TComDataCU*   getCtuAboveLeft             () { return m_pCtuAboveLeft;  }
+  TComDataCU*   getCtuAboveRight            () { return m_pCtuAboveRight; }
   TComDataCU*   getCUColocated              ( RefPicList eRefPicList ) { return m_apcCUColocated[eRefPicList]; }
   Bool          CUIsFromSameSlice           ( const TComDataCU *pCU /* Can be NULL */) const { return ( pCU!=NULL && pCU->getSlice()->getSliceCurStartCtuTsAddr() == getSlice()->getSliceCurStartCtuTsAddr() ); }
   Bool          CUIsFromSameTile            ( const TComDataCU *pCU /* Can be NULL */) const;
@@ -416,15 +416,15 @@ public:
   TComDataCU*   getPUAbove                  ( UInt&  uiAPartUnitIdx,
                                               UInt uiCurrPartUnitIdx,
                                               Bool bEnforceSliceRestriction=true,
-                                              Bool planarAtLCUBoundary = false,
+                                              Bool planarAtCTUBoundary = false,
                                               Bool bEnforceTileRestriction=true );
   TComDataCU*   getPUAboveLeft              ( UInt&  uiALPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
   TComDataCU*   getPUBelowLeft              ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, Bool bEnforceSliceRestriction=true );
 
-  TComDataCU*   getQpMinCuLeft              ( UInt&  uiLPartUnitIdx , UInt uiCurrAbsIdxInLCU );
-  TComDataCU*   getQpMinCuAbove             ( UInt&  uiAPartUnitIdx , UInt uiCurrAbsIdxInLCU );
-  Char          getRefQP                    ( UInt   uiCurrAbsIdxInLCU                       );
+  TComDataCU*   getQpMinCuLeft              ( UInt&  uiLPartUnitIdx , UInt uiCurrAbsIdxInCtu );
+  TComDataCU*   getQpMinCuAbove             ( UInt&  uiAPartUnitIdx , UInt uiCurrAbsIdxInCtu );
+  Char          getRefQP                    ( UInt   uiCurrAbsIdxInCtu                       );
 
   TComDataCU*   getPUAboveRightAdi          ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true );
   TComDataCU*   getPUBelowLeftAdi           ( UInt&  uiBLPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true );
@@ -433,7 +433,7 @@ public:
   Void          deriveLeftBottomIdx         ( UInt uiPartIdx, UInt& ruiPartIdxLB );
 
   Void          deriveLeftRightTopIdxAdi    ( UInt& ruiPartIdxLT, UInt& ruiPartIdxRT, UInt uiPartOffset, UInt uiPartDepth );
-  Void          deriveLeftBottomIdxAdi      ( UInt& ruiPartIdxLB, UInt  uiPartOffset, UInt uiPartDepth );
+  Void          deriveLeftBottomIdxAdi      ( UInt& ruiPartIdxLB, UInt  uiPartOffset, UInt uiPartDepth ); // NOTE: Unused function.
 
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
   Void          getInterMergeCandidates       ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
