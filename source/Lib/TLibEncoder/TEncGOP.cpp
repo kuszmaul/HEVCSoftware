@@ -533,7 +533,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 {
   // TODO: Split this function up.
 
-  TComPic*        pcPic;
+  TComPic*        pcPic = NULL;
   TComPicYuv*     pcPicYuvRecOut;
   TComSlice*      pcSlice;
   TComOutputBitstream  *pcBitstreamRedirect;
