@@ -121,27 +121,27 @@ Void TDecCu::destroy()
 /** \param    pcCU        pointer of CU data
  \param    ruiIsLast   last data?
  */
-Void TDecCu::decodeCU( TComDataCU* pcCU, UInt& ruiIsLast )
+Void TDecCu::decodeCtu( TComDataCU* pCtu, UInt& ruiIsLast )
 {
-  if ( pcCU->getSlice()->getPPS()->getUseDQP() )
+  if ( pCtu->getSlice()->getPPS()->getUseDQP() )
   {
     setdQPFlag(true);
   }
 
-  if ( pcCU->getSlice()->getUseChromaQpAdj() )
+  if ( pCtu->getSlice()->getUseChromaQpAdj() )
   {
     setIsChromaQpAdjCoded(true);
   }
 
   // start from the top level CU
-  xDecodeCU( pcCU, 0, 0, ruiIsLast);
+  xDecodeCU( pCtu, 0, 0, ruiIsLast);
 }
 
 /** \param    pcCU        pointer of CU data
  */
-Void TDecCu::decompressCU( TComDataCU* pcCU )
+Void TDecCu::decompressCtu( TComDataCU* pCtu )
 {
-  xDecompressCU( pcCU, 0,  0 );
+  xDecompressCU( pCtu, 0,  0 );
 }
 
 // ====================================================================================================================
@@ -173,12 +173,12 @@ Bool TDecCu::xDecodeSliceEnd( TComDataCU* pcCU, UInt uiAbsPartIdx )
   {
     if(pcSlice->isNextSliceSegment()&&!pcSlice->isNextSlice())
     {
-      pcSlice->setSliceSegmentCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getAddr())+1 );
+      pcSlice->setSliceSegmentCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getCtuRsAddr())+1 );
     }
     else
     {
-      pcSlice->setSliceCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getAddr())+1 );
-      pcSlice->setSliceSegmentCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getAddr())+1 );
+      pcSlice->setSliceCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getCtuRsAddr())+1 );
+      pcSlice->setSliceSegmentCurEndCtuTsAddr( pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getCtuRsAddr())+1 );
     }
   }
 
@@ -195,7 +195,7 @@ Bool TDecCu::xDecodeSliceEnd( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& ruiIsLast)
 {
   TComPic* pcPic = pcCU->getPic();
-  UInt uiCurNumParts    = pcPic->getNumPartInCU() >> (uiDepth<<1);
+  UInt uiCurNumParts    = pcPic->getNumPartitionsInCtu() >> (uiDepth<<1);
   UInt uiQNumParts      = uiCurNumParts>>2;
 
   Bool bBoundary = false;
@@ -350,35 +350,35 @@ Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth,
   ruiIsLast = xDecodeSliceEnd( pcCU, uiAbsPartIdx );
 }
 
-Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth )
+Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 {
-  TComPic* pcPic = pcLCU->getPic();
+  TComPic* pcPic = pCtu->getPic();
 
   Bool bBoundary = false;
-  UInt uiLPelX   = pcLCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiLPelX   = pCtu->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
-  UInt uiTPelY   = pcLCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiTPelY   = pCtu->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
 
-  TComSlice * pcSlice = pcLCU->getPic()->getSlice(pcLCU->getPic()->getCurrSliceIdx());
+  TComSlice * pcSlice = pCtu->getPic()->getSlice(pCtu->getPic()->getCurrSliceIdx());
   if( ( uiRPelX >= pcSlice->getSPS()->getPicWidthInLumaSamples() ) || ( uiBPelY >= pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
   {
     bBoundary = true;
   }
 
-  if( ( ( uiDepth < pcLCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
+  if( ( ( uiDepth < pCtu->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
   {
     UInt uiNextDepth = uiDepth + 1;
-    UInt uiQNumParts = pcLCU->getTotalNumPart() >> (uiNextDepth<<1);
+    UInt uiQNumParts = pCtu->getTotalNumPart() >> (uiNextDepth<<1);
     UInt uiIdx = uiAbsPartIdx;
     for ( UInt uiPartIdx = 0; uiPartIdx < 4; uiPartIdx++ )
     {
-      uiLPelX = pcLCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiIdx] ];
-      uiTPelY = pcLCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiIdx] ];
+      uiLPelX = pCtu->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiIdx] ];
+      uiTPelY = pCtu->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiIdx] ];
 
       if( ( uiLPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
       {
-        xDecompressCU(pcLCU, uiIdx, uiNextDepth );
+        xDecompressCU(pCtu, uiIdx, uiNextDepth );
       }
 
       uiIdx += uiQNumParts;
@@ -389,7 +389,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcLCU, UInt uiAbsPartIdx,  UInt uiDepth 
   // Residual reconstruction
   m_ppcYuvResi[uiDepth]->clear();
 
-  m_ppcCU[uiDepth]->copySubCU( pcLCU, uiAbsPartIdx, uiDepth );
+  m_ppcCU[uiDepth]->copySubCU( pCtu, uiAbsPartIdx, uiDepth );
 
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
@@ -565,7 +565,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
         Pel* pPred      = piPred;
         Pel* pResi      = piResi;
         Pel* pReco      = pcRecoYuv->getAddr( compID, uiAbsPartIdx );
-        Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
+        Pel* pRecIPred  = pcCU->getPic()->getPicYuvRec()->getAddr( compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiAbsPartIdx );
 
 
 #ifdef DEBUG_STRING
@@ -710,9 +710,9 @@ TDecCu::xIntraRecQT(TComYuv*    pcRecoYuv,
 
 Void TDecCu::xCopyToPic( TComDataCU* pcCU, TComPic* pcPic, UInt uiZorderIdx, UInt uiDepth )
 {
-  UInt uiCUAddr = pcCU->getAddr();
+  UInt uiCtuRsAddr = pcCU->getCtuRsAddr();
 
-  m_ppcYuvReco[uiDepth]->copyToPicYuv  ( pcPic->getPicYuvRec (), uiCUAddr, uiZorderIdx );
+  m_ppcYuvReco[uiDepth]->copyToPicYuv  ( pcPic->getPicYuvRec (), uiCtuRsAddr, uiZorderIdx );
 
   return;
 }
@@ -747,7 +747,7 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
  */
 Void TDecCu::xDecodePCMTexture( TComDataCU* pcCU, const UInt uiPartIdx, const Pel *piPCM, Pel* piReco, const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID)
 {
-        Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiPartIdx);
+        Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiPartIdx);
   const UInt uiPicStride       = pcCU->getPic()->getPicYuvRec()->getStride(compID);
   const UInt uiPcmLeftShiftBit = g_bitDepth[toChannelType(compID)] - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
 

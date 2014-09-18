@@ -220,7 +220,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseSAO                                            ( m_bUseSAO );
   m_cTEncTop.setMaxNumOffsetsPerPic                               ( m_maxNumOffsetsPerPic);
 
-  m_cTEncTop.setSaoLcuBoundary                                    ( m_saoLcuBoundary);
+  m_cTEncTop.setSaoCtuBoundary                                    ( m_saoCtuBoundary);
   m_cTEncTop.setPCMInputBitDepthFlag                              ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag                              ( m_bPCMFilterDisableFlag);
 

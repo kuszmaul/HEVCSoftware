@@ -797,13 +797,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AlignCABACBeforeBypass",                          m_alignCABACBeforeBypass,                         false, "Align the CABAC engine to a defined fraction of a bit prior to coding bypass data. Must be 1 in high bit rate profile, 0 otherwise" )
   ("SAO",                                             m_bUseSAO,                                         true, "Enable Sample Adaptive Offset")
   ("MaxNumOffsetsPerPic",                             m_maxNumOffsetsPerPic,                             2048, "Max number of SAO offset per picture (Default: 2048)")
-  ("SAOLcuBoundary",                                  m_saoLcuBoundary,                                 false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
-  ("SliceMode",                                       m_sliceMode,                                          0, "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
+  ("SAOLcuBoundary",                                  m_saoCtuBoundary,                                 false, "0: right/bottom CTU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
+  ("SliceMode",                                       m_sliceMode,                                          0, "0: Disable all Recon slice limits, 1: Enforce max # of CTUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
   ("SliceArgument",                                   m_sliceArgument,                                      0, "Depending on SliceMode being:"
                                                                                                                "\t1: max number of CTUs per slice"
                                                                                                                "\t2: max number of bytes per slice"
                                                                                                                "\t3: max number of tiles per slice")
-  ("SliceSegmentMode",                                m_sliceSegmentMode,                                   0, "0: Disable all slice segment limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
+  ("SliceSegmentMode",                                m_sliceSegmentMode,                                   0, "0: Disable all slice segment limits, 1: Enforce max # of CTUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
   ("SliceSegmentArgument",                            m_sliceSegmentArgument,                               0, "Depending on SliceSegmentMode being:"
                                                                                                                "\t1: max number of CTUs per slice segment"
                                                                                                                "\t2: max number of bytes per slice segment"
@@ -829,8 +829,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TileUniformSpacing",                              m_tileUniformSpacingFlag,                         false,      "Indicates that tile columns and rows are distributed uniformly")
   ("NumTileColumnsMinus1",                            m_numTileColumnsMinus1,                               0,          "Number of tile columns in a picture minus 1")
   ("NumTileRowsMinus1",                               m_numTileRowsMinus1,                                  0,          "Number of rows in a picture minus 1")
-  ("TileColumnWidthArray",                            cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing tile column width values in units of LCU")
-  ("TileRowHeightArray",                              cfg_RowHeight,                            cfg_RowHeight, "Array containing tile row height values in units of LCU")
+  ("TileColumnWidthArray",                            cfg_ColumnWidth,                        cfg_ColumnWidth, "Array containing tile column width values in units of CTU")
+  ("TileRowHeightArray",                              cfg_RowHeight,                            cfg_RowHeight, "Array containing tile row height values in units of CTU")
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with top-right-right")
   ("ScalingList",                                     m_useScalingListId,                                   0, "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
@@ -853,8 +853,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "RateControl",                                    m_RCEnableRateControl,                            false, "Rate control: enable rate control" )
   ( "TargetBitrate",                                  m_RCTargetBitrate,                                    0, "Rate control: target bit-rate" )
   ( "KeepHierarchicalBit",                            m_RCKeepHierarchicalBit,                              0, "Rate control: 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation" )
-  ( "LCULevelRateControl",                            m_RCLCULevelRC,                                    true, "Rate control: true: LCU level RC; false: picture level RC" )
-  ( "RCLCUSeparateModel",                             m_RCUseLCUSeparateModel,                           true, "Rate control: use LCU level separate R-lambda model" )
+  ( "LCULevelRateControl",                            m_RCLCULevelRC,                                    true, "Rate control: true: CTU level RC; false: picture level RC" )
+  ( "RCLCUSeparateModel",                             m_RCUseLCUSeparateModel,                           true, "Rate control: use CTU level separate R-lambda model" )
   ( "InitialQP",                                      m_RCInitialQP,                                        0, "Rate control: initial QP" )
   ( "RCForceIntraQP",                                 m_RCForceIntraQP,                                 false, "Rate control: force intra QP to be equal to initial QP" )
 
@@ -2054,7 +2054,7 @@ Void TAppEncCfg::xCheckParameter()
     {
       m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/((2*m_iSourceHeight+m_iSourceWidth)*m_uiMaxCUHeight)-4;
     }
-    else if(m_sliceMode == FIXED_NUMBER_OF_LCU)
+    else if(m_sliceMode == FIXED_NUMBER_OF_CTU)
     {
       m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/(m_sliceArgument*m_uiMaxCUWidth*m_uiMaxCUHeight)-4;
     }

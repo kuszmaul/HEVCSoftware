@@ -161,7 +161,7 @@ protected:
   Bool      m_DeblockingFilterMetric;
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
-  Bool      m_saoLcuBoundary;
+  Bool      m_saoCtuBoundary;
 
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
@@ -582,8 +582,8 @@ public:
   Bool      getUseSAO                  ()                            { return m_bUseSAO; }
   Void  setMaxNumOffsetsPerPic                   (Int iVal)          { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                  { return m_maxNumOffsetsPerPic; }
-  Void  setSaoLcuBoundary              (Bool val)                    { m_saoLcuBoundary = val; }
-  Bool  getSaoLcuBoundary              ()                            { return m_saoLcuBoundary; }
+  Void  setSaoCtuBoundary              (Bool val)                    { m_saoCtuBoundary = val; }
+  Bool  getSaoCtuBoundary              ()                            { return m_saoCtuBoundary; }
   Void  setLFCrossTileBoundaryFlag               ( Bool   val  )     { m_loopFilterAcrossTilesEnabledFlag = val; }
   Bool  getLFCrossTileBoundaryFlag               ()                  { return m_loopFilterAcrossTilesEnabledFlag;   }
   Void  setTileUniformSpacingFlag      ( Bool b )                    { m_tileUniformSpacingFlag = b; }

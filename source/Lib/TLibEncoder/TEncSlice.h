@@ -119,10 +119,10 @@ public:
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, Bool isField );
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
   // compress and encode slice
-  Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
-  Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
-  Void    calCostSliceI       ( TComPic*& rpcPic );
-  Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams  );
+  Void    precompressSlice    ( TComPic* pcPic                                     );      ///< precompress slice for multi-loop opt.
+  Void    compressSlice       ( TComPic* pcPic                                     );      ///< analysis stage of slice
+  Void    calCostSliceI       ( TComPic* pcPic );
+  Void    encodeSlice         ( TComPic* pcPic, TComOutputBitstream* pcSubstreams  );
 
   // misc. functions
   Void    setSearchRange      ( TComSlice* pcSlice  );                                  ///< set ME range adaptively

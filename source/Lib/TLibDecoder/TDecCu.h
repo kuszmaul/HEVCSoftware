@@ -83,18 +83,18 @@ public:
   /// destroy internal buffers
   Void  destroy                 ();
 
-  /// decode CU information
-  Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast ); // NOTE: code-tidy - rename to decodeCtu
+  /// decode Ctu information
+  Void  decodeCtu               ( TComDataCU* pCtu, UInt& ruiIsLast );
 
-  /// reconstruct CU information
-  Void  decompressCU            ( TComDataCU* pcCU ); // NOTE: code-tidy - rename to decompressCtu
+  /// reconstruct Ctu information
+  Void  decompressCtu           ( TComDataCU* pCtu );
 
 protected:
 
   Void xDecodeCU                ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Void xFinishDecodeCU          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Bool xDecodeSliceEnd          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
 

@@ -114,7 +114,7 @@ TEncGOP::~TEncGOP()
 {
 }
 
-/** Create list to contain pointers to LCU start addresses of slice.
+/** Create list to contain pointers to CTU start addresses of slice.
  */
 Void  TEncGOP::create()
 {
@@ -1123,22 +1123,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     UInt uiNumSlices = 1;
 
-    Int j; // NOTE: code-tidy - local scope this.
     pcPic->getPicSym()->initTiles(pcSlice->getPPS());
     pcPic->getPicSym()->initCtuTsRsAddrMaps();
 
 
     // Allocate some coders, now the number of tiles are known.
-    const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams(); // NOTE: code-tidy - rename to numSubstreams
-    m_pcEncTop->createWPPCoders(iNumSubstreams);
+    const Int numSubstreams = pcSlice->getPPS()->getNumSubstreams();
+    m_pcEncTop->createWPPCoders(numSubstreams);
     pcSbacCoders = m_pcEncTop->getSbacCoders();
-    pcSubstreamsOut = new TComOutputBitstream[iNumSubstreams];
+    pcSubstreamsOut = new TComOutputBitstream[numSubstreams];
 
     UInt startCtuTsAddrSlice    = 0; // used to keep track of current slice's starting CTU addr.
     pcSlice->setSliceCurStartCtuTsAddr( startCtuTsAddrSlice );
 
-    std::vector<Int> storedStartCtuTsAddrForEncodingSlice;        storedStartCtuTsAddrForEncodingSlice.reserve(pcPic->getPicSym()->getNumberOfCUsInFrame());
-    std::vector<Int> storedStartCtuTsAddrForEncodingSliceSegment; storedStartCtuTsAddrForEncodingSliceSegment.reserve(pcPic->getPicSym()->getNumberOfCUsInFrame());
+    std::vector<Int> storedStartCtuTsAddrForEncodingSlice;        storedStartCtuTsAddrForEncodingSlice.reserve(pcPic->getPicSym()->getNumberOfCtusInFrame());
+    std::vector<Int> storedStartCtuTsAddrForEncodingSliceSegment; storedStartCtuTsAddrForEncodingSliceSegment.reserve(pcPic->getPicSym()->getNumberOfCtusInFrame());
 
     UInt startCtuTsAddrSliceSegment    = 0; // used to keep track of current Dependent slice's starting CTU addr.
     pcSlice->setSliceSegmentCurStartCtuTsAddr( startCtuTsAddrSliceSegment );
@@ -1146,7 +1145,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     UInt nextCtuTsAddr = 0;
     storedStartCtuTsAddrForEncodingSlice.push_back (nextCtuTsAddr);
     storedStartCtuTsAddrForEncodingSliceSegment.push_back(nextCtuTsAddr);
-    while(nextCtuTsAddr < pcPic->getPicSym()->getNumberOfCUsInFrame())
+    while(nextCtuTsAddr < pcPic->getPicSym()->getNumberOfCtusInFrame())
     {
       pcSlice->setNextSlice       ( false );
       pcSlice->setNextSliceSegment( false );
@@ -1155,7 +1154,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_pcSliceEncoder->compressSlice   ( pcPic );
 
       Bool bNoBinBitConstraintViolated = (!pcSlice->isNextSlice() && !pcSlice->isNextSliceSegment());
-      if (pcSlice->isNextSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_LCU))
+      if (pcSlice->isNextSlice() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceMode()==FIXED_NUMBER_OF_CTU))
       {
         startCtuTsAddrSlice = pcSlice->getSliceCurEndCtuTsAddr();
         // Reconstruction slice
@@ -1166,7 +1165,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           storedStartCtuTsAddrForEncodingSliceSegment.push_back(startCtuTsAddrSlice);
         }
 
-        if (startCtuTsAddrSlice < pcPic->getPicSym()->getNumberOfCUsInFrame())
+        if (startCtuTsAddrSlice < pcPic->getPicSym()->getNumberOfCtusInFrame())
         {
           pcPic->allocateNewSlice();
           // prepare for next slice
@@ -1182,7 +1181,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           uiNumSlices ++;
         }
       }
-      else if (pcSlice->isNextSliceSegment() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceSegmentMode()==FIXED_NUMBER_OF_LCU))
+      else if (pcSlice->isNextSliceSegment() || (bNoBinBitConstraintViolated && m_pcCfg->getSliceSegmentMode()==FIXED_NUMBER_OF_CTU))
       {
         startCtuTsAddrSliceSegment                                                     = pcSlice->getSliceSegmentCurEndCtuTsAddr();
         storedStartCtuTsAddrForEncodingSliceSegment.push_back(startCtuTsAddrSliceSegment);
@@ -1201,8 +1200,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcSlice = pcPic->getSlice(0);
 
-    // SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
-    if( pcSlice->getSPS()->getUseSAO() && m_pcCfg->getSaoLcuBoundary() )
+    // SAO parameter estimation using non-deblocked pixels for CTU bottom and right boundary areas
+    if( pcSlice->getSPS()->getUseSAO() && m_pcCfg->getSaoCtuBoundary() )
     {
       m_pcSAO->getPreDBFStatistics(pcPic);
     }
@@ -1245,8 +1244,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       if( m_pcCfg->getPictureTimingSEIEnabled() || m_pcCfg->getDecodingUnitInfoSEIEnabled() )
       {
         UInt maxCU = m_pcCfg->getSliceArgument() >> ( pcSlice->getSPS()->getMaxCUDepth() << 1);
-        UInt numDU = ( m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_LCU ) ? ( pcPic->getNumCUsInFrame() / maxCU ) : ( 0 );
-        if( pcPic->getNumCUsInFrame() % maxCU != 0 || numDU == 0 )
+        UInt numDU = ( m_pcCfg->getSliceMode() == FIXED_NUMBER_OF_CTU ) ? ( pcPic->getNumberOfCtusInFrame() / maxCU ) : ( 0 );
+        if( pcPic->getNumberOfCtusInFrame() % maxCU != 0 || numDU == 0 )
         {
           numDU ++;
         }
@@ -1287,7 +1286,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       UInt i = 0;
       UInt prevEntryId = iGOPid;
-      for (j = iGOPid; j < m_iGopSize; j++)
+      for (Int j = iGOPid; j < m_iGopSize; j++)
       {
         Int deltaPOC = m_pcCfg->getGOPEntry(j).m_POC - m_pcCfg->getGOPEntry(prevEntryId).m_POC;
         if ((SOPcurrPOC + deltaPOC) < m_pcCfg->getFramesToBeEncoded())
@@ -1399,8 +1398,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       {
         UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
         UInt offsetPosition = m_activeParameterSetSEIPresentInAU;   // Insert BP SEI after APS SEI
-        AccessUnit::iterator it;
-        for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+        AccessUnit::iterator it = accessUnit.begin();
+        for(Int j = 0; j < seiPositionInAu + offsetPosition; j++)
         {
           it++;
         }
@@ -1419,8 +1418,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         writeRBSPTrailingBits(naluTmp.m_Bitstream);
         UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
         UInt offsetPosition = m_activeParameterSetSEIPresentInAU + m_bufferingPeriodSEIPresentInAU + m_pictureTimingSEIPresentInAU;   // Insert BP SEI after non-nested APS, BP and PT SEIs
-        AccessUnit::iterator it;
-        for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+        AccessUnit::iterator it = accessUnit.begin();
+        for(Int j = 0; j < seiPositionInAu + offsetPosition; j++)
         {
           it++;
         }
@@ -1515,7 +1514,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Int processingState = (pcSlice->getSPS()->getUseSAO())?(EXECUTE_INLOOPFILTER):(ENCODE_SLICE);
     Bool skippedSlice=false;
 
-    while (nextCtuTsAddr < pcPic->getPicSym()->getNumberOfCUsInFrame()) // Iterate over all slices
+    while (nextCtuTsAddr < pcPic->getPicSym()->getNumberOfCtusInFrame()) // Iterate over all slices
     {
       switch(processingState) // NOTE: RExt - the indentation in this switch statement needs updating.
       {
@@ -1567,8 +1566,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               pcSlice->setNextSliceSegment( false );
             }
             skippedSlice=false;
-            pcSlice->allocSubstreamSizes( iNumSubstreams );
-            for ( UInt ui = 0 ; ui < iNumSubstreams; ui++ )
+            pcSlice->allocSubstreamSizes( numSubstreams );
+            for ( UInt ui = 0 ; ui < numSubstreams; ui++ )
             {
               pcSubstreamsOut[ui].clear();
             }
@@ -1621,7 +1620,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               m_pcEntropyCoder->setEntropyCoder ( m_pcSbacCoder, pcSlice );
               m_pcEntropyCoder->resetEntropy    ();
-              for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
+              for ( UInt ui = 0 ; ui < numSubstreams ; ui++ )
               {
                 m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                 m_pcEntropyCoder->resetEntropy    ();
@@ -1633,7 +1632,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // set entropy coder for writing
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               {
-                for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
+                for ( UInt ui = 0 ; ui < numSubstreams ; ui++ )
                 {
                   m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                   m_pcEntropyCoder->resetEntropy    ();
@@ -1677,12 +1676,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // The final bitstream is either nalu.m_Bitstream or pcBitstreamRedirect;
               UInt* puiSubstreamSizes = pcSlice->getSubstreamSizes();
               UInt uiTotalCodedSize = 0; // for padding calcs.
-              UInt uiNumSubstreamsPerTile = iNumSubstreams; // Only used if wavefronts not enabled.
-              if (iNumSubstreams > 1)
+              UInt uiNumSubstreamsPerTile = numSubstreams; // Only used if wavefronts not enabled.
+              if (numSubstreams > 1)
               {
                 uiNumSubstreamsPerTile /= pcPic->getPicSym()->getNumTiles(); // Only used if wavefronts not enabled.
               }
-              for ( UInt ui = 0 ; ui < iNumSubstreams; ui++ )
+              for ( UInt ui = 0 ; ui < numSubstreams; ui++ )
               {
                 // Flush all substreams -- this includes empty ones.
                 // Terminating bit and flush.
@@ -1695,12 +1694,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 // Byte alignment is necessary between tiles when tiles are independent.
                 uiTotalCodedSize += pcSubstreamsOut[ui].getNumberOfWrittenBits();
 
-                Bool bNextSubstreamInNewTile = ((ui+1) < iNumSubstreams)&& ((ui+1)%uiNumSubstreamsPerTile == 0);
+                Bool bNextSubstreamInNewTile = ((ui+1) < numSubstreams)&& ((ui+1)%uiNumSubstreamsPerTile == 0);
                 if (bNextSubstreamInNewTile &&  !pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
                 {
                   pcSlice->setTileLocation(ui/uiNumSubstreamsPerTile, pcSlice->getTileOffstForMultES()+(uiTotalCodedSize>>3));
                 }
-                if (ui+1 < iNumSubstreams)
+                if (ui+1 < numSubstreams)
                 {
                   puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits() + (pcSubstreamsOut[ui].countStartCodeEmulations()<<3);
                 }
@@ -1717,7 +1716,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               Int numSubstreamsToCode = pcSlice->getPPS()->getNumSubstreams();
               if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
               {
-                numZeroSubstreamsAtStartOfSlice  = pcPic->getSubstreamForLCUAddr(pcSlice->getSliceSegmentCurStartCtuTsAddr(), false, pcSlice);
+                numZeroSubstreamsAtStartOfSlice  = pcPic->getSubstreamForCtuAddr(pcSlice->getSliceSegmentCurStartCtuTsAddr(), false, pcSlice);
                 // 1st line present for WPP.
                 numSubstreamsToCode  = pcSlice->getNumEntryPointOffsets()+1;
               }
@@ -1788,7 +1787,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 , sliceEnabled
                 , pcPic->getSlice(0)->getLambdas()
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
-                , m_pcCfg->getSaoLcuBoundary()
+                , m_pcCfg->getSaoCtuBoundary()
 #endif
                 );
               m_pcSAO->PCMLFDisableProcess(pcPic);
@@ -2029,8 +2028,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
           UInt offsetPosition = m_activeParameterSetSEIPresentInAU
                                     + m_bufferingPeriodSEIPresentInAU;    // Insert PT SEI after APS and BP SEI
-          AccessUnit::iterator it;
-          for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+          AccessUnit::iterator it = accessUnit.begin();
+          for(Int j = 0; j < seiPositionInAu + offsetPosition; j++)
           {
             it++;
           }
@@ -2049,8 +2048,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
           UInt offsetPosition = m_activeParameterSetSEIPresentInAU
             + m_bufferingPeriodSEIPresentInAU + m_pictureTimingSEIPresentInAU + m_nestedBufferingPeriodSEIPresentInAU;    // Insert PT SEI after APS and BP SEI
-          AccessUnit::iterator it;
-          for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+          AccessUnit::iterator it = accessUnit.begin();
+          for(Int j = 0; j < seiPositionInAu + offsetPosition; j++)
           {
             it++;
           }
@@ -2072,7 +2071,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           tempSEI.m_dpbOutputDuDelayPresentFlag = false;
           tempSEI.m_picSptDpbOutputDuDelay = picSptDpbOutputDuDelay;
 
-          AccessUnit::iterator it;
           // Insert the first one in the right location, before the first slice
           if(i == 0)
           {
@@ -2084,7 +2082,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
             UInt offsetPosition = m_activeParameterSetSEIPresentInAU
                                   + m_bufferingPeriodSEIPresentInAU
                                   + m_pictureTimingSEIPresentInAU;  // Insert DU info SEI after APS, BP and PT SEI
-            for(j = 0, it = accessUnit.begin(); j < seiPositionInAu + offsetPosition; j++)
+            AccessUnit::iterator it = accessUnit.begin();
+            for(Int j = 0; j < seiPositionInAu + offsetPosition; j++)
             {
               it++;
             }
@@ -2092,9 +2091,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           }
           else
           {
-            Int ctr;
             // For the second decoding unit onwards we know how many NALUs are present
-            for (ctr = 0, it = accessUnit.begin(); it != accessUnit.end(); it++)
+            AccessUnit::iterator it = accessUnit.begin();
+            for (Int ctr = 0; it != accessUnit.end(); it++)
             {
               if(ctr == accumNalsDU[ i - 1 ])
               {
@@ -2692,7 +2691,7 @@ Double TEncGOP::xCalculateRVM()
  *  \param codedSliceData contains the coded slice data (bitstream) to be concatenated to rNalu
  *  \param rNalu          target NAL unit
  */
-Void TEncGOP::xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& codedSliceData)
+Void TEncGOP::xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream* codedSliceData)
 {
   // Byte-align
   rNalu.m_Bitstream.writeByteAlignment();   // Slice header byte-alignment
@@ -2820,9 +2819,8 @@ Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*
 Int TEncGOP::xGetFirstSeiLocation(AccessUnit &accessUnit)
 {
   // Find the location of the first SEI message
-  AccessUnit::iterator it;
   Int seiStartPos = 0;
-  for(it = accessUnit.begin(); it != accessUnit.end(); it++, seiStartPos++)
+  for(AccessUnit::iterator it = accessUnit.begin(); it != accessUnit.end(); it++, seiStartPos++)
   {
      if ((*it)->isSei() || (*it)->isVcl())
      {

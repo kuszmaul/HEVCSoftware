@@ -56,34 +56,34 @@ class TComPPS;
 class TComTile
 {
 private:
-  UInt      m_uiTileWidth;         // NOTE: code-tidy - rename to m_tileWidthInCtus
-  UInt      m_uiTileHeight;        // NOTE: code-tidy - rename to m_tileHeightInCtus
-  UInt      m_uiRightEdgePosInCU;  // NOTE: code-tidy - rename to m_rightEdgePosInCtus
-  UInt      m_uiBottomEdgePosInCU; // NOTE: code-tidy - rename to m_bottomEdgePosInCtus
-  UInt      m_uiFirstCUAddr;       // NOTE: code-tidy - rename to m_firstCtuRsAddr
+  UInt      m_tileWidthInCtus;
+  UInt      m_tileHeightInCtus;
+  UInt      m_rightEdgePosInCtus;
+  UInt      m_bottomEdgePosInCtus;
+  UInt      m_firstCtuRsAddr;
 
 public:
   TComTile();
   virtual ~TComTile();
 
-  Void      setTileWidth         ( UInt i )            { m_uiTileWidth = i; }            // NOTE: code-tidy - rename to setTileWidthInCtus
-  UInt      getTileWidth         () const              { return m_uiTileWidth; }         // NOTE: code-tidy - rename to getTileWidthInCtus
-  Void      setTileHeight        ( UInt i )            { m_uiTileHeight = i; }           // NOTE: code-tidy - rename to setTileHeightInCtus
-  UInt      getTileHeight        () const              { return m_uiTileHeight; }        // NOTE: code-tidy - rename to getTileHeightInCtus
-  Void      setRightEdgePosInCU  ( UInt i )            { m_uiRightEdgePosInCU = i; }     // NOTE: code-tidy - rename to setRightEdgePosInCtus
-  UInt      getRightEdgePosInCU  () const              { return m_uiRightEdgePosInCU; }  // NOTE: code-tidy - rename to getRightEdgePosInCtus
-  Void      setBottomEdgePosInCU ( UInt i )            { m_uiBottomEdgePosInCU = i; }    // NOTE: code-tidy - rename to setBottomEdgePosInCtus
-  UInt      getBottomEdgePosInCU () const              { return m_uiBottomEdgePosInCU; } // NOTE: code-tidy - rename to getBottomEdgePosInCtus
-  Void      setFirstCUAddr       ( UInt i )            { m_uiFirstCUAddr = i; }          // NOTE: code-tidy - rename to setFirstCtuRsAddr
-  UInt      getFirstCUAddr       () const              { return m_uiFirstCUAddr; }       // NOTE: code-tidy - rename to getFirstCtuRsAddr
+  Void      setTileWidthInCtus     ( UInt i )            { m_tileWidthInCtus = i; }
+  UInt      getTileWidthInCtus     () const              { return m_tileWidthInCtus; }
+  Void      setTileHeightInCtus    ( UInt i )            { m_tileHeightInCtus = i; }
+  UInt      getTileHeightInCtus    () const              { return m_tileHeightInCtus; }
+  Void      setRightEdgePosInCtus  ( UInt i )            { m_rightEdgePosInCtus = i; }
+  UInt      getRightEdgePosInCtus  () const              { return m_rightEdgePosInCtus; }
+  Void      setBottomEdgePosInCtus ( UInt i )            { m_bottomEdgePosInCtus = i; }
+  UInt      getBottomEdgePosInCtus () const              { return m_bottomEdgePosInCtus; }
+  Void      setFirstCtuRsAddr      ( UInt i )            { m_firstCtuRsAddr = i; }
+  UInt      getFirstCtuRsAddr      () const              { return m_firstCtuRsAddr; }
 };
 
 /// picture symbol class
 class TComPicSym
 {
 private:
-  UInt          m_uiWidthInCU;   // NOTE: code-tidy - rename to m_frameWidthInCtus
-  UInt          m_uiHeightInCU;  // NOTE: code-tidy - rename to m_frameHeightInCtus
+  UInt          m_frameWidthInCtus;
+  UInt          m_frameHeightInCtus;
 
   UInt          m_uiMaxCUWidth;
   UInt          m_uiMaxCUHeight;
@@ -91,20 +91,20 @@ private:
   UInt          m_uiMinCUHeight;
 
   UChar         m_uhTotalDepth;       ///< max. depth
-  UInt          m_uiNumPartitions;  // NOTE: code-tidy - rename to m_numPartitionsInCtu
-  UInt          m_uiNumPartInWidth; // NOTE: code-tidy - rename to m_numPartInCtuWidth
-  UInt          m_uiNumPartInHeight;// NOTE: code-tidy - rename to m_numPartInCtuHeight
-  UInt          m_uiNumCUsInFrame;  // NOTE: code-tidy - rename to m_numCtusInFrame
+  UInt          m_numPartitionsInCtu;
+  UInt          m_numPartInCtuWidth;
+  UInt          m_numPartInCtuHeight;
+  UInt          m_numCtusInFrame;
 
   TComSlice**   m_apcTComSlice;
   UInt          m_uiNumAllocatedSlice;
-  TComDataCU**  m_apcTComDataCU;        ///< array of CU data. NOTE: code-tidy - rename to m_pictureCtuArray
+  TComDataCU**  m_pictureCtuArray;        ///< array of CU data.
 
-  Int           m_iNumColumnsMinus1;
-  Int           m_iNumRowsMinus1;
+  Int           m_numTileColumnsMinus1;
+  Int           m_numTileRowsMinus1;
   std::vector<TComTile> m_tileParameters;
   UInt*         m_ctuTsToRsAddrMap;    ///< for a given TS (Tile-Scan; coding order) address, returns the RS (Raster-Scan) address. cf CtbAddrTsToRs in specification.
-  UInt*         m_puiTileIdxMap;       ///< the map of the tile index relative to LCU raster scan address
+  UInt*         m_puiTileIdxMap;       ///< the map of the tile index relative to CTU raster scan address
   UInt*         m_ctuRsToTsAddrMap;    ///< for a given RS (Raster-Scan) address, returns the TS (Tile-Scan; coding order) address. cf CtbAddrRsToTs in specification.
 
   SAOBlkParam *m_saoBlkParams;
@@ -114,35 +114,35 @@ public:
   Void               destroy ();
 
   TComPicSym  ();
-  TComSlice*         getSlice(UInt i)                                      { return  m_apcTComSlice[i];            }
-  const TComSlice*   getSlice(UInt i) const                                { return  m_apcTComSlice[i];            }
-  UInt               getFrameWidthInCU()                                   { return m_uiWidthInCU;                 } // NOTE: code-tidy - rename to getFrameWidthInCtus
-  UInt               getFrameHeightInCU()                                  { return m_uiHeightInCU;                } // NOTE: code-tidy - rename to getFrameHeightInCtus
-  UInt               getMinCUWidth()                                       { return m_uiMinCUWidth;                }
-  UInt               getMinCUHeight()                                      { return m_uiMinCUHeight;               }
-  UInt               getNumberOfCUsInFrame()                               { return m_uiNumCUsInFrame;             } // NOTE: code-tidy - rename to getNumberOfCtusInFrame
-  TComDataCU*&       getCU( UInt ctuRsAddr )                               { return m_apcTComDataCU[ctuRsAddr];    } // NOTE: code-tidy - rename to getCtu
-  const TComDataCU*  getCU( UInt ctuRsAddr ) const                         { return m_apcTComDataCU[ctuRsAddr];    } // NOTE: code-tidy - rename to getCtu
+  TComSlice*         getSlice(UInt i)                                      { return m_apcTComSlice[i];             }
+  const TComSlice*   getSlice(UInt i) const                                { return m_apcTComSlice[i];             }
+  UInt               getFrameWidthInCtus() const                           { return m_frameWidthInCtus;            }
+  UInt               getFrameHeightInCtus() const                          { return m_frameHeightInCtus;           }
+  UInt               getMinCUWidth() const                                 { return m_uiMinCUWidth;                }
+  UInt               getMinCUHeight() const                                { return m_uiMinCUHeight;               }
+  UInt               getNumberOfCtusInFrame() const                        { return m_numCtusInFrame;              }
+  TComDataCU*        getCtu( UInt ctuRsAddr )                              { return m_pictureCtuArray[ctuRsAddr];  }
+  const TComDataCU*  getCtu( UInt ctuRsAddr ) const                        { return m_pictureCtuArray[ctuRsAddr];  }
 
   Void               setSlice(TComSlice* p, UInt i)                        { m_apcTComSlice[i] = p;           }
   UInt               getNumAllocatedSlice() const                          { return m_uiNumAllocatedSlice;         }
   Void               allocateNewSlice();
   Void               clearSliceBuffer();
-  UInt               getNumPartition() const                               { return m_uiNumPartitions;   } // NOTE: code-tidy - rename to getNumPartitionsInCtu
-  UInt               getNumPartInWidth() const                             { return m_uiNumPartInWidth;  } // NOTE: code-tidy - rename to getNumPartInCtuWidth
-  UInt               getNumPartInHeight() const                            { return m_uiNumPartInHeight; } // NOTE: code-tidy - rename to getNumPartInCtuHeight
-  Void               setNumColumnsMinus1( Int i )                          { m_iNumColumnsMinus1 = i;    } // NOTE: code-tidy - rename to setNumTileColumnsMinus1
-  Int                getNumColumnsMinus1() const                           { return m_iNumColumnsMinus1; } // NOTE: code-tidy - rename to getNumTileColumnsMinus1
-  Void               setNumRowsMinus1( Int i )                             { m_iNumRowsMinus1 = i;       } // NOTE: code-tidy - rename to setNumTileRowsMinus1
-  Int                getNumRowsMinus1() const                              { return m_iNumRowsMinus1;    } // NOTE: code-tidy - rename to getNumTileRowsMinus1
-  Int                getNumTiles() const                                   { return (m_iNumRowsMinus1+1)*(m_iNumColumnsMinus1+1); }
+  UInt               getNumPartitionsInCtu() const                         { return m_numPartitionsInCtu;   }
+  UInt               getNumPartInCtuWidth() const                          { return m_numPartInCtuWidth;    }
+  UInt               getNumPartInCtuHeight() const                         { return m_numPartInCtuHeight;   }
+  Void               setNumTileColumnsMinus1( Int i )                      { m_numTileColumnsMinus1 = i;    }
+  Int                getNumTileColumnsMinus1() const                       { return m_numTileColumnsMinus1; }
+  Void               setNumTileRowsMinus1( Int i )                         { m_numTileRowsMinus1 = i;       }
+  Int                getNumTileRowsMinus1() const                          { return m_numTileRowsMinus1;    }
+  Int                getNumTiles() const                                   { return (m_numTileRowsMinus1+1)*(m_numTileColumnsMinus1+1); }
   TComTile*          getTComTile  ( UInt tileIdx )                         { return &(m_tileParameters[tileIdx]); }
   const TComTile*    getTComTile  ( UInt tileIdx ) const                   { return &(m_tileParameters[tileIdx]); }
   Void               setCtuTsToRsAddrMap( Int ctuTsAddr, Int ctuRsAddr )   { *(m_ctuTsToRsAddrMap + ctuTsAddr) = ctuRsAddr; }
-  UInt               getCtuTsToRsAddrMap( Int ctuTsAddr ) const            { return *(m_ctuTsToRsAddrMap + (ctuTsAddr>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : ctuTsAddr)); }
+  UInt               getCtuTsToRsAddrMap( Int ctuTsAddr ) const            { return *(m_ctuTsToRsAddrMap + (ctuTsAddr>=m_numCtusInFrame ? m_numCtusInFrame : ctuTsAddr)); }
   UInt               getTileIdxMap( Int ctuRsAddr ) const                  { return *(m_puiTileIdxMap + ctuRsAddr); }
   Void               setCtuRsToTsAddrMap( Int ctuRsAddr, Int ctuTsOrder )  { *(m_ctuRsToTsAddrMap + ctuRsAddr) = ctuTsOrder; }
-  UInt               getCtuRsToTsAddrMap( Int ctuRsAddr ) const            { return *(m_ctuRsToTsAddrMap + (ctuRsAddr>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : ctuRsAddr)); }
+  UInt               getCtuRsToTsAddrMap( Int ctuRsAddr ) const            { return *(m_ctuRsToTsAddrMap + (ctuRsAddr>=m_numCtusInFrame ? m_numCtusInFrame : ctuRsAddr)); }
   Void               initTiles(TComPPS *pps);
 
   Void               initCtuTsRsAddrMaps();
