@@ -1156,7 +1156,7 @@ Void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
   DTRACE_CABAC_T( "\tetype=" )
   DTRACE_CABAC_V( component )
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
-  DTRACE_CABAC_V( uiAbsPartIdx )
+  DTRACE_CABAC_V( rTu.GetAbsPartIdxTU() )
   DTRACE_CABAC_T( "\n" )
 
   pcCU->setTransformSkipPartRange( useTransformSkip, component, uiAbsPartIdx, rTu.GetAbsPartIdxNumParts(component));

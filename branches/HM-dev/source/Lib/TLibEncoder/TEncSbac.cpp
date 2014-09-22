@@ -1069,7 +1069,7 @@ Void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
   DTRACE_CABAC_T( "\tetype=" )
   DTRACE_CABAC_V( component )
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
-  DTRACE_CABAC_V( uiAbsPartIdx )
+  DTRACE_CABAC_V( rTu.GetAbsPartIdxTU() )
   DTRACE_CABAC_T( "\n" )
 }
 
@@ -1245,7 +1245,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 //  DTRACE_CABAC_V( rTu.GetTransformDepthTotalAdj(compID) )
   DTRACE_CABAC_V( rTu.GetTransformDepthTotal() )
   DTRACE_CABAC_T( "\tabspartidx=" )
-//  DTRACE_CABAC_V( uiAbsPartIdx )
+  DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\ttoCU-X=" )
   DTRACE_CABAC_V( pcCU->getCUPelX() )
   DTRACE_CABAC_T( "\ttoCU-Y=" )
