@@ -621,7 +621,7 @@ Void TEncSbac::codeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_T( "\tMergeFlag: " );
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\tAddress: " );
-  DTRACE_CABAC_V( pcCU->getAddr() );
+  DTRACE_CABAC_V( pcCU->getCtuRsAddr() );
   DTRACE_CABAC_T( "\tuiAbsPartIdx: " );
   DTRACE_CABAC_V( uiAbsPartIdx );
   DTRACE_CABAC_T( "\n" );
@@ -1065,7 +1065,7 @@ Void TEncSbac::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
   DTRACE_CABAC_T( "\tsymbol=" )
   DTRACE_CABAC_V( useTransformSkip )
   DTRACE_CABAC_T( "\tAddr=" )
-  DTRACE_CABAC_V( pcCU->getAddr() )
+  DTRACE_CABAC_V( pcCU->getCtuRsAddr() )
   DTRACE_CABAC_T( "\tetype=" )
   DTRACE_CABAC_V( component )
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
@@ -1251,7 +1251,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   DTRACE_CABAC_T( "\ttoCU-Y=" )
   DTRACE_CABAC_V( pcCU->getCUPelY() )
   DTRACE_CABAC_T( "\tCU-addr=" )
-  DTRACE_CABAC_V(  pcCU->getAddr() )
+  DTRACE_CABAC_V(  pcCU->getCtuRsAddr() )
   DTRACE_CABAC_T( "\tinCU-X=" )
 //  DTRACE_CABAC_V( g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ] )
   DTRACE_CABAC_V( g_auiRasterToPelX[ g_auiZscanToRaster[rTu.GetAbsPartIdxTU(compID)] ] )
