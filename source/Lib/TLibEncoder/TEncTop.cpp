@@ -61,7 +61,7 @@ TEncTop::TEncTop()
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
   {
-    g_hTrace = fopen( "TraceEnc_RExt.txt", "wb" );
+    g_hTrace = fopen( "TraceEnc.txt", "wb" );
   }
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
