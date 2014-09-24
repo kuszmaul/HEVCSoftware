@@ -898,7 +898,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
   Int   iCode;
 
 #if ENC_DEC_TRACE
-  xTraceSliceHeader(rpcSlice);
+  xTraceSliceHeader(pcSlice);
 #endif
   TComPPS* pps = NULL;
   TComSPS* sps = NULL;

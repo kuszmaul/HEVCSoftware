@@ -52,7 +52,7 @@ TDecTop::TDecTop()
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
   {
-    g_hTrace = fopen( "TraceDec_RExt.txt", "wb" );
+    g_hTrace = fopen( "TraceDec.txt", "wb" );
   }
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
