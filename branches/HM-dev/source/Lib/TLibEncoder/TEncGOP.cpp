@@ -2275,7 +2275,7 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
   //  Rec. output
   TComList<TComPicYuv*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
 
-  if (isField && pocCurr > 2 && m_iGopSize!=1)
+  if (isField && pocCurr > 1 && m_iGopSize!=1)
   {
     iTimeOffset--;
   }
