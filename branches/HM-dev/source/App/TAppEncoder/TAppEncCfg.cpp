@@ -1534,6 +1534,32 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
 #endif
 
+  if (m_isField)
+  {
+    if (!m_pictureTimingSEIEnabled)
+    {
+      fprintf(stderr, "****************************************************************************\n");
+      fprintf(stderr, "** WARNING: Picture Timing SEI should be enabled for field coding!        **\n");
+      fprintf(stderr, "****************************************************************************\n");
+    }
+  }
+  if ( m_bufferingPeriodSEIEnabled && !m_activeParameterSetsSEIEnabled)
+  {
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: using buffering period SEI requires SPS activation with       **\n"); 
+    fprintf(stderr, "**          active parameter sets SEI. Enabling active parameter sets SEI **\n");
+    fprintf(stderr, "****************************************************************************\n");
+    m_activeParameterSetsSEIEnabled = 1;
+  }
+  if ( m_pictureTimingSEIEnabled && !m_activeParameterSetsSEIEnabled)
+  {
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: using picture timing SEI requires SPS activation with active  **\n"); 
+    fprintf(stderr, "**          parameter sets SEI. Enabling active parameter sets SEI.       **\n");
+    fprintf(stderr, "****************************************************************************\n");
+    m_activeParameterSetsSEIEnabled = 1;
+  }
+
   if(m_useCrossComponentPrediction && (m_chromaFormatIDC != CHROMA_444))
   {
     fprintf(stderr, "****************************************************************************\n");
