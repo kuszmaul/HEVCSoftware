@@ -522,11 +522,10 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
   if (sei.m_nestingOpFlag)
   {
     WRITE_FLAG( sei.m_defaultOpFlag,                 "default_op_flag"               );
-    WRITE_UVLC( sei.m_nestingNumOpsMinus1,           "nesting_num_ops"               );
+    WRITE_UVLC( sei.m_nestingNumOpsMinus1,           "nesting_num_ops_minus1"        );
     for (UInt i = (sei.m_defaultOpFlag ? 1 : 0); i <= sei.m_nestingNumOpsMinus1; i++)
     {
-      WRITE_CODE( sei.m_nestingNoOpMaxTemporalIdPlus1, 3, "nesting_no_op_max_temporal_id" );
-      WRITE_CODE( sei.m_nestingMaxTemporalIdPlus1[i], 3,  "nesting_max_temporal_id"       );
+      WRITE_CODE( sei.m_nestingMaxTemporalIdPlus1[i], 3,  "nesting_max_temporal_id_plus1" );
       WRITE_UVLC( sei.m_nestingOpIdx[i],                  "nesting_op_idx"                );
     }
   }
@@ -535,8 +534,8 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     WRITE_FLAG( sei.m_allLayersFlag,                      "all_layers_flag"               );
     if (!sei.m_allLayersFlag)
     {
-      WRITE_CODE( sei.m_nestingNoOpMaxTemporalIdPlus1, 3, "nesting_no_op_max_temporal_id" );
-      WRITE_UVLC( sei.m_nestingNumLayersMinus1,           "nesting_num_layers"            );
+      WRITE_CODE( sei.m_nestingNoOpMaxTemporalIdPlus1, 3, "nesting_no_op_max_temporal_id_plus1" );
+      WRITE_UVLC( sei.m_nestingNumLayersMinus1,           "nesting_num_layers"                  );
       for (UInt i = 0; i <= sei.m_nestingNumLayersMinus1; i++)
       {
         WRITE_CODE( sei.m_nestingLayerId[i], 6,           "nesting_layer_id"              );
