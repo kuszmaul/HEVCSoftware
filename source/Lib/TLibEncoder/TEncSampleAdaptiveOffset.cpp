@@ -793,7 +793,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
   Double minCost, modeCost;
 
 
-#if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149
+#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
   Double totalCost = 0;
 #endif
 
@@ -848,7 +848,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
       }
     } //mode
 
-#if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149
+#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
     totalCost += minCost;
 #endif
 
@@ -860,7 +860,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
     offsetCTU(ctuRsAddr, srcYuv, resYuv, reconParams[ctuRsAddr], pic);
   } //ctuRsAddr
 
-#if !RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149
+#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
   if (!allBlksDisabled && (totalCost >= 0)) //SAO is not beneficial - disable it
   {
     for(Int ctuRsAddr = 0; ctuRsAddr < m_numCTUsPic; ctuRsAddr++)

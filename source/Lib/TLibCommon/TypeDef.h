@@ -238,6 +238,7 @@
 #define FIX_1323                                          1
 
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
+#define RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL              0 ///< 1 = tests whether SAO should be disabled at the picture level,  0 (default) = does not apply this additional test
 
 // ====================================================================================================================
 // RExt control settings
@@ -271,7 +272,6 @@
 //------------------------------------------------
 
 // NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149                           1 ///< Maintain backwards compatibility with HM for ticket 1149 (allow the encoder to test not using SAO at all)
 #define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticket 1298 (output value clipping missing from HM RDOQ)
 #define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
 #define RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105                  1 ///< Maintain backwards compatibility with HM when coding version 1 profile due to changes in motion estimation introduced in JCTVC-R0105.
