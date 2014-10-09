@@ -898,35 +898,6 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       m_pcEntropyCoder->encodeTerminatingBit( 0 );
     }
   }
-#if !MODIFIED_ENCODER_RESPONSE
-  if (!pcSlice->getFinalized())
-  {
-    Int numberOfWrittenBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-
-    // Calculate slice end IF this CU puts us over slice bit size.
-    // cannot terminate if current slice/slice-segment would be 0 Ctu in size,
-    const UInt validEndOfSliceCtuTsAddr = currentCTUTsAddr + (currentCTUTsAddr == pcSlice->getSliceSegmentCurStartCtuTsAddr() ? 1 : 0);
-    // Set slice end parameter
-    if(pcSlice->getSliceMode()==FIXED_NUMBER_OF_BYTES&&pcSlice->getSliceBits()+numberOfWrittenBits>pcSlice->getSliceArgument()<<3)
-    {
-      pcSlice->setSliceSegmentCurEndCtuTsAddr(validEndOfSliceCtuTsAddr);
-      pcSlice->setSliceCurEndCtuTsAddr(validEndOfSliceCtuTsAddr);
-      return;
-    }
-    // Set dependent slice end parameter
-    if(pcSlice->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES&&pcSlice->getSliceSegmentBits()+numberOfWrittenBits > pcSlice->getSliceSegmentArgument()<<3)
-    {
-      pcSlice->setSliceSegmentCurEndCtuTsAddr(validEndOfSliceCtuTsAddr);
-      return;
-    }
-    if(isLastSubCUOfCtu)
-    {
-      pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
-      pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
-      m_pcEntropyCoder->resetBits();
-    }
-  }
-#endif
 }
 
 /** Compute QP for each CU
@@ -1002,12 +973,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
       uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
-#if MODIFIED_ENCODER_RESPONSE
       if( ( uiLPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
-#else
-      const Bool bInSlice = pcPic->getPicSym()->getCtuRsToTsAddrMap(pcCU->getCtuRsAddr()) < pcSlice->getSliceSegmentCurEndCtuTsAddr(); // do not evaluate blocks not in this slice segment due to reaching byte limit
-      if(bInSlice&&( uiLPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
-#endif
       {
         xEncodeCU( pcCU, uiAbsPartIdx, uiDepth+1 );
       }
