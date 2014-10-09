@@ -673,9 +673,6 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
 
 Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
 {
-  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
-  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
-  //{
   WRITE_CODE(sei.m_verChromaFilterIdc, 8, "ver_chroma_filter_idc");
   WRITE_CODE(sei.m_horChromaFilterIdc, 8, "hor_chroma_filter_idc");
   WRITE_FLAG(sei.m_verFilteringProcessFlag, "ver_filtering_process_flag");
@@ -683,7 +680,6 @@ Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterH
   {
     writeUserDefinedCoefficients(sei);
   }
-  //}
   xWriteByteAlign();
 }
 

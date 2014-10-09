@@ -108,7 +108,7 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  */
 Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
 {
-  //NOTE: RExt - files cannot have bit depth greater than 16
+  //NOTE: files cannot have bit depth greater than 16
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_fileBitdepth       [ch] = std::min<UInt>(fileBitDepth[ch], 16);

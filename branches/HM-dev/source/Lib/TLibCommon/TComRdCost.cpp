@@ -84,7 +84,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       break;
   }
 
-  if (bFlag) //NOTE: RExt - this "bFlag" is never true
+  if (bFlag) //NOTE: this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
 #if SEQUENCE_LEVEL_LOSSLESS
@@ -110,7 +110,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0)); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
       }
     }
     else
@@ -124,7 +124,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
       }
 #endif
     }
@@ -161,7 +161,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       break;
   }
 
-  if (bFlag) //NOTE: RExt - this "bFlag" is never true
+  if (bFlag) //NOTE: this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
 #if SEQUENCE_LEVEL_LOSSLESS
@@ -187,7 +187,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0)); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
       }
     }
     else
@@ -201,7 +201,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5); // NOTE: RExt - Integer casts removed from here. This version should be identical to HM for 8- and 10-bit test conditions
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
       }
 #endif
     }

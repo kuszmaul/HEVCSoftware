@@ -1447,8 +1447,6 @@ Void TAppEncCfg::xCheckParameter()
 
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT)
   {
-    // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
-    // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHTHROUGHPUTREXT, "AlignCABACBeforeBypass must not be enabled unless the high throughput profile is being used.");
     if (m_profile == Profile::MAINREXT)
@@ -2199,7 +2197,7 @@ Void TAppEncCfg::xSetGlobal()
   g_uiAddCUDepth  = 0;
   while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + g_uiAddCUDepth )  ) ) g_uiAddCUDepth++;
 
-  g_uiAddCUDepth+=getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // NOTE: RExt - if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
+  g_uiAddCUDepth+=getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
 
   m_uiMaxCUDepth += g_uiAddCUDepth;
   g_uiAddCUDepth++;

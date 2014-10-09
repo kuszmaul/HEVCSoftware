@@ -2006,7 +2006,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     //-- interlaced summary
     m_gcAnalyzeAll_in.setFrmRate( m_pcCfg->getFrameRate());
     m_gcAnalyzeAll_in.setBits(m_gcAnalyzeAll.getBits());
-    // NOTE: RExt - prior to the above statement, the interlace analyser does not contain the correct total number of bits.
+    // prior to the above statement, the interlace analyser does not contain the correct total number of bits.
 
     printf( "\n\nSUMMARY INTERLACED ---------------------------------------------\n" );
     m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE);
@@ -2357,7 +2357,7 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize*2);
   }
 
-  UInt uibits = 0; // NOTE: RExt - the number of bits for the pair is not calculated here - instead the overall total is used elsewhere.
+  UInt uibits = 0; // the number of bits for the pair is not calculated here - instead the overall total is used elsewhere.
 
   //===== add PSNR =====
   m_gcAnalyzeAll_in.addResult (dPSNR, (Double)uibits, MSEyuvframe);

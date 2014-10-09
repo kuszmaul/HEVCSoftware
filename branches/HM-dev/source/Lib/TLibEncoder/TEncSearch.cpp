@@ -2048,7 +2048,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
             currModeId++;
 
             const Bool isOneMode  = (totalModesToTest == 1);
-            const Bool isLastMode = (currModeId == totalModesToTest); //NOTE: RExt - currModeId is indexed from 1
+            const Bool isLastMode = (currModeId == totalModesToTest); // currModeId is indexed from 1
 
             if (isOneMode)
             {
@@ -2234,7 +2234,7 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
       const UInt  uiHeight    = rect.height;
       const UInt  partIdx     = tuRecurseWithPU.GetAbsPartIdxCU();
       const UInt  uiStride    = pcOrgYuv ->getStride(COMPONENT_Cb);
-      Pel*  piOrgU      = pcOrgYuv ->getAddr ( COMPONENT_Cb, partIdx ); //TODO: RExt - Change this into an array and loop over chroma components below
+      Pel*  piOrgU      = pcOrgYuv ->getAddr ( COMPONENT_Cb, partIdx ); //TODO: Change this into an array and loop over chroma components below
       Pel*  piOrgV      = pcOrgYuv ->getAddr ( COMPONENT_Cr, partIdx );
       Pel*  piPredU     = pcPredYuv->getAddr ( COMPONENT_Cb, partIdx );
       Pel*  piPredV     = pcPredYuv->getAddr ( COMPONENT_Cr, partIdx );
@@ -2322,7 +2322,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
 
         bMaintainResidual[RESIDUAL_ENCODER_SIDE] = !(m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate());
 
-  //NOTE: RExt - Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
+  // Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
 #if FULL_NBIT
   const Double sqrtLambdaForFirstPass= (m_pcEncCfg->getCostMode()==COST_MIXED_LOSSLESS_LOSSY_CODING && pcCU->getCUTransquantBypass(0)) ?
                 sqrt(0.57 * pow(2.0, ((RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0)))
@@ -4858,8 +4858,6 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
                                       TComTU     &rTu
                                       DEBUG_STRING_FN_DECLARE(sDebug) )
 {
-  //NOTE: RExt - Ideally this function would be restructured to use just one component loop, but it is kept in this form to maintain HM-compatibility for 4:2:0
-
   TComDataCU *pcCU        = rTu.getCU();
   const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
   const UInt uiDepth      = rTu.GetTransformDepthTotal();
@@ -4986,7 +4984,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
           }
 
           const Int transformSkipModesToTest    = checkTransformSkip[compID] ? 2 : 1;
-          const Int crossCPredictionModesToTest = (preCalcAlpha != 0)        ? 2 : 1; //NOTE: RExt - preCalcAlpha cannot be anything other than 0 if isCrossCPredictionAvailable is false
+          const Int crossCPredictionModesToTest = (preCalcAlpha != 0)        ? 2 : 1; // preCalcAlpha cannot be anything other than 0 if isCrossCPredictionAvailable is false
 
           const Bool isOneMode                  = (crossCPredictionModesToTest == 1) && (transformSkipModesToTest == 1);
 
@@ -5163,7 +5161,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
                   
                 if (pcCU->isLosslessCoded(0)) nonCoeffCost = MAX_DOUBLE;
               }
-              else if ((transformSkipModeId == 1) && !bUseCrossCPrediction) //NOTE: RExt - if the CBF (i.e. currAbsSum) is 0, this mode combination gives the same result as when transformSkipModeId = 0 (Not coding-efficiency-affecting - maybe remove test in later revision)
+              else if ((transformSkipModeId == 1) && !bUseCrossCPrediction)
               {
                 currCompCost = MAX_DOUBLE;
               }

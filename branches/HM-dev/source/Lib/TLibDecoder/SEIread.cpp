@@ -253,13 +253,6 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
     case SEI::CHROMA_SAMPLING_FILTER_HINT:
-      //NOTE: RExt - Made unconditional on SPS to be consistent with the working text P1005
-      //if (!sps)
-      //{
-      //  printf ("Warning: Found Chroma Sampling Filter Hint SEI message, but no active SPS is available. Ignoring.\n");
-      //}
-      //else
-      //{
       sei = new SEIChromaSamplingFilterHint;
       xParseSEIChromaSamplingFilterHint((SEIChromaSamplingFilterHint&) *sei, payloadSize/*, sps*/, pDecodedMessageOutputStream);
       //}
@@ -978,9 +971,6 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
   UInt uiCode;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
-  //NOTE: RExt - Made unconditional to be consistent with the working text P1005
-  //if(sps->getVuiParameters()->getChromaLocInfoPresentFlag())
-  //{
   sei_read_code( pDecodedMessageOutputStream, 8, uiCode, "ver_chroma_filter_idc"); sei.m_verChromaFilterIdc = uiCode;
   sei_read_code( pDecodedMessageOutputStream, 8, uiCode, "hor_chroma_filter_idc"); sei.m_horChromaFilterIdc = uiCode;
   sei_read_flag( pDecodedMessageOutputStream, uiCode, "ver_filtering_process_flag"); sei.m_verFilteringProcessFlag = uiCode;
@@ -1024,7 +1014,6 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
       }
     }
   }
-  //}
 }
 
 Void SEIReader::xParseSEIKneeFunctionInfo(SEIKneeFunctionInfo& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)

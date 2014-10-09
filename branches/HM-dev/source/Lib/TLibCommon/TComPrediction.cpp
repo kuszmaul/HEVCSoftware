@@ -789,9 +789,6 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
       horPred += rightColumn[y];
       topRow[x] += bottomRow[x];
 
-      // NOTE: RExt - The intermediate shift right could be rolled into the final shift right,
-      //              thereby increasing the accuracy of the calculation
-      // eg  rpDst[y*dstStride+x] = ( (horPred<<topRowShift) + topRow[x] ) >> (shift1Dver+1);
       Int vertPred = ((topRow[x] + topRowShift)>>topRowShift);
       rpDst[y*dstStride+x] = ( horPred + vertPred ) >> (shift1Dhor+1);
     }

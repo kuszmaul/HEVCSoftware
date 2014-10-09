@@ -182,7 +182,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_SVLC( COMPONENT_Cb<numberValidComponents ?  (pcPPS->getQpOffset(COMPONENT_Cb)) : 0, "pps_cb_qp_offset" );
   WRITE_SVLC( COMPONENT_Cr<numberValidComponents ?  (pcPPS->getQpOffset(COMPONENT_Cr)) : 0, "pps_cr_qp_offset" );
 
-  assert(numberValidComponents <= 3); // NOTE: RExt - if more than 3 components (eg 4:4:4:4), then additional offsets will have to go in extension area...
+  assert(numberValidComponents <= 3); // if more than 3 components (eg 4:4:4:4), then additional offsets will have to go in extension area...
 
   WRITE_FLAG( pcPPS->getSliceChromaQpFlag() ? 1 : 0,          "pps_slice_chroma_qp_offsets_present_flag" );
 
@@ -474,9 +474,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   codePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
   WRITE_UVLC( pcSPS->getSPSId (),                   "sps_seq_parameter_set_id" );
   WRITE_UVLC( Int(pcSPS->getChromaFormatIdc ()),    "chroma_format_idc" );
-  // assert(pcSPS->getChromaFormatIdc () == 1);
-  //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
-  // in the first version chroma_format_idc can only be equal to 1 (4:2:0)
   if( format == CHROMA_444 )
   {
     WRITE_FLAG( 0,                                  "separate_colour_plane_flag");
@@ -717,9 +714,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   const UInt         numberValidComponents = getNumberValidComponents(format);
   const Bool         chromaEnabled         = isChromaEnabled(format);
 
-  // NOTE: RExt - slice headers can know about chroma formats, since they need to know whether
-  //              separate_colour_plane_flag is 1.
-
   //calculate number of bits required for slice address
   Int maxSliceSegmentAddress = pcSlice->getPic()->getNumberOfCtusInFrame();
   Int bitsSliceSegmentAddress = 0;
@@ -764,13 +758,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG( pcSlice->getPicOutputFlag() ? 1 : 0, "pic_output_flag" );
     }
-
-    // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
-    //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
-    //TODO: RExt - interpretation of separate_colour_plane_flag required.
-    // assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
-    // if( separate_colour_plane_flag  ==  1 )
-    //   colour_plane_id                                      u(2)
 
     if( !pcSlice->getIdrPicFlag() )
     {
@@ -1008,7 +995,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     WRITE_SVLC( iCode, "slice_qp_delta" );
     if (pcSlice->getPPS()->getSliceChromaQpFlag())
     {
-      // NOTE: RExt the number of slice_qp_deltas is dependent on the number of valid components here.
       if (numberValidComponents > COMPONENT_Cb) { WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb), "slice_qp_delta_cb" ); }
       if (numberValidComponents > COMPONENT_Cr) { WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr), "slice_qp_delta_cr" ); }
       assert(numberValidComponents <= COMPONENT_Cr+1);
@@ -1036,7 +1022,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 
-    // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
     Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (chromaEnabled && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA)));
     Bool isDBFEnabled = (!pcSlice->getDeblockingFilterDisable());
 
@@ -1333,7 +1318,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
   WPScalingParam  *wp;
   const ChromaFormat    format                = pcSlice->getPic()->getChromaFormat();
   const UInt            numberValidComponents = getNumberValidComponents(format);
-  const Bool            bChroma               = isChromaEnabled(format); // NOTE: RExt - slice headers can know about the chroma format.
+  const Bool            bChroma               = isChromaEnabled(format);
   const Int             iNbRef                = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
         Bool            bDenomCoded           = false;
         UInt            uiMode                = 0;
@@ -1349,7 +1334,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
     {
       RefPicList  eRefPicList = ( iNumRef ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
 
-      // NOTE: RExt - wp[].uiLog2WeightDenom and wp[].bPresentFlag are actually per-channel-type settings.
+      // NOTE: wp[].uiLog2WeightDenom and wp[].bPresentFlag are actually per-channel-type settings.
 
       for ( Int iRefIdx=0 ; iRefIdx<pcSlice->getNumRefIdx(eRefPicList) ; iRefIdx++ )
       {
@@ -1361,7 +1346,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 
           if( bChroma )
           {
-            assert(wp[COMPONENT_Cb].uiLog2WeightDenom == wp[COMPONENT_Cr].uiLog2WeightDenom); // NOTE: RExt - check the channel-type settings are consistent across components.
+            assert(wp[COMPONENT_Cb].uiLog2WeightDenom == wp[COMPONENT_Cr].uiLog2WeightDenom); // check the channel-type settings are consistent across components.
             iDeltaDenom = (wp[COMPONENT_Cb].uiLog2WeightDenom - wp[COMPONENT_Y].uiLog2WeightDenom);
             WRITE_SVLC( iDeltaDenom, "delta_chroma_log2_weight_denom" );       // se(v): delta_chroma_log2_weight_denom
           }
@@ -1375,7 +1360,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
         for ( Int iRefIdx=0 ; iRefIdx<pcSlice->getNumRefIdx(eRefPicList) ; iRefIdx++ )
         {
           pcSlice->getWpScaling(eRefPicList, iRefIdx, wp);
-          assert(wp[COMPONENT_Cb].bPresentFlag == wp[COMPONENT_Cr].bPresentFlag); // NOTE: RExt - check the channel-type settings are consistent across components.
+          assert(wp[COMPONENT_Cb].bPresentFlag == wp[COMPONENT_Cr].bPresentFlag); // check the channel-type settings are consistent across components.
           WRITE_FLAG( wp[COMPONENT_Cb].bPresentFlag, "chroma_weight_lX_flag" );           // u(1): chroma_weight_lX_flag
           uiTotalSignalledWeightFlags += 2*wp[COMPONENT_Cb].bPresentFlag;
         }
