@@ -176,9 +176,6 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL,                              settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298,                      settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,           settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105,             settingNameWidth, settingValueWidth);
 
   //------------------------------------------------
 

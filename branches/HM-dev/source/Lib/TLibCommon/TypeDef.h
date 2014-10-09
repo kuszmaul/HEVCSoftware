@@ -268,15 +268,6 @@
 #define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
 //------------------------------------------------
-// Backwards-compatibility
-//------------------------------------------------
-
-// NOTE: RExt - Compatibility defaults chosen so that simulations run with the common test conditions do not differ with HM.
-#define RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298                           0 ///< Maintain backwards compatibility with HM for ticket 1298 (output value clipping missing from HM RDOQ)
-#define RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION                0 ///< Maintain backwards compatibility with (use same algorithm as) HM for RBSP emulation prevention
-#define RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105                  0 ///< Maintain backwards compatibility with HM when coding version 1 profile due to changes in motion estimation introduced in JCTVC-R0105.
-
-//------------------------------------------------
 // Derived macros
 //------------------------------------------------
 

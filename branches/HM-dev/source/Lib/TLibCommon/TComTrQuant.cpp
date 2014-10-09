@@ -2107,11 +2107,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         piArlDstCoeff[uiBlkPos]   = (TCoeff)(( lLevelDouble + iAddC) >> iQBitsC );
       }
 #endif
-#if RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298
-      const UInt uiMaxAbsLevel  = UInt((lLevelDouble + (Intermediate_Int(1) << (iQBits - 1))) >> iQBits);
-#else
       const UInt uiMaxAbsLevel  = std::min<UInt>(UInt(entropyCodingMaximum), UInt((lLevelDouble + (Intermediate_Int(1) << (iQBits - 1))) >> iQBits));
-#endif
 
       const Double dErr         = Double( lLevelDouble );
       pdCostCoeff0[ iScanPos ]  = dErr * dErr * errorScale;
