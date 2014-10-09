@@ -260,7 +260,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     READ_FLAG ( uiCode, "uniform_spacing_flag" );                   pcPPS->setTileUniformSpacingFlag( uiCode == 1 );
 
     const UInt tileColumnsMinus1 = pcPPS->getNumTileColumnsMinus1();
-    const UInt tileRowsMinus1    = pcPPS->getTileNumRowsMinus1();
+    const UInt tileRowsMinus1    = pcPPS->getNumTileRowsMinus1();
  
     if ( !pcPPS->getTileUniformSpacingFlag())
     {
@@ -952,16 +952,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
   pcSlice->setSliceSegmentCurStartCtuTsAddr( sliceSegmentAddress );// this is actually a Raster-Scan (RS) address, but we do not have the RS->TS conversion table defined yet.
   pcSlice->setSliceSegmentCurEndCtuTsAddr(numCTUs);                // Set end as the last CTU of the picture.
 
-  if (pcSlice->getDependentSliceSegmentFlag())
+  if (!pcSlice->getDependentSliceSegmentFlag())
   {
-    pcSlice->setNextSlice          ( false );
-    pcSlice->setNextSliceSegment ( true  );
-  }
-  else
-  {
-    pcSlice->setNextSlice          ( true  );
-    pcSlice->setNextSliceSegment ( false );
-
     pcSlice->setSliceCurStartCtuTsAddr(sliceSegmentAddress); // this is actually a Raster-Scan (RS) address, but we do not have the RS->TS conversion table defined yet.
     pcSlice->setSliceCurEndCtuTsAddr(numCTUs);
   }
@@ -1425,25 +1417,22 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
 
   }
 
-  UInt *entryPointOffset          = NULL;
-  UInt numEntryPointOffsets, offsetLenMinus1;
+  std::vector<UInt> entryPointOffset;
   if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
   {
-    READ_UVLC(numEntryPointOffsets, "num_entry_point_offsets"); pcSlice->setNumEntryPointOffsets ( numEntryPointOffsets );
+    UInt numEntryPointOffsets;
+    UInt offsetLenMinus1;
+    READ_UVLC(numEntryPointOffsets, "num_entry_point_offsets");
     if (numEntryPointOffsets>0)
     {
       READ_UVLC(offsetLenMinus1, "offset_len_minus1");
+      entryPointOffset.resize(numEntryPointOffsets);
+      for (UInt idx=0; idx<numEntryPointOffsets; idx++)
+      {
+        READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset_minus1");
+        entryPointOffset[ idx ] = uiCode + 1;
+      }
     }
-    entryPointOffset = new UInt[numEntryPointOffsets];
-    for (UInt idx=0; idx<numEntryPointOffsets; idx++)
-    {
-      READ_CODE(offsetLenMinus1+1, uiCode, "entry_point_offset_minus1");
-      entryPointOffset[ idx ] = uiCode + 1;
-    }
-  }
-  else
-  {
-    pcSlice->setNumEntryPointOffsets ( 0 );
   }
 
   if(pps->getSliceHeaderExtensionPresentFlag())
@@ -1461,6 +1450,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
   m_pcBitstream->readByteAlignment();
 #endif
 
+  pcSlice->clearSubstreamSizes();
+
   if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
   {
     Int endOfSliceHeaderLocation = m_pcBitstream->getByteLocation();
@@ -1476,7 +1467,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
 
     Int  curEntryPointOffset     = 0;
     Int  prevEntryPointOffset    = 0;
-    for (UInt idx=0; idx<numEntryPointOffsets; idx++)
+    for (UInt idx=0; idx<entryPointOffset.size(); idx++)
     {
       curEntryPointOffset += entryPointOffset[ idx ];
 
@@ -1492,40 +1483,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
 
       entryPointOffset[ idx ] -= emulationPreventionByteCount;
       prevEntryPointOffset = curEntryPointOffset;
-    }
-
-    if ( pps->getEntropyCodingSyncEnabledFlag() )
-    {
-      Int numSubstreams = pcSlice->getNumEntryPointOffsets()+1;
-      pcSlice->allocSubstreamSizes(numSubstreams);
-      UInt *pSubstreamSizes       = pcSlice->getSubstreamSizes();
-      for (Int idx=0; idx<numSubstreams-1; idx++)
-      {
-        if ( idx < numEntryPointOffsets )
-        {
-          pSubstreamSizes[ idx ] = ( entryPointOffset[ idx ] << 3 ) ;
-        }
-        else
-        {
-          pSubstreamSizes[ idx ] = 0;
-        }
-      }
-    }
-    else if ( pps->getTilesEnabledFlag() )
-    {
-      pcSlice->setTileLocationCount( numEntryPointOffsets );
-
-      UInt prevPos = 0;
-      for (Int idx=0; idx<pcSlice->getTileLocationCount(); idx++)
-      {
-        pcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
-        prevPos += entryPointOffset[ idx ];
-      }
-    }
-
-    if (entryPointOffset)
-    {
-      delete [] entryPointOffset;
+      pcSlice->addSubstreamSize(entryPointOffset [ idx ] );
     }
   }
 
@@ -1635,6 +1593,27 @@ Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )
     if (uiPeekValue == (1<<(iBitsLeft-1)))
     {
       ruiBit = true;
+    }
+  }
+}
+
+Void TDecCavlc::parseRemainingBytes( Bool noTrailingBytesExpected )
+{
+  if (noTrailingBytesExpected)
+  {
+    const UInt numberOfRemainingSubstreamBytes=m_pcBitstream->getNumBitsLeft();
+    assert (numberOfRemainingSubstreamBytes == 0);
+  }
+  else
+  {
+    while (m_pcBitstream->getNumBitsLeft())
+    {
+      UInt trailingNullByte=m_pcBitstream->readByte();
+      if (trailingNullByte!=0)
+      {
+        printf("Trailing byte should be 0, but has value %02x\n", trailingNullByte);
+        assert(trailingNullByte==0);
+      }
     }
   }
 }

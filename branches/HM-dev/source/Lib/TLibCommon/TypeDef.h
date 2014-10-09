@@ -237,6 +237,10 @@
 
 #define FIX_1323                                          1
 
+#define MODIFIED_ENCODER_RESPONSE                         0
+
+#define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
+
 // ====================================================================================================================
 // RExt control settings
 // ====================================================================================================================
@@ -572,6 +576,13 @@ enum SignificanceMapContextType
   CONTEXT_TYPE_NxN    = 2,
   CONTEXT_TYPE_SINGLE = 3,
   CONTEXT_NUMBER_OF_TYPES = 4
+};
+
+enum ScalingListMode
+{
+  SCALING_LIST_OFF,
+  SCALING_LIST_DEFAULT,
+  SCALING_LIST_FILE_READ
 };
 
 enum ScalingListSize

@@ -1112,7 +1112,7 @@ public:
   Void     setTileColumnWidth        (const std::vector<Int>& columnWidth ) { m_tileColumnWidth = columnWidth; }
   UInt     getTileColumnWidth        (UInt columnIdx) const                 { return  m_tileColumnWidth[columnIdx]; }
   Void     setNumTileRowsMinus1      (Int i)                                { m_numTileRowsMinus1 = i; }
-  Int      getTileNumRowsMinus1      () const                               { return m_numTileRowsMinus1; }
+  Int      getNumTileRowsMinus1      () const                               { return m_numTileRowsMinus1; }
   Void     setTileRowHeight          (const std::vector<Int>& rowHeight)    { m_tileRowHeight = rowHeight;  }
   UInt     getTileRowHeight          (UInt rowIdx) const                    { return m_tileRowHeight[rowIdx]; }
 
@@ -1264,18 +1264,12 @@ private:
   WPScalingParam  m_weightPredTable[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
   WPACDCParam    m_weightACDCParam[MAX_NUM_COMPONENT];
 
-  std::vector<UInt> m_tileByteLocation;
+  std::vector<UInt> m_substreamSizes;
 
-  UInt        *m_uiTileByteLocation;
-  UInt        m_uiTileCount;
-  UInt        m_uiTileOffstForMultES;
-
-  UInt*       m_puiSubstreamSizes;
   TComScalingList*     m_scalingList;                 //!< pointer of quantization matrix
   Bool        m_cabacInitFlag;
 
   Bool       m_bLMvdL1Zero;
-  Int         m_numEntryPointOffsets;
   Bool       m_temporalLayerNonReferenceFlag;
   Bool       m_LFCrossSliceBoundaryFlag;
 
@@ -1461,10 +1455,6 @@ public:
   UInt getSliceSegmentCurStartCtuTsAddr () const            { return m_sliceSegmentCurStartCtuTsAddr;      } // CTU Tile-scan address (as opposed to raster-scan)
   Void setSliceSegmentCurEndCtuTsAddr   ( UInt ctuTsAddr )  { m_sliceSegmentCurEndCtuTsAddr = ctuTsAddr;   } // CTU Tile-scan address (as opposed to raster-scan)
   UInt getSliceSegmentCurEndCtuTsAddr   () const            { return m_sliceSegmentCurEndCtuTsAddr;        } // CTU Tile-scan address (as opposed to raster-scan)
-  Void setNextSlice                     ( Bool b )          { m_nextSlice = b;                           }
-  Bool isNextSlice                      ()                  { return m_nextSlice;                        }
-  Void setNextSliceSegment              ( Bool b )          { m_nextSliceSegment = b;                    }
-  Bool isNextSliceSegment               ()                  { return m_nextSliceSegment;                 }
   Void setSliceBits                     ( UInt uiVal )      { m_sliceBits = uiVal;                      }
   UInt getSliceBits                     ()                  { return m_sliceBits;                       }
   Void setSliceSegmentBits              ( UInt uiVal )      { m_sliceSegmentBits = uiVal;            }
@@ -1481,24 +1471,18 @@ public:
   Void  setWpAcDcParam  ( WPACDCParam wp[MAX_NUM_COMPONENT] ) { memcpy(m_weightACDCParam, wp, sizeof(WPACDCParam)*MAX_NUM_COMPONENT); }
   Void  getWpAcDcParam  ( WPACDCParam *&wp );
   Void  initWpAcDcParam ();
-  Void setTileLocationCount             ( UInt cnt )               { return m_tileByteLocation.resize(cnt);    }
-  UInt getTileLocationCount             ()                         { return (UInt) m_tileByteLocation.size();  }
-  Void setTileLocation                  ( Int idx, UInt location ) { assert (idx<m_tileByteLocation.size());
-                                                                     m_tileByteLocation[idx] = location;       }
-  Void addTileLocation                  ( UInt location )          { m_tileByteLocation.push_back(location);   }
-  UInt getTileLocation                  ( Int idx )                { return m_tileByteLocation[idx];           }
-  Void setTileOffstForMultES            (UInt uiOffset )      { m_uiTileOffstForMultES = uiOffset;        }
-  UInt getTileOffstForMultES            ()                    { return m_uiTileOffstForMultES;            }
-  Void allocSubstreamSizes              ( UInt uiNumSubstreams );
-  UInt* getSubstreamSizes               ()                  { return m_puiSubstreamSizes; }
+
+  Void clearSubstreamSizes       ( )                        { return m_substreamSizes.clear();        }
+  UInt getNumberOfSubstreamSizes ( )                        { return (UInt) m_substreamSizes.size();  }
+  Void addSubstreamSize          ( UInt size )              { m_substreamSizes.push_back(size);       }
+  UInt getSubstreamSize          ( Int idx )                { assert(idx<getNumberOfSubstreamSizes()); return m_substreamSizes[idx]; }
+
   Void  setScalingList              ( TComScalingList* scalingList ) { m_scalingList = scalingList; }
   TComScalingList*   getScalingList ()                               { return m_scalingList; }
   Void  setDefaultScalingList       ();
   Bool  checkDefaultScalingList     ();
   Void      setCabacInitFlag  ( Bool val ) { m_cabacInitFlag = val;      }  //!< set CABAC initial flag
   Bool      getCabacInitFlag  ()           { return m_cabacInitFlag;     }  //!< get CABAC initial flag
-  Void      setNumEntryPointOffsets(Int val)  { m_numEntryPointOffsets = val;     }
-  Int       getNumEntryPointOffsets()         { return m_numEntryPointOffsets;    }
   Bool      getTemporalLayerNonReferenceFlag()       { return m_temporalLayerNonReferenceFlag;}
   Void      setTemporalLayerNonReferenceFlag(Bool x) { m_temporalLayerNonReferenceFlag = x;}
   Void      setLFCrossSliceBoundaryFlag     ( Bool   val )    { m_LFCrossSliceBoundaryFlag = val; }

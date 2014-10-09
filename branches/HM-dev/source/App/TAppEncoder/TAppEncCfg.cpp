@@ -321,6 +321,21 @@ strToCostMode[] =
   {"mixed_lossless_lossy",      COST_MIXED_LOSSLESS_LOSSY_CODING}
 };
 
+static const struct MapStrToScalingListMode
+{
+  const Char* str;
+  ScalingListMode value;
+}
+strToScalingListMode[] =
+{
+  {"0",       SCALING_LIST_OFF},
+  {"1",       SCALING_LIST_DEFAULT},
+  {"2",       SCALING_LIST_FILE_READ},
+  {"off",     SCALING_LIST_OFF},
+  {"default", SCALING_LIST_DEFAULT},
+  {"file",    SCALING_LIST_FILE_READ}
+};
+
 template<typename T, typename P>
 static std::string enumToString(P map[], UInt mapLen, const T val)
 {
@@ -377,6 +392,11 @@ namespace Level
 static inline istream& operator >> (istream &in, CostMode &mode)
 {
   return readStrToEnum(strToCostMode, sizeof(strToCostMode)/sizeof(*strToCostMode), in, mode);
+}
+
+static inline istream& operator >> (istream &in, ScalingListMode &mode)
+{
+  return readStrToEnum(strToScalingListMode, sizeof(strToScalingListMode)/sizeof(*strToScalingListMode), in, mode);
 }
 
 template <class T>
@@ -833,7 +853,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TileRowHeightArray",                              cfg_RowHeight,                            cfg_RowHeight, "Array containing tile row height values in units of CTU")
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with top-right-right")
-  ("ScalingList",                                     m_useScalingListId,                                   0, "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
+  ("ScalingList",                                     m_useScalingListId,                    SCALING_LIST_OFF, "0/off: no scaling list, 1/default: default scaling lists, 2/file: scaling lists specified in ScalingListFile")
   ("ScalingListFile",                                 cfg_ScalingListFile,                         string(""), "Scaling list file name. Use an empty string to produce help.")
   ("SignHideFlag,-SBH",                               m_signHideFlag,                                       1)
   ("MaxNumMergeCand",                                 m_maxNumMergeCand,                                   5u, "Maximum number of merge candidates")

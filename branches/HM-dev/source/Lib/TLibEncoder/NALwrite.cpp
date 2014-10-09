@@ -170,15 +170,4 @@ Void writeRBSPTrailingBits(TComOutputBitstream& bs)
   bs.writeAlignZero();
 }
 
-/**
- * Copy NALU from naluSrc to naluDest
- */
-Void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
-{
-  naluDest.m_nalUnitType = naluSrc.m_nalUnitType;
-  naluDest.m_reservedZero6Bits  = naluSrc.m_reservedZero6Bits;
-  naluDest.m_temporalId  = naluSrc.m_temporalId;
-  naluDest.m_Bitstream   = naluSrc.m_Bitstream;
-}
-
 //! \}

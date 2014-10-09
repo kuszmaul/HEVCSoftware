@@ -70,7 +70,6 @@ Void  xTraceSliceHeader (TComSlice *pSlice)
 TEncCavlc::TEncCavlc()
 {
   m_pcBitIf           = NULL;
-  m_uiCoeffCost       = 0;
 }
 
 TEncCavlc::~TEncCavlc()
@@ -195,7 +194,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   if( pcPPS->getTilesEnabledFlag() )
   {
     WRITE_UVLC( pcPPS->getNumTileColumnsMinus1(),                                    "num_tile_columns_minus1" );
-    WRITE_UVLC( pcPPS->getTileNumRowsMinus1(),                                       "num_tile_rows_minus1" );
+    WRITE_UVLC( pcPPS->getNumTileRowsMinus1(),                                       "num_tile_rows_minus1" );
     WRITE_FLAG( pcPPS->getTileUniformSpacingFlag(),                                  "uniform_spacing_flag" );
     if( !pcPPS->getTileUniformSpacingFlag() )
     {
@@ -203,12 +202,12 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
       {
         WRITE_UVLC( pcPPS->getTileColumnWidth(i)-1,                                  "column_width_minus1" );
       }
-      for(UInt i=0; i<pcPPS->getTileNumRowsMinus1(); i++)
+      for(UInt i=0; i<pcPPS->getNumTileRowsMinus1(); i++)
       {
         WRITE_UVLC( pcPPS->getTileRowHeight(i)-1,                                    "row_height_minus1" );
       }
     }
-    if(pcPPS->getNumTileColumnsMinus1() !=0 || pcPPS->getTileNumRowsMinus1() !=0)
+    if(pcPPS->getNumTileColumnsMinus1() !=0 || pcPPS->getNumTileRowsMinus1() !=0)
     {
       WRITE_FLAG( pcPPS->getLoopFilterAcrossTilesEnabledFlag()?1 : 0,          "loop_filter_across_tiles_enabled_flag");
     }
@@ -728,7 +727,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
     bitsSliceSegmentAddress++;
   }
-  const Int ctuTsAddress = (pcSlice->isNextSlice()) ? pcSlice->getSliceCurStartCtuTsAddr() : pcSlice->getSliceSegmentCurStartCtuTsAddr();
+  const Int ctuTsAddress = pcSlice->getSliceSegmentCurStartCtuTsAddr();
 
   //write slice address
   const Int sliceSegmentRsAddress = pcSlice->getPic()->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddress);
@@ -743,7 +742,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #endif
   }
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "slice_pic_parameter_set_id" );
-  pcSlice->setDependentSliceSegmentFlag(!pcSlice->isNextSlice());
   if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentRsAddress!=0) )
   {
     WRITE_FLAG( pcSlice->getDependentSliceSegmentFlag() ? 1 : 0, "dependent_slice_segment_flag" );
@@ -1132,7 +1130,7 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
 }
 
 /**
- - write wavefront substreams sizes for the slice header.
+ - write tiles and wavefront substreams sizes for the slice header.
  .
  \param pcSlice Where we find the substream size information.
  */
@@ -1142,66 +1140,34 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   {
     return;
   }
-  UInt numEntryPointOffsets = 0, offsetLenMinus1 = 0, maxOffset = 0;
-  UInt *entryPointOffset = NULL;
-  if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
+  UInt maxOffset = 0;
+  for(Int idx=0; idx<pSlice->getNumberOfSubstreamSizes(); idx++)
   {
-    UInt* pSubstreamSizes                 = pSlice->getSubstreamSizes();
-    const Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurStartCtuTsAddr(), false, pSlice);
-    const Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurEndCtuTsAddr()-1, false, pSlice);
-    numEntryPointOffsets                  = subStreamOfLastSegmentOfSlice-numZeroSubstreamsAtStartOfSlice;
-    pSlice->setNumEntryPointOffsets(numEntryPointOffsets);
-    entryPointOffset           = new UInt[numEntryPointOffsets];
-    for (Int idx=0; idx<numEntryPointOffsets; idx++)
+    UInt offset=pSlice->getSubstreamSize(idx);
+    if ( offset > maxOffset )
     {
-      entryPointOffset[ idx ] = ( pSubstreamSizes[ idx+numZeroSubstreamsAtStartOfSlice ] >> 3 ) ;
-      if ( entryPointOffset[ idx ] > maxOffset )
-      {
-        maxOffset = entryPointOffset[ idx ];
-      }
+      maxOffset = offset;
     }
   }
-  else if ( pSlice->getPPS()->getTilesEnabledFlag() )
-  {
-    numEntryPointOffsets = pSlice->getTileLocationCount();
-    entryPointOffset     = new UInt[numEntryPointOffsets];
-    for (Int idx=0; idx<pSlice->getTileLocationCount(); idx++)
-    {
-      if ( idx == 0 )
-      {
-        entryPointOffset [ idx ] = pSlice->getTileLocation( 0 );
-      }
-      else
-      {
-        entryPointOffset [ idx ] = pSlice->getTileLocation( idx ) - pSlice->getTileLocation( idx-1 );
-      }
 
-      if ( entryPointOffset[ idx ] > maxOffset )
-      {
-        maxOffset = entryPointOffset[ idx ];
-      }
-    }
-  }
   // Determine number of bits "offsetLenMinus1+1" required for entry point information
-  offsetLenMinus1 = 0;
+  UInt offsetLenMinus1 = 0;
   while (maxOffset >= (1u << (offsetLenMinus1 + 1)))
   {
     offsetLenMinus1++;
     assert(offsetLenMinus1 + 1 < 32);
   }
 
-  WRITE_UVLC(numEntryPointOffsets, "num_entry_point_offsets");
-  if (numEntryPointOffsets>0)
+  WRITE_UVLC(pSlice->getNumberOfSubstreamSizes(), "num_entry_point_offsets");
+  if (pSlice->getNumberOfSubstreamSizes()>0)
   {
     WRITE_UVLC(offsetLenMinus1, "offset_len_minus1");
-  }
 
-  for (UInt idx=0; idx<numEntryPointOffsets; idx++)
-  {
-    WRITE_CODE(entryPointOffset[ idx ]-1, offsetLenMinus1+1, "entry_point_offset_minus1");
+    for (UInt idx=0; idx<pSlice->getNumberOfSubstreamSizes(); idx++)
+    {
+      WRITE_CODE(pSlice->getSubstreamSize(idx)-1, offsetLenMinus1+1, "entry_point_offset_minus1");
+    }
   }
-
-  delete [] entryPointOffset;
 }
 
 Void TEncCavlc::codeTerminatingBit      ( UInt uilsLast )

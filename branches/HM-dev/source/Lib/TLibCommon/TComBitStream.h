@@ -80,12 +80,12 @@ class TComOutputBitstream : public TComBitIf
    *  - &fifo.front() to get a pointer to the data array.
    *    NB, this pointer is only valid until the next push_back()/clear()
    */
-  std::vector<uint8_t> *m_fifo;
+  std::vector<uint8_t> m_fifo;
 
   UInt m_num_held_bits; /// number of bits not flushed to bytestream.
   UChar m_held_bits; /// the bits held and not flushed to bytestream.
                              /// this value is always msb-aligned, bigendian.
-
+  TComOutputBitstream &operator=(const TComOutputBitstream &); // not defined. do not use
 public:
   // create / destroy
   TComOutputBitstream();
@@ -136,20 +136,20 @@ public:
   /**
    * Return the number of bits that have been written since the last clear()
    */
-  UInt getNumberOfWrittenBits() const { return UInt(m_fifo->size()) * 8 + m_num_held_bits; }
+  UInt getNumberOfWrittenBits() const { return UInt(m_fifo.size()) * 8 + m_num_held_bits; }
 
   Void insertAt(const TComOutputBitstream& src, UInt pos);
 
   /**
    * Return a reference to the internal fifo
    */
-  std::vector<uint8_t>& getFIFO() { return *m_fifo; }
+  std::vector<uint8_t>& getFIFO() { return m_fifo; }
 
   UChar getHeldBits  ()          { return m_held_bits;          }
 
-  TComOutputBitstream& operator= (const TComOutputBitstream& src);
+  //TComOutputBitstream& operator= (const TComOutputBitstream& src);
   /** Return a reference to the internal fifo */
-  std::vector<uint8_t>& getFIFO() const { return *m_fifo; }
+  const std::vector<uint8_t>& getFIFO() const { return m_fifo; }
 
   Void          addSubstream    ( TComOutputBitstream* pcSubstream );
   Void writeByteAlignment();
