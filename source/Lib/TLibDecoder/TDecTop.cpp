@@ -730,9 +730,6 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_PREFIX_SEI:
     case NAL_UNIT_SUFFIX_SEI:
       xDecodeSEI( nalu.m_Bitstream, nalu.m_nalUnitType );
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
-//      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS,nalu.m_Bitstream->readByteAlignment(),0); // NOTE: RExt - Byte alignment now read as part of xDecodeSEI (SEIReader::parseSEImessage)
-#endif
       return false;
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:

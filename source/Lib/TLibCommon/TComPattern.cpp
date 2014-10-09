@@ -103,10 +103,9 @@ Void TComPattern::initPattern (Pel* piY,
 }
 
 
-// NOTE: RExt - this has been kept in this C++ file to allow easier tracking/comparison against HM.
+// TODO: move this function to TComPrediction.cpp.
 Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLeft, const ComponentID compID, const Bool bFilterRefSamples DEBUG_STRING_FN_DECLARE(sDebug))
 {
-  // NOTE: RExt - This function has been modified for increased flexibility as part of the Square TU 4:2:2 implementation
   const ChannelType chType    = toChannelType(compID);
 
   TComDataCU *pcCU=rTu.getCU();
@@ -315,7 +314,6 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
                            const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
                            const ChannelType chType, const ChromaFormat chFmt )
 {
-  // NOTE: RExt - This function has been modified for increased flexibility as part of the Square TU 4:2:2 implementation
   const Pel* piRoiTemp;
   Int  i, j;
   Int  iDCValue = 1 << (bitDepth - 1);

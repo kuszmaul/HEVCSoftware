@@ -1518,7 +1518,7 @@ Void  TComSlice::initWpScaling()
         const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (g_bitDepth[toChannelType(ComponentID(yuv))]-8));
 
         pwp->w      = pwp->iWeight;
-        pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: RExt - This value of the ".o" variable is never used - .o is set immediately before it gets used
+        pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: This value of the ".o" variable is never used - .o is set immediately before it gets used
         pwp->shift  = pwp->uiLog2WeightDenom;
         pwp->round  = (pwp->uiLog2WeightDenom>=1) ? (1 << (pwp->uiLog2WeightDenom-1)) : (0);
       }

@@ -56,7 +56,7 @@
 
 class TComTU; // forward declaration
 
-static const UInt NUM_MOST_PROBABLE_MODES=3; // NOTE: RExt - new definition
+static const UInt NUM_MOST_PROBABLE_MODES=3;
 
 // ====================================================================================================================
 // Class definition

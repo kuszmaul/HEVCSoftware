@@ -55,7 +55,7 @@ class TComTrQuant;
 // Constants
 // ====================================================================================================================
 
-static const UInt REF_PIC_LIST_NUM_IDX=32; // NOTE: RExt - new definition
+static const UInt REF_PIC_LIST_NUM_IDX=32;
 
 // ====================================================================================================================
 // Class definition
@@ -579,7 +579,7 @@ private:
 
 public:
   TComVUI()
-    :m_aspectRatioInfoPresentFlag(false) //TODO: RExt - This initialiser list contains magic numbers
+    :m_aspectRatioInfoPresentFlag(false) //TODO: This initialiser list contains magic numbers
     ,m_aspectRatioIdc(0)
     ,m_sarWidth(0)
     ,m_sarHeight(0)

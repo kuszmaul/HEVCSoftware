@@ -128,7 +128,7 @@
 
 #define SBH_THRESHOLD                                     4  ///< I0156: value of the fixed SBH controlling threshold
 
-//NOTE: RExt - There is a command-line-controlled alternative mechanism in RExt - this macro is kept (for now) for backwards-compatibility reasons
+//NOTE: There is a command-line-controlled cost-mode alternative mechanism - this macro is kept (for now) for backwards-compatibility reasons
 #define SEQUENCE_LEVEL_LOSSLESS                           0  ///< H0530: used only for sequence or frame-level lossless coding
 
 #define DISABLING_CLIP_FOR_BIPREDME                       1  ///< Ticket #175
@@ -229,8 +229,8 @@
 
 #define CABAC_INIT_PRESENT_FLAG                           1
 
-#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4 // NOTE: RExt - new definition
-#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8 // NOTE: RExt - new definition
+#define LUMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS    4
+#define CHROMA_INTERPOLATION_FILTER_SUB_SAMPLE_POSITIONS  8
 
 #define MAX_NUM_LONG_TERM_REF_PICS                       33
 
@@ -667,7 +667,7 @@ namespace Level
 
   enum Name
   {
-    //NOTE: RExt - code = (level * 30)
+    // code = (level * 30)
     NONE     = 0,
     LEVEL1   = 30,
     LEVEL2   = 60,

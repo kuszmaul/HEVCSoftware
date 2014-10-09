@@ -252,7 +252,7 @@ Void TComPicSym::initTiles(TComPPS *pps)
   Int minWidth  = 1;
   Int minHeight = 1;
   const Int profileIdc = pps->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc();
-  if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10) //TODO: RExt - add more profiles...
+  if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10) //TODO: add more profiles to the tile-size check...
   {
     if (pps->getTilesEnabledFlag())
     {

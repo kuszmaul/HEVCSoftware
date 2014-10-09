@@ -238,7 +238,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   assert( pcPPS->getQpOffset(COMPONENT_Cr) >= -12 );
   assert( pcPPS->getQpOffset(COMPONENT_Cr) <=  12 );
 
-  assert(MAX_NUM_COMPONENT<=3); // NOTE: RExt - place-holder for 4:4:4:4 handling.
+  assert(MAX_NUM_COMPONENT<=3);
 
   READ_FLAG( uiCode, "pps_slice_chroma_qp_offsets_present_flag" );
   pcPPS->setSliceChromaQpFlag( uiCode ? true : false );
@@ -264,7 +264,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
  
     if ( !pcPPS->getTileUniformSpacingFlag())
     {
-      if (tileColumnsMinus1 > 0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
+      if (tileColumnsMinus1 > 0)
       {
         std::vector<Int> columnWidth(tileColumnsMinus1);
         for(UInt i = 0; i < tileColumnsMinus1; i++)
@@ -275,7 +275,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
         pcPPS->setTileColumnWidth(columnWidth);
       }
 
-      if (tileRowsMinus1 > 0) // NOTE: RExt - additional check added, otherwise some code run-time analysis tools complain about malloc(0)
+      if (tileRowsMinus1 > 0)
       {
         std::vector<Int> rowHeight (tileRowsMinus1);
         for(UInt i = 0; i < tileRowsMinus1; i++)
@@ -589,10 +589,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( ChromaFormat(uiCode) );
   assert(uiCode <= 3);
-
-  // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
-  //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
-  // assert (uiCode == 1);
 
   if( pcSPS->getChromaFormatIdc() == CHROMA_444 )
   {
@@ -974,11 +970,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
     {
       pcSlice->setPicOutputFlag( true );
     }
-    // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
-    //NOTE: RExt - assertion removed here due to incompatibility with chroma formats beyond 4:2:0
-    // assert (sps->getChromaFormatIdc() == 1 );
-    // if( separate_colour_plane_flag  ==  1 )
-    //   colour_plane_id                                      u(2)
 
     if( pcSlice->getIdrPicFlag() )
     {
@@ -1159,7 +1150,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
 
       if (bChroma)
       {
-        READ_FLAG(uiCode, "slice_sao_chroma_flag");  pcSlice->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, (Bool)uiCode); // NOTE: RExt - This SE is not present in slice header for 4:0:0 ?
+        READ_FLAG(uiCode, "slice_sao_chroma_flag");  pcSlice->setSaoEnabledFlag(CHANNEL_TYPE_CHROMA, (Bool)uiCode);
       }
     }
 
@@ -1340,7 +1331,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
     {
       if (numValidComp>COMPONENT_Cb)
       {
-        READ_SVLC( iCode, "slice_qp_delta_cb" );  // NOTE: RExt - This SE is not present for 4:0:0
+        READ_SVLC( iCode, "slice_qp_delta_cb" );
         pcSlice->setSliceChromaQpDelta(COMPONENT_Cb, iCode );
         assert( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb) >= -12 );
         assert( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb) <=  12 );
@@ -1350,7 +1341,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
 
       if (numValidComp>COMPONENT_Cr)
       {
-        READ_SVLC( iCode, "slice_qp_delta_cr" );  // NOTE: RExt - This SE is not present for 4:0:0
+        READ_SVLC( iCode, "slice_qp_delta_cr" );
         pcSlice->setSliceChromaQpDelta(COMPONENT_Cr, iCode );
         assert( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr) >= -12 );
         assert( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr) <=  12 );
@@ -1402,7 +1393,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
       pcSlice->setDeblockingFilterTcOffsetDiv2  ( 0 );
     }
 
-    Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (bChroma && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA))); // NOTE: RExt - masking of SAO Enable Flag Chroma for 4:0:0
+    Bool isSAOEnabled = pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA) || (bChroma && pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA)));
     Bool isDBFEnabled = (!pcSlice->getDeblockingFilterDisable());
 
     if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))
@@ -1765,7 +1756,7 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
         TComSPS        *sps          = pcSlice->getSPS();
   const ChromaFormat    chFmt        = sps->getChromaFormatIdc();
   const Int             numValidComp = Int(getNumberValidComponents(chFmt));
-  const Bool            bChroma      = (chFmt!=CHROMA_400); // NOTE: RExt - slice headers can know about chroma format.
+  const Bool            bChroma      = (chFmt!=CHROMA_400);
   const SliceType       eSliceType   = pcSlice->getSliceType();
   const Int             iNbRef       = (eSliceType == B_SLICE ) ? (2) : (1);
         UInt            uiLog2WeightDenomLuma=0, uiLog2WeightDenomChroma=0;

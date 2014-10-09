@@ -921,7 +921,7 @@ Void TEncSbac::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowe
   const UInt height       = rTu.getRect(compID).height;
   const Bool canQuadSplit = (width >= (MIN_TU_SIZE * 2)) && (height >= (MIN_TU_SIZE * 2));
 
-  //NOTE: RExt - since the CBF for chroma is coded at the highest level possible, if sub-TUs are
+  //             Since the CBF for chroma is coded at the highest level possible, if sub-TUs are
   //             to be coded for a 4x8 chroma TU, their CBFs must be coded at the highest 4x8 level
   //             (i.e. where luma TUs are 8x8 rather than 4x4)
   //    ___ ___

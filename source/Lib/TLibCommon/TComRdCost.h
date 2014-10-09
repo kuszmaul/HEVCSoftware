@@ -59,7 +59,7 @@ class TComPattern;
 // ====================================================================================================================
 
 // for function pointer
-typedef Distortion (*FpDistFunc) (DistParam*); // TODO: RExt - can this pointer be replaced with a reference? - there are no NULL checks on pointer.
+typedef Distortion (*FpDistFunc) (DistParam*); // TODO: can this pointer be replaced with a reference? - there are no NULL checks on pointer.
 
 // ====================================================================================================================
 // Class definition
