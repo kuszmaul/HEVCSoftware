@@ -4052,10 +4052,6 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     const TComMv *pIntegerMv2Nx2NPred=0;
     if (pcCU->getPartitionSize(0) != SIZE_2Nx2N || pcCU->getDepth(0) != 0)
     {
-#if RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105
-      const Profile::Name profileIdc=pcCU->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc(); // TODO: RExt - temporary profile check to ensure backwards compatibility with HM.
-      if (profileIdc != Profile::MAIN && profileIdc != Profile::MAIN10 && profileIdc != Profile::MAINSTILLPICTURE)
-#endif
       pIntegerMv2Nx2NPred = &(m_integerMv2Nx2N[eRefPicList][iRefIdxPred]);
     }
     xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, pIntegerMv2Nx2NPred );
