@@ -3353,34 +3353,9 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   //------------------
 
-  switch (MDCS_MODE)
-  {
-    case MDCS_BOTH_DIRECTIONS:
-      if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
-      else if (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
-      break;
-
-    case MDCS_VERTICAL_ONLY:
-      if      (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
-      break;
-
-    case MDCS_HORIZONTAL_ONLY:
-      if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
-      break;
-
-    case MDCS_DISABLED:
-      break;
-
-    default:
-      std::cerr << "ERROR: Unrecognised MDCS mode" << std::endl;
-      assert(false);
-      exit(1);
-      break;
-  }
-
-  //------------------------------------------------
-
-  return SCAN_DIAG;
+  if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
+  else if (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
+  else return SCAN_DIAG;
 }
 
 //! \}
