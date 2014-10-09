@@ -47,8 +47,15 @@
 
 TComSlice::TComSlice()
 : m_iPPSId                        ( -1 )
+, m_PicOutputFlag                 ( true )
 , m_iPOC                          ( 0 )
 , m_iLastIDR                      ( 0 )
+, m_iAssociatedIRAP               ( 0 )
+, m_iAssociatedIRAPType           ( NAL_UNIT_INVALID )
+, m_pcRPS                         ( 0 )
+, m_LocalRPS                      ( )
+, m_iBDidx                        ( 0 )
+, m_RefPicListModification        ( )
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR_W_RADL )
 , m_eSliceType                    ( I_SLICE )
 , m_iSliceQp                      ( 0 )
@@ -65,16 +72,21 @@ TComSlice::TComSlice()
 , m_iSliceQpDelta                 ( 0 )
 , m_iDepth                        ( 0 )
 , m_bRefenced                     ( false )
+, m_pcVPS                         ( NULL )
 , m_pcSPS                         ( NULL )
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
+#if ADAPTIVE_QP_SELECTION
+, m_pcTrQuant                     ( NULL )
+#endif
 , m_colFromL0Flag                 ( 1 )
 #if SETTING_NO_OUT_PIC_PRIOR
 , m_noOutputPriorPicsFlag         ( false )
 , m_noRaslOutputFlag              ( false )
-, m_handleCraAsBlaFlag              ( false )
+, m_handleCraAsBlaFlag            ( false )
 #endif
 , m_colRefIdx                     ( 0 )
+, m_maxNumMergeCand               ( 0 )
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
 , m_sliceMode                     ( NO_SLICES )
@@ -91,12 +103,12 @@ TComSlice::TComSlice()
 , m_sliceBits                     ( 0 )
 , m_sliceSegmentBits              ( 0 )
 , m_bFinalized                    ( false )
-, m_uiTileOffstForMultES          ( 0 )
-, m_puiSubstreamSizes             ( NULL )
+, m_substreamSizes                ( )
+, m_scalingList                   ( NULL )
 , m_cabacInitFlag                 ( false )
 , m_bLMvdL1Zero                   ( false )
-, m_numEntryPointOffsets          ( 0 )
 , m_temporalLayerNonReferenceFlag ( false )
+, m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -137,8 +149,6 @@ TComSlice::TComSlice()
 
 TComSlice::~TComSlice()
 {
-  delete[] m_puiSubstreamSizes;
-  m_puiSubstreamSizes = NULL;
 }
 
 
@@ -161,9 +171,8 @@ Void TComSlice::initSlice()
 
   m_bFinalized=false;
 
-  m_tileByteLocation.clear();
+  m_substreamSizes.clear();
   m_cabacInitFlag        = false;
-  m_numEntryPointOffsets = 0;
   m_enableTMVPFlag = true;
 }
 
@@ -177,17 +186,6 @@ Bool TComSlice::getRapPicFlag()
       || getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA;
 }
 
-
-/**
- - allocate table to contain substream sizes to be written to the slice header.
- .
- \param uiNumSubstreams Number of substreams -- the allocation will be this value - 1.
- */
-Void  TComSlice::allocSubstreamSizes(UInt uiNumSubstreams)
-{
-  delete[] m_puiSubstreamSizes;
-  m_puiSubstreamSizes = new UInt[uiNumSubstreams > 0 ? uiNumSubstreams-1 : 0];
-}
 
 Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
 {
@@ -771,7 +769,6 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   }
 
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
-  m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
   m_LFCrossSliceBoundaryFlag = pSrc->m_LFCrossSliceBoundaryFlag;

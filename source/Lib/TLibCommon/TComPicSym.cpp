@@ -199,10 +199,10 @@ Void TComPicSym::initTiles(TComPPS *pps)
 {
   //set NumColumnsMinus1 and NumRowsMinus1
   setNumTileColumnsMinus1( pps->getNumTileColumnsMinus1() );
-  setNumTileRowsMinus1(    pps->getTileNumRowsMinus1()    );
+  setNumTileRowsMinus1(    pps->getNumTileRowsMinus1()    );
 
   const Int numCols = pps->getNumTileColumnsMinus1() + 1;
-  const Int numRows = pps->getTileNumRowsMinus1() + 1;
+  const Int numRows = pps->getNumTileRowsMinus1() + 1;
   const Int numTiles = numRows * numCols;
 
   // allocate memory for tile parameters
