@@ -206,7 +206,6 @@
 #define INVALID_MODE_IDX                                 (NUM_INTRA_MODE+1)    // value used to indicate an invalid intra mode
 #define STOPCHROMASEARCH_MODE_IDX                        (INVALID_MODE_IDX+1)  // value used to signal the end of a chroma mode search
 
-#define MDCS_MODE                       MDCS_BOTH_DIRECTIONS        ///< Name taken from definition of MDCSMode enumeration below
 #define MDCS_ANGLE_LIMIT                                  4         ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
 #define MDCS_MAXIMUM_WIDTH                                8         ///< (default 8) (measured in pixels) TUs with width greater than this can only use diagonal scan
 #define MDCS_MAXIMUM_HEIGHT                               8         ///< (default 8) (measured in pixels) TUs with height greater than this can only use diagonal scan
@@ -581,16 +580,6 @@ enum ScalingListSize
   SCALING_LIST_16x16,
   SCALING_LIST_32x32,
   SCALING_LIST_SIZE_NUM
-};
-
-///MDCS modes
-enum MDCSMode
-{
-  MDCS_DISABLED        = 0,
-  MDCS_HORIZONTAL_ONLY = 1,
-  MDCS_VERTICAL_ONLY   = 2,
-  MDCS_BOTH_DIRECTIONS = 3,
-  MDCS_NUMBER_OF_MODES = 4
 };
 
 // Slice / Slice segment encoding modes
