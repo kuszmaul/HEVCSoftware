@@ -161,9 +161,9 @@ EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produc
 
 //macro value printing function
 
-Void printRExtMacroSettings()
+Void printMacroSettings()
 {
-  std::cout << "RExt Non-environment-variable-controlled macros set as follows: \n" << std::endl;
+  std::cout << "Non-environment-variable-controlled macros set as follows: \n" << std::endl;
 
   //------------------------------------------------
 
@@ -173,7 +173,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(O0043_BEST_EFFORT_DECODING,                                        settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL,                              settingNameWidth, settingValueWidth);
 

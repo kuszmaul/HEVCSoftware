@@ -49,7 +49,7 @@
 //! \ingroup TLibDecoder
 //! \{
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 #include "../TLibCommon/Debug.h"
 #endif
 
@@ -1590,7 +1590,7 @@ Void TDecSbac::parseCoeffNxN(  TComTU &rTu, ComponentID compID )
     }
   }
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   printSBACCoeffData(uiPosLastX, uiPosLastY, uiWidth, uiHeight, compID, uiAbsPartIdx, codingParameters.scanType, pcCoef);
 #endif
 
@@ -1748,14 +1748,14 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
 
       if(ctbParam.modeIdc == SAO_MODE_NEW)
       {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
         Int bitDepthOrig = g_bitDepthInStream[toChannelType(compIdx)];
         Int forceBitDepthAdjust = bitDepthOrig - g_bitDepth[toChannelType(compIdx)];
 #endif
         Int offset[4];
         for(Int i=0; i< 4; i++)
         {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
           Int saoMaxOffsetQVal = (1<<(min(bitDepthOrig, MAX_SAO_TRUNCATED_BITDEPTH)-5))-1;
           parseSaoMaxUvlc(uiSymbol, saoMaxOffsetQVal); //sao_offset_abs
 #else
@@ -1773,7 +1773,7 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
               parseSaoSign(uiSymbol); //sao_offset_sign
               if(uiSymbol)
               {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
                 offset[i] >>= forceBitDepthAdjust;
 #endif
                 offset[i] = -offset[i];

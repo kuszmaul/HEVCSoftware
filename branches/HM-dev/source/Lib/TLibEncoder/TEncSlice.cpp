@@ -308,7 +308,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
 
   if (m_pcCfg->getCostMode()==COST_LOSSLESS_CODING)
   {
-    dQP=RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP;
+    dQP=LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP;
     m_pcCfg->setDeltaQpRD(0);
   }
 

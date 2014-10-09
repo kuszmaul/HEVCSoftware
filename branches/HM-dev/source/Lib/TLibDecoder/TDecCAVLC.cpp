@@ -608,7 +608,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
   const UInt forceDecodeBitDepth = pcSPS->getForceDecodeBitDepth();
   g_bitDepthInStream[CHANNEL_TYPE_LUMA] = 8 + uiCode;
   if (forceDecodeBitDepth != 0)
@@ -619,14 +619,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   assert(uiCode <= 8);
 
   pcSPS->setBitDepth(CHANNEL_TYPE_LUMA, 8 + uiCode);
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_LUMA]-8)) );
 #else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
 #endif
 
   READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
   g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
   if (forceDecodeBitDepth != 0)
   {
@@ -635,7 +635,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   assert(uiCode <= 8);
   pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode);
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_CHROMA]-8)) );
 #else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*uiCode) );
