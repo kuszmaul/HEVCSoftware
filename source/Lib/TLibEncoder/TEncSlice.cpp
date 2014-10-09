@@ -656,23 +656,8 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   m_dPicRdCost      = 0; // NOTE: This is a write-only variable!
   m_uiPicDist       = 0;
 
-#if MODIFIED_ENCODER_RESPONSE
   m_pcEntropyCoder->setEntropyCoder   ( m_pppcRDSbacCoder[0][CI_CURR_BEST], pcSlice );
   m_pcEntropyCoder->resetEntropy      ();
-#else
-  // Ideally, m_pcSbacCoder would not be used in this function at all
-  // but because resetEntropy does not reset fracBits in the SbacCoder's start
-  // function, we need to be consistent with HM16.1
-  m_pcSbacCoder->init( m_pcBinCABAC );
-  m_pcEntropyCoder->setEntropyCoder   ( m_pcSbacCoder, pcSlice );
-  m_pcEntropyCoder->resetEntropy      ();
-  m_pppcRDSbacCoder[0][CI_CURR_BEST]->load(m_pcSbacCoder);
-
-  TEncSbac tempInitialSbac;
-  TEncBinCABAC tempInitialBinSbac;
-  tempInitialSbac.init(&tempInitialBinSbac);
-  tempInitialSbac.load(m_pppcRDSbacCoder[0][CI_CURR_BEST]);
-#endif
 
   TEncBinCABAC* pRDSbacCoder = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
   pRDSbacCoder->setBinCountingEnableFlag( false );
@@ -756,31 +741,12 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     
     if (ctuRsAddr == firstCtuRsAddrOfTile)
     {
-#if MODIFIED_ENCODER_RESPONSE
       m_pppcRDSbacCoder[0][CI_CURR_BEST]->resetEntropy();
-#else
-      if (m_pcCfg->getWaveFrontsynchro()) // added the 'if' statement to match HM16.1; ideally, it should always be reset.
-      {
-        m_pppcRDSbacCoder[0][CI_CURR_BEST]->load(&tempInitialSbac);
-      }
-
-      if( ctuRsAddr == firstCtuRsAddrOfTile &&                                                         // must be first CU of tile
-          ctuRsAddr!=0 &&                                                                              // cannot be first CU of picture
-          ctuTsAddr!=pcPic->getSlice(pcPic->getCurrSliceIdx())->getSliceSegmentCurStartCtuTsAddr() &&
-          ctuTsAddr!=pcPic->getSlice(pcPic->getCurrSliceIdx())->getSliceCurStartCtuTsAddr())           // cannot be first CU of slice
-      {
-        m_pppcRDSbacCoder[0][CI_CURR_BEST]->resetEntropy();
-      }
-#endif
     }
     else if ( ctuXPosInCtus == tileXPosInCtus && m_pcCfg->getWaveFrontsynchro())
     {
       // reset and then update contexts to the state at the end of the top-right CTU (if within current slice and tile).
-#if MODIFIED_ENCODER_RESPONSE
       m_pppcRDSbacCoder[0][CI_CURR_BEST]->resetEntropy();
-#else
-      m_pppcRDSbacCoder[0][CI_CURR_BEST]->load(&tempInitialSbac);
-#endif
       // Sync if the Top-Right is available.
       TComDataCU *pCtuUp = pCtu->getCtuAbove();
       if ( pCtuUp && ((ctuRsAddr%frameWidthInCtus+1) < frameWidthInCtus)  )
@@ -867,7 +833,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 
     pRDSbacCoder->setBinCountingEnableFlag( false );
 
-#if MODIFIED_ENCODER_RESPONSE
     const Int numberOfWrittenBits = m_pcEntropyCoder->getNumberOfWrittenBits();
 
     // Calculate if this CTU puts us over slice bit size.
@@ -891,16 +856,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 
     pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
     pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
-
-#else
-    // check if this CTU has caused the slice-segment to exceed its byte quota
-    if (pcSlice->getSliceSegmentCurEndCtuTsAddr( ) != boundingCtuTsAddr )
-    {
-      boundingCtuTsAddr = pcSlice->getSliceSegmentCurEndCtuTsAddr( );
-      if (boundingCtuTsAddr <= ctuTsAddr)
-        break;
-    }
-#endif
 
     // Store probabilities of second CTU in line into buffer - used only if wavefront-parallel-processing is enabled.
     if ( ctuXPosInCtus == tileXPosInCtus+1 && m_pcCfg->getWaveFrontsynchro())

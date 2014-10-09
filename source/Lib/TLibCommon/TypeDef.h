@@ -237,8 +237,6 @@
 
 #define FIX_1323                                          1
 
-#define MODIFIED_ENCODER_RESPONSE                         1
-
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
 
 // ====================================================================================================================
