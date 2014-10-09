@@ -51,7 +51,7 @@
 
 using namespace std;
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
 Bool g_bFinalEncode = false;
 #endif
 
@@ -1549,14 +1549,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       pcSlice->setFinalized(true);
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       g_bFinalEncode = true;
 #endif
 
       pcSlice->clearSubstreamSizes(  );
       m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]));
 
-#if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
+#if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       g_bFinalEncode = false;
 #endif
 

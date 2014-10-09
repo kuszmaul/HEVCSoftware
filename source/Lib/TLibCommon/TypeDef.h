@@ -237,23 +237,23 @@
 #define FIX_1323                                          1
 
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
+
 #define RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL              0 ///< 1 = tests whether SAO should be disabled at the picture level,  0 (default) = does not apply this additional test
 
-// ====================================================================================================================
-// RExt control settings
-// ====================================================================================================================
+#define O0043_BEST_EFFORT_DECODING                        0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
-//------------------------------------------------
-// Enable environment variables
-//------------------------------------------------
+// Cost mode support
 
-#define RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST                              0 ///< When enabled, allows control of RExt modifications via environment variables
-#define RExt__PRINT_MACRO_VALUES                                               1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
+#define LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP       0 ///< QP to use for lossless coding.
+#define LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME 4 ///< QP' to use for mixed_lossy_lossless coding.
 
-//------------------------------------------------
-// Processing controls
-//------------------------------------------------
+// Debug support
 
+#define ENVIRONMENT_VARIABLE_DEBUG_AND_TEST               0 ///< When enabled, allows control of debug modifications via environment variables
+
+#define PRINT_MACRO_VALUES                                1 ///< When enabled, the encoder prints out a list of the non-environment-variable controlled macros and their values on startup
+
+// TODO: rename this macro to DECODER_DEBUG_BIT_STATISTICS (may currently cause merge issues with other branches)
 // This can be enabled by the makefile
 #ifndef RExt__DECODER_DEBUG_BIT_STATISTICS
 #define RExt__DECODER_DEBUG_BIT_STATISTICS                                     0 ///< 0 (default) = decoder reports as normal, 1 = decoder produces bit usage statistics (will impact decoder run time by up to ~10%)
@@ -264,7 +264,13 @@
 #define RExt__HIGH_BIT_DEPTH_SUPPORT                                           0 ///< 0 (default) use data type definitions for 8-10 bit video, 1 = use larger data types to allow for up to 16-bit video (originally developed as part of N0188)
 #endif
 
-#define RExt__O0043_BEST_EFFORT_DECODING                                       0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
+#define RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS                           4
+#define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
+
+#define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
+
+#define MAX_TIMECODE_SEI_SETS                                                  3 ///< Maximum number of time sets
+
 
 //------------------------------------------------
 // Derived macros
@@ -284,15 +290,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-#define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP                      0 ///< QP to use for lossless coding.
-#define RExt__LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME                4 ///< QP' to use for mixed_lossy_lossless coding.
-
-#define RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS                           4
-#define RExt__GOLOMB_RICE_INCREMENT_DIVISOR                                    4
-
-#define RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION                       0 ///< Additional fixed bit precision used during encoder-side weighting prediction analysis. Currently only used when high_precision_prediction_weighting_flag is set, for backwards compatibility reasons.
-
-#define MAX_TIMECODE_SEI_SETS                                                  3 ///< Maximum number of time sets
 
 //------------------------------------------------
 // Error checks

@@ -48,7 +48,7 @@
 // Forward declarations
 
 /// padding of unavailable reference samples for intra prediction
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
 Void fillReferenceSamples( const Int bitDepth, const Int bitDepthDelta, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
 #else
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
@@ -157,7 +157,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   {
     Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiZorderIdxInPart);
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
     fillReferenceSamples (g_bitDepthInStream[chType], g_bitDepthInStream[chType] - g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
 #else
     fillReferenceSamples (g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
@@ -201,7 +201,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
       if (useStrongIntraSmoothing)
       {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
         const Int  threshold     = 1 << (g_bitDepthInStream[chType] - 5);
 #else
         const Int  threshold     = 1 << (g_bitDepth[chType] - 5);
@@ -305,7 +305,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   DEBUG_STRING_APPEND(sDebug, ss.str())
 }
 
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
 Void fillReferenceSamples( const Int bitDepth, const Int bitDepthDelta, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
 #else
 Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
@@ -338,7 +338,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
 
     for (i=0; i<uiWidth; i++)
     {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
       piAdiTemp[i] = piRoiTemp[i] << bitDepthDelta;
 #else
       piAdiTemp[i] = piRoiTemp[i];
@@ -350,7 +350,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
 
     for (i=1; i<uiHeight; i++)
     {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
       piAdiTemp[i*uiWidth] = (*(piRoiTemp)) << bitDepthDelta;
 #else
       piAdiTemp[i*uiWidth] = *(piRoiTemp);
@@ -379,7 +379,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
     pbNeighborFlags = bNeighborFlags + iLeftUnits;
     if (*pbNeighborFlags)
     {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
       Pel topLeftVal=piRoiTemp[0] << bitDepthDelta;
 #else
       Pel topLeftVal=piRoiTemp[0];
@@ -401,7 +401,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       {
         for (i=0; i<unitHeight; i++)
         {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
           piAdiLineTemp[-i] = piRoiTemp[i*iPicStride] << bitDepthDelta;
 #else
           piAdiLineTemp[-i] = piRoiTemp[i*iPicStride];
@@ -424,7 +424,7 @@ Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRo
       {
         for (i=0; i<unitWidth; i++)
         {
-#if RExt__O0043_BEST_EFFORT_DECODING
+#if O0043_BEST_EFFORT_DECODING
           piAdiLineTemp[i] = piRoiTemp[i] << bitDepthDelta;
 #else
           piAdiLineTemp[i] = piRoiTemp[i];
