@@ -84,7 +84,6 @@ private:
   TComTrQuant*            m_pcTrQuant;                          ///< transform & quantization
 
   // RD optimization
-  TComBitCounter*         m_pcBitCounter;                       ///< bit counter
   TComRdCost*             m_pcRdCost;                           ///< RD cost computation
   TEncSbac***             m_pppcRDSbacCoder;                    ///< storage for SBAC-based RD optimization
   TEncSbac*               m_pcRDGoOnSbacCoder;                  ///< go-on SBAC encoder
