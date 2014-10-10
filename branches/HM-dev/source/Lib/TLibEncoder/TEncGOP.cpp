@@ -607,6 +607,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
   }
 #endif
+  // reset flag indicating whether pictures have been encoded
+  for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
+  {
+    m_pcCfg->setEncodedFlag(iGOPid, false);
+  }
 
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
@@ -1678,32 +1683,69 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       accessUnit.insert(it, new NALUnitEBSP(nalu));
     }
 
+    m_pcCfg->setEncodedFlag(iGOPid, true);
     xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
 
     //In case of field coding, compute the interlaced PSNR for both fields
-    if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)) && (pcPic->getPOC()%m_iGopSize != 1))
+    if(isField)
     {
-      //get complementary top field
-
-      TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
-      while ((*iterPic)->getPOC() != pcPic->getPOC()-1)
+      Bool bothFieldsAreEncoded = false;
+      Int correspondingFieldPOC = pcPic->getPOC();
+      Int currentPicGOPPoc = m_pcCfg->getGOPEntry(iGOPid).m_POC;
+      if(pcPic->getPOC() == 0)
       {
-        iterPic ++;
+        // particular case for POC 0 and 1. 
+        // If they are not encoded first and separately from other pictures, we need to change this 
+        // POC 0 is always encoded first then POC 1 is encoded
+        bothFieldsAreEncoded = false;
       }
-      TComPic* pcPicFirstField = *(iterPic);
-      xCalculateInterlacedAddPSNR(pcPicFirstField, pcPic, pcPicFirstField->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
-    }
-    else if (isField && pcPic->getPOC()!= 0 && (pcPic->getPOC()%m_iGopSize == 0))
-    {
-      //get complementary bottom field
-
-      TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
-      while ((*iterPic)->getPOC() != pcPic->getPOC()+1)
+      else if(pcPic->getPOC() == 1)
       {
-        iterPic ++;
+        // if we are at POC 1, POC 0 has been encoded for sure
+        correspondingFieldPOC = 0;
+        bothFieldsAreEncoded = true;
       }
-      TComPic* pcPicFirstField = *(iterPic);
-      xCalculateInterlacedAddPSNR(pcPic, pcPicFirstField, pcPic->getPicYuvRec(), pcPicFirstField->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+      else 
+      {
+        if(pcPic->getPOC()%2 == 1)
+        {
+          correspondingFieldPOC -= 1; // all odd POC are associated with the preceding even POC (e.g poc 1 is associated to poc 0)
+          currentPicGOPPoc      -= 1;
+        }
+        else
+        {
+          correspondingFieldPOC += 1; // all even POC are associated with the following odd POC (e.g poc 0 is associated to poc 1)
+          currentPicGOPPoc      += 1;
+        }
+        for(Int i = 0; i < m_iGopSize; i ++)
+        {
+          if(m_pcCfg->getGOPEntry(i).m_POC == currentPicGOPPoc)
+          {
+            bothFieldsAreEncoded = m_pcCfg->getGOPEntry(i).m_isEncoded;
+            break;
+          }
+        }
+      }
+
+      if(bothFieldsAreEncoded)
+      {        
+        //get complementary top field
+        TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
+        while ((*iterPic)->getPOC() != correspondingFieldPOC)
+        {
+          iterPic ++;
+        }
+        TComPic* correspondingFieldPic = *(iterPic);
+
+        if(pcPic->isTopField() && isTff || !pcPic->isTopField() && !isTff)
+        {
+          xCalculateInterlacedAddPSNR(pcPic, correspondingFieldPic, pcPic->getPicYuvRec(), correspondingFieldPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+        }
+        else
+        {
+          xCalculateInterlacedAddPSNR(correspondingFieldPic, pcPic, correspondingFieldPic->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+        }
+      }
     }
 
     if (!digestStr.empty())
