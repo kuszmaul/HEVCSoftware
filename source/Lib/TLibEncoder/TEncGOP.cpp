@@ -1737,7 +1737,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         TComPic* correspondingFieldPic = *(iterPic);
 
-        if(pcPic->isTopField() && isTff || !pcPic->isTopField() && !isTff)
+        if( (pcPic->isTopField() && isTff) || (!pcPic->isTopField() && !isTff))
         {
           xCalculateInterlacedAddPSNR(pcPic, correspondingFieldPic, pcPic->getPicYuvRec(), correspondingFieldPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
         }
