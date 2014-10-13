@@ -418,13 +418,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 #endif
 
-#if FIX_POC_CRA_NORASL_OUTPUT
   if (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA && m_craNoRaslOutputFlag) //Reset POC MSB when CRA has NoRaslOutputFlag equal to 1
   {
     Int iMaxPOClsb = 1 << m_apcSlicePilot->getSPS()->getBitsForPOC();
     m_apcSlicePilot->setPOC( m_apcSlicePilot->getPOC() & (iMaxPOClsb - 1) );
   }
-#endif
 
   // Skip pictures due to random access
   if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
