@@ -134,11 +134,9 @@ public:
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
   Void  setNoOutputPriorPicsFlag (Bool val) { m_isNoOutputPriorPics = val; }
 #endif
-#if FIX_OUTPUT_ORDER_BEHAVIOR
   Void  setFirstSliceInPicture (bool val)  { m_bFirstSliceInPicture = val; }
   Bool  getFirstSliceInSequence ()         { return m_bFirstSliceInSequence; }
   Void  setFirstSliceInSequence (bool val) { m_bFirstSliceInSequence = val; }
-#endif
 #if O0043_BEST_EFFORT_DECODING
   Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
 #endif
