@@ -85,7 +85,9 @@ protected:
   Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, ComponentID component);
 protected:
   UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
+#if !SAO_CLIP_FUNC
   Int* m_offsetClip[MAX_NUM_COMPONENT]; //clip table for fast operation. NOTE: this should be removed, cf m_sign.
+#endif
 #if !SAO_SGN_FUNC
   Short* m_sign; //sign table for fast operation
 #endif
@@ -105,7 +107,9 @@ protected:
   ChromaFormat m_chromaFormatIDC;
 private:
   Bool m_picSAOEnabled[MAX_NUM_COMPONENT];
+#if !SAO_CLIP_FUNC
   Int*   m_offsetClipTable[MAX_NUM_COMPONENT];
+#endif
 #if !SAO_SGN_FUNC
   Short* m_signTable;
 #endif
