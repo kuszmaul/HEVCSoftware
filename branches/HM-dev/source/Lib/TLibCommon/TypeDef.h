@@ -83,7 +83,6 @@
 // ====================================================================================================================
 
 #define HARMONIZE_GOP_FIRST_FIELD_COUPLE                  1
-#define FIX_FIELD_DEPTH                                   1
 #define EFFICIENT_FIELD_IRAP                              1
 #define ALLOW_RECOVERY_POINT_AS_RAP                       1
 #define BUGFIX_INTRAPERIOD                                1
