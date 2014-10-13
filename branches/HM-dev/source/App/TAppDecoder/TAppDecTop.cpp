@@ -181,32 +181,24 @@ Void TAppDecTop::decode()
       }
     }
 
-#if FIX_OUTPUT_ORDER_BEHAVIOR
     if ( (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS) &&
         !m_cTDecTop.getFirstSliceInSequence () )
-#else
-    if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS)
-#endif
     {
       if (!loopFiltered || bitstreamFile)
       {
         m_cTDecTop.executeLoopFilters(poc, pcListPic);
       }
       loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
-#if FIX_OUTPUT_ORDER_BEHAVIOR
       if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
         m_cTDecTop.setFirstSliceInSequence(true);
       }
-#endif
     }
-#if FIX_OUTPUT_ORDER_BEHAVIOR
     else if ( (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS ) &&
               m_cTDecTop.getFirstSliceInSequence () ) 
     {
       m_cTDecTop.setFirstSliceInPicture (true);
     }
-#endif
 #if !FIX_WRITING_OUTPUT
 #if SETTING_NO_OUT_PIC_PRIOR
     if (bNewPicture && m_cTDecTop.getIsNoOutputPriorPics())
@@ -254,9 +246,7 @@ Void TAppDecTop::decode()
       if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
         xWriteOutput( pcListPic, nalu.m_temporalId );
-#if FIX_OUTPUT_ORDER_BEHAVIOR
         m_cTDecTop.setFirstSliceInPicture (false);
-#endif
       }
       // write reconstruction to file -- for additional bumping as defined in C.5.2.3
 #if FIX_WRITING_OUTPUT
