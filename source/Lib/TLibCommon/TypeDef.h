@@ -217,8 +217,6 @@
 
 #define MAX_NUM_LONG_TERM_REF_PICS                       33
 
-#define FIX_1323                                          1
-
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
 
 #define RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL              0 ///< 1 = tests whether SAO should be disabled at the picture level,  0 (default) = does not apply this additional test
