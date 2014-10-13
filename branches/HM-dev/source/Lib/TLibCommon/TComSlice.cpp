@@ -80,11 +80,9 @@ TComSlice::TComSlice()
 , m_pcTrQuant                     ( NULL )
 #endif
 , m_colFromL0Flag                 ( 1 )
-#if SETTING_NO_OUT_PIC_PRIOR
 , m_noOutputPriorPicsFlag         ( false )
 , m_noRaslOutputFlag              ( false )
 , m_handleCraAsBlaFlag            ( false )
-#endif
 , m_colRefIdx                     ( 0 )
 , m_maxNumMergeCand               ( 0 )
 , m_uiTLayer                      ( 0 )
@@ -906,11 +904,7 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
     // Any picture that has PicOutputFlag equal to 1 that precedes an IRAP picture
     // in decoding order shall precede the IRAP picture in output order.
     // (Note that any picture following in output order would be present in the DPB)
-#if SETTING_NO_OUT_PIC_PRIOR
     if(rpcPic->getSlice(0)->getPicOutputFlag() == 1 && !this->getNoOutputPriorPicsFlag())
-#else
-    if(rpcPic->getSlice(0)->getPicOutputFlag() == 1)
-#endif
     {
       if(nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP    ||
          nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP    ||

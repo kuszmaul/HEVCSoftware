@@ -91,8 +91,6 @@
 
 #define TILE_SIZE_CHECK                                   1
 
-#define SETTING_NO_OUT_PIC_PRIOR                          1
-
 #define MAX_NUM_PICS_IN_SOP                            1024
 
 #define MAX_NESTING_NUM_OPS                            1024
