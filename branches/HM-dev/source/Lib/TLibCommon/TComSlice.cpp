@@ -591,9 +591,6 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
 Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic* rpcPic;
-#if !FIX1172
-  setAssociatedIRAPPOC(pocCRA);
-#endif
   Int      pocCurr = getPOC();
 
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
