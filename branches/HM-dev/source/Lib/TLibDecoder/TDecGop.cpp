@@ -189,11 +189,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 
   printf("\n");
 
-#if SETTING_PIC_OUTPUT_MARK
   pcPic->setOutputMark(pcPic->getSlice(0)->getPicOutputFlag() ? true : false);
-#else
-  pcPic->setOutputMark(true);
-#endif
   pcPic->setReconMark(true);
 }
 
