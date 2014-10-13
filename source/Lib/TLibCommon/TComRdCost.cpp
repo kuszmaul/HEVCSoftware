@@ -87,9 +87,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
   if (bFlag) //NOTE: this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
-#if SEQUENCE_LEVEL_LOSSLESS
-    dRdCost = (Double)(uiBits);
-#else
     if (m_costMode != COST_STANDARD_LOSSY)
     {
       dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -98,7 +95,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
     {
       dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
     }
-#endif
   }
   else
   {
@@ -115,9 +111,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
     }
     else
     {
-#if SEQUENCE_LEVEL_LOSSLESS
-      dRdCost = (Double)(uiBits);
-#else
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -126,7 +119,6 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       {
         dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
       }
-#endif
     }
   }
 
@@ -164,9 +156,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
   if (bFlag) //NOTE: this "bFlag" is never true
   {
     // Intra8x8, Intra4x4 Block only...
-#if SEQUENCE_LEVEL_LOSSLESS
-    dRdCost = (Double)(uiBits);
-#else
     if (m_costMode != COST_STANDARD_LOSSY)
     {
       dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -175,7 +164,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     {
       dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
     }
-#endif
   }
   else
   {
@@ -192,9 +180,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
     }
     else
     {
-#if SEQUENCE_LEVEL_LOSSLESS
-      dRdCost = (Double)(uiBits);
-#else
       if (m_costMode != COST_STANDARD_LOSSY)
       {
         dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
@@ -203,7 +188,6 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       {
         dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
       }
-#endif
     }
   }
 
