@@ -85,7 +85,6 @@ class TComOutputBitstream : public TComBitIf
   UInt m_num_held_bits; /// number of bits not flushed to bytestream.
   UChar m_held_bits; /// the bits held and not flushed to bytestream.
                              /// this value is always msb-aligned, bigendian.
-  TComOutputBitstream &operator=(const TComOutputBitstream &); // not defined. do not use
 public:
   // create / destroy
   TComOutputBitstream();
