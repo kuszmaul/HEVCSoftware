@@ -112,9 +112,6 @@ TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
     m_offsetClipTable[compIdx] = NULL;
   }
 #endif
-#if !SAO_SGN_FUNC
-  m_signTable = NULL; 
-#endif
 
   m_lineBufWidth = 0;
   m_signLineBuf1 = NULL;
@@ -160,16 +157,11 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   }
 
 
-#if !SAO_SGN_FUNC || !SAO_CLIP_FUNC
-#if !SAO_SGN_FUNC
-  //look-up table for clipping
-  Int allComponentMaximumSampleValue = 0;
-#endif
+#if !SAO_CLIP_FUNC
   for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
     Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))]; //exclusive
     Int maxSampleValue = (1<< bitDepthSample); //exclusive
-#if !SAO_CLIP_FUNC
     Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]);
 
     m_offsetClipTable[compIdx] = new Int[(maxSampleValue + maxOffsetValue -1)+ (maxOffsetValue)+1 ]; //positive & negative range plus 0
@@ -186,23 +178,6 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
       *(offsetClipPtr + maxSampleValue+ k) = maxSampleValue-1;
       *(offsetClipPtr -k -1 )              = 0;
     }
-#endif
-
-#if !SAO_SGN_FUNC
-    if (maxSampleValue > allComponentMaximumSampleValue) allComponentMaximumSampleValue = maxSampleValue;
-#endif
-  }
-#endif
-
-#if !SAO_SGN_FUNC
-  m_signTable = new Short[ 2*(allComponentMaximumSampleValue-1) + 1 ];
-  m_sign = &(m_signTable[allComponentMaximumSampleValue-1]);
-
-  m_sign[0] = 0;
-  for(Int k=1; k< allComponentMaximumSampleValue; k++)
-  {
-    m_sign[k] = 1;
-    m_sign[-k]= -1;
   }
 #endif
 }
@@ -223,13 +198,6 @@ Void TComSampleAdaptiveOffset::destroy()
     {
       delete[] m_offsetClipTable[compIdx]; m_offsetClipTable[compIdx] = NULL;
     }
-  }
-#endif
-
-#if !SAO_SGN_FUNC
-  if( m_signTable )
-  {
-    delete[] m_signTable; m_signTable = NULL;
   }
 #endif
 }
@@ -417,18 +385,10 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       endX   = isRightAvail ? width : (width -1);
       for (y=0; y< height; y++)
       {
-#if SAO_SGN_FUNC
         signLeft = (Char)sgn(srcLine[startX] - srcLine[startX-1]);
-#else
-        signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
-#endif
         for (x=startX; x< endX; x++)
         {
-#if SAO_SGN_FUNC
           signRight = (Char)sgn(srcLine[x] - srcLine[x+1]); 
-#else
-          signRight = (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
-#endif
           edgeType =  signRight + signLeft;
           signLeft  = -signRight;
 
@@ -460,11 +420,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       Pel* srcLineAbove= srcLine- srcStride;
       for (x=0; x< width; x++)
       {
-#if SAO_SGN_FUNC
         signUpLine[x] = (Char)sgn(srcLine[x] - srcLineAbove[x]);
-#else
-        signUpLine[x] = (Char)m_sign[srcLine[x] - srcLineAbove[x]];
-#endif
       }
 
       Pel* srcLineBelow;
@@ -474,11 +430,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 
         for (x=0; x< width; x++)
         {
-#if SAO_SGN_FUNC
           signDown  = (Char)sgn(srcLine[x] - srcLineBelow[x]);
-#else
-          signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]]; 
-#endif
           edgeType = signDown + signUpLine[x];
           signUpLine[x]= -signDown;
 
@@ -509,11 +461,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       Pel* srcLineBelow= srcLine+ srcStride;
       for (x=startX; x< endX+1; x++)
       {
-#if SAO_SGN_FUNC
         signUpLine[x] = (Char)sgn(srcLineBelow[x] - srcLine[x- 1]);
-#else
-        signUpLine[x] = (Char)m_sign[srcLineBelow[x] - srcLine[x- 1]];
-#endif
       }
 
       //1st line
@@ -522,11 +470,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       firstLineEndX   = isAboveAvail? endX: 1;
       for(x= firstLineStartX; x< firstLineEndX; x++)
       {
-#if SAO_SGN_FUNC
         edgeType  =  sgn(srcLine[x] - srcLineAbove[x- 1]) - signUpLine[x+1];
-#else
-        edgeType  =  m_sign[srcLine[x] - srcLineAbove[x- 1]] - signUpLine[x+1];
-#endif
 
 #if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
@@ -545,11 +489,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 
         for (x=startX; x<endX; x++)
         {
-#if SAO_SGN_FUNC
           signDown =  (Char)sgn(srcLine[x] - srcLineBelow[x+ 1]);
-#else
-          signDown =  (Char)m_sign[srcLine[x] - srcLineBelow[x+ 1]] ;
-#endif
           edgeType =  signDown + signUpLine[x];
 #if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
@@ -559,11 +499,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 
           signDownLine[x+1] = -signDown;
         }
-#if SAO_SGN_FUNC
         signDownLine[startX] = (Char)sgn(srcLineBelow[startX] - srcLine[startX-1]);
-#else
-        signDownLine[startX] = (Char)m_sign[srcLineBelow[startX] - srcLine[startX-1]];
-#endif
 
         signTmpLine  = signUpLine;
         signUpLine   = signDownLine;
@@ -579,11 +515,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       lastLineEndX   = isBelowRightAvail ? width : (width -1);
       for(x= lastLineStartX; x< lastLineEndX; x++)
       {
-#if SAO_SGN_FUNC
         edgeType =  sgn(srcLine[x] - srcLineBelow[x+ 1]) + signUpLine[x];
-#else
-        edgeType =  m_sign[srcLine[x] - srcLineBelow[x+ 1]] + signUpLine[x];
-#endif
 #if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
 #else
@@ -605,11 +537,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       Pel* srcLineBelow= srcLine+ srcStride;
       for (x=startX-1; x< endX; x++)
       {
-#if SAO_SGN_FUNC
         signUpLine[x] = (Char)sgn(srcLineBelow[x] - srcLine[x+1]);
-#else
-        signUpLine[x] = (Char)m_sign[srcLineBelow[x] - srcLine[x+1]];
-#endif
       }
 
 
@@ -619,11 +547,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       firstLineEndX   = isAboveRightAvail ? width : (width-1);
       for(x= firstLineStartX; x< firstLineEndX; x++)
       {
-#if SAO_SGN_FUNC
         edgeType = sgn(srcLine[x] - srcLineAbove[x+1]) -signUpLine[x-1];
-#else
-        edgeType = m_sign[srcLine[x] - srcLineAbove[x+1]] -signUpLine[x-1];
-#endif
 #if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
 #else
@@ -640,11 +564,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 
         for(x= startX; x< endX; x++)
         {
-#if SAO_SGN_FUNC
           signDown =  (Char)sgn(srcLine[x] - srcLineBelow[x-1]);
-#else
-          signDown =  (Char)m_sign[srcLine[x] - srcLineBelow[x-1]] ;
-#endif
           edgeType =  signDown + signUpLine[x];
 #if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
@@ -653,11 +573,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
 #endif
           signUpLine[x-1] = -signDown;
         }
-#if SAO_SGN_FUNC
         signUpLine[endX-1] = (Char)sgn(srcLineBelow[endX-1] - srcLine[endX]);
-#else
-        signUpLine[endX-1] = (Char)m_sign[srcLineBelow[endX-1] - srcLine[endX]];
-#endif
         srcLine  += srcStride;
         resLine += resStride;
       }
@@ -668,11 +584,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       lastLineEndX   = isBelowAvail ? endX : 1;
       for(x= lastLineStartX; x< lastLineEndX; x++)
       {
-#if SAO_SGN_FUNC
         edgeType = sgn(srcLine[x] - srcLineBelow[x-1]) + signUpLine[x];
-#else
-        edgeType = m_sign[srcLine[x] - srcLineBelow[x-1]] + signUpLine[x];
-#endif
 #if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
 #else
