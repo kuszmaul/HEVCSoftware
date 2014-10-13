@@ -217,13 +217,11 @@ Void TAppDecTop::decode()
       {
         xWriteOutput( pcListPic, nalu.m_temporalId );
       }
-#if SETTING_NO_OUT_PIC_PRIOR
       if ( (bNewPicture || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA) && m_cTDecTop.getNoOutputPriorPicsFlag() )
       {
         m_cTDecTop.checkNoOutputPriorPics( pcListPic );
         m_cTDecTop.setNoOutputPriorPicsFlag (false);
       }
-#endif
       if ( bNewPicture &&
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP

@@ -65,12 +65,10 @@ TDecTop::TDecTop()
   m_bFirstSliceInSequence   = true;
   m_prevSliceSkipped = false;
   m_skippedPOC = 0;
-#if SETTING_NO_OUT_PIC_PRIOR
   m_bFirstSliceInBitstream  = true;
   m_lastPOCNoOutputPriorPics = -1;
   m_craNoRaslOutputFlag = false;
   m_isNoOutputPriorPics = false;
-#endif
 }
 
 TDecTop::~TDecTop()
@@ -212,7 +210,6 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
   return;
 }
 
-#if SETTING_NO_OUT_PIC_PRIOR
 Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>* pcListPic)
 {
   if (!pcListPic || !m_isNoOutputPriorPics) return;
@@ -228,7 +225,6 @@ Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>* pcListPic)
     }
   }
 }
-#endif
 
 Void TDecTop::xCreateLostPicture(Int iLostPoc)
 {
@@ -370,7 +366,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_apcSlicePilot->setAssociatedIRAPPOC(m_pocCRA);
   m_apcSlicePilot->setAssociatedIRAPType(m_associatedIRAPType);
 
-#if SETTING_NO_OUT_PIC_PRIOR
   //For inference of NoOutputOfPriorPicsFlag
   if (m_apcSlicePilot->getRapPicFlag())
   {
@@ -416,7 +411,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       m_apcSlicePilot->setPicOutputFlag(false);
     }
   }
-#endif
 
   if (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA && m_craNoRaslOutputFlag) //Reset POC MSB when CRA has NoRaslOutputFlag equal to 1
   {
@@ -471,9 +465,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_prevPOC = m_apcSlicePilot->getPOC();
   }
   m_bFirstSliceInSequence = false;
-#if SETTING_NO_OUT_PIC_PRIOR  
   m_bFirstSliceInBitstream  = false;
-#endif
   //detect lost reference picture and insert copy of earlier frame.
   Int lostPoc;
   while((lostPoc=m_apcSlicePilot->checkThatAllRefPicsAreAvailable(m_cListPic, m_apcSlicePilot->getRPS(), true, m_pocRandomAccess)) > 0)

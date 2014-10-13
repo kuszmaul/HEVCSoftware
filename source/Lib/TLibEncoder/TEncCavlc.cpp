@@ -729,11 +729,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
   if ( pcSlice->getRapPicFlag() )
   {
-#if SETTING_NO_OUT_PIC_PRIOR
     WRITE_FLAG( pcSlice->getNoOutputPriorPicsFlag() ? 1 : 0, "no_output_of_prior_pics_flag" );
-#else
-   WRITE_FLAG( 0, "no_output_of_prior_pics_flag" );
-#endif
   }
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "slice_pic_parameter_set_id" );
   if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentRsAddress!=0) )

@@ -1522,7 +1522,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->getTLayer() );
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
 
-#if SETTING_NO_OUT_PIC_PRIOR
       pcSlice->setNoRaslOutputFlag(false);
       if (pcSlice->isIRAP())
       {
@@ -1540,7 +1539,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           }
         }
       }
-#endif
 
       tmpBitsBeforeWriting = m_pcEntropyCoder->getNumberOfWrittenBits();
       m_pcEntropyCoder->encodeSliceHeader(pcSlice);

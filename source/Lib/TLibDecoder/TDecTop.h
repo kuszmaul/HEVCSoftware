@@ -99,12 +99,10 @@ private:
   Bool                    m_bFirstSliceInSequence;
   Bool                    m_prevSliceSkipped;
   Int                     m_skippedPOC;
-#if SETTING_NO_OUT_PIC_PRIOR  
   Bool                    m_bFirstSliceInBitstream;
   Int                     m_lastPOCNoOutputPriorPics;
   Bool                    m_isNoOutputPriorPics;
   Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
-#endif
 #if O0043_BEST_EFFORT_DECODING
   UInt                    m_forceDecodeBitDepth;
 #endif
@@ -127,13 +125,11 @@ public:
   TComSPS* getActiveSPS() { return m_parameterSetManagerDecoder.getActiveSPS(); }
 
 
-  Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
-#if SETTING_NO_OUT_PIC_PRIOR  
+  Void  executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
   Void  checkNoOutputPriorPics (TComList<TComPic*>* rpcListPic);
 
   Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
   Void  setNoOutputPriorPicsFlag (Bool val) { m_isNoOutputPriorPics = val; }
-#endif
   Void  setFirstSliceInPicture (bool val)  { m_bFirstSliceInPicture = val; }
   Bool  getFirstSliceInSequence ()         { return m_bFirstSliceInSequence; }
   Void  setFirstSliceInSequence (bool val) { m_bFirstSliceInSequence = val; }
