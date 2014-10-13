@@ -194,7 +194,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   // depth computation based on GOP size
   Int depth;
   {
-#if FIX_FIELD_DEPTH    
     Int poc = rpcSlice->getPOC();
     if(isField)
     {
@@ -204,9 +203,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     {
       poc = poc % m_pcCfg->getGOPSize();   
     }
-#else
-    Int poc = rpcSlice->getPOC()%m_pcCfg->getGOPSize();
-#endif
 
     if ( poc == 0 )
     {
@@ -231,7 +227,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
       }
     }
 
-#if FIX_FIELD_DEPTH  
 #if HARMONIZE_GOP_FIRST_FIELD_COUPLE
     if(poc != 0)
     {
@@ -242,7 +237,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
       }
 #if HARMONIZE_GOP_FIRST_FIELD_COUPLE
     }
-#endif
 #endif
   }
 
