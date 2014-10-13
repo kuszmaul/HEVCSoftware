@@ -144,6 +144,7 @@ protected:
   Int       m_maxTempLayer;                                  ///< Max temporal layer
 
   // coding unit (CU) definition
+  // TODO: Remove MaxCUWidth/MaxCUHeight and replace with MaxCUSize.
   UInt      m_uiMaxCUWidth;                                   ///< max. CU width in pixel
   UInt      m_uiMaxCUHeight;                                  ///< max. CU height in pixel
   UInt      m_uiMaxCUDepth;                                   ///< max. CU depth
