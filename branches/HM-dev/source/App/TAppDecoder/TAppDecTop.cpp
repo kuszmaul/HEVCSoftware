@@ -199,14 +199,6 @@ Void TAppDecTop::decode()
     {
       m_cTDecTop.setFirstSliceInPicture (true);
     }
-#if !FIX_WRITING_OUTPUT
-#if SETTING_NO_OUT_PIC_PRIOR
-    if (bNewPicture && m_cTDecTop.getIsNoOutputPriorPics())
-    {
-      m_cTDecTop.checkNoOutputPriorPics( pcListPic );
-    }
-#endif
-#endif
 
     if( pcListPic )
     {
@@ -220,7 +212,6 @@ Void TAppDecTop::decode()
         m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, g_bitDepth ); // write mode
         openedReconFile = true;
       }
-#if FIX_WRITING_OUTPUT
       // write reconstruction to file
       if( bNewPicture )
       {
@@ -232,7 +223,6 @@ Void TAppDecTop::decode()
         m_cTDecTop.checkNoOutputPriorPics( pcListPic );
         m_cTDecTop.setNoOutputPriorPicsFlag (false);
       }
-#endif
 #endif
       if ( bNewPicture &&
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
@@ -249,11 +239,7 @@ Void TAppDecTop::decode()
         m_cTDecTop.setFirstSliceInPicture (false);
       }
       // write reconstruction to file -- for additional bumping as defined in C.5.2.3
-#if FIX_WRITING_OUTPUT
       if(!bNewPicture && nalu.m_nalUnitType >= NAL_UNIT_CODED_SLICE_TRAIL_N && nalu.m_nalUnitType <= NAL_UNIT_RESERVED_VCL31)
-#else
-      if(bNewPicture)
-#endif
       {
         xWriteOutput( pcListPic, nalu.m_temporalId );
       }

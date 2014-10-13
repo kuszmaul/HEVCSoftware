@@ -93,8 +93,6 @@
 
 #define SETTING_PIC_OUTPUT_MARK                           1
 #define SETTING_NO_OUT_PIC_PRIOR                          1
-#define FIX_WRITING_OUTPUT                                1
-
 
 #define MAX_NUM_PICS_IN_SOP                            1024
 
