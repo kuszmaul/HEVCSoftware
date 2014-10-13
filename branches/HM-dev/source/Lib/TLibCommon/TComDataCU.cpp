@@ -310,13 +310,11 @@ Bool TComDataCU::CUIsFromSameSliceAndTile    ( const TComDataCU *pCU /* Can be N
          ;
 }
 
-#if FIX_1323
 Bool TComDataCU::CUIsFromSameSliceTileAndWavefrontRow( const TComDataCU *pCU /* Can be NULL */) const
 {
   return CUIsFromSameSliceAndTile(pCU)
          && (!getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() || getPic()->getCtu(getCtuRsAddr())->getCUPelY() == getPic()->getCtu(pCU->getCtuRsAddr())->getCUPelY());
 }
-#endif
 
 Bool TComDataCU::isLastSubCUOfCtu(const UInt absPartIdx)
 {
@@ -1427,12 +1425,7 @@ Char TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
       return getPic()->getCtu( getCtuRsAddr() )->getLastCodedQP( getZorderIdxInCtu() ); // TODO - remove this recursion
     }
     else if ( getPic()->getPicSym()->getCtuRsToTsAddrMap(getCtuRsAddr()) > 0
-#if FIX_1323
       && CUIsFromSameSliceTileAndWavefrontRow(getPic()->getCtu(getPic()->getPicSym()->getCtuTsToRsAddrMap(getPic()->getPicSym()->getCtuRsToTsAddrMap(getCtuRsAddr())-1))) )
-#else
-      && getPic()->getPicSym()->getTileIdxMap(getCtuRsAddr()) == getPic()->getPicSym()->getTileIdxMap(getPic()->getPicSym()->getCtuTsToRsAddrMap(getPic()->getPicSym()->getCtuRsToTsAddrMap(getCtuRsAddr())-1))
-      && !( getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() && getCtuRsAddr() % getPic()->getFrameWidthInCtus() == 0 ) ) // Fix required
-#endif
     {
       // If this isn't the first Ctu (how can it be due to the first 'if'?), and the previous Ctu is from the same tile, examine the previous Ctu.
       return getPic()->getCtu( getPic()->getPicSym()->getCtuTsToRsAddrMap(getPic()->getPicSym()->getCtuRsToTsAddrMap(getCtuRsAddr())-1) )->getLastCodedQP( getPic()->getNumPartitionsInCtu() );  // TODO - remove this recursion
