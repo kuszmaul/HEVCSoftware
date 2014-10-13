@@ -631,16 +631,7 @@ enum SAOEOClasses
 };
 
 #define NUM_SAO_BO_CLASSES_LOG2  5
-enum SAOBOClasses
-{
-  //SAO_CLASS_BO_BAND0 = 0,
-  //SAO_CLASS_BO_BAND1,
-  //SAO_CLASS_BO_BAND2,
-  //...
-  //SAO_CLASS_BO_BAND31,
-
-  NUM_SAO_BO_CLASSES = (1<<NUM_SAO_BO_CLASSES_LOG2),
-};
+#define NUM_SAO_BO_CLASSES       (1<<NUM_SAO_BO_CLASSES_LOG2)
 
 namespace Profile
 {
