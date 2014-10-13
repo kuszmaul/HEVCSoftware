@@ -106,13 +106,6 @@ const SAOBlkParam& SAOBlkParam::operator= (const SAOBlkParam& src)
 TComSampleAdaptiveOffset::TComSampleAdaptiveOffset()
 {
   m_tempPicYuv = NULL;
-#if !SAO_CLIP_FUNC
-  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
-  {
-    m_offsetClipTable[compIdx] = NULL;
-  }
-#endif
-
   m_lineBufWidth = 0;
   m_signLineBuf1 = NULL;
   m_signLineBuf2 = NULL;
@@ -155,31 +148,6 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
     m_offsetStepLog2  [compIdx] = isLuma(ComponentID(compIdx))? lumaBitShift : chromaBitShift;
     g_saoMaxOffsetQVal[compIdx] = (1<<(min(bitDepthSample,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; //Table 9-32, inclusive
   }
-
-
-#if !SAO_CLIP_FUNC
-  for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
-  {
-    Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))]; //exclusive
-    Int maxSampleValue = (1<< bitDepthSample); //exclusive
-    Int maxOffsetValue = (g_saoMaxOffsetQVal[compIdx] << m_offsetStepLog2[compIdx]);
-
-    m_offsetClipTable[compIdx] = new Int[(maxSampleValue + maxOffsetValue -1)+ (maxOffsetValue)+1 ]; //positive & negative range plus 0
-    m_offsetClip[compIdx] = &(m_offsetClipTable[compIdx][maxOffsetValue]);
-
-    //assign clipped values
-    Int* offsetClipPtr = m_offsetClip[compIdx];
-    for(Int k=0; k< maxSampleValue; k++)
-    {
-      *(offsetClipPtr + k) = k;
-    }
-    for(Int k=0; k< maxOffsetValue; k++ )
-    {
-      *(offsetClipPtr + maxSampleValue+ k) = maxSampleValue-1;
-      *(offsetClipPtr -k -1 )              = 0;
-    }
-  }
-#endif
 }
 
 Void TComSampleAdaptiveOffset::destroy()
@@ -190,16 +158,6 @@ Void TComSampleAdaptiveOffset::destroy()
     delete m_tempPicYuv;
     m_tempPicYuv = NULL;
   }
-
-#if !SAO_CLIP_FUNC
-  for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
-  {
-    if(m_offsetClipTable[compIdx])
-    {
-      delete[] m_offsetClipTable[compIdx]; m_offsetClipTable[compIdx] = NULL;
-    }
-  }
-#endif
 }
 
 Void TComSampleAdaptiveOffset::invertQuantOffsets(ComponentID compIdx, Int typeIdc, Int typeAuxInfo, Int* dstOffsets, Int* srcOffsets)
@@ -363,11 +321,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
     m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
 
-#if SAO_CLIP_FUNC
   const Int maxSampleValueIncl = (1<< g_bitDepth[toChannelType(compIdx)] )-1;
-#else
-  Int* offsetClip = m_offsetClip[compIdx];
-#endif
 
   Int x,y, startX, startY, endX, endY, edgeType;
   Int firstLineStartX, firstLineEndX, lastLineStartX, lastLineEndX;
@@ -392,11 +346,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
           edgeType =  signRight + signLeft;
           signLeft  = -signRight;
 
-#if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-          resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
         }
         srcLine  += srcStride;
         resLine += resStride;
@@ -434,11 +384,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
           edgeType = signDown + signUpLine[x];
           signUpLine[x]= -signDown;
 
-#if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-          resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
         }
         srcLine += srcStride;
         resLine += resStride;
@@ -472,11 +418,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       {
         edgeType  =  sgn(srcLine[x] - srcLineAbove[x- 1]) - signUpLine[x+1];
 
-#if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-        resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
       }
       srcLine  += srcStride;
       resLine  += resStride;
@@ -491,11 +433,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
         {
           signDown =  (Char)sgn(srcLine[x] - srcLineBelow[x+ 1]);
           edgeType =  signDown + signUpLine[x];
-#if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-          resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
 
           signDownLine[x+1] = -signDown;
         }
@@ -516,11 +454,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       for(x= lastLineStartX; x< lastLineEndX; x++)
       {
         edgeType =  sgn(srcLine[x] - srcLineBelow[x+ 1]) + signUpLine[x];
-#if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-        resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
 
       }
     }
@@ -548,11 +482,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       for(x= firstLineStartX; x< firstLineEndX; x++)
       {
         edgeType = sgn(srcLine[x] - srcLineAbove[x+1]) -signUpLine[x-1];
-#if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-        resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
       }
       srcLine += srcStride;
       resLine += resStride;
@@ -566,11 +496,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
         {
           signDown =  (Char)sgn(srcLine[x] - srcLineBelow[x-1]);
           edgeType =  signDown + signUpLine[x];
-#if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-          resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
           signUpLine[x-1] = -signDown;
         }
         signUpLine[endX-1] = (Char)sgn(srcLineBelow[endX-1] - srcLine[endX]);
@@ -585,11 +511,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       for(x= lastLineStartX; x< lastLineEndX; x++)
       {
         edgeType = sgn(srcLine[x] - srcLineBelow[x-1]) + signUpLine[x];
-#if SAO_CLIP_FUNC
         resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[edgeType]);
-#else
-        resLine[x] = offsetClip[srcLine[x] + offset[edgeType]];
-#endif
 
       }
     }
@@ -601,11 +523,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
       {
         for (x=0; x< width; x++)
         {
-#if SAO_CLIP_FUNC
           resLine[x] = Clip3<Int>(0, maxSampleValueIncl, srcLine[x] + offset[srcLine[x] >> shiftBits] );
-#else
-          resLine[x] = offsetClip[ srcLine[x] + offset[srcLine[x] >> shiftBits] ];
-#endif
         }
         srcLine += srcStride;
         resLine += resStride;
