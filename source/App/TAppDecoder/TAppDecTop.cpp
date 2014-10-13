@@ -253,13 +253,9 @@ Void TAppDecTop::decode()
       }
       if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
-#if FIX_OUTPUT_EOS
         xWriteOutput( pcListPic, nalu.m_temporalId );
 #if FIX_OUTPUT_ORDER_BEHAVIOR
         m_cTDecTop.setFirstSliceInPicture (false);
-#endif
-#else
-        xFlushOutput( pcListPic );
 #endif
       }
       // write reconstruction to file -- for additional bumping as defined in C.5.2.3
