@@ -50,9 +50,6 @@ TComRdCost::TComRdCost()
 
 TComRdCost::~TComRdCost()
 {
-#if !FIX203
-  xUninit();
-#endif
 }
 
 // Calculate RD functions
@@ -270,57 +267,13 @@ Void TComRdCost::init()
 
   m_costMode                   = COST_STANDARD_LOSSY;
 
-#if !FIX203
-  m_puiComponentCostOriginP    = NULL;
-  m_puiComponentCost           = NULL;
-  m_puiVerCost                 = NULL;
-  m_puiHorCost                 = NULL;
-#endif
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dCost                      = 0;
 #else
   m_uiCost                     = 0;
 #endif
   m_iCostScale                 = 0;
-#if !FIX203
-  m_iSearchLimit               = 0xdeaddead;
-#endif
 }
-
-#if !FIX203
-Void TComRdCost::initRateDistortionModel( Int iSubPelSearchLimit )
-{
-  // make it larger
-  iSubPelSearchLimit += 4;
-  iSubPelSearchLimit *= 8;
-
-  if( m_iSearchLimit != iSubPelSearchLimit )
-  {
-    xUninit();
-
-    m_iSearchLimit = iSubPelSearchLimit;
-
-    m_puiComponentCostOriginP = new UInt[ 4 * iSubPelSearchLimit ];
-    iSubPelSearchLimit *= 2;
-
-    m_puiComponentCost = m_puiComponentCostOriginP + iSubPelSearchLimit;
-
-    for( Int n = -iSubPelSearchLimit; n < iSubPelSearchLimit; n++)
-    {
-      m_puiComponentCost[n] = xGetComponentBits( n );
-    }
-  }
-}
-
-Void TComRdCost::xUninit()
-{
-  if( NULL != m_puiComponentCostOriginP )
-  {
-    delete [] m_puiComponentCostOriginP;
-    m_puiComponentCostOriginP = NULL;
-  }
-}
-#endif
 
 UInt TComRdCost::xGetComponentBits( Int iVal )
 {
