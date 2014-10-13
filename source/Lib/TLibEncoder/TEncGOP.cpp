@@ -103,10 +103,8 @@ TEncGOP::TEncGOP()
   m_lastBPSEI         = 0;
   xResetNonNestedSEIPresentFlags();
   xResetNestedSEIPresentFlags();
-#if FIX1172
   m_associatedIRAPType = NAL_UNIT_CODED_SLICE_IDR_N_LP;
   m_associatedIRAPPOC  = 0;
-#endif
   return;
 }
 
@@ -835,7 +833,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
 
 #if EFFICIENT_FIELD_IRAP
-#if FIX1172
     if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
       || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
       || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
@@ -848,14 +845,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
     pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
-#endif
 #endif
     // Do decoding refresh marking if any
     pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
 #if !EFFICIENT_FIELD_IRAP
-#if FIX1172
     if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
       || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
       || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
@@ -868,7 +863,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
     pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
-#endif
 #endif
 
 #if ALLOW_RECOVERY_POINT_AS_RAP

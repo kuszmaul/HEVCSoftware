@@ -107,10 +107,8 @@ private:
   // clean decoding refresh
   Bool                    m_bRefreshPending;
   Int                     m_pocCRA;
-#if FIX1172
   NalUnitType             m_associatedIRAPType;
   Int                     m_associatedIRAPPOC;
-#endif
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;
