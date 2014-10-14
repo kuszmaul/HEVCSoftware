@@ -241,7 +241,7 @@ TEncSearch::~TEncSearch()
 
 
 
-void TEncSearch::init(TEncCfg*      pcEncCfg,
+Void TEncSearch::init(TEncCfg*      pcEncCfg,
                       TComTrQuant*  pcTrQuant,
                       Int           iSearchRange,
                       Int           bipredSearchRange,
@@ -846,10 +846,8 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
 
 Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
                                            TComMv baseRefMv,
-                                           Int iFrac, TComMv& rcMvFrac
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
-                                          ,Bool bAllowUseOfHadamard
-#endif
+                                           Int iFrac, TComMv& rcMvFrac,
+                                           Bool bAllowUseOfHadamard
                                          )
 {
   Distortion  uiDist;
@@ -859,11 +857,7 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
   Pel*  piRefPos;
   Int iRefStride = m_filteredBlock[0][0].getStride(COMPONENT_Y);
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   m_pcRdCost->setDistParam( pcPatternKey, m_filteredBlock[0][0].getAddr(COMPONENT_Y), iRefStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() && bAllowUseOfHadamard );
-#else
-  m_pcRdCost->setDistParam( pcPatternKey, m_filteredBlock[0][0].getAddr(COMPONENT_Y), iRefStride, 1, m_cDistParam, m_pcEncCfg->getUseHADME() );
-#endif
 
   const TComMv* pcMvRefine = (iFrac == 2 ? s_acMvRefineH : s_acMvRefineQ);
 
@@ -2906,14 +2900,12 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
             Distortion  uiMinSAD           = std::numeric_limits<Distortion>::max();
       const UInt        mappedModeTable[4] = {PLANAR_IDX,DC_IDX,HOR_IDX,VER_IDX};
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
       DistParam distParamU, distParamV;
       const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
       m_pcRdCost->setDistParam(distParamU, g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgU, uiStride, piPredU, uiStride, uiWidth, uiHeight, bUseHadamard);
       m_pcRdCost->setDistParam(distParamV, g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgV, uiStride, piPredV, uiStride, uiWidth, uiHeight, bUseHadamard);
       distParamU.bApplyWeight = false;
       distParamV.bApplyWeight = false;
-#endif
 
       for( UInt uiMode_  = uiMinMode; uiMode_ < uiMaxMode; uiMode_++ )
       {
@@ -2925,13 +2917,8 @@ TEncSearch::preestChromaPredMode( TComDataCU* pcCU,
         predIntraAng( COMPONENT_Cr, uiMode, piOrgV, uiStride, piPredV, uiStride, tuRecurseCU, bAboveAvail, bLeftAvail, bUseFilter );
 
         //--- get SAD ---
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
         Distortion uiSAD  = distParamU.DistFunc(&distParamU);
         uiSAD            += distParamV.DistFunc(&distParamV);
-#else
-        Distortion uiSAD  = m_pcRdCost->calcHAD( g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgU, uiStride, piPredU, uiStride, uiWidth, uiHeight );
-        uiSAD            += m_pcRdCost->calcHAD( g_bitDepth[CHANNEL_TYPE_CHROMA], piOrgV, uiStride, piPredV, uiStride, uiWidth, uiHeight );
-#endif
         //--- check ---
         if( uiSAD < uiMinSAD )
         {
@@ -3051,12 +3038,10 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
       Pel* piOrg         = pcOrgYuv ->getAddr( COMPONENT_Y, uiAbsPartIdx );
       Pel* piPred        = pcPredYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
       UInt uiStride      = pcPredYuv->getStride( COMPONENT_Y );
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
       DistParam distParam;
       const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
       m_pcRdCost->setDistParam(distParam, g_bitDepth[CHANNEL_TYPE_LUMA], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height, bUseHadamard);
       distParam.bApplyWeight = false;
-#endif
       for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
       {
         UInt       uiMode = modeIdx;
@@ -3067,11 +3052,7 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiMode) );
 
         // use hadamard transform here
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
         uiSad+=distParam.DistFunc(&distParam);
-#else
-        uiSad+=m_pcRdCost->calcHAD( g_bitDepth[toChannelType(COMPONENT_Y)], piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );
-#endif
 
         UInt   iModeBits = 0;
 
@@ -4398,17 +4379,10 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
   cDistParam.bApplyWeight = false;
 
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   m_pcRdCost->setDistParam( cDistParam, g_bitDepth[CHANNEL_TYPE_LUMA],
                             pcYuvOrg->getAddr( COMPONENT_Y, uiAbsPartIdx ), pcYuvOrg->getStride(COMPONENT_Y),
                             m_tmpYuvPred .getAddr( COMPONENT_Y, uiAbsPartIdx ), m_tmpYuvPred.getStride(COMPONENT_Y),
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() && (pcCU->getCUTransquantBypass(uiAbsPartIdx) == 0) );
-#else
-  m_pcRdCost->setDistParam( cDistParam, g_bitDepth[CHANNEL_TYPE_LUMA],
-                            pcYuvOrg->getAddr( COMPONENT_Y, uiAbsPartIdx ), pcYuvOrg->getStride(COMPONENT_Y),
-                            m_tmpYuvPred .getAddr( COMPONENT_Y, uiAbsPartIdx ), m_tmpYuvPred .getStride(COMPONENT_Y),
-                            iWidth, iHeight, m_pcEncCfg->getUseHADME() );
-#endif
 
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
@@ -7494,11 +7468,10 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   else
   {
     rcMv = *pcMvPred;
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
     const TComMv *pIntegerMv2Nx2NPred=0;
     if (pcCU->getPartitionSize(0) != SIZE_2Nx2N || pcCU->getDepth(0) != 0)
     {
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT == 2
+#if RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105
       const Profile::Name profileIdc=pcCU->getSlice()->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc(); // TODO: RExt - temporary profile check to ensure backwards compatibility with HM.
       if (profileIdc != Profile::MAIN && profileIdc != Profile::MAIN10 && profileIdc != Profile::MAINSTILLPICTURE)
 #endif
@@ -7509,20 +7482,13 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     {
       m_integerMv2Nx2N[eRefPicList][iRefIdxPred] = rcMv;
     }
-#else
-    xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
-#endif
   }
 
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setCostScale ( 1 );
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   const Bool bIsLosslessCoded = pcCU->getCUTransquantBypass(uiPartAddr) != 0;
   xPatternSearchFracDIF( bIsLosslessCoded, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
-#else
-  xPatternSearchFracDIF( pcCU, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
-#endif
 
   m_pcRdCost->setCostScale( 0 );
   rcMv <<= 2;
@@ -7620,7 +7586,6 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 
 
 
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
 Void TEncSearch::xPatternSearchFast( TComDataCU*   pcCU,
                                      TComPattern*  pcPatternKey,
                                      Pel*          piRefY,
@@ -7630,9 +7595,6 @@ Void TEncSearch::xPatternSearchFast( TComDataCU*   pcCU,
                                      TComMv       &rcMv,
                                      Distortion   &ruiSAD,
                                      const TComMv* pIntegerMv2Nx2NPred )
-#else
-Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
-#endif
 {
   assert (MD_LEFT < NUM_MV_PREDICTORS);
   pcCU->getMvPredLeft       ( m_acMvPredictors[MD_LEFT] );
@@ -7644,19 +7606,11 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
   switch ( m_iFastSearch )
   {
     case 1:
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
-#else
-      xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
-#endif
       break;
 
     case 2:
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
-#else
-      xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD );
-#endif
       break;
     default:
       break;
@@ -7666,7 +7620,6 @@ Void TEncSearch::xPatternSearchFast( TComDataCU* pcCU, TComPattern* pcPatternKey
 
 
 
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
 Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
                             TComPattern* pcPatternKey,
                             Pel*         piRefY,
@@ -7676,9 +7629,6 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
                             TComMv      &rcMv,
                             Distortion  &ruiSAD,
                             const TComMv* pIntegerMv2Nx2NPred )
-#else
-Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
-#endif
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
@@ -7717,7 +7667,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
   if (pIntegerMv2Nx2NPred != 0)
   {
     TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
@@ -7738,7 +7687,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
     iSrchRngVerTop    = cMvSrchRngLT.getVer();
     iSrchRngVerBottom = cMvSrchRngRB.getVer();
   }
-#endif
 
   if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
   {
@@ -7897,7 +7845,6 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
 }
 
 
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
 Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
                                      TComPattern*  pcPatternKey,
                                      Pel*          piRefY,
@@ -7907,9 +7854,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
                                      TComMv       &rcMv,
                                      Distortion   &ruiSAD,
                                      const TComMv* pIntegerMv2Nx2NPred )
-#else
-Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
-#endif
 {
   SEL_SEARCH_CONFIGURATION
 
@@ -7959,7 +7903,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
     xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
   }
 
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
   if ( pIntegerMv2Nx2NPred != 0 )
   {
     TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
@@ -7980,7 +7923,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
     iSrchRngVerTop    = cMvSrchRngLT.getVer();
     iSrchRngVerBottom = cMvSrchRngRB.getVer();
   }
-#endif
 
   if ( m_pcEncCfg->getUseHashBasedME() && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
   {
@@ -8086,11 +8028,7 @@ Void TEncSearch::xTZSearchSelective( TComDataCU* pcCU, TComPattern* pcPatternKey
 
 
 Void TEncSearch::xPatternSearchFracDIF(
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
                                        Bool         bIsLosslessCoded,
-#else
-                                       TComDataCU*  pcCU,
-#endif
                                        TComPattern* pcPatternKey,
                                        Pel*         piRefY,
                                        Int          iRefStride,
@@ -8117,11 +8055,7 @@ Void TEncSearch::xPatternSearchFracDIF(
     m_pcRdCost->setCostScale( 0 );
     xExtDIFUpSamplingH( &cPatternRoi, biPred );
     rcMvQter = *pcMvInt;   rcMvQter <<= 2;    // for mv-cost
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
     ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter, !bIsLosslessCoded );
-#else
-    ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter );
-#endif
     return;
   }
 
@@ -8131,11 +8065,7 @@ Void TEncSearch::xPatternSearchFracDIF(
 
   rcMvHalf = *pcMvInt;   rcMvHalf <<= 1;    // for mv-cost
   TComMv baseRefMv(0, 0);
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 2, rcMvHalf, !bIsLosslessCoded );
-#else
-  ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 2, rcMvHalf   );
-#endif
 
   m_pcRdCost->setCostScale( 0 );
 
@@ -8145,11 +8075,7 @@ Void TEncSearch::xPatternSearchFracDIF(
 
   rcMvQter = *pcMvInt;   rcMvQter <<= 1;    // for mv-cost
   rcMvQter += rcMvHalf;  rcMvQter <<= 1;
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter, !bIsLosslessCoded );
-#else
-  ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter );
-#endif
 }
 
 

@@ -75,8 +75,8 @@ public:
 
   static std::list< std::pair<std::string, std::string> > &getEnvVarList();
   static std::list<EnvVar*>                               &getEnvVarInUse();
-  static void printEnvVar();
-  static void printEnvVarInUse();
+  static Void printEnvVar();
+  static Void printEnvVarInUse();
 
   EnvVar(const std::string &sName, const std::string &sDefault, const std::string &sHelp);
 
@@ -152,10 +152,10 @@ Void printCbfArray( class TComDataCU* pcCU  );
 UInt getDecimalWidth(const Double value);
 UInt getZScanIndex(const UInt x, const UInt y);
 
-//template specialisation for char type to get it to render as a number
-template <typename ValueType> inline Void writeValueToStream               (const ValueType     &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<                value;  }
-template <>                   inline Void writeValueToStream<         char>(const          char &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<           int (value); }
-template <>                   inline Void writeValueToStream<unsigned char>(const unsigned char &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) << (unsigned int)(value); }
+//template specialisation for Char types to get it to render as a number
+template <typename ValueType> inline Void writeValueToStream       (const ValueType &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<      value;  }
+template <>                   inline Void writeValueToStream<Char >(const Char      &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) <<  Int(value); }
+template <>                   inline Void writeValueToStream<UChar>(const UChar     &value, std::ostream &stream, const UInt outputWidth) { stream << std::setw(outputWidth) << UInt(value); }
 
 template <typename ValueType>
 Void printBlock(const ValueType    *const source,
@@ -223,7 +223,7 @@ Void printBlock(const ValueType    *const source,
 
 
 template <typename T>
-Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, const T * blkSrc, const UInt width, const UInt height, const UInt stride, const UInt subBlockWidth=0, const UInt subBlockHeight=0, const UInt defWidth=3 )
+Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, const T * blkSrc, const UInt width, const UInt height, const UInt stride, const UInt subBlockWidth=0, const UInt subBlockHeight=0, const UInt defWidth=3 )
 {
   for (UInt y=0; y<height; y++)
   {
@@ -243,7 +243,7 @@ Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, const T * bl
 }
 
 class TComYuv;
-Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross=1, const UInt numSubBlocksUp=1, const UInt defWidth=3 );
+Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross=1, const UInt numSubBlocksUp=1, const UInt defWidth=3 );
 
 // ---------------------------------------------------------------------------------------------- //
 
@@ -259,7 +259,7 @@ std::string indentNewLines(const std::string &input, const UInt indentBy);
 
 #ifdef DEBUG_STRING
   Int DebugStringGetPredModeMask(PredMode mode);
-  void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask);
+  Void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask);
 #endif
 
 

@@ -230,8 +230,8 @@ extern UInt64 g_nSymbolCounter;
 #define LOG2_SCALING_LIST_NEUTRAL_VALUE 4                                 ///< log2 of the value that, when used in a scaling list, has no effect on quantisation
 #define SCALING_LIST_DC 16                                                ///< default DC value
 
-extern const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
-extern const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
+extern const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 
 extern Int g_quantTSDefault4x4[4*4];
 extern Int g_quantIntraDefault8x8[8*8];

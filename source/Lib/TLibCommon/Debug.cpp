@@ -53,7 +53,7 @@ const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_C
      {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"},
      {"Start of channel 0 intra-bc debug\n", "Start of channel 1 intra-bc debug\n", "Start of channel 2 intra-bc debug\n", "End of intra-bc residual debug\n"}
    } ;
-const char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
+const Char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -177,12 +177,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING,                settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__R0105_MOTION_ESTIMATION_STARTING_POINT,                      settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__R0128_HIGH_THROUGHPUT_PROFILE,                               settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT,                 settingNameWidth, settingValueWidth);
-  PRINT_CONSTANT(RExt__MEETING_NOTES_MONOCHROME_PROFILE,                            settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__Q0175_INTRA_BLOCK_COPY_SEARCH_CHROMA_REFINEMENT,             settingNameWidth, settingValueWidth);        
 
   PRINT_CONSTANT(SCM__R0102_HASH_ME_FIX,                                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0147_ADAPTIVE_COLOR_TRANSFORM,                               settingNameWidth, settingValueWidth);
@@ -196,6 +191,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1149,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_HM_TICKET_1298,                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_RBSP_EMULATION_PREVENTION,           settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__BACKWARDS_COMPATIBILITY_MOTION_ESTIMATION_R0105,             settingNameWidth, settingValueWidth);
 
   //------------------------------------------------
 
@@ -357,7 +353,7 @@ std::string lineWrap(const std::string &input, const UInt maximumLineLength)
     {
       std::string::size_type spacePosition = std::string::npos;
 
-      //search backwards for the last space character (must use signed int because lineStartPosition can be 0)
+      //search backwards for the last space character (must use signed Int because lineStartPosition can be 0)
       for (Int currentPosition = Int(searchFromPosition); currentPosition >= Int(lineStartPosition); currentPosition--)
       {
         if (result[currentPosition] == ' ') { spacePosition = currentPosition; break; }
@@ -403,7 +399,7 @@ std::string indentNewLines(const std::string &input, const UInt indentBy)
 // --------------------------------------------------------------------------------------------------------------------- //
 
 
-Void printBlockToStream( std::ostream &ss, const char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross, const UInt numSubBlocksUp, const UInt defWidth )
+Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, TComYuv &src, const UInt numSubBlocksAcross, const UInt numSubBlocksUp, const UInt defWidth )
 {
   const UInt numValidComp=src.getNumberValidComponents();
 
@@ -443,7 +439,7 @@ Int DebugStringGetPredModeMask(PredMode mode)
   return (mode==MODE_INTRA)?1:((mode==MODE_INTER)?2:4);
 }
 
-void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask)
+Void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask)
 {
   if (DebugOptionList::DebugString_Pred.getInt()&predmode_mask)
   {

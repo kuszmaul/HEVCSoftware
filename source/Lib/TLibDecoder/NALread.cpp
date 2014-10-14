@@ -52,7 +52,7 @@ using namespace std;
 
 //! \ingroup TLibDecoder
 //! \{
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *bitstream, Bool isVclNalUnit)
+static Void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *bitstream, Bool isVclNalUnit)
 {
   UInt zeroCount = 0;
   vector<uint8_t>::iterator it_read, it_write;
@@ -141,7 +141,7 @@ Void readNalUnitHeader(InputNALUnit& nalu)
  * create a NALunit structure with given header values and storage for
  * a bitstream
  */
-void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
+Void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 {
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);

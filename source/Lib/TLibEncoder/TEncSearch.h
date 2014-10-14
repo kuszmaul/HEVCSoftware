@@ -136,9 +136,7 @@ protected:
   RefPicList      m_currRefPicList;
   Int             m_currRefPicIndex;
   Bool            m_bSkipFracME;
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
-#endif
 #if SCM__R0348_PALETTE_MODE
   Bool            m_bBestScanRotationMode;
   Pel*            m_paOriginalLevel;
@@ -169,10 +167,7 @@ protected:
   /// sub-function for motion vector refinement used in fractional-pel accuracy
   Distortion  xPatternRefinement( TComPattern* pcPatternKey,
                                   TComMv baseRefMv,
-                                  Int iFrac, TComMv& rcMvFrac
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
-                                 ,Bool bAllowUseOfHadamard
-#endif
+                                  Int iFrac, TComMv& rcMvFrac, Bool bAllowUseOfHadamard
                                  );
 
   typedef struct
@@ -638,10 +633,8 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
-                                   ,const TComMv *pIntegerMv2Nx2NPred
-#endif
+                                    Distortion&  ruiSAD,
+                                    const TComMv *pIntegerMv2Nx2NPred
                                     );
 
   Void xTZSearchSelective         ( TComDataCU*  pcCU,
@@ -651,10 +644,8 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
-                                   ,const TComMv *pIntegerMv2Nx2NPred
-#endif
+                                    Distortion&  ruiSAD,
+                                    const TComMv *pIntegerMv2Nx2NPred
                                     );
 
   Void xSetSearchRange            ( TComDataCU*  pcCU,
@@ -670,10 +661,8 @@ protected:
                                     TComMv*      pcMvSrchRngLT,
                                     TComMv*      pcMvSrchRngRB,
                                     TComMv&      rcMv,
-                                    Distortion&  ruiSAD
-#if RExt__R0105_MOTION_ESTIMATION_STARTING_POINT
-                                  , const TComMv* pIntegerMv2Nx2NPred
-#endif
+                                    Distortion&  ruiSAD,
+                                    const TComMv* pIntegerMv2Nx2NPred
                                   );
 
   Void xPatternSearch             ( TComPattern* pcPatternKey,
@@ -685,11 +674,7 @@ protected:
                                     Distortion&  ruiSAD );
 
   Void xPatternSearchFracDIF      (
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
                                     Bool         bIsLosslessCoded,
-#else
-                                    TComDataCU*  pcCU,
-#endif
                                     TComPattern* pcPatternKey,
                                     Pel*         piRefY,
                                     Int          iRefStride,

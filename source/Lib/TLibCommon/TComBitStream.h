@@ -105,7 +105,7 @@ public:
   Void        writeAlignZero  ();
 
   /** this function should never be called */
-  void resetBits() { assert(0); }
+  Void resetBits() { assert(0); }
 
   // utility functions
 
@@ -138,7 +138,7 @@ public:
    */
   UInt getNumberOfWrittenBits() const { return UInt(m_fifo->size()) * 8 + m_num_held_bits; }
 
-  void insertAt(const TComOutputBitstream& src, UInt pos);
+  Void insertAt(const TComOutputBitstream& src, UInt pos);
 
   /**
    * Return a reference to the internal fifo

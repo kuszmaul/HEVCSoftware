@@ -825,7 +825,7 @@ Double TEncRCPic::getLCUEstLambda( Double bpp )
 
   //for Lambda clip, LCU level clip
   Double clipNeighbourLambda = -1.0;
-  for ( int i=LCUIdx - 1; i>=0; i-- )
+  for ( Int i=LCUIdx - 1; i>=0; i-- )
   {
     if ( m_LCUs[i].m_lambda > 0 )
     {
@@ -863,7 +863,7 @@ Int TEncRCPic::getLCUEstQP( Double lambda, Int clipPicQP )
 
   //for Lambda clip, LCU level clip
   Int clipNeighbourQP = g_RCInvalidQPValue;
-  for ( int i=LCUIdx - 1; i>=0; i-- )
+  for ( Int i=LCUIdx - 1; i>=0; i-- )
   {
     if ( (getLCU(i)).m_QP > g_RCInvalidQPValue )
     {
@@ -929,7 +929,7 @@ Void TEncRCPic::updateAfterLCU( Int LCUIdx, Int bits, Int QP, Double lambda, Boo
 
   calLambda = Clip3( inputLambda / 10.0, inputLambda * 10.0, calLambda );
   alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
-  double lnbpp = log( bpp );
+  Double lnbpp = log( bpp );
   lnbpp = Clip3( -5.0, -0.1, lnbpp );
   beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
 
@@ -1045,7 +1045,7 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
 
     calLambda = Clip3( inputLambda / 10.0, inputLambda * 10.0, calLambda );
     alpha += m_encRCSeq->getAlphaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * alpha;
-    double lnbpp = log( picActualBpp );
+    Double lnbpp = log( picActualBpp );
     lnbpp = Clip3( -5.0, -0.1, lnbpp );
 
     beta  += m_encRCSeq->getBetaUpdate() * ( log( inputLambda ) - log( calLambda ) ) * lnbpp;
@@ -1087,12 +1087,12 @@ Int TEncRCPic::getRefineBitsForIntra( Int orgBits )
   return iIntraBits;
 }
 
-Double TEncRCPic::calculateLambdaIntra(double alpha, double beta, double MADPerPixel, double bitsPerPixel)
+Double TEncRCPic::calculateLambdaIntra(Double alpha, Double beta, Double MADPerPixel, Double bitsPerPixel)
 {
   return ( (alpha/256.0) * pow( MADPerPixel/bitsPerPixel, beta ) );
 }
 
-Void TEncRCPic::updateAlphaBetaIntra(double *alpha, double *beta)
+Void TEncRCPic::updateAlphaBetaIntra(Double *alpha, Double *beta)
 {
   Double lnbpp = log(pow(m_totalCostIntra / (Double)m_numberOfPixel, BETA1));
   Double diffLambda = (*beta)*(log((Double)m_picActualBits)-log((Double)m_targetBits));
@@ -1128,7 +1128,7 @@ Double TEncRCPic::getLCUEstLambdaAndQP(Double bpp, Int clipPicQP, Int *estQP)
   Double estLambda = calculateLambdaIntra(alpha, beta, costPerPixel, bpp);
 
   Int clipNeighbourQP = g_RCInvalidQPValue;
-  for (int i=LCUIdx-1; i>=0; i--)
+  for (Int i=LCUIdx-1; i>=0; i--)
   {
     if ((getLCU(i)).m_QP > g_RCInvalidQPValue)
     {
@@ -1325,8 +1325,8 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
     }
   }
 
-  Int* GOPID2Level = new int[ GOPSize ];
-  for ( int i=0; i<GOPSize; i++ )
+  Int* GOPID2Level = new Int[ GOPSize ];
+  for ( Int i=0; i<GOPSize; i++ )
   {
     GOPID2Level[i] = 1;
     if ( !GOPList[i].m_refPic )
