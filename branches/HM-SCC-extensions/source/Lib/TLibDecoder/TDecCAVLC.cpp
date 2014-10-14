@@ -82,7 +82,7 @@ TDecCavlc::~TDecCavlc()
 // Public member functions
 // ====================================================================================================================
 
-void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* rps, Int idx )
+Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* rps, Int idx )
 {
   UInt code;
   UInt interRPSPred;
@@ -1505,20 +1505,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       prevEntryPointOffset = curEntryPointOffset;
     }
 
-#if !RExt__R0128_HIGH_THROUGHPUT_PROFILE
-    if ( pps->getTilesEnabledFlag() )
-    {
-      rpcSlice->setTileLocationCount( numEntryPointOffsets );
-
-      UInt prevPos = 0;
-      for (Int idx=0; idx<rpcSlice->getTileLocationCount(); idx++)
-      {
-        rpcSlice->setTileLocation( idx, prevPos + entryPointOffset [ idx ] );
-        prevPos += entryPointOffset[ idx ];
-      }
-    }
-    else
-#endif
     if ( pps->getEntropyCodingSyncEnabledFlag() )
     {
       Int numSubstreams = rpcSlice->getNumEntryPointOffsets()+1;
@@ -1536,7 +1522,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
       }
     }
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     else if ( pps->getTilesEnabledFlag() )
     {
       rpcSlice->setTileLocationCount( numEntryPointOffsets );
@@ -1548,7 +1533,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         prevPos += entryPointOffset[ idx ];
       }
     }
-#endif
 
     if (entryPointOffset)
     {
@@ -1621,11 +1605,7 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#else
-  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#endif
   {
     UInt maxBitDepth=16;
     READ_FLAG(    uiCode, "general_max_12bit_constraint_flag" ); if (uiCode) maxBitDepth=12;

@@ -130,7 +130,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 
   UInt uiTilesAcross   = rpcPic->getPicSym()->getNumColumnsMinus1()+1;
   TComSlice*  pcSlice = rpcPic->getSlice(rpcPic->getCurrSliceIdx());
-  Int  iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
 
   // delete decoders if already allocated in previous slice
   if (m_pcBufferSbacDecoders)
@@ -177,35 +176,32 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 
   UInt uiWidthInLCUs  = rpcPic->getPicSym()->getFrameWidthInCU();
   //UInt uiHeightInLCUs = rpcPic->getPicSym()->getFrameHeightInCU();
-  UInt uiCol=0, uiLin=0, uiSubStrm=0;
 
   UInt uiTileCol;
-  UInt uiTileStartLCU;
   UInt uiTileLCUX;
-  Int iNumSubstreamsPerTile = 1; // if independent.
-  Bool depSliceSegmentsEnabled = rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getPPS()->getDependentSliceSegmentsEnabledFlag();
-  uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr))->getFirstCUAddr();
+  const Bool depSliceSegmentsEnabled = rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getPPS()->getDependentSliceSegmentsEnabledFlag();
+  const UInt startTileIdx=rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr);
+  TComTile *pCurrentTile=rpcPic->getPicSym()->getTComTile(startTileIdx);
+  UInt uiTileStartLCU = pCurrentTile->getFirstCUAddr(); // Code tidy
+
+  // The first LCU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForLCUAddr may be higher.
+  // This calculates the common offset for all substreams in this slice.
+  const UInt subStreamOffset=rpcPic->getSubstreamForLCUAddr(iStartCUAddr, true, pcSlice);
   if( depSliceSegmentsEnabled )
   {
-    if( (!rpcPic->getSlice(rpcPic->getCurrSliceIdx())->isNextSlice()) &&
-       iStartCUAddr != rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr))->getFirstCUAddr())
+    if( (!rpcPic->getSlice(rpcPic->getCurrSliceIdx())->isNextSlice()) && iStartCUAddr != uiTileStartLCU)  // Code tidy // Is this a dependent slice segment and not the start of a tile?
     {
       if(pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
       {
-        uiTileCol = rpcPic->getPicSym()->getTileIdxMap(iStartCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1);
+        uiTileCol = startTileIdx % (rpcPic->getPicSym()->getNumColumnsMinus1()+1); // Code tidy
         m_pcBufferSbacDecoders[uiTileCol].loadContexts( CTXMem[1]  );//2.LCU
-        if ( (iStartCUAddr%uiWidthInLCUs+1) >= uiWidthInLCUs  )
+        if ( pCurrentTile->getTileWidth() < 2)
         {
-          uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
-          uiCol     = iStartCUAddr % uiWidthInLCUs;
-          if(uiCol==uiTileLCUX)
-          {
-            CTXMem[0]->loadContexts(pcSbacDecoder);
-          }
+          CTXMem[0]->loadContexts(pcSbacDecoder); // If tile width is less than 2, need to ensure CTX states get initialised to un-adapted CABAC. Set here, to load a few lines later (!)
         }
       }
       pcSbacDecoder->loadContexts(CTXMem[0] ); //end of depSlice-1
-      pcSbacDecoders[uiSubStrm].loadContexts(pcSbacDecoder);
+      pcSbacDecoders[0].loadContexts(pcSbacDecoder); // The first substream used for the slice will always be 0. (The original code was equivalent)
     }
     else
     {
@@ -274,16 +270,11 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
     uiTileCol = rpcPic->getPicSym()->getTileIdxMap(iCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1); // what column of tiles are we in?
     uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr();
     uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
-    uiCol     = iCUAddr % uiWidthInLCUs;
-    // The 'line' is now relative to the 1st line in the slice, not the 1st line in the picture.
-    uiLin     = (iCUAddr/uiWidthInLCUs)-(iStartCUAddr/uiWidthInLCUs);
+    UInt uiCol     = iCUAddr % uiWidthInLCUs;
+    UInt uiSubStrm=rpcPic->getSubstreamForLCUAddr(iCUAddr, true, pcSlice)-subStreamOffset;
     // inherit from TR if necessary, select substream to use.
     if( (pcSlice->getPPS()->getNumSubstreams() > 1) || ( depSliceSegmentsEnabled  && (uiCol == uiTileLCUX)&&(pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag()) ))
     {
-      // independent tiles => substreams are "per tile".  iNumSubstreams has already been multiplied.
-      iNumSubstreamsPerTile = iNumSubstreams/rpcPic->getPicSym()->getNumTiles();
-      uiSubStrm = rpcPic->getPicSym()->getTileIdxMap(iCUAddr)*iNumSubstreamsPerTile
-                  + uiLin%iNumSubstreamsPerTile;
       m_pcEntropyDecoder->setBitstream( ppcSubstreams[uiSubStrm] );
       // Synchronize cabac probabilities with upper-right LCU if it's available and we're at the start of a line.
       if (((pcSlice->getPPS()->getNumSubstreams() > 1) || depSliceSegmentsEnabled ) && (uiCol == uiTileLCUX)&&(pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag()))
@@ -314,11 +305,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         }
       }
       pcSbacDecoder->load(&pcSbacDecoders[uiSubStrm]);  //this load is used to simplify the code (avoid to change all the call to pcSbacDecoders)
-    }
-    else if ( pcSlice->getPPS()->getNumSubstreams() <= 1 )
-    {
-      // Set variables to appropriate values to avoid later code change.
-      iNumSubstreamsPerTile = 1;
     }
 
     if ( (iCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr()) && // 1st in tile.

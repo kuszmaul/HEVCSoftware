@@ -386,7 +386,7 @@ Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvT
 /**------------------------------------------------
  Separate interlaced frame into two fields
  -------------------------------------------------**/
-void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt height, bool isTop)
+Void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt height, Bool isTop)
 {
   if (!isTop)
   {
@@ -405,11 +405,11 @@ void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt heigh
 
 }
 
-Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, Bool isTff)
 {
   iNumEncoded = 0;
 
-  for (int fieldNum=0; fieldNum<2; fieldNum++)
+  for (Int fieldNum=0; fieldNum<2; fieldNum++)
   {
     if (pcPicYuvOrg)
     {
@@ -1057,7 +1057,7 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 
 Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )
 {
-  int rpsIdx = GOPid;
+  Int rpsIdx = GOPid;
 
   for(Int extraNum=m_iGOPSize; extraNum<m_extraRPSs+m_iGOPSize; extraNum++)
   {

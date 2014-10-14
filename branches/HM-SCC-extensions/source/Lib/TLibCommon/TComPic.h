@@ -81,8 +81,8 @@ private:
   Window                m_conformanceWindow;
   Window                m_defaultDisplayWindow;
 
-  bool                  m_isTop;
-  bool                  m_isField;
+  Bool                  m_isTop;
+  Bool                  m_isField;
 
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
@@ -172,18 +172,20 @@ public:
 
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
+  UInt          getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice);
+  
   Void          addPictureToHashMapForInter();
   TComHash*     getHashMap() { return &m_hashMap; }
 
   /* field coding parameters*/
 
-   Void              setTopField(bool b)                  {m_isTop = b;}
-   bool              isTopField()                         {return m_isTop;}
-   Void              setField(bool b)                     {m_isField = b;}
-   bool              isField()                            {return m_isField;}
+   Void              setTopField(Bool b)                  {m_isTop = b;}
+   Bool              isTopField()                         {return m_isTop;}
+   Void              setField(Bool b)                     {m_isField = b;}
+   Bool              isField()                            {return m_isField;}
 
   /** transfer ownership of seis to this picture */
-  void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
+  Void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
   /**
    * return the current list of SEI messages associated with this picture.

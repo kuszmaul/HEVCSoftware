@@ -49,7 +49,7 @@ extern Bool g_md5_mismatch; ///< top level flag to signal when there is a decode
 
 //! \ingroup TLibDecoder
 //! \{
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI);
+static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI);
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
@@ -110,7 +110,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   TComInputBitstream **ppcSubstreams = NULL;
 
   //-- For time output for each slice
-  long iBeforeTime = clock();
+  clock_t iBeforeTime = clock();
   m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinCABAC );
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
@@ -159,7 +159,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   TComSlice*  pcSlice = rpcPic->getSlice(rpcPic->getCurrSliceIdx());
 
   //-- For time output for each slice
-  long iBeforeTime = clock();
+  clock_t iBeforeTime = clock();
 
   // deblocking filter
   Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
@@ -228,7 +228,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
  *            ***ERROR*** - calculated hash does not match the SEI message
  *            unk         - no SEI message was available for comparison
  */
-static void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI)
+static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI)
 {
   /* calculate MD5sum for entire reconstructed picture */
   TComDigest recon_digest;

@@ -67,8 +67,8 @@ protected:
 
   Int       m_iSourceHeightOrg;                               ///< original source height in pixel (when interlaced = frame height)
 
-  bool      m_isField;                                        ///< enable field coding
-  bool      m_isTopFieldFirst;
+  Bool      m_isField;                                        ///< enable field coding
+  Bool      m_isTopFieldFirst;
 
   Int       m_conformanceWindowMode;
   Int       m_confWinLeft;

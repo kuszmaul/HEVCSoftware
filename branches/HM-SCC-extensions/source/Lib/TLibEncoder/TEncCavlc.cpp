@@ -1136,11 +1136,7 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
-  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#else
-  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHREXT || ptl->getProfileIdc() == Profile::MAINSCC )
-#endif
+  if (ptl->getProfileIdc() == Profile::MAINREXT || ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT )
   {
     const UInt         bitDepthConstraint=ptl->getBitDepthConstraint();
     WRITE_FLAG(bitDepthConstraint<=12, "general_max_12bit_constraint_flag");
@@ -1177,39 +1173,14 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
     return;
   }
   UInt numEntryPointOffsets = 0, offsetLenMinus1 = 0, maxOffset = 0;
-  Int  numZeroSubstreamsAtStartOfSlice  = 0;
   UInt *entryPointOffset = NULL;
-#if !RExt__R0128_HIGH_THROUGHPUT_PROFILE
-  if ( pSlice->getPPS()->getTilesEnabledFlag() )
-  {
-    numEntryPointOffsets = pSlice->getTileLocationCount();
-    entryPointOffset     = new UInt[numEntryPointOffsets];
-    for (Int idx=0; idx<pSlice->getTileLocationCount(); idx++)
-    {
-      if ( idx == 0 )
-      {
-        entryPointOffset [ idx ] = pSlice->getTileLocation( 0 );
-      }
-      else
-      {
-        entryPointOffset [ idx ] = pSlice->getTileLocation( idx ) - pSlice->getTileLocation( idx-1 );
-      }
-
-      if ( entryPointOffset[ idx ] > maxOffset )
-      {
-        maxOffset = entryPointOffset[ idx ];
-      }
-    }
-  }
-  else
-#endif
   if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
   {
     UInt* pSubstreamSizes                 = pSlice->getSubstreamSizes();
-    Int maxNumParts                       = pSlice->getPic()->getNumPartInCU();
-    numZeroSubstreamsAtStartOfSlice       = pSlice->getSliceSegmentCurStartCUAddr()/maxNumParts/pSlice->getPic()->getFrameWidthInCU();
-    Int  numZeroSubstreamsAtEndOfSlice    = pSlice->getPic()->getFrameHeightInCU()-1 - ((pSlice->getSliceSegmentCurEndCUAddr()-1)/maxNumParts/pSlice->getPic()->getFrameWidthInCU());
-    numEntryPointOffsets                  = pSlice->getPPS()->getNumSubstreams() - numZeroSubstreamsAtStartOfSlice - numZeroSubstreamsAtEndOfSlice - 1;
+    Int  maxNumParts                      = pSlice->getPic()->getNumPartInCU();
+    Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForLCUAddr(pSlice->getSliceSegmentCurStartCUAddr()/maxNumParts, false, pSlice);
+    Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForLCUAddr((pSlice->getSliceSegmentCurEndCUAddr()/maxNumParts)-1, false, pSlice);
+    numEntryPointOffsets                  = subStreamOfLastSegmentOfSlice-numZeroSubstreamsAtStartOfSlice;
     pSlice->setNumEntryPointOffsets(numEntryPointOffsets);
     entryPointOffset           = new UInt[numEntryPointOffsets];
     for (Int idx=0; idx<numEntryPointOffsets; idx++)
@@ -1221,7 +1192,6 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
       }
     }
   }
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   else if ( pSlice->getPPS()->getTilesEnabledFlag() )
   {
     numEntryPointOffsets = pSlice->getTileLocationCount();
@@ -1243,7 +1213,6 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
       }
     }
   }
-#endif
   // Determine number of bits "offsetLenMinus1+1" required for entry point information
   offsetLenMinus1 = 0;
   while (maxOffset >= (1u << (offsetLenMinus1 + 1)))

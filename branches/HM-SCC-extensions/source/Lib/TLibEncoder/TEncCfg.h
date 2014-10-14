@@ -501,7 +501,7 @@ public:
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
   Int       getFramesToBeEncoded            ()      { return  m_framesToBeEncoded; }
-  void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
+  Void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
   Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
 
   //==== Coding Structure ========
@@ -757,11 +757,11 @@ public:
   Bool  getTMCTSSEIEnabled()                                         { return m_tmctsSEIEnabled; }
   Void  setTimeCodeSEIEnabled(Bool b)                                { m_timeCodeSEIEnabled = b; }
   Bool  getTimeCodeSEIEnabled()                                      { return m_timeCodeSEIEnabled; }
-  Void  setNumberOfTimeSets(int value)                               { m_timeCodeSEINumTs = value; }
+  Void  setNumberOfTimeSets(Int value)                               { m_timeCodeSEINumTs = value; }
   Int   getNumberOfTimesets()                                        { return m_timeCodeSEINumTs; }
-  Void  setTimeSet(TComSEITimeSet element, int index)                { m_timeSetArray[index] = element; }
-  TComSEITimeSet &getTimeSet(int index)                              { return m_timeSetArray[index]; }
-  const TComSEITimeSet &getTimeSet(int index) const                  { return m_timeSetArray[index]; }
+  Void  setTimeSet(TComSEITimeSet element, Int index)                { m_timeSetArray[index] = element; }
+  TComSEITimeSet &getTimeSet(Int index)                              { return m_timeSetArray[index]; }
+  const TComSEITimeSet &getTimeSet(Int index) const                  { return m_timeSetArray[index]; }
   Void  setKneeSEIEnabled(Int b)                                     { m_kneeSEIEnabled = b; }
   Bool  getKneeSEIEnabled()                                          { return m_kneeSEIEnabled; }
   Void  setKneeSEIId(Int b)                                          { m_kneeSEIId = b; }

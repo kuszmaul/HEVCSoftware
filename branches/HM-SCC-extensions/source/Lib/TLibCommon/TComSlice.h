@@ -765,8 +765,8 @@ private:
 
   UInt        m_uiBitsForPOC;
   UInt        m_numLongTermRefPicSPS;
-  UInt        m_ltRefPicPocLsbSps[MAX_NUM_SPS + 1];
-  Bool        m_usedByCurrPicLtSPSFlag[MAX_NUM_SPS + 1];
+  UInt        m_ltRefPicPocLsbSps[MAX_NUM_LONG_TERM_REF_PICS];
+  Bool        m_usedByCurrPicLtSPSFlag[MAX_NUM_LONG_TERM_REF_PICS];
   // Max physical transform size
   UInt        m_uiMaxTrSize;
 
@@ -825,11 +825,11 @@ public:
   UInt  getNumLongTermRefPicSPS()             { return m_numLongTermRefPicSPS; }
   Void  setNumLongTermRefPicSPS(UInt val)     { m_numLongTermRefPicSPS = val; }
 
-  UInt  getLtRefPicPocLsbSps(UInt index)             { assert(index<(MAX_NUM_SPS + 1)); return m_ltRefPicPocLsbSps[index]; }
-  Void  setLtRefPicPocLsbSps(UInt index, UInt val)   { assert(index<(MAX_NUM_SPS + 1)); m_ltRefPicPocLsbSps[index] = val; }
+  UInt  getLtRefPicPocLsbSps(UInt index)             { assert( index < MAX_NUM_LONG_TERM_REF_PICS ); return m_ltRefPicPocLsbSps[index]; }
+  Void  setLtRefPicPocLsbSps(UInt index, UInt val)   { assert( index < MAX_NUM_LONG_TERM_REF_PICS ); m_ltRefPicPocLsbSps[index] = val; }
 
-  Bool getUsedByCurrPicLtSPSFlag(Int i)              {assert(i<(MAX_NUM_SPS + 1)); return m_usedByCurrPicLtSPSFlag[i];}
-  Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { assert(i<(MAX_NUM_SPS + 1)); m_usedByCurrPicLtSPSFlag[i] = x;}
+  Bool getUsedByCurrPicLtSPSFlag(Int i)              { assert( i < MAX_NUM_LONG_TERM_REF_PICS ); return m_usedByCurrPicLtSPSFlag[i];}
+  Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { assert( i < MAX_NUM_LONG_TERM_REF_PICS ); m_usedByCurrPicLtSPSFlag[i] = x;}
 
   Int  getLog2MinCodingBlockSize() const           { return m_log2MinCodingBlockSize; }
   Void setLog2MinCodingBlockSize(Int val)          { m_log2MinCodingBlockSize = val; }
@@ -1339,7 +1339,7 @@ public:
   Int       getPOC          ()                          { return  m_iPOC;           }
   Int       getSliceQp      ()                          { return  m_iSliceQp;           }
   Bool      getDependentSliceSegmentFlag()             const { return m_dependentSliceSegmentFlag; }
-  void      setDependentSliceSegmentFlag(Bool val)           { m_dependentSliceSegmentFlag = val; }
+  Void      setDependentSliceSegmentFlag(Bool val)           { m_dependentSliceSegmentFlag = val; }
 #if ADAPTIVE_QP_SELECTION
   Int       getSliceQpBase  ()                         const { return  m_iSliceQpBase;       }
 #endif

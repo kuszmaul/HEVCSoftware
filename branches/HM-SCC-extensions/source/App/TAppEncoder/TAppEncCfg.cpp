@@ -63,19 +63,13 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   MAIN10 = 2,
   MAINSTILLPICTURE = 3,
   MAINREXT = 4,
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   HIGHTHROUGHPUTREXT = 5, // Placeholder profile for development
-#else
-  HIGHREXT = 30, // Placeholder profile for development
-#endif
   MAINSCC  = 31, // Placeholder profile for development
   // The following are RExt profiles, which would map to the MAINREXT profile idc.
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
   //                           the intra constraint in the top digit
-#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
   MONOCHROME_8      = 1008,
-#endif
   MONOCHROME_12     = 1012,
   MONOCHROME_16     = 1016,
   MAIN_12           = 1112,
@@ -222,17 +216,13 @@ static const struct MapStrToProfile
 }
 strToProfile[] =
 {
-  {"none",                 Profile::NONE            },
-  {"main",                 Profile::MAIN            },
-  {"main10",               Profile::MAIN10          },
-  {"main-still-picture",   Profile::MAINSTILLPICTURE},
-  {"main-RExt",            Profile::MAINREXT        },
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
-  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT  },
-#else
-  {"high-RExt",            Profile::HIGHREXT        },
-#endif
-  {"main-SCC",             Profile::MAINSCC         }
+  {"none",                 Profile::NONE               },
+  {"main",                 Profile::MAIN               },
+  {"main10",               Profile::MAIN10             },
+  {"main-still-picture",   Profile::MAINSTILLPICTURE   },
+  {"main-RExt",            Profile::MAINREXT           },
+  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT },
+  {"main-SCC",             Profile::MAINSCC            }
 };
 
 static const struct MapStrToExtendedProfile
@@ -247,15 +237,9 @@ strToExtendedProfile[] =
     {"main10",             MAIN10           },
     {"main-still-picture", MAINSTILLPICTURE },
     {"main-RExt",          MAINREXT         },
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     {"high-throughput-RExt", HIGHTHROUGHPUTREXT },
-#else
-    {"high-RExt",          HIGHREXT         },
-#endif
     {"main-SCC",           MAINSCC          },
-#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
     {"monochrome",         MONOCHROME_8     },
-#endif
     {"monochrome12",       MONOCHROME_12    },
     {"monochrome16",       MONOCHROME_16    },
     {"main12",             MAIN_12          },
@@ -279,11 +263,7 @@ strToExtendedProfile[] =
 static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/][4/* bit depth constraint 8=0, 10=1, 12=2, 16=3*/][4/*chroma format*/]=
 {
     {
-#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
         { MONOCHROME_8,  NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
-#else
-        { NONE,          NONE,          NONE,              MAIN_444          }, // 8-bit  inter for 400, 420, 422 and 444
-#endif
         { NONE,          NONE,          MAIN_422_10,       MAIN_444_10       }, // 10-bit inter for 400, 420, 422 and 444
         { MONOCHROME_12, MAIN_12,       MAIN_422_12,       MAIN_444_12       }, // 12-bit inter for 400, 420, 422 and 444
         { MONOCHROME_16, NONE,          NONE,              MAIN_444_16       }  // 16-bit inter for 400, 420, 422 and 444 (the latter is non standard used for development)
@@ -345,9 +325,9 @@ strToCostMode[] =
 };
 
 template<typename T, typename P>
-static std::string enumToString(P map[], unsigned long mapLen, const T val)
+static std::string enumToString(P map[], UInt mapLen, const T val)
 {
-  for (Int i = 0; i < mapLen; i++)
+  for (UInt i = 0; i < mapLen; i++)
   {
     if (val == map[i].value)
     {
@@ -358,12 +338,12 @@ static std::string enumToString(P map[], unsigned long mapLen, const T val)
 }
 
 template<typename T, typename P>
-static istream& readStrToEnum(P map[], unsigned long mapLen, istream &in, T &val)
+static istream& readStrToEnum(P map[], UInt mapLen, istream &in, T &val)
 {
   string str;
   in >> str;
 
-  for (Int i = 0; i < mapLen; i++)
+  for (UInt i = 0; i < mapLen; i++)
   {
     if (str == map[i].str)
     {
@@ -434,14 +414,14 @@ static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      unsigned long val=strtoul(pStr, &eptr, 0);
+      Char *eptr;
+      UInt val=strtoul(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
@@ -458,7 +438,7 @@ static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
         in.setstate(ios::failbit);
         break;
       }
-      values.values.push_back(UInt(val));
+      values.values.push_back(val);
       // soak up any whitespace and up to 1 comma.
       pStr=eptr;
       for(;isspace(*pStr);pStr++);
@@ -480,14 +460,14 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      long val=strtol(pStr, &eptr, 0);
+      Char *eptr;
+      Int val=strtol(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
@@ -504,7 +484,7 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
         in.setstate(ios::failbit);
         break;
       }
-      values.values.push_back(Int(val));
+      values.values.push_back(val);
       // soak up any whitespace and up to 1 comma.
       pStr=eptr;
       for(;isspace(*pStr);pStr++);
@@ -526,20 +506,20 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
   in >> str;
   if (!str.empty())
   {
-    const char *pStr=str.c_str();
+    const Char *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
     while (*pStr != 0)
     {
-      char *eptr;
-      long val=strtol(pStr, &eptr, 0);
+      Char *eptr;
+      Int val=strtol(pStr, &eptr, 0);
       if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
       {
         in.setstate(ios::failbit);
         break;
       }
-      if (val<long(values.minValIncl) || val>long(values.maxValIncl))
+      if (val<Int(values.minValIncl) || val>Int(values.maxValIncl))
       {
         in.setstate(ios::failbit);
         break;
@@ -610,11 +590,7 @@ automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
     else
     {
       chromaFormatConstraint = CHROMA_400;
-#if RExt__MEETING_NOTES_MONOCHROME_PROFILE
       bitDepthConstraint     = trialBitDepthConstraint == 8 ? 8 : 12;
-#else
-      bitDepthConstraint     = 12;
-#endif
     }
   }
   else
@@ -1136,7 +1112,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     else
     {
       m_tileRowHeight.resize(m_numTileRowsMinus1);
-      for(UInt i=0; i<cfg_ColumnWidth.values.size(); i++)
+      for(UInt i=0; i<cfg_RowHeight.values.size(); i++)
         m_tileRowHeight[i]=cfg_RowHeight.values[i];
     }
   }
@@ -1182,16 +1158,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_profile = Profile::Name(extendedProfile);
   }
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile == Profile::HIGHTHROUGHPUTREXT )
   {
     if (m_bitDepthConstraint == 0) m_bitDepthConstraint = 16;
     m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? CHROMA_444 : numberToChromaFormat(tmpConstraintChromaFormat);
   }
   else if (m_profile == Profile::MAINREXT)
-#else
-  if (m_profile == Profile::MAINREXT || m_profile == Profile::HIGHREXT )
-#endif
   {
     if (m_bitDepthConstraint == 0 && tmpConstraintChromaFormat == 0)
     {
@@ -1420,7 +1392,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   if(m_timeCodeSEIEnabled)
   {
-    for(int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
+    for(Int i = 0; i < m_timeCodeSEINumTs && i < MAX_TIMECODE_SEI_SETS; i++)
     {
       m_timeSetArray[i].clockTimeStampFlag    = cfg_timeCodeSeiTimeStampFlag        .values.size()>i ? cfg_timeCodeSeiTimeStampFlag        .values [i] : false;
       m_timeSetArray[i].numUnitFieldBasedFlag = cfg_timeCodeSeiNumUnitFieldBasedFlag.values.size()>i ? cfg_timeCodeSeiNumUnitFieldBasedFlag.values [i] : 0;
@@ -1487,20 +1459,12 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT || m_profile==Profile::MAINSCC)
-#else
-  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHREXT || m_profile==Profile::MAINSCC)
-#endif
   {
     // NOTE: RExt - consider adjusting so that only the restricted legal combinations are possible
     // m_intraConstraintFlag is checked below.
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHTHROUGHPUTREXT, "AlignCABACBeforeBypass must not be enabled unless the high throughput profile is being used.");
-#else
-    xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHREXT, "AlignCABACBeforeBypass must not be enabled unless the high bit rate profile is being used.");
-#endif
     xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
     if (m_profile == Profile::MAINREXT)
     {
@@ -1532,14 +1496,12 @@ Void TAppEncCfg::xCheckParameter()
         fprintf(stderr, "********************************************************************************************************\n");
       }
     }
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
     else if (m_profile == Profile::HIGHTHROUGHPUTREXT)
     {
       xConfirmPara( m_chromaFormatConstraint != CHROMA_444, "chroma format constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
       xConfirmPara( m_bitDepthConstraint     != 16,         "bit depth constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
       xConfirmPara( m_intraConstraintFlag    != 1,          "intra constraint flag must be 1 in the High Throughput 4:4:4 16-bit Intra profile.");
     }
-#endif
   }
   else
   {
@@ -1655,7 +1617,6 @@ Void TAppEncCfg::xCheckParameter()
   }
 #endif
 
-#if RExt__R0104_REMOVAL_OF_HADAMARD_IN_LOSSLESS_CODING
   if ( m_CUTransquantBypassFlagForce && m_bUseHADME )
   {
     fprintf(stderr, "****************************************************************************\n");
@@ -1665,7 +1626,6 @@ Void TAppEncCfg::xCheckParameter()
 
     m_bUseHADME = false; // this has been disabled so that the lambda is calculated slightly differently for lossless modes (as a result of JCTVC-R0104).
   }
-#endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");
 
@@ -1750,14 +1710,10 @@ Void TAppEncCfg::xCheckParameter()
   }
 
   Bool tileFlag = (m_numTileColumnsMinus1 > 0 || m_numTileRowsMinus1 > 0 );
-#if RExt__R0128_HIGH_THROUGHPUT_PROFILE
   if (m_profile!=Profile::HIGHTHROUGHPUTREXT)
   {
     xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together, except in the High Throughput Intra 4:4:4 16 profile");
   }
-#else
-  xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
-#endif
 
   xConfirmPara( m_iSourceWidth  % TComSPS::getWinUnitX(m_chromaFormatIDC) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_iSourceHeight % TComSPS::getWinUnitY(m_chromaFormatIDC) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");

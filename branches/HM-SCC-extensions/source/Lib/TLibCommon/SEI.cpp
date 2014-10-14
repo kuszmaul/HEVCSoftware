@@ -87,7 +87,7 @@ Void deleteSEIs (SEIMessages &seiList)
 
 
 // Static member
-const char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
+const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
 {
   switch (payloadType)
   {

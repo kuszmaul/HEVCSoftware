@@ -633,7 +633,7 @@ const UInt ctxIndMap4x4[4*4] =
 const UInt g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ MAX_TU_SIZE ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
 
-const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
+const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
   {
     "INTRA4X4_LUMA",
@@ -669,7 +669,7 @@ const char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
   },
 };
 
-const char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
+const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM] =
 {
   {
   },

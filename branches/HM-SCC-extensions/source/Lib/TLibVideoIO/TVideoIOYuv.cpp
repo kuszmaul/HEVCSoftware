@@ -488,7 +488,7 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
                        const ComponentID compID,
                        const ChromaFormat srcFormat,
                        const ChromaFormat fileFormat,
-                       const UInt fileBitDepth, const bool isTff)
+                       const UInt fileBitDepth, const Bool isTff)
 {
   const UInt csx_file =getComponentScaleX(compID, fileFormat);
   const UInt csy_file =getComponentScaleY(compID, fileFormat);

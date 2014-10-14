@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
   // starting time
   Double dResult;
-  long lBefore = clock();
+  clock_t lBefore = clock();
 
   // call decoding function
   cTAppDecTop.decode();

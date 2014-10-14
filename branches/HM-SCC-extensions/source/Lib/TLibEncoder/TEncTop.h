@@ -187,12 +187,12 @@ public:
                std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg,
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg,
                TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
                TComList<TComPicYuv*>& rcListPicYuvRecOut,
-               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
+               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, Bool isTff);
 
-  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, m_printSequenceMSE); }
+  Void printSummary(Bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, m_printSequenceMSE); }
 
 };
 

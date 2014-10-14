@@ -424,7 +424,7 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
   for(;bytesRead < payloadSize; bytesRead++)
   {
     sei_read_code( NULL, 8, val, traceString);
-    sei.m_digest.hash.push_back((unsigned char)val);
+    sei.m_digest.hash.push_back((UChar)val);
     if (pDecodedMessageOutputStream) (*pDecodedMessageOutputStream) << std::setw(2) << val;
   }
 
@@ -919,7 +919,7 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostre
   UInt code;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
   sei_read_code( pDecodedMessageOutputStream, 2, code, "num_clock_ts"); sei.numClockTs = code;
-  for(int i = 0; i < sei.numClockTs; i++)
+  for(Int i = 0; i < sei.numClockTs; i++)
   {
     TComSEITimeSet currentTimeSet;
     sei_read_flag( pDecodedMessageOutputStream, code, "clock_time_stamp_flag[i]"); currentTimeSet.clockTimeStampFlag = code;
@@ -987,9 +987,6 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
   if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
   {
     sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "target_format_idc"); sei.m_targetFormatIdc = uiCode;
-#if !RExt__R0357_UPDATED_CHROMA_RESAMPLING_FILTER_HINT
-    sei_read_flag( pDecodedMessageOutputStream, uiCode, "perfect_reconstruction_flag"); sei.m_perfectReconstructionFlag = uiCode;
-#endif
     if(sei.m_verChromaFilterIdc == 1)
     {
       sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "num_vertical_filters"); sei.m_numVerticalFilters = uiCode;

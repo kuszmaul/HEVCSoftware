@@ -242,7 +242,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
       Int* ptmp = m_pcCfg->getTMISEIStartOfCodedInterva();
       if(ptmp)
       {
-        for(int i=0; i<num;i++)
+        for(Int i=0; i<num;i++)
         {
           seiToneMappingInfo->m_startOfCodedInterval[i] = ptmp[i];
         }
@@ -258,7 +258,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
       Int* ptmptarget = m_pcCfg->getTMISEITargetPivotValue();
       if(ptmpcoded&&ptmptarget)
       {
-        for(int i=0; i<(seiToneMappingInfo->m_numPivots);i++)
+        for(Int i=0; i<(seiToneMappingInfo->m_numPivots);i++)
         {
           seiToneMappingInfo->m_codedPivotValue[i]=ptmpcoded[i];
           seiToneMappingInfo->m_targetPivotValue[i]=ptmptarget[i];
@@ -493,7 +493,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     SEITimeCode sei_time_code;
     //  Set data as per command line options
     sei_time_code.numClockTs = m_pcCfg->getNumberOfTimesets();
-    for(int i = 0; i < sei_time_code.numClockTs; i++)
+    for(Int i = 0; i < sei_time_code.numClockTs; i++)
       sei_time_code.timeSetArray[i] = m_pcCfg->getTimeSet(i);
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
@@ -648,7 +648,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     UInt uiColDir = 1;
     //-- For time output for each slice
-    long iBeforeTime = clock();
+    clock_t iBeforeTime = clock();
 
     //select uiColDir
     Int iCloseLeft=1, iCloseRight=-1;
@@ -1150,7 +1150,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getPicSym()->initTiles(pcSlice->getPPS());
 
     // Allocate some coders, now we know how many tiles there are.
-    Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
+    const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
 
     //generate the Coding Order Map and Inverse Coding Order Map
     for(p=0, uiEncCUAddr=0; p<pcPic->getPicSym()->getNumberOfCUsInFrame(); p++, uiEncCUAddr = pcPic->getPicSym()->xCalculateNxtCUAddr(uiEncCUAddr))
@@ -1379,7 +1379,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           accumNalsDU                                  = new UInt[ numDU ];
         }
       }
-      pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
+      pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<Double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
       pictureTimingSEI.m_picDpbOutputDelay = pcSlice->getSPS()->getNumReorderPics(pcSlice->getSPS()->getMaxTLayers()-1) + pcSlice->getPOC() - m_totalCoded;
 #if EFFICIENT_FIELD_IRAP
       if(IRAPGOPid > 0 && IRAPGOPid < m_iGopSize)
@@ -1691,7 +1691,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               m_pcEntropyCoder->setEntropyCoder ( m_pcSbacCoder, pcSlice );
               m_pcEntropyCoder->resetEntropy    ();
-              for ( UInt ui = 0 ; ui < pcSlice->getPPS()->getNumSubstreams() ; ui++ )
+              for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
               {
                 m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                 m_pcEntropyCoder->resetEntropy    ();
@@ -1703,7 +1703,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // set entropy coder for writing
               m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
               {
-                for ( UInt ui = 0 ; ui < pcSlice->getPPS()->getNumSubstreams() ; ui++ )
+                for ( UInt ui = 0 ; ui < iNumSubstreams ; ui++ )
                 {
                   m_pcEntropyCoder->setEntropyCoder ( &pcSbacCoders[ui], pcSlice );
                   m_pcEntropyCoder->resetEntropy    ();
@@ -1747,10 +1747,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               // The final bitstream is either nalu.m_Bitstream or pcBitstreamRedirect;
               UInt* puiSubstreamSizes = pcSlice->getSubstreamSizes();
               UInt uiTotalCodedSize = 0; // for padding calcs.
-              UInt uiNumSubstreamsPerTile = iNumSubstreams;
+              UInt uiNumSubstreamsPerTile = iNumSubstreams; // Only used if wavefronts not enabled.
               if (iNumSubstreams > 1)
               {
-                uiNumSubstreamsPerTile /= pcPic->getPicSym()->getNumTiles();
+                uiNumSubstreamsPerTile /= pcPic->getPicSym()->getNumTiles(); // Only used if wavefronts not enabled.
               }
               for ( UInt ui = 0 ; ui < iNumSubstreams; ui++ )
               {
@@ -1766,13 +1766,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 uiTotalCodedSize += pcSubstreamsOut[ui].getNumberOfWrittenBits();
 
                 Bool bNextSubstreamInNewTile = ((ui+1) < iNumSubstreams)&& ((ui+1)%uiNumSubstreamsPerTile == 0);
-                if (bNextSubstreamInNewTile)
+                if (bNextSubstreamInNewTile &&  !pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
                 {
                   pcSlice->setTileLocation(ui/uiNumSubstreamsPerTile, pcSlice->getTileOffstForMultES()+(uiTotalCodedSize>>3));
                 }
-                if (ui+1 < pcSlice->getPPS()->getNumSubstreams())
+                if (ui+1 < iNumSubstreams)
                 {
-                  puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits();
+                  puiSubstreamSizes[ui] = pcSubstreamsOut[ui].getNumberOfWrittenBits() + (pcSubstreamsOut[ui].countStartCodeEmulations()<<3);
                 }
               }
 
@@ -1783,17 +1783,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
               // Substreams...
               TComOutputBitstream *pcOut = pcBitstreamRedirect;
-            Int offs = 0;
-            Int nss = pcSlice->getPPS()->getNumSubstreams();
-            if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
-            {
-              // 1st line present for WPP.
-              offs = pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU()/pcSlice->getPic()->getFrameWidthInCU();
-              nss  = pcSlice->getNumEntryPointOffsets()+1;
-            }
-            for ( UInt ui = 0 ; ui < nss; ui++ )
-            {
-              pcOut->addSubstream(&pcSubstreamsOut[ui+offs]);
+              Int numZeroSubstreamsAtStartOfSlice = 0;
+              Int numSubstreamsToCode = pcSlice->getPPS()->getNumSubstreams();
+              if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
+              {
+                Int  maxNumParts                      = pcPic->getNumPartInCU();
+                numZeroSubstreamsAtStartOfSlice  = pcPic->getSubstreamForLCUAddr(pcSlice->getSliceSegmentCurStartCUAddr()/maxNumParts, false, pcSlice);
+                // 1st line present for WPP.
+                numSubstreamsToCode  = pcSlice->getNumEntryPointOffsets()+1;
+              }
+              for ( UInt ui = 0 ; ui < numSubstreamsToCode; ui++ )
+              {
+                pcOut->addSubstream(&pcSubstreamsOut[ui+numZeroSubstreamsAtStartOfSlice]);
               }
             }
 
@@ -2288,7 +2289,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
   m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummaryOut(chFmt, printSequenceMSE);
+  m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE);
 #endif
 #if _SUMMARY_PIC_
   m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE,'I');
@@ -2307,7 +2308,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE);
 
 #if _SUMMARY_OUT_
-    m_gcAnalyzeAll_in.printSummaryOut(chFmt);
+    m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE);
 #endif
   }
 
@@ -2337,7 +2338,7 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 // ====================================================================================================================
 
 
-Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField )
+Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Bool isField )
 {
   assert( iNumPicRcvd > 0 );
   //  Exception for the first frames
