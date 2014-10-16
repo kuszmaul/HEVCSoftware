@@ -81,12 +81,21 @@ public:
 
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SCM__R0348_PALETTE_MODE
+  virtual Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp) = 0;
+  virtual Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+  virtual Void codePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  virtual Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -120,6 +129,12 @@ public:
 
   virtual Void codeExplicitRdpcmMode ( TComTU &rTu, const ComponentID compID ) = 0;
 
+  virtual Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SCM__R0186_INTRABC_BVD
+  virtual Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;
+  virtual Void estBvdBin0Cost    (Int *Bin0Cost)  = 0;
+#endif
   virtual ~TEncEntropyIf() {}
 };
 
@@ -149,6 +164,9 @@ public:
   Void encodePPS               ( TComPPS* pcPPS );
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if SCM__R0348_PALETTE_MODE
+  Void encodePLTModeInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );
@@ -159,6 +177,7 @@ public:
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
+  Void encodePartSizeIntraBC   ( TComDataCU* pcCU, UInt uiAbsPartIdx);
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU = false );
@@ -177,6 +196,9 @@ public:
   Void updateContextTables     ( SliceType eSliceType, Int iQp )                        { m_pcEntropyCoderIf->updateContextTables( eSliceType, iQp, true );               }
 
   Void encodeScalingList       ( TComScalingList* scalingList );
+
+  Void encodeIntraBCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void encodeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 

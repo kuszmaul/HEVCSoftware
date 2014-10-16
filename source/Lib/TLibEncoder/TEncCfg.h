@@ -113,6 +113,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+  Bool      m_printClippedPSNR;
 
   /* profile & level */
   Profile::Name m_profile;
@@ -161,10 +162,18 @@ protected:
   Bool      m_DeblockingFilterMetric;
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
-  Bool      m_saoCtuBoundary;
+  Bool      m_saoLcuBoundary;
 
   //====== Motion search ========
-  Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
+  Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Bool      m_useHashBasedIntraBlockCopySearch; // Enable the use of hash based search is applied to 8x8 blocks
+  Int       m_intraBlockCopySearchWidthInCTUs;  // Search range for IBC (-1: full frame search)
+  UInt      m_intraBlockCopyNonHashSearchWidthInCTUs; // IBC search range for conventional non-hash based method (i.e., fast/full search)
+#else
+  Bool      m_intraBlockCopyFullFrameSearch;    // Intra block copy full frame search
+#endif
+  Bool      m_useHashBasedME;                   //  Hash based inter search 
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
 
@@ -181,6 +190,8 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
+  Bool      m_intraBlockCopyFastSearch;
   Bool      m_useHighPrecisionPredictionWeighting;
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -206,6 +217,14 @@ protected:
   Bool      m_useSingleSignificanceMapContext;
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool      m_bRGBformat;
+  Bool      m_useColorTrans;
+  Bool      m_useLL;
+#endif
+#if SCM__R0348_PALETTE_MODE
+  Bool      m_usePaletteMode;
+#endif
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -215,10 +234,10 @@ protected:
   UInt      m_pcmLog2MaxSize;
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
-  SliceConstraint m_sliceMode;
+  Int       m_sliceMode;
   Int       m_sliceArgument;
   //====== Dependent Slice ========
-  SliceConstraint m_sliceSegmentMode;
+  Int       m_sliceSegmentMode;
   Int       m_sliceSegmentArgument;
   Bool      m_bLFCrossSliceBoundaryFlag;
 
@@ -292,6 +311,7 @@ protected:
   Int       m_kneeSEIId;
   Bool      m_kneeSEICancelFlag;
   Bool      m_kneeSEIPersistenceFlag;
+  Bool      m_kneeSEIMappingFlag;
   Int       m_kneeSEIInputDrange;
   Int       m_kneeSEIInputDispLuminance;
   Int       m_kneeSEIOutputDrange;
@@ -391,6 +411,9 @@ public:
   Bool      getPrintSequenceMSE             ()         const { return m_printSequenceMSE;           }
   Void      setPrintSequenceMSE             (Bool value)     { m_printSequenceMSE = value;          }
 
+  Bool      getPrintClippedPSNR             ()         const { return m_printClippedPSNR;           }
+  Void      setPrintClippedPSNR             (Bool value)     { m_printClippedPSNR = value;          }
+
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }
@@ -428,6 +451,14 @@ public:
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Void      setUseHashBasedIntraBCSearch    ( Bool b )       { m_useHashBasedIntraBlockCopySearch = b; }
+  Void      setIntraBCSearchWidthInCTUs     ( Int  i )       { m_intraBlockCopySearchWidthInCTUs = i; }
+  Void      setIntraBCNonHashSearchWidthInCTUs( UInt u )     { m_intraBlockCopyNonHashSearchWidthInCTUs = u; }
+#else
+  Void      setUseIntraBCFullFrameSearch    ( Bool b )       { m_intraBlockCopyFullFrameSearch = b; }
+#endif
+  Void      setUseHashBasedME               ( Bool b )       { m_useHashBasedME = b; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
 
@@ -451,6 +482,12 @@ public:
 
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
+
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+
+  Bool      getUseIntraBlockCopyFastSearch() const     { return m_intraBlockCopyFastSearch;  }
+  Void      setUseIntraBlockCopyFastSearch(Bool value) { m_intraBlockCopyFastSearch = value; }
 
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
@@ -493,6 +530,15 @@ public:
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
+#if SCM__FLEXIBLE_INTRABC_SEARCH
+  Bool      getUseHashBasedIntraBCSearch    ()      { return m_useHashBasedIntraBlockCopySearch; }
+  Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopySearchWidthInCTUs == -1; }
+  Int       getIntraBCSearchWidthInCTUs     ()      { return m_intraBlockCopySearchWidthInCTUs; }
+  UInt      getIntraBCNonHashSearchWidthInCTUs()    { return m_intraBlockCopyNonHashSearchWidthInCTUs; }
+#else
+  Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopyFullFrameSearch ; }
+#endif
+  Bool      getUseHashBasedME               ()      { return m_useHashBasedME; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
 
   //==== Quality control ========
@@ -553,6 +599,18 @@ public:
   Void setUseGolombRiceParameterAdaptation             (const Bool value)       { m_useGolombRiceParameterAdaptation = value; }
   Bool getAlignCABACBeforeBypass                       ()       const      { return m_alignCABACBeforeBypass;  }
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
+  Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
+  Bool getUseColorTrans                                ()            const { return                  m_useColorTrans;}
+  Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
+  Bool getUseLossless                                  ()            const { return m_useLL;}
+  Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
+#endif
+#if SCM__R0348_PALETTE_MODE
+  Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
+  Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
+#endif
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
@@ -566,36 +624,36 @@ public:
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
 
   //====== Slice ========
-  Void  setSliceMode                   ( SliceConstraint  i )        { m_sliceMode = i;              }
-  Void  setSliceArgument               ( Int  i )                    { m_sliceArgument = i;          }
-  SliceConstraint getSliceMode         () const                      { return m_sliceMode;           }
-  Int   getSliceArgument               ()                            { return m_sliceArgument;       }
+  Void  setSliceMode                   ( Int  i )       { m_sliceMode = i;              }
+  Void  setSliceArgument               ( Int  i )       { m_sliceArgument = i;          }
+  Int   getSliceMode                   ()              { return m_sliceMode;           }
+  Int   getSliceArgument               ()              { return m_sliceArgument;       }
   //====== Dependent Slice ========
-  Void  setSliceSegmentMode            ( SliceConstraint  i )        { m_sliceSegmentMode = i;       }
-  Void  setSliceSegmentArgument        ( Int  i )                    { m_sliceSegmentArgument = i;   }
-  SliceConstraint getSliceSegmentMode  () const                      { return m_sliceSegmentMode;    }
-  Int   getSliceSegmentArgument        ()                            { return m_sliceSegmentArgument;}
-  Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )       { m_bLFCrossSliceBoundaryFlag = bValue; }
-  Bool      getLFCrossSliceBoundaryFlag     ()                       { return m_bLFCrossSliceBoundaryFlag;   }
+  Void  setSliceSegmentMode            ( Int  i )      { m_sliceSegmentMode = i;       }
+  Void  setSliceSegmentArgument        ( Int  i )      { m_sliceSegmentArgument = i;   }
+  Int   getSliceSegmentMode            ()              { return m_sliceSegmentMode;    }
+  Int   getSliceSegmentArgument        ()              { return m_sliceSegmentArgument;}
+  Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
+  Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
 
-  Void      setUseSAO                  (Bool bVal)                   { m_bUseSAO = bVal; }
-  Bool      getUseSAO                  ()                            { return m_bUseSAO; }
-  Void  setMaxNumOffsetsPerPic                   (Int iVal)          { m_maxNumOffsetsPerPic = iVal; }
-  Int   getMaxNumOffsetsPerPic                   ()                  { return m_maxNumOffsetsPerPic; }
-  Void  setSaoCtuBoundary              (Bool val)                    { m_saoCtuBoundary = val; }
-  Bool  getSaoCtuBoundary              ()                            { return m_saoCtuBoundary; }
-  Void  setLFCrossTileBoundaryFlag               ( Bool   val  )     { m_loopFilterAcrossTilesEnabledFlag = val; }
-  Bool  getLFCrossTileBoundaryFlag               ()                  { return m_loopFilterAcrossTilesEnabledFlag;   }
-  Void  setTileUniformSpacingFlag      ( Bool b )                    { m_tileUniformSpacingFlag = b; }
-  Bool  getTileUniformSpacingFlag      ()                            { return m_tileUniformSpacingFlag; }
-  Void  setNumColumnsMinus1            ( Int i )                     { m_iNumColumnsMinus1 = i; }
-  Int   getNumColumnsMinus1            ()                            { return m_iNumColumnsMinus1; }
-  Void  setColumnWidth ( const std::vector<Int>& columnWidth )       { m_tileColumnWidth = columnWidth; }
-  UInt  getColumnWidth                 ( UInt columnIdx )            { return m_tileColumnWidth[columnIdx]; }
-  Void  setNumRowsMinus1               ( Int i )                     { m_iNumRowsMinus1 = i; }
-  Int   getNumRowsMinus1               ()                            { return m_iNumRowsMinus1; }
-  Void  setRowHeight ( const std::vector<Int>& rowHeight)            { m_tileRowHeight = rowHeight; }
-  UInt  getRowHeight                   ( UInt rowIdx )               { return m_tileRowHeight[rowIdx]; }
+  Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
+  Bool      getUseSAO                  ()              {return m_bUseSAO;}
+  Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
+  Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
+  Void  setSaoLcuBoundary              (Bool val)      { m_saoLcuBoundary = val; }
+  Bool  getSaoLcuBoundary              ()              { return m_saoLcuBoundary; }
+  Void  setLFCrossTileBoundaryFlag               ( Bool   val  )       { m_loopFilterAcrossTilesEnabledFlag = val; }
+  Bool  getLFCrossTileBoundaryFlag               ()                    { return m_loopFilterAcrossTilesEnabledFlag;   }
+  Void  setTileUniformSpacingFlag      ( Bool b )          { m_tileUniformSpacingFlag = b; }
+  Bool  getTileUniformSpacingFlag      ()                  { return m_tileUniformSpacingFlag; }
+  Void  setNumColumnsMinus1            ( Int i )               { m_iNumColumnsMinus1 = i; }
+  Int   getNumColumnsMinus1            ()                      { return m_iNumColumnsMinus1; }
+  Void  setColumnWidth ( const std::vector<Int>& columnWidth ) { m_tileColumnWidth = columnWidth; }
+  UInt  getColumnWidth                 ( UInt columnIdx )      { return m_tileColumnWidth[columnIdx]; }
+  Void  setNumRowsMinus1               ( Int i )               { m_iNumRowsMinus1 = i; }
+  Int   getNumRowsMinus1               ()                      { return m_iNumRowsMinus1; }
+  Void  setRowHeight ( const std::vector<Int>& rowHeight)      { m_tileRowHeight = rowHeight; }
+  UInt  getRowHeight                   ( UInt rowIdx )         { return m_tileRowHeight[rowIdx]; }
   Void  xCheckGSParameters();
   Void  setWaveFrontSynchro(Int iWaveFrontSynchro)                   { m_iWaveFrontSynchro = iWaveFrontSynchro; }
   Int   getWaveFrontsynchro()                                        { return m_iWaveFrontSynchro; }
@@ -712,6 +770,8 @@ public:
   Bool  getKneeSEICancelFlag()                                       { return m_kneeSEICancelFlag; }
   Void  setKneeSEIPersistenceFlag(Bool b)                            { m_kneeSEIPersistenceFlag = b; }
   Bool  getKneeSEIPersistenceFlag()                                  { return m_kneeSEIPersistenceFlag; }
+  Void  setKneeSEIMappingFlag(Bool b)                                { m_kneeSEIMappingFlag = b; }
+  Bool  getKneeSEIMappingFlag()                                      { return m_kneeSEIMappingFlag; }
   Void  setKneeSEIInputDrange(Int b)                                 { m_kneeSEIInputDrange = b; }
   Int   getKneeSEIInputDrange()                                      { return m_kneeSEIInputDrange; }
   Void  setKneeSEIInputDispLuminance(Int b)                          { m_kneeSEIInputDispLuminance = b; }

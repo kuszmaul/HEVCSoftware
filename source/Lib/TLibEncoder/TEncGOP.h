@@ -108,6 +108,8 @@ private:
   // clean decoding refresh
   Bool                    m_bRefreshPending;
   Int                     m_pocCRA;
+  std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
+  std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
 #if FIX1172
   NalUnitType             m_associatedIRAPType;
   Int                     m_associatedIRAPPOC;
@@ -124,6 +126,10 @@ private:
   Bool                    m_pictureTimingSEIPresentInAU;
   Bool                    m_nestedBufferingPeriodSEIPresentInAU;
   Bool                    m_nestedPictureTimingSEIPresentInAU;
+
+  Bool                    m_hasLosslessPSNR[MAX_NUM_COMPONENT];
+  Double                  m_losslessPSNR[MAX_NUM_COMPONENT];
+
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -134,7 +140,7 @@ public:
   Void  init        ( TEncTop* pcTEncTop );
   Void  compressGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec,
                       std::list<AccessUnit>& accessUnitsInGOP, Bool isField, Bool isTff, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE );
-  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream* pcBitstreamRedirect);
+  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
 
   Int   getGOPSize()          { return  m_iGopSize;  }

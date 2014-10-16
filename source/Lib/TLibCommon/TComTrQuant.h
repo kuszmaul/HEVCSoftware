@@ -119,7 +119,7 @@ public:
                      const UInt             uiStride,
                            TCoeff        *  rpcCoeff,
 #if ADAPTIVE_QP_SELECTION
-                           TCoeff        * rpcArlCoeff,
+                           TCoeff        *& rpcArlCoeff,
 #endif
                            TCoeff         & uiAbsSum,
                      const QpParam        & cQP
@@ -128,7 +128,7 @@ public:
 
   Void invTransformNxN(      TComTU       & rTu,
                        const ComponentID    compID,
-                             Pel         *pcResidual,
+                             Pel         *& rpcResidual,
                        const UInt           uiStride,
                              TCoeff      *  pcCoeff,
                        const QpParam      & cQP
@@ -146,6 +146,9 @@ public:
 #if RDOQ_CHROMA_LAMBDA
   Void setLambdas(const Double lambdas[MAX_NUM_COMPONENT]) { for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_lambdas[component] = lambdas[component]; }
   Void selectLambda(const ComponentID compIdx) { m_dLambda = m_lambdas[compIdx]; }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void adjustBitDepthandLambdaForColorTrans(Int delta_QP);
+#endif
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif
@@ -241,7 +244,7 @@ private:
                      TCoeff      * pSrc,
                      TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
-                     TCoeff      *pArlDes,
+                     TCoeff      *&pArlDes,
 #endif
                      TCoeff       &uiAbsSum,
                const ComponentID   compID,
@@ -253,7 +256,7 @@ private:
                                            TCoeff      * plSrcCoeff,
                                            TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
-                                           TCoeff      *piArlDstCoeff,
+                                           TCoeff      *&piArlDstCoeff,
 #endif
                                            TCoeff       &uiAbsSum,
                                      const ComponentID   compID,

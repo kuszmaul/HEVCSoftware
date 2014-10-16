@@ -61,7 +61,7 @@ TEncTop::TEncTop()
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
   {
-    g_hTrace = fopen( "TraceEnc.txt", "wb" );
+    g_hTrace = fopen( "TraceEnc_RExt.txt", "wb" );
   }
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
@@ -97,6 +97,7 @@ Void TEncTop::create ()
 {
   // initialize global variables
   initROM();
+  TComHash::initBlockSizeToIndex();
 
   // create processing unit classes
   m_cGOPEncoder.        create( );
@@ -106,7 +107,7 @@ Void TEncTop::create ()
   {
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_saoOffsetBitShift[CHANNEL_TYPE_LUMA], m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] );
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
-    m_cEncSAO.createEncData(getSaoCtuBoundary());
+    m_cEncSAO.createEncData(getSaoLcuBoundary());
 #else
     m_cEncSAO.createEncData();
 #endif
@@ -533,6 +534,16 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+  rpcPic->getHashMap()->clearAll();
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if( getRGBFormatFlag() && getUseColorTrans() )
+  {
+    if( rpcPic->getPicYuvCSC() == NULL )
+    {
+      rpcPic->allocateCSCBuffer( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+    }
+  }
+#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -621,6 +632,7 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
+  m_cSPS.setUseIntraBlockCopy(m_useIntraBlockCopy);
   m_cSPS.setUseHighPrecisionPredictionWeighting(m_useHighPrecisionPredictionWeighting);
 
   m_cSPS.setUseSAO( m_bUseSAO );
@@ -628,7 +640,12 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
-
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  m_cSPS.setUseColorTrans               (       m_useColorTrans      );
+#endif
+#if SCM__R0348_PALETTE_MODE
+  m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
+#endif
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
     m_cSPS.setUseResidualDPCM(RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);
@@ -789,7 +806,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setUseTransformSkip( m_useTransformSkip );
   m_cPPS.setTransformSkipLog2MaxSize( m_transformSkipLog2MaxSize  );
 
-  if (m_sliceSegmentMode != NO_SLICES)
+  if (m_sliceSegmentMode)
   {
     m_cPPS.setDependentSliceSegmentsEnabledFlag( true );
   }

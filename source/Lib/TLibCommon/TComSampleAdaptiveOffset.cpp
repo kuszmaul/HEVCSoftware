@@ -251,10 +251,10 @@ Void TComSampleAdaptiveOffset::invertQuantOffsets(ComponentID compIdx, Int typeI
 
 }
 
-Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctuRsAddr, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
+Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctu, SAOBlkParam* blkParams, SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES])
 {
-  Int ctuX = ctuRsAddr % m_numCTUInWidth;
-  Int ctuY = ctuRsAddr / m_numCTUInWidth;
+  Int ctuX = ctu % m_numCTUInWidth;
+  Int ctuY = ctu / m_numCTUInWidth;
   Int mergedCTUPos;
   Int numValidMergeCandidates = 0;
 
@@ -268,8 +268,8 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctuRsAddr, SAOBlkPa
       {
         if(ctuY > 0)
         {
-          mergedCTUPos = ctuRsAddr- m_numCTUInWidth;
-          if( pic->getSAOMergeAvailability(ctuRsAddr, mergedCTUPos) )
+          mergedCTUPos = ctu- m_numCTUInWidth;
+          if( pic->getSAOMergeAvailability(ctu, mergedCTUPos) )
           {
             mergeCandidate = &(blkParams[mergedCTUPos]);
           }
@@ -280,8 +280,8 @@ Int TComSampleAdaptiveOffset::getMergeList(TComPic* pic, Int ctuRsAddr, SAOBlkPa
       {
         if(ctuX > 0)
         {
-          mergedCTUPos = ctuRsAddr- 1;
-          if( pic->getSAOMergeAvailability(ctuRsAddr, mergedCTUPos) )
+          mergedCTUPos = ctu- 1;
+          if( pic->getSAOMergeAvailability(ctu, mergedCTUPos) )
           {
             mergeCandidate = &(blkParams[mergedCTUPos]);
           }
@@ -354,16 +354,16 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
 
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
 
-  for(Int ctuRsAddr=0; ctuRsAddr< m_numCTUsPic; ctuRsAddr++)
+  for(Int ctu=0; ctu< m_numCTUsPic; ctu++)
   {
     SAOBlkParam* mergeList[NUM_SAO_MERGE_TYPES] = { NULL };
-    getMergeList(pic, ctuRsAddr, saoBlkParams, mergeList);
+    getMergeList(pic, ctu, saoBlkParams, mergeList);
 
-    reconstructBlkSAOParam(saoBlkParams[ctuRsAddr], mergeList);
+    reconstructBlkSAOParam(saoBlkParams[ctu], mergeList);
 
     for(Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
-      if(saoBlkParams[ctuRsAddr][compIdx].modeIdc != SAO_MODE_OFF)
+      if(saoBlkParams[ctu][compIdx].modeIdc != SAO_MODE_OFF)
       {
         m_picSAOEnabled[compIdx] = true;
       }
@@ -660,7 +660,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
   }
 }
 
-Void TComSampleAdaptiveOffset::offsetCTU(Int ctuRsAddr, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic)
+Void TComSampleAdaptiveOffset::offsetCTU(Int ctu, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic)
 {
   Bool isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail;
 
@@ -673,10 +673,10 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctuRsAddr, TComPicYuv* srcYuv, TCom
   if (bAllOff) return;
 
   //block boundary availability
-  pPic->getPicSym()->deriveLoopFilterBoundaryAvailibility(ctuRsAddr, isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail);
+  pPic->getPicSym()->deriveLoopFilterBoundaryAvailibility(ctu, isLeftAvail,isRightAvail,isAboveAvail,isBelowAvail,isAboveLeftAvail,isAboveRightAvail,isBelowLeftAvail,isBelowRightAvail);
 
-  Int yPos   = (ctuRsAddr / m_numCTUInWidth)*m_maxCUHeight;
-  Int xPos   = (ctuRsAddr % m_numCTUInWidth)*m_maxCUWidth;
+  Int yPos   = (ctu / m_numCTUInWidth)*m_maxCUHeight;
+  Int xPos   = (ctu % m_numCTUInWidth)*m_maxCUWidth;
   Int height = (yPos + m_maxCUHeight > m_picHeight)?(m_picHeight- yPos):m_maxCUHeight;
   Int width  = (xPos + m_maxCUWidth  > m_picWidth )?(m_picWidth - xPos):m_maxCUWidth;
 
@@ -727,9 +727,9 @@ Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
   TComPicYuv* resYuv = pDecPic->getPicYuvRec();
   TComPicYuv* srcYuv = m_tempPicYuv;
   resYuv->copyToPic(srcYuv);
-  for(Int ctuRsAddr= 0; ctuRsAddr < m_numCTUsPic; ctuRsAddr++)
+  for(Int ctu= 0; ctu < m_numCTUsPic; ctu++)
   {
-    offsetCTU(ctuRsAddr, srcYuv, resYuv, (pDecPic->getPicSym()->getSAOBlkParam())[ctuRsAddr], pDecPic);
+    offsetCTU(ctu, srcYuv, resYuv, (pDecPic->getPicSym()->getSAOBlkParam())[ctu], pDecPic);
   } //ctu
 }
 
@@ -755,9 +755,9 @@ Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
 
   if(bPCMFilter || pcPic->getSlice(0)->getPPS()->getTransquantBypassEnableFlag())
   {
-    for( UInt ctuRsAddr = 0; ctuRsAddr < pcPic->getNumberOfCtusInFrame() ; ctuRsAddr++ )
+    for( UInt uiCUAddr = 0; uiCUAddr < pcPic->getNumCUsInFrame() ; uiCUAddr++ )
     {
-      TComDataCU* pcCU = pcPic->getCtu(ctuRsAddr);
+      TComDataCU* pcCU = pcPic->getCU(uiCUAddr);
 
       xPCMCURestoration(pcCU, 0, 0);
     }
@@ -773,7 +773,7 @@ Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
 Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth )
 {
   TComPic* pcPic     = pcCU->getPic();
-  UInt uiCurNumParts = pcPic->getNumPartitionsInCtu() >> (uiDepth<<1);
+  UInt uiCurNumParts = pcPic->getNumPartInCU() >> (uiDepth<<1);
   UInt uiQNumParts   = uiCurNumParts>>2;
 
   // go to sub-CU
@@ -809,6 +809,12 @@ Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZ
  */
 Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID)
 {
+#if SCM__R0348_PALETTE_MODE
+  if (pcCU->getPLTModeFlag(uiAbsZorderIdx))
+  {
+    return;
+  }
+#endif
         TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
         UInt uiPcmLeftShiftBit;
   const UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
@@ -816,7 +822,7 @@ Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiA
   const UInt csy=pcPicYuvRec->getComponentScaleY(compID);
   const UInt uiOffset   = (uiMinCoeffSize*uiAbsZorderIdx)>>(csx+csy);
 
-        Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getCtuRsAddr(), uiAbsZorderIdx);
+        Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getAddr(), uiAbsZorderIdx);
   const Pel *piPcm = pcCU->getPCMSample(compID) + uiOffset;
   const UInt uiStride  = pcPicYuvRec->getStride(compID);
   const UInt uiWidth  = ((g_uiMaxCUWidth >> uiDepth) >> csx);

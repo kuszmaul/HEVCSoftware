@@ -115,6 +115,13 @@ public:
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
+#if SCM__R0348_PALETTE_MODE
+  Void  xEncodePLTPredIndicator ( UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
+  Void  xEncodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
+  Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
+  Void  xWritePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
 
@@ -136,6 +143,11 @@ protected:
 
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM__R0348_PALETTE_MODE
+  Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+  Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -143,6 +155,10 @@ public:
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -166,6 +182,13 @@ public:
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
+  Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM__R0186_INTRABC_BVD
+  Void codeIntraBCBvd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void estBvdBin0Cost          (Int *Bin0Cost);
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
   // -------------------------------------------------------------------------------------------------------------------
@@ -186,7 +209,9 @@ public:
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
   UInt                 m_uiLastQp;
-
+#if SCM__R0348_PALETTE_MODE
+  UInt* m_puiScanOrder;
+#endif
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -220,10 +245,24 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
+  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
-
+#if SCM__R0348_PALETTE_MODE
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
+#endif
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
+#endif
+#if SCM__R0186_INTRABC_BVD
+  ContextModel3DBuffer m_cIntraBCBVDSCModel;
+#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

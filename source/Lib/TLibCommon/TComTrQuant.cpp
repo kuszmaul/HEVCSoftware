@@ -1088,7 +1088,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
                                 TCoeff      * pSrc,
                                 TCoeff      * pDes,
 #if ADAPTIVE_QP_SELECTION
-                                TCoeff      *pArlDes,
+                                TCoeff      *&pArlDes,
 #endif
                                 TCoeff       &uiAbsSum,
                           const ComponentID   compID,
@@ -1340,7 +1340,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
                                 const UInt            uiStride,
                                       TCoeff       *  rpcCoeff,
 #if ADAPTIVE_QP_SELECTION
-                                      TCoeff       *  pcArlCoeff,
+                                      TCoeff       *& rpcArlCoeff,
 #endif
                                       TCoeff        & uiAbsSum,
                                 const QpParam       & cQP
@@ -1404,7 +1404,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
       xQuant( rTu, m_plTempCoeff, rpcCoeff,
 
 #if ADAPTIVE_QP_SELECTION
-              pcArlCoeff,
+              rpcArlCoeff,
 #endif
               uiAbsSum, compID, cQP );
 
@@ -1422,7 +1422,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 
 Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
                                   const ComponentID    compID,
-                                        Pel          *pcResidual,
+                                        Pel          *&rpcResidual,
                                   const UInt           uiStride,
                                         TCoeff       * pcCoeff,
                                   const QpParam       &cQP
@@ -1448,7 +1448,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
       const UInt lineOffset = subTURecurse.GetSectionNumber() * subTURecurse.getRect(compID).height;
 
-      Pel    *subTUResidual     = pcResidual + (lineOffset * uiStride);
+      Pel    *subTUResidual     = rpcResidual + (lineOffset * uiStride);
       TCoeff *subTUCoefficients = pcCoeff     + (lineOffset * subTURecurse.getRect(compID).width);
 
       invTransformNxN(subTURecurse, compID, subTUResidual, uiStride, subTUCoefficients, cQP DEBUG_STRING_PASS_INTO(psDebug));
@@ -1481,7 +1481,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     {
       for (UInt x = 0; x<uiWidth; x++, coefficientIndex++)
       {
-        pcResidual[(y * uiStride) + x] = Pel(pcCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex]);
+        rpcResidual[(y * uiStride) + x] = Pel(pcCoeff[rotateResidual ? (uiSizeMinus1 - coefficientIndex) : coefficientIndex]);
       }
     }
   }
@@ -1510,13 +1510,13 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
     if(pcCU->getTransformSkip(uiAbsPartIdx, compID))
     {
-      xITransformSkip( m_plTempCoeff, pcResidual, uiStride, rTu, compID );
+      xITransformSkip( m_plTempCoeff, rpcResidual, uiStride, rTu, compID );
 
 #if defined DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
-        printBlockToStream(ss, "###InvTran resi: ", pcResidual, uiWidth, uiHeight, uiStride);
+        printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
         (*psDebug)+=ss.str();
         (*psDebug)+="(<- was a Transform-skipped block)\n";
       }
@@ -1524,13 +1524,13 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     }
     else
     {
-      xIT( compID, rTu.useDST(compID), m_plTempCoeff, pcResidual, uiStride, uiWidth, uiHeight );
+      xIT( compID, rTu.useDST(compID), m_plTempCoeff, rpcResidual, uiStride, uiWidth, uiHeight );
 
 #if defined DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
-        printBlockToStream(ss, "###InvTran resi: ", pcResidual, uiWidth, uiHeight, uiStride);
+        printBlockToStream(ss, "###InvTran resi: ", rpcResidual, uiWidth, uiHeight, uiStride);
         (*psDebug)+=ss.str();
         (*psDebug)+="(<- was a Transformed block)\n";
       }
@@ -1539,12 +1539,12 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 
 #ifdef DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
-    printBlock(pcResidual, uiWidth, uiHeight, uiStride);
+    printBlock(rpcResidual, uiWidth, uiHeight, uiStride);
     g_debugCounter++;
 #endif
   }
 
-  invRdpcmNxN( rTu, compID, pcResidual, uiStride );
+  invRdpcmNxN( rTu, compID, rpcResidual, uiStride );
 }
 
 Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
@@ -1568,10 +1568,19 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           Pel           *rpcResidual = pResidual->getAddr( compID );
           UInt           uiAddr      = (tuRect.x0 + uiStride*tuRect.y0);
           Pel           *pResi       = rpcResidual + uiAddr;
-          TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
-
+          TCoeff        *rpcCoeff    = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+     QpParam cQP(*pcCU, compID);
+     if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
+     {
+        cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+        cQP.per = cQP.Qp/6;
+        cQP.rem= cQP.Qp%6;
+        adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+     }
+#else
     const QpParam cQP(*pcCU, compID);
-
+#endif
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
       DEBUG_STRING_NEW(sTemp)
@@ -1579,7 +1588,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
       std::string *psDebug=((DebugOptionList::DebugString_InvTran.getInt()&(pcCU->isIntra(absPartIdxTU)?1:(pcCU->isInter(absPartIdxTU)?2:4)))!=0) ? &sTemp : 0;
 #endif
 
-      invTransformNxN( rTu, compID, pResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
+      invTransformNxN( rTu, compID, pResi, uiStride, rpcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
 
 #ifdef DEBUG_STRING
       if (psDebug != 0)
@@ -1602,6 +1611,12 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
         crossComponentPrediction( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
     }
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+    if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
+    {
+      adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V:  - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+    }
+#endif 
   }
   else
   {
@@ -1975,7 +1990,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
                                                             TCoeff      * plSrcCoeff,
                                                             TCoeff      * piDstCoeff,
 #if ADAPTIVE_QP_SELECTION
-                                                            TCoeff      * piArlDstCoeff,
+                                                            TCoeff      *&piArlDstCoeff,
 #endif
                                                             TCoeff       &uiAbsSum,
                                                       const ComponentID   compID,
@@ -3333,5 +3348,33 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
     pResiT += strideT;
   }
 }
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TComTrQuant::adjustBitDepthandLambdaForColorTrans(Int delta_QP)
+{
+  double lamdbaAdjustRate = 1;
+  static int pairCheck = 0;
+
+  if (delta_QP < 0)
+  {
+    assert ( pairCheck == 0 );
+    pairCheck = 1;
+
+  }
+  else
+  {
+    assert ( pairCheck == 1 );
+    pairCheck = 0;
+  }
+  lamdbaAdjustRate = pow(2.0, delta_QP / 3.0);
+
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) 
+  {
+    m_lambdas[component] = m_lambdas[component] * lamdbaAdjustRate;
+  }
+  m_dLambda = m_dLambda * lamdbaAdjustRate;
+}
+#endif
+
 
 //! \}

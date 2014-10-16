@@ -41,7 +41,10 @@
 #include "TComTU.h"
 #include "Debug.h"
 #include "TComPrediction.h"
-
+#if SCM__R0348_PALETTE_MODE
+#include <cmath>
+#include <algorithm>
+#endif
 //! \ingroup TLibCommon
 //! \{
 
@@ -126,8 +129,8 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
   assert(iTUHeightInUnits > 0 && iTUWidthInUnits > 0);
 
-  const Int  iPartIdxStride   = pcCU->getPic()->getNumPartInCtuWidth();
-  const UInt uiPartIdxLT      = pcCU->getZorderIdxInCtu() + uiZorderIdxInPart;
+  const Int  iPartIdxStride   = pcCU->getPic()->getNumPartInWidth(); //NOTE: RExt - despite the name "TComPic::getNumPartInWidth", this gets the number of parts in an **LCU** width, not the picture width
+  const UInt uiPartIdxLT      = pcCU->getZorderIdxInCU() + uiZorderIdxInPart;
   const UInt uiPartIdxRT      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] +   iTUWidthInUnits  - 1                   ];
   const UInt uiPartIdxLB      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] + ((iTUHeightInUnits - 1) * iPartIdxStride)];
 
@@ -157,7 +160,7 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
 
   {
     Pel *piAdiTemp   = m_piYuvExt[compID][PRED_BUF_UNFILTERED];
-    Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiZorderIdxInPart);
+    Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
 #if RExt__O0043_BEST_EFFORT_DECODING
     fillReferenceSamples (g_bitDepthInStream[chType], g_bitDepthInStream[chType] - g_bitDepth[chType], pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
 #else
@@ -562,7 +565,7 @@ Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
   TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
-    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isIntra( uiPartAboveLeft ) );
+    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isConstrainedIntra( uiPartAboveLeft ) );
   }
   else
   {
@@ -585,7 +588,7 @@ Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool
     TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAbove && pcCUAbove->isIntra( uiPartAbove ) )
+      if ( pcCUAbove && pcCUAbove->isConstrainedIntra( uiPartAbove ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -616,7 +619,7 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
 {
   const UInt uiRasterPartBegin = g_auiZscanToRaster[uiPartIdxLT];
   const UInt uiRasterPartEnd = g_auiZscanToRaster[uiPartIdxLB]+1;
-  const UInt uiIdxStep = pcCU->getPic()->getNumPartInCtuWidth();
+  const UInt uiIdxStep = pcCU->getPic()->getNumPartInWidth();
   Bool *pbValidFlags = bValidFlags;
   Int iNumIntra = 0;
 
@@ -626,7 +629,7 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
     TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCULeft && pcCULeft->isIntra( uiPartLeft ) )
+      if ( pcCULeft && pcCULeft->isConstrainedIntra( uiPartLeft ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -666,7 +669,7 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
     TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAboveRight && pcCUAboveRight->isIntra( uiPartAboveRight ) )
+      if ( pcCUAboveRight && pcCUAboveRight->isConstrainedIntra( uiPartAboveRight ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -696,7 +699,7 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
 
 Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
 {
-  const UInt uiNumUnitsInPU = (g_auiZscanToRaster[uiPartIdxLB] - g_auiZscanToRaster[uiPartIdxLT]) / pcCU->getPic()->getNumPartInCtuWidth() + 1;
+  const UInt uiNumUnitsInPU = (g_auiZscanToRaster[uiPartIdxLB] - g_auiZscanToRaster[uiPartIdxLT]) / pcCU->getPic()->getNumPartInWidth() + 1;
   Bool *pbValidFlags = bValidFlags;
   Int iNumIntra = 0;
 
@@ -706,7 +709,7 @@ Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, 
     TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUBelowLeft && pcCUBelowLeft->isIntra( uiPartBelowLeft ) )
+      if ( pcCUBelowLeft && pcCUBelowLeft->isConstrainedIntra( uiPartBelowLeft ) )
       {
         iNumIntra++;
         *pbValidFlags = true;

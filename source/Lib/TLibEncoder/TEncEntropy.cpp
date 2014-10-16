@@ -89,6 +89,25 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
   return;
 }
 
+#if SCM__R0348_PALETTE_MODE
+Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  {
+    if ( bRD )
+    {
+      uiAbsPartIdx = 0;
+    }
+
+    m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codePLTModeSyntax( pcCU, uiAbsPartIdx, 3 );
+    }
+  }
+}
+#endif
+
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -160,10 +179,41 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
   if ( pcCU->getSlice()->isIntra() )
   {
+#if SCM__R0348_PALETTE_MODE
+    if ( pcCU->isIntra( uiAbsPartIdx ) )
+    {
+      encodePLTModeInfo( pcCU, uiAbsPartIdx );
+      if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+      {
+        if ( !bRD )
+        {
+          pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+        }
+      }
+    }
+#endif
+    return;
+  }
+
+  if( pcCU->isIntraBC( uiAbsPartIdx ) )
+  {
     return;
   }
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
+#if SCM__R0348_PALETTE_MODE
+  if(pcCU->isIntra( uiAbsPartIdx ))
+  {
+    encodePLTModeInfo (pcCU, uiAbsPartIdx);
+    if (pcCU->getPLTModeFlag(uiAbsPartIdx))
+    {
+      if (!bRD)
+      {
+        pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+      }
+    }
+  }
+#endif
 }
 
 // Split mode
@@ -194,6 +244,10 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
+Void TEncEntropy::encodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  m_pcEntropyCoderIf->codePartSizeIntraBC( pcCU, uiAbsPartIdx );
+}
 
 /** Encode I_PCM information.
  * \param pcCU pointer to CU
@@ -341,7 +395,7 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, Bool& codeChromaQpAdj, TComT
 
     if ( bHaveACodedBlock )
     {
-      // dQP: only for CTU once
+      // dQP: only for LCU once
       if ( pcCU->getSlice()->getPPS()->getUseDQP() )
       {
         if ( bCodeDQP )
@@ -432,9 +486,24 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
+Void TEncEntropy::encodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  m_pcEntropyCoderIf->codeIntraBCFlag( pcCU, uiAbsPartIdx );
+}
+
+Void TEncEntropy::encodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  m_pcEntropyCoderIf->codeIntraBC( pcCU, uiAbsPartIdx );
+}
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+  assert ( !pcCU->isIntraBC( uiAbsPartIdx ) );
+
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
@@ -444,7 +513,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
       if (enable4ChromaPUsInIntraNxNCU(pcCU->getPic()->getChromaFormat()) && pcCU->getPartitionSize( uiAbsPartIdx )==SIZE_NxN)
       {
-        UInt uiPartOffset = ( pcCU->getPic()->getNumPartitionsInCtu() >> ( pcCU->getDepth(uiAbsPartIdx) << 1 ) ) >> 2;
+        UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(uiAbsPartIdx) << 1 ) ) >> 2;
         encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset   );
         encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset*2 );
         encodeIntraDirModeChroma( pcCU, uiAbsPartIdx + uiPartOffset*3 );
@@ -671,7 +740,12 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
+  {
+    m_pcEntropyCoderIf->codeColorTransformFlag( pcCU, uiAbsPartIdx );
+  }
+#endif
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);

@@ -180,9 +180,11 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
     WRITE_UVLC( pcPPS->getMaxCuDQPDepth(), "diff_cu_qp_delta_depth" );
   }
 
-  WRITE_SVLC( COMPONENT_Cb<numberValidComponents ?  (pcPPS->getQpOffset(COMPONENT_Cb)) : 0, "pps_cb_qp_offset" );
-  WRITE_SVLC( COMPONENT_Cr<numberValidComponents ?  (pcPPS->getQpOffset(COMPONENT_Cr)) : 0, "pps_cr_qp_offset" );
 
+  for (UInt component = COMPONENT_Cb; component < 3; component++) // NOTE: RExt - replaced limit with 3 since PPS parsing should not know about chroma format
+  {
+    WRITE_SVLC( component<numberValidComponents ?  (pcPPS->getQpOffset(ComponentID(component))) : 0, "cb-cr_qp_offset" );
+  }
   assert(numberValidComponents <= 3); // NOTE: RExt - if more than 3 components (eg 4:4:4:4), then additional offsets will have to go in extension area...
 
   WRITE_FLAG( pcPPS->getSliceChromaQpFlag() ? 1 : 0,          "pps_slice_chroma_qp_offsets_present_flag" );
@@ -590,6 +592,16 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
        || pcSPS->getAlignCABACBeforeBypass()
     );
 
+  sps_extension_flags[SPS_EXT__SCC] = (
+        pcSPS->getUseIntraBlockCopy()
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+     || pcSPS->getUseColorTrans()
+#endif
+#if SCM__R0348_PALETTE_MODE
+     || pcSPS->getUsePLTMode()
+#endif
+    );
+
   // Other SPS extension flags checked here.
 
   for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
@@ -623,6 +635,15 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_prediction_weighting_flag" );
             WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "golomb_rice_parameter_adaptation_flag" );
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "cabac_bypass_alignment_enabled_flag" );
+            break;
+          case SPS_EXT__SCC:
+            WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+            WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
+#endif
+#if SCM__R0348_PALETTE_MODE
+            WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
+#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -722,18 +743,27 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   //              separate_colour_plane_flag is 1.
 
   //calculate number of bits required for slice address
-  Int maxSliceSegmentAddress = pcSlice->getPic()->getNumberOfCtusInFrame();
+  Int maxSliceSegmentAddress = pcSlice->getPic()->getNumCUsInFrame();
   Int bitsSliceSegmentAddress = 0;
   while(maxSliceSegmentAddress>(1<<bitsSliceSegmentAddress))
   {
     bitsSliceSegmentAddress++;
   }
-  const Int ctuTsAddress = (pcSlice->isNextSlice()) ? pcSlice->getSliceCurStartCtuTsAddr() : pcSlice->getSliceSegmentCurStartCtuTsAddr();
-
+  Int ctuAddress;
+  if (pcSlice->isNextSlice())
+  {
+    // Calculate slice address
+    ctuAddress = (pcSlice->getSliceCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
+  }
+  else
+  {
+    // Calculate slice address
+    ctuAddress = (pcSlice->getSliceSegmentCurStartCUAddr()/pcSlice->getPic()->getNumPartInCU());
+  }
   //write slice address
-  const Int sliceSegmentRsAddress = pcSlice->getPic()->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddress);
+  Int sliceSegmentAddress = pcSlice->getPic()->getPicSym()->getCUOrderMap(ctuAddress);
 
-  WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
+  WRITE_FLAG( sliceSegmentAddress==0, "first_slice_segment_in_pic_flag" );
   if ( pcSlice->getRapPicFlag() )
   {
 #if SETTING_NO_OUT_PIC_PRIOR
@@ -744,13 +774,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "slice_pic_parameter_set_id" );
   pcSlice->setDependentSliceSegmentFlag(!pcSlice->isNextSlice());
-  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentRsAddress!=0) )
+  if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentAddress!=0) )
   {
     WRITE_FLAG( pcSlice->getDependentSliceSegmentFlag() ? 1 : 0, "dependent_slice_segment_flag" );
   }
-  if(sliceSegmentRsAddress>0)
+  if(sliceSegmentAddress>0)
   {
-    WRITE_CODE( sliceSegmentRsAddress, bitsSliceSegmentAddress, "slice_segment_address" );
+    WRITE_CODE( sliceSegmentAddress, bitsSliceSegmentAddress, "slice_segment_address" );
   }
   if ( !pcSlice->getDependentSliceSegmentFlag() )
   {
@@ -1147,8 +1177,9 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   if ( pSlice->getPPS()->getEntropyCodingSyncEnabledFlag() )
   {
     UInt* pSubstreamSizes                 = pSlice->getSubstreamSizes();
-    const Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurStartCtuTsAddr(), false, pSlice);
-    const Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForCtuAddr(pSlice->getSliceSegmentCurEndCtuTsAddr()-1, false, pSlice);
+    Int  maxNumParts                      = pSlice->getPic()->getNumPartInCU();
+    Int  numZeroSubstreamsAtStartOfSlice  = pSlice->getPic()->getSubstreamForLCUAddr(pSlice->getSliceSegmentCurStartCUAddr()/maxNumParts, false, pSlice);
+    Int  subStreamOfLastSegmentOfSlice    = pSlice->getPic()->getSubstreamForLCUAddr((pSlice->getSliceSegmentCurEndCUAddr()/maxNumParts)-1, false, pSlice);
     numEntryPointOffsets                  = subStreamOfLastSegmentOfSlice-numZeroSubstreamsAtStartOfSlice;
     pSlice->setNumEntryPointOffsets(numEntryPointOffsets);
     entryPointOffset           = new UInt[numEntryPointOffsets];
@@ -1222,6 +1253,11 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   assert(0);
 }
 
+Void TEncCavlc::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
 Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1246,6 +1282,18 @@ Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx 
 {
   assert(0);
 }
+
+#if SCM__R0348_PALETTE_MODE
+Void TEncCavlc:: codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -1305,6 +1353,29 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+Void TEncCavlc::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TEncCavlc::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+#if SCM__R0186_INTRABC_BVD
+Void TEncCavlc::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -1553,5 +1624,12 @@ Void TEncCavlc::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
  {
    assert(0);
  }
+
+#if SCM__R0348_PALETTE_MODE
+Void TEncCavlc:: codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 //! \}

@@ -53,7 +53,7 @@ TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, co
     mSplitMode(DONT_SPLIT),
     mAbsPartIdxCU(absPartIdxCU),
     mAbsPartIdxTURelCU(0),
-    mAbsPartIdxStep(pcCU->getPic()->getNumPartitionsInCtu() >> (pcCU->getDepth(absPartIdxCU)<<1)),
+    mAbsPartIdxStep(pcCU->getPic()->getNumPartInCU() >> (pcCU->getDepth(absPartIdxCU)<<1)),
     mpcCU(pcCU),
     mLog2TrLumaSize(0),
     mpParent(NULL)
@@ -220,13 +220,13 @@ Bool TComTU::useDST(const ComponentID compID)
         TComDataCU *const pcCU       = getCU();
   const UInt              absPartIdx = GetAbsPartIdxTU(compID);
 
-  return isLuma(compID) && pcCU->isIntra(absPartIdx);
+  return isLuma(compID) && (pcCU->isIntra(absPartIdx) || pcCU->isIntraBC(absPartIdx));
 }
 
 
 Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)
 {
-  // rotation only for 4x4 intra, and is only used for non-transformed blocks (the latter is not checked here)
+  // rotation only for 4x4 intra (not intra-bc), and is only used for non-transformed blocks (the latter is not checked here)
   return    getCU()->getSlice()->getSPS()->getUseResidualRotation()
          && mRect[compID].width == 4
          && getCU()->isIntra(GetAbsPartIdxTU());

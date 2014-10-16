@@ -78,6 +78,10 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  TComYuv**               m_ppcNoCorrYuv;
+#endif
+
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
   Bool                    m_CodeChromaQpAdjFlag;
@@ -110,15 +114,19 @@ public:
   /// destroy internal buffers
   Void  destroy             ();
 
-  /// CTU analysis function
-  Void  compressCtu         ( TComDataCU*  pCtu );
+  /// CU analysis function
+#if SCM__R0348_PALETTE_MODE
+  Void  compressCU          ( TComDataCU*& rpcCU, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE] );
+#else
+  Void  compressCU          ( TComDataCU*&  rpcCU );
+#endif
 
-  /// CTU encoding function
-  Void  encodeCtu           ( TComDataCU*  pCtu );
+  /// CU encoding function
+  Void  encodeCU            ( TComDataCU*    pcCU );
 
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 
-  Int   updateCtuDataISlice ( TComDataCU* pCtu, Int width, Int height );
+  Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
 
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
@@ -132,7 +140,11 @@ protected:
   Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest) DEBUG_STRING_PASS_INTO(Bool bAddSizeInfo=true));
 
+#if SCM__R0102_HASH_ME_FIX
+  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode, Bool checkSkipOnly );
+#else
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode );
+#endif
 
 #if AMP_MRG
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false  );
@@ -140,16 +152,45 @@ protected:
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
 
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
                               TComDataCU *&rpcTempCU,
                               Double      &cost,
                               PartSize     ePartSize
                               DEBUG_STRING_FN_DECLARE(sDebug)
+                              ,Bool         bRGBIntraModeReuse = false
+                             );
+
+  Void  xCheckRDCostIntraCSC ( TComDataCU *&rpcBestCU,
+                               TComDataCU *&rpcTempCU,
+                               Double      &cost,
+                               PartSize    ePartSize
+                               DEBUG_STRING_FN_DECLARE(sDebug)
+                              );
+#else
+  Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
+                              TComDataCU *&rpcTempCU,
+                              Double      &cost,
+                              PartSize     ePartSize
+                              DEBUG_STRING_FN_DECLARE(sDebug)
+                             );
+#endif
+
+  Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
+                              TComDataCU*& rpcTempCU,
+                              Bool         bUse1DSearchFor8x8
+                             ,PartSize     eSize
+                             ,Double&      rdCost
+                              DEBUG_STRING_FN_DECLARE(sDebug)
                             );
 
   Void  xCheckDQP           ( TComDataCU*  pcCU );
+  Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+#if SCM__R0348_PALETTE_MODE
+  Void  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool bCheckPLTSharingMode );
+#endif
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
   Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );
   Void  xCopyYuv2Tmp        ( UInt uhPartUnitIdx, UInt uiDepth );
@@ -162,19 +203,19 @@ protected:
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
-  Void xCtuCollectARLStats(TComDataCU* pCtu);
+  Void xLcuCollectARLStats(TComDataCU* rpcCU);
   Int  xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
 #endif
 
 #if AMP_ENC_SPEEDUP
 #if AMP_MRG
-  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
 #else
-  Void deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
+  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
 #endif
 #endif
 
-  Void  xFillPCMBuffer     ( TComDataCU* pCU, TComYuv* pOrgYuv );
+  Void  xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv );
 };
 
 //! \}

@@ -61,6 +61,9 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+#if SCM__R0147_RGB_YUV_RD_ENC
+  m_apcPicYuvCSC = NULL;
+#endif
 }
 
 TComPic::~TComPic()
@@ -94,6 +97,8 @@ Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UIn
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
+  m_hashMap.clearAll();
+
   return;
 }
 
@@ -116,52 +121,75 @@ Void TComPic::destroy()
     }
   }
 
+  m_hashMap.clearAll();
+#if SCM__R0147_RGB_YUV_RD_ENC
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
+  }
+#endif
+
+
   deleteSEIs(m_SEIs);
 }
 
 Void TComPic::compressMotion()
 {
   TComPicSym* pPicSym = getPicSym();
-  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getNumberOfCtusInFrame(); uiCUAddr++ )
+  for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
   {
-    TComDataCU* pCtu = pPicSym->getCtu(uiCUAddr);
-    pCtu->compressMV();
+    TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
+    pcCU->compressMV();
   }
 }
 
 Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
 {
-  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCtuTsToRsAddrMap(getCtu(currAddr)->getSlice()->getSliceCurStartCtuTsAddr()));
+  Bool mergeCtbInSliceSeg = (mergeAddr >= getPicSym()->getCUOrderMap(getCU(currAddr)->getSlice()->getSliceCurStartCUAddr()/getNumPartInCU()));
   Bool mergeCtbInTile     = (getPicSym()->getTileIdxMap(mergeAddr) == getPicSym()->getTileIdxMap(currAddr));
   return (mergeCtbInSliceSeg && mergeCtbInTile);
 }
 
-UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
+UInt TComPic::getSubstreamForLCUAddr(const UInt uiLCUAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
 {
-  UInt subStrm;
+  const Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
+  UInt uiSubStrm;
 
-  if (pcSlice->getPPS()->getNumSubstreams() > 1) // wavefronts, and possibly tiles being used.
+  if (iNumSubstreams > 1) // wavefronts, and possibly tiles being used.
   {
-    const TComPicSym &picSym            = *(getPicSym());
-    const UInt ctuRsAddr                = bAddressInRaster?ctuAddr : picSym.getCtuTsToRsAddrMap(ctuAddr);
-    const UInt frameWidthInCtus         = picSym.getFrameWidthInCtus();
-    const UInt tileIndex                = picSym.getTileIdxMap(ctuRsAddr);
-    const UInt numTileColumns           = (picSym.getNumTileColumnsMinus1()+1);
-    const TComTile *pTile               = picSym.getTComTile(tileIndex);
-    const UInt firstCtuRsAddrOfTile     = pTile->getFirstCtuRsAddr();
-    const UInt tileYInCtus              = firstCtuRsAddrOfTile / frameWidthInCtus;
-    // independent tiles => substreams are "per tile"
-    const UInt ctuLine                  = ctuRsAddr / frameWidthInCtus;
-    const UInt startingSubstreamForTile =(tileYInCtus*numTileColumns) + (pTile->getTileHeightInCtus()*(tileIndex%numTileColumns));
-    subStrm = startingSubstreamForTile + (ctuLine - tileYInCtus);
+    TComPicSym &picSym=*(getPicSym());
+    const UInt uiLCUAddrRaster = bAddressInRaster?uiLCUAddr : picSym.getCUOrderMap(uiLCUAddr);
+    const UInt uiWidthInLCUs  = picSym.getFrameWidthInCU();
+    const UInt uiTileIndex=picSym.getTileIdxMap(uiLCUAddrRaster);
+    const UInt widthInTiles=(picSym.getNumColumnsMinus1()+1);
+    TComTile *pTile=picSym.getTComTile(uiTileIndex);
+    const UInt uiTileStartLCU = pTile->getFirstCUAddr();
+    const UInt uiTileLCUY = uiTileStartLCU / uiWidthInLCUs;
+    // independent tiles => substreams are "per tile".  iNumSubstreams has already been multiplied.
+    const UInt uiLin = uiLCUAddrRaster / uiWidthInLCUs;
+          UInt uiStartingSubstreamForTile=(uiTileLCUY*widthInTiles) + (pTile->getTileHeight()*(uiTileIndex%widthInTiles));
+    uiSubStrm = uiStartingSubstreamForTile + (uiLin-uiTileLCUY);
   }
   else
   {
     // dependent tiles => substreams are "per frame".
-    subStrm = 0;
+    uiSubStrm = 0;//uiLin % iNumSubstreams; // x modulo 1 = 0 !
   }
-  return subStrm;
+  return uiSubStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64 );
+}
 
 //! \}

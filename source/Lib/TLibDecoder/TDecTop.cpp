@@ -52,7 +52,7 @@ TDecTop::TDecTop()
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
   {
-    g_hTrace = fopen( "TraceDec.txt", "wb" );
+    g_hTrace = fopen( "TraceDec_RExt.txt", "wb" );
   }
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
@@ -197,7 +197,7 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
     return;
   }
 
-  TComPic*   pcPic         = m_pcPic;
+  TComPic*&   pcPic         = m_pcPic;
 
   // Execute Deblock + Cleanup
 
@@ -213,15 +213,15 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
 }
 
 #if SETTING_NO_OUT_PIC_PRIOR
-Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>* pcListPic)
+Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic)
 {
-  if (!pcListPic || !m_isNoOutputPriorPics) return;
+  if (!rpcListPic || !m_isNoOutputPriorPics) return;
 
-  TComList<TComPic*>::iterator  iterPic   = pcListPic->begin();
+  TComList<TComPic*>::iterator  iterPic   = rpcListPic->begin();
 
-  while (iterPic != pcListPic->end())
+  while (iterPic != rpcListPic->end())
   {
-    TComPic* pcPicTmp = *(iterPic++);
+    TComPic*& pcPicTmp = *(iterPic++);
     if (m_lastPOCNoOutputPriorPics != pcPicTmp->getPOC())
     {
       pcPicTmp->setOutputMark(false);
@@ -265,9 +265,9 @@ Void TDecTop::xCreateLostPicture(Int iLostPoc)
     }
   }
   cFillPic->setCurrSliceIdx(0);
-  for(Int ctuRsAddr=0; ctuRsAddr<cFillPic->getNumberOfCtusInFrame(); ctuRsAddr++)
+  for(Int i=0; i<cFillPic->getNumCUsInFrame(); i++)
   {
-    cFillPic->getCtu(ctuRsAddr)->initCtu(cFillPic, ctuRsAddr);
+    cFillPic->getCU(i)->initCU(cFillPic,i);
   }
   cFillPic->getSlice(0)->setReferenced(true);
   cFillPic->getSlice(0)->setPOC(iLostPoc);
@@ -350,6 +350,7 @@ Void TDecTop::xActivateParameterSets()
 
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
 {
+  TComPic*& pcPic = m_pcPic;
   m_apcSlicePilot->initSlice();
 
   if (m_bFirstSliceInPicture)
@@ -358,7 +359,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
   else
   {
-    m_apcSlicePilot->copySliceInfo( m_pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
+    m_apcSlicePilot->copySliceInfo( pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
   }
   m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
 
@@ -462,14 +463,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_prevSliceSkipped = false;
 
   //we should only get a different poc for a new picture (with CTU address==0)
-  if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (m_apcSlicePilot->getSliceCurStartCtuTsAddr() != 0))
+  if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (m_apcSlicePilot->getSliceCurStartCUAddr() != 0))
   {
     printf ("Warning, the first slice of a picture might have been lost!\n");
   }
 
   // exit when a new picture is found
 #if FIX_OUTPUT_ORDER_BEHAVIOR
-  if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCtuTsAddr() == 0 && !m_bFirstSliceInPicture) )
+  if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) )
 #else
   if (m_apcSlicePilot->isNextSlice() && (m_apcSlicePilot->getSliceCurStartCUAddr() == 0 && !m_bFirstSliceInPicture) && !m_bFirstSliceInSequence )
 #endif
@@ -509,7 +510,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cPrediction.initTempBuff(m_apcSlicePilot->getSPS()->getChromaFormatIdc());
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
     //  Get a new picture buffer
-    xGetNewPicBuffer (m_apcSlicePilot, m_pcPic);
+    xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
     Bool isField = false;
     Bool isTff = false;
@@ -531,7 +532,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_pcPic->setTopField(isTff);
 
     // transfer any SEI messages that have been received to the picture
-    m_pcPic->setSEIs(m_SEIs);
+    pcPic->setSEIs(m_SEIs);
     m_SEIs.clear();
 
     // Recursive structure
@@ -547,7 +548,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     if(!m_SEIs.empty())
     {
       // Currently only decoding Unit SEI message occurring between VCL NALUs copied
-      SEIMessages &picSEI = m_pcPic->getSEIs();
+      SEIMessages &picSEI = pcPic->getSEIs();
       SEIMessages decodingUnitInfos = extractSeisByType (m_SEIs, SEI::DECODING_UNIT_INFO);
       picSEI.insert(picSEI.end(), decodingUnitInfos.begin(), decodingUnitInfos.end());
       deleteSEIs(m_SEIs);
@@ -558,35 +559,44 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   TComSlice*  pcSlice = m_apcSlicePilot;
   Bool bNextSlice     = pcSlice->isNextSlice();
 
-  m_pcPic->getPicSym()->initTiles(pcSlice->getPPS());
-  m_pcPic->getPicSym()->initCtuTsRsAddrMaps();
+  UInt i;
+  pcPic->getPicSym()->initTiles(pcSlice->getPPS());
 
-  // When decoding the slice header, the stored start and end addresses were actually RS addresses, not TS addresses.
-  // Now, having set up the maps, convert them to the correct form.
-  pcSlice->setSliceSegmentCurStartCtuTsAddr( m_pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceSegmentCurStartCtuTsAddr()) );
-  pcSlice->setSliceSegmentCurEndCtuTsAddr( m_pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceSegmentCurEndCtuTsAddr()) );
+  //generate the Coding Order Map and Inverse Coding Order Map
+  UInt uiEncCUAddr;
+  for(i=0, uiEncCUAddr=0; i<pcPic->getPicSym()->getNumberOfCUsInFrame(); i++, uiEncCUAddr = pcPic->getPicSym()->xCalculateNxtCUAddr(uiEncCUAddr))
+  {
+    pcPic->getPicSym()->setCUOrderMap(i, uiEncCUAddr);
+    pcPic->getPicSym()->setInverseCUOrderMap(uiEncCUAddr, i);
+  }
+  pcPic->getPicSym()->setCUOrderMap(pcPic->getPicSym()->getNumberOfCUsInFrame(), pcPic->getPicSym()->getNumberOfCUsInFrame());
+  pcPic->getPicSym()->setInverseCUOrderMap(pcPic->getPicSym()->getNumberOfCUsInFrame(), pcPic->getPicSym()->getNumberOfCUsInFrame());
+
+  //convert the start and end CU addresses of the slice and dependent slice into encoding order
+  pcSlice->setSliceSegmentCurStartCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurStartCUAddr()) );
+  pcSlice->setSliceSegmentCurEndCUAddr( pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceSegmentCurEndCUAddr()) );
   if(pcSlice->isNextSlice())
   {
-    pcSlice->setSliceCurStartCtuTsAddr(m_pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceCurStartCtuTsAddr()));
-    pcSlice->setSliceCurEndCtuTsAddr(m_pcPic->getPicSym()->getCtuRsToTsAddrMap(pcSlice->getSliceCurEndCtuTsAddr()));
+    pcSlice->setSliceCurStartCUAddr(pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceCurStartCUAddr()));
+    pcSlice->setSliceCurEndCUAddr(pcPic->getPicSym()->getPicSCUEncOrder(pcSlice->getSliceCurEndCUAddr()));
   }
 
   if (m_bFirstSliceInPicture)
   {
-    if(m_pcPic->getNumAllocatedSlice() != 1)
+    if(pcPic->getNumAllocatedSlice() != 1)
     {
-      m_pcPic->clearSliceBuffer();
+      pcPic->clearSliceBuffer();
     }
   }
   else
   {
-    m_pcPic->allocateNewSlice();
+    pcPic->allocateNewSlice();
   }
-  assert(m_pcPic->getNumAllocatedSlice() == (m_uiSliceIdx + 1));
-  m_apcSlicePilot = m_pcPic->getPicSym()->getSlice(m_uiSliceIdx);
-  m_pcPic->getPicSym()->setSlice(pcSlice, m_uiSliceIdx);
+  assert(pcPic->getNumAllocatedSlice() == (m_uiSliceIdx + 1));
+  m_apcSlicePilot = pcPic->getPicSym()->getSlice(m_uiSliceIdx);
+  pcPic->getPicSym()->setSlice(pcSlice, m_uiSliceIdx);
 
-  m_pcPic->setTLayer(nalu.m_temporalId);
+  pcPic->setTLayer(nalu.m_temporalId);
 
   if (bNextSlice)
   {
@@ -637,7 +647,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->setRefPOCList();
   }
 
-  m_pcPic->setCurrSliceIdx(m_uiSliceIdx);
+  pcPic->setCurrSliceIdx(m_uiSliceIdx);
   if(pcSlice->getSPS()->getScalingListFlag())
   {
     pcSlice->setScalingList ( pcSlice->getSPS()->getScalingList()  );
@@ -659,7 +669,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 
   //  Decode a picture
-  m_cGopDecoder.decompressSlice(nalu.m_Bitstream, m_pcPic);
+  m_cGopDecoder.decompressSlice(nalu.m_Bitstream, pcPic);
 
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;

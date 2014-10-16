@@ -83,24 +83,35 @@ public:
   /// destroy internal buffers
   Void  destroy                 ();
 
-  /// decode Ctu information
-  Void  decodeCtu               ( TComDataCU* pCtu, UInt& ruiIsLast );
+  /// decode CU information
+  Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast );
 
-  /// reconstruct Ctu information
-  Void  decompressCtu           ( TComDataCU* pCtu );
+  /// reconstruct CU information
+  Void  decompressCU            ( TComDataCU* pcCU );
 
 protected:
 
   Void xDecodeCU                ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Void xFinishDecodeCU          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
-  Bool xDecodeSliceEnd          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
+  Bool xDecodeSliceEnd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
+  Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-
+  Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
+#if SCM__R0348_PALETTE_MODE
+  Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
+  Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
+  Void xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID);
+#endif
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
   Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
+  Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
+#endif
 
   Void xReconPCM                ( TComDataCU* pcCU, UInt uiDepth );
 

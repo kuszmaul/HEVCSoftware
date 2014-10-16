@@ -152,10 +152,9 @@ class TComScalingList
 public:
   TComScalingList();
   virtual ~TComScalingList();
-  Void     setScalingListPresentFlag      (Bool b)                             { m_scalingListPresentFlag = b;    }
-  Bool     getScalingListPresentFlag      ()                                   { return m_scalingListPresentFlag; }
-  Int*           getScalingListAddress    (UInt sizeId, UInt listId)           { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
-  const Int*     getScalingListAddress    (UInt sizeId, UInt listId) const     { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
+  Void     setScalingListPresentFlag    (Bool b)                               { m_scalingListPresentFlag = b;    }
+  Bool     getScalingListPresentFlag    ()                                     { return m_scalingListPresentFlag; }
+  Int*     getScalingListAddress          (UInt sizeId, UInt listId)           { return m_scalingListCoef[sizeId][listId]; } //!< get matrix coefficient
   Bool     checkPredMode                  (UInt sizeId, UInt listId);
   Void     setRefMatrixId                 (UInt sizeId, UInt listId, UInt u)   { m_refMatrixId[sizeId][listId] = u;    }     //!< set reference matrix ID
   UInt     getRefMatrixId                 (UInt sizeId, UInt listId)           { return m_refMatrixId[sizeId][listId]; }     //!< get reference matrix ID
@@ -163,7 +162,7 @@ public:
   Void     processDefaultMatrix           (UInt sizeId, UInt listId);
   Void     setScalingListDC               (UInt sizeId, UInt listId, UInt u)   { m_scalingListDC[sizeId][listId] = u; }      //!< set DC value
 
-  Int      getScalingListDC               (UInt sizeId, UInt listId) const     { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
+  Int      getScalingListDC               (UInt sizeId, UInt listId)           { return m_scalingListDC[sizeId][listId]; }   //!< get DC value
   Void     checkDcOfMatrix                ();
   Void     processRefMatrix               (UInt sizeId, UInt listId , UInt refListId );
   Bool     xParseScalingList              (Char* pchFile);
@@ -171,7 +170,6 @@ public:
 private:
   Void     init                    ();
   Void     destroy                 ();
-  Void     outputScalingLists(std::ostream &os) const;
   Int      m_scalingListDC               [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< the DC value of the matrix coefficient for 16x16
   Bool     m_useDefaultScalingMatrixFlag [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< UseDefaultScalingMatrixFlag
   UInt     m_refMatrixId                 [SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]; //!< RefMatrixID
@@ -306,9 +304,9 @@ public:
   ,m_dpbOutputDelayDuLengthMinus1(0)
   ,m_bitRateScale(0)
   ,m_cpbSizeScale(0)
-  ,m_initialCpbRemovalDelayLengthMinus1(23)
-  ,m_cpbRemovalDelayLengthMinus1(23)
-  ,m_dpbOutputDelayLengthMinus1(23)
+  ,m_initialCpbRemovalDelayLengthMinus1(0)
+  ,m_cpbRemovalDelayLengthMinus1(0)
+  ,m_dpbOutputDelayLengthMinus1(0)
   {}
 
   virtual ~TComHRD() {}
@@ -748,11 +746,18 @@ private:
   Int         m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
   Int         m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
   Bool        m_useExtendedPrecision;
+  Bool        m_useIntraBlockCopy;
   Bool        m_useHighPrecisionPredictionWeighting;
   Bool        m_useResidualRotation;
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool        m_useColorTrans;
+#endif
+#if SCM__R0348_PALETTE_MODE
+  Bool        m_usePaletteMode;
+#endif
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
@@ -879,6 +884,8 @@ public:
   Void      setQpBDOffset   (ChannelType type, Int i)  { m_qpBDOffset[type] = i;      }
   Bool      getUseExtendedPrecision()          const   { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision(Bool value)        { m_useExtendedPrecision = value; }
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
 
@@ -896,7 +903,14 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
+  Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
+#endif
+#if SCM__R0348_PALETTE_MODE
+  Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
+  Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
+#endif
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
 
@@ -1246,15 +1260,15 @@ private:
   UInt        m_uiTLayer;
   Bool        m_bTLayerSwitchingFlag;
 
-  SliceConstraint m_sliceMode;
+  UInt        m_sliceMode;
   UInt        m_sliceArgument;
-  UInt        m_sliceCurStartCtuTsAddr;
-  UInt        m_sliceCurEndCtuTsAddr;
+  UInt        m_sliceCurStartCUAddr;
+  UInt        m_sliceCurEndCUAddr;
   UInt        m_sliceIdx;
-  SliceConstraint m_sliceSegmentMode;
+  UInt        m_sliceSegmentMode;
   UInt        m_sliceSegmentArgument;
-  UInt        m_sliceSegmentCurStartCtuTsAddr;
-  UInt        m_sliceSegmentCurEndCtuTsAddr;
+  UInt        m_sliceSegmentCurStartCUAddr;
+  UInt        m_sliceSegmentCurEndCUAddr;
   Bool        m_nextSlice;
   Bool        m_nextSliceSegment;
   UInt        m_sliceBits;
@@ -1442,25 +1456,25 @@ public:
   Bool getHandleCraAsBlaFlag            ()                   { return m_handleCraAsBlaFlag;             }
 #endif
 
-  Void setSliceMode                     ( SliceConstraint mode ) { m_sliceMode = mode;                  }
-  SliceConstraint getSliceMode          () const            { return m_sliceMode;                       }
+  Void setSliceMode                     ( UInt uiMode )     { m_sliceMode = uiMode;                     }
+  UInt getSliceMode                     ()                  { return m_sliceMode;                       }
   Void setSliceArgument                 ( UInt uiArgument ) { m_sliceArgument = uiArgument;             }
   UInt getSliceArgument                 ()                  { return m_sliceArgument;                   }
-  Void setSliceCurStartCtuTsAddr        ( UInt ctuTsAddr )  { m_sliceCurStartCtuTsAddr = ctuTsAddr;     } // CTU Tile-scan address (as opposed to raster-scan)
-  UInt getSliceCurStartCtuTsAddr        () const            { return m_sliceCurStartCtuTsAddr;          } // CTU Tile-scan address (as opposed to raster-scan)
-  Void setSliceCurEndCtuTsAddr          ( UInt ctuTsAddr )  { m_sliceCurEndCtuTsAddr = ctuTsAddr;       } // CTU Tile-scan address (as opposed to raster-scan)
-  UInt getSliceCurEndCtuTsAddr          () const            { return m_sliceCurEndCtuTsAddr;            } // CTU Tile-scan address (as opposed to raster-scan)
+  Void setSliceCurStartCUAddr           ( UInt uiAddr )     { m_sliceCurStartCUAddr = uiAddr;           }
+  UInt getSliceCurStartCUAddr           ()                  { return m_sliceCurStartCUAddr;             }
+  Void setSliceCurEndCUAddr             ( UInt uiAddr )     { m_sliceCurEndCUAddr = uiAddr;             }
+  UInt getSliceCurEndCUAddr             ()                  { return m_sliceCurEndCUAddr;               }
   Void setSliceIdx                      ( UInt i)           { m_sliceIdx = i;                           }
   UInt getSliceIdx                      ()                  { return  m_sliceIdx;                       }
   Void copySliceInfo                    (TComSlice *pcSliceSrc);
-  Void setSliceSegmentMode              ( SliceConstraint mode ) { m_sliceSegmentMode = mode;           }
-  SliceConstraint getSliceSegmentMode   () const            { return m_sliceSegmentMode;                }
+  Void setSliceSegmentMode              ( UInt uiMode )     { m_sliceSegmentMode = uiMode;              }
+  UInt getSliceSegmentMode              ()                  { return m_sliceSegmentMode;                }
   Void setSliceSegmentArgument          ( UInt uiArgument ) { m_sliceSegmentArgument = uiArgument;      }
   UInt getSliceSegmentArgument          ()                  { return m_sliceSegmentArgument;            }
-  Void setSliceSegmentCurStartCtuTsAddr ( UInt ctuTsAddr )  { m_sliceSegmentCurStartCtuTsAddr = ctuTsAddr; } // CTU Tile-scan address (as opposed to raster-scan)
-  UInt getSliceSegmentCurStartCtuTsAddr () const            { return m_sliceSegmentCurStartCtuTsAddr;      } // CTU Tile-scan address (as opposed to raster-scan)
-  Void setSliceSegmentCurEndCtuTsAddr   ( UInt ctuTsAddr )  { m_sliceSegmentCurEndCtuTsAddr = ctuTsAddr;   } // CTU Tile-scan address (as opposed to raster-scan)
-  UInt getSliceSegmentCurEndCtuTsAddr   () const            { return m_sliceSegmentCurEndCtuTsAddr;        } // CTU Tile-scan address (as opposed to raster-scan)
+  Void setSliceSegmentCurStartCUAddr    ( UInt uiAddr )     { m_sliceSegmentCurStartCUAddr = uiAddr;    }
+  UInt getSliceSegmentCurStartCUAddr    ()                  { return m_sliceSegmentCurStartCUAddr;      }
+  Void setSliceSegmentCurEndCUAddr      ( UInt uiAddr )     { m_sliceSegmentCurEndCUAddr = uiAddr;      }
+  UInt getSliceSegmentCurEndCUAddr      ()                  { return m_sliceSegmentCurEndCUAddr;        }
   Void setNextSlice                     ( Bool b )          { m_nextSlice = b;                           }
   Bool isNextSlice                      ()                  { return m_nextSlice;                        }
   Void setNextSliceSegment              ( Bool b )          { m_nextSliceSegment = b;                    }

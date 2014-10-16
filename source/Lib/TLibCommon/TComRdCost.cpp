@@ -214,6 +214,12 @@ Void TComRdCost::setLambda( Double dLambda )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+  if(getUseColorTrans()&&!getUseLossless())
+  {
+    m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS/3.0));
+  }
+#endif
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
@@ -353,6 +359,35 @@ UInt TComRdCost::xGetComponentBits( Int iVal )
 
   return uiLength;
 }
+
+#if SCM__R0186_INTRABC_BVD
+UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
+{
+  if(iVal == 0)
+  {
+    return m_mvdBin0Cost[0 + (bComponent << 1)];
+  }
+
+  UInt uiLength;
+  Int numBins = 0;
+  UInt uiCount = SCM__R0186_INTRABC_BVD_CODING_EGORDER; 
+  UInt uiTemp  = ( iVal <= 0) ? (-iVal-1): (iVal- 1);
+
+  while( uiTemp >= (UInt)(1<<uiCount) )
+  {
+    numBins++;
+    uiTemp -= 1 << uiCount;
+    uiCount  ++;
+  }
+  
+  numBins++;
+
+  uiLength = (2 + numBins + uiCount) << 15;
+  uiLength+= m_mvdBin0Cost[1 + (bComponent << 1)];
+  
+  return uiLength;
+}
+#endif
 
 Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam )
 {
@@ -516,6 +551,33 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
     return cDtParam.DistFunc( &cDtParam );
   }
 }
+
+#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+Void TComRdCost::adjustLambdaForColorTrans(Int delta_QP)
+{
+  double lamdbaAdjustRate;
+
+  static int pairCheck = 0;
+  if (delta_QP < 0)
+  {
+    assert ( pairCheck == 0 );
+    pairCheck = 1;
+  
+    lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
+  }
+  else
+  {
+    assert ( pairCheck == 1 );
+    pairCheck = 0;
+
+    lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
+  }
+
+  Double dLambda = m_dLambda * lamdbaAdjustRate;
+  setLambda( dLambda );
+}
+#endif
+
 
 // ====================================================================================================================
 // Distortion functions
