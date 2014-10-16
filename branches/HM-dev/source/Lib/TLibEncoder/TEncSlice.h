@@ -117,7 +117,7 @@ public:
   Void    precompressSlice    ( TComPic* pcPic                                     );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic* pcPic                                     );      ///< analysis stage of slice
   Void    calCostSliceI       ( TComPic* pcPic );
-  Void    encodeSlice         ( TComPic* pcPic, TComOutputBitstream* pcSubstreams  );
+  Void    encodeSlice         ( TComPic* pcPic, TComOutputBitstream* pcSubstreams, UInt &numBinsCoded );
 
   // misc. functions
   Void    setSearchRange      ( TComSlice* pcSlice  );                                  ///< set ME range adaptively

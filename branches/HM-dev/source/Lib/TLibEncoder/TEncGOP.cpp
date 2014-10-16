@@ -1498,6 +1498,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
 
     // pcSlice is currently slice 0.
+    Int64 binCountsInNalUnits   = 0; // For implementation of cabac_zero_word stuffing (section 7.4.3.10)
+    Int64 numBytesInVclNalUnits = 0; // For implementation of cabac_zero_word stuffing (section 7.4.3.10)
+
     for( UInt sliceSegmentStartCtuTsAddr = 0, sliceIdxCount=0; sliceSegmentStartCtuTsAddr < pcPic->getPicSym()->getNumberOfCtusInFrame(); sliceIdxCount++, sliceSegmentStartCtuTsAddr=pcSlice->getSliceSegmentCurEndCtuTsAddr() )
     {
       pcSlice = pcPic->getSlice(sliceIdxCount);
@@ -1551,7 +1554,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
 
       pcSlice->clearSubstreamSizes(  );
-      m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]));
+      {
+        UInt numBinsCoded = 0;
+        m_pcSliceEncoder->encodeSlice(pcPic, &(substreamsOut[0]), numBinsCoded);
+        binCountsInNalUnits+=numBinsCoded;
+      }
 
 #if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
       g_bFinalEncode = false;
@@ -1581,6 +1588,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       xAttachSliceDataToNalUnit(nalu, pcBitstreamRedirect);
       accessUnit.push_back(new NALUnitEBSP(nalu));
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
+      numBytesInVclNalUnits += Int64(accessUnit.back()->m_nalUnitData.str().size());
       bNALUAlignedWrittenToList = true;
 
       if (!bNALUAlignedWrittenToList)
@@ -1610,6 +1618,44 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         accumNalsDU[ pcSlice->getSliceIdx() ] = numNalus;   // SEI not counted for bit count; hence shouldn't be counted for # of NALUs - only for consistency
       }
     } // end iteration over slices
+
+    // cabac_zero_words processing
+    {
+      const Int log2subWidthCxsubHeightC = (pcPic->getComponentScaleX(COMPONENT_Cb)+pcPic->getComponentScaleY(COMPONENT_Cb));
+      const Int minCuWidth  = pcPic->getMinCUWidth();
+      const Int minCuHeight = pcPic->getMinCUHeight();
+      const Int paddedWidth = ((pcSlice->getSPS()->getPicWidthInLumaSamples()  + minCuWidth  - 1) / minCuWidth) * minCuWidth;
+      const Int paddedHeight= ((pcSlice->getSPS()->getPicHeightInLumaSamples() + minCuHeight - 1) / minCuHeight) * minCuHeight;
+      const Int rawBits = paddedWidth * paddedHeight *
+                             (g_bitDepth[CHANNEL_TYPE_LUMA] + 2*(g_bitDepth[CHANNEL_TYPE_CHROMA]>>log2subWidthCxsubHeightC));
+      const Int64 threshold = (32LL/3)*numBytesInVclNalUnits + (rawBits/32);
+      if (binCountsInNalUnits >= threshold)
+      {
+        // need to add additional cabac zero words (each one accounts for 3 bytes (=00 00 03)) to increase numBytesInVclNalUnits
+        const Int64 targetNumBytesInVclNalUnits = ((binCountsInNalUnits - (rawBits/32))*3+31)/32;
+        const Int64 numberOfAdditionalBytesNeeded=targetNumBytesInVclNalUnits - numBytesInVclNalUnits;
+
+        if (numberOfAdditionalBytesNeeded>0) // It should be!
+        {
+          const Int64 numberOfAdditionalCabacZeroWords=(numberOfAdditionalBytesNeeded+2)/3;
+          const Int64 numberOfAdditionalCabacZeroBytes=numberOfAdditionalCabacZeroWords*3;
+          if (m_pcCfg->getCabacZeroWordPaddingEnabled())
+          {
+            std::vector<Char> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, Char(0));
+            for(Int64 i=0; i<numberOfAdditionalCabacZeroWords; i++)
+            {
+              zeroBytesPadding[i*3+2]=3;  // 00 00 03
+            }
+            accessUnit.back()->m_nalUnitData.write(&(zeroBytesPadding[0]), numberOfAdditionalCabacZeroBytes);
+            printf("Adding %lld bytes of padding\n", numberOfAdditionalCabacZeroWords*3);
+          }
+          else
+          {
+            printf("Standard would normally require adding %lld bytes of padding\n", numberOfAdditionalCabacZeroWords*3);
+          }
+        }
+      }
+    }
 
     pcPic->compressMotion();
 

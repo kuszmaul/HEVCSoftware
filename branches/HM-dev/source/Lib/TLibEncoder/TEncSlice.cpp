@@ -907,7 +907,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
  \param  rpcPic        picture class
  \retval rpcBitstream  bitstream class
  */
-Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstreams )
+Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstreams, UInt &numBinsCoded )
 {
   TComSlice* pcSlice                 = pcPic->getSlice(getSliceIdx());
 
@@ -922,6 +922,10 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
   m_pcSbacCoder->init( (TEncBinIf*)m_pcBinCABAC );
   m_pcEntropyCoder->setEntropyCoder ( m_pcSbacCoder, pcSlice );
   m_pcEntropyCoder->resetEntropy      ();
+
+  numBinsCoded = 0;
+  m_pcBinCABAC->setBinCountingEnableFlag( true );
+  m_pcBinCABAC->setBinsCoded(0);
 
 #if ENC_DEC_TRACE
   g_bJustDoIt = g_bEncDecTraceEnable;
@@ -1087,6 +1091,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       m_pcEntropyCoder->determineCabacInitIdx();
     }
   }
+  numBinsCoded = m_pcBinCABAC->getBinsCoded();
 }
 
 Void TEncSlice::calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UInt &boundingCtuTSAddrSlice, Bool &haveReachedTileBoundary,
