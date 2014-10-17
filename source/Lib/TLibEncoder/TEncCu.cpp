@@ -2598,11 +2598,10 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
       cuCompRect.width  = (g_uiMaxCUWidth>>uiSrcDepth);
       cuCompRect.height = (g_uiMaxCUHeight>>uiSrcDepth);
 
-      TComYuv* pcTmpYuvPred = m_pcPredSearch->getTmpYuvPred();
       for( UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++ )
-        m_ppcRecoYuvBest[uiSrcDepth]->copyPartToPartComponentMxN( ComponentID(ch), pcTmpYuvPred, cuCompRect);
-      pcTmpYuvPred->DefaultConvertPix( cuCompRect.x0, cuCompRect.y0, cuCompRect.width );  
-      pcTmpYuvPred->copyToPicYuv( rpcPic->getPicYuvCSC(), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
+        m_ppcRecoYuvBest[uiSrcDepth]->copyPartToPartComponentMxN( ComponentID(ch), m_ppcRecoYuvTemp[uiSrcDepth], cuCompRect);
+      m_ppcRecoYuvTemp[uiSrcDepth]->DefaultConvertPix( cuCompRect.x0, cuCompRect.y0, cuCompRect.width );
+      m_ppcRecoYuvTemp[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvCSC(), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
     }
 #endif
     m_ppcPredYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvPred (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
