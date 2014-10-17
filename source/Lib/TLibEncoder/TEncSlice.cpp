@@ -1201,7 +1201,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
   }
 
   UInt uiWidthInLCUs  = rpcPic->getPicSym()->getFrameWidthInCU();
-  UInt uiCol=0, uiLin=0, uiSubStrm=0;
+  UInt uiCol=0, uiSubStrm=0;
   UInt uiTileCol      = 0;
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
@@ -1257,7 +1257,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
     uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
     //UInt uiSliceStartLCU = pcSlice->getSliceCurStartCUAddr();
     uiCol     = uiCUAddr % uiWidthInLCUs;
-    uiLin     = uiCUAddr / uiWidthInLCUs;
     uiSubStrm=rpcPic->getSubstreamForLCUAddr(uiCUAddr, true, pcSlice);
 
     m_pcEntropyCoder->setBitstream( &pcSubstreams[uiSubStrm] );
