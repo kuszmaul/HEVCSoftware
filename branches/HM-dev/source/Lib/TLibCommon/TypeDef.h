@@ -167,8 +167,6 @@
 
 #define FAST_UDI_MAX_RDMODE_NUM                          35          ///< maximum number of RD comparison in fast-UDI estimation loop
 
-#define ZERO_MVD_EST                                      0           ///< Zero Mvd Estimation in normal mode
-
 #define NUM_INTRA_MODE                                   36
 
 #define WRITE_BACK                                        1           ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
