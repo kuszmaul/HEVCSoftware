@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT                   1 ///< 0 = no chroma refinement for intraBC hash search, 1 (default) = enable chroma refinement for intraBC hash search
 #define SCM__R0309_INTRABC_BVP                                       1 ///< 0 = disable BVP improvements as proposed in R0309, 1 (default) = enable BVP improvements as proposed in R0309
 #define SCM__R0081_CODE_SIMPLIFICATION                               1 ///< code simplification as proposed in R0081
 #define SCM__R0081_BUGFIX                                            1 ///< Bug fix as proposed in R0081
@@ -335,9 +334,7 @@
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS                          -5
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V                        -3
 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
 #define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4
-#endif 
 
 #if SCM__R0186_INTRABC_BVD
 #define SCM__R0186_INTRABC_BVD_CODING_EGORDER                         3
