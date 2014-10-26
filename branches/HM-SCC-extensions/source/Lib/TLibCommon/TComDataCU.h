@@ -321,11 +321,7 @@ public:
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
   TComMv        getLastIntraBCMv(Int idx=0) {return m_lastIntraBCMv[idx]; }
   Void          setLastIntraBCMv(TComMv mv, Int idx=0 ) { m_lastIntraBCMv[idx] = mv; }
-#if SCM__FLEXIBLE_INTRABC_SEARCH
   UInt          getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs );
-#else
-  UInt          getIntraBCSearchAreaWidth();
-#endif
 
   TCoeff*       getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 

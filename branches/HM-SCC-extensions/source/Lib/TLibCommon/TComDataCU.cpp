@@ -3932,20 +3932,12 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
   return SCAN_DIAG;
 }
 
-#if SCM__FLEXIBLE_INTRABC_SEARCH
 UInt TComDataCU::getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs )
-#else
-UInt TComDataCU::getIntraBCSearchAreaWidth()
-#endif
 {
   const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();  
   const TComPicSym &picSym            = *getPic()->getPicSym();
   const UInt        currentTileIdx    = picSym.getTileIdxMap(getCtuRsAddr());
-#if SCM__FLEXIBLE_INTRABC_SEARCH
   const UInt        maxWidth          = uiMaxSearchWidthToLeftInCTUs*lcuWidth;
-#else
-  const UInt        maxWidth          = INTRABC_LEFTWIDTH;
-#endif
 
   UInt width = 0;
 
