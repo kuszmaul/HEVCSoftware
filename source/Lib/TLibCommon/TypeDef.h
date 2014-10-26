@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__FLEXIBLE_INTRABC_SEARCH                                 1 ///< flexible 1xN IntraBC search range (in terms of CTUs)
 
 //------------------------------------------------
 // Derived macros
@@ -338,9 +337,6 @@
 #define MAX_PLT_PRED_SIZE                                             64
 #define PLT_SHARING_BUGFIX                                            1 ///< 1: PLT sharing bug fix 
 
-#if !SCM__FLEXIBLE_INTRABC_SEARCH
-#define INTRABC_LEFTWIDTH                                             64  ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
-#endif
 
 //------------------------------------------------
 // Backwards-compatibility

@@ -139,13 +139,9 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
-#if SCM__FLEXIBLE_INTRABC_SEARCH
   m_cTEncTop.setUseHashBasedIntraBCSearch                         ( m_useHashBasedIntraBlockCopySearch );
   m_cTEncTop.setIntraBCSearchWidthInCTUs                          ( m_intraBlockCopySearchWidthInCTUs );
   m_cTEncTop.setIntraBCNonHashSearchWidthInCTUs                   ( m_intraBlockCopyNonHashSearchWidthInCTUs );
-#else
-  m_cTEncTop.setUseIntraBCFullFrameSearch                 ( m_intraBlockCopyFullFrameSearch );
-#endif
   m_cTEncTop.setUseHashBasedME                            ( m_useHashBasedME );
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );

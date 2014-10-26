@@ -1078,11 +1078,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       }
     }
 
-#if SCM__FLEXIBLE_INTRABC_SEARCH
     if( m_pcCfg->getUseHashBasedIntraBCSearch() )
-#else
-    if(m_pcCfg->getUseIntraBCFullFrameSearch())
-#endif
     {
       m_pcPredSearch->xIntraBCHashTableUpdate(pCtu, false);
     }
@@ -1117,11 +1113,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   xRestoreWPparam( pcSlice );
 
   //clear the hash table used in Intra BC search
-#if SCM__FLEXIBLE_INTRABC_SEARCH
   if( m_pcCfg->getUseHashBasedIntraBCSearch() )
-#else
-  if(m_pcCfg->getUseIntraBCFullFrameSearch())
-#endif
   {
     m_pcPredSearch->xClearIntraBCHashTable();
   }
