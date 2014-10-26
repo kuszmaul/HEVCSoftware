@@ -594,9 +594,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
      || pcSPS->getUseColorTrans()
-#endif
 #if SCM__R0348_PALETTE_MODE
      || pcSPS->getUsePLTMode()
 #endif
@@ -638,9 +636,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             break;
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
             WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
-#endif
 #if SCM__R0348_PALETTE_MODE
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
 #endif
@@ -1354,12 +1350,11 @@ Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 Void TEncCavlc::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#endif
+
 #if SCM__R0186_INTRABC_BVD
 Void TEncCavlc::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 {

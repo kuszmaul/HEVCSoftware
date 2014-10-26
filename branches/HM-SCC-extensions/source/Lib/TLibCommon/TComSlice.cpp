@@ -1600,9 +1600,7 @@ TComSPS::TComSPS()
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 , m_useColorTrans             (false)
-#endif
 #if SCM__R0348_PALETTE_MODE
 , m_usePaletteMode            (false)
 #endif

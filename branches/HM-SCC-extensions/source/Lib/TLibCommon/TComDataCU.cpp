@@ -70,10 +70,8 @@ TComDataCU::TComDataCU()
   m_ChromaQpAdj        = NULL;
   m_pbMergeFlag        = NULL;
   m_puhMergeIndex      = NULL;
-
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_ColorTransform     = NULL;
-#endif
+
   for(UInt i=0; i<MAX_NUM_CHANNEL_TYPE; i++)
   {
     m_puhIntraDir[i]     = NULL;
@@ -169,9 +167,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     memset( m_pePartSize, NUMBER_OF_PART_SIZES,uiNumPartition * sizeof( *m_pePartSize ) );
     m_pePredMode         = new Char[ uiNumPartition ];
     m_CUTransquantBypass = new Bool[ uiNumPartition ];
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     m_ColorTransform     = new Bool[ uiNumPartition ];
-#endif
 
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
@@ -280,9 +276,7 @@ Void TComDataCU::destroy()
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir        = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag        = NULL; }
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex      = NULL; }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     if ( m_ColorTransform     ) { delete[] m_ColorTransform;    m_ColorTransform     = NULL; }
-#endif
 
     for (UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
     {
@@ -459,9 +453,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   memset( m_puhTrIdx          , 0,                          m_uiNumPartition * sizeof( *m_puhTrIdx ) );
   memset( m_puhWidth          , g_uiMaxCUWidth,             m_uiNumPartition * sizeof( *m_puhWidth ) );
   memset( m_puhHeight         , g_uiMaxCUHeight,            m_uiNumPartition * sizeof( *m_puhHeight ) );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   memset( m_ColorTransform    , false,                      m_uiNumPartition * sizeof( *m_ColorTransform) );
-#endif
 
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -593,9 +585,8 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
 #endif
     }
     m_skipFlag[ui]      = false;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-      m_ColorTransform[ui] = false;
-#endif
+    m_ColorTransform[ui] = false;
+
     m_pePartSize[ui]    = NUMBER_OF_PART_SIZES;
     m_pePredMode[ui]    = NUMBER_OF_PREDICTION_MODES;
     m_CUTransquantBypass[ui] = bTransquantBypass;
@@ -654,7 +645,6 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
   }
 }
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 Void TComDataCU::initRQTData( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopySrc, Bool bResetIntraMode, Bool bResetTUSplit )
 {
   assert( uiDepth == getDepth(0) );
@@ -703,7 +693,7 @@ Void TComDataCU::initRQTData( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopy
   #endif
   }
 }
-#endif
+
 // initialize Sub partition
 Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp )
 {
@@ -789,9 +779,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     m_ColorTransform[ui] = false;
-#endif
+
     m_pePartSize[ui] = NUMBER_OF_PART_SIZES;
     m_pePredMode[ui] = NUMBER_OF_PREDICTION_MODES;
     m_CUTransquantBypass[ui] = false;
@@ -868,9 +857,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_uiCUPelY           = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
   m_skipFlag=pcCU->getSkipFlag()          + uiPart;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_ColorTransform     = pcCU->getColorTransform() + uiPart;
-#endif
 
   m_phQP=pcCU->getQP()                    + uiPart;
   m_ChromaQpAdj = pcCU->getChromaQpAdj()  + uiPart;
@@ -1042,10 +1029,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_CUTransquantBypass + uiOffset, pcCU->getCUTransquantBypass(), sizeof( *m_CUTransquantBypass ) * uiNumPartition );
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
-
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   memcpy( m_ColorTransform + uiOffset, pcCU->getColorTransform(), sizeof( *m_ColorTransform ) * uiNumPartition  );
-#endif
 
   for (UInt ch=0; ch<numValidChan; ch++)
   {
@@ -1134,9 +1118,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   Int sizeInChar  = sizeof( Char ) * m_uiNumPartition;
 
   memcpy( pCtu->getSkipFlag() + m_absZIdxInCtu, m_skipFlag, sizeof( *m_skipFlag ) * m_uiNumPartition );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   memcpy( pCtu->getColorTransform() + m_absZIdxInCtu, m_ColorTransform, sizeof( *m_ColorTransform ) * m_uiNumPartition  );
-#endif
 
   memcpy( pCtu->getQP() + m_absZIdxInCtu, m_phQP, sizeInChar  );
 
@@ -1230,9 +1212,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   Int sizeInChar  = sizeof( Char ) * uiQNumPart;
 
   memcpy( pCtu->getSkipFlag()       + uiPartOffset, m_skipFlag,   sizeof( *m_skipFlag )   * uiQNumPart );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   memcpy( pCtu->getColorTransform() + uiPartOffset, m_ColorTransform, sizeof( *m_ColorTransform ) * uiQNumPart );
-#endif
 
   memcpy( pCtu->getQP() + uiPartOffset, m_phQP, sizeInChar );
   memcpy( pCtu->getPartitionSize()  + uiPartOffset, m_pePartSize, sizeof( *m_pePartSize ) * uiQNumPart );
@@ -2331,13 +2311,11 @@ Void TComDataCU::setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID com
   memset((m_explicitRdpcmMode[compID] + uiAbsPartIdx), rdpcmMode, (sizeof(UChar) * uiCoveredPartIdxes));
 }
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 Void TComDataCU::setColorTransformSubParts( Bool colorTransform, UInt uiAbsPartIdx, UInt uiDepth)
 {
   assert( sizeof( *m_ColorTransform) == 1 );
   memset( m_ColorTransform + uiAbsPartIdx, colorTransform, m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1) );
 }
-#endif
 
 Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth )
 {

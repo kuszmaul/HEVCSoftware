@@ -95,9 +95,7 @@ TDecSbac::TDecSbac()
 , m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 , m_cCUColorTransformFlagSCModel             ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 #if SCM__R0186_INTRABC_BVD
 , m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -174,9 +172,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cCUColorTransformFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_COLOR_TRANS);
-#endif
 #if SCM__R0186_INTRABC_BVD
   m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
 #endif
@@ -248,9 +244,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
-#endif
 #if SCM__R0186_INTRABC_BVD
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD );
 #endif
@@ -1576,7 +1570,7 @@ Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2Transfo
   DTRACE_CABAC_V( uiLog2TransformBlockSize )
   DTRACE_CABAC_T( "\n" )
 }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
 Void TDecSbac::parseColorTransformFlag( UInt uiAbsPartIdx, Bool & uiFlag )
 {
   UInt uiSymbol;
@@ -1584,7 +1578,7 @@ Void TDecSbac::parseColorTransformFlag( UInt uiAbsPartIdx, Bool & uiFlag )
   m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUColorTransformFlagSCModel.get( 0, 0, uiCtx ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__QT_ROOT_CBF) );
   uiFlag = (uiSymbol? true: false);
 }
-#endif
+
 
 Void TDecSbac::parseQtRootCbf( UInt uiAbsPartIdx, UInt& uiQtRootCbf )
 {

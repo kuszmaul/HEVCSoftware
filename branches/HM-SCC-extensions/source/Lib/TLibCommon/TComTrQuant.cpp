@@ -1569,18 +1569,15 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           UInt           uiAddr      = (tuRect.x0 + uiStride*tuRect.y0);
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-     QpParam cQP(*pcCU, compID);
-     if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
-     {
-        cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
-        cQP.per = cQP.Qp/6;
-        cQP.rem= cQP.Qp%6;
-        adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
-     }
-#else
-    const QpParam cQP(*pcCU, compID);
-#endif
+          QpParam cQP(*pcCU, compID);
+          if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
+          {
+            cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+            cQP.per = cQP.Qp/6;
+            cQP.rem= cQP.Qp%6;
+            adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+          }
+
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
       DEBUG_STRING_NEW(sTemp)
@@ -1611,12 +1608,10 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
         crossComponentPrediction( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
     }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
     if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
     {
       adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V:  - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
     }
-#endif 
   }
   else
   {
@@ -3349,7 +3344,6 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
   }
 }
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 Void TComTrQuant::adjustBitDepthandLambdaForColorTrans(Int delta_QP)
 {
   double lamdbaAdjustRate = 1;
@@ -3374,7 +3368,7 @@ Void TComTrQuant::adjustBitDepthandLambdaForColorTrans(Int delta_QP)
   }
   m_dLambda = m_dLambda * lamdbaAdjustRate;
 }
-#endif
+
 
 
 //! \}

@@ -70,9 +70,8 @@ public:
   Void  setBitstream        ( TComInputBitstream* p )   { m_pcBitstream = p; }
   Void  parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void  parseQtCbf          ( class TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void  parseColorTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
-#endif
+
   Void  parseQtRootCbf      ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   Void  parseVPS            ( TComVPS* pcVPS );
   Void  parseSPS            ( TComSPS* pcSPS );

@@ -164,11 +164,10 @@ Void TEncSlice::init( TEncTop* pcEncTop )
 Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_pcRdCost->setRGBFormatFlag               (  m_pcCfg->getRGBFormatFlag() );
   m_pcRdCost->setUseColorTrans               (  slice->getSPS()->getUseColorTrans() );
   m_pcRdCost->setUseLossless                 (  m_pcCfg->getUseLossless() );
-#endif
+
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
 

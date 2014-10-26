@@ -117,9 +117,7 @@ private:
 #endif
 
   Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool*          m_ColorTransform; 
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
@@ -193,12 +191,10 @@ protected:
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
 public:
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Double        tmpIntraBCRDCost;
   Double        tmpInterRDCost;
   Bool          bIntraBCCSCEnabled;
   Bool          bInterCSCEnabled; 
-#endif
   TComDataCU();
   virtual ~TComDataCU();
 
@@ -216,9 +212,7 @@ public:
   Void          initCtu               ( TComPic* pcPic, UInt ctuRsAddr );
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void          initRQTData           ( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopySrc, Bool bResetIntraMode, Bool bResetTUSplit );
-#endif
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
 
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
@@ -270,11 +264,9 @@ public:
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
-
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool*         getColorTransform( )                              { return m_ColorTransform;         }
   Bool          getColorTransform( UInt uiIdx)                    { return m_ColorTransform[uiIdx];  }
-#endif
+
 
   Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
   Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
@@ -325,10 +317,7 @@ public:
   Void          setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
-
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void          setColorTransformSubParts ( Bool ColorTransform, UInt uiAbsPartIdx, UInt uiDepth);
-#endif
 
   Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );

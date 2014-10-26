@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0147_ADAPTIVE_COLOR_TRANSFORM                          1 ///< 0 = no CU-level Adaptive Color-space Transform, 1 (default) = enable CU-level Adaptive Color-space Transform
 #define SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT                   1 ///< 0 = no chroma refinement for intraBC hash search, 1 (default) = enable chroma refinement for intraBC hash search
 #define SCM__R0309_INTRABC_BVP                                       1 ///< 0 = disable BVP improvements as proposed in R0309, 1 (default) = enable BVP improvements as proposed in R0309
 #define SCM__R0081_CODE_SIMPLIFICATION                               1 ///< code simplification as proposed in R0081
@@ -332,11 +331,9 @@
 // Derived macros
 //------------------------------------------------
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
 #define SCM__R0147_RGB_YUV_RD_ENC                                     1  ///< non-normative tools for RGB coding
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS                          -5
 #define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V                        -3
-#endif
 
 #if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
 #define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4

@@ -640,9 +640,8 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_cSPS.setUseColorTrans               (       m_useColorTrans      );
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
 #endif
