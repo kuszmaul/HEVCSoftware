@@ -579,7 +579,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
-#if SCM__R0102_HASH_ME_FIX
         if ( m_pcEncCfg->getUseHashBasedME() )
         {
           xCheckRDCostHashInter( rpcBestCU, rpcTempCU, isPerfectMatch DEBUG_STRING_PASS_INTO(sDebug) );
@@ -593,46 +592,18 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
         }
-#endif
+
         // 2Nx2N
-#if SCM__R0102_HASH_ME_FIX
         if(m_pcEncCfg->getUseEarlySkipDetection() && !terminateAllFurtherRDO)
-#else
-        if(m_pcEncCfg->getUseEarlySkipDetection())
-#endif
         {
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );//by Competition for inter_2Nx2N
         }
         // SKIP
-#if SCM__R0102_HASH_ME_FIX
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode, terminateAllFurtherRDO );//by Merge for inter_2Nx2N
-#else
-        xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU DEBUG_STRING_PASS_INTO(sDebug), &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
-#endif
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
-#if !SCM__R0102_HASH_ME_FIX
-        if ( m_pcEncCfg->getUseHashBasedME() )
-        {
-        xCheckRDCostHashInter( rpcBestCU, rpcTempCU, isPerfectMatch );
-        rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-        if ( isPerfectMatch )
-        {
-          if ( uiDepth == 0 )
-          {
-            terminateAllFurtherRDO = true;
-            }
-          }
-        }
-#endif
-
-#if SCM__R0102_HASH_ME_FIX
         if(!m_pcEncCfg->getUseEarlySkipDetection() && !terminateAllFurtherRDO)
-#else
-        if(!m_pcEncCfg->getUseEarlySkipDetection())
-#endif
         {
           // 2Nx2N, NxN
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
@@ -1661,11 +1632,7 @@ Int  TEncCu::updateCtuDataISlice(TComDataCU* pCtu, Int width, Int height)
  * \param rpcTempCU
  * \returns Void
  */
-#if SCM__R0102_HASH_ME_FIX
 Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode, Bool checkSkipOnly )
-#else
-Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode )
-#endif
 {
   assert( rpcTempCU->getSlice()->getSliceType() != I_SLICE );
   TComMvField  cMvFieldNeighbours[2 * MRG_MAX_NUM_CANDS]; // double length for mv of both lists
@@ -1690,15 +1657,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   Bool bestIsSkip = false;
 
   UInt iteration;
-#if SCM__R0102_HASH_ME_FIX
   UInt iterationBegin = checkSkipOnly ? 1 : 0;
-#endif
   if ( rpcTempCU->isLosslessCoded(0))
   {
     iteration = 1;
-#if SCM__R0102_HASH_ME_FIX
     iterationBegin = 0;
-#endif
   }
   else
   {
@@ -1706,11 +1669,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   }
   DEBUG_STRING_NEW(bestStr)
 
-#if SCM__R0102_HASH_ME_FIX
   for( UInt uiNoResidual = iterationBegin; uiNoResidual < iteration; ++uiNoResidual )
-#else
-  for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )
-#endif
   {
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
     {

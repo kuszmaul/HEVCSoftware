@@ -5529,12 +5529,8 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
             bestRefPicList = eRefPicList;
             bestRefIndex = iRefIdx;
             bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
-#if SCM__R0102_HASH_ME_FIX
             bestMv <<= 2;
             bestMvd.set( bestMv.getHor() - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), bestMv.getVer() - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
-#else
-            bestMvd.set( (*it).x - currBlockHash.x - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), (*it).y - currBlockHash.y - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
-#endif
             bestMVPIndex = currMVPIdx;
           }
         }
