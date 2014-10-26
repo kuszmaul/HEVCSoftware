@@ -5832,7 +5832,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
     Distortion uiTempSadBest = 0;
 
-#if SCM__R0081_BUGFIX
     Int srLeft = iSrchRngHorLeft, srRight = iSrchRngHorRight, srTop = iSrchRngVerTop, srBottom = iSrchRngVerBottom;
 
     const Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
@@ -5855,7 +5854,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         srBottom = iPicHeight%lcuHeight - cuPelY % lcuHeight - iRoiHeight;
       }
     }
-#endif
+
 
     for(Int iPred = 0; iPred < 2; iPred++)
     {
@@ -5865,24 +5864,15 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     uiSad = std::numeric_limits<Distortion>::max();
 
     if ( !( xPred==0 && yPred==0)
-#if SCM__R0081_BUGFIX
       && !( (yPred < srTop)  || (yPred > srBottom) )
       && !( (xPred < srLeft) || (xPred > srRight) )
-#else
-      && !( (yPred < iSrchRngVerTop)  || (yPred > iSrchRngVerBottom) )
-      && !( (xPred < iSrchRngHorLeft) || (xPred > iSrchRngHorRight) )
-#endif
       )
     {
       Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
       Int iTempX = xPred + iRelCUPelX + iRoiWidth  - 1;
       Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
  
-#if SCM__R0081_BUGFIX
       if((iTempX >= (Int)lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
-#else
-      if((iTempX >= lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
-#endif
       {
         validCand = false;
       }
@@ -5911,19 +5901,10 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           r += 4;
         }
 
-#if SCM__R0081_BUGFIX
         xIntraBCSearchMVCandUpdate(uiSad, xPred, yPred, uiSadBestCand, cMVCand);
         iBestX = cMVCand[0].getHor();
         iBestY = cMVCand[0].getVer();
         uiSadBest = uiSadBestCand[0];
-#else
-        if ( uiSad < uiSadBest )
-        {
-          uiSadBest = uiSad;
-          iBestX    = xPred;
-          iBestY    = yPred;
-        }
-#endif
         rcMv.set( iBestX, iBestY );
       }
     }
@@ -6018,11 +5999,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
     if( pcCU->getWidth(0) < 16 && !bUse1DSearchFor8x8 )
     {
-#if !SCM__R0081_BUGFIX
-      Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
-      Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-#endif
-
       for(Int y = max(iSrchRngVerTop, -cuPelY); y <= iSrchRngVerBottom; y +=2)
       {
         if ((y == 0) || ((Int) (cuPelY + y + iRoiHeight) >= iPicHeight)) //NOTE: RExt - is this still necessary?
