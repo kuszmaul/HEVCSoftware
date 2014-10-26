@@ -787,9 +787,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             break;
           case SPS_EXT__SCC:
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
             READ_FLAG( uiCode, "adaptive_color_trans_flag"    );            pcSPS->setUseColorTrans                          (uiCode != 0);
-#endif
 #if SCM__R0348_PALETTE_MODE
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
 #endif
@@ -1799,12 +1797,11 @@ Void TDecCavlc::parseQtCbf( TComTU &/*rTu*/, const ComponentID /*compID*/, const
 {
   assert(0);
 }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
 Void  TDecCavlc::parseColorTransformFlag( UInt , Bool&  )
 {
   assert(0);
 }
-#endif
 
 Void TDecCavlc::parseQtRootCbf( UInt /*uiAbsPartIdx*/, UInt& /*uiQtRootCbf*/ )
 {

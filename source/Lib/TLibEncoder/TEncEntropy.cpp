@@ -740,12 +740,11 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
   {
     m_pcEntropyCoderIf->codeColorTransformFlag( pcCU, uiAbsPartIdx );
   }
-#endif
+
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST
   if (bDebugRQT) printf("..codeCoeff: uiAbsPartIdx=%d, PU format=%d, 2Nx2N=%d, NxN=%d\n", uiAbsPartIdx, pcCU->getPartitionSize(uiAbsPartIdx), SIZE_2Nx2N, SIZE_NxN);

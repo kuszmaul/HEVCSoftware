@@ -120,11 +120,9 @@ protected:
   Bool      m_enableAMP;
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
   Bool      m_alignCABACBeforeBypass;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool      m_bRGBformat;
   Bool      m_useColorTrans;
   Bool      m_useLL;
-#endif
 #if SCM__R0348_PALETTE_MODE
   Bool      m_usePaletteMode;
 #endif

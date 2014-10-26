@@ -214,7 +214,6 @@ public:
                                   Distortion  uiPreCalcDistC
                                   DEBUG_STRING_FN_DECLARE(sDebug));
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void  estIntraPredQTCT        ( TComDataCU* pcCU,
                                    TComYuv*    pcOrgYuv,
                                    TComYuv*    pcPredYuv,
@@ -240,7 +239,7 @@ public:
                                             Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE],
                                             Distortion  uiPreCalcDistC
                                           );
-#endif
+
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -384,10 +383,8 @@ public:
                                   TComYuv*    pcYuvResi,
                                   TComYuv*    pcYuvResiBest,
                                   TComYuv*    pcYuvRec,
-                                  Bool        bSkipRes
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM 
-                                 ,TComYuv*    pcYuvNoCorrResi
-#endif
+                                  Bool        bSkipRes,
+                                  TComYuv*    pcYuvNoCorrResi
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
 
   /// set ME search range
@@ -472,7 +469,7 @@ protected:
                                     DEBUG_STRING_FN_DECLARE(sTest)
                                          ,Int           default0Save1Load2 = 0
                                    );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
   Void  xIntraCodingTUBlockCSC    (       TComYuv*      pcResiYuv,
                                           Pel           resiLuma[MAX_CU_SIZE * MAX_CU_SIZE],
                                     const Bool          checkDecorrelation,
@@ -481,7 +478,7 @@ protected:
                                           QpParam       &cQP
                                           DEBUG_STRING_FN_DECLARE(sDebug)
                                   );
-#endif
+
   Void  xRecurIntraCodingQT       ( Bool        bLumaOnly,
                                     TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,
@@ -524,7 +521,7 @@ protected:
                                     Distortion& ruiDist,
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug));
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
   Void  xRecurIntraCodingQTCSC    ( TComYuv*     pcOrgYuv,
                                     TComYuv*     pcPredYuv,
                                     TComYuv*     pcResiYuv,
@@ -535,7 +532,7 @@ protected:
                                     Bool         bTestMaxTUSize
                                     DEBUG_STRING_FN_DECLARE(sDebug)
                                   );
-#endif
+
   Void  xSetIntraResultChromaQT   ( TComYuv*    pcRecoYuv, TComTU &rTu);
 
   Void  xStoreIntraResultQT       ( const ComponentID first, const ComponentID lastIncl, TComTU &rTu);
@@ -691,11 +688,7 @@ protected:
 
 
   Void xEncodeResidualQT( const ComponentID compID, TComTU &rTu );
-  Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug)
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
-    ,TComYuv* pcOrgResi = NULL
-#endif
-    );
+  Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug), TComYuv* pcOrgResi = NULL);
   Void xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth, const ChannelType compID );

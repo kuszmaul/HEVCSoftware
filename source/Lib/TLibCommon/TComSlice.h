@@ -754,9 +754,7 @@ private:
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool        m_useColorTrans;
-#endif
 #if SCM__R0348_PALETTE_MODE
   Bool        m_usePaletteMode;
 #endif
@@ -905,10 +903,9 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
   Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }

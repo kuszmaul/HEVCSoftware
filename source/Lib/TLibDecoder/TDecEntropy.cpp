@@ -688,13 +688,11 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setCbfSubParts( cbfZero, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
       pcCU->setColorTransformSubParts(0, uiAbsPartIdx, uiDepth);
-#endif
       return;
     }
   }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
   if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
   {
     Bool uiFlag = 0;
@@ -704,7 +702,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
     pcCU->setColorTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
-#endif
+
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 
 #if RExt__ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

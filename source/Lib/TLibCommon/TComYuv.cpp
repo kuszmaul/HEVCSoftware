@@ -422,7 +422,7 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
     }
   }
 }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
+
 Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless, TComYuv* pcYuvNoCorrResi)
 {
   assert(getChromaFormat() == CHROMA_444);
@@ -553,7 +553,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
     }
   }
 }
-#endif
+
 #if SCM__R0147_RGB_YUV_RD_ENC
 Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth)
 {

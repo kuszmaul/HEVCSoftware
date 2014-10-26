@@ -1015,9 +1015,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplay.minLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
   ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   ("ColorTransform",                                  m_useColorTrans,                                   false, "Enable the color transform (not valid in V1 profiles")
-#endif
 #if SCM__R0348_PALETTE_MODE
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
 #endif
@@ -1194,10 +1192,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 
   m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   m_bRGBformat    = (m_inputColourSpaceConvert == IPCOLOURSPACE_RGBtoGBR && m_chromaFormatIDC == CHROMA_444)? true: false;
   m_useLL         = m_costMode == COST_LOSSLESS_CODING ? true: false;
-#endif
 
   switch (m_conformanceWindowMode)
   {
@@ -1568,7 +1564,6 @@ Void TAppEncCfg::xCheckParameter()
     m_useCrossComponentPrediction = false;
   }
 
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   if(m_useColorTrans && (m_chromaFormatIDC != CHROMA_444))
   {
     fprintf(stderr, "***************************************************************************\n");
@@ -1585,7 +1580,6 @@ Void TAppEncCfg::xCheckParameter()
 
     m_useColorTrans = false;
   }
-#endif
 
 #if SCM__R0348_PALETTE_MODE
   if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
@@ -2354,9 +2348,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("High-precision prediction weight  : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
   printf("Golomb-Rice parameter adaptation  : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   printf("Adaptive color transform          : %s\n", (m_useColorTrans                          ? "Enabled" : "Disabled") );
-#endif
 #if SCM__R0348_PALETTE_MODE
   printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled") );
 #endif

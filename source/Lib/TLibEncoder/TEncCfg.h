@@ -217,11 +217,10 @@ protected:
   Bool      m_useSingleSignificanceMapContext;
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Bool      m_bRGBformat;
   Bool      m_useColorTrans;
   Bool      m_useLL;
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   Bool      m_usePaletteMode;
 #endif
@@ -598,14 +597,13 @@ public:
   Void setUseGolombRiceParameterAdaptation             (const Bool value)       { m_useGolombRiceParameterAdaptation = value; }
   Bool getAlignCABACBeforeBypass                       ()       const      { return m_alignCABACBeforeBypass;  }
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
-#if SCM__R0147_ADAPTIVE_COLOR_TRANSFORM
   Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
   Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
   Bool getUseColorTrans                                ()            const { return                  m_useColorTrans;}
   Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
   Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
