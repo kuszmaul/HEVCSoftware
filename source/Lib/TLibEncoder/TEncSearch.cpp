@@ -6655,7 +6655,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 
   Int        iOrgHashIndex;
 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
   Distortion  uiSadBestCand[SCM__R0162_CHROMA_REFINEMENT_CANDIDATES];
   TComMv      cMVCand[SCM__R0162_CHROMA_REFINEMENT_CANDIDATES];
   for(int iCand = 0; iCand < SCM__R0162_CHROMA_REFINEMENT_CANDIDATES; iCand++)
@@ -6663,7 +6662,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
     uiSadBestCand[iCand] = std::numeric_limits<Distortion>::max();
     cMVCand[iCand].set(0,0);
   }  
-#endif
 
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight ); 
 
@@ -6718,20 +6716,11 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 
   Distortion  uiSad;
 
-#if !SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT || !SCM__R0081_CODE_SIMPLIFICATION
-  Distortion  uiSadBest = uiIntraBCECost;
-#endif 
-#if !SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
-  Int         iBestX    = 0;
-  Int         iBestY    = 0;
-#endif
   Int         iTempX;
   Int         iTempY;
   Pel*  piRefSrch;
 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
   xIntraBCSearchMVCandUpdate(uiIntraBCECost, rcMv.getHor(), rcMv.getVer(), uiSadBestCand, cMVCand);
-#endif
 
   while(HashLinklist)
   {
@@ -6764,11 +6753,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
       uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
       if(uiSad > uiSadBestCand[SCM__R0162_CHROMA_REFINEMENT_CANDIDATES-1])
-#else
-      if(uiSad > uiSadBest)
-#endif
         break;
 
       r += 4;
@@ -6781,17 +6766,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 #else
       uiSad += m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
 #endif 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
       xIntraBCSearchMVCandUpdate(uiSad, iTempX - cuPelX, iTempY - cuPelY, uiSadBestCand, cMVCand);
-#else
-      if(uiSad < uiSadBest)
-      {
-        uiSadBest = uiSad;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
-        iBestX    = iTempX - cuPelX;
-        iBestY    = iTempY - cuPelY;
-        rcMv.set( iBestX, iBestY );
-      }
-#endif
       break;
     }
 
@@ -6801,25 +6776,12 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
     uiSad += m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
 #endif 
 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
     xIntraBCSearchMVCandUpdate(uiSad, iTempX - cuPelX, iTempY - cuPelY, uiSadBestCand, cMVCand);
-#else
-    if ( uiSad < uiSadBest )
-    {
-      uiSadBest = uiSad;
-      iBestX    = iTempX - cuPelX;
-      iBestY    = iTempY - cuPelY;
-      rcMv.set( iBestX, iBestY );
-    }
-#endif
-
     HashLinklist = HashLinklist->next;
   }
 
-#if SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT
   Int iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, 0);
   rcMv = cMVCand[iBestCandIdx];
-#endif
 
 #if !SCM__R0081_CODE_SIMPLIFICATION
 #if SCM__R0309_INTRABC_BVP

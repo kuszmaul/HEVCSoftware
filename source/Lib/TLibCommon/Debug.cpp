@@ -176,8 +176,7 @@ Void printRExtMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_BIT_DEPTH_SUPPORT,                                      settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
-  PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);  
-  PRINT_CONSTANT(SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT,                        settingNameWidth, settingValueWidth);
+  PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);    
   PRINT_CONSTANT(SCM__R0309_INTRABC_BVP,                                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0081_CODE_SIMPLIFICATION,                                    settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0081_BUGFIX,                                                 settingNameWidth, settingValueWidth);
