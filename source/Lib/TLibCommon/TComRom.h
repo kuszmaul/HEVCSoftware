@@ -73,11 +73,8 @@ Void         destroyROM();
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
-#if SCM__R0348_PALETTE_MODE
 extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
-#else
-extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
-#endif
+
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
 
@@ -163,10 +160,9 @@ extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
 extern        Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE];
 extern        Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
 
-#if SCM__R0348_PALETTE_MODE
 extern        UChar g_uhPLTQuant[52];
 extern        UChar g_uhPLTTBC[257];
-#endif
+
 
 #if RExt__O0043_BEST_EFFORT_DECODING
 extern        Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE]; // In the encoder, this is the same as g_bitDepth. In the decoder, this can vary from g_bitDepth if the decoder is forced to use 'best-effort decoding' at a particular bit-depth.

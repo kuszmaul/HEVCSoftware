@@ -369,9 +369,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   ); 
   m_cTEncTop.setUseColorTrans                                     ( m_useColorTrans                );
   m_cTEncTop.setUseLossless                                       ( m_useLL                        );
-#if SCM__R0348_PALETTE_MODE
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
-#endif
 }
 
 Void TAppEncTop::xCreateLib()

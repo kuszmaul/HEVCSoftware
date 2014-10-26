@@ -144,11 +144,8 @@ private:
   Bool                    m_bRGBformat;
   Bool                    m_useColorTrans;
   Bool                    m_useLL;
-
-#if SCM__R0348_PALETTE_MODE
   Bool                    m_usePaletteMode;
-#endif
- Int                      m_mvdBin0Cost[4];
+  Int                     m_mvdBin0Cost[4];
 public:
   TComRdCost();
   virtual ~TComRdCost();

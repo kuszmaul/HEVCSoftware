@@ -334,7 +334,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   {
     m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
 
-#if SCM__R0348_PALETTE_MODE
     if (pcCU->getPLTModeFlag(uiAbsPartIdx) )
     {
       Bool bCodeDQP = getdQPFlag();
@@ -342,7 +341,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
       return;
     }
-#endif
+
     m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
     if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
@@ -452,12 +451,12 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
   }
 #endif
 
-#if SCM__R0348_PALETTE_MODE
   if ( m_ppcCU[uiDepth]->getPLTModeFlag(0) == false )
-#endif
-  if ( m_ppcCU[uiDepth]->isLosslessCoded(0) && (m_ppcCU[uiDepth]->getIPCMFlag(0) == false))
   {
-    xFillPCMBuffer(m_ppcCU[uiDepth], uiDepth);
+    if ( m_ppcCU[uiDepth]->isLosslessCoded(0) && (m_ppcCU[uiDepth]->getIPCMFlag(0) == false))
+    {
+      xFillPCMBuffer(m_ppcCU[uiDepth], uiDepth);
+    }
   }
 
   xCopyToPic( m_ppcCU[uiDepth], pcPic, uiAbsPartIdx, uiDepth );
@@ -863,7 +862,6 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
     xReconPCM( pcCU, uiDepth );
     return;
   }
-#if SCM__R0348_PALETTE_MODE
   if (pcCU->getPLTModeFlag(0))
   {
     ChromaFormat cCF = pcCU->getPic()->getSlice(0)->getSPS()->getChromaFormatIdc();
@@ -879,7 +877,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
   
     return;
   }
-#endif
+
   if( !pcCU->getSlice()->getSPS()->getUseColorTrans () )
   {
   const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
@@ -1009,7 +1007,7 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
 
   DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][MAX_NUM_COMPONENT])
 }
-#if SCM__R0348_PALETTE_MODE
+
 Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID)
 {
   Bool bLossless = pcCU->getCUTransquantBypass (uiPartIdx);
@@ -1161,7 +1159,7 @@ Void TDecCu::xReconPLTMode(TComDataCU *pcCU, UInt uiDepth)
     xDecodePLTTexture(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(COMPONENT_Y), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, compID);
   }
 }
-#endif
+
 /** Function for deriving reconstructed luma/chroma samples of a PCM mode CU.
  * \param pcCU pointer to current CU
  * \param uiPartIdx part index

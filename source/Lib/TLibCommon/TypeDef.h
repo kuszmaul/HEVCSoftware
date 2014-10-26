@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0348_PALETTE_MODE                                      1 ///< 0 = no palette mode, 1 (default) = enable palette mode
 #define SCM__FLEXIBLE_INTRABC_SEARCH                                 1 ///< flexible 1xN IntraBC search range (in terms of CTUs)
 
 //------------------------------------------------
@@ -334,12 +333,10 @@
 
 #define SCM__R0186_INTRABC_BVD_CODING_EGORDER                         3
 
-#if SCM__R0348_PALETTE_MODE
 #include <cstdlib>
 #define MAX_PLT_SIZE                                                  31
 #define MAX_PLT_PRED_SIZE                                             64
 #define PLT_SHARING_BUGFIX                                            1 ///< 1: PLT sharing bug fix 
-#endif
 
 #if !SCM__FLEXIBLE_INTRABC_SEARCH
 #define INTRABC_LEFTWIDTH                                             64  ///< if the left CTU is used for IntraBC, this is set to be the CTU width; if only the left 4 columns are used, this is set to be 4
@@ -597,12 +594,8 @@ enum COEFF_SCAN_TYPE
   SCAN_DIAG = 0,        ///< up-right diagonal scan
   SCAN_HOR  = 1,        ///< horizontal first scan
   SCAN_VER  = 2,        ///< vertical first scan
-#if SCM__R0348_PALETTE_MODE
   SCAN_TRAV = 3,
   SCAN_NUMBER_OF_TYPES = 4
-#else
-  SCAN_NUMBER_OF_TYPES = 3
-#endif
 };
 
 enum COEFF_SCAN_GROUP_TYPE
@@ -913,7 +906,6 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
-#if SCM__R0348_PALETTE_MODE
 enum PLTRunMode
 {
   PLT_RUN_LEFT  = 0,
@@ -997,7 +989,7 @@ public:
   }
 };
 
-#endif
+
 //! \}
 
 #endif

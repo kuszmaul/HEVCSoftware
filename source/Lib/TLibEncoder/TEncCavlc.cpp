@@ -595,9 +595,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
      || pcSPS->getUseColorTrans()
-#if SCM__R0348_PALETTE_MODE
      || pcSPS->getUsePLTMode()
-#endif
     );
 
   // Other SPS extension flags checked here.
@@ -637,9 +635,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
-#if SCM__R0348_PALETTE_MODE
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
-#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -1269,7 +1265,6 @@ Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx 
   assert(0);
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TEncCavlc:: codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1279,7 +1274,7 @@ Void TEncCavlc::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNu
 {
   assert(0);
 }
-#endif
+
 
 Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -1608,11 +1603,10 @@ Void TEncCavlc::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
    assert(0);
  }
 
-#if SCM__R0348_PALETTE_MODE
 Void TEncCavlc:: codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#endif
+
 
 //! \}

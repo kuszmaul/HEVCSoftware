@@ -641,10 +641,8 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
   m_cSPS.setUseColorTrans               (       m_useColorTrans      );
-
-#if SCM__R0348_PALETTE_MODE
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
-#endif
+
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
     m_cSPS.setUseResidualDPCM(RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);

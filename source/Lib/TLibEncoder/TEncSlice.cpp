@@ -819,7 +819,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
-#if SCM__R0348_PALETTE_MODE
 #if PLT_SHARING_BUGFIX
   UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
 #else
@@ -831,7 +830,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
   }
-#endif
+
 #if SCM__R0147_RGB_YUV_RD_ENC
   if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() ) 
   {
@@ -845,7 +844,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     TComDataCU* pCtu = pcPic->getCtu( ctuRsAddr );
     pCtu->initCtu( pcPic, ctuRsAddr );
 
-#if SCM__R0348_PALETTE_MODE
     Bool resetPltPredictor = false;
 
     if( ctuRsAddr == pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr() && !resetPltPredictor )
@@ -879,7 +877,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
         pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
     }
-#endif
+
     // inherit from TR if necessary, select substream to use.
     tileColumnNumber = pcPic->getPicSym()->getTileIdxMap(ctuRsAddr) % (pcPic->getPicSym()->getNumTileColumnsMinus1()+1); // what column of tiles are we in?
     const UInt firstCtuRsAddrOfTile = pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr();
@@ -920,7 +918,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
         sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
       }
 
-#if SCM__R0348_PALETTE_MODE
       for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
 #if PLT_SHARING_BUGFIX
@@ -930,7 +927,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #endif
         lastPLTSize[comp] = 0;
       }
-#endif
+
 
       m_pcEntropyCoder->updateContextTables ( sliceType, pcSlice->getSliceQp(), false );
       m_pcEntropyCoder->setEntropyCoder     ( m_pppcRDSbacCoder[0][CI_CURR_BEST], pcSlice );
@@ -995,11 +992,8 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 }
 
     // run CU encoder
-#if SCM__R0348_PALETTE_MODE
     m_pcCuEncoder->compressCtu( pCtu, lastPLTSize, lastPLTUsedSize, lastPLT );
-#else
-    m_pcCuEncoder->compressCtu( pCtu );
-#endif
+
     // restore entropy coder to an initial stage
     m_pcEntropyCoder->setEntropyCoder ( m_pppcRDSbacCoder[0][CI_CURR_BEST], pcSlice );
     m_pcEntropyCoder->setBitstream( &pcBitCounters[uiSubStrm] );
@@ -1060,7 +1054,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       m_pcRateCtrl->getRCPic()->updateAfterCTU( m_pcRateCtrl->getRCPic()->getLCUCoded(), actualBits, actualQP, actualLambda,
           pCtu->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
     }
-#if SCM__R0348_PALETTE_MODE
+
 #if PLT_SHARING_BUGFIX
     if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
 #else
@@ -1083,7 +1077,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
         }
       }
     }
-#endif
+
 #if SCM__FLEXIBLE_INTRABC_SEARCH
     if( m_pcCfg->getUseHashBasedIntraBCSearch() )
 #else
@@ -1222,7 +1216,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       pcSbacCoders[uiSubStrm].loadContexts( CTXMem[0] );
     }
   }
-#if SCM__R0348_PALETTE_MODE
+
 #if PLT_SHARING_BUGFIX
   UChar lastPLTUsedSize[3] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
 #else
@@ -1230,7 +1224,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 #endif
   UChar lastPLTSize[3] = { 0, 0, 0 };
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
-#endif
+
   for( UInt ctuTsAddr = startCtuTsAddr; ctuTsAddr < boundingCtuTsAddr; ctuRsAddr = pcPic->getPicSym()->getCtuTsToRsAddrMap(++ctuTsAddr) )
   {
     tileColumnNumber     = pcPic->getPicSym()->getTileIdxMap(ctuRsAddr) % (pcPic->getPicSym()->getNumTileColumnsMinus1()+1); // what column of tiles are we in?
@@ -1279,7 +1273,6 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
           sliceType = (SliceType) pcSlice->getPPS()->getEncCABACTableIdx();
         }
 
-#if SCM__R0348_PALETTE_MODE
         for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
 #if PLT_SHARING_BUGFIX
@@ -1289,7 +1282,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 #endif
           lastPLTSize[comp] = 0;
         }
-#endif
+
         m_pcEntropyCoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
 
         // Byte-alignment in slice_data() when new tile
@@ -1310,7 +1303,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
     }
 
     TComDataCU* pCtu = pcPic->getCtu( ctuRsAddr );
-#if SCM__R0348_PALETTE_MODE
+
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
       Bool resetPltPredictor = false;
@@ -1342,7 +1335,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
         pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
     }
-#endif
+
 
     if ( pcSlice->getSPS()->getUseSAO() )
     {
@@ -1385,7 +1378,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
-#if SCM__R0348_PALETTE_MODE
+
 #if PLT_SHARING_BUGFIX
     if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
 #else
@@ -1408,7 +1401,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
         }
       }
     }
-#endif
+
     pcSbacCoders[uiSubStrm].load(m_pcSbacCoder);   //load back status of the entropy coder after encoding the CTU into relevant bitstream entropy coder
 
     //Store probabilities of second CTU in line into buffer

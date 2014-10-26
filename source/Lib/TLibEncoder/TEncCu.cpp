@@ -237,17 +237,12 @@ Void TEncCu::init( TEncTop* pcEncTop )
 
 /** \param  rpcCU pointer of CU data class
  */
-#if SCM__R0348_PALETTE_MODE
 Void TEncCu::compressCtu( TComDataCU* pCtu, UChar* lastPLTSize, UChar* lastPLTUsedSize, Pel lastPLT[][MAX_PLT_PRED_SIZE] )
-#else
-Void TEncCu::compressCtu( TComDataCU* pCtu )
-#endif
 {
   // initialize CU data
   m_ppcBestCU[0]->initCtu( pCtu->getPic(), pCtu->getCtuRsAddr() );
   m_ppcTempCU[0]->initCtu( pCtu->getPic(), pCtu->getCtuRsAddr() );
 
-#if SCM__R0348_PALETTE_MODE
   for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
     m_ppcBestCU[0]->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
@@ -260,7 +255,6 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
       m_ppcTempCU[0]->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
     }
   }
-#endif
 
   // analysis of CU
   DEBUG_STRING_NEW(sDebug)
@@ -448,7 +442,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     lastIntraBCMv[i] = rpcBestCU->getLastIntraBCMv(i);
   }
 
-#if SCM__R0348_PALETTE_MODE
   UChar lastPLTUsedSize[3];
   UChar lastPLTSize[3];
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
@@ -462,7 +455,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       lastPLT[ch][i] = rpcBestCU->getLastPLTInLcuFinal(ch, i);
     }
   }
-#endif
+
   TComPic* pcPic = rpcBestCU->getPic();
   DEBUG_STRING_NEW(sDebug)
 
@@ -946,7 +939,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           iQP = iMinQP;
         }
-#if SCM__R0348_PALETTE_MODE
         if ( rpcBestCU->getSlice()->getSPS()->getUsePLTMode() )
         {
           xCheckPLTMode( rpcBestCU, rpcTempCU, false );
@@ -963,7 +955,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           }
         }
-#endif
+
       }
     }
 
@@ -1006,12 +998,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
     }
-#if SCM__R0348_PALETTE_MODE
     if (rpcBestCU->getPLTModeFlag(0))
     {
       rpcBestCU->saveLastPLTInLcuFinal( rpcBestCU, 0, MAX_NUM_COMPONENT );
     }
-#endif
 
     m_pcEntropyCoder->resetBits();
     m_pcEntropyCoder->encodeSplitFlag( rpcBestCU, 0, uiDepth, true );
@@ -1035,12 +1025,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 
   // copy orginal YUV samples to PCM buffer
-#if SCM__R0348_PALETTE_MODE
   if( rpcBestCU->getPLTModeFlag(0) == false )
-#endif
-  if( rpcBestCU->isLosslessCoded(0) && (rpcBestCU->getIPCMFlag(0) == false))
   {
-    xFillPCMBuffer(rpcBestCU, m_ppcOrigYuv[uiDepth]);
+    if( rpcBestCU->isLosslessCoded(0) && (rpcBestCU->getIPCMFlag(0) == false))
+    {
+      xFillPCMBuffer(rpcBestCU, m_ppcOrigYuv[uiDepth]);
+    }
   }
 
   if( (g_uiMaxCUWidth>>uiDepth) == rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
@@ -1097,7 +1087,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           pcSubTempPartCU->setLastIntraBCMv( lastIntraBCMv[i], i );
         }
 
-#if SCM__R0348_PALETTE_MODE
         for (UInt ch = 0; ch < numValidComp; ch++)
         {
           pcSubBestPartCU->setLastPLTInLcuUsedSizeFinal(ch, lastPLTUsedSize[ch]);
@@ -1110,7 +1099,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             pcSubTempPartCU->setLastPLTInLcuFinal(ch, lastPLT[ch][i], i);
           }
         }
-#endif
+
 
         if( ( pcSubBestPartCU->getCUPelX() < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( pcSubBestPartCU->getCUPelY() < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
         {
@@ -1147,7 +1136,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               lastIntraBCMv[i] = pcSubBestPartCU->getLastIntraBCMv(i);
             }
           }
-#if SCM__R0348_PALETTE_MODE
+
 #if PLT_SHARING_BUGFIX
           if(pcSubBestPartCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y) != PLT_SIZE_INVALID)
 #else
@@ -1171,7 +1160,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               }
             }
           }
-#endif
+
 
           rpcTempCU->copyPartFrom( pcSubBestPartCU, uiPartUnitIdx, uhNextDepth );         // Keep best part data to current temporary data.
           xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
@@ -1443,13 +1432,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if ( !pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
-#if SCM__R0348_PALETTE_MODE
     if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
     {
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
       return;
     }
-#endif
 
     m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -2302,7 +2289,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   DEBUG_STRING_NEW(b)
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 }
-#if SCM__R0348_PALETTE_MODE
+
 Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool bCheckPLTSharingMode)
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
@@ -2323,7 +2310,7 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   DEBUG_STRING_NEW(b)
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 }
-#endif
+
 
 /** check whether current try is the best with identifying the depth of current try
  * \param rpcBestCU

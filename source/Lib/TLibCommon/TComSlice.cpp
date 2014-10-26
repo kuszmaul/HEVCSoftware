@@ -1601,9 +1601,7 @@ TComSPS::TComSPS()
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
 , m_useColorTrans             (false)
-#if SCM__R0348_PALETTE_MODE
 , m_usePaletteMode            (false)
-#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)

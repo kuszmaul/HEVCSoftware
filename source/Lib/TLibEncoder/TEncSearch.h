@@ -137,13 +137,11 @@ protected:
   Int             m_currRefPicIndex;
   Bool            m_bSkipFracME;
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
-#if SCM__R0348_PALETTE_MODE
   Bool            m_bBestScanRotationMode;
   Pel*            m_paOriginalLevel;
   Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
-#endif
 public:
   TEncSearch();
   virtual ~TEncSearch();
@@ -385,10 +383,8 @@ public:
 
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* rpcPredYuv, TComYuv* rpcResiYuv, TComYuv* rpcRecoYuv );
-#if SCM__R0348_PALETTE_MODE
   Void PLTSearch  (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode);
   Void deriveRunAndCalcBits( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode);
-#endif
 
   Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
                                 Int pos_X,

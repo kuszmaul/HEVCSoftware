@@ -788,9 +788,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
           case SPS_EXT__SCC:
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
             READ_FLAG( uiCode, "adaptive_color_trans_flag"    );            pcSPS->setUseColorTrans                          (uiCode != 0);
-#if SCM__R0348_PALETTE_MODE
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
-#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -1651,7 +1649,6 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TDecCavlc::parsePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp)
 {
   assert(0);
@@ -1666,7 +1663,7 @@ Void TDecCavlc::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
 {
   assert(0);
 }
-#endif
+
 
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
@@ -2064,7 +2061,6 @@ Void TDecCavlc::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
   assert(0);
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TDecCavlc::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2073,7 +2069,7 @@ Void TDecCavlc::parseScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, 
 {
   assert(0);
 }
-#endif
+
 
 //! \}
 

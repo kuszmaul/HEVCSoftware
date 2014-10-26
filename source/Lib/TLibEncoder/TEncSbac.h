@@ -115,13 +115,11 @@ public:
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
-#if SCM__R0348_PALETTE_MODE
   Void  xEncodePLTPredIndicator ( UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
   Void  xEncodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
   Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
   Void  xWritePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
   Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
 
@@ -143,11 +141,9 @@ protected:
 
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if SCM__R0348_PALETTE_MODE
   Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
   Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -205,9 +201,7 @@ public:
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
   UInt                 m_uiLastQp;
-#if SCM__R0348_PALETTE_MODE
   UInt* m_puiScanOrder;
-#endif
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -243,14 +237,12 @@ private:
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
-#if SCM__R0348_PALETTE_MODE
   ContextModel3DBuffer m_PLTModeFlagSCModel;
   ContextModel3DBuffer m_SPointSCModel;
   ContextModel3DBuffer m_cCopyTopRunSCModel;
   ContextModel3DBuffer m_cRunSCModel;
   ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
   ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
-#endif
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
   ContextModel3DBuffer m_cCUColorTransformFlagSCModel;

@@ -72,11 +72,9 @@ private:
   static const UChar m_aucIntraFilter[MAX_NUM_CHANNEL_TYPE][MAX_INTRA_FILTER_DEPTHS];
 
 protected:
-#if SCM__R0348_PALETTE_MODE
   Int       m_iPLTErrLimit;
   Pel       m_cIndexBlock[MAX_CU_SIZE * MAX_CU_SIZE];
   UInt*     m_puiScanOrder;
-#endif
   Pel*      m_piYuvExt[MAX_NUM_COMPONENT][NUM_PRED_BUF];
   Int       m_iYuvExtSize;
 
@@ -145,7 +143,6 @@ public:
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled);
 
   static Bool UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode);
-#if SCM__R0348_PALETTE_MODE
   Void  derivePLTLossy(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost );
   Void  derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc [3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
   Void  deriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
@@ -159,7 +156,7 @@ public:
   Void  setPLTErrLimit ( Int iPLTErrLimit ) {  m_iPLTErrLimit = iPLTErrLimit;  }
   Int   getPLTErrLimit () {return m_iPLTErrLimit;}
   Void  rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bool isInverse );
-#endif
+
 };
 
 //! \}
