@@ -178,7 +178,6 @@ Void printRExtMacroSettings()
 
   PRINT_CONSTANT(RExt__O0043_BEST_EFFORT_DECODING,                                  settingNameWidth, settingValueWidth);  
 
-  PRINT_CONSTANT(SCM__R0102_HASH_ME_FIX,                                            settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0147_ADAPTIVE_COLOR_TRANSFORM,                               settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0162_INTRABC_HASH_SEARCH_ENHANCEMENT,                        settingNameWidth, settingValueWidth);
   PRINT_CONSTANT(SCM__R0309_INTRABC_BVP,                                            settingNameWidth, settingValueWidth);

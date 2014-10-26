@@ -4031,8 +4031,7 @@ UInt TComDataCU::getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs )
 UInt TComDataCU::getIntraBCSearchAreaWidth()
 #endif
 {
-  const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();
-  const UInt        zScanPartsPerLCU  = g_auiRasterToZscan[getPic()->getNumPartInCtuWidth() - 1 ];
+  const UInt        lcuWidth          = getSlice()->getSPS()->getMaxCUWidth();  
   const TComPicSym &picSym            = *getPic()->getPicSym();
   const UInt        currentTileIdx    = picSym.getTileIdxMap(getCtuRsAddr());
 #if SCM__FLEXIBLE_INTRABC_SEARCH
