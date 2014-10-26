@@ -96,9 +96,7 @@ TDecSbac::TDecSbac()
 , m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColorTransformFlagSCModel             ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#if SCM__R0186_INTRABC_BVD
 , m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 #if SCM__R0348_PALETTE_MODE
 , m_PLTModeFlagSCModel                       ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
@@ -173,9 +171,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_COLOR_TRANS);
-#if SCM__R0186_INTRABC_BVD
   m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
-#endif
 #if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
@@ -245,9 +241,8 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
-#if SCM__R0186_INTRABC_BVD
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD );
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
@@ -980,11 +975,7 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
   UInt        uiMvpIdx;
   UInt        uiSymbol;
 
-#if SCM__R0186_INTRABC_BVD
   parseIntraBCBvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
-#else
-  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
-#endif 
   
   MvLast[0] = pcCU->getLastIntraBCMv(0);
   MvLast[1] = pcCU->getLastIntraBCMv(1);
@@ -1011,7 +1002,6 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
 
 }
 
-#if SCM__R0186_INTRABC_BVD
 Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList )
 {
  
@@ -1051,7 +1041,7 @@ Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPart
 
   return; 
 }
-#endif
+
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx

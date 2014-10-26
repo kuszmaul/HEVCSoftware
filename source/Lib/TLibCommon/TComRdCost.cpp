@@ -359,7 +359,6 @@ UInt TComRdCost::xGetComponentBits( Int iVal )
   return uiLength;
 }
 
-#if SCM__R0186_INTRABC_BVD
 UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
 {
   if(iVal == 0)
@@ -386,7 +385,7 @@ UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
   
   return uiLength;
 }
-#endif
+
 
 Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam )
 {

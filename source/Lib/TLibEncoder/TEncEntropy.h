@@ -129,10 +129,8 @@ public:
 
   virtual Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if SCM__R0186_INTRABC_BVD
   virtual Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;
   virtual Void estBvdBin0Cost    (Int *Bin0Cost)  = 0;
-#endif
   virtual ~TEncEntropyIf() {}
 };
 
