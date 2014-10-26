@@ -268,9 +268,6 @@ public:
                                   Int          iPartIdx,
                                   TComMv*      pcMvPred,
                                   TComMv&      rcMv,
-#if !SCM__R0081_CODE_SIMPLIFICATION
-                                  UInt&        ruiBits,
-#endif
                                   Distortion&  ruiCost,
                                   Bool         bUse1DSearchFor8x8
                                 );
@@ -406,10 +403,6 @@ public:
                                 Int iPartIdx,
                                 TComMv* pcMvPred,
                                 TComMv& rcMv,
-#if !SCM__R0081_CODE_SIMPLIFICATION
-                                UInt& ruiBits,
-                                Distortion& ruiCost,
-#endif
                                 UInt uiIntraBCECost
                               );
 
