@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0081_CODE_SIMPLIFICATION                               1 ///< code simplification as proposed in R0081
 #define SCM__R0081_BUGFIX                                            1 ///< Bug fix as proposed in R0081
 #define SCM__R0186_INTRABC_BVD                                       1 ///< 0 = disable BVD improvements as proposed in R0186, 1 (default) = enable BVD improvements as proposed in R0186
 #define SCM__R0348_PALETTE_MODE                                      1 ///< 0 = no palette mode, 1 (default) = enable palette mode
