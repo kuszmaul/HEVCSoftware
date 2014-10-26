@@ -809,20 +809,18 @@ Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZ
  */
 Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID)
 {
-#if SCM__R0348_PALETTE_MODE
   if (pcCU->getPLTModeFlag(uiAbsZorderIdx))
   {
     return;
   }
-#endif
-        TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
-        UInt uiPcmLeftShiftBit;
+  TComPicYuv* pcPicYuvRec = pcCU->getPic()->getPicYuvRec();
+  UInt uiPcmLeftShiftBit;
   const UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   const UInt csx=pcPicYuvRec->getComponentScaleX(compID);
   const UInt csy=pcPicYuvRec->getComponentScaleY(compID);
   const UInt uiOffset   = (uiMinCoeffSize*uiAbsZorderIdx)>>(csx+csy);
 
-        Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getCtuRsAddr(), uiAbsZorderIdx);
+  Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getCtuRsAddr(), uiAbsZorderIdx);
   const Pel *piPcm = pcCU->getPCMSample(compID) + uiOffset;
   const UInt uiStride  = pcPicYuvRec->getStride(compID);
   const UInt uiWidth  = ((g_uiMaxCUWidth >> uiDepth) >> csx);

@@ -208,7 +208,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     }
   }
 
-#if SCM__R0348_PALETTE_MODE
 #if PLT_SHARING_BUGFIX
   UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
 #else
@@ -220,7 +219,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
   }
-#endif
+
 
   for( Int ctuRsAddr = startCtuRsAddr ;!uiIsLast && ctuRsAddr < pcPic->getNumberOfCtusInFrame(); ctuRsAddr = pcPic->getPicSym()->getCtuTsToRsAddrMap(pcPic->getPicSym()->getCtuRsToTsAddrMap(ctuRsAddr)+1) )
   {
@@ -232,7 +231,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     const UInt ctuXPosInCtus  = ctuRsAddr % frameWidthInCtus;
     const UInt uiSubStrm=pcPic->getSubstreamForCtuAddr(ctuRsAddr, true, pcSlice)-subStreamOffset;
 
-#if SCM__R0348_PALETTE_MODE
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
       Bool resetPltPredictor = false;
@@ -265,7 +263,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
         pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
     }
-#endif
+
 
     // inherit from TR if necessary, select substream to use.
     if( (pcSlice->getPPS()->getNumSubstreams() > 1) || ( depSliceSegmentsEnabled  && (ctuXPosInCtus == tileXPosInCtus)&&(pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag()) ))
@@ -326,7 +324,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
           }
         }
 
-#if SCM__R0348_PALETTE_MODE
         for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
 #if PLT_SHARING_BUGFIX
@@ -336,7 +333,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
 #endif
           lastPLTSize[comp] = 0;
         }
-#endif
+
 
         m_pcEntropyDecoder->updateContextTables( sliceType, pcSlice->getSliceQp() );
       }
@@ -383,7 +380,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
 
     m_pcCuDecoder->decodeCtu     ( pCtu, uiIsLast );
     m_pcCuDecoder->decompressCtu ( pCtu );
-#if SCM__R0348_PALETTE_MODE
+
 #if PLT_SHARING_BUGFIX
     if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) != PLT_SIZE_INVALID )
 #else
@@ -406,7 +403,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
         }
       }
     }
-#endif
+
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif

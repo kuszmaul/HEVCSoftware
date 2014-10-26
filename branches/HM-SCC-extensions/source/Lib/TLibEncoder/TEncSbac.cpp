@@ -91,14 +91,12 @@ TEncSbac::TEncSbac()
 , m_explicitRdpcmDirSCModel            ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCPredFlagSCModel            ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCrossComponentPredictionSCModel   ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
-#if SCM__R0348_PALETTE_MODE
 , m_PLTModeFlagSCModel                 ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 , m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColorTransformFlagSCModel       ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
@@ -156,14 +154,12 @@ Void TEncSbac::resetEntropy           ()
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
   m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION  );
-#if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
   m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG);
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
@@ -231,14 +227,12 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_explicitRdpcmDirSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
       curCost += m_cIntraBCPredFlagSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
       curCost += m_cCrossComponentPredictionSCModel.calcCost   ( curSliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
-#if SCM__R0348_PALETTE_MODE
       curCost += m_PLTModeFlagSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
       curCost += m_SPointSCModel.calcCost                      ( curSliceType, qp, (UChar*)INIT_SPOINT );
       curCost += m_cCopyTopRunSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_TOP_RUN );
       curCost += m_cRunSCModel.calcCost                        ( curSliceType, qp, (UChar*)INIT_RUN );
       curCost += m_PLTSharingModeFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
       curCost += m_PLTScanRotationModeFlagSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
       curCost += m_cCUColorTransformFlagSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_COLOR_TRANS );
@@ -299,15 +293,12 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
-
-#if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN );
   m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN );
   m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -424,7 +415,6 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
   m_pcBinIf->encodeBinsEP( bins, numBins );
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
 {
   UInt uiThresh;
@@ -739,7 +729,7 @@ Void TEncSbac::codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   UInt uiCtx = pcCU->getCtxScanRotationModeFlag( uiAbsPartIdx );
   m_pcBinIf->encodeBin( uiSymbol, m_PLTScanRotationModeFlagSCModel.get( 0, 0, uiCtx ) );
 }
-#endif
+
 
 /** Coding of coeff_abs_level_minus3
  * \param uiSymbol value of coeff_abs_level_minus3

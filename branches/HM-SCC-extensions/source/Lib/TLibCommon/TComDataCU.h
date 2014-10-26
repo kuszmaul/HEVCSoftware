@@ -144,7 +144,6 @@ private:
   Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
-#if SCM__R0348_PALETTE_MODE
   UChar*        m_piSPoint[MAX_NUM_COMPONENT];            ///< 0: left run mode; 1: above run mode
   Bool*         m_pbPLTModeFlag;                          ///< array of intra_pcm flags
   Pel*          m_piPLT[MAX_NUM_COMPONENT];               ///< Palette
@@ -156,7 +155,7 @@ private:
   Bool*         m_pbPLTSharingModeFlag;
   Bool*         m_pbPLTScanRotationModeFlag;
   Bool*         m_pbPLTScanTraverseModeFlag;
-#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -386,7 +385,6 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#if SCM__R0348_PALETTE_MODE
   UChar*        getSPoint             (ComponentID component)   { return m_piSPoint[component];      }
   Pel*          getLevel              (ComponentID component)   { return m_pcIPCMSample[component];  }
   TCoeff*       getRun                (ComponentID component)   { return m_pcTrCoeff[component];     }
@@ -437,7 +435,7 @@ public:
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
   Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }
   Void          setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#endif
+
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -552,10 +550,8 @@ public:
 
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
-#if SCM__R0348_PALETTE_MODE
   UInt          getCtxEscapeFlag                ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pEscapeFlag  );
   UInt          getCtxSPoint                    ( UInt   uiAbsPartIdx, UInt uiIdx,  UChar *SPoint     );
-#endif
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 

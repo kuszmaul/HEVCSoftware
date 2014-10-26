@@ -89,7 +89,6 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
   return;
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
@@ -106,7 +105,7 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
     }
   }
 }
-#endif
+
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
@@ -179,7 +178,6 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
   if ( pcCU->getSlice()->isIntra() )
   {
-#if SCM__R0348_PALETTE_MODE
     if ( pcCU->isIntra( uiAbsPartIdx ) )
     {
       encodePLTModeInfo( pcCU, uiAbsPartIdx );
@@ -191,7 +189,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
         }
       }
     }
-#endif
+
     return;
   }
 
@@ -201,7 +199,6 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
-#if SCM__R0348_PALETTE_MODE
   if(pcCU->isIntra( uiAbsPartIdx ))
   {
     encodePLTModeInfo (pcCU, uiAbsPartIdx);
@@ -213,7 +210,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       }
     }
   }
-#endif
+
 }
 
 // Split mode

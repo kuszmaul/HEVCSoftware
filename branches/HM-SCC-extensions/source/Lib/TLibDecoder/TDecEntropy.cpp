@@ -57,12 +57,10 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
 
 Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if SCM__R0348_PALETTE_MODE
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;
   }
-#endif
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -72,7 +70,6 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
@@ -86,7 +83,7 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   }
 }
 
-#endif
+
 /** decode merge flag
  * \param pcSubCU
  * \param uiAbsPartIdx
@@ -124,22 +121,18 @@ Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
-#if SCM__R0348_PALETTE_MODE
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
   }
-#endif
 }
 
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if SCM__R0348_PALETTE_MODE
   if (pcCU->getPLTModeFlag(uiAbsPartIdx))
   {
     return;
   }
-#endif
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -154,12 +147,10 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   {
     return;
   }
-#if SCM__R0348_PALETTE_MODE
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;
   }
-#endif
 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
@@ -196,12 +187,12 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     return;
   }
-#if SCM__R0348_PALETTE_MODE
+
   if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
     return;
   }
-#endif
+
   m_pcEntropyDecoderIf->parseIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
 }
 

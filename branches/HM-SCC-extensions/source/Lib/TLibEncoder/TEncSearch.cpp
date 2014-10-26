@@ -146,7 +146,6 @@ TEncSearch::TEncSearch()
   m_pTempPel                                       = NULL;
   setWpScalingDistParam( NULL, -1, REF_PIC_LIST_X );
 
-#if SCM__R0348_PALETTE_MODE
   m_paOriginalLevel  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
@@ -154,7 +153,6 @@ TEncSearch::TEncSearch()
   }
   m_paBestSPoint = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
   m_paBestRun    = (TCoeff*)xMalloc(TCoeff , MAX_CU_SIZE * MAX_CU_SIZE);
-#endif
 }
 
 
@@ -227,7 +225,6 @@ TEncSearch::~TEncSearch()
 
 
   m_tmpYuvPred.destroy();
-#if SCM__R0348_PALETTE_MODE
   if (m_paOriginalLevel)  { xFree(m_paOriginalLevel);  m_paOriginalLevel=NULL;  }
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
@@ -235,7 +232,6 @@ TEncSearch::~TEncSearch()
   }
   if (m_paBestSPoint)     { xFree(m_paBestSPoint); m_paBestSPoint=NULL; }
   if (m_paBestRun)        { xFree(m_paBestRun);    m_paBestRun=NULL;    }
-#endif
 }
 
 
@@ -1035,7 +1031,6 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
         m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
       }
-#if SCM__R0348_PALETTE_MODE
       else // encodePredMode has already done it
       {
         if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
@@ -1044,7 +1039,7 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         }
         m_pcEntropyCoder->encodePLTModeInfo(pcCU, 0, true);
       }
-#endif
+
       if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
       {
         m_pcEntropyCoder->encodeIntraBCFlag ( pcCU, 0, true );
@@ -1055,12 +1050,10 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
           return;
         }
       }
-#if SCM__R0348_PALETTE_MODE
       if (pcCU->getPLTModeFlag(0))
       {
         return;
       }
-#endif
       m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
 
       if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
@@ -4033,7 +4026,6 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
     pRecoPic += uiReconStride;
   }
 }
-#if SCM__R0348_PALETTE_MODE
 Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv,
                            TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode)
 {
@@ -4288,7 +4280,7 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
     memset(paSPoint[0], 0, sizeof(UChar) * uiTotalPixel);
   }
 }
-#endif
+
 
 
 /**  Function for PCM mode estimation.

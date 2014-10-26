@@ -39,9 +39,7 @@
 #include "TComDataCU.h"
 #include "TComTU.h"
 #include "TComPic.h"
-#if SCM__R0348_PALETTE_MODE
 #include <math.h>
-#endif
 //! \ingroup TLibCommon
 //! \{
 
@@ -90,23 +88,19 @@ TComDataCU::TComDataCU()
 #endif
     m_pcIPCMSample[comp]                  = NULL;
     m_explicitRdpcmMode[comp]             = NULL;
-#if SCM__R0348_PALETTE_MODE
     m_piPLT[comp]                         = NULL;
     m_piSPoint[comp]                      = NULL;
     m_puhPLTEscape[comp]                  = NULL;
     m_bPrevPLTReusedFlag[comp]            = NULL;
     m_piLastPLTInLcuFinal[comp]           = NULL;
-#endif
   }
 #if ADAPTIVE_QP_SELECTION
   m_ArlCoeffIsAliasedAllocation = false;
 #endif
   m_pbIPCMFlag         = NULL;
-#if SCM__R0348_PALETTE_MODE
   m_pbPLTModeFlag             = NULL;
   m_pbPLTSharingModeFlag      = NULL;
   m_pbPLTScanRotationModeFlag = NULL;
-#endif
   m_pCtuAboveLeft      = NULL;
   m_pCtuAboveRight     = NULL;
   m_pCtuAbove          = NULL;
@@ -144,14 +138,13 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     m_lastIntraBCMv[i] = TComMv();
   }
 
-#if SCM__R0348_PALETTE_MODE
 #if PLT_SHARING_BUGFIX
   m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = PLT_SIZE_INVALID;
 #else
   m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = 0;
 #endif
   m_uhLastPLTSizeFinal[COMPONENT_Y] = m_uhLastPLTSizeFinal[COMPONENT_Cb] = m_uhLastPLTSizeFinal[COMPONENT_Cr] = 0;
-#endif
+
   if ( !bDecSubCu )
   {
     m_phQP               = (Char*     )xMalloc(Char,     uiNumPartition);
@@ -213,21 +206,17 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       }
 #endif
       m_pcIPCMSample[compID] = (Pel*   )xMalloc(Pel , totalSize);
-#if SCM__R0348_PALETTE_MODE 
       m_piPLT[compID]               = (Pel*  )xMalloc(Pel, (uiNumPartition >> 2) * MAX_PLT_SIZE);
       m_piSPoint[compID]            = (UChar*)xMalloc(UChar, totalSize);
       m_puhPLTEscape[compID]        = (UChar*)xMalloc(Bool, uiNumPartition);
       m_bPrevPLTReusedFlag[comp]    = (UChar*)xMalloc(UChar, (uiNumPartition >> 2) * MAX_PLT_PRED_SIZE);
       m_piLastPLTInLcuFinal[compID] = (Pel*  )xMalloc(Pel, MAX_PLT_PRED_SIZE);
-#endif
     }
 
     m_pbIPCMFlag         = (Bool*  )xMalloc(Bool, uiNumPartition);
-#if SCM__R0348_PALETTE_MODE
     m_pbPLTModeFlag             = (Bool*)xMalloc(Bool, uiNumPartition);
     m_pbPLTSharingModeFlag      = (Bool*)xMalloc(Bool, uiNumPartition);
     m_pbPLTScanRotationModeFlag = (Bool*)xMalloc(Bool, uiNumPartition);
-#endif
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
     {
       m_acCUMvField[i].create( uiNumPartition );
@@ -302,21 +291,16 @@ Void TComDataCU::destroy()
 #endif
 
       if ( m_pcIPCMSample[comp]   ) { xFree(m_pcIPCMSample[comp]);    m_pcIPCMSample[comp]  = NULL; }
-#if SCM__R0348_PALETTE_MODE
       if ( m_piPLT[comp]               ) { xFree(m_piPLT[comp]);               m_piPLT[comp]               = NULL; }
       if ( m_piSPoint[comp]            ) { xFree(m_piSPoint[comp]);            m_piSPoint[comp]            = NULL; }
       if ( m_puhPLTEscape[comp]        ) { xFree(m_puhPLTEscape[comp]) ;       m_puhPLTEscape[comp]        = NULL; }
       if ( m_bPrevPLTReusedFlag[comp]  ) { xFree(m_bPrevPLTReusedFlag[comp]);  m_bPrevPLTReusedFlag[comp]  = NULL; }
       if ( m_piLastPLTInLcuFinal[comp] ) { xFree(m_piLastPLTInLcuFinal[comp]); m_piLastPLTInLcuFinal[comp] = NULL; }
-#endif
     }
     if ( m_pbIPCMFlag         ) { xFree(m_pbIPCMFlag   );       m_pbIPCMFlag        = NULL; }
-#if SCM__R0348_PALETTE_MODE
     if ( m_pbPLTModeFlag             ) { xFree(m_pbPLTModeFlag);             m_pbPLTModeFlag             = NULL; }
     if ( m_pbPLTSharingModeFlag      ) { xFree(m_pbPLTSharingModeFlag);      m_pbPLTSharingModeFlag      = NULL; }
     if ( m_pbPLTScanRotationModeFlag ) { xFree(m_pbPLTScanRotationModeFlag); m_pbPLTScanRotationModeFlag = NULL; }
-#endif
-
 
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
     {
@@ -424,7 +408,6 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
     m_lastIntraBCMv[i].setZero();
   }
 
-#if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
 #if PLT_SHARING_BUGFIX
@@ -438,7 +421,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
       m_piLastPLTInLcuFinal[comp][i] = 0;
     }
   }
-#endif
+
 
   memset( m_skipFlag          , false,                      m_uiNumPartition * sizeof( *m_skipFlag ) );
 
@@ -465,9 +448,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
     memset( m_puhTransformSkip[comp]              , 0,                     m_uiNumPartition * sizeof( *m_puhTransformSkip[comp]) );
     memset( m_puhCbf[comp]                        , 0,                     m_uiNumPartition * sizeof( *m_puhCbf[comp] ) );
     memset( m_explicitRdpcmMode[comp]             , NUMBER_OF_RDPCM_MODES, m_uiNumPartition * sizeof( *m_explicitRdpcmMode[comp] ) );
-#if SCM__R0348_PALETTE_MODE
-      memset( m_puhPLTEscape[comp]                , 0,                     m_uiNumPartition * sizeof( *m_puhPLTEscape[comp] ) );
-#endif
+    memset( m_puhPLTEscape[comp]                , 0,                     m_uiNumPartition * sizeof( *m_puhPLTEscape[comp] ) );
   }
   memset( m_pbMergeFlag       , false,                    m_uiNumPartition * sizeof( *m_pbMergeFlag ) );
   memset( m_puhMergeIndex     , 0,                        m_uiNumPartition * sizeof( *m_puhMergeIndex ) );
@@ -477,11 +458,9 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   }
   memset( m_puhInterDir       , 0,                        m_uiNumPartition * sizeof( *m_puhInterDir ) );
   memset( m_pbIPCMFlag        , false,                    m_uiNumPartition * sizeof( *m_pbIPCMFlag ) );
-#if SCM__R0348_PALETTE_MODE
   memset( m_pbPLTModeFlag             , false,            m_uiNumPartition * sizeof( *m_pbPLTModeFlag ) );
   memset( m_pbPLTSharingModeFlag      , false,            m_uiNumPartition * sizeof( *m_pbPLTSharingModeFlag) );
   memset( m_pbPLTScanRotationModeFlag , false,            m_uiNumPartition * sizeof( *m_pbPLTScanRotationModeFlag ) );
-#endif
 
   const UInt numCoeffY    = g_uiMaxCUWidth*g_uiMaxCUHeight;
   for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
@@ -576,9 +555,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       m_crossComponentPredictionAlpha[comp][ui] = 0;
       m_puhTransformSkip             [comp][ui] = 0;
       m_explicitRdpcmMode            [comp][ui] = NUMBER_OF_RDPCM_MODES;
-#if SCM__R0348_PALETTE_MODE
-        m_puhPLTEscape[comp][ui]                  = 0;
-#endif
+      m_puhPLTEscape[comp][ui]                  = 0;
     }
     m_skipFlag[ui]      = false;
     m_ColorTransform[ui] = false;
@@ -587,11 +564,9 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
     m_pePredMode[ui]    = NUMBER_OF_PREDICTION_MODES;
     m_CUTransquantBypass[ui] = bTransquantBypass;
     m_pbIPCMFlag[ui]    = 0;
-#if SCM__R0348_PALETTE_MODE
-      m_pbPLTModeFlag[ui]             = 0;
-      m_pbPLTSharingModeFlag[ui]      = 0;
-      m_pbPLTScanRotationModeFlag[ui] = 0;
-#endif
+    m_pbPLTModeFlag[ui]             = 0;
+    m_pbPLTSharingModeFlag[ui]      = 0;
+    m_pbPLTScanRotationModeFlag[ui] = 0;
     m_phQP[ui]          = qp;
     m_ChromaQpAdj[ui]   = 0;
     m_pbMergeFlag[ui]   = 0;
@@ -606,16 +581,14 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
     for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
       m_puhCbf[comp][ui] = 0;
-#if SCM__R0348_PALETTE_MODE 
-        for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
-        {
-          m_piPLT[comp][(ui >> 2) * MAX_PLT_SIZE + uiPLTIdx] = 0;
-        }
-        for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_PRED_SIZE; uiPLTIdx++)
-        {
-          m_bPrevPLTReusedFlag[comp][(ui >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = 0;
-        }
-#endif
+      for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
+      {
+        m_piPLT[comp][(ui >> 2) * MAX_PLT_SIZE + uiPLTIdx] = 0;
+      }
+      for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_PRED_SIZE; uiPLTIdx++)
+      {
+        m_bPrevPLTReusedFlag[comp][(ui >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = 0;
+      }
     }
   }
 
@@ -635,9 +608,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
     memset( m_pcArlCoeff[comp],   0, numCoeff * sizeof( TCoeff ) );
 #endif
     memset( m_pcIPCMSample[comp], 0, numCoeff * sizeof( Pel) );
-#if SCM__R0348_PALETTE_MODE
     memset( m_piSPoint[comp],     0, numCoeff * sizeof( UChar) );
-#endif
   }
 }
 
@@ -716,7 +687,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     m_lastIntraBCMv[i].setZero();
   }
 
-#if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
 #if PLT_SHARING_BUGFIX
@@ -730,7 +700,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_piLastPLTInLcuFinal[comp][i] = 0;
     }
   }
-#endif
+
 
   Int iSizeInUchar = sizeof( UChar  ) * m_uiNumPartition;
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
@@ -753,9 +723,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_puhTransformSkip[comp],              0, iSizeInUchar );
     memset( m_puhCbf[comp],                        0, iSizeInUchar );
     memset( m_explicitRdpcmMode[comp],             NUMBER_OF_RDPCM_MODES, iSizeInUchar );
-#if SCM__R0348_PALETTE_MODE
     memset( m_puhPLTEscape[comp],                  0, iSizeInUchar );
-#endif
   }
 
   memset( m_puhDepth,     uiDepth, iSizeInUchar );
@@ -765,11 +733,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_puhWidth,          uhWidth,  iSizeInUchar );
   memset( m_puhHeight,         uhHeight, iSizeInUchar );
   memset( m_pbIPCMFlag,        0, iSizeInBool  );
-#if SCM__R0348_PALETTE_MODE
   memset( m_pbPLTModeFlag,             0, iSizeInBool );
   memset( m_pbPLTSharingModeFlag,      0, iSizeInBool );
   memset( m_pbPLTScanRotationModeFlag, 0, iSizeInBool );
-#endif
+
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
@@ -800,9 +767,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
     memset( m_pcArlCoeff[ch], 0, sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memset( m_pcIPCMSample[ch], 0, sizeof(Pel)* (numCoeffY>>componentShift) );
-#if SCM__R0348_PALETTE_MODE
     memset( m_piSPoint[ch], 0, sizeof(UChar) * (numCoeffY >> componentShift) );
-#endif
   }
 
   for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)
@@ -876,11 +841,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_puhTransformSkip[comp]              = pcCU->getTransformSkip(ComponentID(comp))                 + uiPart;
     m_puhCbf[comp]                        = pcCU->getCbf(ComponentID(comp))                           + uiPart;
     m_explicitRdpcmMode[comp]             = pcCU->getExplicitRdpcmMode(ComponentID(comp))             + uiPart;
-#if SCM__R0348_PALETTE_MODE
     m_piPLT[comp]              = pcCU->getPLT(comp) + (uiPart >> 2) * MAX_PLT_SIZE;
     m_bPrevPLTReusedFlag[comp] = pcCU->getPrevPLTReusedFlag(comp) + (uiPart >> 2) * MAX_PLT_PRED_SIZE;
     m_puhPLTEscape[comp]       = pcCU->getPLTEscape(comp)                                             + uiPart;
-#endif
   }
 
   m_puhDepth=pcCU->getDepth()                     + uiPart;
@@ -888,11 +851,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_puhHeight=pcCU->getHeight()                   + uiPart;
 
   m_pbIPCMFlag         = pcCU->getIPCMFlag()        + uiPart;
-#if SCM__R0348_PALETTE_MODE
   m_pbPLTModeFlag             =  pcCU->getPLTModeFlag()            + uiPart;
   m_pbPLTSharingModeFlag      = pcCU->getPLTSharingModeFlag()      + uiPart;
   m_pbPLTScanRotationModeFlag = pcCU->getPLTScanRotationModeFlag() + uiPart;
-#endif
   m_pCtuAboveLeft      = pcCU->getCtuAboveLeft();
   m_pCtuAboveRight     = pcCU->getCtuAboveRight();
   m_pCtuAbove          = pcCU->getCtuAbove();
@@ -927,9 +888,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_pcArlCoeff[ch] = pcCU->getArlCoeff(component) + offset;
 #endif
     m_pcIPCMSample[ch] = pcCU->getPCMSample(component) + offset;
-#if SCM__R0348_PALETTE_MODE
     m_piSPoint[ch] = pcCU->getSPoint(component) + offset;
-#endif
   }
 }
 
@@ -999,7 +958,6 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     m_lastIntraBCMv[i] = pcCU->getLastIntraBCMv(i);
   }
 
-#if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
     m_uhLastPLTUsedSizeFinal[comp] = pcCU->getLastPLTInLcuUsedSizeFinal(comp);
@@ -1009,7 +967,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
       m_piLastPLTInLcuFinal[comp][i] = pcCU->getLastPLTInLcuFinal(comp, i);
     }
   }
-#endif
+
 
   Int sizeInChar  = sizeof( Char ) * uiNumPartition;
   memcpy( m_skipFlag   + uiOffset, pcCU->getSkipFlag(),       sizeof( *m_skipFlag )   * uiNumPartition );
@@ -1036,11 +994,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_puhTransformSkip[comp]              + uiOffset, pcCU->getTransformSkip(ComponentID(comp))                , iSizeInUchar );
     memcpy( m_puhCbf[comp]                        + uiOffset, pcCU->getCbf(ComponentID(comp))                          , iSizeInUchar );
     memcpy( m_explicitRdpcmMode[comp]             + uiOffset, pcCU->getExplicitRdpcmMode(ComponentID(comp))            , iSizeInUchar );
-#if SCM__R0348_PALETTE_MODE
     memcpy( m_piPLT[comp] + (uiOffset >> 2) * MAX_PLT_SIZE,                   pcCU->getPLT(comp),                    sizeof(Pel) * (uiNumPartition >> 2) * MAX_PLT_SIZE);
     memcpy( m_bPrevPLTReusedFlag[comp] + (uiOffset >> 2) * MAX_PLT_PRED_SIZE, pcCU->getPrevPLTReusedFlag(comp),      sizeof(UChar) * (uiNumPartition >> 2) * MAX_PLT_PRED_SIZE);
     memcpy( m_puhPLTEscape[comp] + uiOffset,                                  pcCU->getPLTEscape(ComponentID(comp)), iSizeInUchar );
-#endif
   }
 
   memcpy( m_puhDepth  + uiOffset, pcCU->getDepth(),  iSizeInUchar );
@@ -1048,11 +1004,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_puhHeight + uiOffset, pcCU->getHeight(), iSizeInUchar );
 
   memcpy( m_pbIPCMFlag + uiOffset, pcCU->getIPCMFlag(), iSizeInBool );
-#if SCM__R0348_PALETTE_MODE
   memcpy( m_pbPLTModeFlag             + uiOffset, pcCU->getPLTModeFlag(),             iSizeInBool );
   memcpy( m_pbPLTSharingModeFlag      + uiOffset, pcCU->getPLTSharingModeFlag(),      iSizeInBool );
   memcpy( m_pbPLTScanRotationModeFlag + uiOffset, pcCU->getPLTScanRotationModeFlag(), iSizeInBool );
-#endif
   m_pCtuAboveLeft      = pcCU->getCtuAboveLeft();
   m_pCtuAboveRight     = pcCU->getCtuAboveRight();
   m_pCtuAbove          = pcCU->getCtuAbove();
@@ -1084,9 +1038,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_pcArlCoeff[ch] + offset, pcCU->getArlCoeff(component), sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( m_pcIPCMSample[ch] + offset, pcCU->getPCMSample(component), sizeof(Pel)*(numCoeffY>>componentShift) );
-#if SCM__R0348_PALETTE_MODE
     memcpy( m_piSPoint[ch] + offset, pcCU->getSPoint(component), sizeof(UChar) * (numCoeffY >> componentShift) );
-#endif
   }
 
   m_uiTotalBins += pcCU->getTotalBins();
@@ -1133,11 +1085,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     memcpy( pCtu->getTransformSkip(ComponentID(comp))                 + m_absZIdxInCtu, m_puhTransformSkip[comp],              iSizeInUchar );
     memcpy( pCtu->getCbf(ComponentID(comp))                           + m_absZIdxInCtu, m_puhCbf[comp],                        iSizeInUchar );
     memcpy( pCtu->getExplicitRdpcmMode(ComponentID(comp))             + m_absZIdxInCtu, m_explicitRdpcmMode[comp],             iSizeInUchar );
-#if SCM__R0348_PALETTE_MODE
     memcpy( pCtu->getPLT(comp) + (m_absZIdxInCtu >> 2) * MAX_PLT_SIZE, m_piPLT[comp], sizeof(Pel) * MAX_PLT_SIZE * (m_uiNumPartition >> 2));
     memcpy( pCtu->getPrevPLTReusedFlag(comp) + (m_absZIdxInCtu >> 2) * MAX_PLT_PRED_SIZE, m_bPrevPLTReusedFlag[comp], sizeof(UChar) * MAX_PLT_PRED_SIZE * (m_uiNumPartition >> 2));
     memcpy( pCtu->getPLTEscape(comp) + m_absZIdxInCtu,          m_puhPLTEscape[comp], iSizeInUchar  );
-#endif
   }
 
   memcpy( pCtu->getDepth()  + m_absZIdxInCtu, m_puhDepth,  iSizeInUchar );
@@ -1158,11 +1108,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   }
 
   memcpy( pCtu->getIPCMFlag() + m_absZIdxInCtu, m_pbIPCMFlag,         iSizeInBool  );
-#if SCM__R0348_PALETTE_MODE
   memcpy( pCtu->getPLTModeFlag()             + m_absZIdxInCtu, m_pbPLTModeFlag,             iSizeInBool );
   memcpy( pCtu->getPLTSharingModeFlag()      + m_absZIdxInCtu, m_pbPLTSharingModeFlag,      iSizeInBool );
   memcpy( pCtu->getPLTScanRotationModeFlag() + m_absZIdxInCtu, m_pbPLTScanRotationModeFlag, iSizeInBool );
-#endif
 
   const UInt numCoeffY    = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>(uhDepth<<1);
   const UInt offsetY      = m_absZIdxInCtu*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
@@ -1175,9 +1123,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     memcpy( pCtu->getArlCoeff(component) + (offsetY>>componentShift), m_pcArlCoeff[component], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( pCtu->getPCMSample(component) + (offsetY>>componentShift), m_pcIPCMSample[component], sizeof(Pel)*(numCoeffY>>componentShift) );
-#if SCM__R0348_PALETTE_MODE
     memcpy( pCtu->getSPoint(component) + (offsetY>>componentShift), m_piSPoint[component], sizeof(UChar) * (numCoeffY >> componentShift) );
-#endif
   }
 
   pCtu->getTotalBins() = m_uiTotalBins;
@@ -1226,11 +1172,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     memcpy( pCtu->getTransformSkip(ComponentID(comp) )                + uiPartOffset, m_puhTransformSkip[comp],   iSizeInUchar );
     memcpy( pCtu->getCbf(ComponentID(comp))                           + uiPartOffset, m_puhCbf[comp],             iSizeInUchar );
     memcpy( pCtu->getExplicitRdpcmMode(ComponentID(comp) )            + uiPartOffset, m_explicitRdpcmMode[comp],  iSizeInUchar );
-#if SCM__R0348_PALETTE_MODE 
     memcpy( pCtu->getPLT(comp) + (uiPartOffset >> 2) * MAX_PLT_SIZE, m_piPLT[comp], sizeof(Pel) * (uiQNumPart >> 2) * MAX_PLT_SIZE);
     memcpy( pCtu->getPrevPLTReusedFlag(comp) + (uiPartOffset >> 2) * MAX_PLT_PRED_SIZE, m_bPrevPLTReusedFlag[comp], sizeof(UChar) * (uiQNumPart >> 2) * MAX_PLT_PRED_SIZE);
     memcpy( pCtu->getPLTEscape(comp)     + uiPartOffset,      m_puhPLTEscape[comp], iSizeInUchar  );
-#endif
   }
 
   memcpy( pCtu->getDepth()  + uiPartOffset, m_puhDepth,  iSizeInUchar );
@@ -1251,11 +1195,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   }
 
   memcpy( pCtu->getIPCMFlag() + uiPartOffset, m_pbIPCMFlag,         iSizeInBool  );
-#if SCM__R0348_PALETTE_MODE
   memcpy( pCtu->getPLTModeFlag()             + uiPartOffset, m_pbPLTModeFlag,             iSizeInBool );
   memcpy( pCtu->getPLTSharingModeFlag()      + uiPartOffset, m_pbPLTSharingModeFlag,      iSizeInBool );
   memcpy( pCtu->getPLTScanRotationModeFlag() + uiPartOffset, m_pbPLTScanRotationModeFlag, iSizeInBool );
-#endif
   const UInt numCoeffY    = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>((uhDepth+uiPartDepth)<<1);
   const UInt offsetY      = uiPartOffset*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
   for (UInt comp=0; comp<numValidComp; comp++)
@@ -1266,9 +1208,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     memcpy( pCtu->getArlCoeff(ComponentID(comp)) + (offsetY>>componentShift), m_pcArlCoeff[comp], sizeof(TCoeff)*(numCoeffY>>componentShift) );
 #endif
     memcpy( pCtu->getPCMSample(ComponentID(comp)) + (offsetY>>componentShift), m_pcIPCMSample[comp], sizeof(Pel)*(numCoeffY>>componentShift) );
-#if SCM__R0348_PALETTE_MODE 
     memcpy( pCtu->getSPoint(ComponentID(comp)) + (offsetY>>componentShift), m_piSPoint[comp], sizeof(UChar)*(numCoeffY>>componentShift) );
-#endif
   }
 
   pCtu->getTotalBins() = m_uiTotalBins;
@@ -3307,7 +3247,6 @@ Void TComDataCU::setIPCMFlagSubParts  (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt u
   memset(m_pbIPCMFlag + uiAbsPartIdx, bIpcmFlag, sizeof(Bool)*uiCurrPartNumb );
 }
 
-#if SCM__R0348_PALETTE_MODE
 UInt TComDataCU::getCtxScanRotationModeFlag( UInt uiAbsPartIdx)
 {
   TComDataCU* pcTempCU;
@@ -3549,7 +3488,7 @@ Void TComDataCU::xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3])
     }
   }
 }
-#endif
+
 
 /** Test whether the current block is skipped
  * \param uiPartIdx Block index
@@ -4022,11 +3961,9 @@ UInt TComDataCU::getIntraBCSearchAreaWidth()
   return std::min<UInt>(width, maxWidth);
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TComDataCU::setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth)
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1);
   memset(m_pbPLTScanRotationModeFlag + uiAbsPartIdx, bPLTScanRotationModeFlag, sizeof(Bool)*uiCurrPartNumb );
 }
-#endif
 //! \}

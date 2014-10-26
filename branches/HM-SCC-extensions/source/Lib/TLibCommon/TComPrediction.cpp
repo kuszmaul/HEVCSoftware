@@ -80,9 +80,7 @@ TComPrediction::TComPrediction()
       m_piYuvExt[ch][buf] = NULL;
     }
   }
-#if SCM__R0348_PALETTE_MODE
   m_iPLTErrLimit = 3;
-#endif
 }
 
 TComPrediction::~TComPrediction()
@@ -902,7 +900,6 @@ Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt 
           (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
 
-#if SCM__R0348_PALETTE_MODE
 Void TComPrediction::deriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  Pel* pValue, UChar* pSPoint,
                                Pel** paPixelValue, Pel ** paRecoValue, TCoeff* pRun,
                                UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize)
@@ -1480,5 +1477,5 @@ Void  TComPrediction::rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bo
     }
   }
 }
-#endif
+
 //! \}

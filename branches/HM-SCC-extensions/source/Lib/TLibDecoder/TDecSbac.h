@@ -96,23 +96,19 @@ private:
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat );
-#if SCM__R0348_PALETTE_MODE
   Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, const class TComCodingStatisticsClassType &whichStat);
   Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
   Void  xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0);
-#endif 
 #else
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
-#if SCM__R0348_PALETTE_MODE
   Void  xDecodeRun              (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev);
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
   Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
-#endif
 #endif
 private:
   TComInputBitstream* m_pcBitstream;
@@ -122,12 +118,10 @@ public:
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if SCM__R0348_PALETTE_MODE
   Void parsePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
   Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
@@ -172,9 +166,7 @@ public:
 private:
   UInt m_uiLastDQpNonZero;
   UInt m_uiLastQp;
-#if SCM__R0348_PALETTE_MODE
   UInt* m_puiScanOrder;
-#endif
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -218,14 +210,12 @@ private:
   ContextModel3DBuffer m_cIntraBCBVDSCModel;
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
-#if SCM__R0348_PALETTE_MODE
   ContextModel3DBuffer m_PLTModeFlagSCModel;
   ContextModel3DBuffer m_SPointSCModel;
   ContextModel3DBuffer m_cCopyTopRunSCModel;
   ContextModel3DBuffer m_cRunSCModel;
   ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
   ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;  
-#endif
 };
 
 //! \}

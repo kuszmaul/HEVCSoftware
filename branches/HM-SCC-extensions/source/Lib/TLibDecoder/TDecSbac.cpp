@@ -97,14 +97,12 @@ TDecSbac::TDecSbac()
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColorTransformFlagSCModel             ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#if SCM__R0348_PALETTE_MODE
 , m_PLTModeFlagSCModel                       ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                              ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 , m_PLTSharingModeFlagSCModel                ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
 , m_PLTScanRotationModeFlagSCModel           ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -172,14 +170,12 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_COLOR_TRANS);
   m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
-#if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( sliceType, qp, (UChar*)INIT_RUN);
   m_PLTSharingModeFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
   m_uiLastDQpNonZero  = 0;
 
   // new structure
@@ -242,15 +238,13 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD );
-
-#if SCM__R0348_PALETTE_MODE
   m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
   m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG );
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
-#endif
+
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
     m_golombRiceAdaptationStatistics[statisticIndex] = 0;
@@ -477,9 +471,6 @@ Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx,
   pcCU->setCUTransquantBypassSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
 }
 
-
-
-#if SCM__R0348_PALETTE_MODE
 Void TDecSbac::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
@@ -911,7 +902,7 @@ Void TDecSbac::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   m_pcTDecBinIf->decodeBin( uiSymbol, m_PLTScanRotationModeFlagSCModel.get( 0, 0, uiCtx ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
   pcCU->setPLTScanRotationModeFlagSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
 }
-#endif
+
 
 /** parse skip flag
  * \param pcCU
