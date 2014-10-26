@@ -148,9 +148,7 @@ private:
 #if SCM__R0348_PALETTE_MODE
   Bool                    m_usePaletteMode;
 #endif
-#if SCM__R0186_INTRABC_BVD
  Int                      m_mvdBin0Cost[4];
-#endif
 public:
   TComRdCost();
   virtual ~TComRdCost();
@@ -185,9 +183,8 @@ public:
   Void    xUninit();
 #endif
   UInt    xGetComponentBits( Int iVal );
-#if SCM__R0186_INTRABC_BVD
   UInt    xGetBvdComponentBits( Int iVal,  Int iComponent );
-#endif
+
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
   Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
 #else
@@ -238,19 +235,11 @@ public:
 
     if(absCand[0] < absCand[1] )
     {
-#if SCM__R0186_INTRABC_BVD
       return (xGetBvdComponentBits(rmvH[0],0) + xGetBvdComponentBits(rmvV[0],1) + (1 << 14)) >> 15;
-#else
-      return getIComponentBits(rmvH[0]) + getIComponentBits(rmvV[0]);
-#endif 
     }
     else
     {
-#if SCM__R0186_INTRABC_BVD
       return (xGetBvdComponentBits(rmvH[1],0) + xGetBvdComponentBits(rmvV[1],1) + (1 << 14)) >> 15;
-#else
-      return getIComponentBits(rmvH[1]) + getIComponentBits(rmvV[1]);
-#endif 
     }
   }
 
@@ -303,7 +292,6 @@ public:
 #endif
   }
 
-#if SCM__R0186_INTRABC_BVD
 __inline Distortion getBvCost( Int x, Int y ) { 
     return m_uiCost * getBvBits(x, y) >> 16;
   } 
@@ -315,7 +303,7 @@ __inline Distortion getBvCost( Int x, Int y ) {
   }
 
   Int*    getMvdBin0CostPtr() { return m_mvdBin0Cost; }
-#endif 
+
 
 private:
 

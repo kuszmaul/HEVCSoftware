@@ -319,7 +319,6 @@
 //------------------------------------------------
 // Processing controls
 //------------------------------------------------
-#define SCM__R0186_INTRABC_BVD                                       1 ///< 0 = disable BVD improvements as proposed in R0186, 1 (default) = enable BVD improvements as proposed in R0186
 #define SCM__R0348_PALETTE_MODE                                      1 ///< 0 = no palette mode, 1 (default) = enable palette mode
 #define SCM__FLEXIBLE_INTRABC_SEARCH                                 1 ///< flexible 1xN IntraBC search range (in terms of CTUs)
 
@@ -333,9 +332,7 @@
 
 #define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4
 
-#if SCM__R0186_INTRABC_BVD
 #define SCM__R0186_INTRABC_BVD_CODING_EGORDER                         3
-#endif
 
 #if SCM__R0348_PALETTE_MODE
 #include <cstdlib>
