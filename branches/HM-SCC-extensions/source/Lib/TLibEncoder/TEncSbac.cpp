@@ -1217,10 +1217,8 @@ Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #else
     codeMvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
 #endif 
-#if SCM__R0309_INTRABC_BVP
     Int iSymbol = pcCU->getMVPIdx(REF_PIC_LIST_INTRABC, uiAbsPartIdx + iPartIdx * uiPUOffset);
     xWriteUnaryMaxSymbol(iSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1);
-#endif
   }
 }
 

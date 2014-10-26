@@ -125,9 +125,7 @@ private:
   // for motion cost
 #if FIX203
   TComMv                  m_mvPredictor;
-#if SCM__R0309_INTRABC_BVP
   TComMv                  m_mvPredictors[2];
-#endif
 #else
   UInt*                   m_puiComponentCostOriginP;
   UInt*                   m_puiComponentCost;
@@ -205,7 +203,6 @@ public:
 #endif
   }
 
-#if SCM__R0309_INTRABC_BVP
   Void    setPredictors( TComMv* pcMv )
   {
 #if FIX203
@@ -272,7 +269,7 @@ public:
 
     return uiLength;
   }
-#endif
+
 
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   __inline Distortion getCost( Int x, Int y )

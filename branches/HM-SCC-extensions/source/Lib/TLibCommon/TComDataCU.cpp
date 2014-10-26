@@ -138,14 +138,12 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   m_pcSlice            = NULL;
   m_uiNumPartition     = uiNumPartition;
   m_unitSize = unitSize;
-#if SCM__R0309_INTRABC_BVP
+
   for(Int i=0; i<2; i++)
   {
     m_lastIntraBCMv[i] = TComMv();
   }
-#else
-  m_lastIntraBCMv = TComMv();
-#endif 
+
 #if SCM__R0348_PALETTE_MODE
 #if PLT_SHARING_BUGFIX
   m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = PLT_SIZE_INVALID;
@@ -420,14 +418,12 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcPic->getNumPartitionsInCtu();
-#if SCM__R0309_INTRABC_BVP
+
   for(Int i=0; i<2; i++)
   {
     m_lastIntraBCMv[i].setZero();
   }
-#else
-  m_lastIntraBCMv.setZero();
-#endif 
+
 #if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
@@ -714,14 +710,12 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
   m_uiNumPartition     = pcCU->getTotalNumPart() >> 2;
-#if SCM__R0309_INTRABC_BVP
+
   for(Int i=0; i<2; i++)
   {
     m_lastIntraBCMv[i].setZero();
   }
-#else
-  m_lastIntraBCMv.setZero();
-#endif
+
 #if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
@@ -1000,14 +994,11 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   Int iSizeInUchar  = sizeof( UChar ) * uiNumPartition;
   Int iSizeInBool   = sizeof( Bool  ) * uiNumPartition;
 
-#if SCM__R0309_INTRABC_BVP
   for(Int i=0; i<2; i++)
   {
     m_lastIntraBCMv[i] = pcCU->getLastIntraBCMv(i);
   }
-#else
-  m_lastIntraBCMv = pcCU->getLastIntraBCMv();
-#endif 
+
 #if SCM__R0348_PALETTE_MODE
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
@@ -1287,7 +1278,6 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 // Other public functions
 // --------------------------------------------------------------------------------------------------------------------
 
-#if SCM__R0309_INTRABC_BVP
 Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast)
 {
   TComDataCU*     pcTempLeftCU;
@@ -1382,7 +1372,7 @@ Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLas
 
   return;
 }
-#endif
+
 
 TComDataCU* TComDataCU::getPULeft( UInt& uiLPartUnitIdx,
                                    UInt uiCurrPartUnitIdx,

@@ -104,11 +104,8 @@ private:
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
   TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra block copying vector field.
-#if SCM__R0309_INTRABC_BVP
   TComMv         m_lastIntraBCMv[2];    ///< last 2 Intra Block Copy Mv used.
-#else
-  TComMv         m_lastIntraBCMv;       ///< last Intra Block Copy Mv used. (0,0) indicates that the vector has not been used within the CU.
-#endif 
+
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
@@ -246,9 +243,7 @@ public:
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
 
-#if SCM__R0309_INTRABC_BVP
   Void          getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast);
-#endif
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }
@@ -325,13 +320,8 @@ public:
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
-#if SCM__R0309_INTRABC_BVP
   TComMv        getLastIntraBCMv(Int idx=0) {return m_lastIntraBCMv[idx]; }
   Void          setLastIntraBCMv(TComMv mv, Int idx=0 ) { m_lastIntraBCMv[idx] = mv; }
-#else
-  TComMv        getLastIntraBCMv() {return m_lastIntraBCMv; }
-  Void          setLastIntraBCMv(TComMv mv ) { m_lastIntraBCMv = mv; }
-#endif
 #if SCM__FLEXIBLE_INTRABC_SEARCH
   UInt          getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs );
 #else

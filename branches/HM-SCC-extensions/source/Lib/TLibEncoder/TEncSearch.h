@@ -368,11 +368,7 @@ public:
                                   Distortion&  ruiSAD,
                                   Int          iRoiWidth,
                                   Int          iRoiHeight,
-#if SCM__R0309_INTRABC_BVP
-                                  TComMv*      mvPreds,
-#else
-                                  TComMv&      mvPred,
-#endif 
+                                  TComMv*      mvPreds, 
                                   Bool         bUse1DSearchFor8x8
                                 );
 

@@ -976,7 +976,6 @@ Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPar
 Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   Int mvx = 0, mvy = 0;
-#if SCM__R0309_INTRABC_BVP
   TComMv      MvPred[2], MvLast[2];
   UInt        uiMvpIdx;
   UInt        uiSymbol;
@@ -1009,27 +1008,7 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
     pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
     pcCU->setLastIntraBCMv( cMv );
   }
-#else
-  TComMv mvPred = pcCU->getLastIntraBCMv();
-  if (mvPred.getHor()==0 && mvPred.getVer()==0)
-  {
-    mvPred.setHor(-Short(pcCU->getWidth(uiAbsPartIdx)));
-  }
 
-#if SCM__R0186_INTRABC_BVD
-  parseIntraBCBvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
-#else
-  parseMvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
-#endif 
-
-  mvx = mvPred.getHor() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
-  mvy = mvPred.getVer() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
-
-  const TComMv cMv(mvx, mvy );
-
-  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
-  pcCU->setLastIntraBCMv( cMv );
-#endif 
 }
 
 #if SCM__R0186_INTRABC_BVD
