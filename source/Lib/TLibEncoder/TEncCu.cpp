@@ -442,15 +442,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth )
 #endif
 {
-#if SCM__R0309_INTRABC_BVP
   TComMv lastIntraBCMv[2];
   for(Int i=0; i<2; i++)
   {
     lastIntraBCMv[i] = rpcBestCU->getLastIntraBCMv(i);
   }
-#else
-  TComMv lastIntraBCMv = rpcBestCU->getLastIntraBCMv();
-#endif 
+
 #if SCM__R0348_PALETTE_MODE
   UChar lastPLTUsedSize[3];
   UChar lastPLTSize[3];
@@ -973,7 +970,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     // If Intra BC keep last coded Mv
     if( rpcBestCU->getPredictionMode(0) == MODE_INTRABC )
     {
-#if SCM__R0309_INTRABC_BVP
       if( rpcBestCU->getPartitionSize( 0 ) == SIZE_2Nx2N)
       {
         if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) != rpcBestCU->getLastIntraBCMv(0))
@@ -1009,9 +1005,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
       }
-#else
-      rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
-#endif 
     }
 #if SCM__R0348_PALETTE_MODE
     if (rpcBestCU->getPLTModeFlag(0))
@@ -1098,16 +1091,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         pcSubBestPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
         pcSubTempPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
 
-#if SCM__R0309_INTRABC_BVP
         for(Int i=0; i<2; i++)
         {
           pcSubBestPartCU->setLastIntraBCMv( lastIntraBCMv[i], i );
           pcSubTempPartCU->setLastIntraBCMv( lastIntraBCMv[i], i );
         }
-#else
-        pcSubBestPartCU->setLastIntraBCMv( lastIntraBCMv );
-        pcSubTempPartCU->setLastIntraBCMv( lastIntraBCMv );
-#endif 
+
 #if SCM__R0348_PALETTE_MODE
         for (UInt ch = 0; ch < numValidComp; ch++)
         {
@@ -1153,14 +1142,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           // NOTE: RExt - (0,0) is used as an indicator that IntraBC has not been used within the CU.
           if( pcSubBestPartCU->getLastIntraBCMv().getHor() != 0 || pcSubBestPartCU->getLastIntraBCMv().getVer() != 0 )
           {
-#if SCM__R0309_INTRABC_BVP
             for(Int i=0; i<2; i++)
             {
               lastIntraBCMv[i] = pcSubBestPartCU->getLastIntraBCMv(i);
             }
-#else
-            lastIntraBCMv = pcSubBestPartCU->getLastIntraBCMv();
-#endif 
           }
 #if SCM__R0348_PALETTE_MODE
 #if PLT_SHARING_BUGFIX
