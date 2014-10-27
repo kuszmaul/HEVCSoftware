@@ -253,7 +253,7 @@ Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
 
   fclose(pFile);
 }
-#if SCM__R0147_RGB_YUV_RD_ENC
+
 Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
 {
   assert(m_iPicWidth       == pcSrcPicYuv->m_iPicWidth);
@@ -307,5 +307,5 @@ Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
     pDst2 += iDstStride2; 
   }
 }
-#endif
+
 //! \}

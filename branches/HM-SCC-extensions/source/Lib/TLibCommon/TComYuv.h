@@ -200,9 +200,7 @@ public:
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
   Void         convert          (const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
-#if SCM__R0147_RGB_YUV_RD_ENC
   Void         DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth);
-#endif
 };// END CLASS DEFINITION TComYuv
 
 //! \}

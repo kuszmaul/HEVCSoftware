@@ -535,7 +535,6 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
   rpcPic->getHashMap()->clearAll();
-#if SCM__R0147_RGB_YUV_RD_ENC
   if( getRGBFormatFlag() && getUseColorTrans() )
   {
     if( rpcPic->getPicYuvCSC() == NULL )
@@ -543,7 +542,6 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
       rpcPic->allocateCSCBuffer( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
     }
   }
-#endif
 }
 
 Void TEncTop::xInitSPS()

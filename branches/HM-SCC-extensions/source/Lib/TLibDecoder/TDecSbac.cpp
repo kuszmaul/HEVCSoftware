@@ -1013,7 +1013,7 @@ Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPart
 
   if( bHorAbsGr0 )
   {
-    xReadEpExGolomb( uiSymbol, SCM__R0186_INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
+    xReadEpExGolomb( uiSymbol, INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
     uiHorAbs += uiSymbol;
 
     m_pcTDecBinIf->decodeBinEP( uiHorSign RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
@@ -1021,7 +1021,7 @@ Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPart
 
   if( bVerAbsGr0 )
   {
-    xReadEpExGolomb( uiSymbol, SCM__R0186_INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
+    xReadEpExGolomb( uiSymbol, INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
     uiVerAbs += uiSymbol;
 
     m_pcTDecBinIf->decodeBinEP( uiVerSign RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );

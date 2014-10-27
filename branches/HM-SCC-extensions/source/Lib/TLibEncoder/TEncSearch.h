@@ -146,9 +146,8 @@ public:
   TEncSearch();
   virtual ~TEncSearch();
 
-#if SCM__R0147_RGB_YUV_RD_ENC
   TComYuv* getTmpYuvPred() {return &m_tmpYuvPred;}
-#endif
+
   Void init(  TEncCfg*      pcEncCfg,
             TComTrQuant*  pcTrQuant,
             Int           iSearchRange,

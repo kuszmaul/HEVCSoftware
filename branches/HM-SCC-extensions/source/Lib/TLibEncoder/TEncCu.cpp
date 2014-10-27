@@ -1137,11 +1137,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
 
-#if PLT_SHARING_BUGFIX
           if(pcSubBestPartCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y) != PLT_SIZE_INVALID)
-#else
-          if (pcSubBestPartCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y) != 0)
-#endif
           {
             for (UInt ch = 0; ch < numValidComp; ch++)
             {
@@ -2040,13 +2036,12 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
 
   // intra BV search
-#if SCM__R0147_RGB_YUV_RD_ENC
   if( rpcTempCU->getSlice()->getSPS()->getUseColorTrans () && m_pcEncCfg->getRGBFormatFlag())
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvResi(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();                                                                          //YCgCo reference picture
   }
-#endif
+
   Bool bValid = m_pcPredSearch->predIntraBCSearch ( rpcTempCU,
                                                     m_ppcOrigYuv[uiDepth],
                                                     m_ppcPredYuvTemp[uiDepth],
@@ -2055,13 +2050,12 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                                     DEBUG_STRING_PASS_INTO(sTest),
                                                     bUse1DSearchFor8x8,
                                                     false);
-#if SCM__R0147_RGB_YUV_RD_ENC
+
   if( rpcTempCU->getSlice()->getSPS()->getUseColorTrans() && m_pcEncCfg->getRGBFormatFlag()) 
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvOrg(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();
   }
-#endif
 
   if (bValid)
   {
@@ -2077,7 +2071,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     {
       uiColorTransform = ( bRGB && bEnableTrans )? (1-i): i;
 
-#if SCM__R0147_RGB_YUV_RD_ENC
       if( uiColorTransform && m_pcEncCfg->getRGBFormatFlag())
       {
         for ( Int iPartIdx = 0; iPartIdx < rpcTempCU->getNumPartitions(); iPartIdx++ )
@@ -2085,7 +2078,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
           m_pcPredSearch->intraBlockCopy( rpcTempCU, m_ppcPredYuvTemp[uiDepth], iPartIdx );
         }
       }
-#endif
+
       rpcTempCU->setColorTransformSubParts((uiColorTransform? true: false), 0, uiDepth);
       m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], (bColorTrans ? m_ppcPredYuvBest[uiDepth] : m_ppcPredYuvTemp[uiDepth]), m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false, m_ppcNoCorrYuv  [uiDepth] DEBUG_STRING_PASS_INTO(sTest) );
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
@@ -2397,7 +2390,6 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdxY = ( ( uiAbsPartIdxInRaster / rpcPic->getNumPartInCtuWidth() ) % uiSrcBlkWidth) / uiBlkWidth;
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
-#if SCM__R0147_RGB_YUV_RD_ENC
     if( pcCU->getSlice()->getSPS()->getUseColorTrans () && m_pcEncCfg->getRGBFormatFlag() )
     {
       TComRectangle cuCompRect;
@@ -2411,7 +2403,7 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
       m_ppcRecoYuvTemp[uiSrcDepth]->DefaultConvertPix( cuCompRect.x0, cuCompRect.y0, cuCompRect.width );
       m_ppcRecoYuvTemp[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvCSC(), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
     }
-#endif
+
   m_ppcPredYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvPred (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 }
 
