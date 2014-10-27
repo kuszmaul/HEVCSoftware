@@ -79,7 +79,7 @@ TComSlice::TComSlice()
 #if ADAPTIVE_QP_SELECTION
 , m_pcTrQuant                     ( NULL )
 #endif
-, m_colFromL0Flag                 ( 1 )
+, m_colFromL0Flag                 ( true )
 , m_noOutputPriorPicsFlag         ( false )
 , m_noRaslOutputFlag              ( false )
 , m_handleCraAsBlaFlag            ( false )
@@ -156,7 +156,7 @@ Void TComSlice::initSlice()
   {
     m_aiNumRefIdx[i]      = 0;
   }
-  m_colFromL0Flag = 1;
+  m_colFromL0Flag = true;
 
   m_colRefIdx = 0;
   initEqualRef();
@@ -1763,7 +1763,7 @@ TComPPS::TComPPS()
 , m_numTileColumnsMinus1             (0)
 , m_numTileRowsMinus1                (0)
 , m_numSubstreams                    (1)
-, m_signHideFlag                     (0)
+, m_signHideFlag                     (false)
 , m_cabacInitPresentFlag             (false)
 , m_encCABACTableIdx                 (I_SLICE)
 , m_sliceHeaderExtensionPresentFlag  (false)
@@ -1976,8 +1976,8 @@ Void TComRPSList::setNumberOfReferencePictureSets(Int numberOfReferencePictureSe
 }
 
 TComRefPicListModification::TComRefPicListModification()
-: m_bRefPicListModificationFlagL0 (false)
-, m_bRefPicListModificationFlagL1 (false)
+: m_refPicListModificationFlagL0 (false)
+, m_refPicListModificationFlagL1 (false)
 {
   ::memset( m_RefPicSetIdxL0, 0, sizeof(m_RefPicSetIdxL0) );
   ::memset( m_RefPicSetIdxL1, 0, sizeof(m_RefPicSetIdxL1) );

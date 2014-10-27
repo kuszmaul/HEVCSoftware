@@ -272,7 +272,7 @@ struct HrdSubLayerInfo
   UInt bitRateValueMinus1[MAX_CPB_CNT][2];
   UInt cpbSizeValue      [MAX_CPB_CNT][2];
   UInt ducpbSizeValue    [MAX_CPB_CNT][2];
-  UInt cbrFlag           [MAX_CPB_CNT][2];
+  Bool cbrFlag           [MAX_CPB_CNT][2];
   UInt duBitRateValue    [MAX_CPB_CNT][2];
 };
 
@@ -375,7 +375,7 @@ public:
   UInt getDuCpbSizeValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl            )  { return m_HRD[layer].ducpbSizeValue[cpbcnt][nalOrVcl];        }
   Void setDuBitRateValueMinus1     ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].duBitRateValue[cpbcnt][nalOrVcl] = value;       }
   UInt getDuBitRateValueMinus1     (Int layer, Int cpbcnt, Int nalOrVcl )              { return m_HRD[layer].duBitRateValue[cpbcnt][nalOrVcl];        }
-  Void setCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl, UInt value ) { m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl] = value;            }
+  Void setCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl, Bool value ) { m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl] = value;            }
   Bool getCbrFlag                ( Int layer, Int cpbcnt, Int nalOrVcl             ) { return m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl];             }
 
   Void setNumDU                              ( UInt value ) { m_numDU = value;                            }
@@ -939,8 +939,8 @@ public:
 class TComRefPicListModification
 {
 private:
-  UInt      m_bRefPicListModificationFlagL0;
-  UInt      m_bRefPicListModificationFlagL1;
+  Bool      m_refPicListModificationFlagL0;
+  Bool      m_refPicListModificationFlagL1;
   UInt      m_RefPicSetIdxL0[REF_PIC_LIST_NUM_IDX];
   UInt      m_RefPicSetIdxL1[REF_PIC_LIST_NUM_IDX];
 
@@ -951,10 +951,10 @@ public:
   Void  create                    ();
   Void  destroy                   ();
 
-  Bool       getRefPicListModificationFlagL0() { return m_bRefPicListModificationFlagL0; }
-  Void       setRefPicListModificationFlagL0(Bool flag) { m_bRefPicListModificationFlagL0 = flag; }
-  Bool       getRefPicListModificationFlagL1() { return m_bRefPicListModificationFlagL1; }
-  Void       setRefPicListModificationFlagL1(Bool flag) { m_bRefPicListModificationFlagL1 = flag; }
+  Bool       getRefPicListModificationFlagL0() { return m_refPicListModificationFlagL0; }
+  Void       setRefPicListModificationFlagL0(Bool flag) { m_refPicListModificationFlagL0 = flag; }
+  Bool       getRefPicListModificationFlagL1() { return m_refPicListModificationFlagL1; }
+  Void       setRefPicListModificationFlagL1(Bool flag) { m_refPicListModificationFlagL1 = flag; }
   Void       setRefPicSetIdxL0(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL0[idx] = refPicSetIdx; }
   UInt       getRefPicSetIdxL0(UInt idx) { assert(idx<REF_PIC_LIST_NUM_IDX); return m_RefPicSetIdxL0[idx]; }
   Void       setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL1[idx] = refPicSetIdx; }
@@ -1010,7 +1010,7 @@ private:
 
   Int      m_numSubstreams;
 
-  Int      m_signHideFlag;
+  Bool     m_signHideFlag;
 
   Bool     m_cabacInitPresentFlag;
   UInt     m_encCABACTableIdx;           // Used to transmit table selection across slices
@@ -1119,8 +1119,8 @@ public:
   Void     setNumSubstreams    (Int numSubstreams)                     { m_numSubstreams = numSubstreams; }
   Int      getNumSubstreams    ()                                      { return m_numSubstreams; }
 
-  Void      setSignHideFlag( Int signHideFlag ) { m_signHideFlag = signHideFlag; }
-  Int       getSignHideFlag()                    { return m_signHideFlag; }
+  Void      setSignHideFlag( Bool signHideFlag ) { m_signHideFlag = signHideFlag; }
+  Bool      getSignHideFlag()                    { return m_signHideFlag; }
 
   Void     setCabacInitPresentFlag( Bool flag )     { m_cabacInitPresentFlag = flag;    }
   Void     setEncCABACTableIdx( Int idx )           { m_encCABACTableIdx = idx;         }
@@ -1229,7 +1229,7 @@ private:
 #if ADAPTIVE_QP_SELECTION
   TComTrQuant* m_pcTrQuant;
 #endif
-  UInt        m_colFromL0Flag;  // collocated picture from List0 flag
+  Bool        m_colFromL0Flag;  // collocated picture from List0 flag
 
   Bool        m_noOutputPriorPicsFlag;
   Bool        m_noRaslOutputFlag;
@@ -1334,7 +1334,7 @@ public:
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
   Int       getDepth            ()                              { return  m_iDepth;                     }
-  UInt      getColFromL0Flag    ()                              { return  m_colFromL0Flag;              }
+  Bool      getColFromL0Flag    ()                              { return  m_colFromL0Flag;              }
   UInt      getColRefIdx        ()                              { return  m_colRefIdx;                  }
   Void      checkColRefIdx      (UInt curSliceIdx, TComPic* pic);
   Bool      getIsUsedAsLongTerm (Int i, Int j)                  { return m_bIsUsedAsLongTerm[i][j]; }
@@ -1375,7 +1375,7 @@ public:
 
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr = false );
   Void      setRefPOCList       ();
-  Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }
+  Void      setColFromL0Flag    ( Bool colFromL0 ) { m_colFromL0Flag = colFromL0; }
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }
   Void      setCheckLDC         ( Bool b )                      { m_bCheckLDC = b; }
   Void      setMvdL1ZeroFlag     ( Bool b)                       { m_bLMvdL1Zero = b; }
