@@ -39,6 +39,7 @@
 #define __TYPEDEF__
 
 #include <vector>
+#include <cstdlib>
 
 //! \ingroup TLibCommon
 //! \{
@@ -323,20 +324,6 @@
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
-
-#define SCM__R0147_RGB_YUV_RD_ENC                                     1  ///< non-normative tools for RGB coding
-#define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS                          -5
-#define SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V                        -3
-
-#define SCM__R0162_CHROMA_REFINEMENT_CANDIDATES                       4
-
-#define SCM__R0186_INTRABC_BVD_CODING_EGORDER                         3
-
-#include <cstdlib>
-#define MAX_PLT_SIZE                                                  31
-#define MAX_PLT_PRED_SIZE                                             64
-#define PLT_SHARING_BUGFIX                                            1 ///< 1: PLT sharing bug fix 
-
 
 //------------------------------------------------
 // Backwards-compatibility

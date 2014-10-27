@@ -67,9 +67,7 @@ private:
   Bool                  m_bIsLongTerm;            //  IS long term picture
   TComPicSym*           m_apcPicSym;              //  Symbol
   TComPicYuv*           m_apcPicYuv[NUM_PIC_YUV];
-#if SCM__R0147_RGB_YUV_RD_ENC
   TComPicYuv*           m_apcPicYuvCSC;
-#endif
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
@@ -117,7 +115,6 @@ public:
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
-#if SCM__R0147_RGB_YUV_RD_ENC
   TComPicYuv*   getPicYuvCSC()        { return  m_apcPicYuvCSC; }
   Void          allocateCSCBuffer( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
                 { assert( m_apcPicYuvCSC == NULL ); m_apcPicYuvCSC = new TComPicYuv; m_apcPicYuvCSC->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth ); }
@@ -129,7 +126,7 @@ public:
                    m_apcPicYuv[PIC_YUV_REC] = m_apcPicYuvCSC;
                    m_apcPicYuvCSC = pcTmpPicYuv;
                 }
-#endif
+
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }

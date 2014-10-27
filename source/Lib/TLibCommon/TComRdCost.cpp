@@ -216,7 +216,7 @@ Void TComRdCost::setLambda( Double dLambda )
   m_sqrtLambda        = sqrt(m_dLambda);
   if(getUseColorTrans()&&!getUseLossless())
   {
-    m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS/3.0));
+    m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, DELTA_QP_FOR_YCgCo_TRANS/3.0));
   }
 
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
@@ -368,7 +368,7 @@ UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
 
   UInt uiLength;
   Int numBins = 0;
-  UInt uiCount = SCM__R0186_INTRABC_BVD_CODING_EGORDER; 
+  UInt uiCount = INTRABC_BVD_CODING_EGORDER; 
   UInt uiTemp  = ( iVal <= 0) ? (-iVal-1): (iVal- 1);
 
   while( uiTemp >= (UInt)(1<<uiCount) )

@@ -1572,10 +1572,10 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           QpParam cQP(*pcCU, compID);
           if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
           {
-            cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+            cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
             cQP.per = cQP.Qp/6;
             cQP.rem= cQP.Qp%6;
-            adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V: SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+            adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
           }
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
@@ -1610,7 +1610,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     }
     if(!pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 ))
     {
-      adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V:  - SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+      adjustBitDepthandLambdaForColorTrans(compID==COMPONENT_Cr ? - DELTA_QP_FOR_YCgCo_TRANS_V:  - DELTA_QP_FOR_YCgCo_TRANS);
     }
   }
   else

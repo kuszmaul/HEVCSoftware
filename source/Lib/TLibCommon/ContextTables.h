@@ -173,6 +173,15 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_LEFT_RUN_CTX              3
 #define NUM_PLT_REUSE_FLAG_CTX        1
 #define NUM_SCAN_ROTATION_FLAG_CTX    2
+#define MAX_PLT_SIZE                  31
+#define MAX_PLT_PRED_SIZE             64
+
+#define DELTA_QP_FOR_YCgCo_TRANS     -5
+#define DELTA_QP_FOR_YCgCo_TRANS_V   -3
+
+#define CHROMA_REFINEMENT_CANDIDATES  4
+
+#define INTRABC_BVD_CODING_EGORDER    3
 
 // ====================================================================================================================
 // Tables

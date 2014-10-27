@@ -171,7 +171,6 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
 
-#if SCM__R0147_RGB_YUV_RD_ENC
   Int map[52] =
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
@@ -180,7 +179,6 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     4, 5, 5, 6, 6, 6, 6, 6, 6, 6,
     6, 6
   };
-#endif
 
   // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -191,12 +189,10 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-#if SCM__R0147_RGB_YUV_RD_ENC 
     if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColorTrans())
     {
       tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
     }
-#endif
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
     dLambdas[compIdx]=dLambda/tmpWeight;
   }
@@ -819,11 +815,8 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
-#if PLT_SHARING_BUGFIX
+
   UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
-#else
-  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
-#endif
   UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
   Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   for(UChar comp=0; comp < MAX_NUM_COMPONENT; comp++)
@@ -831,12 +824,11 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
   }
 
-#if SCM__R0147_RGB_YUV_RD_ENC
   if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() ) 
   {
     pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
   }
-#endif
+
   // for every CU in slice
   for( UInt ctuTsAddr = startCtuTsAddr; ctuTsAddr < boundingCtuTsAddr; ctuRsAddr = pcPic->getPicSym()->getCtuTsToRsAddrMap(++ctuTsAddr) )
   {
@@ -860,11 +852,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
-#if PLT_SHARING_BUGFIX
         lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-        lastPLTUsedSize[comp] = 0;
-#endif
         lastPLTSize[comp] = 0;
       }
     }
@@ -920,11 +908,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 
       for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
-#if PLT_SHARING_BUGFIX
         lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-        lastPLTUsedSize[comp] = 0;
-#endif
         lastPLTSize[comp] = 0;
       }
 
@@ -983,12 +967,10 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #if ADAPTIVE_QP_SELECTION
       pCtu->getSlice()->setSliceQpBase( estQP );
 #endif
-#if SCM__R0147_RGB_YUV_RD_ENC
   if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
   {
     pcPic->releaseCSCBuffer();
   }
-#endif
 }
 
     // run CU encoder
@@ -1055,11 +1037,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
           pCtu->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
     }
 
-#if PLT_SHARING_BUGFIX
     if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
-#else
-    if (pcCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y))
-#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {
@@ -1209,11 +1187,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
     }
   }
 
-#if PLT_SHARING_BUGFIX
   UChar lastPLTUsedSize[3] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
-#else
-  UChar lastPLTUsedSize[3] = { 0, 0, 0 };
-#endif
   UChar lastPLTSize[3] = { 0, 0, 0 };
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
 
@@ -1267,11 +1241,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 
         for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-#if PLT_SHARING_BUGFIX
           lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-          lastPLTUsedSize[comp] = 0;
-#endif
           lastPLTSize[comp] = 0;
         }
 
@@ -1312,11 +1282,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 
       if( resetPltPredictor )
       {
-#if PLT_SHARING_BUGFIX
         lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-        lastPLTUsedSize[comp] = 0;
-#endif
         lastPLTSize[comp] = 0;
       }
 
@@ -1371,11 +1337,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
-#if PLT_SHARING_BUGFIX
     if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
-#else
-    if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y))
-#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {

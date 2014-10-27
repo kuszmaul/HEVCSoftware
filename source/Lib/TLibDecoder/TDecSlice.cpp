@@ -208,11 +208,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     }
   }
 
-#if PLT_SHARING_BUGFIX
   UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
-#else
-  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
-#endif
   UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
   Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
@@ -247,11 +243,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
 
       if( resetPltPredictor )
       {
-#if PLT_SHARING_BUGFIX
         lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-        lastPLTUsedSize[comp] = 0;
-#endif
         lastPLTSize[comp] = 0;
       }
 
@@ -326,11 +318,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
 
         for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-#if PLT_SHARING_BUGFIX
           lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
-#else
-          lastPLTUsedSize[comp] = 0;
-#endif
           lastPLTSize[comp] = 0;
         }
 
@@ -381,11 +369,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     m_pcCuDecoder->decodeCtu     ( pCtu, uiIsLast );
     m_pcCuDecoder->decompressCtu ( pCtu );
 
-#if PLT_SHARING_BUGFIX
     if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) != PLT_SIZE_INVALID )
-#else
-    if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) )
-#endif
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
       {

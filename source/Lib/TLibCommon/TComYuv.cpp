@@ -554,7 +554,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   }
 }
 
-#if SCM__R0147_RGB_YUV_RD_ENC
+
 Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth)
 {
   assert(getChromaFormat() == CHROMA_444);
@@ -593,5 +593,5 @@ Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt
     pDst2 += iStride2; 
   }
 }
-#endif
+
 //! \}

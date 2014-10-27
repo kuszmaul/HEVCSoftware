@@ -138,11 +138,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     m_lastIntraBCMv[i] = TComMv();
   }
 
-#if PLT_SHARING_BUGFIX
   m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = PLT_SIZE_INVALID;
-#else
-  m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = 0;
-#endif
   m_uhLastPLTSizeFinal[COMPONENT_Y] = m_uhLastPLTSizeFinal[COMPONENT_Cb] = m_uhLastPLTSizeFinal[COMPONENT_Cr] = 0;
 
   if ( !bDecSubCu )
@@ -410,11 +406,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
-#if PLT_SHARING_BUGFIX
     m_uhLastPLTUsedSizeFinal[comp] = PLT_SIZE_INVALID;
-#else
-    m_uhLastPLTUsedSizeFinal[comp] = 0;
-#endif
     m_uhLastPLTSizeFinal[comp] = 0;
     for ( Int i = 0; i < MAX_PLT_PRED_SIZE; i++ )
     {
@@ -689,11 +681,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   for (Int comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
-#if PLT_SHARING_BUGFIX
     m_uhLastPLTUsedSizeFinal[comp] = PLT_SIZE_INVALID;
-#else
-    m_uhLastPLTUsedSizeFinal[comp] = 0;
-#endif
     m_uhLastPLTSizeFinal[comp] = 0;
     for (Int i = 0; i < MAX_PLT_PRED_SIZE; i++)
     {

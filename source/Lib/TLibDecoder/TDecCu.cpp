@@ -770,10 +770,10 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     QpParam cQP(*pcCU, compID);
     if(bModifyQP)
     {
-      cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS_V:SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+      cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
       cQP.per = cQP.Qp/6;
       cQP.rem= cQP.Qp%6;   
-      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(DELTA_QP_FOR_YCgCo_TRANS);
     }
 
     DEBUG_STRING_NEW( sDebug );
@@ -811,7 +811,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     }    
     if(bModifyQP)
     {
-      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(- SCM__R0147_DELTA_QP_FOR_YCgCo_TRANS);
+      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(- DELTA_QP_FOR_YCgCo_TRANS);
     }
   }
 

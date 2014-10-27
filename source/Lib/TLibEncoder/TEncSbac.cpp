@@ -1222,13 +1222,13 @@ Void TEncSbac::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList e
   
   if( bHorAbsGr0 )
   {
-    xWriteEpExGolomb( uiHorAbs-1, SCM__R0186_INTRABC_BVD_CODING_EGORDER );
+    xWriteEpExGolomb( uiHorAbs-1, INTRABC_BVD_CODING_EGORDER );
     m_pcBinIf->encodeBinEP( 0 > iHor ? 1 : 0 );
   }
   
   if( bVerAbsGr0 )
   {
-    xWriteEpExGolomb( uiVerAbs-1, SCM__R0186_INTRABC_BVD_CODING_EGORDER );
+    xWriteEpExGolomb( uiVerAbs-1, INTRABC_BVD_CODING_EGORDER );
     m_pcBinIf->encodeBinEP( 0 > iVer ? 1 : 0 );
   }
   return;
