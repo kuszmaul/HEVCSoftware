@@ -260,7 +260,7 @@ protected:
   Int       m_cameraIsoSpeedValue;
   Int       m_exposureIndexIdc;
   Int       m_exposureIndexValue;
-  Int       m_exposureCompensationValueSignFlag;
+  Bool      m_exposureCompensationValueSignFlag;
   Int       m_exposureCompensationValueNumerator;
   Int       m_exposureCompensationValueDenomIdc;
   Int       m_refScreenLuminanceWhite;
@@ -311,7 +311,7 @@ protected:
   ScalingListMode m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
   Char*     m_scalingListFile;          ///< quantization matrix file name
   Int       m_TMVPModeId;
-  Int       m_signHideFlag;
+  Bool      m_signHideFlag;
   Bool      m_RCEnableRateControl;
   Int       m_RCTargetBitrate;
   Int       m_RCKeepHierarchicalBit;
@@ -654,8 +654,8 @@ public:
   Int   getTMISEIExposurIndexIdc()                                   { return m_exposureIndexIdc;  }
   Void  setTMISEIExposureIndexValue(Int b)                           { m_exposureIndexValue = b;  }
   Int   getTMISEIExposurIndexValue()                                 { return m_exposureIndexValue;  }
-  Void  setTMISEIExposureCompensationValueSignFlag(Int b)            { m_exposureCompensationValueSignFlag = b;  }
-  Int   getTMISEIExposureCompensationValueSignFlag()                 { return m_exposureCompensationValueSignFlag;  }
+  Void  setTMISEIExposureCompensationValueSignFlag(Bool b)           { m_exposureCompensationValueSignFlag = b;  }
+  Bool  getTMISEIExposureCompensationValueSignFlag()                 { return m_exposureCompensationValueSignFlag;  }
   Void  setTMISEIExposureCompensationValueNumerator(Int b)           { m_exposureCompensationValueNumerator = b;  }
   Int   getTMISEIExposureCompensationValueNumerator()                { return m_exposureCompensationValueNumerator;  }
   Void  setTMISEIExposureCompensationValueDenomIdc(Int b)            { m_exposureCompensationValueDenomIdc =b;  }
@@ -749,8 +749,8 @@ public:
   Char*        getScalingListFile     ()                             { return m_scalingListFile;    }
   Void         setTMVPModeId ( Int  u )                              { m_TMVPModeId = u;    }
   Int          getTMVPModeId ()                                      { return m_TMVPModeId; }
-  Void         setSignHideFlag( Int signHideFlag )                   { m_signHideFlag = signHideFlag; }
-  Int          getSignHideFlag()                                     { return m_signHideFlag; }
+  Void         setSignHideFlag( Bool signHideFlag )                  { m_signHideFlag = signHideFlag; }
+  Bool         getSignHideFlag()                                     { return m_signHideFlag; }
   Bool         getUseRateCtrl         ()                             { return m_RCEnableRateControl;   }
   Void         setUseRateCtrl         ( Bool b )                     { m_RCEnableRateControl = b;      }
   Int          getTargetBitrate       ()                             { return m_RCTargetBitrate;       }
