@@ -51,6 +51,7 @@
 #include "TEncCfg.h"
 #include "TLibCommon/TComHash.h"
 
+
 //! \ingroup TLibEncoder
 //! \{
 
@@ -535,9 +536,6 @@ protected:
                                     TComMv&     rcMvPred,
                                     Bool        bFilled = false
                                   , Distortion* puiDistBiP = NULL
-                                  #if ZERO_MVD_EST
-                                  , Distortion* puiDist = NULL
-                                  #endif
                                      );
 
   Void xCheckBestMVP              ( TComDataCU* pcCU,
@@ -560,9 +558,6 @@ protected:
                                     Int         iRefIdx,
                                     Int         iSizeX,
                                     Int         iSizeY
-                                  #if ZERO_MVD_EST
-                                  , Distortion& ruiDist
-                                  #endif
                                    );
 
 

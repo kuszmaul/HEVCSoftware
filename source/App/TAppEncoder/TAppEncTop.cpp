@@ -98,6 +98,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPrintFrameMSE                                     ( m_printFrameMSE);
   m_cTEncTop.setPrintSequenceMSE                                  ( m_printSequenceMSE);
   m_cTEncTop.setPrintClippedPSNR                          (m_printClippedPSNR);
+  m_cTEncTop.setCabacZeroWordPaddingEnabled                       ( m_cabacZeroWordPaddingEnabled );
   m_cTEncTop.setFrameRate                                         ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                                         ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                                       ( m_iSourceWidth );
