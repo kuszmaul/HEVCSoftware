@@ -511,7 +511,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     delete sei;
   }
     
-  if(m_pcCfg->getMasteringDisplaySEI().colourVolumeSEIEnabled)
+  if(m_pcCfg->getMasteringDisplaySEI().ColourVolumeSEIEnabled)
   {
     const TComSEIMasteringDisplay &seiCfg=m_pcCfg->getMasteringDisplaySEI();
     SEIMasteringDisplayColourVolume mdcv;

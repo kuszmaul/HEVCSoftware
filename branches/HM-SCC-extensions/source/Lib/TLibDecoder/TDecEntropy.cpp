@@ -679,7 +679,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setCbfSubParts( cbfZero, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
-      pcCU->setColorTransformSubParts(0, uiAbsPartIdx, uiDepth);
+      pcCU->setColourTransformSubParts(0, uiAbsPartIdx, uiDepth);
       return;
     }
   }
@@ -687,11 +687,11 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
   {
     Bool uiFlag = 0;
-    if(pcCU->getSlice()->getSPS()->getUseColorTrans())
+    if(pcCU->getSlice()->getSPS()->getUseColourTrans())
     {
-      m_pcEntropyDecoderIf->parseColorTransformFlag(uiAbsPartIdx, uiFlag );
+      m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
     }
-    pcCU->setColorTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
+    pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
