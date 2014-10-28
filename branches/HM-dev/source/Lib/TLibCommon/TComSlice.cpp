@@ -1799,6 +1799,10 @@ TComReferencePictureSet::TComReferencePictureSet()
   ::memset( m_POC, 0, sizeof(m_POC) );
   ::memset( m_used, 0, sizeof(m_used) );
   ::memset( m_refIdc, 0, sizeof(m_refIdc) );
+  ::memset( m_bCheckLTMSB, 0, sizeof(m_bCheckLTMSB) );
+  ::memset( m_pocLSBLT, 0, sizeof(m_pocLSBLT) );
+  ::memset( m_deltaPOCMSBCycleLT, 0, sizeof(m_deltaPOCMSBCycleLT) );
+  ::memset( m_deltaPocMSBPresentFlag, 0, sizeof(m_deltaPocMSBPresentFlag) );
 }
 
 TComReferencePictureSet::~TComReferencePictureSet()

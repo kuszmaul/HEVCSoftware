@@ -797,6 +797,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         Int numLtrpInSPS = 0;
         UInt ltrpIndex;
         Int counter = 0;
+        // WARNING: The following code only works only if a matching long-term RPS is 
+        //          found in the SPS for ALL long-term pictures
+        //          The problem is that the SPS coded long-term pictures are moved to the
+        //          beginning of the list which causes a mismatch when no reference picture
+        //          list reordering is used
+        //          NB: Long-term coding is currently not supported in general by the HM encoder
         for(Int k = rps->getNumberOfPictures()-1; k > rps->getNumberOfPictures()-rps->getNumberOfLongtermPictures()-1; k--)
         {
           if (findMatchingLTRP(pcSlice, &ltrpIndex, rps->getPOC(k), rps->getUsed(k)))
@@ -810,6 +816,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           }
         }
         numLtrpInSH -= numLtrpInSPS;
+        // check that either all long-term pictures are coded in SPS or in slice header (no mixing)
+        assert (numLtrpInSH==0 || numLtrpInSPS==0); 
 
         Int bitsForLtrpInSPS = 0;
         while (pcSlice->getSPS()->getNumLongTermRefPicSPS() > (1 << bitsForLtrpInSPS))
@@ -825,7 +833,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         // Not sorted here because LT ref indices will be used in setRefPicList()
         Int prevDeltaMSB = 0, prevLSB = 0;
         Int offset = rps->getNumberOfNegativePictures() + rps->getNumberOfPositivePictures();
-        for(Int i=rps->getNumberOfPictures()-1 ; i > offset-1; i--)
+        counter = 0;
+        // Warning: If some pictures are moved to ltrpInSPS, i is referring to a wrong index 
+        //          (mapping would be required)
+        for(Int i=rps->getNumberOfPictures()-1 ; i > offset-1; i--, counter++)
         {
           if (counter < numLtrpInSPS)
           {
