@@ -68,7 +68,7 @@ TComDataCU::TComDataCU()
   m_ChromaQpAdj        = NULL;
   m_pbMergeFlag        = NULL;
   m_puhMergeIndex      = NULL;
-  m_ColorTransform     = NULL;
+  m_ColourTransform     = NULL;
 
   for(UInt i=0; i<MAX_NUM_CHANNEL_TYPE; i++)
   {
@@ -154,7 +154,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     memset( m_pePartSize, NUMBER_OF_PART_SIZES,uiNumPartition * sizeof( *m_pePartSize ) );
     m_pePredMode         = new Char[ uiNumPartition ];
     m_CUTransquantBypass = new Bool[ uiNumPartition ];
-    m_ColorTransform     = new Bool[ uiNumPartition ];
+    m_ColourTransform     = new Bool[ uiNumPartition ];
 
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
@@ -259,7 +259,7 @@ Void TComDataCU::destroy()
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir        = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag        = NULL; }
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex      = NULL; }
-    if ( m_ColorTransform     ) { delete[] m_ColorTransform;    m_ColorTransform     = NULL; }
+    if ( m_ColourTransform     ) { delete[] m_ColourTransform;    m_ColourTransform     = NULL; }
 
     for (UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
     {
@@ -422,7 +422,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   memset( m_puhTrIdx          , 0,                          m_uiNumPartition * sizeof( *m_puhTrIdx ) );
   memset( m_puhWidth          , g_uiMaxCUWidth,             m_uiNumPartition * sizeof( *m_puhWidth ) );
   memset( m_puhHeight         , g_uiMaxCUHeight,            m_uiNumPartition * sizeof( *m_puhHeight ) );
-  memset( m_ColorTransform    , false,                      m_uiNumPartition * sizeof( *m_ColorTransform) );
+  memset( m_ColourTransform    , false,                      m_uiNumPartition * sizeof( *m_ColourTransform) );
 
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -548,7 +548,7 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
       m_puhPLTEscape[comp][ui]                  = 0;
     }
     m_skipFlag[ui]      = false;
-    m_ColorTransform[ui] = false;
+    m_ColourTransform[ui] = false;
 
     m_pePartSize[ui]    = NUMBER_OF_PART_SIZES;
     m_pePredMode[ui]    = NUMBER_OF_PREDICTION_MODES;
@@ -627,7 +627,7 @@ Void TComDataCU::initRQTData( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopy
     if(bResetTUSplit)
       m_puhTrIdx  [ui] = 0;
 
-    m_ColorTransform[ui] = 0;
+    m_ColourTransform[ui] = 0;
 
     for(UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
@@ -726,7 +726,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
-    m_ColorTransform[ui] = false;
+    m_ColourTransform[ui] = false;
 
     m_pePartSize[ui] = NUMBER_OF_PART_SIZES;
     m_pePredMode[ui] = NUMBER_OF_PREDICTION_MODES;
@@ -802,7 +802,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_uiCUPelY           = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
   m_skipFlag=pcCU->getSkipFlag()          + uiPart;
-  m_ColorTransform     = pcCU->getColorTransform() + uiPart;
+  m_ColourTransform     = pcCU->getColourTransform() + uiPart;
 
   m_phQP=pcCU->getQP()                    + uiPart;
   m_ChromaQpAdj = pcCU->getChromaQpAdj()  + uiPart;
@@ -964,7 +964,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_CUTransquantBypass + uiOffset, pcCU->getCUTransquantBypass(), sizeof( *m_CUTransquantBypass ) * uiNumPartition );
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
-  memcpy( m_ColorTransform + uiOffset, pcCU->getColorTransform(), sizeof( *m_ColorTransform ) * uiNumPartition  );
+  memcpy( m_ColourTransform + uiOffset, pcCU->getColourTransform(), sizeof( *m_ColourTransform ) * uiNumPartition  );
 
   for (UInt ch=0; ch<numValidChan; ch++)
   {
@@ -1047,7 +1047,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   Int sizeInChar  = sizeof( Char ) * m_uiNumPartition;
 
   memcpy( pCtu->getSkipFlag() + m_absZIdxInCtu, m_skipFlag, sizeof( *m_skipFlag ) * m_uiNumPartition );
-  memcpy( pCtu->getColorTransform() + m_absZIdxInCtu, m_ColorTransform, sizeof( *m_ColorTransform ) * m_uiNumPartition  );
+  memcpy( pCtu->getColourTransform() + m_absZIdxInCtu, m_ColourTransform, sizeof( *m_ColourTransform ) * m_uiNumPartition  );
 
   memcpy( pCtu->getQP() + m_absZIdxInCtu, m_phQP, sizeInChar  );
 
@@ -1135,7 +1135,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   Int sizeInChar  = sizeof( Char ) * uiQNumPart;
 
   memcpy( pCtu->getSkipFlag()       + uiPartOffset, m_skipFlag,   sizeof( *m_skipFlag )   * uiQNumPart );
-  memcpy( pCtu->getColorTransform() + uiPartOffset, m_ColorTransform, sizeof( *m_ColorTransform ) * uiQNumPart );
+  memcpy( pCtu->getColourTransform() + uiPartOffset, m_ColourTransform, sizeof( *m_ColourTransform ) * uiQNumPart );
 
   memcpy( pCtu->getQP() + uiPartOffset, m_phQP, sizeInChar );
   memcpy( pCtu->getPartitionSize()  + uiPartOffset, m_pePartSize, sizeof( *m_pePartSize ) * uiQNumPart );
@@ -2222,10 +2222,10 @@ Void TComDataCU::setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID com
   memset((m_explicitRdpcmMode[compID] + uiAbsPartIdx), rdpcmMode, (sizeof(UChar) * uiCoveredPartIdxes));
 }
 
-Void TComDataCU::setColorTransformSubParts( Bool colorTransform, UInt uiAbsPartIdx, UInt uiDepth)
+Void TComDataCU::setColourTransformSubParts( Bool ColourTransform, UInt uiAbsPartIdx, UInt uiDepth)
 {
-  assert( sizeof( *m_ColorTransform) == 1 );
-  memset( m_ColorTransform + uiAbsPartIdx, colorTransform, m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1) );
+  assert( sizeof( *m_ColourTransform) == 1 );
+  memset( m_ColourTransform + uiAbsPartIdx, ColourTransform, m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1) );
 }
 
 Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth )

@@ -117,7 +117,7 @@ const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
     case SEI::REGION_REFRESH_INFO:                  return "Region refresh information";
     case SEI::NO_DISPLAY:                           return "No display";
     case SEI::TIME_CODE:                            return "Time code";
-    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
+    case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display Colour volume";
     case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
     case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";

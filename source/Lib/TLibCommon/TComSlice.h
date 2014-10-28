@@ -553,8 +553,8 @@ private:
   Bool m_videoSignalTypePresentFlag;
   Int  m_videoFormat;
   Bool m_videoFullRangeFlag;
-  Bool m_colourDescriptionPresentFlag;
-  Int  m_colourPrimaries;
+  Bool m_ColourDescriptionPresentFlag;
+  Int  m_ColourPrimaries;
   Int  m_transferCharacteristics;
   Int  m_matrixCoefficients;
   Bool m_chromaLocInfoPresentFlag;
@@ -588,8 +588,8 @@ public:
     ,m_videoSignalTypePresentFlag(false)
     ,m_videoFormat(5)
     ,m_videoFullRangeFlag(false)
-    ,m_colourDescriptionPresentFlag(false)
-    ,m_colourPrimaries(2)
+    ,m_ColourDescriptionPresentFlag(false)
+    ,m_ColourPrimaries(2)
     ,m_transferCharacteristics(2)
     ,m_matrixCoefficients(2)
     ,m_chromaLocInfoPresentFlag(false)
@@ -639,11 +639,11 @@ public:
   Bool getVideoFullRangeFlag() { return m_videoFullRangeFlag; }
   Void setVideoFullRangeFlag(Bool i) { m_videoFullRangeFlag = i; }
 
-  Bool getColourDescriptionPresentFlag() { return m_colourDescriptionPresentFlag; }
-  Void setColourDescriptionPresentFlag(Bool i) { m_colourDescriptionPresentFlag = i; }
+  Bool getColourDescriptionPresentFlag() { return m_ColourDescriptionPresentFlag; }
+  Void setColourDescriptionPresentFlag(Bool i) { m_ColourDescriptionPresentFlag = i; }
 
-  Int getColourPrimaries() { return m_colourPrimaries; }
-  Void setColourPrimaries(Int i) { m_colourPrimaries = i; }
+  Int getColourPrimaries() { return m_ColourPrimaries; }
+  Void setColourPrimaries(Int i) { m_ColourPrimaries = i; }
 
   Int getTransferCharacteristics() { return m_transferCharacteristics; }
   Void setTransferCharacteristics(Int i) { m_transferCharacteristics = i; }
@@ -754,7 +754,7 @@ private:
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
-  Bool        m_useColorTrans;
+  Bool        m_useColourTrans;
   Bool        m_usePaletteMode;
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -901,8 +901,8 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-  Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
-  Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
+  Bool      getUseColourTrans                  ()                 const { return m_useColourTrans;}
+  Void      setUseColourTrans                  (const Bool value)       { m_useColourTrans= value;}
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }

@@ -145,7 +145,7 @@ public:
 
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
-  Void  parseColorTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
+  Void  parseColourTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
 
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
 
@@ -202,7 +202,7 @@ private:
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
-  ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
+  ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
 
   ContextModel3DBuffer m_cIntraBCBVDSCModel;
 

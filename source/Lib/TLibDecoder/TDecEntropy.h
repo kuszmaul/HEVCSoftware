@@ -105,7 +105,7 @@ public:
 
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
   virtual Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel ) = 0;
-  virtual Void  parseColorTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag ) = 0;
+  virtual Void  parseColourTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag ) = 0;
 
   virtual Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf ) = 0;
 

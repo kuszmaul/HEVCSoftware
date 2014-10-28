@@ -114,7 +114,7 @@ private:
 #endif
 
   Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
-  Bool*          m_ColorTransform; 
+  Bool*          m_ColourTransform; 
 
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
@@ -258,8 +258,8 @@ public:
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
-  Bool*         getColorTransform( )                              { return m_ColorTransform;         }
-  Bool          getColorTransform( UInt uiIdx)                    { return m_ColorTransform[uiIdx];  }
+  Bool*         getColourTransform( )                              { return m_ColourTransform;         }
+  Bool          getColourTransform( UInt uiIdx)                    { return m_ColourTransform[uiIdx];  }
 
 
   Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
@@ -311,7 +311,7 @@ public:
   Void          setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
-  Void          setColorTransformSubParts ( Bool ColorTransform, UInt uiAbsPartIdx, UInt uiDepth);
+  Void          setColourTransformSubParts ( Bool ColourTransform, UInt uiAbsPartIdx, UInt uiDepth);
 
   Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );

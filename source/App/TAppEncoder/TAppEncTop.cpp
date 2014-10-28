@@ -343,8 +343,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setVideoSignalTypePresentFlag                        ( m_videoSignalTypePresentFlag );
   m_cTEncTop.setVideoFormat                                       ( m_videoFormat );
   m_cTEncTop.setVideoFullRangeFlag                                ( m_videoFullRangeFlag );
-  m_cTEncTop.setColourDescriptionPresentFlag                      ( m_colourDescriptionPresentFlag );
-  m_cTEncTop.setColourPrimaries                                   ( m_colourPrimaries );
+  m_cTEncTop.setColourDescriptionPresentFlag                      ( m_ColourDescriptionPresentFlag );
+  m_cTEncTop.setColourPrimaries                                   ( m_ColourPrimaries );
   m_cTEncTop.setTransferCharacteristics                           ( m_transferCharacteristics );
   m_cTEncTop.setMatrixCoefficients                                ( m_matrixCoefficients );
   m_cTEncTop.setChromaLocInfoPresentFlag                          ( m_chromaLocInfoPresentFlag );
@@ -364,7 +364,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLog2MaxMvLengthHorizontal                         ( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical                           ( m_log2MaxMvLengthVertical );
   m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   ); 
-  m_cTEncTop.setUseColorTrans                                     ( m_useColorTrans                );
+  m_cTEncTop.setUseColourTrans                                     ( m_useColourTrans                );
   m_cTEncTop.setUseLossless                                       ( m_useLL                        );
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
 }

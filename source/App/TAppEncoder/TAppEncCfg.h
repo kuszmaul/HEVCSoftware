@@ -77,9 +77,9 @@ protected:
   Int       m_confWinBottom;
   Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
-  InputColourSpaceConversion m_inputColourSpaceConvert;       ///< colour space conversion to apply to input video
-  Bool      m_snrInternalColourSpace;                       ///< if true, then no colour space conversion is applied for snr calculation, otherwise inverse of input is applied.
-  Bool      m_outputInternalColourSpace;                    ///< if true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.
+  InputColourSpaceConversion m_inputColourSpaceConvert;       ///< Colour space conversion to apply to input video
+  Bool      m_snrInternalColourSpace;                       ///< if true, then no Colour space conversion is applied for snr calculation, otherwise inverse of input is applied.
+  Bool      m_outputInternalColourSpace;                    ///< if true, then no Colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.
   ChromaFormat m_InputChromaFormatIDC;
 
   Bool      m_printMSEBasedSequencePSNR;
@@ -122,7 +122,7 @@ protected:
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
   Bool      m_alignCABACBeforeBypass;
   Bool      m_bRGBformat;
-  Bool      m_useColorTrans;
+  Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
 
@@ -334,11 +334,11 @@ protected:
   Int       m_sarHeight;                                      ///< vertical size of the sample aspect ratio
   Bool      m_overscanInfoPresentFlag;                        ///< Signals whether overscan_appropriate_flag is present
   Bool      m_overscanAppropriateFlag;                        ///< Indicates whether conformant decoded pictures are suitable for display using overscan
-  Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present
+  Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and Colour_description_present_flag are present
   Int       m_videoFormat;                                    ///< Indicates representation of pictures
   Bool      m_videoFullRangeFlag;                             ///< Indicates the black level and range of luma and chroma signals
-  Bool      m_colourDescriptionPresentFlag;                   ///< Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present
-  Int       m_colourPrimaries;                                ///< Indicates chromaticity coordinates of the source primaries
+  Bool      m_ColourDescriptionPresentFlag;                   ///< Signals whether Colour_primaries, transfer_characteristics and matrix_coefficients are present
+  Int       m_ColourPrimaries;                                ///< Indicates chromaticity coordinates of the source primaries
   Int       m_transferCharacteristics;                        ///< Indicates the opto-electronic transfer characteristics of the source
   Int       m_matrixCoefficients;                             ///< Describes the matrix coefficients used in deriving luma and chroma from RGB primaries
   Bool      m_chromaLocInfoPresentFlag;                       ///< Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present

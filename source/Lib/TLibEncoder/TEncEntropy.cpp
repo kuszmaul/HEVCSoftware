@@ -739,7 +739,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
   if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
   {
-    m_pcEntropyCoderIf->codeColorTransformFlag( pcCU, uiAbsPartIdx );
+    m_pcEntropyCoderIf->codeColourTransformFlag( pcCU, uiAbsPartIdx );
   }
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
