@@ -2943,7 +2943,7 @@ Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPre
   pcCU->getTotalCost()       = dCost;
   pcCU->getTotalDistortion() = uiDistortion;
 
-  pcCU->copyToPic(uiDepth, 0, 0);
+  pcCU->copyToPic(uiDepth);
 }
 
 
