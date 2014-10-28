@@ -68,6 +68,7 @@ struct GOPEntry
   Int m_deltaRPS;
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
+  Bool m_isEncoded;
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -82,6 +83,7 @@ struct GOPEntry
   , m_interRPSPrediction(false)
   , m_deltaRPS(0)
   , m_numRefIdc(0)
+  , m_isEncoded(false)
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
@@ -114,6 +116,7 @@ protected:
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
   Bool      m_printClippedPSNR;
+  Bool      m_cabacZeroWordPaddingEnabled;
 
   /* profile & level */
   Profile::Name m_profile;
@@ -163,6 +166,7 @@ protected:
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoCtuBoundary;
+
 
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
@@ -317,7 +321,7 @@ protected:
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
   UInt      m_log2ParallelMergeLevelMinus2;       ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                    ///< Maximum number of merge candidates
-  Int       m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
+  ScalingListMode m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
   Char*     m_scalingListFile;          ///< quantization matrix file name
   Int       m_TMVPModeId;
   Int       m_signHideFlag;
@@ -405,6 +409,8 @@ public:
 
   Bool      getPrintClippedPSNR             ()         const { return m_printClippedPSNR;           }
   Void      setPrintClippedPSNR             (Bool value)     { m_printClippedPSNR = value;          }
+  Bool      getCabacZeroWordPaddingEnabled()           const { return m_cabacZeroWordPaddingEnabled;  }
+  Void      setCabacZeroWordPaddingEnabled(Bool value)       { m_cabacZeroWordPaddingEnabled = value; }
 
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -413,6 +419,7 @@ public:
   Void      setGopList                      ( GOPEntry*  GOPList ) {  for ( Int i = 0; i < MAX_GOP; i++ ) m_GOPList[i] = GOPList[i]; }
   Void      setExtraRPSs                    ( Int   i )      { m_extraRPSs = i; }
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
+  Void      setEncodedFlag                  ( Int  i, Bool value )  { m_GOPList[i].m_isEncoded = value; }
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
 
@@ -774,8 +781,8 @@ public:
   UInt         getLog2ParallelMergeLevelMinus2   ()                  { return m_log2ParallelMergeLevelMinus2;       }
   Void         setMaxNumMergeCand                ( UInt u )          { m_maxNumMergeCand = u;      }
   UInt         getMaxNumMergeCand                ()                  { return m_maxNumMergeCand;   }
-  Void         setUseScalingListId    ( Int  u )                     { m_useScalingListId       = u;   }
-  Int          getUseScalingListId    ()                             { return m_useScalingListId;      }
+  Void         setUseScalingListId    ( ScalingListMode u )          { m_useScalingListId       = u;   }
+  ScalingListMode getUseScalingListId    ()                          { return m_useScalingListId;      }
   Void         setScalingListFile     ( Char*  pch )                 { m_scalingListFile     = pch; }
   Char*        getScalingListFile     ()                             { return m_scalingListFile;    }
   Void         setTMVPModeId ( Int  u )                              { m_TMVPModeId = u;    }

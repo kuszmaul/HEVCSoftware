@@ -49,8 +49,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-#define FIX203 1
-
 class DistParam;
 class TComPattern;
 
@@ -59,7 +57,7 @@ class TComPattern;
 // ====================================================================================================================
 
 // for function pointer
-typedef Distortion (*FpDistFunc) (DistParam*); // TODO: RExt - can this pointer be replaced with a reference? - there are no NULL checks on pointer.
+typedef Distortion (*FpDistFunc) (DistParam*); // TODO: can this pointer be replaced with a reference? - there are no NULL checks on pointer.
 
 // ====================================================================================================================
 // Class definition
@@ -123,24 +121,14 @@ private:
   Double                  m_dFrameLambda;
 
   // for motion cost
-#if FIX203
   TComMv                  m_mvPredictor;
   TComMv                  m_mvPredictors[2];
-#else
-  UInt*                   m_puiComponentCostOriginP;
-  UInt*                   m_puiComponentCost;
-  UInt*                   m_puiVerCost;
-  UInt*                   m_puiHorCost;
-#endif
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
   Double                  m_dCost;
 #else
   UInt                    m_uiCost;
 #endif
   Int                     m_iCostScale;
-#if !FIX203
-  Int                     m_iSearchLimit;
-#endif
   Bool                    m_bRGBformat;
   Bool                    m_useColorTrans;
   Bool                    m_useLL;
@@ -175,10 +163,6 @@ public:
   Distortion calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
 
   // for motion cost
-#if !FIX203
-  Void    initRateDistortionModel( Int iSubPelSearchLimit );
-  Void    xUninit();
-#endif
   UInt    xGetComponentBits( Int iVal );
   UInt    xGetBvdComponentBits( Int iVal,  Int iComponent );
 
@@ -189,25 +173,15 @@ public:
 #endif
   Void    setPredictor( TComMv& rcMv )
   {
-#if FIX203
     m_mvPredictor = rcMv;
-#else
-    m_puiHorCost = m_puiComponentCost - rcMv.getHor();
-    m_puiVerCost = m_puiComponentCost - rcMv.getVer();
-#endif
   }
 
   Void    setPredictors( TComMv* pcMv )
   {
-#if FIX203
     for(Int i=0; i<2; i++)
     {
       m_mvPredictors[i] = pcMv[i];
     }
-#else
-    m_puiHorCost = m_puiComponentCost - rcMv.getHor();
-    m_puiVerCost = m_puiComponentCost - rcMv.getVer();
-#endif
   }
 
   __inline Distortion getCostMultiplePreds( Int x, Int y )
@@ -261,17 +235,9 @@ public:
   __inline Distortion getCost( Int x, Int y )
   {
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
-#if FIX203
     return Distortion((m_dCost * getBits(x, y)) / 65536.0);
 #else
-    return Distortion(( m_dCost * (m_puiHorCost[ x * (1<<m_iCostScale) ] + m_puiVerCost[ y * (1<<m_iCostScale) ]) ) / 65536.0);
-#endif
-#else
-#if FIX203
     return m_uiCost * getBits(x, y) >> 16;
-#else
-    return (( m_uiCost * (m_puiHorCost[ x * (1<<m_iCostScale) ] + m_puiVerCost[ y * (1<<m_iCostScale) ]) ) >> 16);
-#endif
 #endif
   }
 #if RExt__HIGH_BIT_DEPTH_SUPPORT
@@ -281,12 +247,8 @@ public:
 #endif
   UInt    getBits( Int x, Int y )
   {
-#if FIX203
     return xGetComponentBits((x << m_iCostScale) - m_mvPredictor.getHor())
     +      xGetComponentBits((y << m_iCostScale) - m_mvPredictor.getVer());
-#else
-    return m_puiHorCost[ x * (1<<m_iCostScale)] + m_puiVerCost[ y * (1<<m_iCostScale) ];
-#endif
   }
 
 __inline Distortion getBvCost( Int x, Int y ) { 
