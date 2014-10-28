@@ -197,7 +197,6 @@ public:
   Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
 
   Void          copyToPic             ( UChar uiDepth );
-  Void          copyToPic             ( UChar uiDepth, UInt uiPartIdx, UInt uiPartDepth );
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for CU description
