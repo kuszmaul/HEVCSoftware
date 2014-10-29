@@ -468,7 +468,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
-    if(pcCU->getColourTransform( 0 ))
+    if(pcCU->getColorTransform( 0 ))
     {
       m_ppcYuvResi[uiDepth]->convert(0, 0, pcCU->getWidth( 0 ), false, pcCU->isLosslessCoded(0));
     }
@@ -509,7 +509,7 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
-    if(pcCU->getColourTransform( 0 ))
+    if(pcCU->getColorTransform( 0 ))
     {
       m_ppcYuvResi[uiDepth]->convert(0, 0, pcCU->getWidth( 0 ),  false, pcCU->isLosslessCoded(0));
     }
@@ -581,7 +581,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   std::ostream &ss(std::cout);
 #endif
 
-  assert( !pcCU->getColourTransform( 0 ));
+  assert( !pcCU->getColorTransform( 0 ));
 
   DEBUG_STRING_NEW(sTemp)
   m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
@@ -715,7 +715,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
   TComDataCU         *pcCU        = rTu.getCU();
   const UInt         uiAbsPartIdx = rTu.GetAbsPartIdxTU();
   const ChromaFormat chFmt        = rTu.GetChromaFormat();
-  Bool bModifyQP = !pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 );
+  Bool bModifyQP = !pcCU->isLosslessCoded(0) && pcCU->getColorTransform( 0 );
 
 
   for(UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
@@ -758,7 +758,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
       cQP.per = cQP.Qp/6;
       cQP.rem= cQP.Qp%6;   
-      m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(DELTA_QP_FOR_YCgCo_TRANS);
+      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(DELTA_QP_FOR_YCgCo_TRANS);
     }
 
     DEBUG_STRING_NEW( sDebug );
@@ -796,12 +796,12 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     }    
     if(bModifyQP)
     {
-      m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(- DELTA_QP_FOR_YCgCo_TRANS);
+      m_pcTrQuant->adjustBitDepthandLambdaForColorTrans(- DELTA_QP_FOR_YCgCo_TRANS);
     }
   }
 
 
-  if( pcCU->getColourTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx,COMPONENT_Y)||pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cb)|| pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cr)))
+  if( pcCU->getColorTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx,COMPONENT_Y)||pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cb)|| pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cr)))
   {
     pcResiYuv->convert(rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->isLosslessCoded(uiAbsPartIdx));
   }
@@ -863,7 +863,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
     return;
   }
 
-  if( !pcCU->getSlice()->getSPS()->getUseColourTrans () )
+  if( !pcCU->getSlice()->getSPS()->getUseColorTrans () )
   {
   const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
   for (UInt chType=CHANNEL_TYPE_LUMA; chType<numChType; chType++)

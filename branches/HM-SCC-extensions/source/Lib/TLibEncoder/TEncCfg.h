@@ -218,7 +218,7 @@ protected:
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
   Bool      m_bRGBformat;
-  Bool      m_useColourTrans;
+  Bool      m_useColorTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
 
@@ -350,11 +350,11 @@ protected:
   Int       m_sarHeight;                                      ///< vertical size of the sample aspect ratio
   Bool      m_overscanInfoPresentFlag;                        ///< Signals whether overscan_appropriate_flag is present
   Bool      m_overscanAppropriateFlag;                        ///< Indicates whether conformant decoded pictures are suitable for display using overscan
-  Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and Colour_description_present_flag are present
+  Bool      m_videoSignalTypePresentFlag;                     ///< Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present
   Int       m_videoFormat;                                    ///< Indicates representation of pictures
   Bool      m_videoFullRangeFlag;                             ///< Indicates the black level and range of luma and chroma signals
-  Bool      m_ColourDescriptionPresentFlag;                   ///< Signals whether Colour_primaries, transfer_characteristics and matrix_coefficients are present
-  Int       m_ColourPrimaries;                                ///< Indicates chromaticity coordinates of the source primaries
+  Bool      m_colourDescriptionPresentFlag;                   ///< Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present
+  Int       m_colourPrimaries;                                ///< Indicates chromaticity coordinates of the source primaries
   Int       m_transferCharacteristics;                        ///< Indicates the opto-electronic transfer characteristics of the source
   Int       m_matrixCoefficients;                             ///< Describes the matrix coefficients used in deriving luma and chroma from RGB primaries
   Bool      m_chromaLocInfoPresentFlag;                       ///< Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present
@@ -592,8 +592,8 @@ public:
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
   Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
   Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
-  Bool getUseColourTrans                                ()            const { return                  m_useColourTrans;}
-  Void setUseColourTrans                                (const Bool value)  { m_useColourTrans               = value;  }
+  Bool getUseColorTrans                                ()            const { return                  m_useColorTrans;}
+  Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
@@ -840,10 +840,10 @@ public:
   Void         setVideoFormat(Int i)                                 { m_videoFormat = i; }
   Bool         getVideoFullRangeFlag()                               { return m_videoFullRangeFlag; }
   Void         setVideoFullRangeFlag(Bool i)                         { m_videoFullRangeFlag = i; }
-  Bool         getColourDescriptionPresentFlag()                     { return m_ColourDescriptionPresentFlag; }
-  Void         setColourDescriptionPresentFlag(Bool i)               { m_ColourDescriptionPresentFlag = i; }
-  Int          getColourPrimaries()                                  { return m_ColourPrimaries; }
-  Void         setColourPrimaries(Int i)                             { m_ColourPrimaries = i; }
+  Bool         getColourDescriptionPresentFlag()                     { return m_colourDescriptionPresentFlag; }
+  Void         setColourDescriptionPresentFlag(Bool i)               { m_colourDescriptionPresentFlag = i; }
+  Int          getColourPrimaries()                                  { return m_colourPrimaries; }
+  Void         setColourPrimaries(Int i)                             { m_colourPrimaries = i; }
   Int          getTransferCharacteristics()                          { return m_transferCharacteristics; }
   Void         setTransferCharacteristics(Int i)                     { m_transferCharacteristics = i; }
   Int          getMatrixCoefficients()                               { return m_matrixCoefficients; }

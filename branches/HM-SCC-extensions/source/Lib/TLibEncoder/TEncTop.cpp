@@ -451,7 +451,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
   rpcPic->getHashMap()->clearAll();
-  if( getRGBFormatFlag() && getUseColourTrans() )
+  if( getRGBFormatFlag() && getUseColorTrans() )
   {
     if( rpcPic->getPicYuvCSC() == NULL )
     {
@@ -554,7 +554,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
-  m_cSPS.setUseColourTrans               (       m_useColourTrans      );
+  m_cSPS.setUseColorTrans               (       m_useColorTrans      );
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)

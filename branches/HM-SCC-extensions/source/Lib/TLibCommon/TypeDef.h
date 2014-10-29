@@ -839,7 +839,7 @@ struct TComSEITimeSet
 
 struct TComSEIMasteringDisplay
 {
-  Bool      ColourVolumeSEIEnabled;
+  Bool      colourVolumeSEIEnabled;
   UInt      maxLuminance;
   UInt      minLuminance;
   UShort    primaries[3][2];

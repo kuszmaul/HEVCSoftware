@@ -325,10 +325,10 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
   {
     WRITE_CODE(pcVUI->getVideoFormat(), 3,                      "video_format");
     WRITE_FLAG(pcVUI->getVideoFullRangeFlag(),                  "video_full_range_flag");
-    WRITE_FLAG(pcVUI->getColourDescriptionPresentFlag(),        "Colour_description_present_flag");
+    WRITE_FLAG(pcVUI->getColourDescriptionPresentFlag(),        "colour_description_present_flag");
     if (pcVUI->getColourDescriptionPresentFlag())
     {
-      WRITE_CODE(pcVUI->getColourPrimaries(), 8,                "Colour_primaries");
+      WRITE_CODE(pcVUI->getColourPrimaries(), 8,                "colour_primaries");
       WRITE_CODE(pcVUI->getTransferCharacteristics(), 8,        "transfer_characteristics");
       WRITE_CODE(pcVUI->getMatrixCoefficients(), 8,             "matrix_coefficients");
     }
@@ -476,7 +476,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_UVLC( Int(pcSPS->getChromaFormatIdc ()),    "chroma_format_idc" );
   if( format == CHROMA_444 )
   {
-    WRITE_FLAG( 0,                                  "separate_Colour_plane_flag");
+    WRITE_FLAG( 0,                                  "separate_colour_plane_flag");
   }
 
   WRITE_UVLC( pcSPS->getPicWidthInLumaSamples (),   "pic_width_in_luma_samples" );
@@ -588,7 +588,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
-     || pcSPS->getUseColourTrans()
+     || pcSPS->getUseColorTrans()
      || pcSPS->getUsePLTMode()
     );
 
@@ -628,7 +628,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             break;
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-            WRITE_FLAG( (pcSPS->getUseColourTrans()     ? 1 : 0),                    "adaptive_Colour_trans_flag" );
+            WRITE_FLAG( (pcSPS->getUseColorTrans()     ? 1 : 0),                    "adaptive_color_trans_flag" );
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
             break;
           default:
@@ -1290,7 +1290,7 @@ Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-Void TEncCavlc::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }

@@ -195,7 +195,7 @@ Void TComRdCost::setLambda( Double dLambda )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
-  if(getUseColourTrans()&&!getUseLossless())
+  if(getUseColorTrans()&&!getUseLossless())
   {
     m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, DELTA_QP_FOR_YCgCo_TRANS/3.0));
   }
@@ -487,7 +487,7 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
   }
 }
 
-Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP)
+Void TComRdCost::adjustLambdaForColorTrans(Int delta_QP)
 {
   double lamdbaAdjustRate;
 
