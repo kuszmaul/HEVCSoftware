@@ -754,7 +754,7 @@ private:
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
-  Bool        m_useColorTrans;
+  Bool        m_useColourTrans;
   Bool        m_usePaletteMode;
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -901,8 +901,8 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-  Bool      getUseColorTrans                  ()                 const { return m_useColorTrans;}
-  Void      setUseColorTrans                  (const Bool value)       { m_useColorTrans= value;}
+  Bool      getUseColourTrans                  ()                 const { return m_useColourTrans;}
+  Void      setUseColourTrans                  (const Bool value)       { m_useColourTrans= value;}
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }

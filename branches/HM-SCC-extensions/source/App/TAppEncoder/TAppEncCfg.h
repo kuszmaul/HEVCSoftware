@@ -122,7 +122,7 @@ protected:
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
   Bool      m_alignCABACBeforeBypass;
   Bool      m_bRGBformat;
-  Bool      m_useColorTrans;
+  Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
 

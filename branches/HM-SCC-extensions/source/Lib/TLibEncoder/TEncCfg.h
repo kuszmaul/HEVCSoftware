@@ -218,7 +218,7 @@ protected:
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
   Bool      m_bRGBformat;
-  Bool      m_useColorTrans;
+  Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
 
@@ -592,8 +592,8 @@ public:
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
   Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
   Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
-  Bool getUseColorTrans                                ()            const { return                  m_useColorTrans;}
-  Void setUseColorTrans                                (const Bool value)  { m_useColorTrans               = value;  }
+  Bool getUseColourTrans                                ()            const { return                  m_useColourTrans;}
+  Void setUseColourTrans                                (const Bool value)  { m_useColourTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }

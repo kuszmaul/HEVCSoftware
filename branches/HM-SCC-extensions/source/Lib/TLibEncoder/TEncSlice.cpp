@@ -132,7 +132,7 @@ Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
   m_pcRdCost->setRGBFormatFlag               (  m_pcCfg->getRGBFormatFlag() );
-  m_pcRdCost->setUseColorTrans               (  slice->getSPS()->getUseColorTrans() );
+  m_pcRdCost->setUseColourTrans               (  slice->getSPS()->getUseColourTrans() );
   m_pcRdCost->setUseLossless                 (  m_pcCfg->getUseLossless() );
 
   // store lambda
@@ -156,7 +156,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-    if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColorTrans())
+    if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColourTrans())
     {
       tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
     }
@@ -744,7 +744,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
   }
 
-  if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() ) 
+  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() ) 
   {
     pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
   }
@@ -872,7 +872,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #if ADAPTIVE_QP_SELECTION
       pCtu->getSlice()->setSliceQpBase( estQP );
 #endif
-  if( pcSlice->getSPS()->getUseColorTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
+  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
   {
     pcPic->releaseCSCBuffer();
   }

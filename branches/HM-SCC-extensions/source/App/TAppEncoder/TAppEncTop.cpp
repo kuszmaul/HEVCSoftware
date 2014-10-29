@@ -364,7 +364,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLog2MaxMvLengthHorizontal                         ( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical                           ( m_log2MaxMvLengthVertical );
   m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   ); 
-  m_cTEncTop.setUseColorTrans                                     ( m_useColorTrans                );
+  m_cTEncTop.setUseColourTrans                                    ( m_useColourTrans                );
   m_cTEncTop.setUseLossless                                       ( m_useLL                        );
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
 }

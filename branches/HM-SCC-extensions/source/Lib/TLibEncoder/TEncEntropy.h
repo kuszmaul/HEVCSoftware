@@ -89,7 +89,7 @@ public:
 
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
