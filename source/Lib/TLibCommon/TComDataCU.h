@@ -96,14 +96,16 @@ private:
   Char*          m_pePartSize;         ///< array of partition sizes
   Char*          m_pePredMode;         ///< array of prediction modes
   Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
-  Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
+  Bool*          m_CUTransquantBypass; ///< array of cu_transquant_bypass flags
   Char*          m_phQP;               ///< array of QP values
   UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed)
   UInt           m_codedChromaQpAdj;
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
   UChar*         m_puhCbf[MAX_NUM_COMPONENT];          ///< array of coded block flags (CBF)
-  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_01];    ///< array of motion vectors.
+  TComCUMvField  m_acCUMvField[NUM_REF_PIC_LIST_CU_MV_FIELD];    ///< array of motion vectors, and includes intra block copying vector field.
+  TComMv         m_lastIntraBCMv[2];    ///< last 2 Intra Block Copy Mv used.
+
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
@@ -112,6 +114,7 @@ private:
 #endif
 
   Pel*           m_pcIPCMSample[MAX_NUM_COMPONENT];    ///< PCM sample buffer (0->Y, 1->Cb, 2->Cr)
+  Bool*          m_ColourTransform; 
 
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
@@ -141,6 +144,17 @@ private:
   Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
+  UChar*        m_piSPoint[MAX_NUM_COMPONENT];            ///< 0: left run mode; 1: above run mode
+  Bool*         m_pbPLTModeFlag;                          ///< array of intra_pcm flags
+  Pel*          m_piPLT[MAX_NUM_COMPONENT];               ///< Palette
+  UChar*        m_bPrevPLTReusedFlag[MAX_NUM_COMPONENT];  ///< Palette
+  UChar *       m_puhPLTEscape[MAX_NUM_COMPONENT];
+  Pel*          m_piLastPLTInLcuFinal[MAX_NUM_COMPONENT]; ///< Palette
+  UChar         m_uhLastPLTSizeFinal[MAX_NUM_COMPONENT];
+  UChar         m_uhLastPLTUsedSizeFinal[MAX_NUM_COMPONENT];
+  Bool*         m_pbPLTSharingModeFlag;
+  Bool*         m_pbPLTScanRotationModeFlag;
+  Bool*         m_pbPLTScanTraverseModeFlag;
 
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
@@ -173,6 +187,10 @@ protected:
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
 public:
+  Double        tmpIntraBCRDCost;
+  Double        tmpInterRDCost;
+  Bool          bIntraBCCSCEnabled;
+  Bool          bInterCSCEnabled; 
   TComDataCU();
   virtual ~TComDataCU();
 
@@ -190,6 +208,7 @@ public:
   Void          initCtu               ( TComPic* pcPic, UInt ctuRsAddr );
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
+  Void          initRQTData           ( const UInt uiDepth, TComDataCU* pSrcCU, Bool bCopySrc, Bool bResetIntraMode, Bool bResetTUSplit );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
 
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
@@ -223,6 +242,7 @@ public:
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
 
+  Void          getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast);
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }
@@ -238,6 +258,9 @@ public:
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
+  Bool*         getColourTransform( )                              { return m_ColourTransform;         }
+  Bool          getColourTransform( UInt uiIdx)                    { return m_ColourTransform[uiIdx];  }
+
 
   Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
   Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
@@ -288,6 +311,7 @@ public:
   Void          setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getUseResidualDPCM(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
+  Void          setColourTransformSubParts ( Bool ColourTransform, UInt uiAbsPartIdx, UInt uiDepth);
 
   Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
@@ -295,6 +319,9 @@ public:
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
 
   TComCUMvField* getCUMvField         ( RefPicList e )          { return  &m_acCUMvField[e];  }
+  TComMv        getLastIntraBCMv(Int idx=0) {return m_lastIntraBCMv[idx]; }
+  Void          setLastIntraBCMv(TComMv mv, Int idx=0 ) { m_lastIntraBCMv[idx] = mv; }
+  UInt          getIntraBCSearchAreaWidth( UInt uiMaxSearchWidthToLeftInCTUs );
 
   TCoeff*       getCoeff              (ComponentID component)   { return m_pcTrCoeff[component]; }
 
@@ -354,6 +381,57 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
+  UChar*        getSPoint             (ComponentID component)   { return m_piSPoint[component];      }
+  Pel*          getLevel              (ComponentID component)   { return m_pcIPCMSample[component];  }
+  TCoeff*       getRun                (ComponentID component)   { return m_pcTrCoeff[component];     }
+  Bool*         getPLTModeFlag        ()                        { return m_pbPLTModeFlag;            }
+  Bool          getPLTModeFlag        (UInt uiIdx)              { return m_pbPLTModeFlag[uiIdx];     }
+  Void          setRLModeFlag         (UInt uiIdx, Bool b)      { m_pbPLTModeFlag[uiIdx] = b;        }
+  Void          setPLTModeFlagSubParts(Bool bRLModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
+  Pel*          getPLT                (UChar ucCh)                                         { return m_piPLT[ucCh]; }
+  Pel*          getPLT                (UChar ucCh, UInt uiIdx)                             { return m_piPLT[ucCh] + (uiIdx >> 2) * MAX_PLT_SIZE; }
+  Pel           getPLT                (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)              { return m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx]; }
+  Void          setPLT                (UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx) { m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx] = uiValue; }
+  Void          setPLTSubParts        (UChar ucCh, Pel uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
+
+  UChar*        getPLTSize            (UChar ucCh)                          { return m_puhTransformSkip[ucCh];               }
+  UChar         getPLTSize            (UChar ucCh, UInt uiIdx )             { return m_puhTransformSkip[ucCh][uiIdx];        }
+  Void          setPLTSize            (UChar ucCh, UInt uiIdx, Bool b )     { m_puhTransformSkip[ucCh][uiIdx] = b;           }
+  Void          setPLTSizeSubParts    (UChar ucCh, UChar ucRLDictSize, UInt uiAbsPartIdx, UInt uiDepth);
+
+  UChar*        getPLTEscape          (UChar ucCh)                          { return m_puhPLTEscape[ucCh];        }
+  UChar         getPLTEscape          (UChar ucCh, UInt uiIdx)              { return m_puhPLTEscape[ucCh][uiIdx]; }
+  Void          setPLTEscape          (UChar ucCh, UInt uiIdx, Bool b)      { m_puhPLTEscape[ucCh][uiIdx] = b;    }
+  Void          setPLTEscapeSubParts  (UChar ucCh, UChar ucUseEscape, UInt uiAbsPartIdx, UInt uiDepth);
+
+  UChar*        getPrevPLTReusedFlag  (UChar ucCh)                                           { return m_bPrevPLTReusedFlag[ucCh]; }
+  UChar*        getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx)                               { return m_bPrevPLTReusedFlag[ucCh] + (uiIdx >> 2) * MAX_PLT_PRED_SIZE; }
+  UChar         getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)                { return m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx]; }
+  Void          setPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UChar uiValue, UInt uiPLTIdx) { m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = uiValue; }
+  Void          setPrevPLTReusedFlagSubParts(UChar ucCh, UChar uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
+
+  Bool*         getPLTSharingModeFlag      ()                        { return m_pbPLTSharingModeFlag;        }
+  Bool          getPLTSharingModeFlag      (UInt uiIdx)              { return m_pbPLTSharingModeFlag[uiIdx]; }
+  Void          setPLTSharingModeFlag      (UInt uiIdx, Bool b)      { m_pbPLTSharingModeFlag[uiIdx] = b;    }
+  Void          setPLTSharingFlagSubParts  (Bool bPLTSharingFlag, UInt uiAbsPartIdx, UInt uiDepth);
+  Pel*          getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev, UInt &uiPLTUsedSizePrev);
+  UInt          getCtxScanRotationModeFlag( UInt uiAbsPartIdx);
+  UChar         getLastPLTInLcuUsedSizeFinal (UChar ucCh)             { return m_uhLastPLTUsedSizeFinal[ucCh]; }
+  Void          setLastPLTInLcuUsedSizeFinal (UChar ucCh, UChar uh)   { m_uhLastPLTUsedSizeFinal[ucCh] = uh;   }
+
+  UChar         getLastPLTInLcuSizeFinal     (UChar ucCh)           { return m_uhLastPLTSizeFinal[ucCh]; }
+  Void          setLastPLTInLcuSizeFinal     (UChar ucCh, UChar uh) { m_uhLastPLTSizeFinal[ucCh] = uh;   }
+
+  Pel*          getLastPLTInLcuFinal         (UChar ucCh)                             { return m_piLastPLTInLcuFinal[ucCh];              }
+  Pel           getLastPLTInLcuFinal         (UChar ucCh, UInt uiPLTIdx)              { return m_piLastPLTInLcuFinal[ucCh][uiPLTIdx];    }
+  Void          setLastPLTInLcuFinal         (UChar ucCh, Pel uiValue, UInt uiPLTIdx) { m_piLastPLTInLcuFinal[ucCh][uiPLTIdx] = uiValue; }
+  Void          saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UInt numValidComp );
+  Void          xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3]);
+  Int           xCalcMaxVals(TComDataCU *pcCU, ComponentID compID);
+  Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
+  Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }
+  Void          setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
+
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -443,6 +521,9 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
+  Bool          isIntraBC          ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRABC;                                            }
+  Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
+  Bool          isLoopFilterIntra  ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
   Bool          isIntra            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA;                                              }
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
@@ -463,7 +544,8 @@ public:
 
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
-
+  UInt          getCtxEscapeFlag                ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pEscapeFlag  );
+  UInt          getCtxSPoint                    ( UInt   uiAbsPartIdx, UInt uiIdx,  UChar *SPoint     );
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 

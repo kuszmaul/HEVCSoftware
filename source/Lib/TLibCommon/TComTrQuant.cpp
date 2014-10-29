@@ -1569,8 +1569,14 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           UInt           uiAddr      = (tuRect.x0 + uiStride*tuRect.y0);
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
-
-    const QpParam cQP(*pcCU, compID);
+          QpParam cQP(*pcCU, compID);
+          if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
+          {
+            cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
+            cQP.per = cQP.Qp/6;
+            cQP.rem= cQP.Qp%6;
+            adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
+          }
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
@@ -1601,6 +1607,10 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
 
         crossComponentPrediction( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
+    }
+    if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
+    {
+      adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr ? - DELTA_QP_FOR_YCgCo_TRANS_V:  - DELTA_QP_FOR_YCgCo_TRANS);
     }
   }
   else
@@ -3329,5 +3339,32 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
     pResiT += strideT;
   }
 }
+
+Void TComTrQuant::adjustBitDepthandLambdaForColourTrans(Int delta_QP)
+{
+  double lamdbaAdjustRate = 1;
+  static int pairCheck = 0;
+
+  if (delta_QP < 0)
+  {
+    assert ( pairCheck == 0 );
+    pairCheck = 1;
+
+  }
+  else
+  {
+    assert ( pairCheck == 1 );
+    pairCheck = 0;
+  }
+  lamdbaAdjustRate = pow(2.0, delta_QP / 3.0);
+
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) 
+  {
+    m_lambdas[component] = m_lambdas[component] * lamdbaAdjustRate;
+  }
+  m_dLambda = m_dLambda * lamdbaAdjustRate;
+}
+
+
 
 //! \}

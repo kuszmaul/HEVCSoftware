@@ -85,6 +85,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+  Bool      m_printClippedPSNR;
   Bool      m_cabacZeroWordPaddingEnabled;
 
   // profile/level
@@ -120,6 +121,10 @@ protected:
   Bool      m_enableAMP;
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
   Bool      m_alignCABACBeforeBypass;
+  Bool      m_bRGBformat;
+  Bool      m_useColourTrans;
+  Bool      m_useLL;
+  Bool      m_usePaletteMode;
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
@@ -163,6 +168,7 @@ protected:
   Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];      ///< bit-depth of input samples after MSB extension
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
   Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
   Bool      m_useHighPrecisionPredictionWeighting;
 
   //coding tools (chroma format)
@@ -196,9 +202,14 @@ protected:
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
   Bool      m_useRDOQTS;                                     ///< flag for using RD optimized quantization for transform skip
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
-  Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
+  Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
+  Bool      m_useHashBasedIntraBlockCopySearch;               ///< Enable the use of hash based search for intra block copying on 8x8 blocks
+  Int       m_intraBlockCopySearchWidthInCTUs;                ///< Search range for IBC hash search method (-1: full frame search)
+  UInt      m_intraBlockCopyNonHashSearchWidthInCTUs;         ///< Search range for IBC non-hash search method (i.e., fast/full search)
+  Bool      m_useHashBasedME;                                 ///< flag for using hash based inter search
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Bool      m_intraBlockCopyFastSearch;                       ///< Use a restricted search range for intra block-copy motion vectors to reduce the encoding time
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
