@@ -1032,7 +1032,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplay.minLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
   ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
-  ("ColorTransform",                                  m_useColorTrans,                                   false, "Enable the color transform (not valid in V1 profiles")
+  ("ColourTransform",                                 m_useColourTrans,                                   false, "Enable the colour transform (not valid in V1 profiles")
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
   ;
 
@@ -1603,21 +1603,21 @@ Void TAppEncCfg::xCheckParameter()
     m_useCrossComponentPrediction = false;
   }
 
-  if(m_useColorTrans && (m_chromaFormatIDC != CHROMA_444))
+  if(m_useColourTrans && (m_chromaFormatIDC != CHROMA_444))
   {
     fprintf(stderr, "***************************************************************************\n");
     fprintf(stderr, "** WARNING: Adaptive Colour transform is specified for 4:4:4 format only **\n");
     fprintf(stderr, "***************************************************************************\n");
 
-    m_useColorTrans = false;
+    m_useColourTrans = false;
   }
-  if ( m_useColorTrans && m_profile != Profile::MAINSCC )
+  if ( m_useColourTrans && m_profile != Profile::MAINSCC )
   {
     fprintf(stderr, "***************************************************************************\n");
     fprintf(stderr, "** WARNING: Adaptive Colour transform can be used in SCC profile only    **\n");
     fprintf(stderr, "***************************************************************************\n");
 
-    m_useColorTrans = false;
+    m_useColourTrans = false;
   }
 
   if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
@@ -2384,7 +2384,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("High-precision prediction weight  : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
   printf("Golomb-Rice parameter adaptation  : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
-  printf("Adaptive color transform          : %s\n", (m_useColorTrans                          ? "Enabled" : "Disabled") );
+  printf("Adaptive colour transform         : %s\n", (m_useColourTrans                         ? "Enabled" : "Disabled") );
   printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled") );
 
   if (m_bUseSAO)

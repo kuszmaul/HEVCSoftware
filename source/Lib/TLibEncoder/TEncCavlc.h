@@ -108,7 +108,7 @@ public:
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 

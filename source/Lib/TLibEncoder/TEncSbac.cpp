@@ -98,7 +98,7 @@ TEncSbac::TEncSbac()
 , m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCUColorTransformFlagSCModel       ( 1,             1,                      NUM_COLOR_TRANS_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCUColourTransformFlagSCModel      ( 1,             1,                      NUM_COLOUR_TRANS_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cIntraBCBVDSCModel                 (1,              1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -161,7 +161,7 @@ Void TEncSbac::resetEntropy           ()
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
-  m_cCUColorTransformFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_COLOR_TRANS );
+  m_cCUColourTransformFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_COLOUR_TRANS );
   m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
@@ -231,7 +231,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_PLTScanRotationModeFlagSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
-      curCost += m_cCUColorTransformFlagSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_COLOR_TRANS );
+      curCost += m_cCUColourTransformFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_COLOUR_TRANS );
       curCost += m_cIntraBCBVDSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_INTRABC_BVD );
 
       if (curCost < bestCost)
@@ -1544,13 +1544,13 @@ Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
 }
 
-Void TEncSbac::codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncSbac::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-  Bool uiFlag = pcCU->getColorTransform(uiAbsPartIdx)== true? 1: 0;
+  Bool uiFlag = pcCU->getColourTransform(uiAbsPartIdx)== true? 1: 0;
   UInt uiCtx = 0;
-  if(pcCU->getSlice()->getSPS()->getUseColorTrans())
+  if(pcCU->getSlice()->getSPS()->getUseColourTrans())
   {
-    m_pcBinIf->encodeBin( uiFlag , m_cCUColorTransformFlagSCModel.get( 0, 0, uiCtx ) );
+    m_pcBinIf->encodeBin( uiFlag , m_cCUColourTransformFlagSCModel.get( 0, 0, uiCtx ) );
   }
 }
 
