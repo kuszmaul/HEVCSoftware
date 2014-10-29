@@ -145,7 +145,7 @@ public:
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeColorTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -234,7 +234,7 @@ private:
   ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
-  ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
+  ContextModel3DBuffer m_cCUColorTransformFlagSCModel;
   ContextModel3DBuffer m_cIntraBCBVDSCModel;
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];

@@ -694,8 +694,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ExtendedPrecision",                               m_useExtendedPrecision,                           false, "Increased internal accuracies to support high bit depths (not valid in V1 profiles)")
   ("HighPrecisionPredictionWeighting",                m_useHighPrecisionPredictionWeighting,            false, "Use high precision option for weighted prediction (not valid in V1 profiles)")
   ("InputColourSpaceConvert",                         inputColourSpaceConvert,                     string(""), "Colour space conversion to apply to input video. Permitted values are (empty string=UNCHANGED) " + getListOfColourSpaceConverts(true))
-  ("SNRInternalColourSpace",                          m_snrInternalColourSpace,                         false, "If true, then no Colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
-  ("OutputInternalColourSpace",                       m_outputInternalColourSpace,                      false, "If true, then no Colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
+  ("SNRInternalColourSpace",                          m_snrInternalColourSpace,                         false, "If true, then no colour space conversion is applied prior to SNR, otherwise inverse of input is applied.")
+  ("OutputInternalColourSpace",                       m_outputInternalColourSpace,                      false, "If true, then no colour space conversion is applied for reconstructed video, otherwise inverse of input is applied.")
   ("InputChromaFormat",                               tmpInputChromaFormat,                               420, "InputChromaFormatIDC")
   ("MSEBasedSequencePSNR",                            m_printMSEBasedSequencePSNR,                      false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
   ("PrintFrameMSE",                                   m_printFrameMSE,                                  false, "0 (default) emit only bit count and PSNRs for each frame, 1 = also emit MSE values")
@@ -902,11 +902,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SarHeight",                                       m_sarHeight,                                          0, "vertical size of the sample aspect ratio")
   ("OverscanInfoPresent",                             m_overscanInfoPresentFlag,                        false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
   ("OverscanAppropriate",                             m_overscanAppropriateFlag,                        false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
-  ("VideoSignalTypePresent",                          m_videoSignalTypePresentFlag,                     false, "Signals whether video_format, video_full_range_flag, and Colour_description_present_flag are present")
+  ("VideoSignalTypePresent",                          m_videoSignalTypePresentFlag,                     false, "Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present")
   ("VideoFormat",                                     m_videoFormat,                                        5, "Indicates representation of pictures")
   ("VideoFullRange",                                  m_videoFullRangeFlag,                             false, "Indicates the black level and range of luma and chroma signals")
-  ("ColourDescriptionPresent",                        m_ColourDescriptionPresentFlag,                   false, "Signals whether Colour_primaries, transfer_characteristics and matrix_coefficients are present")
-  ("ColourPrimaries",                                 m_ColourPrimaries,                                    2, "Indicates chromaticity coordinates of the source primaries")
+  ("ColourDescriptionPresent",                        m_colourDescriptionPresentFlag,                   false, "Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present")
+  ("ColourPrimaries",                                 m_colourPrimaries,                                    2, "Indicates chromaticity coordinates of the source primaries")
   ("TransferCharacteristics",                         m_transferCharacteristics,                            2, "Indicates the opto-electronic transfer characteristics of the source")
   ("MatrixCoefficients",                              m_matrixCoefficients,                                 2, "Describes the matrix coefficients used in deriving luma and chroma from RGB primaries")
   ("ChromaLocInfoPresent",                            m_chromaLocInfoPresentFlag,                       false, "Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present")
@@ -1027,12 +1027,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIKneeFunctionNumKneePointsMinus1",              m_kneeSEINumKneePointsMinus1,                         2, "Specifies the number of knee points - 1")
   ("SEIKneeFunctionInputKneePointValue",              cfg_kneeSEIInputKneePointValue,   cfg_kneeSEIInputKneePointValue, "Array of input knee point")
   ("SEIKneeFunctionOutputKneePointValue",             cfg_kneeSEIOutputKneePointValue, cfg_kneeSEIOutputKneePointValue, "Array of output knee point")
-  ("SEIMasteringDisplayColourVolume",                 m_masteringDisplay.ColourVolumeSEIEnabled,         false, "Control generation of mastering display Colour volume SEI messages")
+  ("SEIMasteringDisplayColourVolume",                 m_masteringDisplay.colourVolumeSEIEnabled,         false, "Control generation of mastering display colour volume SEI messages")
   ("SEIMasteringDisplayMaxLuminance",                 m_masteringDisplay.maxLuminance,                  10000u, "Specifies the mastering display maximum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
   ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplay.minLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
-  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three Colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
+  ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
-  ("ColourTransform",                                  m_useColourTrans,                                   false, "Enable the Colour transform (not valid in V1 profiles")
+  ("ColorTransform",                                  m_useColorTrans,                                   false, "Enable the color transform (not valid in V1 profiles")
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
   ;
 
@@ -1331,7 +1331,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   m_iWaveFrontSubstreams = m_iWaveFrontSynchro ? (m_iSourceHeight + m_uiMaxCUHeight - 1) / m_uiMaxCUHeight : 1;
 
-  if( m_masteringDisplay.ColourVolumeSEIEnabled )
+  if( m_masteringDisplay.colourVolumeSEIEnabled )
   {
     for(UInt idx=0; idx<6; idx++)
     {
@@ -1603,21 +1603,21 @@ Void TAppEncCfg::xCheckParameter()
     m_useCrossComponentPrediction = false;
   }
 
-  if(m_useColourTrans && (m_chromaFormatIDC != CHROMA_444))
+  if(m_useColorTrans && (m_chromaFormatIDC != CHROMA_444))
   {
     fprintf(stderr, "***************************************************************************\n");
     fprintf(stderr, "** WARNING: Adaptive Colour transform is specified for 4:4:4 format only **\n");
     fprintf(stderr, "***************************************************************************\n");
 
-    m_useColourTrans = false;
+    m_useColorTrans = false;
   }
-  if ( m_useColourTrans && m_profile != Profile::MAINSCC )
+  if ( m_useColorTrans && m_profile != Profile::MAINSCC )
   {
     fprintf(stderr, "***************************************************************************\n");
     fprintf(stderr, "** WARNING: Adaptive Colour transform can be used in SCC profile only    **\n");
     fprintf(stderr, "***************************************************************************\n");
 
-    m_useColourTrans = false;
+    m_useColorTrans = false;
   }
 
   if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
@@ -2384,7 +2384,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("High-precision prediction weight  : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
   printf("Golomb-Rice parameter adaptation  : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
-  printf("Adaptive Colour transform          : %s\n", (m_useColourTrans                          ? "Enabled" : "Disabled") );
+  printf("Adaptive color transform          : %s\n", (m_useColorTrans                          ? "Enabled" : "Disabled") );
   printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled") );
 
   if (m_bUseSAO)

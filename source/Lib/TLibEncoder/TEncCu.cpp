@@ -515,7 +515,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
   // We need to split, so don't try these modes.
-  if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+  if(rpcBestCU->getSlice()->getSPS()->getUseColorTrans())
   {
     m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = MAX_DOUBLE;
     m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = MAX_DOUBLE;
@@ -766,7 +766,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
         {
-          if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+          if(rpcBestCU->getSlice()->getSPS()->getUseColorTrans())
           {
             Double tempIntraCost = MAX_DOUBLE;
             TComDataCU *pStoredBestCU = rpcBestCU;
@@ -805,7 +805,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
               Double tmpIntraCost;
-              if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+              if(rpcBestCU->getSlice()->getSPS()->getUseColorTrans())
               {
                 Double      tempIntraCost = MAX_DOUBLE;
                 TComDataCU *pStoredBestCU = rpcBestCU;
@@ -1607,8 +1607,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
           // do MC
           m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
-          Bool bColourTrans = (m_pcEncCfg->getRGBFormatFlag() && rpcBestCU->getSlice()->getSPS()->getUseColourTrans())? true : false;
-          rpcTempCU->setColourTransformSubParts(bColourTrans, 0, uhDepth);
+          Bool bColorTrans = (m_pcEncCfg->getRGBFormatFlag() && rpcBestCU->getSlice()->getSPS()->getUseColorTrans())? true : false;
+          rpcTempCU->setColorTransformSubParts(bColorTrans, 0, uhDepth);
 
           // estimate residual and encode everything
           m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
@@ -1648,15 +1648,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(bestStr) DEBUG_STRING_PASS_INTO(tmpStr));
 
           Bool bParentUseCSC = ( (uhDepth != 0) && (m_ppcBestCU[uhDepth -1]->bInterCSCEnabled) );
-          if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
+          if(rpcBestCU->getSlice()->getSPS()->getUseColorTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
           {
             if( rpcTempCU != rpcTempCUPre )
             {
               rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag );
               rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
             }
-            bColourTrans = bColourTrans? false: true;
-            rpcTempCU->setColourTransformSubParts(bColourTrans, 0, uhDepth);
+            bColorTrans = bColorTrans? false: true;
+            rpcTempCU->setColorTransformSubParts(bColorTrans, 0, uhDepth);
             m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, 
               m_ppcOrigYuv[uhDepth], 
               ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth], 
@@ -1759,17 +1759,17 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 
   TComDataCU *rpcTempCUPre = NULL;
-  Bool   bColourTrans       = false;
-  Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
-  UChar  uiColourTransform = 0;
+  Bool   bColorTrans       = false;
+  Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColorTrans();
+  UChar  uiColorTransform = 0;
   Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
   Char   orgQP             = rpcTempCU->getQP( 0 );
   Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
   for(UInt i = 0;  i < 2 ; i++)
   {
-    uiColourTransform = (bRGB && bEnableTrans)? (1-i): i;
-    rpcTempCU->setColourTransformSubParts((uiColourTransform?true: false), 0, uhDepth);
-    m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], ( bColourTrans ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth]), m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, m_ppcNoCorrYuv  [uhDepth] DEBUG_STRING_PASS_INTO(sTest) );
+    uiColorTransform = (bRGB && bEnableTrans)? (1-i): i;
+    rpcTempCU->setColorTransformSubParts((uiColorTransform?true: false), 0, uhDepth);
+    m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], ( bColorTrans ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth]), m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, m_ppcNoCorrYuv  [uhDepth] DEBUG_STRING_PASS_INTO(sTest) );
 
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 
@@ -1818,7 +1818,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       {
         rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag);
         rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
-        bColourTrans = true;
+        bColorTrans = true;
       }
     }
   }
@@ -1844,7 +1844,7 @@ Void TEncCu::xCheckRDCostIntraCSC( TComDataCU *&rpcBestCU,
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
 
-  rpcTempCU->setColourTransformSubParts(true, 0 ,uiDepth); 
+  rpcTempCU->setColorTransformSubParts(true, 0 ,uiDepth); 
   m_pcPredSearch->estIntraPredQTCT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth] DEBUG_STRING_PASS_INTO(sTest) );
 
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
@@ -1904,7 +1904,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
-  rpcTempCU->setColourTransformSubParts(false, 0 ,uiDepth);
+  rpcTempCU->setColorTransformSubParts(false, 0 ,uiDepth);
 
   Bool bSeparateLumaChroma = true; // choose estimation mode
 
@@ -2001,7 +2001,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
 
   // intra BV search
-  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag())
+  if( rpcTempCU->getSlice()->getSPS()->getUseColorTrans () && m_pcEncCfg->getRGBFormatFlag())
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvResi(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();                                                                          //YCgCo reference picture
@@ -2016,7 +2016,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                                     bUse1DSearchFor8x8,
                                                     false);
 
-  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag()) 
+  if( rpcTempCU->getSlice()->getSPS()->getUseColorTrans() && m_pcEncCfg->getRGBFormatFlag()) 
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvOrg(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();
@@ -2025,18 +2025,18 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   if (bValid)
   {
     TComDataCU *rpcTempCUPre = NULL;
-    Bool   bColourTrans       = false;
-    Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
-    UChar  uiColourTransform = 0;
+    Bool   bColorTrans       = false;
+    Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColorTrans();
+    UChar  uiColorTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Double dCostFst          = MAX_DOUBLE;
     Char   orgQP             = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
     for(UInt i = 0;  i < 2 ; i++)
     {
-      uiColourTransform = ( bRGB && bEnableTrans )? (1-i): i;
+      uiColorTransform = ( bRGB && bEnableTrans )? (1-i): i;
 
-      if( uiColourTransform && m_pcEncCfg->getRGBFormatFlag())
+      if( uiColorTransform && m_pcEncCfg->getRGBFormatFlag())
       {
         for ( Int iPartIdx = 0; iPartIdx < rpcTempCU->getNumPartitions(); iPartIdx++ )
         {
@@ -2044,8 +2044,8 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
         }
       }
 
-      rpcTempCU->setColourTransformSubParts((uiColourTransform? true: false), 0, uiDepth);
-      m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], (bColourTrans ? m_ppcPredYuvBest[uiDepth] : m_ppcPredYuvTemp[uiDepth]), m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false, m_ppcNoCorrYuv  [uiDepth] DEBUG_STRING_PASS_INTO(sTest) );
+      rpcTempCU->setColorTransformSubParts((uiColorTransform? true: false), 0, uiDepth);
+      m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], (bColorTrans ? m_ppcPredYuvBest[uiDepth] : m_ppcPredYuvTemp[uiDepth]), m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false, m_ppcNoCorrYuv  [uiDepth] DEBUG_STRING_PASS_INTO(sTest) );
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
     rdCost = rpcTempCU->getTotalCost();
 
@@ -2090,7 +2090,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
         {
           rpcTempCU->initEstData( uiDepth, orgQP, bTransquantBypassFlag );
           rpcTempCU->copyPartFrom( rpcBestCU, 0, uiDepth );
-          bColourTrans = true;
+          bColorTrans = true;
         }
       }
       else
@@ -2128,17 +2128,17 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   if ( m_pcPredSearch->predInterHashSearch( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], isPerfectMatch ) )
   {
     TComDataCU *rpcTempCUPre = NULL;
-    Bool   bColourTrans       = false;
-    Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
-    UChar  uiColourTransform = 0;
+    Bool   bColorTrans       = false;
+    Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColorTrans();
+    UChar  uiColorTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Char   orgQP             = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
     for(UInt i = 0;  i < 2 ; i++)
     {
-      uiColourTransform = ( bRGB && bEnableTrans )? (1-i): i;
-      rpcTempCU->setColourTransformSubParts((uiColourTransform?true: false), 0, uhDepth);
-      m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], (bColourTrans ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth]), m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, m_ppcNoCorrYuv  [uhDepth] DEBUG_STRING_PASS_INTO(sTest) );
+      uiColorTransform = ( bRGB && bEnableTrans )? (1-i): i;
+      rpcTempCU->setColorTransformSubParts((uiColorTransform?true: false), 0, uhDepth);
+      m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], (bColorTrans ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth]), m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, m_ppcNoCorrYuv  [uhDepth] DEBUG_STRING_PASS_INTO(sTest) );
       rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 
       if(!i)
@@ -2181,7 +2181,7 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
           {
             rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag);
             rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
-            bColourTrans = true;
+            bColorTrans = true;
           }
         }
       }
@@ -2355,7 +2355,7 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdxY = ( ( uiAbsPartIdxInRaster / rpcPic->getNumPartInCtuWidth() ) % uiSrcBlkWidth) / uiBlkWidth;
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
-    if( pcCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+    if( pcCU->getSlice()->getSPS()->getUseColorTrans () && m_pcEncCfg->getRGBFormatFlag() )
     {
       TComRectangle cuCompRect;
       cuCompRect.x0     = 0;
