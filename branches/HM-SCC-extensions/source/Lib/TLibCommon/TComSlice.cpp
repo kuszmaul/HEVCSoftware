@@ -320,6 +320,14 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      if( m_pcRPS->getNumberOfPictures() == 0 )
+      {
+        m_apcRefPicList[REF_PIC_LIST_INTRABC][0] = *(rcListPic.begin());
+        m_aiNumRefIdx[REF_PIC_LIST_INTRABC] = 1;
+      }
+#endif
+
       return;
     }
 
