@@ -269,8 +269,11 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+#define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               8
+#else
 #define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               4
+#endif
 
 
 //------------------------------------------------
@@ -289,9 +292,17 @@
 // Processing controls
 //------------------------------------------------
 
+#define SCM_S0067_ENCODER_IMPROVEMENTS                    1 ///< Accumulate candidates and neighbours for fast evaluation
+
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+#define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
+#define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
+#define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
+#endif
 
 //------------------------------------------------
 // Backwards-compatibility

@@ -261,6 +261,10 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_pppcRDSbacCoder     = pppcRDSbacCoder;
   m_pcRDGoOnSbacCoder   = pcRDGoOnSbacCoder;
 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+  m_uiNumBVs = 0;
+#endif
+
   for (UInt iDir = 0; iDir < MAX_NUM_REF_LIST_ADAPT_SR; iDir++)
   {
     for (UInt iRefIdx = 0; iRefIdx < MAX_IDX_ADAPT_SR; iRefIdx++)
@@ -4962,7 +4966,11 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
                                     TComYuv    *&rpcRecoYuv
                                     DEBUG_STRING_FN_DECLARE(sDebug),
                                     Bool         bUse1DSearchFor8x8,
-                                    Bool         bUseRes )
+                                    Bool         bUseRes 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+                                    , Bool       testOnlyPred
+#endif
+                                    )
 {
   rpcPredYuv->clear();
   if ( !bUseRes )
@@ -4973,10 +4981,17 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
 
   PartSize     ePartSize  = pcCU->getPartitionSize( 0 );
 
+#if SCM_S0067_MAX_CAND_SIZE
+  if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && (pcCU->getWidth(0) > SCM_S0067_MAX_CAND_SIZE))
+#else
   if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && (pcCU->getWidth(0) > 16))
+#endif
     return false;
 
   const Int iNumPart = pcCU->getNumPartitions();
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+  UInt uiTotalCost = 0;
+#endif
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
     Int iDummyWidth, iDummyHeight;
@@ -5003,10 +5018,17 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     pcCU->getIntraBCMVPs(uiPartAddr, cMvPred, MvLast); 
     Distortion  uiCost;
 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+    xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiCost, bUse1DSearchFor8x8, testOnlyPred );
+#else
     xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiCost, bUse1DSearchFor8x8 );
+#endif
 
     if( m_pcEncCfg->getUseHashBasedIntraBCSearch()
       && pcCU->getWidth(0) == 8
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      && !testOnlyPred
+#endif
       && ePartSize == SIZE_2Nx2N
       && (m_pcEncCfg->getUseHashBasedIntraBCSearch()
         || pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCSearchWidthInCTUs() ) != pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() ))
@@ -5014,7 +5036,13 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     {
       UInt uiIntraBCECost = uiCost;
       xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiIntraBCECost);
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      uiCost = std::min(uiIntraBCECost, uiCost);
     }
+    uiTotalCost += uiCost;
+#else
+    }
+#endif
 
     // store intra BV in REF_PIC_LIST_0
     cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
@@ -5029,9 +5057,29 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     // no valid intra BV
     if (cMv.getHor() == 0 && cMv.getVer() == 0)
     {
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      if( testOnlyPred ) m_lastCandCost = MAX_UINT;
+#endif
       return false;
     }
   }
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+  Distortion abortThreshold = pcCU->getWidth(0)*pcCU->getHeight(0)*2;
+  if( testOnlyPred )
+  {
+    if( iNumPart==1 && uiTotalCost > abortThreshold )
+    {
+      m_lastCandCost = MAX_UINT;
+      return false;
+    }
+    m_lastCandCost = uiTotalCost;
+  }
+  else if( uiTotalCost < abortThreshold && 3*uiTotalCost>>2 >= m_lastCandCost )
+  {
+    return false;
+  }
+#endif
 
   // motion compensation
   if( !pcCU->getSlice()->getSPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() )
@@ -5331,6 +5379,9 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
                                             TComMv     &rcMv,
                                             Distortion &ruiCost,
                                             Bool        bUse1DSearchFor8x8
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+                                            , Bool      testOnlyPred
+#endif
                                            )
 {
   UInt          uiPartAddr;
@@ -5371,7 +5422,11 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   m_pcEntropyCoder->m_pcEntropyCoderIf->estBvdBin0Cost( m_pcRdCost->getMvdBin0CostPtr());  
 
   //  Do integer search
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+  xIntraPatternSearch      ( pcCU, uiPartAddr, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, pcMvPred, bUse1DSearchFor8x8, testOnlyPred );
+#else
   xIntraPatternSearch      ( pcCU, uiPartAddr, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, pcMvPred, bUse1DSearchFor8x8 );
+#endif
   //printf("ruiCost = %d\n", ruiCost);
 
   UInt uiMvBits = 0;
@@ -5596,6 +5651,31 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
   return iBestCandIdx;
 }
 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+static UInt MergeCandLists(TComMv *dst, UInt dn, TComMv *src, UInt sn)
+{
+  for(UInt cand = 0; cand < sn && dn<SCM_S0067_NUM_CANDIDATES; cand++)
+  {
+    Bool found = false;
+    for(int j=0; j<dn; j++)
+    {
+      if( src[cand] == dst[j] )
+      {
+        found = true;
+        break;
+      }
+    }
+
+    if( !found )
+    {
+      dst[dn] = src[cand];
+      dn++;
+    }
+  }
+
+  return dn;
+}
+#endif
 
 // based on xPatternSearch
 Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
@@ -5611,6 +5691,9 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
                                       Int          iRoiHeight,
                                       TComMv      *mvPred,
                                       Bool         bUse1DSearchFor8x8
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+                                      , Bool       testOnlyPred
+#endif
                                       )
 {
   const Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
@@ -5690,6 +5773,81 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
     }
 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+    if(iRoiWidth>8 || iRoiHeight>8)
+    {
+      m_uiNumBVs = 0;
+    }
+    else if (iRoiWidth+iRoiHeight==16)
+    {
+      m_uiNumBVs = m_uiNumBV16s;
+    }
+
+    if( testOnlyPred )
+    {
+      m_uiNumBVs = 0;
+    }
+
+    TComMv cMvPredEncOnly[16];
+    Int nbPreds = 0;
+    pcCU->getIntraBCMVPsEncOnly(uiPartAddr, cMvPredEncOnly, nbPreds );
+    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMvPredEncOnly, nbPreds);
+
+    for(UInt cand = 0; cand < m_uiNumBVs; cand++)
+    {
+      Int xPred = m_acBVs[cand].getHor();
+      Int yPred = m_acBVs[cand].getVer();
+
+      if ( !( xPred==0 && yPred==0)
+            && !( (yPred < srTop)  || (yPred > srBottom) )
+            && !( (xPred < srLeft) || (xPred > srRight) ) )
+      {
+        Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
+        Int iTempX = xPred + iRelCUPelX + iRoiWidth  - 1;
+        Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
+
+        if((iTempX >= (Int)lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
+        {
+          validCand = false;
+        }
+
+        if ((iTempX >= 0) && (iTempY >= 0))
+        {
+          Int iTempRasterIdx = (iTempY/pcCU->getPic()->getMinCUHeight()) * pcCU->getPic()->getNumPartInCtuWidth() + (iTempX/pcCU->getPic()->getMinCUWidth());
+          Int iTempZscanIdx = g_auiRasterToZscan[iTempRasterIdx];
+          if(iTempZscanIdx >= pcCU->getZorderIdxInCtu())
+          {
+            validCand = false;
+          }
+        }
+
+        if( validCand )
+        {
+          uiSad = m_pcRdCost->getCostMultiplePreds( xPred, yPred);
+
+          for(int r = 0; r < iRoiHeight; )
+          {
+            piRefSrch = piRefY + yPred * iRefStride + r*iRefStride + xPred;
+            m_cDistParam.pCur = piRefSrch;
+            m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
+
+            uiSad += m_cDistParam.DistFunc( &m_cDistParam );
+            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+              break;
+
+            r += 4;
+          }
+
+          xIntraBCSearchMVCandUpdate(uiSad, xPred, yPred, uiSadBestCand, cMVCand);
+        }
+      }
+    }
+
+    iBestX = cMVCand[0].getHor();
+    iBestY = cMVCand[0].getVer();
+    rcMv.set( iBestX, iBestY );
+    uiSadBest = uiSadBestCand[0];
+#else
 
     for(Int iPred = 0; iPred < 2; iPred++)
     {
@@ -5744,9 +5902,24 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
     }
     } // for iPred
+#endif
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+    if( testOnlyPred ) 
+    {
+      ruiSAD       = uiSadBest;
+      return; 
+    }
+#endif
 
     const Int boundY = (0 - iRoiHeight - puPelOffsetY);
+#if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
+    Int lowY = (pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU)
+             ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
+    for(Int y = lowY ; y <= boundY ; ++y )
+#else
     for(Int y = max(iSrchRngVerTop, 0 - cuPelY) ; y <= boundY ; ++y )
+#endif
     {
       if (!isValidIntraBCSearchArea(pcCU, 0 + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
         continue;
@@ -5776,11 +5949,20 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         uiSadBest = uiSadBestCand[0];
         rcMv.set( iBestX, iBestY );
         ruiSAD = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+        goto end;
+#else
         return;
+#endif
       }
     }
 
+#if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
+    const Int boundX = (pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU)
+                     ? -cuPelX : max(iSrchRngHorLeft, - cuPelX);
+#else
     const Int boundX = max(iSrchRngHorLeft, - cuPelX);
+#endif
     for(Int x = 0 - iRoiWidth - puPelOffsetX ; x >= boundX ; --x )
     {
       if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, 0 + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
@@ -5810,7 +5992,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         uiSadBest = uiSadBestCand[0];
         rcMv.set( iBestX, iBestY );
         ruiSAD = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+        goto end;
+#else
         return;
+#endif
       }
 
 
@@ -5828,7 +6014,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       uiSadBest    = uiSadBestCand[iBestCandIdx]; 
       rcMv.set( iBestX, iBestY );
       ruiSAD       = uiSadBest;
-      return; 
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      goto end;
+#else
+      return;
+#endif
     }
 
 
@@ -5889,7 +6079,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         uiSadBest    = uiSadBestCand[iBestCandIdx]; 
         rcMv.set( iBestX, iBestY );
         ruiSAD       = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+        goto end;
+#else
         return;
+#endif
       }
 
 
@@ -5942,7 +6136,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             uiSadBest    = uiSadBestCand[iBestCandIdx]; 
             rcMv.set( iBestX, iBestY );
             ruiSAD       = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+            goto end;
+#else
             return;
+#endif
           }
         }
       }
@@ -5960,7 +6158,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         uiSadBest    = uiSadBestCand[iBestCandIdx]; 
         rcMv.set( iBestX, iBestY );
         ruiSAD       = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+        goto end;
+#else
         return; 
+#endif
       }
 
       uiTempSadBest = uiSadBestCand[0];
@@ -6016,7 +6218,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             uiSadBest    = uiSadBestCand[iBestCandIdx]; 
             rcMv.set( iBestX, iBestY );
             ruiSAD       = uiSadBest;
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+            goto end;
+#else
             return;  
+#endif
           }
         }
       }
@@ -6083,6 +6289,20 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   uiSadBest    = uiSadBestCand[iBestCandIdx];  
   rcMv.set( iBestX, iBestY );
   ruiSAD       = uiSadBest;
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+end:
+  if(iRoiWidth+iRoiHeight > 8)
+  {
+    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES);
+
+    if(iRoiWidth+iRoiHeight==32)
+    {
+      m_uiNumBV16s = m_uiNumBVs;
+    }
+  }
+#endif
+
   return;
 }
 
@@ -6326,6 +6546,10 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 
   Int iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, 0);
   rcMv = cMVCand[iBestCandIdx];
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+  m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES);
+#endif
 
   UInt uiMvBits = 0;
   UInt uiMvBitsBest = MAX_UINT;
