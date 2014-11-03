@@ -176,10 +176,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define MAX_PLT_SIZE                  31
 #define MAX_PLT_PRED_SIZE             64
 
-#define DELTA_QP_FOR_YCgCo_TRANS     -5
-#define DELTA_QP_FOR_YCgCo_TRANS_V   -3
-
-
 #define INTRABC_BVD_CODING_EGORDER    3
 
 // ====================================================================================================================
