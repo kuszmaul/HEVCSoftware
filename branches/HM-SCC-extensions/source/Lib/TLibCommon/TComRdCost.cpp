@@ -39,6 +39,7 @@
 #include <assert.h>
 #include "TComRom.h"
 #include "TComRdCost.h"
+#include "TComTU.h"
 
 //! \ingroup TLibCommon
 //! \{
