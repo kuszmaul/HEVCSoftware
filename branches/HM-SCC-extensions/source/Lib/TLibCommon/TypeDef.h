@@ -269,13 +269,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-#define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               8
-#else
-#define RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES                               4
-#endif
-
-
 //------------------------------------------------
 // Error checks
 //------------------------------------------------

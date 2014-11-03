@@ -5551,17 +5551,17 @@ Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, I
 
 Void TEncSearch::xIntraBCSearchMVCandUpdate(Distortion  uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand)
 {
-  int j = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1;
+  int j = CHROMA_REFINEMENT_CANDIDATES - 1;
 
-  if(uiSad < uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+  if(uiSad < uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
   {
-    for(int t = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1; t >= 0; t--)
+    for(int t = CHROMA_REFINEMENT_CANDIDATES - 1; t >= 0; t--)
     {
       if(uiSad < uiSadBestCand[t])
         j = t;
     }
 
-    for(int k = RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1;k > j; k--)
+    for(int k = CHROMA_REFINEMENT_CANDIDATES - 1;k > j; k--)
     {
       uiSadBestCand[k]=uiSadBestCand[k-1];
 
@@ -5595,7 +5595,7 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
   Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
-  for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
+  for(int iCand = 0; iCand < CHROMA_REFINEMENT_CANDIDATES; iCand++)
   {
     if((!cMVCand[iCand].getHor()) && (!cMVCand[iCand].getVer())) 
       continue;
@@ -5717,12 +5717,12 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
   Int         iBestCandIdx = 0;
   UInt        uiPartOffset = 0;
-  Distortion  uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
-  TComMv      cMVCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES];
+  Distortion  uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES];
+  TComMv      cMVCand[CHROMA_REFINEMENT_CANDIDATES];
 
   uiPartOffset = uiPartAddr;
 
-  for(int iCand = 0; iCand < RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES; iCand++)
+  for(int iCand = 0; iCand < CHROMA_REFINEMENT_CANDIDATES; iCand++)
   {
     uiSadBestCand[iCand] = std::numeric_limits<Distortion>::max();
     cMVCand[iCand].set(0,0);
@@ -5832,7 +5832,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+            if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
               break;
 
             r += 4;
@@ -5934,7 +5934,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
         uiSad += m_cDistParam.DistFunc( &m_cDistParam );
 
-        if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+        if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
           break;
 
         r += 4;
@@ -5977,7 +5977,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
         m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
         uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-        if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+        if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
           break;
 
         r += 4;
@@ -6057,7 +6057,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+            if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
               break;
 
             r += 4;
@@ -6120,7 +6120,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+            if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
               break;
 
             r += 4;
@@ -6202,7 +6202,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
             m_cDistParam.pOrg = pcPatternKey->getROIY() + r * pcPatternKey->getPatternLStride();
 
             uiSad += m_cDistParam.DistFunc( &m_cDistParam );
-            if(uiSad > uiSadBestCand[RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES - 1])
+            if(uiSad > uiSadBestCand[CHROMA_REFINEMENT_CANDIDATES - 1])
               break;
 
             r += 4;
@@ -6294,7 +6294,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 end:
   if(iRoiWidth+iRoiHeight > 8)
   {
-    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES);
+    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES);
 
     if(iRoiWidth+iRoiHeight==32)
     {
@@ -6548,7 +6548,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   rcMv = cMVCand[iBestCandIdx];
 
 #if SCM_S0067_ENCODER_IMPROVEMENTS
-  m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, RExt__Q0175_CHROMA_REFINEMENT_CANDIDATES);
+  m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES);
 #endif
 
   UInt uiMvBits = 0;

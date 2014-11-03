@@ -179,11 +179,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define DELTA_QP_FOR_YCgCo_TRANS     -5
 #define DELTA_QP_FOR_YCgCo_TRANS_V   -3
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-#define CHROMA_REFINEMENT_CANDIDATES  8
-#else
-#define CHROMA_REFINEMENT_CANDIDATES  4
-#endif
 
 #define INTRABC_BVD_CODING_EGORDER    3
 
