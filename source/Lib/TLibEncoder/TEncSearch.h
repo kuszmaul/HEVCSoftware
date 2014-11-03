@@ -51,6 +51,15 @@
 #include "TEncCfg.h"
 #include "TLibCommon/TComHash.h"
 
+// ====================================================================================================================
+// Constants 
+// ====================================================================================================================
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+#define CHROMA_REFINEMENT_CANDIDATES  8
+#else
+#define CHROMA_REFINEMENT_CANDIDATES  4
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
