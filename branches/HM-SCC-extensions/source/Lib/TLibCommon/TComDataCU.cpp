@@ -3311,6 +3311,38 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   return false;
 }
 
+#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
+Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if ( !getSlice()->getPPS()->getUseColourTrans() )
+  {
+    return false;
+  }
+  if ( !isIntra( uiAbsPartIdx ) )
+  {
+    return true;
+  }
+  if ( getPartitionSize( uiAbsPartIdx )==SIZE_2Nx2N && getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX )
+  {
+    return true;
+  }
+
+  if ( getPartitionSize( uiAbsPartIdx )==SIZE_NxN )
+  {
+    UInt uiPartOffset = ( getPic()->getNumPartitionsInCtu() >> ( uiDepth << 1 ) ) >> 2;
+    if ( getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*0 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*1 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*2 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*3 ) == DM_CHROMA_IDX )
+    {
+      return true;
+    }
+  }
+
+  assert( !getColourTransform( uiAbsPartIdx ) );
+  return false;
+}
+#endif
 
 Void TComDataCU::clipMv    (TComMv&  rcMv)
 {
