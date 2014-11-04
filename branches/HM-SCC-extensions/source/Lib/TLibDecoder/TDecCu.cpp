@@ -863,7 +863,11 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
     return;
   }
 
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( !pcCU->getSlice()->getPPS()->getUseColourTrans () )
+#else
   if( !pcCU->getSlice()->getSPS()->getUseColourTrans () )
+#endif
   {
   const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
   for (UInt chType=CHANNEL_TYPE_LUMA; chType<numChType; chType++)

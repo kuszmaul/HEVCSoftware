@@ -515,7 +515,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
   // We need to split, so don't try these modes.
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans())
+#else
   if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
   {
     m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = MAX_DOUBLE;
     m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = MAX_DOUBLE;
@@ -789,7 +793,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           {
 #endif
 
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+          if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans())
+#else
           if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
           {
             Double tempIntraCost = MAX_DOUBLE;
             TComDataCU *pStoredBestCU = rpcBestCU;
@@ -828,7 +836,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
               Double tmpIntraCost;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+              if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans())
+#else
               if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
               {
                 Double      tempIntraCost = MAX_DOUBLE;
                 TComDataCU *pStoredBestCU = rpcBestCU;
@@ -1670,7 +1682,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
           // do MC
           m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+          Bool bColourTrans = (m_pcEncCfg->getRGBFormatFlag() && rpcBestCU->getSlice()->getPPS()->getUseColourTrans())? true : false;
+#else
           Bool bColourTrans = (m_pcEncCfg->getRGBFormatFlag() && rpcBestCU->getSlice()->getSPS()->getUseColourTrans())? true : false;
+#endif
           rpcTempCU->setColourTransformSubParts(bColourTrans, 0, uhDepth);
 
           // estimate residual and encode everything
@@ -1714,7 +1730,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if SCM_S0067_ENCODER_IMPROVEMENTS
           bParentUseCSC = bParentUseCSC || rpcBestCU->getQtRootCbf(0) == 0 || rpcBestCU->getMergeFlag( 0 );
 #endif
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+          if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
+#else
           if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
+#endif
           {
             if( rpcTempCU != rpcTempCUPre )
             {
@@ -1826,7 +1846,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   TComDataCU *rpcTempCUPre = NULL;
   Bool   bColourTrans       = false;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getUseColourTrans();
+#else
   Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
+#endif
   UChar  uiColourTransform = 0;
   Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
   Char   orgQP             = rpcTempCU->getQP( 0 );
@@ -2076,7 +2100,11 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_ChromaQpAdjIdc, 0, uiDepth );
 
   // intra BV search
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag())
+#else
   if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag())
+#endif
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvResi(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();                                                                          //YCgCo reference picture
@@ -2095,7 +2123,11 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 #endif
                                                     );
 
-  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag()) 
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag())
+#else
+  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag())
+#endif
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvOrg(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
     rpcTempCU->getPic()->exchangePicYuvRec();
@@ -2105,7 +2137,11 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   {
     TComDataCU *rpcTempCUPre = NULL;
     Bool   bColourTrans       = false;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getUseColourTrans();
+#else
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
+#endif
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Double dCostFst          = MAX_DOUBLE;
@@ -2218,7 +2254,11 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   {
     TComDataCU *rpcTempCUPre = NULL;
     Bool   bColourTrans       = false;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getUseColourTrans();
+#else
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getSPS()->getUseColourTrans();
+#endif
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Char   orgQP             = rpcTempCU->getQP( 0 );
@@ -2450,7 +2490,11 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdxY = ( ( uiAbsPartIdxInRaster / rpcPic->getNumPartInCtuWidth() ) % uiSrcBlkWidth) / uiBlkWidth;
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#else
     if( pcCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#endif
     {
       TComRectangle cuCompRect;
       cuCompRect.x0     = 0;

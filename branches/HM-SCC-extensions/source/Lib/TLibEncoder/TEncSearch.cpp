@@ -5082,7 +5082,11 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
 #endif
 
   // motion compensation
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( !pcCU->getSlice()->getPPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() )
+#else
   if( !pcCU->getSlice()->getSPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() )
+#endif
   {
     for( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++ )
     {
@@ -5622,14 +5626,22 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
     for (UInt ch = COMPONENT_Cb; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
       pRef = pcCU->getPic()->getPicYuvRec()->getAddr(ComponentID(ch), pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiPartOffset);
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+      if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#else
       if( pcCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#endif
       {
         pOrg = pcCU->getPic()->getPicYuvResi()->getAddr(ComponentID(ch), pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiPartOffset);
       }
       else
       pOrg = pcCU->getPic()->getPicYuvOrg()->getAddr(ComponentID(ch), pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiPartOffset);
       iRefStride = pcCU->getPic()->getPicYuvRec()->getStride(ComponentID(ch));
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+      if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#else
       if( pcCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+#endif
       {
         iOrgStride = pcCU->getPic()->getPicYuvResi()->getStride(ComponentID(ch));
       }
