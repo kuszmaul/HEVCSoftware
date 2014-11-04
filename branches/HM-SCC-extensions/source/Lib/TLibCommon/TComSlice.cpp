@@ -108,6 +108,9 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+, m_useIntegerMv                  ( false )
+#endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -1598,6 +1601,9 @@ TComSPS::TComSPS()
 , m_alignCABACBeforeBypass    (false)
 , m_useColourTrans             (false)
 , m_usePaletteMode            (false)
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+, m_useAdaptiveMvResolution   (false)
+#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)

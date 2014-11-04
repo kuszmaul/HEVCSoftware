@@ -756,6 +756,9 @@ private:
   Bool        m_alignCABACBeforeBypass;
   Bool        m_useColourTrans;
   Bool        m_usePaletteMode;
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Bool        m_useAdaptiveMvResolution;
+#endif
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
@@ -906,6 +909,11 @@ public:
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
+
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
+  Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
+#endif
 
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
@@ -1282,6 +1290,9 @@ private:
   Bool       m_LFCrossSliceBoundaryFlag;
 
   Bool       m_enableTMVPFlag;
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Bool       m_useIntegerMv;
+#endif
 public:
   TComSlice();
   virtual ~TComSlice();
@@ -1496,6 +1507,11 @@ public:
 
   Void      setEnableTMVPFlag     ( Bool   b )    { m_enableTMVPFlag = b; }
   Bool      getEnableTMVPFlag     ()              { return m_enableTMVPFlag;}
+
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
+  Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
+#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, Int poc);

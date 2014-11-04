@@ -590,6 +590,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
         pcSPS->getUseIntraBlockCopy()
      || pcSPS->getUseColourTrans()
      || pcSPS->getUsePLTMode()
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+     || pcSPS->getUseAdaptiveMvResolution()
+#endif
     );
 
   // Other SPS extension flags checked here.
@@ -630,6 +633,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
             WRITE_FLAG( (pcSPS->getUseColourTrans()    ? 1 : 0),                    "adaptive_colour_trans_flag" );
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+            WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
+#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -997,6 +1003,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+      if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
+      {
+        WRITE_FLAG( pcSlice->getUseIntegerMv() ? 1 : 0, "use_integer_mv" );
+      }
+#endif
     }
     Int iCode = pcSlice->getSliceQp() - ( pcSlice->getPPS()->getPicInitQPMinus26() + 26 );
     WRITE_SVLC( iCode, "slice_qp_delta" );

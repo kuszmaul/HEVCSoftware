@@ -556,6 +556,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
   m_cSPS.setUseColourTrans               (       m_useColourTrans      );
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  m_cSPS.setUseAdaptiveMvResolution( m_useAdaptiveMvResolution );
+#endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
