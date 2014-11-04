@@ -172,7 +172,11 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_TOP_RUN_CTX               3
 #define NUM_LEFT_RUN_CTX              3
 #define NUM_PLT_REUSE_FLAG_CTX        1
+#if SCM_S0186_TRANS_FLAG_CTX
+#define NUM_SCAN_ROTATION_FLAG_CTX    1
+#else
 #define NUM_SCAN_ROTATION_FLAG_CTX    2
+#endif
 #define MAX_PLT_SIZE                  31
 #define MAX_PLT_PRED_SIZE             64
 
@@ -221,6 +225,15 @@ INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =
   { 154 },
 };
 
+#if SCM_S0186_TRANS_FLAG_CTX
+static const UChar
+INIT_SCAN_ROTATION_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SCAN_ROTATION_FLAG_CTX] =
+{
+  { 154 },
+  { 154 },
+  { 154 },
+};
+#else
 static const UChar
 INIT_SCAN_ROTATION_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SCAN_ROTATION_FLAG_CTX] =
 {
@@ -228,7 +241,7 @@ INIT_SCAN_ROTATION_FLAG[NUMBER_OF_SLICE_TYPES][NUM_SCAN_ROTATION_FLAG_CTX] =
   { 154, 154 },
   { 154, 154 },
 };
-
+#endif
 
 // initial probability for cu_transquant_bypass flag
 static const UChar

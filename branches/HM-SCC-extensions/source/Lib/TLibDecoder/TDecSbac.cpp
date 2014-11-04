@@ -856,7 +856,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecSbac::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
+#if SCM_S0186_TRANS_FLAG_CTX
+  UInt uiCtx = 0;
+#else
   UInt uiCtx = pcCU->getCtxScanRotationModeFlag( uiAbsPartIdx );
+#endif
   m_pcTDecBinIf->decodeBin( uiSymbol, m_PLTScanRotationModeFlagSCModel.get( 0, 0, uiCtx ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
   pcCU->setPLTScanRotationModeFlagSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
 }
