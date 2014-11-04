@@ -291,6 +291,7 @@
 #define SCM_S0086_MOVE_ACT_FLAG_TO_PPS                    1 ///< move ACT flag from SPS to PPS
 #define SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM                1 ///< for Intra CU, code ACT flag if all PU(s) are DM
 #define SCM_S0186_TRANS_FLAG_CTX                          1 ///< remove one context for palette_transpose_flag
+#define SCM_S0254_ACT_UNIFICATION                         1 ///< unification of lossy and lossless ACT
 
 //------------------------------------------------
 // Derived macros
@@ -876,9 +877,9 @@ public:
   Int uiData[3];
   Int uiShift, uiLastCnt, uiSumData[3];
 
-  inline Bool operator<(const SortingElement &other) const 
-  { 
-    return uiCnt > other.uiCnt; 
+  inline Bool operator<(const SortingElement &other) const
+  {
+    return uiCnt > other.uiCnt;
   }
 
   SortingElement() {
@@ -889,7 +890,7 @@ public:
   Void setAll(UInt ui0, UInt ui1, UInt ui2) {
     if( !ui0 && !ui1 && !ui2 )
     {
-      uiShift = uiLastCnt = 0; 
+      uiShift = uiLastCnt = 0;
       uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
     }
     uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;

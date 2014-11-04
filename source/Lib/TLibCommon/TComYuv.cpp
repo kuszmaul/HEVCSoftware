@@ -427,7 +427,9 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 {
   assert(getChromaFormat() == CHROMA_444);
   UInt uiPartSize = uiWidth;
+#if SCM_S0254_ACT_UNIFICATION==0
   const Int iRound = 2;
+#endif 
 
   Pel* pOrg0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
   Pel* pOrg1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
@@ -449,6 +451,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 
   if(bForwardConversion)
   {
+#if SCM_S0254_ACT_UNIFICATION==0
     if(!bLossless)
     { 
       for(Int y=0; y<uiPartSize; y++) 
@@ -476,6 +479,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
       }
     }
     else
+#endif 
     {
       for(Int y=0; y<uiPartSize; y++)
       {
@@ -491,6 +495,13 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
           pDst0[x] = t + (Cg>>1);
           pDst1[x] = Cg;
           pDst2[x] = Co;
+#if SCM_S0254_ACT_UNIFICATION
+          if(!bLossless)
+          {
+            pDst1[x] = (pDst1[x]+1)>>1;
+            pDst2[x] = (pDst2[x]+1)>>1;
+          }
+#endif
         }
         pOrg0 += iStride0;
         pOrg1 += iStride1;
@@ -503,6 +514,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   }
   else
   {
+#if SCM_S0254_ACT_UNIFICATION==0
     if(!bLossless)
     {
       for(Int y=0; y<uiPartSize; y++) 
@@ -528,6 +540,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
       }
     }
     else
+#endif
     {
       for(Int y=0; y<uiPartSize; y++)
       {
@@ -537,7 +550,13 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
           y0 = pOrg0[x];
           cg = pOrg1[x];
           co = pOrg2[x];
-
+#if SCM_S0254_ACT_UNIFICATION
+          if(!bLossless)
+          {
+            cg <<= 1;
+            co <<= 1;
+          }
+#endif
           Int t = y0 - (cg>>1);
           pDst0[x] = cg + t;
           pDst1[x] = t - (co>>1);
