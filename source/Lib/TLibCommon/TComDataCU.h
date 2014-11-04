@@ -422,7 +422,9 @@ public:
   Void          setPLTSharingModeFlag      (UInt uiIdx, Bool b)      { m_pbPLTSharingModeFlag[uiIdx] = b;    }
   Void          setPLTSharingFlagSubParts  (Bool bPLTSharingFlag, UInt uiAbsPartIdx, UInt uiDepth);
   Pel*          getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev, UInt &uiPLTUsedSizePrev);
+#if !SCM_S0186_TRANS_FLAG_CTX
   UInt          getCtxScanRotationModeFlag( UInt uiAbsPartIdx);
+#endif
   UChar         getLastPLTInLcuUsedSizeFinal (UChar ucCh)             { return m_uhLastPLTUsedSizeFinal[ucCh]; }
   Void          setLastPLTInLcuUsedSizeFinal (UChar ucCh, UChar uh)   { m_uhLastPLTUsedSizeFinal[ucCh] = uh;   }
 

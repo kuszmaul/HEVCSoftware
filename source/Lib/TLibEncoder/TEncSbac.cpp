@@ -581,7 +581,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
-
   codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
   Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
@@ -666,7 +665,11 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 Void TEncSbac::codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx);
+#if SCM_S0186_TRANS_FLAG_CTX
+  UInt uiCtx = 0;
+#else
   UInt uiCtx = pcCU->getCtxScanRotationModeFlag( uiAbsPartIdx );
+#endif
   m_pcBinIf->encodeBin( uiSymbol, m_PLTScanRotationModeFlagSCModel.get( 0, 0, uiCtx ) );
 }
 
