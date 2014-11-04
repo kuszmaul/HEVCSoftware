@@ -287,6 +287,7 @@
 
 #define SCM_S0067_ENCODER_IMPROVEMENTS                    1 ///< Accumulate candidates and neighbours for fast evaluation
 #define SCM_S0085_ADAPTIVE_MV_RESOLUTION                  1 ///< adaptive motion vector resolution, as proposed in JCTVC-S0085
+#define SCM_S0100_IBC_CHANGE_EARLY_TERMINATION            1 ///< make the same changes to IBC early termination, regardless of ACT or not
 
 //------------------------------------------------
 // Derived macros
