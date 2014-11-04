@@ -687,7 +687,11 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
   {
     Bool uiFlag = 0;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    if(pcCU->getSlice()->getPPS()->getUseColourTrans())
+#else
     if(pcCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
     {
       m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
     }

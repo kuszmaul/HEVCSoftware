@@ -376,6 +376,11 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             READ_UVLC( uiCode, "sao_chroma_bit_shift");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
             break;
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+          case PPS_EXT__SCC:
+            READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcPPS->setUseColourTrans(uiCode != 0);
+            break;
+#endif
           default:
             bSkipTrailingExtensionBits=true;
             break;
@@ -783,7 +788,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             break;
           case SPS_EXT__SCC:
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
+#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
             READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcSPS->setUseColourTrans                          (uiCode != 0);
+#endif
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
