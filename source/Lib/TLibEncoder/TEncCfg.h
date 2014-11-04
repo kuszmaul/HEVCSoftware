@@ -221,6 +221,9 @@ protected:
   Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Bool      m_useAdaptiveMvResolution;
+#endif
 
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
@@ -598,6 +601,10 @@ public:
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
   Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  Void setUseAdaptiveMvResolution                      ( Bool b )          { m_useAdaptiveMvResolution = b; }
+  Bool getUseAdaptiveMvResolution                      ()            const { return m_useAdaptiveMvResolution; }
+#endif
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }

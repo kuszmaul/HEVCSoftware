@@ -785,6 +785,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
             READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcSPS->setUseColourTrans                          (uiCode != 0);
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+            READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
+#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -1320,6 +1323,18 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
+
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+      if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
+      {
+        READ_FLAG( uiCode, "use_integer_mv_flag" );
+        pcSlice->setUseIntegerMv( uiCode != 0 );
+      }
+      else
+      {
+        pcSlice->setUseIntegerMv( false );
+      }
+#endif
     }
 
     READ_SVLC( iCode, "slice_qp_delta" );

@@ -367,6 +367,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseColourTrans                                    ( m_useColourTrans                );
   m_cTEncTop.setUseLossless                                       ( m_useLL                        );
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
+#endif
 }
 
 Void TAppEncTop::xCreateLib()
