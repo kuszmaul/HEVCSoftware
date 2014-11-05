@@ -986,7 +986,21 @@ Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSr
       UInt uiMinError = MAX_UINT;
       while (uiPLTIdx < uiPLTSize)
       {
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+        UInt uiAbsError = MAX_UINT;
+        if ( bLossless )
+        {
+          uiAbsError = abs( Palette[0][uiPLTIdx] - pSrc[0][uiPos] ) + abs( Palette[1][uiPLTIdx] - pSrc[1][uiPos] ) + abs( Palette[2][uiPLTIdx] - pSrc[2][uiPos] );
+        }
+        else
+        {
+          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) )
+                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) )
+                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+        }
+#else
         UInt uiAbsError = abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) + abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) + abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]);
+#endif
         if (uiAbsError < uiMinError)
         {
           uiBestIdx = uiPLTIdx;
@@ -1200,17 +1214,29 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
                           pListSort[i].uiSumData[2]/(Double)pListSort[i].uiCnt };
 
         Double err      = pal[0] - Palette[0][uiPLTSize];
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+        Double bestCost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]-8)) );
+        err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+        err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+#else
         Double bestCost = err*err;
         err = pal[1] - Palette[1][uiPLTSize]; bestCost += err*err;
         err = pal[2] - Palette[2][uiPLTSize]; bestCost += err*err;
+#endif
         bestCost = bestCost * pListSort[i].uiCnt + bitCost;
 
         for(int t=0; t<pcCU->getLastPLTInLcuSizeFinal(0); t++)
         {
           err = pal[0] - pPred[0][t];
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+          Double cost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]-8)) );
+          err = pal[1] - pPred[1][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+          err = pal[2] - pPred[2][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+#else
           Double cost = err*err;
           err = pal[1] - pPred[1][t]; cost += err*err;
           err = pal[2] - pPred[2][t]; cost += err*err;
+#endif
           cost *= pListSort[i].uiCnt;
           if(cost < bestCost)
           {
@@ -1298,7 +1324,14 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
   {
     for (Int j = i - 1; j >= 0; j--)
     {
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+      if ( psList[j].uiCnt && psList[i].uiData[0] == psList[j].uiData[0]
+                           && psList[i].uiData[1] == psList[j].uiData[1]
+                           && psList[i].uiData[2] == psList[j].uiData[2]
+         )
+#else
       if (psList[j].uiCnt && psList[i].almostEqualData(psList[j], 0))
+#endif
       {
         psList[i].uiCnt = 0;
         break;

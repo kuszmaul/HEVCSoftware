@@ -1205,7 +1205,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   else
   {
     m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+    m_bitDepthConstraint = (m_internalBitDepth[CHANNEL_TYPE_LUMA] > m_internalBitDepth[CHANNEL_TYPE_CHROMA])? m_internalBitDepth[CHANNEL_TYPE_LUMA]: m_internalBitDepth[CHANNEL_TYPE_CHROMA];
+#else
     m_bitDepthConstraint = (m_profile == Profile::MAIN10?10:8);
+#endif
   }
 
 

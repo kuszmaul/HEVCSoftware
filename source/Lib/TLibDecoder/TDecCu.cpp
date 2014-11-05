@@ -757,7 +757,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     {
       cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
       cQP.per = cQP.Qp/6;
-      cQP.rem= cQP.Qp%6;   
+      cQP.rem= cQP.Qp%6;
       m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(DELTA_QP_FOR_YCgCo_TRANS);
     }
 
@@ -793,7 +793,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       const Pel* pResiLuma                      = pcResiYuv->getAddr( COMPONENT_Y, uiAbsPartIdx );
       const Int  strideLuma                     = pcResiYuv->getStride( COMPONENT_Y );
       TComTrQuant::crossComponentPrediction( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
-    }    
+    }
     if(bModifyQP)
     {
       m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(- DELTA_QP_FOR_YCgCo_TRANS);
@@ -985,7 +985,6 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
 {
 
   TComTURecurse tuRecur(pcCU, 0, uiDepth);
-
   for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)
   {
     const ComponentID compID=ComponentID(ch);

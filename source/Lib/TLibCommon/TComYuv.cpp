@@ -465,7 +465,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 
           pDst0[x] = (g<<1) +r+b  ;   
           pDst1[x] = (g<<1) -r-b  ;   
-          pDst2[x] = ((r-b) << 1) ;         
+          pDst2[x] = ((r-b) << 1) ;
           pDst0[x] = (pDst0[x] + iRound) >> 2;
           pDst1[x] = (pDst1[x] + iRound) >> 2;
           pDst2[x] = (pDst2[x] + iRound) >> 2;
@@ -521,7 +521,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
       { 
         for(Int x=0; x<uiPartSize; x++) 
         { 
-          Int y0, cg, co; 
+          Int y0, cg, co;
           y0 = pOrg0[x]; 
           cg = pOrg1[x]; 
           co = pOrg2[x];
@@ -599,12 +599,13 @@ Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt
       g = pDst0[x];
       b = pDst1[x];
 
-      pDst0[x] = ((g<<1) + r+b + 2)>>2;                     
-      pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);   
-      pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);          
-      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );   
-      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );   
-      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );   
+      pDst0[x] = ((g<<1) + r+b + 2)>>2;
+      pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);
+      pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);
+ 
+      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
+      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
+      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
     }
 
     pDst0 += iStride0;

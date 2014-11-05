@@ -1208,7 +1208,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTRA);
 #endif
 
-  QpParam cQP(*pcCU, compID); 
+  QpParam cQP(*pcCU, compID);
   if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform(0))
   {
     cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
@@ -2221,7 +2221,6 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
         m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(ch==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
         m_pcRdCost->adjustLambdaForColourTrans            (ch==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
       }
-
       const ComponentID compID = ComponentID(ch);
       DEBUG_STRING_NEW(sDebugBestMode)
 
@@ -2951,13 +2950,11 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         }
 
         bMaintainResidual[RESIDUAL_ENCODER_SIDE] = !(m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate());
-
         if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
         {
           m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( DELTA_QP_FOR_YCgCo_TRANS );
           m_pcRdCost->adjustLambdaForColourTrans            ( DELTA_QP_FOR_YCgCo_TRANS );
         }
-
 
   // Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
 #if FULL_NBIT
@@ -3330,7 +3327,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
   //===== set distortion (rate and r-d costs are determined later) =====
   ruiDistC                   = uiOverallDistC;
   pcCU->getTotalDistortion() = uiOverallDistY + uiOverallDistC;
-
   if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
   {
     m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( -DELTA_QP_FOR_YCgCo_TRANS );
@@ -5658,7 +5654,11 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
       {
         for(int col = 0; col < iWidth; col++)
         {
-          uiTempSad += abs(pRef[col] - pOrg[col]); 
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+          uiTempSad += ( (abs( pRef[col] - pOrg[col] )) >> (g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+#else
+          uiTempSad += abs(pRef[col] - pOrg[col]);
+#endif 
         }
         pRef += iRefStride;
         pOrg += iOrgStride;
