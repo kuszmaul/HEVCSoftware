@@ -247,10 +247,19 @@ Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeig
         }
       }
 
-      if ( isHorizontalPerfectTemp || TComHash::isVerticalPerfect( pPicYuv, width, height, xPos, yPos ) )
+#if SCM_S0089_HASH_ME_IMPROVEMENT
+      Int widthMinus1 = width - 1;
+      Int heightMinus1 = height - 1;
+      if ( (xPos & widthMinus1) != 0 || (yPos & heightMinus1) != 0 )
       {
-        continue;
+#endif
+        if ( isHorizontalPerfectTemp || TComHash::isVerticalPerfect( pPicYuv, width, height, xPos, yPos ) )
+        {
+          continue;
+        }
+#if SCM_S0089_HASH_ME_IMPROVEMENT
       }
+#endif
 
       for ( Int y=0; y<height; y++ )
       {
@@ -428,11 +437,13 @@ Bool TComHash::isVerticalPerfect( TComPicYuv* pPicYuv, Int width, Int height, In
 
 Bool TComHash::getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, UInt& hashValue1, UInt& hashValue2 )
 {
+#if !SCM_S0089_HASH_ME_IMPROVEMENT
   if ( TComHash::isHorizontalPerfect( pPicYuv, width, height, xStart, yStart ) ||
        TComHash::isVerticalPerfect( pPicYuv, width, height, xStart, yStart ) )
   {
     return false;
   }
+#endif
 
   Int addValue = m_blockSizeToIndex[width][height];
   assert( addValue >= 0 );
