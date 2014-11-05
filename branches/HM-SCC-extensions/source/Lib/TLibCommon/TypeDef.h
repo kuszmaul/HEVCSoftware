@@ -293,6 +293,7 @@
 #define SCM_S0186_TRANS_FLAG_CTX                          1 ///< remove one context for palette_transpose_flag
 #define SCM_S0254_ACT_UNIFICATION                         1 ///< unification of lossy and lossless ACT
 #define SCM_S0089_HASH_ME_IMPROVEMENT                     1 ///< hash based motion estimation improvement
+#define SCM_S0180_BUG_FIX_BIT_DEPTH                       1 ///< bug fix for different bit depth between luma and chroma
 
 //------------------------------------------------
 // Derived macros
@@ -871,6 +872,10 @@ enum PLTScanMode
   NUM_PLT_SCAN     = 2
 };
 
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
+#endif
+
 class SortingElement
 {
 public:
@@ -896,8 +901,20 @@ public:
     }
     uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
   }
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit
+                                                                      && ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit 
+                                                                      && ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit;
+                                                                 }
+  UInt getSAD(SortingElement sElement) { return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) ) 
+                                              + ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) 
+                                              + ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+
+                                       }  
+#else
   Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return std::abs(uiData[0] - sElement.uiData[0]) <= iErrorLimit && std::abs(uiData[1] - sElement.uiData[1]) <= iErrorLimit && std::abs(uiData[2] - sElement.uiData[2]) <= iErrorLimit;}
   UInt getSAD(SortingElement sElement) { return std::abs(uiData[0] - sElement.uiData[0]) + std::abs(uiData[1] - sElement.uiData[1]) + std::abs(uiData[2] - sElement.uiData[2]); }
+#endif
   Void copyDataFrom(SortingElement sElement) {
     uiData[0] = sElement.uiData[0];
     uiData[1] = sElement.uiData[1];

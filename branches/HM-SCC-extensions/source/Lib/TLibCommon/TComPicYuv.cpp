@@ -289,13 +289,13 @@ Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
       g = pSrc0[x];
       b = pSrc1[x];
 
-      pDst0[x] = ((g<<1) + r+b + 2)>>2;                     
-      pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);   
-      pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);          
+      pDst0[x] = ((g<<1) + r+b + 2)>>2;
+      pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);
+      pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);
 
-      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );   
-      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );   
-      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );   
+      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
+      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
+      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
     }
 
     pSrc0 += iSrcStride0;
