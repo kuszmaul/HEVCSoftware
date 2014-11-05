@@ -587,12 +587,20 @@ Bool TEncGOP::xGetUseIntegerMv( TComSlice* pcSlice )
         continue;
       }
 
+#if SCM_S0089_HASH_ME_IMPROVEMENT
+      if ( TComHash::isHorizontalPerfect( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos ) ||
+           TComHash::isVerticalPerfect( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos ) )
+#else
       if ( !TComHash::getBlockHashValue( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos, hashValue1, hashValue2 ) )
+#endif
       {
         S++;
         continue;
       }
 
+#if SCM_S0089_HASH_ME_IMPROVEMENT
+      TComHash::getBlockHashValue( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos, hashValue1, hashValue2 );
+#endif
       if ( pcSlice->getRefPic( REF_PIC_LIST_0, 0 )->getHashMap()->hasExactMatch( hashValue1, hashValue2 ) )
       {
         M++;
