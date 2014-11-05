@@ -6540,6 +6540,18 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       }
     }
 
+#if SCM_S0220_IBC_PRED_CONSTRAINT
+     Int uiRefCuX   = (iTempX + iRoiWidth)/uiMaxCuWidth;
+     Int uiRefCuY   = (iTempY + iRoiHeight)/uiMaxCuHeight;     
+     Int uiCuPelX   = (cuPelX / uiMaxCuWidth);
+     Int uiCuPelY   = (cuPelY / uiMaxCuHeight);     
+
+    if(((Int)(uiRefCuX - uiCuPelX) > (Int)((uiCuPelY - uiRefCuY))))
+    {
+      HashLinklist = HashLinklist->next;
+      continue;       
+    }
+#endif 
 
     uiSad = 0;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
 
