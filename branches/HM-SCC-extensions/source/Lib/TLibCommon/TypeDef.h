@@ -297,6 +297,7 @@
 #define SCM_S0180_ACT_BIT_DEPTH_ALIGN                     1 ///< bit depth alignment for ACT
 #define SCM_S0220_IBC_PRED_CONSTRAINT                     1 ///< WPP shape based contraint for IBC prediction
 #define SCM_S0179_ACT_TU_DEC                              1 ///< perform ACT operation on TU blocks
+#define SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY        1 ///< bug fix for temporal scalability
 
 //------------------------------------------------
 // Derived macros
