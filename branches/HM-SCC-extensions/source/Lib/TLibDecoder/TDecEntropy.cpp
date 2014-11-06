@@ -705,6 +705,10 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #endif
     pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( pcCU->getCUTransquantBypass(uiAbsPartIdx) && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+    assert( pcCU->getColourTransform(uiAbsPartIdx) == 0 );
+#endif
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 

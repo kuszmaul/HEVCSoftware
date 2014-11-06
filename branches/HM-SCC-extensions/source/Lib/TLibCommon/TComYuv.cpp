@@ -427,7 +427,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 {
   assert(getChromaFormat() == CHROMA_444);
   UInt uiPartSize = uiWidth;
-#if SCM_S0254_ACT_UNIFICATION==0
+#if SCM_S0254_ACT_UNIFICATION==0 && !SCM_S0180_ACT_BIT_DEPTH_ALIGN
   const Int iRound = 2;
 #endif 
 
@@ -453,22 +453,41 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   {
 #if SCM_S0254_ACT_UNIFICATION==0
     if(!bLossless)
-    { 
+    {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = 1<<(1+iShiftLuma);
+      Int iRoundChroma = 1<<(1+iShiftChroma);
+#endif 
       for(Int y=0; y<uiPartSize; y++) 
       { 
         for(Int x=0; x<uiPartSize; x++) 
         {
           Int r, g, b;
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          r = pOrg2[x]<<iShiftChroma;
+          g = pOrg0[x]<<iShiftLuma;
+          b = pOrg1[x]<<iShiftChroma;
+#else
           r = pOrg2[x];
           g = pOrg0[x];
           b = pOrg1[x];
+#endif
 
           pDst0[x] = (g<<1) +r+b  ;   
           pDst1[x] = (g<<1) -r-b  ;   
           pDst2[x] = ((r-b) << 1) ;
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> (2+iShiftLuma);
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> (2+iShiftChroma);
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> (2+iShiftChroma);
+#else
           pDst0[x] = (pDst0[x] + iRound) >> 2;
           pDst1[x] = (pDst1[x] + iRound) >> 2;
           pDst2[x] = (pDst2[x] + iRound) >> 2;
+#endif
         }
         pOrg0 += iStride0;
         pOrg1 += iStride1;
@@ -481,14 +500,34 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
     else
 #endif 
     {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
+      Int iRoundChroma = (1<<iShiftChroma);
+#endif
       for(Int y=0; y<uiPartSize; y++)
       {
         for(Int x=0; x<uiPartSize; x++)
         {
           Int r, g, b;
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+          if(!bLossless)
+          {
+            r = pOrg2[x]<<iShiftChroma;
+            g = pOrg0[x]<<iShiftLuma;
+            b = pOrg1[x]<<iShiftChroma;
+          }
+          else
+          {
+#endif
           r = pOrg2[x];
           g = pOrg0[x];
           b = pOrg1[x];
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+          }
+#endif
           Int Co = r-b;
           Int t = b + (Co>>1);
           Int Cg = g - t;
@@ -498,8 +537,14 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 #if SCM_S0254_ACT_UNIFICATION
           if(!bLossless)
           {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+            pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
+            pDst1[x] = (pDst1[x] + iRoundChroma) >> (1+iShiftChroma);
+            pDst2[x] = (pDst2[x] + iRoundChroma) >> (1+iShiftChroma);
+#else
             pDst1[x] = (pDst1[x]+1)>>1;
             pDst2[x] = (pDst2[x]+1)>>1;
+#endif
           }
 #endif
         }
@@ -517,11 +562,27 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 #if SCM_S0254_ACT_UNIFICATION==0
     if(!bLossless)
     {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = (iShiftLuma == 0)?0: (1<<(iShiftLuma-1));
+      Int iRoundChroma = (iShiftChroma == 0)?0: (1<<(iShiftChroma-1));
+#endif
       for(Int y=0; y<uiPartSize; y++) 
       { 
         for(Int x=0; x<uiPartSize; x++) 
         { 
           Int y0, cg, co;
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          y0 = pOrg0[x]<<iShiftLuma; 
+          cg = pOrg1[x]<<iShiftChroma; 
+          co = pOrg2[x]<<iShiftChroma;
+
+          pDst0[x] = ( y0 + cg      + iRoundLuma   )>>iShiftLuma;
+          pDst1[x] = ( y0 - cg - co + iRoundChroma )>>iShiftChroma;
+          pDst2[x] = ( y0 - cg + co + iRoundChroma )>>iShiftChroma;
+#else
           y0 = pOrg0[x]; 
           cg = pOrg1[x]; 
           co = pOrg2[x];
@@ -529,6 +590,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
           pDst0[x] = ( y0 + cg      );
           pDst1[x] = ( y0 - cg - co );
           pDst2[x] = ( y0 - cg + co );
+#endif
         }
 
         pOrg0 += iStride0;
@@ -542,6 +604,13 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
     else
 #endif
     {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
+      Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
+#endif
       for(Int y=0; y<uiPartSize; y++)
       {
         for(Int x=0; x<uiPartSize; x++)
@@ -553,14 +622,28 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 #if SCM_S0254_ACT_UNIFICATION
           if(!bLossless)
           {
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+            y0 <<= iShiftLuma;
+            cg <<= (iShiftChroma + 1);
+            co <<= (iShiftChroma + 1);
+#else
             cg <<= 1;
             co <<= 1;
+#endif
           }
 #endif
           Int t = y0 - (cg>>1);
           pDst0[x] = cg + t;
           pDst1[x] = t - (co>>1);
           pDst2[x] = co + pDst1[x];
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+          if(!bLossless)
+          {
+            pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
+            pDst1[x] = (pDst1[x] + iRoundChroma) >> iShiftChroma;
+            pDst2[x] = (pDst2[x] + iRoundChroma) >> iShiftChroma;
+          }
+#endif
         }
         pOrg0 += iStride0;
         pOrg1 += iStride1;
@@ -581,6 +664,13 @@ Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt
   Int  iMaxLuma   = (1<<g_bitDepth[CHANNEL_TYPE_LUMA])   - 1;
   Int  iMaxChroma = (1<<g_bitDepth[CHANNEL_TYPE_CHROMA]) - 1;
   Int  iChromaOffset = (1<<(g_bitDepth[CHANNEL_TYPE_CHROMA]-1));
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+  Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+  Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+  Int iRoundLuma   = 1<<(1+iShiftLuma);
+  Int iRoundChroma = 1<<(1+iShiftChroma);
+#endif
 
   Pel* pDst0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
   Pel* pDst1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
@@ -595,6 +685,18 @@ Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt
     for(Int x=0; x<uiPartSize; x++) 
     {
       Int r, g, b;
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+      r = pDst2[x]<<iShiftChroma;
+      g = pDst0[x]<<iShiftLuma;
+      b = pDst1[x]<<iShiftChroma;
+
+      pDst0[x] = ((g<<1)+r+b + iRoundLuma)>>(2+iShiftLuma);
+      pDst1[x] = ((g<<1)-r-b + iRoundChroma)>>(2+iShiftChroma);
+      pDst2[x] = (((r-b)<<1)  + iRoundChroma)>>(2+iShiftChroma);
+
+      pDst1[x] += iChromaOffset;
+      pDst2[x] += iChromaOffset;
+#else
       r = pDst2[x];
       g = pDst0[x];
       b = pDst1[x];
@@ -602,7 +704,7 @@ Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt
       pDst0[x] = ((g<<1) + r+b + 2)>>2;
       pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);
       pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);
- 
+#endif 
       pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
       pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
       pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
