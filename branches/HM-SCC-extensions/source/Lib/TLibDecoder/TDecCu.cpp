@@ -468,10 +468,12 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
+#if !SCM_S0179_ACT_TU_DEC
     if(pcCU->getColourTransform( 0 ))
     {
       m_ppcYuvResi[uiDepth]->convert(0, 0, pcCU->getWidth( 0 ), false, pcCU->isLosslessCoded(0));
     }
+#endif
     m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
   }
   else
@@ -509,10 +511,12 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
+#if !SCM_S0179_ACT_TU_DEC
     if(pcCU->getColourTransform( 0 ))
     {
       m_ppcYuvResi[uiDepth]->convert(0, 0, pcCU->getWidth( 0 ),  false, pcCU->isLosslessCoded(0));
     }
+#endif
     m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
   }
   else
@@ -758,7 +762,9 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
       cQP.per = cQP.Qp/6;
       cQP.rem= cQP.Qp%6;
+#if !SCM_S0179_ACT_TU_DEC
       m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(DELTA_QP_FOR_YCgCo_TRANS);
+#endif
     }
 
     DEBUG_STRING_NEW( sDebug );
@@ -794,10 +800,12 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       const Int  strideLuma                     = pcResiYuv->getStride( COMPONENT_Y );
       TComTrQuant::crossComponentPrediction( rTu, compID, pResiLuma, piResi, piResi, uiWidth, uiHeight, strideLuma, uiStride, uiStride, true );
     }
+#if !SCM_S0179_ACT_TU_DEC
     if(bModifyQP)
     {
       m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(- DELTA_QP_FOR_YCgCo_TRANS);
     }
+#endif
   }
 
 
@@ -985,13 +993,24 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
 {
 
   TComTURecurse tuRecur(pcCU, 0, uiDepth);
-  for(UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++)
+#if SCM_S0179_ACT_TU_DEC
+  if ( pcCU->getSlice()->getPPS()->getUseColourTrans() && pcCU->getColourTransform( 0 ) )
   {
-    const ComponentID compID=ComponentID(ch);
-    DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][compID])
-
-    m_pcTrQuant->invRecurTransformNxN ( compID, m_ppcYuvResi[uiDepth], tuRecur );
+    m_pcTrQuant->invRecurTransformACTNxN( m_ppcYuvResi[uiDepth], tuRecur );
   }
+  else
+  {
+#endif
+    for ( UInt ch=0; ch<pcCU->getPic()->getNumberValidComponents(); ch++ )
+    {
+      const ComponentID compID=ComponentID( ch );
+      DEBUG_STRING_OUTPUT( std::cout, debug_reorder_data_token[pcCU->isIntraBC( 0 ) ? 1 : 0][compID] )
+
+      m_pcTrQuant->invRecurTransformNxN( compID, m_ppcYuvResi[uiDepth], tuRecur );
+    }
+#if SCM_S0179_ACT_TU_DEC
+  }
+#endif
 
   DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][MAX_NUM_COMPONENT])
 }
