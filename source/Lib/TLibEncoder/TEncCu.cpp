@@ -794,9 +794,17 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
+#else
           if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans())
+#endif
+#else
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA]) ) )
 #else
           if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
 #endif
           {
             Double tempIntraCost = MAX_DOUBLE;
@@ -837,9 +845,17 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               Double tmpIntraCost;
 #if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+              if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
+#else
               if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans())
+#endif
+#else
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+              if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
 #else
               if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
 #endif
               {
                 Double      tempIntraCost = MAX_DOUBLE;
@@ -1687,6 +1703,10 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
           Bool bColourTrans = (m_pcEncCfg->getRGBFormatFlag() && rpcBestCU->getSlice()->getSPS()->getUseColourTrans())? true : false;
 #endif
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          if( bTransquantBypassFlag && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+            bColourTrans = false;
+#endif
           rpcTempCU->setColourTransformSubParts(bColourTrans, 0, uhDepth);
 
           // estimate residual and encode everything
@@ -1731,9 +1751,17 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           bParentUseCSC = bParentUseCSC || rpcBestCU->getQtRootCbf(0) == 0 || rpcBestCU->getMergeFlag( 0 );
 #endif
 #if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC && (!bTransquantBypassFlag || g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+#else
           if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
+#endif
+#else
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+          if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC && (!bTransquantBypassFlag || g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA]) )
 #else
           if(rpcBestCU->getSlice()->getSPS()->getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC )
+#endif
 #endif
           {
             if( rpcTempCU != rpcTempCUPre )
@@ -1855,6 +1883,10 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
   Char   orgQP             = rpcTempCU->getQP( 0 );
   Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( bTransquantBypassFlag && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+    bEnableTrans = false;
+#endif
   for(UInt i = 0;  i < 2 ; i++)
   {
     uiColourTransform = (bRGB && bEnableTrans)? (1-i): i;
@@ -2101,9 +2133,17 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 
   // intra BV search
 #if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() && (!rpcTempCU->getCUTransquantBypass(0) || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])) )
+#else
   if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag())
+#endif
+#else
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() && (!rpcTempCU->getCUTransquantBypass(0) || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])) )
 #else
   if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag())
+#endif
 #endif
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvResi(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
@@ -2124,9 +2164,17 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                                     );
 
 #if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag() && (!rpcTempCU->getCUTransquantBypass(0) || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])) )
+#else
   if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag())
+#endif
+#else
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag() && (!rpcTempCU->getCUTransquantBypass(0) || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])) )
 #else
   if( rpcTempCU->getSlice()->getSPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag())
+#endif
 #endif
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvOrg(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
@@ -2147,6 +2195,10 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     Double dCostFst          = MAX_DOUBLE;
     Char   orgQP             = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+    if( bTransquantBypassFlag && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+      bEnableTrans = false;
+#endif
 #if SCM_S0067_ENCODER_IMPROVEMENTS
     for(UInt i = 0;  i < (testPredOnly ? 1 : 2) ; i++)
 #else
@@ -2263,6 +2315,10 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Char   orgQP             = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+    if( bTransquantBypassFlag && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+      bEnableTrans = false;
+#endif
     for(UInt i = 0;  i < 2 ; i++)
     {
       uiColourTransform = ( bRGB && bEnableTrans )? (1-i): i;
