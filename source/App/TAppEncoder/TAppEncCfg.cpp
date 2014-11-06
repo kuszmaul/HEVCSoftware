@@ -1626,6 +1626,17 @@ Void TAppEncCfg::xCheckParameter()
 
     m_useColourTrans = false;
   }
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if(m_useColourTrans && m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce && m_internalBitDepth[CHANNEL_TYPE_LUMA] != m_internalBitDepth[CHANNEL_TYPE_CHROMA])
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Adaptive Colour transform is not used for lossless coding    **\n");
+    fprintf(stderr, "**          with different luma and chroma bit depth                     **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_useColourTrans = false;
+  }
+#endif
 
   if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
   {
