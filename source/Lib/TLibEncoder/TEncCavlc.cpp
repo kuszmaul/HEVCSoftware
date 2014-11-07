@@ -606,6 +606,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
      || pcSPS->getUseAdaptiveMvResolution()
 #endif
+#if SCM_S0102_IBF_SPS_CONTROL
+     || pcSPS->getDisableIntraBoundaryFilter()
+#endif
     );
 
   // Other SPS extension flags checked here.
@@ -650,6 +653,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
+#endif
+#if SCM_S0102_IBF_SPS_CONTROL
+            WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
 #endif
             break;
           default:
@@ -1034,6 +1040,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
 
+
+#if SCM_S0102_IBF_SPS_CONTROL 
+    if (pcSlice->getSPS()->getDisableIntraBoundaryFilter())
+    {
+        WRITE_FLAG(pcSlice->getDisableIntraBoundaryFilter(), "boundary_filter_disable_in_slice_flag");  //can be adaptively changed
+    }
+#endif
     if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "slice_chroma_qp_adjustment_enabled_flag");

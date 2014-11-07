@@ -795,6 +795,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
 #endif
+#if SCM_S0102_IBF_SPS_CONTROL
+            READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
+#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -1373,6 +1376,17 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
       }
     }
 
+#if SCM_S0102_IBF_SPS_CONTROL
+    if (pcSlice->getSPS()->getDisableIntraBoundaryFilter())
+    {
+      READ_FLAG(uiCode,"boundary_filter_disable_in_slice_flag");
+      pcSlice->setDisableIntraBoundaryFilter( uiCode!=0 );
+    }
+    else
+    {
+      pcSlice->setDisableIntraBoundaryFilter(false);
+    }
+#endif
     if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       READ_FLAG(uiCode, "slice_chroma_qp_adjustment_enabled_flag"); pcSlice->setUseChromaQpAdj(uiCode != 0);
