@@ -1015,7 +1015,11 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
   DEBUG_STRING_OUTPUT(std::cout, debug_reorder_data_token[pcCU->isIntraBC(0)?1:0][MAX_NUM_COMPONENT])
 }
 
+#if SCM_S0258_PLT_ESCAPE_SIG
+Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag)
+#else
 Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID)
+#endif
 {
   Bool bLossless = pcCU->getCUTransquantBypass (uiPartIdx);
   Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiPartIdx);
@@ -1028,7 +1032,11 @@ Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx
     for(UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
       uiIdx = uiY * uiWidth + uiX;
+#if SCM_S0258_PLT_ESCAPE_SIG
+      if (pEscapeFlag[uiIdx])
+#else
       if (pSPoint[uiIdx] == PLT_ESCAPE)
+#endif
       {
         if ( bLossless )
         {
@@ -1059,7 +1067,11 @@ Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx
   }
 }
 
+#if SCM_S0258_PLT_ESCAPE_SIG
+Void TDecCu::xDecodePLTTexture         ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag)
+#else
 Void TDecCu::xDecodePLTTexture         ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID)
+#endif
 {
   Bool bLossless = pcCU->getCUTransquantBypass (uiPartIdx);
   Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiPartIdx);
@@ -1072,7 +1084,11 @@ Void TDecCu::xDecodePLTTexture         ( TComDataCU* pcCU, const UInt uiPartIdx,
     for(UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
       uiIdx = (uiY<<pcCU->getPic()->getComponentScaleY(compID))*(uiWidth<<pcCU->getPic()->getComponentScaleX(compID))+(uiX<<pcCU->getPic()->getComponentScaleX(compID));
+#if SCM_S0258_PLT_ESCAPE_SIG
+      if( pEscapeFlag[uiIdx] )
+#else
       if (pSPoint[uiIdx] == PLT_ESCAPE)
+#endif
       {
         if ( bLossless )
         {
@@ -1127,7 +1143,11 @@ Void  TDecCu::xReconPLTModeLuma(TComDataCU* pcCU, UInt uiDepth)
   pRecChannel = m_ppcYuvReco[uiDepth]->getAddr(COMPONENT_Y);
 
   Pel *pPixelValue = pcCU->getLevel(COMPONENT_Y);
+#if SCM_S0258_PLT_ESCAPE_SIG
+  xDecodePLTTextureLumaChroma(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(COMPONENT_Y), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, COMPONENT_Y, pcCU->getEscapeFlag(COMPONENT_Y));
+#else
   xDecodePLTTextureLumaChroma(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(COMPONENT_Y), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, COMPONENT_Y);
+#endif
 }
 
 Void  TDecCu::xReconPLTModeChroma(TComDataCU* pcCU, UInt uiDepth)
@@ -1144,7 +1164,11 @@ Void  TDecCu::xReconPLTModeChroma(TComDataCU* pcCU, UInt uiDepth)
     pPalette = pcCU->getPLT(compID, 0);
     pRecChannel = m_ppcYuvReco[uiDepth]->getAddr(compID);
     Pel *pPixelValue = pcCU->getLevel(compID);
+#if SCM_S0258_PLT_ESCAPE_SIG
+    xDecodePLTTextureLumaChroma(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(compID), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, compID, pcCU->getEscapeFlag(compID));
+#else
     xDecodePLTTextureLumaChroma(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(compID), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, compID);
+#endif
   }
 }
 
@@ -1163,7 +1187,11 @@ Void TDecCu::xReconPLTMode(TComDataCU *pcCU, UInt uiDepth)
     pRecChannel = m_ppcYuvReco[uiDepth]->getAddr(compID);
 
     Pel *pPixelValue = pcCU->getLevel(compID);
+#if SCM_S0258_PLT_ESCAPE_SIG
+    xDecodePLTTexture(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(COMPONENT_Y), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, compID, pcCU->getEscapeFlag(COMPONENT_Y));
+#else
     xDecodePLTTexture(pcCU, 0, pPalette, pLevel, pcCU->getSPoint(COMPONENT_Y), pPixelValue, pRecChannel, uiStride, uiWidth, uiHeight, compID);
+#endif
   }
 }
 

@@ -100,7 +100,11 @@ private:
   Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, const class TComCodingStatisticsClassType &whichStat);
   Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
+#if SCM_S0258_PLT_ESCAPE_SIG
+  Void  xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+#else
   Void  xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0);
+#endif
 #else
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
@@ -109,7 +113,11 @@ private:
   Void  xDecodeRun              (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev);
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
+#if SCM_S0258_PLT_ESCAPE_SIG
+  Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+#else
   Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
+#endif
 #endif
 private:
   TComInputBitstream* m_pcBitstream;
