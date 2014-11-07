@@ -301,6 +301,8 @@
 #define SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY        1 ///< bug fix for temporal scalability
 #define SCM_S0102_IBF_SPS_CONTROL                         1 ///< intra boundary filter control at SPS
 #define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< JCTVC-S0153: Zero run-length coding for palette predictor
+#define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< JCTVC-S0258: include escape sample into the INDEX and COPY_ABOVE modes
+#define SCM_S0156_PLT_ENC_RDO                             1 ///< JCTVC-S0156: RD based palette encoder
 
 //------------------------------------------------
 // Derived macros
@@ -868,8 +870,12 @@ enum PLTRunMode
 {
   PLT_RUN_LEFT  = 0,
   PLT_RUN_ABOVE = 1,
+#if SCM_S0258_PLT_ESCAPE_SIG
+  NUM_PLT_RUN   = 2  
+#else
   PLT_ESCAPE    = 2,
   NUM_PLT_RUN   = 3
+#endif
 };
 
 enum PLTScanMode

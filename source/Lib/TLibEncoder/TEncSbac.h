@@ -108,13 +108,30 @@ public:
                     , Bool onlyEstMergeInfo = false
                     );
 
+#if SCM_S0156_PLT_ENC_RDO
+#if SCM_S0258_PLT_ESCAPE_SIG
+  Void  writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+#else
+  Void  writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
+#endif
+  Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
+#endif
+
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xEncodePLTPredIndicator ( UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted);
+#if !SCM_S0156_PLT_ENC_RDO
   Void  xEncodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
+#endif
   Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
+#if !SCM_S0156_PLT_ENC_RDO
+#if SCM_S0258_PLT_ESCAPE_SIG
+  Void  xWritePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+#else
   Void  xWritePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0);
+#endif
+#endif
   Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
@@ -137,6 +154,9 @@ public:
   Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
   Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM_S0156_PLT_ENC_RDO
+  Void encodeSPoint          ( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder );
+#endif
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );

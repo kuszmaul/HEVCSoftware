@@ -157,6 +157,9 @@ protected:
   Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
+#if SCM_S0258_PLT_ESCAPE_SIG
+  UChar*          m_paBestEscapeFlag;
+#endif
 public:
   TEncSearch();
   virtual ~TEncSearch();
@@ -711,6 +714,10 @@ protected:
   Void  setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicList eRefPicListCur );
   inline  Void  setDistParamComp( ComponentID compIdx )  { m_cDistParam.compIdx = compIdx; }
 
+#if SCM_S0156_PLT_ENC_RDO
+  Void   xDeriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
+  Double xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode);
+#endif
 };// END CLASS DEFINITION TEncSearch
 
 //! \}

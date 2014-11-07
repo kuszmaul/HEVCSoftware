@@ -155,6 +155,9 @@ private:
   Bool*         m_pbPLTSharingModeFlag;
   Bool*         m_pbPLTScanRotationModeFlag;
   Bool*         m_pbPLTScanTraverseModeFlag;
+#if SCM_S0258_PLT_ESCAPE_SIG
+  UChar*        m_piEscapeFlag[MAX_NUM_COMPONENT];
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
@@ -440,7 +443,9 @@ public:
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
   Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }
   Void          setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
-
+#if SCM_S0258_PLT_ESCAPE_SIG
+  UChar*        getEscapeFlag(ComponentID component)                 { return m_piEscapeFlag[component]; }
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
