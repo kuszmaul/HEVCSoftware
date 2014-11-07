@@ -430,6 +430,40 @@ Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pS
 
 Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted)
 {
+#if SCM_S0153_PALETTE_ZERO_RUNS
+  Int lastPredIdx = -1;
+  UInt run = 0;
+  uiNumPLTPredicted = 0;
+
+  for( UInt idx = 0; idx < uiPLTSizePrev; idx++ )
+  {
+    if( bReusedPrev[idx] )
+    {
+      uiNumPLTPredicted++;
+      lastPredIdx = idx;
+    }
+  }
+
+  Int idx = 0;
+  while( idx <= lastPredIdx )
+  {
+    if( bReusedPrev[idx] )
+    {
+      xWriteEpExGolomb( run ? run + 1 : run, 0 );
+      run = 0;
+    }
+    else
+    {
+      run++;
+    }
+    idx++;
+  }
+
+  if( ( uiNumPLTPredicted < MAX_PLT_SIZE && lastPredIdx + 1 < uiPLTSizePrev ) || !uiNumPLTPredicted )
+  {
+    xWriteEpExGolomb( 1, 0 );
+  }
+#else
   UInt lastPrevIdx = uiPLTSizePrev - 1;
   UInt groupLength = 4;
   UInt uiIdxPrev = 0;
@@ -482,6 +516,7 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
       uiIdxPrev += groupLength;
     }
   }
+#endif
 }
 
 Void TEncSbac::xEncodeRun(UInt uiRun, Bool bCopyTopMode, Int GRParam)

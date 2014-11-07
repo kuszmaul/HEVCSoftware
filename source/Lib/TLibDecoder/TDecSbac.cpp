@@ -555,6 +555,36 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, c
 Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
 #endif
 {
+#if SCM_S0153_PALETTE_ZERO_RUNS
+  UInt uiSymbol, uiNumPLTPredicted = 0, idx = 0;
+
+  xReadEpExGolomb( uiSymbol, 0 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
+
+  if( uiSymbol != 1 )
+  {
+    while( idx < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE )
+    {
+      if( idx > 0 )
+      {
+        xReadEpExGolomb( uiSymbol, 0 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
+      }
+      if( uiSymbol == 1 )
+      {
+        break;
+      }
+
+      if( uiSymbol )
+      {
+        idx += uiSymbol - 1;
+      }
+
+      bReusedPrev[idx] = 1;
+
+      uiNumPLTPredicted++;
+      idx++;
+    }
+  }
+#else
   UInt groupLength = 4;
   UInt lastGroup = 0;
   UInt uiIdxPrev = 0;
@@ -619,6 +649,7 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
       uiIdxPrev += groupLength;
     }
   }
+#endif
 }
 
 Void TDecSbac::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
