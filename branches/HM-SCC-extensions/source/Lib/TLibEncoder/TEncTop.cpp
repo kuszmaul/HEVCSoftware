@@ -518,6 +518,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthInter( m_uiQuadtreeTUMaxDepthInter    );
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
 
+#if SCM_S0102_IBF_SPS_CONTROL
+  m_cSPS.setDisableIntraBoundaryFilter( m_disableIntraBoundaryFilter );
+#endif
   m_cSPS.setTMVPFlagsPresent(false);
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );

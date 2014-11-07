@@ -474,15 +474,22 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
       // Create the prediction
             TComDataCU *const pcCU              = rTu.getCU();
       const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
+#if SCM_S0102_IBF_SPS_CONTROL
+      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getDisableIntraBoundaryFilter();
+#else
       const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx));
+#endif
 
 #if O0043_BEST_EFFORT_DECODING
       xPredIntraAng( g_bitDepthInStream[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
 #else
       xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
 #endif
-
+#if SCM_S0102_IBF_SPS_CONTROL
+      if(( uiDirMode == DC_IDX ) && bAbove && bLeft && enableEdgeFilters)
+#else
       if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
+#endif
       {
         xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
       }

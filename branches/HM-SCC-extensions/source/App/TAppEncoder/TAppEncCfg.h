@@ -198,7 +198,9 @@ protected:
   UInt      m_uiPCMLog2MinSize;                               ///< log2 of minimum PCM block size
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
   Bool      m_enableIntraReferenceSmoothing;                  ///< flag for enabling(default)/disabling intra reference smoothing/filtering
-
+#if SCM_S0102_IBF_SPS_CONTROL
+  Bool      m_disableIntraBoundaryFilter;                     ///  flag for enabling(default)/disabling intra boundary filtering
+#endif
   // coding tools (encoder-only parameters)
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
