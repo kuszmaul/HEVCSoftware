@@ -304,6 +304,7 @@
 #define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< JCTVC-S0258: include escape sample into the INDEX and COPY_ABOVE modes
 #define SCM_S0156_PLT_ENC_RDO                             1 ///< JCTVC-S0156: RD based palette encoder
 #define SCM_S0140_ACT_QP_CLIP_TO_ZERO                     1 ///< clip ACT negative QPs to zero
+#define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
 
 //------------------------------------------------
 // Derived macros
