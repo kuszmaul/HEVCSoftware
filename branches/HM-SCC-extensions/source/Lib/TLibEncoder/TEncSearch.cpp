@@ -1219,6 +1219,9 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform(0))
   {
     cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
+#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
+    cQP.Qp = std::max<Int>( cQP.Qp, 0 );
+#endif
     cQP.per = cQP.Qp/6;
     cQP.rem= cQP.Qp%6;
   }
@@ -2522,6 +2525,9 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
       if(!pcCU->isLosslessCoded(0) )
       {
         cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
+#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
+        cQP.Qp = std::max<Int>( cQP.Qp, 0 );
+#endif
         cQP.per = cQP.Qp/6;
         cQP.rem= cQP.Qp%6;
         m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS );
@@ -8309,6 +8315,9 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
         if(!pcCU->isLosslessCoded(0) && iColourTransform)
         {
           cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
+#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
+          cQP.Qp = std::max<Int>( cQP.Qp, 0 );
+#endif
           cQP.per = cQP.Qp/6;
           cQP.rem= cQP.Qp%6;
           m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS );
