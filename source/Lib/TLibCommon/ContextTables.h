@@ -38,6 +38,7 @@
 
 #ifndef __CONTEXTTABLES__
 #define __CONTEXTTABLES__
+#include <cstring>
 
 //! \ingroup TLibCommon
 //! \{
@@ -187,7 +188,7 @@ struct PaletteInfoBuffer
   UChar lastPLTSize[3];
   Pel   lastPLT[3][MAX_PLT_PRED_SIZE];
 
-  PaletteInfoBuffer() { memset( this, 0, sizeof( PaletteInfoBuffer ) ); }
+  PaletteInfoBuffer() { std::memset( this, 0, sizeof( PaletteInfoBuffer ) ); }
 };
 #endif
 
