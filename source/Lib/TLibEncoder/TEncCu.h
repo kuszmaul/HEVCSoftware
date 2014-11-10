@@ -103,7 +103,11 @@ public:
   Void  init                ( TEncTop* pcEncTop );
 
   /// create internal buffers
-  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight, ChromaFormat chromaFormat );
+  Void  create              ( UChar uhTotalDepth, UInt iMaxWidth, UInt iMaxHeight, ChromaFormat chromaFormat
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                             ,UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
+    );
 
   /// destroy internal buffers
   Void  destroy             ();

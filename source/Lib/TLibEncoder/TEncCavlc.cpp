@@ -651,6 +651,15 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseColourTrans()    ? 1 : 0),                    "adaptive_colour_trans_flag" );
 #endif
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
+
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+            if (pcSPS->getUsePLTMode())
+            {
+              WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");                      
+              WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");          
+            }
+#endif
+
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
 #endif

@@ -70,7 +70,11 @@ TComPicSym::TComPicSym()
 {}
 
 
-Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+Void TComPicSym::create(ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
+  )
 {
   UInt i;
 
@@ -107,6 +111,9 @@ Void TComPicSym::create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPic
   {
     m_pictureCtuArray[i] = new TComDataCU;
     m_pictureCtuArray[i]->create( chromaFormatIDC, m_numPartitionsInCtu, m_uiMaxCUWidth, m_uiMaxCUHeight, false, m_uiMaxCUWidth >> m_uhTotalDepth
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      , uiPLTMaxSize, uiPLTMaxPredSize
+#endif
 #if ADAPTIVE_QP_SELECTION
       , true
 #endif

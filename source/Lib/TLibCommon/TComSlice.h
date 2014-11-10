@@ -758,6 +758,10 @@ private:
   Bool        m_useColourTrans;
 #endif
   Bool        m_usePaletteMode;
+  #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt        m_uiPLTMaxSize;
+  UInt        m_uiPLTMaxPredSize;
+#endif
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool        m_useAdaptiveMvResolution;
 #endif
@@ -916,7 +920,12 @@ public:
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt      getPLTMaxSize()                                      const { return m_uiPLTMaxSize; }
+  Void      setPLTMaxSize(const UInt value)                            { m_uiPLTMaxSize = value; }
+  UInt      getPLTMaxPredSize()                                  const { return m_uiPLTMaxPredSize; }
+  Void      setPLTMaxPredSize(const UInt value)                        { m_uiPLTMaxPredSize = value; }
+#endif
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
   Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }

@@ -792,6 +792,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcSPS->setUseColourTrans                          (uiCode != 0);
 #endif
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+            if (pcSPS->getUsePLTMode())//decode only when palette mode is enabled
+            {
+              READ_UVLC(uiCode, "palette_max_size");                        pcSPS->setPLTMaxSize(uiCode);
+              READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
+            }
+#endif
+
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
 #endif

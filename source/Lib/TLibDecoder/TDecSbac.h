@@ -98,7 +98,11 @@ private:
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat );
   Void  xDecodeRun          (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat);
+#else
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, const class TComCodingStatisticsClassType &whichStat);
+#endif
   Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
 #if SCM_S0258_PLT_ESCAPE_SIG
   Void  xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
@@ -111,7 +115,11 @@ private:
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
   Void  xDecodeRun              (UInt& ruiSymbol, Bool bCopyTopMode, UInt GRParam);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  Void  xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize);
+#else
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev);
+#endif
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
 #if SCM_S0258_PLT_ESCAPE_SIG
   Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);

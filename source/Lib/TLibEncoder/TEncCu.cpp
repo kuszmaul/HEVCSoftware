@@ -58,7 +58,11 @@ using namespace std;
  \param    uiMaxWidth    largest CU width
  \param    uiMaxHeight   largest CU height
  */
-Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormat)
+Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormat
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                    , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
+  )
 {
   Int i;
 
@@ -82,8 +86,16 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, Chrom
     UInt uiWidth  = uiMaxWidth  >> i;
     UInt uiHeight = uiMaxHeight >> i;
 
-    m_ppcBestCU[i] = new TComDataCU; m_ppcBestCU[i]->create( chromaFormat, uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) );
-    m_ppcTempCU[i] = new TComDataCU; m_ppcTempCU[i]->create( chromaFormat, uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) );
+    m_ppcBestCU[i] = new TComDataCU; m_ppcBestCU[i]->create( chromaFormat, uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1)
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                 ,uiPLTMaxSize, uiPLTMaxPredSize
+#endif
+   );
+    m_ppcTempCU[i] = new TComDataCU; m_ppcTempCU[i]->create( chromaFormat, uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                    ,uiPLTMaxSize, uiPLTMaxPredSize
+#endif
+   );
 
     m_ppcPredYuvBest[i] = new TComYuv; m_ppcPredYuvBest[i]->create(uiWidth, uiHeight, chromaFormat);
     m_ppcResiYuvBest[i] = new TComYuv; m_ppcResiYuvBest[i]->create(uiWidth, uiHeight, chromaFormat);
@@ -246,7 +258,11 @@ Void TEncCu::compressCtu( TComDataCU* pCtu, UChar* lastPLTSize, UChar* lastPLTUs
     m_ppcTempCU[0]->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
     m_ppcBestCU[0]->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
     m_ppcTempCU[0]->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (UInt idx = 0; idx < pCtu->getSlice()->getSPS()->getPLTMaxPredSize(); idx++)
+#else
     for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
     {
       m_ppcBestCU[0]->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       m_ppcTempCU[0]->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
@@ -441,13 +457,26 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   UChar lastPLTUsedSize[3];
   UChar lastPLTSize[3];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt numValidComp = rpcBestCU->getPic()->getNumberValidComponents();
+  Pel*  lastPLT[MAX_NUM_COMPONENT];
+  for (UInt ch = 0; ch < numValidComp; ch++)
+  {
+    lastPLT[ch] = (Pel*)xMalloc(Pel, rpcBestCU->getSlice()->getSPS()->getPLTMaxPredSize());
+  }
+#else
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
   UInt numValidComp = rpcBestCU->getPic()->getNumberValidComponents();
+#endif
   for (UInt ch = 0; ch < numValidComp; ch++)
   {
     lastPLTUsedSize[ch] = rpcBestCU->getLastPLTInLcuUsedSizeFinal(ch);
     lastPLTSize[ch] = rpcBestCU->getLastPLTInLcuSizeFinal(ch);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (UInt i = 0; i < rpcBestCU->getSlice()->getSPS()->getPLTMaxPredSize(); i++)
+#else
     for (UInt i = 0; i < MAX_PLT_PRED_SIZE; i++)
+#endif
     {
       lastPLT[ch][i] = rpcBestCU->getLastPLTInLcuFinal(ch, i);
     }
@@ -1181,7 +1210,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           pcSubTempPartCU->setLastPLTInLcuUsedSizeFinal(ch, lastPLTUsedSize[ch]);
           pcSubBestPartCU->setLastPLTInLcuSizeFinal(ch, lastPLTSize[ch]);
           pcSubTempPartCU->setLastPLTInLcuSizeFinal(ch, lastPLTSize[ch]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+          for (UInt i = 0; i < pcSlice->getSPS()->getPLTMaxPredSize(); i++)
+#else
           for (UInt i = 0; i<MAX_PLT_PRED_SIZE; i++)
+#endif
           {
             pcSubBestPartCU->setLastPLTInLcuFinal(ch, lastPLT[ch][i], i);
             pcSubTempPartCU->setLastPLTInLcuFinal(ch, lastPLT[ch][i], i);
@@ -1237,7 +1270,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             for (UInt ch = 0; ch < numValidComp; ch++)
             {
               lastPLTSize[ch] = pcSubBestPartCU->getLastPLTInLcuSizeFinal(ch);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+              for (UInt i = 0; i < pcSlice->getSPS()->getPLTMaxPredSize(); i++)
+#else
               for (UInt i = 0; i < MAX_PLT_PRED_SIZE; i++)
+#endif
               {
 
                 lastPLT[ch][i] = pcSubBestPartCU->getLastPLTInLcuFinal(ch, i);
@@ -1330,7 +1367,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   {
     return;
   }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  for (UInt ch = 0; ch < numValidComp; ch++)
+  {
+    if (lastPLT[ch])
+    {
+      xFree(lastPLT[ch]);
+      lastPLT[ch] = NULL;
+    }
+  }
+#endif
   // Assert if Best prediction mode is NONE
   // Selected mode's RD-cost must be not MAX_DOUBLE.
   assert( rpcBestCU->getPartitionSize ( 0 ) != NUMBER_OF_PART_SIZES       );
