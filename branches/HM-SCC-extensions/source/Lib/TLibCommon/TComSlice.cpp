@@ -1609,6 +1609,10 @@ TComSPS::TComSPS()
 , m_useColourTrans             (false)
 #endif
 , m_usePaletteMode            (false)
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+#endif
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 , m_useAdaptiveMvResolution   (false)
 #endif

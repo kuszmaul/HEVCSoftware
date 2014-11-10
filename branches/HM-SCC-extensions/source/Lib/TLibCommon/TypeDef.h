@@ -306,6 +306,7 @@
 #define SCM_S0140_ACT_QP_CLIP_TO_ZERO                     1 ///< clip ACT negative QPs to zero
 #define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
 #define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
+#define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
 
 //------------------------------------------------
 // Derived macros

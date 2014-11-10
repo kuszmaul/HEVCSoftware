@@ -1084,7 +1084,11 @@ Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSr
       m_cIndexBlock[uiPos] = uiBestIdx;
       if (uiMinError > iErrorLimit)
       {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+        m_cIndexBlock[uiPos] -= pcCU->getSlice()->getSPS()->getPLTMaxSize();
+#else
         m_cIndexBlock[uiPos] -= MAX_PLT_SIZE;
+#endif
         useEscapeFlag=1;
       }
     }
@@ -1099,13 +1103,27 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
   UInt uiPLTSizePrev, uiDictMaxSize;
   UInt uiPLTUsedSizePrev;
   Pel * pPalettePrev[3];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getPLTMaxPredSize();
+  Pel* pPaletteTemp[3];
+  for (UInt ch = 0; ch < 3; ch++)
+  {
+    pPaletteTemp[ch] = (Pel*)xMalloc(Pel, uiMaxPLTSize);
+  }
+#else
   Pel pPaletteTemp[3][MAX_PLT_SIZE];
+#endif
   ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
 
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (UInt i = 0; i < uiMaxPLTSize; i++)
+#else
     for (UInt i = 0; i < MAX_PLT_SIZE; i++)
+#endif
     {
       pPaletteTemp[comp][i] = pPalette[comp][i];
     }
@@ -1116,10 +1134,17 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
 
   UInt uiIdxPrev = 0, uiIdxCurr = 0;
   Bool bReused = false;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  Bool *bPredicted, *bReusedPrev;
+  bPredicted  = (Bool*)xMalloc(Bool, uiMaxPLTSize + 1);
+  bReusedPrev = (Bool*)xMalloc(Bool, uiMaxPLTPredSize + 1);
+  memset(bPredicted, 0, sizeof(Bool)*(uiMaxPLTSize + 1));
+  memset(bReusedPrev, 0, sizeof(Bool)*(uiMaxPLTPredSize + 1));
+#else
   Bool bPredicted[MAX_PLT_SIZE + 1], bReusedPrev[MAX_PLT_PRED_SIZE + 1];
   memset(bReusedPrev, 0, sizeof(bReusedPrev));
   memset(bPredicted, 0, sizeof(bPredicted));
-
+#endif
   UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
   for (uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++)
   {
@@ -1150,8 +1175,11 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
       uiNumPLTPredicted++;
     }
   }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE   
+  for (uiIdxPrev = 0; uiIdxPrev < uiMaxPLTPredSize; uiIdxPrev++)
+#else
   for (uiIdxPrev = 0; uiIdxPrev < MAX_PLT_PRED_SIZE; uiIdxPrev++)
+#endif
   {
     for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
     {
@@ -1182,6 +1210,26 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
       uiIdxCurr++;
     }
   }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  for (UInt ch = 0; ch < 3; ch++)
+  {
+    if (pPaletteTemp[ch])
+    {
+      xFree(pPaletteTemp[ch]);
+      pPaletteTemp[ch] = NULL;
+    }
+  }
+  if (bPredicted)
+  {
+    xFree(bPredicted);
+    bPredicted = NULL;
+  }
+  if (bReusedPrev)
+  {
+    xFree(bReusedPrev);
+    bReusedPrev = NULL;
+  }
+#endif
 }
 
 Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost )
@@ -1190,8 +1238,13 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   UInt uiTotalSize = uiHeight*uiWidth;
   SortingElement *psList = new SortingElement [uiTotalSize];
   SortingElement sElement;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt uiDictMaxSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  SortingElement *pListSort = new SortingElement [uiDictMaxSize + 1];
+#else
   UInt uiDictMaxSize = MAX_PLT_SIZE;
   SortingElement *pListSort = new SortingElement [MAX_PLT_SIZE + 1];
+#endif
   UInt uiIdx = 0;
   UInt uiPos;
   Int last = -1;
@@ -1251,7 +1304,11 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
         if (psList[i].uiCnt > pListSort[j-1].uiCnt)
         {
           pListSort[j].copyAllFrom (pListSort[j-1]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE   
+          uiDictMaxSize = std::min(uiDictMaxSize + 1, pcCU->getSlice()->getSPS()->getPLTMaxSize());
+#else
           uiDictMaxSize = std::min(uiDictMaxSize+1,(UInt)MAX_PLT_SIZE);
+#endif
         }
         else
         {
@@ -1265,8 +1322,11 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   uiPLTSize = 0;
   Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
   Double bitCost = pcCost->getLambda() * 24;
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  for (Int i = 0; i < pcCU->getSlice()->getSPS()->getPLTMaxSize(); i++)
+#else
   for (Int i = 0; i < MAX_PLT_SIZE; i++)
+#endif
   {
     if( pListSort[i].uiCnt )
     {
@@ -1440,7 +1500,11 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
       Palette[1][uiPLTSize] = psList[i].uiData[1];
       Palette[2][uiPLTSize] = psList[i].uiData[2];
       uiPLTSize++;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      if (uiPLTSize == pcCU->getSlice()->getSPS()->getPLTMaxSize())
+#else
       if (uiPLTSize == MAX_PLT_SIZE)
+#endif
       {
         break;
       }

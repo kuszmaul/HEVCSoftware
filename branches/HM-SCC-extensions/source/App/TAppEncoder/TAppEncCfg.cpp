@@ -1037,6 +1037,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
   ("ColourTransform",                                 m_useColourTrans,                                   false, "Enable the colour transform (not valid in V1 profiles")
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       31u,  "Maximum palette size")
+  ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                   64u,  "Maximum palette predictor size")
+#endif
+
+
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   ("UseAdaptiveMvResolution",                         m_useAdaptiveMvResolution,                         false, "Enable adaptive mv resolution (not valid in V1 profiles)")
 #endif
@@ -2525,8 +2531,13 @@ Void TAppEncCfg::xPrintParameter()
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
   if (m_usePaletteMode)
   {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    printf(" MaxPLTSize:%d", m_uiPLTMaxSize);
+    printf(" MaxPLTPredictorSize:%d", m_uiPLTMaxPredSize);
+#else
     printf(" MaxPLTSize:%d", MAX_PLT_SIZE);
     printf(" MaxPLTPredictorSize:%d", MAX_PLT_PRED_SIZE);
+#endif
   }
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   printf( " AdapMvRes:%d", m_useAdaptiveMvResolution ? 1 : 0 );

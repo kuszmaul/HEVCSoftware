@@ -582,11 +582,18 @@ Void  TDecSbac::xDecodeRun(UInt &ruiSymbol, Bool bCopyTopMode, UInt GRParam)
   xReadCoefRemainExGolomb(uiRemaining, uiGoRiceParamRun, false, MAX_NUM_CHANNEL_TYPE RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
   ruiSymbol = uiRemaining + 3;
 }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat)
+#else
+Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize)
+#endif
+#else
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, const class TComCodingStatisticsClassType &whichStat)
 #else
 Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
+#endif
 #endif
 {
 #if SCM_S0153_PALETTE_ZERO_RUNS
@@ -596,7 +603,11 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
 
   if( uiSymbol != 1 )
   {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE
+    while (idx < uiPLTSizePrev && uiNumPLTPredicted < uiMaxPLTSize)
+#else
     while( idx < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE )
+#endif
     {
       if( idx > 0 )
       {
@@ -624,7 +635,11 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
   UInt uiIdxPrev = 0;
   UInt uiNumPLTPredicted = 0;
   UInt uiSymbol;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  while (!lastGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < uiMaxPLTSize)
+#else
   while (!lastGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE)
+#endif
   {
     UInt lastIdx = min(uiIdxPrev + groupLength, uiPLTSizePrev) - 1;
     Bool lastPossibleGroup = (uiIdxPrev + groupLength) > uiPLTSizePrev ? true : false;
@@ -641,7 +656,11 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
     if (!uiSymbol)
     {
       //decode the first 3 bins in current group
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      while (uiIdxPrev < lastIdx && uiNumPLTPredicted < uiMaxPLTSize)
+#else
       while (uiIdxPrev < lastIdx && uiNumPLTPredicted < MAX_PLT_SIZE)
+#endif
       {
         m_pcTDecBinIf->decodeBinEP(uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
         bReusedPrev[uiIdxPrev] = uiSymbol;
@@ -652,7 +671,11 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
         }
         uiIdxPrev++;
       }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      if (uiNumPLTPredicted < uiMaxPLTSize)
+#else
       if (uiNumPLTPredicted < MAX_PLT_SIZE)
+#endif
       {
         //decode the 4th bins in current group
         if (numOnesInGroup > 0)
@@ -673,7 +696,11 @@ Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev)
       }
 
       lastGroup = (UInt)lastPossibleGroup;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      if (!lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < uiMaxPLTSize)
+#else
       if (!lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE)
+#endif
       {
         m_pcTDecBinIf->decodeBinEP(lastGroup RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
       }
@@ -766,7 +793,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         pcCU->setPLTSubParts(comp, pPalette[comp][i], i, uiAbsPartIdx, uiDepth);
       }
     }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for ( UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++)
+#else
     for ( UInt uiIdxPrev = 0; uiIdxPrev < MAX_PLT_PRED_SIZE; uiIdxPrev++ )
+#endif
     {
       if ( uiIdxPrev < uiDictMaxSize )
       {
@@ -791,7 +822,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     memset( bReusedPrev, 0, sizeof( UChar ) * uiPLTSizePrev );
     if ( uiPLTSizePrev )
     {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      xDecodePLTPredIndicator(bReusedPrev, uiPLTSizePrev, pcCU->getSlice()->getSPS()->getPLTMaxSize() RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#else
       xDecodePLTPredIndicator( bReusedPrev, uiPLTSizePrev RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
+#endif
       for ( Int uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++ )
       {
         if ( bReusedPrev[uiIdxPrev] )
@@ -806,10 +841,17 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       }
     }
 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    if ( uiNumPLTPredicted < pcCU->getSlice()->getSPS()->getPLTMaxSize())
+    {
+      for (UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < pcCU->getSlice()->getSPS()->getPLTMaxSize(); uiPLTIdx++)
+      {
+#else
     if ( uiNumPLTPredicted < MAX_PLT_SIZE )
     {
       for ( UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++ )
       {
+#endif
         m_pcTDecBinIf->decodeBinEP( uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
         if ( uiSymbol )
         {
@@ -849,7 +891,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
     uiIndexMaxSize++;
   }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE   
+  assert(uiDictMaxSize <= pcCU->getSlice()->getSPS()->getPLTMaxSize());
+#else
   assert(uiDictMaxSize <= MAX_PLT_SIZE);
+#endif
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][(isScanTraverseMode)?SCAN_TRAV:SCAN_HOR][g_aucConvertToBit[uiWidth]+2][g_aucConvertToBit[uiHeight]+2];
   uiIdx = 0;

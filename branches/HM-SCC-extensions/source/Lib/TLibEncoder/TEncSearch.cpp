@@ -4102,7 +4102,11 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
         paPalette[comp][i] = pPalettePrev[comp][i];
       }
     }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for(UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++)
+#else
     for(UInt uiIdxPrev = 0; uiIdxPrev < MAX_PLT_PRED_SIZE; uiIdxPrev++)
+#endif
     {
       if(uiIdxPrev < uiPLTSize)
       {
@@ -4141,7 +4145,11 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   UInt uiPLTIdx = 0;
   for (UInt ch = 0; ch < 3; ch++)
   {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for ( uiPLTIdx = 0; uiPLTIdx < pcCU->getSlice()->getSPS()->getPLTMaxSize(); uiPLTIdx++)
+#else
     for ( uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
+#endif
     {
       pcCU->setPLTSubParts(ch,  paPalette[ch][uiPLTIdx], uiPLTIdx, 0, pcCU->getDepth(0));
     }

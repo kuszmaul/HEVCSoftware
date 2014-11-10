@@ -117,6 +117,10 @@ TComDataCU::TComDataCU()
   }
 
   m_bDecSubCu          = false;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  m_PLTMaxSize = 0;
+  m_PLTMaxPredSize = 0;
+#endif
 }
 
 TComDataCU::~TComDataCU()
@@ -124,6 +128,9 @@ TComDataCU::~TComDataCU()
 }
 
 Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                        , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
 #if ADAPTIVE_QP_SELECTION
                         , Bool bGlobalRMARLBuffer
 #endif
@@ -144,6 +151,10 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
   m_uhLastPLTUsedSizeFinal[COMPONENT_Y] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cb] = m_uhLastPLTUsedSizeFinal[COMPONENT_Cr] = PLT_SIZE_INVALID;
   m_uhLastPLTSizeFinal[COMPONENT_Y] = m_uhLastPLTSizeFinal[COMPONENT_Cb] = m_uhLastPLTSizeFinal[COMPONENT_Cr] = 0;
 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  m_PLTMaxSize     = uiPLTMaxSize;
+  m_PLTMaxPredSize = uiPLTMaxPredSize;
+#endif
   if ( !bDecSubCu )
   {
     m_phQP               = (Char*     )xMalloc(Char,     uiNumPartition);
@@ -205,11 +216,20 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       }
 #endif
       m_pcIPCMSample[compID] = (Pel*   )xMalloc(Pel , totalSize);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      m_piPLT[compID]               = (Pel*  )xMalloc(Pel, (uiNumPartition >> 2) * m_PLTMaxSize);
+#else
       m_piPLT[compID]               = (Pel*  )xMalloc(Pel, (uiNumPartition >> 2) * MAX_PLT_SIZE);
+#endif
       m_piSPoint[compID]            = (UChar*)xMalloc(UChar, totalSize);
       m_puhPLTEscape[compID]        = (UChar*)xMalloc(Bool, uiNumPartition);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      m_bPrevPLTReusedFlag[comp] =    (UChar*)xMalloc(UChar, (uiNumPartition >> 2) * m_PLTMaxPredSize);
+      m_piLastPLTInLcuFinal[compID] = (Pel*)xMalloc(Pel, m_PLTMaxPredSize);
+#else
       m_bPrevPLTReusedFlag[comp]    = (UChar*)xMalloc(UChar, (uiNumPartition >> 2) * MAX_PLT_PRED_SIZE);
-      m_piLastPLTInLcuFinal[compID] = (Pel*  )xMalloc(Pel, MAX_PLT_PRED_SIZE);
+      m_piLastPLTInLcuFinal[compID] = (Pel*)xMalloc(Pel, MAX_PLT_PRED_SIZE);
+#endif
 #if SCM_S0258_PLT_ESCAPE_SIG
       m_piEscapeFlag[comp]          = (UChar*)xMalloc(UChar, totalSize);
 #endif
@@ -417,7 +437,11 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   {
     m_uhLastPLTUsedSizeFinal[comp] = PLT_SIZE_INVALID;
     m_uhLastPLTSizeFinal[comp] = 0;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (Int i = 0; i < m_PLTMaxPredSize; i++)
+#else
     for ( Int i = 0; i < MAX_PLT_PRED_SIZE; i++ )
+#endif
     {
       m_piLastPLTInLcuFinal[comp][i] = 0;
     }
@@ -585,14 +609,25 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
     for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
       m_puhCbf[comp][ui] = 0;
-      for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
-      {
-        m_piPLT[comp][(ui >> 2) * MAX_PLT_SIZE + uiPLTIdx] = 0;
-      }
-      for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_PRED_SIZE; uiPLTIdx++)
-      {
-        m_bPrevPLTReusedFlag[comp][(ui >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = 0;
-      }
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+        for (UInt uiPLTIdx = 0; uiPLTIdx < m_PLTMaxSize; uiPLTIdx++)
+        {
+          m_piPLT[comp][(ui >> 2) * m_PLTMaxSize + uiPLTIdx] = 0;
+        }
+        for (UInt uiPLTIdx = 0; uiPLTIdx < m_PLTMaxPredSize; uiPLTIdx++) 
+        { 
+          m_bPrevPLTReusedFlag[comp][(ui >> 2) * m_PLTMaxPredSize + uiPLTIdx] = 0;
+        }
+#else
+        for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
+        {
+          m_piPLT[comp][(ui >> 2) * MAX_PLT_SIZE + uiPLTIdx] = 0;
+        }
+        for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_PRED_SIZE; uiPLTIdx++)
+        {
+          m_bPrevPLTReusedFlag[comp][(ui >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = 0;
+        }
+#endif
     }
   }
 
@@ -698,7 +733,11 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   {
     m_uhLastPLTUsedSizeFinal[comp] = PLT_SIZE_INVALID;
     m_uhLastPLTSizeFinal[comp] = 0;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (Int i = 0; i < m_PLTMaxPredSize; i++)
+#else
     for (Int i = 0; i < MAX_PLT_PRED_SIZE; i++)
+#endif
     {
       m_piLastPLTInLcuFinal[comp][i] = 0;
     }
@@ -848,8 +887,13 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_puhTransformSkip[comp]              = pcCU->getTransformSkip(ComponentID(comp))                 + uiPart;
     m_puhCbf[comp]                        = pcCU->getCbf(ComponentID(comp))                           + uiPart;
     m_explicitRdpcmMode[comp]             = pcCU->getExplicitRdpcmMode(ComponentID(comp))             + uiPart;
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    m_piPLT[comp]              = pcCU->getPLT(comp) + (uiPart >> 2) * m_PLTMaxSize;
+    m_bPrevPLTReusedFlag[comp] = pcCU->getPrevPLTReusedFlag(comp) + (uiPart >> 2) * m_PLTMaxPredSize;
+#else
     m_piPLT[comp]              = pcCU->getPLT(comp) + (uiPart >> 2) * MAX_PLT_SIZE;
     m_bPrevPLTReusedFlag[comp] = pcCU->getPrevPLTReusedFlag(comp) + (uiPart >> 2) * MAX_PLT_PRED_SIZE;
+#endif
     m_puhPLTEscape[comp]       = pcCU->getPLTEscape(comp)                                             + uiPart;
   }
 
@@ -972,7 +1016,11 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   {
     m_uhLastPLTUsedSizeFinal[comp] = pcCU->getLastPLTInLcuUsedSizeFinal(comp);
     m_uhLastPLTSizeFinal[comp] = pcCU->getLastPLTInLcuSizeFinal(comp);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    for (Int i = 0; i < m_PLTMaxPredSize; i++)
+#else
     for (Int i = 0; i < MAX_PLT_PRED_SIZE; i++)
+#endif
     {
       m_piLastPLTInLcuFinal[comp][i] = pcCU->getLastPLTInLcuFinal(comp, i);
     }
@@ -1004,8 +1052,13 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_puhTransformSkip[comp]              + uiOffset, pcCU->getTransformSkip(ComponentID(comp))                , iSizeInUchar );
     memcpy( m_puhCbf[comp]                        + uiOffset, pcCU->getCbf(ComponentID(comp))                          , iSizeInUchar );
     memcpy( m_explicitRdpcmMode[comp]             + uiOffset, pcCU->getExplicitRdpcmMode(ComponentID(comp))            , iSizeInUchar );
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memcpy( m_piPLT[comp] + (uiOffset >> 2) * m_PLTMaxSize,                  pcCU->getPLT(comp),                    sizeof(Pel) * (uiNumPartition >> 2) * m_PLTMaxSize );
+    memcpy( m_bPrevPLTReusedFlag[comp] + (uiOffset >> 2) * m_PLTMaxPredSize, pcCU->getPrevPLTReusedFlag(comp),      sizeof(UChar) * (uiNumPartition >> 2) * m_PLTMaxPredSize );
+#else
     memcpy( m_piPLT[comp] + (uiOffset >> 2) * MAX_PLT_SIZE,                   pcCU->getPLT(comp),                    sizeof(Pel) * (uiNumPartition >> 2) * MAX_PLT_SIZE);
     memcpy( m_bPrevPLTReusedFlag[comp] + (uiOffset >> 2) * MAX_PLT_PRED_SIZE, pcCU->getPrevPLTReusedFlag(comp),      sizeof(UChar) * (uiNumPartition >> 2) * MAX_PLT_PRED_SIZE);
+#endif
     memcpy( m_puhPLTEscape[comp] + uiOffset,                                  pcCU->getPLTEscape(ComponentID(comp)), iSizeInUchar );
   }
 
@@ -1098,8 +1151,13 @@ Void TComDataCU::copyToPic( UChar uhDepth )
     memcpy( pCtu->getTransformSkip(ComponentID(comp))                 + m_absZIdxInCtu, m_puhTransformSkip[comp],              iSizeInUchar );
     memcpy( pCtu->getCbf(ComponentID(comp))                           + m_absZIdxInCtu, m_puhCbf[comp],                        iSizeInUchar );
     memcpy( pCtu->getExplicitRdpcmMode(ComponentID(comp))             + m_absZIdxInCtu, m_explicitRdpcmMode[comp],             iSizeInUchar );
-    memcpy( pCtu->getPLT(comp) + (m_absZIdxInCtu >> 2) * MAX_PLT_SIZE, m_piPLT[comp], sizeof(Pel) * MAX_PLT_SIZE * (m_uiNumPartition >> 2));
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memcpy( pCtu->getPLT(comp)               + (m_absZIdxInCtu >> 2) * m_PLTMaxSize,     m_piPLT[comp],              sizeof(Pel)* m_PLTMaxSize * (m_uiNumPartition >> 2));
+    memcpy( pCtu->getPrevPLTReusedFlag(comp) + (m_absZIdxInCtu >> 2) * m_PLTMaxPredSize, m_bPrevPLTReusedFlag[comp], sizeof(UChar)* m_PLTMaxPredSize * (m_uiNumPartition >> 2));
+#else
+    memcpy( pCtu->getPLT(comp)               + (m_absZIdxInCtu >> 2) * MAX_PLT_SIZE, m_piPLT[comp], sizeof(Pel) * MAX_PLT_SIZE * (m_uiNumPartition >> 2));
     memcpy( pCtu->getPrevPLTReusedFlag(comp) + (m_absZIdxInCtu >> 2) * MAX_PLT_PRED_SIZE, m_bPrevPLTReusedFlag[comp], sizeof(UChar) * MAX_PLT_PRED_SIZE * (m_uiNumPartition >> 2));
+#endif
     memcpy( pCtu->getPLTEscape(comp) + m_absZIdxInCtu,          m_puhPLTEscape[comp], iSizeInUchar  );
   }
 
@@ -1188,8 +1246,13 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
     memcpy( pCtu->getTransformSkip(ComponentID(comp) )                + uiPartOffset, m_puhTransformSkip[comp],   iSizeInUchar );
     memcpy( pCtu->getCbf(ComponentID(comp))                           + uiPartOffset, m_puhCbf[comp],             iSizeInUchar );
     memcpy( pCtu->getExplicitRdpcmMode(ComponentID(comp) )            + uiPartOffset, m_explicitRdpcmMode[comp],  iSizeInUchar );
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memcpy( pCtu->getPLT(comp) + (uiPartOffset >> 2) * m_PLTMaxSize, m_piPLT[comp], sizeof(Pel) * (uiQNumPart >> 2) * m_PLTMaxSize);
+    memcpy( pCtu->getPrevPLTReusedFlag(comp) + (uiPartOffset >> 2) * m_PLTMaxPredSize, m_bPrevPLTReusedFlag[comp], sizeof(UChar) * (uiQNumPart >> 2) * m_PLTMaxPredSize);
+#else
     memcpy( pCtu->getPLT(comp) + (uiPartOffset >> 2) * MAX_PLT_SIZE, m_piPLT[comp], sizeof(Pel) * (uiQNumPart >> 2) * MAX_PLT_SIZE);
     memcpy( pCtu->getPrevPLTReusedFlag(comp) + (uiPartOffset >> 2) * MAX_PLT_PRED_SIZE, m_bPrevPLTReusedFlag[comp], sizeof(UChar) * (uiQNumPart >> 2) * MAX_PLT_PRED_SIZE);
+#endif
     memcpy( pCtu->getPLTEscape(comp)     + uiPartOffset,      m_puhPLTEscape[comp], iSizeInUchar  );
   }
 
@@ -3450,7 +3513,11 @@ Void TComDataCU::setPrevPLTReusedFlagSubParts ( UChar ucCh,  UChar uiValue, UInt
   UInt uiCurrPartNumb = m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1);
   for (UInt uiIdx = 0; uiIdx < uiCurrPartNumb; uiIdx ++)
   {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    m_bPrevPLTReusedFlag[ucCh][((uiAbsPartIdx+uiIdx) >> 2 ) * m_PLTMaxPredSize + uiPLTIdx] = uiValue;
+#else
     m_bPrevPLTReusedFlag[ucCh][((uiAbsPartIdx + uiIdx) >> 2 )* MAX_PLT_PRED_SIZE + uiPLTIdx] = uiValue;
+#endif
   }
 }
 
@@ -3460,7 +3527,11 @@ Void TComDataCU::setPLTSubParts    ( UChar ucCh,  Pel uiValue, UInt uiPLTIdx, UI
 
   for (UInt uiIdx = 0; uiIdx < uiCurrPartNumb; uiIdx ++)
   {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    m_piPLT[ucCh][((uiAbsPartIdx + uiIdx) >> 2) * m_PLTMaxSize + uiPLTIdx] = uiValue;
+#else
     m_piPLT[ucCh][((uiAbsPartIdx + uiIdx) >> 2 )* MAX_PLT_SIZE + uiPLTIdx] = uiValue;
+#endif
   }
 }
 
@@ -3492,11 +3563,19 @@ Void TComDataCU::saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UI
   {
     UInt srcCh = (!ch || pcSrc->getSlice()->getSPS()->getChromaFormatIdc()==CHROMA_444) ? 0 : 1;
     UInt size  = pcSrc->getPLTSize( srcCh, uiAbsPartIdx );
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    UInt numEl = std::min( size, (UInt)m_PLTMaxPredSize );
+#else
     UInt numEl = std::min( size, (UInt)MAX_PLT_PRED_SIZE );
+#endif
     ::memcpy( chinfo[ch].values, pcSrc->getPLT(ch, uiAbsPartIdx ), numEl*sizeof(Pel) );
 
     UInt uiPLTSizePrev = pcSrc->getLastPLTInLcuSizeFinal(srcCh);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    UInt limit = m_PLTMaxPredSize;
+#else
     UInt limit = MAX_PLT_PRED_SIZE;
+#endif
     // Padd with last palette
     for(UInt i=0; i<uiPLTSizePrev && numEl<limit; i++)
     {
@@ -3520,7 +3599,11 @@ Void TComDataCU::saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UI
     UInt srcCh = (!ch || pcSrc->getSlice()->getSPS()->getChromaFormatIdc()==CHROMA_444) ? 0 : 1;
     setLastPLTInLcuUsedSizeFinal( ch, pcSrc->getPLTSize( srcCh, uiAbsPartIdx ) );
     setLastPLTInLcuSizeFinal( ch, chinfo[ch].size );
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    ::memcpy( getLastPLTInLcuFinal(ch), chinfo[ch].values, m_PLTMaxPredSize * sizeof(Pel) );
+#else
     ::memcpy( getLastPLTInLcuFinal(ch), chinfo[ch].values, MAX_PLT_PRED_SIZE * sizeof(Pel) );
+#endif
   }
 }
 

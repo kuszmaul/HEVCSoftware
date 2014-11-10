@@ -78,7 +78,11 @@ public:
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
 
   /// create internal buffers
-  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC );
+  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                                 ,UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
+    );
 
   /// destroy internal buffers
   Void  destroy                 ();

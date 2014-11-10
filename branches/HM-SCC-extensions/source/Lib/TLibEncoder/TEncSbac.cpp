@@ -484,8 +484,11 @@ Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pS
     xWriteTruncBinCode((UInt)siCurLevel, iMaxSymbol);
   }
 }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize)
+#else
 Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted)
+#endif
 {
 #if SCM_S0153_PALETTE_ZERO_RUNS
   Int lastPredIdx = -1;
@@ -515,8 +518,11 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
     }
     idx++;
   }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  if ((uiNumPLTPredicted < uiMaxPLTSize && lastPredIdx + 1 < uiPLTSizePrev) || !uiNumPLTPredicted)
+#else
   if( ( uiNumPLTPredicted < MAX_PLT_SIZE && lastPredIdx + 1 < uiPLTSizePrev ) || !uiNumPLTPredicted )
+#endif
   {
     xWriteEpExGolomb( 1, 0 );
   }
@@ -530,8 +536,11 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
   {
     lastPrevIdx--;
   }
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  while (uiIdxPrev <= lastPrevIdx && uiNumPLTPredicted < uiMaxPLTSize)
+#else
   while (uiIdxPrev <= lastPrevIdx && uiNumPLTPredicted < MAX_PLT_SIZE)
+#endif
   {
     UInt lastIdx = min(uiIdxPrev + groupLength, uiPLTSizePrev) - 1;
     UInt numOnesInGroup = 4;
@@ -549,21 +558,32 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
 
     if ( numOnesInGroup )
     {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      while (uiIdxPrev < lastIdx && uiNumPLTPredicted < uiMaxPLTSize)
+#else
       while ( uiIdxPrev < lastIdx && uiNumPLTPredicted < MAX_PLT_SIZE )
+#endif
       {
         m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
         uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
         uiIdxPrev++;
       }
 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      if ((numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < uiMaxPLTSize)
+#else
       if ( (numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < MAX_PLT_SIZE )
+#endif
       {
         m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
       }
       uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
       uiIdxPrev++;
-
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      if (!lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < uiMaxPLTSize)
+#else
       if ( !lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE )
+#endif
       {
         m_pcBinIf->encodeBinEP( uiIdxPrev > lastPrevIdx );
       }
@@ -672,7 +692,12 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   uiDictMaxSize = pcCU->getPLTSize(compBegin, uiAbsPartIdx);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  assert(uiDictMaxSize <= uiMaxPLTSize);
+#else
   assert(uiDictMaxSize <= MAX_PLT_SIZE);
+#endif
   uiDictIdxBits = 0;
   while ((1 << uiDictIdxBits) < uiDictMaxSize)
   {
@@ -712,16 +737,28 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 
     if ( uiPLTSizePrev )
     {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted, uiMaxPLTSize);
+#else
       xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted );
+#endif
     }
 
     assert( uiDictMaxSize >= uiNumPLTPredicted );
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    if ( uiNumPLTPredicted < uiMaxPLTSize)
+#else
     if ( uiNumPLTPredicted < MAX_PLT_SIZE )
+#endif
     {
       uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
       for ( UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++ )
       {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+        if ( uiNumPLTPredicted + uiPLTIdx < uiMaxPLTSize)
+#else
         if ( uiNumPLTPredicted + uiPLTIdx < MAX_PLT_SIZE )
+#endif
         {
           m_pcBinIf->encodeBinEP( uiPLTIdx == (uiNumPLTRceived) );
         }
