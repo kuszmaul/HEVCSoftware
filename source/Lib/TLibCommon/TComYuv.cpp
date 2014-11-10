@@ -427,7 +427,7 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 {
   assert(getChromaFormat() == CHROMA_444);
   UInt uiPartSize = uiWidth;
-#if SCM_S0254_ACT_UNIFICATION==0 && !SCM_S0180_ACT_BIT_DEPTH_ALIGN
+#if !SCM_S0180_ACT_BIT_DEPTH_ALIGN
   const Int iRound = 2;
 #endif 
 
@@ -451,7 +451,6 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 
   if(bForwardConversion)
   {
-#if SCM_S0254_ACT_UNIFICATION==0
     if(!bLossless)
     {
 #if SCM_S0180_ACT_BIT_DEPTH_ALIGN
@@ -498,55 +497,22 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
       }
     }
     else
-#endif 
     {
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
-      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
-      Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
-      Int iRoundChroma = (1<<iShiftChroma);
-#endif
       for(Int y=0; y<uiPartSize; y++)
       {
         for(Int x=0; x<uiPartSize; x++)
         {
           Int r, g, b;
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
-          if(!bLossless)
-          {
-            r = pOrg2[x]<<iShiftChroma;
-            g = pOrg0[x]<<iShiftLuma;
-            b = pOrg1[x]<<iShiftChroma;
-          }
-          else
-          {
-#endif
           r = pOrg2[x];
           g = pOrg0[x];
           b = pOrg1[x];
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
-          }
-#endif
+
           Int Co = r-b;
           Int t = b + (Co>>1);
           Int Cg = g - t;
           pDst0[x] = t + (Cg>>1);
           pDst1[x] = Cg;
           pDst2[x] = Co;
-#if SCM_S0254_ACT_UNIFICATION
-          if(!bLossless)
-          {
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
-            pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
-            pDst1[x] = (pDst1[x] + iRoundChroma) >> (1+iShiftChroma);
-            pDst2[x] = (pDst2[x] + iRoundChroma) >> (1+iShiftChroma);
-#else
-            pDst1[x] = (pDst1[x]+1)>>1;
-            pDst2[x] = (pDst2[x]+1)>>1;
-#endif
-          }
-#endif
         }
         pOrg0 += iStride0;
         pOrg1 += iStride1;
