@@ -305,6 +305,7 @@
 #define SCM_S0156_PLT_ENC_RDO                             1 ///< JCTVC-S0156: RD based palette encoder
 #define SCM_S0140_ACT_QP_CLIP_TO_ZERO                     1 ///< clip ACT negative QPs to zero
 #define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
+#define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
 
 //------------------------------------------------
 // Derived macros
