@@ -2900,7 +2900,7 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
         xSetScalingListEnc(scalingList,list,size,qp,format);
-        xSetScalingListDec(scalingList,list,size,qp,format);
+        xSetScalingListDec(*scalingList,list,size,qp,format);
         setErrScaleCoeff(list,size,qp);
       }
     }
@@ -2909,7 +2909,7 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
 /** set quantized matrix coefficient for decode
  * \param scalingList quantaized matrix address
  */
-Void TComTrQuant::setScalingListDec(TComScalingList *scalingList, const ChromaFormat format)
+Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const ChromaFormat format)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -2985,13 +2985,13 @@ Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, 
  * \param size size index
  * \param uiQP Quantization parameter
  */
-Void TComTrQuant::xSetScalingListDec(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
+Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
 {
   UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
   UInt ratio  = g_scalingListSizeX[sizeId]/min(MAX_MATRIX_SIZE_NUM,(Int)g_scalingListSizeX[sizeId]);
   Int *dequantcoeff;
-  Int *coeff  = scalingList->getScalingListAddress(sizeId,listId);
+  const Int *coeff  = scalingList.getScalingListAddress(sizeId,listId);
 
   dequantcoeff = getDequantCoeff(listId, qp, sizeId);
 
@@ -3002,7 +3002,7 @@ Void TComTrQuant::xSetScalingListDec(TComScalingList *scalingList, UInt listId, 
                         invQuantScale,
                         height, width, ratio,
                         min(MAX_MATRIX_SIZE_NUM, (Int)g_scalingListSizeX[sizeId]),
-                        scalingList->getScalingListDC(sizeId,listId));
+                        scalingList.getScalingListDC(sizeId,listId));
 }
 
 /** set flat matrix value to quantized coefficient
@@ -3085,7 +3085,7 @@ Void TComTrQuant::processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantS
  * \param sizuNum matrix size
  * \param dc dc parameter
  */
-Void TComTrQuant::processScalingListDec( Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc)
+Void TComTrQuant::processScalingListDec( const Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc)
 {
   for(UInt j=0;j<height;j++)
   {

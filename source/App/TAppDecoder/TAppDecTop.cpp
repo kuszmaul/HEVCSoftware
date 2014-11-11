@@ -301,7 +301,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
   Int dpbFullness = 0;
-  TComSPS* activeSPS = m_cTDecTop.getActiveSPS();
+  const TComSPS* activeSPS = &(pcListPic->front()->getPicSym()->getSPS());
   UInt numReorderPicsHighestTid;
   UInt maxDecPicBufferingHighestTid;
   UInt maxNrSublayers = activeSPS->getMaxTLayers();
@@ -361,7 +361,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         if ( m_pchReconFile )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
-          const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
+          const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
 
           Bool display = true;
@@ -446,7 +446,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         if ( m_pchReconFile )
         {
           const Window &conf    = pcPic->getConformanceWindow();
-          const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+          const Window  defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
                                          m_outputColourSpaceConvert,
@@ -514,7 +514,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         if ( m_pchReconFile )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
-          const Window &defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
+          const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
           const Bool isTff = pcPicTop->isTopField();
           m_cTVideoIOYuvReconFile.write( pcPicTop->getPicYuvRec(), pcPicBottom->getPicYuvRec(),
                                          m_outputColourSpaceConvert,
@@ -590,7 +590,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         if ( m_pchReconFile )
         {
           const Window &conf    = pcPic->getConformanceWindow();
-          const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
+          const Window  defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 
           m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
                                          m_outputColourSpaceConvert,

@@ -108,10 +108,10 @@ Void TEncSbac::resetEntropy           ()
   Int  iQp              = m_pcSlice->getSliceQp();
   SliceType eSliceType  = m_pcSlice->getSliceType();
 
-  Int  encCABACTableIdx = m_pcSlice->getPPS()->getEncCABACTableIdx();
+  SliceType encCABACTableIdx = m_pcSlice->getEncCABACTableIdx();
   if (!m_pcSlice->isIntra() && (encCABACTableIdx==B_SLICE || encCABACTableIdx==P_SLICE) && m_pcSlice->getPPS()->getCabacInitPresentFlag())
   {
-    eSliceType = (SliceType) encCABACTableIdx;
+    eSliceType = encCABACTableIdx;
   }
 
   m_cCUSplitFlagSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
@@ -160,7 +160,7 @@ Void TEncSbac::resetEntropy           ()
  * If current slice type is P/B then it determines the distance of initialisation type 1 and 2 from the current CABAC states and
  * stores the index of the closest table.  This index is used for the next P/B slice when cabac_init_present_flag is true.
  */
-Void TEncSbac::determineCabacInitIdx()
+SliceType TEncSbac::determineCabacInitIdx()
 {
   Int  qp              = m_pcSlice->getSliceQp();
 
@@ -213,27 +213,27 @@ Void TEncSbac::determineCabacInitIdx()
         bestCost      = curCost;
       }
     }
-    m_pcSlice->getPPS()->setEncCABACTableIdx( bestSliceType );
+    return bestSliceType;
   }
   else
   {
-    m_pcSlice->getPPS()->setEncCABACTableIdx( I_SLICE );
+    return I_SLICE;
   }
 }
 
-Void TEncSbac::codeVPS( TComVPS* pcVPS )
+Void TEncSbac::codeVPS( const TComVPS* pcVPS )
 {
   assert (0);
   return;
 }
 
-Void TEncSbac::codeSPS( TComSPS* pcSPS )
+Void TEncSbac::codeSPS( const TComSPS* pcSPS )
 {
   assert (0);
   return;
 }
 
-Void TEncSbac::codePPS( TComPPS* pcPPS )
+Void TEncSbac::codePPS( const TComPPS* pcPPS )
 {
   assert (0);
   return;
@@ -454,7 +454,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
       m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+      if ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < g_uiMaxCUDepth-g_uiAddCUDepth )
       {
         if (eSize == SIZE_2NxN)
         {
@@ -480,7 +480,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 2) );
       }
 
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+      if ( pcCU->getSlice()->getSPS()->getUseAMP() && uiDepth < g_uiMaxCUDepth-g_uiAddCUDepth )
       {
         if (eSize == SIZE_Nx2N)
         {

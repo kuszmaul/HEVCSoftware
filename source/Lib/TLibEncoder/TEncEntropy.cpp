@@ -77,13 +77,13 @@ Void TEncEntropy::encodeSliceFinish()
   m_pcEntropyCoderIf->codeSliceFinish();
 }
 
-Void TEncEntropy::encodePPS( TComPPS* pcPPS )
+Void TEncEntropy::encodePPS( const TComPPS* pcPPS )
 {
   m_pcEntropyCoderIf->codePPS( pcPPS );
   return;
 }
 
-Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
+Void TEncEntropy::encodeSPS( const TComSPS* pcSPS )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS );
   return;
@@ -98,7 +98,7 @@ Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPart
   m_pcEntropyCoderIf->codeCUTransquantBypassFlag( pcCU, uiAbsPartIdx );
 }
 
-Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
+Void TEncEntropy::encodeVPS( const TComVPS* pcVPS )
 {
   m_pcEntropyCoderIf->codeVPS( pcVPS );
   return;
@@ -728,14 +728,6 @@ Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
   }
 
   return count;
-}
-
-/** encode quantization matrix
- * \param scalingList quantization matrix information
- */
-Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
-{
-  m_pcEntropyCoderIf->codeScalingList( scalingList );
 }
 
 //! \}

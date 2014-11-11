@@ -181,11 +181,11 @@ public:
   Void setFlatScalingList  (const ChromaFormat format);
   Void xsetFlatScalingList ( UInt list, UInt size, Int qp, const ChromaFormat format);
   Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
-  Void xSetScalingListDec  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
+  Void xSetScalingListDec  ( const TComScalingList &scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
   Void setScalingList      ( TComScalingList *scalingList, const ChromaFormat format);
-  Void setScalingListDec   ( TComScalingList *scalingList, const ChromaFormat format);
+  Void setScalingListDec   ( const TComScalingList &scalingList, const ChromaFormat format);
   Void processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
-  Void processScalingListDec( Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
+  Void processScalingListDec( const Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
 #if ADAPTIVE_QP_SELECTION
   Void    initSliceQpDelta() ;
   Void    storeSliceQpNext(TComSlice* pcSlice);
