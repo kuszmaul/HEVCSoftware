@@ -79,7 +79,7 @@ public:
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
   Void  parseProfileTier    (ProfileTierLevel *ptl);
   Void  parseHrdParameters  (TComHRD *hrd, Bool cprms_present_flag, UInt tempLevelHigh);
-  Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManagerDecoder *parameterSetManager);
+  Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager);
   Void  parseTerminatingBit ( UInt& ruiBit );
   Void  parseRemainingBytes ( Bool noTrailingBytesExpected );
 
@@ -111,7 +111,7 @@ public:
 
   Void parseIPCMInfo        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
-  Void xParsePredWeightTable ( TComSlice* pcSlice );
+  Void xParsePredWeightTable ( TComSlice* pcSlice, const TComSPS *sps );
   Void  parseScalingList     ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
 

@@ -58,7 +58,7 @@ TComTU::TComTU(TComDataCU *pcCU, const UInt absPartIdxCU, const UInt cuDepth, co
     mLog2TrLumaSize(0),
     mpParent(NULL)
 {
-  TComSPS *pSPS=pcCU->getSlice()->getSPS();
+  const TComSPS *pSPS=pcCU->getSlice()->getSPS();
   mLog2TrLumaSize = g_aucConvertToBit[pSPS->getMaxCUWidth() >> (mCuDepth+initTrDepthRelCU)]+2;
 
   const UInt baseOffset444=pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight()*absPartIdxCU;

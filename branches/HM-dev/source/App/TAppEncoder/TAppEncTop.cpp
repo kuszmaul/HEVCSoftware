@@ -309,7 +309,6 @@ Void TAppEncTop::xInitLibCfg()
   }
   m_cTEncTop.setLFCrossTileBoundaryFlag                           ( m_bLFCrossTileBoundaryFlag );
   m_cTEncTop.setWaveFrontSynchro                                  ( m_iWaveFrontSynchro );
-  m_cTEncTop.setWaveFrontSubstreams                               ( m_iWaveFrontSubstreams );
   m_cTEncTop.setTMVPModeId                                        ( m_TMVPModeId );
   m_cTEncTop.setUseScalingListId                                  ( m_useScalingListId  );
   m_cTEncTop.setScalingListFile                                   ( m_scalingListFile   );

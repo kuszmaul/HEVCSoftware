@@ -238,7 +238,6 @@ protected:
   std::vector<Int> m_tileRowHeight;
 
   Int       m_iWaveFrontSynchro;
-  Int       m_iWaveFrontSubstreams;
 
   Int       m_decodedPictureHashSEIEnabled;              ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_bufferingPeriodSEIEnabled;
@@ -606,8 +605,6 @@ public:
   Void  xCheckGSParameters();
   Void  setWaveFrontSynchro(Int iWaveFrontSynchro)                   { m_iWaveFrontSynchro = iWaveFrontSynchro; }
   Int   getWaveFrontsynchro()                                        { return m_iWaveFrontSynchro; }
-  Void  setWaveFrontSubstreams(Int iWaveFrontSubstreams)             { m_iWaveFrontSubstreams = iWaveFrontSubstreams; }
-  Int   getWaveFrontSubstreams()                                     { return m_iWaveFrontSubstreams; }
   Void  setDecodedPictureHashSEIEnabled(Int b)                       { m_decodedPictureHashSEIEnabled = b; }
   Int   getDecodedPictureHashSEIEnabled()                            { return m_decodedPictureHashSEIEnabled; }
   Void  setBufferingPeriodSEIEnabled(Int b)                          { m_bufferingPeriodSEIEnabled = b; }
