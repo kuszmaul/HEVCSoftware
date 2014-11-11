@@ -1616,7 +1616,7 @@ TComSPS::TComSPS()
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 , m_useAdaptiveMvResolution   (false)
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+#if SCM_S0102_IBF_SPS_CONTROL
 , m_disableIntraBoundaryFilter(false)
 #endif
 , m_bPCMFilterDisableFlag     (false)

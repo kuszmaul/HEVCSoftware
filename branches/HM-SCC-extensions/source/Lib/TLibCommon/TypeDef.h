@@ -327,7 +327,7 @@
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 #endif
 
-#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO                1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
+#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
                                                             ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT 
 //------------------------------------------------
 // Backwards-compatibility

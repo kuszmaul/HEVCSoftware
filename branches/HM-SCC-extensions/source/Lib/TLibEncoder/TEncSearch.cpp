@@ -6138,7 +6138,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
         Bool validCand = isValidIntraBCSearchArea(pcCU, xPred, chromaROIStartXInPixels, yPred, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset);
 #else
-        Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset);
+        Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
 #endif 
         if((iTempX >= (Int)lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
         {
@@ -6200,7 +6200,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
       Bool validCand = isValidIntraBCSearchArea(pcCU, xPred, chromaROIStartXInPixels, yPred, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset);
 #else
-      Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset);
+      Bool validCand = isValidIntraBCSearchArea(pcCU, xPred + chromaROIStartXInPixels, yPred + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels);
 #endif 
  
       if((iTempX >= (Int)lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
@@ -6262,7 +6262,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
       if (!isValidIntraBCSearchArea(pcCU, 0, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-      if (!isValidIntraBCSearchArea(pcCU, 0 + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+      if (!isValidIntraBCSearchArea(pcCU, 0 + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif 
         continue;
 
@@ -6310,7 +6310,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
       if (!isValidIntraBCSearchArea(pcCU, x, chromaROIStartXInPixels, 0, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-      if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, 0 + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+      if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, 0 + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif
         continue;
 
@@ -6395,7 +6395,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
           if (!isValidIntraBCSearchArea(pcCU, x, chromaROIStartXInPixels, y,  chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif 
             continue;
 
@@ -6462,7 +6462,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
           if (!isValidIntraBCSearchArea(pcCU, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif 
             continue;
 
@@ -6548,7 +6548,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
           if (!isValidIntraBCSearchArea(pcCU, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+          if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif 
             continue;
 
@@ -6621,7 +6621,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 #if SCM_S0220_IBC_PRED_CONSTRAINT
         if (!isValidIntraBCSearchArea(pcCU, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
 #else
-        if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+        if (!isValidIntraBCSearchArea(pcCU, x + chromaROIStartXInPixels, y + chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels))
 #endif 
           continue;
 
