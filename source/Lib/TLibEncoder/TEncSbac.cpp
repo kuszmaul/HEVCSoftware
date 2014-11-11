@@ -768,7 +768,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 #if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
 #if !SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
-  codeScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
+  codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
 #endif
 #else 
   codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
