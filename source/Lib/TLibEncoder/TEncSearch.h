@@ -353,6 +353,35 @@ public:
                                   Int           roiWidth,
                                   Int           roiHeight);
 
+#if SCM_S0220_IBC_PRED_CONSTRAINT
+  Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+                                  Int           predX,
+                                  Int           ROIStartX,
+                                  Int           predY,                                  
+                                  Int           ROIStartY,
+                                  Int           roiWidth,
+                                  Int           roiHeight,
+                                  Int           uiPartOffset)
+  {
+     const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+     const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+     const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
+     const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
+     Int uiRefCuX             = (cuPelX + predX + roiWidth  - 1)/uiMaxCuWidth;
+     Int uiRefCuY             = (cuPelY + predY + roiHeight - 1)/uiMaxCuHeight;     
+     Int uiCuPelX             = (cuPelX / uiMaxCuWidth);
+     Int uiCuPelY             = (cuPelY / uiMaxCuHeight);     
+    
+     if(((Int)(uiRefCuX - uiCuPelX) > (Int)((uiCuPelY - uiRefCuY))))
+     {
+       return false;          
+     }
+
+    return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
+           (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
+           xCIPIntraSearchPruning(pcCU, predX + ROIStartX, predY + ROIStartY, roiWidth, roiHeight);
+  }
+#else
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
                                   Int           relX,
                                   Int           relY,
@@ -363,6 +392,7 @@ public:
            (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
            xCIPIntraSearchPruning(pcCU, relX, relY, roiWidth, roiHeight);
   }
+#endif 
 
   Void xIntraBCSearchMVCandUpdate(Distortion uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand);
   

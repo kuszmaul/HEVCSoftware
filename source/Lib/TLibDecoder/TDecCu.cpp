@@ -501,6 +501,39 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
   const UInt iNumPart = pcCU->getNumPartitions();
   for( Int iPartIdx = 0 ; iPartIdx < iNumPart ; ++iPartIdx )
   {
+#if SCM_S0220_IBC_PRED_CONSTRAINT
+    // Check Mv validity
+    Int         iWidth;
+    Int         iHeight;
+    UInt        uiPartAddr;
+
+    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
+    TComMv  cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiPartAddr );
+    const UInt uiMaxCuWidth         = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+    const UInt uiMaxCuHeight        = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+
+    // Curr position
+    Int posX         = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiPartAddr] ];
+    Int posY         = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiPartAddr] ];
+    // Ref Position
+    Int refPosX      = posX + cMv.getHor() + iWidth - 1;
+    Int refPosY      = posY + cMv.getVer() + iHeight - 1;
+    // CTB Position
+    Int currCTBPosX  = posX / uiMaxCuWidth;
+    Int currCTBPosY  = posY / uiMaxCuHeight;
+    Int refCTBPosX   = refPosX / uiMaxCuWidth;
+    Int refCTBPosY   = refPosY / uiMaxCuHeight;
+
+    const Int diffX = currCTBPosX - refCTBPosX;
+    const Int diffY = currCTBPosY - refCTBPosY;
+
+    if(  diffY < -diffX )
+    {
+      printf("Error Position uiDepth:%d Pos:(%d,%d) CTB_Curr:(%d,%d) mv:(%d,%d) CTB_REF:(%d,%d) \n", uiDepth, posX, posY, currCTBPosX, currCTBPosY, cMv.getHor(), cMv.getVer(), refCTBPosX, refCTBPosY);
+      fflush(stdout);
+      assert(0);
+    }
+#endif
     m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth], iPartIdx );
   }
 
