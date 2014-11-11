@@ -766,7 +766,13 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
+#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
+#if !SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
+  codeScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
+#endif
+#else 
   codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
+#endif
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
   Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
   if ( !bUsePLTSharingMode )
@@ -817,11 +823,39 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[width]+2][g_aucConvertToBit[height]+2];
+#if SCM__PLT_ZERO_COLOR_OPT
+  if (uiDictMaxSize > 0)
+  {
+    m_pcBinIf->encodeBinEP(uiSignalEscape);
+#if SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
+    if (uiDictMaxSize + uiSignalEscape > 1)
+    {
+      codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
+    }
+    else
+    {
+      assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
+      assert(!uiSignalEscape);
+    }
+#endif
+  }
+#if SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
+  else
+  {
+    assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
+  }
+#endif
+#else
   m_pcBinIf->encodeBinEP(uiSignalEscape);
+#endif
   while ( uiIdx < uiTotal )
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+    if (uiIndexMaxSize > 1)
+    {
+#endif
     uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
     if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
     {
@@ -834,6 +868,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
       m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+    }
+#endif
 #if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
 #endif
@@ -907,7 +944,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
       }
       uiRun = pRun[uiTraIdx];
-
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+      if (uiIndexMaxSize > 1)
+#endif
 #if SCM_S0156_PLT_ENC_RDO
 #if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
       encodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1);
