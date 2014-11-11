@@ -171,7 +171,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_PLTMODE_FLAG_CTX          1
 #define NUM_SPOINT_CTX                3
 #define NUM_TOP_RUN_CTX               3
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
 #define NUM_LEFT_RUN_CTX              5
 #else
 #define NUM_LEFT_RUN_CTX              3
@@ -225,7 +225,7 @@ INIT_TOP_RUN[NUMBER_OF_SLICE_TYPES][NUM_TOP_RUN_CTX] =
   { 154, 154, 154 },
 };
 
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
 static const UChar
 INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
 {
