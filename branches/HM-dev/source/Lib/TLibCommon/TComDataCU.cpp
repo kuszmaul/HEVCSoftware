@@ -1884,6 +1884,7 @@ UChar TComDataCU::getNumPartitions(const UInt uiAbsPartIdx)
   return  iNumPart;
 }
 
+// This is for use by a leaf/sub CU object only, with no additional AbsPartIdx
 Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight )
 {
   switch ( m_pePartSize[0] )
