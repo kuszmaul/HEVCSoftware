@@ -308,6 +308,10 @@
 #define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
 #define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
 #define SCM__S0269_PLT_RUN_MSB_IDX                        1 ///< improvement on run length coding
+#define SCM__PLT_ZERO_COLOR_OPT                           1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
+#define SCM__PLT_SINGLE_COLOR_OPT                         1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
+#define SCM__S0110_PLT_TRANSPOSE_FLAG_OPT                 1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
+
 
 //------------------------------------------------
 // Derived macros
@@ -323,6 +327,9 @@
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 #endif
+
+#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM__PLT_ZERO_COLOR_OPT, SCM__PLT_SINGLE_COLOR_OPT, 
+                                                            ///< SCM__S0110_PLT_TRANSPOSE_FLAG_OPT 
 
 //------------------------------------------------
 // Backwards-compatibility

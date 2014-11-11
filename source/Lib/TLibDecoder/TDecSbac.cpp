@@ -822,7 +822,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   }
 
   pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
+#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
+#if !SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
   parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
+#endif
+#else
+  parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
+#endif
   Bool isScanTraverseMode = true;
 
   parsePLTSharingModeFlag(pcCU, uiAbsPartIdx, uiDepth);
@@ -926,8 +932,32 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiDictIdxBits++;
   }
   UInt uiIndexMaxSize = uiDictMaxSize;
+#if SCM__PLT_ZERO_COLOR_OPT
+  UInt uiSignalEscape = 1;
+  if (uiDictMaxSize > 0)
+  {
+    m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#if SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
+    if (uiDictMaxSize + uiSignalEscape > 1)
+    {
+      parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
+    }
+    else
+    {
+      pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
+    }
+#endif
+  }
+#if SCM__S0110_PLT_TRANSPOSE_FLAG_OPT
+  else
+  {
+    pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
+  }
+#endif
+#else 
   UInt uiSignalEscape;
   m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
+#endif
   UInt uiDictIdxBitsExteneded = uiDictIdxBits;
   if ( uiSignalEscape )
   {
@@ -949,6 +979,10 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+    if (uiIndexMaxSize > 1)
+    {
+#endif
     uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
     if (uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
     {
@@ -958,6 +992,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       uiSymbol = 0;
     }
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+    }
+    else
+    {
+      uiSymbol = 0;
+    }
+#endif
     pSPoint[uiTraIdx] = uiSymbol;
 #if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
@@ -997,6 +1038,9 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
     {
       UInt uiPos = 0;
+#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+      if (uiIndexMaxSize > 1)
+      {
 #if SCM__S0269_PLT_RUN_MSB_IDX
 #if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
       xDecodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
@@ -1005,6 +1049,25 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
 #else
       xDecodeRun(uiRun, pSPoint[uiTraIdx], 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
+      }
+      else
+      {
+#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO && !SCM_S0258_PLT_ESCAPE_SIG
+        assert(uiSignalEscape == 0);
+#endif
+        uiRun = uiTotal - uiIdx - 1;
+      }
+#else
+#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+      xDecodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#else
+      xDecodeRun(uiRun, pSPoint[uiTraIdx], uiPreDecodeLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
+#else
+      xDecodeRun(uiRun, pSPoint[uiTraIdx], 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
 #endif
 
       if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
