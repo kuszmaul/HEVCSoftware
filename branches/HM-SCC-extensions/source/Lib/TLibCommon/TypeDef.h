@@ -300,26 +300,25 @@
 #define SCM_S0179_ACT_TU_DEC                              1 ///< perform ACT operation on TU blocks
 #define SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY        1 ///< bug fix for temporal scalability
 #define SCM_S0102_IBF_SPS_CONTROL                         1 ///< intra boundary filter control at SPS
-#define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< JCTVC-S0153: Zero run-length coding for palette predictor
-#define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< JCTVC-S0258: include escape sample into the INDEX and COPY_ABOVE modes
-#define SCM_S0156_PLT_ENC_RDO                             1 ///< JCTVC-S0156: RD based palette encoder
+#define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< Zero run-length coding for palette predictor
+#define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< include escape sample into the INDEX and COPY_ABOVE modes
+#define SCM_S0156_PLT_ENC_RDO                             1 ///< RD based palette encoder
 #define SCM_S0140_ACT_QP_CLIP_TO_ZERO                     1 ///< clip ACT negative QPs to zero
 #define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
 #define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
 #define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
-#define SCM__S0269_PLT_RUN_MSB_IDX                        1 ///< improvement on run length coding
-#define SCM__PLT_ZERO_COLOR_OPT                           1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
-#define SCM__PLT_SINGLE_COLOR_OPT                         1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
-#define SCM__S0110_PLT_TRANSPOSE_FLAG_OPT                 1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
-
+#define SCM_S0269_PLT_RUN_MSB_IDX                         1 ///< improvement on run length coding
+#define SCM_PLT_ZERO_COLOR_OPT                            1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
+#define SCM_PLT_SINGLE_COLOR_OPT                          1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
+#define SCM_S0110_PLT_TRANSPOSE_FLAG_OPT                  1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
 
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
 
-#if SCM__S0269_PLT_RUN_MSB_IDX
-#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX          1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
-#define SCM__S0269_MSB_IDX_CODING                         1
+#if SCM_S0269_PLT_RUN_MSB_IDX
+#define SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX           1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
+#define SCM_S0269_MSB_IDX_CODING                          1
 #endif
 
 #if SCM_S0067_ENCODER_IMPROVEMENTS
@@ -328,9 +327,8 @@
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 #endif
 
-#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM__PLT_ZERO_COLOR_OPT, SCM__PLT_SINGLE_COLOR_OPT, 
-                                                            ///< SCM__S0110_PLT_TRANSPOSE_FLAG_OPT 
-
+#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO                1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
+                                                            ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT 
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------

@@ -237,14 +237,14 @@ extern UInt g_scalingListSize [SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListSizeX[SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListNum  [SCALING_LIST_SIZE_NUM];
 
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
 #define SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE              4       ///< CABAC bypass threshold
 #define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T1                         1
 #define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2                         3
 extern UChar g_ucRunTopLut[5];
 extern UChar g_ucRunLeftLut[5];
 #endif
-#if SCM__S0269_MSB_IDX_CODING
+#if SCM_S0269_MSB_IDX_CODING
 extern UChar g_ucMsbP1Idx[256];
 extern UChar g_getMsbP1Idx(UInt uiVal);
 #endif

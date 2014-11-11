@@ -4167,7 +4167,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 
   deriveRunAndCalcBits(pcCU, pcOrgYuv, rpcRecoYuv, uiBits, true,  PLT_SCAN_HORTRAV);
 #if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#if SCM__PLT_ZERO_COLOR_OPT || SCM__PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
   if ((pcCU->getPLTSize(COMPONENT_Y, 0) + pcCU->getPLTEscape(COMPONENT_Y, 0)) > 1)
 #endif
 #else
@@ -4505,7 +4505,7 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 {
   UInt uiDepth      = pcCU->getDepth(0);
   UInt uiWidth      = pcCU->getWidth(0);
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
   UInt uiHeight = pcCU->getHeight(0);
   UInt uiTotal = uiWidth * uiHeight;
   UInt siCurLevel = 0;
@@ -4541,13 +4541,13 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 #endif
 
 #if SCM_S0258_PLT_ESCAPE_SIG
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
     siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
 #else
     m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
 #endif
 #else
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
     siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth);
 #else
     m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth);
@@ -4560,14 +4560,14 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
       pValue[uiTraIdx] = uiRealLevel;
     }
 #endif
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT, siCurLevel, uiTotal - uiStartPos - 1);
 #else
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT);
 #endif
     break;
   case PLT_RUN_ABOVE:
-#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM_S0269_PLT_RUN_MSB_IDX
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE, siCurLevel, uiTotal - uiStartPos - 1);
 #else
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE);
