@@ -474,15 +474,31 @@ Void TDecSbac::xReadTruncBinCode(UInt& ruiSymbol, UInt uiMaxSymbol)
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 #if SCM_S0258_PLT_ESCAPE_SIG
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
+#else
 Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
+#endif
+#else
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth)
 #else
 Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth)
 #endif
+#endif
 #else
 #if SCM_S0258_PLT_ESCAPE_SIG
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
+#else
 Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
+#endif
+#else
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
 #else
 Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
+#endif
 #endif
 #endif
 {
@@ -537,14 +553,43 @@ Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
   {
     uiSymbol = 0;
   }
-
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+  Pel siCurLevel = uiSymbol;
+#endif
   if (uiSymbol >= iRefLevel)
   {
     uiSymbol++;
   }
   pLevel[uiTraIdx] = uiSymbol;
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+  return siCurLevel;
+#endif
 }
 
+
+#if SCM__S0269_PLT_RUN_MSB_IDX
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+Void  TDecSbac::xDecodeRun(UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun, const class TComCodingStatisticsClassType &whichStat)
+#else
+Void  TDecSbac::xDecodeRun(UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun)
+#endif
+{
+  ContextModel *pcModel;
+  UChar *ucCtxLut;
+  if ( bCopyTopMode )
+  {
+    pcModel = m_cCopyTopRunSCModel.get(0);
+    ucCtxLut = g_ucRunTopLut;
+  }
+  else
+  {
+    pcModel = m_cRunSCModel.get(0);
+    ucCtxLut = g_ucRunLeftLut;
+    g_ucRunLeftLut[0] = (uiPltIdx < SCM__S0269_PLT_RUN_MSB_IDX_CTX_T1 ? 0: (uiPltIdx < SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2 ? 1 : 2));
+  }
+  ruiSymbol = xReadTruncMsbP1RefinementBits( pcModel, uiMaxRun, SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE, ucCtxLut RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+}
+#else
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void  TDecSbac::xDecodeRun(UInt &ruiSymbol, Bool bCopyTopMode, UInt GRParam, const class TComCodingStatisticsClassType &whichStat)
 #else
@@ -582,6 +627,7 @@ Void  TDecSbac::xDecodeRun(UInt &ruiSymbol, Bool bCopyTopMode, UInt GRParam)
   xReadCoefRemainExGolomb(uiRemaining, uiGoRiceParamRun, false, MAX_NUM_CHANNEL_TYPE RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
   ruiSymbol = uiRemaining + 3;
 }
+#endif
 #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat)
@@ -913,12 +959,23 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       uiSymbol = 0;
     }
     pSPoint[uiTraIdx] = uiSymbol;
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+    Pel siCurLevel = 0;
+#endif
     if (!uiSymbol)
     {
 #if SCM_S0258_PLT_ESCAPE_SIG
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+    siCurLevel = xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth, pEscapeFlag);
+#else
       xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth, pEscapeFlag);
+#endif
+#else
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+    siCurLevel = xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth);
 #else
       xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth);
+#endif
 #endif
     }
     UInt uiPreDecodeLevel = pLevel[uiTraIdx];
@@ -940,7 +997,16 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
     {
       UInt uiPos = 0;
+#if SCM__S0269_PLT_RUN_MSB_IDX
+#if SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
+      xDecodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#else
+      xDecodeRun(uiRun, pSPoint[uiTraIdx], uiPreDecodeLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
+#else
       xDecodeRun(uiRun, pSPoint[uiTraIdx], 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
+
       if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
       {
         uiSymbol = uiPreDecodeLevel;
@@ -2641,5 +2707,62 @@ Void TDecSbac::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
   }
 }
 
+#if SCM__S0269_MSB_IDX_CODING
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+UInt TDecSbac::xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat)
+#else
+UInt TDecSbac::xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut)
+#endif
+{
+  if (uiMax == 0)
+    return 0;
+  UInt uiBin, uiIdx = 0;
+  do
+  {
+    if ( uiIdx > uiCtxT )
+      m_pcTDecBinIf->decodeBinEP(uiBin RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+    else
+      m_pcTDecBinIf->decodeBin(uiBin, uiIdx <= uiCtxT? pcSCModel[ucCtxLut[uiIdx]] : pcSCModel[ucCtxLut[uiCtxT]] RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat) );
+    uiIdx++;
+  }
+  while ( uiBin && uiIdx < uiMax );
+
+  return ( uiBin && uiIdx == uiMax ) ? uiMax : uiIdx-1;
+}
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+UInt TDecSbac::xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat)
+#else
+UInt TDecSbac::xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut)
+#endif
+{
+  if (uiMax==0)
+  {
+    return 0;
+  }
+  UInt uiSymbol;
+  UInt uiMsbP1 = xReadTruncUnarySymbol( pcSCModel, g_getMsbP1Idx(uiMax), uiCtxT, ucCtxLut RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
+  if ( uiMsbP1 > 1)
+  {
+    UInt uiNumBins = g_getMsbP1Idx(uiMax);
+    if ( uiMsbP1 < uiNumBins)
+    {
+      UInt uiBits = uiMsbP1-1;
+      m_pcTDecBinIf->decodeBinsEP( uiSymbol, uiBits RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(whichStat));
+      uiSymbol |= (1 << uiBits);
+    }
+    else
+    {
+      UInt curValue = 1 << (uiNumBins-1);
+      xReadTruncBinCode(uiSymbol, (uiMax+1-curValue) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+      uiSymbol += curValue;
+    }
+  }
+  else
+    uiSymbol = uiMsbP1;
+
+  return uiSymbol;
+}
+#endif
 
 //! \}
