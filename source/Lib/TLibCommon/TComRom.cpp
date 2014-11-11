@@ -161,6 +161,33 @@ public:
   }
 };
 
+#if SCM__S0269_MSB_IDX_CODING
+UChar g_ucMsbP1Idx[256];
+static Void g_initMsbP1IdxLut()
+{
+  g_ucMsbP1Idx[0] = 0; g_ucMsbP1Idx[1] = 1;
+  UInt val = 2;
+  for (UInt idx = 2; idx <= 8; idx++)
+  {
+    for (Int i = val - 1; i >= 0; i--)
+    {
+      g_ucMsbP1Idx[val++] = idx;
+    }
+  }
+}
+
+UChar g_getMsbP1Idx(UInt uiVal)
+{
+  UChar idx = 0; 
+  while(uiVal > 255)
+  {
+    uiVal >>= 8;
+    idx += 8;
+  }
+  return idx+g_ucMsbP1Idx[uiVal];
+}
+#endif
+
 // initialize ROM variables
 Void initROM()
 {
@@ -244,6 +271,9 @@ Void initROM()
       //--------------------------------------------------------------------------------------------------
     }
   }
+#if SCM__S0269_MSB_IDX_CODING
+  g_initMsbP1IdxLut();
+#endif
 }
 
 Void destroyROM()
@@ -709,4 +739,8 @@ Int g_quantInterDefault8x8[8*8] =
 UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
 
+#if SCM__S0269_PLT_RUN_MSB_IDX
+UChar g_ucRunTopLut[5] =  {0, 1, 1, 2, 2};
+UChar g_ucRunLeftLut[5] = {0, 3, 3, 4, 4};
+#endif
 //! \}

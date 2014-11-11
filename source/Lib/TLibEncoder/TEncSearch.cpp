@@ -4496,6 +4496,11 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 {
   UInt uiDepth      = pcCU->getDepth(0);
   UInt uiWidth      = pcCU->getWidth(0);
+#if SCM__S0269_PLT_RUN_MSB_IDX
+  UInt uiHeight = pcCU->getHeight(0);
+  UInt uiTotal = uiWidth * uiHeight;
+  UInt siCurLevel = 0;
+#endif
   UInt uiIndexMaxSize = pcCU->getPLTSize(COMPONENT_Y, 0);
   if( pcCU->getPLTEscape(COMPONENT_Y, 0) )
   {
@@ -4527,9 +4532,17 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 #endif
 
 #if SCM_S0258_PLT_ESCAPE_SIG
+#if SCM__S0269_PLT_RUN_MSB_IDX
+    siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
+#else
     m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
+#endif
+#else
+#if SCM__S0269_PLT_RUN_MSB_IDX
+    siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth);
 #else
     m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth);
+#endif
 #endif
 
 #if SCM_S0258_PLT_ESCAPE_SIG
@@ -4538,11 +4551,18 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
       pValue[uiTraIdx] = uiRealLevel;
     }
 #endif
-
+#if SCM__S0269_PLT_RUN_MSB_IDX
+    m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT, siCurLevel, uiTotal - uiStartPos - 1);
+#else
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT);
+#endif
     break;
   case PLT_RUN_ABOVE:
+#if SCM__S0269_PLT_RUN_MSB_IDX
+    m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE, siCurLevel, uiTotal - uiStartPos - 1);
+#else
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE);
+#endif
     break;
   default:
     assert(0);

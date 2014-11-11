@@ -307,10 +307,16 @@
 #define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
 #define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
 #define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
+#define SCM__S0269_PLT_RUN_MSB_IDX                        1 ///< improvement on run length coding
 
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
+
+#if SCM__S0269_PLT_RUN_MSB_IDX
+#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX          1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
+#define SCM__S0269_MSB_IDX_CODING                         1
+#endif
 
 #if SCM_S0067_ENCODER_IMPROVEMENTS
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
