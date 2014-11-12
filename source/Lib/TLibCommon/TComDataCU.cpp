@@ -3410,7 +3410,11 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
 #if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
 Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if ( !getSlice()->getPPS()->getUseColourTrans() )
+#else
+  if ( !getSlice()->getSPS()->getUseColourTrans() )
+#endif
   {
     return false;
   }
