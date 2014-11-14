@@ -1630,26 +1630,26 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
   UInt uiX = 0;
   UInt uiY = 0;
 
-        UInt &majorAxis             = (mode == RDPCM_HOR) ? uiX      : uiY;
-        UInt &minorAxis             = (mode == RDPCM_HOR) ? uiY      : uiX;
-  const UInt  majorAxisLimit        = (mode == RDPCM_HOR) ? uiWidth  : uiHeight;
-  const UInt  minorAxisLimit        = (mode == RDPCM_HOR) ? uiHeight : uiWidth;
-  const UInt  referenceSampleOffset = (mode == RDPCM_HOR) ? 1        : uiWidth;
+        UInt &majorAxis             = (mode == RDPCM_VER) ? uiX      : uiY;
+        UInt &minorAxis             = (mode == RDPCM_VER) ? uiY      : uiX;
+  const UInt  majorAxisLimit        = (mode == RDPCM_VER) ? uiWidth  : uiHeight;
+  const UInt  minorAxisLimit        = (mode == RDPCM_VER) ? uiHeight : uiWidth;
+  static const TCoeff pelMin=(Int) std::numeric_limits<Pel>::min();
+  static const TCoeff pelMax=(Int) std::numeric_limits<Pel>::max();
 
-  const Bool bUseHalfRoundingPoint = (mode != RDPCM_OFF);
+  const Bool bUseHalfRoundingPoint  = (mode != RDPCM_OFF);
 
   uiAbsSum = 0;
 
   for ( majorAxis = 0; majorAxis < majorAxisLimit; majorAxis++ )
   {
+    TCoeff accumulatorValue = 0; // 32-bit accumulator
     for ( minorAxis = 0; minorAxis < minorAxisLimit; minorAxis++ )
     {
       const UInt sampleIndex      = (uiY * uiWidth) + uiX;
       const UInt coefficientIndex = (rotateResidual ? (uiSizeMinus1-sampleIndex) : sampleIndex);
       const Pel  currentSample    = pcResidual[(uiY * uiStride) + uiX];
-      const Pel  referenceSample  = ((mode != RDPCM_OFF) && (majorAxis > 0)) ? reconstructedResi[sampleIndex - referenceSampleOffset] : 0;
-
-      const Pel  encoderSideDelta = currentSample - referenceSample;
+      const TCoeff encoderSideDelta = TCoeff(currentSample) - accumulatorValue;
 
       Pel reconstructedDelta;
       if ( bLossless )
@@ -1665,7 +1665,15 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
 
       uiAbsSum += abs(pcCoeff[coefficientIndex]);
 
-      reconstructedResi[sampleIndex] = reconstructedDelta + referenceSample;
+      if (mode == RDPCM_OFF)
+      {
+        reconstructedResi[sampleIndex] = reconstructedDelta;
+      }
+      else
+      {
+        accumulatorValue += reconstructedDelta;
+        reconstructedResi[sampleIndex] = (Pel) Clip3<TCoeff>(pelMin, pelMax, accumulatorValue);
+      }
     }
   }
 }
@@ -1764,28 +1772,34 @@ Void TComTrQuant::invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcRes
       rdpcmMode = RDPCMMode(pcCU->getExplicitRdpcmMode( compID, uiAbsPartIdx ));
     }
 
+    static const TCoeff pelMin=(TCoeff) std::numeric_limits<Pel>::min();
+    static const TCoeff pelMax=(TCoeff) std::numeric_limits<Pel>::max();
     if (rdpcmMode == RDPCM_VER)
     {
-      pcResidual += uiStride; //start from row 1
-
-      for( UInt uiY = 1; uiY < uiHeight; uiY++ )
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        Pel *pcCurResidual = pcResidual+uiX;
+        TCoeff accumulator = *pcCurResidual; // 32-bit accumulator
+        pcCurResidual+=uiStride;
+        for( UInt uiY = 1; uiY < uiHeight; uiY++, pcCurResidual+=uiStride )
         {
-          pcResidual[ uiX ] = pcResidual[ uiX ] + pcResidual [ (Int)uiX - (Int)uiStride ];
+          accumulator += *(pcCurResidual);
+          *pcCurResidual = (Pel)Clip3<TCoeff>(pelMin, pelMax, accumulator);
         }
-        pcResidual += uiStride;
       }
     }
     else if (rdpcmMode == RDPCM_HOR)
     {
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
-        for( UInt uiX = 1; uiX < uiWidth; uiX++ )
+        Pel *pcCurResidual = pcResidual+uiY*uiStride;
+        TCoeff accumulator = *pcCurResidual;
+        pcCurResidual++;
+        for( UInt uiX = 1; uiX < uiWidth; uiX++, pcCurResidual++ )
         {
-          pcResidual[ uiX ] = pcResidual[ uiX ] + pcResidual [ (Int)uiX-1 ];
+          accumulator += *(pcCurResidual);
+          *pcCurResidual = (Pel)Clip3<TCoeff>(pelMin, pelMax, accumulator);
         }
-        pcResidual += uiStride;
       }
     }
   }
@@ -3137,7 +3151,7 @@ Void TComTrQuant::destroyScalingList()
   }
 }
 
-Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const Pel resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint)
+Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const TCoeff resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint)
 {
         TComDataCU    *pcCU                           = rTu.getCU();
   const UInt           uiAbsPartIdx                   = rTu.GetAbsPartIdxTU();
