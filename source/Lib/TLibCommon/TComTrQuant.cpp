@@ -3304,23 +3304,38 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
         Pel *pResiT = piResiT;
 
   TComDataCU *pCU = rTu.getCU();
-  const Char alpha = pCU->getCrossComponentPredictionAlpha( rTu.GetAbsPartIdxTU( compID ), compID );
+  const Int alpha = pCU->getCrossComponentPredictionAlpha( rTu.GetAbsPartIdxTU( compID ), compID );
   const Int diffBitDepth = pCU->getSlice()->getSPS()->getDifferentialLumaChromaBitDepth();
 
   for( Int y = 0; y < height; y++ )
   {
     if (reverse)
     {
+      // A constraint is to be added to the HEVC Standard to limit the size of pResiL and pResiC at this point.
+      // The likely form of the constraint is to either restrict the values to CoeffMin to CoeffMax,
+      // or to be representable in a bitDepthY+4 or bitDepthC+4 signed integer.
+      //  The result of the constraint is that for 8/10/12bit profiles, the input values
+      //  can be represented within a 16-bit Pel-type.
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
       for( Int x = 0; x < width; x++ )
       {
         pResiT[x] = pResiC[x] + (( alpha * rightShift( pResiL[x], diffBitDepth) ) >> 3);
       }
+#else
+      const Int minPel=std::numeric_limits<Pel>::min();
+      const Int maxPel=std::numeric_limits<Pel>::max();
+      for( Int x = 0; x < width; x++ )
+      {
+        pResiT[x] = Clip3<Int>(minPel, maxPel, pResiC[x] + (( alpha * rightShift<Int>(Int(pResiL[x]), diffBitDepth) ) >> 3));
+      }
+#endif
     }
     else
     {
+      // Forward does not need clipping. Pel type should always be big enough.
       for( Int x = 0; x < width; x++ )
       {
-        pResiT[x] = pResiC[x] - (( alpha * rightShift(pResiL[x], diffBitDepth) ) >> 3);
+        pResiT[x] = pResiC[x] - (( alpha * rightShift<Int>(Int(pResiL[x]), diffBitDepth) ) >> 3);
       }
     }
 
