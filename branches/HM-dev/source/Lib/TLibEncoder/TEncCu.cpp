@@ -442,7 +442,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         /* To exercise the current code, the index used for adjustment is based on
          * block position
          */
-        Int lgMinCuSize = pcSlice->getSPS()->getLog2MinCodingBlockSize();
+        Int lgMinCuSize = pcSlice->getSPS()->getLog2MinCodingBlockSize() +
+                          std::max<Int>(0, pcSlice->getSPS()->getLog2DiffMaxMinCodingBlockSize()-Int(pcSlice->getPPS()->getMaxCuChromaQpAdjDepth()));
         m_ChromaQpAdjIdc = ((uiLPelX >> lgMinCuSize) + (uiTPelY >> lgMinCuSize)) % (pcSlice->getPPS()->getChromaQpAdjTableSize() + 1);
       }
 
