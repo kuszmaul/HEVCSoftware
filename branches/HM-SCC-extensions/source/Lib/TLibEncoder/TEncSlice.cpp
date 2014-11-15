@@ -443,16 +443,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setUseChromaQpAdj( pPPS->getChromaQpAdjTableSize() > 0 );
   rpcSlice->setNumRefIdx(REF_PIC_LIST_0,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
   rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
-#if  SCM_S0102_IBF_SPS_CONTROL
-  if(rpcSlice->getSPS()->getDisableIntraBoundaryFilter())
-  {
-    rpcSlice->setDisableIntraBoundaryFilter(true);  //can be adaptively changed
-  }
-  else
-  {
-    rpcSlice->setDisableIntraBoundaryFilter(false);
-  }
-#endif
+
   if ( m_pcCfg->getDeblockingFilterMetric() )
   {
     rpcSlice->setDeblockingFilterOverrideFlag(true);

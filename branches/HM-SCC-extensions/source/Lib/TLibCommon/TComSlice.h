@@ -1322,9 +1322,7 @@ private:
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool       m_useIntegerMv;
 #endif
-#if SCM_S0102_IBF_SPS_CONTROL
-  Bool        m_disableIntraBoundaryFilter;
-#endif
+
 public:
   TComSlice();
   virtual ~TComSlice();
@@ -1413,10 +1411,6 @@ public:
   Void      setSliceQpBase      ( Int i )                       { m_iSliceQpBase      = i;      }
 #endif
   Void      setSliceQpDelta     ( Int i )                       { m_iSliceQpDelta     = i;      }
-#if SCM_S0102_IBF_SPS_CONTROL
-  Void      setDisableIntraBoundaryFilter( Bool b)              { m_disableIntraBoundaryFilter = b;    }
-  Bool      getDisableIntraBoundaryFilter()                     { return m_disableIntraBoundaryFilter; }
-#endif
   Void      setSliceChromaQpDelta( ComponentID compID, Int i )  { m_iSliceChromaQpDelta[compID] = isLuma(compID) ? 0 : i;  }
   Void      setUseChromaQpAdj   ( Bool b )                      { m_ChromaQpAdjEnabled = b;     }
   Void      setDeblockingFilterDisable( Bool b )                { m_deblockingFilterDisable= b;      }
