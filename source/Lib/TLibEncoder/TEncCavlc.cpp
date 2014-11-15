@@ -1049,13 +1049,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
 
-
-#if SCM_S0102_IBF_SPS_CONTROL 
-    if (pcSlice->getSPS()->getDisableIntraBoundaryFilter())
-    {
-        WRITE_FLAG(pcSlice->getDisableIntraBoundaryFilter(), "boundary_filter_disable_in_slice_flag");  //can be adaptively changed
-    }
-#endif
     if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "slice_chroma_qp_adjustment_enabled_flag");

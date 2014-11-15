@@ -475,7 +475,7 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
             TComDataCU *const pcCU              = rTu.getCU();
       const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
 #if SCM_S0102_IBF_SPS_CONTROL
-      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getDisableIntraBoundaryFilter();
+      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getSPS()->getDisableIntraBoundaryFilter();
 #else
       const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx));
 #endif

@@ -111,9 +111,6 @@ TComSlice::TComSlice()
 #if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 , m_useIntegerMv                  ( false )
 #endif
-#if SCM_S0102_IBF_SPS_CONTROL
-, m_disableIntraBoundaryFilter    ( false )
-#endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -716,9 +713,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
-#if SCM_S0102_IBF_SPS_CONTROL
-  m_disableIntraBoundaryFilter = pSrc->m_disableIntraBoundaryFilter;
-#endif
+
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = pSrc->m_iSliceChromaQpDelta[component];
   for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {

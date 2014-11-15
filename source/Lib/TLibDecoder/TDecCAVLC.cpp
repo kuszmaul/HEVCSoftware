@@ -1384,17 +1384,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
       }
     }
 
-#if SCM_S0102_IBF_SPS_CONTROL
-    if (pcSlice->getSPS()->getDisableIntraBoundaryFilter())
-    {
-      READ_FLAG(uiCode,"boundary_filter_disable_in_slice_flag");
-      pcSlice->setDisableIntraBoundaryFilter( uiCode!=0 );
-    }
-    else
-    {
-      pcSlice->setDisableIntraBoundaryFilter(false);
-    }
-#endif
     if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
     {
       READ_FLAG(uiCode, "slice_chroma_qp_adjustment_enabled_flag"); pcSlice->setUseChromaQpAdj(uiCode != 0);
