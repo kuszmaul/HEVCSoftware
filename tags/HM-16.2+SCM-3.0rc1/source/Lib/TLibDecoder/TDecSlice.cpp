@@ -1,0 +1,485 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/** \file     TDecSlice.cpp
+    \brief    slice decoder class
+*/
+
+#include "TDecSlice.h"
+
+//! \ingroup TLibDecoder
+//! \{
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+
+TDecSlice::TDecSlice()
+{
+}
+
+TDecSlice::~TDecSlice()
+{
+}
+
+Void TDecSlice::create()
+{
+}
+
+Void TDecSlice::destroy()
+{
+}
+
+Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
+{
+  m_pcEntropyDecoder  = pcEntropyDecoder;
+  m_pcCuDecoder       = pcCuDecoder;
+}
+
+Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TDecSbac* pcSbacDecoder)
+{
+  TComSlice* pcSlice                 = pcPic->getSlice(pcPic->getCurrSliceIdx());
+
+  const Int  startCtuTsAddr          = pcSlice->getSliceSegmentCurStartCtuTsAddr();
+  const Int  startCtuRsAddr          = pcPic->getPicSym()->getCtuTsToRsAddrMap(startCtuTsAddr);
+  const UInt numCtusInFrame          = pcPic->getNumberOfCtusInFrame();
+
+  const UInt frameWidthInCtus        = pcPic->getPicSym()->getFrameWidthInCtus();
+  const Bool depSliceSegmentsEnabled = pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag();
+  const Bool wavefrontsEnabled       = pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag();
+
+  m_pcEntropyDecoder->setEntropyDecoder ( pcSbacDecoder  );
+  m_pcEntropyDecoder->setBitstream      ( ppcSubstreams[0] );
+  m_pcEntropyDecoder->resetEntropy      (pcSlice);
+
+  // decoder doesn't need prediction & residual frame buffer
+  pcPic->setPicYuvPred( 0 );
+  pcPic->setPicYuvResi( 0 );
+
+#if ENC_DEC_TRACE
+  g_bJustDoIt = g_bEncDecTraceEnable;
+#endif
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tPOC: " );
+  DTRACE_CABAC_V( pcPic->getPOC() );
+  DTRACE_CABAC_T( "\n" );
+
+#if ENC_DEC_TRACE
+  g_bJustDoIt = g_bEncDecTraceDisable;
+#endif
+
+  // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
+  // This calculates the common offset for all substreams in this slice.
+  const UInt subStreamOffset=pcPic->getSubstreamForCtuAddr(startCtuRsAddr, true, pcSlice);
+
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE             
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
+#else
+    memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
+#endif 
+  }
+#endif
+
+  if (depSliceSegmentsEnabled)
+  {
+    // modify initial contexts with previous slice segment if this is a dependent slice.
+    const UInt startTileIdx=pcPic->getPicSym()->getTileIdxMap(startCtuRsAddr);
+    const TComTile *pCurrentTile=pcPic->getPicSym()->getTComTile(startTileIdx);
+    const UInt firstCtuRsAddrOfTile = pCurrentTile->getFirstCtuRsAddr();
+
+    if( pcSlice->getDependentSliceSegmentFlag() && startCtuRsAddr != firstCtuRsAddrOfTile)
+    {
+      if ( pCurrentTile->getTileWidthInCtus() >= 2 || !wavefrontsEnabled)
+      {
+        pcSbacDecoder->loadContexts(&m_lastSliceSegmentEndContextState);
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+        for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp];
+          lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+          for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+          for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+          {
+            lastPLT[comp][idx] = m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx];
+          }
+        }
+#endif
+      }
+    }
+  }
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());          
+#else
+    memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
+#endif
+  }
+#endif
+
+  // for every CTU in the slice segment...
+
+  Bool isLastCtuOfSliceSegment = false;
+  for( UInt ctuTsAddr = startCtuTsAddr; !isLastCtuOfSliceSegment && ctuTsAddr < numCtusInFrame; ctuTsAddr++)
+  {
+    const UInt ctuRsAddr = pcPic->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddr);
+    const TComTile &currentTile = *(pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr)));
+    const UInt firstCtuRsAddrOfTile = currentTile.getFirstCtuRsAddr();
+    const UInt tileXPosInCtus = firstCtuRsAddrOfTile % frameWidthInCtus;
+    const UInt tileYPosInCtus = firstCtuRsAddrOfTile / frameWidthInCtus;
+    const UInt ctuXPosInCtus  = ctuRsAddr % frameWidthInCtus;
+    const UInt ctuYPosInCtus  = ctuRsAddr / frameWidthInCtus;
+    const UInt uiSubStrm=pcPic->getSubstreamForCtuAddr(ctuRsAddr, true, pcSlice)-subStreamOffset;
+    TComDataCU* pCtu = pcPic->getCtu( ctuRsAddr );
+    pCtu->initCtu( pcPic, ctuRsAddr );
+
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      Bool resetPltPredictor = false;
+
+      if( ctuRsAddr == pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr() && !resetPltPredictor )
+      {
+        resetPltPredictor = true;
+      }
+
+      if( pCtu->getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() && !resetPltPredictor )
+      {
+        resetPltPredictor = pCtu->getCUPelX() == 0;
+      }
+
+      if( resetPltPredictor )
+      {
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+        lastPLTSize[comp] = 0;
+      }
+
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      for (UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif 
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
+
+
+    m_pcEntropyDecoder->setBitstream( ppcSubstreams[uiSubStrm] );
+
+    // set up CABAC contexts' state for this CTU
+    if (ctuRsAddr == firstCtuRsAddrOfTile)
+    {
+      if (ctuTsAddr != startCtuTsAddr) // if it is the first CTU, then the entropy coder has already been reset
+      {
+        m_pcEntropyDecoder->resetEntropy(pcSlice);
+      }
+    }
+    else if (ctuXPosInCtus == tileXPosInCtus && wavefrontsEnabled)
+    {
+      // Synchronize cabac probabilities with upper-right CTU if it's available and at the start of a line.
+      if (ctuTsAddr != startCtuTsAddr) // if it is the first CTU, then the entropy coder has already been reset
+      {
+        m_pcEntropyDecoder->resetEntropy(pcSlice);
+      }
+      TComDataCU *pCtuUp = pCtu->getCtuAbove();
+      if ( pCtuUp && ((ctuRsAddr%frameWidthInCtus+1) < frameWidthInCtus)  )
+      {
+        TComDataCU *pCtuTR = pcPic->getCtu( ctuRsAddr - frameWidthInCtus + 1 );
+        if ( pCtu->CUIsFromSameSliceAndTile(pCtuTR) )
+        {
+          // Top-right is available, so use it.
+          pcSbacDecoder->loadContexts( &m_entropyCodingSyncContextState );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+          for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+          {
+            lastPLTUsedSize[comp] = m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp];
+            lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE       
+            for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+            for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+            {
+              lastPLT[comp][idx] = m_entropyCodingSyncPaletteState.lastPLT[comp][idx];
+            }
+          }
+#endif
+        }
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+        for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+          lastPLTSize[comp] = 0;
+        }
+#endif
+
+      }
+
+    }
+
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE       
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif 
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
+
+#if ENC_DEC_TRACE
+    g_bJustDoIt = g_bEncDecTraceEnable;
+#endif
+
+    if ( pcSlice->getSPS()->getUseSAO() )
+    {
+      SAOBlkParam& saoblkParam = (pcPic->getPicSym()->getSAOBlkParam())[ctuRsAddr];
+      Bool bIsSAOSliceEnabled = false;
+      Bool sliceEnabled[MAX_NUM_COMPONENT];
+      for(Int comp=0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        ComponentID compId=ComponentID(comp);
+        sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < pcPic->getNumberValidComponents());
+        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+        saoblkParam[compId].modeIdc = SAO_MODE_OFF;
+      }
+      if (bIsSAOSliceEnabled)
+      {
+        Bool leftMergeAvail = false;
+        Bool aboveMergeAvail= false;
+
+        //merge left condition
+        Int rx = (ctuRsAddr % frameWidthInCtus);
+        if(rx > 0)
+        {
+          leftMergeAvail = pcPic->getSAOMergeAvailability(ctuRsAddr, ctuRsAddr-1);
+        }
+        //merge up condition
+        Int ry = (ctuRsAddr / frameWidthInCtus);
+        if(ry > 0)
+        {
+          aboveMergeAvail = pcPic->getSAOMergeAvailability(ctuRsAddr, ctuRsAddr-frameWidthInCtus);
+        }
+
+        pcSbacDecoder->parseSAOBlkParam( saoblkParam, sliceEnabled, leftMergeAvail, aboveMergeAvail);
+      }
+    }
+
+    m_pcCuDecoder->decodeCtu     ( pCtu, isLastCtuOfSliceSegment );
+    m_pcCuDecoder->decompressCtu ( pCtu );
+
+    if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) != PLT_SIZE_INVALID )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+    if( pCtu->getLastPLTInLcuSizeFinal( COMPONENT_Y ) )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
+
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                 
+        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif 
+        {
+          lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+
+#if ENC_DEC_TRACE
+    g_bJustDoIt = g_bEncDecTraceDisable;
+#endif
+
+    //Store probabilities of second CTU in line into buffer
+    if ( ctuXPosInCtus == tileXPosInCtus+1 && wavefrontsEnabled)
+    {
+      m_entropyCodingSyncContextState.loadContexts( pcSbacDecoder );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+      for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+        m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+        for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+        for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+        {
+          m_entropyCodingSyncPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+        }
+      }
+#endif
+    }
+
+    // Should the sub-stream/stream be terminated after this CTU?
+    // (end of slice-segment, end of tile, end of wavefront-CTU-row)
+    if (isLastCtuOfSliceSegment ||
+         (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
+          ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
+         )
+       )
+    {
+      UInt binVal;
+      pcSbacDecoder->parseTerminatingBit( binVal );
+      assert( binVal );
+#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
+      pcSbacDecoder->parseRemainingBytes(!isLastCtuOfSliceSegment);
+#endif
+
+      if (isLastCtuOfSliceSegment)
+      {
+        if(!pcSlice->getDependentSliceSegmentFlag())
+        {
+          pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
+        }
+        pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
+        break;
+      }
+    }
+  }
+
+  assert(isLastCtuOfSliceSegment == true);
+
+
+  if( depSliceSegmentsEnabled )
+  {
+    m_lastSliceSegmentEndContextState.loadContexts( pcSbacDecoder );//ctx end of dep.slice
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+    {
+      m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+      m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+      {
+        m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+      }
+    }
+#endif
+  }
+
+}
+
+ParameterSetManagerDecoder::ParameterSetManagerDecoder()
+: m_vpsBuffer(MAX_NUM_VPS)
+, m_spsBuffer(MAX_NUM_SPS)
+, m_ppsBuffer(MAX_NUM_PPS)
+{
+}
+
+ParameterSetManagerDecoder::~ParameterSetManagerDecoder()
+{
+
+}
+
+TComVPS* ParameterSetManagerDecoder::getPrefetchedVPS  (Int vpsId)
+{
+  if (m_vpsBuffer.getPS(vpsId) != NULL )
+  {
+    return m_vpsBuffer.getPS(vpsId);
+  }
+  else
+  {
+    return getVPS(vpsId);
+  }
+}
+
+
+TComSPS* ParameterSetManagerDecoder::getPrefetchedSPS  (Int spsId)
+{
+  if (m_spsBuffer.getPS(spsId) != NULL )
+  {
+    return m_spsBuffer.getPS(spsId);
+  }
+  else
+  {
+    return getSPS(spsId);
+  }
+}
+
+TComPPS* ParameterSetManagerDecoder::getPrefetchedPPS  (Int ppsId)
+{
+  if (m_ppsBuffer.getPS(ppsId) != NULL )
+  {
+    return m_ppsBuffer.getPS(ppsId);
+  }
+  else
+  {
+    return getPPS(ppsId);
+  }
+}
+
+Void     ParameterSetManagerDecoder::applyPrefetchedPS()
+{
+  m_vpsMap.mergePSList(m_vpsBuffer);
+  m_ppsMap.mergePSList(m_ppsBuffer);
+  m_spsMap.mergePSList(m_spsBuffer);
+}
+
+//! \}
