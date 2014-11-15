@@ -328,7 +328,9 @@
 #endif
 
 #define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
-                                                            ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT 
+                                                            ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
+#define SCM_420_IBC_BUGFIX                                1 ///< Bug fix for 420 Intra BC mode. Note: it may only work with CTC.
+                                                            ///< Slice and tile boundary may need further consideration
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
