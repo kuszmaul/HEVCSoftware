@@ -355,27 +355,105 @@ public:
 
 #if SCM_S0220_IBC_PRED_CONSTRAINT
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+#if SCM_420_IBC_BUGFIX
+                                  Int           iPartIdx,
+#endif
                                   Int           predX,
                                   Int           ROIStartX,
-                                  Int           predY,                                  
+                                  Int           predY,
                                   Int           ROIStartY,
                                   Int           roiWidth,
                                   Int           roiHeight,
                                   Int           uiPartOffset)
   {
-     const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
-     const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
-     const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
-     const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
-     Int uiRefCuX             = (cuPelX + predX + roiWidth  - 1)/uiMaxCuWidth;
-     Int uiRefCuY             = (cuPelY + predY + roiHeight - 1)/uiMaxCuHeight;     
-     Int uiCuPelX             = (cuPelX / uiMaxCuWidth);
-     Int uiCuPelY             = (cuPelY / uiMaxCuHeight);     
+    const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+    const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+    const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
+    const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
+    Int uiRefCuX             = (cuPelX + predX + roiWidth  - 1)/uiMaxCuWidth;
+    Int uiRefCuY             = (cuPelY + predY + roiHeight - 1)/uiMaxCuHeight;
+    Int uiCuPelX             = (cuPelX / uiMaxCuWidth);
+    Int uiCuPelY             = (cuPelY / uiMaxCuHeight);
     
-     if(((Int)(uiRefCuX - uiCuPelX) > (Int)((uiCuPelY - uiRefCuY))))
-     {
-       return false;          
-     }
+    if(((Int)(uiRefCuX - uiCuPelX) > (Int)((uiCuPelY - uiRefCuY))))
+    {
+      return false;
+    }
+
+#if SCM_420_IBC_BUGFIX
+    // check boundary
+    if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )
+    {
+      if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_420 )
+      {
+        if ( (pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3) ||
+             (pcCU->getPartitionSize( 0 ) == SIZE_2NxN && iPartIdx == 1) ||
+             (pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1) )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 8 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+      }
+      else if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_422 )
+      {
+        if ( pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 8 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 1 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 4 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + 4 + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 4 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+      }
+    }
+#endif
 
     return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
            (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
@@ -383,14 +461,101 @@ public:
   }
 #else
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+#if SCM_420_IBC_BUGFIX
+                                  Int           iPartIdx,
+                                  Int           predX,
+                                  Int           ROIStartX,
+                                  Int           predY,
+                                  Int           ROIStartY,
+#else
                                   Int           relX,
                                   Int           relY,
+#endif
                                   Int           roiWidth,
                                   Int           roiHeight)
   {
+#if SCM_420_IBC_BUGFIX
+    // check boundary
+    if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )
+    {
+      if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_420 )
+      {
+        if ( (pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3) ||
+             (pcCU->getPartitionSize( 0 ) == SIZE_2NxN && iPartIdx == 1) ||
+             (pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1) )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 8 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+      }
+      else if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_422 )
+      {
+        if ( pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 8 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 1 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 4 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3 )
+        {
+          Int cuStartX = pcCU->getCUPelX();
+          Int cuStartY = pcCU->getCUPelY();
+          Int refStartX = cuStartX + predX;
+          Int refStartY = cuStartY + 4 + predY;
+          Int refEndX = refStartX + 8 - 1;
+          Int refEndY = refStartY + 4 - 1;
+          if ( refStartX < 0 || refStartY < 0 ||
+               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
+               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
+          {
+            return false;
+          }
+        }
+      }
+    }
+#endif
+
     return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
            (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
+#if SCM_420_IBC_BUGFIX
+           xCIPIntraSearchPruning(pcCU, predX + ROIStartX, predY + ROIStartY, roiWidth, roiHeight);
+#else
            xCIPIntraSearchPruning(pcCU, relX, relY, roiWidth, roiHeight);
+#endif
   }
 #endif 
 
@@ -406,6 +571,9 @@ public:
                                     UInt        uiPartAddr);
 
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
+#if SCM_420_IBC_BUGFIX
+                                  Int          iPartIdx,
+#endif
                                   UInt         uiPartAddr,
                                   TComPattern* pcPatternKey,
                                   Pel*         piRefY,
