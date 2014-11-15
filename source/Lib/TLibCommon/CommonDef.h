@@ -57,7 +57,7 @@
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.2"                 ///< Current software version
+#define NV_VERSION        "16.2_SCM3.0rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -128,6 +128,11 @@
 
 #define NOT_VALID                   -1
 
+#define PLT_SIZE_INVALID            0xff
+#if PLT_SIZE_INVALID <= MAX_PLT_SIZE  
+#error "PLT_SIZE_INVALID" should be greater than "MAX_PLT_SIZE".
+#endif
+
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
@@ -138,7 +143,7 @@ template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a)
 template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
 template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
 
-template <typename T> inline Void Check3( T minVal, T maxVal, T a)
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
 {
   if ((a > maxVal) || (a < minVal))
   {

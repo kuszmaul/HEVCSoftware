@@ -123,6 +123,31 @@ public:
         break;
 
       //------------------------------------------------
+      case SCAN_TRAV:
+        {
+          if (m_line%2==0)
+          {
+            if (m_column == (m_blockWidth - 1))
+            {
+              m_line++;
+              m_column = m_blockWidth - 1;
+            }
+            else m_column++;
+          }
+          else
+          {
+            if (m_column == 0)
+            {
+              m_line++;
+              m_column = 0;
+            }
+            else m_column--;
+          }
+        }
+        break;
+
+      //------------------------------------------------
+
 
       default:
         {
@@ -135,6 +160,33 @@ public:
     return rtn;
   }
 };
+
+#if SCM_S0269_MSB_IDX_CODING
+UChar g_ucMsbP1Idx[256];
+static Void g_initMsbP1IdxLut()
+{
+  g_ucMsbP1Idx[0] = 0; g_ucMsbP1Idx[1] = 1;
+  UInt val = 2;
+  for (UInt idx = 2; idx <= 8; idx++)
+  {
+    for (Int i = val - 1; i >= 0; i--)
+    {
+      g_ucMsbP1Idx[val++] = idx;
+    }
+  }
+}
+
+UChar g_getMsbP1Idx(UInt uiVal)
+{
+  UChar idx = 0; 
+  while(uiVal > 255)
+  {
+    uiVal >>= 8;
+    idx += 8;
+  }
+  return idx+g_ucMsbP1Idx[uiVal];
+}
+#endif
 
 // initialize ROM variables
 Void initROM()
@@ -151,9 +203,9 @@ Void initROM()
   }
 
   // initialise scan orders
-  for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+  for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
   {
-    for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+    for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
     {
       const UInt blockWidth  = 1 << log2BlockWidth;
       const UInt blockHeight = 1 << log2BlockHeight;
@@ -219,6 +271,9 @@ Void initROM()
       //--------------------------------------------------------------------------------------------------
     }
   }
+#if SCM_S0269_MSB_IDX_CODING
+  g_initMsbP1IdxLut();
+#endif
 }
 
 Void destroyROM()
@@ -227,9 +282,9 @@ Void destroyROM()
   {
     for (UInt scanOrderIndex = 0; scanOrderIndex < SCAN_NUMBER_OF_TYPES; scanOrderIndex++)
     {
-      for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+      for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
       {
-        for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+        for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
         {
           delete [] g_scanOrder[groupTypeIndex][scanOrderIndex][log2BlockWidth][log2BlockHeight];
         }
@@ -545,6 +600,18 @@ Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE] = {8, 8}; // In the encoder, thi
 #endif
 Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};    // PCM bit-depth
 
+UChar g_uhPLTQuant[52] = { 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 8, 9, 9,10,11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 24, 23, 25, 26, 28, 29, 31, 32, 34, 36, 37, 39, 41, 42, 45 };
+UChar g_uhPLTTBC[257] = { 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                          4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+                          5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8};
+
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
@@ -564,7 +631,7 @@ UInt64 g_nSymbolCounter = 0;
 // ====================================================================================================================
 
 // scanning order table
-UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
+UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
 
 const UInt ctxIndMap4x4[4*4] =
 {
@@ -672,4 +739,8 @@ Int g_quantInterDefault8x8[8*8] =
 UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
 
+#if SCM_S0269_PLT_RUN_MSB_IDX
+UChar g_ucRunTopLut[5] =  {0, 1, 1, 2, 2};
+UChar g_ucRunLeftLut[5] = {0, 3, 3, 4, 4};
+#endif
 //! \}

@@ -108,6 +108,9 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+, m_useIntegerMv                  ( false )
+#endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -319,6 +322,14 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+      if( m_pcRPS->getNumberOfPictures() == 0 )
+      {
+        m_apcRefPicList[REF_PIC_LIST_INTRABC][0] = *(rcListPic.begin());
+        m_aiNumRefIdx[REF_PIC_LIST_INTRABC] = 1;
+      }
+#endif
 
       return;
     }
@@ -603,7 +614,12 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
-      if (rpcPic->getPOC() != pocCurr) rpcPic->getSlice(0)->setReferenced(false);
+
+      if (rpcPic->getPOC() != pocCurr)
+      {
+        rpcPic->getSlice(0)->setReferenced(false);
+        rpcPic->getHashMap()->clearAll();
+      }
       iterPic++;
     }
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -630,6 +646,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -648,6 +665,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -695,6 +713,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
+
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = pSrc->m_iSliceChromaQpDelta[component];
   for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {
@@ -1055,6 +1074,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {
       rpcPic->getSlice( 0 )->setReferenced( false );
+      rpcPic->getHashMap()->clearAll();
       rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }
@@ -1574,11 +1594,26 @@ TComSPS::TComSPS()
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
 , m_useExtendedPrecision      (false)
+, m_useIntraBlockCopy         (false)
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
+#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+, m_useColourTrans             (false)
+#endif
+, m_usePaletteMode            (false)
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+#endif
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+, m_useAdaptiveMvResolution   (false)
+#endif
+#if SCM_S0102_IBF_SPS_CONTROL
+, m_disableIntraBoundaryFilter(false)
+#endif
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
@@ -1770,6 +1805,9 @@ TComPPS::TComPPS()
 , m_loopFilterAcrossSlicesEnabledFlag(false)
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+, m_useColourTrans                   (false)
+#endif
 {
   m_scalingList = new TComScalingList;
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
