@@ -454,7 +454,7 @@ public:
   UInt          getIntraSizeIdx                 ( UInt uiAbsPartIdx                                       );
 
   Void          getAllowedChromaDir             ( UInt uiAbsPartIdx, UInt* uiModeList );
-  Int           getIntraDirPredictor            ( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode = NULL );
+  Void          getIntraDirPredictor            ( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode = NULL );
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for SBAC context
