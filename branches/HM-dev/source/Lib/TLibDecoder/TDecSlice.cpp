@@ -215,31 +215,31 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       m_entropyCodingSyncContextState.loadContexts( pcSbacDecoder );
     }
 
-    // Should the sub-stream/stream be terminated after this CTU?
-    // (end of slice-segment, end of tile, end of wavefront-CTU-row)
-    if (isLastCtuOfSliceSegment ||
-         (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
-          ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
-         )
-       )
+    if (isLastCtuOfSliceSegment)
     {
+#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
+      pcSbacDecoder->parseRemainingBytes(false);
+#endif
+      if(!pcSlice->getDependentSliceSegmentFlag())
+      {
+        pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
+      }
+      pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
+    }
+    else if (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
+             ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
+            )
+    {
+      // The sub-stream/stream should be terminated after this CTU.
+      // (end of slice-segment, end of tile, end of wavefront-CTU-row)
       UInt binVal;
       pcSbacDecoder->parseTerminatingBit( binVal );
       assert( binVal );
 #if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-      pcSbacDecoder->parseRemainingBytes(!isLastCtuOfSliceSegment);
+      pcSbacDecoder->parseRemainingBytes(true);
 #endif
-
-      if (isLastCtuOfSliceSegment)
-      {
-        if(!pcSlice->getDependentSliceSegmentFlag())
-        {
-          pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
-        }
-        pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
-        break;
-      }
     }
+
   }
 
   assert(isLastCtuOfSliceSegment == true);
