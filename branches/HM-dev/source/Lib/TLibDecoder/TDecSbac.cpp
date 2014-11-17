@@ -654,7 +654,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   for (j=0;j<partNum;j++)
   {
     Int preds[NUM_MOST_PROBABLE_MODES] = {-1, -1, -1};
-    Int predNum = pcCU->getIntraDirPredictor(absPartIdx+partOffset*j, preds, COMPONENT_Y);
+    pcCU->getIntraDirPredictor(absPartIdx+partOffset*j, preds, COMPONENT_Y);
     if (mpmPred[j])
     {
       m_pcTDecBinIf->decodeBinEP( symbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
@@ -671,7 +671,6 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
       intraPredMode = symbol;
 
       //postponed sorting of MPMs (only in remaining branch)
-      assert(predNum>=3); // It is currently always 3!
       if (preds[0] > preds[1])
       {
         std::swap(preds[0], preds[1]);
@@ -684,7 +683,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
       {
         std::swap(preds[1], preds[2]);
       }
-      for ( Int i = 0; i < predNum; i++ )
+      for ( UInt i = 0; i < NUM_MOST_PROBABLE_MODES; i++ )
       {
         intraPredMode += ( intraPredMode >= preds[i] );
       }

@@ -637,15 +637,15 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
 {
   UInt dir[4],j;
   Int preds[4][NUM_MOST_PROBABLE_MODES] = {{-1, -1, -1},{-1, -1, -1},{-1, -1, -1},{-1, -1, -1}};
-  Int predNum[4], predIdx[4] ={ -1,-1,-1,-1};
+  Int predIdx[4] ={ -1,-1,-1,-1};
   PartSize mode = pcCU->getPartitionSize( absPartIdx );
   UInt partNum = isMultiple?(mode==SIZE_NxN?4:1):1;
   UInt partOffset = ( pcCU->getPic()->getNumPartitionsInCtu() >> ( pcCU->getDepth(absPartIdx) << 1 ) ) >> 2;
   for (j=0;j<partNum;j++)
   {
     dir[j] = pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx+partOffset*j );
-    predNum[j] = pcCU->getIntraDirPredictor(absPartIdx+partOffset*j, preds[j], COMPONENT_Y);
-    for(UInt i = 0; i < predNum[j]; i++)
+    pcCU->getIntraDirPredictor(absPartIdx+partOffset*j, preds[j], COMPONENT_Y);
+    for(UInt i = 0; i < NUM_MOST_PROBABLE_MODES; i++)
     {
       if(dir[j] == preds[j][i])
       {
@@ -666,7 +666,6 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
     }
     else
     {
-      assert(predNum[j]>=3); // It is currently always 3!
       if (preds[j][0] > preds[j][1])
       {
         std::swap(preds[j][0], preds[j][1]);
@@ -679,7 +678,7 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
       {
         std::swap(preds[j][1], preds[j][2]);
       }
-      for(Int i = (predNum[j] - 1); i >= 0; i--)
+      for(Int i = (Int(NUM_MOST_PROBABLE_MODES) - 1); i >= 0; i--)
       {
         dir[j] = dir[j] > preds[j][i] ? dir[j] - 1 : dir[j];
       }

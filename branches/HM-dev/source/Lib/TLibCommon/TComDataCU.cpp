@@ -1404,13 +1404,12 @@ Void TComDataCU::getAllowedChromaDir( UInt uiAbsPartIdx, UInt uiModeList[NUM_CHR
 *\param   piMode          it is set with MPM mode in case both MPM are equal. It is used to restrict RD search at encode side.
 *\returns Number of MPM
 */
-Int TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode  )
+Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_MOST_PROBABLE_MODES], const ComponentID compID, Int* piMode  )
 {
   TComDataCU* pcCULeft, *pcCUAbove;
   UInt        LeftPartIdx  = MAX_UINT;
   UInt        AbovePartIdx = MAX_UINT;
   Int         iLeftIntraDir, iAboveIntraDir;
-  Int         uiPredNum = 0;
 
   const ChannelType chType = toChannelType(compID);
   const ChromaFormat chForm = getPic()->getChromaFormat();
@@ -1433,7 +1432,6 @@ Int TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_
   }
 
   assert (2<NUM_MOST_PROBABLE_MODES);
-  uiPredNum = NUM_MOST_PROBABLE_MODES;
   if(iLeftIntraDir == iAboveIntraDir)
   {
     if( piMode )
@@ -1472,10 +1470,8 @@ Int TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM_
       uiIntraDirPred[2] =  (iLeftIntraDir+iAboveIntraDir)<2? VER_IDX : DC_IDX;
     }
   }
-  for (Int i=0; i<uiPredNum; i++)
+  for (UInt i=0; i<NUM_MOST_PROBABLE_MODES; i++)
     assert(uiIntraDirPred[i] < 35);
-
-  return uiPredNum;
 }
 
 UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
