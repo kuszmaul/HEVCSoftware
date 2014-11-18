@@ -168,7 +168,10 @@ TComTU::TComTU(TComTU &parent, const Bool bProcessLastOfLevel, const TU_SPLIT_MO
     }
 
     mOrigWidth[i]=mRect[i].width;
-    if (!mCodeAll[i] && mbProcessLastOfLevel) mRect[i].width=0;
+    if (!mCodeAll[i] && mbProcessLastOfLevel)
+    {
+      mRect[i].width=0;
+    }
   }
 }
 
@@ -184,7 +187,10 @@ Bool TComTURecurse::nextSection(const TComTU &parent)
     for(UInt i=0; i<MAX_NUM_COMPONENT; i++)
     {
       mOffsets[i]+=mRect[i].width*mRect[i].height;
-      if (mbProcessLastOfLevel) mRect[i].width=mOrigWidth[i];
+      if (mbProcessLastOfLevel)
+      {
+        mRect[i].width=mOrigWidth[i];
+      }
       mRect[i].x0+=mRect[i].width;
       const TComRectangle &parentRect=parent.getRect(ComponentID(i));
       if (mRect[i].x0 >= parentRect.x0+parentRect.width)
@@ -194,7 +200,10 @@ Bool TComTURecurse::nextSection(const TComTU &parent)
       }
       if (!mCodeAll[i])
       {
-        if (!mbProcessLastOfLevel || mSection!=2) mRect[i].width=0;
+        if (!mbProcessLastOfLevel || mSection!=2)
+        {
+          mRect[i].width=0;
+        }
       }
     }
     assert(mRect[COMPONENT_Cb].x0==mRect[COMPONENT_Cr].x0);

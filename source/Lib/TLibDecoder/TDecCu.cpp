@@ -416,14 +416,20 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 
 #ifdef DEBUG_STRING
   const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTER);
-  if (DebugOptionList::DebugString_Pred.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));
+  if (DebugOptionList::DebugString_Pred.getInt()&debugPredModeMask)
+  {
+    printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));
+  }
 #endif
 
   // inter recon
   xDecodeInterTexture( pcCU, uiDepth );
 
 #ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-resi: ", *(m_ppcYuvResi[uiDepth]));
+  if (DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask)
+  {
+    printBlockToStream(std::cout, "###inter-resi: ", *(m_ppcYuvResi[uiDepth]));
+  }
 #endif
 
   // clip for only non-zero cbp case
@@ -436,7 +442,10 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 #ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Reco.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-reco: ", *(m_ppcYuvReco[uiDepth]));
+  if (DebugOptionList::DebugString_Reco.getInt()&debugPredModeMask)
+  {
+    printBlockToStream(std::cout, "###inter-reco: ", *(m_ppcYuvReco[uiDepth]));
+  }
 #endif
 
 }
@@ -449,7 +458,10 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
                       const ComponentID compID,
                             TComTU     &rTu)
 {
-  if (!rTu.ProcessComponentSection(compID)) return;
+  if (!rTu.ProcessComponentSection(compID))
+  {
+    return;
+  }
   const Bool       bIsLuma = isLuma(compID);
 
 
@@ -475,8 +487,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     do
     {
       xIntraRecBlk(pcRecoYuv, pcPredYuv, pcResiYuv, compID, subTURecurse);
-    }
-    while (subTURecurse.nextSection(rTu));
+    } while (subTURecurse.nextSection(rTu));
 
     //------------------------------------------------
 
@@ -529,15 +540,19 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   else
   {
     for (UInt y = 0; y < uiHeight; y++)
+    {
       for (UInt x = 0; x < uiWidth; x++)
       {
         piResi[(y * uiStride) + x] = 0;
       }
+    }
   }
 
 #ifdef DEBUG_STRING
   if (psDebug)
+  {
     ss << (*psDebug);
+  }
 #endif
 
   //===== reconstruction =====
@@ -558,7 +573,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   const Bool bDebugResi=((DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask) && DEBUG_STRING_CHANNEL_CONDITION(compID));
   const Bool bDebugReco=((DebugOptionList::DebugString_Reco.getInt()&debugPredModeMask) && DEBUG_STRING_CHANNEL_CONDITION(compID));
   if (bDebugPred || bDebugResi || bDebugReco)
+  {
     ss << "###: " << "CompID: " << compID << " pred mode (ch/fin): " << uiChPredMode << "/" << uiChFinalMode << " absPartIdx: " << rTu.GetAbsPartIdxTU() << std::endl;
+  }
 #endif
 
 #if O0043_BEST_EFFORT_DECODING
@@ -574,7 +591,10 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
 #ifdef DEBUG_STRING
-    if (bDebugPred || bDebugResi || bDebugReco) ss << "###: ";
+    if (bDebugPred || bDebugResi || bDebugReco)
+    {
+      ss << "###: ";
+    }
 
     if (bDebugPred)
     {
@@ -584,14 +604,19 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
         ss << pPred[ uiX ] << ", ";
       }
     }
-    if (bDebugResi) ss << " - resi: ";
+    if (bDebugResi)
+    {
+      ss << " - resi: ";
+    }
 #endif
 
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
 #ifdef DEBUG_STRING
       if (bDebugResi)
+      {
         ss << pResi[ uiX ] << ", ";
+      }
 #endif
 #if O0043_BEST_EFFORT_DECODING
       pReco    [ uiX ] = ClipBD( rightShiftEvenRounding<Pel>(pPred[ uiX ] + pResi[ uiX ], bitDepthDelta), clipbd );
@@ -611,7 +636,9 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     }
 
     if (bDebugPred || bDebugResi || bDebugReco)
+    {
       ss << "\n";
+    }
 #endif
     pPred     += uiStride;
     pResi     += uiStride;
@@ -673,7 +700,9 @@ TDecCu::xIntraRecQT(TComYuv*    pcRecoYuv,
   if( uiTrMode == uiTrDepth )
   {
     if (isLuma(chType))
+    {
       xIntraRecBlk( pcRecoYuv, pcPredYuv, pcResiYuv, COMPONENT_Y,  rTu );
+    }
     else
     {
       const UInt numValidComp=getNumberValidComponents(rTu.GetChromaFormat());

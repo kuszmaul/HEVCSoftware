@@ -279,7 +279,10 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
   m_cTEncTop.setTimeCodeSEIEnabled                                ( m_timeCodeSEIEnabled );
   m_cTEncTop.setNumberOfTimeSets                                  ( m_timeCodeSEINumTs );
-  for(Int i = 0; i < m_timeCodeSEINumTs; i++) { m_cTEncTop.setTimeSet(m_timeSetArray[i], i); }
+  for(Int i = 0; i < m_timeCodeSEINumTs; i++)
+  {
+    m_cTEncTop.setTimeSet(m_timeSetArray[i], i);
+  }
   m_cTEncTop.setKneeSEIEnabled                                    ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                                         ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag                                 ( m_kneeSEICancelFlag );
@@ -466,8 +469,14 @@ Void TAppEncTop::encode()
     }
 
     // call encoding function for one frame
-    if ( m_isField ) m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded, m_isTopFieldFirst );
-    else             m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
+    if ( m_isField )
+    {
+      m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded, m_isTopFieldFirst );
+    }
+    else
+    {
+      m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
+    }
 
     // write bistream to file if necessary
     if ( iNumEncoded > 0 )

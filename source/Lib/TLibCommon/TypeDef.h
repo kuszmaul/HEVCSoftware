@@ -764,9 +764,17 @@ struct TComDigest
 
   Bool operator==(const TComDigest &other) const
   {
-    if (other.hash.size() != hash.size()) return false;
+    if (other.hash.size() != hash.size())
+    {
+      return false;
+    }
     for(UInt i=0; i<UInt(hash.size()); i++)
-      if (other.hash[i] != hash[i]) return false;
+    {
+      if (other.hash[i] != hash[i])
+      {
+        return false;
+      }
+    }
     return true;
   }
 

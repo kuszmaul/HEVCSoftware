@@ -91,8 +91,12 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
       const Pel *pPel = pPic->getAddr(compID);
 
       for(Int y = 0; y < iHeight; y++, pPel+=iStride )
+      {
         for(Int x = 0; x < iWidth; x++ )
+        {
           iOrgDC += (Int)( pPel[x] );
+        }
+      }
     }
 
     const Int64 iOrgNormDC = ((iOrgDC+(iSample>>1)) / iSample);
@@ -102,8 +106,12 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
       const Pel *pPel = pPic->getAddr(compID);
 
       for(Int y = 0; y < iHeight; y++, pPel += iStride )
+      {
         for(Int x = 0; x < iWidth; x++ )
+        {
           iOrgAC += abs( (Int)pPel[x] - (Int)iOrgNormDC );
+        }
+      }
     }
 
     const Int fixedBitShift = (slice->getSPS()->getUseHighPrecisionPredictionWeighting())?RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION:0;
@@ -255,7 +263,9 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
         const Int deltaWeight   = (defaultWeight - weight);
 
         if(deltaWeight >= range || deltaWeight < -range)
+        {
           return false;
+        }
 
         m_wp[refList][refIdxTemp][comp].bPresentFlag      = true;
         m_wp[refList][refIdxTemp][comp].iWeight           = weight;

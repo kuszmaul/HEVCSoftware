@@ -177,7 +177,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       {
         ComponentID compId=ComponentID(comp);
         sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < pcPic->getNumberValidComponents());
-        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+        if (sliceEnabled[compId])
+        {
+          bIsSAOSliceEnabled=true;
+        }
         saoblkParam[compId].modeIdc = SAO_MODE_OFF;
       }
       if (bIsSAOSliceEnabled)

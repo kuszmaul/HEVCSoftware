@@ -123,7 +123,9 @@ Int main(Int argc, const char** argv)
     for (Int y = 0; y < height; y++)
     {
       for (Int x = 0; x < height; x++)
+      {
         img[x] = 0;
+      }
       img += frame.getStride();
     }
     img = frame.getAddr(COMPONENT_Y);
@@ -133,7 +135,9 @@ Int main(Int argc, const char** argv)
     output.write(&frame, IPCOLOURSPACE_UNCHANGED);
     num_frames_processed++;
     if (num_frames_processed == num_frames)
+    {
       break;
+    }
   }
 
   input.close();
