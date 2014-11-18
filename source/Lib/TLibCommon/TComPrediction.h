@@ -72,6 +72,9 @@ private:
   static const UChar m_aucIntraFilter[MAX_NUM_CHANNEL_TYPE][MAX_INTRA_FILTER_DEPTHS];
 
 protected:
+  Int       m_iPLTErrLimit;
+  Pel       m_cIndexBlock[MAX_CU_SIZE * MAX_CU_SIZE];
+  UInt*     m_puiScanOrder;
   Pel*      m_piYuvExt[MAX_NUM_COMPONENT][NUM_PRED_BUF];
   Int       m_iYuvExtSize;
 
@@ -94,6 +97,8 @@ protected:
   Void xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi );
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv* pcYuvDst );
 
+  Void xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic);
+
   Void xGetLLSPrediction ( const Pel* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0, const ChromaFormat chFmt  DEBUG_STRING_FN_DECLARE(sDebug) );
 
   Void xDCPredFiltering( const Pel* pSrc, Int iSrcStride, Pel* pDst, Int iDstStride, Int iWidth, Int iHeight, ChannelType channelType );
@@ -110,6 +115,8 @@ public:
 
   // inter
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
+
+  Void intraBlockCopy    ( TComDataCU*  pcCU, TComYuv* pcYuvPred, Int iPartIdx = -1 );
 
   // motion vector prediction
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, TComMv& rcMvPred );
@@ -136,6 +143,27 @@ public:
   static Bool filteringIntraReferenceSamples(const ComponentID compID, UInt uiDirMode, UInt uiTuChWidth, UInt uiTuChHeight, const ChromaFormat chFmt, const Bool intraReferenceSmoothingDisabled);
 
   static Bool UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode);
+  Void  derivePLTLossy(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost );
+  Void  derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc [3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
+#if SCM_S0258_PLT_ESCAPE_SIG
+  Bool  calLeftRun(Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
+  Bool  calAboveRun(Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
+#else
+  Bool  calLeftRun(Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun);
+  Bool  calAboveRun(Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun);
+#endif  
+#if !SCM_S0156_PLT_ENC_RDO
+  Void  deriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
+#endif
+  Void  calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel*paRecoValue[3],
+                      UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
+  Void  preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize);
+
+  Void  reorderPLT(TComDataCU* pcCU, Pel *Palette[3], UInt uiNumComp);
+  Void  setPLTErrLimit ( Int iPLTErrLimit ) {  m_iPLTErrLimit = iPLTErrLimit;  }
+  Int   getPLTErrLimit () {return m_iPLTErrLimit;}
+  Void  rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bool isInverse );
+
 };
 
 //! \}

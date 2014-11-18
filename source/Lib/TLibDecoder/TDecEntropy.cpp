@@ -57,6 +57,10 @@ Void TDecEntropy::setEntropyDecoder         ( TDecEntropyIf* p )
 
 Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
+  {
+    return;
+  }
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -64,6 +68,19 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  {
+    m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyDecoderIf->parsePLTModeSyntax( pcCU, uiAbsPartIdx, uiDepth, 3 );
+      pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+    }
+  }
 }
 
 
@@ -104,15 +121,37 @@ Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
+  if ( pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
+  }
 }
 
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+  if (pcCU->getPLTModeFlag(uiAbsPartIdx))
+  {
+    return;
+  }
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parsePartSizeIntraBC( pcCU, uiAbsPartIdx, uiDepth );
 }
 
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
 {
+  if( pcCU->isIntraBC( uiAbsPartIdx ) )                                 // Do nothing for IntraBC mode.
+  {
+    return;
+  }
+  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
+  {
+    return;
+  }
+
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
@@ -149,6 +188,11 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     return;
   }
 
+  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
+  {
+    return;
+  }
+
   m_pcEntropyDecoderIf->parseIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
 }
 
@@ -170,6 +214,15 @@ Void TDecEntropy::decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #endif
 }
 
+Void TDecEntropy::decodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseIntraBCFlag( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseIntraBC( pcCU, uiAbsPartIdx, uiPartIdx, uiDepth );
+}
 
 /** decode motion information for every PU block.
  * \param pcCU
@@ -626,10 +679,36 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
       pcCU->setCbfSubParts( cbfZero, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
+      pcCU->setColourTransformSubParts(0, uiAbsPartIdx, uiDepth);
       return;
     }
-
   }
+
+#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
+  if ( pcCU->hasAssociatedACTFlag( uiAbsPartIdx, uiDepth ) )
+#else
+  if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
+#endif
+  {
+    Bool uiFlag = 0;
+#if !SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    if(pcCU->getSlice()->getPPS()->getUseColourTrans())
+#else
+    if(pcCU->getSlice()->getSPS()->getUseColourTrans())
+#endif
+    {
+#endif
+      m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
+#if !SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
+    }
+#endif
+    pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
+  }
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if( pcCU->getCUTransquantBypass(uiAbsPartIdx) && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+    assert( pcCU->getColourTransform(uiAbsPartIdx) == 0 );
+#endif
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 

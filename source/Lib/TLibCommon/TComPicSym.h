@@ -110,7 +110,11 @@ private:
   SAOBlkParam *m_saoBlkParams;
 
 public:
-  Void               create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void        create  ( ChromaFormat chromaFormatIDC, Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                       , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+#endif
+    );
   Void               destroy ();
 
   TComPicSym  ();

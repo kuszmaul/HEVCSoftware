@@ -135,6 +135,9 @@ public:
                              DEBUG_STRING_FN_DECLAREP(psDebug));
 
   Void invRecurTransformNxN ( const ComponentID compID, TComYuv *pResidual, TComTU &rTu );
+#if SCM_S0179_ACT_TU_DEC
+  Void invRecurTransformACTNxN ( TComYuv *pResidual, TComTU &rTu );
+#endif
 
   Void rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode );
   Void invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride );
@@ -146,6 +149,7 @@ public:
 #if RDOQ_CHROMA_LAMBDA
   Void setLambdas(const Double lambdas[MAX_NUM_COMPONENT]) { for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_lambdas[component] = lambdas[component]; }
   Void selectLambda(const ComponentID compIdx) { m_dLambda = m_lambdas[compIdx]; }
+  Void adjustBitDepthandLambdaForColourTrans(Int delta_QP);
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif

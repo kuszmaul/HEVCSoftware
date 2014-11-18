@@ -146,6 +146,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( pcPic );
 
+
   if( pcSlice->getSPS()->getUseSAO() )
   {
     m_pcSAO->reconstructBlkSAOParams(pcPic, pcPic->getPicSym()->getSAOBlkParam());

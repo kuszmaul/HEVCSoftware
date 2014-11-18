@@ -64,6 +64,7 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   MAINSTILLPICTURE = 3,
   MAINREXT = 4,
   HIGHTHROUGHPUTREXT = 5, // Placeholder profile for development
+  MAINSCC  = 31, // Placeholder profile for development
   // The following are RExt profiles, which would map to the MAINREXT profile idc.
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
@@ -220,7 +221,8 @@ strToProfile[] =
   {"main10",               Profile::MAIN10             },
   {"main-still-picture",   Profile::MAINSTILLPICTURE   },
   {"main-RExt",            Profile::MAINREXT           },
-  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT }
+  {"high-throughput-RExt", Profile::HIGHTHROUGHPUTREXT },
+  {"main-SCC",             Profile::MAINSCC            }
 };
 
 static const struct MapStrToExtendedProfile
@@ -236,6 +238,7 @@ strToExtendedProfile[] =
     {"main-still-picture", MAINSTILLPICTURE },
     {"main-RExt",          MAINREXT         },
     {"high-throughput-RExt", HIGHTHROUGHPUTREXT },
+    {"main-SCC",           MAINSCC          },
     {"monochrome",         MONOCHROME_8     },
     {"monochrome12",       MONOCHROME_12    },
     {"monochrome16",       MONOCHROME_16    },
@@ -697,6 +700,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MSEBasedSequencePSNR",                            m_printMSEBasedSequencePSNR,                      false, "0 (default) emit sequence PSNR only as a linear average of the frame PSNRs, 1 = also emit a sequence PSNR based on an average of the frame MSEs")
   ("PrintFrameMSE",                                   m_printFrameMSE,                                  false, "0 (default) emit only bit count and PSNRs for each frame, 1 = also emit MSE values")
   ("PrintSequenceMSE",                                m_printSequenceMSE,                               false, "0 (default) emit only bit rate and PSNRs for the whole sequence, 1 = also emit MSE values")
+  ("PrintClippedPSNR",                                m_printClippedPSNR,                               false, "0: (default) print lossless PSNR values as 999.99 dB, 1: clip lossless PSNR according to resolution" )
   ("CabacZeroWordPaddingEnabled",                     m_cabacZeroWordPaddingEnabled,                    false, "0 (default) do not add conforming cabac-zero-words to bit streams, 1 = add cabac-zero-words")
   ("ChromaFormatIDC,-cf",                             tmpChromaFormat,                                      0, "ChromaFormatIDC (400|420|422|444 or set 0 (default) for same as InputChromaFormat)")
   ("ConformanceMode",                                 m_conformanceWindowMode,                              0, "Deprecated alias of ConformanceWindowMode")
@@ -757,7 +761,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GOPSize,g",                                       m_iGOPSize,                                           1, "GOP size of temporal structure")
 
   // motion search options
-  ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:Diamond  2:PMVFAST")
+  ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:TZ search  2:Selective search")
+  ("HashBasedIntraBlockCopySearchEnabled",            m_useHashBasedIntraBlockCopySearch,               false, "Enable the use of hash based search for intra block copying on 8x8 blocks")
+  ("IntraBlockCopySearchWidthInCTUs",                 m_intraBlockCopySearchWidthInCTUs,                   -1, "Search range for IBC (-1: full frame search)")
+  ("IntraBlockCopyNonHashSearchWidthInCTUs",          m_intraBlockCopyNonHashSearchWidthInCTUs,            1u, "Search range for IBC conventional search method (i.e., fast/full search)")
+  ("HashBasedME",                                     m_useHashBasedME,                                 false, "Hash based inter search")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
   ("HadamardME",                                      m_bUseHADME,                                       true, "Hadamard ME for fractional-pel")
@@ -803,6 +811,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // Coding tools
   ("AMP",                                             m_enableAMP,                                       true, "Enable asymmetric motion partitions")
+  ("IntraBlockCopyEnabled",                           m_useIntraBlockCopy,                              false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
+#if SCM_S0102_IBF_SPS_CONTROL
+  ("IntraBoundaryFilterDisabled",                     m_disableIntraBoundaryFilter,                     false, "Disable the use of intra boundary filters")
+#endif
+  ("IntraBlockCopyFastSearch",                        m_intraBlockCopyFastSearch,                        true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
   ("CrossComponentPrediction",                        m_useCrossComponentPrediction,                    false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate",              m_reconBasedCrossCPredictionEstimate,             false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")
   ("SaoLumaOffsetBitShift",                           saoOffsetBitShift[CHANNEL_TYPE_LUMA],                 0, "Specify the luma SAO bit-shift. If negative, automatically calculate a suitable value based upon bit depth and initial QP")
@@ -811,7 +824,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransformSkipFast",                               m_useTransformSkipFast,                           false, "Fast intra transform skipping")
   ("TransformSkipLog2MaxSize",                        m_transformSkipLog2MaxSize,                          2U, "Specify transform-skip maximum size. Minimum 2. (not valid in V1 profiles)")
   ("ImplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT],         false, "Enable implicitly signalled residual DPCM for intra (also known as sample-adaptive intra predict) (not valid in V1 profiles)")
-  ("ExplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT],         false, "Enable explicitly signalled residual DPCM for inter (not valid in V1 profiles)")
+  ("ExplicitResidualDPCM",                            m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT],         false, "Enable explicitly signalled residual DPCM for inter and intra-block-copy (not valid in V1 profiles)")
   ("ResidualRotation",                                m_useResidualRotation,                            false, "Enable rotation of transform-skipped and transquant-bypassed TUs through 180 degrees prior to entropy coding (not valid in V1 profiles)")
   ("SingleSignificanceMapContext",                    m_useSingleSignificanceMapContext,                false, "Enable, for transform-skipped and transquant-bypassed TUs, the selection of a single significance map context variable for all coefficients (not valid in V1 profiles)")
   ("GolombRiceParameterAdaptation",                   m_useGolombRiceParameterAdaptation,               false, "Enable the adaptation of the Golomb-Rice parameter over the course of each slice")
@@ -1022,7 +1035,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayMinLuminance",                 m_masteringDisplay.minLuminance,                      0u, "Specifies the mastering display minimum luminance value in units of 1/10000 candela per square metre (32-bit code value)")
   ("SEIMasteringDisplayPrimaries",                    cfg_DisplayPrimariesCode,       cfg_DisplayPrimariesCode, "Mastering display primaries for all three colour planes in CIE xy coordinates in increments of 1/50000 (results in the ranges 0 to 50000 inclusive)")
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
-    
+  ("ColourTransform",                                 m_useColourTrans,                                   false, "Enable the colour transform (not valid in V1 profiles")
+  ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       31u,  "Maximum palette size")
+  ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                   64u,  "Maximum palette predictor size")
+#endif
+
+
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  ("UseAdaptiveMvResolution",                         m_useAdaptiveMvResolution,                         false, "Enable adaptive mv resolution (not valid in V1 profiles)")
+#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -1191,11 +1214,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   else
   {
     m_chromaFormatConstraint = (tmpConstraintChromaFormat == 0) ? m_chromaFormatIDC : numberToChromaFormat(tmpConstraintChromaFormat);
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+    m_bitDepthConstraint = (m_internalBitDepth[CHANNEL_TYPE_LUMA] > m_internalBitDepth[CHANNEL_TYPE_CHROMA])? m_internalBitDepth[CHANNEL_TYPE_LUMA]: m_internalBitDepth[CHANNEL_TYPE_CHROMA];
+#else
     m_bitDepthConstraint = (m_profile == Profile::MAIN10?10:8);
+#endif
   }
 
 
   m_inputColourSpaceConvert = stringToInputColourSpaceConvert(inputColourSpaceConvert, true);
+  m_bRGBformat    = (m_inputColourSpaceConvert == IPCOLOURSPACE_RGBtoGBR && m_chromaFormatIDC == CHROMA_444)? true: false;
+  m_useLL         = m_costMode == COST_LOSSLESS_CODING ? true: false;
 
   switch (m_conformanceWindowMode)
   {
@@ -1446,10 +1475,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
 
-  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT)
+  if (m_profile==Profile::MAINREXT || m_profile==Profile::HIGHTHROUGHPUTREXT || m_profile==Profile::MAINSCC)
   {
     xConfirmPara(m_lowerBitRateConstraintFlag==false && m_intraConstraintFlag==false, "The lowerBitRateConstraint flag cannot be false when intraConstraintFlag is false");
     xConfirmPara(m_alignCABACBeforeBypass && m_profile!=Profile::HIGHTHROUGHPUTREXT, "AlignCABACBeforeBypass must not be enabled unless the high throughput profile is being used.");
+    xConfirmPara(m_useIntraBlockCopy      && m_profile!=Profile::MAINSCC,  "UseIntraBlockCopy must not be enabled unless the main-SCC profile is being used.");
     if (m_profile == Profile::MAINREXT)
     {
       const UInt intraIdx = m_intraConstraintFlag ? 1:0;
@@ -1480,7 +1510,7 @@ Void TAppEncCfg::xCheckParameter()
         fprintf(stderr, "********************************************************************************************************\n");
       }
     }
-    else
+    else if (m_profile == Profile::HIGHTHROUGHPUTREXT)
     {
       xConfirmPara( m_chromaFormatConstraint != CHROMA_444, "chroma format constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
       xConfirmPara( m_bitDepthConstraint     != 16,         "bit depth constraint must be 4:4:4 in the High Throughput 4:4:4 16-bit Intra profile.");
@@ -1502,6 +1532,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT]==true, "ExplicitResidualDPCM must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useGolombRiceParameterAdaptation==true, "GolombRiceParameterAdaption must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useExtendedPrecision==true, "UseExtendedPrecision must not be enabled for non main-RExt profiles.");
+    xConfirmPara(m_useIntraBlockCopy==true, "UseIntraBlockCopy must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_useHighPrecisionPredictionWeighting==true, "UseHighPrecisionPredictionWeighting must not be enabled for non main-RExt profiles.");
     xConfirmPara(m_enableIntraReferenceSmoothing==false, "EnableIntraReferenceSmoothing must be enabled for non main-RExt profiles.");
     xConfirmPara(m_alignCABACBeforeBypass, "AlignCABACBeforeBypass cannot be enabled for non main-RExt profiles.");
@@ -1588,6 +1619,52 @@ Void TAppEncCfg::xCheckParameter()
     m_useCrossComponentPrediction = false;
   }
 
+  if(m_useColourTrans && (m_chromaFormatIDC != CHROMA_444))
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Adaptive Colour transform is specified for 4:4:4 format only **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_useColourTrans = false;
+  }
+  if ( m_useColourTrans && m_profile != Profile::MAINSCC )
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Adaptive Colour transform can be used in SCC profile only    **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_useColourTrans = false;
+  }
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
+  if(m_useColourTrans && m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce && m_internalBitDepth[CHANNEL_TYPE_LUMA] != m_internalBitDepth[CHANNEL_TYPE_CHROMA])
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Adaptive Colour transform is not used for lossless coding    **\n");
+    fprintf(stderr, "**          with different luma and chroma bit depth                     **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_useColourTrans = false;
+  }
+#endif
+
+  if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Palette mode is specified for 4:4:4 format only **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_usePaletteMode = false;
+  }
+  if (m_usePaletteMode && m_profile != Profile::MAINSCC)
+  {
+    fprintf(stderr, "***************************************************************************\n");
+    fprintf(stderr, "** WARNING: Palette mode can be used in SCC profile only    **\n");
+    fprintf(stderr, "***************************************************************************\n");
+
+    m_usePaletteMode = false;
+  }
+
+
   if ( m_CUTransquantBypassFlagForce && m_bUseHADME )
   {
     fprintf(stderr, "****************************************************************************\n");
@@ -1612,7 +1689,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iQP <  -6 * (m_internalBitDepth[CHANNEL_TYPE_LUMA] - 8) || m_iQP > 51,    "QP exceeds supported range (-QpBDOffsety to 51)" );
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -6 || m_loopFilterBetaOffsetDiv2 > 6,        "Loop Filter Beta Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
-  xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
+  xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:TZ search  2:Selective search)" );
+
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
@@ -1805,7 +1883,11 @@ Void TAppEncCfg::xCheckParameter()
               {
                 if(absPOC%m_iGOPSize == m_GOPList[k].m_POC%m_iGOPSize)
                 {
+#if SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY
+                  if(m_GOPList[k].m_temporalId<=m_GOPList[curGOP].m_temporalId)
+#else
                   if(m_GOPList[k].m_temporalId==m_GOPList[curGOP].m_temporalId)
+#endif
                   {
                     m_GOPList[k].m_refPic = true;
                   }
@@ -1877,7 +1959,11 @@ Void TAppEncCfg::xCheckParameter()
             {
               Int insertPoint=newRefs;
               //this picture can be added, find appropriate place in list and insert it.
+#if SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY
+              if(m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId)
+#else
               if(m_GOPList[offGOP].m_temporalId==m_GOPList[curGOP].m_temporalId)
+#endif
               {
                 m_GOPList[offGOP].m_refPic = true;
               }
@@ -2177,6 +2263,35 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_timeCodeSEINumTs > MAX_TIMECODE_SEI_SETS, "Number of time sets cannot exceed 3");
   }
 
+  if( m_useIntraBlockCopy )
+  {
+    if( m_useHashBasedIntraBlockCopySearch )
+    {
+      xConfirmPara(m_intraBlockCopySearchWidthInCTUs < -1, "IntraBlockCopySearchWidth should be greater than or equal to -1\n");
+      if( m_intraBlockCopySearchWidthInCTUs >= 0 )
+      {
+        xConfirmPara((Int)m_intraBlockCopyNonHashSearchWidthInCTUs > m_intraBlockCopySearchWidthInCTUs, "IntraBlockCopyNonHashSearchWidth should be less than or equal to IntraBlockCopySearchWidth\n");
+        if( m_intraBlockCopySearchWidthInCTUs == (Int)m_intraBlockCopyNonHashSearchWidthInCTUs )
+        {
+          m_useHashBasedIntraBlockCopySearch = false;
+        }
+      }
+    }
+    else
+    {
+      xConfirmPara(m_intraBlockCopySearchWidthInCTUs < 0, "HashBasedIntraBlockCopySearch must be set to 1 to enable IntraBlockCopy full frame search\n");
+      m_intraBlockCopySearchWidthInCTUs = (Int)m_intraBlockCopyNonHashSearchWidthInCTUs;
+    }
+    if( !(m_intraBlockCopySearchWidthInCTUs == -1 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1)
+      && !(m_intraBlockCopySearchWidthInCTUs == 3 && m_intraBlockCopyNonHashSearchWidthInCTUs == 1) )
+    {
+      fprintf(stderr, "***************************************************************************\n");
+      fprintf(stderr, "** WARNING: IntraBC search ranges are not part of CTC/CE test conditions **\n");
+      fprintf(stderr, "***************************************************************************\n");
+    }
+  }
+
+
 #undef xConfirmPara
   if (check_failed)
   {
@@ -2244,6 +2359,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Sequence PSNR output              : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   printf("Sequence MSE output               : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
   printf("Frame MSE output                  : %s\n", (m_printFrameMSE    ? "Enabled" : "Disabled") );
+  printf("Print Clipped PSNR                : %s\n", (m_printClippedPSNR ? "Enabled" : "Disabled") );
   printf("Cabac-zero-word-padding           : %s\n", (m_cabacZeroWordPaddingEnabled? "Enabled" : "Disabled") );
   if (m_isField)
   {
@@ -2296,12 +2412,16 @@ Void TAppEncCfg::xPrintParameter()
   printf("Intra reference smoothing         : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
   printf("Implicit residual DPCM            : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );
   printf("Explicit residual DPCM            : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_EXPLICIT] ? "Enabled" : "Disabled") );
+  printf("Intra block copying               : %s\n", (m_useIntraBlockCopy                      ? (m_intraBlockCopyFastSearch ? "Enabled (fast search)" : "Enabled (full search)") : "Disabled") );
   printf("Residual rotation                 : %s\n", (m_useResidualRotation                    ? "Enabled" : "Disabled") );
   printf("Single significance map context   : %s\n", (m_useSingleSignificanceMapContext        ? "Enabled" : "Disabled") );
   printf("Cross-component prediction        : %s\n", (m_useCrossComponentPrediction            ? (m_reconBasedCrossCPredictionEstimate ? "Enabled (reconstructed-residual-based estimate)" : "Enabled (encoder-side-residual-based estimate)") : "Disabled") );
   printf("High-precision prediction weight  : %s\n", (m_useHighPrecisionPredictionWeighting    ? "Enabled" : "Disabled") );
   printf("Golomb-Rice parameter adaptation  : %s\n", (m_useGolombRiceParameterAdaptation       ? "Enabled" : "Disabled") );
   printf("CABAC bypass bit alignment        : %s\n", (m_alignCABACBeforeBypass                 ? "Enabled" : "Disabled") );
+  printf("Adaptive colour transform         : %s\n", (m_useColourTrans                         ? "Enabled" : "Disabled") );
+  printf("Palette mode                      : %s\n", (m_usePaletteMode                         ? "Enabled" : "Disabled") );
+
   if (m_bUseSAO)
   {
     printf("Sao Luma Offset bit shifts        : %d\n", m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]);
@@ -2316,6 +2436,30 @@ Void TAppEncCfg::xPrintParameter()
     case COST_MIXED_LOSSLESS_LOSSY_CODING:  printf("Cost function:                    : Mixed_lossless_lossy coding with QP'=%d for lossless evaluation\n", LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME); break;
     default:                                printf("Cost function:                    : Unknown\n"); break;
   }
+
+  switch ( m_iFastSearch )
+  {
+    case 0:  printf( "Motion Estimation                 : Full search\n" ); break;
+    case 1:  printf( "Motion Estimation                 : TZ search\n" ); break;
+    case 2:  printf( "Motion Estimation                 : Selective search\n" ); break;
+    default: printf( "Motion Estimation                 : Unknown\n" ); break;
+  }
+
+  if( m_useIntraBlockCopy )
+  {
+    printf("Hash based IntraBC search         : %s\n", (m_useHashBasedIntraBlockCopySearch ? "Enabled" : "Disabled") );
+    if( m_intraBlockCopySearchWidthInCTUs == -1 )
+    {
+      printf("IntraBC search range              : full frame\n");
+    }
+    else
+    {
+      printf("IntraBC search range              : 1x%d CTU%s\n", m_intraBlockCopySearchWidthInCTUs+1, m_intraBlockCopySearchWidthInCTUs ? "s" : "" );
+    }
+    printf("IntraBC non-hash search range     : 1x%d CTU%s\n", m_intraBlockCopyNonHashSearchWidthInCTUs+1, m_intraBlockCopyNonHashSearchWidthInCTUs ? "s" : "" );
+  }
+
+  printf("HashME                            : %d\n", m_useHashBasedME ? 1 : 0 );
 
   printf("RateControl                       : %d\n", m_RCEnableRateControl );
 
@@ -2385,6 +2529,19 @@ Void TAppEncCfg::xPrintParameter()
 
   printf(" SignBitHidingFlag:%d ", m_signHideFlag);
   printf("RecalQP:%d", m_recalculateQPAccordingToLambda ? 1 : 0 );
+  if (m_usePaletteMode)
+  {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    printf(" MaxPLTSize:%d", m_uiPLTMaxSize);
+    printf(" MaxPLTPredictorSize:%d", m_uiPLTMaxPredSize);
+#else
+    printf(" MaxPLTSize:%d", MAX_PLT_SIZE);
+    printf(" MaxPLTPredictorSize:%d", MAX_PLT_PRED_SIZE);
+#endif
+  }
+#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
+  printf( " AdapMvRes:%d", m_useAdaptiveMvResolution ? 1 : 0 );
+#endif
 
   printf("\n\n");
 

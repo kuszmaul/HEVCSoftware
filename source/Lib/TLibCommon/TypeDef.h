@@ -39,6 +39,7 @@
 #define __TYPEDEF__
 
 #include <vector>
+#include <cstdlib>
 
 //! \ingroup TLibCommon
 //! \{
@@ -81,7 +82,6 @@
 // ====================================================================================================================
 // Tool Switches
 // ====================================================================================================================
-
 #define HARMONIZE_GOP_FIRST_FIELD_COUPLE                  1
 #define EFFICIENT_FIELD_IRAP                              1
 #define ALLOW_RECOVERY_POINT_AS_RAP                       1
@@ -269,7 +269,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-
 //------------------------------------------------
 // Error checks
 //------------------------------------------------
@@ -277,6 +276,64 @@
 #if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && (RExt__HIGH_BIT_DEPTH_SUPPORT == 0))
 #error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__HIGH_BIT_DEPTH_SUPPORT
 #endif
+
+// ====================================================================================================================
+// SCC control settings
+// ====================================================================================================================
+
+
+//------------------------------------------------
+// Processing controls
+//------------------------------------------------
+
+#define SCM_S0067_ENCODER_IMPROVEMENTS                    1 ///< Accumulate candidates and neighbours for fast evaluation
+#define SCM_S0085_ADAPTIVE_MV_RESOLUTION                  1 ///< adaptive motion vector resolution, as proposed in JCTVC-S0085
+#define SCM_S0100_IBC_CHANGE_EARLY_TERMINATION            1 ///< make the same changes to IBC early termination, regardless of ACT or not
+#define SCM_S0086_MOVE_ACT_FLAG_TO_PPS                    1 ///< move ACT flag from SPS to PPS
+#define SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM                1 ///< for Intra CU, code ACT flag if all PU(s) are DM
+#define SCM_S0186_TRANS_FLAG_CTX                          1 ///< remove one context for palette_transpose_flag
+#define SCM_S0254_ACT_UNIFICATION                         1 ///< unification of lossy and lossless ACT
+#define SCM_S0089_HASH_ME_IMPROVEMENT                     1 ///< hash based motion estimation improvement
+#define SCM_S0180_BUG_FIX_BIT_DEPTH                       1 ///< bug fix for different bit depth between luma and chroma
+#define SCM_S0180_ACT_BIT_DEPTH_ALIGN                     1 ///< bit depth alignment for ACT
+#define SCM_S0220_IBC_PRED_CONSTRAINT                     1 ///< WPP shape based contraint for IBC prediction
+#define SCM_S0179_ACT_TU_DEC                              1 ///< perform ACT operation on TU blocks
+#define SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY        1 ///< bug fix for temporal scalability
+#define SCM_S0102_IBF_SPS_CONTROL                         1 ///< intra boundary filter control at SPS
+#define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< Zero run-length coding for palette predictor
+#define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< include escape sample into the INDEX and COPY_ABOVE modes
+#define SCM_S0156_PLT_ENC_RDO                             1 ///< RD based palette encoder
+#define SCM_S0140_ACT_QP_CLIP_TO_ZERO                     1 ///< clip ACT negative QPs to zero
+#define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
+#define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
+#define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
+#define SCM_S0269_PLT_RUN_MSB_IDX                         1 ///< improvement on run length coding
+#define SCM_PLT_ZERO_COLOR_OPT                            1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
+#define SCM_PLT_SINGLE_COLOR_OPT                          1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
+#define SCM_S0110_PLT_TRANSPOSE_FLAG_OPT                  1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
+
+//------------------------------------------------
+// Derived macros
+//------------------------------------------------
+
+#if SCM_S0269_PLT_RUN_MSB_IDX
+#define SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX           1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
+#define SCM_S0269_MSB_IDX_CODING                          1
+#endif
+
+#if SCM_S0067_ENCODER_IMPROVEMENTS
+#define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
+#define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
+#define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
+#endif
+
+#define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
+                                                            ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
+#define SCM_420_IBC_BUGFIX                                1 ///< Bug fix for 420 Intra BC mode. Note: it may only work with CTC.
+                                                            ///< Slice and tile boundary may need further consideration
+//------------------------------------------------
+// Backwards-compatibility
+//------------------------------------------------
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -409,6 +466,7 @@ enum PredMode
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
   NUMBER_OF_PREDICTION_MODES = 2,
+  MODE_INTRABC               = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
 };
 
 /// reference list index
@@ -416,7 +474,9 @@ enum RefPicList
 {
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
-  NUM_REF_PIC_LIST_01          = 2,
+  REF_PIC_LIST_INTRABC         = 2,
+  NUM_REF_PIC_LIST_01          = 3,
+  NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
   REF_PIC_LIST_X               = 100  ///< special mark
 };
 
@@ -523,7 +583,8 @@ enum COEFF_SCAN_TYPE
   SCAN_DIAG = 0,        ///< up-right diagonal scan
   SCAN_HOR  = 1,        ///< horizontal first scan
   SCAN_VER  = 2,        ///< vertical first scan
-  SCAN_NUMBER_OF_TYPES = 3
+  SCAN_TRAV = 3,
+  SCAN_NUMBER_OF_TYPES = 4
 };
 
 enum COEFF_SCAN_GROUP_TYPE
@@ -621,6 +682,7 @@ namespace Profile
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
     HIGHTHROUGHPUTREXT = 5
+   ,MAINSCC  = 31 // Placeholder profile for development
   };
 }
 
@@ -666,6 +728,7 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
+  SPS_EXT__SCC            = 6, // place holder
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -674,6 +737,7 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
+  PPS_EXT__SCC            = 6, // place holder
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 
@@ -819,6 +883,110 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
+enum PLTRunMode
+{
+  PLT_RUN_LEFT  = 0,
+  PLT_RUN_ABOVE = 1,
+#if SCM_S0258_PLT_ESCAPE_SIG
+  NUM_PLT_RUN   = 2  
+#else
+  PLT_ESCAPE    = 2,
+  NUM_PLT_RUN   = 3
+#endif
+};
+
+enum PLTScanMode
+{
+  PLT_SCAN_HORTRAV = 0,
+  PLT_SCAN_VERTRAV = 1,
+  NUM_PLT_SCAN     = 2
+};
+
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
+#endif
+
+class SortingElement
+{
+public:
+  UInt uiCnt;
+  Int uiData[3];
+  Int uiShift, uiLastCnt, uiSumData[3];
+
+  inline Bool operator<(const SortingElement &other) const
+  {
+    return uiCnt > other.uiCnt;
+  }
+
+  SortingElement() {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+  Void setAll(UInt ui0, UInt ui1, UInt ui2) {
+    if( !ui0 && !ui1 && !ui2 )
+    {
+      uiShift = uiLastCnt = 0;
+      uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+    }
+    uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
+  }
+#if SCM_S0180_BUG_FIX_BIT_DEPTH
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit
+                                                                      && ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit 
+                                                                      && ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit;
+                                                                 }
+  UInt getSAD(SortingElement sElement) { return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) ) 
+                                              + ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) 
+                                              + ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+
+                                       }  
+#else
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return std::abs(uiData[0] - sElement.uiData[0]) <= iErrorLimit && std::abs(uiData[1] - sElement.uiData[1]) <= iErrorLimit && std::abs(uiData[2] - sElement.uiData[2]) <= iErrorLimit;}
+  UInt getSAD(SortingElement sElement) { return std::abs(uiData[0] - sElement.uiData[0]) + std::abs(uiData[1] - sElement.uiData[1]) + std::abs(uiData[2] - sElement.uiData[2]); }
+#endif
+  Void copyDataFrom(SortingElement sElement) {
+    uiData[0] = sElement.uiData[0];
+    uiData[1] = sElement.uiData[1];
+    uiData[2] = sElement.uiData[2];
+    uiShift = 0; uiLastCnt = 1; uiSumData[0] = uiData[0]; uiSumData[1] = uiData[1]; uiSumData[2] = uiData[2];
+  }
+  Void copyAllFrom(SortingElement sElement) {
+    copyDataFrom(sElement); uiCnt = sElement.uiCnt;
+    uiSumData[0] = sElement.uiSumData[0]; uiSumData[1] = sElement.uiSumData[1]; uiSumData[2] = sElement.uiSumData[2];
+    uiLastCnt = sElement.uiLastCnt; uiShift = sElement.uiShift;
+  }
+
+  Void addElement(const SortingElement& sElement)
+  {
+    uiCnt++;
+    for ( int i=0; i<3; i++ )
+    {
+      uiSumData[i] += sElement.uiData[i];
+    }
+    if( uiCnt>1 && uiCnt==2*uiLastCnt )
+    {
+      UInt uiRnd;
+      if( uiCnt == 2 )
+      {
+        uiShift = 0;
+        uiRnd   = 1;
+      }
+      else
+      {
+        uiRnd = 1<<uiShift;
+      }
+      uiShift++;
+      for ( int i=0; i<3; i++ )
+      {
+        uiData[i] = (uiSumData[i] + uiRnd) >> uiShift;
+      }
+      uiLastCnt = uiCnt;
+    }
+  }
+};
+
+
 //! \}
 
 #endif

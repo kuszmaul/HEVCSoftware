@@ -131,8 +131,25 @@ Void TEncSlice::init( TEncTop* pcEncTop )
 Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
+  m_pcRdCost->setRGBFormatFlag               (  m_pcCfg->getRGBFormatFlag() );
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  m_pcRdCost->setUseColourTrans              (  slice->getPPS()->getUseColourTrans() );
+#else
+  m_pcRdCost->setUseColourTrans               (  slice->getSPS()->getUseColourTrans() );
+#endif
+  m_pcRdCost->setUseLossless                 (  m_pcCfg->getUseLossless() );
+
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
+
+  Int map[52] =
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 3, 3, 4,
+    4, 5, 5, 6, 6, 6, 6, 6, 6, 6,
+    6, 6
+  };
 
   // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -143,6 +160,14 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+    if(m_pcCfg->getRGBFormatFlag() && slice->getPPS()->getUseColourTrans())
+#else
+    if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColourTrans())
+#endif
+    {
+      tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
+    }
     m_pcRdCost->setDistortionWeight(compID, tmpWeight);
     dLambdas[compIdx]=dLambda/tmpWeight;
   }
@@ -701,7 +726,19 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   }
 #endif
 
-
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp < MAX_NUM_COMPONENT; comp++)
+  {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
+#else
+    memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
+#endif 
+  }
+#endif
 
   // Adjust initial state if this is the start of a dependent slice.
   {
@@ -715,18 +752,91 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       if( pCurrentTile->getTileWidthInCtus() >= 2 || !m_pcCfg->getWaveFrontsynchro() )
       {
         m_pppcRDSbacCoder[0][CI_CURR_BEST]->loadContexts( &m_lastSliceSegmentEndContextState );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+        for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp];
+          lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+          for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+          for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+          {
+            lastPLT[comp][idx] = m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx];
+          }
+        }
+#endif
       }
     }
   }
 
-  // for every CTU in the slice segment (may terminate sooner if there is a byte limit on the slice-segment)
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp < MAX_NUM_COMPONENT; comp++)
+  {
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
+#else
+    memset(lastPLT[comp], 0, sizeof(Pel) * MAX_PLT_PRED_SIZE);
+#endif 
+  }
+#endif
 
-  for( UInt ctuTsAddr = startCtuTsAddr; ctuTsAddr < boundingCtuTsAddr; ++ctuTsAddr )
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() )
+#else
+  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() ) 
+#endif
+  {
+    pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
+  }
+
+  // for every CTU in slice
+  for( UInt ctuTsAddr = startCtuTsAddr; ctuTsAddr < boundingCtuTsAddr; ++ctuTsAddr)
   {
     const UInt ctuRsAddr = pcPic->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddr);
     // initialize CTU encoder
     TComDataCU* pCtu = pcPic->getCtu( ctuRsAddr );
     pCtu->initCtu( pcPic, ctuRsAddr );
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+    Bool resetPltPredictor = false;
+
+    if( ctuRsAddr == pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr() && !resetPltPredictor )
+    {
+      resetPltPredictor = true;
+    }
+
+    if( pCtu->getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() && !resetPltPredictor )
+    {
+      resetPltPredictor = pCtu->getCUPelX() == 0;
+    }
+
+    if( resetPltPredictor )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+        lastPLTSize[comp] = 0;
+      }
+    }
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE  
+      for (UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
 
     // update CABAC state
     const UInt firstCtuRsAddrOfTile = pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr();
@@ -750,9 +860,49 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
         {
           // Top-Right is available, we use it.
           m_pppcRDSbacCoder[0][CI_CURR_BEST]->loadContexts( &m_entropyCodingSyncContextState );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+          for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+          {
+            lastPLTUsedSize[comp] = m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp];
+            lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+            for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+            for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+            {
+              lastPLT[comp][idx] = m_entropyCodingSyncPaletteState.lastPLT[comp][idx];
+            }
+          }
+#endif
         }
       }
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+      for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+        lastPLTSize[comp] = 0;
+      }
+#endif
+
     }
+
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif 
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
 
     // set go-on entropy coder (used for all trial encodings - the cu encoder and encoder search also have a copy of the same pointer)
     m_pcEntropyCoder->setEntropyCoder ( m_pcRDGoOnSbacCoder, pcSlice );
@@ -805,10 +955,18 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #if ADAPTIVE_QP_SELECTION
       pCtu->getSlice()->setSliceQpBase( estQP );
 #endif
-    }
+#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
+  if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
+#else
+  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
+#endif
+  {
+    pcPic->releaseCSCBuffer();
+  }
+}
 
     // run CTU trial encoder
-    m_pcCuEncoder->compressCtu( pCtu );
+    m_pcCuEncoder->compressCtu( pCtu, lastPLTSize, lastPLTUsedSize, lastPLT );
 
 
     // All CTU decisions have now been made. Restore entropy coder to an initial stage, ready to make a true encode,
@@ -851,12 +1009,51 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
     pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
 
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+    if (pCtu->getLastPLTInLcuSizeFinal(COMPONENT_Y))
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
+        {
+          lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+#endif
+
     // Store probabilities of second CTU in line into buffer - used only if wavefront-parallel-processing is enabled.
     if ( ctuXPosInCtus == tileXPosInCtus+1 && m_pcCfg->getWaveFrontsynchro())
     {
       m_entropyCodingSyncContextState.loadContexts(m_pppcRDSbacCoder[0][CI_CURR_BEST]);
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+      for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+        m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+        for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+        for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+        {
+          m_entropyCodingSyncPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+        }
+      }
+#endif
     }
-
 
     if ( m_pcCfg->getUseRateCtrl() )
     {
@@ -886,6 +1083,36 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
                                                 pCtu->getSlice()->getSliceType() == I_SLICE ? 0 : m_pcCfg->getLCULevelRC() );
     }
 
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+    if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+    if (pCtu->getLastPLTInLcuSizeFinal(COMPONENT_Y))
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
+        {
+          lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+#endif
+
+    if( m_pcCfg->getUseHashBasedIntraBCSearch() )
+    {
+      m_pcPredSearch->xIntraBCHashTableUpdate(pCtu, false);
+    }
+
     m_uiPicTotalBits += pCtu->getTotalBits();
     m_dPicRdCost     += pCtu->getTotalCost();
     m_uiPicDist      += pCtu->getTotalDistortion();
@@ -895,12 +1122,32 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   if( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() )
   {
     m_lastSliceSegmentEndContextState.loadContexts( m_pppcRDSbacCoder[0][CI_CURR_BEST] );//ctx end of dep.slice
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+    {
+      m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+      m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+      {
+        m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+      }
+    }
+#endif
   }
   xRestoreWPparam( pcSlice );
 
   // stop use of temporary bit counter object.
   m_pppcRDSbacCoder[0][CI_CURR_BEST]->setBitstream(NULL);
   m_pcRDGoOnSbacCoder->setBitstream(NULL); // stop use of tempBitCounter.
+  //clear the hash table used in Intra BC search
+  if( m_pcCfg->getUseHashBasedIntraBCSearch() )
+  {
+    m_pcPredSearch->xClearIntraBCHashTable();
+  }
 }
 
 /**
@@ -938,6 +1185,11 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
   g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[3] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[3] = { 0, 0, 0 };
+  Pel lastPLT[3][MAX_PLT_PRED_SIZE];
+#endif
 
   if (depSliceSegmentsEnabled)
   {
@@ -952,9 +1204,30 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       if( pCurrentTile->getTileWidthInCtus() >= 2 || !wavefrontsEnabled )
       {
         m_pcSbacCoder->loadContexts(&m_lastSliceSegmentEndContextState);
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+        for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp];
+          lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+          for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+          for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+          {
+            lastPLT[comp][idx] = m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx];
+          }
+        }
+#endif
       }
     }
   }
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+  UChar lastPLTUsedSize[3] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[3] = { 0, 0, 0 };
+  Pel lastPLT[3][MAX_PLT_PRED_SIZE];
+#endif
 
   // for every CTU in the slice segment...
 
@@ -987,6 +1260,15 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       {
         m_pcEntropyCoder->resetEntropy();
       }
+
+#if !SCM_S0088_WPP_PALETTE_PREDICTION
+        for( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+          lastPLTSize[comp] = 0;
+        }
+#endif
+
       TComDataCU *pCtuUp = pCtu->getCtuAbove();
       if ( pCtuUp && ((ctuRsAddr%frameWidthInCtus+1) < frameWidthInCtus)  )
       {
@@ -995,9 +1277,72 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
         {
           // Top-right is available, so use it.
           m_pcSbacCoder->loadContexts( &m_entropyCodingSyncContextState );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+          for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+          {
+            lastPLTUsedSize[comp] = m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp];
+            lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+            for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+            for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+            {
+              lastPLT[comp][idx] = m_entropyCodingSyncPaletteState.lastPLT[comp][idx];
+            }
+          }
+#endif
         }
       }
     }
+
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif 
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#else
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      Bool resetPltPredictor = false;
+
+      if( ctuRsAddr == pcPic->getPicSym()->getTComTile(pcPic->getPicSym()->getTileIdxMap(ctuRsAddr))->getFirstCtuRsAddr() && !resetPltPredictor )
+      {
+        resetPltPredictor = true;
+      }
+
+      if( pCtu->getSlice()->getPPS()->getEntropyCodingSyncEnabledFlag() && !resetPltPredictor )
+      {
+        resetPltPredictor = pCtu->getCUPelX() == 0;
+      }
+
+      if( resetPltPredictor )
+      {
+        lastPLTUsedSize[comp] = PLT_SIZE_INVALID;
+        lastPLTSize[comp] = 0;
+      }
+
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+      for (UInt idx = 0; idx < pCtu->getSlice()->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+      for (UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
+      }
+    }
+#endif
 
 
     if ( pcSlice->getSPS()->getUseSAO() )
@@ -1042,10 +1387,49 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
+    if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+    if (pCtu->getLastPLTInLcuSizeFinal(COMPONENT_Y))
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE  
+        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+#else
+        for (Int idx = 0; idx < MAX_PLT_PRED_SIZE; idx++)
+#endif
+        {
+          lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+
+
     //Store probabilities of second CTU in line into buffer
     if ( ctuXPosInCtus == tileXPosInCtus+1 && wavefrontsEnabled)
     {
       m_entropyCodingSyncContextState.loadContexts( m_pcSbacCoder );
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+      for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+        m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+        for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+        for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+        {
+          m_entropyCodingSyncPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+        }
+      }
+#endif
     }
 
     // terminate the sub-stream, if required (end of slice-segment, end of tile, end of wavefront-CTU-row):
@@ -1071,15 +1455,28 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
   if( depSliceSegmentsEnabled )
   {
     m_lastSliceSegmentEndContextState.loadContexts( m_pcSbacCoder );//ctx end of dep.slice
+#if SCM_S0088_WPP_PALETTE_PREDICTION
+    for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+    {
+      m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+      m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE                         
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+#else
+      for ( UInt idx = 0; idx < MAX_PLT_PRED_SIZE; idx++ )
+#endif 
+      {
+        m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+      }
+    }
+#endif
   }
-
 #if ADAPTIVE_QP_SELECTION
   if( m_pcCfg->getUseAdaptQpSelect() )
   {
     m_pcTrQuant->storeSliceQpNext(pcSlice);
   }
 #endif
-
   if (pcSlice->getPPS()->getCabacInitPresentFlag())
   {
     if (pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag())

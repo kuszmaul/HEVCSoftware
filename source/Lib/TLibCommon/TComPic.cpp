@@ -61,6 +61,7 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+  m_apcPicYuvCSC = NULL;
 }
 
 TComPic::~TComPic()
@@ -68,9 +69,17 @@ TComPic::~TComPic()
 }
 
 Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
-                      Int *numReorderPics, Bool bIsVirtual)
+                      Int *numReorderPics, 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+#endif
+                      Bool bIsVirtual)
 {
-  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                    , uiPLTMaxSize, uiPLTMaxPredSize
+#endif
+               );
   if (!bIsVirtual)
   {
     m_apcPicYuv[PIC_YUV_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
@@ -94,6 +103,8 @@ Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UIn
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
+  m_hashMap.clearAll();
+
   return;
 }
 
@@ -114,6 +125,14 @@ Void TComPic::destroy()
       delete m_apcPicYuv[i];
       m_apcPicYuv[i]  = NULL;
     }
+  }
+
+  m_hashMap.clearAll();
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
   }
 
   deleteSEIs(m_SEIs);
@@ -173,5 +192,16 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
   return subStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64 );
+}
 
 //! \}

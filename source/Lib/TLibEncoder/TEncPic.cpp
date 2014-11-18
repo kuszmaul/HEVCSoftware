@@ -126,9 +126,17 @@ TEncPic::~TEncPic()
  * \return Void
  */
 Void TEncPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormat, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth,
-                      Window &conformanceWindow, Window &defaultDisplayWindow, Int *numReorderPics, Bool bIsVirtual )
+                      Window &conformanceWindow, Window &defaultDisplayWindow, Int *numReorderPics, 
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+#endif
+                      Bool bIsVirtual )
 {
-  TComPic::create( iWidth, iHeight, chromaFormat, uiMaxWidth, uiMaxHeight, uiMaxDepth, conformanceWindow, defaultDisplayWindow, numReorderPics, bIsVirtual );
+  TComPic::create( iWidth, iHeight, chromaFormat, uiMaxWidth, uiMaxHeight, uiMaxDepth, conformanceWindow, defaultDisplayWindow, numReorderPics,
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+     uiPLTMaxSize, uiPLTMaxPredSize,
+#endif
+     bIsVirtual );
   m_uiMaxAQDepth = uiMaxAQDepth;
   if ( uiMaxAQDepth > 0 )
   {

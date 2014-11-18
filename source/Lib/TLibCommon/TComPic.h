@@ -43,6 +43,7 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
+#include "TComHash.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -66,7 +67,7 @@ private:
   Bool                  m_bIsLongTerm;            //  IS long term picture
   TComPicSym*           m_apcPicSym;              //  Symbol
   TComPicYuv*           m_apcPicYuv[NUM_PIC_YUV];
-
+  TComPicYuv*           m_apcPicYuvCSC;
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
@@ -85,12 +86,18 @@ private:
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
+  TComHash              m_hashMap;
+
 public:
   TComPic();
   virtual ~TComPic();
 
   Void          create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
-                        Int *numReorderPics,Bool bIsVirtual /*= false*/ );
+                        Int *numReorderPics,
+#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+  UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+#endif
+  Bool bIsVirtual /*= false*/ );
 
   virtual Void  destroy();
 
@@ -112,6 +119,17 @@ public:
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
+  TComPicYuv*   getPicYuvCSC()        { return  m_apcPicYuvCSC; }
+  Void          allocateCSCBuffer( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+                { assert( m_apcPicYuvCSC == NULL ); m_apcPicYuvCSC = new TComPicYuv; m_apcPicYuvCSC->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth ); }
+  Void          releaseCSCBuffer()    { m_apcPicYuvCSC->destroy(); delete m_apcPicYuvCSC; m_apcPicYuvCSC = NULL; }
+  Void          exchangePicYuvRec()
+                {
+                   TComPicYuv* pcTmpPicYuv;
+                   pcTmpPicYuv = m_apcPicYuv[PIC_YUV_REC];
+                   m_apcPicYuv[PIC_YUV_REC] = m_apcPicYuvCSC;
+                   m_apcPicYuvCSC = pcTmpPicYuv;
+                }
 
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
@@ -154,6 +172,9 @@ public:
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
   UInt          getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRaster, TComSlice *pcSlice);
+  
+  Void          addPictureToHashMapForInter();
+  TComHash*     getHashMap() { return &m_hashMap; }
 
   /* field coding parameters*/
 
