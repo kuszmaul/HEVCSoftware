@@ -97,9 +97,21 @@ Void TEncSlice::destroy()
   }
 
   // free lambda and QP arrays
-  if ( m_pdRdPicLambda ) { xFree( m_pdRdPicLambda ); m_pdRdPicLambda = NULL; }
-  if ( m_pdRdPicQp     ) { xFree( m_pdRdPicQp     ); m_pdRdPicQp     = NULL; }
-  if ( m_piRdPicQp     ) { xFree( m_piRdPicQp     ); m_piRdPicQp     = NULL; }
+  if ( m_pdRdPicLambda )
+  {
+    xFree( m_pdRdPicLambda );
+    m_pdRdPicLambda = NULL;
+  }
+  if ( m_pdRdPicQp )
+  {
+    xFree( m_pdRdPicQp );
+    m_pdRdPicQp = NULL;
+  }
+  if ( m_piRdPicQp )
+  {
+    xFree( m_piRdPicQp );
+    m_piRdPicQp = NULL;
+  }
 }
 
 Void TEncSlice::init( TEncTop* pcEncTop )
@@ -838,7 +850,9 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     }
 
     if (boundingCtuTsAddr <= ctuTsAddr)
+    {
       break;
+    }
 
     pcSlice->setSliceBits( (UInt)(pcSlice->getSliceBits() + numberOfWrittenBits) );
     pcSlice->setSliceSegmentBits(pcSlice->getSliceSegmentBits()+numberOfWrittenBits);
@@ -1009,7 +1023,10 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
       {
         ComponentID compId=ComponentID(comp);
         sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < pcPic->getNumberValidComponents());
-        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+        if (sliceEnabled[compId])
+        {
+          bIsSAOSliceEnabled=true;
+        }
       }
       if (bIsSAOSliceEnabled)
       {
@@ -1110,10 +1127,7 @@ Void TEncSlice::calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UI
       }
       break;
     case FIXED_NUMBER_OF_BYTES:
-      if (encodingSlice)
-        boundingCtuTSAddrSlice  = sliceCurEndCtuTSAddr;
-      else
-        boundingCtuTSAddrSlice  = numberOfCtusInFrame;
+      boundingCtuTSAddrSlice  = (encodingSlice) ? sliceCurEndCtuTSAddr : numberOfCtusInFrame;
       break;
     case FIXED_NUMBER_OF_TILES:
       {
@@ -1184,7 +1198,7 @@ Void TEncSlice::calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UI
  * \param bEncodeSlice Identifies if the calling function is compressSlice() [false] or encodeSlice() [true]
  * \returns Updates startCtuTsAddr, boundingCtuTsAddr with appropriate CTU address
  */
-Void TEncSlice::xDetermineStartAndBoundingCtuTsAddr  ( UInt& startCtuTsAddr, UInt& boundingCtuTsAddr, TComPic* pcPic, const Bool encodingSlice )
+Void TEncSlice::xDetermineStartAndBoundingCtuTsAddr  ( UInt& startCtuTsAddr, UInt& boundingCtuTsAddr, TComPic* pcPic, const Bool encodingSlice ) // TODO: this is now only ever called with encodingSlice=false
 {
   TComSlice* pcSlice                 = pcPic->getSlice(getSliceIdx());
 

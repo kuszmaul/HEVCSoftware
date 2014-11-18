@@ -173,14 +173,17 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
 #if ADAPTIVE_QP_SELECTION
       if( bGlobalRMARLBuffer )
       {
-        if (m_pcGlbArlCoeff[compID] == NULL) m_pcGlbArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
+        if (m_pcGlbArlCoeff[compID] == NULL)
+        {
+          m_pcGlbArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
+        }
 
         m_pcArlCoeff[compID] = m_pcGlbArlCoeff[compID];
         m_ArlCoeffIsAliasedAllocation = true;
       }
       else
       {
-         m_pcArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
+        m_pcArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
       }
 #endif
       m_pcIPCMSample[compID] = (Pel*   )xMalloc(Pel , totalSize);
@@ -220,20 +223,68 @@ Void TComDataCU::destroy()
   // encoder-side buffer free
   if ( !m_bDecSubCu )
   {
-    if ( m_phQP               ) { xFree(m_phQP);                m_phQP               = NULL; }
-    if ( m_puhDepth           ) { xFree(m_puhDepth);            m_puhDepth           = NULL; }
-    if ( m_puhWidth           ) { xFree(m_puhWidth);            m_puhWidth           = NULL; }
-    if ( m_puhHeight          ) { xFree(m_puhHeight);           m_puhHeight          = NULL; }
+    if ( m_phQP )
+    {
+      xFree(m_phQP);
+      m_phQP = NULL;
+    }
+    if ( m_puhDepth )
+    {
+      xFree(m_puhDepth);
+      m_puhDepth = NULL;
+    }
+    if ( m_puhWidth )
+    {
+      xFree(m_puhWidth);
+      m_puhWidth = NULL;
+    }
+    if ( m_puhHeight )
+    {
+      xFree(m_puhHeight);
+      m_puhHeight = NULL;
+    }
 
-    if ( m_skipFlag           ) { delete[] m_skipFlag;          m_skipFlag          = NULL; }
+    if ( m_skipFlag )
+    {
+      delete[] m_skipFlag;
+      m_skipFlag = NULL;
+    }
 
-    if ( m_pePartSize         ) { delete[] m_pePartSize;        m_pePartSize         = NULL; }
-    if ( m_pePredMode         ) { delete[] m_pePredMode;        m_pePredMode         = NULL; }
-    if ( m_ChromaQpAdj        ) { delete[] m_ChromaQpAdj;       m_ChromaQpAdj        = NULL; }
-    if ( m_CUTransquantBypass ) { delete[] m_CUTransquantBypass;m_CUTransquantBypass = NULL; }
-    if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir        = NULL; }
-    if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag        = NULL; }
-    if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex      = NULL; }
+    if ( m_pePartSize )
+    {
+      delete[] m_pePartSize;
+      m_pePartSize = NULL;
+    }
+    if ( m_pePredMode )
+    {
+      delete[] m_pePredMode;
+      m_pePredMode = NULL;
+    }
+    if ( m_ChromaQpAdj )
+    {
+      delete[] m_ChromaQpAdj;
+      m_ChromaQpAdj = NULL;
+    }
+    if ( m_CUTransquantBypass )
+    {
+      delete[] m_CUTransquantBypass;
+      m_CUTransquantBypass = NULL;
+    }
+    if ( m_puhInterDir )
+    {
+      xFree(m_puhInterDir);
+      m_puhInterDir = NULL;
+    }
+    if ( m_pbMergeFlag )
+    {
+      xFree(m_pbMergeFlag);
+      m_pbMergeFlag = NULL;
+    }
+    if ( m_puhMergeIndex )
+    {
+      xFree(m_puhMergeIndex);
+      m_puhMergeIndex  = NULL;
+    }
 
     for (UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
     {
@@ -241,34 +292,82 @@ Void TComDataCU::destroy()
       m_puhIntraDir[ch] = NULL;
     }
 
-    if ( m_puhTrIdx           ) { xFree(m_puhTrIdx);            m_puhTrIdx          = NULL; }
+    if ( m_puhTrIdx )
+    {
+      xFree(m_puhTrIdx);
+      m_puhTrIdx = NULL;
+    }
 
     for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
     {
-      if ( m_crossComponentPredictionAlpha[comp] ) { xFree(m_crossComponentPredictionAlpha[comp]); m_crossComponentPredictionAlpha[comp] = NULL; }
-      if ( m_puhTransformSkip[comp]              ) { xFree(m_puhTransformSkip[comp]);              m_puhTransformSkip[comp]              = NULL; }
-      if ( m_puhCbf[comp]                        ) { xFree(m_puhCbf[comp]);                        m_puhCbf[comp]                        = NULL; }
-      if ( m_pcTrCoeff[comp]                     ) { xFree(m_pcTrCoeff[comp]);                     m_pcTrCoeff[comp]                     = NULL; }
-      if ( m_explicitRdpcmMode[comp]             ) { xFree(m_explicitRdpcmMode[comp]);             m_explicitRdpcmMode[comp]             = NULL; }
+      if ( m_crossComponentPredictionAlpha[comp] )
+      {
+        xFree(m_crossComponentPredictionAlpha[comp]);
+        m_crossComponentPredictionAlpha[comp] = NULL;
+      }
+      if ( m_puhTransformSkip[comp] )
+      {
+        xFree(m_puhTransformSkip[comp]);
+        m_puhTransformSkip[comp] = NULL;
+      }
+      if ( m_puhCbf[comp] )
+      {
+        xFree(m_puhCbf[comp]);
+        m_puhCbf[comp] = NULL;
+      }
+      if ( m_pcTrCoeff[comp] )
+      {
+        xFree(m_pcTrCoeff[comp]);
+        m_pcTrCoeff[comp] = NULL;
+      }
+      if ( m_explicitRdpcmMode[comp] )
+      {
+        xFree(m_explicitRdpcmMode[comp]);
+        m_explicitRdpcmMode[comp] = NULL;
+      }
 
 #if ADAPTIVE_QP_SELECTION
       if (!m_ArlCoeffIsAliasedAllocation)
       {
-        if ( m_pcArlCoeff[comp]     ) { xFree(m_pcArlCoeff[comp]);      m_pcArlCoeff[comp]    = NULL; }
+        if ( m_pcArlCoeff[comp] )
+        {
+          xFree(m_pcArlCoeff[comp]);
+          m_pcArlCoeff[comp] = NULL;
+        }
       }
 
-      if ( m_pcGlbArlCoeff[comp]  ) { xFree(m_pcGlbArlCoeff[comp]);   m_pcGlbArlCoeff[comp] = NULL; }
+      if ( m_pcGlbArlCoeff[comp] )
+      {
+        xFree(m_pcGlbArlCoeff[comp]);
+        m_pcGlbArlCoeff[comp] = NULL;
+      }
 #endif
 
-      if ( m_pcIPCMSample[comp]   ) { xFree(m_pcIPCMSample[comp]);    m_pcIPCMSample[comp]  = NULL; }
+      if ( m_pcIPCMSample[comp] )
+      {
+        xFree(m_pcIPCMSample[comp]);
+        m_pcIPCMSample[comp] = NULL;
+      }
     }
-    if ( m_pbIPCMFlag         ) { xFree(m_pbIPCMFlag   );       m_pbIPCMFlag        = NULL; }
+    if ( m_pbIPCMFlag )
+    {
+      xFree(m_pbIPCMFlag );
+      m_pbIPCMFlag = NULL;
+    }
 
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
     {
       const RefPicList rpl=RefPicList(i);
-      if ( m_apiMVPIdx[rpl]       ) { delete[] m_apiMVPIdx[rpl];      m_apiMVPIdx[rpl]      = NULL; }
-      if ( m_apiMVPNum[rpl]       ) { delete[] m_apiMVPNum[rpl];      m_apiMVPNum[rpl]      = NULL; }
+      if ( m_apiMVPIdx[rpl] )
+      {
+        delete[] m_apiMVPIdx[rpl];
+        m_apiMVPIdx[rpl] = NULL;
+      }
+      if ( m_apiMVPNum[rpl] )
+      {
+        delete[] m_apiMVPNum[rpl];
+        m_apiMVPNum[rpl] = NULL;
+      }
     }
 
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -1416,19 +1515,31 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
   // Get intra direction of left PU
   pcCULeft = getPULeft( LeftPartIdx, m_absZIdxInCtu + uiAbsPartIdx );
 
-  if (isChroma(compID)) LeftPartIdx = getChromasCorrespondingPULumaIdx(LeftPartIdx, chForm);
+  if (isChroma(compID))
+  {
+    LeftPartIdx = getChromasCorrespondingPULumaIdx(LeftPartIdx, chForm);
+  }
   iLeftIntraDir  = pcCULeft ? ( pcCULeft->isIntra( LeftPartIdx ) ? pcCULeft->getIntraDir( chType, LeftPartIdx ) : DC_IDX ) : DC_IDX;
 
   // Get intra direction of above PU
   pcCUAbove = getPUAbove( AbovePartIdx, m_absZIdxInCtu + uiAbsPartIdx, true, true );
 
-  if (isChroma(compID)) AbovePartIdx = getChromasCorrespondingPULumaIdx(AbovePartIdx, chForm);
+  if (isChroma(compID))
+  {
+    AbovePartIdx = getChromasCorrespondingPULumaIdx(AbovePartIdx, chForm);
+  }
   iAboveIntraDir = pcCUAbove ? ( pcCUAbove->isIntra( AbovePartIdx ) ? pcCUAbove->getIntraDir( chType, AbovePartIdx ) : DC_IDX ) : DC_IDX;
 
   if (isChroma(chType))
   {
-    if (iLeftIntraDir  == DM_CHROMA_IDX) iLeftIntraDir  = pcCULeft-> getIntraDir( CHANNEL_TYPE_LUMA, LeftPartIdx  );
-    if (iAboveIntraDir == DM_CHROMA_IDX) iAboveIntraDir = pcCUAbove->getIntraDir( CHANNEL_TYPE_LUMA, AbovePartIdx );
+    if (iLeftIntraDir  == DM_CHROMA_IDX)
+    {
+      iLeftIntraDir  = pcCULeft-> getIntraDir( CHANNEL_TYPE_LUMA, LeftPartIdx  );
+    }
+    if (iAboveIntraDir == DM_CHROMA_IDX)
+    {
+      iAboveIntraDir = pcCUAbove->getIntraDir( CHANNEL_TYPE_LUMA, AbovePartIdx );
+    }
   }
 
   assert (2<NUM_MOST_PROBABLE_MODES);
@@ -1471,7 +1582,9 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
     }
   }
   for (UInt i=0; i<NUM_MOST_PROBABLE_MODES; i++)
+  {
     assert(uiIntraDirPred[i] < 35);
+  }
 }
 
 UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
@@ -3234,7 +3347,10 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   //this mechanism is available for intra only
 
-  if (!isIntra(uiAbsPartIdx)) return SCAN_DIAG;
+  if (!isIntra(uiAbsPartIdx))
+  {
+    return SCAN_DIAG;
+  }
 
   //------------------------------------------------
 
@@ -3245,7 +3361,10 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
   const UInt maximumWidth  = MDCS_MAXIMUM_WIDTH  >> getComponentScaleX(compID, format);
   const UInt maximumHeight = MDCS_MAXIMUM_HEIGHT >> getComponentScaleY(compID, format);
 
-  if ((uiWidth > maximumWidth) || (uiHeight > maximumHeight)) return SCAN_DIAG;
+  if ((uiWidth > maximumWidth) || (uiHeight > maximumHeight))
+  {
+    return SCAN_DIAG;
+  }
 
   //------------------------------------------------
 
@@ -3265,9 +3384,18 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   //------------------
 
-  if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_HOR;
-  else if (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT) return SCAN_VER;
-  else return SCAN_DIAG;
+  if      (abs((Int)uiDirMode - VER_IDX) <= MDCS_ANGLE_LIMIT)
+  {
+    return SCAN_HOR;
+  }
+  else if (abs((Int)uiDirMode - HOR_IDX) <= MDCS_ANGLE_LIMIT)
+  {
+    return SCAN_VER;
+  }
+  else
+  {
+    return SCAN_DIAG;
+  }
 }
 
 //! \}

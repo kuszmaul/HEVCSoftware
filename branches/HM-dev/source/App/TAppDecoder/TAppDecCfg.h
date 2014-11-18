@@ -87,7 +87,9 @@ public:
 #endif
   {
     for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+    {
       m_outputBitDepth[channelTypeIndex] = 0;
+    }
   }
 
   virtual ~TAppDecCfg() {}

@@ -872,7 +872,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if(pcSlice->getSPS()->getUseSAO())
     {
        WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_LUMA), "slice_sao_luma_flag" );
-       if (chromaEnabled) WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA), "slice_sao_chroma_flag" );
+       if (chromaEnabled)
+       {
+         WRITE_FLAG( pcSlice->getSaoEnabledFlag(CHANNEL_TYPE_CHROMA), "slice_sao_chroma_flag" );
+       }
     }
 
     //check if numrefidxes match the defaults. If not, override
@@ -991,8 +994,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     WRITE_SVLC( iCode, "slice_qp_delta" );
     if (pcSlice->getPPS()->getSliceChromaQpFlag())
     {
-      if (numberValidComponents > COMPONENT_Cb) { WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb), "slice_qp_delta_cb" ); }
-      if (numberValidComponents > COMPONENT_Cr) { WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr), "slice_qp_delta_cr" ); }
+      if (numberValidComponents > COMPONENT_Cb)
+      {
+        WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cb), "slice_qp_delta_cb" );
+      }
+      if (numberValidComponents > COMPONENT_Cr)
+      {
+        WRITE_SVLC( pcSlice->getSliceChromaQpDelta(COMPONENT_Cr), "slice_qp_delta_cr" );
+      }
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
 

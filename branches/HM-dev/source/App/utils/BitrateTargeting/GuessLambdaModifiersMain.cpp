@@ -48,7 +48,10 @@ int main( int argc, char** ppArgv )
 {
   try
   {
-    if( argc != 3 ) throw WrongNumberOfArgumentsException( );
+    if( argc != 3 )
+    {
+      throw WrongNumberOfArgumentsException( );
+    }
 
     std::string initialAdjustmentParameterString( ppArgv[ 1 ] );
     std::istringstream initialAdjustmentParameterIstream( initialAdjustmentParameterString );

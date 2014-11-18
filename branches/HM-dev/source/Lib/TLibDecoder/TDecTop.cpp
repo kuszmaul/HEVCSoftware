@@ -201,7 +201,10 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
 
 Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>* pcListPic)
 {
-  if (!pcListPic || !m_isNoOutputPriorPics) return;
+  if (!pcListPic || !m_isNoOutputPriorPics)
+  {
+    return;
+  }
 
   TComList<TComPic*>::iterator  iterPic   = pcListPic->begin();
 

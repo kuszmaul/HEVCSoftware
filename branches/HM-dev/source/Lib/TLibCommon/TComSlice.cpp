@@ -165,7 +165,10 @@ Void TComSlice::initSlice()
 
   m_bCheckLDC = false;
 
-  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = 0;
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++)
+  {
+    m_iSliceChromaQpDelta[component] = 0;
+  }
 
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
 
@@ -199,7 +202,10 @@ Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
   for (Int i = 1; i < (Int)(rcListPic.size()); i++)
   {
     iterPicExtract = rcListPic.begin();
-    for (Int j = 0; j < i; j++) iterPicExtract++;
+    for (Int j = 0; j < i; j++)
+    {
+      iterPicExtract++;
+    }
     pcPicExtract = *(iterPicExtract);
     pcPicExtract->setCurrSliceIdx(0);
 
@@ -605,7 +611,10 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
-      if (rpcPic->getPOC() != pocCurr) rpcPic->getSlice(0)->setReferenced(false);
+      if (rpcPic->getPOC() != pocCurr)
+      {
+        rpcPic->getSlice(0)->setReferenced(false);
+      }
       iterPic++;
     }
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -697,7 +706,10 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_bCheckLDC             = pSrc->m_bCheckLDC;
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
-  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_iSliceChromaQpDelta[component] = pSrc->m_iSliceChromaQpDelta[component];
+  for (UInt component = 0; component < MAX_NUM_COMPONENT; component++)
+  {
+    m_iSliceChromaQpDelta[component] = pSrc->m_iSliceChromaQpDelta[component];
+  }
   for (i = 0; i < NUM_REF_PIC_LIST_01; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)

@@ -206,7 +206,10 @@ Void TAppDecTop::decode()
       {
         for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
         {
-          if (m_outputBitDepth[channelType] == 0) m_outputBitDepth[channelType] = g_bitDepth[channelType];
+          if (m_outputBitDepth[channelType] == 0)
+          {
+            m_outputBitDepth[channelType] = g_bitDepth[channelType];
+          }
         }
 
         m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, g_bitDepth ); // write mode

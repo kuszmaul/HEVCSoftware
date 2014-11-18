@@ -1134,7 +1134,9 @@ Void  TEncCfg::xCheckGSParameters()
   if( m_iNumRowsMinus1 && !m_tileUniformSpacingFlag )
   {
     for(Int i=0; i<m_iNumRowsMinus1; i++)
+    {
       uiCummulativeRowHeight += m_tileRowHeight[i];
+    }
 
     if( uiCummulativeRowHeight >= iHeightInCU )
     {

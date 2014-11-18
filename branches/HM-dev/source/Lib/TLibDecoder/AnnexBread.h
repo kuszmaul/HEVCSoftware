@@ -88,7 +88,9 @@ public:
   {
     assert(n <= 4);
     if (m_NumFutureBytes >= n)
+    {
       return false;
+    }
 
     n -= m_NumFutureBytes;
     try
@@ -152,7 +154,9 @@ public:
   {
     uint32_t val = 0;
     for (UInt i = 0; i < n; i++)
+    {
       val = (val << 8) | readByte();
+    }
     return val;
   }
 

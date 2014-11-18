@@ -402,9 +402,13 @@ Void  TEncSbac::loadIntraDirMode( const TEncSbac* pSrc, const ChannelType chType
 {
   m_pcBinIf->copyState( pSrc->m_pcBinIf );
   if (isLuma(chType))
+  {
     this->m_cCUIntraPredSCModel      .copyFrom( &pSrc->m_cCUIntraPredSCModel       );
+  }
   else
+  {
     this->m_cCUChromaPredSCModel     .copyFrom( &pSrc->m_cCUChromaPredSCModel      );
+  }
 }
 
 
@@ -608,7 +612,9 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+  {
     return;
+  }
 
   UInt uiCtx           = pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth );
   UInt uiCurrSplitFlag = ( pcCU->getDepth( uiAbsPartIdx ) > uiDepth ) ? 1 : 0;
@@ -827,7 +833,10 @@ Void TEncSbac::codeCrossComponentPrediction( TComTU &rTu, ComponentID compID )
 {
   TComDataCU *pcCU = rTu.getCU();
 
-  if( isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction() ) return;
+  if( isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction() )
+  {
+    return;
+  }
 
   const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
 
@@ -1257,7 +1266,9 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
     {
       beValid = false;
       if ( (!pcCU->isIntra(uiAbsPartIdx)) && pcCU->isRDPCMEnabled(uiAbsPartIdx))
+      {
         codeExplicitRdpcmMode( rTu, compID);
+      }
     }
     else
     {
@@ -1317,8 +1328,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
 
       uiNumSig--;
     }
-  }
-  while ( uiNumSig > 0 );
+  } while ( uiNumSig > 0 );
 
   // Code position of last coefficient
   Int posLastY = posLast >> uiLog2BlockWidth;

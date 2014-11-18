@@ -484,7 +484,9 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     //  Set data as per command line options
     sei_time_code.numClockTs = m_pcCfg->getNumberOfTimesets();
     for(Int i = 0; i < sei_time_code.numClockTs; i++)
+    {
       sei_time_code.timeSetArray[i] = m_pcCfg->getTimeSet(i);
+    }
 
     nalu = NALUnit(NAL_UNIT_PREFIX_SEI);
     m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
@@ -882,7 +884,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 for(kk=0;kk<m_pcCfg->getGOPSize();kk++)
                 {
                   if(m_pcCfg->getGOPEntry(kk).m_POC==tPoc)
+                  {
                     break;
+                  }
                 }
                 Int tTid=m_pcCfg->getGOPEntry(kk).m_temporalId;
                 if(tTid >= pcSlice->getTLayer())
@@ -1820,7 +1824,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
                 ui64Tmp = uiPrev + 1;
                 flag = 1;
               }
-              else                            ui64Tmp = maxDiff - tmp + 1;
+              else
+              {
+                ui64Tmp = maxDiff - tmp + 1;
+              }
             }
             pCRD[ i ] = (UInt)ui64Tmp - uiPrev - 1;
             if( (Int)pCRD[ i ] < 0 )
@@ -1980,8 +1987,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
   delete pcBitstreamRedirect;
 
-  if( accumBitsDU != NULL) delete accumBitsDU;
-  if( accumNalsDU != NULL) delete accumNalsDU;
+  if( accumBitsDU != NULL)
+  {
+    delete accumBitsDU;
+  }
+  if( accumNalsDU != NULL)
+  {
+    delete accumNalsDU;
+  }
 
   assert ( (m_iNumPicCoded == iNumPicRcvd) );
 }
@@ -2046,7 +2059,9 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist )
   m_pcLoopFilter->loopFilterPic( pcPic );
 
   if (!bCalcDist)
+  {
     ruiDist = xFindDistortionFrame(pcPic->getPicYuvOrg(), pcPic->getPicYuvRec());
+  }
 }
 
 // ====================================================================================================================
@@ -2268,7 +2283,10 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
-  if (!pcSlice->isReferenced()) c += 32;
+  if (!pcSlice->isReferenced())
+  {
+    c += 32;
+  }
 
 #if ADAPTIVE_QP_SELECTION
   printf("POC %4d TId: %1d ( %c-SLICE, nQP %d QP %d ) %10d bits",
@@ -2470,7 +2488,9 @@ Double TEncGOP::xCalculateRVM()
     {
       vRL[i] = 0;
       for( Int j = i - RVM_VCEGAM10_M ; j <= i + RVM_VCEGAM10_M - 1 ; j++ )
+      {
         vRL[i] += m_vRVM_RP[j];
+      }
       vRL[i] /= ( 2 * RVM_VCEGAM10_M );
       vB[i] = vB[i-1] + m_vRVM_RP[i] - vRL[i];
       dRavg += m_vRVM_RP[i];

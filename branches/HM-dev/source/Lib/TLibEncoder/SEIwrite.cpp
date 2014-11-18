@@ -156,7 +156,9 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, const TComSPS *sp
 
 #if ENC_DEC_TRACE
   if (g_HLSTraceEnable)
-  xTraceSEIHeader();
+  {
+    xTraceSEIHeader();
+  }
 #endif
 
   UInt payloadType = sei.payloadType();
@@ -176,7 +178,9 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, const TComSPS *sp
   /* payloadData */
 #if ENC_DEC_TRACE
   if (g_HLSTraceEnable)
-  xTraceSEIMessageType(sei.payloadType());
+  {
+    xTraceSEIMessageType(sei.payloadType());
+  }
 #endif
 
   xWriteSEIpayloadData(bs, sei, sps);
@@ -341,7 +345,8 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
   WRITE_UVLC( sei.m_arrangementId,                  "frame_packing_arrangement_id" );
   WRITE_FLAG( sei.m_arrangementCancelFlag,          "frame_packing_arrangement_cancel_flag" );
 
-  if( sei.m_arrangementCancelFlag == 0 ) {
+  if( sei.m_arrangementCancelFlag == 0 )
+  {
     WRITE_CODE( sei.m_arrangementType, 7,           "frame_packing_arrangement_type" );
 
     WRITE_FLAG( sei.m_quincunxSamplingFlag,         "quincunx_sampling_flag" );
@@ -631,7 +636,9 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
             WRITE_CODE(currentTimeSet.minutesValue, 6, "minutes_value");
             WRITE_FLAG(currentTimeSet.hoursFlag, "hours_flag");
             if(currentTimeSet.hoursFlag)
+            {
               WRITE_CODE(currentTimeSet.hoursValue, 5, "hours_value");
+            }
           }
         }
       }
