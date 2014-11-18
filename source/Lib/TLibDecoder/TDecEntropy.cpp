@@ -84,8 +84,6 @@ Void TDecEntropy::decodeMergeFlag( TComDataCU* pcSubCU, UInt uiAbsPartIdx, UInt 
  * \param pcCU
  * \param uiPartIdx
  * \param uiAbsPartIdx
- * \param puhInterDirNeighbours pointer to list of inter direction from the casual neighbours
- * \param pcMvFieldNeighbours pointer to list of motion vector field from the casual neighbours
  * \param uiDepth
  * \returns Void
  */
@@ -195,7 +193,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     uhInterDirNeighbours[ui] = 0;
   }
   Int numValidMergeCand = 0;
-  Bool isMerged = false;
+  Bool hasMergedCandList = false;
 
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
@@ -216,13 +214,13 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 )
       {
-        pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-        if ( !isMerged )
+        if ( !hasMergedCandList )
         {
+          pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); // temporarily set.
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-          isMerged = true;
+          pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth ); // restore.
+          hasMergedCandList = true;
         }
-        pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth );
       }
       else
       {
