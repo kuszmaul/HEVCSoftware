@@ -203,7 +203,6 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
                       Int           iSearchRange,
                       Int           bipredSearchRange,
                       Int           iFastSearch,
-                      Int           iMaxDeltaQP,
                       TEncEntropy*  pcEntropyCoder,
                       TComRdCost*   pcRdCost,
                       TEncSbac*** pppcRDSbacCoder,
@@ -215,7 +214,6 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_iSearchRange         = iSearchRange;
   m_bipredSearchRange    = bipredSearchRange;
   m_iFastSearch          = iFastSearch;
-  m_iMaxDeltaQP          = iMaxDeltaQP;
   m_pcEntropyCoder       = pcEntropyCoder;
   m_pcRdCost             = pcRdCost;
 
@@ -4319,39 +4317,33 @@ Void TEncSearch::xPatternSearchFracDIF(
  */
 Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg, TComYuv* pcYuvPred,
                                             TComYuv* pcYuvResi, TComYuv* pcYuvResiBest, TComYuv* pcYuvRec,
-                                            Bool bSkipRes DEBUG_STRING_FN_DECLARE(sDebug) )
+                                            Bool bSkipResidual DEBUG_STRING_FN_DECLARE(sDebug) )
 {
-  if ( pcCU->isIntra(0) )
-  {
-    return;
-  }
+  assert ( !pcCU->isIntra(0) );
 
-  Bool       bHighPass    = pcCU->getSlice()->getDepth() ? true : false;
-  UInt       uiBits       = 0, uiBitsBest       = 0;
-  Distortion uiDistortion = 0, uiDistortionBest = 0;
+  const UInt cuWidthPixels      = pcCU->getWidth ( 0 );
+  const UInt cuHeightPixels     = pcCU->getHeight( 0 );
+  const Int  numValidComponents = pcCU->getPic()->getNumberValidComponents();
 
-  UInt        uiWidth      = pcCU->getWidth ( 0 );
-  UInt        uiHeight     = pcCU->getHeight( 0 );
-
-  // The pcCU is not marked as skip-mode at this point, and its coeffs and arlCoeffs will all be 0.
+  // The pcCU is not marked as skip-mode at this point, and its m_pcTrCoeff, m_pcArlCoeff, m_puhCbf, m_puhTrIdx will all be 0.
   // due to prior calls to TComDataCU::initEstData(  );
 
-  //  No residual coding : SKIP mode
-  if ( bSkipRes )
+  if ( bSkipResidual ) //  No residual coding : SKIP mode
   {
     pcCU->setSkipFlagSubParts( true, 0, pcCU->getDepth(0) );
 
     pcYuvResi->clear();
 
     pcYuvPred->copyToPartYuv( pcYuvRec, 0 );
+    Distortion distortion = 0;
 
-    for (UInt ch=0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
+    for (Int comp=0; comp < numValidComponents; comp++)
     {
-      const ComponentID compID=ComponentID(ch);
+      const ComponentID compID=ComponentID(comp);
       const UInt csx=pcYuvOrg->getComponentScaleX(compID);
       const UInt csy=pcYuvOrg->getComponentScaleY(compID);
-      uiDistortion += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], pcYuvRec->getAddr(compID), pcYuvRec->getStride(compID), pcYuvOrg->getAddr(compID),
-                                               pcYuvOrg->getStride(compID), uiWidth >> csx, uiHeight >> csy, compID);
+      distortion += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], pcYuvRec->getAddr(compID), pcYuvRec->getStride(compID), pcYuvOrg->getAddr(compID),
+                                               pcYuvOrg->getStride(compID), cuWidthPixels >> csx, cuHeightPixels >> csy, compID);
     }
 
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
@@ -4365,16 +4357,12 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
 
-    uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
+    UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     pcCU->getTotalBits()       = uiBits;
-    pcCU->getTotalDistortion() = uiDistortion;
-    pcCU->getTotalCost()       = m_pcRdCost->calcRdCost( uiBits, uiDistortion );
+    pcCU->getTotalDistortion() = distortion;
+    pcCU->getTotalCost()       = m_pcRdCost->calcRdCost( uiBits, distortion );
 
     m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_TEMP_BEST]);
-
-    static const UInt cbfZero[MAX_NUM_COMPONENT]={0,0,0};
-    pcCU->setCbfSubParts( cbfZero, 0, pcCU->getDepth( 0 ) );
-    pcCU->setTrIdxSubParts( 0, 0, pcCU->getDepth(0) );
 
 #ifdef DEBUG_STRING
     pcYuvResiBest->clear(); // Clear the residual image, if we didn't code it.
@@ -4388,210 +4376,97 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   }
 
   //  Residual coding.
-  Int qp;
-  Int qpBest = 0;
-  Int qpMin;
-  Int qpMax;
-  Double  dCost, dCostBest = MAX_DOUBLE;
 
-  UInt uiTrLevel = 0;
-  if( (pcCU->getWidth(0) > pcCU->getSlice()->getSPS()->getMaxTrSize()) )
-  {
-    while( pcCU->getWidth(0) > (pcCU->getSlice()->getSPS()->getMaxTrSize()<<uiTrLevel) )
-    {
-      uiTrLevel++;
-    }
-  }
-
-  // TODO: there should be a check on the CU depth (but see to-do below regarding this feature) eg:
-  // bHighPass = (bHighPass && pcCU->getDepth(0) <= pcCU->getSlice()->getPPS()->getMaxCuDQPDepth());
-  qpMin =  bHighPass ? Clip3( -pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, pcCU->getQP(0) - m_iMaxDeltaQP ) : pcCU->getQP( 0 );
-  qpMax =  bHighPass ? Clip3( -pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA), MAX_QP, pcCU->getQP(0) + m_iMaxDeltaQP ) : pcCU->getQP( 0 );
-
-  pcYuvResi->subtract( pcYuvOrg, pcYuvPred, 0, uiWidth );
+   pcYuvResi->subtract( pcYuvOrg, pcYuvPred, 0, cuWidthPixels );
 
   TComTURecurse tuLevel0(pcCU, 0);
 
-  for ( qp = qpMin; qp <= qpMax; qp++ ) // TODO: see the to-do below about this loop.
+  Double     nonZeroCost       = 0;
+  UInt       nonZeroBits       = 0;
+  Distortion nonZeroDistortion = 0;
+  Distortion zeroDistortion    = 0;
+
+  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_CURR_BEST ] );
+
+  xEstimateInterResidualQT( pcYuvResi,  nonZeroCost, nonZeroBits, nonZeroDistortion, &zeroDistortion, tuLevel0 DEBUG_STRING_PASS_INTO(sDebug) );
+
+  // -------------------------------------------------------
+  // set the coefficients in the pcCU, and also calculates the residual data.
+  // If a block full of 0's is efficient, then just use 0's.
+  // The costs at this point do not include header bits.
+
+  m_pcEntropyCoder->resetBits();
+  m_pcEntropyCoder->encodeQtRootCbfZero( pcCU );
+  const UInt   zeroResiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
+  const Double zeroCost     = (pcCU->isLosslessCoded( 0 )) ? (nonZeroCost+1) : (m_pcRdCost->calcRdCost( zeroResiBits, zeroDistortion ));
+
+  if ( zeroCost < nonZeroCost || !pcCU->getQtRootCbf(0) )
   {
-    dCost = 0.;
-    uiBits = 0;
-    uiDistortion = 0;
-
-    // TODO: see the to-do below. eg:
-    //if (qpMin != qpMax)
-    //{
-    //  pcCU->setQPSubParts(qp, 0, pcCU->getDepth(0));
-    //  pcCU->setSkipFlagSubParts(false, 0, pcCU->getDepth(0));
-    //}
-
-    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_CURR_BEST ] );
-
-    Distortion uiZeroDistortion = 0;
-
-    xEstimateResidualQT( pcYuvResi,  dCost, uiBits, uiDistortion, &uiZeroDistortion, tuLevel0 DEBUG_STRING_PASS_INTO(sDebug) );
-
-    // -------------------------------------------------------
-    // set the coefficients in the pcCU, and also calculates the residual data.
-    // If a block full of 0's is efficient, then just use 0's.
-    // The costs at this point do not include header bits.
-
-    m_pcEntropyCoder->resetBits();
-    m_pcEntropyCoder->encodeQtRootCbfZero( pcCU );
-    UInt zeroResiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-    Double dZeroCost = m_pcRdCost->calcRdCost( zeroResiBits, uiZeroDistortion );
-
-    if(pcCU->isLosslessCoded( 0 ))
-    {
-      dZeroCost = dCost + 1;
-    }
-
-    const Bool bRootCbf=pcCU->getQtRootCbf(0)!=0;
-    if ( dZeroCost < dCost || !bRootCbf )
-    {
-      if ( dZeroCost < dCost )
-      {
-        dCost        = dZeroCost;
-      }
-      uiDistortion = uiZeroDistortion;
-
-      const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
-      ::memset( pcCU->getTransformIdx()     , 0, uiQPartNum * sizeof(UChar) );
-      for (UInt ch=0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
-      {
-        const ComponentID component = ComponentID(ch);
-        ::memset( pcCU->getCbf( component ) , 0, uiQPartNum * sizeof(UChar) );
-        if (qpMin != qpMax) // If there is only one iteration, then these will already be 0.
-        {
-          const UInt componentShift   = pcCU->getPic()->getComponentScaleX(component) + pcCU->getPic()->getComponentScaleY(component);
-          ::memset( pcCU->getCoeff(component), 0, (uiWidth*uiHeight*sizeof(TCoeff))>>componentShift );
-#if ADAPTIVE_QP_SELECTION
-          ::memset( pcCU->getArlCoeff(component), 0, (uiWidth*uiHeight*sizeof(TCoeff))>>componentShift );
-#endif
-        }
-        ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(Char) ) );
-      }
-      static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
-      pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
-#ifdef DEBUG_STRING
-      sDebug.clear();
-      for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
-      {
-        sDebug+=debug_reorder_data_inter_token[i];
-      }
-#endif
-    }
-    else
-    {
-      xSetResidualQTData( NULL, false, tuLevel0); // Call first time to set coefficients.
-    }
-
-    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-
-    uiBits = 0;
-    xAddSymbolBitsInter( pcCU, 0, 0, uiBits );
-    // we've now encoded the pcCU, and so have a valid bit cost
-
-
-    Double dExactCost = m_pcRdCost->calcRdCost( uiBits, uiDistortion );
-    dCost = dExactCost;
-
-    // Is our new cost better?
-    if ( dCost < dCostBest )
-    {
-      if ( !pcCU->getQtRootCbf( 0 ) )
-      {
-        pcYuvResiBest->clear(); // Clear the residual image, if we didn't code it.
-      }
-      else
-      {
-        xSetResidualQTData( pcYuvResiBest, true, tuLevel0 ); // else set the residual image data pcYUVResiBest from the various temp images.
-      }
-
-      if( qpMin != qpMax && qp != qpMax )
-      {
-        const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
-        ::memcpy( m_puhQTTempTrIdx, pcCU->getTransformIdx(),        uiQPartNum * sizeof(UChar) );
-        for(UInt i=0; i<pcCU->getPic()->getNumberValidComponents(); i++)
-        {
-          const ComponentID compID=ComponentID(i);
-          const UInt csr = pcCU->getPic()->getComponentScaleX(compID) + pcCU->getPic()->getComponentScaleY(compID);
-          ::memcpy( m_puhQTTempCbf[compID],      pcCU->getCbf( compID ),     uiQPartNum * sizeof(UChar) );
-          ::memcpy( m_pcQTTempCoeff[compID],     pcCU->getCoeff(compID),     uiWidth * uiHeight * sizeof( TCoeff ) >> csr     );
-#if ADAPTIVE_QP_SELECTION
-          ::memcpy( m_pcQTTempArlCoeff[compID],  pcCU->getArlCoeff(compID),  uiWidth * uiHeight * sizeof( TCoeff )>> csr     );
-#endif
-          ::memcpy( m_puhQTTempTransformSkipFlag[compID], pcCU->getTransformSkip(compID),     uiQPartNum * sizeof( UChar ) );
-          ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID], pcCU->getCrossComponentPredictionAlpha(compID), uiQPartNum * sizeof(Char) );
-        }
-      }
-      uiBitsBest       = uiBits;
-      uiDistortionBest = uiDistortion;
-      dCostBest        = dCost;
-      qpBest           = qp;
-
-      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-    }
-  }
-
-  assert ( dCostBest != MAX_DOUBLE );
-
-  if( qpMin != qpMax && qpBest != qpMax )
-  {
-    // TODO: this code has never been used, the qp doesn't change the QP coded, and the following assert prevented this code running.
-    //        also, skip flag got stuck-on, as nothing cleared it. Recommend removing this.
-    assert( 0 ); // check
-    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-
-      // copy best cbf and trIdx to pcCU
     const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
-    ::memcpy( pcCU->getTransformIdx(),       m_puhQTTempTrIdx,  uiQPartNum * sizeof(UChar) );
-    for(UInt i=0; i<pcCU->getPic()->getNumberValidComponents(); i++)
+    ::memset( pcCU->getTransformIdx()     , 0, uiQPartNum * sizeof(UChar) );
+    for (Int comp=0; comp < numValidComponents; comp++)
     {
-      const ComponentID compID=ComponentID(i);
-      const UInt csr = pcCU->getPic()->getComponentScaleX(compID) + pcCU->getPic()->getComponentScaleY(compID);
-      ::memcpy( pcCU->getCbf( compID ),     m_puhQTTempCbf[compID],     uiQPartNum * sizeof(UChar) );
-      ::memcpy( pcCU->getCoeff(compID),     m_pcQTTempCoeff[compID],    uiWidth * uiHeight * sizeof( TCoeff ) >> csr     );
-#if ADAPTIVE_QP_SELECTION
-      ::memcpy( pcCU->getArlCoeff(compID),  m_pcQTTempArlCoeff[compID], uiWidth * uiHeight * sizeof( TCoeff    ) >> csr );
-#endif
-      ::memcpy( pcCU->getTransformSkip(compID),     m_puhQTTempTransformSkipFlag[compID], uiQPartNum * sizeof( UChar ) );
-      ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID),  m_phQTTempCrossComponentPredictionAlpha[compID], uiQPartNum * sizeof( Char ) );
+      const ComponentID component = ComponentID(comp);
+      ::memset( pcCU->getCbf( component ) , 0, uiQPartNum * sizeof(UChar) );
+      ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(Char) ) );
     }
-    // TODO: see to-do above. eg:
-    // pcCU->setSkipFlagSubParts(  (pcCU->getMergeFlag( 0 ) && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N && !pcCU->getQtRootCbf( 0 )), 0, pcCU->getDepth(0) );
+    static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
+    pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
+#ifdef DEBUG_STRING
+    sDebug.clear();
+    for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
+    {
+      sDebug+=debug_reorder_data_inter_token[i];
+    }
+#endif
   }
-  pcYuvRec->addClip ( pcYuvPred, pcYuvResiBest, 0, uiWidth );
-
-  // update with clipped distortion and cost (qp estimation loop uses unclipped values)
-
-  uiDistortionBest = 0;
-  for(UInt ch=0; ch<pcYuvRec->getNumberValidComponents(); ch++)
+  else
   {
-    const ComponentID compID=ComponentID(ch);
-    uiDistortionBest += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], pcYuvRec->getAddr(compID ), pcYuvRec->getStride(compID ), pcYuvOrg->getAddr(compID ), pcYuvOrg->getStride(compID), uiWidth >> pcYuvOrg->getComponentScaleX(compID), uiHeight >> pcYuvOrg->getComponentScaleY(compID), compID);
+    xSetInterResidualQTData( NULL, false, tuLevel0); // Call first time to set coefficients.
   }
-  dCostBest = m_pcRdCost->calcRdCost( uiBitsBest, uiDistortionBest );
 
-  pcCU->getTotalBits()       = uiBitsBest;
-  pcCU->getTotalDistortion() = uiDistortionBest;
-  pcCU->getTotalCost()       = dCostBest;
+  // all decisions now made. Fully encode the CU, including the headers:
+  m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
 
-  if( qpMin != qpMax) // TODO: see to-do above
+  UInt finalBits = 0;
+  xAddSymbolBitsInter( pcCU, 0, 0, finalBits );
+  // we've now encoded the pcCU, and so have a valid bit cost
+
+  if ( !pcCU->getQtRootCbf( 0 ) )
   {
-    pcCU->setQPSubParts( qpBest, 0, pcCU->getDepth(0) );
+    pcYuvResiBest->clear(); // Clear the residual image, if we didn't code it.
   }
+  else
+  {
+    xSetInterResidualQTData( pcYuvResiBest, true, tuLevel0 ); // else set the residual image data pcYUVResiBest from the various temp images.
+  }
+  m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
+
+  pcYuvRec->addClip ( pcYuvPred, pcYuvResiBest, 0, cuWidthPixels );
+
+  // update with clipped distortion and cost (previously unclipped reconstruction values were used)
+
+  Distortion finalDistortion = 0;
+  for(Int comp=0; comp<numValidComponents; comp++)
+  {
+    const ComponentID compID=ComponentID(comp);
+    finalDistortion += m_pcRdCost->getDistPart( g_bitDepth[toChannelType(compID)], pcYuvRec->getAddr(compID ), pcYuvRec->getStride(compID ), pcYuvOrg->getAddr(compID ), pcYuvOrg->getStride(compID), cuWidthPixels >> pcYuvOrg->getComponentScaleX(compID), cuHeightPixels >> pcYuvOrg->getComponentScaleY(compID), compID);
+  }
+
+  pcCU->getTotalBits()       = finalBits;
+  pcCU->getTotalDistortion() = finalDistortion;
+  pcCU->getTotalCost()       = m_pcRdCost->calcRdCost( finalBits, finalDistortion );
 }
 
 
 
-Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
-                                      Double     &rdCost,
-                                      UInt       &ruiBits,
-                                      Distortion &ruiDist,
-                                      Distortion *puiZeroDist,
-                                      TComTU     &rTu
-                                      DEBUG_STRING_FN_DECLARE(sDebug) )
+Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
+                                           Double     &rdCost,
+                                           UInt       &ruiBits,
+                                           Distortion &ruiDist,
+                                           Distortion *puiZeroDist,
+                                           TComTU     &rTu
+                                           DEBUG_STRING_FN_DECLARE(sDebug) )
 {
   TComDataCU *pcCU        = rTu.getCU();
   const UInt uiAbsPartIdx = rTu.GetAbsPartIdxTU();
@@ -5092,7 +4967,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     do
     {
       DEBUG_STRING_NEW(childString)
-      xEstimateResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(childString));
+      xEstimateInterResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(childString));
 #ifdef DEBUG_STRING
       // split the string by component and append to the relevant output (because decoder decodes in channel order, whereas this search searches by TU-order)
       std::size_t lastPos=0;
@@ -5135,10 +5010,10 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
     m_pcEntropyCoder->resetBits();
 
     // when compID isn't a channel, code Cbfs:
-    xEncodeResidualQT( MAX_NUM_COMPONENT, rTu );
+    xEncodeInterResidualQT( MAX_NUM_COMPONENT, rTu );
     for(UInt ch = 0; ch < numValidComp; ch++)
     {
-      xEncodeResidualQT( ComponentID(ch), rTu );
+      xEncodeInterResidualQT( ComponentID(ch), rTu );
     }
 
     uiSubdivBits = m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -5227,7 +5102,7 @@ Void TEncSearch::xEstimateResidualQT( TComYuv    *pcResi,
 
 
 
-Void TEncSearch::xEncodeResidualQT( const ComponentID compID, TComTU &rTu )
+Void TEncSearch::xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu )
 {
   TComDataCU* pcCU=rTu.getCU();
   const UInt uiAbsPartIdx=rTu.GetAbsPartIdxTU();
@@ -5299,7 +5174,7 @@ Void TEncSearch::xEncodeResidualQT( const ComponentID compID, TComTU &rTu )
       TComTURecurse tuRecurseChild(rTu, false);
       do
       {
-        xEncodeResidualQT( compID, tuRecurseChild );
+        xEncodeInterResidualQT( compID, tuRecurseChild );
       } while (tuRecurseChild.nextSection(rTu));
     }
   }
@@ -5308,7 +5183,7 @@ Void TEncSearch::xEncodeResidualQT( const ComponentID compID, TComTU &rTu )
 
 
 
-Void TEncSearch::xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu ) // TODO: turn this into two functions for bSpatial=true and false.
+Void TEncSearch::xSetInterResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu ) // TODO: turn this into two functions for bSpatial=true and false.
 {
   TComDataCU* pcCU=rTu.getCU();
   const UInt uiCurrTrMode=rTu.GetTransformDepthRel();
@@ -5365,7 +5240,7 @@ Void TEncSearch::xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu
     TComTURecurse tuRecurseChild(rTu, false);
     do
     {
-      xSetResidualQTData( pcResi, bSpatial, tuRecurseChild );
+      xSetInterResidualQTData( pcResi, bSpatial, tuRecurseChild );
     } while (tuRecurseChild.nextSection(rTu));
   }
 }

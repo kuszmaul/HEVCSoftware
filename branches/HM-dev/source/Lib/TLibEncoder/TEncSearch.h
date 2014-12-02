@@ -115,7 +115,6 @@ protected:
   // Misc.
   Pel*            m_pTempPel;
   const UInt*     m_puiDFilter;
-  Int             m_iMaxDeltaQP;
 
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
@@ -132,7 +131,6 @@ public:
             Int           iSearchRange,
             Int           bipredSearchRange,
             Int           iFastSearch,
-            Int           iMaxDeltaQP,
             TEncEntropy*  pcEntropyCoder,
             TComRdCost*   pcRdCost,
             TEncSbac***   pppcRDSbacCoder,
@@ -203,7 +201,7 @@ public:
                                   TComYuv*    pcYuvResi,
                                   TComYuv*    pcYuvResiBest,
                                   TComYuv*    pcYuvRec,
-                                  Bool        bSkipRes
+                                  Bool        bSkipResidual
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
 
   /// set ME search range
@@ -438,9 +436,9 @@ protected:
   // -------------------------------------------------------------------------------------------------------------------
 
 
-  Void xEncodeResidualQT( const ComponentID compID, TComTU &rTu );
-  Void xEstimateResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
-  Void xSetResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
+  Void xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu );
+  Void xEstimateInterResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
+  Void xSetInterResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth, const ChannelType compID );
   UInt  xUpdateCandList( UInt uiMode, Double uiCost, UInt uiFastCandNum, UInt * CandModeList, Double * CandCostList );
