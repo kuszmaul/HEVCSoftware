@@ -279,8 +279,8 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
               /* skip zero index */
               for (Int chromaQpAdjustmentIndex = 1; chromaQpAdjustmentIndex <= pcPPS->getChromaQpAdjTableSize(); chromaQpAdjustmentIndex++)
               {
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CbOffset,     "cb_qp_adjustnemt[i]");
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CrOffset,     "cr_qp_adjustnemt[i]");
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CbOffset,     "cb_qp_adjustment[i]");
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CrOffset,     "cr_qp_adjustment[i]");
               }
             }
 
