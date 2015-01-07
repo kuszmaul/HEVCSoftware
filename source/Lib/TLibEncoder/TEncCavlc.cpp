@@ -1051,11 +1051,7 @@ Void TEncCavlc::codePTL( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxN
 
   for (Int i = 0; i < maxNumSubLayersMinus1; i++)
   {
-    if(profilePresentFlag)
-    {
-      WRITE_FLAG( pcPTL->getSubLayerProfilePresentFlag(i), "sub_layer_profile_present_flag[i]" );
-    }
-
+    WRITE_FLAG( pcPTL->getSubLayerProfilePresentFlag(i), "sub_layer_profile_present_flag[i]" );
     WRITE_FLAG( pcPTL->getSubLayerLevelPresentFlag(i),   "sub_layer_level_present_flag[i]" );
   }
 
@@ -1069,7 +1065,7 @@ Void TEncCavlc::codePTL( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxN
 
   for(Int i = 0; i < maxNumSubLayersMinus1; i++)
   {
-    if( profilePresentFlag && pcPTL->getSubLayerProfilePresentFlag(i) )
+    if( pcPTL->getSubLayerProfilePresentFlag(i) )
     {
       codeProfileTier(pcPTL->getSubLayerPTL(i));  // sub_layer_...
     }
