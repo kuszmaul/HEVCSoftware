@@ -166,7 +166,6 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     in>>entry.m_referencePics[i];
   }
   in>>entry.m_interRPSPrediction;
-#if AUTO_INTER_RPS
   if (entry.m_interRPSPrediction==1)
   {
     in>>entry.m_deltaRPS;
@@ -180,17 +179,6 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   {
     in>>entry.m_deltaRPS;
   }
-#else
-  if (entry.m_interRPSPrediction)
-  {
-    in>>entry.m_deltaRPS;
-    in>>entry.m_numRefIdc;
-    for ( Int i = 0; i < entry.m_numRefIdc; i++ )
-    {
-      in>>entry.m_refIdc[i];
-    }
-  }
-#endif
   return in;
 }
 
