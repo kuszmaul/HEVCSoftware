@@ -44,17 +44,17 @@
 
 #if ENC_DEC_TRACE
 
-Void  xTraceSPSHeader (TComSPS *pSPS)
+Void  xTraceSPSHeader (const TComSPS *pSPS)
 {
   fprintf( g_hTrace, "=========== Sequence Parameter Set ID: %d ===========\n", pSPS->getSPSId() );
 }
 
-Void  xTracePPSHeader (TComPPS *pPPS)
+Void  xTracePPSHeader (const TComPPS *pPPS)
 {
   fprintf( g_hTrace, "=========== Picture Parameter Set ID: %d ===========\n", pPPS->getPPSId() );
 }
 
-Void  xTraceSliceHeader (TComSlice *pSlice)
+Void  xTraceSliceHeader (const TComSlice *pSlice)
 {
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
