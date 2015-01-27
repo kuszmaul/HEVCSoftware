@@ -1651,8 +1651,6 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
         UInt &minorAxis             = (mode == RDPCM_VER) ? uiY      : uiX;
   const UInt  majorAxisLimit        = (mode == RDPCM_VER) ? uiWidth  : uiHeight;
   const UInt  minorAxisLimit        = (mode == RDPCM_VER) ? uiHeight : uiWidth;
-  static const TCoeff pelMin=(Int) std::numeric_limits<Pel>::min();
-  static const TCoeff pelMax=(Int) std::numeric_limits<Pel>::max();
 
   const Bool bUseHalfRoundingPoint  = (mode != RDPCM_OFF);
 
