@@ -77,7 +77,7 @@ public:
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
-  Void  parseProfileTier    (ProfileTierLevel *ptl);
+  Void  parseProfileTier    (ProfileTierLevel *ptl, const Bool bIsSubLayer);
   Void  parseHrdParameters  (TComHRD *hrd, Bool cprms_present_flag, UInt tempLevelHigh);
   Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager);
   Void  parseTerminatingBit ( UInt& ruiBit );
