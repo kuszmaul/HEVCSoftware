@@ -85,7 +85,7 @@ public:
   Void  codePPS                 ( const TComPPS* pcPPS );
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
-  Void  codeProfileTier         ( const ProfileTierLevel* ptl );
+  Void  codeProfileTier         ( const ProfileTierLevel* ptl, const Bool bIsSubLayer );
   Void  codeHrdParameters       ( const TComHRD *hrd, Bool commonInfPresentFlag, UInt maxNumSubLayersMinus1 );
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast );
