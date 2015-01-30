@@ -2025,11 +2025,6 @@ Void TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   setScalingListPredModeFlag(sizeId, listId, true);
 }
 
-/** parse syntax infomation
- *  \param pchFile syntax infomation
- *  \returns false if successful
- */
-
 static Void outputScalingListHelp(std::ostream &os)
 {
   os << "The scaling list file specifies all matrices and their DC values; none can be missing,\n"
