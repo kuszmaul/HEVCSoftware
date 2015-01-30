@@ -229,14 +229,18 @@ Void TVideoIOYuv::skipFrames(UInt numFrames, UInt width, UInt height, ChromaForm
  * padding the left and right edges by edge-extension.  Input may be
  * either 8bit or 16bit little-endian lsb-aligned words.
  *
- * @param dst     destination image
- * @param fd      input file stream
- * @param is16bit true if input file carries > 8bit data, false otherwise.
- * @param stride  distance between vertically adjacent pixels of dst.
- * @param width   width of active area in dst.
- * @param height  height of active area in dst.
- * @param pad_x   length of horizontal padding.
- * @param pad_y   length of vertical padding.
+ * @param dst          destination image plane
+ * @param fd           input file stream
+ * @param is16bit      true if input file carries > 8bit data, false otherwise.
+ * @param stride444    distance between vertically adjacent pixels of dst.
+ * @param width444     width of active area in dst.
+ * @param height444    height of active area in dst.
+ * @param pad_x444     length of horizontal padding.
+ * @param pad_y444     length of vertical padding.
+ * @param compID       chroma component
+ * @param destFormat   chroma format of image
+ * @param fileFormat   chroma format of file
+ * @param fileBitDepth component bit depth in file
  * @return true for success, false in case of error
  */
 static Bool readPlane(Pel* dst,
@@ -380,14 +384,18 @@ static Bool readPlane(Pel* dst,
 }
 
 /**
- * Write width*height pixels info fd from src.
+ * Write an image plane (width444*height444 pixels) from src into output stream fd.
  *
- * @param fd      output file stream
- * @param src     source image
- * @param is16bit true if input file carries > 8bit data, false otherwise.
- * @param stride  distance between vertically adjacent pixels of src.
- * @param width   width of active area in src.
- * @param height  height of active area in src.
+ * @param fd         output file stream
+ * @param src        source image
+ * @param is16bit    true if input file carries > 8bit data, false otherwise.
+ * @param stride444  distance between vertically adjacent pixels of src.
+ * @param width444   width of active area in src.
+ * @param height444  height of active area in src.
+ * @param compID       chroma component
+ * @param srcFormat    chroma format of image
+ * @param fileFormat   chroma format of file
+ * @param fileBitDepth component bit depth in file
  * @return true for success, false in case of error
  */
 static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,

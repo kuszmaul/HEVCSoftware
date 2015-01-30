@@ -440,12 +440,10 @@ Bool TComDataCU::isLastSubCUOfCtu(const UInt absPartIdx)
 // --------------------------------------------------------------------------------------------------------------------
 
 /**
- - initialize top-level CU
- - internal buffers are already created
- - set values before encoding a CU
- .
- \param  pcPic     picture (TComPic) class pointer
- \param  iCUAddr   CU address
+ Initialize top-level CU: create internal buffers and set initial values before encoding the CTU.
+ 
+ \param  pcPic       picture (TComPic) class pointer
+ \param  ctuRsAddr   CTU address in raster scan order
  */
 Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 {
@@ -554,12 +552,14 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 }
 
 
-/** initialize prediction data with enabling sub-CTU-level delta QP
-*\param  uiDepth  depth of the current CU
-*\param  qp     qp for the current CU
-*- set CU width and CU height according to depth
-*- set qp value according to input qp
-*- set last-coded qp value according to input last-coded qp
+/** Initialize prediction data with enabling sub-CTU-level delta QP.
+*   - set CU width and CU height according to depth
+*   - set qp value according to input qp
+*   - set last-coded qp value according to input last-coded qp
+*
+* \param  uiDepth            depth of the current CU
+* \param  qp                 qp for the current CU
+* \param  bTransquantBypass  true for transquant bypass
 */
 Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTransquantBypass )
 {
@@ -1460,8 +1460,8 @@ Char TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
 }
 
 
-/** Check whether the CU is coded in lossless coding mode
- * \param   uiAbsPartIdx
+/** Check whether the CU is coded in lossless coding mode.
+ * \param   absPartIdx
  * \returns true if the CU is coded in lossless coding mode; false if otherwise
  */
 Bool TComDataCU::isLosslessCoded(UInt absPartIdx)
@@ -1471,10 +1471,10 @@ Bool TComDataCU::isLosslessCoded(UInt absPartIdx)
 
 
 /** Get allowed chroma intra modes
-*\param   uiAbsPartIdx
-*\param   uiModeList  pointer to chroma intra modes array
-*\returns
-*- fill uiModeList with chroma intra modes
+*   - fills uiModeList with chroma intra modes
+*
+*\param   [in]  uiAbsPartIdx
+*\param   [out] uiModeList pointer to chroma intra modes array
 */
 Void TComDataCU::getAllowedChromaDir( UInt uiAbsPartIdx, UInt uiModeList[NUM_CHROMA_MODE] )
 {
@@ -1498,8 +1498,9 @@ Void TComDataCU::getAllowedChromaDir( UInt uiAbsPartIdx, UInt uiModeList[NUM_CHR
 }
 
 /** Get most probable intra modes
-*\param   uiAbsPartIdx
+*\param   uiAbsPartIdx    partition index
 *\param   uiIntraDirPred  pointer to the array for MPM storage
+*\param   compID          color component ID
 *\param   piMode          it is set with MPM mode in case both MPM are equal. It is used to restrict RD search at encode side.
 *\returns Number of MPM
 */
@@ -2220,12 +2221,11 @@ Void TComDataCU::deriveLeftBottomIdx( UInt  uiPartIdx,      UInt&      ruiPartId
   }
 }
 
-/** Derives the partition index of neighbouring bottom right block
- * \param [in]  eCUMode
- * \param [in]  uiPartIdx
- * \param [out] ruiPartIdxRB
+/** Derive the partition index of neighbouring bottom right block
+ * \param [in]  uiPartIdx     current partition index
+ * \param [out] ruiPartIdxRB  partition index of neighbouring bottom right block
  */
-Void TComDataCU::deriveRightBottomIdx( UInt  uiPartIdx,      UInt&      ruiPartIdxRB )
+Void TComDataCU::deriveRightBottomIdx( UInt uiPartIdx, UInt &ruiPartIdxRB )
 {
   ruiPartIdxRB      = g_auiRasterToZscan [g_auiZscanToRaster[ m_absZIdxInCtu ] + ( ((m_puhHeight[0] / m_pcPic->getMinCUHeight())>>1) - 1)*m_pcPic->getNumPartInCtuWidth() +  m_puhWidth[0] / m_pcPic->getMinCUWidth() - 1];
 
@@ -2302,14 +2302,7 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
   return true;
 }
 
-/** Constructs a list of merging candidates
- * \param uiAbsPartIdx
- * \param uiPUIdx
- * \param uiDepth
- * \param pcMvFieldNeighbours
- * \param puhInterDirNeighbours
- * \param numValidMergeCand
- */
+//! Construct a list of merging candidates
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx )
 {
   UInt uiAbsPartAddr = m_absZIdxInCtu + uiAbsPartIdx;
@@ -2660,9 +2653,8 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 }
 
 /** Check whether the current PU and a spatial neighboring PU are in a same ME region.
- * \param xN, xN   location of the upper-left corner pixel of a neighboring PU
+ * \param xN, yN   location of the upper-left corner pixel of a neighboring PU
  * \param xP, yP   location of the upper-left corner pixel of the current PU
- * \returns Bool
  */
 Bool TComDataCU::isDiffMER(Int xN, Int yN, Int xP, Int yP)
 {
@@ -2679,11 +2671,10 @@ Bool TComDataCU::isDiffMER(Int xN, Int yN, Int xP, Int yP)
   return false;
 }
 
-/** calculate the location of upper-left corner pixel and size of the current PU.
- * \param partIdx  PU index within a CU
- * \param xP, yP   location of the upper-left corner pixel of the current PU
- * \param PSW, nPSH    size of the curren PU
- * \returns Void
+/** Calculate the location of upper-left corner pixel and size of the current PU.
+ * \param partIdx       PU index within a CU
+ * \param xP, yP        location of the upper-left corner pixel of the current PU
+ * \param nPSW, nPSH    size of the current PU
  */
 Void TComDataCU::getPartPosition( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH)
 {
@@ -2966,9 +2957,9 @@ Void TComDataCU::setIPCMFlagSubParts  (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt u
   memset(m_pbIPCMFlag + uiAbsPartIdx, bIpcmFlag, sizeof(Bool)*uiCurrPartNumb );
 }
 
-/** Test whether the current block is skipped
- * \param uiPartIdx Block index
- * \returns Flag indicating whether the block is skipped
+/** Test whether the block at uiPartIdx is skipped.
+ * \param uiPartIdx Partition index
+ * \returns true if the current the block is skipped
  */
 Bool TComDataCU::isSkipped( UInt uiPartIdx )
 {
@@ -3190,13 +3181,6 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   return false;
 }
 
-/**
- * \param eRefPicList
- * \param uiCUAddr
- * \param uiPartUnitIdx
- * \param riRefIdx
- * \returns Bool
- */
 Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx )
 {
   UInt uiAbsPartAddr = uiPartUnitIdx;
@@ -3310,12 +3294,6 @@ Int TComDataCU::xGetDistScaleFactor(Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, 
   }
 }
 
-/**
- * \param eCUMode
- * \param uiPartIdx
- * \param ruiPartIdxCenter
- * \returns Void
- */
 Void TComDataCU::xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter )
 {
   UInt uiPartAddr;

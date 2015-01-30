@@ -444,7 +444,7 @@ public:
 
   Bool          isIntra            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA;                                              }
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
-  Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
+  Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped
   Bool          isBipredRestriction( UInt puIdx );
 
   // -------------------------------------------------------------------------------------------------------------------
