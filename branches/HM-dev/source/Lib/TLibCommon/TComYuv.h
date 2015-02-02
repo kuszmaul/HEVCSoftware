@@ -39,7 +39,6 @@
 
 #ifndef __TCOMYUV__
 #define __TCOMYUV__
-#include <assert.h>
 #include "CommonDef.h"
 #include "TComPicYuv.h"
 #include "TComRectangle.h"

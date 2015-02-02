@@ -39,7 +39,6 @@
 #define __CONTEXTMODEL3DBUFFER__
 
 #include <stdio.h>
-#include <assert.h>
 #include <memory.h>
 
 #include "CommonDef.h"

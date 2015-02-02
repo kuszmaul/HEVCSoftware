@@ -37,6 +37,7 @@
 
 #include <memory.h>
 #include "TComPrediction.h"
+#include "TComPic.h"
 #include "TComTU.h"
 
 //! \ingroup TLibCommon
