@@ -37,6 +37,7 @@
 
 #include "TDecCu.h"
 #include "TLibCommon/TComTU.h"
+#include "TLibCommon/TComPrediction.h"
 
 //! \ingroup TLibDecoder
 //! \{

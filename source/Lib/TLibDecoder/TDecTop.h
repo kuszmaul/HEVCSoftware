@@ -43,6 +43,7 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComTrQuant.h"
+#include "TLibCommon/TComPrediction.h"
 #include "TLibCommon/SEI.h"
 
 #include "TDecGop.h"
