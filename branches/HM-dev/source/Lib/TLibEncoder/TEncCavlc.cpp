@@ -1350,14 +1350,9 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
   const Bool            bChroma               = isChromaEnabled(format);
   const Int             iNbRef                = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
         Bool            bDenomCoded           = false;
-        UInt            uiMode                = 0;
         UInt            uiTotalSignalledWeightFlags = 0;
 
   if ( (pcSlice->getSliceType()==P_SLICE && pcSlice->getPPS()->getUseWP()) || (pcSlice->getSliceType()==B_SLICE && pcSlice->getPPS()->getWPBiPred()) )
-  {
-    uiMode = 1; // explicit
-  }
-  if(uiMode == 1)
   {
     for ( Int iNumRef=0 ; iNumRef<iNbRef ; iNumRef++ ) // loop over l0 and l1 syntax elements
     {
