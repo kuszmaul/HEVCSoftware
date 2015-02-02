@@ -383,6 +383,7 @@ Void xITr(Int bitDepth, TCoeff *coeff, Pel *block, UInt uiStride, UInt uiTrSize,
  *  \param src   input data (residual)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
  */
 Void partialButterfly4(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
@@ -468,6 +469,9 @@ Void fastInverseDst(TCoeff *tmp, TCoeff *block, Int shift, const TCoeff outputMi
  *  \param src   input data (transform coefficients)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
+ *  \param outputMinimum  minimum for clipping
+ *  \param outputMaximum  maximum for clipping
  */
 Void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
@@ -498,6 +502,7 @@ Void partialButterflyInverse4(TCoeff *src, TCoeff *dst, Int shift, Int line, con
  *  \param src   input data (residual)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
  */
 Void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
@@ -539,6 +544,9 @@ Void partialButterfly8(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param src   input data (transform coefficients)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
+ *  \param outputMinimum  minimum for clipping
+ *  \param outputMaximum  maximum for clipping
  */
 Void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
@@ -580,6 +588,7 @@ Void partialButterflyInverse8(TCoeff *src, TCoeff *dst, Int shift, Int line, con
  *  \param src   input data (residual)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
  */
 Void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
@@ -635,9 +644,12 @@ Void partialButterfly16(TCoeff *src, TCoeff *dst, Int shift, Int line)
 }
 
 /** 16x16 inverse transform implemented using partial butterfly structure (1D)
- *  \param src   input data (transform coefficients)
- *  \param dst   output data (residual)
- *  \param shift specifies right shift after 1D transform
+ *  \param src            input data (transform coefficients)
+ *  \param dst            output data (residual)
+ *  \param shift          specifies right shift after 1D transform
+ *  \param line
+ *  \param outputMinimum  minimum for clipping
+ *  \param outputMaximum  maximum for clipping
  */
 Void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
@@ -692,6 +704,7 @@ Void partialButterflyInverse16(TCoeff *src, TCoeff *dst, Int shift, Int line, co
  *  \param src   input data (residual)
  *  \param dst   output data (transform coefficients)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
  */
 Void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
 {
@@ -765,6 +778,9 @@ Void partialButterfly32(TCoeff *src, TCoeff *dst, Int shift, Int line)
  *  \param src   input data (transform coefficients)
  *  \param dst   output data (residual)
  *  \param shift specifies right shift after 1D transform
+ *  \param line
+ *  \param outputMinimum  minimum for clipping
+ *  \param outputMaximum  maximum for clipping
  */
 Void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, const TCoeff outputMinimum, const TCoeff outputMaximum)
 {
@@ -832,10 +848,14 @@ Void partialButterflyInverse32(TCoeff *src, TCoeff *dst, Int shift, Int line, co
 }
 
 /** MxN forward transform (2D)
-*  \param block input data (residual)
-*  \param coeff output data (transform coefficients)
-*  \param iWidth input data (width of transform)
-*  \param iHeight input data (height of transform)
+*  \param bitDepth          [in]  bit depth
+*  \param block             [in]  residual block
+*  \param coeff             [out] transform coefficients
+*  \param iWidth            [in]  width of transform
+*  \param iHeight           [in]  height of transform
+*  \param useDST            [in]
+*  \param maxTrDynamicRange [in]
+
 */
 Void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
 {
@@ -896,10 +916,13 @@ Void xTrMxN(Int bitDepth, TCoeff *block, TCoeff *coeff, Int iWidth, Int iHeight,
 
 
 /** MxN inverse transform (2D)
-*  \param coeff input data (transform coefficients)
-*  \param block output data (residual)
-*  \param iWidth input data (width of transform)
-*  \param iHeight input data (height of transform)
+*  \param bitDepth          [in]  bit depth
+*  \param coeff             [in]  transform coefficients
+*  \param block             [out] residual block
+*  \param iWidth            [in]  width of transform
+*  \param iHeight           [in]  height of transform
+*  \param useDST            [in]
+*  \param maxTrDynamicRange [in]
 */
 Void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight, Bool useDST, const Int maxTrDynamicRange)
 {
@@ -1823,11 +1846,13 @@ Void TComTrQuant::invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcRes
 // ------------------------------------------------------------------------------------------------
 
 /** Wrapper function between HM interface and core NxN forward transform (2D)
+ *  \param compID colour component ID
+ *  \param useDST
  *  \param piBlkResi input data (residual)
- *  \param psCoeff output data (transform coefficients)
  *  \param uiStride stride of input residual data
- *  \param iSize transform size (iSize x iSize)
- *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
+ *  \param psCoeff output data (transform coefficients)
+ *  \param iWidth transform width
+ *  \param iHeight transform height
  */
 Void TComTrQuant::xT( const ComponentID compID, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight )
 {
@@ -1856,11 +1881,13 @@ Void TComTrQuant::xT( const ComponentID compID, Bool useDST, Pel* piBlkResi, UIn
 }
 
 /** Wrapper function between HM interface and core NxN inverse transform (2D)
+ *  \param compID colour component ID
+ *  \param useDST
  *  \param plCoef input data (transform coefficients)
  *  \param pResidual output data (residual)
  *  \param uiStride stride of input residual data
- *  \param iSize transform size (iSize x iSize)
- *  \param uiMode is Intra Prediction mode used in Mode-Dependent DCT/DST only
+ *  \param iWidth transform width
+ *  \param iHeight transform height
  */
 Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight )
 {
@@ -1898,9 +1925,10 @@ Void TComTrQuant::xIT( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pe
 
 /** Wrapper function between HM interface and core 4x4 transform skipping
  *  \param piBlkResi input data (residual)
- *  \param psCoeff output data (transform coefficients)
  *  \param uiStride stride of input residual data
- *  \param iSize transform size (iSize x iSize)
+ *  \param psCoeff output data (transform coefficients)
+ *  \param rTu reference to transform data
+ *  \param component colour component
  */
 Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component )
 {
@@ -1946,7 +1974,8 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
  *  \param plCoef input data (coefficients)
  *  \param pResidual output data (residual)
  *  \param uiStride stride of input residual data
- *  \param iSize transform size (iSize x iSize)
+ *  \param rTu reference to transform data
+ *  \param component colour component ID
  */
 Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component )
 {
@@ -1990,15 +2019,14 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
 }
 
 /** RDOQ with CABAC
- * \param pcCU pointer to coding unit structure
+ * \param rTu reference to transform data
  * \param plSrcCoeff pointer to input buffer
  * \param piDstCoeff reference to pointer to output buffer
- * \param uiWidth block width
- * \param uiHeight block height
+ * \param piArlDstCoeff
  * \param uiAbsSum reference to absolute sum of quantized transform coefficient
- * \param eTType plane type / luminance or chrominance
- * \param uiAbsPartIdx absolute partition index
- * \returns Void
+ * \param compID colour component ID
+ * \param cQP reference to quantization parameters
+
  * Rate distortion optimized quantization for entropy
  * coding engines using probability models like CABAC
  */
@@ -2549,8 +2577,8 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
  * \param sigCoeffGroupFlag pointer to prior coded significant coeff group
  * \param uiCGPosX column of current coefficient group
  * \param uiCGPosY row of current coefficient group
- * \param width width of the block
- * \param height height of the block
+ * \param widthInGroups width of the block
+ * \param heightInGroups height of the block
  * \returns pattern for current coefficient group
  */
 Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPosX, UInt uiCGPosY, UInt widthInGroups, UInt heightInGroups )
@@ -2581,11 +2609,11 @@ Int  TComTrQuant::calcPatternSigCtx( const UInt* sigCoeffGroupFlag, UInt uiCGPos
 
 /** Context derivation process of coeff_abs_significant_flag
  * \param patternSigCtx pattern for current coefficient group
- * \param codingParameters coding parmeters for the TU (includes the scan)
+ * \param codingParameters coding parameters for the TU (includes the scan)
  * \param scanPosition current position in scan order
  * \param log2BlockWidth log2 width of the block
  * \param log2BlockHeight log2 height of the block
- * \param ChannelType channel type (CHANNEL_TYPE_LUMA/CHROMA)
+ * \param chanType channel type (CHANNEL_TYPE_LUMA/CHROMA)
  * \returns ctxInc for current scan position
  */
 Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCtx,
@@ -2697,9 +2725,13 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
  * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
  * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
  * \param ui16AbsGoRice current Rice parameter for coeff_abs_level_minus3
+ * \param c1Idx
+ * \param c2Idx
  * \param iQBits quantization step size
- * \param dTemp correction factor
+ * \param errorScale
  * \param bLast indicates if the coefficient is the last significant
+ * \param useLimitedPrefixLength
+ * \param channelType  texture channel type (luma/chroma)
  * \returns best quantized transform level for given scan position
  * This method calculates the best quantized transform level for a given scan position.
  */
@@ -2766,6 +2798,10 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,
  * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
  * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
  * \param ui16AbsGoRice Rice parameter for coeff_abs_level_minus3
+ * \param c1Idx
+ * \param c2Idx
+ * \param useLimitedPrefixLength
+ * \param channelType  texture channel type (luma/chroma)
  * \returns cost of given absolute transform level
  */
 __inline Int TComTrQuant::xGetICRate         ( UInt                            uiAbsLevel,
@@ -2853,6 +2889,7 @@ __inline Double TComTrQuant::xGetRateSigCoeffGroup  ( UShort                    
 /** Calculates the cost of signaling the last significant coefficient in the block
  * \param uiPosX X coordinate of the last significant coefficient
  * \param uiPosY Y coordinate of the last significant coefficient
+ * \param component colour component ID
  * \returns cost of last significant coefficient
  */
 /*
@@ -2878,13 +2915,6 @@ __inline Double TComTrQuant::xGetRateLast   ( const UInt                      ui
   return xGetICost( uiCost );
 }
 
- /** Calculates the cost for specific absolute transform level
- * \param uiAbsLevel scaled quantized level
- * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
- * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
- * \param ui16CtxBase current global offset for coeff_abs_level_greater1 and coeff_abs_level_greater2
- * \returns cost of given absolute transform level
- */
 __inline Double TComTrQuant::xGetRateSigCoef  ( UShort                          uiSignificance,
                                                 UShort                          ui16CtxNumSig ) const
 {
@@ -2910,9 +2940,10 @@ __inline Double TComTrQuant::xGetIEPRate      (                                 
 
 /** Context derivation process of coeff_abs_significant_flag
  * \param uiSigCoeffGroupFlag significance map of L1
- * \param uiBlkX column of current scan position
- * \param uiBlkY row of current scan position
- * \param uiLog2BlkSize log2 value of block size
+ * \param uiCGPosX column of current scan position
+ * \param uiCGPosY row of current scan position
+ * \param widthInGroups width of the block
+ * \param heightInGroups height of the block
  * \returns ctxInc for current scan position
  */
 UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
@@ -2938,7 +2969,8 @@ UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
 
 
 /** set quantized matrix coefficient for encode
- * \param scalingList quantaized matrix address
+ * \param scalingList quantized matrix address
+ * \param format      chroma format
  */
 Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaFormat format)
 {
@@ -2959,7 +2991,8 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
   }
 }
 /** set quantized matrix coefficient for decode
- * \param scalingList quantaized matrix address
+ * \param scalingList quantized matrix address
+ * \param format      chroma format
  */
 Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const ChromaFormat format)
 {
@@ -2979,8 +3012,8 @@ Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const Ch
 }
 /** set error scale coefficients
  * \param list List ID
- * \param uiSize Size
- * \param uiQP Quantization parameter
+ * \param size Size
+ * \param qp   Quantization parameter
  */
 Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp)
 {
@@ -3007,10 +3040,11 @@ Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp)
 }
 
 /** set quantized matrix coefficient for encode
- * \param scalingList quantaized matrix address
+ * \param scalingList quantized matrix address
  * \param listId List index
  * \param sizeId size index
- * \param uiQP Quantization parameter
+ * \param qp Quantization parameter
+ * \param format chroma format
  */
 Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
 {
@@ -3033,9 +3067,10 @@ Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, 
 
 /** set quantized matrix coefficient for decode
  * \param scalingList quantaized matrix address
- * \param list List index
- * \param size size index
- * \param uiQP Quantization parameter
+ * \param listId List index
+ * \param sizeId size index
+ * \param qp Quantization parameter
+ * \param format chroma format
  */
 Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
 {
@@ -3079,8 +3114,9 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format)
 
 /** set flat matrix value to quantized coefficient
  * \param list List ID
- * \param uiQP Quantization parameter
- * \param uiSize Size
+ * \param size size index
+ * \param qp Quantization parameter
+ * \param format chroma format
  */
 Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, Int qp, const ChromaFormat format)
 {

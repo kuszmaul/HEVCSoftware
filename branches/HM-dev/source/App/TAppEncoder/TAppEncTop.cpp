@@ -551,7 +551,11 @@ Void TAppEncTop::xDeleteBuffer( )
 
 }
 
-/** \param iNumEncoded  number of encoded frames
+/** 
+  Write access units to output file.
+  \param bitstreamFile  target bitstream file
+  \param iNumEncoded    number of encoded frames
+  \param accessUnits    list of access units to be written
  */
 Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits)
 {

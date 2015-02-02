@@ -175,9 +175,9 @@ protected:
 
 public:
   /**
-   * Create a new bitstream reader object that reads from #buf#.  Ownership
-   * of #buf# remains with the callee, although the constructed object
-   * will hold a reference to #buf#
+   * Create a new bitstream reader object that reads from buf.  Ownership
+   * of buf remains with the callee, although the constructed object
+   * will hold a reference to buf
    */
   TComInputBitstream(std::vector<uint8_t>* buf);
   ~TComInputBitstream();

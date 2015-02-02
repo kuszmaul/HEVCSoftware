@@ -291,9 +291,10 @@ Void TDecSbac::xReadUnarySymbol( UInt& ruiSymbol, ContextModel* pcSCModel, Int i
 
 
 /** Parsing of coeff_abs_level_remaing
- * \param ruiSymbol reference to coeff_abs_level_remaing
- * \param ruiParam reference to parameter
- * \returns Void
+ * \param rSymbol                 reference to coeff_abs_level_remaing
+ * \param rParam                  reference to parameter
+ * \param useLimitedPrefixLength
+ * \param channelType
  */
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat )
@@ -1133,7 +1134,7 @@ Void TDecSbac::parseTransformSkipFlags (TComTU &rTu, ComponentID component)
  * \param uiPosLastY reference to Y component of last coefficient
  * \param width  Block width
  * \param height Block height
- * \param eTType plane type / luminance or chrominance
+ * \param component chroma compinent ID
  * \param uiScanIdx scan type (zig-zag, hor, ver)
  *
  * This method decodes the X and Y component within a block of the last significant coefficient.

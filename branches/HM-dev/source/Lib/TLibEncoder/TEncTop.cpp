@@ -301,8 +301,10 @@ Void TEncTop::deletePicBuffer()
  .
  \param   flush               cause encoder to encode a partial GOP
  \param   pcPicYuvOrg         original YUV picture
+ \param   pcPicYuvTrueOrg     
+ \param   snrCSC
  \retval  rcListPicYuvRecOut  list of reconstruction YUV pictures
- \retval  rcListBitstreamOut  list of output bitstreams
+ \retval  accessUnitsOut      list of output access units
  \retval  iNumEncoded         number of encoded pictures
  */
 Void TEncTop::encode( Bool flush, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvTrueOrg, const InputColourSpaceConversion snrCSC, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )

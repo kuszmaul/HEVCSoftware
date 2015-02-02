@@ -64,9 +64,10 @@ Void TDecCu::init( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPr
 }
 
 /**
- \param    uiMaxDepth    total number of allowable depth
- \param    uiMaxWidth    largest CU width
- \param    uiMaxHeight   largest CU height
+ \param    uiMaxDepth      total number of allowable depth
+ \param    uiMaxWidth      largest CU width
+ \param    uiMaxHeight     largest CU height
+ \param    chromaFormatIDC chroma format
  */
 Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC )
 {
@@ -118,8 +119,10 @@ Void TDecCu::destroy()
 // Public member functions
 // ====================================================================================================================
 
-/** \param    pcCU        pointer of CU data
- \param    ruiIsLast   last data?
+/** 
+ Parse a CTU.
+ \param    pCtu                      [in/out] pointer to CTU data structure
+ \param    isLastCtuOfSliceSegment   [out]    true, if last CTU of the slice segment
  */
 Void TDecCu::decodeCtu( TComDataCU* pCtu, Bool& isLastCtuOfSliceSegment )
 {
@@ -137,7 +140,9 @@ Void TDecCu::decodeCtu( TComDataCU* pCtu, Bool& isLastCtuOfSliceSegment )
   xDecodeCU( pCtu, 0, 0, isLastCtuOfSliceSegment);
 }
 
-/** \param    pcCU        pointer of CU data
+/** 
+ Decoding process for a CTU.
+ \param    pCtu                      [in/out] pointer to CTU data structure
  */
 Void TDecCu::decompressCtu( TComDataCU* pCtu )
 {
@@ -148,12 +153,7 @@ Void TDecCu::decompressCtu( TComDataCU* pCtu )
 // Protected member functions
 // ====================================================================================================================
 
-/**decode end-of-slice flag
- * \param pcCU
- * \param uiAbsPartIdx
- * \param uiDepth
- * \returns Bool
- */
+//! decode end-of-slice flag
 Bool TDecCu::xDecodeSliceEnd( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiIsLastCtuOfSliceSegment;
@@ -170,13 +170,7 @@ Bool TDecCu::xDecodeSliceEnd( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return uiIsLastCtuOfSliceSegment>0;
 }
 
-/** decode CU block recursively
- * \param pcCU
- * \param uiAbsPartIdx
- * \param uiDepth
- * \returns Void
- */
-
+//! decode CU block recursively
 Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool &isLastCtuOfSliceSegment)
 {
   TComPic* pcPic = pcCU->getPic();
@@ -675,15 +669,14 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
 
 
 
-/** Function for deriving recontructed PU/CU chroma samples with QTree structure
- * \param pcCU pointer of current CU
- * \param uiTrDepth current tranform split depth
- * \param uiAbsPartIdx  part index
+/** Function for deriving reconstructed PU/CU chroma samples with QTree structure
  * \param pcRecoYuv pointer to reconstructed sample arrays
  * \param pcPredYuv pointer to prediction sample arrays
  * \param pcResiYuv pointer to residue sample arrays
+ * \param chType    texture channel type (luma/chroma)
+ * \param rTu       reference to transform data
  *
- \ This function dervies recontructed PU/CU chroma samples with QTree recursive structure
+ \ This function derives reconstructed PU/CU chroma samples with QTree recursive structure
  */
 
 Void
@@ -755,7 +748,7 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
  * \param uiStride stride of reconstructed sample arrays
  * \param uiWidth CU width
  * \param uiHeight CU height
- * \param ttText texture component type
+ * \param compID colour component ID
  * \returns Void
  */
 Void TDecCu::xDecodePCMTexture( TComDataCU* pcCU, const UInt uiPartIdx, const Pel *piPCM, Pel* piReco, const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID)
@@ -797,9 +790,8 @@ Void TDecCu::xReconPCM( TComDataCU* pcCU, UInt uiDepth )
 }
 
 /** Function for filling the PCM buffer of a CU using its reconstructed sample array
- * \param pcCU pointer to current CU
- * \param uiDepth CU Depth
- * \returns Void
+ * \param pCU   pointer to current CU
+ * \param depth CU Depth
  */
 Void TDecCu::xFillPCMBuffer(TComDataCU* pCU, UInt depth)
 {

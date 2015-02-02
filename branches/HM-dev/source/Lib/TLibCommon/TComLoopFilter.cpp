@@ -160,9 +160,12 @@ Void TComLoopFilter::loopFilterPic( TComPic* pcPic )
 // ====================================================================================================================
 
 /**
- - Deblocking filter process in CU-based (the same function as conventional's)
- .
- \param Edge          the direction of the edge in block boundary (horizonta/vertical), which is added newly
+ Deblocking filter process in CU-based (the same function as conventional's)
+
+ \param pcCU             Pointer to CTU/CU structure
+ \param uiAbsZorderIdx   Position in CU
+ \param uiDepth          Depth in CU
+ \param edgeDir          the direction of the edge in block boundary (horizontal/vertical), which is added newly
 */
 Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir )
 {

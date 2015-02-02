@@ -116,14 +116,13 @@ TEncPic::~TEncPic()
 }
 
 /** Initialize member variables
- * \param iWidth Picture width
- * \param iHeight Picture height
+ * \param sps reference to used SPS
+ * \param pps reference to used PPS
  * \param uiMaxWidth Maximum CU width
  * \param uiMaxHeight Maximum CU height
  * \param uiMaxDepth Maximum CU depth
  * \param uiMaxAQDepth Maximum depth of unit block for assigning QP adaptive to local image characteristics
  * \param bIsVirtual
- * \return Void
  */
 Void TEncPic::create( const TComSPS &sps, const TComPPS &pps, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth, Bool bIsVirtual )
 {
@@ -141,9 +140,7 @@ Void TEncPic::create( const TComSPS &sps, const TComPPS &pps, UInt uiMaxWidth, U
   }
 }
 
-/** Clean up
- * \return Void
- */
+//! Clean up
 Void TEncPic::destroy()
 {
   if (m_acAQLayer)

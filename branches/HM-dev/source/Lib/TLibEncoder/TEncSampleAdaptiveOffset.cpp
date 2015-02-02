@@ -45,9 +45,7 @@
 //! \{
 
 
-/** rounding with IBDI
- * \param  x
- */
+//! rounding with IBDI
 inline Double xRoundIbdi2(Int bitDepth, Double x)
 {
   return ((x)>0) ? (Int)(((Int)(x)+(1<<(bitDepth-8-1)))/(1<<(bitDepth-8))) : ((Int)(((Int)(x)-(1<<(bitDepth-8-1)))/(1<<(bitDepth-8))));

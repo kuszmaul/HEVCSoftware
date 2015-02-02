@@ -80,7 +80,7 @@ protected:
   Void offsetCTU(Int ctuRsAddr, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam& saoblkParam, TComPic* pPic);
   Void xPCMRestoration(TComPic* pcPic);
   Void xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth );
-  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, ComponentID component);
+  Void xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID);
 protected:
   UInt m_offsetStepLog2[MAX_NUM_COMPONENT]; //offset step
   TComPicYuv*   m_tempPicYuv; //temporary buffer

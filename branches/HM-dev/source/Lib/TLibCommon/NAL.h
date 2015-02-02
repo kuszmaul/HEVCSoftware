@@ -106,7 +106,7 @@ struct NALUnitEBSP : public NALUnit
   std::ostringstream m_nalUnitData;
 
   /**
-   * convert the OutputNALUnit #nalu# into EBSP format by writing out
+   * convert the OutputNALUnit nalu into EBSP format by writing out
    * the NALUnit header, then the rbsp_bytes including any
    * emulation_prevention_three_byte symbols.
    */

@@ -2716,16 +2716,15 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
 /** Function for encoding and reconstructing luma/chroma samples of a PCM mode CU.
  * \param pcCU pointer to current CU
  * \param uiAbsPartIdx part index
- * \param piOrg pointer to original sample arrays
- * \param piPCM pointer to PCM code arrays
- * \param piPred pointer to prediction signal arrays
- * \param piResi pointer to residual signal arrays
- * \param piReco pointer to reconstructed sample arrays
+ * \param pOrg pointer to original sample arrays
+ * \param pPCM pointer to PCM code arrays
+ * \param pPred pointer to prediction signal arrays
+ * \param pResi pointer to residual signal arrays
+ * \param pReco pointer to reconstructed sample arrays
  * \param uiStride stride of the original/prediction/residual sample arrays
  * \param uiWidth block width
  * \param uiHeight block height
- * \param ttText texture component type
- * \returns Void
+ * \param compID texture component type
  */
 Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* pPCM, Pel* pPred, Pel* pResi, Pel* pReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID )
 {
@@ -2760,14 +2759,7 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
 }
 
 
-/**  Function for PCM mode estimation.
- * \param pcCU
- * \param pcOrgYuv
- * \param rpcPredYuv
- * \param rpcResiYuv
- * \param rpcRecoYuv
- * \returns Void
- */
+//!  Function for PCM mode estimation.
 Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv )
 {
   UInt        uiDepth      = pcCU->getDepth(0);
@@ -2833,19 +2825,7 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
 
-/** estimation of best merge coding
- * \param pcCU
- * \param pcYuvOrg
- * \param iPUIdx
- * \param uiInterDir
- * \param pacMvField
- * \param uiMergeIndex
- * \param ruiCost
- * \param ruiBits
- * \param puhNeighCands
- * \param bValid
- * \returns Void
- */
+//! estimation of best merge coding
 Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUIdx, UInt& uiInterDir, TComMvField* pacMvField, UInt& uiMergeIndex, Distortion& ruiCost, TComMvField* cMvFieldNeighbours, UChar* uhInterDirNeighbours, Int& numValidMergeCand )
 {
   UInt uiAbsPartIdx = 0;
@@ -2924,15 +2904,7 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
   }
 }
 
-/** search of the best candidate for inter prediction
- * \param pcCU
- * \param pcOrgYuv
- * \param rpcPredYuv
- * \param rpcResiYuv
- * \param rpcRecoYuv
- * \param bUseRes
- * \returns Void
- */
+//! search of the best candidate for inter prediction
 #if AMP_MRG
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes, Bool bUseMRG )
 #else
@@ -4305,16 +4277,7 @@ Void TEncSearch::xPatternSearchFracDIF(
 }
 
 
-/** encode residual and calculate rate-distortion for a CU block
- * \param pcCU
- * \param pcYuvOrg
- * \param pcYuvPred
- * \param rpcYuvResi
- * \param rpcYuvResiBest
- * \param rpcYuvRec
- * \param bSkipRes
- * \returns Void
- */
+//! encode residual and calculate rate-distortion for a CU block
 Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg, TComYuv* pcYuvPred,
                                             TComYuv* pcYuvResi, TComYuv* pcYuvResiBest, TComYuv* pcYuvRec,
                                             Bool bSkipResidual DEBUG_STRING_FN_DECLARE(sDebug) )
@@ -5571,12 +5534,7 @@ Void TEncSearch::xExtDIFUpSamplingQ( TComPattern* pattern, TComMv halfPelRef, Bo
 
 
 
-/** set wp tables
- * \param TComDataCU* pcCU
- * \param iRefIdx
- * \param eRefPicListCur
- * \returns Void
- */
+//! set wp tables
 Void  TEncSearch::setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicList eRefPicListCur )
 {
   if ( iRefIdx<0 )

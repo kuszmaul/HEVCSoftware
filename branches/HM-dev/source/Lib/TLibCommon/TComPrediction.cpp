@@ -223,15 +223,19 @@ Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt
 // Function for deriving the angular Intra predictions
 
 /** Function for deriving the simplified angular intra predictions.
- * \param pSrc pointer to reconstructed sample array
- * \param srcStride the stride of the reconstructed sample array
- * \param rpDst reference to pointer for the prediction sample array
- * \param dstStride the stride of the prediction sample array
- * \param width the width of the block
- * \param height the height of the block
- * \param dirMode the intra prediction mode index
- * \param blkAboveAvailable boolean indication if the block above is available
- * \param blkLeftAvailable boolean indication if the block to the left is available
+ * \param bitDepth           bit depth
+ * \param pSrc               pointer to reconstructed sample array
+ * \param srcStride          the stride of the reconstructed sample array
+ * \param pTrueDst           reference to pointer for the prediction sample array
+ * \param dstStrideTrue      the stride of the prediction sample array
+ * \param uiWidth            the width of the block
+ * \param uiHeight           the height of the block
+ * \param channelType        type of pel array (luma/chroma)
+ * \param format             chroma format
+ * \param dirMode            the intra prediction mode index
+ * \param blkAboveAvailable  boolean indication if the block above is available
+ * \param blkLeftAvailable   boolean indication if the block to the left is available
+ * \param bEnableEdgeFilters indication whether to enable edge filters
  *
  * This function derives the prediction samples for the angular mode based on the prediction direction indicated by
  * the prediction mode index. The prediction direction is given by the displacement of the bottom row of the block and
@@ -490,9 +494,8 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 
 }
 
-/** Function for checking identical motion.
- * \param TComDataCU* pcCU
- * \param UInt PartAddr
+/** Check for identical motion in both motion vector direction of a bi-directional predicted CU
+  * \returns true, if motion vectors and reference pictures match
  */
 Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
 {
@@ -648,6 +651,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 /**
  * \brief Generate motion-compensated block
  *
+ * \param compID   Colour component ID
  * \param cu       Pointer to current CU
  * \param refPic   Pointer to reference picture
  * \param partAddr Address of block within CU
@@ -735,12 +739,14 @@ Void TComPrediction::getMvPredAMVP( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPar
 }
 
 /** Function for deriving planar intra prediction.
- * \param pSrc pointer to reconstructed sample array
- * \param srcStride the stride of the reconstructed sample array
- * \param rpDst reference to pointer for the prediction sample array
- * \param dstStride the stride of the prediction sample array
- * \param width the width of the block
- * \param height the height of the block
+ * \param pSrc        pointer to reconstructed sample array
+ * \param srcStride   the stride of the reconstructed sample array
+ * \param rpDst       reference to pointer for the prediction sample array
+ * \param dstStride   the stride of the prediction sample array
+ * \param width       the width of the block
+ * \param height      the height of the block
+ * \param channelType type of pel array (luma, chroma)
+ * \param format      chroma format
  *
  * This function derives the prediction samples for planar mode (intra coding).
  */
@@ -800,10 +806,11 @@ Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDs
 /** Function for filtering intra DC predictor.
  * \param pSrc pointer to reconstructed sample array
  * \param iSrcStride the stride of the reconstructed sample array
- * \param rpDst reference to pointer for the prediction sample array
+ * \param pDst reference to pointer for the prediction sample array
  * \param iDstStride the stride of the prediction sample array
  * \param iWidth the width of the block
  * \param iHeight the height of the block
+ * \param channelType type of pel array (luma, chroma)
  *
  * This function performs filtering left and top edges of the prediction samples for DC mode (intra coding).
  */
