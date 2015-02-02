@@ -180,14 +180,14 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
  - set temporal layer ID and the parameter sets
  .
  \param pcPic         picture class
- \param pocLast      POC of last picture
- \param pocCurr     current POC
+ \param pocLast       POC of last picture
+ \param pocCurr       current POC
  \param iNumPicRcvd   number of received pictures
- \param iTimeOffset   POC offset for hierarchical structure
- \param iDepth        temporal layer depth
+ \param iGOPid        POC offset for hierarchical structure
  \param rpcSlice      slice header class
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
+ \param isField       true for field coding
  */
 
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, const TComSPS* pSPS, const TComPPS *pPPS, Bool isField )
@@ -523,9 +523,9 @@ Void TEncSlice::setSearchRange( TComSlice* pcSlice )
 }
 
 /**
- - multi-loop slice encoding for different slice QP
- .
- \param rpcPic    picture class
+ Multi-loop slice encoding for different slice QP
+
+ \param pcPic    picture class
  */
 Void TEncSlice::precompressSlice( TComPic* pcPic )
 {
@@ -639,7 +639,7 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic)
   m_pcRateCtrl->getRCPic()->setTotalIntraCost(iSumHadSlice);
 }
 
-/** \param rpcPic   picture class
+/** \param pcPic   picture class
  */
 Void TEncSlice::compressSlice( TComPic* pcPic )
 {
@@ -918,10 +918,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   //}
 }
 
-/**
- \param  rpcPic        picture class
- \retval rpcBitstream  bitstream class
- */
 Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstreams, UInt &numBinsCoded )
 {
   TComSlice* pcSlice                 = pcPic->getSlice(getSliceIdx());
@@ -1195,8 +1191,12 @@ Void TEncSlice::calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UI
 }
 
 /** Determines the starting and bounding CTU address of current slice / dependent slice
- * \param bEncodeSlice Identifies if the calling function is compressSlice() [false] or encodeSlice() [true]
- * \returns Updates startCtuTsAddr, boundingCtuTsAddr with appropriate CTU address
+ * \param [out] startCtuTsAddr
+ * \param [out] boundingCtuTsAddr
+ * \param [in] pcPic
+ * \param encodingSlice Identifies, if the calling function is compressSlice() [false] or encodeSlice() [true]
+
+ * Updates startCtuTsAddr, boundingCtuTsAddr with appropriate CTU address
  */
 Void TEncSlice::xDetermineStartAndBoundingCtuTsAddr  ( UInt& startCtuTsAddr, UInt& boundingCtuTsAddr, TComPic* pcPic, const Bool encodingSlice ) // TODO: this is now only ever called with encodingSlice=false
 {

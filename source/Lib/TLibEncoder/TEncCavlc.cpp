@@ -1147,9 +1147,9 @@ Void TEncCavlc::codeProfileTier( const ProfileTierLevel* ptl, const Bool /*bIsSu
 }
 
 /**
- - write tiles and wavefront substreams sizes for the slice header.
- .
- \param pcSlice Where we find the substream size information.
+ * Write tiles and wavefront substreams sizes for the slice header (entry points).
+ *
+ * \param pSlice TComSlice structure that contains the substream size information.
  */
 Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
 {
@@ -1341,10 +1341,7 @@ Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height
 // Protected member functions
 // ====================================================================================================================
 
-/** code explicit wp tables
- * \param TComSlice* pcSlice
- * \returns Void
- */
+//! Code weighted prediction tables
 Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 {
   WPScalingParam  *wp;
@@ -1467,8 +1464,8 @@ Void TEncCavlc::codeScalingList( const TComScalingList &scalingList )
 }
 /** code DPCM
  * \param scalingList quantization matrix information
- * \param sizeIdc size index
- * \param listIdc list index
+ * \param sizeId      size index
+ * \param listId      list index
  */
 Void TEncCavlc::xCodeScalingList(const TComScalingList* scalingList, UInt sizeId, UInt listId)
 {

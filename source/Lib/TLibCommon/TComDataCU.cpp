@@ -1500,7 +1500,7 @@ Void TComDataCU::getAllowedChromaDir( UInt uiAbsPartIdx, UInt uiModeList[NUM_CHR
 /** Get most probable intra modes
 *\param   uiAbsPartIdx    partition index
 *\param   uiIntraDirPred  pointer to the array for MPM storage
-*\param   compID          color component ID
+*\param   compID          colour component ID
 *\param   piMode          it is set with MPM mode in case both MPM are equal. It is used to restrict RD search at encode side.
 *\returns Number of MPM
 */
@@ -1693,12 +1693,11 @@ Void TComDataCU::setCbfSubParts( UInt uiCbf, ComponentID compID, UInt uiAbsPartI
 }
 
 /** Sets a coded block flag for all sub-partitions of a partition
- * \param uiCbf The value of the coded block flag to be set
- * \param eTType
+ * \param uiCbf          The value of the coded block flag to be set
+ * \param compID
  * \param uiAbsPartIdx
  * \param uiPartIdx
  * \param uiDepth
- * \returns Void
  */
 Void TComDataCU::setCbfSubParts ( UInt uiCbf, ComponentID compID, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {

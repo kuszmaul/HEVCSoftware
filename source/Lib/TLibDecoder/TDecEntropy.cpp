@@ -609,14 +609,7 @@ Void TDecEntropy::decodeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx 
 }
 
 
-/** decode coefficients
- * \param pcCU
- * \param uiAbsPartIdx
- * \param uiDepth
- * \param uiWidth
- * \param uiHeight
- * \returns Void
- */
+//! decode coefficients
 Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
 {
   if( pcCU->isIntra(uiAbsPartIdx) )

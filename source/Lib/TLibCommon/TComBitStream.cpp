@@ -214,11 +214,11 @@ Int TComOutputBitstream::countStartCodeEmulations()
 }
 
 /**
- * read #uiNumberOfBits# from bitstream without updating the bitstream
- * state, storing the result in #ruiBits#.
+ * read uiNumberOfBits from bitstream without updating the bitstream
+ * state, storing the result in ruiBits.
  *
- * If reading #uiNumberOfBits# would overrun the bitstream buffer,
- * the bitsream is effectively padded with sufficient zero-bits to
+ * If reading uiNumberOfBits would overrun the bitstream buffer,
+ * the bitstream is effectively padded with sufficient zero-bits to
  * avoid the overrun.
  */
 Void TComInputBitstream::pseudoRead ( UInt uiNumberOfBits, UInt& ruiBits )
@@ -337,9 +337,8 @@ UInt TComInputBitstream::readOutTrailingBits ()
 //}
 
 /**
- - extract substream from the current bitstream
- .
- \param  pcBitstream  bitstream which contains substreams
+ Extract substream from the current bitstream.
+
  \param  uiNumBits    number of bits to transfer
  */
 TComInputBitstream *TComInputBitstream::extractSubstream( UInt uiNumBits )

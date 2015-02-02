@@ -54,9 +54,10 @@ using namespace std;
 // ====================================================================================================================
 
 /**
- \param    uiTotalDepth  total number of allowable depth
+ \param    uhTotalDepth  total number of allowable depth
  \param    uiMaxWidth    largest CU width
  \param    uiMaxHeight   largest CU height
+ \param    chromaFormat  chroma format
  */
 Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormat)
 {
@@ -221,7 +222,8 @@ Void TEncCu::init( TEncTop* pcEncTop )
 // Public member functions
 // ====================================================================================================================
 
-/** \param  rpcCU pointer of CU data class
+/** 
+ \param  pCtu pointer of CU data class
  */
 Void TEncCu::compressCtu( TComDataCU* pCtu )
 {
@@ -245,7 +247,7 @@ Void TEncCu::compressCtu( TComDataCU* pCtu )
   }
 #endif
 }
-/** \param  pcCU  pointer of CU data class
+/** \param  pCtu  pointer of CU data class
  */
 Void TEncCu::encodeCtu ( TComDataCU* pCtu )
 {
@@ -266,15 +268,7 @@ Void TEncCu::encodeCtu ( TComDataCU* pCtu )
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
-/** Derive small set of test modes for AMP encoder speed-up
- *\param   rpcBestCU
- *\param   eParentPartSize
- *\param   bTestAMP_Hor
- *\param   bTestAMP_Ver
- *\param   bTestMergeAMP_Hor
- *\param   bTestMergeAMP_Ver
- *\returns Void
-*/
+//! Derive small set of test modes for AMP encoder speed-up
 #if AMP_ENC_SPEEDUP
 #if AMP_MRG
 Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver)
@@ -349,12 +343,7 @@ Void TEncCu::deriveTestModeAMP (TComDataCU *pcBestCU, PartSize eParentPartSize, 
 // Protected member functions
 // ====================================================================================================================
 /** Compress a CU block recursively with enabling sub-CTU-level delta QP
- *\param   rpcBestCU
- *\param   rpcTempCU
- *\param   uiDepth
- *\returns Void
- *
- *- for loop of QP value to compress the current CU with all possible QP
+ *  - for loop of QP value to compress the current CU with all possible QP
 */
 #if AMP_ENC_SPEEDUP
 Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sDebug_), PartSize eParentPartSize )
@@ -1160,7 +1149,7 @@ Int  TEncCu::updateCtuDataISlice(TComDataCU* pCtu, Int width, Int height)
 /** check RD costs for a CU block encoded with merge
  * \param rpcBestCU
  * \param rpcTempCU
- * \returns Void
+ * \param earlyDetectionSkipMode
  */
 Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode )
 {
@@ -1438,7 +1427,7 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 /** check whether current try is the best with identifying the depth of current try
  * \param rpcBestCU
  * \param rpcTempCU
- * \returns Void
+ * \param uiDepth
  */
 Void TEncCu::xCheckBestMode( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest) DEBUG_STRING_PASS_INTO(Bool bAddSizeInfo) )
 {
@@ -1532,9 +1521,8 @@ Void TEncCu::xCopyYuv2Tmp( UInt uiPartUnitIdx, UInt uiNextDepth )
 }
 
 /** Function for filling the PCM buffer of a CU using its original sample array
- * \param pcCU pointer to current CU
- * \param pcOrgYuv pointer to original sample array
- * \returns Void
+ * \param pCU pointer to current CU
+ * \param pOrgYuv pointer to original sample array
  */
 Void TEncCu::xFillPCMBuffer     ( TComDataCU* pCU, TComYuv* pOrgYuv )
 {
@@ -1593,13 +1581,11 @@ Int TEncCu::xTuCollectARLStats(TCoeff* rpcCoeff, TCoeff* rpcArlCoeff, Int NumCoe
   return 0;
 }
 
-/** Collect ARL statistics from one CTU
- * \param pcCU
- */
+//! Collect ARL statistics from one CTU
 Void TEncCu::xCtuCollectARLStats(TComDataCU* pCtu )
 {
-  Double cSum[ LEVEL_RANGE + 1 ];     //: the sum of DCT coefficients corresponding to datatype and quantization output
-  UInt numSamples[ LEVEL_RANGE + 1 ]; //: the number of coefficients corresponding to datatype and quantization output
+  Double cSum[ LEVEL_RANGE + 1 ];     //: the sum of DCT coefficients corresponding to data type and quantization output
+  UInt numSamples[ LEVEL_RANGE + 1 ]; //: the number of coefficients corresponding to data type and quantization output
 
   TCoeff* pCoeffY = pCtu->getCoeff(COMPONENT_Y);
   TCoeff* pArlCoeffY = pCtu->getArlCoeff(COMPONENT_Y);

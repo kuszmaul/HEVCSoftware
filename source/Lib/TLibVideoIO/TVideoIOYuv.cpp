@@ -112,6 +112,7 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  * \param pchFile          file name string
  * \param bWriteMode       file open mode: true=read, false=write
  * \param fileBitDepth     bit-depth array of input/output file data.
+ * \param MSBExtendedBitDepth
  * \param internalBitDepth bit-depth array to scale image data to/from when reading/writing.
  */
 Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
@@ -669,8 +670,11 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
  * resulting data is clipped to the appropriate legal range, as if the
  * file had been provided at the lower-bitdepth compliant to Rec601/709.
  *
- * @param pPicYuv      input picture YUV buffer class pointer
- * @param aiPad        source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
+ * @param pPicYuvUser      input picture YUV buffer class pointer
+ * @param pPicYuvTrueOrg
+ * @param ipcsc
+ * @param aiPad            source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
+ * @param format           chroma format
  * @return true for success, false in case of error
  */
 Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, const InputColourSpaceConversion ipcsc, Int aiPad[2], ChromaFormat format )
@@ -751,8 +755,13 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
  * Write one Y'CbCr frame. No bit-depth conversion is performed, pcPicYuv is
  * assumed to be at TVideoIO::m_fileBitdepth depth.
  *
- * @param pPicYuv     input picture YUV buffer class pointer
- * @param aiPad       source padding size, aiPad[0] = horizontal, aiPad[1] = vertical
+ * @param pPicYuvUser      input picture YUV buffer class pointer
+ * @param ipCSC
+ * @param confLeft         conformance window left border
+ * @param confRight        conformance window right border
+ * @param confTop          conformance window top border
+ * @param confBottom       conformance window bottom border
+ * @param format           chroma format
  * @return true for success, false in case of error
  */
 Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversion ipCSC, Int confLeft, Int confRight, Int confTop, Int confBottom, ChromaFormat format )

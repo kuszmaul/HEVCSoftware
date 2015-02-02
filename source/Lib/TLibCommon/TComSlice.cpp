@@ -1445,18 +1445,13 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   this->setRPSidx(-1);
 }
 
-/** get AC and DC values for weighted pred
- * \param *wp
- * \returns Void
- */
+//! get AC and DC values for weighted pred
 Void  TComSlice::getWpAcDcParam(WPACDCParam *&wp)
 {
   wp = m_weightACDCParam;
 }
 
-/** init AC and DC values for weighted pred
- * \returns Void
- */
+//! init AC and DC values for weighted pred
 Void  TComSlice::initWpAcDcParam()
 {
   for(Int iComp = 0; iComp < MAX_NUM_COMPONENT; iComp++ )
@@ -1466,22 +1461,14 @@ Void  TComSlice::initWpAcDcParam()
   }
 }
 
-/** get WP tables for weighted pred
- * \param RefPicList
- * \param iRefIdx
- * \param *&WPScalingParam
- * \returns Void
- */
+//! get tables for weighted prediction
 Void  TComSlice::getWpScaling( RefPicList e, Int iRefIdx, WPScalingParam *&wp )
 {
   assert (e<NUM_REF_PIC_LIST_01);
   wp = m_weightPredTable[e][iRefIdx];
 }
 
-/** reset Default WP tables settings : no weight.
- * \param WPScalingParam
- * \returns Void
- */
+//! reset Default WP tables settings : no weight.
 Void  TComSlice::resetWpScaling()
 {
   for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
@@ -1501,9 +1488,7 @@ Void  TComSlice::resetWpScaling()
   }
 }
 
-/** init WP table
- * \returns Void
- */
+//! init WP table
 Void  TComSlice::initWpScaling(const TComSPS *sps)
 {
   const Bool bUseHighPrecisionPredictionWeighting = sps->getUseHighPrecisionPredictionWeighting();
@@ -1862,20 +1847,13 @@ Void TComReferencePictureSet::setCheckLTMSBPresent(Int bufferNum, Bool b)
   m_bCheckLTMSB[bufferNum] = b;
 }
 
-/** set the reference idc value at uiBufferNum entry to the value of iRefIdc
- * \param uiBufferNum
- * \param iRefIdc
- * \returns Void
- */
+//! set the reference idc value at uiBufferNum entry to the value of iRefIdc
 Void TComReferencePictureSet::setRefIdc(Int bufferNum, Int refIdc)
 {
   m_refIdc[bufferNum] = refIdc;
 }
 
-/** get the reference idc value at uiBufferNum
- * \param uiBufferNum
- * \returns Int
- */
+//! get the reference idc value at uiBufferNum
 Int  TComReferencePictureSet::getRefIdc(Int bufferNum) const
 {
   return m_refIdc[bufferNum];
@@ -1998,9 +1976,9 @@ Bool TComScalingList::checkDefaultScalingList()
 }
 
 /** get scaling matrix from RefMatrixID
- * \param sizeId size index
- * \param Index of input matrix
- * \param Index of reference matrix
+ * \param sizeId    size index
+ * \param listId    index of input matrix
+ * \param refListId index of reference matrix
  */
 Void TComScalingList::processRefMatrix( UInt sizeId, UInt listId , UInt refListId )
 {
@@ -2236,7 +2214,7 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
 
 /** process of default matrix
  * \param sizeId size index
- * \param Index of input matrix
+ * \param listId index of input matrix
  */
 Void TComScalingList::processDefaultMatrix(UInt sizeId, UInt listId)
 {

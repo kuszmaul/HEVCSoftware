@@ -330,9 +330,10 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
 
 
 /** Coding of coeff_abs_level_minus3
- * \param uiSymbol value of coeff_abs_level_minus3
- * \param ruiGoRiceParam reference to Rice parameter
- * \returns Void
+ * \param symbol                  value of coeff_abs_level_minus3
+ * \param rParam                  reference to Rice parameter
+ * \param useLimitedPrefixLength
+ * \param channelType             plane type (luma/chroma)
  */
 Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType )
 {
@@ -1103,12 +1104,12 @@ Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU )
 }
 
 /** Encode (X,Y) position of the last significant coefficient
- * \param uiPosX X component of last coefficient
- * \param uiPosY Y component of last coefficient
- * \param width  Block width
- * \param height Block height
- * \param eTType plane type / luminance or chrominance
- * \param uiScanIdx scan type (zig-zag, hor, ver)
+ * \param uiPosX     X component of last coefficient
+ * \param uiPosY     Y component of last coefficient
+ * \param width      Block width
+ * \param height     Block height
+ * \param component  chroma component ID
+ * \param uiScanIdx  scan type (zig-zag, hor, ver)
  * This method encodes the X and Y component within a block of the last significant coefficient.
  */
 Void TEncSbac::codeLastSignificantXY( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx )
@@ -1570,8 +1571,6 @@ Void TEncSbac::codeSaoMaxUvlc    ( UInt code, UInt maxSymbol )
 }
 
 /** Code SAO EO class or BO band position
- * \param uiLength
- * \param uiCode
  */
 Void TEncSbac::codeSaoUflc       ( UInt uiLength, UInt uiCode )
 {
@@ -1579,8 +1578,6 @@ Void TEncSbac::codeSaoUflc       ( UInt uiLength, UInt uiCode )
 }
 
 /** Code SAO merge flags
- * \param uiCode
- * \param uiCompIdx
  */
 Void TEncSbac::codeSaoMerge       ( UInt uiCode )
 {
@@ -1588,7 +1585,6 @@ Void TEncSbac::codeSaoMerge       ( UInt uiCode )
 }
 
 /** Code SAO type index
- * \param uiCode
  */
 Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
 {

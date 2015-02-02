@@ -643,7 +643,6 @@ Void TComSampleAdaptiveOffset::SAOProcess(TComPic* pDecPic)
 
 /** PCM LF disable process.
  * \param pcPic picture (TComPic) pointer
- * \returns Void
  *
  * \note Replace filtered sample values of PCM mode blocks with the transmitted and reconstructed ones.
  */
@@ -654,7 +653,6 @@ Void TComSampleAdaptiveOffset::PCMLFDisableProcess (TComPic* pcPic)
 
 /** Picture-level PCM restoration.
  * \param pcPic picture (TComPic) pointer
- * \returns Void
  */
 Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
 {
@@ -672,10 +670,9 @@ Void TComSampleAdaptiveOffset::xPCMRestoration(TComPic* pcPic)
 }
 
 /** PCM CU restoration.
- * \param pcCU pointer to current CU
- * \param uiAbsPartIdx part index
- * \param uiDepth CU depth
- * \returns Void
+ * \param pcCU            pointer to current CU
+ * \param uiAbsZorderIdx  part index
+ * \param uiDepth         CU depth
  */
 Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth )
 {
@@ -710,11 +707,10 @@ Void TComSampleAdaptiveOffset::xPCMCURestoration ( TComDataCU* pcCU, UInt uiAbsZ
 }
 
 /** PCM sample restoration.
- * \param pcCU pointer to current CU
- * \param uiAbsPartIdx part index
- * \param uiDepth CU depth
- * \param ttText texture component type
- * \returns Void
+ * \param pcCU           pointer to current CU
+ * \param uiAbsZorderIdx part index
+ * \param uiDepth        CU depth
+ * \param compID         texture component type
  */
 Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, const ComponentID compID)
 {

@@ -63,10 +63,7 @@ WeightPredAnalysis::WeightPredAnalysis()
 }
 
 
-/** calculate AC and DC values for current original image
- * \param TComSlice *slice
- * \returns Void
- */
+//! calculate AC and DC values for current original image
 Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
 {
   //===== calculate AC/DC value =====
@@ -123,10 +120,7 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
 }
 
 
-/** check weighted pred or non-weighted pred
- * \param TComSlice *slice
- * \returns Void
- */
+//! check weighted pred or non-weighted pred
 Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
 {
   const TComPicYuv *pPic = slice->getPic()->getPicYuvOrg();
@@ -174,9 +168,7 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
 }
 
 
-/** estimate wp tables for explicit wp
- * \param TComSlice *slice
- */
+//! estimate wp tables for explicit wp
 Void WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *const slice)
 {
   Int  iDenom         = 6;
@@ -204,10 +196,7 @@ Void WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *const slice)
 }
 
 
-/** update wp tables for explicit wp w.r.t ramge limitation
- * \param TComSlice *slice
- * \returns Bool
- */
+//! update wp tables for explicit wp w.r.t range limitation
 Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int log2Denom)
 {
   const Int  numComp                    = slice->getPic()->getPicYuvOrg()->getNumberValidComponents();
@@ -278,11 +267,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
 }
 
 
-/** select whether weighted pred enables or not.
- * \param TComSlice *slice
- * \param log2Denom
- * \returns Bool
- */
+//! select whether weighted pred enables or not.
 Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 {
         TComPicYuv *const pPic                                = slice->getPic()->getPicYuvOrg();
@@ -334,18 +319,7 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 }
 
 
-/** calculate SAD values for both WP version and non-WP version.
- * \param Pel *pOrgPel
- * \param Pel *pRefPel
- * \param Int iWidth
- * \param Int iHeight
- * \param Int iOrgStride
- * \param Int iRefStride
- * \param Int iLog2Denom
- * \param Int iWeight
- * \param Int iOffset
- * \returns Int64
- */
+//! calculate SAD values for both WP version and non-WP version.
 Int64 WeightPredAnalysis::xCalcSADvalueWP(const Int   bitDepth,
                                           const Pel  *pOrgPel,
                                           const Pel  *pRefPel,

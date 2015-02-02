@@ -2414,7 +2414,9 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
 
 /** Function for deciding the nal_unit_type.
  * \param pocCurr POC of the current picture
- * \returns the nal unit type of the picture
+ * \param lastIDR  POC of the last IDR picture
+ * \param isField  true to indicate field coding
+ * \returns the NAL unit type of the picture
  * This function checks the configuration and returns the appropriate nal_unit_type for the picture.
  */
 NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)

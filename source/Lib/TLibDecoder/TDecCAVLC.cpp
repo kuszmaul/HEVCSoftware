@@ -1785,10 +1785,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
 // Protected member functions
 // ====================================================================================================================
 
-/** parse explicit wp tables
-* \param TComSlice* pcSlice
-* \returns Void
-*/
+//! parse explicit wp tables
 Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice, const TComSPS *sps )
 {
         WPScalingParam *wp;
