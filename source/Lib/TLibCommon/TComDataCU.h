@@ -39,7 +39,8 @@
 #ifndef __TCOMDATACU__
 #define __TCOMDATACU__
 
-#include <assert.h>
+#include <algorithm>
+#include <vector>
 
 // Include files
 #include "CommonDef.h"
@@ -47,9 +48,6 @@
 #include "TComSlice.h"
 #include "TComRdCost.h"
 #include "TComPattern.h"
-
-#include <algorithm>
-#include <vector>
 
 //! \ingroup TLibCommon
 //! \{

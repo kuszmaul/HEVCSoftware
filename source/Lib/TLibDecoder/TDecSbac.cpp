@@ -37,6 +37,7 @@
 
 #include "TDecSbac.h"
 #include "TLibCommon/TComTU.h"
+#include "TLibCommon/TComTrQuant.h"
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 #include "TLibCommon/TComCodingStatistics.h"

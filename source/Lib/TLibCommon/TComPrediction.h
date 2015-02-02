@@ -40,14 +40,13 @@
 
 
 // Include files
-#include "TComPic.h"
-#include "TComMotionInfo.h"
-#include "TComPattern.h"
-#include "TComTrQuant.h"
+#include "TComYuv.h"
 #include "TComInterpolationFilter.h"
 #include "TComWeightPrediction.h"
 
-class TComTU; // forward declaration
+// forward declaration
+class TComMv;
+class TComTU; 
 
 //! \ingroup TLibCommon
 //! \{

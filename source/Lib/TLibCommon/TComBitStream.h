@@ -45,7 +45,6 @@
 #include <stdint.h>
 #include <vector>
 #include <stdio.h>
-#include <assert.h>
 #include "CommonDef.h"
 
 //! \ingroup TLibCommon

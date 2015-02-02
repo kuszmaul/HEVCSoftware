@@ -38,13 +38,12 @@
 #ifndef __TCOMWEIGHTPREDICTION__
 #define __TCOMWEIGHTPREDICTION__
 
+#include "CommonDef.h"
 
-// Include files
-#include "TComPic.h"
-#include "TComMotionInfo.h"
-#include "TComPattern.h"
-#include "TComTrQuant.h"
-#include "TComInterpolationFilter.h"
+// forward declarations
+class  TComDataCU;
+class  TComYuv;
+struct WPScalingParam;
 
 // ====================================================================================================================
 // Class definition
