@@ -376,7 +376,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
                 Int cbOffset;
                 Int crOffset;
                 READ_SVLC(cbOffset, "cb_qp_offset_list[i]");
+                assert(cbOffset >= -12 && cbOffset <= 12); 
                 READ_SVLC(crOffset, "cr_qp_offset_list[i]");
+                assert(crOffset >= -12 && crOffset <= 12);
                 pcPPS->setChromaQpAdjTableAt(chromaQpAdjustmentIndex, cbOffset, crOffset);
               }
               assert(pcPPS->getChromaQpAdjTableSize() == tableSizeMinus1 + 1);
