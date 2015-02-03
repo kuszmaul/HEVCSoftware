@@ -96,7 +96,7 @@ private:
   Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
   Char*          m_phQP;               ///< array of QP values
-  UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed)
+  UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   UInt           m_codedChromaQpAdj;
   UChar*         m_puhTrIdx;           ///< array of transform indices
   UChar*         m_puhTransformSkip[MAX_NUM_COMPONENT];///< array of transform skipping flags
@@ -262,9 +262,9 @@ public:
   Void          setCodedQP            ( Char qp )               { m_codedQP = qp;             }
   Char          getCodedQP            ()                        { return m_codedQP;           }
 
-  UChar*        getChromaQpAdj        ()                        { return m_ChromaQpAdj;       }
-  UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  }
-  Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   }
+  UChar*        getChromaQpAdj        ()                        { return m_ChromaQpAdj;       } ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
+  UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  } ///< When value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
+  Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   } ///< When val = 0,   cu_chroma_qp_offset_flag=0; when val>0,   indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=val-1
   Void          setChromaQpAdjSubParts( UChar val, Int absPartIdx, Int depth );
   Void          setCodedChromaQpAdj   ( Char qp )               { m_codedChromaQpAdj = qp;    }
   Char          getCodedChromaQpAdj   ()                        { return m_codedChromaQpAdj;  }

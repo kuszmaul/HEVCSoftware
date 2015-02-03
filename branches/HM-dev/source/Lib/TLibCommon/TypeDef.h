@@ -221,6 +221,7 @@
 
 #define O0043_BEST_EFFORT_DECODING                        0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
+#define MAX_QP_OFFSET_LIST_SIZE                           6 ///< Maximum size of QP offset list is 6 entries
 // Cost mode support
 
 #define LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP       0 ///< QP to use for lossless coding.

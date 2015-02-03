@@ -370,8 +370,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               READ_UVLC(uiCode, "diff_cu_chroma_qp_offset_depth"); pcPPS->setMaxCuChromaQpAdjDepth(uiCode);
               UInt tableSizeMinus1 = 0;
               READ_UVLC(tableSizeMinus1, "chroma_qp_offset_list_len_minus1");
-              /* skip zero index */
-              for (Int chromaQpAdjustmentIndex = 1; chromaQpAdjustmentIndex <= (tableSizeMinus1 + 1); chromaQpAdjustmentIndex++)
+              assert(tableSizeMinus1 < MAX_QP_OFFSET_LIST_SIZE);
+
+              for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx <= (tableSizeMinus1); cuChromaQpOffsetIdx++)
               {
                 Int cbOffset;
                 Int crOffset;
@@ -379,7 +380,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
                 assert(cbOffset >= -12 && cbOffset <= 12); 
                 READ_SVLC(crOffset, "cr_qp_offset_list[i]");
                 assert(crOffset >= -12 && crOffset <= 12);
-                pcPPS->setChromaQpAdjTableAt(chromaQpAdjustmentIndex, cbOffset, crOffset);
+                // table uses +1 for index (see comment inside the function)
+                pcPPS->setChromaQpAdjTableAt(cuChromaQpOffsetIdx+1, cbOffset, crOffset);
               }
               assert(pcPPS->getChromaQpAdjTableSize() == tableSizeMinus1 + 1);
             }
