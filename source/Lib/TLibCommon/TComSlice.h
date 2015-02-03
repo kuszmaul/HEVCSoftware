@@ -989,8 +989,8 @@ private:
 
   // Chroma QP Adjustments
   Int              m_MaxCuChromaQpAdjDepth;
-  Int              m_ChromaQpAdjTableSize;
-  ChromaQpAdj      m_ChromaQpAdjTable[7];
+  Int              m_ChromaQpAdjTableSize; // size (excludes the null entry used in the following array).
+  ChromaQpAdj      m_ChromaQpAdjTableIncludingNullEntry[1+MAX_QP_OFFSET_LIST_SIZE]; //!< Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
 
   Int              m_chromaCbQpOffset;
   Int              m_chromaCrQpOffset;
@@ -1079,12 +1079,19 @@ public:
   UInt                   getMaxCuChromaQpAdjDepth () const                                { return m_MaxCuChromaQpAdjDepth;               }
   Void                   clearChromaQpAdjTable()                                          { m_ChromaQpAdjTableSize = 0;                   }
   Int                    getChromaQpAdjTableSize() const                                  { return m_ChromaQpAdjTableSize;                }
-  const ChromaQpAdj&     getChromaQpAdjTableAt( Int idx ) const                           { return m_ChromaQpAdjTable[idx];               }
-  Void                   setChromaQpAdjTableAt( Int idx, Int cbOffset, Int crOffset )
+
+  const ChromaQpAdj&     getChromaQpAdjTableAt( Int cuChromaQpOffsetIdxPlus1 ) const
   {
-    m_ChromaQpAdjTable[idx].u.comp.CbOffset = cbOffset;
-    m_ChromaQpAdjTable[idx].u.comp.CrOffset = crOffset;
-    m_ChromaQpAdjTableSize = max(m_ChromaQpAdjTableSize, idx);
+    assert(cuChromaQpOffsetIdxPlus1 < m_ChromaQpAdjTableSize+1);
+    return m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1]; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
+  }
+
+  Void                   setChromaQpAdjTableAt( Int cuChromaQpOffsetIdxPlus1, Int cbOffset, Int crOffset )
+  {
+    assert (cuChromaQpOffsetIdxPlus1 != 0 && cuChromaQpOffsetIdxPlus1 <= MAX_QP_OFFSET_LIST_SIZE);
+    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CbOffset = cbOffset; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
+    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CrOffset = crOffset;
+    m_ChromaQpAdjTableSize = max(m_ChromaQpAdjTableSize, cuChromaQpOffsetIdxPlus1);
   }
 
   Void                   setNumRefIdxL0DefaultActive(UInt ui)                             { m_numRefIdxL0DefaultActive=ui;                }

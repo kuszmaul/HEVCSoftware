@@ -288,10 +288,10 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
               WRITE_UVLC(pcPPS->getMaxCuChromaQpAdjDepth(),                       "diff_cu_chroma_qp_offset_depth");
               WRITE_UVLC(pcPPS->getChromaQpAdjTableSize() - 1,                    "chroma_qp_offset_list_len_minus1");
               /* skip zero index */
-              for (Int chromaQpAdjustmentIndex = 1; chromaQpAdjustmentIndex <= pcPPS->getChromaQpAdjTableSize(); chromaQpAdjustmentIndex++)
+              for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < pcPPS->getChromaQpAdjTableSize(); cuChromaQpOffsetIdx++)
               {
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CbOffset,     "cb_qp_offset_list[i]");
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(chromaQpAdjustmentIndex).u.comp.CrOffset,     "cr_qp_offset_list[i]");
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
+                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
               }
             }
 
