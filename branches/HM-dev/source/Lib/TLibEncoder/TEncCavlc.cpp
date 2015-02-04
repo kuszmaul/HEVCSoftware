@@ -1140,7 +1140,7 @@ Void TEncCavlc::codeProfileTier( const ProfileTierLevel* ptl, const Bool /*bIsSu
   {
     WRITE_CODE(0x0000 , 16, PTL_TRACE_TEXT("reserved_zero_43bits[0..15]"     ));
     WRITE_CODE(0x0000 , 16, PTL_TRACE_TEXT("reserved_zero_43bits[16..31]"    ));
-    WRITE_CODE(0x000  , 12, PTL_TRACE_TEXT("reserved_zero_43bits[32..42]"    ));
+    WRITE_CODE(0x000  , 11, PTL_TRACE_TEXT("reserved_zero_43bits[32..42]"    ));
   }
   WRITE_FLAG(false,   PTL_TRACE_TEXT("inbld_flag" ));
 #undef PTL_TRACE_TEXT
