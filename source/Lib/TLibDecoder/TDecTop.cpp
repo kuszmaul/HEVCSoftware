@@ -785,6 +785,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_RESERVED_NVCL45:
     case NAL_UNIT_RESERVED_NVCL46:
     case NAL_UNIT_RESERVED_NVCL47:
+      printf ("Note: found reserved NAL unit.\n");
+      return false;
     case NAL_UNIT_UNSPECIFIED_48:
     case NAL_UNIT_UNSPECIFIED_49:
     case NAL_UNIT_UNSPECIFIED_50:
@@ -801,7 +803,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_UNSPECIFIED_61:
     case NAL_UNIT_UNSPECIFIED_62:
     case NAL_UNIT_UNSPECIFIED_63:
-
+      printf ("Note: found unspecified NAL unit.\n");
+      return false;
     default:
       assert (0);
       break;
