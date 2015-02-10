@@ -161,9 +161,7 @@ protected:
                               Bool         bUse1DSearchFor8x8
                              ,PartSize     eSize
                              ,Double&      rdCost
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-                             , Bool        testPredOnly=false
-#endif
+                             ,Bool         testPredOnly=false
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
 

@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0067_ENCODER_IMPROVEMENTS                    1 ///< Accumulate candidates and neighbours for fast evaluation
 #define SCM_S0085_ADAPTIVE_MV_RESOLUTION                  1 ///< adaptive motion vector resolution, as proposed in JCTVC-S0085
 #define SCM_S0100_IBC_CHANGE_EARLY_TERMINATION            1 ///< make the same changes to IBC early termination, regardless of ACT or not
 #define SCM_S0086_MOVE_ACT_FLAG_TO_PPS                    1 ///< move ACT flag from SPS to PPS
@@ -321,11 +320,9 @@
 #define SCM_S0269_MSB_IDX_CODING                          1
 #endif
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
-#endif
 
 #define SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO               1 ///< aspects relating to combination of SCM_PLT_ZERO_COLOR_OPT, SCM_PLT_SINGLE_COLOR_OPT, 
                                                             ///< SCM_S0110_PLT_TRANSPOSE_FLAG_OPT

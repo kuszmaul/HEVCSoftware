@@ -1395,7 +1395,6 @@ Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLas
   return;
 }
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
 Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& nbPred)
 {
   UInt            uiTempPartIdx;
@@ -1526,7 +1525,7 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
 
   return isIBC;
 }
-#endif
+
 
 TComDataCU* TComDataCU::getPULeft( UInt& uiLPartUnitIdx,
                                    UInt uiCurrPartUnitIdx,
@@ -4064,7 +4063,6 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
   return true;
 }
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
 Bool TComDataCU::xGetColMVPIBC( Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv)
 {
   UInt uiAbsPartAddr = uiPartUnitIdx;
@@ -4093,7 +4091,6 @@ Bool TComDataCU::xGetColMVPIBC( Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv)
 
   return true;
 }
-#endif
 
 UInt TComDataCU::xGetMvdBits(TComMv cMvd)
 {
