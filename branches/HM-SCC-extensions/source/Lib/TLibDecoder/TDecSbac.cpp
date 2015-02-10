@@ -2491,7 +2491,6 @@ Void TDecSbac::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
   }
 }
 
-#if SCM_S0269_MSB_IDX_CODING
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 UInt TDecSbac::xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat)
 #else
@@ -2547,6 +2546,5 @@ UInt TDecSbac::xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMa
 
   return uiSymbol;
 }
-#endif
 
 //! \}
