@@ -294,8 +294,6 @@
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 
-#define SCM_420_IBC_BUGFIX                                1 ///< Bug fix for 420 Intra BC mode. Note: it may only work with CTC.
-                                                            ///< Slice and tile boundary may need further consideration
 //------------------------------------------------
 // Backwards-compatibility
 //------------------------------------------------
