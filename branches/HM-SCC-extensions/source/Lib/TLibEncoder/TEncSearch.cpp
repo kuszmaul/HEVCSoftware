@@ -5613,12 +5613,10 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
 
         m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( 0 ) );
         m_pcRdCost->setCostScale( 2 );
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
         if ( pcCU->getSlice()->getUseIntegerMv() )
         {
           m_pcRdCost->setCostScale( 0 );
         }
-#endif
         list<BlockHash>::iterator it;
         for ( it = listBlockHash.begin(); it != listBlockHash.end(); ++it )
         {
@@ -5656,12 +5654,10 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
             bestRefIndex = iRefIdx;
             bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
             bestMv <<= 2;
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             if ( pcCU->getSlice()->getUseIntegerMv() )
             {
               bestMv >>= 2;
             }
-#endif
             bestMvd.set( bestMv.getHor() - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), bestMv.getVer() - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
             bestMVPIndex = currMVPIdx;
           }
@@ -7186,12 +7182,10 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
 
   TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec();
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     cMvCand <<= 2;
   }
-#endif
   pcCU->clipMv( cMvCand );
 
   // prediction pattern
@@ -7279,13 +7273,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_currRefPicIndex = iRefIdxPred;
   m_bSkipFracME = false;
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     m_pcRdCost->setCostScale( 0 );
     m_bSkipFracME = true;
   }
-#endif
 
   //  Do integer search
   if ( !m_iFastSearch || bBi )
@@ -7311,23 +7303,15 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->setCostScale ( 1 );
 
   const Bool bIsLosslessCoded = pcCU->getCUTransquantBypass(uiPartAddr) != 0;
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   xPatternSearchFracDIF( bIsLosslessCoded, pcCU, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
-#else
-  xPatternSearchFracDIF( bIsLosslessCoded, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost ,bBi );
-#endif
 
   m_pcRdCost->setCostScale( 0 );
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( !pcCU->getSlice()->getUseIntegerMv() )
   {
-#endif
     rcMv <<= 2;
     rcMv += (cMvHalf <<= 1);
     rcMv +=  cMvQter;
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   }
-#endif
 
   UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
 
@@ -7472,12 +7456,10 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
   TZ_SEARCH_CONFIGURATION
 
   UInt uiSearchRange = m_iSearchRange;
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     rcMv <<= 2;
   }
-#endif
   pcCU->clipMv( rcMv );
   rcMv >>= 2;
   // init TZSearchStruct
@@ -7711,12 +7693,10 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
   Int   iBestY                  = 0;
   Int   iDist                   = 0;
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     rcMv <<= 2;
   }
-#endif
   pcCU->clipMv( rcMv );
   rcMv >>= 2;
   // init TZSearchStruct
@@ -7875,10 +7855,7 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
 
 Void TEncSearch::xPatternSearchFracDIF(
                                        Bool         bIsLosslessCoded,
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
                                        TComDataCU*  pcCU,
-#endif
                                        TComPattern* pcPatternKey,
                                        Pel*         piRefY,
                                        Int          iRefStride,
@@ -7897,7 +7874,6 @@ Void TEncSearch::xPatternSearchFracDIF(
                           pcPatternKey->getROIYHeight(),
                           iRefStride );
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     TComMv baseRefMv( 0, 0 );
@@ -7908,7 +7884,6 @@ Void TEncSearch::xPatternSearchFracDIF(
     ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter, !bIsLosslessCoded );
     return;
   }
-#endif
 
   if ( m_bSkipFracME )
   {

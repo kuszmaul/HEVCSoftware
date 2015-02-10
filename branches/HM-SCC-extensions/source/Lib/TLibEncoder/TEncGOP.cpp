@@ -526,8 +526,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
   }
 }
 
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 list<Double> g_CSMRate;
 list<Double> g_MRate;
 
@@ -672,7 +670,6 @@ Bool TEncGOP::xGetUseIntegerMv( TComSlice* pcSlice )
 
   return false;
 }
-#endif
 
 // ====================================================================================================================
 // Public member functions
@@ -1210,14 +1207,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
     pcSlice->setUseIntegerMv( false );
     if ( !pcSlice->isIntra() )
     {
       pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
     }
-#endif
 
     pcPic->getPicSym()->initTiles(pcSlice->getPPS());
     pcPic->getPicSym()->initCtuTsRsAddrMaps();

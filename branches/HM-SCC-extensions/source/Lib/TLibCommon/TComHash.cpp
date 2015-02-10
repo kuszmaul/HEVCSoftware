@@ -181,7 +181,6 @@ MapIterator TComHash::getFirstIterator( UInt hashValue )
   return m_pLookupTable[hashValue]->begin();
 }
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 Bool TComHash::hasExactMatch( UInt hashValue1, UInt hashValue2 )
 {
   if ( m_pLookupTable[hashValue1] == NULL )
@@ -198,7 +197,6 @@ Bool TComHash::hasExactMatch( UInt hashValue1, UInt hashValue2 )
   }
   return false;
 }
-#endif
 
 Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height )
 {

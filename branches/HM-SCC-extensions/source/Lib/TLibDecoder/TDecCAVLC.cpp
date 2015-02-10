@@ -799,10 +799,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
               READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
             }
 #endif
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
             READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
 #endif
@@ -1342,7 +1339,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
       if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
       {
         READ_FLAG( uiCode, "use_integer_mv_flag" );
@@ -1352,7 +1348,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManagerDecoder
       {
         pcSlice->setUseIntegerMv( false );
       }
-#endif
     }
 
     READ_SVLC( iCode, "slice_qp_delta" );

@@ -108,9 +108,7 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 , m_useIntegerMv                  ( false )
-#endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -1606,9 +1604,7 @@ TComSPS::TComSPS()
 , m_uiPLTMaxSize              ( 31)
 , m_uiPLTMaxPredSize          ( 64)
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
 , m_useAdaptiveMvResolution   (false)
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
 , m_disableIntraBoundaryFilter(false)
 #endif

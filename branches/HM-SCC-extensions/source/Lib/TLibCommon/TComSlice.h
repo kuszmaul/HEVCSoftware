@@ -762,9 +762,7 @@ private:
   UInt        m_uiPLTMaxSize;
   UInt        m_uiPLTMaxPredSize;
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool        m_useAdaptiveMvResolution;
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
   Bool        m_disableIntraBoundaryFilter;
 #endif
@@ -926,10 +924,8 @@ public:
   UInt      getPLTMaxPredSize()                                  const { return m_uiPLTMaxPredSize; }
   Void      setPLTMaxPredSize(const UInt value)                        { m_uiPLTMaxPredSize = value; }
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
   Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
   Void      setDisableIntraBoundaryFilter( Bool b) { m_disableIntraBoundaryFilter = b;    }
   Bool      getDisableIntraBoundaryFilter()        { return m_disableIntraBoundaryFilter; }
@@ -1319,9 +1315,7 @@ private:
   Bool       m_LFCrossSliceBoundaryFlag;
 
   Bool       m_enableTMVPFlag;
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool       m_useIntegerMv;
-#endif
 
 public:
   TComSlice();
@@ -1538,10 +1532,8 @@ public:
   Void      setEnableTMVPFlag     ( Bool   b )    { m_enableTMVPFlag = b; }
   Bool      getEnableTMVPFlag     ()              { return m_enableTMVPFlag;}
 
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
   Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
-#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, Int poc);

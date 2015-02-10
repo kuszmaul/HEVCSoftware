@@ -624,12 +624,10 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 {
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
     cMv <<= 2;
   }
-#endif
   pcCU->clipMv(cMv);
 
   for (UInt ch=COMPONENT_Y; ch<pcYuvPred->getNumberValidComponents(); ch++)

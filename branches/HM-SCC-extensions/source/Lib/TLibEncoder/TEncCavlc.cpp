@@ -603,9 +603,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
      || pcSPS->getUseColourTrans()
 #endif
      || pcSPS->getUsePLTMode()
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
      || pcSPS->getUseAdaptiveMvResolution()
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
      || pcSPS->getDisableIntraBoundaryFilter()
 #endif
@@ -659,10 +657,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
               WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");          
             }
 #endif
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
-#endif
 #if SCM_S0102_IBF_SPS_CONTROL
             WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
 #endif
@@ -1033,12 +1028,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
       if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
       {
         WRITE_FLAG( pcSlice->getUseIntegerMv() ? 1 : 0, "use_integer_mv" );
       }
-#endif
     }
     Int iCode = pcSlice->getSliceQp() - ( pcSlice->getPPS()->getPicInitQPMinus26() + 26 );
     WRITE_SVLC( iCode, "slice_qp_delta" );
