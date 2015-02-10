@@ -509,7 +509,6 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
 Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted)
 #endif
 {
-#if SCM_S0153_PALETTE_ZERO_RUNS
   Int lastPredIdx = -1;
   UInt run = 0;
   uiNumPLTPredicted = 0;
@@ -545,74 +544,6 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
   {
     xWriteEpExGolomb( 1, 0 );
   }
-#else
-  UInt lastPrevIdx = uiPLTSizePrev - 1;
-  UInt groupLength = 4;
-  UInt uiIdxPrev = 0;
-  UInt allZerosIdxPlus1 = groupLength;
-
-  while (lastPrevIdx && !bReusedPrev[lastPrevIdx])
-  {
-    lastPrevIdx--;
-  }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
-  while (uiIdxPrev <= lastPrevIdx && uiNumPLTPredicted < uiMaxPLTSize)
-#else
-  while (uiIdxPrev <= lastPrevIdx && uiNumPLTPredicted < MAX_PLT_SIZE)
-#endif
-  {
-    UInt lastIdx = min(uiIdxPrev + groupLength, uiPLTSizePrev) - 1;
-    UInt numOnesInGroup = 4;
-    Bool lastPossibleGroup = uiIdxPrev + groupLength > uiPLTSizePrev; ///< last possible group, can be 0 but cannot be full size (4)
-
-    if (uiIdxPrev >= allZerosIdxPlus1 && !lastPossibleGroup)
-    {
-      numOnesInGroup = 0;
-      for (UInt idx = uiIdxPrev; idx <= lastIdx; idx++)
-      {
-        numOnesInGroup += (UInt)bReusedPrev[idx];
-      }
-      m_pcBinIf->encodeBinEP(numOnesInGroup == 0);
-    }
-
-    if ( numOnesInGroup )
-    {
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
-      while (uiIdxPrev < lastIdx && uiNumPLTPredicted < uiMaxPLTSize)
-#else
-      while ( uiIdxPrev < lastIdx && uiNumPLTPredicted < MAX_PLT_SIZE )
-#endif
-      {
-        m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
-        uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
-        uiIdxPrev++;
-      }
-
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
-      if ((numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < uiMaxPLTSize)
-#else
-      if ( (numOnesInGroup > 1 || (numOnesInGroup == 1 && !bReusedPrev[uiIdxPrev])) && uiNumPLTPredicted < MAX_PLT_SIZE )
-#endif
-      {
-        m_pcBinIf->encodeBinEP( (UInt)bReusedPrev[uiIdxPrev] );
-      }
-      uiNumPLTPredicted += bReusedPrev[uiIdxPrev];
-      uiIdxPrev++;
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
-      if (!lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < uiMaxPLTSize)
-#else
-      if ( !lastPossibleGroup && uiIdxPrev < uiPLTSizePrev && uiNumPLTPredicted < MAX_PLT_SIZE )
-#endif
-      {
-        m_pcBinIf->encodeBinEP( uiIdxPrev > lastPrevIdx );
-      }
-    }
-    else
-    {
-      uiIdxPrev += groupLength;
-    }
-  }
-#endif
 }
 
 #if SCM_S0269_PLT_RUN_MSB_IDX
