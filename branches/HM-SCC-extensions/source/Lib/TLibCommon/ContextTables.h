@@ -171,11 +171,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_PLTMODE_FLAG_CTX          1
 #define NUM_SPOINT_CTX                3
 #define NUM_TOP_RUN_CTX               3
-#if SCM_S0269_PLT_RUN_MSB_IDX
 #define NUM_LEFT_RUN_CTX              5
-#else
-#define NUM_LEFT_RUN_CTX              3
-#endif
 #define NUM_PLT_REUSE_FLAG_CTX        1
 #define NUM_SCAN_ROTATION_FLAG_CTX    1
 #define MAX_PLT_SIZE                  31
@@ -219,7 +215,6 @@ INIT_TOP_RUN[NUMBER_OF_SLICE_TYPES][NUM_TOP_RUN_CTX] =
   { 154, 154, 154 },
 };
 
-#if SCM_S0269_PLT_RUN_MSB_IDX
 static const UChar
 INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
 {
@@ -227,15 +222,6 @@ INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
   { 154, 154, 154, 154, 154 }, 
   { 154, 154, 154, 154, 154 }, 
 };
-#else
-static const UChar
-INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
-{
-  { 154, 154, 154 },
-  { 154, 154, 154 },
-  { 154, 154, 154 },
-};
-#endif
 
 static const UChar
 INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =

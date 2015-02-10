@@ -489,7 +489,6 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
   }
 }
 
-#if SCM_S0269_PLT_RUN_MSB_IDX
 Void TEncSbac::encodeRun ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun )
 {
   ContextModel *pcModel;
@@ -507,37 +506,7 @@ Void TEncSbac::encodeRun ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, c
   }
   xWriteTruncMsbP1RefinementBits( uiRun, pcModel, uiMaxRun, SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE, ucCtxLut );
 }
-#else
-Void TEncSbac::encodeRun(UInt uiRun, Bool bCopyTopMode, Int GRParam)
-{
-  UInt uiGoRiceParamRun = 3;
-  ContextModel3DBuffer *cContextModel = bCopyTopMode ? &m_cCopyTopRunSCModel : &m_cRunSCModel;
-  Int uiGr0 = uiRun > 0 ? 1 : 0;
-  m_pcBinIf->encodeBin(uiGr0, cContextModel->get(0, 0, 0));
 
-  if (uiGr0 == 0)
-  {
-    return;
-  }
-
-  UInt uiGr1 = uiRun > 1 ? 1 : 0;
-  m_pcBinIf->encodeBin(uiGr1, cContextModel->get(0, 0, 1));
-
-  if (uiGr1 == 0)
-  {
-    return;
-  }
-
-  UInt uiGr2 = uiRun > 2 ? 1 : 0;
-  m_pcBinIf->encodeBin(uiGr2, cContextModel->get(0, 0, 2));
-
-  if (uiGr2 == 0)
-  {
-    return;
-  }
-  xWriteCoefRemainExGolomb((uiRun - 3), uiGoRiceParamRun, false, MAX_NUM_CHANNEL_TYPE);
-}
-#endif
 Void TEncSbac::encodeSPoint( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder )
 {
   if( uiRefScanOrder )

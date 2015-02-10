@@ -113,11 +113,7 @@ public:
 #else
   Void  writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
 #endif
-#if SCM_S0269_PLT_RUN_MSB_IDX
   Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun );
-#else
-  Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, Int GRParam = 3);
-#endif
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
