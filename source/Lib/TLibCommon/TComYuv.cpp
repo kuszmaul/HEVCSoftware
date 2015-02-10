@@ -525,52 +525,8 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   }
   else
   {
-#if SCM_S0254_ACT_UNIFICATION==0
-    if(!bLossless)
     {
 #if SCM_S0180_ACT_BIT_DEPTH_ALIGN
-      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
-      Int iRoundLuma   = (iShiftLuma == 0)?0: (1<<(iShiftLuma-1));
-      Int iRoundChroma = (iShiftChroma == 0)?0: (1<<(iShiftChroma-1));
-#endif
-      for(Int y=0; y<uiPartSize; y++) 
-      { 
-        for(Int x=0; x<uiPartSize; x++) 
-        { 
-          Int y0, cg, co;
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
-          y0 = pOrg0[x]<<iShiftLuma; 
-          cg = pOrg1[x]<<iShiftChroma; 
-          co = pOrg2[x]<<iShiftChroma;
-
-          pDst0[x] = ( y0 + cg      + iRoundLuma   )>>iShiftLuma;
-          pDst1[x] = ( y0 - cg - co + iRoundChroma )>>iShiftChroma;
-          pDst2[x] = ( y0 - cg + co + iRoundChroma )>>iShiftChroma;
-#else
-          y0 = pOrg0[x]; 
-          cg = pOrg1[x]; 
-          co = pOrg2[x];
-
-          pDst0[x] = ( y0 + cg      );
-          pDst1[x] = ( y0 - cg - co );
-          pDst2[x] = ( y0 - cg + co );
-#endif
-        }
-
-        pOrg0 += iStride0;
-        pOrg1 += iStride1;
-        pOrg2 += iStride2;
-        pDst0 += iStride0;
-        pDst1 += iStride1;
-        pDst2 += iStride2; 
-      }
-    }
-    else
-#endif
-    {
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
       Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
       Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
       Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
@@ -585,7 +541,6 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
           y0 = pOrg0[x];
           cg = pOrg1[x];
           co = pOrg2[x];
-#if SCM_S0254_ACT_UNIFICATION
           if(!bLossless)
           {
 #if SCM_S0180_ACT_BIT_DEPTH_ALIGN
@@ -597,12 +552,11 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
             co <<= 1;
 #endif
           }
-#endif
           Int t = y0 - (cg>>1);
           pDst0[x] = cg + t;
           pDst1[x] = t - (co>>1);
           pDst2[x] = co + pDst1[x];
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN && SCM_S0254_ACT_UNIFICATION
+#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
           if(!bLossless)
           {
             pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
