@@ -1570,18 +1570,6 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
           QpParam cQP(*pcCU, compID);
-#if !SCM_S0179_ACT_TU_DEC
-          if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-          {
-            cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
-            cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-#endif
-            cQP.per = cQP.Qp/6;
-            cQP.rem= cQP.Qp%6;
-            adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-          }
-#endif
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
@@ -1613,12 +1601,6 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
         crossComponentPrediction( rTu, compID, pResiLuma, pResi, pResi, tuWidth, tuHeight, strideLuma, uiStride, uiStride, true );
       }
     }
-#if !SCM_S0179_ACT_TU_DEC
-    if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-    {
-      adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr ? - DELTA_QP_FOR_YCgCo_TRANS_V:  - DELTA_QP_FOR_YCgCo_TRANS);
-    }
-#endif
   }
   else
   {
@@ -1631,7 +1613,6 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
   }
 }
 
-#if SCM_S0179_ACT_TU_DEC
 Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
 {
   TComDataCU* pcCU  = rTu.getCU();
@@ -1699,8 +1680,6 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
     while (tuRecurseChild.nextSection(rTu));
   }
 }
-#endif
-
 
 Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, const RDPCMMode mode )
 {
