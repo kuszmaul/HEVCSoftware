@@ -3485,20 +3485,6 @@ Void TComDataCU::setIPCMFlagSubParts  (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt u
   memset(m_pbIPCMFlag + uiAbsPartIdx, bIpcmFlag, sizeof(Bool)*uiCurrPartNumb );
 }
 
-#if !SCM_S0186_TRANS_FLAG_CTX
-UInt TComDataCU::getCtxScanRotationModeFlag( UInt uiAbsPartIdx)
-{
-  TComDataCU* pcTempCU;
-  UInt        uiTempPartIdx;
-  UInt        uiCtx;
-  // Get left split flag
-  pcTempCU = getPULeft( uiTempPartIdx, m_absZIdxInCtu + uiAbsPartIdx );
-  uiCtx  = ( pcTempCU ) ? ( pcTempCU->getPLTScanRotationModeFlag(uiTempPartIdx) ? 1 : 0 ) : 0;
-
-  return uiCtx;
-}
-#endif
-
 Void TComDataCU::setPLTModeFlagSubParts  (Bool bPLTModeFlag, UInt uiAbsPartIdx, UInt uiDepth)
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1);
