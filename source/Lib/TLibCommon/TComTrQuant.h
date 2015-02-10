@@ -135,9 +135,7 @@ public:
                              DEBUG_STRING_FN_DECLAREP(psDebug));
 
   Void invRecurTransformNxN ( const ComponentID compID, TComYuv *pResidual, TComTU &rTu );
-#if SCM_S0179_ACT_TU_DEC
   Void invRecurTransformACTNxN ( TComYuv *pResidual, TComTU &rTu );
-#endif
 
   Void rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode );
   Void invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride );

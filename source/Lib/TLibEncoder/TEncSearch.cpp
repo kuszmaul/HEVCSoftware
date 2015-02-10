@@ -1213,17 +1213,6 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
 #endif
 
   QpParam cQP(*pcCU, compID);
-#if !SCM_S0179_ACT_TU_DEC 
-  if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform(0))
-  {
-    cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
-    cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-#endif
-    cQP.per = cQP.Qp/6;
-    cQP.rem= cQP.Qp%6;
-  }
-#endif
 
   //===== init availability pattern =====
   Bool  bAboveAvail = false;
@@ -2225,13 +2214,6 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
 
     for (UInt ch=COMPONENT_Cb; ch<numberValidComponents; ch++)
     {
-#if !SCM_S0179_ACT_TU_DEC
-      if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-      {
-        m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(ch==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-        m_pcRdCost->adjustLambdaForColourTrans            (ch==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-      }
-#endif
       const ComponentID compID = ComponentID(ch);
       DEBUG_STRING_NEW(sDebugBestMode)
 
@@ -2344,21 +2326,11 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
         DEBUG_STRING_APPEND(sDebug, sDebugBestMode)
         pcCU ->setTransformSkipPartRange                ( bestTransformSkipMode,     compID, subTUAbsPartIdx, partIdxesPerSubTU );
         pcCU ->setCrossComponentPredictionAlphaPartRange( bestCrossCPredictionAlpha, compID, subTUAbsPartIdx, partIdxesPerSubTU );
-#if !SCM_S0179_ACT_TU_DEC
-        if(!pcCU->getColourTransform( 0 ))
-#endif
         ruiDist += singleDistC;
       }
       while (TUIterator.nextSection(rTu));
 
       if (splitIntoSubTUs) offsetSubTUCBFs(rTu, compID);
-#if !SCM_S0179_ACT_TU_DEC
-      if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-      {
-        m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr ? - DELTA_QP_FOR_YCgCo_TRANS_V:  - DELTA_QP_FOR_YCgCo_TRANS );
-        m_pcRdCost->adjustLambdaForColourTrans            (compID==COMPONENT_Cr ? - DELTA_QP_FOR_YCgCo_TRANS_V:  - DELTA_QP_FOR_YCgCo_TRANS );
-      }
-#endif
     }
   }
   else
@@ -2968,13 +2940,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
         }
 
         bMaintainResidual[RESIDUAL_ENCODER_SIDE] = !(m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate());
-#if !SCM_S0179_ACT_TU_DEC
-        if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-        {
-          m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( DELTA_QP_FOR_YCgCo_TRANS );
-          m_pcRdCost->adjustLambdaForColourTrans            ( DELTA_QP_FOR_YCgCo_TRANS );
-        }
-#endif
 
   // Lambda calculation at equivalent Qp of 4 is recommended because at that Qp, the quantisation divisor is 1.
 #if FULL_NBIT
@@ -3347,13 +3312,6 @@ TEncSearch::estIntraPredQT(TComDataCU* pcCU,
   //===== set distortion (rate and r-d costs are determined later) =====
   ruiDistC                   = uiOverallDistC;
   pcCU->getTotalDistortion() = uiOverallDistY + uiOverallDistC;
-#if !SCM_S0179_ACT_TU_DEC
-  if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
-  {
-    m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( -DELTA_QP_FOR_YCgCo_TRANS );
-    m_pcRdCost->adjustLambdaForColourTrans            ( -DELTA_QP_FOR_YCgCo_TRANS );
-  }
-#endif
 }
 
 Void
