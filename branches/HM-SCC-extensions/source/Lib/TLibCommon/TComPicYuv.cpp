@@ -263,13 +263,11 @@ Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
   Int  iMaxLuma   = (1<<g_bitDepth[CHANNEL_TYPE_LUMA])   - 1;
   Int  iMaxChroma = (1<<g_bitDepth[CHANNEL_TYPE_CHROMA]) - 1;
   Int  iChromaOffset = (1<<(g_bitDepth[CHANNEL_TYPE_CHROMA]-1));
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
   Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
   Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
   Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
   Int iRoundLuma   = 1<<(1+iShiftLuma);
   Int iRoundChroma = 1<<(1+iShiftChroma);
-#endif
 
   Pel* pSrc0  = pcSrcPicYuv->getAddr(COMPONENT_Y);
   Pel* pSrc1  = pcSrcPicYuv->getAddr(COMPONENT_Cb);
@@ -292,7 +290,6 @@ Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
     for(Int x = 0; x < m_iPicWidth; x++) 
     {
       Int r, g, b;
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
       r = pSrc2[x]<<iShiftChroma;
       g = pSrc0[x]<<iShiftLuma;
       b = pSrc1[x]<<iShiftChroma;
@@ -303,15 +300,6 @@ Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv)
 
       pDst1[x] += iChromaOffset;
       pDst2[x] += iChromaOffset;
-#else
-      r = pSrc2[x];
-      g = pSrc0[x];
-      b = pSrc1[x];
-
-      pDst0[x] = ((g<<1) + r+b + 2)>>2;
-      pDst1[x] = ((((g<<1)-r-b + 2)>>2) + iChromaOffset);
-      pDst2[x] = ((((r-b)+1)>>1) + iChromaOffset);
-#endif
 
       pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
       pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
