@@ -181,7 +181,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define MAX_PLT_SIZE                  31
 #define MAX_PLT_PRED_SIZE             64
 
-#if SCM_S0088_WPP_PALETTE_PREDICTION
 struct PaletteInfoBuffer
 {
   UChar lastPLTUsedSize[3];
@@ -190,7 +189,6 @@ struct PaletteInfoBuffer
 
   PaletteInfoBuffer() { std::memset( this, 0, sizeof( PaletteInfoBuffer ) ); }
 };
-#endif
 
 #define INTRABC_BVD_CODING_EGORDER    3
 

@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0088_WPP_PALETTE_PREDICTION                  1 ///< palette prediction alignment with CABAC
 #define SCM_S0096_PALETTE_DB                              1 ///< disable deblocking for palette mode
 #define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
 #define SCM_S0269_PLT_RUN_MSB_IDX                         1 ///< improvement on run length coding
