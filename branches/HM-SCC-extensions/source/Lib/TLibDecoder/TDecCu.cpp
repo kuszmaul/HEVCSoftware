@@ -501,7 +501,6 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
   const UInt iNumPart = pcCU->getNumPartitions();
   for( Int iPartIdx = 0 ; iPartIdx < iNumPart ; ++iPartIdx )
   {
-#if SCM_S0220_IBC_PRED_CONSTRAINT
     // Check Mv validity
     Int         iWidth;
     Int         iHeight;
@@ -533,7 +532,6 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
       fflush(stdout);
       assert(0);
     }
-#endif
     m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth], iPartIdx );
   }
 
