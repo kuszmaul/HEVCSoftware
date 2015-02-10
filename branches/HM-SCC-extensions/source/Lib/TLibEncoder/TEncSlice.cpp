@@ -132,11 +132,7 @@ Void
 TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 {
   m_pcRdCost->setRGBFormatFlag               (  m_pcCfg->getRGBFormatFlag() );
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   m_pcRdCost->setUseColourTrans              (  slice->getPPS()->getUseColourTrans() );
-#else
-  m_pcRdCost->setUseColourTrans               (  slice->getSPS()->getUseColourTrans() );
-#endif
   m_pcRdCost->setUseLossless                 (  m_pcCfg->getUseLossless() );
 
   // store lambda
@@ -160,11 +156,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
     Int chromaQPOffset = slice->getPPS()->getQpOffset(compID) + slice->getSliceChromaQpDelta(compID);
     Int qpc=(iQP + chromaQPOffset < 0) ? iQP : getScaledChromaQP(iQP + chromaQPOffset, m_pcCfg->getChromaFormatIdc());
     Double tmpWeight = pow( 2.0, (iQP-qpc)/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
     if(m_pcCfg->getRGBFormatFlag() && slice->getPPS()->getUseColourTrans())
-#else
-    if(m_pcCfg->getRGBFormatFlag() && slice->getSPS()->getUseColourTrans())
-#endif
     {
       tmpWeight = tmpWeight*pow( 2.0, (0-map[iQP])/3.0 );
     }
@@ -785,11 +777,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   }
 #endif
 
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() )
-#else
-  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() ) 
-#endif
   {
     pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
   }
@@ -955,11 +943,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #if ADAPTIVE_QP_SELECTION
       pCtu->getSlice()->setSliceQpBase( estQP );
 #endif
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
-#else
-  if( pcSlice->getSPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() && pcPic->getPicYuvCSC() )
-#endif
   {
     pcPic->releaseCSCBuffer();
   }

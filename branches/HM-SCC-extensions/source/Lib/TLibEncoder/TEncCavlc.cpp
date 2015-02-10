@@ -244,11 +244,9 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
      )
     ;
 
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   pps_extension_flags[PPS_EXT__SCC] = (
      pcPPS->getUseColourTrans()
     );
-#endif
 
   // Other PPS extension flags checked here.
 
@@ -297,11 +295,9 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "sao_luma_bit_shift"   );
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "sao_chroma_bit_shift" );
             break;
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
           case PPS_EXT__SCC:
             WRITE_FLAG( (pcPPS->getUseColourTrans() ? 1 : 0),                     "adaptive_colour_trans_flag" );
             break;
-#endif
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.
             break;
@@ -599,9 +595,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-     || pcSPS->getUseColourTrans()
-#endif
      || pcSPS->getUsePLTMode()
      || pcSPS->getUseAdaptiveMvResolution()
 #if SCM_S0102_IBF_SPS_CONTROL
@@ -645,9 +638,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             break;
           case SPS_EXT__SCC:
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-            WRITE_FLAG( (pcSPS->getUseColourTrans()    ? 1 : 0),                    "adaptive_colour_trans_flag" );
-#endif
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
 
 #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 

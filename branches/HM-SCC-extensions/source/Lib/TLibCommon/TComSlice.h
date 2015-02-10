@@ -754,9 +754,6 @@ private:
   Bool        m_useSingleSignificanceMapContext;
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-  Bool        m_useColourTrans;
-#endif
   Bool        m_usePaletteMode;
   #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt        m_uiPLTMaxSize;
@@ -911,10 +908,6 @@ public:
 
   Bool      getAlignCABACBeforeBypass         ()                 const { return m_alignCABACBeforeBypass;  }
   Void      setAlignCABACBeforeBypass         (const Bool value)       { m_alignCABACBeforeBypass = value; }
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-  Bool      getUseColourTrans                  ()                 const { return m_useColourTrans;}
-  Void      setUseColourTrans                  (const Bool value)       { m_useColourTrans= value;}
-#endif
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
@@ -1061,10 +1054,7 @@ private:
   Bool     m_listsModificationPresentFlag;
   UInt     m_log2ParallelMergeLevelMinus2;
   Int      m_numExtraSliceHeaderBits;
-
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   Bool     m_useColourTrans;
-#endif
 
 public:
   TComPPS();
@@ -1189,10 +1179,8 @@ public:
     Bool getSliceHeaderExtensionPresentFlag   ()                    { return m_sliceHeaderExtensionPresentFlag; }
   Void setSliceHeaderExtensionPresentFlag   (Bool val)            { m_sliceHeaderExtensionPresentFlag = val; }
 
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   Bool     getUseColourTrans()                 const { return m_useColourTrans;}
   Void     setUseColourTrans(const Bool value)       { m_useColourTrans= value;}
-#endif
 };
 
 struct WPScalingParam

@@ -569,9 +569,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-  m_cSPS.setUseColourTrans              (       m_useColourTrans     );
-#endif
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
 #if SCM_CE5_MAX_PLT_AND_PRED_SIZE
   m_cSPS.setPLTMaxSize                  (       m_uiPLTMaxSize       );
@@ -743,9 +740,7 @@ Void TEncTop::xInitPPS()
   {
     m_cPPS.setDependentSliceSegmentsEnabledFlag( true );
   }
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   m_cPPS.setUseColourTrans( m_useColourTrans );
-#endif
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.

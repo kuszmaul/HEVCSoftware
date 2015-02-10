@@ -915,11 +915,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
     return;
   }
 
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if( !pcCU->getSlice()->getPPS()->getUseColourTrans () )
-#else
-  if( !pcCU->getSlice()->getSPS()->getUseColourTrans () )
-#endif
   {
   const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
   for (UInt chType=CHANNEL_TYPE_LUMA; chType<numChType; chType++)
@@ -1038,11 +1034,7 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
 
   TComTURecurse tuRecur(pcCU, 0, uiDepth);
 #if SCM_S0179_ACT_TU_DEC
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if ( pcCU->getSlice()->getPPS()->getUseColourTrans() && pcCU->getColourTransform( 0 ) )
-#else
-  if ( pcCU->getSlice()->getSPS()->getUseColourTrans() && pcCU->getColourTransform( 0 ) )
-#endif
   {
     m_pcTrQuant->invRecurTransformACTNxN( m_ppcYuvResi[uiDepth], tuRecur );
   }
