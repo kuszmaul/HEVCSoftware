@@ -588,10 +588,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
-#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#else 
-  codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
-#endif
+
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
   Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
   if ( !bUsePLTSharingMode )
