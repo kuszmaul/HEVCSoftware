@@ -860,9 +860,7 @@ protected:
 
   Void xPatternSearchFracDIF      (
                                     Bool         bIsLosslessCoded,
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
                                     TComDataCU*  pcCU,
-#endif
                                     TComPattern* pcPatternKey,
                                     Pel*         piRefY,
                                     Int          iRefStride,

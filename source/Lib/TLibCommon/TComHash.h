@@ -94,9 +94,7 @@ public:
   Void addToTable( UInt hashValue, const BlockHash& blockHash );
   Int count( UInt hashValue );
   MapIterator getFirstIterator( UInt hashValue );
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool hasExactMatch( UInt hashValue1, UInt hashValue2 );
-#endif
 
   Void addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height );
 

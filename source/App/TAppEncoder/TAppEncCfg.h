@@ -129,9 +129,7 @@ protected:
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   Bool      m_useAdaptiveMvResolution;
-#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)

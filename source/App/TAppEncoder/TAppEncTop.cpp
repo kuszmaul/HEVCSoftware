@@ -373,9 +373,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPLTMaxSize                                        ( m_uiPLTMaxSize                 );
   m_cTEncTop.setPLTMaxPredSize                                    ( m_uiPLTMaxPredSize             );
 #endif
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
-#endif
 }
 
 Void TAppEncTop::xCreateLib()

@@ -1041,11 +1041,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       31u,  "Maximum palette size")
   ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                   64u,  "Maximum palette predictor size")
 #endif
-
-
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   ("UseAdaptiveMvResolution",                         m_useAdaptiveMvResolution,                         false, "Enable adaptive mv resolution (not valid in V1 profiles)")
-#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++) {
@@ -2539,9 +2535,7 @@ Void TAppEncCfg::xPrintParameter()
     printf(" MaxPLTPredictorSize:%d", MAX_PLT_PRED_SIZE);
 #endif
   }
-#if SCM_S0085_ADAPTIVE_MV_RESOLUTION
   printf( " AdapMvRes:%d", m_useAdaptiveMvResolution ? 1 : 0 );
-#endif
 
   printf("\n\n");
 
