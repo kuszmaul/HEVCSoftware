@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_CE5_MAX_PLT_AND_PRED_SIZE                     1 ///< JCTVC-S meeting CE5: SPS signal for max palette and palette predictor size
 #define SCM_S0269_PLT_RUN_MSB_IDX                         1 ///< improvement on run length coding
 #define SCM_PLT_ZERO_COLOR_OPT                            1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
 #define SCM_PLT_SINGLE_COLOR_OPT                          1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1

@@ -69,9 +69,7 @@ Void TDecCu::init( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPr
  \param    uiMaxHeight   largest CU height
  */
 Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
                     ,UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
-#endif
   )
 {
   m_uiMaxDepth = uiMaxDepth+1;
@@ -89,10 +87,8 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaF
 
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight, chromaFormatIDC );
-    m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( chromaFormatIDC, uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+    m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( chromaFormatIDC, uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1)
       , uiPLTMaxSize, uiPLTMaxPredSize
-#endif
     );
   }
 

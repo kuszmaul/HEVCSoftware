@@ -221,10 +221,8 @@ protected:
   Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
-  #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
-#endif
   Bool      m_useAdaptiveMvResolution;
 
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
@@ -604,12 +602,10 @@ public:
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
   Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   Void setPLTMaxSize                                    (const UInt value) { m_uiPLTMaxSize = value; }
   UInt getPLTMaxSize()                                               const { return m_uiPLTMaxSize; }
   Void setPLTMaxPredSize                                (const UInt value) { m_uiPLTMaxPredSize = value; }
   UInt getPLTMaxPredSize()                                           const { return m_uiPLTMaxPredSize; }
-#endif
   Void setUseAdaptiveMvResolution                      ( Bool b )          { m_useAdaptiveMvResolution = b; }
   Bool getUseAdaptiveMvResolution                      ()            const { return m_useAdaptiveMvResolution; }
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }

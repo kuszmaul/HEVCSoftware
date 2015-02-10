@@ -125,10 +125,8 @@ protected:
   Bool      m_useColourTrans;
   Bool      m_useLL;
   Bool      m_usePaletteMode;
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
-#endif
   Bool      m_useAdaptiveMvResolution;
 
   // coding quality

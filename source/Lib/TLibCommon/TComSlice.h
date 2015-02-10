@@ -755,10 +755,8 @@ private:
   Bool        m_useGolombRiceParameterAdaptation;
   Bool        m_alignCABACBeforeBypass;
   Bool        m_usePaletteMode;
-  #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt        m_uiPLTMaxSize;
   UInt        m_uiPLTMaxPredSize;
-#endif
   Bool        m_useAdaptiveMvResolution;
   Bool        m_disableIntraBoundaryFilter;
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
@@ -909,12 +907,10 @@ public:
 
   Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
   Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt      getPLTMaxSize()                                      const { return m_uiPLTMaxSize; }
   Void      setPLTMaxSize(const UInt value)                            { m_uiPLTMaxSize = value; }
   UInt      getPLTMaxPredSize()                                  const { return m_uiPLTMaxPredSize; }
   Void      setPLTMaxPredSize(const UInt value)                        { m_uiPLTMaxPredSize = value; }
-#endif
   Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
   Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
   Void      setDisableIntraBoundaryFilter( Bool b) { m_disableIntraBoundaryFilter = b;    }

@@ -168,10 +168,8 @@ private:
   UInt          m_uiTotalBins;        ///< sum of partition bins
   Char          m_codedQP;
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt          m_PLTMaxSize;         ///< maximum PLT size
   UInt          m_PLTMaxPredSize;     ///< maximum PLT predictor size
-#endif 
 
 protected:
 
@@ -205,9 +203,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
     , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
-#endif
 #if ADAPTIVE_QP_SELECTION
     , Bool bGlobalRMARLBuffer = false
 #endif
@@ -400,15 +396,9 @@ public:
   Void          setRLModeFlag         (UInt uiIdx, Bool b)      { m_pbPLTModeFlag[uiIdx] = b;        }
   Void          setPLTModeFlagSubParts(Bool bRLModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
   Pel*          getPLT                (UChar ucCh)                                         { return m_piPLT[ucCh]; }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   Pel*          getPLT                (UChar ucCh, UInt uiIdx)                             { return m_piPLT[ucCh] + (uiIdx >> 2) * m_PLTMaxSize; }
   Pel           getPLT                (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)              { return m_piPLT[ucCh][(uiIdx >> 2) * m_PLTMaxSize + uiPLTIdx]; }
   Void          setPLT                (UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx) { m_piPLT[ucCh][(uiIdx >> 2) * m_PLTMaxSize + uiPLTIdx] = uiValue; }
-#else
-  Pel*          getPLT                (UChar ucCh, UInt uiIdx)                             { return m_piPLT[ucCh] + (uiIdx >> 2) * MAX_PLT_SIZE; }
-  Pel           getPLT                (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)              { return m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx]; }
-  Void          setPLT                (UChar ucCh, UInt uiIdx, Pel uiValue, UInt uiPLTIdx) { m_piPLT[ucCh][(uiIdx >> 2) * MAX_PLT_SIZE + uiPLTIdx] = uiValue; }
-#endif
   Void          setPLTSubParts        (UChar ucCh, Pel uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
 
   UChar*        getPLTSize            (UChar ucCh)                          { return m_puhTransformSkip[ucCh];               }
@@ -422,15 +412,9 @@ public:
   Void          setPLTEscapeSubParts  (UChar ucCh, UChar ucUseEscape, UInt uiAbsPartIdx, UInt uiDepth);
 
   UChar*        getPrevPLTReusedFlag  (UChar ucCh)                                           { return m_bPrevPLTReusedFlag[ucCh]; }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UChar*        getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx )                              { return m_bPrevPLTReusedFlag[ucCh]+ (uiIdx>> 2) * m_PLTMaxPredSize; }
   UChar         getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)                { return m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * m_PLTMaxPredSize + uiPLTIdx]; }
   Void          setPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UChar uiValue, UInt uiPLTIdx) { m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * m_PLTMaxPredSize + uiPLTIdx] = uiValue; }
-#else
-  UChar*        getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx)                               { return m_bPrevPLTReusedFlag[ucCh] + (uiIdx >> 2) * MAX_PLT_PRED_SIZE; }
-  UChar         getPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UInt uiPLTIdx)                { return m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx]; }
-  Void          setPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UChar uiValue, UInt uiPLTIdx) { m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * MAX_PLT_PRED_SIZE + uiPLTIdx] = uiValue; }
-#endif
   Void          setPrevPLTReusedFlagSubParts(UChar ucCh, UChar uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
 
   Bool*         getPLTSharingModeFlag      ()                        { return m_pbPLTSharingModeFlag;        }

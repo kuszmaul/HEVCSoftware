@@ -1597,10 +1597,8 @@ TComSPS::TComSPS()
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
 , m_usePaletteMode            (false)
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
 , m_uiPLTMaxSize              ( 31)
 , m_uiPLTMaxPredSize          ( 64)
-#endif
 , m_useAdaptiveMvResolution   (false)
 , m_disableIntraBoundaryFilter(false)
 , m_bPCMFilterDisableFlag     (false)

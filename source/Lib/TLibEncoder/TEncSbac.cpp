@@ -454,11 +454,7 @@ Void TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
   return siCurLevel;
 #endif
 }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
 Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize)
-#else
-Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted)
-#endif
 {
   Int lastPredIdx = -1;
   UInt run = 0;
@@ -487,11 +483,7 @@ Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, U
     }
     idx++;
   }
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   if ((uiNumPLTPredicted < uiMaxPLTSize && lastPredIdx + 1 < uiPLTSizePrev) || !uiNumPLTPredicted)
-#else
-  if( ( uiNumPLTPredicted < MAX_PLT_SIZE && lastPredIdx + 1 < uiPLTSizePrev ) || !uiNumPLTPredicted )
-#endif
   {
     xWriteEpExGolomb( 1, 0 );
   }
@@ -604,12 +596,8 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   uiDictMaxSize = pcCU->getPLTSize(compBegin, uiAbsPartIdx);
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
   assert(uiDictMaxSize <= uiMaxPLTSize);
-#else
-  assert(uiDictMaxSize <= MAX_PLT_SIZE);
-#endif
   uiDictIdxBits = 0;
   while ((1 << uiDictIdxBits) < uiDictMaxSize)
   {
@@ -655,28 +643,16 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 
     if ( uiPLTSizePrev )
     {
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
       xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted, uiMaxPLTSize);
-#else
-      xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted );
-#endif
     }
 
     assert( uiDictMaxSize >= uiNumPLTPredicted );
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
     if ( uiNumPLTPredicted < uiMaxPLTSize)
-#else
-    if ( uiNumPLTPredicted < MAX_PLT_SIZE )
-#endif
     {
       uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
       for ( UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++ )
       {
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
         if ( uiNumPLTPredicted + uiPLTIdx < uiMaxPLTSize)
-#else
-        if ( uiNumPLTPredicted + uiPLTIdx < MAX_PLT_SIZE )
-#endif
         {
           m_pcBinIf->encodeBinEP( uiPLTIdx == (uiNumPLTRceived) );
         }

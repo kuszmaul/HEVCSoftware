@@ -94,9 +94,7 @@ Void TEncTop::create ()
   m_cGOPEncoder.        create( );
   m_cSliceEncoder.      create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, m_chromaFormatIDC
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
                          ,m_uiPLTMaxSize, m_uiPLTMaxPredSize
-#endif
      );
   if (m_bUseSAO)
   {
@@ -436,9 +434,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     {
       TEncPic* pcEPic = new TEncPic;
       pcEPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_cPPS.getMaxCuDQPDepth()+1, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
         , m_cSPS.getPLTMaxSize(), m_cSPS.getPLTMaxPredSize()
-#endif
         );
       rpcPic = pcEPic;
     }
@@ -446,10 +442,8 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     {
       rpcPic = new TComPic;
       rpcPic->create( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, m_conformanceWindow, m_defaultDisplayWindow, m_numReorderPics 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
         , m_cSPS.getPLTMaxSize(), m_cSPS.getPLTMaxPredSize()
-#endif
-       , false );   
+       , false );
     }
 
     m_cListPic.pushBack( rpcPic );
@@ -568,10 +562,8 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE
   m_cSPS.setPLTMaxSize                  (       m_uiPLTMaxSize       );
   m_cSPS.setPLTMaxPredSize              (       m_uiPLTMaxPredSize   );
-#endif
   m_cSPS.setUseAdaptiveMvResolution( m_useAdaptiveMvResolution );
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
