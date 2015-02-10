@@ -594,9 +594,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
 #if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#if !SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
-  codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
-#endif
 #else 
   codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
 #endif
@@ -641,7 +638,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   if (uiDictMaxSize > 0)
   {
     m_pcBinIf->encodeBinEP(uiSignalEscape);
-#if SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
     if (uiDictMaxSize + uiSignalEscape > 1)
     {
       codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
@@ -651,14 +647,11 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
       assert(!uiSignalEscape);
     }
-#endif
   }
-#if SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
   else
   {
     assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
   }
-#endif
 
   while ( uiIdx < uiTotal )
   {

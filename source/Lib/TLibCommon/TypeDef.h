@@ -286,8 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0110_PLT_TRANSPOSE_FLAG_OPT                  1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
-
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------

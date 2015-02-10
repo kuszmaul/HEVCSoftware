@@ -653,9 +653,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 
   pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
 #if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#if !SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
-  parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
-#endif
 #else
   parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
 #endif
@@ -751,7 +748,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   if (uiDictMaxSize > 0)
   {
     m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#if SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
     if (uiDictMaxSize + uiSignalEscape > 1)
     {
       parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
@@ -760,14 +756,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
     }
-#endif
   }
-#if SCM_S0110_PLT_TRANSPOSE_FLAG_OPT
   else
   {
     pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
   }
-#endif
 
   UInt uiDictIdxBitsExteneded = uiDictIdxBits;
   if ( uiSignalEscape )
