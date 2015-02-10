@@ -766,15 +766,15 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
     if (uiIndexMaxSize > 1)
     {
-    uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
-    if (uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
-    {
-      m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, uiCtx)   RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-    }
-    else
-    {
-      uiSymbol = 0;
-    }
+      uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
+      if (uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
+      {
+        m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, uiCtx)   RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+      }
+      else
+      {
+        uiSymbol = 0;
+      }
     }
     else
     {
