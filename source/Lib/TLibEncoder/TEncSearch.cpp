@@ -5360,11 +5360,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   }
 
   // motion compensation
-#if SCM_S0180_ACT_BIT_DEPTH_ALIGN
   if( !pcCU->getSlice()->getPPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() || (pcCU->getCUTransquantBypass(0) && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA])) )
-#else
-  if( !pcCU->getSlice()->getPPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() )
-#endif
   {
     for( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++ )
     {
