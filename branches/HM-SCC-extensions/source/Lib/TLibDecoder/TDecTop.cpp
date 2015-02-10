@@ -146,10 +146,8 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     rpcPic = new TComPic();
 
     rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
-                     conformanceWindow, defaultDisplayWindow, numReorderPics, 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                     conformanceWindow, defaultDisplayWindow, numReorderPics,
                      pcSlice->getSPS()->getPLTMaxSize(), pcSlice->getSPS()->getPLTMaxPredSize(),
-#endif
            true);
 
     m_cListPic.pushBack( rpcPic );
@@ -188,10 +186,8 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   }
   rpcPic->destroy();
   rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), pcSlice->getSPS()->getChromaFormatIdc(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
-                   conformanceWindow, defaultDisplayWindow, numReorderPics, 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                   conformanceWindow, defaultDisplayWindow, numReorderPics,
                    pcSlice->getSPS()->getPLTMaxSize(), pcSlice->getSPS()->getPLTMaxPredSize(),
-#endif
            true);
 }
 
@@ -513,9 +509,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     // Recursive structure
     m_cCuDecoder.create ( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getChromaFormatIdc()
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
       , m_apcSlicePilot->getSPS()->getPLTMaxSize(), m_apcSlicePilot->getSPS()->getPLTMaxPredSize()
-#endif
     );
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize());

@@ -787,13 +787,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
           case SPS_EXT__SCC:
             READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
             READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
             if (pcSPS->getUsePLTMode())//decode only when palette mode is enabled
             {
               READ_UVLC(uiCode, "palette_max_size");                        pcSPS->setPLTMaxSize(uiCode);
               READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
             }
-#endif
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
             READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
             break;

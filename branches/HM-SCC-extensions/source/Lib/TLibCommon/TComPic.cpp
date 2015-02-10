@@ -69,16 +69,12 @@ TComPic::~TComPic()
 }
 
 Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
-                      Int *numReorderPics, 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
+                      Int *numReorderPics,
                       UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
-#endif
                       Bool bIsVirtual)
 {
   m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
                     , uiPLTMaxSize, uiPLTMaxPredSize
-#endif
                );
   if (!bIsVirtual)
   {

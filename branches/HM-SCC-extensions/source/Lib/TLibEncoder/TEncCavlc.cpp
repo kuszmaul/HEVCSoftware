@@ -638,13 +638,11 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
             WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
 
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
             if (pcSPS->getUsePLTMode())
             {
-              WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");                      
-              WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");          
+              WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");
+              WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");
             }
-#endif
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
             WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
             break;

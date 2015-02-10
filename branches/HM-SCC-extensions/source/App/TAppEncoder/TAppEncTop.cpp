@@ -363,14 +363,12 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxBitsPerMinCuDenom                              ( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal                         ( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical                           ( m_log2MaxMvLengthVertical );
-  m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   ); 
+  m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   );
   m_cTEncTop.setUseColourTrans                                    ( m_useColourTrans                );
   m_cTEncTop.setUseLossless                                       ( m_useLL                        );
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
-#if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
   m_cTEncTop.setPLTMaxSize                                        ( m_uiPLTMaxSize                 );
   m_cTEncTop.setPLTMaxPredSize                                    ( m_uiPLTMaxPredSize             );
-#endif
   m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
 }
 
