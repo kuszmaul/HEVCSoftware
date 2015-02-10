@@ -230,9 +230,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setSaoCtuBoundary                                    ( m_saoCtuBoundary);
   m_cTEncTop.setPCMInputBitDepthFlag                              ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag                              ( m_bPCMFilterDisableFlag);
-#if SCM_S0102_IBF_SPS_CONTROL
   m_cTEncTop.setDisableIntraBoundaryFilter                        ( m_disableIntraBoundaryFilter );
-#endif
   m_cTEncTop.setDisableIntraReferenceSmoothing                    (!m_enableIntraReferenceSmoothing );
   m_cTEncTop.setDecodedPictureHashSEIEnabled                      ( m_decodedPictureHashSEIEnabled );
   m_cTEncTop.setRecoveryPointSEIEnabled                           ( m_recoveryPointSEIEnabled );

@@ -812,9 +812,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Coding tools
   ("AMP",                                             m_enableAMP,                                       true, "Enable asymmetric motion partitions")
   ("IntraBlockCopyEnabled",                           m_useIntraBlockCopy,                              false, "Enable the use of intra block copying vectors (not valid in V1 profiles)")
-#if SCM_S0102_IBF_SPS_CONTROL
   ("IntraBoundaryFilterDisabled",                     m_disableIntraBoundaryFilter,                     false, "Disable the use of intra boundary filters")
-#endif
   ("IntraBlockCopyFastSearch",                        m_intraBlockCopyFastSearch,                        true, "Use a restricted search range for intra block-copy motion vectors to reduce the encoding time")
   ("CrossComponentPrediction",                        m_useCrossComponentPrediction,                    false, "Enable the use of cross-component prediction (not valid in V1 profiles)")
   ("ReconBasedCrossCPredictionEstimate",              m_reconBasedCrossCPredictionEstimate,             false, "When determining the alpha value for cross-component prediction, use the decoded residual rather than the pre-transform encoder-side residual")

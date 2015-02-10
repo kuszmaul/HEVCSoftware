@@ -597,9 +597,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
         pcSPS->getUseIntraBlockCopy()
      || pcSPS->getUsePLTMode()
      || pcSPS->getUseAdaptiveMvResolution()
-#if SCM_S0102_IBF_SPS_CONTROL
      || pcSPS->getDisableIntraBoundaryFilter()
-#endif
     );
 
   // Other SPS extension flags checked here.
@@ -648,9 +646,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
             }
 #endif
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
-#if SCM_S0102_IBF_SPS_CONTROL
             WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
-#endif
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
