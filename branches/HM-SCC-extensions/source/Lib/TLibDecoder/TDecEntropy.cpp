@@ -684,21 +684,10 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
   }
 
-#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
   if ( pcCU->hasAssociatedACTFlag( uiAbsPartIdx, uiDepth ) )
-#else
-  if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
-#endif
   {
     Bool uiFlag = 0;
-#if !SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
-    if(pcCU->getSlice()->getPPS()->getUseColourTrans())
-    {
-#endif
-      m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
-#if !SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
-    }
-#endif
+    m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
     pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
 #if SCM_S0180_ACT_BIT_DEPTH_ALIGN

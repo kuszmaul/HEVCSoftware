@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM                1 ///< for Intra CU, code ACT flag if all PU(s) are DM
 #define SCM_S0186_TRANS_FLAG_CTX                          1 ///< remove one context for palette_transpose_flag
 #define SCM_S0254_ACT_UNIFICATION                         1 ///< unification of lossy and lossless ACT
 #define SCM_S0089_HASH_ME_IMPROVEMENT                     1 ///< hash based motion estimation improvement

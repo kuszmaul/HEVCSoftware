@@ -3406,7 +3406,6 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   return false;
 }
 
-#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
 Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
 {
   if ( !getSlice()->getPPS()->getUseColourTrans() )
@@ -3437,7 +3436,6 @@ Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
   assert( !getColourTransform( uiAbsPartIdx ) );
   return false;
 }
-#endif
 
 Void TComDataCU::clipMv    (TComMv&  rcMv)
 {

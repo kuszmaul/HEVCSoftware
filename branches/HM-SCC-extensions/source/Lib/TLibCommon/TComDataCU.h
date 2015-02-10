@@ -558,9 +558,7 @@ public:
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   Bool          isBipredRestriction( UInt puIdx );
 
-#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
   Bool          hasAssociatedACTFlag ( UInt uiAbsPartIdx, UInt uiDepth );
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)

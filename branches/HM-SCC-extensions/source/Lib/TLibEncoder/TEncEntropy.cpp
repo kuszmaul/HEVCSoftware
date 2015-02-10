@@ -737,11 +737,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-#if SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM
   if ( pcCU->hasAssociatedACTFlag( uiAbsPartIdx, uiDepth ) )
-#else
-  if(!pcCU->isIntra(uiAbsPartIdx) || pcCU->getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx ) == DM_CHROMA_IDX)
-#endif
   {
     m_pcEntropyCoderIf->codeColourTransformFlag( pcCU, uiAbsPartIdx );
   }
