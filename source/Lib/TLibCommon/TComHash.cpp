@@ -321,11 +321,7 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
     includeAllComponent = false;
   }
 
-#if SCM_S0180_BUG_FIX_BIT_DEPTH
   if ( g_bitDepth[CHANNEL_TYPE_LUMA] == 8 && g_bitDepth[CHANNEL_TYPE_CHROMA] == 8 )
-#else
-  if ( g_bitDepth[CHANNEL_TYPE_LUMA] == 8 )
-#endif
   {
     Pel* pPel[3];
     Int stride[3];
@@ -351,9 +347,7 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
   else
   {
     Int shift = g_bitDepth[CHANNEL_TYPE_LUMA] - 8;
-#if SCM_S0180_BUG_FIX_BIT_DEPTH
     Int shiftc = g_bitDepth[CHANNEL_TYPE_CHROMA] - 8;
-#endif
     Pel* pPel[3];
     Int stride[3];
     for ( Int id=0; id<3; id++ )
@@ -370,13 +364,8 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
       pPixelsIn1D[index++] = static_cast<UChar>( pPel[0][j] >> shift );
       if ( includeAllComponent )
       {
-#if SCM_S0180_BUG_FIX_BIT_DEPTH
         pPixelsIn1D[index++] = static_cast<UChar>( pPel[1][j] >> shiftc );
         pPixelsIn1D[index++] = static_cast<UChar>( pPel[2][j] >> shiftc );
-#else
-        pPixelsIn1D[index++] = static_cast<UChar>( pPel[1][j] >> shift );
-        pPixelsIn1D[index++] = static_cast<UChar>( pPel[2][j] >> shift );
-#endif
       }
     }
   }

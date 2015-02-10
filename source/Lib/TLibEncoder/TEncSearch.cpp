@@ -5922,11 +5922,7 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
       {
         for(int col = 0; col < iWidth; col++)
         {
-#if SCM_S0180_BUG_FIX_BIT_DEPTH
           uiTempSad += ( (abs( pRef[col] - pOrg[col] )) >> (g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
-#else
-          uiTempSad += abs(pRef[col] - pOrg[col]);
-#endif 
         }
         pRef += iRefStride;
         pOrg += iOrgStride;
