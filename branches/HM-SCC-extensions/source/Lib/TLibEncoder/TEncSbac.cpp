@@ -651,12 +651,12 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
     if (uiIndexMaxSize > 1)
     {
-    uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
-    if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
-    {
-      UInt mode = pSPoint[uiTraIdx];
-      m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
-    }
+      uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
+      if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
+      {
+        UInt mode = pSPoint[uiTraIdx];
+        m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
+      }
     }
     Pel siCurLevel = 0;
     {

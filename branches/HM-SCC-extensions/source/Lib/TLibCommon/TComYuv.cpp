@@ -508,44 +508,42 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   }
   else
   {
+    Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
+    Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
+    Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+    Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
+    Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
+    for(Int y=0; y<uiPartSize; y++)
     {
-      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
-      Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
-      Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
-      for(Int y=0; y<uiPartSize; y++)
+      for(Int x=0; x<uiPartSize; x++)
       {
-        for(Int x=0; x<uiPartSize; x++)
+        Int y0, cg, co;
+        y0 = pOrg0[x];
+        cg = pOrg1[x];
+        co = pOrg2[x];
+        if(!bLossless)
         {
-          Int y0, cg, co;
-          y0 = pOrg0[x];
-          cg = pOrg1[x];
-          co = pOrg2[x];
-          if(!bLossless)
-          {
-            y0 <<= iShiftLuma;
-            cg <<= (iShiftChroma + 1);
-            co <<= (iShiftChroma + 1);
-          }
-          Int t = y0 - (cg>>1);
-          pDst0[x] = cg + t;
-          pDst1[x] = t - (co>>1);
-          pDst2[x] = co + pDst1[x];
-          if(!bLossless)
-          {
-            pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
-            pDst1[x] = (pDst1[x] + iRoundChroma) >> iShiftChroma;
-            pDst2[x] = (pDst2[x] + iRoundChroma) >> iShiftChroma;
-          }
+          y0 <<= iShiftLuma;
+          cg <<= (iShiftChroma + 1);
+          co <<= (iShiftChroma + 1);
         }
-        pOrg0 += iStride0;
-        pOrg1 += iStride1;
-        pOrg2 += iStride2;
-        pDst0 += iStride0;
-        pDst1 += iStride1;
-        pDst2 += iStride2;
+        Int t = y0 - (cg>>1);
+        pDst0[x] = cg + t;
+        pDst1[x] = t - (co>>1);
+        pDst2[x] = co + pDst1[x];
+        if(!bLossless)
+        {
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> iShiftChroma;
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> iShiftChroma;
+        }
       }
+      pOrg0 += iStride0;
+      pOrg1 += iStride1;
+      pOrg2 += iStride2;
+      pDst0 += iStride0;
+      pDst1 += iStride1;
+      pDst2 += iStride2;
     }
   }
 }

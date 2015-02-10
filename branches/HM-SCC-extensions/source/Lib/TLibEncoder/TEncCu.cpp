@@ -792,82 +792,82 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
             ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
           {
-          if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
-          {
-            Double tempIntraCost = MAX_DOUBLE;
-            TComDataCU *pStoredBestCU = rpcBestCU;
-            if(m_pcEncCfg->getRGBFormatFlag())
+            if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
             {
-              xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
-            }
-            else
-            {
-              xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug));
-            }
-            Bool bSkipRGBCoding = pStoredBestCU == rpcBestCU ? !rpcTempCU->getQtRootCbf( 0 ): !rpcBestCU->getQtRootCbf( 0 );
-            if(!bSkipRGBCoding) 
-            {
-              rpcTempCU->initRQTData( uiDepth, rpcBestCU, (pStoredBestCU != rpcBestCU), false, true );
+              Double tempIntraCost = MAX_DOUBLE;
+              TComDataCU *pStoredBestCU = rpcBestCU;
               if(m_pcEncCfg->getRGBFormatFlag())
-              {
-                xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug), true );
-              }
-              else
               {
                 xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
               }
-              intraCost = std::min(intraCost, tempIntraCost);
-            }
-            else
-              intraCost = tempIntraCost;
-          }
-          else
-          {
-            xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
-          }
-          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
-          {
-            if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
-            {
-              Double tmpIntraCost;
-              if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
+              else
               {
-                Double      tempIntraCost = MAX_DOUBLE;
-                TComDataCU *pStoredBestCU = rpcBestCU;
+                xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug));
+              }
+              Bool bSkipRGBCoding = pStoredBestCU == rpcBestCU ? !rpcTempCU->getQtRootCbf( 0 ): !rpcBestCU->getQtRootCbf( 0 );
+              if(!bSkipRGBCoding) 
+              {
+                rpcTempCU->initRQTData( uiDepth, rpcBestCU, (pStoredBestCU != rpcBestCU), false, true );
                 if(m_pcEncCfg->getRGBFormatFlag())
                 {
-                  xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
+                  xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug), true );
                 }
                 else
                 {
-                  xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
+                  xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
                 }
-                Bool bSkipRGBCoding = pStoredBestCU == rpcBestCU ? !rpcTempCU->getQtRootCbf( 0 ) : !rpcBestCU->getQtRootCbf( 0 );
-                if(!bSkipRGBCoding) 
+                intraCost = std::min(intraCost, tempIntraCost);
+              }
+              else
+                intraCost = tempIntraCost;
+            }
+            else
+            {
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
+            }
+            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+            if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+            {
+              if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
+              {
+                Double tmpIntraCost;
+                if(rpcBestCU->getSlice()->getPPS()->getUseColourTrans() && ( !bIsLosslessMode || (g_bitDepth[CHANNEL_TYPE_LUMA] == g_bitDepth[CHANNEL_TYPE_CHROMA])))
                 {
-                  rpcTempCU->initRQTData( uiDepth, rpcBestCU, (pStoredBestCU != rpcBestCU), false, true );
+                  Double      tempIntraCost = MAX_DOUBLE;
+                  TComDataCU *pStoredBestCU = rpcBestCU;
                   if(m_pcEncCfg->getRGBFormatFlag())
-                  {
-                    xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug), true );
-                  }
-                  else
                   {
                     xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
                   }
-                  tmpIntraCost = std::min(tmpIntraCost, tempIntraCost);
+                  else
+                  {
+                    xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
+                  }
+                  Bool bSkipRGBCoding = pStoredBestCU == rpcBestCU ? !rpcTempCU->getQtRootCbf( 0 ) : !rpcBestCU->getQtRootCbf( 0 );
+                  if(!bSkipRGBCoding) 
+                  {
+                    rpcTempCU->initRQTData( uiDepth, rpcBestCU, (pStoredBestCU != rpcBestCU), false, true );
+                    if(m_pcEncCfg->getRGBFormatFlag())
+                    {
+                      xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug), true );
+                    }
+                    else
+                    {
+                      xCheckRDCostIntraCSC( rpcBestCU, rpcTempCU, tempIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug) );
+                    }
+                    tmpIntraCost = std::min(tmpIntraCost, tempIntraCost);
+                  }
+                  else
+                    tmpIntraCost = tempIntraCost;
                 }
                 else
-                  tmpIntraCost = tempIntraCost;
+                {
+                  xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
+                }
+                intraCost = std::min(intraCost, tmpIntraCost);
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
               }
-              else
-              {
-                xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
-              }
-              intraCost = std::min(intraCost, tmpIntraCost);
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
-          }
           }
 
           if( rpcBestCU->isIntraBC( 0 ) )
@@ -900,103 +900,103 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
         {
-        if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
-        {
-          bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
-
-          if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() &&
-              !bSkipIntraBlockCopySearch &&
-              rpcTempCU->getWidth(0) == 8 &&
-              !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
+          if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
           {
-            bUse1DSearchFor8x8 = (CalculateMinimumHVLumaActivity(rpcTempCU, 0, m_ppcOrigYuv) < (168 << (g_bitDepth[0] - 8)));
-          }
-        }
+            bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
 
-        if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-        {
-          if (!bSkipIntraBlockCopySearch)
-          {
-            Double adIntraBcCost[NUMBER_OF_PART_SIZES] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-            xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2Nx2N, adIntraBcCost[SIZE_2Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
-            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-            if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
+            if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() &&
+                !bSkipIntraBlockCopySearch &&
+                rpcTempCU->getWidth(0) == 8 &&
+                !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
             {
-              if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth ) // Only additionally check Nx2N, 2NxN, NxN at the bottom level in fast search
+              bUse1DSearchFor8x8 = (CalculateMinimumHVLumaActivity(rpcTempCU, 0, m_ppcOrigYuv) < (168 << (g_bitDepth[0] - 8)));
+            }
+          }
+
+          if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
+          {
+            if (!bSkipIntraBlockCopySearch)
+            {
+              Double adIntraBcCost[NUMBER_OF_PART_SIZES] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+              xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2Nx2N, adIntraBcCost[SIZE_2Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+
+              if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
               {
-                intraCost = std::min( intraCost, adIntraBcCost[SIZE_2Nx2N] );
+                if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth ) // Only additionally check Nx2N, 2NxN, NxN at the bottom level in fast search
+                {
+                  intraCost = std::min( intraCost, adIntraBcCost[SIZE_2Nx2N] );
 
-                Double dTH2 = std::max( 60 * m_pcRdCost->getLambda(),  56.0 );
-                Double dTH3 = std::max( 66 * m_pcRdCost->getLambda(), 800.0 );
-                if( intraCost >= dTH2 ) // only check Nx2N depending on best intraCost (and intraBCcost so far)
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
-                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                  intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
-                }
+                  Double dTH2 = std::max( 60 * m_pcRdCost->getLambda(),  56.0 );
+                  Double dTH3 = std::max( 66 * m_pcRdCost->getLambda(), 800.0 );
+                  if( intraCost >= dTH2 ) // only check Nx2N depending on best intraCost (and intraBCcost so far)
+                  {
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
+                    rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                    intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
+                  }
 
-                if( intraCost >= dTH2 && !bIsLosslessMode ) // only check 2NxN depending on best intraCost (and intraBCcost so far) and if it is not lossless
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
-                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                  intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
-                }
+                  if( intraCost >= dTH2 && !bIsLosslessMode ) // only check 2NxN depending on best intraCost (and intraBCcost so far) and if it is not lossless
+                  {
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                    rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                    intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
+                  }
 
-                dTH2 = std::max( 110 * m_pcRdCost->getLambda(), 60.0 );
-                dTH3 = std::max( 112 * m_pcRdCost->getLambda(), 66.0 );
-                if( intraCost >= dTH2 ) // only check NxN depending on best intraCost (and intraBCcost so far)
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, (intraCost < dTH3), SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
-                }
-                else
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, false, SIZE_NxN, adIntraBcCost[SIZE_NxN], true DEBUG_STRING_PASS_INTO(sDebug));
-                }
-                {
-                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                  //intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
+                  dTH2 = std::max( 110 * m_pcRdCost->getLambda(), 60.0 );
+                  dTH3 = std::max( 112 * m_pcRdCost->getLambda(), 66.0 );
+                  if( intraCost >= dTH2 ) // only check NxN depending on best intraCost (and intraBCcost so far)
+                  {
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, (intraCost < dTH3), SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                  }
+                  else
+                  {
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, false, SIZE_NxN, adIntraBcCost[SIZE_NxN], true DEBUG_STRING_PASS_INTO(sDebug));
+                  }
+                  {
+                    rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                    //intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
+                  }
                 }
               }
-            }
-            else
-            {
-              // full search (bUse1DSearchFor8x8 will be false but is kept here for consistency).
-
-              xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-              if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+              else
               {
-                xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                // full search (bUse1DSearchFor8x8 will be false but is kept here for consistency).
+
+                xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+
+                if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+                {
+                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                }
               }
             }
           }
-        }
 
-        if (bIsLosslessMode) // Restore loop variable if lossless mode was searched.
-        {
-          iQP = iMinQP;
-        }
-        if ( rpcBestCU->getSlice()->getSPS()->getUsePLTMode() )
-        {
-          xCheckPLTMode( rpcBestCU, rpcTempCU, false );
-          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-          Bool bPLTSharingAvail=false;
-          for ( UInt ch = 0; ch < numValidComp; ch++ )
+          if (bIsLosslessMode) // Restore loop variable if lossless mode was searched.
           {
-            bPLTSharingAvail = bPLTSharingAvail || (rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0);
+            iQP = iMinQP;
           }
-          if ( bPLTSharingAvail )
+          if ( rpcBestCU->getSlice()->getSPS()->getUsePLTMode() )
           {
-            xCheckPLTMode( rpcBestCU, rpcTempCU, true );
+            xCheckPLTMode( rpcBestCU, rpcTempCU, false );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+
+            Bool bPLTSharingAvail=false;
+            for ( UInt ch = 0; ch < numValidComp; ch++ )
+            {
+              bPLTSharingAvail = bPLTSharingAvail || (rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0);
+            }
+            if ( bPLTSharingAvail )
+            {
+              xCheckPLTMode( rpcBestCU, rpcTempCU, true );
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+            }
           }
-        }
         }
       }
     }
@@ -2250,10 +2250,10 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
         }
       }
 
-    xCheckDQP( rpcTempCU );
-    rpcTempCUPre = rpcTempCU;
+      xCheckDQP( rpcTempCU );
+      rpcTempCUPre = rpcTempCU;
 
-    xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest) );
+      xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest) );
       if(bEnableTrans)
       {
         if( !rpcBestCU->isInter(0) || rpcBestCU->isSkipped(0)  )
@@ -2445,19 +2445,19 @@ Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UIn
   UInt uiPartIdxY = ( ( uiAbsPartIdxInRaster / rpcPic->getNumPartInCtuWidth() ) % uiSrcBlkWidth) / uiBlkWidth;
   UInt uiPartIdx = uiPartIdxY * ( uiSrcBlkWidth / uiBlkWidth ) + uiPartIdxX;
   m_ppcRecoYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvRec (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
-    if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
-    {
-      TComRectangle cuCompRect;
-      cuCompRect.x0     = 0;
-      cuCompRect.y0     = 0;
-      cuCompRect.width  = (g_uiMaxCUWidth>>uiSrcDepth);
-      cuCompRect.height = (g_uiMaxCUHeight>>uiSrcDepth);
+  if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
+  {
+    TComRectangle cuCompRect;
+    cuCompRect.x0     = 0;
+    cuCompRect.y0     = 0;
+    cuCompRect.width  = (g_uiMaxCUWidth>>uiSrcDepth);
+    cuCompRect.height = (g_uiMaxCUHeight>>uiSrcDepth);
 
-      for( UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++ )
-        m_ppcRecoYuvBest[uiSrcDepth]->copyPartToPartComponentMxN( ComponentID(ch), m_ppcRecoYuvTemp[uiSrcDepth], cuCompRect);
-      m_ppcRecoYuvTemp[uiSrcDepth]->DefaultConvertPix( cuCompRect.x0, cuCompRect.y0, cuCompRect.width );
-      m_ppcRecoYuvTemp[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvCSC(), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
-    }
+    for( UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++ )
+      m_ppcRecoYuvBest[uiSrcDepth]->copyPartToPartComponentMxN( ComponentID(ch), m_ppcRecoYuvTemp[uiSrcDepth], cuCompRect);
+    m_ppcRecoYuvTemp[uiSrcDepth]->DefaultConvertPix( cuCompRect.x0, cuCompRect.y0, cuCompRect.width );
+    m_ppcRecoYuvTemp[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvCSC(), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
+  }
 
   m_ppcPredYuvBest[uiSrcDepth]->copyToPicYuv( rpcPic->getPicYuvPred (), uiCUAddr, uiAbsPartIdx, uiDepth - uiSrcDepth, uiPartIdx);
 }
