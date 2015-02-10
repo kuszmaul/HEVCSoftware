@@ -290,7 +290,6 @@
 // Derived macros
 //------------------------------------------------
 
-#define SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX           1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
 #define SCM_S0269_MSB_IDX_CODING                          1
 
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test

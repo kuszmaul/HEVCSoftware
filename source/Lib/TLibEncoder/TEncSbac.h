@@ -108,11 +108,7 @@ public:
                     , Bool onlyEstMergeInfo = false
                     );
 
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
   Pel   writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#else
-  Void  writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#endif
   Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun );
 
 private:

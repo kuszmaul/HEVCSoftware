@@ -393,11 +393,7 @@ Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
   }
 }
 
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
 Pel TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
-#else
-Void TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
-#endif
 {
   UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
   Pel siCurLevel = pLevel[uiTraIdx];
@@ -450,10 +446,9 @@ Void TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
   {
     xWriteTruncBinCode((UInt)siCurLevel, iMaxSymbol);
   }
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
   return siCurLevel;
-#endif
 }
+
 Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize)
 {
   Int lastPredIdx = -1;
@@ -666,9 +661,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
     }
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
-#endif
     {
       if ( pSPoint[uiTraIdx] == PLT_RUN_LEFT )
       {
@@ -678,11 +671,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           pLevel[uiTraIdx] = uiIndexMaxSize - 1;
         }
 
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
         siCurLevel = writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag );
-#else
-        writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag );
-#endif
 
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -690,12 +679,10 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         }
       }
       uiRun = pRun[uiTraIdx];
-      if (uiIndexMaxSize > 1)
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-      encodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1);
-#else
-      encodeRun( uiRun, pSPoint[uiTraIdx] );
-#endif
+      if ( uiIndexMaxSize > 1 )
+      {
+        encodeRun( uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1 );
+      }
 
       for(UInt uiRunIdx = 0; uiRunIdx <= uiRun; uiRunIdx++, uiIdx++)
       {

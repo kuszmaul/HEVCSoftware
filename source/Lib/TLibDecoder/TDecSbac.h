@@ -100,11 +100,7 @@ private:
   Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun, const class TComCodingStatisticsClassType &whichStat);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat);
   Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
   Pel   xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#else
-  Void  xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#endif
 #if SCM_S0269_MSB_IDX_CODING
   UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
   UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
@@ -118,11 +114,7 @@ private:
   Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun);
   Void  xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize);
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
   Pel   xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#else
-  Void  xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
-#endif
 #if SCM_S0269_MSB_IDX_CODING
   UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
   UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
