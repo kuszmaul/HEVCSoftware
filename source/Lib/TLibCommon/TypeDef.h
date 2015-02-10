@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0269_PLT_RUN_MSB_IDX                         1 ///< improvement on run length coding
 #define SCM_PLT_ZERO_COLOR_OPT                            1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 0
 #define SCM_PLT_SINGLE_COLOR_OPT                          1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
 #define SCM_S0110_PLT_TRANSPOSE_FLAG_OPT                  1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
@@ -295,10 +294,8 @@
 // Derived macros
 //------------------------------------------------
 
-#if SCM_S0269_PLT_RUN_MSB_IDX
 #define SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX           1 ///< 1 (default): parsed index for context, 0: reconstructed index for context
 #define SCM_S0269_MSB_IDX_CODING                          1
-#endif
 
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N

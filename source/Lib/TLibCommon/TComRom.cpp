@@ -739,8 +739,6 @@ Int g_quantInterDefault8x8[8*8] =
 UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
 
-#if SCM_S0269_PLT_RUN_MSB_IDX
 UChar g_ucRunTopLut[5] =  {0, 1, 1, 2, 2};
 UChar g_ucRunLeftLut[5] = {0, 3, 3, 4, 4};
-#endif
 //! \}
