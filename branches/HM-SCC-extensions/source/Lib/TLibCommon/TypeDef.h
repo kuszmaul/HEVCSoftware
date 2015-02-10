@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0100_IBC_CHANGE_EARLY_TERMINATION            1 ///< make the same changes to IBC early termination, regardless of ACT or not
 #define SCM_S0086_MOVE_ACT_FLAG_TO_PPS                    1 ///< move ACT flag from SPS to PPS
 #define SCM_S0086_CODE_ACT_FLAG_FOR_ALL_DM                1 ///< for Intra CU, code ACT flag if all PU(s) are DM
 #define SCM_S0186_TRANS_FLAG_CTX                          1 ///< remove one context for palette_transpose_flag
