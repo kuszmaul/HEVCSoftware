@@ -183,9 +183,7 @@ protected:
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
-#if SCM_S0067_ENCODER_IMPROVEMENTS
   Bool          xGetColMVPIBC( Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv);
-#endif
 
   /// compute required bits to encode MVD (used in AMVP)
   UInt          xGetMvdBits           ( TComMv cMvd );
@@ -256,10 +254,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
 
   Void          getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast);
-#if SCM_S0067_ENCODER_IMPROVEMENTS
   Void          getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPredEnc, Int& nbPred);
   Bool          getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv);
-#endif
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }

@@ -55,11 +55,7 @@
 // Constants 
 // ====================================================================================================================
 
-#if SCM_S0067_ENCODER_IMPROVEMENTS
 #define CHROMA_REFINEMENT_CANDIDATES  8
-#else
-#define CHROMA_REFINEMENT_CANDIDATES  4
-#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -147,11 +143,9 @@ protected:
   Int             m_currRefPicIndex;
   Bool            m_bSkipFracME;
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
-#if SCM_S0067_ENCODER_IMPROVEMENTS
   TComMv          m_acBVs[SCM_S0067_NUM_CANDIDATES];
   UInt            m_uiNumBVs, m_uiNumBV16s;
   Distortion      m_lastCandCost;
-#endif
   Bool            m_bBestScanRotationMode;
   Pel*            m_paOriginalLevel;
   Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
@@ -276,9 +270,7 @@ public:
                                   DEBUG_STRING_FN_DECLARE(sDebug),
                                   Bool        bUse1DSearchFor8x8,
                                   Bool        bUseRes
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-                                  , Bool      testOnlyPred
-#endif
+                                , Bool        testOnlyPred
                                 );
 
   Void xIntraBlockCopyEstimation( TComDataCU*  pcCU,
@@ -288,9 +280,7 @@ public:
                                   TComMv&      rcMv,
                                   Distortion&  ruiCost,
                                   Bool         bUse1DSearchFor8x8
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-                                  , Bool       testOnlyPred
-#endif
+                                , Bool         testOnlyPred
                                 );
 
   Void addToSortList            ( list<BlockHash>& listBlockHash,
@@ -586,9 +576,7 @@ public:
                                   Int          iRoiHeight,
                                   TComMv*      mvPreds, 
                                   Bool         bUse1DSearchFor8x8
-#if SCM_S0067_ENCODER_IMPROVEMENTS
-                                  , Bool       testOnlyPred
-#endif
+                                , Bool         testOnlyPred
                                 );
 
   /// encode residual and compute rd-cost for inter mode
