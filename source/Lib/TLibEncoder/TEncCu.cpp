@@ -924,9 +924,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
         }
 
-#if SCM_S0100_IBC_CHANGE_EARLY_TERMINATION
         intraCost = MAX_DOUBLE;
-#endif
 
         // test PCM
         if(pcPic->getSlice(0)->getSPS()->getUsePCM()
