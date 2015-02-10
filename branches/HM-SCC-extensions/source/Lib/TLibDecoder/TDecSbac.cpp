@@ -747,7 +747,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiDictIdxBits++;
   }
   UInt uiIndexMaxSize = uiDictMaxSize;
-#if SCM_PLT_ZERO_COLOR_OPT
   UInt uiSignalEscape = 1;
   if (uiDictMaxSize > 0)
   {
@@ -769,10 +768,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
   }
 #endif
-#else 
-  UInt uiSignalEscape;
-  m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
-#endif
+
   UInt uiDictIdxBitsExteneded = uiDictIdxBits;
   if ( uiSignalEscape )
   {
@@ -790,7 +786,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
     if (uiIndexMaxSize > 1)
     {
 #endif
@@ -803,7 +799,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       uiSymbol = 0;
     }
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
     }
     else
     {
@@ -827,7 +823,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     pEscapeFlag[uiTraIdx] = (isEscapePixel)? 1: 0;
     {
       UInt uiPos = 0;
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
       if (uiIndexMaxSize > 1)
       {
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
