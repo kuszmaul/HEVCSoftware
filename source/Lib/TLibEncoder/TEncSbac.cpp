@@ -1870,11 +1870,7 @@ Void TEncSbac::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Bool uiFlag = pcCU->getColourTransform(uiAbsPartIdx)== true? 1: 0;
   UInt uiCtx = 0;
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
   if(pcCU->getSlice()->getPPS()->getUseColourTrans())
-#else
-  if(pcCU->getSlice()->getSPS()->getUseColourTrans())
-#endif
   {
     m_pcBinIf->encodeBin( uiFlag , m_cCUColourTransformFlagSCModel.get( 0, 0, uiCtx ) );
   }

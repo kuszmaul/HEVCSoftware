@@ -1596,9 +1596,6 @@ TComSPS::TComSPS()
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
-#if !SCM_S0086_MOVE_ACT_FLAG_TO_PPS
-, m_useColourTrans             (false)
-#endif
 , m_usePaletteMode            (false)
 #if SCM_CE5_MAX_PLT_AND_PRED_SIZE 
 , m_uiPLTMaxSize              ( 31)
@@ -1799,9 +1796,7 @@ TComPPS::TComPPS()
 , m_loopFilterAcrossSlicesEnabledFlag(false)
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
-#if SCM_S0086_MOVE_ACT_FLAG_TO_PPS
 , m_useColourTrans                   (false)
-#endif
 {
   m_scalingList = new TComScalingList;
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
