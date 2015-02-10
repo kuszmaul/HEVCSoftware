@@ -2510,7 +2510,6 @@ Void TEncSbac::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
   }
 }
 
-#if SCM_S0269_MSB_IDX_CODING
 UInt TEncSbac::xWriteTruncMsbP1( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut)
 {
   if ( uiMax == 0 )
@@ -2564,6 +2563,5 @@ Void TEncSbac::xWriteTruncMsbP1RefinementBits ( UInt uiSymbol, ContextModel* pcS
 }
 
 
-#endif
 
 //! \}

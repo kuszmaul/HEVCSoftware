@@ -242,10 +242,8 @@ extern UInt g_scalingListNum  [SCALING_LIST_SIZE_NUM];
 #define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2                         3
 extern UChar g_ucRunTopLut[5];
 extern UChar g_ucRunLeftLut[5];
-#if SCM_S0269_MSB_IDX_CODING
 extern UChar g_ucMsbP1Idx[256];
 extern UChar g_getMsbP1Idx(UInt uiVal);
-#endif
 //! \}
 
 #endif  //__TCOMROM__

@@ -161,7 +161,6 @@ public:
   }
 };
 
-#if SCM_S0269_MSB_IDX_CODING
 UChar g_ucMsbP1Idx[256];
 static Void g_initMsbP1IdxLut()
 {
@@ -186,7 +185,6 @@ UChar g_getMsbP1Idx(UInt uiVal)
   }
   return idx+g_ucMsbP1Idx[uiVal];
 }
-#endif
 
 // initialize ROM variables
 Void initROM()
@@ -271,9 +269,7 @@ Void initROM()
       //--------------------------------------------------------------------------------------------------
     }
   }
-#if SCM_S0269_MSB_IDX_CODING
   g_initMsbP1IdxLut();
-#endif
 }
 
 Void destroyROM()

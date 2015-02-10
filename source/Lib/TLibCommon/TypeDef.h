@@ -290,8 +290,6 @@
 // Derived macros
 //------------------------------------------------
 
-#define SCM_S0269_MSB_IDX_CODING                          1
-
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
