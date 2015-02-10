@@ -394,7 +394,6 @@ Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
 }
 
 #if SCM_S0156_PLT_ENC_RDO
-#if SCM_S0258_PLT_ESCAPE_SIG
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
 Pel TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
 #else
@@ -402,45 +401,25 @@ Void TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
 #endif
 #else
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-Pel TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#else
-Void TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#endif
-#endif
-#else
-#if SCM_S0258_PLT_ESCAPE_SIG
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
 Pel TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
 #else
 Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
-#endif
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-Pel TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#else
-Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#endif
 #endif
 #endif
 {
   UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
   Pel siCurLevel = pLevel[uiTraIdx];
 
-#if SCM_S0258_PLT_ESCAPE_SIG
   if( pEscapeFlag[uiTraIdx] )
   {
     assert(siCurLevel == (iMaxSymbol-1));
   }
 
   if( uiIdx )
-#else
-  if (uiIdx && (PLT_ESCAPE != pSPoint[m_puiScanOrder[uiIdx - 1]]))
-#endif
   {
     UInt uiTraIdxLeft = m_puiScanOrder[uiIdx - 1];
     if (pSPoint[uiTraIdxLeft] == PLT_RUN_LEFT)  ///< copy left
     {
-#if SCM_S0258_PLT_ESCAPE_SIG
       Pel siLeftLevel = pLevel[uiTraIdxLeft];
       if( pEscapeFlag[uiTraIdxLeft] )
       {
@@ -453,16 +432,7 @@ Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pS
       {
         siCurLevel--;
       }
-#else
-      assert(siCurLevel != pLevel[uiTraIdxLeft]);
-      if (siCurLevel > pLevel[uiTraIdxLeft])
-      {
-        siCurLevel--;
-      }
-      iMaxSymbol--;
-#endif
     }
-#if SCM_S0258_PLT_ESCAPE_SIG
     else
     {
       assert(uiTraIdxLeft >= iWidth);
@@ -480,17 +450,6 @@ Void TEncSbac::xWritePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pS
       }
     }
     iMaxSymbol--;
-#else
-    else if (uiTraIdx >= iWidth && pSPoint[uiTraIdxLeft] == PLT_RUN_ABOVE && (pSPoint[uiTraIdx - iWidth] != PLT_ESCAPE))
-    {
-      assert(siCurLevel != pLevel[uiTraIdx - iWidth]);
-      if (siCurLevel > pLevel[uiTraIdx - iWidth])
-      {
-        siCurLevel--;
-      }
-      iMaxSymbol--;
-    }
-#endif
   }
   assert(iMaxSymbol > 0);
   assert(siCurLevel >= 0);
@@ -654,9 +613,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   pLevel = pcCU->getLevel(compBegin) + offset;
   pRun = pcCU->getRun(compBegin) + offset;
   UChar* pSPoint = pcCU->getSPoint(compBegin) + offset;
-#if SCM_S0258_PLT_ESCAPE_SIG
   UChar* pEscapeFlag = pcCU->getEscapeFlag(compBegin) + offset;
-#endif
 
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
@@ -791,12 +748,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
     {
       UInt mode = pSPoint[uiTraIdx];
-#if !SCM_S0258_PLT_ESCAPE_SIG
-      if ( PLT_ESCAPE == pSPoint[uiTraIdx] )
-      {
-        mode = 0;
-      }
-#endif
       m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
 #if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
@@ -805,37 +756,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
 #endif
-#if !SCM_S0258_PLT_ESCAPE_SIG
-    if ( pSPoint[uiTraIdx] == PLT_ESCAPE )
-    {
-      UInt uiRealLevel = pLevel[uiTraIdx];
-      pLevel[uiTraIdx] = uiIndexMaxSize - 1;
-#if SCM_S0156_PLT_ENC_RDO
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-      siCurLevel = writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#else
-      writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#endif
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-      siCurLevel = xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#else
-      xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#endif
-#endif
-      pLevel[uiTraIdx] = uiRealLevel;
-      for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
-      {
-        xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
-      }
-      uiIdx++;
-    }
-    else
-#endif
     {
       if ( pSPoint[uiTraIdx] == PLT_RUN_LEFT )
       {
-#if SCM_S0258_PLT_ESCAPE_SIG
         UInt uiRealLevel = pLevel[uiTraIdx];
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -860,19 +783,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         {
           pLevel[uiTraIdx] = uiRealLevel;
         }
-#elif SCM_S0156_PLT_ENC_RDO
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-        siCurLevel = writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#else
-        writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#endif
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-        siCurLevel = xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#else
-        xWritePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width );
-#endif
-#endif
       }
       uiRun = pRun[uiTraIdx];
 #if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
@@ -892,7 +802,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
 #endif
 
-#if SCM_S0258_PLT_ESCAPE_SIG
       for(UInt uiRunIdx = 0; uiRunIdx <= uiRun; uiRunIdx++, uiIdx++)
       {
         if( pEscapeFlag[m_puiScanOrder[uiIdx]] )
@@ -901,12 +810,8 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           {
             xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
           }
-        }                 
+        }
       }
-#else
-      uiIdx += uiRun;
-      uiIdx++;
-#endif
     }
   }
   assert(uiIdx == uiTotal);

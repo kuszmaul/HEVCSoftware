@@ -151,9 +151,7 @@ protected:
   Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
-#if SCM_S0258_PLT_ESCAPE_SIG
   UChar*          m_paBestEscapeFlag;
-#endif
 public:
   TEncSearch();
   virtual ~TEncSearch();
