@@ -795,9 +795,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             }
 #endif
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
-#if SCM_S0102_IBF_SPS_CONTROL
             READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
-#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;

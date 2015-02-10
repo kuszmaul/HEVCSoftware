@@ -760,9 +760,7 @@ private:
   UInt        m_uiPLTMaxPredSize;
 #endif
   Bool        m_useAdaptiveMvResolution;
-#if SCM_S0102_IBF_SPS_CONTROL
   Bool        m_disableIntraBoundaryFilter;
-#endif
   Bool        m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt        m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool        m_bPCMFilterDisableFlag;
@@ -919,10 +917,8 @@ public:
 #endif
   Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
   Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
-#if SCM_S0102_IBF_SPS_CONTROL
   Void      setDisableIntraBoundaryFilter( Bool b) { m_disableIntraBoundaryFilter = b;    }
   Bool      getDisableIntraBoundaryFilter()        { return m_disableIntraBoundaryFilter; }
-#endif
 
   Bool      getUseResidualDPCM (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void      setUseResidualDPCM (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }

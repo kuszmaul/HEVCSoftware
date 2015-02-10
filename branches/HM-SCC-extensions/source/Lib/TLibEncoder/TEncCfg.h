@@ -248,9 +248,7 @@ protected:
   UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
   Bool      m_disableIntraReferenceSmoothing;
-#if SCM_S0102_IBF_SPS_CONTROL
   Bool      m_disableIntraBoundaryFilter;
-#endif
   Bool      m_loopFilterAcrossTilesEnabledFlag;
   Bool      m_tileUniformSpacingFlag;
   Int       m_iNumColumnsMinus1;
@@ -622,10 +620,8 @@ public:
   Void setTransformSkipLog2MaxSize                     ( UInt u )    { m_transformSkipLog2MaxSize  = u;       }
   Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
   Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }
-#if SCM_S0102_IBF_SPS_CONTROL
   Void setDisableIntraBoundaryFilter                   (Bool bValue) { m_disableIntraBoundaryFilter=bValue; }
   Bool getDisableIntraBoundaryFilter                   ()      const { return m_disableIntraBoundaryFilter; }
-#endif
 
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }

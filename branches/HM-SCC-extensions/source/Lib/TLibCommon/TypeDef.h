@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0102_IBF_SPS_CONTROL                         1 ///< intra boundary filter control at SPS
 #define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< Zero run-length coding for palette predictor
 #define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< include escape sample into the INDEX and COPY_ABOVE modes
 #define SCM_S0156_PLT_ENC_RDO                             1 ///< RD based palette encoder
