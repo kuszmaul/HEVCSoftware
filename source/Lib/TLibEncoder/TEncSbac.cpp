@@ -664,19 +664,15 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-#if SCM_PLT_SINGLE_COLOR_OPT
     if (uiIndexMaxSize > 1)
     {
-#endif
     uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
     if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
     {
       UInt mode = pSPoint[uiTraIdx];
       m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
-#if SCM_PLT_SINGLE_COLOR_OPT
     }
-#endif
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
 #endif
@@ -701,9 +697,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         }
       }
       uiRun = pRun[uiTraIdx];
-#if SCM_PLT_SINGLE_COLOR_OPT
       if (uiIndexMaxSize > 1)
-#endif
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
       encodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1);
 #else

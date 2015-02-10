@@ -786,10 +786,8 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
-#if SCM_PLT_SINGLE_COLOR_OPT
     if (uiIndexMaxSize > 1)
     {
-#endif
     uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
     if (uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
     {
@@ -799,13 +797,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       uiSymbol = 0;
     }
-#if SCM_PLT_SINGLE_COLOR_OPT
     }
     else
     {
       uiSymbol = 0;
     }
-#endif
     pSPoint[uiTraIdx] = uiSymbol;
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     Pel siCurLevel = 0;
@@ -823,7 +819,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     pEscapeFlag[uiTraIdx] = (isEscapePixel)? 1: 0;
     {
       UInt uiPos = 0;
-#if SCM_PLT_SINGLE_COLOR_OPT
       if (uiIndexMaxSize > 1)
       {
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
@@ -836,13 +831,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       {
         uiRun = uiTotal - uiIdx - 1;
       }
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-      xDecodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#else
-      xDecodeRun(uiRun, pSPoint[uiTraIdx], uiPreDecodeLevel, (uiTotal - uiIdx - 1) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
-#endif
 
       if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
       {

@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_PLT_SINGLE_COLOR_OPT                          1 ///< JCTVC-S0099/S0105/S0110/S0173, syntax optimization for palette size = 1
 #define SCM_S0110_PLT_TRANSPOSE_FLAG_OPT                  1 ///< 0 = palette_transpose_flag at the beginning, 1 (default) = palette_transpose_flag afterward
 
 //------------------------------------------------
