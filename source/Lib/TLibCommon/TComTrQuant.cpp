@@ -1636,9 +1636,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
       if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
       {
         cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-#if SCM_S0140_ACT_QP_CLIP_TO_ZERO
         cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-#endif
         cQP.per = cQP.Qp/6;
         cQP.rem= cQP.Qp%6;
       }
