@@ -1873,11 +1873,7 @@ Void TAppEncCfg::xCheckParameter()
               {
                 if(absPOC%m_iGOPSize == m_GOPList[k].m_POC%m_iGOPSize)
                 {
-#if SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY
                   if(m_GOPList[k].m_temporalId<=m_GOPList[curGOP].m_temporalId)
-#else
-                  if(m_GOPList[k].m_temporalId==m_GOPList[curGOP].m_temporalId)
-#endif
                   {
                     m_GOPList[k].m_refPic = true;
                   }
@@ -1949,11 +1945,7 @@ Void TAppEncCfg::xCheckParameter()
             {
               Int insertPoint=newRefs;
               //this picture can be added, find appropriate place in list and insert it.
-#if SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY
               if(m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId)
-#else
-              if(m_GOPList[offGOP].m_temporalId==m_GOPList[curGOP].m_temporalId)
-#endif
               {
                 m_GOPList[offGOP].m_refPic = true;
               }

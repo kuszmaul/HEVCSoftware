@@ -286,7 +286,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_S0090_BUG_FIX_FOR_TEMPORAL_SCALABILITY        1 ///< bug fix for temporal scalability
 #define SCM_S0102_IBF_SPS_CONTROL                         1 ///< intra boundary filter control at SPS
 #define SCM_S0153_PALETTE_ZERO_RUNS                       1 ///< Zero run-length coding for palette predictor
 #define SCM_S0258_PLT_ESCAPE_SIG                          1 ///< include escape sample into the INDEX and COPY_ABOVE modes
