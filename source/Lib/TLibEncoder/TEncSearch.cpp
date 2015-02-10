@@ -4106,14 +4106,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   m_bBestScanRotationMode = 0;
 
   deriveRunAndCalcBits(pcCU, pcOrgYuv, rpcRecoYuv, uiBits, true,  PLT_SCAN_HORTRAV);
-#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-  if ((pcCU->getPLTSize(COMPONENT_Y, 0) + pcCU->getPLTEscape(COMPONENT_Y, 0)) > 1)
-#else
-#if SCM__PLT_ZERO_SINGLE_COLOR_OPT
-  if ((pcCU->getPLTSize(COMPONENT_Y, 0) + pcCU->getPLTEscape(COMPONENT_Y, 0)) > 1)
-#endif
-#endif
-  deriveRunAndCalcBits(pcCU, pcOrgYuv, rpcRecoYuv, uiBits, false,  PLT_SCAN_VERTRAV);
+  if ( (pcCU->getPLTSize( COMPONENT_Y, 0 ) + pcCU->getPLTEscape( COMPONENT_Y, 0 )) > 1 )
+  {
+    deriveRunAndCalcBits( pcCU, pcOrgYuv, rpcRecoYuv, uiBits, false, PLT_SCAN_VERTRAV );
+  }
 
   pcCU->setPLTScanRotationModeFlagSubParts( m_bBestScanRotationMode, 0, uiDepth );
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)

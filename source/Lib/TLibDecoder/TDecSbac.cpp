@@ -640,10 +640,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   }
 
   pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
-#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#else
-  parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
-#endif
+
   Bool isScanTraverseMode = true;
 
   parsePLTSharingModeFlag(pcCU, uiAbsPartIdx, uiDepth);
