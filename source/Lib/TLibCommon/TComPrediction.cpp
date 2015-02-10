@@ -899,98 +899,6 @@ Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt 
           (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
 
-#if !SCM_S0156_PLT_ENC_RDO
-Void TComPrediction::deriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  Pel* pValue, UChar* pSPoint,
-                               Pel** paPixelValue, Pel ** paRecoValue, TCoeff* pRun,
-                               UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize)
-{
-  UInt uiTotal = uiHeight * uiWidth, uiIdx = 0;
-  UInt uiStartPos = 0,  uiRun = 0, uiCopyRun = 0;
-  Int iTemp = 0;
-  UInt uiTraIdx;  //unified position variable (raster scan)
-
-  UChar *pEscapeFlag  = pcCU->getEscapeFlag(COMPONENT_Y);
-  Pel *pcIndexBlock = m_cIndexBlock;
-
-  //Test Run
-  while (uiIdx < uiTotal)
-  {
-    uiStartPos = uiIdx;
-    uiRun = 0;
-
-    Bool RunValid = calLeftRun(pValue, pSPoint, uiStartPos, uiTotal, uiRun, pEscapeFlag);
-
-    uiCopyRun = 0;
-
-    Bool CopyValid = calAboveRun(pValue, pSPoint, uiWidth, uiStartPos, uiTotal, uiCopyRun, pEscapeFlag );
-    uiTraIdx = m_puiScanOrder[uiIdx];    //unified position variable (raster scan)
-
-    assert( RunValid || CopyValid );
-    {
-      if ( CopyValid && (uiCopyRun + 2 > uiRun))
-      {
-        pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
-        pRun[uiTraIdx]  = uiCopyRun-1;
-        pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
-
-        if( pEscapeFlag[uiTraIdx] )
-        {
-          calcPixelPred(pcCU, pOrg, pPalette, pValue, paPixelValue, paRecoValue, uiWidth, uiHeight, uiStrideOrg, uiTraIdx);
-        }
-        uiIdx++;
-
-        iTemp = uiCopyRun - 1;
-        while (iTemp > 0)
-        {
-          uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-
-          pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
-
-          if( pEscapeFlag[uiTraIdx] )
-          {
-            calcPixelPred(pcCU, pOrg, pPalette, pValue, paPixelValue, paRecoValue, uiWidth, uiHeight, uiStrideOrg, uiTraIdx);
-          }
-
-          pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
-          uiIdx++;
-
-          iTemp--;
-        }
-      }
-      else
-      {
-        pSPoint[uiTraIdx] = PLT_RUN_LEFT;
-        pRun[uiTraIdx] = uiRun;
-
-        pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
-
-        if( pEscapeFlag[uiTraIdx] )
-        {
-          calcPixelPred(pcCU, pOrg, pPalette, pValue, paPixelValue, paRecoValue, uiWidth, uiHeight, uiStrideOrg, uiTraIdx);
-        }
-
-        uiIdx++;
-        iTemp = uiRun;
-        while (iTemp > 0)
-        {
-          uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-          pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
-
-          if( pEscapeFlag[uiTraIdx] )
-          {
-            calcPixelPred(pcCU, pOrg, pPalette, pValue, paPixelValue, paRecoValue, uiWidth, uiHeight, uiStrideOrg, uiTraIdx);
-          }
-          pSPoint[uiTraIdx] = PLT_RUN_LEFT;
-          uiIdx++;
-          iTemp--;
-        }
-      }
-    }
-  }
-  assert (uiIdx == uiTotal);
-}
-#endif
-
 Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize)
 {
   Bool bLossless = pcCU->getCUTransquantBypass(0);
@@ -1506,9 +1414,7 @@ Bool TComPrediction::calLeftRun(Pel* pValue, UChar* pSPoint, UInt uiStartPos, UI
     pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + MAX_PLT_SIZE : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
-#if SCM_S0156_PLT_ENC_RDO
     pSPoint[uiTraIdx] = PLT_RUN_LEFT;
-#endif
     pEscapeFlag[uiTraIdx] = (pcIndexBlock[uiTraIdx] < 0)? 1: 0;
     UInt leftTraIdx = uiIdx ? m_puiScanOrder[uiIdx - 1] : 0;
     if( uiIdx > uiStartPos &&
@@ -1548,9 +1454,7 @@ Bool  TComPrediction::calAboveRun(Pel* pValue, UChar* pSPoint, UInt uiWidth, UIn
     pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + MAX_PLT_SIZE : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
-#if SCM_S0156_PLT_ENC_RDO
     pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
-#endif
     pEscapeFlag[uiTraIdx] = (pcIndexBlock[uiTraIdx] < 0)? 1: 0;
 
     if ( ( pcIndexBlock[uiTraIdx - uiStride] >= 0 && pValue[uiTraIdx] == pValue[uiTraIdx - uiStride] && !bMismatch ) ||

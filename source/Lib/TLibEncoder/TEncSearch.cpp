@@ -4253,11 +4253,7 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[uiWidth]+2][g_aucConvertToBit[uiHeight]+2];
 
-#if SCM_S0156_PLT_ENC_RDO
   xDeriveRun(pcCU, paOrig, paPalette,  paLevel[0], paSPoint[0], pPixelValue, pRecoValue, pRun, uiWidth, uiHeight, pcOrgYuv->getStride(ComponentID(0)), uiPLTSize);
-#else
-  deriveRun(pcCU, paOrig, paPalette,  paLevel[0], paSPoint[0], pPixelValue, pRecoValue, pRun, uiWidth, uiHeight, pcOrgYuv->getStride(ComponentID(0)), uiPLTSize);
-#endif
 
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
   m_pcEntropyCoder->resetBits();
@@ -4285,7 +4281,6 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   }
 }
 
-#if SCM_S0156_PLT_ENC_RDO
 Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  Pel* pValue, UChar* pSPoint,
   Pel** paPixelValue, Pel ** paRecoValue, TCoeff* pRun,
   UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize)
@@ -4466,8 +4461,6 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
   Double dCostPerPixel = uiBits * 1.0 / uiRun;  
   return dCostPerPixel;
 }
-#endif
-
 
 /**  Function for PCM mode estimation.
  * \param pcCU
