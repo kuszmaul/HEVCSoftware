@@ -342,9 +342,7 @@ public:
                                   Int           roiHeight);
 
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
-#if SCM_420_IBC_BUGFIX
                                   Int           iPartIdx,
-#endif
                                   Int           predX,
                                   Int           ROIStartX,
                                   Int           predY,
@@ -367,7 +365,6 @@ public:
       return false;
     }
 
-#if SCM_420_IBC_BUGFIX
     // check boundary
     if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )
     {
@@ -440,7 +437,6 @@ public:
         }
       }
     }
-#endif
 
     return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
            (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
@@ -459,9 +455,7 @@ public:
                                     UInt        uiPartAddr);
 
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
-#if SCM_420_IBC_BUGFIX
                                   Int          iPartIdx,
-#endif
                                   UInt         uiPartAddr,
                                   TComPattern* pcPatternKey,
                                   Pel*         piRefY,
