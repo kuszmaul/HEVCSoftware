@@ -638,7 +638,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[width]+2][g_aucConvertToBit[height]+2];
-#if SCM_PLT_ZERO_COLOR_OPT
   if (uiDictMaxSize > 0)
   {
     m_pcBinIf->encodeBinEP(uiSignalEscape);
@@ -660,14 +659,12 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
   }
 #endif
-#else
-  m_pcBinIf->encodeBinEP(uiSignalEscape);
-#endif
+
   while ( uiIdx < uiTotal )
   {
     UInt uiCtx = 0;
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
     if (uiIndexMaxSize > 1)
     {
 #endif
@@ -677,7 +674,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       UInt mode = pSPoint[uiTraIdx];
       m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
     }
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
     }
 #endif
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
@@ -704,7 +701,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         }
       }
       uiRun = pRun[uiTraIdx];
-#if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
+#if SCM_PLT_SINGLE_COLOR_OPT
       if (uiIndexMaxSize > 1)
 #endif
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
