@@ -4107,9 +4107,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 
   deriveRunAndCalcBits(pcCU, pcOrgYuv, rpcRecoYuv, uiBits, true,  PLT_SCAN_HORTRAV);
 #if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO
-#if SCM_PLT_SINGLE_COLOR_OPT
   if ((pcCU->getPLTSize(COMPONENT_Y, 0) + pcCU->getPLTEscape(COMPONENT_Y, 0)) > 1)
-#endif
 #else
 #if SCM__PLT_ZERO_SINGLE_COLOR_OPT
   if ((pcCU->getPLTSize(COMPONENT_Y, 0) + pcCU->getPLTEscape(COMPONENT_Y, 0)) > 1)
