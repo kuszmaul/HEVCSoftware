@@ -473,7 +473,6 @@ Void TDecSbac::xReadTruncBinCode(UInt& ruiSymbol, UInt uiMaxSymbol)
 }
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
-#if SCM_S0258_PLT_ESCAPE_SIG
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
 Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
 #else
@@ -481,24 +480,9 @@ Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const clas
 #endif
 #else
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth)
-#else
-Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint, Int iWidth)
-#endif
-#endif
-#else
-#if SCM_S0258_PLT_ESCAPE_SIG
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
 Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
 #else
 Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
-#endif
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-Pel TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#else
-Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth)
-#endif
 #endif
 #endif
 {
@@ -506,27 +490,17 @@ Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
   Int iRefLevel = MAX_INT;
   UInt uiTraIdx = m_puiScanOrder[uiIdx];
 
-#if SCM_S0258_PLT_ESCAPE_SIG
   if (uiIdx)
-#else
-  if (uiIdx && (PLT_ESCAPE != pSPoint[m_puiScanOrder[uiIdx - 1]]))
-#endif
   {
     UInt uiTraIdxLeft = m_puiScanOrder[uiIdx - 1];
     if (pSPoint[uiTraIdxLeft] == PLT_RUN_LEFT)
     {
-#if SCM_S0258_PLT_ESCAPE_SIG
       iRefLevel = pLevel[uiTraIdxLeft];
       if(pEscapeFlag[uiTraIdxLeft])
       {
         iRefLevel = iMaxSymbol - 1;
       }
-#else
-      iRefLevel = pLevel[uiTraIdxLeft];
-      iMaxSymbol--;
-#endif
     }
-#if SCM_S0258_PLT_ESCAPE_SIG
     else
     {
       assert(uiTraIdxLeft >= iWidth);
@@ -537,13 +511,6 @@ Void TDecSbac::xReadPLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSP
       }
     }
     iMaxSymbol--;
-#else
-    else if (uiTraIdx >= iWidth && pSPoint[uiTraIdxLeft] == PLT_RUN_ABOVE && pSPoint[uiTraIdx - iWidth] != PLT_ESCAPE )
-    {
-      iRefLevel = pLevel[uiTraIdx - iWidth];
-      iMaxSymbol--;
-    }
-#endif
   }
   if (iMaxSymbol > 1)
   {
@@ -714,9 +681,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   uiTotal = uiWidth * uiHeight;
   pLevel = pcCU->getLevel(compBegin) + offset;
   UChar *pSPoint = pcCU->getSPoint(compBegin) + offset;
-#if SCM_S0258_PLT_ESCAPE_SIG
   UChar *pEscapeFlag = pcCU->getEscapeFlag(compBegin) + offset;
-#endif
   UInt uiRun = 0;
   UInt uiStride = uiWidth;
 
@@ -922,37 +887,15 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
     if (!uiSymbol)
     {
-#if SCM_S0258_PLT_ESCAPE_SIG
 #if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
     siCurLevel = xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth, pEscapeFlag);
 #else
       xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth, pEscapeFlag);
 #endif
-#else
-#if SCM_S0269_PLT_RUN_MSB_IDX_CTX_CODED_IDX
-    siCurLevel = xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth);
-#else
-      xReadPLTIndex(uiIdx, pLevel, uiIndexMaxSize RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS), pSPoint, uiWidth);
-#endif
-#endif
     }
     UInt uiPreDecodeLevel = pLevel[uiTraIdx];
     Bool isEscapePixel = (!uiSymbol && (uiPreDecodeLevel == uiDictMaxSize)) ? true : false;
-#if SCM_S0258_PLT_ESCAPE_SIG
     pEscapeFlag[uiTraIdx] = (isEscapePixel)? 1: 0;
-#else
-    if (isEscapePixel)
-    {
-      pSPoint[uiTraIdx] = PLT_ESCAPE;
-      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-      {
-        xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-        pPixelValue[comp][uiTraIdx] = uiSymbol;
-      }
-      uiIdx++;
-    }
-    else
-#endif
     {
       UInt uiPos = 0;
 #if SCM_PLT_ZERO_COLOR_OPT || SCM_PLT_SINGLE_COLOR_OPT
@@ -970,9 +913,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       }
       else
       {
-#if SCM_PLT_ZERO_SINGLE_COLOR_OPT_COMBO && !SCM_S0258_PLT_ESCAPE_SIG
-        assert(uiSignalEscape == 0);
-#endif
         uiRun = uiTotal - uiIdx - 1;
       }
 #else
@@ -991,7 +931,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       {
         uiSymbol = uiPreDecodeLevel;
         pLevel[uiTraIdx] = uiSymbol;
-#if SCM_S0258_PLT_ESCAPE_SIG
         UChar sEscapeColor = (pLevel[uiTraIdx] == uiDictMaxSize);
         assert(pEscapeFlag[uiTraIdx] == sEscapeColor);
         if( sEscapeColor )
@@ -1002,7 +941,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             pPixelValue[comp][uiTraIdx] = uiSymbol;
           }
         }
-#endif
         uiPos = 0;
         while (uiPos < uiRun)
         {
@@ -1011,7 +949,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           uiTraIdx = m_puiScanOrder[uiIdx];
           pLevel [uiTraIdx] = uiSymbol;
           pSPoint[uiTraIdx] = PLT_RUN_LEFT;
-#if SCM_S0258_PLT_ESCAPE_SIG
           pEscapeFlag[uiTraIdx] = sEscapeColor;
           if( sEscapeColor )
           {
@@ -1021,14 +958,12 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
               pPixelValue[comp][uiTraIdx] = uiSymbol;
             }
           }
-#endif
         }
         uiIdx++;
       }
       else  //pSPoint[uiTraIdx] == PLT_RUN_ABOVE
       {
         pLevel[uiTraIdx] = pLevel[uiTraIdx - uiStride];
-#if SCM_S0258_PLT_ESCAPE_SIG
         pEscapeFlag[uiTraIdx] = pEscapeFlag[uiTraIdx - uiStride];
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -1036,9 +971,8 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           {
             xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
             pPixelValue[comp][uiTraIdx] = uiSymbol;
-          }        
+          }
         }
-#endif
         uiPos = 0;
         while (uiPos < uiRun)
         {
@@ -1047,7 +981,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           uiTraIdx = m_puiScanOrder[uiIdx];
           pLevel [uiTraIdx] =  pLevel [uiTraIdx - uiStride];
           pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
-#if SCM_S0258_PLT_ESCAPE_SIG
           pEscapeFlag[uiTraIdx] = pEscapeFlag[uiTraIdx - uiStride];
           if( pEscapeFlag[uiTraIdx] )
           {
@@ -1055,9 +988,8 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             {
               xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
               pPixelValue[comp][uiTraIdx] = uiSymbol;
-            } 
+            }
           }
-#endif
         }
         uiIdx++;
       }
