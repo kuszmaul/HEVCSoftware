@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -102,6 +102,13 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   // This calculates the common offset for all substreams in this slice.
   const UInt subStreamOffset=pcPic->getSubstreamForCtuAddr(startCtuRsAddr, true, pcSlice);
 
+  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
+  UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
+  Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  {
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
+  }
 
   if (depSliceSegmentsEnabled)
   {
@@ -115,6 +122,15 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       if ( pCurrentTile->getTileWidthInCtus() >= 2 || !wavefrontsEnabled)
       {
         pcSbacDecoder->loadContexts(&m_lastSliceSegmentEndContextState);
+        for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+        {
+          lastPLTUsedSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp];
+          lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
+          for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+          {
+            lastPLT[comp][idx] = m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx];
+          }
+        }
       }
     }
   }
@@ -160,7 +176,27 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
         {
           // Top-right is available, so use it.
           pcSbacDecoder->loadContexts( &m_entropyCodingSyncContextState );
+          for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+          {
+            lastPLTUsedSize[comp] = m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp];
+            lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
+            for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+            {
+              lastPLT[comp][idx] = m_entropyCodingSyncPaletteState.lastPLT[comp][idx];
+            }
+          }
         }
+      }
+
+    }
+
+    for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+    {
+      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+      pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+      {
+        pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
     }
 
@@ -177,10 +213,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       {
         ComponentID compId=ComponentID(comp);
         sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < pcPic->getNumberValidComponents());
-        if (sliceEnabled[compId])
-        {
-          bIsSAOSliceEnabled=true;
-        }
+        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
         saoblkParam[compId].modeIdc = SAO_MODE_OFF;
       }
       if (bIsSAOSliceEnabled)
@@ -208,6 +241,26 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     m_pcCuDecoder->decodeCtu     ( pCtu, isLastCtuOfSliceSegment );
     m_pcCuDecoder->decompressCtu ( pCtu );
 
+    if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) != PLT_SIZE_INVALID )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
+      }
+    }
+    if( pCtu->getLastPLTInLcuSizeFinal( COMPONENT_Y ) )
+    {
+      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
+      {
+        lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
+
+        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+        {
+          lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
+        }
+      }
+    }
+
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
@@ -216,33 +269,42 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     if ( ctuXPosInCtus == tileXPosInCtus+1 && wavefrontsEnabled)
     {
       m_entropyCodingSyncContextState.loadContexts( pcSbacDecoder );
+      for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+        m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+        for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+        {
+          m_entropyCodingSyncPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+        }
+      }
     }
 
-    if (isLastCtuOfSliceSegment)
+    // Should the sub-stream/stream be terminated after this CTU?
+    // (end of slice-segment, end of tile, end of wavefront-CTU-row)
+    if (isLastCtuOfSliceSegment ||
+         (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
+          ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
+         )
+       )
     {
-#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-      pcSbacDecoder->parseRemainingBytes(false);
-#endif
-      if(!pcSlice->getDependentSliceSegmentFlag())
-      {
-        pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
-      }
-      pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
-    }
-    else if (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
-             ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
-            )
-    {
-      // The sub-stream/stream should be terminated after this CTU.
-      // (end of slice-segment, end of tile, end of wavefront-CTU-row)
       UInt binVal;
       pcSbacDecoder->parseTerminatingBit( binVal );
       assert( binVal );
 #if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-      pcSbacDecoder->parseRemainingBytes(true);
+      pcSbacDecoder->parseRemainingBytes(!isLastCtuOfSliceSegment);
 #endif
-    }
 
+      if (isLastCtuOfSliceSegment)
+      {
+        if(!pcSlice->getDependentSliceSegmentFlag())
+        {
+          pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
+        }
+        pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
+        break;
+      }
+    }
   }
 
   assert(isLastCtuOfSliceSegment == true);
@@ -251,8 +313,73 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   if( depSliceSegmentsEnabled )
   {
     m_lastSliceSegmentEndContextState.loadContexts( pcSbacDecoder );//ctx end of dep.slice
+    for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+    {
+      m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
+      m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+      {
+        m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
+      }
+    }
   }
 
+}
+
+ParameterSetManagerDecoder::ParameterSetManagerDecoder()
+: m_vpsBuffer(MAX_NUM_VPS)
+, m_spsBuffer(MAX_NUM_SPS)
+, m_ppsBuffer(MAX_NUM_PPS)
+{
+}
+
+ParameterSetManagerDecoder::~ParameterSetManagerDecoder()
+{
+
+}
+
+TComVPS* ParameterSetManagerDecoder::getPrefetchedVPS  (Int vpsId)
+{
+  if (m_vpsBuffer.getPS(vpsId) != NULL )
+  {
+    return m_vpsBuffer.getPS(vpsId);
+  }
+  else
+  {
+    return getVPS(vpsId);
+  }
+}
+
+
+TComSPS* ParameterSetManagerDecoder::getPrefetchedSPS  (Int spsId)
+{
+  if (m_spsBuffer.getPS(spsId) != NULL )
+  {
+    return m_spsBuffer.getPS(spsId);
+  }
+  else
+  {
+    return getSPS(spsId);
+  }
+}
+
+TComPPS* ParameterSetManagerDecoder::getPrefetchedPPS  (Int ppsId)
+{
+  if (m_ppsBuffer.getPS(ppsId) != NULL )
+  {
+    return m_ppsBuffer.getPS(ppsId);
+  }
+  else
+  {
+    return getPPS(ppsId);
+  }
+}
+
+Void     ParameterSetManagerDecoder::applyPrefetchedPS()
+{
+  m_vpsMap.mergePSList(m_vpsBuffer);
+  m_ppsMap.mergePSList(m_ppsBuffer);
+  m_spsMap.mergePSList(m_spsBuffer);
 }
 
 //! \}

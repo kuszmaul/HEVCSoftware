@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,11 @@ struct GOPEntry
   Int m_numRefPics;
   Int m_referencePics[MAX_NUM_REF_PICS];
   Int m_usedByCurrPic[MAX_NUM_REF_PICS];
+#if AUTO_INTER_RPS
   Int m_interRPSPrediction;
+#else
+  Bool m_interRPSPrediction;
+#endif
   Int m_deltaRPS;
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
@@ -111,6 +115,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+  Bool      m_printClippedPSNR;
   Bool      m_cabacZeroWordPaddingEnabled;
 
   /* profile & level */
@@ -162,8 +167,13 @@ protected:
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoCtuBoundary;
 
+
   //====== Motion search ========
-  Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
+  Int       m_iFastSearch;                      //  0:Full search  1:TZ search  2:Selective search
+  Bool      m_useHashBasedIntraBlockCopySearch; // Enable the use of hash based search is applied to 8x8 blocks
+  Int       m_intraBlockCopySearchWidthInCTUs;  // Search range for IBC (-1: full frame search)
+  UInt      m_intraBlockCopyNonHashSearchWidthInCTUs; // IBC search range for conventional non-hash based method (i.e., fast/full search)
+  Bool      m_useHashBasedME;                   //  Hash based inter search 
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
 
@@ -180,6 +190,8 @@ protected:
   Bool      m_bUseAdaptQpSelect;
 #endif
   Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
+  Bool      m_intraBlockCopyFastSearch;
   Bool      m_useHighPrecisionPredictionWeighting;
   Bool      m_bUseAdaptiveQP;
   Int       m_iQPAdaptationRange;
@@ -205,6 +217,14 @@ protected:
   Bool      m_useSingleSignificanceMapContext;
   Bool      m_useGolombRiceParameterAdaptation;
   Bool      m_alignCABACBeforeBypass;
+  Bool      m_bRGBformat;
+  Bool      m_useColourTrans;
+  Bool      m_useLL;
+  Bool      m_usePaletteMode;
+  UInt      m_uiPLTMaxSize;
+  UInt      m_uiPLTMaxPredSize;
+  Bool      m_useAdaptiveMvResolution;
+
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -226,6 +246,7 @@ protected:
   UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
   Bool      m_disableIntraReferenceSmoothing;
+  Bool      m_disableIntraBoundaryFilter;
   Bool      m_loopFilterAcrossTilesEnabledFlag;
   Bool      m_tileUniformSpacingFlag;
   Int       m_iNumColumnsMinus1;
@@ -234,6 +255,7 @@ protected:
   std::vector<Int> m_tileRowHeight;
 
   Int       m_iWaveFrontSynchro;
+  Int       m_iWaveFrontSubstreams;
 
   Int       m_decodedPictureHashSEIEnabled;              ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_bufferingPeriodSEIEnabled;
@@ -255,7 +277,7 @@ protected:
   Int       m_cameraIsoSpeedValue;
   Int       m_exposureIndexIdc;
   Int       m_exposureIndexValue;
-  Bool      m_exposureCompensationValueSignFlag;
+  Int       m_exposureCompensationValueSignFlag;
   Int       m_exposureCompensationValueNumerator;
   Int       m_exposureCompensationValueDenomIdc;
   Int       m_refScreenLuminanceWhite;
@@ -306,7 +328,7 @@ protected:
   ScalingListMode m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
   Char*     m_scalingListFile;          ///< quantization matrix file name
   Int       m_TMVPModeId;
-  Bool      m_signHideFlag;
+  Int       m_signHideFlag;
   Bool      m_RCEnableRateControl;
   Int       m_RCTargetBitrate;
   Int       m_RCKeepHierarchicalBit;
@@ -389,6 +411,8 @@ public:
   Bool      getPrintSequenceMSE             ()         const { return m_printSequenceMSE;           }
   Void      setPrintSequenceMSE             (Bool value)     { m_printSequenceMSE = value;          }
 
+  Bool      getPrintClippedPSNR             ()         const { return m_printClippedPSNR;           }
+  Void      setPrintClippedPSNR             (Bool value)     { m_printClippedPSNR = value;          }
   Bool      getCabacZeroWordPaddingEnabled()           const { return m_cabacZeroWordPaddingEnabled;  }
   Void      setCabacZeroWordPaddingEnabled(Bool value)       { m_cabacZeroWordPaddingEnabled = value; }
 
@@ -430,6 +454,10 @@ public:
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
+  Void      setUseHashBasedIntraBCSearch    ( Bool b )       { m_useHashBasedIntraBlockCopySearch = b; }
+  Void      setIntraBCSearchWidthInCTUs     ( Int  i )       { m_intraBlockCopySearchWidthInCTUs = i; }
+  Void      setIntraBCNonHashSearchWidthInCTUs( UInt u )     { m_intraBlockCopyNonHashSearchWidthInCTUs = u; }
+  Void      setUseHashBasedME               ( Bool b )       { m_useHashBasedME = b; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
 
@@ -453,6 +481,12 @@ public:
 
   Bool      getUseExtendedPrecision         ()         const { return m_useExtendedPrecision;  }
   Void      setUseExtendedPrecision         (Bool value)     { m_useExtendedPrecision = value; }
+
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+
+  Bool      getUseIntraBlockCopyFastSearch() const     { return m_intraBlockCopyFastSearch;  }
+  Void      setUseIntraBlockCopyFastSearch(Bool value) { m_intraBlockCopyFastSearch = value; }
 
   Bool      getUseHighPrecisionPredictionWeighting() const { return m_useHighPrecisionPredictionWeighting; }
   Void      setUseHighPrecisionPredictionWeighting(Bool value) { m_useHighPrecisionPredictionWeighting = value; }
@@ -495,6 +529,11 @@ public:
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
+  Bool      getUseHashBasedIntraBCSearch    ()      { return m_useHashBasedIntraBlockCopySearch; }
+  Bool      getUseIntraBCFullFrameSearch    ()      { return m_intraBlockCopySearchWidthInCTUs == -1; }
+  Int       getIntraBCSearchWidthInCTUs     ()      { return m_intraBlockCopySearchWidthInCTUs; }
+  UInt      getIntraBCNonHashSearchWidthInCTUs()    { return m_intraBlockCopyNonHashSearchWidthInCTUs; }
+  Bool      getUseHashBasedME               ()      { return m_useHashBasedME; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
 
   //==== Quality control ========
@@ -555,6 +594,20 @@ public:
   Void setUseGolombRiceParameterAdaptation             (const Bool value)       { m_useGolombRiceParameterAdaptation = value; }
   Bool getAlignCABACBeforeBypass                       ()       const      { return m_alignCABACBeforeBypass;  }
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
+  Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
+  Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
+  Bool getUseColourTrans                                ()            const { return                  m_useColourTrans;}
+  Void setUseColourTrans                                (const Bool value)  { m_useColourTrans               = value;  }
+  Bool getUseLossless                                  ()            const { return m_useLL;}
+  Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
+  Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
+  Bool getUsePLTMode()                                               const { return m_usePaletteMode; }
+  Void setPLTMaxSize                                    (const UInt value) { m_uiPLTMaxSize = value; }
+  UInt getPLTMaxSize()                                               const { return m_uiPLTMaxSize; }
+  Void setPLTMaxPredSize                                (const UInt value) { m_uiPLTMaxPredSize = value; }
+  UInt getPLTMaxPredSize()                                           const { return m_uiPLTMaxPredSize; }
+  Void setUseAdaptiveMvResolution                      ( Bool b )          { m_useAdaptiveMvResolution = b; }
+  Bool getUseAdaptiveMvResolution                      ()            const { return m_useAdaptiveMvResolution; }
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
@@ -563,6 +616,8 @@ public:
   Void setTransformSkipLog2MaxSize                     ( UInt u )    { m_transformSkipLog2MaxSize  = u;       }
   Void setDisableIntraReferenceSmoothing               (Bool bValue) { m_disableIntraReferenceSmoothing=bValue; }
   Bool getDisableIntraReferenceSmoothing               ()      const { return m_disableIntraReferenceSmoothing; }
+  Void setDisableIntraBoundaryFilter                   (Bool bValue) { m_disableIntraBoundaryFilter=bValue; }
+  Bool getDisableIntraBoundaryFilter                   ()      const { return m_disableIntraBoundaryFilter; }
 
   Int*      getdQPs                         ()      { return m_aidQP;       }
   UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
@@ -601,6 +656,8 @@ public:
   Void  xCheckGSParameters();
   Void  setWaveFrontSynchro(Int iWaveFrontSynchro)                   { m_iWaveFrontSynchro = iWaveFrontSynchro; }
   Int   getWaveFrontsynchro()                                        { return m_iWaveFrontSynchro; }
+  Void  setWaveFrontSubstreams(Int iWaveFrontSubstreams)             { m_iWaveFrontSubstreams = iWaveFrontSubstreams; }
+  Int   getWaveFrontSubstreams()                                     { return m_iWaveFrontSubstreams; }
   Void  setDecodedPictureHashSEIEnabled(Int b)                       { m_decodedPictureHashSEIEnabled = b; }
   Int   getDecodedPictureHashSEIEnabled()                            { return m_decodedPictureHashSEIEnabled; }
   Void  setBufferingPeriodSEIEnabled(Int b)                          { m_bufferingPeriodSEIEnabled = b; }
@@ -647,8 +704,8 @@ public:
   Int   getTMISEIExposurIndexIdc()                                   { return m_exposureIndexIdc;  }
   Void  setTMISEIExposureIndexValue(Int b)                           { m_exposureIndexValue = b;  }
   Int   getTMISEIExposurIndexValue()                                 { return m_exposureIndexValue;  }
-  Void  setTMISEIExposureCompensationValueSignFlag(Bool b)           { m_exposureCompensationValueSignFlag = b;  }
-  Bool  getTMISEIExposureCompensationValueSignFlag()                 { return m_exposureCompensationValueSignFlag;  }
+  Void  setTMISEIExposureCompensationValueSignFlag(Int b)            { m_exposureCompensationValueSignFlag = b;  }
+  Int   getTMISEIExposureCompensationValueSignFlag()                 { return m_exposureCompensationValueSignFlag;  }
   Void  setTMISEIExposureCompensationValueNumerator(Int b)           { m_exposureCompensationValueNumerator = b;  }
   Int   getTMISEIExposureCompensationValueNumerator()                { return m_exposureCompensationValueNumerator;  }
   Void  setTMISEIExposureCompensationValueDenomIdc(Int b)            { m_exposureCompensationValueDenomIdc =b;  }
@@ -742,8 +799,8 @@ public:
   Char*        getScalingListFile     ()                             { return m_scalingListFile;    }
   Void         setTMVPModeId ( Int  u )                              { m_TMVPModeId = u;    }
   Int          getTMVPModeId ()                                      { return m_TMVPModeId; }
-  Void         setSignHideFlag( Bool signHideFlag )                  { m_signHideFlag = signHideFlag; }
-  Bool         getSignHideFlag()                                     { return m_signHideFlag; }
+  Void         setSignHideFlag( Int signHideFlag )                   { m_signHideFlag = signHideFlag; }
+  Int          getSignHideFlag()                                     { return m_signHideFlag; }
   Bool         getUseRateCtrl         ()                             { return m_RCEnableRateControl;   }
   Void         setUseRateCtrl         ( Bool b )                     { m_RCEnableRateControl = b;      }
   Int          getTargetBitrate       ()                             { return m_RCTargetBitrate;       }

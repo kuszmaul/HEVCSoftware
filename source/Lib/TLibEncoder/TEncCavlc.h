@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,26 +67,26 @@ public:
 protected:
   TComSlice*    m_pcSlice;
 
-  Void codeShortTermRefPicSet              ( const TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
+  Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
 
 public:
 
   Void  resetEntropy          ();
-  SliceType determineCabacInitIdx  () { assert(0); return I_SLICE; };
+  Void  determineCabacInitIdx  () {};
 
   Void  setBitstream          ( TComBitIf* p )  { m_pcBitIf = p;  }
   Void  setSlice              ( TComSlice* p )  { m_pcSlice = p;  }
   Void  resetBits             ()                { m_pcBitIf->resetBits(); }
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
-  Void  codeVPS                 ( const TComVPS* pcVPS );
-  Void  codeVUI                 ( const TComVUI *pcVUI, const TComSPS* pcSPS );
-  Void  codeSPS                 ( const TComSPS* pcSPS );
-  Void  codePPS                 ( const TComPPS* pcPPS );
+  Void  codeVPS                 ( TComVPS* pcVPS );
+  Void  codeVUI                 ( TComVUI *pcVUI, TComSPS* pcSPS );
+  Void  codeSPS                 ( TComSPS* pcSPS );
+  Void  codePPS                 ( TComPPS* pcPPS );
   Void  codeSliceHeader         ( TComSlice* pcSlice );
-  Void  codePTL                 ( const TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
-  Void  codeProfileTier         ( const ProfileTierLevel* ptl, const Bool bIsSubLayer );
-  Void  codeHrdParameters       ( const TComHRD *hrd, Bool commonInfPresentFlag, UInt maxNumSubLayersMinus1 );
+  Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
+  Void  codeProfileTier         ( ProfileTierLevel* ptl );
+  Void  codeHrdParameters       ( TComHRD *hrd, Bool commonInfPresentFlag, UInt maxNumSubLayersMinus1 );
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
   Void  codeTerminatingBit      ( UInt uilsLast );
   Void  codeSliceFinish         ();
@@ -94,6 +94,10 @@ public:
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -103,6 +107,9 @@ public:
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -130,12 +137,17 @@ public:
 
   Void xCodePredWeightTable          ( TComSlice* pcSlice );
 
-  Void codeScalingList  ( const TComScalingList &scalingList );
-  Void xCodeScalingList ( const TComScalingList* scalingList, UInt sizeId, UInt listId);
+  Void codeScalingList  ( TComScalingList* scalingList );
+  Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
   Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
+
+  Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void estBvdBin0Cost    (Int *Bin0Cost) { assert(0); }
 };
 
 //! \}

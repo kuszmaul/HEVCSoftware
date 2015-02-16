@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include <stdint.h>
 #include <vector>
 #include <stdio.h>
+#include <assert.h>
 #include "CommonDef.h"
 
 //! \ingroup TLibCommon
@@ -84,6 +85,7 @@ class TComOutputBitstream : public TComBitIf
   UInt m_num_held_bits; /// number of bits not flushed to bytestream.
   UChar m_held_bits; /// the bits held and not flushed to bytestream.
                              /// this value is always msb-aligned, bigendian.
+
 public:
   // create / destroy
   TComOutputBitstream();
@@ -174,9 +176,9 @@ protected:
 
 public:
   /**
-   * Create a new bitstream reader object that reads from buf.  Ownership
-   * of buf remains with the callee, although the constructed object
-   * will hold a reference to buf
+   * Create a new bitstream reader object that reads from #buf#.  Ownership
+   * of #buf# remains with the callee, although the constructed object
+   * will hold a reference to #buf#
    */
   TComInputBitstream(std::vector<uint8_t>* buf);
   ~TComInputBitstream();
@@ -220,8 +222,6 @@ public:
   UInt      getEmulationPreventionByteLocation  ( UInt idx )                  { return m_emulationPreventionByteLocation[ idx ];    }
   Void      clearEmulationPreventionByteLocation()                            { m_emulationPreventionByteLocation.clear();          }
   Void      setEmulationPreventionByteLocation  ( std::vector<UInt> vec )     { m_emulationPreventionByteLocation = vec;            }
-
-  const std::vector<uint8_t> *getFifo() const { return m_fifo; }
 };
 
 //! \}

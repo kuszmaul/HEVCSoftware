@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,8 @@ public:
   Void  setBitstream        ( TComInputBitstream* p )   { m_pcBitstream = p; }
   Void  parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void  parseQtCbf          ( class TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
+  Void  parseColourTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
+
   Void  parseQtRootCbf      ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   Void  parseVPS            ( TComVPS* pcVPS );
   Void  parseSPS            ( TComSPS* pcSPS );
@@ -77,9 +79,9 @@ public:
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
-  Void  parseProfileTier    (ProfileTierLevel *ptl, const Bool bIsSubLayer);
+  Void  parseProfileTier    (ProfileTierLevel *ptl);
   Void  parseHrdParameters  (TComHRD *hrd, Bool cprms_present_flag, UInt tempLevelHigh);
-  Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManager *parameterSetManager);
+  Void  parseSliceHeader    ( TComSlice* pcSlice, ParameterSetManagerDecoder *parameterSetManager);
   Void  parseTerminatingBit ( UInt& ruiBit );
   Void  parseRemainingBytes ( Bool noTrailingBytesExpected );
 
@@ -87,14 +89,25 @@ public:
 
   Void parseSkipFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp);
+  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanTraverseModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePartSize        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void parseIntraDirLumaAng ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+
   Void parseIntraDirChroma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+
+  Void parseIntraBCFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void parseIntraBC         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void parseIntraBCBvd      ( TComDataCU* pcCU, UInt uiAbsPartAddr,UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
 
   Void parseInterDir        ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx       ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
@@ -111,7 +124,7 @@ public:
 
   Void parseIPCMInfo        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
-  Void xParsePredWeightTable ( TComSlice* pcSlice, const TComSPS *sps );
+  Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList     ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
 

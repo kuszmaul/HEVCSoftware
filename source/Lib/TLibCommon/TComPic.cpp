@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@ TComPic::TComPic()
 : m_uiTLayer                              (0)
 , m_bUsedByCurr                           (false)
 , m_bIsLongTerm                           (false)
+, m_apcPicSym                             (NULL)
 , m_pcPicYuvPred                          (NULL)
 , m_pcPicYuvResi                          (NULL)
 , m_bReconstructed                        (false)
@@ -60,22 +61,24 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+  m_apcPicYuvCSC = NULL;
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWidth, const UInt uiMaxHeight, const UInt uiMaxDepth, const Bool bIsVirtual)
+Void TComPic::create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
+                      Int *numReorderPics,
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+                      Bool bIsVirtual)
 {
-  const ChromaFormat chromaFormatIDC=sps.getChromaFormatIdc();
-  const Int iWidth  = sps.getPicWidthInLumaSamples();
-  const Int iHeight = sps.getPicHeightInLumaSamples();
-
-  m_picSym.create( sps, pps, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_apcPicSym     = new TComPicSym;  m_apcPicSym   ->create( chromaFormatIDC, iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth
+                    , uiPLTMaxSize, uiPLTMaxPredSize
+               );
   if (!bIsVirtual)
   {
-    m_apcPicYuv[PIC_YUV_ORG    ]   = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+    m_apcPicYuv[PIC_YUV_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
     m_apcPicYuv[PIC_YUV_TRUE_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_TRUE_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
   m_apcPicYuv[PIC_YUV_REC]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_REC]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
@@ -86,11 +89,29 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWi
     deleteSEIs (m_SEIs);
   }
   m_bUsedByCurr = false;
+
+  /* store conformance window parameters with picture */
+  m_conformanceWindow = conformanceWindow;
+
+  /* store display window parameters with picture */
+  m_defaultDisplayWindow = defaultDisplayWindow;
+
+  /* store number of reorder pics with picture */
+  memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
+
+  m_hashMap.clearAll();
+
+  return;
 }
 
 Void TComPic::destroy()
 {
-  m_picSym.destroy();
+  if (m_apcPicSym)
+  {
+    m_apcPicSym->destroy();
+    delete m_apcPicSym;
+    m_apcPicSym = NULL;
+  }
 
   for(UInt i=0; i<NUM_PIC_YUV; i++)
   {
@@ -100,6 +121,14 @@ Void TComPic::destroy()
       delete m_apcPicYuv[i];
       m_apcPicYuv[i]  = NULL;
     }
+  }
+
+  m_hashMap.clearAll();
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
   }
 
   deleteSEIs(m_SEIs);
@@ -125,13 +154,12 @@ Bool  TComPic::getSAOMergeAvailability(Int currAddr, Int mergeAddr)
 UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRaster, TComSlice *pcSlice)
 {
   UInt subStrm;
-  const bool bWPPEnabled=pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag();
-  const TComPicSym &picSym            = *(getPicSym());
 
-  if ((bWPPEnabled && picSym.getFrameHeightInCtus()>1) || (picSym.getNumTiles()>1)) // wavefronts, and possibly tiles being used.
+  if (pcSlice->getPPS()->getNumSubstreams() > 1) // wavefronts, and possibly tiles being used.
   {
-    if (bWPPEnabled)
+    if (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag())
     {
+      const TComPicSym &picSym            = *(getPicSym());
       const UInt ctuRsAddr                = bAddressInRaster?ctuAddr : picSym.getCtuTsToRsAddrMap(ctuAddr);
       const UInt frameWidthInCtus         = picSym.getFrameWidthInCtus();
       const UInt tileIndex                = picSym.getTileIdxMap(ctuRsAddr);
@@ -146,6 +174,7 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
     }
     else
     {
+      const TComPicSym &picSym            = *(getPicSym());
       const UInt ctuRsAddr                = bAddressInRaster?ctuAddr : picSym.getCtuTsToRsAddrMap(ctuAddr);
       const UInt tileIndex                = picSym.getTileIdxMap(ctuRsAddr);
       subStrm=tileIndex;
@@ -159,5 +188,16 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
   return subStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64 );
+}
 
 //! \}

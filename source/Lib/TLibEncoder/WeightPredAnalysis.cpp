@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,9 @@
 
 WeightPredAnalysis::WeightPredAnalysis()
 {
+  m_weighted_pred_flag = false;
+  m_weighted_bipred_flag = false;
+
   for ( UInt lst =0 ; lst<NUM_REF_PIC_LIST_01 ; lst++ )
   {
     for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ )
@@ -63,7 +66,10 @@ WeightPredAnalysis::WeightPredAnalysis()
 }
 
 
-//! calculate AC and DC values for current original image
+/** calculate AC and DC values for current original image
+ * \param TComSlice *slice
+ * \returns Void
+ */
 Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
 {
   //===== calculate AC/DC value =====
@@ -88,12 +94,8 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
       const Pel *pPel = pPic->getAddr(compID);
 
       for(Int y = 0; y < iHeight; y++, pPel+=iStride )
-      {
         for(Int x = 0; x < iWidth; x++ )
-        {
           iOrgDC += (Int)( pPel[x] );
-        }
-      }
     }
 
     const Int64 iOrgNormDC = ((iOrgDC+(iSample>>1)) / iSample);
@@ -103,12 +105,8 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
       const Pel *pPel = pPic->getAddr(compID);
 
       for(Int y = 0; y < iHeight; y++, pPel += iStride )
-      {
         for(Int x = 0; x < iWidth; x++ )
-        {
           iOrgAC += abs( (Int)pPel[x] - (Int)iOrgNormDC );
-        }
-      }
     }
 
     const Int fixedBitShift = (slice->getSPS()->getUseHighPrecisionPredictionWeighting())?RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION:0;
@@ -120,7 +118,33 @@ Void WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *const slice)
 }
 
 
-//! check weighted pred or non-weighted pred
+/** store weighted_pred_flag and weighted_bipred_idc values
+ * \param weighted_pred_flag
+ * \param weighted_bipred_idc
+ * \returns Void
+ */
+Void  WeightPredAnalysis::xStoreWPparam(const Bool weighted_pred_flag, const Bool weighted_bipred_flag)
+{
+  m_weighted_pred_flag   = weighted_pred_flag;
+  m_weighted_bipred_flag = weighted_bipred_flag;
+}
+
+
+/** restore weighted_pred_flag and weighted_bipred_idc values
+ * \param TComSlice *slice
+ * \returns Void
+ */
+Void  WeightPredAnalysis::xRestoreWPparam(TComSlice *const slice)
+{
+  slice->getPPS()->setUseWP   (m_weighted_pred_flag);
+  slice->getPPS()->setWPBiPred(m_weighted_bipred_flag);
+}
+
+
+/** check weighted pred or non-weighted pred
+ * \param TComSlice *slice
+ * \returns Void
+ */
 Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
 {
   const TComPicYuv *pPic = slice->getPic()->getPicYuvOrg();
@@ -140,8 +164,8 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
 
   if(iPresentCnt==0)
   {
-    slice->setTestWeightPred(false);
-    slice->setTestWeightBiPred(false);
+    slice->getPPS()->setUseWP(false);
+    slice->getPPS()->setWPBiPred(false);
 
     for ( UInt lst=0 ; lst<NUM_REF_PIC_LIST_01 ; lst++ )
     {
@@ -160,15 +184,12 @@ Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *const slice)
     }
     slice->setWpScaling( m_wp );
   }
-  else
-  {
-    slice->setTestWeightPred(slice->getPPS()->getUseWP());
-    slice->setTestWeightBiPred(slice->getPPS()->getWPBiPred());
-  }
 }
 
 
-//! estimate wp tables for explicit wp
+/** estimate wp tables for explicit wp
+ * \param TComSlice *slice
+ */
 Void WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *const slice)
 {
   Int  iDenom         = 6;
@@ -188,15 +209,17 @@ Void WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *const slice)
     }
   } while (validRangeFlag == false);
 
-  // selecting whether WP is used, or not (fast search)
-  // NOTE: This is not operating on a slice, but the entire picture.
+  // selecting whether WP is used, or not
   xSelectWP(slice, iDenom);
 
   slice->setWpScaling( m_wp );
 }
 
 
-//! update wp tables for explicit wp w.r.t range limitation
+/** update wp tables for explicit wp w.r.t ramge limitation
+ * \param TComSlice *slice
+ * \returns Bool
+ */
 Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int log2Denom)
 {
   const Int  numComp                    = slice->getPic()->getPicYuvOrg()->getNumberValidComponents();
@@ -252,9 +275,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
         const Int deltaWeight   = (defaultWeight - weight);
 
         if(deltaWeight >= range || deltaWeight < -range)
-        {
           return false;
-        }
 
         m_wp[refList][refIdxTemp][comp].bPresentFlag      = true;
         m_wp[refList][refIdxTemp][comp].iWeight           = weight;
@@ -267,7 +288,11 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
 }
 
 
-//! select whether weighted pred enables or not.
+/** select whether weighted pred enables or not.
+ * \param TComSlice *slice
+ * \param log2Denom
+ * \returns Bool
+ */
 Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 {
         TComPicYuv *const pPic                                = slice->getPic()->getPicYuvOrg();
@@ -319,7 +344,18 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 }
 
 
-//! calculate SAD values for both WP version and non-WP version.
+/** calculate SAD values for both WP version and non-WP version.
+ * \param Pel *pOrgPel
+ * \param Pel *pRefPel
+ * \param Int iWidth
+ * \param Int iHeight
+ * \param Int iOrgStride
+ * \param Int iRefStride
+ * \param Int iLog2Denom
+ * \param Int iWeight
+ * \param Int iOffset
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcSADvalueWP(const Int   bitDepth,
                                           const Pel  *pOrgPel,
                                           const Pel  *pRefPel,

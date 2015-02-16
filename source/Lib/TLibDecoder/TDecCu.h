@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #endif // _MSC_VER > 1000
 
 #include "TLibCommon/TComTrQuant.h"
+#include "TLibCommon/TComPrediction.h"
 #include "TDecEntropy.h"
 
 //! \ingroup TLibDecoder
@@ -77,7 +78,9 @@ public:
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
 
   /// create internal buffers
-  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC );
+  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC
+                                 ,UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+    );
 
   /// destroy internal buffers
   Void  destroy                 ();
@@ -96,10 +99,17 @@ protected:
   Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-
+  Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
+  Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
+  Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
+  Void xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
   Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );
+  Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
+  Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
 
   Void xReconPCM                ( TComDataCU* pcCU, UInt uiDepth );
 

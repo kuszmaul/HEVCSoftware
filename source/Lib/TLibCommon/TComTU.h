@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,12 @@ class TComTU; // forward declaration
 class TComDataCU; // forward declaration
 
 //----------------------------------------------------------------------------------------------------------------------
+// Constants
+//----------------------------------------------------------------------------------------------------------------------
+#define DELTA_QP_FOR_YCgCo_TRANS     -5
+#define DELTA_QP_FOR_YCgCo_TRANS_V   -3
 
+//----------------------------------------------------------------------------------------------------------------------
 
 class TComTU
 {

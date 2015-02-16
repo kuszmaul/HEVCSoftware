@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,7 @@ enum TComCodingStatisticsType
   STATS__NAL_UNIT_HEADER_BITS,
   STATS__CABAC_INITIALISATION,
   STATS__CABAC_BITS__TQ_BYPASS_FLAG,
+  STATS__CABAC_DICTIONARY_BITS,
   STATS__CABAC_BITS__SKIP_FLAG,
   STATS__CABAC_BITS__MERGE_FLAG,
   STATS__CABAC_BITS__MERGE_INDEX,
@@ -88,6 +89,7 @@ enum TComCodingStatisticsType
   STATS__BYTE_ALIGNMENT_BITS,
   STATS__TRAILING_BITS,
   STATS__EXPLICIT_RDPCM_BITS,
+  STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR,
   STATS__CABAC_EP_BIT_ALIGNMENT,
   STATS__CABAC_BITS__ALIGNED_SIGN_BIT,
   STATS__CABAC_BITS__ALIGNED_ESCAPE_BITS,
@@ -138,6 +140,7 @@ static inline const Char* getName(TComCodingStatisticsType name)
     "BYTE_ALIGNMENT_BITS",
     "TRAILING_BITS",
     "EXPLICIT_RDPCM_BITS",
+    "CABAC_BITS__INTRA_BLOCK_COPY_VECTOR",
     "CABAC_EP_BIT_ALIGNMENT",
     "CABAC_BITS__ALIGNED_SIGN_BIT",
     "CABAC_BITS__ALIGNED_ESCAPE_BITS"
@@ -245,15 +248,11 @@ class TComCodingStatistics
     static Void OutputLine(const Char *pName, const Char sep, UInt width, const Char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
     {
       if (width==0)
-      {
         OutputLine(pName, sep, "-", pSubClassStr, sCABAC, sEP);
-      }
       else
-      {
         printf("%c%-45s%c  %6d %6s %12lld %12lld %12lld %12lld %12lld %12lld %12lld (%12lld)%c\n",
           sep=='~'?'[':' ', pName, sep, 1<<width, pSubClassStr,
               sCABAC.count, sCABAC.sum, sCABAC.bits, sEP.count, sEP.sum, sEP.bits, sCABAC.bits+sEP.bits, (sCABAC.bits+sEP.bits)/8, sep=='~'?']':' ');
-      }
     }
     static Void OutputLine(const Char *pName, const Char sep, const Char *pWidthString, const Char *pSubClassStr, const SStat &sCABAC, const SStat &sEP)
     {
@@ -273,7 +272,6 @@ class TComCodingStatistics
       printf("--%s",pText);
       UInt tot=0;
       for(;pText[tot]!=0; tot++);
-
       tot+=2;
       for (; tot<168; tot++)
       {
@@ -320,22 +318,12 @@ class TComCodingStatistics
           SStat &sCABACorig=data.statistics[i][c];
           SStat &sEP=data.statistics_ep[i][c];
 
-          if (sCABACorig.bits==0 && sEP.bits==0)
-          {
-            continue;
-          }
+          if (sCABACorig.bits==0 && sEP.bits==0) continue;
 
           SStat sCABAC;
           {
-            Int64 thisCABACbits=sCABACorig.bits/es;
-            if (i==STATS__CABAC_INITIALISATION && sCABACorig.bits!=0)
-            {
-              thisCABACbits+=cr;
-              cr=0;
-            }
-            sCABAC.bits=thisCABACbits;
-            sCABAC.count=sCABACorig.count;
-            sCABAC.sum=sCABACorig.sum;
+            Int64 thisCABACbits=sCABACorig.bits/es; if (i==STATS__CABAC_INITIALISATION && sCABACorig.bits!=0) { thisCABACbits+=cr; cr=0; }
+            sCABAC.bits=thisCABACbits; sCABAC.count=sCABACorig.count; sCABAC.sum=sCABACorig.sum;
           }
           UInt width=TComCodingStatisticsClassType::GetSubClassWidth(c);
           OutputLine(pName, ':', width, TComCodingStatisticsClassType::GetSubClassString(c), sCABAC, sEP);

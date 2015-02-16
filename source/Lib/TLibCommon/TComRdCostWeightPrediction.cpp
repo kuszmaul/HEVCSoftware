@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,7 +139,14 @@ Distortion TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
 // --------------------------------------------------------------------------------------------------------------------
 // HADAMARD with step (used in fractional search)
 // --------------------------------------------------------------------------------------------------------------------
-//! get weighted Hadamard cost for 2x2 block
+/** get weighted Hadamard cost for 2x2 block
+ * \param *piOrg
+ * \param *piCur
+ * \param iStrideOrg
+ * \param iStrideCur
+ * \param iStep
+ * \returns Distortion
+ */
 Distortion xCalcHADs2x2w( const WPScalingParam &wpCur, const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   const Int round  = wpCur.round;
@@ -176,7 +183,14 @@ Distortion xCalcHADs2x2w( const WPScalingParam &wpCur, const Pel *piOrg, const P
 }
 
 
-//! get weighted Hadamard cost for 4x4 block
+/** get weighted Hadamard cost for 4x4 block
+ * \param *piOrg
+ * \param *piCur
+ * \param iStrideOrg
+ * \param iStrideCur
+ * \param iStep
+ * \returns Distortion
+ */
 Distortion xCalcHADs4x4w( const WPScalingParam &wpCur, const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   const Int round  = wpCur.round;
@@ -285,7 +299,14 @@ Distortion xCalcHADs4x4w( const WPScalingParam &wpCur, const Pel *piOrg, const P
 }
 
 
-//! get weighted Hadamard cost for 8x8 block
+/** get weighted Hadamard cost for 8x8 block
+ * \param *piOrg
+ * \param *piCur
+ * \param iStrideOrg
+ * \param iStrideCur
+ * \param iStep
+ * \returns Distortion
+ */
 Distortion xCalcHADs8x8w( const WPScalingParam &wpCur, const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Distortion sad=0;
@@ -403,7 +424,10 @@ Distortion xCalcHADs8x8w( const WPScalingParam &wpCur, const Pel *piOrg, const P
 }
 
 
-//! get weighted Hadamard cost
+/** get weighted Hadamard cost
+ * \param *pcDtParam
+ * \returns Distortion
+ */
 Distortion TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
 {
   const Pel        *piOrg      = pcDtParam->pOrg;

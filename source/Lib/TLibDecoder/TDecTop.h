@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,6 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComTrQuant.h"
-#include "TLibCommon/TComPrediction.h"
 #include "TLibCommon/SEI.h"
 
 #include "TDecGop.h"
@@ -72,7 +71,7 @@ private:
   Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
 
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
-  ParameterSetManager     m_parameterSetManager;  // storage for parameter sets
+  ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets
   TComSlice*              m_apcSlicePilot;
 
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
@@ -123,6 +122,9 @@ public:
   Void  deletePicBuffer();
 
   
+  TComSPS* getActiveSPS() { return m_parameterSetManagerDecoder.getActiveSPS(); }
+
+
   Void  executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
   Void  checkNoOutputPriorPics (TComList<TComPic*>* rpcListPic);
 
@@ -137,14 +139,14 @@ public:
   Void  setDecodedSEIMessageOutputStream(std::ostream *pOpStream) { m_pDecodedSEIOutputStream = pOpStream; }
 
 protected:
-  Void  xGetNewPicBuffer  (const TComSPS &sps, const TComPPS &pps, TComPic*& rpcPic, const UInt temporalLayer);
+  Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xCreateLostPicture (Int iLostPOC);
 
   Void      xActivateParameterSets();
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
-  Void      xDecodeVPS(const std::vector<UChar> *pNaluData);
-  Void      xDecodeSPS(const std::vector<UChar> *pNaluData);
-  Void      xDecodePPS(const std::vector<UChar> *pNaluData);
+  Void      xDecodeVPS();
+  Void      xDecodeSPS();
+  Void      xDecodePPS();
   Void      xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType );
 
 };// END CLASS DEFINITION TDecTop

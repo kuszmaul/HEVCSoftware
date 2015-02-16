@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -121,6 +121,10 @@ private:
   Bool                    m_pictureTimingSEIPresentInAU;
   Bool                    m_nestedBufferingPeriodSEIPresentInAU;
   Bool                    m_nestedPictureTimingSEIPresentInAU;
+
+  Bool                    m_hasLosslessPSNR[MAX_NUM_COMPONENT];
+  Double                  m_losslessPSNR[MAX_NUM_COMPONENT];
+
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -161,17 +165,18 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 
   Double xCalculateRVM();
+  Bool xGetUseIntegerMv( TComSlice* pcSlice );
 
-  SEIActiveParameterSets*           xCreateSEIActiveParameterSets (const TComSPS *sps);
+  SEIActiveParameterSets*           xCreateSEIActiveParameterSets (TComSPS *sps);
   SEIFramePacking*                  xCreateSEIFramePacking();
   SEISegmentedRectFramePacking*     xCreateSEISegmentedRectFramePacking();
   SEIDisplayOrientation*            xCreateSEIDisplayOrientation();
   SEIToneMappingInfo*               xCreateSEIToneMappingInfo();
-  SEITempMotionConstrainedTileSets* xCreateSEITempMotionConstrainedTileSets (const TComPPS *pps);
+  SEITempMotionConstrainedTileSets* xCreateSEITempMotionConstrainedTileSets ();
   SEIKneeFunctionInfo*              xCreateSEIKneeFunctionInfo();
   SEIChromaSamplingFilterHint*      xCreateSEIChromaSamplingFilterHint(Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIdc);
 
-  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, const TComSPS *sps, const TComPPS *pps);
+  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
   Int xGetFirstSeiLocation (AccessUnit &accessUnit);
   Void xResetNonNestedSEIPresentFlags()
   {
@@ -184,7 +189,7 @@ protected:
     m_nestedBufferingPeriodSEIPresentInAU    = false;
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
-  Void applyDeblockingFilterMetric( TComPic* pcPic, UInt uiNumSlices );
+  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
 };// END CLASS DEFINITION TEncGOP
 
 //! \}

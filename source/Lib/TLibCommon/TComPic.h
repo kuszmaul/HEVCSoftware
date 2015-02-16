@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
+#include "TComHash.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -64,15 +65,19 @@ private:
   UInt                  m_uiTLayer;               //  Temporal layer
   Bool                  m_bUsedByCurr;            //  Used by current picture
   Bool                  m_bIsLongTerm;            //  IS long term picture
-  TComPicSym            m_picSym;                 //  Symbol
+  TComPicSym*           m_apcPicSym;              //  Symbol
   TComPicYuv*           m_apcPicYuv[NUM_PIC_YUV];
-
+  TComPicYuv*           m_apcPicYuvCSC;
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
   Bool                  m_bCheckLTMSB;
+
+  Int                   m_numReorderPics[MAX_TLAYER];
+  Window                m_conformanceWindow;
+  Window                m_defaultDisplayWindow;
 
   Bool                  m_isTop;
   Bool                  m_isField;
@@ -81,11 +86,16 @@ private:
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
+  TComHash              m_hashMap;
+
 public:
   TComPic();
   virtual ~TComPic();
 
-  Void          create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWidth, const UInt uiMaxHeight, const UInt uiMaxDepth, const Bool bIsVirtual /*= false*/ );
+  Void          create( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow,
+                        Int *numReorderPics,
+  UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+  Bool bIsVirtual /*= false*/ );
 
   virtual Void  destroy();
 
@@ -99,28 +109,39 @@ public:
   Void          setCheckLTMSBPresent     (Bool b ) {m_bCheckLTMSB=b;}
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
-  TComPicSym*   getPicSym()           { return  &m_picSym;    }
-  TComSlice*    getSlice(Int i)       { return  m_picSym.getSlice(i);  }
-  Int           getPOC() const        { return  m_picSym.getSlice(m_uiCurrSliceIdx)->getPOC();  }
-  TComDataCU*   getCtu( UInt ctuRsAddr )           { return  m_picSym.getCtu( ctuRsAddr ); }
-  const TComDataCU* getCtu( UInt ctuRsAddr ) const { return  m_picSym.getCtu( ctuRsAddr ); }
+  TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
+  TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
+  Int           getPOC() const        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
+  TComDataCU*   getCtu( UInt ctuRsAddr )           { return  m_apcPicSym->getCtu( ctuRsAddr ); }
+  const TComDataCU* getCtu( UInt ctuRsAddr ) const { return  m_apcPicSym->getCtu( ctuRsAddr ); }
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
+  TComPicYuv*   getPicYuvCSC()        { return  m_apcPicYuvCSC; }
+  Void          allocateCSCBuffer( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
+                { assert( m_apcPicYuvCSC == NULL ); m_apcPicYuvCSC = new TComPicYuv; m_apcPicYuvCSC->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth ); }
+  Void          releaseCSCBuffer()    { m_apcPicYuvCSC->destroy(); delete m_apcPicYuvCSC; m_apcPicYuvCSC = NULL; }
+  Void          exchangePicYuvRec()
+                {
+                   TComPicYuv* pcTmpPicYuv;
+                   pcTmpPicYuv = m_apcPicYuv[PIC_YUV_REC];
+                   m_apcPicYuv[PIC_YUV_REC] = m_apcPicYuvCSC;
+                   m_apcPicYuvCSC = pcTmpPicYuv;
+                }
 
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }
   Void          setPicYuvResi( TComPicYuv* pcPicYuv )       { m_pcPicYuvResi = pcPicYuv; }
 
-  UInt          getNumberOfCtusInFrame() const     { return m_picSym.getNumberOfCtusInFrame(); }
-  UInt          getNumPartInCtuWidth() const       { return m_picSym.getNumPartInCtuWidth();   }
-  UInt          getNumPartInCtuHeight() const      { return m_picSym.getNumPartInCtuHeight();  }
-  UInt          getNumPartitionsInCtu() const      { return m_picSym.getNumPartitionsInCtu();  }
-  UInt          getFrameWidthInCtus() const        { return m_picSym.getFrameWidthInCtus();    }
-  UInt          getFrameHeightInCtus() const       { return m_picSym.getFrameHeightInCtus();   }
-  UInt          getMinCUWidth() const              { return m_picSym.getMinCUWidth();          }
-  UInt          getMinCUHeight() const             { return m_picSym.getMinCUHeight();         }
+  UInt          getNumberOfCtusInFrame() const     { return m_apcPicSym->getNumberOfCtusInFrame(); }
+  UInt          getNumPartInCtuWidth() const       { return m_apcPicSym->getNumPartInCtuWidth();   }
+  UInt          getNumPartInCtuHeight() const      { return m_apcPicSym->getNumPartInCtuHeight();  }
+  UInt          getNumPartitionsInCtu() const      { return m_apcPicSym->getNumPartitionsInCtu();  }
+  UInt          getFrameWidthInCtus() const        { return m_apcPicSym->getFrameWidthInCtus();    }
+  UInt          getFrameHeightInCtus() const       { return m_apcPicSym->getFrameHeightInCtus();   }
+  UInt          getMinCUWidth() const              { return m_apcPicSym->getMinCUWidth();          }
+  UInt          getMinCUHeight() const             { return m_apcPicSym->getMinCUHeight();         }
 
   Int           getStride(const ComponentID id) const          { return m_apcPicYuv[PIC_YUV_REC]->getStride(id); }
   Int           getComponentScaleX(const ComponentID id) const    { return m_apcPicYuv[PIC_YUV_REC]->getComponentScaleX(id); }
@@ -133,19 +154,25 @@ public:
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark () const      { return m_bNeededForOutput;  }
 
+  Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
+  Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
+
   Void          compressMotion();
   UInt          getCurrSliceIdx() const           { return m_uiCurrSliceIdx;                }
   Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
-  UInt          getNumAllocatedSlice() const      {return m_picSym.getNumAllocatedSlice();}
-  Void          allocateNewSlice()           {m_picSym.allocateNewSlice();         }
-  Void          clearSliceBuffer()           {m_picSym.clearSliceBuffer();         }
+  UInt          getNumAllocatedSlice() const      {return m_apcPicSym->getNumAllocatedSlice();}
+  Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
+  Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 
-  const Window& getConformanceWindow() const { return m_picSym.getSPS().getConformanceWindow(); }
-  Window        getDefDisplayWindow() const  { return m_picSym.getSPS().getVuiParametersPresentFlag() ? m_picSym.getSPS().getVuiParameters()->getDefaultDisplayWindow() : Window(); }
+  Window&       getConformanceWindow()  { return m_conformanceWindow; }
+  Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
 
   Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
   UInt          getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRaster, TComSlice *pcSlice);
+  
+  Void          addPictureToHashMapForInter();
+  TComHash*     getHashMap() { return &m_hashMap; }
 
   /* field coding parameters*/
 

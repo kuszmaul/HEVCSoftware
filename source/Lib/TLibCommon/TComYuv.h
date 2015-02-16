@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 
 #ifndef __TCOMYUV__
 #define __TCOMYUV__
+#include <assert.h>
 #include "CommonDef.h"
 #include "TComPicYuv.h"
 #include "TComRectangle.h"
@@ -170,10 +171,8 @@ public:
                                                 UInt width=getWidth(id);
                                                 Int blkX = ( iTransUnitIdx * iBlkSizeForComponent ) &  ( width - 1 );
                                                 Int blkY = ( iTransUnitIdx * iBlkSizeForComponent ) &~ ( width - 1 );
-                                                if (m_chromaFormatIDC==CHROMA_422 && id!=COMPONENT_Y)
-                                                {
-                                                  blkY<<=1;
-                                                }
+                                                if (m_chromaFormatIDC==CHROMA_422 && id!=COMPONENT_Y) blkY<<=1;
+//                                                assert((blkX<getWidth(id) && blkY<getHeight(id)));
                                                 return m_apiBuf[id] + blkX + blkY * iBlkSizeForComponent;
                                               }
 
@@ -182,10 +181,9 @@ public:
                                                 UInt width=getWidth(id);
                                                 Int blkX = ( iTransUnitIdx * iBlkSizeForComponent ) &  ( width - 1 );
                                                 Int blkY = ( iTransUnitIdx * iBlkSizeForComponent ) &~ ( width - 1 );
-                                                if (m_chromaFormatIDC==CHROMA_422 && id!=COMPONENT_Y)
-                                                {
-                                                  blkY<<=1;
-                                                }
+                                                if (m_chromaFormatIDC==CHROMA_422 && id!=COMPONENT_Y) blkY<<=1;
+//                                                UInt w=getWidth(id), h=getHeight(id);
+//                                                assert((blkX<w && blkY<h));
                                                 return m_apiBuf[id] + blkX + blkY * iBlkSizeForComponent;
                                               }
 
@@ -201,7 +199,8 @@ public:
   UInt         getNumberValidComponents   ()                     const { return ::getNumberValidComponents(m_chromaFormatIDC); }
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
-
+  Void         convert          (const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
+  Void         DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth);
 };// END CLASS DEFINITION TComYuv
 
 //! \}

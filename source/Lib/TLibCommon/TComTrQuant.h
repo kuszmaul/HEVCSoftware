@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -135,6 +135,7 @@ public:
                              DEBUG_STRING_FN_DECLAREP(psDebug));
 
   Void invRecurTransformNxN ( const ComponentID compID, TComYuv *pResidual, TComTU &rTu );
+  Void invRecurTransformACTNxN ( TComYuv *pResidual, TComTU &rTu );
 
   Void rdpcmNxN   ( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride, const QpParam& cQP, TCoeff* pcCoeff, TCoeff &uiAbsSum, RDPCMMode& rdpcmMode );
   Void invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcResidual, const UInt uiStride );
@@ -146,6 +147,7 @@ public:
 #if RDOQ_CHROMA_LAMBDA
   Void setLambdas(const Double lambdas[MAX_NUM_COMPONENT]) { for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) m_lambdas[component] = lambdas[component]; }
   Void selectLambda(const ComponentID compIdx) { m_dLambda = m_lambdas[compIdx]; }
+  Void adjustBitDepthandLambdaForColourTrans(Int delta_QP);
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}
 #endif
@@ -181,11 +183,11 @@ public:
   Void setFlatScalingList  (const ChromaFormat format);
   Void xsetFlatScalingList ( UInt list, UInt size, Int qp, const ChromaFormat format);
   Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
-  Void xSetScalingListDec  ( const TComScalingList &scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
+  Void xSetScalingListDec  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
   Void setScalingList      ( TComScalingList *scalingList, const ChromaFormat format);
-  Void setScalingListDec   ( const TComScalingList &scalingList, const ChromaFormat format);
+  Void setScalingListDec   ( TComScalingList *scalingList, const ChromaFormat format);
   Void processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
-  Void processScalingListDec( const Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
+  Void processScalingListDec( Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
 #if ADAPTIVE_QP_SELECTION
   Void    initSliceQpDelta() ;
   Void    storeSliceQpNext(TComSlice* pcSlice);
@@ -194,7 +196,7 @@ public:
   Int*    getSliceNSamples(){ return m_sliceNsamples ;}
   Double* getSliceSumC()    { return m_sliceSumC; }
 #endif
-  Void transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const TCoeff resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint);
+  Void transformSkipQuantOneSample(TComTU &rTu, const ComponentID compID, const Pel resiDiff, TCoeff* pcCoeff, const UInt uiPos, const QpParam &cQP, const Bool bUseHalfRoundingPoint);
   Void invTrSkipDeQuantOneSample(TComTU &rTu, ComponentID compID, TCoeff pcCoeff, Pel &reconSample, const QpParam &cQP, UInt uiPos );
 
 protected:

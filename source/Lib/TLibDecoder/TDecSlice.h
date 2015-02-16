@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,9 @@ private:
   TDecSbac        m_lastSliceSegmentEndContextState;    ///< context storage for state at the end of the previous slice-segment (used for dependent slices only).
   TDecSbac        m_entropyCodingSyncContextState;      ///< context storate for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
 
+  PaletteInfoBuffer m_lastSliceSegmentEndPaletteState;
+  PaletteInfoBuffer m_entropyCodingSyncPaletteState;
+
 public:
   TDecSlice();
   virtual ~TDecSlice();
@@ -78,6 +81,27 @@ public:
 
   Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic* pcPic, TDecSbac* pcSbacDecoder );
 };
+
+
+class ParameterSetManagerDecoder:public ParameterSetManager
+{
+public:
+  ParameterSetManagerDecoder();
+  virtual ~ParameterSetManagerDecoder();
+  Void     storePrefetchedVPS(TComVPS *vps)  { m_vpsBuffer.storePS( vps->getVPSId(), vps); };
+  TComVPS* getPrefetchedVPS  (Int vpsId);
+  Void     storePrefetchedSPS(TComSPS *sps)  { m_spsBuffer.storePS( sps->getSPSId(), sps); };
+  TComSPS* getPrefetchedSPS  (Int spsId);
+  Void     storePrefetchedPPS(TComPPS *pps)  { m_ppsBuffer.storePS( pps->getPPSId(), pps); };
+  TComPPS* getPrefetchedPPS  (Int ppsId);
+  Void     applyPrefetchedPS();
+
+private:
+  ParameterSetMap<TComVPS> m_vpsBuffer;
+  ParameterSetMap<TComSPS> m_spsBuffer;
+  ParameterSetMap<TComPPS> m_ppsBuffer;
+};
+
 
 //! \}
 

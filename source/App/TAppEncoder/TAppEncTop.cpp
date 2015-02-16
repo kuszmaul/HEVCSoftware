@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,8 +97,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPrintMSEBasedSequencePSNR                         ( m_printMSEBasedSequencePSNR);
   m_cTEncTop.setPrintFrameMSE                                     ( m_printFrameMSE);
   m_cTEncTop.setPrintSequenceMSE                                  ( m_printSequenceMSE);
+  m_cTEncTop.setPrintClippedPSNR                          (m_printClippedPSNR);
   m_cTEncTop.setCabacZeroWordPaddingEnabled                       ( m_cabacZeroWordPaddingEnabled );
-
   m_cTEncTop.setFrameRate                                         ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                                         ( m_FrameSkip );
   m_cTEncTop.setSourceWidth                                       ( m_iSourceWidth );
@@ -140,6 +140,10 @@ Void TAppEncTop::xInitLibCfg()
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
+  m_cTEncTop.setUseHashBasedIntraBCSearch                         ( m_useHashBasedIntraBlockCopySearch );
+  m_cTEncTop.setIntraBCSearchWidthInCTUs                          ( m_intraBlockCopySearchWidthInCTUs );
+  m_cTEncTop.setIntraBCNonHashSearchWidthInCTUs                   ( m_intraBlockCopyNonHashSearchWidthInCTUs );
+  m_cTEncTop.setUseHashBasedME                            ( m_useHashBasedME );
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );
 
@@ -159,6 +163,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseAdaptiveQP                                     ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange                                 ( m_iQPAdaptationRange );
   m_cTEncTop.setUseExtendedPrecision                              ( m_useExtendedPrecision );
+  m_cTEncTop.setUseIntraBlockCopy                         ( m_useIntraBlockCopy );
+  m_cTEncTop.setUseIntraBlockCopyFastSearch               ( m_intraBlockCopyFastSearch );
   m_cTEncTop.setUseHighPrecisionPredictionWeighting               ( m_useHighPrecisionPredictionWeighting );
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                                         ( m_uiDeltaQpRD  );
@@ -224,7 +230,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setSaoCtuBoundary                                    ( m_saoCtuBoundary);
   m_cTEncTop.setPCMInputBitDepthFlag                              ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag                              ( m_bPCMFilterDisableFlag);
-
+  m_cTEncTop.setDisableIntraBoundaryFilter                        ( m_disableIntraBoundaryFilter );
   m_cTEncTop.setDisableIntraReferenceSmoothing                    (!m_enableIntraReferenceSmoothing );
   m_cTEncTop.setDecodedPictureHashSEIEnabled                      ( m_decodedPictureHashSEIEnabled );
   m_cTEncTop.setRecoveryPointSEIEnabled                           ( m_recoveryPointSEIEnabled );
@@ -279,10 +285,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMCTSSEIEnabled                                   ( m_tmctsSEIEnabled );
   m_cTEncTop.setTimeCodeSEIEnabled                                ( m_timeCodeSEIEnabled );
   m_cTEncTop.setNumberOfTimeSets                                  ( m_timeCodeSEINumTs );
-  for(Int i = 0; i < m_timeCodeSEINumTs; i++)
-  {
-    m_cTEncTop.setTimeSet(m_timeSetArray[i], i);
-  }
+  for(Int i = 0; i < m_timeCodeSEINumTs; i++) { m_cTEncTop.setTimeSet(m_timeSetArray[i], i); }
   m_cTEncTop.setKneeSEIEnabled                                    ( m_kneeSEIEnabled );
   m_cTEncTop.setKneeSEIId                                         ( m_kneeSEIId );
   m_cTEncTop.setKneeSEICancelFlag                                 ( m_kneeSEICancelFlag );
@@ -312,6 +315,7 @@ Void TAppEncTop::xInitLibCfg()
   }
   m_cTEncTop.setLFCrossTileBoundaryFlag                           ( m_bLFCrossTileBoundaryFlag );
   m_cTEncTop.setWaveFrontSynchro                                  ( m_iWaveFrontSynchro );
+  m_cTEncTop.setWaveFrontSubstreams                               ( m_iWaveFrontSubstreams );
   m_cTEncTop.setTMVPModeId                                        ( m_TMVPModeId );
   m_cTEncTop.setUseScalingListId                                  ( m_useScalingListId  );
   m_cTEncTop.setScalingListFile                                   ( m_scalingListFile   );
@@ -359,6 +363,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxBitsPerMinCuDenom                              ( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal                         ( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical                           ( m_log2MaxMvLengthVertical );
+  m_cTEncTop.setRGBFormatFlag                                     ( m_bRGBformat                   );
+  m_cTEncTop.setUseColourTrans                                    ( m_useColourTrans                );
+  m_cTEncTop.setUseLossless                                       ( m_useLL                        );
+  m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
+  m_cTEncTop.setPLTMaxSize                                        ( m_uiPLTMaxSize                 );
+  m_cTEncTop.setPLTMaxPredSize                                    ( m_uiPLTMaxPredSize             );
+  m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
 }
 
 Void TAppEncTop::xCreateLib()
@@ -469,14 +480,8 @@ Void TAppEncTop::encode()
     }
 
     // call encoding function for one frame
-    if ( m_isField )
-    {
-      m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded, m_isTopFieldFirst );
-    }
-    else
-    {
-      m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
-    }
+    if ( m_isField ) m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded, m_isTopFieldFirst );
+    else             m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, flush ? 0 : &cPicYuvTrueOrg, snrCSC, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
 
     // write bistream to file if necessary
     if ( iNumEncoded > 0 )
@@ -551,11 +556,7 @@ Void TAppEncTop::xDeleteBuffer( )
 
 }
 
-/** 
-  Write access units to output file.
-  \param bitstreamFile  target bitstream file
-  \param iNumEncoded    number of encoded frames
-  \param accessUnits    list of access units to be written
+/** \param iNumEncoded  number of encoded frames
  */
 Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits)
 {

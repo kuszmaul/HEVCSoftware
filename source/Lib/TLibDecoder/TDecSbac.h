@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ public:
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
 
-  Void  parseSliceHeader          ( TComSlice* /*pcSlice*/, ParameterSetManager* /*parameterSetManager*/) {}
+  Void  parseSliceHeader          ( TComSlice* /*pcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/) {}
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseRemainingBytes       ( Bool noTrailingBytesExpected);
   Void  parseMVPIdx               ( Int& riMVPIdx          );
@@ -97,12 +97,26 @@ private:
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount, const class TComCodingStatisticsClassType &whichStat );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const class TComCodingStatisticsClassType &whichStat );
+  Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun, const class TComCodingStatisticsClassType &whichStat);
+  Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat);
+  Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
+  Pel   xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+  UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
+  UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
+
 #else
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
+  Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun);
+  Void  xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize);
+  Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
+  Pel   xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+  UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
+  UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
 #endif
+
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
@@ -111,23 +125,34 @@ public:
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
+  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parsePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
-  Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
-  Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
-  Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+  Void parseIntraBCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void parseIntraBC        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Void parseIntraBCBvd     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
+  Void parseInterDir       ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
+  Void parseRefFrmIdx      ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
+  Void parseMvd            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
 
   Void parseCrossComponentPrediction ( class TComTU &rTu, ComponentID compID );
 
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComTU &rTu, const ComponentID compID, const Bool lowestLevel );
+  Void parseColourTransformFlag( UInt uiAbsPartIdx, Bool& uiFlag );
+
   Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
 
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -144,6 +169,7 @@ public:
   Void  parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID );
 
 private:
+  UInt* m_puiScanOrder;
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -177,12 +203,22 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
+  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+  ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
+
+  ContextModel3DBuffer m_cIntraBCBVDSCModel;
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;  
 };
 
 //! \}

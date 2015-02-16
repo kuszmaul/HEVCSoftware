@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,12 +160,9 @@ Void TComLoopFilter::loopFilterPic( TComPic* pcPic )
 // ====================================================================================================================
 
 /**
- Deblocking filter process in CU-based (the same function as conventional's)
-
- \param pcCU             Pointer to CTU/CU structure
- \param uiAbsZorderIdx   Position in CU
- \param uiDepth          Depth in CU
- \param edgeDir          the direction of the edge in block boundary (horizontal/vertical), which is added newly
+ - Deblocking filter process in CU-based (the same function as conventional's)
+ .
+ \param Edge          the direction of the edge in block boundary (horizonta/vertical), which is added newly
 */
 Void TComLoopFilter::xDeblockCU( TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, DeblockEdgeDir edgeDir )
 {
@@ -435,13 +432,13 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pCtu, DeblockEdgeD
   }
 
   //-- Set BS for Intra MB : BS = 4 or 3
-  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) )
+  if ( pcCUP->isLoopFilterIntra(uiPartP) || pcCUQ->isLoopFilterIntra(uiPartQ) )
   {
     uiBs = 2;
   }
 
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
-  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) )
+  if ( !pcCUP->isLoopFilterIntra(uiPartP) && !pcCUQ->isLoopFilterIntra(uiPartQ) )
   {
     UInt nsPartQ = uiPartQ;
     UInt nsPartP = uiPartP;
@@ -452,6 +449,10 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pCtu, DeblockEdgeD
     }
     else
     {
+      if (edgeDir == EDGE_HOR)
+      {
+        pcCUP = pcCUQ->getPUAbove(uiPartP, uiPartQ, !pCtu->getSlice()->getLFCrossSliceBoundaryFlag(), false, !m_bLFCrossTileBoundary);
+      }
       if (pcSlice->isInterB() || pcCUP->getSlice()->isInterB())
       {
         Int iRefIdx;
@@ -470,22 +471,10 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pCtu, DeblockEdgeD
         TComMv pcMvQ0 = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartQ);
         TComMv pcMvQ1 = pcCUQ->getCUMvField(REF_PIC_LIST_1)->getMv(uiPartQ);
 
-        if (piRefP0 == NULL)
-        {
-          pcMvP0.setZero();
-        }
-        if (piRefP1 == NULL)
-        {
-          pcMvP1.setZero();
-        }
-        if (piRefQ0 == NULL)
-        {
-          pcMvQ0.setZero();
-        }
-        if (piRefQ1 == NULL)
-        {
-          pcMvQ1.setZero();
-        }
+        if (piRefP0 == NULL) pcMvP0.setZero();
+        if (piRefP1 == NULL) pcMvP1.setZero();
+        if (piRefQ0 == NULL) pcMvQ0.setZero();
+        if (piRefQ1 == NULL) pcMvQ1.setZero();
 
         if ( ((piRefP0==piRefQ0)&&(piRefP1==piRefQ1)) || ((piRefP0==piRefQ1)&&(piRefP1==piRefQ0)) )
         {
@@ -534,14 +523,8 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pCtu, DeblockEdgeD
         TComMv pcMvP0 = pcCUP->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartP);
         TComMv pcMvQ0 = pcCUQ->getCUMvField(REF_PIC_LIST_0)->getMv(uiPartQ);
 
-        if (piRefP0 == NULL)
-        {
-          pcMvP0.setZero();
-        }
-        if (piRefQ0 == NULL)
-        {
-          pcMvQ0.setZero();
-        }
+        if (piRefP0 == NULL) pcMvP0.setZero();
+        if (piRefQ0 == NULL) pcMvQ0.setZero();
 
         uiBs  = ((piRefP0 != piRefQ0) ||
                  (abs(pcMvQ0.getHor() - pcMvP0.getHor()) >= 4) ||
@@ -640,7 +623,9 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
         Int dq = dq0 + dq3;
         Int d =  d0 + d3;
 
-        if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+        if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag() ||
+                          (pcCU->getPredictionMode(uiAbsZorderIdx) == MODE_INTRA &&
+                           pcCU->getPLTModeFlag(uiAbsZorderIdx) == true))
         {
           // Check if each of PUs is I_PCM with LF disabling
           bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
@@ -649,6 +634,10 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
           // check if each of PUs is lossless coded
           bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx) );
           bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx) );
+
+          // check if each of PUs is palette coded
+          bPartPNoFilter = bPartPNoFilter || (pcCUP->getPredictionMode(uiPartPIdx) == MODE_INTRA && pcCUP->getPLTModeFlag(uiPartPIdx) == true);
+          bPartQNoFilter = bPartQNoFilter || (pcCUQ->getPredictionMode(uiPartQIdx) == MODE_INTRA && pcCUQ->getPLTModeFlag(uiPartQIdx) == true);
         }
 
         if (d < iBeta)
@@ -759,8 +748,9 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
       }
 
       iQP_P = pcCUP->getQP(uiPartPIdx);
-
-      if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+      if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag() ||
+                        (pcCU->getPredictionMode(uiAbsZorderIdx) == MODE_INTRA &&
+                         pcCU->getPLTModeFlag(uiAbsZorderIdx) == true))
       {
         // Check if each of PUs is I_PCM with LF disabling
         bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
@@ -769,6 +759,10 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         // check if each of PUs is lossless coded
         bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx));
         bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx));
+
+        // check if each of PUs is palette coded
+        bPartPNoFilter = bPartPNoFilter || (pcCUP->getPredictionMode(uiPartPIdx) == MODE_INTRA && pcCUP->getPLTModeFlag(uiPartPIdx) == true);
+        bPartQNoFilter = bPartQNoFilter || (pcCUQ->getPredictionMode(uiPartQIdx) == MODE_INTRA && pcCUQ->getPLTModeFlag(uiPartQIdx) == true);
       }
 
       for ( UInt chromaIdx = 0; chromaIdx < 2; chromaIdx++ )
@@ -779,14 +773,8 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         iQP = ((iQP_P + iQP_Q + 1) >> 1) + chromaQPOffset;
         if (iQP >= chromaQPMappingTableSize)
         {
-          if (pcPicYuvRec->getChromaFormat()==CHROMA_420)
-          {
-            iQP -=6;
-          }
-          else if (iQP>51)
-          {
-            iQP=51;
-          }
+          if (pcPicYuvRec->getChromaFormat()==CHROMA_420) iQP -=6;
+          else if (iQP>51) iQP=51;
         }
         else if (iQP >= 0 )
         {
