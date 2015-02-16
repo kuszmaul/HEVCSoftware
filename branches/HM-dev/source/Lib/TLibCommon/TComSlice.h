@@ -296,7 +296,6 @@ private:
   UInt m_initialCpbRemovalDelayLengthMinus1;
   UInt m_cpbRemovalDelayLengthMinus1;
   UInt m_dpbOutputDelayLengthMinus1;
-  UInt m_numDU;
   HrdSubLayerInfo m_HRD[MAX_TLAYER];
 
 public:
@@ -382,8 +381,6 @@ public:
   Void    setCbrFlag( Int layer, Int cpbcnt, Int nalOrVcl, Bool value )              { m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl] = value;            }
   Bool    getCbrFlag( Int layer, Int cpbcnt, Int nalOrVcl ) const                    { return m_HRD[layer].cbrFlag[cpbcnt][nalOrVcl];             }
 
-  Void    setNumDU( UInt value )                                                     { m_numDU = value;                                           }
-  UInt    getNumDU( ) const                                                          { return m_numDU;                                            }
   Bool    getCpbDpbDelaysPresentFlag( ) const                      { return getNalHrdParametersPresentFlag() || getVclHrdParametersPresentFlag(); }
 };
 
@@ -938,8 +935,7 @@ public:
   Void                   setVuiParametersPresentFlag(Bool b)                                             { m_vuiParametersPresentFlag = b;                                      }
   TComVUI*               getVuiParameters()                                                              { return &m_vuiParameters;                                             }
   const TComVUI*         getVuiParameters() const                                                        { return &m_vuiParameters;                                             }
-  Void                   setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess );
-
+  Void                   setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRate, Bool randomAccess );
   const TComPTL*         getPTL() const                                                                  { return &m_pcPTL;                                                     }
   TComPTL*               getPTL()                                                                        { return &m_pcPTL;                                                     }
 

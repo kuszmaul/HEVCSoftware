@@ -209,7 +209,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash* pictureHashSEI)
 {
   /* calculate MD5sum for entire reconstructed picture */
-  TComDigest recon_digest;
+  TComPictureHash recon_digest;
   Int numChar=0;
   const Char* hashType = "\0";
 
@@ -250,19 +250,19 @@ static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash*
   if (pictureHashSEI)
   {
     ok = "(OK)";
-    if (recon_digest != pictureHashSEI->m_digest)
+    if (recon_digest != pictureHashSEI->m_pictureHash)
     {
       ok = "(***ERROR***)";
       mismatch = true;
     }
   }
 
-  printf("[%s:%s,%s] ", hashType, digestToString(recon_digest, numChar).c_str(), ok);
+  printf("[%s:%s,%s] ", hashType, hashToString(recon_digest, numChar).c_str(), ok);
 
   if (mismatch)
   {
     g_md5_mismatch = true;
-    printf("[rx%s:%s] ", hashType, digestToString(pictureHashSEI->m_digest, numChar).c_str());
+    printf("[rx%s:%s] ", hashType, hashToString(pictureHashSEI->m_pictureHash, numChar).c_str());
   }
 }
 //! \}

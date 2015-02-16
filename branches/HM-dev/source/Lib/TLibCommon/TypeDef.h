@@ -758,11 +758,11 @@ struct TUEntropyCodingParameters
 };
 
 
-struct TComDigest
+struct TComPictureHash
 {
   std::vector<UChar> hash;
 
-  Bool operator==(const TComDigest &other) const
+  Bool operator==(const TComPictureHash &other) const
   {
     if (other.hash.size() != hash.size())
     {
@@ -778,7 +778,7 @@ struct TComDigest
     return true;
   }
 
-  Bool operator!=(const TComDigest &other) const
+  Bool operator!=(const TComPictureHash &other) const
   {
     return !(*this == other);
   }

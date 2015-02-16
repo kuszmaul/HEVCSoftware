@@ -1622,7 +1622,7 @@ Void  TComSPS::createRPSList( Int numRPS )
   m_RPSList.create(numRPS);
 }
 
-Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess )
+Void TComSPS::setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRate, Bool randomAccess )
 {
   if( !getVuiParametersPresentFlag() )
   {
@@ -1660,7 +1660,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   hrd->setNalHrdParametersPresentFlag( rateCnt );
   hrd->setVclHrdParametersPresentFlag( rateCnt );
 
-  hrd->setSubPicCpbParamsPresentFlag( ( numDU > 1 ) );
+  hrd->setSubPicCpbParamsPresentFlag( useSubCpbParams );
 
   if( hrd->getSubPicCpbParamsPresentFlag() )
   {
@@ -1707,7 +1707,10 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 
     bitrateValue = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
-    duCpbSizeValue = bitRate/numDU;
+    // DU CPB size could be smaller, but we don't know how 
+    // in how many DUs the slice segment settings will result 
+    // (used to be: bitRate/numDU)
+    duCpbSizeValue = bitRate;
     duBitRateValue = bitRate;
 
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )

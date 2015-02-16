@@ -667,27 +667,13 @@ Void TEncTop::xInitSPS()
   }
   if( getPictureTimingSEIEnabled() || getDecodingUnitInfoSEIEnabled() )
   {
-    const UInt picWidth = m_cSPS.getPicWidthInLumaSamples();
-    const UInt picHeight= m_cSPS.getPicWidthInLumaSamples();
-
-    const UInt frameWidthInCtus   = ( picWidth + g_uiMaxCUWidth -1 ) / g_uiMaxCUWidth;
-    const UInt frameHeightInCtus  = ( picHeight + g_uiMaxCUHeight - 1 ) / g_uiMaxCUHeight;
-    const UInt numCtusInFrame = frameWidthInCtus * frameHeightInCtus;
-
-    UInt maxCU = getSliceArgument();
-    UInt numDU = ( getSliceMode() == FIXED_NUMBER_OF_CTU ) ? ( numCtusInFrame / maxCU ) : ( 0 );
-    if( numCtusInFrame % maxCU != 0 || numDU == 0 )
-    {
-      numDU ++;
-    }
-    m_cSPS.getVuiParameters()->getHrdParameters()->setNumDU( numDU );
-    m_cSPS.setHrdParameters( getFrameRate(), numDU, getTargetBitrate(), ( getIntraPeriod() > 0 ) );
+    Bool useDUParameters = (getSliceMode() > 0) || (getSliceSegmentMode() > 0);
+    m_cSPS.setHrdParameters( getFrameRate(), useDUParameters, getTargetBitrate(), ( getIntraPeriod() > 0 ) );
   }
   if( getBufferingPeriodSEIEnabled() || getPictureTimingSEIEnabled() || getDecodingUnitInfoSEIEnabled() )
   {
     m_cSPS.getVuiParameters()->setHrdParametersPresentFlag( true );
   }
-
 }
 
 Void TEncTop::xInitPPS()
