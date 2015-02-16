@@ -85,6 +85,36 @@ Void deleteSEIs (SEIMessages &seiList)
   seiList.clear();
 }
 
+void SEIBufferingPeriod::copyTo (SEIBufferingPeriod& target)
+{
+  target.m_bpSeqParameterSetId = m_bpSeqParameterSetId;
+  target.m_rapCpbParamsPresentFlag = m_rapCpbParamsPresentFlag;
+  target.m_cpbDelayOffset = m_cpbDelayOffset;
+  target.m_dpbDelayOffset = m_dpbDelayOffset;
+  target.m_concatenationFlag = m_concatenationFlag;
+  target.m_auCpbRemovalDelayDelta = m_auCpbRemovalDelayDelta;
+  ::memcpy(target.m_initialCpbRemovalDelay, m_initialCpbRemovalDelay, sizeof(m_initialCpbRemovalDelay));
+  ::memcpy(target.m_initialCpbRemovalDelayOffset, m_initialCpbRemovalDelayOffset, sizeof(m_initialCpbRemovalDelayOffset));
+  ::memcpy(target.m_initialAltCpbRemovalDelay, m_initialAltCpbRemovalDelay, sizeof(m_initialAltCpbRemovalDelay));
+  ::memcpy(target.m_initialAltCpbRemovalDelayOffset, m_initialAltCpbRemovalDelayOffset, sizeof(m_initialAltCpbRemovalDelayOffset));
+}
+
+void SEIPictureTiming::copyTo (SEIPictureTiming& target)
+{
+  target.m_picStruct = m_picStruct;
+  target.m_sourceScanType = m_sourceScanType;
+  target.m_duplicateFlag = m_duplicateFlag;
+
+  target.m_auCpbRemovalDelay = m_auCpbRemovalDelay;
+  target.m_picDpbOutputDelay = m_picDpbOutputDelay;
+  target.m_picDpbOutputDuDelay = m_picDpbOutputDuDelay;
+  target.m_numDecodingUnitsMinus1 = m_numDecodingUnitsMinus1;
+  target.m_duCommonCpbRemovalDelayFlag = m_duCommonCpbRemovalDelayFlag;
+  target.m_duCommonCpbRemovalDelayMinus1 = m_duCommonCpbRemovalDelayMinus1;
+
+  target.m_numNalusInDuMinus1 = m_numNalusInDuMinus1;
+  target.m_duCpbRemovalDelayMinus1 = m_duCpbRemovalDelayMinus1;
+}
 
 // Static member
 const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)

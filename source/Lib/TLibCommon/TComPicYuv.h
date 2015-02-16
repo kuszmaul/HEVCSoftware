@@ -157,10 +157,10 @@ public:
 
 
 // These functions now return the length of the digest strings.
-UInt calcChecksum(const TComPicYuv& pic, TComDigest &digest);
-UInt calcCRC     (const TComPicYuv& pic, TComDigest &digest);
-UInt calcMD5     (const TComPicYuv& pic, TComDigest &digest);
-std::string digestToString(const TComDigest &digest, Int numChar);
+UInt calcChecksum(const TComPicYuv& pic, TComPictureHash &digest);
+UInt calcCRC     (const TComPicYuv& pic, TComPictureHash &digest);
+UInt calcMD5     (const TComPicYuv& pic, TComPictureHash &digest);
+std::string hashToString(const TComPictureHash &digest, Int numChar);
 //! \}
 
 #endif // __TCOMPICYUV__

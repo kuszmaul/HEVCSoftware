@@ -39,6 +39,7 @@ DEFS			= -DMSYS_LINUX
 # set objects
 OBJS          	= \
 			$(OBJ_DIR)/NALwrite.o \
+			$(OBJ_DIR)/SEIEncoder.o \
 			$(OBJ_DIR)/SEIwrite.o \
 			$(OBJ_DIR)/SyntaxElementWriter.o \
 			$(OBJ_DIR)/TEncBinCoderCABAC.o \
