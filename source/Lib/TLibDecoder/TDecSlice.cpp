@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,10 +98,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
-  // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
-  // This calculates the common offset for all substreams in this slice.
-  const UInt subStreamOffset=pcPic->getSubstreamForCtuAddr(startCtuRsAddr, true, pcSlice);
-
   UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
   UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
   Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
@@ -109,6 +105,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
   }
+
+  // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
+  // This calculates the common offset for all substreams in this slice.
+  const UInt subStreamOffset=pcPic->getSubstreamForCtuAddr(startCtuRsAddr, true, pcSlice);
 
   if (depSliceSegmentsEnabled)
   {
@@ -134,6 +134,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       }
     }
   }
+
 
   // for every CTU in the slice segment...
 
@@ -213,7 +214,10 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       {
         ComponentID compId=ComponentID(comp);
         sliceEnabled[compId] = pcSlice->getSaoEnabledFlag(toChannelType(compId)) && (comp < pcPic->getNumberValidComponents());
-        if (sliceEnabled[compId]) bIsSAOSliceEnabled=true;
+        if (sliceEnabled[compId])
+        {
+          bIsSAOSliceEnabled=true;
+        }
         saoblkParam[compId].modeIdc = SAO_MODE_OFF;
       }
       if (bIsSAOSliceEnabled)
@@ -280,31 +284,31 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       }
     }
 
-    // Should the sub-stream/stream be terminated after this CTU?
-    // (end of slice-segment, end of tile, end of wavefront-CTU-row)
-    if (isLastCtuOfSliceSegment ||
-         (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
-          ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
-         )
-       )
+    if (isLastCtuOfSliceSegment)
     {
+#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
+      pcSbacDecoder->parseRemainingBytes(false);
+#endif
+      if(!pcSlice->getDependentSliceSegmentFlag())
+      {
+        pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
+      }
+      pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
+    }
+    else if (  ctuXPosInCtus + 1 == tileXPosInCtus + currentTile.getTileWidthInCtus() &&
+             ( ctuYPosInCtus + 1 == tileYPosInCtus + currentTile.getTileHeightInCtus() || wavefrontsEnabled)
+            )
+    {
+      // The sub-stream/stream should be terminated after this CTU.
+      // (end of slice-segment, end of tile, end of wavefront-CTU-row)
       UInt binVal;
       pcSbacDecoder->parseTerminatingBit( binVal );
       assert( binVal );
 #if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-      pcSbacDecoder->parseRemainingBytes(!isLastCtuOfSliceSegment);
+      pcSbacDecoder->parseRemainingBytes(true);
 #endif
-
-      if (isLastCtuOfSliceSegment)
-      {
-        if(!pcSlice->getDependentSliceSegmentFlag())
-        {
-          pcSlice->setSliceCurEndCtuTsAddr( ctuTsAddr+1 );
-        }
-        pcSlice->setSliceSegmentCurEndCtuTsAddr( ctuTsAddr+1 );
-        break;
-      }
     }
+
   }
 
   assert(isLastCtuOfSliceSegment == true);
@@ -321,65 +325,12 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       {
         m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
       }
-    }
+    }    
   }
 
-}
-
-ParameterSetManagerDecoder::ParameterSetManagerDecoder()
-: m_vpsBuffer(MAX_NUM_VPS)
-, m_spsBuffer(MAX_NUM_SPS)
-, m_ppsBuffer(MAX_NUM_PPS)
-{
-}
-
-ParameterSetManagerDecoder::~ParameterSetManagerDecoder()
-{
-
-}
-
-TComVPS* ParameterSetManagerDecoder::getPrefetchedVPS  (Int vpsId)
-{
-  if (m_vpsBuffer.getPS(vpsId) != NULL )
-  {
-    return m_vpsBuffer.getPS(vpsId);
-  }
-  else
-  {
-    return getVPS(vpsId);
-  }
-}
 
 
-TComSPS* ParameterSetManagerDecoder::getPrefetchedSPS  (Int spsId)
-{
-  if (m_spsBuffer.getPS(spsId) != NULL )
-  {
-    return m_spsBuffer.getPS(spsId);
-  }
-  else
-  {
-    return getSPS(spsId);
-  }
-}
 
-TComPPS* ParameterSetManagerDecoder::getPrefetchedPPS  (Int ppsId)
-{
-  if (m_ppsBuffer.getPS(ppsId) != NULL )
-  {
-    return m_ppsBuffer.getPS(ppsId);
-  }
-  else
-  {
-    return getPPS(ppsId);
-  }
-}
-
-Void     ParameterSetManagerDecoder::applyPrefetchedPS()
-{
-  m_vpsMap.mergePSList(m_vpsBuffer);
-  m_ppsMap.mergePSList(m_ppsBuffer);
-  m_spsMap.mergePSList(m_spsBuffer);
 }
 
 //! \}
