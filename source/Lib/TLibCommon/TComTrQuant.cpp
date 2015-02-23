@@ -1758,7 +1758,11 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
       if ( bLossless )
       {
         pcCoeff[coefficientIndex] = encoderSideDelta;
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+        reconstructedDelta        = (Pel)encoderSideDelta;
+#else
         reconstructedDelta        = encoderSideDelta;
+#endif 
       }
       else
       {
