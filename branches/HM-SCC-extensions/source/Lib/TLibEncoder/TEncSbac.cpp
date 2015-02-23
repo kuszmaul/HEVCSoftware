@@ -674,7 +674,11 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           pLevel[uiTraIdx] = uiRealLevel;
         }
       }
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+      uiRun = (UInt)pRun[uiTraIdx];
+#else
       uiRun = pRun[uiTraIdx];
+#endif 
       if ( uiIndexMaxSize > 1 )
       {
         encodeRun( uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1 );

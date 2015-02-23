@@ -48,7 +48,14 @@
 // disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
+
 #include "TypeDef.h"
+
+#ifdef _MSC_VER
+#if _MSC_VER <= 1500 // MS VC6
+inline Int64 abs (Int64 x) { return _abs64(x); }
+#endif
+#endif 
 
 //! \ingroup TLibCommon
 //! \{

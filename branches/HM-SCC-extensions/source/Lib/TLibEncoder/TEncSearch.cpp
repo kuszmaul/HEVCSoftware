@@ -403,7 +403,11 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   {
     Int isubShift = 0;
     // motion cost
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+    Distortion uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
+#else
     UInt uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
+#endif 
 
     if ( m_cDistParam.iRows > 32 )
     {
@@ -3855,7 +3859,11 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
                            TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode)
 {
   UInt  uiDepth      = pcCU->getDepth(0);
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX  
+  Distortion  uiDistortion = 0;
+#else
   UInt  uiDistortion = 0;
+#endif 
   Pel *paOrig[3], *paPalette[3];
   TCoeff *pRun;
   UChar *paSPoint[3];
@@ -4961,7 +4969,11 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     return false;
 
   const Int iNumPart = pcCU->getNumPartitions();
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+  Distortion uiTotalCost = 0;
+#else
   UInt uiTotalCost = 0;
+#endif 
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
     Int iDummyWidth, iDummyHeight;
@@ -4998,8 +5010,13 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
         || pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCSearchWidthInCTUs() ) != pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() ))
       )
     {
-      UInt uiIntraBCECost = uiCost;
-      xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiIntraBCECost);
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+    Distortion uiIntraBCECost = uiCost;
+    xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, (UInt)uiIntraBCECost);
+#else
+    UInt uiIntraBCECost = uiCost;
+    xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiIntraBCECost);
+#endif       
       uiCost = std::min(uiIntraBCECost, uiCost);
     }
     uiTotalCost += uiCost;
@@ -5318,7 +5335,11 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
 
           if ( currCost < bestCost )
           {
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+            bestCost = (Int)currCost;
+#else
             bestCost = currCost;
+#endif 
             bestRefPicList = eRefPicList;
             bestRefIndex = iRefIdx;
             bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );

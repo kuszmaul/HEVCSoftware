@@ -186,7 +186,15 @@ public:
 
   __inline Distortion getCostMultiplePreds( Int x, Int y )
   {
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+    return Distortion((m_dCost * getBitsMultiplePreds(x, y)) / 65536.0);    
+#else
     return m_uiCost * getBitsMultiplePreds(x, y) >> 16;
+#endif 
+#else
+    return m_uiCost * getBitsMultiplePreds(x, y) >> 16;
+#endif 
   }
 
   UInt    getBitsMultiplePreds( Int x, Int y )
@@ -252,7 +260,15 @@ public:
   }
 
 __inline Distortion getBvCost( Int x, Int y ) { 
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+#if RExt__HIGH_BIT_DEPTH_SUPPORT    
+    return Distortion((m_dCost * getBvBits(x, y)) / 65536.0);            
+#else
     return m_uiCost * getBvBits(x, y) >> 16;
+#endif 
+#else
+    return m_uiCost * getBvBits(x, y) >> 16;
+#endif     
   } 
 
   UInt    getBvBits( Int x, Int y )
