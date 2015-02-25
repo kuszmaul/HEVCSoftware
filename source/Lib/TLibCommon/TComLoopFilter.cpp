@@ -435,13 +435,13 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pCtu, DeblockEdgeD
   }
 
   //-- Set BS for Intra MB : BS = 4 or 3
-  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) )
+  if ( pcCUP->isLoopFilterIntra(uiPartP) || pcCUQ->isLoopFilterIntra(uiPartQ) )
   {
     uiBs = 2;
   }
 
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
-  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) )
+  if ( !pcCUP->isLoopFilterIntra(uiPartP) && !pcCUQ->isLoopFilterIntra(uiPartQ) )
   {
     UInt nsPartQ = uiPartQ;
     UInt nsPartP = uiPartP;
@@ -640,7 +640,9 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
         Int dq = dq0 + dq3;
         Int d =  d0 + d3;
 
-        if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+        if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag() ||
+                          (pcCU->getPredictionMode(uiAbsZorderIdx) == MODE_INTRA &&
+                           pcCU->getPLTModeFlag(uiAbsZorderIdx) == true))
         {
           // Check if each of PUs is I_PCM with LF disabling
           bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
@@ -649,6 +651,10 @@ Void TComLoopFilter::xEdgeFilterLuma( TComDataCU* pcCU, UInt uiAbsZorderIdx, UIn
           // check if each of PUs is lossless coded
           bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx) );
           bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx) );
+
+          // check if each of PUs is palette coded
+          bPartPNoFilter = bPartPNoFilter || (pcCUP->getPredictionMode(uiPartPIdx) == MODE_INTRA && pcCUP->getPLTModeFlag(uiPartPIdx) == true);
+          bPartQNoFilter = bPartQNoFilter || (pcCUQ->getPredictionMode(uiPartQIdx) == MODE_INTRA && pcCUQ->getPLTModeFlag(uiPartQIdx) == true);
         }
 
         if (d < iBeta)
@@ -759,8 +765,9 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
       }
 
       iQP_P = pcCUP->getQP(uiPartPIdx);
-
-      if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+      if (bPCMFilter || pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag() ||
+                        (pcCU->getPredictionMode(uiAbsZorderIdx) == MODE_INTRA &&
+                         pcCU->getPLTModeFlag(uiAbsZorderIdx) == true))
       {
         // Check if each of PUs is I_PCM with LF disabling
         bPartPNoFilter = (bPCMFilter && pcCUP->getIPCMFlag(uiPartPIdx));
@@ -769,6 +776,10 @@ Void TComLoopFilter::xEdgeFilterChroma( TComDataCU* pcCU, UInt uiAbsZorderIdx, U
         // check if each of PUs is lossless coded
         bPartPNoFilter = bPartPNoFilter || (pcCUP->isLosslessCoded(uiPartPIdx));
         bPartQNoFilter = bPartQNoFilter || (pcCUQ->isLosslessCoded(uiPartQIdx));
+
+        // check if each of PUs is palette coded
+        bPartPNoFilter = bPartPNoFilter || (pcCUP->getPredictionMode(uiPartPIdx) == MODE_INTRA && pcCUP->getPLTModeFlag(uiPartPIdx) == true);
+        bPartQNoFilter = bPartQNoFilter || (pcCUQ->getPredictionMode(uiPartQIdx) == MODE_INTRA && pcCUQ->getPLTModeFlag(uiPartQIdx) == true);
       }
 
       for ( UInt chromaIdx = 0; chromaIdx < 2; chromaIdx++ )

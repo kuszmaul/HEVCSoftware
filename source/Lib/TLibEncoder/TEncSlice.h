@@ -97,6 +97,8 @@ private:
   UInt                    m_uiSliceIdx;
   TEncSbac                m_lastSliceSegmentEndContextState;    ///< context storage for state at the end of the previous slice-segment (used for dependent slices only).
   TEncSbac                m_entropyCodingSyncContextState;      ///< context storate for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
+  PaletteInfoBuffer       m_lastSliceSegmentEndPaletteState;
+  PaletteInfoBuffer       m_entropyCodingSyncPaletteState;
   SliceType               m_encCABACTableIdx;
 
   Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);

@@ -41,7 +41,8 @@
 #include "TComTU.h"
 #include "Debug.h"
 #include "TComPrediction.h"
-
+#include <cmath>
+#include <algorithm>
 //! \ingroup TLibCommon
 //! \{
 
@@ -554,7 +555,7 @@ Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
   TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
-    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isIntra( uiPartAboveLeft ) );
+    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isConstrainedIntra( uiPartAboveLeft ) );
   }
   else
   {
@@ -577,7 +578,7 @@ Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool
     TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAbove && pcCUAbove->isIntra( uiPartAbove ) )
+      if ( pcCUAbove && pcCUAbove->isConstrainedIntra( uiPartAbove ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -618,7 +619,7 @@ Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool 
     TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCULeft && pcCULeft->isIntra( uiPartLeft ) )
+      if ( pcCULeft && pcCULeft->isConstrainedIntra( uiPartLeft ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -658,7 +659,7 @@ Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT,
     TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAboveRight && pcCUAboveRight->isIntra( uiPartAboveRight ) )
+      if ( pcCUAboveRight && pcCUAboveRight->isConstrainedIntra( uiPartAboveRight ) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -698,7 +699,7 @@ Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, 
     TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUBelowLeft && pcCUBelowLeft->isIntra( uiPartBelowLeft ) )
+      if ( pcCUBelowLeft && pcCUBelowLeft->isConstrainedIntra( uiPartBelowLeft ) )
       {
         iNumIntra++;
         *pbValidFlags = true;

@@ -109,6 +109,7 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
+, m_useIntegerMv                  ( false )
 , m_encCABACTableIdx              (I_SLICE)
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -327,6 +328,12 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
+
+      if( m_pcRPS->getNumberOfPictures() == 0 )
+      {
+        m_apcRefPicList[REF_PIC_LIST_INTRABC][0] = *(rcListPic.begin());
+        m_aiNumRefIdx[REF_PIC_LIST_INTRABC] = 1;
+      }
 
       return;
     }
@@ -613,9 +620,11 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
+
       if (rpcPic->getPOC() != pocCurr)
       {
         rpcPic->getSlice(0)->setReferenced(false);
+        rpcPic->getHashMap()->clearAll();
       }
       iterPic++;
     }
@@ -643,6 +652,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -661,6 +671,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -1070,6 +1081,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, const T
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {
       rpcPic->getSlice( 0 )->setReferenced( false );
+      rpcPic->getHashMap()->clearAll();
       rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }
@@ -1571,11 +1583,17 @@ TComSPS::TComSPS()
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
 , m_useExtendedPrecision      (false)
+, m_useIntraBlockCopy         (false)
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
+, m_usePaletteMode            (false)
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+, m_useAdaptiveMvResolution   (false)
+, m_disableIntraBoundaryFilter(false)
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
@@ -1760,6 +1778,7 @@ TComPPS::TComPPS()
 , m_loopFilterAcrossSlicesEnabledFlag(false)
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
+, m_useColourTrans                   (false)
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {

@@ -121,6 +121,10 @@ private:
   Bool                    m_pictureTimingSEIPresentInAU;
   Bool                    m_nestedBufferingPeriodSEIPresentInAU;
   Bool                    m_nestedPictureTimingSEIPresentInAU;
+
+  Bool                    m_hasLosslessPSNR[MAX_NUM_COMPONENT];
+  Double                  m_losslessPSNR[MAX_NUM_COMPONENT];
+
 public:
   TEncGOP();
   virtual ~TEncGOP();
@@ -161,6 +165,7 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 
   Double xCalculateRVM();
+  Bool xGetUseIntegerMv( TComSlice* pcSlice );
 
   SEIActiveParameterSets*           xCreateSEIActiveParameterSets (const TComSPS *sps);
   SEIFramePacking*                  xCreateSEIFramePacking();

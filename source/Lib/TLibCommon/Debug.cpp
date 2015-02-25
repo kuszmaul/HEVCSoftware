@@ -48,8 +48,11 @@ static const UInt settingValueWidth = 3;
 
 #ifdef DEBUG_STRING
 // these strings are used to reorder the debug output so that the encoder and decoder match.
-const Char *debug_reorder_data_inter_token[MAX_NUM_COMPONENT+1]
- = {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"} ;
+const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1]
+ = {
+     {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"},
+     {"Start of channel 0 intra-bc debug\n", "Start of channel 1 intra-bc debug\n", "Start of channel 2 intra-bc debug\n", "End of intra-bc residual debug\n"}
+   } ;
 const Char *partSizeToString[NUMBER_OF_PART_SIZES]={"2Nx2N(0)", "2NxN(1)", "Nx2N(2)", "NxN(3)", "2Nx(N/2+3N/2)(4)", "2Nx(3N/2+N/2)(5)", "(N/2+3N/2)x2N(6)", "(3N/2+N/2)x2N(7)"};
 #endif
 
@@ -153,11 +156,11 @@ EnvVar DebugOptionList::ForceLumaMode         ("FORCE_LUMA_MODE",   "0", "Force 
 EnvVar DebugOptionList::ForceChromaMode       ("FORCE_CHROMA_MODE", "0", "Force a particular intra direction for chroma (0-5)"                                            );
 
 #ifdef DEBUG_STRING
-EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen structure                        bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter");
-EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter");
+EnvVar DebugOptionList::DebugString_Structure ("DEBUG_STRUCTURE",   "0", "Produce output on chosen structure                        bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Pred      ("DEBUG_PRED",        "0", "Produce output on prediction data.                        bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Resi      ("DEBUG_RESI",        "0", "Produce output on residual data.                          bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_Reco      ("DEBUG_RECO",        "0", "Produce output on reconstructed data.                     bit0=intra, bit1=inter, bit2=intra-bc");
+EnvVar DebugOptionList::DebugString_InvTran   ("DEBUG_INV_QT",      "0", "Produce output on inverse-quantiser and transform stages. bit0=intra, bit1=inter, bit2=intra-bc");
 #endif
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -177,7 +180,7 @@ Void printMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(O0043_BEST_EFFORT_DECODING,                                        settingNameWidth, settingValueWidth);
-
+  
   PRINT_CONSTANT(RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL,                              settingNameWidth, settingValueWidth);
 
   //------------------------------------------------
@@ -462,7 +465,7 @@ Void printBlockToStream( std::ostream &ss, const Char *pLinePrefix, TComYuv &src
 #ifdef DEBUG_STRING
 Int DebugStringGetPredModeMask(PredMode mode)
 {
-  return (mode==MODE_INTRA)?1:2;
+  return (mode==MODE_INTRA)?1:((mode==MODE_INTER)?2:4);
 }
 
 Void DebugInterPredResiReco(std::string &sDebug, TComYuv &pred, TComYuv &resi, TComYuv &reco, Int predmode_mask)

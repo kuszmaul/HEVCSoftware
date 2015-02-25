@@ -124,9 +124,11 @@ TEncPic::~TEncPic()
  * \param uiMaxAQDepth Maximum depth of unit block for assigning QP adaptive to local image characteristics
  * \param bIsVirtual
  */
-Void TEncPic::create( const TComSPS &sps, const TComPPS &pps, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth, Bool bIsVirtual )
+Void TEncPic::create( const TComSPS &sps, const TComPPS &pps, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, UInt uiMaxAQDepth,
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize,
+                      Bool bIsVirtual )
 {
-  TComPic::create( sps, pps, uiMaxWidth, uiMaxHeight, uiMaxDepth, bIsVirtual );
+  TComPic::create( sps, pps, uiMaxWidth, uiMaxHeight, uiMaxDepth, uiPLTMaxSize, uiPLTMaxPredSize, bIsVirtual );
   const Int iWidth  = sps.getPicWidthInLumaSamples();
   const Int iHeight = sps.getPicHeightInLumaSamples();
   m_uiMaxAQDepth = uiMaxAQDepth;

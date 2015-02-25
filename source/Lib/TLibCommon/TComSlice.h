@@ -759,11 +759,17 @@ private:
   Int              m_uiBitDepth[MAX_NUM_CHANNEL_TYPE];
   Int              m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
   Bool             m_useExtendedPrecision;
+  Bool        m_useIntraBlockCopy;
   Bool             m_useHighPrecisionPredictionWeighting;
   Bool             m_useResidualRotation;
   Bool             m_useSingleSignificanceMapContext;
   Bool             m_useGolombRiceParameterAdaptation;
   Bool             m_alignCABACBeforeBypass;
+  Bool        m_usePaletteMode;
+  UInt        m_uiPLTMaxSize;
+  UInt        m_uiPLTMaxPredSize;
+  Bool        m_useAdaptiveMvResolution;
+  Bool        m_disableIntraBoundaryFilter;
   Bool             m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt             m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool             m_bPCMFilterDisableFlag;
@@ -886,6 +892,8 @@ public:
   Void                   setQpBDOffset(ChannelType type, Int i)                                          { m_qpBDOffset[type] = i;                                              }
   Bool                   getUseExtendedPrecision() const                                                 { return m_useExtendedPrecision;                                       }
   Void                   setUseExtendedPrecision(Bool value)                                             { m_useExtendedPrecision = value;                                      }
+  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
+  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
   Bool                   getUseHighPrecisionPredictionWeighting() const                                  { return m_useHighPrecisionPredictionWeighting;                        }
   Void                   setUseHighPrecisionPredictionWeighting(Bool value)                              { m_useHighPrecisionPredictionWeighting = value;                       }
 
@@ -903,6 +911,17 @@ public:
 
   Bool                   getAlignCABACBeforeBypass()                 const                               { return m_alignCABACBeforeBypass;                                     }
   Void                   setAlignCABACBeforeBypass(const Bool value)                                     { m_alignCABACBeforeBypass = value;                                    }
+
+  Bool      getUsePLTMode()                                      const { return m_usePaletteMode; }
+  Void      setUsePLTMode(const Bool value)                            { m_usePaletteMode = value; }
+  UInt      getPLTMaxSize()                                      const { return m_uiPLTMaxSize; }
+  Void      setPLTMaxSize(const UInt value)                            { m_uiPLTMaxSize = value; }
+  UInt      getPLTMaxPredSize()                                  const { return m_uiPLTMaxPredSize; }
+  Void      setPLTMaxPredSize(const UInt value)                        { m_uiPLTMaxPredSize = value; }
+  Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
+  Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
+  Void      setDisableIntraBoundaryFilter( Bool b) { m_disableIntraBoundaryFilter = b;    }
+  Bool      getDisableIntraBoundaryFilter()  const { return m_disableIntraBoundaryFilter; }
 
   Bool                   getUseResidualDPCM(const RDPCMSignallingMode signallingMode) const              { return m_useResidualDPCM[signallingMode];                            }
   Void                   setUseResidualDPCM(const RDPCMSignallingMode signallingMode, const Bool value)  { m_useResidualDPCM[signallingMode] = value;                           }
@@ -1033,6 +1052,7 @@ private:
   Bool             m_listsModificationPresentFlag;
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
+  Bool     m_useColourTrans;
 
 public:
                          TComPPS();
@@ -1169,6 +1189,9 @@ public:
   Bool                   getLoopFilterAcrossSlicesEnabledFlag() const                     { return m_loopFilterAcrossSlicesEnabledFlag;   }
   Bool                   getSliceHeaderExtensionPresentFlag() const                       { return m_sliceHeaderExtensionPresentFlag;     }
   Void                   setSliceHeaderExtensionPresentFlag(Bool val)                     { m_sliceHeaderExtensionPresentFlag = val;      }
+
+  Bool     getUseColourTrans()                 const { return m_useColourTrans;}
+  Void     setUseColourTrans(const Bool value)       { m_useColourTrans= value;}
 };
 
 struct WPScalingParam
@@ -1292,6 +1315,7 @@ private:
   Bool                       m_LFCrossSliceBoundaryFlag;
 
   Bool                       m_enableTMVPFlag;
+  Bool                       m_useIntegerMv;
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.
 
@@ -1520,6 +1544,9 @@ public:
 
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
   Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
+
+  Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
+  Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }

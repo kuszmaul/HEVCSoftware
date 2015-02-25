@@ -73,7 +73,7 @@ Void         destroyROM();
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
-extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
+extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
 
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
@@ -159,6 +159,11 @@ extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
 
 extern        Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE];
 extern        Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
+
+extern        UChar g_uhPLTQuant[52];
+extern        UChar g_uhPLTTBC[257];
+
+
 #if O0043_BEST_EFFORT_DECODING
 extern        Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE]; // In the encoder, this is the same as g_bitDepth. In the decoder, this can vary from g_bitDepth if the decoder is forced to use 'best-effort decoding' at a particular bit-depth.
 #endif
@@ -231,6 +236,14 @@ extern Int g_quantInterDefault8x8[8*8];
 extern UInt g_scalingListSize [SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListSizeX[SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListNum  [SCALING_LIST_SIZE_NUM];
+
+#define SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE              4       ///< CABAC bypass threshold
+#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T1                         1
+#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2                         3
+extern UChar g_ucRunTopLut[5];
+extern UChar g_ucRunLeftLut[5];
+extern UChar g_ucMsbP1Idx[256];
+extern UChar g_getMsbP1Idx(UInt uiVal);
 //! \}
 
 #endif  //__TCOMROM__

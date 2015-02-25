@@ -136,7 +136,8 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
   {
     rpcPic = new TComPic();
 
-    rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+    rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
+                     sps.getPLTMaxSize(), sps.getPLTMaxPredSize(), true);
 
     m_cListPic.pushBack( rpcPic );
 
@@ -173,7 +174,8 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+  rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
+                   sps.getPLTMaxSize(), sps.getPLTMaxPredSize(), true);
 }
 
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
@@ -291,7 +293,6 @@ Void TDecTop::xActivateParameterSets()
     g_uiMaxCUHeight = sps->getMaxCUHeight();
     g_uiMaxCUDepth  = sps->getMaxCUDepth();
     g_uiAddCUDepth  = max (0, sps->getLog2MinCodingBlockSize() - (Int)sps->getQuadtreeTULog2MinSize() + (Int)getMaxCUDepthOffset(sps->getChromaFormatIdc(), sps->getQuadtreeTULog2MinSize()));
-
     //  Get a new picture buffer. This will also set up m_pcPic, and therefore give us a SPS and PPS pointer that we can use.
     xGetNewPicBuffer (*(sps), *(pps), m_pcPic, m_apcSlicePilot->getTLayer());
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
@@ -327,7 +328,6 @@ Void TDecTop::xActivateParameterSets()
         isTopField = (pictureTiming->m_picStruct == 1) || (pictureTiming->m_picStruct == 9) || (pictureTiming->m_picStruct == 11);
       }
     }
-
     //Set Field/Frame coding mode
     m_pcPic->setField(isField);
     m_pcPic->setTopField(isTopField);
@@ -337,7 +337,7 @@ Void TDecTop::xActivateParameterSets()
     m_SEIs.clear();
 
     // Recursive structure
-    m_cCuDecoder.create ( sps->getMaxCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc() );
+    m_cCuDecoder.create ( sps->getMaxCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc(), sps->getPLTMaxSize(), sps->getPLTMaxPredSize() );
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( sps->getMaxTrSize() );
 

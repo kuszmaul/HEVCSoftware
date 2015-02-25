@@ -391,6 +391,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             READ_UVLC( uiCode, "log2_sao_offset_scale_chroma");
             pcPPS->setSaoOffsetBitShift(CHANNEL_TYPE_CHROMA, uiCode);
             break;
+          case PPS_EXT__SCC:
+            READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcPPS->setUseColourTrans(uiCode != 0);
+            break;
           default:
             bSkipTrailingExtensionBits=true;
             break;
@@ -806,6 +809,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             READ_FLAG( uiCode, "high_precision_offsets_enabled_flag");      pcSPS->setUseHighPrecisionPredictionWeighting    (uiCode != 0);
             READ_FLAG( uiCode, "persistent_rice_adaptation_enabled_flag");  pcSPS->setUseGolombRiceParameterAdaptation       (uiCode != 0);
             READ_FLAG( uiCode, "cabac_bypass_alignment_enabled_flag");      pcSPS->setAlignCABACBeforeBypass                 (uiCode != 0);
+            break;
+          case SPS_EXT__SCC:
+            READ_FLAG( uiCode, "intra_block_copy_enabled_flag");            pcSPS->setUseIntraBlockCopy                      (uiCode != 0);
+            READ_FLAG(uiCode, "palette_mode_enabled_flag");                 pcSPS->setUsePLTMode                             (uiCode != 0);
+            if (pcSPS->getUsePLTMode())//decode only when palette mode is enabled
+            {
+              READ_UVLC(uiCode, "palette_max_size");                        pcSPS->setPLTMaxSize(uiCode);
+              READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
+            }
+            READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
+            READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
             break;
           default:
             bSkipTrailingExtensionBits=true;
@@ -1344,6 +1358,16 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
+
+      if ( sps->getUseAdaptiveMvResolution() )
+      {
+        READ_FLAG( uiCode, "use_integer_mv_flag" );
+        pcSlice->setUseIntegerMv( uiCode != 0 );
+      }
+      else
+      {
+        pcSlice->setUseIntegerMv( false );
+      }
     }
 
     READ_SVLC( iCode, "slice_qp_delta" );
@@ -1571,7 +1595,8 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl, const Bool /*bIsSubLayer
   READ_FLAG(uiCode,       PTL_TRACE_TEXT("frame_only_constraint_flag"      )); ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
 
   if (ptl->getProfileIdc() == Profile::MAINREXT           || ptl->getProfileCompatibilityFlag(Profile::MAINREXT) ||
-      ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileCompatibilityFlag(Profile::HIGHTHROUGHPUTREXT))
+      ptl->getProfileIdc() == Profile::HIGHTHROUGHPUTREXT || ptl->getProfileCompatibilityFlag(Profile::HIGHTHROUGHPUTREXT) ||
+      ptl->getProfileIdc() == Profile::MAINSCC            || ptl->getProfileCompatibilityFlag(Profile::MAINSCC))
   {
     UInt maxBitDepth=16;
     READ_FLAG(    uiCode, PTL_TRACE_TEXT("max_12bit_constraint_flag"       )); if (uiCode) maxBitDepth=12;
@@ -1657,6 +1682,22 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+Void TDecCavlc::parsePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp)
+{
+  assert(0);
+}
+
+Void TDecCavlc::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+    assert(0);
+}
+
+Void TDecCavlc::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+
+
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
@@ -1673,6 +1714,11 @@ Void TDecCavlc::parseSplitFlag     ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
 }
 
 Void TDecCavlc::parsePartSize( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parsePartSizeIntraBC( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
@@ -1701,6 +1747,21 @@ Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartId
 }
 
 Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parseIntraBCFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parseIntraBC ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parseIntraBCBvd( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiPartIdx*/, UInt /*uiDepth*/, RefPicList /*eRefList*/ )
 {
   assert(0);
 }
@@ -1761,6 +1822,11 @@ Void TDecCavlc::parseTransformSubdivFlag( UInt& /*ruiSubdivFlag*/, UInt /*uiLog2
 }
 
 Void TDecCavlc::parseQtCbf( TComTU &/*rTu*/, const ComponentID /*compID*/, const Bool /*lowestLevel*/ )
+{
+  assert(0);
+}
+
+Void  TDecCavlc::parseColourTransformFlag( UInt , Bool&  )
 {
   assert(0);
 }
@@ -2026,6 +2092,16 @@ Void TDecCavlc::parseExplicitRdpcmMode( TComTU &rTu, ComponentID compID )
 {
   assert(0);
 }
+
+Void TDecCavlc::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseScanTraverseModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+
 
 //! \}
 

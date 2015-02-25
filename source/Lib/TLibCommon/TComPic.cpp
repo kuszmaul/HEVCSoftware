@@ -60,22 +60,24 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+  m_apcPicYuvCSC = NULL;
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWidth, const UInt uiMaxHeight, const UInt uiMaxDepth, const Bool bIsVirtual)
+Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWidth, const UInt uiMaxHeight, const UInt uiMaxDepth,
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize, const Bool bIsVirtual )
 {
   const ChromaFormat chromaFormatIDC=sps.getChromaFormatIdc();
   const Int iWidth  = sps.getPicWidthInLumaSamples();
   const Int iHeight = sps.getPicHeightInLumaSamples();
 
-  m_picSym.create( sps, pps, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+  m_picSym.create( sps, pps, uiMaxWidth, uiMaxHeight, uiMaxDepth, uiPLTMaxSize, uiPLTMaxPredSize );
   if (!bIsVirtual)
   {
-    m_apcPicYuv[PIC_YUV_ORG    ]   = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+    m_apcPicYuv[PIC_YUV_ORG     ]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
     m_apcPicYuv[PIC_YUV_TRUE_ORG]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_TRUE_ORG]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
   m_apcPicYuv[PIC_YUV_REC]  = new TComPicYuv;  m_apcPicYuv[PIC_YUV_REC]->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth );
@@ -86,6 +88,7 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWi
     deleteSEIs (m_SEIs);
   }
   m_bUsedByCurr = false;
+  m_hashMap.clearAll();
 }
 
 Void TComPic::destroy()
@@ -100,6 +103,14 @@ Void TComPic::destroy()
       delete m_apcPicYuv[i];
       m_apcPicYuv[i]  = NULL;
     }
+  }
+
+  m_hashMap.clearAll();
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
   }
 
   deleteSEIs(m_SEIs);
@@ -159,5 +170,16 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
   return subStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32 );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64 );
+}
 
 //! \}
