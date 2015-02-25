@@ -287,6 +287,7 @@
 //------------------------------------------------
 
 #define SCM_HIGH_BIT_DEPTH_BUG_FIX                       1                     
+#define SCM_T0121_INFER_TU_SPLIT_ENCODER                 1
 
 //------------------------------------------------
 // Derived macros
