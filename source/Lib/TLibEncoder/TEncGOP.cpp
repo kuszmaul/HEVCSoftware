@@ -1167,7 +1167,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
     pcSlice->setUseIntegerMv( false );
-    if ( !pcSlice->isIntra() )
+    if ( !pcSlice->isIntra() && m_pcCfg->getUseAdaptiveMvResolution() )
     {
       pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
     }
