@@ -247,7 +247,14 @@ public:
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
 #endif
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+                                , TComMv*    iMVCandList = NULL
+#endif
                                 );
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, Int picWidth, Int picHeight, Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize );
+#endif
 
   Bool predIntraBCSearch        ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -259,6 +266,17 @@ public:
                                   Bool        bUseRes
                                 , Bool        testOnlyPred
                                 );
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Bool predMixedIntraBCInterSearch( TComDataCU* pcCU,
+                                    TComYuv*    pcOrgYuv,
+                                    TComYuv*&   rpcPredYuv,
+                                    TComYuv*&   rpcResiYuv,
+                                    TComYuv*&   rpcRecoYuv
+                                    DEBUG_STRING_FN_DECLARE( sDebug ),
+                                    TComMv*     iMVCandList,
+                                    Bool        bUseRes
+                                    );
+#endif
 
   Void xIntraBlockCopyEstimation( TComDataCU*  pcCU,
                                   TComYuv*     pcYuvOrg,
@@ -665,6 +683,9 @@ protected:
                                     TComMvField* cMvFieldNeighbours,
                                     UChar*       uhInterDirNeighbours,
                                     Int&         numValidMergeCand
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+                                    ,Int iCostCalcType = 0
+#endif
                                    );
 
   Void xRestrictBipredMergeCand   ( TComDataCU*     pcCU,

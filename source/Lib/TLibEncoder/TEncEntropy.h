@@ -87,7 +87,9 @@ public:
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   virtual Void codePartSizeIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 
@@ -119,10 +121,12 @@ public:
 
   virtual Void codeExplicitRdpcmMode ( TComTU &rTu, const ComponentID compID ) = 0;
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   virtual Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;
   virtual Void estBvdBin0Cost    (Int *Bin0Cost)  = 0;
+#endif
   virtual ~TEncEntropyIf() {}
 };
 
@@ -161,7 +165,9 @@ public:
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   Void encodePartSizeIntraBC   ( TComDataCU* pcCU, UInt uiAbsPartIdx);
+#endif
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU = false );
@@ -177,8 +183,10 @@ public:
   Void encodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeChromaQpAdjustment ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   Void encodeIntraBCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeIntraBC           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
   Void encodeCrossComponentPrediction( TComTU &rTu, ComponentID compID );
 

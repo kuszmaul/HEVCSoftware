@@ -892,8 +892,8 @@ public:
   Void                   setQpBDOffset(ChannelType type, Int i)                                          { m_qpBDOffset[type] = i;                                              }
   Bool                   getUseExtendedPrecision() const                                                 { return m_useExtendedPrecision;                                       }
   Void                   setUseExtendedPrecision(Bool value)                                             { m_useExtendedPrecision = value;                                      }
-  Bool      getUseIntraBlockCopy()         const   { return m_useIntraBlockCopy;  }
-  Void      setUseIntraBlockCopy(Bool value)       { m_useIntraBlockCopy = value; }
+  Bool                   getUseIntraBlockCopy()         const                                            { return m_useIntraBlockCopy;  }
+  Void                   setUseIntraBlockCopy(Bool value)                                                { m_useIntraBlockCopy = value; }
   Bool                   getUseHighPrecisionPredictionWeighting() const                                  { return m_useHighPrecisionPredictionWeighting;                        }
   Void                   setUseHighPrecisionPredictionWeighting(Bool value)                              { m_useHighPrecisionPredictionWeighting = value;                       }
 

@@ -92,12 +92,16 @@ TDecSbac::TDecSbac()
 , m_CUTransquantBypassFlagSCModel            ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmFlagSCModel                 ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 , m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColourTransformFlagSCModel            ( 1,             1,                      NUM_COLOUR_TRANS_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 , m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_PLTModeFlagSCModel                       ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
@@ -126,13 +130,26 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
     switch (sliceType)
     {
     case P_SLICE:           // change initialization table to B_SLICE initialization
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if( pSlice->getSPS()->getUseIntraBlockCopy() && (pSlice->getNumRefIdx(REF_PIC_LIST_0) == 1))
+      {
+        sliceType = P_SLICE;
+      }
+      else
+      {
+        sliceType = B_SLICE;
+      }
+#else
       sliceType = B_SLICE;
+#endif
       break;
     case B_SLICE:           // change initialization table to P_SLICE initialization
       sliceType = P_SLICE;
       break;
     default     :           // should not occur
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
       assert(0);
+#endif
       break;
     }
   }
@@ -165,12 +182,16 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_CUTransquantBypassFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
   m_explicitRdpcmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
+#endif
   m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColourTransformFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_COLOUR_TRANS);
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
+#endif
   m_PLTModeFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
@@ -885,7 +906,11 @@ Void TDecSbac::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, U
  */
 Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
+#else
   if( pcCU->getSlice()->isIntra() )
+#endif
   {
     return;
   }
@@ -911,6 +936,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;
@@ -1005,6 +1031,7 @@ Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPart
 
   return; 
 }
+#endif
 
 /** parse merge flag
  * \param pcCU
@@ -1099,7 +1126,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   assert( ! pcCU->isIntraBC( uiAbsPartIdx ) );
+#endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__PART_SIZE, g_aucConvertToBit[g_uiMaxCUWidth>>uiDepth]+2);
@@ -1171,6 +1200,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 /** parse partition size for IBC
 * \param pcCU
 * \param uiAbsPartIdx
@@ -1205,6 +1235,7 @@ Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 
   pcCU->setPartSizeSubParts( (PartSize)uiMode, uiAbsPartIdx, uiDepth ) ;
 }
+#endif
 
 /** parse prediction mode
  * \param pcCU
@@ -1214,7 +1245,11 @@ Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
  */
 Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
+#else
   if( pcCU->getSlice()->isIntra() )
+#endif
   {
     pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
     return;

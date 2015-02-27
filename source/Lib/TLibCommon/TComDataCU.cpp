@@ -1237,6 +1237,58 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 // Other public functions
 // --------------------------------------------------------------------------------------------------------------------
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TComDataCU::getStartPosition( UInt uiPartIdx, Int& xStartInCU, Int& yStartInCU )
+{
+  switch ( m_pePartSize[0] )
+  {
+    case SIZE_2NxN:
+      xStartInCU = 0;
+      yStartInCU = getHeight( 0 ) / 2 * uiPartIdx;
+      break;
+    case SIZE_Nx2N:
+      xStartInCU = getWidth( 0 ) / 2 * uiPartIdx;
+      yStartInCU = 0;
+      break;
+    case SIZE_NxN:
+      xStartInCU = getWidth( 0 ) / 2 * (uiPartIdx % 2);
+      yStartInCU = getHeight( 0 ) / 2 * (uiPartIdx / 2);
+      break;
+    case SIZE_2NxnU:
+      xStartInCU = 0;
+      yStartInCU = getHeight( 0 ) / 4 * uiPartIdx;
+      break;
+    case SIZE_2NxnD:
+      xStartInCU = 0;
+      yStartInCU = getHeight( 0 ) / 4 * 3 * uiPartIdx;
+      break;
+    case SIZE_nLx2N:
+      xStartInCU = getWidth( 0 ) / 4 * uiPartIdx;
+      yStartInCU = 0;
+      break;
+    case SIZE_nRx2N:
+      xStartInCU = getWidth( 0 ) / 4 * 3 * uiPartIdx;
+      yStartInCU = 0;
+      break;
+    default:
+      assert( m_pePartSize[0] == SIZE_2Nx2N );
+      xStartInCU = 0;
+      yStartInCU = 0;
+      break;
+  }
+}
+Bool TComDataCU::isIntraBC(UInt uiAbsPartIdx)
+{
+  if(isIntra(uiAbsPartIdx)) return false;
+
+  Int iRefIdx = getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiAbsPartIdx );
+  Bool isNeighborIntraBC = ( iRefIdx >= 0 ) ? ( getSlice()->getRefPic( REF_PIC_LIST_0, iRefIdx )->getPOC() == getSlice()->getPOC() ) : false;
+
+  return isNeighborIntraBC;
+}
+#endif
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast)
 {
   TComDataCU*     pcTempLeftCU;
@@ -1331,6 +1383,7 @@ Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLas
 
   return;
 }
+#endif
 
 Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& nbPred)
 {
@@ -1389,6 +1442,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
       nbPred++;
   }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   // Co-located
   TComMv cMvCol;
   Bool isColAvail = xGetColMVPIBC( getCtuRsAddr(), m_absZIdxInCtu + uiAbsPartIdx, cMvCol );
@@ -1398,6 +1452,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
     if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
       nbPred++;
   }
+#endif
 
   // Below Left predictor search
   TComDataCU* pcTempBelowLeftCU = getPUBelowLeft( uiTempPartIdx, uiPartIdxLB, false);
@@ -1439,9 +1494,13 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   const Int  iCTUHeight       = getSlice()->getSPS()->getMaxCUHeight();
   Int   cuPelX            = getCUPelX() + (uiAbsPartIdx? g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ] : 0);
   Int   cuPelY            = getCUPelY() + (uiAbsPartIdx? g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] : 0);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Int iRX = cuPelX + (currentMv.getHor()>>2) ;
+  Int iRY = cuPelY + (currentMv.getVer()>>2) ;
+#else
   Int iRX = cuPelX + currentMv.getHor() ;
   Int iRY = cuPelY + currentMv.getVer() ;
-
+#endif
   if( iRX < 0 || iRY < 0 || iRX >= getSlice()->getSPS()->getPicWidthInLumaSamples() || iRY >= getSlice()->getSPS()->getPicHeightInLumaSamples() )
   {
     return false;
@@ -1456,7 +1515,24 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
 
   TComMvField mv1;
   pRefCU->getMvField(pRefCU, uiAbsPartIdxDerived, REF_PIC_LIST_INTRABC, mv1);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Int iCurrCtbAddr = (getCUPelY() / iCTUHeight) * getPic()->getFrameWidthInCtus() + (getCUPelX() / iCTUWidth);
+  UInt uiCurrAbsPartIdx = g_auiRasterToZscan[(((getCUPelY()&(iCTUHeight-1))>>2) <<4) + ((getCUPelX()&(iCTUWidth-1))>>2)];
+
+  if((iRefCtbAddr > iCurrCtbAddr) || ((iRefCtbAddr == iCurrCtbAddr) && (uiAbsPartIdxDerived >= uiCurrAbsPartIdx)))
+  {
+    return false;
+  }
+  
+  Int iRefIdx = mv1.getRefIdx();
+  Bool isIBC;
+  if(pRefCU->isIntra(uiAbsPartIdxDerived))
+    isIBC = false;
+  else
+    isIBC= ( iRefIdx >= 0 ) ? ( pRefCU->getSlice()->getRefPic( REF_PIC_LIST_0, iRefIdx )->getPOC() == pRefCU->getSlice()->getPOC() ) : 0;
+#else
   Bool isIBC = pRefCU->isIntraBC(uiAbsPartIdxDerived);
+#endif
   derivedMv = mv1.getMv();
   derivedMv += currentMv;
 
@@ -3900,6 +3976,13 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
   {
     return false;
   }
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( getSlice()->isIntra() )
+  {
+    return false;
+  }
+#endif
 
   eColRefPicList = getSlice()->getCheckLDC() ? eRefPicList : RefPicList(getSlice()->getColFromL0Flag());
 
