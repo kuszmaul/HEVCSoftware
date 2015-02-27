@@ -363,7 +363,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   {
     Int isubShift = 0;
     // motion cost
-    UInt uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
+    Distortion uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
 
     if ( m_cDistParam.iRows > 32 )
     {
