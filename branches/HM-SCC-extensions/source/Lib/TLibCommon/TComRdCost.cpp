@@ -492,6 +492,9 @@ Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP)
 {
   double lamdbaAdjustRate;
 
+#if SCM_T0140_ACT_QP_OFFSET
+  lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
+#else
   static int pairCheck = 0;
   if (delta_QP < 0)
   {
@@ -507,6 +510,7 @@ Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP)
 
     lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
   }
+#endif
 
   Double dLambda = m_dLambda * lamdbaAdjustRate;
   setLambda( dLambda );

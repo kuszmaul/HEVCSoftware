@@ -304,6 +304,16 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
             break;
           case PPS_EXT__SCC:
             WRITE_FLAG( (pcPPS->getUseColourTrans() ? 1 : 0),                     "adaptive_colour_trans_flag" );
+#if SCM_T0140_ACT_QP_OFFSET
+            if(pcPPS->getUseColourTrans())
+            {
+               WRITE_FLAG( (pcPPS->getUseSliceACTOffset() ? 1 : 0), "pps_slice_act_qp_offset_present_flag"    );
+               
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Y ) + 5 ), "pps_act_y_qp_offset_plus5");
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cb) + 5 ), "pps_act_cb_qp_offset_plus5");
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cr) + 3 ), "pps_act_cr_qp_offset_plus3");
+            }
+#endif
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.
@@ -1104,6 +1114,15 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "cu_chroma_qp_offset_enabled_flag");
     }
+
+#if SCM_T0140_ACT_QP_OFFSET
+    if( pcSlice->getPPS()->getUseSliceACTOffset () )
+    {
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Y), "slice_act_y_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cb), "slice_act_cb_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cr), "slice_act_cr_qp_offset");
+    }
+#endif
 
     if (pcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {

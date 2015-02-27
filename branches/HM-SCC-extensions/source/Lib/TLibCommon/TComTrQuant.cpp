@@ -103,6 +103,12 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
 {
   Int chromaQpOffset = 0;
 
+#if SCM_T0140_ACT_QP_OFFSET
+  Bool cuACTFlag = cu.getColourTransform(0);
+
+  if( cuACTFlag == false )
+  {
+#endif
   if (isChroma(compID))
   {
     chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
@@ -116,6 +122,33 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
                   cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
                   chromaQpOffset,
                   cu.getPic()->getChromaFormat());
+#if SCM_T0140_ACT_QP_OFFSET
+  }
+  else
+  {
+    chromaQpOffset += cu.getSlice()->getPPS()->getActQpOffset(compID);
+    chromaQpOffset += cu.getSlice()->getSliceActQpDelta(compID);
+
+    if (isChroma(compID))
+    {
+      chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
+
+      *this = QpParam(cu.getQP( 0 ),
+                      toChannelType(compID),
+                      cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
+                      chromaQpOffset,
+                      cu.getPic()->getChromaFormat());
+    }
+    else
+    {
+      Int baseQp = Clip3( 0, 51 + cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)), (cu.getQP( 0 ) + cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)) + chromaQpOffset));
+      
+      Qp =baseQp;
+      per=baseQp/6;
+      rem=baseQp%6;
+    }
+  }
+#endif
 }
 
 
@@ -1675,6 +1708,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
       TCoeff              *rpcCoeff    = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
       QpParam cQP(*pcCU, compID);
+#if !SCM_T0140_ACT_QP_OFFSET
       if(!pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 ))
       {
         cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr ? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
@@ -1682,6 +1716,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
         cQP.per = cQP.Qp/6;
         cQP.rem= cQP.Qp%6;
       }
+#endif
 
       if ( pcCU->getCbf( absPartIdxTU, compID, uiTrMode ) != 0 )
       {
@@ -3514,6 +3549,8 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
 Void TComTrQuant::adjustBitDepthandLambdaForColourTrans(Int delta_QP)
 {
   double lamdbaAdjustRate = 1;
+
+#if !SCM_T0140_ACT_QP_OFFSET
   static int pairCheck = 0;
 
   if (delta_QP < 0)
@@ -3527,6 +3564,8 @@ Void TComTrQuant::adjustBitDepthandLambdaForColourTrans(Int delta_QP)
     assert ( pairCheck == 1 );
     pairCheck = 0;
   }
+#endif
+
   lamdbaAdjustRate = pow(2.0, delta_QP / 3.0);
 
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++) 
