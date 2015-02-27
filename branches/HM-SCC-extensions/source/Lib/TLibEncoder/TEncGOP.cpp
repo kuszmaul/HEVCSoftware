@@ -1107,6 +1107,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     uiColDir = 1-uiColDir;
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
+    {
+      // add the current picture into the LIST_0 as the last picture
+      Int orgRefNumInList0 = pcSlice->getNumRefIdx( REF_PIC_LIST_0 );
+      pcSlice->setRefPic( pcSlice->getPic(), REF_PIC_LIST_0, orgRefNumInList0 );
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, orgRefNumInList0+1 );
+      pcSlice->getRefPic( REF_PIC_LIST_0, orgRefNumInList0 )->setIsLongTerm( true );
+      pcSlice->setIsUsedAsLongTerm( REF_PIC_LIST_0, orgRefNumInList0, true );
+    }
+#endif
+
     //-------------------------------------------------------------
     pcSlice->setRefPOCList();
 
@@ -1142,6 +1154,24 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Bool bGPBcheck=false;
     if ( pcSlice->getSliceType() == B_SLICE)
     {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
+      {
+        if ( pcSlice->getNumRefIdx( RefPicList( 0 ) ) - 1 == pcSlice->getNumRefIdx( RefPicList( 1 ) ) )
+        {
+          bGPBcheck=true;
+          for ( Int i=0; i < pcSlice->getNumRefIdx( RefPicList( 1 ) ); i++ )
+          {
+            if ( pcSlice->getRefPOC( RefPicList( 1 ), i ) != pcSlice->getRefPOC( RefPicList( 0 ), i ) )
+            {
+              bGPBcheck=false;
+              break;
+            }
+          }
+        }
+      }
+      else
+#endif
       if ( pcSlice->getNumRefIdx(RefPicList( 0 ) ) == pcSlice->getNumRefIdx(RefPicList( 1 ) ) )
       {
         bGPBcheck=true;
@@ -2107,6 +2137,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
     pcPic->setReconMark   ( true );
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    pcPic->setIsLongTerm( false );
+#endif
     m_bFirst = false;
     m_iNumPicCoded++;
     m_totalCoded ++;
@@ -2477,6 +2510,13 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if(pcSlice->isIntra() && pcSlice->getSPS()->getUseIntraBlockCopy())
+  {
+    c = 'P';
+    assert(pcSlice->getNumRefIdx(REF_PIC_LIST_0) == 1);
+  }
+#endif
   if (!pcSlice->isReferenced())
   {
     c += 32;

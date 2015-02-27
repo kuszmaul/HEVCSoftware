@@ -244,7 +244,14 @@ public:
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Void          getStartPosition( UInt uiPartIdx, Int& xStartInCU, Int& yStartInCU );
+  Bool          isIntraBC(UInt uiAbsPartIdx);
+#endif
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   Void          getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast);
+#endif
   Void          getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPredEnc, Int& nbPred);
   Bool          getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv);
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
@@ -524,9 +531,14 @@ public:
   // member functions for modes
   // -------------------------------------------------------------------------------------------------------------------
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
+  Bool          isLoopFilterIntra  ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
+#else
   Bool          isIntraBC          ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRABC;                                            }
   Bool          isConstrainedIntra ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
   Bool          isLoopFilterIntra  ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA || m_pePredMode[ uiPartIdx ] == MODE_INTRABC; }
+#endif
   Bool          isIntra            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTRA;                                              }
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped

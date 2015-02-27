@@ -287,12 +287,23 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool 
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+        if ( uiRefListIdx == 0 && uhInterDirNeighbours[uiMergeIndex] == 1 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
+        {
+          if( pcCU->getLastIntraBCMv() != cMvFieldNeighbours[uiMergeIndex<<1].getMv())
+          {
+            pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
+            pcCU->setLastIntraBCMv( cMvFieldNeighbours[uiMergeIndex<<1].getMv() );
+          }
+        }
+#endif
       }
     }
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
     return;
   }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
   {
     m_pcEntropyDecoder->decodeIntraBCFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
@@ -316,6 +327,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool 
   }
   else
   {
+#endif
     m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
 
     if (pcCU->getPLTModeFlag(uiAbsPartIdx) )
@@ -341,7 +353,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool 
 
     // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
     m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   }
+#endif
 
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
@@ -416,9 +430,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION  
     case MODE_INTRABC:
       xReconIntraBC( m_ppcCU[uiDepth], uiDepth );
       break;
+#endif
     default:
       assert(0);
       break;
@@ -488,7 +504,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 
 }
 
-
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 {
   // intra prediction
@@ -555,7 +571,7 @@ Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
 #endif
 
 }
-
+#endif
 
 Void
 TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,

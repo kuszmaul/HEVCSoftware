@@ -296,6 +296,7 @@ UInt TComRdCost::xGetComponentBits( Int iVal )
 
   return uiLength;
 }
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
 {
   if(iVal == 0)
@@ -322,7 +323,7 @@ UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
   
   return uiLength;
 }
-
+#endif
 
 Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam )
 {

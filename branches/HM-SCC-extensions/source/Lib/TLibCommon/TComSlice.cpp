@@ -329,11 +329,13 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
       if( m_pcRPS->getNumberOfPictures() == 0 )
       {
         m_apcRefPicList[REF_PIC_LIST_INTRABC][0] = *(rcListPic.begin());
         m_aiNumRefIdx[REF_PIC_LIST_INTRABC] = 1;
       }
+#endif
 
       return;
     }
@@ -410,7 +412,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       assert(numPicTotalCurr == 0);
     }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if((m_eSliceType == I_SLICE) || (getNumRefIdx(REF_PIC_LIST_0) == 0 && getNumRefIdx(REF_PIC_LIST_1) == 0))
+#else
     if (m_eSliceType == I_SLICE)
+#endif
     {
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
@@ -491,7 +497,14 @@ Int TComSlice::getNumRpsCurrTempList() const
 
   if (m_eSliceType == I_SLICE)
   {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if(getSPS()->getUseIntraBlockCopy())
+      return 1;
+    else
+      return 0;
+#else
     return 0;
+#endif
   }
   for(UInt i=0; i < m_pcRPS->getNumberOfNegativePictures()+ m_pcRPS->getNumberOfPositivePictures() + m_pcRPS->getNumberOfLongtermPictures(); i++)
   {
@@ -501,6 +514,14 @@ Int TComSlice::getNumRpsCurrTempList() const
     }
   }
   return numRpsCurrTempList;
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if(getSPS()->getUseIntraBlockCopy())
+    return numRpsCurrTempList + 1;
+  else
+    return numRpsCurrTempList;
+#else
+    return numRpsCurrTempList;
+#endif
 }
 
 Void TComSlice::initEqualRef()

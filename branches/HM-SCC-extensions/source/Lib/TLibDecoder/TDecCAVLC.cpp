@@ -1226,6 +1226,14 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
         }
       }
     }
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if(sps->getUseIntraBlockCopy())
+    {
+      assert(pcSlice->getNumRefIdx( REF_PIC_LIST_0) > 0);
+      pcSlice->setNumRefIdx(REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0) - 1);
+    }
+#endif
     // }
     TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
     if(!pcSlice->isIntra())
@@ -1718,10 +1726,12 @@ Void TDecCavlc::parsePartSize( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TDecCavlc::parsePartSizeIntraBC( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
+#endif
 
 Void TDecCavlc::parsePredMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
@@ -1751,6 +1761,7 @@ Void TDecCavlc::parseIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
   assert(0);
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TDecCavlc::parseIntraBCFlag ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt uiPartIdx, UInt /*uiDepth*/ )
 {
   assert(0);
@@ -1765,6 +1776,7 @@ Void TDecCavlc::parseIntraBCBvd( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UI
 {
   assert(0);
 }
+#endif
 
 Void TDecCavlc::parseInterDir( TComDataCU* /*pcCU*/, UInt& /*ruiInterDir*/, UInt /*uiAbsPartIdx*/ )
 {

@@ -124,7 +124,11 @@ Void TEncEntropy::encodeVPS( const TComVPS* pcVPS )
 
 Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
+#else
   if ( pcCU->getSlice()->isIntra() )
+#endif
   {
     return;
   }
@@ -162,6 +166,12 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     uiAbsPartIdx = 0;
   }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
+  {
+    return;
+  }
+#else
   if ( pcCU->getSlice()->isIntra() )
   {
     if ( pcCU->isIntra( uiAbsPartIdx ) )
@@ -183,6 +193,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     return;
   }
+#endif
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
   if(pcCU->isIntra( uiAbsPartIdx ))
@@ -221,10 +232,12 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncEntropy::encodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codePartSizeIntraBC( pcCU, uiAbsPartIdx );
 }
+#endif
 
 /** Encode I_PCM information.
  * \param pcCU          pointer to CU
@@ -475,6 +488,7 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncEntropy::encodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -488,10 +502,13 @@ Void TEncEntropy::encodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   m_pcEntropyCoderIf->codeIntraBC( pcCU, uiAbsPartIdx );
 }
+#endif
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   assert ( !pcCU->isIntraBC( uiAbsPartIdx ) );
+#endif
 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {

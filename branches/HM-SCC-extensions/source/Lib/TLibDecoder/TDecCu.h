@@ -98,7 +98,9 @@ protected:
   Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
+#endif
   Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
