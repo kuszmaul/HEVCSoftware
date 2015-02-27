@@ -780,7 +780,9 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
   TComDataCU         *pcCU        = rTu.getCU();
   const UInt         uiAbsPartIdx = rTu.GetAbsPartIdxTU();
   const ChromaFormat chFmt        = rTu.GetChromaFormat();
+#if !SCM_T0140_ACT_QP_OFFSET
   Bool bModifyQP = !pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 );
+#endif 
 
 
   for(UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
@@ -818,6 +820,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 
     //===== inverse transform =====
     QpParam cQP(*pcCU, compID);
+#if !SCM_T0140_ACT_QP_OFFSET
     if(bModifyQP)
     {
       cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
@@ -825,6 +828,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
       cQP.per = cQP.Qp/6;
       cQP.rem= cQP.Qp%6;
     }
+#endif
 
     DEBUG_STRING_NEW( sDebug );
 #ifdef DEBUG_STRING

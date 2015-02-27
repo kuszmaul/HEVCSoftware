@@ -288,7 +288,8 @@
 
 #define SCM_HIGH_BIT_DEPTH_BUG_FIX                       1                     
 #define SCM_T0121_INFER_TU_SPLIT_ENCODER                 1
-#define SCM_T0227_INTRABC_SIG_UNIFICATION                1   // unify intra BC mode and inter mode in every aspect
+#define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
+#define SCM_T0140_ACT_QP_OFFSET                          1 ///< Signal qp offsets for ACT color components at PPS/Slice level 
 
 //------------------------------------------------
 // Derived macros

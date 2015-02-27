@@ -154,6 +154,12 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setChromaCbQpOffset                                  ( m_cbQpOffset     );
   m_cTEncTop.setChromaCrQpOffset                                  ( m_crQpOffset  );
 
+#if SCM_T0140_ACT_QP_OFFSET
+  m_cTEncTop.setActQpYOffset                                      ( m_actYQpOffset  );
+  m_cTEncTop.setActQpCbOffset                                     ( m_actCbQpOffset );
+  m_cTEncTop.setActQpCrOffset                                     ( m_actCrQpOffset );
+#endif
+
   m_cTEncTop.setChromaFormatIdc                                   ( m_chromaFormatIDC  );
 
 #if ADAPTIVE_QP_SELECTION
