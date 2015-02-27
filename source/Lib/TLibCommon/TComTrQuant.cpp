@@ -1693,7 +1693,7 @@ Void TComTrQuant::applyForwardRDPCM( TComTU& rTu, const ComponentID compID, Pel*
       if ( bLossless )
       {
         pcCoeff[coefficientIndex] = encoderSideDelta;
-        reconstructedDelta        = encoderSideDelta;
+        reconstructedDelta        = (Pel) encoderSideDelta;
       }
       else
       {
