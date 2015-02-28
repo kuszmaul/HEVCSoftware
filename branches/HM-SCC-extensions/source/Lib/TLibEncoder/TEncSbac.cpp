@@ -627,6 +627,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     if ( uiNumPLTPredicted < uiMaxPLTSize)
     {
       uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
+#if SCM_T0063_NUM_PLT_ENTRY
+      xWriteEpExGolomb(uiNumPLTRceived, 0);
+#else
       for ( UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++ )
       {
         if ( uiNumPLTPredicted + uiPLTIdx < uiMaxPLTSize)
@@ -634,6 +637,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           m_pcBinIf->encodeBinEP( uiPLTIdx == (uiNumPLTRceived) );
         }
       }
+#endif
     }
     for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
     {

@@ -717,6 +717,9 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 
     if ( uiNumPLTPredicted < pcCU->getSlice()->getSPS()->getPLTMaxSize())
     {
+#if SCM_T0063_NUM_PLT_ENTRY
+       xReadEpExGolomb(uiNumPLTRceived, 0 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#else
       for (UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < pcCU->getSlice()->getSPS()->getPLTMaxSize(); uiPLTIdx++)
       {
         m_pcTDecBinIf->decodeBinEP( uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
@@ -726,6 +729,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         }
         uiNumPLTRceived++;
       }
+#endif
     }
 
     uiDictMaxSize = uiNumPLTRceived + uiNumPLTPredicted;
