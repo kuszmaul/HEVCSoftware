@@ -291,6 +291,7 @@
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
 #define SCM_T0140_ACT_QP_OFFSET                          1 ///< Signal qp offsets for ACT color components at PPS/Slice level 
 #define SCM_T0063_NUM_PLT_ENTRY                          1 ///< use EG0 to code number of new palette entries
+#define SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION      1 ///< improved palette table generation
 
 //------------------------------------------------
 // Derived macros
@@ -916,6 +917,19 @@ public:
     }
     uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
   }
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  Bool EqualData(SortingElement sElement)
+  {
+    return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]) && (uiData[2] == sElement.uiData[2]);
+  }
+
+  Void ResetElement() 
+  {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+#endif
   Bool almostEqualData(SortingElement sElement, Int iErrorLimit) {return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit
                                                                       && ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit
                                                                       && ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit;

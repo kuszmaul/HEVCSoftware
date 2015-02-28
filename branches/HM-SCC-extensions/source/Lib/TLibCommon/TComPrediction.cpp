@@ -1118,6 +1118,141 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   UInt uiPos;
   Int last = -1;
 
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  SortingElement *psListHistogram = new SortingElement[uiTotalSize];
+  SortingElement *psInitial = new SortingElement[uiTotalSize];
+  UInt uiHisIdx = 0;
+
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+
+      Int i = 0;
+      for (i = uiHisIdx - 1; i >= 0; i--)
+      {
+        if (psListHistogram[i].EqualData(sElement))
+        {
+          psListHistogram[i].addElement(sElement);
+          break;
+        }
+      }
+      if (i == -1)
+      {
+        psListHistogram[uiHisIdx].copyDataFrom(sElement);
+        psListHistogram[uiHisIdx].uiCnt = 1;
+        uiHisIdx++;
+      }
+    }
+  }
+
+  UInt uiHisCnt, uiMaxIdx;
+  UInt uiLimit = ((uiHeight << 2)*iErrorLimit) >> 7;
+  uiLimit = (uiLimit > (uiHeight >> 1)) ? uiLimit : (uiHeight >> 1);
+
+  Bool bOtherPeakExist;
+  while (true)
+  {
+    uiHisCnt = psListHistogram[0].uiCnt;
+    uiMaxIdx = 0;
+    for (UInt j = 1; j < uiHisIdx; j++)
+    {
+      if (psListHistogram[j].uiCnt >= uiHisCnt)
+      {
+        uiHisCnt = psListHistogram[j].uiCnt;
+        uiMaxIdx = j;
+      }
+    }
+
+    if (uiHisCnt >= uiLimit)
+    {
+      bOtherPeakExist = false;
+      for (UInt j = 0; j < uiHisIdx; j++)
+      {
+        if (psListHistogram[j].uiCnt >= (uiHisCnt >> 1) && j != uiMaxIdx)
+        {
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2))
+          {
+            bOtherPeakExist = true;
+          }
+        }
+      }
+
+      if (!bOtherPeakExist)
+      {
+        psList[uiIdx].copyAllFrom(psListHistogram[uiMaxIdx]);
+        psInitial[uiIdx].copyAllFrom(psListHistogram[uiMaxIdx]);
+        last = uiIdx;
+        uiIdx++;
+
+        for (UInt j = 0; j < uiHisIdx; j++)
+        {
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2) && j != uiMaxIdx)
+          {
+            psListHistogram[j].ResetElement();
+          }
+        }
+      }
+
+      psListHistogram[uiMaxIdx].ResetElement();
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  UInt uiInitialIdx = uiIdx;
+  Bool bMatched;
+
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+
+      bMatched = false;
+      for (Int i = 0; i < uiInitialIdx; i++)
+      {
+        bMatched |= psInitial[i].EqualData(sElement);
+      }
+
+      if (!bMatched)
+      {
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement);
+        if (bestSAD)
+        {
+          for (Int i = uiIdx - 1; i >= 0; i--)
+          {
+            UInt sad = psList[i].getSAD(sElement);
+            if (sad < bestSAD)
+            {
+              bestSAD = sad;
+              besti = i;
+              if (!sad) break;
+            }
+          }
+        }
+
+        if (besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit))
+        {
+          psList[besti].addElement(sElement);
+          last = besti;
+        }
+        else
+        {
+          psList[uiIdx].copyDataFrom(sElement);
+          psList[uiIdx].uiCnt = 1;
+          last = uiIdx;
+          uiIdx++;
+        }
+      }
+    }
+  }
+#else
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -1154,6 +1289,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
       }
     }
   }
+#endif
 
   for (Int i = 0; i < uiDictMaxSize; i++)
   {
@@ -1256,6 +1392,11 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
 
   delete [] psList;
   delete [] pListSort;
+
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  delete[] psListHistogram;
+  delete[] psInitial;
+#endif
 }
 
 Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize)
