@@ -914,7 +914,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransquantBypassEnableFlag",                      m_TransquantBypassEnableFlag,                     false, "transquant_bypass_enable_flag indicator in PPS")
   ("CUTransquantBypassFlagForce",                     m_CUTransquantBypassFlagForce,                    false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
 #if SCM_T0121_INFER_TU_SPLIT_ENCODER
-  ("TransquantBypassInferTUSplit",                    m_bTransquantBypassInferTUSplit,                  true, "Infer TU splitting for transquant bypass CUs, when transquant_bypass_enable_flag is enabled")
+  ("TransquantBypassInferTUSplit",                    m_bTransquantBypassInferTUSplit,                  false, "Infer TU splitting for transquant bypass CUs, when transquant_bypass_enable_flag is enabled")
 #endif
   ("CostMode",                                        m_costMode,                         COST_STANDARD_LOSSY, "Use alternative cost functions: choose between 'lossy', 'sequence_level_lossless', 'lossless' (which forces QP to " MACRO_TO_STRING(LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP) ") and 'mixed_lossless_lossy' (which used QP'=" MACRO_TO_STRING(LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for pre-estimates of transquant-bypass blocks).")
   ("RecalculateQPAccordingToLambda",                  m_recalculateQPAccordingToLambda,                 false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
