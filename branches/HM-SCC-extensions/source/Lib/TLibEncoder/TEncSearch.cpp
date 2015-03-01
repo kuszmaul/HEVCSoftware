@@ -9431,18 +9431,7 @@ Void TEncSearch::xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu )
   {
     if( uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() && uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) )
     {
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
-      if((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->isInter(uiAbsPartIdx) && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N))
-      {
-        assert(bSubdiv);
-      }
-      else
-      {
-#endif
       m_pcEntropyCoder->encodeTransformSubdivFlag( bSubdiv, 5 - uiLog2TrSize );
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
-      }
-#endif
     }
 
     assert( !pcCU->isIntra(uiAbsPartIdx) );
