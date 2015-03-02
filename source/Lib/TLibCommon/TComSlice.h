@@ -1211,7 +1211,6 @@ private:
   Int                        m_iLastIDR;
   Int                        m_iAssociatedIRAP;
   NalUnitType                m_iAssociatedIRAPType;
-  static Int                 m_prevTid0POC; // TODO: Remove this static member variable.
   TComReferencePictureSet*   m_pcRPS;
   TComReferencePictureSet    m_LocalRPS;
   Int                        m_iBDidx;
@@ -1321,7 +1320,6 @@ public:
 
   Void                        setRPSidx( Int iBDidx )                                { m_iBDidx = iBDidx;                                            }
   Int                         getRPSidx() const                                      { return m_iBDidx;                                              }
-  Int                         getPrevTid0POC() const                                 { return m_prevTid0POC;                                         }
   TComRefPicListModification* getRefPicListModification()                            { return &m_RefPicListModification;                             }
   Void                        setLastIDR(Int iIDRPOC)                                { m_iLastIDR = iIDRPOC;                                         }
   Int                         getLastIDR() const                                     { return m_iLastIDR;                                            }
@@ -1362,7 +1360,7 @@ public:
   Void                        setReferenced(Bool b)                                  { m_bRefenced = b;                                              }
   Bool                        isReferenced() const                                   { return m_bRefenced;                                           }
   Bool                        isReferenceNalu() const                                { return ((getNalUnitType() <= NAL_UNIT_RESERVED_VCL_R15) && (getNalUnitType()%2 != 0)) || ((getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP) && (getNalUnitType() <= NAL_UNIT_RESERVED_IRAP_VCL23) ); }
-  Void                        setPOC( Int i )                                        { m_iPOC              = i; if ((getTLayer()==0) && (isReferenceNalu() && (getNalUnitType()!=NAL_UNIT_CODED_SLICE_RASL_R)&& (getNalUnitType()!=NAL_UNIT_CODED_SLICE_RADL_R))) {m_prevTid0POC=i;} }
+  Void                        setPOC( Int i )                                        { m_iPOC              = i; }
   Void                        setNalUnitType( NalUnitType e )                        { m_eNalUnitType      = e;                                      }
   NalUnitType                 getNalUnitType() const                                 { return m_eNalUnitType;                                        }
   Bool                        getRapPicFlag() const;

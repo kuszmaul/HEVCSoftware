@@ -96,6 +96,7 @@ private:
   TComPic*                m_pcPic;
   UInt                    m_uiSliceIdx;
   Int                     m_prevPOC;
+  Int                     m_prevTid0POC;
   Bool                    m_bFirstSliceInPicture;
   Bool                    m_bFirstSliceInSequence;
   Bool                    m_prevSliceSkipped;
@@ -149,6 +150,7 @@ protected:
   Void      xDecodeSPS(const std::vector<UChar> *pNaluData);
   Void      xDecodePPS(const std::vector<UChar> *pNaluData);
   Void      xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType );
+  Void      xUpdatePreviousTid0POC( TComSlice *pSlice ) { if ((pSlice->getTLayer()==0) && (pSlice->isReferenceNalu() && (pSlice->getNalUnitType()!=NAL_UNIT_CODED_SLICE_RASL_R)&& (pSlice->getNalUnitType()!=NAL_UNIT_CODED_SLICE_RADL_R))) { m_prevTid0POC=pSlice->getPOC(); } }
 
 
 };// END CLASS DEFINITION TDecTop
