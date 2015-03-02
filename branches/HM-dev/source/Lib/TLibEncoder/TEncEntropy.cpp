@@ -48,10 +48,9 @@ static const Bool bDebugPredEnabled = DebugOptionList::DebugPred.getInt()!=0;
 //! \ingroup TLibEncoder
 //! \{
 
-Void TEncEntropy::setEntropyCoder ( TEncEntropyIf* e, TComSlice* pcSlice )
+Void TEncEntropy::setEntropyCoder ( TEncEntropyIf* e )
 {
   m_pcEntropyCoderIf = e;
-  m_pcEntropyCoderIf->setSlice ( pcSlice );
 }
 
 Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )

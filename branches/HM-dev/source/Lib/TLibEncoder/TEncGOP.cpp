@@ -785,6 +785,226 @@ Void TEncGOP::xUpdateDuInfoSEI(SEIMessages &duInfoSeiMessages, SEIPictureTiming 
   }
 }
 
+static Void
+cabac_zero_word_padding(TComSlice *const pcSlice, TComPic *const pcPic, const std::size_t binCountsInNalUnits, const std::size_t numBytesInVclNalUnits, std::ostringstream &nalUnitData, const Bool cabacZeroWordPaddingEnabled)
+{
+  const TComSPS &sps=*(pcSlice->getSPS());
+  const Int log2subWidthCxsubHeightC = (pcPic->getComponentScaleX(COMPONENT_Cb)+pcPic->getComponentScaleY(COMPONENT_Cb));
+  const Int minCuWidth  = pcPic->getMinCUWidth();
+  const Int minCuHeight = pcPic->getMinCUHeight();
+  const Int paddedWidth = ((sps.getPicWidthInLumaSamples()  + minCuWidth  - 1) / minCuWidth) * minCuWidth;
+  const Int paddedHeight= ((sps.getPicHeightInLumaSamples() + minCuHeight - 1) / minCuHeight) * minCuHeight;
+  const Int rawBits = paddedWidth * paddedHeight *
+                         (sps.getBitDepth(CHANNEL_TYPE_LUMA) + 2*(sps.getBitDepth(CHANNEL_TYPE_CHROMA)>>log2subWidthCxsubHeightC));
+  const std::size_t threshold = (32/3)*numBytesInVclNalUnits + (rawBits/32);
+  if (binCountsInNalUnits >= threshold)
+  {
+    // need to add additional cabac zero words (each one accounts for 3 bytes (=00 00 03)) to increase numBytesInVclNalUnits
+    const std::size_t targetNumBytesInVclNalUnits = ((binCountsInNalUnits - (rawBits/32))*3+31)/32;
+
+    if (targetNumBytesInVclNalUnits>numBytesInVclNalUnits) // It should be!
+    {
+      const std::size_t numberOfAdditionalBytesNeeded=targetNumBytesInVclNalUnits - numBytesInVclNalUnits;
+      const std::size_t numberOfAdditionalCabacZeroWords=(numberOfAdditionalBytesNeeded+2)/3;
+      const std::size_t numberOfAdditionalCabacZeroBytes=numberOfAdditionalCabacZeroWords*3;
+      if (cabacZeroWordPaddingEnabled)
+      {
+        std::vector<Char> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, Char(0));
+        for(std::size_t i=0; i<numberOfAdditionalCabacZeroWords; i++)
+        {
+          zeroBytesPadding[i*3+2]=3;  // 00 00 03
+        }
+        nalUnitData.write(&(zeroBytesPadding[0]), numberOfAdditionalCabacZeroBytes);
+        printf("Adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
+      }
+      else
+      {
+        printf("Standard would normally require adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
+      }
+    }
+  }
+}
+
+#if EFFICIENT_FIELD_IRAP
+class EfficientFieldIRAPMapping
+{
+  private:
+    Int  IRAPGOPid;
+    Bool IRAPtoReorder;
+    Bool swapIRAPForward;
+
+  public:
+    EfficientFieldIRAPMapping() :
+      IRAPGOPid(-1),
+      IRAPtoReorder(false),
+      swapIRAPForward(false)
+    { }
+
+    Void initialize(const Bool isField, const Int gopSize, const Int POCLast, const Int numPicRcvd, const Int lastIDR, TEncGOP *pEncGop, TEncCfg *pCfg);
+
+    Int adjustGOPid(const Int gopID);
+    Int restoreGOPid(const Int gopID);
+    Int GetIRAPGOPid() const { return IRAPGOPid; }
+};
+
+Void EfficientFieldIRAPMapping::initialize(const Bool isField, const Int gopSize, const Int POCLast, const Int numPicRcvd, const Int lastIDR, TEncGOP *pEncGop, TEncCfg *pCfg )
+{
+  if(isField)
+  {
+    Int pocCurr;
+    for ( Int iGOPid=0; iGOPid < gopSize; iGOPid++ )
+    {
+      // determine actual POC
+      if(POCLast == 0) //case first frame or first top field
+      {
+        pocCurr=0;
+      }
+      else if(POCLast == 1 && isField) //case first bottom field, just like the first frame, the poc computation is not right anymore, we set the right value
+      {
+        pocCurr = 1;
+      }
+      else
+      {
+        pocCurr = POCLast - numPicRcvd + pCfg->getGOPEntry(iGOPid).m_POC - isField;
+      }
+
+      // check if POC corresponds to IRAP
+      NalUnitType tmpUnitType = pEncGop->getNalUnitType(pocCurr, lastIDR, isField);
+      if(tmpUnitType >= NAL_UNIT_CODED_SLICE_BLA_W_LP && tmpUnitType <= NAL_UNIT_CODED_SLICE_CRA) // if picture is an IRAP
+      {
+        if(pocCurr%2 == 0 && iGOPid < gopSize-1 && pCfg->getGOPEntry(iGOPid).m_POC == pCfg->getGOPEntry(iGOPid+1).m_POC-1)
+        { // if top field and following picture in enc order is associated bottom field
+          IRAPGOPid = iGOPid;
+          IRAPtoReorder = true;
+          swapIRAPForward = true; 
+          break;
+        }
+        if(pocCurr%2 != 0 && iGOPid > 0 && pCfg->getGOPEntry(iGOPid).m_POC == pCfg->getGOPEntry(iGOPid-1).m_POC+1)
+        {
+          // if picture is an IRAP remember to process it first
+          IRAPGOPid = iGOPid;
+          IRAPtoReorder = true;
+          swapIRAPForward = false; 
+          break;
+        }
+      }
+    }
+  }
+}
+
+Int EfficientFieldIRAPMapping::adjustGOPid(const Int GOPid)
+{
+  if(IRAPtoReorder)
+  {
+    if(swapIRAPForward)
+    {
+      if(GOPid == IRAPGOPid)
+      {
+        return IRAPGOPid +1;
+      }
+      else if(GOPid == IRAPGOPid +1)
+      {
+        return IRAPGOPid;
+      }
+    }
+    else
+    {
+      if(GOPid == IRAPGOPid -1)
+      {
+        return IRAPGOPid;
+      }
+      else if(GOPid == IRAPGOPid)
+      {
+        return IRAPGOPid -1;
+      }
+    }
+  }
+  return GOPid;
+}
+
+Int EfficientFieldIRAPMapping::restoreGOPid(const Int GOPid)
+{
+  if(IRAPtoReorder)
+  {
+    if(swapIRAPForward)
+    {
+      if(GOPid == IRAPGOPid)
+      {
+        IRAPtoReorder = false;
+        return IRAPGOPid +1;
+      }
+      else if(GOPid == IRAPGOPid +1)
+      {
+        return GOPid -1;
+      }
+    }
+    else
+    {
+      if(GOPid == IRAPGOPid)
+      {
+        return IRAPGOPid -1;
+      }
+      else if(GOPid == IRAPGOPid -1)
+      {
+        IRAPtoReorder = false;
+        return IRAPGOPid;
+      }
+    }
+  }
+  return GOPid;
+}
+
+#endif
+
+static UInt calculateCollocatedFromL1Flag(TEncCfg *pCfg, const Int GOPid, const Int gopSize)
+{
+  Int iCloseLeft=1, iCloseRight=-1;
+  for(Int i = 0; i<pCfg->getGOPEntry(GOPid).m_numRefPics; i++)
+  {
+    Int iRef = pCfg->getGOPEntry(GOPid).m_referencePics[i];
+    if(iRef>0&&(iRef<iCloseRight||iCloseRight==-1))
+    {
+      iCloseRight=iRef;
+    }
+    else if(iRef<0&&(iRef>iCloseLeft||iCloseLeft==1))
+    {
+      iCloseLeft=iRef;
+    }
+  }
+  if(iCloseRight>-1)
+  {
+    iCloseRight=iCloseRight+pCfg->getGOPEntry(GOPid).m_POC-1;
+  }
+  if(iCloseLeft<1)
+  {
+    iCloseLeft=iCloseLeft+pCfg->getGOPEntry(GOPid).m_POC-1;
+    while(iCloseLeft<0)
+    {
+      iCloseLeft+=gopSize;
+    }
+  }
+  Int iLeftQP=0, iRightQP=0;
+  for(Int i=0; i<gopSize; i++)
+  {
+    if(pCfg->getGOPEntry(i).m_POC==(iCloseLeft%gopSize)+1)
+    {
+      iLeftQP= pCfg->getGOPEntry(i).m_QPOffset;
+    }
+    if (pCfg->getGOPEntry(i).m_POC==(iCloseRight%gopSize)+1)
+    {
+      iRightQP=pCfg->getGOPEntry(i).m_QPOffset;
+    }
+  }
+  if(iCloseRight>-1&&iRightQP<iLeftQP)
+  {
+    return 0;
+  }
+  else
+  {
+    return 1;
+  }
+}
+
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -812,51 +1032,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   SEIDecodingUnitInfo decodingUnitInfoSEI;
 
 #if EFFICIENT_FIELD_IRAP
-  Int IRAPGOPid = -1;
-  Bool IRAPtoReorder = false;
-  Bool swapIRAPForward = false;
-  if(isField)
-  {
-    Int pocCurr;
-    for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
-    {
-      // determine actual POC
-      if(iPOCLast == 0) //case first frame or first top field
-      {
-        pocCurr=0;
-      }
-      else if(iPOCLast == 1 && isField) //case first bottom field, just like the first frame, the poc computation is not right anymore, we set the right value
-      {
-        pocCurr = 1;
-      }
-      else
-      {
-        pocCurr = iPOCLast - iNumPicRcvd + m_pcCfg->getGOPEntry(iGOPid).m_POC - isField;
-      }
-
-      // check if POC corresponds to IRAP
-      NalUnitType tmpUnitType = getNalUnitType(pocCurr, m_iLastIDR, isField);
-      if(tmpUnitType >= NAL_UNIT_CODED_SLICE_BLA_W_LP && tmpUnitType <= NAL_UNIT_CODED_SLICE_CRA) // if picture is an IRAP
-      {
-        if(pocCurr%2 == 0 && iGOPid < m_iGopSize-1 && m_pcCfg->getGOPEntry(iGOPid).m_POC == m_pcCfg->getGOPEntry(iGOPid+1).m_POC-1)
-        { // if top field and following picture in enc order is associated bottom field
-          IRAPGOPid = iGOPid;
-          IRAPtoReorder = true;
-          swapIRAPForward = true; 
-          break;
-        }
-        if(pocCurr%2 != 0 && iGOPid > 0 && m_pcCfg->getGOPEntry(iGOPid).m_POC == m_pcCfg->getGOPEntry(iGOPid-1).m_POC+1)
-        {
-          // if picture is an IRAP remember to process it first
-          IRAPGOPid = iGOPid;
-          IRAPtoReorder = true;
-          swapIRAPForward = false; 
-          break;
-        }
-      }
-    }
-  }
+  EfficientFieldIRAPMapping effFieldIRAPMap;
+  effFieldIRAPMap.initialize(isField, m_iGopSize, iPOCLast, iNumPicRcvd, m_iLastIDR, this, m_pcCfg);
 #endif
+
   // reset flag indicating whether pictures have been encoded
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
@@ -866,79 +1045,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
 #if EFFICIENT_FIELD_IRAP
-    if(IRAPtoReorder)
-    {
-      if(swapIRAPForward)
-      {
-        if(iGOPid == IRAPGOPid)
-        {
-          iGOPid = IRAPGOPid +1;
-        }
-        else if(iGOPid == IRAPGOPid +1)
-        {
-          iGOPid = IRAPGOPid;
-        }
-      }
-      else
-      {
-        if(iGOPid == IRAPGOPid -1)
-        {
-          iGOPid = IRAPGOPid;
-        }
-        else if(iGOPid == IRAPGOPid)
-        {
-          iGOPid = IRAPGOPid -1;
-        }
-      }
-    }
+    iGOPid=effFieldIRAPMap.adjustGOPid(iGOPid);
 #endif
 
-    UInt uiColDir = 1;
     //-- For time output for each slice
     clock_t iBeforeTime = clock();
 
-    //select uiColDir
-    Int iCloseLeft=1, iCloseRight=-1;
-    for(Int i = 0; i<m_pcCfg->getGOPEntry(iGOPid).m_numRefPics; i++)
-    {
-      Int iRef = m_pcCfg->getGOPEntry(iGOPid).m_referencePics[i];
-      if(iRef>0&&(iRef<iCloseRight||iCloseRight==-1))
-      {
-        iCloseRight=iRef;
-      }
-      else if(iRef<0&&(iRef>iCloseLeft||iCloseLeft==1))
-      {
-        iCloseLeft=iRef;
-      }
-    }
-    if(iCloseRight>-1)
-    {
-      iCloseRight=iCloseRight+m_pcCfg->getGOPEntry(iGOPid).m_POC-1;
-    }
-    if(iCloseLeft<1)
-    {
-      iCloseLeft=iCloseLeft+m_pcCfg->getGOPEntry(iGOPid).m_POC-1;
-      while(iCloseLeft<0)
-      {
-        iCloseLeft+=m_iGopSize;
-      }
-    }
-    Int iLeftQP=0, iRightQP=0;
-    for(Int i=0; i<m_iGopSize; i++)
-    {
-      if(m_pcCfg->getGOPEntry(i).m_POC==(iCloseLeft%m_iGopSize)+1)
-      {
-        iLeftQP= m_pcCfg->getGOPEntry(i).m_QPOffset;
-      }
-      if (m_pcCfg->getGOPEntry(i).m_POC==(iCloseRight%m_iGopSize)+1)
-      {
-        iRightQP=m_pcCfg->getGOPEntry(i).m_QPOffset;
-      }
-    }
-    if(iCloseRight>-1&&iRightQP<iLeftQP)
-    {
-      uiColDir=0;
-    }
+    UInt uiColDir = calculateCollocatedFromL1Flag(m_pcCfg, iGOPid, m_iGopSize);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////// Initial to start encoding
     Int iTimeOffset;
@@ -963,33 +1076,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
 #if EFFICIENT_FIELD_IRAP
-      if(IRAPtoReorder)
-      {
-        if(swapIRAPForward)
-        {
-          if(iGOPid == IRAPGOPid)
-          {
-            iGOPid = IRAPGOPid +1;
-            IRAPtoReorder = false;
-          }
-          else if(iGOPid == IRAPGOPid +1)
-          {
-            iGOPid --;
-          }
-        }
-        else
-        {
-          if(iGOPid == IRAPGOPid)
-          {
-            iGOPid = IRAPGOPid -1;
-          }
-          else if(iGOPid == IRAPGOPid -1)
-          {
-            iGOPid = IRAPGOPid;
-            IRAPtoReorder = false;
-          }
-        }
-      }
+      iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
 #endif
       continue;
     }
@@ -1168,10 +1255,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     refPicListModification->setRefPicListModificationFlagL1(0);
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
-
-#if ADAPTIVE_QP_SELECTION
-    pcSlice->setTrQuant( m_pcEncTop->getTrQuant() );
-#endif
 
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
@@ -1404,7 +1487,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     /////////////////////////////////////////////////////////////////////////////////////////////////// File writing
     // Set entropy coder
-    m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder, pcSlice );
+    m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder );
 
     if ( m_bSeqFirst )
     {
@@ -1472,8 +1555,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         substreamsOut[ui].clear();
       }
 
-      m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder, pcSlice );
-      m_pcEntropyCoder->resetEntropy      ();
+      m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder );
+      m_pcEntropyCoder->resetEntropy      ( pcSlice );
       /* start slice NALunit */
       OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->getTLayer() );
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
@@ -1515,7 +1598,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         // Construct the final bitstream by concatenating substreams.
         // The final bitstream is either nalu.m_Bitstream or pcBitstreamRedirect;
         // Complete the slice header info.
-        m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder, pcSlice );
+        m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder );
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
         m_pcEntropyCoder->encodeTilesWPPEntryPoint( pcSlice );
 
@@ -1564,43 +1647,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     } // end iteration over slices
 
     // cabac_zero_words processing
-    {
-      const TComSPS &sps=*(pcSlice->getSPS());
-      const Int log2subWidthCxsubHeightC = (pcPic->getComponentScaleX(COMPONENT_Cb)+pcPic->getComponentScaleY(COMPONENT_Cb));
-      const Int minCuWidth  = pcPic->getMinCUWidth();
-      const Int minCuHeight = pcPic->getMinCUHeight();
-      const Int paddedWidth = ((sps.getPicWidthInLumaSamples()  + minCuWidth  - 1) / minCuWidth) * minCuWidth;
-      const Int paddedHeight= ((sps.getPicHeightInLumaSamples() + minCuHeight - 1) / minCuHeight) * minCuHeight;
-      const Int rawBits = paddedWidth * paddedHeight *
-                             (sps.getBitDepth(CHANNEL_TYPE_LUMA) + 2*(sps.getBitDepth(CHANNEL_TYPE_CHROMA)>>log2subWidthCxsubHeightC));
-      const std::size_t threshold = (32/3)*numBytesInVclNalUnits + (rawBits/32);
-      if (binCountsInNalUnits >= threshold)
-      {
-        // need to add additional cabac zero words (each one accounts for 3 bytes (=00 00 03)) to increase numBytesInVclNalUnits
-        const std::size_t targetNumBytesInVclNalUnits = ((binCountsInNalUnits - (rawBits/32))*3+31)/32;
-
-        if (targetNumBytesInVclNalUnits>numBytesInVclNalUnits) // It should be!
-        {
-          const std::size_t numberOfAdditionalBytesNeeded=targetNumBytesInVclNalUnits - numBytesInVclNalUnits;
-          const std::size_t numberOfAdditionalCabacZeroWords=(numberOfAdditionalBytesNeeded+2)/3;
-          const std::size_t numberOfAdditionalCabacZeroBytes=numberOfAdditionalCabacZeroWords*3;
-          if (m_pcCfg->getCabacZeroWordPaddingEnabled())
-          {
-            std::vector<Char> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, Char(0));
-            for(std::size_t i=0; i<numberOfAdditionalCabacZeroWords; i++)
-            {
-              zeroBytesPadding[i*3+2]=3;  // 00 00 03
-            }
-            accessUnit.back()->m_nalUnitData.write(&(zeroBytesPadding[0]), numberOfAdditionalCabacZeroBytes);
-            printf("Adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
-          }
-          else
-          {
-            printf("Standard would normally require adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
-          }
-        }
-      }
-    }
+    cabac_zero_word_padding(pcSlice, pcPic, binCountsInNalUnits, numBytesInVclNalUnits, accessUnit.back()->m_nalUnitData, m_pcCfg->getCabacZeroWordPaddingEnabled());
 
     pcPic->compressMotion();
 
@@ -1618,69 +1665,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     trailingSeiMessages.clear();
 
     m_pcCfg->setEncodedFlag(iGOPid, true);
-    xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
 
-    //In case of field coding, compute the interlaced PSNR for both fields
-    if(isField)
-    {
-      Bool bothFieldsAreEncoded = false;
-      Int correspondingFieldPOC = pcPic->getPOC();
-      Int currentPicGOPPoc = m_pcCfg->getGOPEntry(iGOPid).m_POC;
-      if(pcPic->getPOC() == 0)
-      {
-        // particular case for POC 0 and 1. 
-        // If they are not encoded first and separately from other pictures, we need to change this 
-        // POC 0 is always encoded first then POC 1 is encoded
-        bothFieldsAreEncoded = false;
-      }
-      else if(pcPic->getPOC() == 1)
-      {
-        // if we are at POC 1, POC 0 has been encoded for sure
-        correspondingFieldPOC = 0;
-        bothFieldsAreEncoded = true;
-      }
-      else 
-      {
-        if(pcPic->getPOC()%2 == 1)
-        {
-          correspondingFieldPOC -= 1; // all odd POC are associated with the preceding even POC (e.g poc 1 is associated to poc 0)
-          currentPicGOPPoc      -= 1;
-        }
-        else
-        {
-          correspondingFieldPOC += 1; // all even POC are associated with the following odd POC (e.g poc 0 is associated to poc 1)
-          currentPicGOPPoc      += 1;
-        }
-        for(Int i = 0; i < m_iGopSize; i ++)
-        {
-          if(m_pcCfg->getGOPEntry(i).m_POC == currentPicGOPPoc)
-          {
-            bothFieldsAreEncoded = m_pcCfg->getGOPEntry(i).m_isEncoded;
-            break;
-          }
-        }
-      }
-
-      if(bothFieldsAreEncoded)
-      {        
-        //get complementary top field
-        TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
-        while ((*iterPic)->getPOC() != correspondingFieldPOC)
-        {
-          iterPic ++;
-        }
-        TComPic* correspondingFieldPic = *(iterPic);
-
-        if( (pcPic->isTopField() && isTff) || (!pcPic->isTopField() && !isTff))
-        {
-          xCalculateInterlacedAddPSNR(pcPic, correspondingFieldPic, pcPic->getPicYuvRec(), correspondingFieldPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
-        }
-        else
-        {
-          xCalculateInterlacedAddPSNR(correspondingFieldPic, pcPic, correspondingFieldPic->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
-        }
-      }
-    }
+    xCalculateAddPSNRs( isField, isTff, iGOPid, pcPic, accessUnit, rcListPic, dEncTime, snr_conversion, printFrameMSE );
 
     if (!digestStr.empty())
     {
@@ -1721,7 +1707,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 
-    xCreatePictureTimingSEI(IRAPGOPid, leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, accessUnit, pcSlice, isField, duData);
+#if EFFICIENT_FIELD_IRAP
+    xCreatePictureTimingSEI(effFieldIRAPMap.GetIRAPGOPid(), leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, accessUnit, pcSlice, isField, duData);
+#else
+    xCreatePictureTimingSEI(0, leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, accessUnit, pcSlice, isField, duData);
+#endif
     if (m_pcCfg->getScalableNestingSEIEnabled())
     {
       xCreateScalableNestingSEI (leadingSeiMessages, nestedSeiMessages);
@@ -1744,33 +1734,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     fflush(stdout);
 
 #if EFFICIENT_FIELD_IRAP
-    if(IRAPtoReorder)
-    {
-      if(swapIRAPForward)
-      {
-        if(iGOPid == IRAPGOPid)
-        {
-          iGOPid = IRAPGOPid +1;
-          IRAPtoReorder = false;
-        }
-        else if(iGOPid == IRAPGOPid +1)
-        {
-          iGOPid --;
-        }
-      }
-      else
-      {
-        if(iGOPid == IRAPGOPid)
-        {
-          iGOPid = IRAPGOPid -1;
-        }
-        else if(iGOPid == IRAPGOPid -1)
-        {
-          iGOPid = IRAPGOPid;
-          IRAPtoReorder = false;
-        }
-      }
-    }
+    iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
 #endif
   } // iGOPid-loop
 
@@ -1975,6 +1939,73 @@ static const Char* nalUnitTypeToString(NalUnitType type)
   }
 }
 #endif
+
+Void TEncGOP::xCalculateAddPSNRs( const Bool isField, const Bool isFieldTopFieldFirst, const Int iGOPid, TComPic* pcPic, const AccessUnit&accessUnit, TComList<TComPic*> &rcListPic, const Double dEncTime, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE )
+{
+  xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+
+  //In case of field coding, compute the interlaced PSNR for both fields
+  if(isField)
+  {
+    Bool bothFieldsAreEncoded = false;
+    Int correspondingFieldPOC = pcPic->getPOC();
+    Int currentPicGOPPoc = m_pcCfg->getGOPEntry(iGOPid).m_POC;
+    if(pcPic->getPOC() == 0)
+    {
+      // particular case for POC 0 and 1.
+      // If they are not encoded first and separately from other pictures, we need to change this
+      // POC 0 is always encoded first then POC 1 is encoded
+      bothFieldsAreEncoded = false;
+    }
+    else if(pcPic->getPOC() == 1)
+    {
+      // if we are at POC 1, POC 0 has been encoded for sure
+      correspondingFieldPOC = 0;
+      bothFieldsAreEncoded = true;
+    }
+    else
+    {
+      if(pcPic->getPOC()%2 == 1)
+      {
+        correspondingFieldPOC -= 1; // all odd POC are associated with the preceding even POC (e.g poc 1 is associated to poc 0)
+        currentPicGOPPoc      -= 1;
+      }
+      else
+      {
+        correspondingFieldPOC += 1; // all even POC are associated with the following odd POC (e.g poc 0 is associated to poc 1)
+        currentPicGOPPoc      += 1;
+      }
+      for(Int i = 0; i < m_iGopSize; i ++)
+      {
+        if(m_pcCfg->getGOPEntry(i).m_POC == currentPicGOPPoc)
+        {
+          bothFieldsAreEncoded = m_pcCfg->getGOPEntry(i).m_isEncoded;
+          break;
+        }
+      }
+    }
+
+    if(bothFieldsAreEncoded)
+    {
+      //get complementary top field
+      TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
+      while ((*iterPic)->getPOC() != correspondingFieldPOC)
+      {
+        iterPic ++;
+      }
+      TComPic* correspondingFieldPic = *(iterPic);
+
+      if( (pcPic->isTopField() && isFieldTopFieldFirst) || (!pcPic->isTopField() && !isFieldTopFieldFirst))
+      {
+        xCalculateInterlacedAddPSNR(pcPic, correspondingFieldPic, pcPic->getPicYuvRec(), correspondingFieldPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+      }
+      else
+      {
+        xCalculateInterlacedAddPSNR(correspondingFieldPic, pcPic, correspondingFieldPic->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );
+      }
+    }
+  }
+}
 
 Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion conversion, const Bool printFrameMSE )
 {

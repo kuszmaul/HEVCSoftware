@@ -57,7 +57,6 @@
 TEncSbac::TEncSbac()
 // new structure here
 : m_pcBitIf                            ( NULL )
-, m_pcSlice                            ( NULL )
 , m_pcBinIf                            ( NULL )
 , m_numContextModels                   ( 0 )
 , m_cCUSplitFlagSCModel                ( 1,             1,                      NUM_SPLIT_FLAG_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
@@ -103,13 +102,13 @@ TEncSbac::~TEncSbac()
 // Public member functions
 // ====================================================================================================================
 
-Void TEncSbac::resetEntropy           ()
+Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
 {
-  Int  iQp              = m_pcSlice->getSliceQp();
-  SliceType eSliceType  = m_pcSlice->getSliceType();
+  Int  iQp              = pSlice->getSliceQp();
+  SliceType eSliceType  = pSlice->getSliceType();
 
-  SliceType encCABACTableIdx = m_pcSlice->getEncCABACTableIdx();
-  if (!m_pcSlice->isIntra() && (encCABACTableIdx==B_SLICE || encCABACTableIdx==P_SLICE) && m_pcSlice->getPPS()->getCabacInitPresentFlag())
+  SliceType encCABACTableIdx = pSlice->getEncCABACTableIdx();
+  if (!pSlice->isIntra() && (encCABACTableIdx==B_SLICE || encCABACTableIdx==P_SLICE) && pSlice->getPPS()->getCabacInitPresentFlag())
   {
     eSliceType = encCABACTableIdx;
   }
@@ -160,11 +159,11 @@ Void TEncSbac::resetEntropy           ()
  * If current slice type is P/B then it determines the distance of initialisation type 1 and 2 from the current CABAC states and
  * stores the index of the closest table.  This index is used for the next P/B slice when cabac_init_present_flag is true.
  */
-SliceType TEncSbac::determineCabacInitIdx()
+SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
 {
-  Int  qp              = m_pcSlice->getSliceQp();
+  Int  qp              = pSlice->getSliceQp();
 
-  if (!m_pcSlice->isIntra())
+  if (!pSlice->isIntra())
   {
     SliceType aSliceTypeChoices[] = {B_SLICE, P_SLICE};
 

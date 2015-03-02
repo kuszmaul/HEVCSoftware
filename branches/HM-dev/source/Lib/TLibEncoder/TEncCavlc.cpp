@@ -81,7 +81,7 @@ TEncCavlc::~TEncCavlc()
 // Public member functions
 // ====================================================================================================================
 
-Void TEncCavlc::resetEntropy()
+Void TEncCavlc::resetEntropy(const TComSlice *pSlice)
 {
 }
 
