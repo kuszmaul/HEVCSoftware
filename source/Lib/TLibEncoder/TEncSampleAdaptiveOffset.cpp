@@ -245,8 +245,7 @@ Void TEncSampleAdaptiveOffset::destroyEncData()
 Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice)
 {
   m_pcRDGoOnSbacCoder = pcRDGoOnSbacCoder;
-  m_pcRDGoOnSbacCoder->setSlice(pcSlice);
-  m_pcRDGoOnSbacCoder->resetEntropy();
+  m_pcRDGoOnSbacCoder->resetEntropy(pcSlice);
   m_pcRDGoOnSbacCoder->resetBits();
 
   m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[SAO_CABACSTATE_PIC_INIT]);

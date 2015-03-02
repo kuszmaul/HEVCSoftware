@@ -76,9 +76,6 @@ TComSlice::TComSlice()
 , m_pcSPS                         ( NULL )
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
-#if ADAPTIVE_QP_SELECTION
-, m_pcTrQuant                     ( NULL )
-#endif
 , m_colFromL0Flag                 ( true )
 , m_noOutputPriorPicsFlag         ( false )
 , m_noRaslOutputFlag              ( false )

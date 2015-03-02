@@ -65,18 +65,15 @@ public:
   virtual ~TEncCavlc();
 
 protected:
-  TComSlice*    m_pcSlice;
-
   Void codeShortTermRefPicSet              ( const TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
 
 public:
 
-  Void  resetEntropy          ();
-  SliceType determineCabacInitIdx  () { assert(0); return I_SLICE; };
+  Void  resetEntropy          (const TComSlice *pSlice);
+  SliceType determineCabacInitIdx  (const TComSlice *pSlice) { assert(0); return I_SLICE; };
 
   Void  setBitstream          ( TComBitIf* p )  { m_pcBitIf = p;  }
-  Void  setSlice              ( TComSlice* p )  { m_pcSlice = p;  }
   Void  resetBits             ()                { m_pcBitIf->resetBits(); }
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   Void  codeVPS                 ( const TComVPS* pcVPS );

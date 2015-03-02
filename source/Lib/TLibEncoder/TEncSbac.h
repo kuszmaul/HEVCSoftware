@@ -73,10 +73,9 @@ public:
   Void  uninit                 ()                { m_pcBinIf = 0; }
 
   //  Virtual list
-  Void  resetEntropy           ();
-  SliceType determineCabacInitIdx  ();
+  Void  resetEntropy           (const TComSlice *pSlice);
+  SliceType determineCabacInitIdx  (const TComSlice *pSlice);
   Void  setBitstream           ( TComBitIf* p )  { m_pcBitIf = p; m_pcBinIf->init( p ); }
-  Void  setSlice               ( TComSlice* p )  { m_pcSlice = p;                       }
 
   Void  load                   ( const TEncSbac* pSrc  );
   Void  loadIntraDirMode       ( const TEncSbac* pScr, const ChannelType chType  );
@@ -121,7 +120,6 @@ private:
 
 protected:
   TComBitIf*    m_pcBitIf;
-  TComSlice*    m_pcSlice;
   TEncBinIf*    m_pcBinIf;
 
   //--Adaptive loop filter
