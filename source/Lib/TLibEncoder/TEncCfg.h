@@ -211,6 +211,7 @@ protected:
 
   Bool      m_bUseConstrainedIntraPred;
   Bool      m_usePCM;
+  Int       m_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   UInt      m_pcmLog2MaxSize;
   UInt      m_uiPCMLog2MinSize;
   //====== Slice ========
@@ -222,8 +223,6 @@ protected:
   Bool      m_bLFCrossSliceBoundaryFlag;
 
   Bool      m_bPCMInputBitDepthFlag;
-  UInt      m_uiPCMBitDepthLuma;
-  UInt      m_uiPCMBitDepthChroma;
   Bool      m_bPCMFilterDisableFlag;
   Bool      m_disableIntraReferenceSmoothing;
   Bool      m_loopFilterAcrossTilesEnabledFlag;
@@ -362,7 +361,10 @@ public:
   TEncCfg()
   : m_tileColumnWidth()
   , m_tileRowHeight()
-  {}
+  {
+    m_PCMBitDepth[CHANNEL_TYPE_LUMA]=8;
+    m_PCMBitDepth[CHANNEL_TYPE_CHROMA]=8;
+  }
 
   virtual ~TEncCfg()
   {}
@@ -518,6 +520,7 @@ public:
   Void      setPCMInputBitDepthFlag         ( Bool  b )     { m_bPCMInputBitDepthFlag = b; }
   Void      setPCMFilterDisableFlag         ( Bool  b )     {  m_bPCMFilterDisableFlag = b; }
   Void      setUsePCM                       ( Bool  b )     {  m_usePCM = b;               }
+  Void      setPCMBitDepth( const ChannelType chType, Int pcmBitDepthForChannel ) { m_PCMBitDepth[chType] = pcmBitDepthForChannel; }
   Void      setPCMLog2MaxSize               ( UInt u )      { m_pcmLog2MaxSize = u;      }
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }

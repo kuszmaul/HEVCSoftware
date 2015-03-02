@@ -2261,7 +2261,6 @@ Void TAppEncCfg::xSetGlobal()
 #else
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
 #endif
-    g_PCMBitDepth[channelType] = m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[channelType] : m_internalBitDepth[channelType];
     g_maxTrDynamicRange[channelType] = m_useExtendedPrecision? std::max<Int>(15, (g_bitDepth[channelType] + 6)) : 15;
   }
 }
@@ -2349,7 +2348,8 @@ Void TAppEncCfg::xPrintParameter()
   printf("Input bit depth                   : (Y:%d, C:%d)\n", m_inputBitDepth[CHANNEL_TYPE_LUMA], m_inputBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("MSB-extended bit depth            : (Y:%d, C:%d)\n", m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA], m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("Internal bit depth                : (Y:%d, C:%d)\n", m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
-  printf("PCM sample bit depth              : (Y:%d, C:%d)\n", g_PCMBitDepth[CHANNEL_TYPE_LUMA],      g_PCMBitDepth[CHANNEL_TYPE_CHROMA] );
+  printf("PCM sample bit depth              : (Y:%d, C:%d)\n", m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA] : m_internalBitDepth[CHANNEL_TYPE_LUMA],
+                                                               m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA] : m_internalBitDepth[CHANNEL_TYPE_CHROMA] );
   printf("Extended precision processing     : %s\n", (m_useExtendedPrecision                   ? "Enabled" : "Disabled") );
   printf("Intra reference smoothing         : %s\n", (m_enableIntraReferenceSmoothing          ? "Enabled" : "Disabled") );
   printf("Implicit residual DPCM            : %s\n", (m_useResidualDPCM[RDPCM_SIGNAL_IMPLICIT] ? "Enabled" : "Disabled") );

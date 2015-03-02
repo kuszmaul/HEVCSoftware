@@ -549,7 +549,6 @@ Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE] = {8, 8};
 #if O0043_BEST_EFFORT_DECODING
 Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE] = {8, 8}; // In the encoder, this is the same as g_bitDepth. In the decoder, this can vary from g_bitDepth if the decoder is forced to use 'best-effort decoding' at a particular bit-depth.
 #endif
-Int g_PCMBitDepth[MAX_NUM_CHANNEL_TYPE] = {8, 8};    // PCM bit-depth
 
 // ====================================================================================================================
 // Misc.
