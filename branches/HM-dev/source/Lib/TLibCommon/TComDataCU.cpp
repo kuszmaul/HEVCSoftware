@@ -43,10 +43,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-#if ADAPTIVE_QP_SELECTION
-  TCoeff * TComDataCU::m_pcGlbArlCoeff[MAX_NUM_COMPONENT] = { NULL, NULL, NULL };
-#endif
-
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
 // ====================================================================================================================
@@ -113,7 +109,7 @@ TComDataCU::~TComDataCU()
 
 Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
 #if ADAPTIVE_QP_SELECTION
-                        , Bool bGlobalRMARLBuffer
+                        , TCoeff *pParentARLBuffer
 #endif
                         )
 {
@@ -171,19 +167,16 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       memset( m_pcTrCoeff[compID], 0, (totalSize * sizeof( TCoeff )) );
 
 #if ADAPTIVE_QP_SELECTION
-      if( bGlobalRMARLBuffer )
+      if( pParentARLBuffer != 0 )
       {
-        if (m_pcGlbArlCoeff[compID] == NULL)
-        {
-          m_pcGlbArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
-        }
-
-        m_pcArlCoeff[compID] = m_pcGlbArlCoeff[compID];
+        m_pcArlCoeff[compID] = pParentARLBuffer;
         m_ArlCoeffIsAliasedAllocation = true;
+        pParentARLBuffer += totalSize;
       }
       else
       {
         m_pcArlCoeff[compID] = (TCoeff*)xMalloc(TCoeff, totalSize);
+        m_ArlCoeffIsAliasedAllocation = false;
       }
 #endif
       m_pcIPCMSample[compID] = (Pel*   )xMalloc(Pel , totalSize);
@@ -334,12 +327,6 @@ Void TComDataCU::destroy()
           xFree(m_pcArlCoeff[comp]);
           m_pcArlCoeff[comp] = NULL;
         }
-      }
-
-      if ( m_pcGlbArlCoeff[comp] )
-      {
-        xFree(m_pcGlbArlCoeff[comp]);
-        m_pcGlbArlCoeff[comp] = NULL;
       }
 #endif
 
