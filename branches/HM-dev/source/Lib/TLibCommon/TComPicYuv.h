@@ -149,7 +149,7 @@ public:
   Void          extendPicBorder   ();
 
   //  Dump picture
-  Void          dump              (const Char* pFileName, Bool bAdd = false) const ;
+  Void          dump              (const Char* pFileName, const BitDepths &bitDepths, Bool bAdd = false) const ;
 
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
@@ -157,9 +157,9 @@ public:
 
 
 // These functions now return the length of the digest strings.
-UInt calcChecksum(const TComPicYuv& pic, TComPictureHash &digest);
-UInt calcCRC     (const TComPicYuv& pic, TComPictureHash &digest);
-UInt calcMD5     (const TComPicYuv& pic, TComPictureHash &digest);
+UInt calcChecksum(const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
+UInt calcCRC     (const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
+UInt calcMD5     (const TComPicYuv& pic, TComPictureHash &digest, const BitDepths &bitDepths);
 std::string hashToString(const TComPictureHash &digest, Int numChar);
 //! \}
 

@@ -1600,7 +1600,7 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
   }
 }
 
-Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
+Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled, const Int channelBitDepth)
 {
   UInt uiSymbol;
   if(!sliceEnabled)
@@ -1646,9 +1646,10 @@ Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool
       k++;
     }
 
+    const Int  maxOffsetQVal = TComSampleAdaptiveOffset::getMaxOffsetQVal(channelBitDepth);
     for(Int i=0; i< 4; i++)
     {
-      codeSaoMaxUvlc((offset[i]<0)?(-offset[i]):(offset[i]),  g_saoMaxOffsetQVal[compIdx] ); //sao_offset_abs
+      codeSaoMaxUvlc((offset[i]<0)?(-offset[i]):(offset[i]),  maxOffsetQVal ); //sao_offset_abs
     }
 
 
@@ -1677,7 +1678,7 @@ Void TEncSbac::codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool
 }
 
 
-Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
+Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam, const BitDepths &bitDepths
                               , Bool* sliceEnabled
                               , Bool leftMergeAvail
                               , Bool aboveMergeAvail
@@ -1709,7 +1710,7 @@ Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
   {
     for(Int compIdx=0; compIdx < MAX_NUM_COMPONENT; compIdx++)
     {
-      codeSAOOffsetParam(ComponentID(compIdx), saoBlkParam[compIdx], sliceEnabled[compIdx]);
+      codeSAOOffsetParam(ComponentID(compIdx), saoBlkParam[compIdx], sliceEnabled[compIdx], bitDepths.recon[toChannelType(ComponentID(compIdx))]);
     }
   }
 }

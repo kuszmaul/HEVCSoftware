@@ -240,7 +240,7 @@ Void TComPicYuv::extendPicBorder ()
 
 
 // NOTE: This function is never called, but may be useful for developers.
-Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
+Void TComPicYuv::dump (const Char* pFileName, const BitDepths &bitDepths, Bool bAdd) const
 {
   FILE* pFile;
   if (!bAdd)
@@ -256,7 +256,7 @@ Void TComPicYuv::dump (const Char* pFileName, Bool bAdd) const
   for(Int chan = 0; chan < getNumberValidComponents(); chan++)
   {
     const ComponentID  ch     = ComponentID(chan);
-    const Int          shift  = g_bitDepth[toChannelType(ch)] - 8;
+    const Int          shift  = bitDepths.recon[toChannelType(ch)] - 8;
     const Int          offset = (shift>0)?(1<<(shift-1)):0;
     const Pel         *pi     = getAddr(ch);
     const Int          stride = getStride(ch);

@@ -540,15 +540,6 @@ const UChar g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE] =
   { 0, 1, 2, 2, 2, 2, 3, 5, 7, 8, 10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 23, 24, 24, 25, 25, 26, 27, 27, 28, 28, 29, 29, 30, 31, DM_CHROMA_IDX};
 
 // ====================================================================================================================
-// Bit-depth
-// ====================================================================================================================
-
-Int g_bitDepth   [MAX_NUM_CHANNEL_TYPE] = {8, 8};
-#if O0043_BEST_EFFORT_DECODING
-Int g_bitDepthInStream   [MAX_NUM_CHANNEL_TYPE] = {8, 8}; // In the encoder, this is the same as g_bitDepth. In the decoder, this can vary from g_bitDepth if the decoder is forced to use 'best-effort decoding' at a particular bit-depth.
-#endif
-
-// ====================================================================================================================
 // Misc.
 // ====================================================================================================================
 

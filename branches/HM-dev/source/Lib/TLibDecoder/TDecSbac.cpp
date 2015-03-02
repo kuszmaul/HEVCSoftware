@@ -1685,6 +1685,7 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
                                 , Bool* sliceEnabled
                                 , Bool leftMergeAvail
                                 , Bool aboveMergeAvail
+                                , const BitDepths &bitDepths
                                 )
 {
   UInt uiSymbol;
@@ -1719,7 +1720,13 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
       const ComponentID compIdx=ComponentID(compId);
       const ComponentID firstCompOfChType = getFirstComponentOfChannel(toChannelType(compIdx));
       SAOOffset& ctbParam = saoBlkParam[compIdx];
-
+#if O0043_BEST_EFFORT_DECODING
+      const Int bitDepthOrig = bitDepths.stream[toChannelType(compIdx)];
+      const Int forceBitDepthAdjust = bitDepthOrig - bitDepths.recon[toChannelType(compIdx)];
+#else
+      const Int bitDepthOrig = bitDepths.recon[toChannelType(compIdx)];
+#endif
+      const Int maxOffsetQVal=TComSampleAdaptiveOffset::getMaxOffsetQVal(bitDepthOrig);
       if(!sliceEnabled[compIdx])
       {
         //off
@@ -1758,19 +1765,10 @@ Void TDecSbac::parseSAOBlkParam (SAOBlkParam& saoBlkParam
 
       if(ctbParam.modeIdc == SAO_MODE_NEW)
       {
-#if O0043_BEST_EFFORT_DECODING
-        Int bitDepthOrig = g_bitDepthInStream[toChannelType(compIdx)];
-        Int forceBitDepthAdjust = bitDepthOrig - g_bitDepth[toChannelType(compIdx)];
-#endif
         Int offset[4];
         for(Int i=0; i< 4; i++)
         {
-#if O0043_BEST_EFFORT_DECODING
-          Int saoMaxOffsetQVal = (1<<(min(bitDepthOrig, MAX_SAO_TRUNCATED_BITDEPTH)-5))-1;
-          parseSaoMaxUvlc(uiSymbol, saoMaxOffsetQVal); //sao_offset_abs
-#else
-          parseSaoMaxUvlc(uiSymbol,  g_saoMaxOffsetQVal[compIdx] ); //sao_offset_abs
-#endif
+          parseSaoMaxUvlc(uiSymbol, maxOffsetQVal ); //sao_offset_abs
           offset[i] = (Int)uiSymbol;
         }
 

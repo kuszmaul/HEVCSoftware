@@ -44,8 +44,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-UInt g_saoMaxOffsetQVal[MAX_NUM_COMPONENT];
-
 SAOOffset::SAOOffset()
 {
   reset();
@@ -152,9 +150,7 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   //bit-depth related
   for(Int compIdx = 0; compIdx < MAX_NUM_COMPONENT; compIdx++)
   {
-    Int bitDepthSample = g_bitDepth[toChannelType(ComponentID(compIdx))];
     m_offsetStepLog2  [compIdx] = isLuma(ComponentID(compIdx))? lumaBitShift : chromaBitShift;
-    g_saoMaxOffsetQVal[compIdx] = (1<<(min(bitDepthSample,MAX_SAO_TRUNCATED_BITDEPTH)-5))-1; //Table 9-32, inclusive
   }
 }
 
@@ -314,7 +310,7 @@ Void TComSampleAdaptiveOffset::reconstructBlkSAOParams(TComPic* pic, SAOBlkParam
 }
 
 
-Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int* offset
+Void TComSampleAdaptiveOffset::offsetBlock(const Int channelBitDepth, Int typeIdx, Int* offset
                                           , Pel* srcBlk, Pel* resBlk, Int srcStride, Int resStride,  Int width, Int height
                                           , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail)
 {
@@ -337,7 +333,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
     m_signLineBuf2 = new Char[m_lineBufWidth+1];
   }
 
-  const Int maxSampleValueIncl = (1<< g_bitDepth[toChannelType(compIdx)] )-1;
+  const Int maxSampleValueIncl = (1<< channelBitDepth )-1;
 
   Int x,y, startX, startY, endX, endY, edgeType;
   Int firstLineStartX, firstLineEndX, lastLineStartX, lastLineEndX;
@@ -534,7 +530,7 @@ Void TComSampleAdaptiveOffset::offsetBlock(ComponentID compIdx, Int typeIdx, Int
     break;
   case SAO_TYPE_BO:
     {
-      const Int shiftBits = g_bitDepth[toChannelType(compIdx)] - NUM_SAO_BO_CLASSES_LOG2;
+      const Int shiftBits = channelBitDepth - NUM_SAO_BO_CLASSES_LOG2;
       for (y=0; y< height; y++)
       {
         for (x=0; x< width; x++)
@@ -602,7 +598,7 @@ Void TComSampleAdaptiveOffset::offsetCTU(Int ctuRsAddr, TComPicYuv* srcYuv, TCom
       Int  resStride  = resYuv->getStride(component);
       Pel* resBlk     = resYuv->getAddr(component) + blkYPos*resStride + blkXPos;
 
-      offsetBlock( component, ctbOffset.typeIdc, ctbOffset.offset
+      offsetBlock( pPic->getPicSym()->getSPS().getBitDepth(toChannelType(component)), ctbOffset.typeIdc, ctbOffset.offset
                   , srcBlk, resBlk, srcStride, resStride, blkWidth, blkHeight
                   , isLeftAvail, isRightAvail
                   , isAboveAvail, isBelowAvail
@@ -733,7 +729,7 @@ Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiA
   }
   else
   {
-    uiPcmLeftShiftBit = g_bitDepth[toChannelType(compID)] - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
+    uiPcmLeftShiftBit = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
   }
 
   for(UInt uiY = 0; uiY < uiHeight; uiY++ )

@@ -162,13 +162,9 @@ static inline Bool TUCompRectHasAssociatedTransformSkipFlag(const TComRectangle 
 
 //------------------------------------------------
 
-static inline Int getTransformShift(const ChannelType type, const UInt uiLog2TrSize, const Int maxLog2TrDynamicRange)
+static inline Int getTransformShift(const Int channelBitDepth, const UInt uiLog2TrSize, const Int maxLog2TrDynamicRange)
 {
-#if O0043_BEST_EFFORT_DECODING
-  return maxLog2TrDynamicRange - g_bitDepthInStream[type] - uiLog2TrSize;
-#else
-  return maxLog2TrDynamicRange - g_bitDepth[type] - uiLog2TrSize;
-#endif
+  return maxLog2TrDynamicRange - channelBitDepth - uiLog2TrSize;
 }
 
 

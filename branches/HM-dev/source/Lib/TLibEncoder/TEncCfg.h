@@ -185,6 +185,7 @@ protected:
   Int       m_iQPAdaptationRange;
 
   //====== Tool list ========
+  Int       m_bitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
   Bool      m_useRDOQ;
@@ -506,6 +507,7 @@ public:
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
 
   //==== Tool list ========
+  Void      setBitDepth( const ChannelType chType, Int internalBitDepthForChannel ) { m_bitDepth[chType] = internalBitDepthForChannel; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
