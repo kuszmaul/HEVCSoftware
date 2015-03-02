@@ -1358,7 +1358,10 @@ TComDataCU* TComDataCU::getPUAboveRightAdi(UInt&  uiARPartUnitIdx, UInt uiCurrPa
 TComDataCU* TComDataCU::getQpMinCuLeft( UInt& uiLPartUnitIdx, UInt uiCurrAbsIdxInCtu )
 {
   const UInt numPartInCtuWidth = m_pcPic->getNumPartInCtuWidth();
-  UInt absZorderQpMinCUIdx = (uiCurrAbsIdxInCtu>>((g_uiMaxCUDepth - getSlice()->getPPS()->getMaxCuDQPDepth())<<1))<<((g_uiMaxCUDepth -getSlice()->getPPS()->getMaxCuDQPDepth())<<1);
+  const UInt maxCUDepth        = getSlice()->getSPS()->getMaxTotalCUDepth();
+  const UInt maxCuDQPDepth     = getSlice()->getPPS()->getMaxCuDQPDepth();
+  const UInt doubleDepthDifference = ((maxCUDepth - maxCuDQPDepth)<<1);
+  UInt absZorderQpMinCUIdx = (uiCurrAbsIdxInCtu>>doubleDepthDifference)<<doubleDepthDifference;
   UInt absRorderQpMinCUIdx = g_auiZscanToRaster[absZorderQpMinCUIdx];
 
   // check for left CTU boundary
@@ -1382,7 +1385,10 @@ TComDataCU* TComDataCU::getQpMinCuLeft( UInt& uiLPartUnitIdx, UInt uiCurrAbsIdxI
 TComDataCU* TComDataCU::getQpMinCuAbove( UInt& uiAPartUnitIdx, UInt uiCurrAbsIdxInCtu )
 {
   const UInt numPartInCtuWidth = m_pcPic->getNumPartInCtuWidth();
-  UInt absZorderQpMinCUIdx = (uiCurrAbsIdxInCtu>>((g_uiMaxCUDepth - getSlice()->getPPS()->getMaxCuDQPDepth())<<1))<<((g_uiMaxCUDepth - getSlice()->getPPS()->getMaxCuDQPDepth())<<1);
+  const UInt maxCUDepth        = getSlice()->getSPS()->getMaxTotalCUDepth();
+  const UInt maxCuDQPDepth     = getSlice()->getPPS()->getMaxCuDQPDepth();
+  const UInt doubleDepthDifference = ((maxCUDepth - maxCuDQPDepth)<<1);
+  UInt absZorderQpMinCUIdx = (uiCurrAbsIdxInCtu>>doubleDepthDifference)<<doubleDepthDifference;
   UInt absRorderQpMinCUIdx = g_auiZscanToRaster[absZorderQpMinCUIdx];
 
   // check for top CTU boundary
@@ -1427,7 +1433,7 @@ Int TComDataCU::getLastValidPartIdx( Int iAbsPartIdx )
 
 Char TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
 {
-  UInt uiQUPartIdxMask = ~((1<<((g_uiMaxCUDepth - getSlice()->getPPS()->getMaxCuDQPDepth())<<1))-1);
+  UInt uiQUPartIdxMask = ~((1<<((getSlice()->getSPS()->getMaxTotalCUDepth() - getSlice()->getPPS()->getMaxCuDQPDepth())<<1))-1);
   Int iLastValidPartIdx = getLastValidPartIdx( uiAbsPartIdx&uiQUPartIdxMask ); // A idx will be invalid if it is off the right or bottom edge of the picture.
   // If this CU is in the first CTU of the slice and there is no valid part before this one, use slice QP
   if ( getPic()->getPicSym()->getCtuTsToRsAddrMap(getSlice()->getSliceCurStartCtuTsAddr()) == getCtuRsAddr() && Int(getZorderIdxInCtu())+iLastValidPartIdx<0)
@@ -1511,6 +1517,8 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
   UInt        LeftPartIdx  = MAX_UINT;
   UInt        AbovePartIdx = MAX_UINT;
   Int         iLeftIntraDir, iAboveIntraDir;
+  const TComSPS *sps=getSlice()->getSPS();
+  const UInt partsPerMinCU = 1<<(2*(sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()));
 
   const ChannelType chType = toChannelType(compID);
   const ChromaFormat chForm = getPic()->getChromaFormat();
@@ -1519,7 +1527,7 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
 
   if (isChroma(compID))
   {
-    LeftPartIdx = getChromasCorrespondingPULumaIdx(LeftPartIdx, chForm);
+    LeftPartIdx = getChromasCorrespondingPULumaIdx(LeftPartIdx, chForm, partsPerMinCU);
   }
   iLeftIntraDir  = pcCULeft ? ( pcCULeft->isIntra( LeftPartIdx ) ? pcCULeft->getIntraDir( chType, LeftPartIdx ) : DC_IDX ) : DC_IDX;
 
@@ -1528,7 +1536,7 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
 
   if (isChroma(compID))
   {
-    AbovePartIdx = getChromasCorrespondingPULumaIdx(AbovePartIdx, chForm);
+    AbovePartIdx = getChromasCorrespondingPULumaIdx(AbovePartIdx, chForm, partsPerMinCU);
   }
   iAboveIntraDir = pcCUAbove ? ( pcCUAbove->isIntra( AbovePartIdx ) ? pcCUAbove->getIntraDir( chType, AbovePartIdx ) : DC_IDX ) : DC_IDX;
 
@@ -3353,7 +3361,9 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
 
   if (uiDirMode==DM_CHROMA_IDX)
   {
-    uiDirMode = getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, getPic()->getChromaFormat()));
+    const TComSPS *sps=getSlice()->getSPS();
+    const UInt partsPerMinCU = 1<<(2*(sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()));
+    uiDirMode = getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, getPic()->getChromaFormat(), partsPerMinCU));
   }
 
   if (isChroma(compID) && (format == CHROMA_422))

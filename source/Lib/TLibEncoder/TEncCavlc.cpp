@@ -516,7 +516,6 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
     }
   }
   assert( pcSPS->getMaxCUWidth() == pcSPS->getMaxCUHeight() );
-
   WRITE_UVLC( pcSPS->getLog2MinCodingBlockSize() - 3,                                "log2_min_luma_coding_block_size_minus3" );
   WRITE_UVLC( pcSPS->getLog2DiffMaxMinCodingBlockSize(),                             "log2_diff_max_min_luma_coding_block_size" );
   WRITE_UVLC( pcSPS->getQuadtreeTULog2MinSize() - 2,                                 "log2_min_luma_transform_block_size_minus2" );

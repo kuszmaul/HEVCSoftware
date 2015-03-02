@@ -1448,8 +1448,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // check validity of input parameters
   xCheckParameter();
 
-  // set global varibles
-  xSetGlobal();
+  // compute actual CU depth with respect to config depth and max transform size
+  UInt uiAddCUDepth  = 0;
+  while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + uiAddCUDepth )  ) )
+  {
+    uiAddCUDepth++;
+  }
+
+  m_uiMaxTotalCUDepth = m_uiMaxCUDepth + uiAddCUDepth + getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
+  uiAddCUDepth++;
+  m_uiLog2DiffMaxMinCodingBlockSize = m_uiMaxCUDepth - 1;
 
   // print-out parameters
   xPrintParameter();
@@ -2233,24 +2241,6 @@ Void TAppEncCfg::xCheckParameter()
   }
 }
 
-/** \todo use of global variables should be removed later
- */
-Void TAppEncCfg::xSetGlobal()
-{
-  // compute actual CU depth with respect to config depth and max transform size
-  g_uiAddCUDepth  = 0;
-  while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + g_uiAddCUDepth )  ) )
-  {
-    g_uiAddCUDepth++;
-  }
-
-  g_uiAddCUDepth+=getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
-
-  m_uiMaxCUDepth += g_uiAddCUDepth;
-  g_uiAddCUDepth++;
-  g_uiMaxCUDepth = m_uiMaxCUDepth;
-}
-
 const Char *profileToString(const Profile::Name profile)
 {
   static const UInt numberOfProfiles = sizeof(strToProfile)/sizeof(*strToProfile);
@@ -2315,7 +2305,7 @@ Void TAppEncCfg::xPrintParameter()
   {
     printf("Profile                           : %s\n", profileToString(m_profile) );
   }
-  printf("CU size / depth                   : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
+  printf("CU size / depth / total-depth     : %d / %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth, m_uiMaxTotalCUDepth );
   printf("RQT trans. size (min / max)       : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter               : %d\n", m_uiQuadtreeTUMaxDepthInter);
   printf("Max RQT depth intra               : %d\n", m_uiQuadtreeTUMaxDepthIntra);
