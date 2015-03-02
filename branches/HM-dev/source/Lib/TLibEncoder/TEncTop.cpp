@@ -591,7 +591,7 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setBitDepth    (ChannelType(channelType), g_bitDepth[channelType]            );
     m_cSPS.setQpBDOffset  (ChannelType(channelType), (6 * (g_bitDepth[channelType] - 8)));
-    m_cSPS.setPCMBitDepth (ChannelType(channelType), g_PCMBitDepth[channelType]         );
+    m_cSPS.setPCMBitDepth (ChannelType(channelType), m_PCMBitDepth[channelType]         );
   }
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
