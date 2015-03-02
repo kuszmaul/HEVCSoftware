@@ -109,6 +109,8 @@ private:
 #endif
   std::ostream           *m_pDecodedSEIOutputStream;
 
+  Bool                    m_warningMessageSkipPicture;
+
 public:
   TDecTop();
   virtual ~TDecTop();
@@ -135,6 +137,7 @@ public:
   Void  setForceDecodeBitDepth(UInt bitDepth) { m_forceDecodeBitDepth = bitDepth; }
 #endif
   Void  setDecodedSEIMessageOutputStream(std::ostream *pOpStream) { m_pDecodedSEIOutputStream = pOpStream; }
+  UInt  getNumberOfChecksumErrorsDetected() const { return m_cGopDecoder.getNumberOfChecksumErrorsDetected(); }
 
 protected:
   Void  xGetNewPicBuffer  (const TComSPS &sps, const TComPPS &pps, TComPic*& rpcPic, const UInt temporalLayer);
@@ -146,6 +149,7 @@ protected:
   Void      xDecodeSPS(const std::vector<UChar> *pNaluData);
   Void      xDecodePPS(const std::vector<UChar> *pNaluData);
   Void      xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType );
+
 
 };// END CLASS DEFINITION TDecTop
 

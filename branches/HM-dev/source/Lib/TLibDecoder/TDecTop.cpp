@@ -45,7 +45,8 @@
 //! \{
 
 TDecTop::TDecTop()
-  : m_pDecodedSEIOutputStream(NULL)
+  : m_pDecodedSEIOutputStream(NULL),
+    m_warningMessageSkipPicture(false)
 {
   m_pcPic = 0;
   m_iMaxRefPicNum = 0;
@@ -873,11 +874,10 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     }
     else
     {
-      static Bool warningMessage = false;
-      if(!warningMessage)
+      if(!m_warningMessageSkipPicture)
       {
         printf("\nWarning: this is not a valid random access point and the data is discarded until the first CRA picture");
-        warningMessage = true;
+        m_warningMessageSkipPicture = true;
       }
       return true;
     }

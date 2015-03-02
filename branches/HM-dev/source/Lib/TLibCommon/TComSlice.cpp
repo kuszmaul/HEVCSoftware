@@ -2194,9 +2194,9 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
  * \param listId list index
  * \returns pointer of quantization matrix
  */
-Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
+const Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
 {
-  Int *src = 0;
+  const Int *src = 0;
   switch(sizeId)
   {
     case SCALING_LIST_4x4:

@@ -159,7 +159,7 @@ public:
   Void       setRefMatrixId(UInt sizeId, UInt listId, UInt u)                   { m_refMatrixId[sizeId][listId] = u;                         } //!< set reference matrix ID
   UInt       getRefMatrixId(UInt sizeId, UInt listId) const                     { return m_refMatrixId[sizeId][listId];                      } //!< get reference matrix ID
 
-  Int*       getScalingListDefaultAddress(UInt sizeId, UInt listId);                                                                           //!< get default matrix coefficient
+  const Int* getScalingListDefaultAddress(UInt sizeId, UInt listId);                                                                           //!< get default matrix coefficient
   Void       processDefaultMatrix(UInt sizeId, UInt listId);
 
   Void       setScalingListDC(UInt sizeId, UInt listId, UInt u)                 { m_scalingListDC[sizeId][listId] = u;                       } //!< set DC value
@@ -1211,7 +1211,7 @@ private:
   Int                        m_iLastIDR;
   Int                        m_iAssociatedIRAP;
   NalUnitType                m_iAssociatedIRAPType;
-  static Int                 m_prevTid0POC;
+  static Int                 m_prevTid0POC; // TODO: Remove this static member variable.
   TComReferencePictureSet*   m_pcRPS;
   TComReferencePictureSet    m_LocalRPS;
   Int                        m_iBDidx;

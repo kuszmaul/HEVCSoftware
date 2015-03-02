@@ -44,11 +44,5 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-TEncAnalyze             m_gcAnalyzeAll;
-TEncAnalyze             m_gcAnalyzeI;
-TEncAnalyze             m_gcAnalyzeP;
-TEncAnalyze             m_gcAnalyzeB;
-
-TEncAnalyze             m_gcAnalyzeAll_in;
 
 //! \}
