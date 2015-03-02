@@ -205,7 +205,6 @@ Void TAppEncTop::xInitLibCfg()
     //g_bitDepth   [channelType] = m_internalBitDepth[channelType];
 //#endif
     m_cTEncTop.setPCMBitDepth((ChannelType)channelType, m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[channelType] : m_internalBitDepth[channelType]);
-    //g_maxTrDynamicRange[channelType] = m_useExtendedPrecision? std::max<Int>(15, (g_bitDepth[channelType] + 6)) : 15;
   }
 
   m_cTEncTop.setPCMLog2MaxSize                                    ( m_pcmLog2MaxSize);

@@ -225,10 +225,14 @@ Void TEncTop::xInitScalingLists()
 {
   // Initialise scaling lists
   // The encoder will only use the SPS scaling lists. The PPS will never be marked present.
-
+  const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE] =
+  {
+      m_cSPS.getMaxLog2TrDynamicRange(CHANNEL_TYPE_LUMA),
+      m_cSPS.getMaxLog2TrDynamicRange(CHANNEL_TYPE_CHROMA)
+  };
   if(getUseScalingListId() == SCALING_LIST_OFF)
   {
-    getTrQuant()->setFlatScalingList(m_cSPS.getChromaFormatIdc());
+    getTrQuant()->setFlatScalingList(m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange);
     getTrQuant()->setUseScalingList(false);
     m_cSPS.setScalingListPresentFlag(false);
     m_cPPS.setScalingListPresentFlag(false);
@@ -238,7 +242,8 @@ Void TEncTop::xInitScalingLists()
     m_cSPS.getScalingList().setDefaultScalingList ();
     m_cSPS.setScalingListPresentFlag(false);
     m_cPPS.setScalingListPresentFlag(false);
-    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc());
+
+    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange);
     getTrQuant()->setUseScalingList(true);
   }
   else if(getUseScalingListId() == SCALING_LIST_FILE_READ)
@@ -253,7 +258,7 @@ Void TEncTop::xInitScalingLists()
     m_cSPS.getScalingList().checkDcOfMatrix();
     m_cSPS.setScalingListPresentFlag(m_cSPS.getScalingList().checkDefaultScalingList());
     m_cPPS.setScalingListPresentFlag(false);
-    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc());
+    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange);
     getTrQuant()->setUseScalingList(true);
   }
   else

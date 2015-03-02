@@ -294,7 +294,6 @@ Void TDecTop::xActivateParameterSets()
     for (UInt channel = 0; channel < MAX_NUM_CHANNEL_TYPE; channel++)
     {
       g_bitDepth[channel] = sps->getBitDepth(ChannelType(channel));
-      g_maxTrDynamicRange[channel] = (sps->getUseExtendedPrecision()) ? std::max<Int>(15, (g_bitDepth[channel] + 6)) : 15;
     }
     g_uiMaxCUWidth  = sps->getMaxCUWidth();
     g_uiMaxCUHeight = sps->getMaxCUHeight();
@@ -629,7 +628,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
   else
   {
-    m_cTrQuant.setFlatScalingList(pcSlice->getSPS()->getChromaFormatIdc());
+    const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE] =
+    {
+        pcSlice->getSPS()->getMaxLog2TrDynamicRange(CHANNEL_TYPE_LUMA),
+        pcSlice->getSPS()->getMaxLog2TrDynamicRange(CHANNEL_TYPE_CHROMA)
+    };
+    m_cTrQuant.setFlatScalingList(pcSlice->getSPS()->getChromaFormatIdc(), maxLog2TrDynamicRange);
     m_cTrQuant.setUseScalingList(false);
   }
 

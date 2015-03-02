@@ -322,8 +322,6 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 }
 
-Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
-
 Int g_quantScales[SCALING_LIST_REM_NUM] =
 {
   26214,23302,20560,18396,16384,14564

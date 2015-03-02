@@ -2261,7 +2261,6 @@ Void TAppEncCfg::xSetGlobal()
 #else
     g_bitDepth   [channelType] = m_internalBitDepth[channelType];
 #endif
-    g_maxTrDynamicRange[channelType] = m_useExtendedPrecision? std::max<Int>(15, (g_bitDepth[channelType] + 6)) : 15;
   }
 }
 

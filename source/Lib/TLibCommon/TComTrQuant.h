@@ -171,18 +171,18 @@ public:
 
   Void initScalingList                      ();
   Void destroyScalingList                   ();
-  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp );
+  Void setErrScaleCoeff    ( UInt list, UInt size, Int qp, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE] );
   Double* getErrScaleCoeff              ( UInt list, UInt size, Int qp ) { return m_errScale             [size][list][qp]; };  //!< get Error Scale Coefficent
   Double& getErrScaleCoeffNoScalingList ( UInt list, UInt size, Int qp ) { return m_errScaleNoScalingList[size][list][qp]; };  //!< get Error Scale Coefficent
   Int* getQuantCoeff                    ( UInt list, Int qp, UInt size ) { return m_quantCoef            [size][list][qp]; };  //!< get Quant Coefficent
   Int* getDequantCoeff                  ( UInt list, Int qp, UInt size ) { return m_dequantCoef          [size][list][qp]; };  //!< get DeQuant Coefficent
   Void setUseScalingList   ( Bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
   Bool getUseScalingList   (const UInt width, const UInt height, const Bool isTransformSkip){ return m_scalingListEnabledFlag && (!isTransformSkip || ((width == 4) && (height == 4))); };
-  Void setFlatScalingList  (const ChromaFormat format);
+  Void setFlatScalingList  (const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE]);
   Void xsetFlatScalingList ( UInt list, UInt size, Int qp, const ChromaFormat format);
   Void xSetScalingListEnc  ( TComScalingList *scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
   Void xSetScalingListDec  ( const TComScalingList &scalingList, UInt list, UInt size, Int qp, const ChromaFormat format);
-  Void setScalingList      ( TComScalingList *scalingList, const ChromaFormat format);
+  Void setScalingList      ( TComScalingList *scalingList, const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE]);
   Void setScalingListDec   ( const TComScalingList &scalingList, const ChromaFormat format);
   Void processScalingListEnc( Int *coeff, Int *quantcoeff, Int quantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
   Void processScalingListDec( const Int *coeff, Int *dequantcoeff, Int invQuantScales, UInt height, UInt width, UInt ratio, Int sizuNum, UInt dc);
@@ -229,12 +229,12 @@ protected:
 
 private:
   // forward Transform
-  Void xT   ( const ComponentID compID, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight );
+  Void xT   ( const ComponentID compID, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight, const Int maxLog2TrDynamicRange );
 
   // skipping Transform
   Void xTransformSkip ( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, TComTU &rTu, const ComponentID component );
 
-  Void signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters );
+  Void signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters, const Int maxLog2TrDynamicRange );
 
   // quantization
   Void xQuant(       TComTU       &rTu,
@@ -278,14 +278,14 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
                                              ) const;
 
 
-  __inline Int xGetICRate  ( UInt   uiAbsLevel,
-                             UShort ui16CtxNumOne,
-                             UShort ui16CtxNumAbs,
-                             UShort ui16AbsGoRice,
-                             UInt   c1Idx,
-                             UInt   c2Idx,
-                             Bool   useLimitedPrefixLength,
-                             ChannelType channelType
+  __inline Int xGetICRate  ( const UInt   uiAbsLevel,
+                             const UShort ui16CtxNumOne,
+                             const UShort ui16CtxNumAbs,
+                             const UShort ui16AbsGoRice,
+                             const UInt   c1Idx,
+                             const UInt   c2Idx,
+                             const Bool   useLimitedPrefixLength,
+                             const Int maxLog2TrDynamicRange
                            ) const;
 
   __inline Double xGetRateLast         ( const UInt uiPosX, const UInt uiPosY, const ComponentID component ) const;
@@ -303,7 +303,7 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
                  const QpParam      &cQP );
 
   // inverse transform
-  Void xIT    ( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight );
+  Void xIT    ( const ComponentID compID, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight, const Int maxLog2TrDynamicRange );
 
   // inverse skipping transform
   Void xITransformSkip ( TCoeff* plCoef, Pel* pResidual, UInt uiStride, TComTU &rTu, const ComponentID component );

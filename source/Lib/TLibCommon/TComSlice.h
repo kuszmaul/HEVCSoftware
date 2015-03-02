@@ -878,6 +878,8 @@ public:
   // Bit-depth
   Int                    getBitDepth(ChannelType type) const                                             { return m_uiBitDepth[type];                                           }
   Void                   setBitDepth(ChannelType type, Int u )                                           { m_uiBitDepth[type] = u;                                              }
+  Int                    getMaxLog2TrDynamicRange(ChannelType channelType) const                         { return getUseExtendedPrecision() ? std::max<Int>(15, Int(m_uiBitDepth[channelType] + 6)) : 15; }
+
   Int                    getDifferentialLumaChromaBitDepth() const                                       { return Int(m_uiBitDepth[CHANNEL_TYPE_LUMA]) - Int(m_uiBitDepth[CHANNEL_TYPE_CHROMA]); }
   Int                    getQpBDOffset(ChannelType type) const                                           { return m_qpBDOffset[type];                                           }
   Void                   setQpBDOffset(ChannelType type, Int i)                                          { m_qpBDOffset[type] = i;                                              }
