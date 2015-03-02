@@ -144,7 +144,7 @@ Void TComSampleAdaptiveOffset::create( Int picWidth, Int picHeight, ChromaFormat
   if ( !m_tempPicYuv )
   {
     m_tempPicYuv = new TComPicYuv;
-    m_tempPicYuv->create( m_picWidth, m_picHeight, m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, maxCUDepth );
+    m_tempPicYuv->create( m_picWidth, m_picHeight, m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, maxCUDepth, true );
   }
 
   //bit-depth related
@@ -720,8 +720,9 @@ Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiA
         Pel *piSrc = pcPicYuvRec->getAddr(compID, pcCU->getCtuRsAddr(), uiAbsZorderIdx);
   const Pel *piPcm = pcCU->getPCMSample(compID) + uiOffset;
   const UInt uiStride  = pcPicYuvRec->getStride(compID);
-  const UInt uiWidth  = ((g_uiMaxCUWidth >> uiDepth) >> csx);
-  const UInt uiHeight = ((g_uiMaxCUWidth >> uiDepth) >> csy);
+  const TComSPS &sps = *(pcCU->getSlice()->getSPS());
+  const UInt uiWidth  = ((sps.getMaxCUWidth()  >> uiDepth) >> csx);
+  const UInt uiHeight = ((sps.getMaxCUHeight() >> uiDepth) >> csy);
 
   if ( pcCU->isLosslessCoded(uiAbsZorderIdx) && !pcCU->getIPCMFlag(uiAbsZorderIdx) )
   {
@@ -729,7 +730,7 @@ Void TComSampleAdaptiveOffset::xPCMSampleRestoration (TComDataCU* pcCU, UInt uiA
   }
   else
   {
-    uiPcmLeftShiftBit = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
+    uiPcmLeftShiftBit = sps.getBitDepth(toChannelType(compID)) - sps.getPCMBitDepth(toChannelType(compID));
   }
 
   for(UInt uiY = 0; uiY < uiHeight; uiY++ )

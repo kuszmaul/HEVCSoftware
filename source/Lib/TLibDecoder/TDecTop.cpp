@@ -136,7 +136,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
   {
     rpcPic = new TComPic();
 
-    rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+    rpcPic->create ( sps, pps, g_uiMaxCUDepth, true);
 
     m_cListPic.pushBack( rpcPic );
 
@@ -173,7 +173,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( sps, pps, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, true);
+  rpcPic->create ( sps, pps, g_uiMaxCUDepth, true);
 }
 
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
@@ -291,8 +291,6 @@ Void TDecTop::xActivateParameterSets()
 #endif
 
     // TODO: remove the use of the following globals:
-    g_uiMaxCUWidth  = sps->getMaxCUWidth();
-    g_uiMaxCUHeight = sps->getMaxCUHeight();
     g_uiMaxCUDepth  = sps->getMaxCUDepth();
     g_uiAddCUDepth  = max (0, sps->getLog2MinCodingBlockSize() - (Int)sps->getQuadtreeTULog2MinSize() + (Int)getMaxCUDepthOffset(sps->getChromaFormatIdc(), sps->getQuadtreeTULog2MinSize()));
 
