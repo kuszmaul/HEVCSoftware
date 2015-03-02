@@ -84,10 +84,6 @@ extern       UInt   g_auiRasterToPelY[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 
 Void         initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth );
 
-// global variable (CTU width/height, max. CU depth)
-extern       UInt g_uiMaxCUDepth;
-extern       UInt g_uiAddCUDepth;
-
 extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 
 #define QUANT_SHIFT                14 // Q(4) = 2^14

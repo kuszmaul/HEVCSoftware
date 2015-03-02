@@ -147,6 +147,9 @@ protected:
   Bool      m_useAMP;
   UInt      m_maxCUWidth;
   UInt      m_maxCUHeight;
+  UInt      m_maxTotalCUDepth;
+  UInt      m_log2DiffMaxMinCodingBlockSize;
+
   //======= Transform =============
   UInt      m_uiQuadtreeTULog2MaxSize;
   UInt      m_uiQuadtreeTULog2MinSize;
@@ -419,6 +422,8 @@ public:
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
   Void      setMaxCUWidth                   ( UInt  u )      { m_maxCUWidth  = u; }
   Void      setMaxCUHeight                  ( UInt  u )      { m_maxCUHeight = u; }
+  Void      setMaxTotalCUDepth              ( UInt  u )      { m_maxTotalCUDepth = u; }
+  Void      setLog2DiffMaxMinCodingBlockSize( UInt  u )      { m_log2DiffMaxMinCodingBlockSize = u; }
 
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }

@@ -734,7 +734,7 @@ private:
   Int              m_log2DiffMaxMinCodingBlockSize;
   UInt             m_uiMaxCUWidth;
   UInt             m_uiMaxCUHeight;
-  UInt             m_uiMaxCUDepth;
+  UInt             m_uiMaxTotalCUDepth; ///< Total CU depth, relative to the smallest possible transform block size.
 
   Window           m_conformanceWindow;
 
@@ -843,8 +843,8 @@ public:
   UInt                   getMaxCUWidth() const                                                           { return  m_uiMaxCUWidth;                                              }
   Void                   setMaxCUHeight( UInt u )                                                        { m_uiMaxCUHeight = u;                                                 }
   UInt                   getMaxCUHeight() const                                                          { return  m_uiMaxCUHeight;                                             }
-  Void                   setMaxCUDepth( UInt u )                                                         { m_uiMaxCUDepth = u;                                                  }
-  UInt                   getMaxCUDepth() const                                                           { return  m_uiMaxCUDepth;                                              }
+  Void                   setMaxTotalCUDepth( UInt u )                                                    { m_uiMaxTotalCUDepth = u;                                             }
+  UInt                   getMaxTotalCUDepth() const                                                      { return  m_uiMaxTotalCUDepth;                                         }
   Void                   setUsePCM( Bool b )                                                             { m_usePCM = b;                                                        }
   Bool                   getUsePCM() const                                                               { return m_usePCM;                                                     }
   Void                   setPCMLog2MaxSize( UInt u )                                                     { m_pcmLog2MaxSize = u;                                                }

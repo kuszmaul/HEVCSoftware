@@ -66,13 +66,14 @@ TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxDepth, const Bool bIsVirtual)
+Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirtual)
 {
-  const ChromaFormat chromaFormatIDC=sps.getChromaFormatIdc();
-  const Int  iWidth        = sps.getPicWidthInLumaSamples();
-  const Int  iHeight       = sps.getPicHeightInLumaSamples();
-  const UInt uiMaxCuWidth  = sps.getMaxCUWidth();
-  const UInt uiMaxCuHeight = sps.getMaxCUHeight();
+  const ChromaFormat chromaFormatIDC = sps.getChromaFormatIdc();
+  const Int          iWidth          = sps.getPicWidthInLumaSamples();
+  const Int          iHeight         = sps.getPicHeightInLumaSamples();
+  const UInt         uiMaxCuWidth    = sps.getMaxCUWidth();
+  const UInt         uiMaxCuHeight   = sps.getMaxCUHeight();
+  const UInt         uiMaxDepth      = sps.getMaxTotalCUDepth();
 
   m_picSym.create( sps, pps, uiMaxDepth );
   if (!bIsVirtual)
