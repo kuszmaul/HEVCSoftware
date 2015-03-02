@@ -1506,7 +1506,7 @@ Void  TComSlice::initWpScaling(const TComSPS *sps)
           pwp->iOffset = 0;
         }
 
-        const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (g_bitDepth[toChannelType(ComponentID(yuv))]-8));
+        const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (sps->getBitDepth(toChannelType(ComponentID(yuv)))-8));
 
         pwp->w      = pwp->iWeight;
         pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: This value of the ".o" variable is never used - .o is set immediately before it gets used
@@ -1590,8 +1590,11 @@ TComSPS::TComSPS()
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
-    m_uiBitDepth   [ch] = 8;
-    m_uiPCMBitDepth[ch] = 8;
+    m_bitDepths.recon[ch] = 8;
+#if O0043_BEST_EFFORT_DECODING
+    m_bitDepths.stream[ch] = 8;
+#endif
+    m_pcmBitDepths[ch] = 8;
     m_qpBDOffset   [ch] = 0;
   }
 

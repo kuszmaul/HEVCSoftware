@@ -285,7 +285,7 @@ Void SEIEncoder::initSEIRecoveryPoint(SEIRecoveryPoint *recoveryPointSEI, TComSl
 }
 
 //! calculate hashes for entire reconstructed picture
-Void SEIEncoder::initDecodedPictureHashSEI(SEIDecodedPictureHash *decodedPictureHashSEI, TComPic *pcPic, std::string &rHashString)
+Void SEIEncoder::initDecodedPictureHashSEI(SEIDecodedPictureHash *decodedPictureHashSEI, TComPic *pcPic, std::string &rHashString, const BitDepths &bitDepths)
 {
   assert (m_isInitialized);
   assert (decodedPictureHashSEI!=NULL);
@@ -294,19 +294,19 @@ Void SEIEncoder::initDecodedPictureHashSEI(SEIDecodedPictureHash *decodedPicture
   if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
   {
     decodedPictureHashSEI->method = SEIDecodedPictureHash::MD5;
-    UInt numChar=calcMD5(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash);
+    UInt numChar=calcMD5(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
   }
   else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 2)
   {
     decodedPictureHashSEI->method = SEIDecodedPictureHash::CRC;
-    UInt numChar=calcCRC(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash);
+    UInt numChar=calcCRC(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
   }
   else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 3)
   {
     decodedPictureHashSEI->method = SEIDecodedPictureHash::CHECKSUM;
-    UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash);
+    UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
     rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
   }
 }

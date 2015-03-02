@@ -430,7 +430,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
   // clip for only non-zero cbp case
   if  ( pcCU->getQtRootCbf( 0) )
   {
-    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ), pcCU->getSlice()->getSPS()->getBitDepths() );
   }
   else
   {
@@ -573,10 +573,10 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   }
 #endif
 
+  const Int clipbd = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID));
 #if O0043_BEST_EFFORT_DECODING
-  const Int bitDepthDelta = g_bitDepthInStream[toChannelType(compID)] - g_bitDepth[toChannelType(compID)];
+  const Int bitDepthDelta = pcCU->getSlice()->getSPS()->getStreamBitDepth(toChannelType(compID)) - clipbd;
 #endif
-  const Int clipbd = g_bitDepth[toChannelType(compID)];
 
   if( useCrossComponentPrediction )
   {
@@ -756,7 +756,7 @@ Void TDecCu::xDecodePCMTexture( TComDataCU* pcCU, const UInt uiPartIdx, const Pe
 {
         Pel* piPicReco         = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiPartIdx);
   const UInt uiPicStride       = pcCU->getPic()->getPicYuvRec()->getStride(compID);
-  const UInt uiPcmLeftShiftBit = g_bitDepth[toChannelType(compID)] - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
+  const UInt uiPcmLeftShiftBit = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) - pcCU->getSlice()->getSPS()->getPCMBitDepth(toChannelType(compID));
 
   for(UInt uiY = 0; uiY < uiHeight; uiY++ )
   {

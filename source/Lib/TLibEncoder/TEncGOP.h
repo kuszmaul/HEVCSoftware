@@ -149,7 +149,7 @@ public:
 
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
 
-  Void  printOutSummary      ( UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR, const Bool printSequenceMSE );
+  Void  printOutSummary      ( UInt uiNumAllPicCoded, Bool isField, const Bool printMSEBasedSNR, const Bool printSequenceMSE, const BitDepths &bitDepths );
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist );
 
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
@@ -169,7 +169,7 @@ protected:
                                      TComPicYuv* pcPicRecFirstField, TComPicYuv* pcPicRecSecondField,
                                      const AccessUnit& accessUnit, Double dEncTime, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE );
 
-  UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
+  UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, const BitDepths &bitDepths);
 
   Double xCalculateRVM();
 

@@ -199,11 +199,7 @@ Void TAppEncTop::xInitLibCfg()
   // set internal bit-depth and constants
   for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
   {
-//#if O0043_BEST_EFFORT_DECODING
-    //g_bitDepthInStream[channelType] = g_bitDepth[channelType] = m_internalBitDepth[channelType];
-//#else
-    //g_bitDepth   [channelType] = m_internalBitDepth[channelType];
-//#endif
+    m_cTEncTop.setBitDepth((ChannelType)channelType, m_internalBitDepth[channelType]);
     m_cTEncTop.setPCMBitDepth((ChannelType)channelType, m_bPCMInputBitDepthFlag ? m_MSBExtendedBitDepth[channelType] : m_internalBitDepth[channelType]);
   }
 

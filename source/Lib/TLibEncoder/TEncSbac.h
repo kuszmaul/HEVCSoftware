@@ -99,8 +99,8 @@ public:
   Void  codeSaoUflc          ( UInt uiLength, UInt  uiCode );
   Void  codeSAOSign          ( UInt  uiCode);  //<! code SAO offset sign
 
-  Void codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
-  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
+  Void codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled, const Int channelBitDepth);
+  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, const BitDepths &bitDepths
                     , Bool* sliceEnabled
                     , Bool leftMergeAvail
                     , Bool aboveMergeAvail

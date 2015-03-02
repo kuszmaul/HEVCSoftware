@@ -624,25 +624,25 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
   READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
 #if O0043_BEST_EFFORT_DECODING
+  pcSPS->setStreamBitDepth(CHANNEL_TYPE_LUMA, 8 + uiCode);
   const UInt forceDecodeBitDepth = pcSPS->getForceDecodeBitDepth();
-  g_bitDepthInStream[CHANNEL_TYPE_LUMA] = 8 + uiCode;
   if (forceDecodeBitDepth != 0)
   {
     uiCode = forceDecodeBitDepth - 8;
   }
 #endif
   assert(uiCode <= 8);
-
   pcSPS->setBitDepth(CHANNEL_TYPE_LUMA, 8 + uiCode);
+
 #if O0043_BEST_EFFORT_DECODING
-  pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_LUMA]-8)) );
+  pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*(pcSPS->getStreamBitDepth(CHANNEL_TYPE_LUMA)-8)) );
 #else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_LUMA, (Int) (6*uiCode) );
 #endif
 
   READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
 #if O0043_BEST_EFFORT_DECODING
-  g_bitDepthInStream[CHANNEL_TYPE_CHROMA] = 8 + uiCode;
+  pcSPS->setStreamBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode);
   if (forceDecodeBitDepth != 0)
   {
     uiCode = forceDecodeBitDepth - 8;
@@ -651,7 +651,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   assert(uiCode <= 8);
   pcSPS->setBitDepth(CHANNEL_TYPE_CHROMA, 8 + uiCode);
 #if O0043_BEST_EFFORT_DECODING
-  pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(g_bitDepthInStream[CHANNEL_TYPE_CHROMA]-8)) );
+  pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*(pcSPS->getStreamBitDepth(CHANNEL_TYPE_CHROMA)-8)) );
 #else
   pcSPS->setQpBDOffset(CHANNEL_TYPE_CHROMA,  (Int) (6*uiCode) );
 #endif
@@ -1856,7 +1856,7 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice, const TComSPS *sps )
         assert( iDeltaWeight <=  127 );
         wp[COMPONENT_Y].iWeight = (iDeltaWeight + (1<<wp[COMPONENT_Y].uiLog2WeightDenom));
         READ_SVLC( wp[COMPONENT_Y].iOffset, iNumRef==0?"luma_offset_l0[i]":"luma_offset_l1[i]" );
-        Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<g_bitDepth[CHANNEL_TYPE_LUMA])/2 : 128;
+        Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<sps->getBitDepth(CHANNEL_TYPE_LUMA))/2 : 128;
         assert( wp[0].iOffset >= -range );
         assert( wp[0].iOffset <   range );
       }
@@ -1869,7 +1869,7 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice, const TComSPS *sps )
       {
         if ( wp[COMPONENT_Cb].bPresentFlag )
         {
-          Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<g_bitDepth[CHANNEL_TYPE_CHROMA])/2 : 128;
+          Int range=sps->getUseHighPrecisionPredictionWeighting() ? (1<<sps->getBitDepth(CHANNEL_TYPE_CHROMA))/2 : 128;
           for ( Int j=1 ; j<numValidComp ; j++ )
           {
             Int iDeltaWeight;

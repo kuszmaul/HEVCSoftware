@@ -291,10 +291,6 @@ Void TDecTop::xActivateParameterSets()
 #endif
 
     // TODO: remove the use of the following globals:
-    for (UInt channel = 0; channel < MAX_NUM_CHANNEL_TYPE; channel++)
-    {
-      g_bitDepth[channel] = sps->getBitDepth(ChannelType(channel));
-    }
     g_uiMaxCUWidth  = sps->getMaxCUWidth();
     g_uiMaxCUHeight = sps->getMaxCUHeight();
     g_uiMaxCUDepth  = sps->getMaxCUDepth();
@@ -633,7 +629,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         pcSlice->getSPS()->getMaxLog2TrDynamicRange(CHANNEL_TYPE_LUMA),
         pcSlice->getSPS()->getMaxLog2TrDynamicRange(CHANNEL_TYPE_CHROMA)
     };
-    m_cTrQuant.setFlatScalingList(pcSlice->getSPS()->getChromaFormatIdc(), maxLog2TrDynamicRange);
+    m_cTrQuant.setFlatScalingList(pcSlice->getSPS()->getChromaFormatIdc(), maxLog2TrDynamicRange, pcSlice->getSPS()->getBitDepths());
     m_cTrQuant.setUseScalingList(false);
   }
 

@@ -2253,16 +2253,6 @@ Void TAppEncCfg::xSetGlobal()
   m_uiMaxCUDepth += g_uiAddCUDepth;
   g_uiAddCUDepth++;
   g_uiMaxCUDepth = m_uiMaxCUDepth;
-
-  // set internal bit-depth and constants
-  for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
-  {
-#if O0043_BEST_EFFORT_DECODING
-    g_bitDepthInStream[channelType] = g_bitDepth[channelType] = m_internalBitDepth[channelType];
-#else
-    g_bitDepth   [channelType] = m_internalBitDepth[channelType];
-#endif
-  }
 }
 
 const Char *profileToString(const Profile::Name profile)
@@ -2391,7 +2381,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("\n");
 
   printf("TOOL CFG: ");
-  printf("IBD:%d ", ((g_bitDepth[CHANNEL_TYPE_LUMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA]) || (g_bitDepth[CHANNEL_TYPE_CHROMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA])));
+  printf("IBD:%d ", ((m_internalBitDepth[CHANNEL_TYPE_LUMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA]) || (m_internalBitDepth[CHANNEL_TYPE_CHROMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA])));
   printf("HAD:%d ", m_bUseHADME           );
   printf("RDQ:%d ", m_useRDOQ            );
   printf("RDQTS:%d ", m_useRDOQTS        );
