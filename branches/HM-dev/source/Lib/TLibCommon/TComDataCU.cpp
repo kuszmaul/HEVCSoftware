@@ -417,12 +417,11 @@ Bool TComDataCU::CUIsFromSameSliceTileAndWavefrontRow( const TComDataCU *pCU /* 
 
 Bool TComDataCU::isLastSubCUOfCtu(const UInt absPartIdx)
 {
-  TComPic* pcPic = getPic();
-  TComSlice * pcSlice = pcPic->getSlice(pcPic->getCurrSliceIdx());
+  const TComSPS &sps=*(getSlice()->getSPS());
 
-  const UInt picWidth = pcSlice->getSPS()->getPicWidthInLumaSamples();
-  const UInt picHeight = pcSlice->getSPS()->getPicHeightInLumaSamples();
-  const UInt granularityWidth = g_uiMaxCUWidth;
+  const UInt picWidth = sps.getPicWidthInLumaSamples();
+  const UInt picHeight = sps.getPicHeightInLumaSamples();
+  const UInt granularityWidth = sps.getMaxCUWidth();
 
   const UInt cuPosX = getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[absPartIdx] ];
   const UInt cuPosY = getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[absPartIdx] ];
@@ -448,11 +447,13 @@ Bool TComDataCU::isLastSubCUOfCtu(const UInt absPartIdx)
 Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 {
 
+  const UInt maxCUWidth = pcPic->getPicSym()->getSPS().getMaxCUWidth();
+  const UInt maxCUHeight= pcPic->getPicSym()->getSPS().getMaxCUHeight();
   m_pcPic              = pcPic;
   m_pcSlice            = pcPic->getSlice(pcPic->getCurrSliceIdx());
   m_ctuRsAddr          = ctuRsAddr;
-  m_uiCUPelX           = ( ctuRsAddr % pcPic->getFrameWidthInCtus() ) * g_uiMaxCUWidth;
-  m_uiCUPelY           = ( ctuRsAddr / pcPic->getFrameWidthInCtus() ) * g_uiMaxCUHeight;
+  m_uiCUPelX           = ( ctuRsAddr % pcPic->getFrameWidthInCtus() ) * maxCUWidth;
+  m_uiCUPelY           = ( ctuRsAddr / pcPic->getFrameWidthInCtus() ) * maxCUHeight;
   m_absZIdxInCtu       = 0;
   m_dTotalCost         = MAX_DOUBLE;
   m_uiTotalDistortion  = 0;
@@ -467,8 +468,8 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   memset( m_CUTransquantBypass, false,                      m_uiNumPartition * sizeof( *m_CUTransquantBypass) );
   memset( m_puhDepth          , 0,                          m_uiNumPartition * sizeof( *m_puhDepth ) );
   memset( m_puhTrIdx          , 0,                          m_uiNumPartition * sizeof( *m_puhTrIdx ) );
-  memset( m_puhWidth          , g_uiMaxCUWidth,             m_uiNumPartition * sizeof( *m_puhWidth ) );
-  memset( m_puhHeight         , g_uiMaxCUHeight,            m_uiNumPartition * sizeof( *m_puhHeight ) );
+  memset( m_puhWidth          , maxCUWidth,                 m_uiNumPartition * sizeof( *m_puhWidth ) );
+  memset( m_puhHeight         , maxCUHeight,                m_uiNumPartition * sizeof( *m_puhHeight ) );
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
     const RefPicList rpl=RefPicList(i);
@@ -493,7 +494,7 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
   memset( m_puhInterDir       , 0,                        m_uiNumPartition * sizeof( *m_puhInterDir ) );
   memset( m_pbIPCMFlag        , false,                    m_uiNumPartition * sizeof( *m_pbIPCMFlag ) );
 
-  const UInt numCoeffY    = g_uiMaxCUWidth*g_uiMaxCUHeight;
+  const UInt numCoeffY    = maxCUWidth*maxCUHeight;
   for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
     const UInt componentShift = m_pcPic->getComponentScaleX(ComponentID(comp)) + m_pcPic->getComponentScaleY(ComponentID(comp));
@@ -568,8 +569,8 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
   m_uiTotalBits        = 0;
   m_uiTotalBins        = 0;
 
-  UChar uhWidth  = g_uiMaxCUWidth  >> uiDepth;
-  UChar uhHeight = g_uiMaxCUHeight >> uiDepth;
+  const UChar uhWidth  = getSlice()->getSPS()->getMaxCUWidth()  >> uiDepth;
+  const UChar uhHeight = getSlice()->getSPS()->getMaxCUHeight() >> uiDepth;
 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
@@ -639,12 +640,15 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   UInt uiPartOffset = ( pcCU->getTotalNumPart()>>2 )*uiPartUnitIdx;
 
   m_pcPic              = pcCU->getPic();
-  m_pcSlice            = m_pcPic->getSlice(m_pcPic->getCurrSliceIdx());
+  m_pcSlice            = pcCU->getSlice();
   m_ctuRsAddr          = pcCU->getCtuRsAddr();
   m_absZIdxInCtu       = pcCU->getZorderIdxInCtu() + uiPartOffset;
 
-  m_uiCUPelX           = pcCU->getCUPelX() + ( g_uiMaxCUWidth>>uiDepth  )*( uiPartUnitIdx &  1 );
-  m_uiCUPelY           = pcCU->getCUPelY() + ( g_uiMaxCUHeight>>uiDepth  )*( uiPartUnitIdx >> 1 );
+  const UChar uhWidth  = getSlice()->getSPS()->getMaxCUWidth()  >> uiDepth;
+  const UChar uhHeight = getSlice()->getSPS()->getMaxCUHeight() >> uiDepth;
+
+  m_uiCUPelX           = pcCU->getCUPelX() + ( uhWidth )*( uiPartUnitIdx &  1 );
+  m_uiCUPelY           = pcCU->getCUPelY() + ( uhHeight)*( uiPartUnitIdx >> 1 );
 
   m_dTotalCost         = MAX_DOUBLE;
   m_uiTotalDistortion  = 0;
@@ -676,9 +680,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   }
 
   memset( m_puhDepth,     uiDepth, iSizeInUchar );
-
-  UChar uhWidth  = g_uiMaxCUWidth  >> uiDepth;
-  UChar uhHeight = g_uiMaxCUHeight >> uiDepth;
   memset( m_puhWidth,          uhWidth,  iSizeInUchar );
   memset( m_puhHeight,         uhHeight, iSizeInUchar );
   memset( m_pbIPCMFlag,        0, iSizeInBool  );
@@ -727,11 +728,11 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
 Void TComDataCU::setOutsideCUPart( UInt uiAbsPartIdx, UInt uiDepth )
 {
-  UInt uiNumPartition = m_uiNumPartition >> (uiDepth << 1);
-  UInt uiSizeInUchar = sizeof( UChar  ) * uiNumPartition;
-
-  UChar uhWidth  = g_uiMaxCUWidth  >> uiDepth;
-  UChar uhHeight = g_uiMaxCUHeight >> uiDepth;
+  const UInt     uiNumPartition = m_uiNumPartition >> (uiDepth << 1);
+  const UInt     uiSizeInUchar  = sizeof( UChar  ) * uiNumPartition;
+  const TComSPS &sps            = *(getSlice()->getSPS());
+  const UChar    uhWidth        = sps.getMaxCUWidth()  >> uiDepth;
+  const UChar    uhHeight       = sps.getMaxCUHeight() >> uiDepth;
   memset( m_puhDepth    + uiAbsPartIdx,     uiDepth,  uiSizeInUchar );
   memset( m_puhWidth    + uiAbsPartIdx,     uhWidth,  uiSizeInUchar );
   memset( m_puhHeight   + uiAbsPartIdx,     uhHeight, uiSizeInUchar );
@@ -935,7 +936,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     m_acCUMvField[rpl].copyFrom( pcCU->getCUMvField( rpl ), pcCU->getTotalNumPart(), uiOffset );
   }
 
-  const UInt numCoeffY = g_uiMaxCUWidth*g_uiMaxCUHeight >> (uiDepth<<1);
+  const UInt numCoeffY = (pcCU->getSlice()->getSPS()->getMaxCUWidth()*pcCU->getSlice()->getSPS()->getMaxCUHeight()) >> (uiDepth<<1);
   const UInt offsetY   = uiPartUnitIdx*numCoeffY;
   for (UInt ch=0; ch<numValidComp; ch++)
   {
@@ -1013,7 +1014,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 
   memcpy( pCtu->getIPCMFlag() + m_absZIdxInCtu, m_pbIPCMFlag,         iSizeInBool  );
 
-  const UInt numCoeffY    = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>(uhDepth<<1);
+  const UInt numCoeffY    = (pCtu->getSlice()->getSPS()->getMaxCUWidth()*pCtu->getSlice()->getSPS()->getMaxCUHeight())>>(uhDepth<<1);
   const UInt offsetY      = m_absZIdxInCtu*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
   for (UInt comp=0; comp<numValidComp; comp++)
   {
@@ -2910,13 +2911,14 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
 
 Void TComDataCU::clipMv    (TComMv&  rcMv)
 {
+  const TComSPS &sps=*(m_pcSlice->getSPS());
   Int  iMvShift = 2;
   Int iOffset = 8;
-  Int iHorMax = ( m_pcSlice->getSPS()->getPicWidthInLumaSamples() + iOffset - m_uiCUPelX - 1 ) << iMvShift;
-  Int iHorMin = (       -(Int)g_uiMaxCUWidth - iOffset - (Int)m_uiCUPelX + 1 ) << iMvShift;
+  Int iHorMax = ( sps.getPicWidthInLumaSamples() + iOffset - (Int)m_uiCUPelX - 1 ) << iMvShift;
+  Int iHorMin = (      -(Int)sps.getMaxCUWidth() - iOffset - (Int)m_uiCUPelX + 1 ) << iMvShift;
 
-  Int iVerMax = ( m_pcSlice->getSPS()->getPicHeightInLumaSamples() + iOffset - m_uiCUPelY - 1 ) << iMvShift;
-  Int iVerMin = (       -(Int)g_uiMaxCUHeight - iOffset - (Int)m_uiCUPelY + 1 ) << iMvShift;
+  Int iVerMax = ( sps.getPicHeightInLumaSamples() + iOffset - (Int)m_uiCUPelY - 1 ) << iMvShift;
+  Int iVerMin = (      -(Int)sps.getMaxCUHeight() - iOffset - (Int)m_uiCUPelY + 1 ) << iMvShift;
 
   rcMv.setHor( min (iHorMax, max (iHorMin, rcMv.getHor())) );
   rcMv.setVer( min (iVerMax, max (iVerMin, rcMv.getVer())) );

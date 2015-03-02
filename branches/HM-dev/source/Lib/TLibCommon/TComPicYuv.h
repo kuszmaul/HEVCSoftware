@@ -91,9 +91,10 @@ public:
   Void          create            (const Int iPicWidth,
                                    const Int iPicHeight,
                                    const ChromaFormat chromaFormatIDC,
-                                   const UInt uiMaxCUWidth,
-                                   const UInt uiMaxCUHeight,
-                                   const UInt uiMaxCUDepth );
+                                   const UInt uiMaxCUWidth,  ///< used for generating offsets to CUs. Can use iPicWidth if no offsets are required
+                                   const UInt uiMaxCUHeight, ///< used for generating offsets to CUs. Can use iPicHeight if no offsets are required
+                                   const UInt uiMaxCUDepth,  ///< used for generating offsets to CUs. Can use 0 if no offsets are required
+                                   const Bool bUseMargin);   ///< if true, then a margin of uiMaxCUWidth+16 and uiMaxCUHeight+16 is created around the image.
 
   Void          destroy           ();
 

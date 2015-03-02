@@ -78,14 +78,20 @@ TComPicYuv::~TComPicYuv()
 
 
 
-Void TComPicYuv::create( const Int  iPicWidth,    const  Int iPicHeight,    const ChromaFormat chromaFormatIDC,
-                         const UInt uiMaxCUWidth, const UInt uiMaxCUHeight, const UInt uiMaxCUDepth )
+Void TComPicYuv::create ( const Int iPicWidth,
+                          const Int iPicHeight,
+                          const ChromaFormat chromaFormatIDC,
+                          const UInt uiMaxCUWidth,  ///< used for generating offsets to CUs. Can use iPicWidth if no offsets are required
+                          const UInt uiMaxCUHeight, ///< used for generating offsets to CUs. Can use iPicHeight if no offsets are required
+                          const UInt uiMaxCUDepth,  ///< used for generating offsets to CUs. Can use 0 if no offsets are required
+                          const Bool bUseMargin)    ///< if true, then a margin of uiMaxCUWidth+16 and uiMaxCUHeight+16 is created around the image.
+
 {
   m_iPicWidth         = iPicWidth;
   m_iPicHeight        = iPicHeight;
   m_chromaFormatIDC   = chromaFormatIDC;
-  m_iMarginX          = g_uiMaxCUWidth  + 16; // for 16-byte alignment
-  m_iMarginY          = g_uiMaxCUHeight + 16;  // margin for 8-tap filter and infinite padding
+  m_iMarginX          = (bUseMargin?uiMaxCUWidth:0) + 16; // for 16-byte alignment
+  m_iMarginY          = (bUseMargin?uiMaxCUHeight:0) + 16;  // margin for 8-tap filter and infinite padding
   m_bIsBorderExtended = false;
 
   // assign the picture arrays and set up the ptr to the top left of the original picture

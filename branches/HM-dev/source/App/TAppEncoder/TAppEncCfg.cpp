@@ -2237,10 +2237,6 @@ Void TAppEncCfg::xCheckParameter()
  */
 Void TAppEncCfg::xSetGlobal()
 {
-  // set max CU width & height
-  g_uiMaxCUWidth  = m_uiMaxCUWidth;
-  g_uiMaxCUHeight = m_uiMaxCUHeight;
-
   // compute actual CU depth with respect to config depth and max transform size
   g_uiAddCUDepth  = 0;
   while( (m_uiMaxCUWidth>>m_uiMaxCUDepth) > ( 1 << ( m_uiQuadtreeTULog2MinSize + g_uiAddCUDepth )  ) )

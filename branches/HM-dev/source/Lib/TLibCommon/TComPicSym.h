@@ -86,8 +86,6 @@ private:
   UInt          m_frameWidthInCtus;
   UInt          m_frameHeightInCtus;
 
-  UInt          m_uiMaxCUWidth;
-  UInt          m_uiMaxCUHeight;
   UInt          m_uiMinCUWidth;
   UInt          m_uiMinCUHeight;
 
@@ -119,7 +117,7 @@ private:
   Void               setCtuRsToTsAddrMap( Int ctuRsAddr, Int ctuTsOrder )  { *(m_ctuRsToTsAddrMap + ctuRsAddr) = ctuTsOrder; }
 
 public:
-  Void               create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void               create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth );
   Void               destroy ();
 
   TComPicSym  ();
