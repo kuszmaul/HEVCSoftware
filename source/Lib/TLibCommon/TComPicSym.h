@@ -106,6 +106,9 @@ private:
   UInt*         m_ctuRsToTsAddrMap;    ///< for a given RS (Raster-Scan) address, returns the TS (Tile-Scan; coding order) address. cf CtbAddrRsToTs in specification.
 
   SAOBlkParam  *m_saoBlkParams;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff*       m_pParentARLBuffer;
+#endif
   TComSPS       m_sps;
   TComPPS       m_pps;
 

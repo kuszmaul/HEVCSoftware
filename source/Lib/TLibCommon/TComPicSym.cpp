@@ -64,6 +64,7 @@ TComPicSym::TComPicSym()
 ,m_puiTileIdxMap(NULL)
 ,m_ctuRsToTsAddrMap(NULL)
 ,m_saoBlkParams(NULL)
+,m_pParentARLBuffer(NULL)
 {}
 
 
@@ -97,12 +98,19 @@ Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDep
   clearSliceBuffer();
   allocateNewSlice();
 
+#if ADAPTIVE_QP_SELECTION
+  if (m_pParentARLBuffer == NULL)
+  {
+     m_pParentARLBuffer = new TCoeff[uiMaxCuWidth*uiMaxCuHeight*MAX_NUM_COMPONENT];
+  }
+#endif
+
   for ( i=0; i<m_numCtusInFrame ; i++ )
   {
     m_pictureCtuArray[i] = new TComDataCU;
     m_pictureCtuArray[i]->create( chromaFormatIDC, m_numPartitionsInCtu, uiMaxCuWidth, uiMaxCuHeight, false, uiMaxCuWidth >> m_uhTotalDepth
 #if ADAPTIVE_QP_SELECTION
-      , true
+      , m_pParentARLBuffer
 #endif
       );
   }
@@ -151,6 +159,9 @@ Void TComPicSym::destroy()
   {
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
+
+  delete [] m_pParentARLBuffer;
+  m_pParentARLBuffer = NULL;
 }
 
 Void TComPicSym::allocateNewSlice()
