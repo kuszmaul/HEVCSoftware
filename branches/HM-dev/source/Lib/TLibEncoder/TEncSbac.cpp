@@ -335,7 +335,7 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
  * \param useLimitedPrefixLength
  * \param channelType             plane type (luma/chroma)
  */
-Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType )
+Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType, const Int maxLog2TrDynamicRange )
 {
   Int codeNumber  = (Int)symbol;
   UInt length;
@@ -348,7 +348,7 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool 
   }
   else if (useLimitedPrefixLength)
   {
-    const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + g_maxTrDynamicRange[channelType]));
+    const UInt maximumPrefixLength = (32 - (COEF_REMAIN_BIN_REDUCTION + maxLog2TrDynamicRange));
 
     UInt prefixLength = 0;
     UInt suffixLength = MAX_UINT;
@@ -357,7 +357,7 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool 
     if (codeValue >= ((1 << maximumPrefixLength) - 1))
     {
       prefixLength = maximumPrefixLength;
-      suffixLength = g_maxTrDynamicRange[channelType] - rParam;
+      suffixLength = maxLog2TrDynamicRange - rParam;
     }
     else
     {
@@ -1245,6 +1245,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
   const Bool         extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
 
   const Bool         alignCABACBeforeBypass = pcCU->getSlice()->getSPS()->getAlignCABACBeforeBypass();
+  const Int          maxLog2TrDynamicRange  = pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(channelType);
 
   Bool beValid;
 
@@ -1495,7 +1496,7 @@ Void TEncSbac::codeCoeffNxN( TComTU &rTu, TCoeff* pcCoef, const ComponentID comp
           {
             const UInt escapeCodeValue = absCoeff[idx] - baseLevel;
 
-            xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam, extendedPrecision, channelType );
+            xWriteCoefRemainExGolomb( escapeCodeValue, uiGoRiceParam, extendedPrecision, channelType, maxLog2TrDynamicRange );
 
             if (absCoeff[idx] > (3 << uiGoRiceParam))
             {

@@ -96,8 +96,6 @@ extern       UInt g_auiPUOffset[NUMBER_OF_PART_SIZES];
 #define IQUANT_SHIFT                6
 #define SCALE_BITS                 15 // Inherited from TMuC, pressumably for fractional bit estimates in RDOQ
 
-extern Int g_maxTrDynamicRange[MAX_NUM_CHANNEL_TYPE];
-
 #define SQRT2                      11585
 #define SQRT2_SHIFT                13
 #define INVSQRT2                   11585
