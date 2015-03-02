@@ -43,7 +43,6 @@
 #include "../TLibCommon/Debug.h"
 static const Bool bDebugRQT = DebugOptionList::DebugRQT.getInt()!=0;
 static const Bool bDebugPredEnabled = DebugOptionList::DebugPred.getInt()!=0;
-Bool g_bFinalEncode=true;
 #endif
 
 //! \ingroup TLibDecoder

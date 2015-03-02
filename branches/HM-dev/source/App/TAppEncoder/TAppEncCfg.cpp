@@ -35,6 +35,7 @@
     \brief    Handle encoder configuration parameters
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <cassert>
 #include <cstring>
