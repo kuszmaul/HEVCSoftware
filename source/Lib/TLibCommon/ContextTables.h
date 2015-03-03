@@ -171,7 +171,11 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #define NUM_PLTMODE_FLAG_CTX          1
+#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+#define NUM_SPOINT_CTX                1
+#else
 #define NUM_SPOINT_CTX                3
+#endif
 #define NUM_TOP_RUN_CTX               3
 #define NUM_LEFT_RUN_CTX              5
 #define NUM_PLT_REUSE_FLAG_CTX        1
@@ -206,9 +210,15 @@ INIT_PLTMODE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLTMODE_FLAG_CTX] =
 static const UChar
 INIT_SPOINT[NUMBER_OF_SLICE_TYPES][NUM_SPOINT_CTX] =
 {
+#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+  { 154 },
+  { 154 },
+  { 154 },
+#else
   { 154, 154, 154 },
   { 154, 154, 154 },
   { 154, 154, 154 },
+#endif
 };
 
 static const UChar
