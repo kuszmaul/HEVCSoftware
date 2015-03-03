@@ -1289,6 +1289,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceCurStartCtuTsAddr( 0 );
       pcSlice->setSliceSegmentCurStartCtuTsAddr( 0 );
 
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+      if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() ) 
+      {
+        pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
+      }
+#endif
+
       for(UInt nextCtuTsAddr = 0; nextCtuTsAddr < numberOfCtusInFrame; )
       {
         m_pcSliceEncoder->precompressSlice( pcPic );
@@ -1794,7 +1801,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+    if(m_pcCfg->getIntraPeriod() != 1)
+    {
+      pcPic->compressMotion();
+    }
+#else
     pcPic->compressMotion();
+#endif
     if ( m_pcCfg->getUseHashBasedME() )
     {
       if ( m_pcCfg->getGOPEntry(iGOPid).m_refPic )
