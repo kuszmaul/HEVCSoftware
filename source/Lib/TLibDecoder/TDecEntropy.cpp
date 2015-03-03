@@ -75,6 +75,12 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
   {
+#if SCM_T0058_REMOVE_64x64_PLT
+    if( g_uiMaxCUWidth>>uiDepth == 64)
+    {
+      return;
+    }
+#endif
     m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
     {

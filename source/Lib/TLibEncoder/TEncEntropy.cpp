@@ -98,6 +98,13 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
       uiAbsPartIdx = 0;
     }
 
+#if SCM_T0058_REMOVE_64x64_PLT
+    if( pcCU->getWidth(uiAbsPartIdx) == 64)
+    {
+      return;
+    }
+#endif
+
     m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
     {
