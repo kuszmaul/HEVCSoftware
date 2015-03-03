@@ -776,10 +776,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         Double intraCost = MAX_DOUBLE;
         Double dIntraBcCostPred = 0.0;
 
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+        if( (rpcBestCU->getSlice()->getSliceType() == I_SLICE) || !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
+#else
         if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
            (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
+#endif
         {
 #if SCM_S0067_MAX_CAND_SIZE
           if (m_pcEncCfg->getUseIntraBlockCopyFastSearch() && rpcTempCU->getWidth(0) <= SCM_S0067_MAX_CAND_SIZE )
@@ -906,10 +910,23 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
         }
 #endif
+
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+        if( !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
+#else
+        if( (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                             ||
+            ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
+            ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr)) ||
+            (!rpcBestCU->isIntraBC(0) && !rpcBestCU->isSkipped(0))  
+          ) // avoid very complex intra if it is unlikely
+#endif
+#else
         if(
           (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
+#endif
         {
           if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
           {

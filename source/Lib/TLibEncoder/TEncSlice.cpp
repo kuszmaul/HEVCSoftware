@@ -755,10 +755,12 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     }
   }
 
+#if !SCM_T0116_IBCSEARCH_OPTIMIZE
   if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() )
   {
     pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg() );
   }
+#endif
 
   // for every CTU in the slice segment (may terminate sooner if there is a byte limit on the slice-segment)
 

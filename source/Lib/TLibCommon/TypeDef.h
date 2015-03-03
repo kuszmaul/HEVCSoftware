@@ -295,6 +295,7 @@
 #define SCM_T0069_AMVR_REFINEMENT                        1 ///< high-level syntax refinement for adaptive motion vector resolution
 #define SCM_T0058_REMOVE_64x64_PLT                       1 ///< Disallow palette mode for 64x64 CUs
 #define SCM_T0078_REMOVE_PLT_RUN_MODE_CTX                1 ///< Remove context in palette mode
+#define SCM_T0116_IBCSEARCH_OPTIMIZE                     1 ///< IBC search improvement
 
 //------------------------------------------------
 // Derived macros
