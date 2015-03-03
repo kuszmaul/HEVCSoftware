@@ -836,7 +836,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
               READ_UVLC(uiCode, "palette_max_size");                        pcSPS->setPLTMaxSize(uiCode);
               READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
             }
+#if SCM_T0069_AMVR_REFINEMENT
+            READ_CODE( 2, uiCode, "motion_vector_resolution_control_idc" ); pcSPS->setMotionVectorResolutionControlIdc       (uiCode);
+#else
             READ_FLAG( uiCode, "adaptive_mv_resolution_flag" );             pcSPS->setUseAdaptiveMvResolution                (uiCode != 0);
+#endif
             READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag");      pcSPS->setDisableIntraBoundaryFilter             (uiCode != 0);
             break;
           default:
@@ -1385,14 +1389,22 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
       pcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
 
+#if SCM_T0069_AMVR_REFINEMENT
+      if ( sps->getMotionVectorResolutionControlIdc() == 2 )
+#else
       if ( sps->getUseAdaptiveMvResolution() )
+#endif
       {
         READ_FLAG( uiCode, "use_integer_mv_flag" );
         pcSlice->setUseIntegerMv( uiCode != 0 );
       }
       else
       {
+#if SCM_T0069_AMVR_REFINEMENT
+        pcSlice->setUseIntegerMv( sps->getMotionVectorResolutionControlIdc() == 0 ? false : true );
+#else
         pcSlice->setUseIntegerMv( false );
+#endif
       }
     }
 

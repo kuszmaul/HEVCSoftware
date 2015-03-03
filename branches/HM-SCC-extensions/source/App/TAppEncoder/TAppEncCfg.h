@@ -127,7 +127,11 @@ protected:
   Bool      m_usePaletteMode;
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
+#if SCM_T0069_AMVR_REFINEMENT
+  Int       m_motionVectorResolutionControlIdc;
+#else
   Bool      m_useAdaptiveMvResolution;
+#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
