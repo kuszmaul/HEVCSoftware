@@ -3609,12 +3609,14 @@ UInt TComDataCU::getCtxEscapeFlag(UInt uiAbsPartIdx, UInt uiIdx, Pel *pEscapeFla
   return uiTop;
 }
 
+#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
 UInt TComDataCU::getCtxSPoint(UInt uiAbsPartIdx, UInt uiIdx, UChar *pSPoint)
 {
   UInt uiWidth = getWidth(uiAbsPartIdx);
   UInt uiTop = uiIdx < uiWidth ? 0 : pSPoint[uiIdx - uiWidth];
   return uiTop;
 }
+#endif
 
 Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
 {
