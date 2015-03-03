@@ -380,7 +380,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUsePLTMode                                        ( m_usePaletteMode               );
   m_cTEncTop.setPLTMaxSize                                        ( m_uiPLTMaxSize                 );
   m_cTEncTop.setPLTMaxPredSize                                    ( m_uiPLTMaxPredSize             );
+#if SCM_T0069_AMVR_REFINEMENT
+  m_cTEncTop.setMotionVectorResolutionControlIdc                  ( m_motionVectorResolutionControlIdc );
+#else
   m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
+#endif
 }
 
 Void TAppEncTop::xCreateLib()

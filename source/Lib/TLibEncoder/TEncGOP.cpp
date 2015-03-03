@@ -1197,10 +1197,24 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
     pcSlice->setUseIntegerMv( false );
+#if SCM_T0069_AMVR_REFINEMENT
+    if ( !pcSlice->isIntra() )
+    {
+      if ( m_pcCfg->getMotionVectorResolutionControlIdc() == 2 )
+      {
+        pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
+      }
+      else
+      {
+        pcSlice->setUseIntegerMv( m_pcCfg->getMotionVectorResolutionControlIdc() == 0 ? false : true );
+      }
+    }
+#else
     if ( !pcSlice->isIntra() && m_pcCfg->getUseAdaptiveMvResolution() )
     {
       pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
     }
+#endif
 
     Double lambda            = 0.0;
     Int actualHeadBits       = 0;

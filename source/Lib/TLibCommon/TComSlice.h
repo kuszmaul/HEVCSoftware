@@ -768,7 +768,11 @@ private:
   Bool        m_usePaletteMode;
   UInt        m_uiPLTMaxSize;
   UInt        m_uiPLTMaxPredSize;
+#if SCM_T0069_AMVR_REFINEMENT
+  Int         m_motionVectorResolutionControlIdc;
+#else
   Bool        m_useAdaptiveMvResolution;
+#endif
   Bool        m_disableIntraBoundaryFilter;
   Bool             m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   UInt             m_uiPCMBitDepth[MAX_NUM_CHANNEL_TYPE];
@@ -918,8 +922,13 @@ public:
   Void      setPLTMaxSize(const UInt value)                            { m_uiPLTMaxSize = value; }
   UInt      getPLTMaxPredSize()                                  const { return m_uiPLTMaxPredSize; }
   Void      setPLTMaxPredSize(const UInt value)                        { m_uiPLTMaxPredSize = value; }
+#if SCM_T0069_AMVR_REFINEMENT
+  Int       getMotionVectorResolutionControlIdc        ()   const { return m_motionVectorResolutionControlIdc; }
+  Void      setMotionVectorResolutionControlIdc        ( Int idc ) { m_motionVectorResolutionControlIdc = idc; }
+#else
   Bool      getUseAdaptiveMvResolution        ()   const { return m_useAdaptiveMvResolution; }
   Void      setUseAdaptiveMvResolution        ( Bool b ) { m_useAdaptiveMvResolution = b; }
+#endif
   Void      setDisableIntraBoundaryFilter( Bool b) { m_disableIntraBoundaryFilter = b;    }
   Bool      getDisableIntraBoundaryFilter()  const { return m_disableIntraBoundaryFilter; }
 

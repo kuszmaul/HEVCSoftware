@@ -610,7 +610,11 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   sps_extension_flags[SPS_EXT__SCC] = (
         pcSPS->getUseIntraBlockCopy()
      || pcSPS->getUsePLTMode()
+#if SCM_T0069_AMVR_REFINEMENT
+     || pcSPS->getMotionVectorResolutionControlIdc() != 0
+#else
      || pcSPS->getUseAdaptiveMvResolution()
+#endif
      || pcSPS->getDisableIntraBoundaryFilter()
     );
 
@@ -668,7 +672,11 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
               WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");
               WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");
             }
+#if SCM_T0069_AMVR_REFINEMENT
+            WRITE_CODE( pcSPS->getMotionVectorResolutionControlIdc(), 2,             "motion_vector_resolution_control_idc");
+#else
             WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
+#endif
             WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
             break;
           default:
@@ -1090,7 +1098,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #endif
     {
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#if SCM_T0069_AMVR_REFINEMENT
+      if ( pcSlice->getSPS()->getMotionVectorResolutionControlIdc() == 2 )
+#else
       if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
+#endif
       {
         WRITE_FLAG( pcSlice->getUseIntegerMv() ? 1 : 0, "use_integer_mv" );
       }

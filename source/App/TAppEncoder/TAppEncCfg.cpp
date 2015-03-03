@@ -1061,7 +1061,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
   ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       31u,  "Maximum palette size")
   ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                   64u,  "Maximum palette predictor size")
+#if SCM_T0069_AMVR_REFINEMENT
+  ("MotionVectorResolutionControlIdc",                m_motionVectorResolutionControlIdc,                    0, "0 (default): use 1/4-pel mv; 1: use integer-pel mv; 2: adaptive mv resolution (not valid in V1 profiles)")
+#else
   ("UseAdaptiveMvResolution",                         m_useAdaptiveMvResolution,                         false, "Enable adaptive mv resolution (not valid in V1 profiles)")
+#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++)
@@ -2597,7 +2601,11 @@ Void TAppEncCfg::xPrintParameter()
     printf(" MaxPLTSize:%d", m_uiPLTMaxSize);
     printf(" MaxPLTPredictorSize:%d", m_uiPLTMaxPredSize);
   }
+#if SCM_T0069_AMVR_REFINEMENT
+  printf( " MvResControl:%d", m_motionVectorResolutionControlIdc );
+#else
   printf( " AdapMvRes:%d", m_useAdaptiveMvResolution ? 1 : 0 );
+#endif
 
   printf("\n\n");
 
