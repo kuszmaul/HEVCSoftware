@@ -2757,6 +2757,12 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 
 Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool bCheckPLTSharingMode)
 {
+#if SCM_T0058_REMOVE_64x64_PLT
+  if( rpcTempCU->getWidth(0) == 64)
+  {
+    return;
+  }
+#endif
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );

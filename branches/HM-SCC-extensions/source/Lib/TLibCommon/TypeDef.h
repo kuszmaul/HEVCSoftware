@@ -293,6 +293,7 @@
 #define SCM_T0063_NUM_PLT_ENTRY                          1 ///< use EG0 to code number of new palette entries
 #define SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION      1 ///< improved palette table generation
 #define SCM_T0069_AMVR_REFINEMENT                        1 ///< high-level syntax refinement for adaptive motion vector resolution
+#define SCM_T0058_REMOVE_64x64_PLT                       1 ///< Disallow palette mode for 64x64 CUs
 
 //------------------------------------------------
 // Derived macros
