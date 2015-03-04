@@ -684,11 +684,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   SMultiValueInput<Bool> cfg_timeCodeSeiHoursFlag            (0,  1, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetLength     (0, 31, 0, MAX_TIMECODE_SEI_SETS);
   SMultiValueInput<Int>  cfg_timeCodeSeiTimeOffsetValue      (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, MAX_TIMECODE_SEI_SETS);
+  Int warnUnknowParameter = 0;
 
   po::Options opts;
   opts.addOptions()
   ("help",                                            do_help,                                          false, "this help text")
   ("c",    po::parseConfigFile, "configuration file name")
+  ("WarnUnknowParameter,w",                           warnUnknowParameter,                                  0, "warn for unknown configuration parameters instead of failing")
 
   // File, I/O and source parameters
   ("InputFile,i",                                     cfg_InputFile,                               string(""), "Original YUV input file name")
@@ -1050,7 +1052,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     opts.addOptions()(cOSS.str(), m_GOPList[i-1], GOPEntry());
   }
   po::setDefaults(opts);
-  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
+  po::ErrorReporter err;
+  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv, err);
 
   for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
@@ -1062,6 +1065,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     /* argc == 1: no options have been specified */
     po::doHelp(cout, opts);
     return false;
+  }
+
+  if (err.is_errored)
+  {
+    if (!warnUnknowParameter)
+    {
+      /* error report has already been printed on stderr */
+      return false;
+    }
   }
 
   /*
