@@ -1152,10 +1152,22 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
   Bool useRDOQ = useTransformSkip ? m_useRDOQTS : m_useRDOQ;
   if ( useRDOQ && (isLuma(compID) || RDOQ_CHROMA) )
   {
+#if T0196_SELECTIVE_RDOQ
+    if ( !m_useSelectiveRDOQ || xNeedRDOQ( rTu, piCoef, compID, cQP ) )
+    {
+#endif
 #if ADAPTIVE_QP_SELECTION
-    xRateDistOptQuant( rTu, piCoef, pDes, pArlDes, uiAbsSum, compID, cQP );
+      xRateDistOptQuant( rTu, piCoef, pDes, pArlDes, uiAbsSum, compID, cQP );
 #else
-    xRateDistOptQuant( rTu, piCoef, pDes, uiAbsSum, compID, cQP );
+      xRateDistOptQuant( rTu, piCoef, pDes, uiAbsSum, compID, cQP );
+#endif
+#if T0196_SELECTIVE_RDOQ
+    }
+    else
+    {
+      memset( pDes, 0, sizeof( TCoeff ) * uiWidth *uiHeight );
+      uiAbsSum = 0;
+    }
 #endif
   }
   else
@@ -1240,6 +1252,65 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
   } //if RDOQ
   //return;
 }
+
+#if T0196_SELECTIVE_RDOQ
+Bool TComTrQuant::xNeedRDOQ( TComTU &rTu, TCoeff * pSrc, const ComponentID compID, const QpParam &cQP )
+{
+  const TComRectangle &rect = rTu.getRect(compID);
+  const UInt uiWidth        = rect.width;
+  const UInt uiHeight       = rect.height;
+  TComDataCU* pcCU          = rTu.getCU();
+  const UInt uiAbsPartIdx   = rTu.GetAbsPartIdxTU();
+  const Int channelBitDepth = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID));
+
+  TCoeff* piCoef    = pSrc;
+
+  const Bool useTransformSkip      = pcCU->getTransformSkip(uiAbsPartIdx, compID);
+  const Int  maxLog2TrDynamicRange = pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID));
+
+  const UInt uiLog2TrSize = rTu.GetEquivalentLog2TrSize(compID);
+
+  Int scalingListType = getScalingListType(pcCU->getPredictionMode(uiAbsPartIdx), compID);
+  assert(scalingListType < SCALING_LIST_NUM);
+  Int *piQuantCoeff = getQuantCoeff(scalingListType, cQP.rem, uiLog2TrSize-2);
+
+  const Bool enableScalingLists             = getUseScalingList(uiWidth, uiHeight, (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0));
+  const Int  defaultQuantisationCoefficient = g_quantScales[cQP.rem];
+
+  /* for 422 chroma blocks, the effective scaling applied during transformation is not a power of 2, hence it cannot be
+    * implemented as a bit-shift (the quantised result will be sqrt(2) * larger than required). Alternatively, adjust the
+    * uiLog2TrSize applied in iTransformShift, such that the result is 1/sqrt(2) the required result (i.e. smaller)
+    * Then a QP+3 (sqrt(2)) or QP-3 (1/sqrt(2)) method could be used to get the required result
+    */
+
+  // Represents scaling through forward transform
+  Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
+  if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  {
+    iTransformShift = std::max<Int>(0, iTransformShift);
+  }
+
+  const Int iQBits = QUANT_SHIFT + cQP.per + iTransformShift;
+  // QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
+
+  // iAdd is different from the iAdd used in normal quantization
+  const Int iAdd   = (compID == COMPONENT_Y ? 171 : 256) << (iQBits-9);
+  const Int qBits8 = iQBits - 8;
+
+  for( Int uiBlockPos = 0; uiBlockPos < uiWidth*uiHeight; uiBlockPos++ )
+  {
+    const TCoeff iLevel   = piCoef[uiBlockPos];
+    const Int64  tmpLevel = (Int64)abs(iLevel) * (enableScalingLists ? piQuantCoeff[uiBlockPos] : defaultQuantisationCoefficient);
+    const TCoeff quantisedMagnitude = TCoeff((tmpLevel + iAdd ) >> iQBits);
+
+    if ( quantisedMagnitude != 0 )
+    {
+      return true;
+    }
+  } // for n
+  return false;
+}
+#endif
 
 Void TComTrQuant::xDeQuant(       TComTU        &rTu,
                             const TCoeff       * pSrc,
@@ -1363,6 +1434,9 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
 Void TComTrQuant::init(   UInt  uiMaxTrSize,
                           Bool  bUseRDOQ,
                           Bool  bUseRDOQTS,
+#if T0196_SELECTIVE_RDOQ
+                          Bool  useSelectiveRDOQ,
+#endif
                           Bool  bEnc,
                           Bool  useTransformSkipFast
 #if ADAPTIVE_QP_SELECTION
@@ -1374,6 +1448,9 @@ Void TComTrQuant::init(   UInt  uiMaxTrSize,
   m_bEnc         = bEnc;
   m_useRDOQ      = bUseRDOQ;
   m_useRDOQTS    = bUseRDOQTS;
+#if T0196_SELECTIVE_RDOQ
+  m_useSelectiveRDOQ = useSelectiveRDOQ;
+#endif
 #if ADAPTIVE_QP_SELECTION
   m_bUseAdaptQpSelect = bUseAdaptQpSelect;
 #endif
