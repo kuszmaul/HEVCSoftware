@@ -206,6 +206,9 @@ Void TEncTop::init(Bool isFieldCoding)
   m_cTrQuant.init( 1 << m_uiQuadtreeTULog2MaxSize,
                    m_useRDOQ,
                    m_useRDOQTS,
+#if T0196_SELECTIVE_RDOQ
+                   m_useSelectiveRDOQ,
+#endif
                    true
                   ,m_useTransformSkipFast
 #if ADAPTIVE_QP_SELECTION

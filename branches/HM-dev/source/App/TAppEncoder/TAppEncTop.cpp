@@ -167,6 +167,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setdQPs                                              ( m_aidQP        );
   m_cTEncTop.setUseRDOQ                                           ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                                         ( m_useRDOQTS   );
+#if T0196_SELECTIVE_RDOQ
+  m_cTEncTop.setUseSelectiveRDOQ                                  ( m_useSelectiveRDOQ );
+#endif
   m_cTEncTop.setRDpenalty                                         ( m_rdPenalty );
   m_cTEncTop.setMaxCUWidth                                        ( m_uiMaxCUWidth );
   m_cTEncTop.setMaxCUHeight                                       ( m_uiMaxCUHeight );

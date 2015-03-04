@@ -105,6 +105,9 @@ public:
   Void init                 ( UInt  uiMaxTrSize,
                               Bool useRDOQ                = false,
                               Bool useRDOQTS              = false,
+#if T0196_SELECTIVE_RDOQ
+                              Bool useSelectiveRDOQ       = false,
+#endif
                               Bool bEnc                   = false,
                               Bool useTransformSkipFast   = false
 #if ADAPTIVE_QP_SELECTION
@@ -215,6 +218,9 @@ protected:
   Bool     m_bEnc;
   Bool     m_useRDOQ;
   Bool     m_useRDOQTS;
+#if T0196_SELECTIVE_RDOQ
+  Bool     m_useSelectiveRDOQ;
+#endif
 #if ADAPTIVE_QP_SELECTION
   Bool     m_bUseAdaptQpSelect;
 #endif
@@ -246,6 +252,13 @@ private:
                      TCoeff       &uiAbsSum,
                const ComponentID   compID,
                const QpParam      &cQP );
+
+#if T0196_SELECTIVE_RDOQ
+  Bool xNeedRDOQ(    TComTU       &rTu,
+                     TCoeff      * pSrc,
+               const ComponentID   compID,
+               const QpParam      &cQP );
+#endif
 
   // RDOQ functions
 
