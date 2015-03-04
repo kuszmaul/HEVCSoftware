@@ -81,7 +81,6 @@
 		6767961111AD623900421804 /* TDecSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = 6767960311AD623900421804 /* TDecSlice.h */; };
 		6767961211AD623900421804 /* TDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6767960411AD623900421804 /* TDecTop.cpp */; };
 		6767961311AD623900421804 /* TDecTop.h in Headers */ = {isa = PBXBuildFile; fileRef = 6767960511AD623900421804 /* TDecTop.h */; };
-		6767963311AD628100421804 /* TEncAnalyze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6767961E11AD628100421804 /* TEncAnalyze.cpp */; };
 		6767963411AD628100421804 /* TEncAnalyze.h in Headers */ = {isa = PBXBuildFile; fileRef = 6767961F11AD628100421804 /* TEncAnalyze.h */; };
 		6767963511AD628100421804 /* TEncCavlc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6767962011AD628100421804 /* TEncCavlc.cpp */; };
 		6767963611AD628100421804 /* TEncCavlc.h in Headers */ = {isa = PBXBuildFile; fileRef = 6767962111AD628100421804 /* TEncCavlc.h */; };
@@ -295,7 +294,6 @@
 		6767960411AD623900421804 /* TDecTop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TDecTop.cpp; path = source/Lib/TLibDecoder/TDecTop.cpp; sourceTree = "<group>"; };
 		6767960511AD623900421804 /* TDecTop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TDecTop.h; path = source/Lib/TLibDecoder/TDecTop.h; sourceTree = "<group>"; };
 		6767961911AD626F00421804 /* libTLibEncoder.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibEncoder.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6767961E11AD628100421804 /* TEncAnalyze.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TEncAnalyze.cpp; path = source/Lib/TLibEncoder/TEncAnalyze.cpp; sourceTree = "<group>"; };
 		6767961F11AD628100421804 /* TEncAnalyze.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TEncAnalyze.h; path = source/Lib/TLibEncoder/TEncAnalyze.h; sourceTree = "<group>"; };
 		6767962011AD628100421804 /* TEncCavlc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TEncCavlc.cpp; path = source/Lib/TLibEncoder/TEncCavlc.cpp; sourceTree = "<group>"; };
 		6767962111AD628100421804 /* TEncCavlc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TEncCavlc.h; path = source/Lib/TLibEncoder/TEncCavlc.h; sourceTree = "<group>"; };
@@ -576,16 +574,15 @@
 		6767961411AD624B00421804 /* TLibEncoder */ = {
 			isa = PBXGroup;
 			children = (
-				719E0DAD1A927294000361D4 /* SEIwrite.cpp */,
-				719E0DAE1A927294000361D4 /* SEIwrite.h */,
 				712FAEAC1379BA4900DB5314 /* AnnexBwrite.h */,
 				712FAEAD1379BA4900DB5314 /* NALwrite.cpp */,
 				712FAEAE1379BA4900DB5314 /* NALwrite.h */,
 				719E0DA91A927238000361D4 /* SEIEncoder.cpp */,
 				719E0DAA1A927238000361D4 /* SEIEncoder.h */,
+				719E0DAD1A927294000361D4 /* SEIwrite.cpp */,
+				719E0DAE1A927294000361D4 /* SEIwrite.h */,
 				71206CD916066EDD00A354E7 /* SyntaxElementWriter.cpp */,
 				71206CDA16066EDD00A354E7 /* SyntaxElementWriter.h */,
-				6767961E11AD628100421804 /* TEncAnalyze.cpp */,
 				6767961F11AD628100421804 /* TEncAnalyze.h */,
 				671E0D7211B6ADE900F3747B /* TEncBinCoder.h */,
 				671E0D7311B6ADE900F3747B /* TEncBinCoderCABAC.cpp */,
@@ -1006,7 +1003,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6767963311AD628100421804 /* TEncAnalyze.cpp in Sources */,
 				6767963511AD628100421804 /* TEncCavlc.cpp in Sources */,
 				6767963811AD628100421804 /* TEncCu.cpp in Sources */,
 				6767963A11AD628100421804 /* TEncEntropy.cpp in Sources */,

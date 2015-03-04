@@ -1295,7 +1295,6 @@ Bool TComTrQuant::xNeedRDOQ( TComTU &rTu, TCoeff * pSrc, const ComponentID compI
 
   // iAdd is different from the iAdd used in normal quantization
   const Int iAdd   = (compID == COMPONENT_Y ? 171 : 256) << (iQBits-9);
-  const Int qBits8 = iQBits - 8;
 
   for( Int uiBlockPos = 0; uiBlockPos < uiWidth*uiHeight; uiBlockPos++ )
   {
