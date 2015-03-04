@@ -147,7 +147,6 @@
     <ClCompile Include="..\..\source\Lib\TLibEncoder\SEIEncoder.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\SEIwrite.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\SyntaxElementWriter.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncAnalyze.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABAC.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABACCounter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncCavlc.cpp" />
