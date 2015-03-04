@@ -298,10 +298,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncAnalyze.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncBinCoderCABAC.cpp"
 				>
 			</File>

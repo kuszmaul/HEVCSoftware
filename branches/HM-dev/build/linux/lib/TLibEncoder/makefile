@@ -45,7 +45,6 @@ OBJS          	= \
 			$(OBJ_DIR)/TEncBinCoderCABAC.o \
 			$(OBJ_DIR)/TEncBinCoderCABACCounter.o \
 			$(OBJ_DIR)/TEncSampleAdaptiveOffset.o \
-			$(OBJ_DIR)/TEncAnalyze.o \
 			$(OBJ_DIR)/TEncCavlc.o \
 			$(OBJ_DIR)/TEncCu.o \
 			$(OBJ_DIR)/TEncEntropy.o \
