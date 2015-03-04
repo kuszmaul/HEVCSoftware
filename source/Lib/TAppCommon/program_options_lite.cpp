@@ -251,8 +251,8 @@ namespace df
 
     struct OptionWriter
     {
-      OptionWriter(Options& opts, ErrorReporter& err)
-      : opts(opts), error_reporter(err)
+      OptionWriter(Options& rOpts, ErrorReporter& err)
+      : opts(rOpts), error_reporter(err)
       {}
       virtual ~OptionWriter() {}
 
@@ -304,8 +304,8 @@ namespace df
 
     struct ArgvParser : public OptionWriter
     {
-      ArgvParser(Options& opts, ErrorReporter& error_reporter)
-      : OptionWriter(opts, error_reporter)
+      ArgvParser(Options& rOpts, ErrorReporter& rError_reporter)
+      : OptionWriter(rOpts, rError_reporter)
       {}
 
       const string where() { return "command line"; }
@@ -431,9 +431,9 @@ namespace df
 
     struct CfgStreamParser : public OptionWriter
     {
-      CfgStreamParser(const string& name, Options& opts, ErrorReporter& error_reporter)
-      : OptionWriter(opts, error_reporter)
-      , name(name)
+      CfgStreamParser(const string& rName, Options& rOpts, ErrorReporter& rError_reporter)
+      : OptionWriter(rOpts, rError_reporter)
+      , name(rName)
       , linenum(0)
       {}
 
