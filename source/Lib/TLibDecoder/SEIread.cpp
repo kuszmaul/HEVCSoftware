@@ -840,8 +840,6 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
     sei_read_flag( pDecodedMessageOutputStream, code, "nesting_zero_bit" );
   }
 
-  sei.m_callerOwnsSEIs = false;
-
   // read nested SEI messages
   do
   {

@@ -252,6 +252,9 @@ Void SEIEncoder::initSEIBufferingPeriod(SEIBufferingPeriod *bufferingPeriodSEI, 
   bufferingPeriodSEI->m_dpbDelayOffset = 0;
 }
 
+//! initialize scalable nesting SEI message.
+//! Note: The SEI message structures input into this function will become part of the scalable nesting SEI and will be 
+//!       automatically freed, when the nesting SEI is disposed.
 Void SEIEncoder::initSEIScalableNesting(SEIScalableNesting *scalableNestingSEI, SEIMessages &nestedSEIs)
 {
   assert (m_isInitialized);
@@ -264,7 +267,6 @@ Void SEIEncoder::initSEIScalableNesting(SEIScalableNesting *scalableNestingSEI, 
   scalableNestingSEI->m_nestingNoOpMaxTemporalIdPlus1 = 6 + 1;  //nesting_no_op_max_temporal_id_plus1
   scalableNestingSEI->m_nestingNumLayersMinus1        = 1 - 1;  //nesting_num_layers_minus1
   scalableNestingSEI->m_nestingLayerId[0]             = 0;
-  scalableNestingSEI->m_callerOwnsSEIs                = true;
 
   scalableNestingSEI->m_nestedSEIs.clear();
   for (SEIMessages::iterator it=nestedSEIs.begin(); it!=nestedSEIs.end(); it++)
