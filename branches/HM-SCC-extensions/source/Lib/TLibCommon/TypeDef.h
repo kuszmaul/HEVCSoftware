@@ -297,6 +297,7 @@
 #define SCM_T0078_REMOVE_PLT_RUN_MODE_CTX                1 ///< Remove context in palette mode
 #define SCM_T0116_IBCSEARCH_OPTIMIZE                     1 ///< IBC search improvement
 #define SCM_T0134_DELTA_PLT_PREDICTOR_SIZE               1 ///< Delta signaling for palette predictor size
+#define SCM_T0183_INFER_PLT_ESC_PRESENT_VAL_FLAG         1 ///< Include inference rule for value of syntax element pallete_escape_val_present_flag when not present
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
