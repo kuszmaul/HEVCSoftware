@@ -1692,6 +1692,16 @@ Void TAppEncCfg::xCheckParameter()
     m_useColourTrans = false;
   }
 
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  if (m_usePaletteMode && !(m_chromaFormatIDC == CHROMA_444 || m_chromaFormatIDC == CHROMA_422 || m_chromaFormatIDC == CHROMA_420))
+  {
+    fprintf(stderr, "*******************************************************************************\n");
+    fprintf(stderr, "** WARNING: Palette mode is supported for 4:4:4, 4:2:2 and 4:2:0 format only **\n");
+    fprintf(stderr, "*******************************************************************************\n");
+
+    m_usePaletteMode = false;
+  }
+#else
   if (m_usePaletteMode && (m_chromaFormatIDC != CHROMA_444))
   {
     fprintf(stderr, "***************************************************************************\n");
@@ -1700,6 +1710,7 @@ Void TAppEncCfg::xCheckParameter()
 
     m_usePaletteMode = false;
   }
+#endif
   if (m_usePaletteMode && m_profile != Profile::MAINSCC)
   {
     fprintf(stderr, "***************************************************************************\n");
