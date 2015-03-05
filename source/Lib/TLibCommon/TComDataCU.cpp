@@ -3723,6 +3723,7 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
   Int quantiserScale;
   Int quantiserRightShift;
   Int rightShiftOffset;
+#if !SCM_T0118_T0112_ESCAPE_COLOR_CODING
   UInt uiMaxBit = 0;
 
   Int quantStep = baseQp ? static_cast<Int>(pow(2.0, (baseQp - 4) / 6.0) + 0.5) : 1;
@@ -3732,7 +3733,7 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
     uiMaxBD >>= 1;
     uiMaxBit++;
   }
-
+#endif 
   iQPrem = baseQp % 6;
   iQPper = baseQp / 6;
   quantiserScale = g_quantScales[iQPrem];
@@ -3745,10 +3746,15 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
   }
   else
   {
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+    return Pel((((1 << g_bitDepth[(compID > 0)]) - 1) * quantiserScale + rightShiftOffset) >> quantiserRightShift);
+#else
     return Pel(ClipBD<Int>((((1 << g_bitDepth[(compID > 0)]) - 1) * quantiserScale + rightShiftOffset) >> quantiserRightShift, uiMaxBit));
+#endif 
   }
 }
 
+#if !SCM_T0118_T0112_ESCAPE_COLOR_CODING
 Void TComDataCU::xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3])
 {
   Bool bLossless = pcCU->getCUTransquantBypass(0);
@@ -3799,7 +3805,7 @@ Void TComDataCU::xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3])
     }
   }
 }
-
+#endif 
 
 /** Test whether the block at uiPartIdx is skipped.
  * \param uiPartIdx Partition index

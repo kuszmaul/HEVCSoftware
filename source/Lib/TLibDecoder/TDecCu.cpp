@@ -1095,9 +1095,15 @@ Void TDecCu::xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx
           Int iQP = cQP.Qp;
           Int iQPrem = iQP % 6;
           Int iQPper = iQP / 6;
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+          Int InvquantiserRightShift = IQUANT_SHIFT;
+          Int iAdd = 1 << (InvquantiserRightShift - 1);
+          iValue = ((((pPixelValue[uiIdx]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#else
           Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
           Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
           iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+#endif 
           iValue = Pel(ClipBD<Int>(iValue, g_bitDepth[compID?1:0]));
         }
       }
@@ -1152,6 +1158,15 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
           Int iQP = cQP.Qp;
           Int iQPrem = iQP % 6;          
           Int iQPper = iQP / 6;
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+          Int InvquantiserRightShift = IQUANT_SHIFT;
+          Int iAdd = 1 << (InvquantiserRightShift - 1);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          iValue = ((((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#else
+          iValue = ((((pPixelValue[uiIdx]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#endif 
+#else
           Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
           Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
 #if SCM_T0072_T0109_T0120_PLT_NON444
@@ -1159,6 +1174,7 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
 #else
           iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
 #endif
+#endif 
           iValue = Pel(ClipBD<Int>(iValue, g_bitDepth[compID?1:0]));
         }
       }
@@ -1212,9 +1228,15 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
             Int iQP = cQP.Qp;
             Int iQPrem = iQP % 6;
             Int iQPper = iQP / 6;
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+            Int InvquantiserRightShift = IQUANT_SHIFT;
+            Int iAdd = 1 << (InvquantiserRightShift - 1);
+            iValue = ((((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#else
             Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
             Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
             iValue = ((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+#endif 
             iValue = Pel(ClipBD<Int>(iValue, g_bitDepth[compID?1:0]));
           }
         }
