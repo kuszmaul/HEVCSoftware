@@ -751,10 +751,27 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiDictIdxBits++;
   }
   UInt uiIndexMaxSize = uiDictMaxSize;
+#if SCM_T0183_INFER_PLT_ESC_PRESENT_VAL_FLAG
+  Bool paletteEscapeValPresentFlag = false;
+#endif
   UInt uiSignalEscape = 1;
   if (uiDictMaxSize > 0)
   {
+#if SCM_T0183_INFER_PLT_ESC_PRESENT_VAL_FLAG
+    UInt uiCode = 0;
+    m_pcTDecBinIf->decodeBinEP(uiCode RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+    paletteEscapeValPresentFlag = (uiCode!=0);
+    if (paletteEscapeValPresentFlag)
+    {
+      uiSignalEscape = 1;
+    }
+    else
+    {
+      uiSignalEscape = 0;
+    }
+#else
     m_pcTDecBinIf->decodeBinEP(uiSignalEscape RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
     if (uiDictMaxSize + uiSignalEscape > 1)
     {
       parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
