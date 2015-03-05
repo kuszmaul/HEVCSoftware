@@ -484,7 +484,10 @@ class SEIScalableNesting : public SEI
 public:
   PayloadType payloadType() const { return SCALABLE_NESTING; }
 
-  SEIScalableNesting() {}
+  SEIScalableNesting()
+  : m_callerOwnsSEIs(false)
+  {}
+
   virtual ~SEIScalableNesting()
   {
     if (!m_callerOwnsSEIs)
