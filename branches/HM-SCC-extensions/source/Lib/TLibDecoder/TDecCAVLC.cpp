@@ -834,7 +834,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
             if (pcSPS->getUsePLTMode())//decode only when palette mode is enabled
             {
               READ_UVLC(uiCode, "palette_max_size");                        pcSPS->setPLTMaxSize(uiCode);
+#if SCM_T0134_DELTA_PLT_PREDICTOR_SIZE
+              READ_UVLC(uiCode, "delta_palette_max_predictor_size");        pcSPS->setPLTMaxPredSize(uiCode+pcSPS->getPLTMaxSize());
+#else              
               READ_UVLC(uiCode, "palette_max_predictor_size");              pcSPS->setPLTMaxPredSize(uiCode);
+#endif
             }
 #if SCM_T0069_AMVR_REFINEMENT
             READ_CODE( 2, uiCode, "motion_vector_resolution_control_idc" ); pcSPS->setMotionVectorResolutionControlIdc       (uiCode);

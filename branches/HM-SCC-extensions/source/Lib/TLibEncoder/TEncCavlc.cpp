@@ -670,7 +670,11 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
             if (pcSPS->getUsePLTMode())
             {
               WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");
+#if SCM_T0134_DELTA_PLT_PREDICTOR_SIZE
+              WRITE_UVLC(pcSPS->getPLTMaxPredSize() - pcSPS->getPLTMaxSize(), "delta_palette_max_predictor_size");
+#else
               WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");
+#endif              
             }
 #if SCM_T0069_AMVR_REFINEMENT
             WRITE_CODE( pcSPS->getMotionVectorResolutionControlIdc(), 2,             "motion_vector_resolution_control_idc");
