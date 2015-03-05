@@ -1128,6 +1128,15 @@ Enables or disables rate-distortion-optimized quantization for transformed TUs.
 Enables or disables rate-distortion-optimized quantization for transform-skipped TUs.
 \\
 
+\Option{SelectiveRDOQ} &
+%\ShortOption{\None} &
+\Default{false} &
+Enables or disables selective rate-distortion-optimized quantization.
+A simple quantization is use to pre-analyze, whether to bypass the RDOQ process or not. 
+If all the coefficients are quantized to 0, the RDOQ process is bypassed. 
+Otherwise, the RDOQ process is performed as usual.
+\\
+
 \Option{DeltaQpRD (-dqr)} &
 %\ShortOption{-dqr} &
 \Default{0} &
