@@ -616,10 +616,19 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   UInt uiIdx, uiDictMaxSize, uiDictIdxBits;
   UInt uiSampleBits[3] = { 0 };
   Pel  *pLevel = 0, *pPalette[3] = { 0 };
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  ComponentID compBegin = COMPONENT_Y;
+#else
   const ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
+#endif
   const UInt minCoeffSizeY = pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getMinCUHeight();
   const UInt offsetY = minCoeffSizeY * uiAbsPartIdx;
   const UInt offset = offsetY >> (pcCU->getPic()->getComponentScaleX(compBegin) + pcCU->getPic()->getComponentScaleY(compBegin));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+  const UInt offsetC = offsetY >> (uiScaleX + uiScaleY);
+#endif
 
   UInt uiSymbol = 0;
   Pel *pPixelValue[3] = { 0 };
@@ -653,11 +662,20 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     ComponentID compID = (ComponentID)comp;
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, uiAbsPartIdx, comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+    if(comp == compBegin)
+      pPixelValue[comp] = pcCU->getLevel(compID) + offset;
+    else
+      pPixelValue[comp] = pcCU->getLevel(compID) + offsetC;  
+#else
     pPixelValue[comp] = pcCU->getLevel(compID) + offset;
+#endif
     pPalette[comp] = pcCU->getPLT(comp, uiAbsPartIdx);
   }
 
+#if !SCM_T0072_T0109_T0120_PLT_NON444
   pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
 
   Bool isScanTraverseMode = true;
 
@@ -701,6 +719,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     if ( uiPLTSizePrev )
     {
       xDecodePLTPredIndicator(bReusedPrev, uiPLTSizePrev, pcCU->getSlice()->getSPS()->getPLTMaxSize() RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        for ( UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++ )   
+          pcCU->setPrevPLTReusedFlagSubParts( comp, bReusedPrev[uiIdxPrev], uiIdxPrev, uiAbsPartIdx, uiDepth );
+      }
+#endif
       for ( Int uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++ )
       {
         if ( bReusedPrev[uiIdxPrev] )
@@ -744,7 +769,12 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
   }
 
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+    pcCU->setPLTSizeSubParts(comp, uiDictMaxSize, uiAbsPartIdx, uiDepth);
+#else
   pcCU->setPLTSizeSubParts(compBegin, uiDictMaxSize, uiAbsPartIdx, uiDepth);
+#endif
   uiDictIdxBits = 0;
   while ((1 << uiDictIdxBits) < uiDictMaxSize)
   {
@@ -855,11 +885,56 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         assert(pEscapeFlag[uiTraIdx] == sEscapeColor);
         if( sEscapeColor )
         {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          UInt uiY, uiX;
+          uiY = uiTraIdx/uiWidth;
+          uiX = uiTraIdx%uiWidth;
+          UInt uiXC, uiYC, uiTraIdxC;
+          if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+          {
+            uiXC = (uiX>>uiScaleX);
+            uiYC = (uiY>>uiScaleY);
+            uiTraIdxC = uiYC * (uiWidth>>uiScaleX) + uiXC;
+          }
+          else
+          {
+            uiXC = (uiX>>uiScaleY);
+            uiYC = (uiY>>uiScaleX);
+            uiTraIdxC = uiYC * (uiHeight>>uiScaleY) + uiXC;  
+          }
+
+          if(
+              pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+            )
+          {
+            for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+            {
+              if(comp == compBegin)
+              {
+                xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                pPixelValue[comp][uiTraIdx] = uiSymbol;
+              }
+              else
+              {
+                xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                pPixelValue[comp][uiTraIdxC] = uiSymbol;
+              }
+            }      
+          }
+          else
+          { 
+            xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+            pPixelValue[compBegin][uiTraIdx] = uiSymbol;
+          }
+#else
           for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
           {
             xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
             pPixelValue[comp][uiTraIdx] = uiSymbol;
           }
+#endif
         }
         uiPos = 0;
         while (uiPos < uiRun)
@@ -872,11 +947,56 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           pEscapeFlag[uiTraIdx] = sEscapeColor;
           if( sEscapeColor )
           {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+            UInt uiY, uiX;
+            uiY = uiTraIdx/uiWidth;
+            uiX = uiTraIdx%uiWidth;
+            UInt uiXC, uiYC, uiTraIdxC;
+            if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+            {
+              uiXC = (uiX>>uiScaleX);
+              uiYC = (uiY>>uiScaleY);
+              uiTraIdxC = uiYC * (uiWidth>>uiScaleX) + uiXC;
+            }
+            else
+            {
+              uiXC = (uiX>>uiScaleY);
+              uiYC = (uiY>>uiScaleX);
+              uiTraIdxC = uiYC * (uiHeight>>uiScaleY) + uiXC;  
+            }
+
+            if(
+                pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+              )
+            {
+              for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+              {
+                if(comp == compBegin)
+                {
+                  xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                  pPixelValue[comp][uiTraIdx] = uiSymbol;
+                }
+                else
+                {
+                  xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                  pPixelValue[comp][uiTraIdxC] = uiSymbol;
+                }
+              }
+            }
+            else
+            { 
+              xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+              pPixelValue[compBegin][uiTraIdx] = uiSymbol;
+            }
+#else
             for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
             {
               xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
               pPixelValue[comp][uiTraIdx] = uiSymbol;
             }
+#endif
           }
         }
         uiIdx++;
@@ -887,11 +1007,56 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         pEscapeFlag[uiTraIdx] = pEscapeFlag[uiTraIdx - uiStride];
         if( pEscapeFlag[uiTraIdx] )
         {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          UInt uiY, uiX;
+          uiY = uiTraIdx/uiWidth;
+          uiX = uiTraIdx%uiWidth;
+          UInt uiXC, uiYC, uiTraIdxC;
+          if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+          {
+            uiXC = (uiX>>uiScaleX);
+            uiYC = (uiY>>uiScaleY);
+            uiTraIdxC = uiYC * (uiWidth>>uiScaleX) + uiXC;
+          }
+          else
+          {
+            uiXC = (uiX>>uiScaleY);
+            uiYC = (uiY>>uiScaleX);
+            uiTraIdxC = uiYC * (uiHeight>>uiScaleY) + uiXC;  
+          }
+
+          if(
+              pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+            )
+          {
+            for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+            {
+              if(comp == compBegin)
+              {
+                xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                pPixelValue[comp][uiTraIdx] = uiSymbol;
+              }
+              else
+              {
+                xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                pPixelValue[comp][uiTraIdxC] = uiSymbol;
+              }
+            }
+          }
+          else
+          { 
+            xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+            pPixelValue[compBegin][uiTraIdx] = uiSymbol;
+          }
+#else
           for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
           {
             xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
             pPixelValue[comp][uiTraIdx] = uiSymbol;
           }
+#endif
         }
         uiPos = 0;
         while (uiPos < uiRun)
@@ -904,11 +1069,56 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           pEscapeFlag[uiTraIdx] = pEscapeFlag[uiTraIdx - uiStride];
           if( pEscapeFlag[uiTraIdx] )
           {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+            UInt uiY, uiX;
+            uiY = uiTraIdx/uiWidth;
+            uiX = uiTraIdx%uiWidth;
+            UInt uiXC, uiYC, uiTraIdxC;
+            if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+            {
+              uiXC = (uiX>>uiScaleX);
+              uiYC = (uiY>>uiScaleY);
+              uiTraIdxC = uiYC * (uiWidth>>uiScaleX) + uiXC;
+            }
+            else
+            {
+              uiXC = (uiX>>uiScaleY);
+              uiYC = (uiY>>uiScaleX);
+              uiTraIdxC = uiYC * (uiHeight>>uiScaleY) + uiXC;  
+            }
+
+            if(
+                pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+              )
+            {
+              for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+              {
+                if(comp == compBegin)
+                {
+                  xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                  pPixelValue[comp][uiTraIdx] = uiSymbol;
+                }
+                else
+                {
+                  xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+                  pPixelValue[comp][uiTraIdxC] = uiSymbol;
+                }
+              }
+            }
+            else
+            { 
+              xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+              pPixelValue[compBegin][uiTraIdx] = uiSymbol;
+            }     
+#else
             for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
             {
               xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
               pPixelValue[comp][uiTraIdx] = uiSymbol;
             }
+#endif
           }
         }
         uiIdx++;

@@ -102,10 +102,14 @@ protected:
   Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
 #endif
   Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
+#if !SCM_T0072_T0109_T0120_PLT_NON444
   Void xReconPLTModeLuma      ( TComDataCU* pcCU, UInt uiDepth );
   Void xReconPLTModeChroma    ( TComDataCU* pcCU, UInt uiDepth );
+#endif
   Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
+#if !SCM_T0072_T0109_T0120_PLT_NON444
   Void xDecodePLTTextureLumaChroma( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
+#endif
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
   Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );

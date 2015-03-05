@@ -3909,6 +3909,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   TCoeff *pRun;
   UChar *paSPoint[3];
   Pel *pPixelValue[3];
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#endif
   for (UInt ch = 0; ch < 3; ch++)
   {
     paOrig[ch] = pcOrgYuv->getAddr((ComponentID)ch, 0);
@@ -3931,11 +3935,17 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     for (UInt comp=0; comp < MAX_NUM_COMPONENT; comp++)
     {
       pPalettePrev[comp] = pcCU->getPLTPred (pcCU,  pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      assert( pPalettePrev[comp] && (uiPLTSizePrev != 0) );
+#else
       assert( pPalettePrev[comp] && !((comp == 0) && (uiPLTSizePrev == 0)));
+#endif
     }
   }
 
+#if !SCM_T0072_T0109_T0120_PLT_NON444
   pcCU->getPLTPred (pcCU,  pcCU->getZorderIdxInCtu(), COMPONENT_Y, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
   pcCU->setPLTSharingFlagSubParts(bPLTSharingModeAvailable, 0, pcCU->getDepth(0));
 
   if(bPLTSharingModeAvailable)
@@ -3966,6 +3976,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
       }
     }
     pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+    pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
+    pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));       
+#endif
   }
   else
   {
@@ -3979,6 +3993,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
       derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
     }
     pcCU->setPLTSizeSubParts(0, uiPLTSize,0, pcCU->getDepth(0));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+    pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
+    pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
+#endif
     reorderPLT (pcCU, paPalette, 3);
   }
 
@@ -4012,7 +4030,14 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pcCU->setPLTScanRotationModeFlagSubParts( m_bBestScanRotationMode, 0, uiDepth );
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+    if(!ch)
+      memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * uiWidth * uiHeight);
+    else
+      memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * (uiWidth>>uiScaleX) * (uiHeight>>uiScaleY));      
+#else
     memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * uiWidth * uiHeight);
+#endif
   }
   memcpy(paSPoint[0], m_paBestSPoint, sizeof(UChar) * uiWidth * uiHeight);
   memcpy(pRun,        m_paBestRun,    sizeof(TCoeff) * uiWidth * uiHeight);
@@ -4061,6 +4086,15 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     else
     {
       UInt uiIdx = 0;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      for( UInt uiY = 0; uiY < uiWidth; uiY++ )
+      {
+        for( UInt uiX = 0; uiX < uiHeight; uiX++ )
+        {
+          uiIdx = (uiY << pcCU->getPic()->getComponentScaleX(compID)) * (uiHeight << pcCU->getPic()->getComponentScaleY(compID))
+                  + (uiX << pcCU->getPic()->getComponentScaleY(compID));
+          UInt uiPxlPos = uiX*uiStride+uiY;          
+#else
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
         for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -4068,6 +4102,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
           uiIdx = (uiY << pcCU->getPic()->getComponentScaleY(compID)) * (uiWidth << pcCU->getPic()->getComponentScaleX(compID))
                   + (uiX << pcCU->getPic()->getComponentScaleX(compID));
           UInt uiPxlPos = uiX*uiStride+uiY;
+#endif
           if( !pEscapeFlag[uiIdx] )
           {
             pPred[uiPxlPos] = pPalette[pLevel[uiIdx]];
