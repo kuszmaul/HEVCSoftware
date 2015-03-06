@@ -287,7 +287,7 @@ __inline UInt              xGetCodedLevel  ( Double&          rd64CodedCost,
                                              Double           errorScale,
                                              Bool             bLast,
                                              Bool             useLimitedPrefixLength,
-                                             ChannelType      channelType
+                                             const Int        maxLog2TrDynamicRange
                                              ) const;
 
 
