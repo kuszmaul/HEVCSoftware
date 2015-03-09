@@ -295,7 +295,7 @@ Void TDecSbac::xReadUnarySymbol( UInt& ruiSymbol, ContextModel* pcSCModel, Int i
  * \param rSymbol                 reference to coeff_abs_level_remaing
  * \param rParam                  reference to parameter
  * \param useLimitedPrefixLength
- * \param channelType
+ * \param maxLog2TrDynamicRange
  */
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange, const class TComCodingStatisticsClassType &whichStat )

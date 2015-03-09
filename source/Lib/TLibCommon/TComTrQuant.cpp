@@ -1940,13 +1940,14 @@ Void TComTrQuant::invRdpcmNxN( TComTU& rTu, const ComponentID compID, Pel* pcRes
 // ------------------------------------------------------------------------------------------------
 
 /** Wrapper function between HM interface and core NxN forward transform (2D)
- *  \param compID colour component ID
+ *  \param channelBitDepth bit depth of channel
  *  \param useDST
  *  \param piBlkResi input data (residual)
  *  \param uiStride stride of input residual data
  *  \param psCoeff output data (transform coefficients)
  *  \param iWidth transform width
  *  \param iHeight transform height
+ *  \param maxLog2TrDynamicRange
  */
 Void TComTrQuant::xT( const Int channelBitDepth, Bool useDST, Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff, Int iWidth, Int iHeight, const Int maxLog2TrDynamicRange )
 {
@@ -1975,13 +1976,14 @@ Void TComTrQuant::xT( const Int channelBitDepth, Bool useDST, Pel* piBlkResi, UI
 }
 
 /** Wrapper function between HM interface and core NxN inverse transform (2D)
- *  \param compID colour component ID
+ *  \param channelBitDepth bit depth of channel
  *  \param useDST
  *  \param plCoef input data (transform coefficients)
  *  \param pResidual output data (residual)
  *  \param uiStride stride of input residual data
  *  \param iWidth transform width
  *  \param iHeight transform height
+ *  \param maxLog2TrDynamicRange
  */
 Void TComTrQuant::xIT( const Int channelBitDepth, Bool useDST, TCoeff* plCoef, Pel* pResidual, UInt uiStride, Int iWidth, Int iHeight, const Int maxLog2TrDynamicRange )
 {
@@ -2812,41 +2814,27 @@ Int TComTrQuant::getSigCtxInc    (       Int                        patternSigCt
 
 
 /** Get the best level in RD sense
- * \param rd64CodedCost reference to coded cost
- * \param rd64CodedCost0 reference to cost when coefficient is 0
- * \param rd64CodedCostSig reference to cost of significant coefficient
- * \param lLevelDouble reference to unscaled quantized level
- * \param uiMaxAbsLevel scaled quantized level
- * \param ui16CtxNumSig current ctxInc for coeff_abs_significant_flag
- * \param ui16CtxNumOne current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
- * \param ui16CtxNumAbs current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
- * \param ui16AbsGoRice current Rice parameter for coeff_abs_level_minus3
- * \param c1Idx
- * \param c2Idx
- * \param iQBits quantization step size
- * \param errorScale
- * \param bLast indicates if the coefficient is the last significant
- * \param useLimitedPrefixLength
- * \param channelType  texture channel type (luma/chroma)
+ *
  * \returns best quantized transform level for given scan position
+ *
  * This method calculates the best quantized transform level for a given scan position.
  */
-__inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,
-                                            Double&          rd64CodedCost0,
-                                            Double&          rd64CodedCostSig,
-                                            Intermediate_Int lLevelDouble,
-                                            UInt             uiMaxAbsLevel,
-                                            UShort           ui16CtxNumSig,
-                                            UShort           ui16CtxNumOne,
-                                            UShort           ui16CtxNumAbs,
-                                            UShort           ui16AbsGoRice,
-                                            UInt             c1Idx,
-                                            UInt             c2Idx,
-                                            Int              iQBits,
-                                            Double           errorScale,
-                                            Bool             bLast,
-                                            Bool             useLimitedPrefixLength,
-                                            const Int        maxLog2TrDynamicRange
+__inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,          //< reference to coded cost
+                                            Double&          rd64CodedCost0,         //< reference to cost when coefficient is 0
+                                            Double&          rd64CodedCostSig,       //< rd64CodedCostSig reference to cost of significant coefficient
+                                            Intermediate_Int lLevelDouble,           //< reference to unscaled quantized level
+                                            UInt             uiMaxAbsLevel,          //< scaled quantized level
+                                            UShort           ui16CtxNumSig,          //< current ctxInc for coeff_abs_significant_flag
+                                            UShort           ui16CtxNumOne,          //< current ctxInc for coeff_abs_level_greater1 (1st bin of coeff_abs_level_minus1 in AVC)
+                                            UShort           ui16CtxNumAbs,          //< current ctxInc for coeff_abs_level_greater2 (remaining bins of coeff_abs_level_minus1 in AVC)
+                                            UShort           ui16AbsGoRice,          //< current Rice parameter for coeff_abs_level_minus3
+                                            UInt             c1Idx,                  //< 
+                                            UInt             c2Idx,                  //< 
+                                            Int              iQBits,                 //< quantization step size
+                                            Double           errorScale,             //< 
+                                            Bool             bLast,                  //< indicates if the coefficient is the last significant
+                                            Bool             useLimitedPrefixLength, //< 
+                                            const Int        maxLog2TrDynamicRange   //< 
                                             ) const
 {
   Double dCurrCostSig   = 0;
@@ -2897,7 +2885,7 @@ __inline UInt TComTrQuant::xGetCodedLevel ( Double&          rd64CodedCost,
  * \param c1Idx
  * \param c2Idx
  * \param useLimitedPrefixLength
- * \param channelType  texture channel type (luma/chroma)
+ * \param maxLog2TrDynamicRange
  * \returns cost of given absolute transform level
  */
 __inline Int TComTrQuant::xGetICRate         ( const UInt    uiAbsLevel,
@@ -3065,8 +3053,10 @@ UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
 
 
 /** set quantized matrix coefficient for encode
- * \param scalingList quantized matrix address
- * \param format      chroma format
+ * \param scalingList            quantized matrix address
+ * \param format                 chroma format
+ * \param maxLog2TrDynamicRange
+ * \param bitDepths              reference to bit depth array for all channels
  */
 Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {
@@ -3107,9 +3097,11 @@ Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const Ch
   }
 }
 /** set error scale coefficients
- * \param list List ID
- * \param size Size
- * \param qp   Quantization parameter
+ * \param list                   list ID
+ * \param size                   
+ * \param qp                     quantization parameter
+ * \param maxLog2TrDynamicRange
+ * \param bitDepths              reference to bit depth array for all channels
  */
 Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {

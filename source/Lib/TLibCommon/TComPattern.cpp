@@ -74,6 +74,7 @@ Int   isBelowLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdx
  \param  iRoiWidth     pattern width
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
+ \param  bitDepth      bit depth
  */
 Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
                                            Int iRoiWidth,

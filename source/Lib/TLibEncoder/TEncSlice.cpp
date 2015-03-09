@@ -1194,8 +1194,7 @@ Void TEncSlice::calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UI
 /** Determines the starting and bounding CTU address of current slice / dependent slice
  * \param [out] startCtuTsAddr
  * \param [out] boundingCtuTsAddr
- * \param [in] pcPic
- * \param encodingSlice Identifies, if the calling function is compressSlice() [false] or encodeSlice() [true]
+ * \param [in]  pcPic
 
  * Updates startCtuTsAddr, boundingCtuTsAddr with appropriate CTU address
  */
