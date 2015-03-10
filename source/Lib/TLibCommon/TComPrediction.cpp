@@ -1016,7 +1016,9 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
 {
 
   UInt uiPLTSizePrev, uiDictMaxSize;
+#if !SCM_T0064_REMOVE_PLT_SHARING
   UInt uiPLTUsedSizePrev;
+#endif
   Pel * pPalettePrev[3];
   UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
   UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getPLTMaxPredSize();
@@ -1033,7 +1035,11 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
 
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
+#else
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
     for (UInt i = 0; i < uiMaxPLTSize; i++)
     {
       pPaletteTemp[comp][i] = pPalette[comp][i];
@@ -1041,8 +1047,13 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
   }
 
 #if !SCM_T0072_T0109_T0120_PLT_NON444
+#if SCM_T0064_REMOVE_PLT_SHARING
+  pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), compBegin, uiPLTSizePrev);
+#else
   pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
 #endif
+#endif
+
   uiDictMaxSize = pcCU->getPLTSize(compBegin, 0);
 
   UInt uiIdxPrev = 0, uiIdxCurr = 0;
@@ -1443,16 +1454,100 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
 #endif
 }
 
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, Bool forcePLTPrediction)
+#else
 Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize)
+#endif
 {
   std::vector<SortingElement> psList;
   SortingElement sElement;
-  UInt uiIdx = 0;
+  Int uiIdx = 0;
   UInt uiPos;
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  uiPLTSize = 0;
+
+  const Pel * const pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+#endif
+
 #if SCM_T0072_T0109_T0120_PLT_NON444
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
 #endif
+  
+#if SCM_T0064_REMOVE_PLT_SHARING
+  if( forcePLTPrediction )
+  {
+    UInt pltPredIndexUsed[MAX_PLT_PRED_SIZE];
+    memset( pltPredIndexUsed, 0, sizeof(pltPredIndexUsed) );
+
+    UChar pltIndexUsed[MAX_PLT_PRED_SIZE];
+    memset( pltIndexUsed, 0, sizeof(pltIndexUsed) );
+
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+    {
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+        UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+        Int iBestIdx = -1;
+        UInt uiPLTIdx = 0;
+
+        while( uiPLTIdx < pcCU->getLastPLTInLcuSizeFinal(0) )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          if( pPred[0][uiPLTIdx] == pSrc[0][uiPos] && pPred[1][uiPLTIdx] == pSrc[1][uiPosC] && pPred[2][uiPLTIdx] == pSrc[2][uiPosC] )
+#else
+          if( pPred[0][uiPLTIdx] == pSrc[0][uiPos] && pPred[1][uiPLTIdx] == pSrc[1][uiPos] && pPred[2][uiPLTIdx] == pSrc[2][uiPos] )
+#endif
+          {
+            iBestIdx = uiPLTIdx;
+            break;
+          }
+          uiPLTIdx++;
+        }
+
+        if( iBestIdx >= 0 )
+        {
+          pltPredIndexUsed[iBestIdx]++;        
+        }
+      }
+    }    
+
+    while( uiIdx < maxPLTSizeSPS )
+    {
+      UInt maxNoIndexUsed = 0, bestIndex = 0;
+      for( UInt i = 0; i < pcCU->getLastPLTInLcuSizeFinal(0); i++ )
+      {
+        if( pltIndexUsed[i] == 0 && pltPredIndexUsed[i] > maxNoIndexUsed )
+        {
+          maxNoIndexUsed = pltPredIndexUsed[i];
+          bestIndex = i;
+        }
+      }
+      if( maxNoIndexUsed > 0 )
+      {
+        pltIndexUsed[bestIndex] = 1;
+
+        Palette[0][uiPLTSize] = pPred[0][bestIndex];
+        Palette[1][uiPLTSize] = pPred[1][bestIndex];
+        Palette[2][uiPLTSize] = pPred[2][bestIndex];
+        uiPLTSize++;
+      }
+      else
+      {
+        break;
+      }
+      uiIdx++;
+    }
+  }
+#endif
+
+  uiIdx = 0;
   for (UInt uiY = 0; uiY < uiHeight; uiY++)
   {
     for (UInt uiX = 0; uiX < uiWidth; uiX++)
@@ -1460,11 +1555,42 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
       uiPos = uiY * uiWidth + uiX;
 #if SCM_T0072_T0109_T0120_PLT_NON444
       UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+
+      Int iBestIdx = -1;
+
+      if( forcePLTPrediction )
+      {
+        UInt uiPLTIdx = 0;
+
+        while( uiPLTIdx < uiPLTSize )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          if( Palette[0][uiPLTIdx] == pSrc[0][uiPos] && Palette[1][uiPLTIdx] == pSrc[1][uiPosC] && Palette[2][uiPLTIdx] == pSrc[2][uiPosC] )
+#else
+          if( Palette[0][uiPLTIdx] == pSrc[0][uiPos] && Palette[1][uiPLTIdx] == pSrc[1][uiPos] && Palette[2][uiPLTIdx] == pSrc[2][uiPos] )
+#endif
+          {
+            iBestIdx = uiPLTIdx;
+            break;
+          }
+          uiPLTIdx++;
+        }
+      }
+
+      if( iBestIdx >= 0 )
+      {
+        continue;
+      }
+#endif
+      Int i = 0;
+#if SCM_T0072_T0109_T0120_PLT_NON444
       sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
 #else
       sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
 #endif
-      Int i = 0;
       for (i = uiIdx - 1; i >= 0; i--)
       {
         if( psList[i].uiData[0] == sElement.uiData[0] && psList[i].uiData[1] == sElement.uiData[1] && psList[i].uiData[2] == sElement.uiData[2] )
@@ -1481,17 +1607,28 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
       }
     }
   }
+
   //insertion sort, high frequency -> low frequency
   std::stable_sort(psList.begin(), psList.end());
   UInt uiPLTSizePrev;
+#if !SCM_T0064_REMOVE_PLT_SHARING
   UInt uiPLTUsedSizePrev;
+#endif
   Pel *pPalettePrev[3];
   for (UInt comp = 0; comp < 3; comp++)
   {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
+#else
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
   }
 
+#if SCM_T0064_REMOVE_PLT_SHARING
+  if( uiPLTSize < maxPLTSizeSPS )
+#else
   uiPLTSize = 0;
+#endif
   for (Int i = 0; i < uiIdx; i++)
   {
     for (Int j = i - 1; j >= 0; j--)
@@ -1766,5 +1903,276 @@ Void  TComPrediction::rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bo
     }
   }
 }
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palette[3], Pel *pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost)
+{
+  const Int iErrorLimit = getPLTErrLimit();
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  const UInt uiTotalSize = uiHeight * uiWidth;
+  SortingElement *psList = new SortingElement[uiTotalSize];
+  SortingElement sElement;
+  SortingElement *pListSort = new SortingElement[maxPLTSizeSPS + 1];
+
+  uiPLTSize = 0;
+  UInt uiIdx = 0, uiPos, uiBestIdx = 0;
+  Int last = -1;
+
+  UInt pltPredIndexUsed[MAX_PLT_PRED_SIZE];
+  memset( pltPredIndexUsed, 0, sizeof(pltPredIndexUsed) );
+
+  UChar pltIndexUsed[MAX_PLT_PRED_SIZE];
+  memset( pltIndexUsed, 0, sizeof(pltIndexUsed) );
+
+  Pel *pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#endif
+
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+      UInt uiPLTIdx = 0;
+      UInt uiMinError = MAX_UINT;
+      while( uiPLTIdx < pcCU->getLastPLTInLcuSizeFinal(0) )
+      {
+        UInt uiAbsError = (abs(pPred[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8))
+#if SCM_T0072_T0109_T0120_PLT_NON444
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+#else
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+#endif
+
+        if( uiAbsError < uiMinError )
+        {
+          uiBestIdx = uiPLTIdx;
+          uiMinError = uiAbsError;
+          if (uiMinError == 0)
+          {
+            break;
+          }
+        }
+        uiPLTIdx++;
+      }
+
+      if( uiMinError <= iErrorLimit )
+      {
+        pltPredIndexUsed[uiBestIdx]++;        
+      }      
+    }
+  }
+
+  while( uiIdx < maxPLTSizeSPS )
+  {
+    UInt maxNoIndexUsed = 0, bestIndex = 0;
+    for( UInt i = 0; i < pcCU->getLastPLTInLcuSizeFinal(0); i++ )
+    {
+      if( pltIndexUsed[i] == 0 && pltPredIndexUsed[i] > maxNoIndexUsed )
+      {
+        maxNoIndexUsed = pltPredIndexUsed[i];
+        bestIndex = i;
+      }
+    }
+    if( maxNoIndexUsed > 0 )
+    {
+      pltIndexUsed[bestIndex] = 1;
+
+      Palette[0][uiPLTSize] = pPred[0][bestIndex];
+      Palette[1][uiPLTSize] = pPred[1][bestIndex];
+      Palette[2][uiPLTSize] = pPred[2][bestIndex];
+      uiPLTSize++;
+    }
+    else
+    {
+      break;
+    }
+    uiIdx++;
+  }
+
+  uiIdx = 0;
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+
+      UInt uiPLTIdx = 0;
+      UInt uiMinError = MAX_UINT;
+      while( uiPLTIdx < uiPLTSize )
+      {
+        UInt uiAbsError = (abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8))
+#if SCM_T0072_T0109_T0120_PLT_NON444
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+#else
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+#endif
+
+        if (uiAbsError < uiMinError)
+        {
+          uiMinError = uiAbsError;
+          if (uiMinError == 0)
+          {
+            break;
+          }
+        }
+        uiPLTIdx++;
+      }
+
+      if( uiMinError > iErrorLimit )
+      {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+        sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+        sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement);
+        if (bestSAD)
+        {
+          for (Int i = uiIdx - 1; i >= 0; i--)
+          {
+            UInt sad = psList[i].getSAD(sElement);
+            if (sad < bestSAD)
+            {
+              bestSAD = sad;
+              besti = i;
+              if (!sad)
+              {
+                break;
+              }
+            }
+          }
+        }
+
+        if( besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit) )
+        {
+          psList[besti].addElement(sElement);
+          last = besti;
+        }
+        else
+        {
+          psList[uiIdx].copyDataFrom(sElement);
+          psList[uiIdx].uiCnt = 1;
+          last = uiIdx;
+          uiIdx++;
+        }
+      }
+    }
+  }
+
+  for( Int i = 0; i < maxPLTSizeSPS; i++ )
+  {
+    pListSort[i].uiCnt = 0;
+    pListSort[i].setAll(0, 0, 0);
+  }
+
+  //bubble sorting
+  UInt uiDictMaxSize = 1;
+  for( Int i = 0; i < uiIdx; i++ )
+  {
+    if( psList[i].uiCnt > pListSort[uiDictMaxSize - 1].uiCnt )
+    {
+      Int j;
+      for( j = uiDictMaxSize; j > 0; j-- )
+      {
+        if( psList[i].uiCnt > pListSort[j - 1].uiCnt )
+        {
+          pListSort[j].copyAllFrom(pListSort[j - 1]);
+          uiDictMaxSize = std::min(uiDictMaxSize + 1, maxPLTSizeSPS);
+        }
+        else
+        {
+          break;
+        }
+      }
+      pListSort[j].copyAllFrom(psList[i]);
+    }
+  }
+
+  Double bitCost = pcCost->getLambda() * 24;
+
+  for( Int i = 0; i < maxPLTSizeSPS && uiPLTSize < maxPLTSizeSPS; i++ )
+  {
+    if( pListSort[i].uiCnt )
+    {
+      Int iHalf = pListSort[i].uiCnt >> 1;
+      Palette[0][uiPLTSize] = (pListSort[i].uiSumData[0] + iHalf) / pListSort[i].uiCnt;
+      Palette[1][uiPLTSize] = (pListSort[i].uiSumData[1] + iHalf) / pListSort[i].uiCnt;
+      Palette[2][uiPLTSize] = (pListSort[i].uiSumData[2] + iHalf) / pListSort[i].uiCnt;
+
+      Bool bDuplicate = false;
+      if( pListSort[i].uiCnt == 1 )
+      {
+        bDuplicate = true;
+      }
+      else
+      {
+        Int best = -1;
+        if( iErrorLimit )
+        {  
+          Double pal[3] = { pListSort[i].uiSumData[0] / (Double)pListSort[i].uiCnt,
+                            pListSort[i].uiSumData[1] / (Double)pListSort[i].uiCnt,
+                            pListSort[i].uiSumData[2] / (Double)pListSort[i].uiCnt };
+
+          Double err = pal[0] - Palette[0][uiPLTSize];
+          Double bestCost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8)));
+          err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+          err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+          bestCost = bestCost * pListSort[i].uiCnt + bitCost;
+
+          for( Int t = 0; t < uiPLTSize; t++ )
+          {
+            if( Palette[0][uiPLTSize] == Palette[0][t] && Palette[1][uiPLTSize] == Palette[1][t] && Palette[2][uiPLTSize] == Palette[2][t] )
+            {
+              bDuplicate = true;
+              break;
+            }
+
+            err = pal[0] - Palette[0][t];
+            Double cost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8)));
+            err = pal[1] - Palette[1][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+            err = pal[2] - Palette[2][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+            cost *= pListSort[i].uiCnt;
+            if( cost < bestCost )
+            {
+              best = t;
+              bestCost = cost;
+            }
+          }
+          if( best != -1 )
+          {
+            bDuplicate = true;
+          }
+        }
+      }
+
+      if( !bDuplicate )
+      {
+        uiPLTSize++;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  delete[] psList;
+  delete[] pListSort;
+}
+#endif
 
 //! \}

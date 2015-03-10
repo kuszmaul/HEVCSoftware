@@ -250,8 +250,10 @@ Void TEncCu::compressCtu( TComDataCU* pCtu, UChar* lastPLTSize, UChar* lastPLTUs
 
   for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
   {
+#if !SCM_T0064_REMOVE_PLT_SHARING
     m_ppcBestCU[0]->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
     m_ppcTempCU[0]->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
+#endif
     m_ppcBestCU[0]->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
     m_ppcTempCU[0]->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
     for (UInt idx = 0; idx < pCtu->getSlice()->getSPS()->getPLTMaxPredSize(); idx++)
@@ -434,7 +436,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     lastIntraBCMv[i] = rpcBestCU->getLastIntraBCMv(i);
   }
 
+#if !SCM_T0064_REMOVE_PLT_SHARING
   UChar lastPLTUsedSize[3];
+#endif
   UChar lastPLTSize[3];
   UInt numValidComp = rpcBestCU->getPic()->getNumberValidComponents();
   Pel*  lastPLT[MAX_NUM_COMPONENT];
@@ -444,7 +448,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
   for (UInt ch = 0; ch < numValidComp; ch++)
   {
+#if !SCM_T0064_REMOVE_PLT_SHARING
     lastPLTUsedSize[ch] = rpcBestCU->getLastPLTInLcuUsedSizeFinal(ch);
+#endif
     lastPLTSize[ch] = rpcBestCU->getLastPLTInLcuSizeFinal(ch);
     for (UInt i = 0; i < rpcBestCU->getSlice()->getSPS()->getPLTMaxPredSize(); i++)
     {
@@ -1042,12 +1048,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckPLTMode( rpcBestCU, rpcTempCU, false );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
+#if SCM_T0064_REMOVE_PLT_SHARING
+            Bool forcePLTPrediction = false;
+            for( UChar ch = 0; ch < numValidComp; ch++ )
+            {
+              forcePLTPrediction = forcePLTPrediction || ( rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0 );
+            }
+            if( forcePLTPrediction )
+#else
             Bool bPLTSharingAvail=false;
             for ( UInt ch = 0; ch < numValidComp; ch++ )
             {
               bPLTSharingAvail = bPLTSharingAvail || (rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0);
             }
             if ( bPLTSharingAvail )
+#endif
             {
               xCheckPLTMode( rpcBestCU, rpcTempCU, true );
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -1265,8 +1280,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
         for (UInt ch = 0; ch < numValidComp; ch++)
         {
+#if !SCM_T0064_REMOVE_PLT_SHARING
           pcSubBestPartCU->setLastPLTInLcuUsedSizeFinal(ch, lastPLTUsedSize[ch]);
           pcSubTempPartCU->setLastPLTInLcuUsedSizeFinal(ch, lastPLTUsedSize[ch]);
+#endif
           pcSubBestPartCU->setLastPLTInLcuSizeFinal(ch, lastPLTSize[ch]);
           pcSubTempPartCU->setLastPLTInLcuSizeFinal(ch, lastPLTSize[ch]);
           for (UInt i = 0; i < pcSlice->getSPS()->getPLTMaxPredSize(); i++)
@@ -1313,6 +1330,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
 
+#if !SCM_T0064_REMOVE_PLT_SHARING
           if(pcSubBestPartCU->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y) != PLT_SIZE_INVALID)
           {
             for (UInt ch = 0; ch < numValidComp; ch++)
@@ -1320,6 +1338,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               lastPLTUsedSize[ch] = pcSubBestPartCU->getLastPLTInLcuUsedSizeFinal(ch);
             }
           }
+#endif
           if (pcSubBestPartCU->getLastPLTInLcuSizeFinal(COMPONENT_Y) != 0)
           {
             for (UInt ch = 0; ch < numValidComp; ch++)
@@ -2772,7 +2791,11 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 }
 
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool forcePLTPrediction)
+#else
 Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool bCheckPLTSharingMode)
+#endif
 {
 #if SCM_T0058_REMOVE_64x64_PLT
   if( rpcTempCU->getWidth(0) == 64)
@@ -2790,8 +2813,13 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
   rpcTempCU->setPLTModeFlagSubParts(true, 0, rpcTempCU->getDepth(0));
 
+#if SCM_T0064_REMOVE_PLT_SHARING
+  m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
+                            m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction);
+#else
   m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
                             m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], bCheckPLTSharingMode);
+#endif
 
   xCheckDQP( rpcTempCU );
   DEBUG_STRING_NEW(a)

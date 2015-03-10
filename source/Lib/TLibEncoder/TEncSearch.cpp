@@ -3896,8 +3896,13 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
     pRecoPic += uiReconStride;
   }
 }
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction)
+#else
 Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv,
                            TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode)
+#endif
 {
   UInt  uiDepth      = pcCU->getDepth(0);
 #if SCM_HIGH_BIT_DEPTH_BUG_FIX  
@@ -3926,6 +3931,28 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   setPLTErrLimit(iPLTErrLimit);
 
   UInt uiPLTSize = 1;
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+  if( pcCU->getCUTransquantBypass(0) )
+  {
+    derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, forcePLTPrediction);
+  }
+  else if( forcePLTPrediction )
+  {
+    derivePLTLossyForcePrediction(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
+  }
+  else
+  {
+    derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
+  }
+
+  pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
+  pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
+#endif
+  reorderPLT(pcCU, paPalette, 3);
+#else
   Bool bPLTSharingModeAvailable = bCheckPLTSharingMode;
   Pel* pPalettePrev[3]          = {NULL, NULL, NULL};
   UInt uiPLTSizePrev            = 1;
@@ -3999,6 +4026,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 #endif
     reorderPLT (pcCU, paPalette, 3);
   }
+#endif
 
   preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);
 
