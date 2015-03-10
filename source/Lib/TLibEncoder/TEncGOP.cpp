@@ -1770,12 +1770,12 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
   m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR, printSequenceMSE, bitDepths);
 
 #if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE);
+  m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE, bitDepths);
 #endif
 #if _SUMMARY_PIC_
-  m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE,'I');
-  m_gcAnalyzeP.printSummary(chFmt, printSequenceMSE,'P');
-  m_gcAnalyzeB.printSummary(chFmt, printSequenceMSE,'B');
+  m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE, bitDepths, 'I');
+  m_gcAnalyzeP.printSummary(chFmt, printSequenceMSE, bitDepths, 'P');
+  m_gcAnalyzeB.printSummary(chFmt, printSequenceMSE, bitDepths, 'B');
 #endif
 
   if(isField)
@@ -1789,7 +1789,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE, bitDepths);
 
 #if _SUMMARY_OUT_
-    m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE);
+    m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE, bitDepths);
 #endif
   }
 
