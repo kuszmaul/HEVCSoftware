@@ -96,7 +96,12 @@ TEncSbac::TEncSbac()
 , m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0064_REMOVE_PLT_SHARING
 , m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+, m_PLTLastRunTypeSCModel              ( 1,             1,                      NUM_PLT_LAST_RUN_TYPE_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
@@ -170,7 +175,12 @@ Void TEncSbac::resetEntropy           ()
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
+#if !SCM_T0064_REMOVE_PLT_SHARING
   m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG);
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+  m_PLTLastRunTypeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
+#endif
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
@@ -244,7 +254,12 @@ SliceType TEncSbac::determineCabacInitIdx()
       curCost += m_SPointSCModel.calcCost                      ( curSliceType, qp, (UChar*)INIT_SPOINT );
       curCost += m_cCopyTopRunSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_TOP_RUN );
       curCost += m_cRunSCModel.calcCost                        ( curSliceType, qp, (UChar*)INIT_RUN );
+#if !SCM_T0064_REMOVE_PLT_SHARING
       curCost += m_PLTSharingModeFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+      curCost += m_PLTLastRunTypeSCModel.calcCost              (curSliceType, qp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
+#endif
       curCost += m_PLTScanRotationModeFlagSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
@@ -415,8 +430,11 @@ Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
 Pel TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
 {
   UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+#if SCM_T0065_PLT_IDX_GROUP
+  Pel siCurLevel = pEscapeFlag[uiTraIdx] ? (iMaxSymbol - 1) : pLevel[uiTraIdx];
+#else
   Pel siCurLevel = pLevel[uiTraIdx];
-
+#endif
   if( pEscapeFlag[uiTraIdx] )
   {
     assert(siCurLevel == (iMaxSymbol-1));
@@ -550,11 +568,13 @@ Void TEncSbac::codePLTModeFlag(TComDataCU *pcCU, UInt uiAbsPartIdx)
   m_pcBinIf->encodeBin(uiSymbol, m_PLTModeFlagSCModel.get(0, 0, 0));
 }
 
+#if !SCM_T0064_REMOVE_PLT_SHARING
 Void TEncSbac:: codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
   m_pcBinIf->encodeBin( uiSymbol, m_PLTSharingModeFlagSCModel.get(0,0,0) );
 }
+#endif
 
 Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
 {
@@ -620,7 +640,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     uiIndexMaxSize++;
   }
 
+#if !SCM_T0064_REMOVE_PLT_SHARING
   UInt uiPLTUsedSizePrev;
+#endif
   UInt uiPLTSizePrev;
   //the bit depth depends on QP
   //calculate the bitLen needed to represent the quantized escape values
@@ -630,11 +652,17 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
 
+#if !SCM_T0064_REMOVE_PLT_SHARING
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
   Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
   if ( !bUsePLTSharingMode )
+#endif
   {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev );
+#else
     pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev );
+#endif
     UChar *bReusedPrev;
     UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
 
@@ -689,7 +717,63 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
   }
+#if SCM_T0065_PLT_IDX_GROUP
+  Int iLastRunPos = -1;
+  UInt lastRunType = 0;
+  UInt uiNumIndices = 0;
+  std::list<Int> lIdxPosList, lParsedIdxList;
+  if (uiIndexMaxSize > 1)
+  {
+    uiIdx = 0;
+    while (uiIdx < uiTotal)
+    {
+      UInt uiTraIdx = m_puiScanOrder[uiIdx];
+      if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
+      {
+        lIdxPosList.push_back(uiIdx);
+        uiNumIndices++;
+      }
+      lastRunType = pSPoint[uiTraIdx];
+      iLastRunPos = uiIdx;
+      uiRun = pRun[uiTraIdx];
+      uiIdx += uiRun;
+      uiIdx++;
+    }
 
+    UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
+    UInt uiMappedValue;
+#if SCM_T0064_REMOVE_PLT_SHARING
+    Bool bUsePLTSharingMode = false;
+#endif
+    assert(uiNumIndices);
+    UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
+    UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
+
+    if (uiNumIndices >= uiZeroPosition)
+    {
+      Int iNumResPos = uiZeroPosition - 1;
+      UInt uiValue = uiNumIndices - uiZeroPosition;
+      uiMappedValue = uiValue < iNumResPos * (uiInterval - 1) ?
+        uiValue / (uiInterval - 1) * uiInterval + uiValue % (uiInterval - 1) : uiValue + iNumResPos;
+    }
+    else
+    {
+      UInt uiValue = uiZeroPosition - uiNumIndices;
+      uiMappedValue = uiValue * uiInterval - 1;
+    }
+    xWriteCoefRemainExGolomb(uiMappedValue, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE);
+
+    while (!lIdxPosList.empty())
+    {
+      uiIdx = lIdxPosList.front();
+      lIdxPosList.pop_front();
+      lParsedIdxList.push_back(writePLTIndex(uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag));
+    }
+    m_pcBinIf->encodeBin(lastRunType, m_PLTLastRunTypeSCModel.get(0, 0, 0));
+  }
+
+  uiIdx = 0;
+#endif
   while ( uiIdx < uiTotal )
   {
 #if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
@@ -704,6 +788,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
       {
         UInt mode = pSPoint[uiTraIdx];
+#if SCM_T0065_PLT_IDX_GROUP
+        if (uiNumIndices && uiIdx < uiTotal - 1)
+#endif
 #if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
         m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
 #else
@@ -720,9 +807,19 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         {
           pLevel[uiTraIdx] = uiIndexMaxSize - 1;
         }
-
+#if SCM_T0065_PLT_IDX_GROUP
+        if (!lParsedIdxList.empty())
+        {
+          siCurLevel = lParsedIdxList.front();
+          lParsedIdxList.pop_front();
+        }
+        else
+        {
+          siCurLevel = 0;
+        }
+#else
         siCurLevel = writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag );
-
+#endif
         if( pEscapeFlag[uiTraIdx] )
         {
           pLevel[uiTraIdx] = uiRealLevel;
@@ -735,7 +832,15 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif 
       if ( uiIndexMaxSize > 1 )
       {
+#if SCM_T0065_PLT_IDX_GROUP
+        if (iLastRunPos != uiIdx)
+        {
+          uiNumIndices -= (pSPoint[uiTraIdx] == PLT_RUN_LEFT);
+          encodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiNumIndices - uiIdx - 1);
+        }
+#else
         encodeRun( uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1 );
+#endif
       }
 
       for(UInt uiRunIdx = 0; uiRunIdx <= uiRun; uiRunIdx++, uiIdx++)
