@@ -843,6 +843,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
       }
 
+#if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
       for(UInt uiRunIdx = 0; uiRunIdx <= uiRun; uiRunIdx++, uiIdx++)
       {
         if( pEscapeFlag[m_puiScanOrder[uiIdx]] )
@@ -892,9 +893,64 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
         }
       }
+#else
+      uiIdx += (uiRun + 1);    
+#endif
     }
   }
   assert(uiIdx == uiTotal);
+
+#if SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
+  for( uiIdx = 0; uiIdx < uiTotal; uiIdx ++ )
+  {
+    UInt uiTraIdx = m_puiScanOrder[uiIdx];
+    if( pEscapeFlag[uiTraIdx] )
+    {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiY, uiX;
+      uiY = uiTraIdx/width;
+      uiX = uiTraIdx%width;
+      UInt uiXC, uiYC, uiTraIdxC;
+      if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+      {
+        uiXC = (uiX>>uiScaleX);
+        uiYC = (uiY>>uiScaleY);
+        uiTraIdxC = uiYC * (width>>uiScaleX) + uiXC;
+      }
+      else
+      {
+        uiXC = (uiX>>uiScaleY);
+        uiYC = (uiY>>uiScaleX);
+        uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;  
+      }
+
+      if(
+          pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+          ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+          ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+        )
+      {
+        for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+        {
+          if(comp == compBegin)
+            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
+          else
+            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
+        }
+      }
+      else
+      {
+        xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
+      }
+#else
+      for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+      {
+        xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
+      }
+#endif
+    }
+  }
+#endif
 }
 
 Void TEncSbac::codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
