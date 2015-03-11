@@ -411,6 +411,27 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               pcPPS->setActQpOffset(COMPONENT_Cr, -3);
             }
 #endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+            READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
+            if( uiCode )
+            {
+              READ_UVLC( uiCode, "num_palette_entries_minus1" ); uiCode++;
+              //printf("PPS %u: receiving %u entries\n", pcPPS->getPPSId(), uiCode);
+              pcPPS->setNumPLTPred(uiCode);
+              for(int k=0; k<3; k++)
+              {
+                for(int j=0; j<pcPPS->getNumPLTPred(); j++)
+                {
+                  xReadCode(g_bitDepth[toChannelType(ComponentID(k))], uiCode);
+                  pcPPS->getPLTPred(k)[j] = uiCode;
+                }
+              }
+            }
+            else
+            {
+              pcPPS->setNumPLTPred(0);
+            }
+#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;

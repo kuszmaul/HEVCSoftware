@@ -385,6 +385,9 @@ Void TAppEncTop::xInitLibCfg()
 #else
   m_cTEncTop.setUseAdaptiveMvResolution                           ( m_useAdaptiveMvResolution );
 #endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  m_cTEncTop.setPalettePredInPPSEnabled                           ( m_palettePredInPPSEnabled );
+#endif
 }
 
 Void TAppEncTop::xCreateLib()

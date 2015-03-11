@@ -302,6 +302,7 @@
 #define SCM_T0118_T0112_ESCAPE_COLOR_CODING              1 ///< Improvement to escape color coding
 #define SCM_T0064_REMOVE_PLT_SHARING                     1 ///< JCTVC-T0064: remove palette sharing flag
 #define SCM_T0065_PLT_IDX_GROUP                          1 ///< JCTVC-T0065: group index at front
+#define SCM_T0048_PLT_PRED_IN_PPS                        1 ///< Initialize palette predictor from PPS
 
 //------------------------------------------------
 // Derived macros
@@ -312,6 +313,9 @@
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
 #define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+#define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
 #endif
 
 

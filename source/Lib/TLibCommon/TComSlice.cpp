@@ -1830,6 +1830,9 @@ TComPPS::TComPPS()
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
 , m_useColourTrans                   (false)
+#if SCM_T0048_PLT_PRED_IN_PPS
+, m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
+#endif
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {

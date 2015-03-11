@@ -314,6 +314,19 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
                WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cr) + 3 ), "pps_act_cr_qp_offset_plus3");
             }
 #endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+            WRITE_FLAG( (pcPPS->getNumPLTPred() ? 1 : 0),                         "palette_predictor_initializer_flag" );            
+            if( pcPPS->getNumPLTPred() )
+            {              
+              //printf("PPS %u: %u palette entries\n", pcPPS->getPPSId(), pcPPS->getNumPLTPred());
+              WRITE_UVLC( pcPPS->getNumPLTPred()-1,                               "num_palette_entries_minus1" );
+              for(int k=0; k<MAX_NUM_COMPONENT; k++)
+              {
+                for(int j=0; j<pcPPS->getNumPLTPred(); j++)
+                  xWriteCode( pcPPS->getPLTPred(k)[j], g_bitDepth[toChannelType(ComponentID(k))]);
+              }
+            }
+#endif
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.

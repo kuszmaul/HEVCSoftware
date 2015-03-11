@@ -1066,6 +1066,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #else
   ("UseAdaptiveMvResolution",                         m_useAdaptiveMvResolution,                         false, "Enable adaptive mv resolution (not valid in V1 profiles)")
 #endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  ("PalettePredInPPSEnabled",                         m_palettePredInPPSEnabled,                          false, "Transmit palette predictor in PPS")
+#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++)
