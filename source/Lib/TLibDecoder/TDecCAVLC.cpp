@@ -415,15 +415,19 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
             if( uiCode )
             {
+              READ_UVLC( uiCode, "luma_bit_depth_entry_minus8" );
+              pcPPS->setPalettePredictorBitDepth( CHANNEL_TYPE_LUMA, uiCode+8 );
+              READ_UVLC( uiCode, "chroma_bit_depth_entry_minus8" );
+              pcPPS->setPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA, uiCode+8 );
               READ_UVLC( uiCode, "num_palette_entries_minus1" ); uiCode++;
               //printf("PPS %u: receiving %u entries\n", pcPPS->getPPSId(), uiCode);
               pcPPS->setNumPLTPred(uiCode);
-              for(int k=0; k<3; k++)
+              for ( int j=0; j<pcPPS->getNumPLTPred(); j++ )
               {
-                for(int j=0; j<pcPPS->getNumPLTPred(); j++)
+                for ( int k=0; k<3; k++ )
                 {
-                  xReadCode(g_bitDepth[toChannelType(ComponentID(k))], uiCode);
-                  pcPPS->getPLTPred(k)[j] = uiCode;
+                  xReadCode( pcPPS->getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ), uiCode );
+                  pcPPS->getPLTPred( k )[j] = uiCode;
                 }
               }
             }

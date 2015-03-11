@@ -689,6 +689,10 @@ Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
     lastPLTSize[i] = num;
     memcpy(lastPLT[i], pcPPS->getPLTPred(i), num*sizeof(Pel));
   }
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    pcPPS->setPalettePredictorBitDepth( ChannelType( ch ), pcSPS->getBitDepth( ChannelType( ch ) ) );
+  }
 }
 #endif
 
