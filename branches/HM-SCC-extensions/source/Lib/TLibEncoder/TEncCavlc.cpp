@@ -320,13 +320,18 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 #if SCM_T0048_PLT_PRED_IN_PPS
             WRITE_FLAG( (pcPPS->getNumPLTPred() ? 1 : 0),                         "palette_predictor_initializer_flag" );            
             if( pcPPS->getNumPLTPred() )
-            {              
+            {
               //printf("PPS %u: %u palette entries\n", pcPPS->getPPSId(), pcPPS->getNumPLTPred());
-              WRITE_UVLC( pcPPS->getNumPLTPred()-1,                               "num_palette_entries_minus1" );
-              for(int k=0; k<MAX_NUM_COMPONENT; k++)
+              WRITE_UVLC( pcPPS->getPalettePredictorBitDepth( CHANNEL_TYPE_LUMA )  -8, "luma_bit_depth_entry_minus8" );
+              WRITE_UVLC( pcPPS->getPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA )-8, "chroma_bit_depth_entry_minus8" );
+              WRITE_UVLC( pcPPS->getNumPLTPred()-1,                                    "num_palette_entries_minus1" );
+
+              for ( int j=0; j<pcPPS->getNumPLTPred(); j++ )
               {
-                for(int j=0; j<pcPPS->getNumPLTPred(); j++)
-                  xWriteCode( pcPPS->getPLTPred(k)[j], g_bitDepth[toChannelType(ComponentID(k))]);
+                for ( int k=0; k<MAX_NUM_COMPONENT; k++ )
+                {
+                  xWriteCode( pcPPS->getPLTPred( k )[j], pcPPS->getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );
+                }
               }
             }
 #endif

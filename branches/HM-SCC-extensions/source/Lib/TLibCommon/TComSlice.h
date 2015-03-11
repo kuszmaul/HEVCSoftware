@@ -1072,6 +1072,7 @@ private:
 #if SCM_T0048_PLT_PRED_IN_PPS
   UInt             m_uiNumPLTPred;
   Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
 #endif
 public:
                          TComPPS();
@@ -1222,6 +1223,8 @@ public:
   UInt     getNumPLTPred()                     const { return m_uiNumPLTPred; }
   Void     setNumPLTPred(UInt num)                   { m_uiNumPLTPred = num; }
   Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
+  Int      getPalettePredictorBitDepth(ChannelType type) const   { return m_palettePredictorBitDepth[type]; }
+  Void     setPalettePredictorBitDepth(ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
 #endif
 };
 
