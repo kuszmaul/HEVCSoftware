@@ -242,6 +242,9 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 
   pps_extension_flags[PPS_EXT__SCC] = (
      pcPPS->getUseColourTrans()
+#if SCM_T0048_PLT_PRED_IN_PPS
+  || pcPPS->getNumPLTPred() > 0
+#endif
     );
 
   // Other PPS extension flags checked here.
