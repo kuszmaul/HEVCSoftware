@@ -1265,6 +1265,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       UChar       uhNextDepth         = uiDepth+1;
       TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
       TComDataCU* pcSubTempPartCU     = m_ppcTempCU[uhNextDepth];
+#if SCM_T0048_PLT_PRED_IN_PPS
+      Double dSubBranchCost           = 0.0;
+#endif
       DEBUG_STRING_NEW(sTempDebug)
 
       for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++ )
@@ -1352,6 +1355,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
 
+#if SCM_T0048_PLT_PRED_IN_PPS
+          dSubBranchCost += pcSubBestPartCU->getTotalCost();
+          if( rpcBestCU->getSlice()->isIntra() && dSubBranchCost > rpcBestCU->getTotalCost() )
+            goto end;
+#endif
 
           rpcTempCU->copyPartFrom( pcSubBestPartCU, uiPartUnitIdx, uhNextDepth );         // Keep best part data to current temporary data.
           xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
@@ -1431,6 +1439,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                                                                                        // with sub partitioned prediction.
     }
   }
+#if SCM_T0048_PLT_PRED_IN_PPS
+end:
+#endif
 
   DEBUG_STRING_APPEND(sDebug_, sDebug);
 

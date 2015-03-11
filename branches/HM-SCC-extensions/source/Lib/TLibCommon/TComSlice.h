@@ -1069,6 +1069,10 @@ private:
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
   Bool     m_useColourTrans;
+#if SCM_T0048_PLT_PRED_IN_PPS
+  UInt             m_uiNumPLTPred;
+  Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+#endif
 public:
                          TComPPS();
   virtual                ~TComPPS();
@@ -1213,6 +1217,11 @@ public:
   Void     setUseSliceACTOffset(const Bool value)       { m_useSliceACTOffset= value;}
   Void     setActQpOffset(ComponentID compID, Int i ) { if (compID==COMPONENT_Y) m_actYQpOffset = i; else if (compID==COMPONENT_Cb) m_actCbQpOffset = i; else if (compID==COMPONENT_Cr) m_actCrQpOffset= i; else assert(0); }
   Int      getActQpOffset(ComponentID compID) const { return (compID==COMPONENT_Y) ? m_actYQpOffset : (compID==COMPONENT_Cb ? m_actCbQpOffset : m_actCrQpOffset ); }
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  UInt     getNumPLTPred()                     const { return m_uiNumPLTPred; }
+  Void     setNumPLTPred(UInt num)                   { m_uiNumPLTPred = num; }
+  Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
 #endif
 };
 

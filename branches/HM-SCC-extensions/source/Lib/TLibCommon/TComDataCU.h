@@ -230,6 +230,9 @@ public:
   const TComPic*  getPic              () const                  { return m_pcPic;           }
   TComSlice*       getSlice           ()                        { return m_pcSlice;         }
   const TComSlice* getSlice           () const                  { return m_pcSlice;         }
+#if SCM_T0048_PLT_PRED_IN_PPS
+  Void          setSlice              (TComSlice *pcSlice)      { m_pcSlice = pcSlice;      }
+#endif
   UInt&         getCtuRsAddr          ()                        { return m_ctuRsAddr;       }
   UInt          getCtuRsAddr          () const                  { return m_ctuRsAddr;       }
   UInt          getZorderIdxInCtu     () const                  { return m_absZIdxInCtu;    }

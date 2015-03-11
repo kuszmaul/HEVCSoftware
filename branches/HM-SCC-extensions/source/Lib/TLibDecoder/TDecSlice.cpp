@@ -66,6 +66,28 @@ Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
   m_pcCuDecoder       = pcCuDecoder;
 }
 
+#if SCM_T0048_PLT_PRED_IN_PPS
+Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
+# if !SCM_T0064_REMOVE_PLT_SHARING
+                                UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
+# endif
+                                const TComPPS *pcPPS, const TComSPS *pcSPS)
+{
+  UInt num = std::min(pcPPS->getNumPLTPred(), pcSPS->getPLTMaxPredSize());
+  if( num )
+  {
+    for(int i=0; i<3; i++)
+    {
+# if !SCM_T0064_REMOVE_PLT_SHARING
+      lastPLTUsedSize[i] = std::min(num, pcSPS->getPLTMaxSize());
+# endif
+      lastPLTSize[i] = num;
+      memcpy(lastPLT[i], pcPPS->getPLTPred(i), num*sizeof(Pel));
+    }
+  }
+}
+#endif
+
 Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TDecSbac* pcSbacDecoder)
 {
   TComSlice* pcSlice                 = pcPic->getSlice(pcPic->getCurrSliceIdx());
@@ -107,6 +129,13 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
   }
+#if SCM_T0048_PLT_PRED_IN_PPS
+  xSetPredFromPPS(lastPLT, lastPLTSize,
+# if !SCM_T0064_REMOVE_PLT_SHARING
+                  lastPLTUsedSize,
+# endif
+                  pcSlice->getPPS(), pcSlice->getSPS());
+#endif
 
   // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
   // This calculates the common offset for all substreams in this slice.

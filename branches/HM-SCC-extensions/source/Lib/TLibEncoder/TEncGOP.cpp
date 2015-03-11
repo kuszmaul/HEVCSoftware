@@ -92,7 +92,11 @@ TEncGOP::TEncGOP()
   m_pcSbacCoder         = NULL;
   m_pcBinCABAC          = NULL;
 
+#if SCM_T0048_PLT_PRED_IN_PPS
+  m_uiSeqOrder          = 0;
+#else
   m_bSeqFirst           = true;
+#endif
 
   m_bRefreshPending     = 0;
   m_pocCRA            = 0;
@@ -1355,7 +1359,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder, pcSlice );
 
     // write various header sets.
+#if SCM_T0048_PLT_PRED_IN_PPS
+    if ( m_uiSeqOrder == 0 )
+#else
     if ( m_bSeqFirst )
+#endif
     {
       OutputNALUnit nalu(NAL_UNIT_VPS);
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
@@ -1380,8 +1388,25 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       xCreateLeadingSEIMessages(accessUnit, pcSlice->getSPS(), pcSlice->getPPS());
 
+#if SCM_T0048_PLT_PRED_IN_PPS
+      m_uiSeqOrder = 1;
+#else
       m_bSeqFirst = false;
+#endif
     }
+#if SCM_T0048_PLT_PRED_IN_PPS && SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+    else if( m_uiSeqOrder < pcSlice->getPPS()->getPPSId()+1 )
+    {
+      OutputNALUnit nalu(NAL_UNIT_PPS);
+      printf("  => sending PPS %u with %u elements\n", pcSlice->getPPS()->getPPSId(), pcSlice->getPPS()->getNumPLTPred());
+      m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+      m_pcEntropyCoder->encodePPS(pcSlice->getPPS());
+      writeRBSPTrailingBits(nalu.m_Bitstream);
+      accessUnit.push_back(new NALUnitEBSP(nalu));
+      actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
+      m_uiSeqOrder = pcSlice->getPPS()->getPPSId()+1;
+    }
+#endif
 
     if (writeSOP) // write SOP description SEI (if enabled) at the beginning of GOP
     {
@@ -3072,5 +3097,12 @@ Void TEncGOP::applyDeblockingFilterMetric( TComPic* pcPic, UInt uiNumSlices )
   free(colSAD);
   free(rowSAD);
 }
+
+#if SCM_T0048_PLT_PRED_IN_PPS
+TComPPS* TEncGOP::getPPS()
+{
+  return m_pcEncTop->getPPS();
+}
+#endif
 
 //! \}

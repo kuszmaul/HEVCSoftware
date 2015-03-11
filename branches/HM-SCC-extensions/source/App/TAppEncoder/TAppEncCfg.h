@@ -132,6 +132,9 @@ protected:
 #else
   Bool      m_useAdaptiveMvResolution;
 #endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  Bool      m_palettePredInPPSEnabled;
+#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
