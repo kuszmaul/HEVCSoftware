@@ -235,7 +235,7 @@ Void TEncTop::xInitScalingLists()
   };
   if(getUseScalingListId() == SCALING_LIST_OFF)
   {
-    getTrQuant()->setFlatScalingList(m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange, m_cSPS.getBitDepths());
+    getTrQuant()->setFlatScalingList(maxLog2TrDynamicRange, m_cSPS.getBitDepths());
     getTrQuant()->setUseScalingList(false);
     m_cSPS.setScalingListPresentFlag(false);
     m_cPPS.setScalingListPresentFlag(false);
@@ -246,7 +246,7 @@ Void TEncTop::xInitScalingLists()
     m_cSPS.setScalingListPresentFlag(false);
     m_cPPS.setScalingListPresentFlag(false);
 
-    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange, m_cSPS.getBitDepths());
+    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), maxLog2TrDynamicRange, m_cSPS.getBitDepths());
     getTrQuant()->setUseScalingList(true);
   }
   else if(getUseScalingListId() == SCALING_LIST_FILE_READ)
@@ -261,7 +261,7 @@ Void TEncTop::xInitScalingLists()
     m_cSPS.getScalingList().checkDcOfMatrix();
     m_cSPS.setScalingListPresentFlag(m_cSPS.getScalingList().checkDefaultScalingList());
     m_cPPS.setScalingListPresentFlag(false);
-    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), m_cSPS.getChromaFormatIdc(), maxLog2TrDynamicRange, m_cSPS.getBitDepths());
+    getTrQuant()->setScalingList(&(m_cSPS.getScalingList()), maxLog2TrDynamicRange, m_cSPS.getBitDepths());
     getTrQuant()->setUseScalingList(true);
   }
   else
@@ -998,7 +998,7 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
   slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
 }
 
-Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )
+Int TEncTop::getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid )
 {
   Int rpsIdx = GOPid;
 

@@ -729,7 +729,7 @@ Void TComDataCU::setOutsideCUPart( UInt uiAbsPartIdx, UInt uiDepth )
 // Copy
 // --------------------------------------------------------------------------------------------------------------------
 
-Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiPart = uiAbsPartIdx;
 

@@ -48,14 +48,21 @@
 // Forward declarations
 
 /// padding of unavailable reference samples for intra prediction
+Void fillReferenceSamples( const Int bitDepth, 
 #if O0043_BEST_EFFORT_DECODING
-Void fillReferenceSamples( const Int bitDepth, const Int bitDepthDelta, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
-#else
-Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
+                           const Int bitDepthDelta, 
 #endif
-                           const Int iNumIntraNeighbor, const Int unitWidth, const Int unitHeight, const Int iAboveUnits, const Int iLeftUnits,
-                           const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
-                           const ChannelType chType, const ChromaFormat chFmt );
+                           const Pel* piRoiOrigin, 
+                                 Pel* piAdiTemp, 
+                           const Bool* bNeighborFlags,
+                           const Int iNumIntraNeighbor, 
+                           const Int unitWidth, 
+                           const Int unitHeight, 
+                           const Int iAboveUnits, 
+                           const Int iLeftUnits,
+                           const UInt uiWidth, 
+                           const UInt uiHeight, 
+                           const Int iPicStride );
 
 /// constrained intra prediction
 Bool  isAboveLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT );
@@ -147,7 +154,6 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   bAbove = true;
   bLeft  = true;
 
-  const ChromaFormat chFmt       = rTu.GetChromaFormat();
   const UInt         uiROIWidth  = uiTuWidth2+1;
   const UInt         uiROIHeight = uiTuHeight2+1;
 
@@ -162,11 +168,12 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
     Pel *piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getAddr(compID, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu()+uiZorderIdxInPart);
 #if O0043_BEST_EFFORT_DECODING
     const Int  bitDepthForChannelInStream = sps.getStreamBitDepth(chType);
-    fillReferenceSamples (bitDepthForChannelInStream, bitDepthForChannelInStream - bitDepthForChannel, pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
+    fillReferenceSamples (bitDepthForChannelInStream, bitDepthForChannelInStream - bitDepthForChannel,
 #else
-    fillReferenceSamples (bitDepthForChannel, pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
+    fillReferenceSamples (bitDepthForChannel,
 #endif
-                          uiTuWidth, uiTuHeight, uiROIWidth, uiROIHeight, iPicStride, toChannelType(compID), chFmt);
+                          piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor,  iUnitWidth, iUnitHeight, iAboveUnits, iLeftUnits,
+                          uiROIWidth, uiROIHeight, iPicStride);
 
 
 #ifdef DEBUG_STRING
@@ -315,14 +322,21 @@ Void TComPrediction::initAdiPatternChType( TComTU &rTu, Bool& bAbove, Bool& bLef
   DEBUG_STRING_APPEND(sDebug, ss.str())
 }
 
+Void fillReferenceSamples( const Int bitDepth, 
 #if O0043_BEST_EFFORT_DECODING
-Void fillReferenceSamples( const Int bitDepth, const Int bitDepthDelta, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
-#else
-Void fillReferenceSamples( const Int bitDepth, TComDataCU* pcCU, const Pel* piRoiOrigin, Pel* piAdiTemp, const Bool* bNeighborFlags,
+                           const Int bitDepthDelta, 
 #endif
-                           const Int iNumIntraNeighbor, const Int unitWidth, const Int unitHeight, const Int iAboveUnits, const Int iLeftUnits,
-                           const UInt uiCuWidth, const UInt uiCuHeight, const UInt uiWidth, const UInt uiHeight, const Int iPicStride,
-                           const ChannelType chType, const ChromaFormat chFmt )
+                           const Pel* piRoiOrigin, 
+                                 Pel* piAdiTemp, 
+                           const Bool* bNeighborFlags,
+                           const Int iNumIntraNeighbor, 
+                           const Int unitWidth, 
+                           const Int unitHeight, 
+                           const Int iAboveUnits, 
+                           const Int iLeftUnits,
+                           const UInt uiWidth, 
+                           const UInt uiHeight, 
+                           const Int iPicStride )
 {
   const Pel* piRoiTemp;
   Int  i, j;

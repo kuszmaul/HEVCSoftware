@@ -349,7 +349,7 @@ Void TEncSampleAdaptiveOffset::getStatistics(SAOStatData*** blkStats, TComPicYuv
 
       getBlkStats(component, pPic->getPicSym()->getSPS().getBitDepth(toChannelType(component)), blkStats[ctuRsAddr][component]
                 , srcBlk, orgBlk, srcStride, orgStride, (width  >> componentScaleX), (height >> componentScaleY)
-                , isLeftAvail,  isRightAvail, isAboveAvail, isBelowAvail, isAboveLeftAvail, isAboveRightAvail, isBelowLeftAvail, isBelowRightAvail
+                , isLeftAvail,  isRightAvail, isAboveAvail, isBelowAvail, isAboveLeftAvail, isAboveRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , isCalculatePreDeblockSamples
 #endif
@@ -437,7 +437,7 @@ inline Int64 TEncSampleAdaptiveOffset::estSaoDist(Int64 count, Int64 offset, Int
 }
 
 
-inline Int TEncSampleAdaptiveOffset::estIterOffset(Int typeIdx, Int classIdx, Double lambda, Int offsetInput, Int64 count, Int64 diffSum, Int shift, Int bitIncrease, Int64& bestDist, Double& bestCost, Int offsetTh )
+inline Int TEncSampleAdaptiveOffset::estIterOffset(Int typeIdx, Double lambda, Int offsetInput, Int64 count, Int64 diffSum, Int shift, Int bitIncrease, Int64& bestDist, Double& bestCost, Int offsetTh )
 {
   Int iterOffset, tempOffset;
   Int64 tempDist, tempRate;
@@ -530,7 +530,7 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(ComponentID compIdx, const Int chan
 
           if( quantOffsets[classIdx] != 0 ) //iterative adjustment only when derived offset is not zero
           {
-            quantOffsets[classIdx] = estIterOffset( typeIdc, classIdx, m_lambda[compIdx], quantOffsets[classIdx], statData.count[classIdx], statData.diff[classIdx], shift, m_offsetStepLog2[compIdx], classDist , classCost , offsetTh );
+            quantOffsets[classIdx] = estIterOffset( typeIdc, m_lambda[compIdx], quantOffsets[classIdx], statData.count[classIdx], statData.diff[classIdx], shift, m_offsetStepLog2[compIdx], classDist , classCost , offsetTh );
           }
         }
 
@@ -547,7 +547,7 @@ Void TEncSampleAdaptiveOffset::deriveOffsets(ComponentID compIdx, const Int chan
           costBOClasses[classIdx]= m_lambda[compIdx];
           if( quantOffsets[classIdx] != 0 ) //iterative adjustment only when derived offset is not zero
           {
-            quantOffsets[classIdx] = estIterOffset( typeIdc, classIdx, m_lambda[compIdx], quantOffsets[classIdx], statData.count[classIdx], statData.diff[classIdx], shift, m_offsetStepLog2[compIdx], distBOClasses[classIdx], costBOClasses[classIdx], offsetTh );
+            quantOffsets[classIdx] = estIterOffset( typeIdc, m_lambda[compIdx], quantOffsets[classIdx], statData.count[classIdx], statData.diff[classIdx], shift, m_offsetStepLog2[compIdx], distBOClasses[classIdx], costBOClasses[classIdx], offsetTh );
           }
         }
 
@@ -920,7 +920,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
 
 Void TEncSampleAdaptiveOffset::getBlkStats(const ComponentID compIdx, const Int channelBitDepth, SAOStatData* statsDataTypes
                         , Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height
-                        , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail
+                        , Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                         , Bool isCalculatePreDeblockSamples
 #endif

@@ -81,19 +81,10 @@ TEncCavlc::~TEncCavlc()
 // Public member functions
 // ====================================================================================================================
 
-Void TEncCavlc::resetEntropy(const TComSlice *pSlice)
+Void TEncCavlc::resetEntropy(const TComSlice* /*pSlice*/)
 {
 }
 
-
-Void TEncCavlc::codeDFFlag(UInt uiCode, const Char *pSymbolName)
-{
-  WRITE_FLAG(uiCode, pSymbolName);
-}
-Void TEncCavlc::codeDFSvlc(Int iCode, const Char *pSymbolName)
-{
-  WRITE_SVLC(iCode, pSymbolName);
-}
 
 Void TEncCavlc::codeShortTermRefPicSet( const TComReferencePictureSet* rps, Bool calledFromSliceHeader, Int idx)
 {
@@ -1186,7 +1177,7 @@ Void  TEncCavlc::codeTilesWPPEntryPoint( TComSlice* pSlice )
   }
 }
 
-Void TEncCavlc::codeTerminatingBit      ( UInt uilsLast )
+Void TEncCavlc::codeTerminatingBit      ( UInt /*uilsLast*/ )
 {
 }
 
@@ -1194,76 +1185,76 @@ Void TEncCavlc::codeSliceFinish ()
 {
 }
 
-Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+Void TEncCavlc::codeMVPIdx ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, RefPicList /*eRefList*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+Void TEncCavlc::codePartSize( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codePredMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeMergeFlag    ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeMergeIndex    ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode )
+Void TEncCavlc::codeInterModeFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/, UInt /*uiEncMode*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+Void TEncCavlc::codeSplitFlag   ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
+Void TEncCavlc::codeTransformSubdivFlag( UInt /*uiSymbol*/, UInt /*uiCtx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeQtCbf( TComTU &rTu, const ComponentID compID, const Bool lowestLevel )
+Void TEncCavlc::codeQtCbf( TComTU& /*rTu*/, const ComponentID /*compID*/, const Bool /*lowestLevel*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeQtRootCbf( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeQtRootCbf( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeQtCbfZero( TComTU &rTu, const ChannelType chType )
+Void TEncCavlc::codeQtCbfZero( TComTU& /*rTu*/, const ChannelType /*chType*/ )
 {
   assert(0);
 }
-Void TEncCavlc::codeQtRootCbfZero( TComDataCU* pcCU )
+Void TEncCavlc::codeQtRootCbfZero( )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
+Void TEncCavlc::codeTransformSkipFlags (TComTU& /*rTu*/, ComponentID /*component*/ )
 {
   assert(0);
 }
@@ -1273,32 +1264,32 @@ Void TEncCavlc::codeTransformSkipFlags (TComTU &rTu, ComponentID component )
  * \param uiAbsPartIdx CU index
  * \returns Void
  */
-Void TEncCavlc::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeIPCMInfo( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiple)
+Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, Bool /*isMultiple*/)
 {
   assert(0);
 }
 
-Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeInterDir( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+Void TEncCavlc::codeRefFrmIdx( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, RefPicList /*eRefList*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+Void TEncCavlc::codeMvd( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, RefPicList /*eRefList*/ )
 {
   assert(0);
 }
@@ -1320,17 +1311,17 @@ Void TEncCavlc::codeDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
-Void TEncCavlc::codeChromaQpAdjustment( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeChromaQpAdjustment( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::codeCoeffNxN    ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID )
+Void TEncCavlc::codeCoeffNxN    ( TComTU& /*rTu*/, TCoeff* /*pcCoef*/, const ComponentID /*compID*/ )
 {
   assert(0);
 }
 
-Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height, ChannelType chType )
+Void TEncCavlc::estBit( estBitsSbacStruct* /*pcEstBitsCabac*/, Int /*width*/, Int /*height*/, ChannelType /*chType*/ )
 {
   // printf("error : no VLC mode support in this version\n");
   return;
@@ -1504,7 +1495,7 @@ Bool TEncCavlc::findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltr
   return false;
 }
 
-Void TEncCavlc::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
+Void TEncCavlc::codeExplicitRdpcmMode( TComTU& /*rTu*/, const ComponentID /*compID*/ )
  {
    assert(0);
  }

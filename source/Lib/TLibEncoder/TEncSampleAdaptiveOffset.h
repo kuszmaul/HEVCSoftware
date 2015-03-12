@@ -125,7 +125,7 @@ private: //methods
                    );
   Void decidePicParams(Bool* sliceEnabled, Int picTempLayer);
   Void decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams);
-  Void getBlkStats(const ComponentID compIdx, const Int channelBitDepth, SAOStatData* statsDataTypes, Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height, Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail, Bool isBelowLeftAvail, Bool isBelowRightAvail
+  Void getBlkStats(const ComponentID compIdx, const Int channelBitDepth, SAOStatData* statsDataTypes, Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height, Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                   , Bool isCalculatePreDeblockSamples
 #endif
@@ -135,7 +135,7 @@ private: //methods
   Int64 getDistortion(const Int channelBitDepth, Int typeIdc, Int typeAuxInfo, Int* offsetVal, SAOStatData& statData);
   Void deriveOffsets(ComponentID compIdx, const Int channelBitDepth, Int typeIdc, SAOStatData& statData, Int* quantOffsets, Int& typeAuxInfo);
   inline Int64 estSaoDist(Int64 count, Int64 offset, Int64 diffSum, Int shift);
-  inline Int estIterOffset(Int typeIdx, Int classIdx, Double lambda, Int offsetInput, Int64 count, Int64 diffSum, Int shift, Int bitIncrease, Int64& bestDist, Double& bestCost, Int offsetTh );
+  inline Int estIterOffset(Int typeIdx, Double lambda, Int offsetInput, Int64 count, Int64 diffSum, Int shift, Int bitIncrease, Int64& bestDist, Double& bestCost, Int offsetTh );
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
   Void addPreDBFStatistics(SAOStatData*** blkStats);
 #endif

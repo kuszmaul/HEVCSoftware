@@ -859,7 +859,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
 
-  xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth, rpcBestCU, uiLPelX, uiTPelY );   // Copy Yuv data to picture Yuv
+  xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth );   // Copy Yuv data to picture Yuv
   if (bBoundary)
   {
     return;
@@ -878,7 +878,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
  * \param uiDepth
  * \returns Void
  */
-Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   TComPic* pcPic = pcCU->getPic();
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
@@ -1006,7 +1006,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
-    finishCU(pcCU,uiAbsPartIdx,uiDepth);
+    finishCU(pcCU,uiAbsPartIdx);
     return;
   }
 
@@ -1020,7 +1020,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
       // Encode slice finish
-      finishCU(pcCU,uiAbsPartIdx,uiDepth);
+      finishCU(pcCU,uiAbsPartIdx);
       return;
     }
   }
@@ -1036,7 +1036,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   setdQPFlag( bCodeDQP );
 
   // --- write terminating bit ---
-  finishCU(pcCU,uiAbsPartIdx,uiDepth);
+  finishCU(pcCU,uiAbsPartIdx);
 }
 
 Int xCalcHADs8x8_ISlice(Pel *piOrg, Int iStrideOrg)
@@ -1509,7 +1509,7 @@ Void TEncCu::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
     pDst->m_acMvCand[i] = pSrc->m_acMvCand[i];
   }
 }
-Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY )
+Void TEncCu::xCopyYuv2Pic(TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth )
 {
   UInt uiAbsPartIdxInRaster = g_auiZscanToRaster[uiAbsPartIdx];
   UInt uiSrcBlkWidth = rpcPic->getNumPartInCtuWidth() >> (uiSrcDepth);
