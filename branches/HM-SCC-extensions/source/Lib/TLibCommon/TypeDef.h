@@ -304,6 +304,7 @@
 #define SCM_T0065_PLT_IDX_GROUP                          1 ///< JCTVC-T0065: group index at front
 #define SCM_T0048_PLT_PRED_IN_PPS                        1 ///< Initialize palette predictor from PPS
 #define SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END        1 ///< grouping escape color at the end of palette coding, according to meeting note
+#define SCM_T0132_ACT_CLIP                               1 ///< IACT Clipping
 
 //------------------------------------------------
 // Derived macros
@@ -318,7 +319,6 @@
 #if SCM_T0048_PLT_PRED_IN_PPS
 #define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
 #endif
-
 
 
 //------------------------------------------------

@@ -783,7 +783,9 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 #if !SCM_T0140_ACT_QP_OFFSET
   Bool bModifyQP = !pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 );
 #endif 
-
+#if SCM_T0132_ACT_CLIP
+  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+#endif
 
   for(UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
   {
@@ -868,7 +870,11 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 
   if( pcCU->getColourTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx,COMPONENT_Y)||pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cb)|| pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cr)))
   {
+#if SCM_T0132_ACT_CLIP
+    pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->isLosslessCoded(uiAbsPartIdx));
+#else
     pcResiYuv->convert(rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->isLosslessCoded(uiAbsPartIdx));
+#endif  
   }
 
   //===== reconstruction =====
