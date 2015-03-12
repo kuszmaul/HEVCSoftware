@@ -426,7 +426,11 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               {
                 for ( int k=0; k<3; k++ )
                 {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+                  xReadCode( pcPPS->getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ), uiCode, "palette_predictor_initializers" );
+#else
                   xReadCode( pcPPS->getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ), uiCode );
+#endif
                   pcPPS->getPLTPred( k )[j] = uiCode;
                 }
               }
