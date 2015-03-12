@@ -373,7 +373,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
   // Residual reconstruction
   m_ppcYuvResi[uiDepth]->clear();
 
-  m_ppcCU[uiDepth]->copySubCU( pCtu, uiAbsPartIdx, uiDepth );
+  m_ppcCU[uiDepth]->copySubCU( pCtu, uiAbsPartIdx );
 
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {

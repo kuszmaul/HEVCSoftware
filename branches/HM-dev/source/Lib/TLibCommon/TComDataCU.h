@@ -189,7 +189,7 @@ public:
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
 
-  Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
+  Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx );
   Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList );
   Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
 

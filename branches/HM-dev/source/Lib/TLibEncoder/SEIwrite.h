@@ -70,7 +70,7 @@ protected:
   Void xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei);
   Void xWriteSEISOPDescription(const SEISOPDescription& sei);
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, const TComSPS *sps);
-  Void xWriteSEITempMotionConstrainedTileSets(TComBitIf& bs, const SEITempMotionConstrainedTileSets& sei);
+  Void xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstrainedTileSets& sei);
   Void xWriteSEITimeCode(const SEITimeCode& sei);
   Void xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint& sei/*, TComSPS *sps*/);
   Void writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint& sei);

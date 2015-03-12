@@ -988,7 +988,7 @@ Void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
 
 // To minimize the distortion only. No rate is considered.
-Void TComTrQuant::signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters, const Int maxLog2TrDynamicRange )
+Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters, const Int maxLog2TrDynamicRange )
 {
   const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
   const UInt height    = codingParameters.heightInGroups << MLS_CG_LOG2_HEIGHT;
@@ -1246,7 +1246,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     {
       if(uiAbsSum >= 2) //this prevents TUs with only one coefficient of value 1 from being tested
       {
-        signBitHidingHDQ( compID, piQCoef, piCoef, deltaU, codingParameters, maxLog2TrDynamicRange ) ;
+        signBitHidingHDQ( piQCoef, piCoef, deltaU, codingParameters, maxLog2TrDynamicRange ) ;
       }
     }
   } //if RDOQ
@@ -3058,7 +3058,7 @@ UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
  * \param maxLog2TrDynamicRange
  * \param bitDepths              reference to bit depth array for all channels
  */
-Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
+Void TComTrQuant::setScalingList(TComScalingList *scalingList, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3069,8 +3069,8 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xSetScalingListEnc(scalingList,list,size,qp,format);
-        xSetScalingListDec(*scalingList,list,size,qp,format);
+        xSetScalingListEnc(scalingList,list,size,qp);
+        xSetScalingListDec(*scalingList,list,size,qp);
         setErrScaleCoeff(list,size,qp,maxLog2TrDynamicRange, bitDepths);
       }
     }
@@ -3080,7 +3080,7 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
  * \param scalingList quantized matrix address
  * \param format      chroma format
  */
-Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const ChromaFormat format)
+Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3091,7 +3091,7 @@ Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const Ch
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xSetScalingListDec(scalingList,list,size,qp,format);
+        xSetScalingListDec(scalingList,list,size,qp);
       }
     }
   }
@@ -3135,7 +3135,7 @@ Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp, const Int maxLo
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
+Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp)
 {
   UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
@@ -3161,7 +3161,7 @@ Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, 
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
+Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp)
 {
   UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
@@ -3183,7 +3183,7 @@ Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt li
 
 /** set flat matrix value to quantized coefficient
  */
-Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
+Void TComTrQuant::setFlatScalingList(const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3194,7 +3194,7 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xsetFlatScalingList(list,size,qp,format);
+        xsetFlatScalingList(list,size,qp);
         setErrScaleCoeff(list,size,qp,maxLog2TrDynamicRange, bitDepths);
       }
     }
@@ -3207,7 +3207,7 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, Int qp, const ChromaFormat format)
+Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, Int qp)
 {
   UInt i,num = g_scalingListSize[size];
   Int *quantcoeff;

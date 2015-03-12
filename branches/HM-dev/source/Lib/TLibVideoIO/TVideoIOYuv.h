@@ -74,7 +74,7 @@ public:
   Bool  read  ( TComPicYuv* pPicYuv, TComPicYuv* pPicYuvTrueOrg, const InputColourSpaceConversion ipcsc, Int aiPad[2], ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< read one frame with padding parameter
   Bool  write ( TComPicYuv* pPicYuv, const InputColourSpaceConversion ipCSC, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT );     ///< write one YUV frame with padding parameter
   Bool  write ( TComPicYuv* pPicYuvTop, TComPicYuv* pPicYuvBottom, const InputColourSpaceConversion ipCSC, Int confLeft=0, Int confRight=0, Int confTop=0, Int confBottom=0, ChromaFormat fileFormat=NUM_CHROMA_FORMAT, Bool isTff=false);
-  static Void ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, const Int bitDepths[MAX_NUM_CHANNEL_TYPE], Bool bIsForwards);
+  static Void ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, Bool bIsForwards);
 
   Bool  isEof ();                                           ///< check for end-of-file
   Bool  isFail();                                           ///< check for failure

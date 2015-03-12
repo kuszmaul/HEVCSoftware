@@ -746,7 +746,7 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
   {
     internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
   }
-  ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, internalBitDepth, true);
+  ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, true);
 
   return true;
 }
@@ -775,7 +775,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     {
       internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
     }
-    ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, internalBitDepth, false);
+    ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, false);
   }
   TComPicYuv *pPicYuv=(ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUser : &cPicYuvCSCd;
 
@@ -875,8 +875,8 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
     {
       internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
     }
-    ColourSpaceConvert(*pPicYuvUserTop,    cPicYuvTopCSCd,    ipCSC, internalBitDepth, false);
-    ColourSpaceConvert(*pPicYuvUserBottom, cPicYuvBottomCSCd, ipCSC, internalBitDepth, false);
+    ColourSpaceConvert(*pPicYuvUserTop,    cPicYuvTopCSCd,    ipCSC, false);
+    ColourSpaceConvert(*pPicYuvUserBottom, cPicYuvBottomCSCd, ipCSC, false);
   }
   TComPicYuv *pPicYuvTop    = (ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUserTop    : &cPicYuvTopCSCd;
   TComPicYuv *pPicYuvBottom = (ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUserBottom : &cPicYuvBottomCSCd;
@@ -1010,7 +1010,7 @@ copyPlane(const TComPicYuv &src, const ComponentID srcPlane, TComPicYuv &dest, c
 }
 
 // static member
-Void TVideoIOYuv::ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, const Int bitDepths[MAX_NUM_CHANNEL_TYPE], Bool bIsForwards)
+Void TVideoIOYuv::ColourSpaceConvert(const TComPicYuv &src, TComPicYuv &dest, const InputColourSpaceConversion conversion, Bool bIsForwards)
 {
   const ChromaFormat  format=src.getChromaFormat();
   const UInt          numValidComp=src.getNumberValidComponents();

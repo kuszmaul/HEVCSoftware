@@ -153,7 +153,7 @@ public:
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
-  Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
+  Int getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid );
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
