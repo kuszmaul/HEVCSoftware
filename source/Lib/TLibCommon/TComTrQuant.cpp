@@ -1695,6 +1695,10 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
   UInt uiTrMode     = rTu.GetTransformDepthRel();
   const TComRectangle& rect = rTu.getRect(COMPONENT_Y);
 
+#if SCM_T0132_ACT_CLIP
+  const Bool     extendedPrecision = rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision();
+#endif
+
   if( uiTrMode == pcCU->getTransformIdx( absPartIdxTU ) )
   {
     for( UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++ )
@@ -1742,7 +1746,11 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
 
     if( pcCU->getCbf(absPartIdxTU,COMPONENT_Y) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cb) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cr) )
     {
+#if SCM_T0132_ACT_CLIP
+      pResidual->convert(extendedPrecision, rect.x0, rect.y0, rect.width, false, pcCU->isLosslessCoded(absPartIdxTU));
+#else
       pResidual->convert(rect.x0, rect.y0, rect.width, false, pcCU->isLosslessCoded(absPartIdxTU));
+#endif
     }
   }
   else
