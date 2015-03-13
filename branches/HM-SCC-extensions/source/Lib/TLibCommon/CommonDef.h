@@ -136,9 +136,6 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 #define NOT_VALID                   -1
 
 #define PLT_SIZE_INVALID            0xff
-#if PLT_SIZE_INVALID <= MAX_PLT_SIZE  
-#error "PLT_SIZE_INVALID" should be greater than "MAX_PLT_SIZE".
-#endif
 
 // ====================================================================================================================
 // Macro functions
