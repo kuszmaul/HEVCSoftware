@@ -144,7 +144,7 @@ public:
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
 
   Void    setDistortionWeight  ( const ComponentID compID, const Double distortionWeight ) { m_distortionWeight[compID] = distortionWeight; }
-  Void    setLambda      ( Double dLambda );
+  Void    setLambda      ( Double dLambda, const BitDepths &bitDepths );
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
 
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
@@ -334,7 +334,7 @@ public:
   Void      setUseColourTrans                  (const Bool value)       { m_useColourTrans= value;}
   Bool      getUseLossless                    ()                 const { return m_useLL;}
   Void      setUseLossless                    (const Bool value)       { m_useLL= value;}
-  Void      adjustLambdaForColourTrans         (Int delta_QP);
+  Void      adjustLambdaForColourTrans         (Int delta_QP, const BitDepths &bitDepths);
 
 };// END CLASS DEFINITION TComRdCost
 

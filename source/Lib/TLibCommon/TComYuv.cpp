@@ -277,7 +277,7 @@ Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID ch, TComYuv* pcYuv
 
 
 
-Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize )
+Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize, const BitDepths &clipBitDepths )
 {
   for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
@@ -292,9 +292,9 @@ Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const
     const UInt iSrc0Stride = pcYuvSrc0->getStride(ch);
     const UInt iSrc1Stride = pcYuvSrc1->getStride(ch);
     const UInt iDstStride  = getStride(ch);
-    const Int clipbd = g_bitDepth[toChannelType(ch)];
+    const Int clipbd = clipBitDepths.recon[toChannelType(ch)];
 #if O0043_BEST_EFFORT_DECODING
-    const Int bitDepthDelta = g_bitDepthInStream[toChannelType(ch)] - g_bitDepth[toChannelType(ch)];
+    const Int bitDepthDelta = clipBitDepths.stream[toChannelType(ch)] - clipbd;
 #endif
 
     for ( Int y = uiPartHeight-1; y >= 0; y-- )
@@ -349,7 +349,7 @@ Void TComYuv::subtract( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, cons
 
 
 
-Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight )
+Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const BitDepths &clipBitDepths )
 {
   for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
@@ -361,7 +361,7 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
     const UInt  iSrc0Stride = pcYuvSrc0->getStride(ch);
     const UInt  iSrc1Stride = pcYuvSrc1->getStride(ch);
     const UInt  iDstStride  = getStride(ch);
-    const Int   clipbd      = g_bitDepth[toChannelType(ch)];
+    const Int   clipbd      = clipBitDepths.recon[toChannelType(ch)];
     const Int   shiftNum    = std::max<Int>(2, (IF_INTERNAL_PREC - clipbd)) + 1;
     const Int   offset      = ( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS;
 
@@ -440,14 +440,14 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
 }
 
 #if SCM_T0132_ACT_CLIP
-Void TComYuv::convert(const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless, TComYuv* pcYuvNoCorrResi)
+Void TComYuv::convert(const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
 #else
-Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless, TComYuv* pcYuvNoCorrResi)
+Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
 #endif 
 {
 #if SCM_T0132_ACT_CLIP
-  const Int lumaBitDepth = g_bitDepth[CHANNEL_TYPE_LUMA];
-  const Int chromaBitDepth = g_bitDepth[CHANNEL_TYPE_CHROMA];
+  const Int lumaBitDepth   = bitDepths.recon[CHANNEL_TYPE_LUMA];
+  const Int chromaBitDepth = bitDepths.recon[CHANNEL_TYPE_CHROMA];
 
   Int CoeffMinY = -(1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15));
   Int CoeffMinC = -(1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15));
@@ -479,9 +479,9 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   {
     if(!bLossless)
     {
-      Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-      Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-      Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+      Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
       Int iRoundLuma   = 1<<(1+iShiftLuma);
       Int iRoundChroma = 1<<(1+iShiftChroma);
       for(Int y=0; y<uiPartSize; y++) 
@@ -537,9 +537,9 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   }
   else
   {
-    Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-    Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-    Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+    Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+    Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+    Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
     Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
     Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
     for(Int y=0; y<uiPartSize; y++)
@@ -584,16 +584,16 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
 }
 
 
-Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth)
+Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, const BitDepths& bitDepths )
 {
   assert(getChromaFormat() == CHROMA_444);
   UInt uiPartSize = uiWidth;
-  Int  iMaxLuma   = (1<<g_bitDepth[CHANNEL_TYPE_LUMA])   - 1;
-  Int  iMaxChroma = (1<<g_bitDepth[CHANNEL_TYPE_CHROMA]) - 1;
-  Int  iChromaOffset = (1<<(g_bitDepth[CHANNEL_TYPE_CHROMA]-1));
-  Int maxBitDepth  = std::max(g_bitDepth[CHANNEL_TYPE_LUMA], g_bitDepth[CHANNEL_TYPE_CHROMA]);
-  Int iShiftLuma   = maxBitDepth - g_bitDepth[CHANNEL_TYPE_LUMA];
-  Int iShiftChroma = maxBitDepth - g_bitDepth[CHANNEL_TYPE_CHROMA];
+  Int  iMaxLuma   = (1<<bitDepths.recon[CHANNEL_TYPE_LUMA])   - 1;
+  Int  iMaxChroma = (1<<bitDepths.recon[CHANNEL_TYPE_CHROMA]) - 1;
+  Int  iChromaOffset = (1<<(bitDepths.recon[CHANNEL_TYPE_CHROMA]-1));
+  Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+  Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+  Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
   Int iRoundLuma   = 1<<(1+iShiftLuma);
   Int iRoundChroma = 1<<(1+iShiftChroma);
 

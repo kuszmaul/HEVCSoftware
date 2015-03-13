@@ -52,10 +52,10 @@
 #include "TypeDef.h"
 
 #ifdef _MSC_VER
-#if _MSC_VER <= 1500 // MS VC6
-inline Int64 abs (Int64 x) { return _abs64(x); }
+#if _MSC_VER <= 1500
+inline Int64 abs (Int64 x) { return _abs64(x); };
 #endif
-#endif 
+#endif
 
 //! \ingroup TLibCommon
 //! \{
@@ -64,7 +64,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); }
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.3_SCM3.1"                 ///< Current software version
+#define NV_VERSION        "16.4_SCM3.2"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -144,11 +144,8 @@ inline Int64 abs (Int64 x) { return _abs64(x); }
 // Macro functions
 // ====================================================================================================================
 
-extern Int g_bitDepth[MAX_NUM_CHANNEL_TYPE];
-
 template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
 template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
-template <typename T> inline T Clip  (const T x, const ChannelType type)         { return ClipBD(x, g_bitDepth[type]);                    }
 
 template <typename T> inline void Check3( T minVal, T maxVal, T a)
 {

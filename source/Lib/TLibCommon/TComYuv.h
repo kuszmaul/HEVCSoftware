@@ -130,13 +130,13 @@ public:
   // ------------------------------------------------------------------------------------------------------------------
 
   //  Clip(pcYuvSrc0 + pcYuvSrc1) -> m_apiBuf
-  Void         addClip                    ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize );
+  Void         addClip                    ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize, const BitDepths &clipBitDepths );
 
   //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
   Void         subtract                   ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize );
 
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
-  Void         addAvg                     ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt iWidth, const UInt iHeight );
+  Void         addAvg                     ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt iWidth, const UInt iHeight, const BitDepths &clipBitDepths );
 
   Void         removeHighFreq             ( const TComYuv* pcYuvSrc, const UInt uiPartIdx, const UInt uiWidth, const UInt uiHeight );
 
@@ -202,11 +202,11 @@ public:
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
 #if SCM_T0132_ACT_CLIP
-  Void         convert          (const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
+  Void         convert          (const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
 #else
-  Void         convert          (const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
+  Void         convert          (const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
 #endif  
-  Void         DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth);
+  Void         DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, const BitDepths& bitDepths);
 };// END CLASS DEFINITION TComYuv
 
 //! \}

@@ -88,7 +88,7 @@ public:
   TComPic();
   virtual ~TComPic();
 
-  Void          create( const TComSPS &sps, const TComPPS &pps, const UInt uiMaxWidth, const UInt uiMaxHeight, const UInt uiMaxDepth,
+  Void          create( const TComSPS &sps, const TComPPS &pps,
                         UInt uiPLTMaxSize, UInt uiPLTMaxPredSize, const Bool bIsVirtual /*= false*/ );
 
   virtual Void  destroy();
@@ -113,7 +113,7 @@ public:
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
   TComPicYuv*   getPicYuvCSC()        { return  m_apcPicYuvCSC; }
   Void          allocateCSCBuffer( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
-                { assert( m_apcPicYuvCSC == NULL ); m_apcPicYuvCSC = new TComPicYuv; m_apcPicYuvCSC->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth ); }
+                { assert( m_apcPicYuvCSC == NULL ); m_apcPicYuvCSC = new TComPicYuv; m_apcPicYuvCSC->create( iWidth, iHeight, chromaFormatIDC, uiMaxWidth, uiMaxHeight, uiMaxDepth, true ); }
   Void          releaseCSCBuffer()    { m_apcPicYuvCSC->destroy(); delete m_apcPicYuvCSC; m_apcPicYuvCSC = NULL; }
   Void          exchangePicYuvRec()
                 {

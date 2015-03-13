@@ -107,7 +107,6 @@ private:
   TCoeff*        m_pcTrCoeff[MAX_NUM_COMPONENT];       ///< array of transform coefficient buffers (0->Y, 1->Cb, 2->Cr)
 #if ADAPTIVE_QP_SELECTION
   TCoeff*        m_pcArlCoeff[MAX_NUM_COMPONENT];  // ARL coefficient buffer (0->Y, 1->Cb, 2->Cr)
-  static TCoeff* m_pcGlbArlCoeff[MAX_NUM_COMPONENT]; // global ARL buffer
   Bool           m_ArlCoeffIsAliasedAllocation;  ///< ARL coefficient buffer is an alias of the global buffer and must not be free()'d
 #endif
 
@@ -205,7 +204,7 @@ public:
   Void          create                ( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
     , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
 #if ADAPTIVE_QP_SELECTION
-    , Bool bGlobalRMARLBuffer = false
+    , TCoeff *pParentARLBuffer = 0
 #endif
     );
   Void          destroy               ();
