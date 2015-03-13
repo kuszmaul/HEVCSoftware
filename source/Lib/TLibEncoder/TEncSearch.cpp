@@ -3541,7 +3541,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU* pcCU,
     }
 
 #if SCM_T0121_INFER_TU_SPLIT_ENCODER
-    if((!m_pcEncCfg->getTransquantBypassInferTUSplit() || !pcCU->isLosslessCoded(0)) && (uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiPartOffset)) )  
+    if((!m_pcEncCfg->getTransquantBypassInferTUSplit() || !pcCU->isLosslessCoded(0)) && (uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiPartOffset)) )
 #else
     if( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiPartOffset) )
 #endif
@@ -3917,11 +3917,11 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 #endif
 {
   UInt  uiDepth      = pcCU->getDepth(0);
-#if SCM_HIGH_BIT_DEPTH_BUG_FIX  
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
   Distortion  uiDistortion = 0;
 #else
   UInt  uiDistortion = 0;
-#endif 
+#endif
   Pel *paOrig[3], *paPalette[3];
   TCoeff *pRun;
   UChar *paSPoint[3];
@@ -4071,10 +4071,14 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {
 #if SCM_T0072_T0109_T0120_PLT_NON444
-    if(!ch)
-      memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * uiWidth * uiHeight);
+    if ( ch == 0 )
+    {
+      memcpy( pPixelValue[ch], m_paBestLevel[ch], sizeof( Pel ) * uiWidth * uiHeight );
+    }
     else
-      memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * (uiWidth>>uiScaleX) * (uiHeight>>uiScaleY));      
+    {
+      memcpy( pPixelValue[ch], m_paBestLevel[ch], sizeof( Pel ) * (uiWidth>>uiScaleX) * (uiHeight>>uiScaleY) );
+    }
 #else
     memcpy(pPixelValue[ch],  m_paBestLevel[ch],  sizeof(Pel) * uiWidth * uiHeight);
 #endif
@@ -4133,7 +4137,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
         {
           uiIdx = (uiY << pcCU->getPic()->getComponentScaleX(compID)) * (uiHeight << pcCU->getPic()->getComponentScaleY(compID))
                   + (uiX << pcCU->getPic()->getComponentScaleY(compID));
-          UInt uiPxlPos = uiX*uiStride+uiY;          
+          UInt uiPxlPos = uiX*uiStride+uiY;
 #else
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
       {
@@ -4229,7 +4233,7 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
     for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
 #if SCM_T0072_T0109_T0120_PLT_NON444
-      if ( ch == 0)
+      if ( ch == 0 )
       {
         memcpy(m_paBestLevel[ch], pPixelValue[ch], sizeof(Pel) * uiTotalPixel);
       }
@@ -4520,8 +4524,10 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 
   ruiCost = std::numeric_limits<Distortion>::max();
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  if(iCostCalcType)
+  if ( iCostCalcType )
+  {
     m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiAbsPartIdx ) );
+  }
 #endif
   
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
@@ -4541,8 +4547,10 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-    if(!iCostCalcType)
+    if ( !iCostCalcType )
+    {
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
+    }
     else
     {
       motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPUIdx );
@@ -5260,7 +5268,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   Distortion uiTotalCost = 0;
 #else
   UInt uiTotalCost = 0;
-#endif 
+#endif
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
@@ -5320,7 +5328,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
 #else
     UInt uiIntraBCECost = uiCost;
     xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiIntraBCECost);
-#endif       
+#endif
       uiCost = std::min(uiIntraBCECost, uiCost);
     }
     uiTotalCost += uiCost;
@@ -6692,8 +6700,10 @@ static UInt MergeCandLists(TComMv *dst, UInt dn, TComMv *src, UInt sn)
     Bool found = false;
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
     TComMv TempMv = src[cand];
-    if(!isSrcQuarPel)
-      TempMv <<= 2;  
+    if ( !isSrcQuarPel )
+    {
+      TempMv <<= 2;
+    }
 #endif
     for(int j=0; j<dn; j++)
     {
@@ -8768,7 +8778,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   const Double zeroCost     = (pcCU->isLosslessCoded( 0 )) ? (nonZeroCost+1) : (m_pcRdCost->calcRdCost( zeroResiBits, zeroDistortion ));
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  if ( zeroCost < nonZeroCost )
+  if ( zeroCost < nonZeroCost || !pcCU->getQtRootCbf(0) )
 #else
   if ( zeroCost < nonZeroCost || !pcCU->getQtRootCbf(0) || (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraBC(0) && zeroDistortion == nonZeroDistortion) )
 #endif
@@ -8893,7 +8903,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 #if SCM_T0121_INFER_TU_SPLIT_ENCODER
   Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
   if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && (pcCU->isIntraBC(uiAbsPartIdx) || pcCU->isInter(uiAbsPartIdx)) && (pcCU->getWidth(uiAbsPartIdx) >= 32) && bCheckFull)
-    bCheckSplit = false;  
+    bCheckSplit = false;
 #else
   const Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
 #endif

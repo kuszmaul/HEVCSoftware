@@ -68,9 +68,9 @@ Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
 
 #if SCM_T0048_PLT_PRED_IN_PPS
 Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                                 UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
-# endif
+#endif
                                 const TComPPS *pcPPS, const TComSPS *pcSPS)
 {
   UInt num = std::min(pcPPS->getNumPLTPred(), pcSPS->getPLTMaxPredSize());
@@ -78,9 +78,9 @@ Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
   {
     for(int i=0; i<3; i++)
     {
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
       lastPLTUsedSize[i] = std::min(num, pcSPS->getPLTMaxSize());
-# endif
+#endif
       lastPLTSize[i] = num;
       memcpy(lastPLT[i], pcPPS->getPLTPred(i), num*sizeof(Pel));
     }
@@ -131,9 +131,9 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   }
 #if SCM_T0048_PLT_PRED_IN_PPS
   xSetPredFromPPS(lastPLT, lastPLTSize,
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                   lastPLTUsedSize,
-# endif
+#endif
                   pcSlice->getPPS(), pcSlice->getSPS());
 #endif
 

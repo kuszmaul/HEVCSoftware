@@ -545,7 +545,7 @@ Void TEncSbac::encodeSPoint( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UI
     m_puiScanOrder = uiRefScanOrder;
   }
 
-  UInt uiTraIdx = m_puiScanOrder[uiIdx];  
+  UInt uiTraIdx = m_puiScanOrder[uiIdx];
 #if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
   UInt uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
 #endif
@@ -610,10 +610,14 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     uiSampleBits[comp] = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(ComponentID(comp)));
 #if SCM_T0072_T0109_T0120_PLT_NON444
-    if(comp == compBegin)
-      pPixelValue[comp] = pcCU->getLevel(ComponentID(comp)) + offset;
+    if ( comp == compBegin )
+    {
+      pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offset;
+    }
     else
-      pPixelValue[comp] = pcCU->getLevel(ComponentID(comp)) + offsetC;
+    {
+      pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offsetC;
+    }
 #else
     pPixelValue[comp] = pcCU->getLevel(ComponentID(comp)) + offset;
 #endif
@@ -788,12 +792,16 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       {
         UInt mode = pSPoint[uiTraIdx];
 #if SCM_T0065_PLT_IDX_GROUP
-        if (uiNumIndices && uiIdx < uiTotal - 1)
+        if ( uiNumIndices && uiIdx < uiTotal - 1 )
+        {
 #endif
 #if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-        m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
+          m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
 #else
-        m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
+          m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+        }
 #endif
       }
     }
@@ -920,21 +928,24 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       {
         uiXC = (uiX>>uiScaleY);
         uiYC = (uiY>>uiScaleX);
-        uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;  
+        uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;
       }
 
-      if(
-          pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+      if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
         )
       {
         for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
         {
-          if(comp == compBegin)
+          if ( comp == compBegin )
+          {
             xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
+          }
           else
+          {
             xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
+          }
         }
       }
       else

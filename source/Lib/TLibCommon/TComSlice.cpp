@@ -430,7 +430,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     }
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-    if((m_eSliceType == I_SLICE) || (getNumRefIdx(REF_PIC_LIST_0) == 0 && getNumRefIdx(REF_PIC_LIST_1) == 0))
+    if ( (m_eSliceType == I_SLICE) || (getNumRefIdx(REF_PIC_LIST_0) == 0 && getNumRefIdx(REF_PIC_LIST_1) == 0) )
 #else
     if (m_eSliceType == I_SLICE)
 #endif
@@ -512,13 +512,17 @@ Int TComSlice::getNumRpsCurrTempList() const
 {
   Int numRpsCurrTempList = 0;
 
-  if (m_eSliceType == I_SLICE)
+  if ( m_eSliceType == I_SLICE )
   {
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-    if(getSPS()->getUseIntraBlockCopy())
+    if ( getSPS()->getUseIntraBlockCopy() )
+    {
       return 1;
+    }
     else
+    {
       return 0;
+    }
 #else
     return 0;
 #endif
@@ -532,10 +536,14 @@ Int TComSlice::getNumRpsCurrTempList() const
   }
   return numRpsCurrTempList;
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  if(getSPS()->getUseIntraBlockCopy())
+  if ( getSPS()->getUseIntraBlockCopy() )
+  {
     return numRpsCurrTempList + 1;
+  }
   else
+  {
     return numRpsCurrTempList;
+  }
 #else
     return numRpsCurrTempList;
 #endif

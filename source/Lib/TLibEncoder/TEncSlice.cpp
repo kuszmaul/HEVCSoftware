@@ -662,9 +662,9 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic)
 
 #if SCM_T0048_PLT_PRED_IN_PPS
 Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                                 UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
-# endif
+#endif
                                 TComSlice *pcSlice)
 {
   const TComSPS *pcSPS = pcSlice->getSPS();
@@ -770,9 +770,9 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   }
 #if SCM_T0048_PLT_PRED_IN_PPS
   xSetPredFromPPS(lastPLT, lastPLTSize,
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                   lastPLTUsedSize,
-# endif
+#endif
                   pcSlice);
 #endif
 
@@ -813,7 +813,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 #if SCM_T0048_PLT_PRED_IN_PPS
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
 
-# if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
   Bool refresh = false;
   if( !pcSlice->getSliceIdx() )
   {
@@ -823,9 +823,9 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
               (m_numIDRs && m_numFrames > SCM_T0048_PLT_PRED_IN_PPS_REFRESH) ||
               m_numFrames > 5*m_pcCfg->getFrameRate();
   }
-# else
+#else
   Bool refresh = !pcSlice->getSliceIdx() && !pcPPS->getNumPLTPred() && !pcPic->getPOC();
-# endif
+#endif
   if( pcSlice->getSPS()->getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh )
   {
     // for every CTU in image
@@ -928,7 +928,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       // encode CTU and calculate the true bit counters.
       m_pcCuEncoder->encodeCtu( pCtu );
 
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
       if (pCtu->getLastPLTInLcuUsedSizeFinal(COMPONENT_Y)!=PLT_SIZE_INVALID)
       {
         for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
@@ -936,7 +936,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
           lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
         }
       }
-# endif
+#endif
       if (pCtu->getLastPLTInLcuSizeFinal(COMPONENT_Y))
       {
         for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
@@ -961,7 +961,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       }
     }
 
-# if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
     if( srcCtu == -1 || numPreds < 4 )
     {
       // refresh failed, wait a bit longer before retrying
@@ -973,33 +973,35 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       m_numFrames = m_numFrames>>1;
     }
     else
-# endif
+#endif
     if( srcCtu != -1 )
     {
-# if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
       if( pcSlice->getPOC() )
       {
         UInt ppsid = pcPPS->getPPSId()+1;
         pcPPS->setPPSId(ppsid);
         pcSlice->setPPSId(ppsid);
       }
-# endif
+#endif
       numPreds = std::min(lastPLTSize[0], (UChar)MAX_PLT_PRED_SIZE);
       pcPPS->setNumPLTPred(numPreds);
       //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
-      for(int i=0; i<3; i++)
-        memcpy(pcPPS->getPLTPred(i), lastPLT[i], sizeof(Pel)*numPreds);
-# if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+      for ( int i=0; i<3; i++ )
+      {
+        memcpy( pcPPS->getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPreds );
+      }
+#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
       m_numIDRs   = 0;
       m_numFrames = 0;
-# endif
+#endif
     }
 
     // restore predictor in any case
     xSetPredFromPPS(lastPLT, lastPLTSize,
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                     lastPLTUsedSize,
-# endif
+#endif
                     pcSlice);
 
     // reset entropy
@@ -1341,9 +1343,9 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
 #if SCM_T0048_PLT_PRED_IN_PPS
   xSetPredFromPPS(lastPLT, lastPLTSize,
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                   lastPLTUsedSize,
-# endif
+#endif
                   pcSlice);
 #endif
 

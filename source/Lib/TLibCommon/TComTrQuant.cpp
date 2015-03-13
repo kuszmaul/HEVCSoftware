@@ -106,22 +106,22 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
 #if SCM_T0140_ACT_QP_OFFSET
   Bool cuACTFlag = cu.getColourTransform(0);
 
-  if( cuACTFlag == false )
+  if( !cuACTFlag )
   {
 #endif
-  if (isChroma(compID))
-  {
-    chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
-    chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
+    if (isChroma(compID))
+    {
+      chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
+      chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
 
-    chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
-  }
+      chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
+    }
 
-  *this = QpParam(cu.getQP( 0 ),
-                  toChannelType(compID),
-                  cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
-                  chromaQpOffset,
-                  cu.getPic()->getChromaFormat());
+    *this = QpParam(cu.getQP( 0 ),
+                    toChannelType(compID),
+                    cu.getSlice()->getSPS()->getQpBDOffset(toChannelType(compID)),
+                    chromaQpOffset,
+                    cu.getPic()->getChromaFormat());
 #if SCM_T0140_ACT_QP_OFFSET
   }
   else

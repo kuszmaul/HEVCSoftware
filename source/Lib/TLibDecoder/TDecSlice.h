@@ -73,9 +73,9 @@ private:
 
 #if SCM_T0048_PLT_PRED_IN_PPS
   Void xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
-# if !SCM_T0064_REMOVE_PLT_SHARING
+#if !SCM_T0064_REMOVE_PLT_SHARING
                        UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
-# endif
+#endif
                        const TComPPS *pcPPS, const TComSPS *pcSPS);
 #endif
 

@@ -1285,9 +1285,13 @@ Void TComDataCU::getStartPosition( UInt uiPartIdx, Int& xStartInCU, Int& yStartI
       break;
   }
 }
+
 Bool TComDataCU::isIntraBC(UInt uiAbsPartIdx)
 {
-  if(isIntra(uiAbsPartIdx)) return false;
+  if ( isIntra( uiAbsPartIdx ) )
+  {
+    return false;
+  }
 
   Int iRefIdx = getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiAbsPartIdx );
   Bool isNeighborIntraBC = ( iRefIdx >= 0 ) ? ( getSlice()->getRefPic( REF_PIC_LIST_0, iRefIdx )->getPOC() == getSlice()->getPOC() ) : false;
@@ -1564,8 +1568,8 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   Int   cuPelX            = getCUPelX() + (uiAbsPartIdx? g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ] : 0);
   Int   cuPelY            = getCUPelY() + (uiAbsPartIdx? g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] : 0);
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  Int iRX = cuPelX + (currentMv.getHor()>>2) ;
-  Int iRY = cuPelY + (currentMv.getVer()>>2) ;
+  Int iRX = cuPelX + (currentMv.getHor()>>2);
+  Int iRY = cuPelY + (currentMv.getVer()>>2);
 #else
   Int iRX = cuPelX + currentMv.getHor() ;
   Int iRY = cuPelY + currentMv.getVer() ;
@@ -1592,13 +1596,17 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   {
     return false;
   }
-  
+
   Int iRefIdx = mv1.getRefIdx();
   Bool isIBC;
-  if(pRefCU->isIntra(uiAbsPartIdxDerived))
+  if ( pRefCU->isIntra( uiAbsPartIdxDerived ) )
+  {
     isIBC = false;
+  }
   else
-    isIBC= ( iRefIdx >= 0 ) ? ( pRefCU->getSlice()->getRefPic( REF_PIC_LIST_0, iRefIdx )->getPOC() == pRefCU->getSlice()->getPOC() ) : 0;
+  {
+    isIBC= (iRefIdx >= 0) ? (pRefCU->getSlice()->getRefPic( REF_PIC_LIST_0, iRefIdx )->getPOC() == pRefCU->getSlice()->getPOC()) : 0;
+  }
 #else
   Bool isIBC = pRefCU->isIntraBC(uiAbsPartIdxDerived);
 #endif
@@ -3665,7 +3673,7 @@ Void TComDataCU::saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UI
   {
 #if !SCM_T0064_REMOVE_PLT_SHARING
 #if SCM_T0072_T0109_T0120_PLT_NON444
-    UInt srcCh = ch; 
+    UInt srcCh = ch;
 #else
     UInt srcCh = (!ch || pcSrc->getSlice()->getSPS()->getChromaFormatIdc()==CHROMA_444) ? 0 : 1;
 #endif

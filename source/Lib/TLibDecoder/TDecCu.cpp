@@ -291,7 +291,8 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-        if ( uiRefListIdx == 0 && uhInterDirNeighbours[uiMergeIndex] == 1 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
+        if ( uiRefListIdx == 0 && uhInterDirNeighbours[uiMergeIndex] == 1 &&
+             pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
         {
           if( pcCU->getLastIntraBCMv() != cMvFieldNeighbours[uiMergeIndex<<1].getMv())
           {
@@ -929,7 +930,7 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
   if (pcCU->getPLTModeFlag(0))
   {
 #if SCM_T0072_T0109_T0120_PLT_NON444
-    xReconPLTMode (pcCU, uiDepth);  
+    xReconPLTMode (pcCU, uiDepth);
 #else
     ChromaFormat cCF = pcCU->getPic()->getSlice(0)->getSPS()->getChromaFormatIdc();
     if (cCF !=CHROMA_444)
@@ -1149,78 +1150,78 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
   if(!bRotation)
   {
 #endif
-  for(UInt uiY = 0; uiY < uiHeight; uiY++ )
-  {
-    for(UInt uiX = 0; uiX < uiWidth; uiX++ )
+    for(UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
-      uiIdx = (uiY<<pcCU->getPic()->getComponentScaleY(compID))*(uiWidth<<pcCU->getPic()->getComponentScaleX(compID))+(uiX<<pcCU->getPic()->getComponentScaleX(compID));
-#if SCM_T0072_T0109_T0120_PLT_NON444
-      UInt uiIdxComp = uiY*uiWidth + uiX;
-#endif
-      if( pEscapeFlag[uiIdx] )
+      for(UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-        if ( bLossless )
-        {
+        uiIdx = (uiY<<pcCU->getPic()->getComponentScaleY(compID))*(uiWidth<<pcCU->getPic()->getComponentScaleX(compID))+(uiX<<pcCU->getPic()->getComponentScaleX(compID));
 #if SCM_T0072_T0109_T0120_PLT_NON444
-          iValue = pPixelValue[uiIdxComp];
-#else
-          iValue = pPixelValue[uiIdx];
+        UInt uiIdxComp = uiY*uiWidth + uiX;
 #endif
+        if( pEscapeFlag[uiIdx] )
+        {
+          if ( bLossless )
+          {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+            iValue = pPixelValue[uiIdxComp];
+#else
+            iValue = pPixelValue[uiIdx];
+#endif
+          }
+          else
+          {
+            QpParam cQP(*pcCU, compID);
+            Int iQP = cQP.Qp;
+            Int iQPrem = iQP % 6;          
+            Int iQPper = iQP / 6;
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+            Int InvquantiserRightShift = IQUANT_SHIFT;
+            Int iAdd = 1 << (InvquantiserRightShift - 1);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+            iValue = ((((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#else
+            iValue = ((((pPixelValue[uiIdx]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
+#endif
+#else
+            Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
+            Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+            iValue = ((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+#else
+            iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
+#endif
+#endif
+            iValue = Pel(ClipBD<Int>(iValue, pcCU->getSlice()->getSPS()->getBitDepths().recon[compID?1:0]));
+          }
         }
         else
         {
-          QpParam cQP(*pcCU, compID);
-          Int iQP = cQP.Qp;
-          Int iQPrem = iQP % 6;          
-          Int iQPper = iQP / 6;
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
-          Int InvquantiserRightShift = IQUANT_SHIFT;
-          Int iAdd = 1 << (InvquantiserRightShift - 1);
-#if SCM_T0072_T0109_T0120_PLT_NON444
-          iValue = ((((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
-#else
-          iValue = ((((pPixelValue[uiIdx]*g_invQuantScales[iQPrem])<<iQPper) + iAdd)>>InvquantiserRightShift);
-#endif 
-#else
-          Int InvquantiserRightShift = (IQUANT_SHIFT - iQPper);
-          Int iAdd = InvquantiserRightShift == 0 ? 0 : 1 << (InvquantiserRightShift - 1);
-#if SCM_T0072_T0109_T0120_PLT_NON444
-          iValue = ((pPixelValue[uiIdxComp]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
-#else
-          iValue = ((pPixelValue[uiIdx]*g_invQuantScales[iQPrem] + iAdd)>>InvquantiserRightShift);
-#endif
-#endif 
-          iValue = Pel(ClipBD<Int>(iValue, pcCU->getSlice()->getSPS()->getBitDepths().recon[compID?1:0]));
+          iValue = pPalette[pLevel[uiIdx]];
         }
-      }
-      else
-      {
-        iValue = pPalette[pLevel[uiIdx]];
-      }
 #if SCM_T0072_T0109_T0120_PLT_NON444
-      piReco[uiY*uiStride+uiX] = iValue;
-      piPicReco[uiY*uiPicStride+uiX] = iValue;
-    } 
+        piReco[uiY*uiStride+uiX] = iValue;
+        piPicReco[uiY*uiPicStride+uiX] = iValue;
+      } 
 #else
-     if(bRotation)
-     {
-      piReco[uiX*uiStride+uiY] = iValue;
-      piPicReco[uiX*uiPicStride+uiY] = iValue;
-     }
-     else
-     {
-      piReco[uiX] = iValue;
-      piPicReco[uiX] = iValue;
-     }
-    }
+       if(bRotation)
+       {
+        piReco[uiX*uiStride+uiY] = iValue;
+        piPicReco[uiX*uiPicStride+uiY] = iValue;
+       }
+       else
+       {
+        piReco[uiX] = iValue;
+        piPicReco[uiX] = iValue;
+       }
+      }
 
-    if(!bRotation)
-    {
-      piReco += uiStride;
-      piPicReco += uiPicStride;
-    }
+      if(!bRotation)
+      {
+        piReco += uiStride;
+        piPicReco += uiPicStride;
+      }
 #endif
-  }
+    }
 #if SCM_T0072_T0109_T0120_PLT_NON444
   }
   else
