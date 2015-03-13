@@ -96,7 +96,7 @@ public:
   MapIterator getFirstIterator( UInt hashValue );
   Bool hasExactMatch( UInt hashValue1, UInt hashValue2 );
 
-  Void addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height );
+  Void addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height, const BitDepths& bitDepths );
 
 public:
   static UInt   getCRCValue1( UChar* p, Int length );
@@ -105,10 +105,10 @@ public:
   static UShort getCRCValue4( UChar* p, Int length );
 
   static Bool isRowSameValue( UChar* p, Int width, Bool includeAllComponent = true );
-  static Void getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, Bool includeAllComponent = true );
+  static Void getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, const BitDepths& bitDepths, Bool includeAllComponent = true );
   static Bool isHorizontalPerfect( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, Bool includeAllComponent = true );
   static Bool isVerticalPerfect  ( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, Bool includeAllComponent = true );
-  static Bool getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, UInt& hashValue1, UInt& hashValue2 );
+  static Bool getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, const BitDepths bitDepths, UInt& hashValue1, UInt& hashValue2 );
   static Void initBlockSizeToIndex();
 
 private:

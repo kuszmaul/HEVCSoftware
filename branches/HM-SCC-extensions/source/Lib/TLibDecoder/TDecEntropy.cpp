@@ -43,7 +43,6 @@
 #include "../TLibCommon/Debug.h"
 static const Bool bDebugRQT = DebugOptionList::DebugRQT.getInt()!=0;
 static const Bool bDebugPredEnabled = DebugOptionList::DebugPred.getInt()!=0;
-Bool g_bFinalEncode=true;
 #endif
 
 //! \ingroup TLibDecoder
@@ -76,7 +75,7 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
   {
 #if SCM_T0058_REMOVE_64x64_PLT
-    if( g_uiMaxCUWidth>>uiDepth == 64)
+    if( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth == 64)
     {
       return;
     }
@@ -246,7 +245,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
-  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
 
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
@@ -746,7 +745,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
     pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
   }
-  if ( pcCU->getCUTransquantBypass( uiAbsPartIdx ) && (g_bitDepth[CHANNEL_TYPE_LUMA] != g_bitDepth[CHANNEL_TYPE_CHROMA]) )
+  if ( pcCU->getCUTransquantBypass( uiAbsPartIdx ) && (pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA] != pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]) )
   {
     assert( pcCU->getColourTransform( uiAbsPartIdx ) == 0 );
   }

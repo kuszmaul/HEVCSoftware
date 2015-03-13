@@ -76,9 +76,6 @@ TComSlice::TComSlice()
 , m_pcSPS                         ( NULL )
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
-#if ADAPTIVE_QP_SELECTION
-, m_pcTrQuant                     ( NULL )
-#endif
 , m_colFromL0Flag                 ( true )
 , m_noOutputPriorPicsFlag         ( false )
 , m_noRaslOutputFlag              ( false )
@@ -839,8 +836,6 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 }
 
 
-Int TComSlice::m_prevTid0POC = 0;
-
 /** Function for setting the slice's temporal layer ID and corresponding temporal_layer_switching_point_flag.
  * \param uiTLayer Temporal layer ID of the current slice
  * The decoder calls this function to set temporal_layer_switching_point_flag for each temporal layer based on
@@ -1559,7 +1554,7 @@ Void  TComSlice::initWpScaling(const TComSPS *sps)
           pwp->iOffset = 0;
         }
 
-        const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (g_bitDepth[toChannelType(ComponentID(yuv))]-8));
+        const Int offsetScalingFactor = bUseHighPrecisionPredictionWeighting ? 1 : (1 << (sps->getBitDepth(toChannelType(ComponentID(yuv)))-8));
 
         pwp->w      = pwp->iWeight;
         pwp->o      = pwp->iOffset * offsetScalingFactor; //NOTE: This value of the ".o" variable is never used - .o is set immediately before it gets used
@@ -1613,7 +1608,7 @@ TComSPS::TComSPS()
 , m_log2DiffMaxMinCodingBlockSize(0)
 , m_uiMaxCUWidth              ( 32)
 , m_uiMaxCUHeight             ( 32)
-, m_uiMaxCUDepth              (  3)
+, m_uiMaxTotalCUDepth         (  3)
 , m_bLongTermRefsPresent      (false)
 , m_uiQuadtreeTULog2MaxSize   (  0)
 , m_uiQuadtreeTULog2MinSize   (  0)
@@ -1653,8 +1648,11 @@ TComSPS::TComSPS()
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
-    m_uiBitDepth   [ch] = 8;
-    m_uiPCMBitDepth[ch] = 8;
+    m_bitDepths.recon[ch] = 8;
+#if O0043_BEST_EFFORT_DECODING
+    m_bitDepths.stream[ch] = 8;
+#endif
+    m_pcmBitDepths[ch] = 8;
     m_qpBDOffset   [ch] = 0;
   }
 
@@ -1685,7 +1683,7 @@ Void  TComSPS::createRPSList( Int numRPS )
   m_RPSList.create(numRPS);
 }
 
-Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess )
+Void TComSPS::setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRate, Bool randomAccess )
 {
   if( !getVuiParametersPresentFlag() )
   {
@@ -1723,7 +1721,7 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
   hrd->setNalHrdParametersPresentFlag( rateCnt );
   hrd->setVclHrdParametersPresentFlag( rateCnt );
 
-  hrd->setSubPicCpbParamsPresentFlag( ( numDU > 1 ) );
+  hrd->setSubPicCpbParamsPresentFlag( useSubCpbParams );
 
   if( hrd->getSubPicCpbParamsPresentFlag() )
   {
@@ -1770,7 +1768,10 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
 
     bitrateValue = bitRate;
     cpbSizeValue = bitRate;                                     // 1 second
-    duCpbSizeValue = bitRate/numDU;
+    // DU CPB size could be smaller, but we don't know how 
+    // in how many DUs the slice segment settings will result 
+    // (used to be: bitRate/numDU)
+    duCpbSizeValue = bitRate;
     duBitRateValue = bitRate;
 
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
@@ -2270,9 +2271,9 @@ Bool TComScalingList::xParseScalingList(Char* pchFile)
  * \param listId list index
  * \returns pointer of quantization matrix
  */
-Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
+const Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
 {
-  Int *src = 0;
+  const Int *src = 0;
   switch(sizeId)
   {
     case SCALING_LIST_4x4:

@@ -198,7 +198,7 @@ Bool TComHash::hasExactMatch( UInt hashValue1, UInt hashValue2 )
   return false;
 }
 
-Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height )
+Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeight, Int width, Int height, const BitDepths& bitDepths )
 {
   Int xStart = 0;
   Int xEnd = picWidth - width + 1;
@@ -227,7 +227,7 @@ Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeig
   {
     for ( Int yPos = 0; yPos < picHeight; yPos++ )
     {
-      TComHash::getPixelsIn1DCharArrayByRow( pPicYuv, p, width, xPos, yPos, bIncludeChroma );
+      TComHash::getPixelsIn1DCharArrayByRow( pPicYuv, p, width, xPos, yPos, bitDepths, bIncludeChroma );
       isSameValueRow[yPos] = isRowSameValue( p, width );
       hashValue3Row[yPos] = TComHash::getCRCValue3( p, length );
       hashValue4Row[yPos] = TComHash::getCRCValue4( p, length );
@@ -314,14 +314,14 @@ Bool TComHash::isRowSameValue( UChar* p, Int width, Bool includeAllComponent )
 }
 
 
-Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, Bool includeAllComponent )
+Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, const BitDepths& bitDepths, Bool includeAllComponent )
 {
   if ( pPicYuv->getChromaFormat() != CHROMA_444 )
   {
     includeAllComponent = false;
   }
 
-  if ( g_bitDepth[CHANNEL_TYPE_LUMA] == 8 && g_bitDepth[CHANNEL_TYPE_CHROMA] == 8 )
+  if ( bitDepths.recon[CHANNEL_TYPE_LUMA] == 8 && bitDepths.recon[CHANNEL_TYPE_CHROMA] == 8 )
   {
     Pel* pPel[3];
     Int stride[3];
@@ -346,8 +346,8 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
   }
   else
   {
-    Int shift = g_bitDepth[CHANNEL_TYPE_LUMA] - 8;
-    Int shiftc = g_bitDepth[CHANNEL_TYPE_CHROMA] - 8;
+    Int shift = bitDepths.recon[CHANNEL_TYPE_LUMA] - 8;
+    Int shiftc = bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8;
     Pel* pPel[3];
     Int stride[3];
     for ( Int id=0; id<3; id++ )
@@ -430,7 +430,7 @@ Bool TComHash::isVerticalPerfect( TComPicYuv* pPicYuv, Int width, Int height, In
   return true;
 }
 
-Bool TComHash::getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, UInt& hashValue1, UInt& hashValue2 )
+Bool TComHash::getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, const BitDepths bitDepths, UInt& hashValue1, UInt& hashValue2 )
 {
   Int addValue = m_blockSizeToIndex[width][height];
   assert( addValue >= 0 );
@@ -451,7 +451,7 @@ Bool TComHash::getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, In
 
   for ( Int y=0; y<height; y++ )
   {
-    TComHash::getPixelsIn1DCharArrayByRow( pPicYuv, p, width, xStart, yStart+y, bIncludeChroma );
+    TComHash::getPixelsIn1DCharArrayByRow( pPicYuv, p, width, xStart, yStart+y, bitDepths, bIncludeChroma );
     toHash3[y] = TComHash::getCRCValue3( p, length );
     toHash4[y] = TComHash::getCRCValue4( p, length );
   }

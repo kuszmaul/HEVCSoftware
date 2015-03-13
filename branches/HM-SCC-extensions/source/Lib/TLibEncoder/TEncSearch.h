@@ -162,6 +162,9 @@ public:
             Int           iSearchRange,
             Int           bipredSearchRange,
             Int           iFastSearch,
+            const UInt    maxCUWidth,
+            const UInt    maxCUHeight,
+            const UInt    maxTotalCUDepth,
             TEncEntropy*  pcEntropyCoder,
             TComRdCost*   pcRdCost,
             TEncSbac***   pppcRDSbacCoder,
@@ -299,7 +302,8 @@ public:
                                   Pel* pCurr,
                                   Int currStride,
                                   Int width,
-                                  Int height
+                                  Int height,
+                                  const BitDepths& bitDepths
                                 );
 
   Bool predInterHashSearch      ( TComDataCU* pcCU,

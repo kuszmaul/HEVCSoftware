@@ -481,12 +481,13 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
             TComDataCU *const pcCU              = rTu.getCU();
       const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
       const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getSPS()->getDisableIntraBoundaryFilter();
-
 #if O0043_BEST_EFFORT_DECODING
-      xPredIntraAng( g_bitDepthInStream[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
+      const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getStreamBitDepth(channelType);
 #else
-      xPredIntraAng( g_bitDepth[channelType], ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
+      const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getBitDepth(channelType);
 #endif
+      xPredIntraAng( channelsBitDepthForPrediction, ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
+      
       if(( uiDirMode == DC_IDX ) && bAbove && bLeft && enableEdgeFilters)
       {
         xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
@@ -637,12 +638,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   }
   pcCU->clipMv(cMv);
 
-  for (UInt ch=COMPONENT_Y; ch<pcYuvPred->getNumberValidComponents(); ch++)
+  for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
   {
+    const ComponentID compID=ComponentID(comp);
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-    xPredInterBlk  (ComponentID(ch),  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, isIntraBC);
+    xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)), isIntraBC);
 #else
-    xPredInterBlk  (ComponentID(ch),  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi );
+    xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) );
 #endif
   }
 }
@@ -693,26 +695,27 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
   }
   else
   {
-    xWeightedAverage( &m_acYuvPred[REF_PIC_LIST_0], &m_acYuvPred[REF_PIC_LIST_1], iRefIdx[REF_PIC_LIST_0], iRefIdx[REF_PIC_LIST_1], uiPartAddr, iWidth, iHeight, pcYuvPred );
+    xWeightedAverage( &m_acYuvPred[REF_PIC_LIST_0], &m_acYuvPred[REF_PIC_LIST_1], iRefIdx[REF_PIC_LIST_0], iRefIdx[REF_PIC_LIST_1], uiPartAddr, iWidth, iHeight, pcYuvPred, pcCU->getSlice()->getSPS()->getBitDepths() );
   }
 }
 
 /**
  * \brief Generate motion-compensated block
  *
- * \param compID   Colour component ID
- * \param cu       Pointer to current CU
- * \param refPic   Pointer to reference picture
- * \param partAddr Address of block within CU
- * \param mv       Motion vector
- * \param width    Width of block
- * \param height   Height of block
- * \param dstPic   Pointer to destination picture
- * \param bi       Flag indicating whether bipred is used
+ * \param compID     Colour component ID
+ * \param cu         Pointer to current CU
+ * \param refPic     Pointer to reference picture
+ * \param partAddr   Address of block within CU
+ * \param mv         Motion vector
+ * \param width      Width of block
+ * \param height     Height of block
+ * \param dstPic     Pointer to destination picture
+ * \param bi         Flag indicating whether bipred is used
+ * \param  bitDepth  Bit depth
  */
 
 
-Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi 
+Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
 , Bool isIntraBC
 #endif
@@ -747,11 +750,11 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
   if ( yFrac == 0 )
   {
-    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt);
+    m_if.filterHor(compID, ref, refStride, dst,  dstStride, cxWidth, cxHeight, xFrac, !bi, chFmt, bitDepth);
   }
   else if ( xFrac == 0 )
   {
-    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi, chFmt);
+    m_if.filterVer(compID, ref, refStride, dst, dstStride, cxWidth, cxHeight, yFrac, true, !bi, chFmt, bitDepth);
   }
   else
   {
@@ -760,8 +763,8 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
     const Int vFilterSize = isLuma(compID) ? NTAPS_LUMA : NTAPS_CHROMA;
 
-    m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt);
-    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt);
+    m_if.filterHor(compID, ref - ((vFilterSize>>1) -1)*refStride, refStride, tmp, tmpStride, cxWidth, cxHeight+vFilterSize-1, xFrac, false,      chFmt, bitDepth);
+    m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt, bitDepth);
   }
 }
 
@@ -795,11 +798,11 @@ Void TComPrediction::xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, T
 }
 #endif
 
-Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* pcYuvDst )
+Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* pcYuvDst, const BitDepths &clipBitDepths )
 {
   if( iRefIdx0 >= 0 && iRefIdx1 >= 0 )
   {
-    pcYuvDst->addAvg( pcYuvSrc0, pcYuvSrc1, uiPartIdx, iWidth, iHeight );
+    pcYuvDst->addAvg( pcYuvSrc0, pcYuvSrc1, uiPartIdx, iWidth, iHeight, clipBitDepths );
   }
   else if ( iRefIdx0 >= 0 && iRefIdx1 <  0 )
   {
@@ -976,13 +979,13 @@ Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSr
         else
         {
 #if SCM_T0072_T0109_T0120_PLT_NON444
-          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos])  >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) )
-                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) )
-                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos])  >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA]  -8) )
+                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) )
+                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) );
 #else
-          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]  -8) )
-                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) )
-                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8) );
+          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA]  -8) )
+                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) )
+                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) );
 #endif
         }
         if (uiAbsError < uiMinError)
@@ -1219,7 +1222,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
       {
         if (psListHistogram[j].uiCnt >= (uiHisCnt >> 1) && j != uiMaxIdx)
         {
-          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2))
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2, pcCU->getSlice()->getSPS()->getBitDepths()))
           {
             bOtherPeakExist = true;
           }
@@ -1235,7 +1238,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
 
         for (UInt j = 0; j < uiHisIdx; j++)
         {
-          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2) && j != uiMaxIdx)
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2, pcCU->getSlice()->getSPS()->getBitDepths()) && j != uiMaxIdx)
           {
             psListHistogram[j].ResetElement();
           }
@@ -1272,12 +1275,12 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
 
       if (!bMatched)
       {
-        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement);
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
         if (bestSAD)
         {
           for (Int i = uiIdx - 1; i >= 0; i--)
           {
-            UInt sad = psList[i].getSAD(sElement);
+            UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
             if (sad < bestSAD)
             {
               bestSAD = sad;
@@ -1287,7 +1290,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
           }
         }
 
-        if (besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit))
+        if (besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()))
         {
           psList[besti].addElement(sElement);
           last = besti;
@@ -1315,12 +1318,12 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
       sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
 #endif
 
-      Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement);
+      Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
       if( bestSAD )
       {
         for( Int i = uiIdx-1; i>=0; i-- )
         {
-          UInt sad = psList[i].getSAD(sElement);
+          UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
           if( sad < bestSAD )
           {
             bestSAD = sad;
@@ -1330,7 +1333,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
         }
       }
 
-      if (besti>=0 && psList[besti].almostEqualData(sElement, iErrorLimit))
+      if (besti>=0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()))
       {
         psList[besti].addElement(sElement);
         last = besti;
@@ -1378,6 +1381,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   uiPLTSize = 0;
   Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
   Double bitCost = pcCost->getLambda() * 24;
+  BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
   for (Int i = 0; i < pcCU->getSlice()->getSPS()->getPLTMaxSize(); i++)
   {
     if( pListSort[i].uiCnt )
@@ -1395,17 +1399,17 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
                           pListSort[i].uiSumData[2]/(Double)pListSort[i].uiCnt };
 
         Double err      = pal[0] - Palette[0][uiPLTSize];
-        Double bestCost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]-8)) );
-        err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
-        err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+        Double bestCost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]-8)) );
+        err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+        err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
         bestCost = bestCost * pListSort[i].uiCnt + bitCost;
 
         for(int t=0; t<pcCU->getLastPLTInLcuSizeFinal(0); t++)
         {
           err = pal[0] - pPred[0][t];
-          Double cost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA]-8)) );
-          err = pal[1] - pPred[1][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
-          err = pal[2] - pPred[2][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA]-8)) );
+          Double cost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]-8)) );
+          err = pal[1] - pPred[1][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+          err = pal[2] - pPred[2][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
           cost *= pListSort[i].uiCnt;
           if(cost < bestCost)
           {
@@ -1777,6 +1781,7 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
   }
   else
   {
+    BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
     for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch ++)
     {
 #if SCM_T0072_T0109_T0120_PLT_NON444
@@ -1790,7 +1795,7 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
       paPixelValue[ch][uiScanIdx] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
       paRecoValue[ch][uiYIdxRaster] = (paPixelValue[ch] [uiScanIdx]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
 #endif 
-      paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], g_bitDepth[ch? 1:0]));
+      paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], bitDepths.recon[ch? 1:0]));
 #if SCM_T0072_T0109_T0120_PLT_NON444
       }
       else
@@ -1808,7 +1813,7 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
           paPixelValue[ch][uiScanIdxC] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
           paRecoValue[ch][uiYIdxRasterC] = (paPixelValue[ch] [uiScanIdxC]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
 #endif 
-          paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], g_bitDepth[ch? 1:0]));
+          paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], bitDepths.recon[ch? 1:0]));
         }            
       }
 #endif
@@ -1931,6 +1936,7 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
 #endif
 
+  const BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -1943,13 +1949,13 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
       UInt uiMinError = MAX_UINT;
       while( uiPLTIdx < pcCU->getLastPLTInLcuSizeFinal(0) )
       {
-        UInt uiAbsError = (abs(pPred[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8))
+        UInt uiAbsError = (abs(pPred[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8))
 #if SCM_T0072_T0109_T0120_PLT_NON444
-                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
-                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
 #else
-                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
-                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
 #endif
 
         if( uiAbsError < uiMinError )
@@ -2012,13 +2018,13 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
       UInt uiMinError = MAX_UINT;
       while( uiPLTIdx < uiPLTSize )
       {
-        UInt uiAbsError = (abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8))
+        UInt uiAbsError = (abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8))
 #if SCM_T0072_T0109_T0120_PLT_NON444
-                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
-                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
 #else
-                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8))
-                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8));
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
 #endif
 
         if (uiAbsError < uiMinError)
@@ -2039,12 +2045,12 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
 #else
         sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
 #endif
-        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement);
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
         if (bestSAD)
         {
           for (Int i = uiIdx - 1; i >= 0; i--)
           {
-            UInt sad = psList[i].getSAD(sElement);
+            UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
             if (sad < bestSAD)
             {
               bestSAD = sad;
@@ -2057,7 +2063,7 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
           }
         }
 
-        if( besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit) )
+        if( besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()) )
         {
           psList[besti].addElement(sElement);
           last = besti;
@@ -2128,9 +2134,9 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
                             pListSort[i].uiSumData[2] / (Double)pListSort[i].uiCnt };
 
           Double err = pal[0] - Palette[0][uiPLTSize];
-          Double bestCost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8)));
-          err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
-          err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+          Double bestCost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)));
+          err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+          err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
           bestCost = bestCost * pListSort[i].uiCnt + bitCost;
 
           for( Int t = 0; t < uiPLTSize; t++ )
@@ -2142,9 +2148,9 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
             }
 
             err = pal[0] - Palette[0][t];
-            Double cost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_LUMA] - 8)));
-            err = pal[1] - Palette[1][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
-            err = pal[2] - Palette[2][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(g_bitDepth[CHANNEL_TYPE_CHROMA] - 8)));
+            Double cost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)));
+            err = pal[1] - Palette[1][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+            err = pal[2] - Palette[2][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
             cost *= pListSort[i].uiCnt;
             if( cost < bestCost )
             {

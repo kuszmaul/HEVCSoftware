@@ -73,10 +73,9 @@ public:
   Void  uninit                 ()                { m_pcBinIf = 0; }
 
   //  Virtual list
-  Void  resetEntropy           ();
-  SliceType determineCabacInitIdx  ();
+  Void  resetEntropy           (const TComSlice *pSlice);
+  SliceType determineCabacInitIdx  (const TComSlice *pSlice);
   Void  setBitstream           ( TComBitIf* p )  { m_pcBitIf = p; m_pcBinIf->init( p ); }
-  Void  setSlice               ( TComSlice* p )  { m_pcSlice = p;                       }
 
   Void  load                   ( const TEncSbac* pSrc  );
   Void  loadIntraDirMode       ( const TEncSbac* pScr, const ChannelType chType  );
@@ -99,8 +98,8 @@ public:
   Void  codeSaoUflc          ( UInt uiLength, UInt  uiCode );
   Void  codeSAOSign          ( UInt  uiCode);  //<! code SAO offset sign
 
-  Void codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
-  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
+  Void codeSAOOffsetParam(ComponentID compIdx, SAOOffset& ctbParam, Bool sliceEnabled, const Int channelBitDepth);
+  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, const BitDepths &bitDepths
                     , Bool* sliceEnabled
                     , Bool leftMergeAvail
                     , Bool aboveMergeAvail
@@ -117,7 +116,7 @@ private:
   Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
   Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
-  Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const ChannelType channelType );
+  Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
 
   Void  xCopyFrom            ( const TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( const TEncSbac* pSrc );
@@ -130,7 +129,6 @@ private:
 
 protected:
   TComBitIf*    m_pcBitIf;
-  TComSlice*    m_pcSlice;
   TEncBinIf*    m_pcBinIf;
 
   //--Adaptive loop filter

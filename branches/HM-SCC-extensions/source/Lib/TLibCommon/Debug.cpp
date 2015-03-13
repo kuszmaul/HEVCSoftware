@@ -194,8 +194,6 @@ Void printMacroSettings()
 //Debugging
 
 UInt  g_debugCounter  = 0;
-Bool  g_printDebug    = false;
-Void* g_debugAddr     = NULL;
 
 #ifdef DEBUG_ENCODER_SEARCH_BINS
 const UInt debugEncoderSearchBinTargetLine = 0;
