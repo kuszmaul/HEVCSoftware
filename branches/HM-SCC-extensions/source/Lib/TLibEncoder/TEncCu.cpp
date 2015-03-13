@@ -969,38 +969,38 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                   if( intraCost >= dTH2 ) // only check Nx2N depending on best intraCost (and intraBCcost so far)
                   {
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N], false, (iMVCandList[SIZE_Nx2N]+8) DEBUG_STRING_PASS_INTO(sDebug));
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N], false, (iMVCandList[SIZE_Nx2N]+8) DEBUG_STRING_PASS_INTO(sDebug));
 #else
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
 #endif
-                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                  intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
-                  if(rpcBestCU->getSlice()->getSliceType() != I_SLICE)
-                  {
-                    xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_Nx2N]);
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
-                  }
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+                    if(rpcBestCU->getSlice()->getSliceType() != I_SLICE)
+                    {
+                      xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_Nx2N]);
+                      rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                      intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
+                    }
 #endif
                   }
 
                   if( intraCost >= dTH2 && !bIsLosslessMode ) // only check 2NxN depending on best intraCost (and intraBCcost so far) and if it is not lossless
                   {
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN], false, (iMVCandList[SIZE_2NxN]+8) DEBUG_STRING_PASS_INTO(sDebug));
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN], false, (iMVCandList[SIZE_2NxN]+8) DEBUG_STRING_PASS_INTO(sDebug));
 #else
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
+                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
 #endif
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
                     if(rpcBestCU->getSlice()->getSliceType() != I_SLICE)
-                  {
-                    xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_2NxN]);
-                    rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                    intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
-                  }
+                    {
+                      xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_2NxN]);
+                      rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+                      intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
+                    }
 #endif
                 }
 
@@ -2557,7 +2557,7 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
 )
 {
   DEBUG_STRING_NEW( sTest )
-    UInt uiDepth = rpcTempCU->getDepth( 0 );
+  UInt uiDepth = rpcTempCU->getDepth( 0 );
   rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uiDepth );
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
@@ -2571,7 +2571,7 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
     m_ppcPredYuvTemp[uiDepth],
     m_ppcResiYuvTemp[uiDepth],
     m_ppcRecoYuvTemp[uiDepth]
-  DEBUG_STRING_PASS_INTO( sTest ),
+    DEBUG_STRING_PASS_INTO( sTest ),
     iMVCandList,
     false
     );

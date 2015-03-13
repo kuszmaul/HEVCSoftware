@@ -828,10 +828,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-    if( pcSlice->getSPS()->getUseIntraBlockCopy() && (pcSlice->getSliceType() == I_SLICE) )
-      WRITE_UVLC( P_SLICE,        "slice_type" );
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() && (pcSlice->getSliceType() == I_SLICE) )
+    {
+      WRITE_UVLC( P_SLICE, "slice_type" );
+    }
     else
-    WRITE_UVLC( pcSlice->getSliceType(),       "slice_type" );
+    {
+      WRITE_UVLC( pcSlice->getSliceType(), "slice_type" );
+    }
 #else
     WRITE_UVLC( pcSlice->getSliceType(),       "slice_type" );
 #endif

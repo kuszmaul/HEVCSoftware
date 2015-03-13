@@ -1766,7 +1766,7 @@ Void TAppEncCfg::xCheckParameter()
     fprintf(stderr, "****************************************************************************\n");
 
     m_bTransquantBypassInferTUSplit = false;
-  }  
+  }
 #endif
 
   xConfirmPara (m_transformSkipLog2MaxSize < 2, "Transform Skip Log2 Max Size must be at least 2 (4x4)");

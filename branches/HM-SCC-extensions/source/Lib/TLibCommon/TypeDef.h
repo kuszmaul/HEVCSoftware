@@ -287,7 +287,7 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_HIGH_BIT_DEPTH_BUG_FIX                       1                     
+#define SCM_HIGH_BIT_DEPTH_BUG_FIX                       1
 #define SCM_T0121_INFER_TU_SPLIT_ENCODER                 1
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
 #define SCM_T0140_ACT_QP_OFFSET                          1 ///< Signal qp offsets for ACT color components at PPS/Slice level 
@@ -948,7 +948,7 @@ public:
     return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]) && (uiData[2] == sElement.uiData[2]);
   }
 
-  Void ResetElement() 
+  Void ResetElement()
   {
     uiCnt = uiShift = uiLastCnt = 0;
     uiData[0] = uiData[1] = uiData[2] = 0;
