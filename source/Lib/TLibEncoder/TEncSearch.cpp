@@ -4277,7 +4277,7 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
     Double dAveBitsPerPix[NUM_PLT_RUN];
 
     uiRun = 0;
-    Bool RunValid = calLeftRun(pValue, pSPoint, uiStartPos, uiTotal, uiRun, pEscapeFlag);
+    Bool RunValid = calLeftRun(pcCU, pValue, pSPoint, uiStartPos, uiTotal, uiRun, pEscapeFlag);
 
     if(RunValid)
     {
@@ -4289,7 +4289,7 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
     }
 
     uiCopyRun = 0;
-    Bool CopyValid = calAboveRun(pValue, pSPoint, uiWidth, uiStartPos, uiTotal, uiCopyRun, pEscapeFlag);
+    Bool CopyValid = calAboveRun(pcCU, pValue, pSPoint, uiWidth, uiStartPos, uiTotal, uiCopyRun, pEscapeFlag);
 
     if(CopyValid)
     {

@@ -1064,8 +1064,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIMasteringDisplayWhitePoint",                   cfg_DisplayWhitePointCode,     cfg_DisplayWhitePointCode, "Mastering display white point CIE xy coordinates in normalised increments of 1/50000 (e.g. 0.333 = 16667)")
   ("ColourTransform",                                 m_useColourTrans,                                   false, "Enable the colour transform (not valid in V1 profiles")
   ("PaletteMode",                                     m_usePaletteMode,                                  false, "Enable the palette mode (not valid in V1 profiles")
-  ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       31u,  "Maximum palette size")
-  ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                   64u,  "Maximum palette predictor size")
+  ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       63u,  "Maximum palette size")
+  ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                  128u,  "Maximum palette predictor size")
 #if SCM_T0069_AMVR_REFINEMENT
   ("MotionVectorResolutionControlIdc",                m_motionVectorResolutionControlIdc,                    0, "0 (default): use 1/4-pel mv; 1: use integer-pel mv; 2: adaptive mv resolution (not valid in V1 profiles)")
 #else

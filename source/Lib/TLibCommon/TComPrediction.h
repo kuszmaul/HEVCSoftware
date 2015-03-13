@@ -158,8 +158,8 @@ public:
 #else
   Void  derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc [3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize);
 #endif
-  Bool  calLeftRun(Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
-  Bool  calAboveRun(Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
+  Bool  calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
+  Bool  calAboveRun(TComDataCU* pcCU, Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
   Void  calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel*paRecoValue[3],
                       UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
   Void  preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize);

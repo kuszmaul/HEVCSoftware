@@ -950,7 +950,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       if( pCtu->getLastPLTInLcuSizeFinal(0) && numPreds <= pCtu->getLastPLTInLcuSizeFinal(0) )
       {
         srcCtu = ctuRsAddr;
-        if( MAX_PLT_PRED_SIZE <= numPreds && !constraint )
+        if( pcSlice->getSPS()->getPLTMaxPredSize() <= numPreds && !constraint )
         {
           break;
         }
@@ -984,7 +984,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
         pcSlice->setPPSId(ppsid);
       }
 #endif
-      numPreds = std::min(lastPLTSize[0], (UChar)MAX_PLT_PRED_SIZE);
+      numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getPLTMaxPredSize());
       pcPPS->setNumPLTPred(numPreds);
       //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
       for ( int i=0; i<3; i++ )

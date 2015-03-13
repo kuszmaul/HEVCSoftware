@@ -1823,14 +1823,14 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
   }
 }
 
-Bool TComPrediction::calLeftRun(Pel* pValue, UChar* pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
+Bool TComPrediction::calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
 {
   UInt uiIdx = uiStartPos;
   Pel *pcIndexBlock = m_cIndexBlock;
   while (uiIdx < uiTotal)
   {
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + MAX_PLT_SIZE : pcIndexBlock[uiTraIdx];
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
     pSPoint[uiTraIdx] = PLT_RUN_LEFT;
@@ -1851,7 +1851,7 @@ Bool TComPrediction::calLeftRun(Pel* pValue, UChar* pSPoint, UInt uiStartPos, UI
   return true;
 }
 
-Bool  TComPrediction::calAboveRun(Pel* pValue, UChar* pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
+Bool  TComPrediction::calAboveRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
 {
   UInt uiIdx = uiStartPos;
   UInt uiY = 0;
@@ -1870,7 +1870,7 @@ Bool  TComPrediction::calAboveRun(Pel* pValue, UChar* pSPoint, UInt uiWidth, UIn
     UInt uiStride = uiWidth;
     uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
 
-    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + MAX_PLT_SIZE : pcIndexBlock[uiTraIdx];
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
     pSPoint[uiTraIdx] = PLT_RUN_ABOVE;

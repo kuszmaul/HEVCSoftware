@@ -185,8 +185,7 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_PLT_LAST_RUN_TYPE_CTX     1
 #endif
 #define NUM_SCAN_ROTATION_FLAG_CTX    1
-#define MAX_PLT_SIZE                  31
-#define MAX_PLT_PRED_SIZE             64
+#define MAX_PLT_PRED_SIZE             128
 
 struct PaletteInfoBuffer
 {
