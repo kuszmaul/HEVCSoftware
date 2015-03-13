@@ -4188,6 +4188,11 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   const UInt uiWidth  = pcCU->getWidth(0);
   const UInt uiHeight = pcCU->getHeight(0);
   const UInt uiTotalPixel = uiWidth * uiHeight;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+  const UInt uiTotalPixelC = uiTotalPixel >> uiScaleX >> uiScaleY;
+#endif
   UInt uiPLTSize = pcCU->getPLTSize(0, 0);
 
   paLevel[0] = pcCU->getLevel(COMPONENT_Y);
@@ -4223,7 +4228,18 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
 
     for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      if ( ch == 0)
+      {
+        memcpy(m_paBestLevel[ch], pPixelValue[ch], sizeof(Pel) * uiTotalPixel);
+      }
+      else
+      {
+        memcpy(m_paBestLevel[ch], pPixelValue[ch], sizeof(Pel) * uiTotalPixelC);
+      }
+#else
       memcpy(m_paBestLevel[ch], pPixelValue[ch], sizeof(Pel) * uiTotalPixel);
+#endif
     }
     memcpy(m_paBestSPoint, paSPoint[0], sizeof(UChar) * uiTotalPixel);
     memcpy(m_paBestRun, pRun, sizeof(TCoeff) * uiTotalPixel);
