@@ -91,6 +91,10 @@ public:
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, const BitDepths &bitDepths, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -100,6 +104,11 @@ public:
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -133,6 +142,13 @@ public:
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
   Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void estBvdBin0Cost    (Int *Bin0Cost) { assert(0); }
+#endif
 };
 
 //! \}

@@ -240,6 +240,13 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
      )
     ;
 
+  pps_extension_flags[PPS_EXT__SCC] = (
+     pcPPS->getUseColourTrans()
+#if SCM_T0048_PLT_PRED_IN_PPS
+  || pcPPS->getNumPLTPred() > 0
+#endif
+    );
+
   // Other PPS extension flags checked here.
 
   for(Int i=0; i<NUM_PPS_EXTENSION_FLAGS; i++)
@@ -297,6 +304,37 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
             WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+            break;
+          case PPS_EXT__SCC:
+            WRITE_FLAG( (pcPPS->getUseColourTrans() ? 1 : 0),                     "adaptive_colour_trans_flag" );
+#if SCM_T0140_ACT_QP_OFFSET
+            if(pcPPS->getUseColourTrans())
+            {
+               WRITE_FLAG( (pcPPS->getUseSliceACTOffset() ? 1 : 0), "pps_slice_act_qp_offset_present_flag"    );
+               
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Y ) + 5 ), "pps_act_y_qp_offset_plus5");
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cb) + 5 ), "pps_act_cb_qp_offset_plus5");
+               WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cr) + 3 ), "pps_act_cr_qp_offset_plus3");
+            }
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+            WRITE_FLAG( (pcPPS->getNumPLTPred() ? 1 : 0),                         "palette_predictor_initializer_flag" );            
+            if( pcPPS->getNumPLTPred() )
+            {
+              //printf("PPS %u: %u palette entries\n", pcPPS->getPPSId(), pcPPS->getNumPLTPred());
+              WRITE_UVLC( pcPPS->getPalettePredictorBitDepth( CHANNEL_TYPE_LUMA )  -8, "luma_bit_depth_entry_minus8" );
+              WRITE_UVLC( pcPPS->getPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA )-8, "chroma_bit_depth_entry_minus8" );
+              WRITE_UVLC( pcPPS->getNumPLTPred()-1,                                    "num_palette_entries_minus1" );
+
+              for ( int j=0; j<pcPPS->getNumPLTPred(); j++ )
+              {
+                for ( int k=0; k<MAX_NUM_COMPONENT; k++ )
+                {
+                  xWriteCode( pcPPS->getPLTPred( k )[j], pcPPS->getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );
+                }
+              }
+            }
+#endif
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.
@@ -589,6 +627,17 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
        || pcSPS->getAlignCABACBeforeBypass()
     );
 
+  sps_extension_flags[SPS_EXT__SCC] = (
+        pcSPS->getUseIntraBlockCopy()
+     || pcSPS->getUsePLTMode()
+#if SCM_T0069_AMVR_REFINEMENT
+     || pcSPS->getMotionVectorResolutionControlIdc() != 0
+#else
+     || pcSPS->getUseAdaptiveMvResolution()
+#endif
+     || pcSPS->getDisableIntraBoundaryFilter()
+    );
+
   // Other SPS extension flags checked here.
 
   for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
@@ -633,6 +682,26 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
             WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_offsets_enabled_flag" );
             WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "persistent_rice_adaptation_enabled_flag" );
             WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "cabac_bypass_alignment_enabled_flag" );
+            break;
+          case SPS_EXT__SCC:
+            WRITE_FLAG( (pcSPS->getUseIntraBlockCopy() ? 1 : 0),                    "intra_block_copy_enabled_flag");
+            WRITE_FLAG( (pcSPS->getUsePLTMode() ? 1 : 0),                           "palette_mode_enabled_flag");
+
+            if (pcSPS->getUsePLTMode())
+            {
+              WRITE_UVLC(pcSPS->getPLTMaxSize(),                                     "palette_max_size");
+#if SCM_T0134_DELTA_PLT_PREDICTOR_SIZE
+              WRITE_UVLC(pcSPS->getPLTMaxPredSize() - pcSPS->getPLTMaxSize(), "delta_palette_max_predictor_size");
+#else
+              WRITE_UVLC(pcSPS->getPLTMaxPredSize(),                                 "palette_max_predictor_size");
+#endif              
+            }
+#if SCM_T0069_AMVR_REFINEMENT
+            WRITE_CODE( pcSPS->getMotionVectorResolutionControlIdc(), 2,             "motion_vector_resolution_control_idc");
+#else
+            WRITE_FLAG( (pcSPS->getUseAdaptiveMvResolution() ? 1 : 0),              "adaptive_mv_resolution_flag" );
+#endif
+            WRITE_FLAG( (pcSPS->getDisableIntraBoundaryFilter() ? 1 : 0),           "intra_boundary_filter_disabled_flag");
             break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
@@ -758,7 +827,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG(0, "slice_reserved_flag[]");
     }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() && (pcSlice->getSliceType() == I_SLICE) )
+    {
+      WRITE_UVLC( P_SLICE, "slice_type" );
+    }
+    else
+    {
+      WRITE_UVLC( pcSlice->getSliceType(), "slice_type" );
+    }
+#else
     WRITE_UVLC( pcSlice->getSliceType(),       "slice_type" );
+#endif
 
     if( pcSlice->getPPS()->getOutputFlagPresentFlag() )
     {
@@ -901,7 +981,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     //check if numrefidxes match the defaults. If not, override
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if (!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
+#else
     if (!pcSlice->isIntra())
+#endif
     {
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");
@@ -920,14 +1004,25 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
     else
     {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if ( !pcSlice->getSPS()->getUseIntraBlockCopy() )
+      {
+#endif
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      }
+#endif
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
 
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)
     {
       TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if(!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
+#else
       if(!pcSlice->isIntra())
+#endif
       {
         WRITE_FLAG(pcSlice->getRefPicListModification()->getRefPicListModificationFlagL0() ? 1 : 0,       "ref_pic_list_modification_flag_l0" );
         if (pcSlice->getRefPicListModification()->getRefPicListModificationFlagL0())
@@ -976,9 +1071,17 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getMvdL1ZeroFlag() ? 1 : 0,   "mvd_l1_zero_flag");
     }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if(!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
+#else
     if(!pcSlice->isIntra())
+#endif
     {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if ((!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy()) && pcSlice->getPPS()->getCabacInitPresentFlag())
+#else
       if (!pcSlice->isIntra() && pcSlice->getPPS()->getCabacInitPresentFlag())
+#endif
       {
         SliceType sliceType   = pcSlice->getSliceType();
         SliceType  encCABACTableIdx = pcSlice->getEncCABACTableIdx();
@@ -995,21 +1098,42 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         WRITE_FLAG( pcSlice->getColFromL0Flag(), "collocated_from_l0_flag" );
       }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+      if ( (pcSlice->getSliceType() != I_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy()) &&
+#else
       if ( pcSlice->getSliceType() != I_SLICE &&
+#endif
         ((pcSlice->getColFromL0Flag()==1 && pcSlice->getNumRefIdx(REF_PIC_LIST_0)>1)||
         (pcSlice->getColFromL0Flag()==0  && pcSlice->getNumRefIdx(REF_PIC_LIST_1)>1)))
       {
         WRITE_UVLC( pcSlice->getColRefIdx(), "collocated_ref_idx" );
       }
     }
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( (pcSlice->getPPS()->getUseWP() && (pcSlice->getSliceType()==P_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy())) || (pcSlice->getPPS()->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
+#else
     if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
+#endif
     {
       xCodePredWeightTable( pcSlice );
     }
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( !pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy() )
+#else
     if (!pcSlice->isIntra())
+#endif
     {
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#if SCM_T0069_AMVR_REFINEMENT
+      if ( pcSlice->getSPS()->getMotionVectorResolutionControlIdc() == 2 )
+#else
+      if ( pcSlice->getSPS()->getUseAdaptiveMvResolution() )
+#endif
+      {
+        WRITE_FLAG( pcSlice->getUseIntegerMv() ? 1 : 0, "use_integer_mv" );
+      }
     }
     Int iCode = pcSlice->getSliceQp() - ( pcSlice->getPPS()->getPicInitQPMinus26() + 26 );
     WRITE_SVLC( iCode, "slice_qp_delta" );
@@ -1030,6 +1154,15 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "cu_chroma_qp_offset_enabled_flag");
     }
+
+#if SCM_T0140_ACT_QP_OFFSET
+    if( pcSlice->getPPS()->getUseSliceACTOffset () )
+    {
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Y), "slice_act_y_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cb), "slice_act_cb_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cr), "slice_act_cr_qp_offset");
+    }
+#endif
 
     if (pcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
     {
@@ -1204,6 +1337,13 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   assert(0);
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TEncCavlc::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
 Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1228,6 +1368,17 @@ Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx 
 {
   assert(0);
 }
+
+Void TEncCavlc:: codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
+{
+  assert(0);
+}
+
 
 Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -1287,7 +1438,28 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TEncCavlc::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
 
+Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+Void TEncCavlc::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TEncCavlc::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{
+  assert(0);
+}
+#endif
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1508,5 +1680,11 @@ Void TEncCavlc::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
  {
    assert(0);
  }
+
+Void TEncCavlc:: codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
 
 //! \}

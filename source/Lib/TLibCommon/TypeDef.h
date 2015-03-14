@@ -39,6 +39,7 @@
 #define __TYPEDEF__
 
 #include <vector>
+#include <cstdlib>
 
 //! \ingroup TLibCommon
 //! \{
@@ -82,7 +83,6 @@
 // Tool Switches
 // ====================================================================================================================
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
-
 #define HARMONIZE_GOP_FIRST_FIELD_COUPLE                  1
 #define EFFICIENT_FIELD_IRAP                              1
 #define ALLOW_RECOVERY_POINT_AS_RAP                       1
@@ -270,7 +270,6 @@
 # define DISTORTION_PRECISION_ADJUSTMENT(x) (x)
 #endif
 
-
 //------------------------------------------------
 // Error checks
 //------------------------------------------------
@@ -278,6 +277,55 @@
 #if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && (RExt__HIGH_BIT_DEPTH_SUPPORT == 0))
 #error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__HIGH_BIT_DEPTH_SUPPORT
 #endif
+
+// ====================================================================================================================
+// SCC control settings
+// ====================================================================================================================
+
+
+//------------------------------------------------
+// Processing controls
+//------------------------------------------------
+
+#define SCM_HIGH_BIT_DEPTH_BUG_FIX                       1 ///< Fix compilation issue with high Bit-depth is enabled.
+#define SCM_T0121_INFER_TU_SPLIT_ENCODER                 1 ///< encoder operation to infer split_transform_flag
+#define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
+#define SCM_T0140_ACT_QP_OFFSET                          1 ///< Signal qp offsets for ACT color components at PPS/Slice level 
+#define SCM_T0063_NUM_PLT_ENTRY                          1 ///< use EG0 to code number of new palette entries
+#define SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION      1 ///< improved palette table generation
+#define SCM_T0069_AMVR_REFINEMENT                        1 ///< high-level syntax refinement for adaptive motion vector resolution
+#define SCM_T0058_REMOVE_64x64_PLT                       1 ///< Disallow palette mode for 64x64 CUs
+#define SCM_T0078_REMOVE_PLT_RUN_MODE_CTX                1 ///< Remove context in palette mode
+#define SCM_T0116_IBCSEARCH_OPTIMIZE                     1 ///< IBC search improvement
+#define SCM_T0134_DELTA_PLT_PREDICTOR_SIZE               1 ///< Delta signaling for palette predictor size
+#define SCM_T0183_INFER_PLT_ESC_PRESENT_VAL_FLAG         1 ///< Include inference rule for value of syntax element pallete_escape_val_present_flag when not present
+#define SCM_T0072_T0109_T0120_PLT_NON444                 1 ///< palette mode support for non-444 formats
+#define SCM_T0118_T0112_ESCAPE_COLOR_CODING              1 ///< Improvement to escape color coding
+#define SCM_T0064_REMOVE_PLT_SHARING                     1 ///< JCTVC-T0064: remove palette sharing flag
+#define SCM_T0065_PLT_IDX_GROUP                          1 ///< JCTVC-T0065: group index at front
+#define SCM_T0048_PLT_PRED_IN_PPS                        1 ///< Initialize palette predictor from PPS
+#define SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END        1 ///< grouping escape color at the end of palette coding, according to meeting note
+#define SCM_T0132_ACT_CLIP                               1 ///< IACT Clipping
+#define SCM_FIX_FOX_TICKET_1376                          1 ///< Fix for ticket #1376
+
+//------------------------------------------------
+// Derived macros
+//------------------------------------------------
+
+#define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
+#define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
+#define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+#define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
+#endif
+
+
+//------------------------------------------------
+// Backwards-compatibility
+//------------------------------------------------
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -410,6 +458,9 @@ enum PredMode
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
   NUMBER_OF_PREDICTION_MODES = 2,
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  MODE_INTRABC               = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
+#endif
 };
 
 /// reference list index
@@ -417,7 +468,17 @@ enum RefPicList
 {
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  REF_PIC_LIST_INTRABC         = 0,
+#endif
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
   NUM_REF_PIC_LIST_01          = 2,
+  NUM_REF_PIC_LIST_CU_MV_FIELD = 2,
+#else
+  REF_PIC_LIST_INTRABC         = 2,
+  NUM_REF_PIC_LIST_01          = 3,
+  NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
+#endif
   REF_PIC_LIST_X               = 100  ///< special mark
 };
 
@@ -524,7 +585,8 @@ enum COEFF_SCAN_TYPE
   SCAN_DIAG = 0,        ///< up-right diagonal scan
   SCAN_HOR  = 1,        ///< horizontal first scan
   SCAN_VER  = 2,        ///< vertical first scan
-  SCAN_NUMBER_OF_TYPES = 3
+  SCAN_TRAV = 3,
+  SCAN_NUMBER_OF_TYPES = 4
 };
 
 enum COEFF_SCAN_GROUP_TYPE
@@ -622,6 +684,7 @@ namespace Profile
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
     HIGHTHROUGHPUTREXT = 5
+   ,MAINSCC  = 31 // Placeholder profile for development
   };
 }
 
@@ -667,6 +730,7 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
+  SPS_EXT__SCC            = 6, // place holder
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -675,6 +739,7 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
+  PPS_EXT__SCC            = 6, // place holder
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 
@@ -838,6 +903,113 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
+enum PLTRunMode
+{
+  PLT_RUN_LEFT  = 0,
+  PLT_RUN_ABOVE = 1,
+  NUM_PLT_RUN   = 2
+};
+
+enum PLTScanMode
+{
+  PLT_SCAN_HORTRAV = 0,
+  PLT_SCAN_VERTRAV = 1,
+  NUM_PLT_SCAN     = 2
+};
+
+class SortingElement
+{
+public:
+  UInt uiCnt;
+  Int uiData[3];
+  Int uiShift, uiLastCnt, uiSumData[3];
+
+  inline Bool operator<(const SortingElement &other) const
+  {
+    return uiCnt > other.uiCnt;
+  }
+
+  SortingElement() {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+  Void setAll(UInt ui0, UInt ui1, UInt ui2) {
+    if( !ui0 && !ui1 && !ui2 )
+    {
+      uiShift = uiLastCnt = 0;
+      uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+    }
+    uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
+  }
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  Bool EqualData(SortingElement sElement)
+  {
+    return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]) && (uiData[2] == sElement.uiData[2]);
+  }
+
+  Void ResetElement()
+  {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+#endif
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit, const BitDepths& bitDepths)
+  {
+    return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit
+        && ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit
+        && ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit;
+  }
+  UInt getSAD(SortingElement sElement, const BitDepths& bitDepths)
+  {
+    return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]  -8) )
+         + ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) )
+         + ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) );
+  }
+
+  Void copyDataFrom(SortingElement sElement) {
+    uiData[0] = sElement.uiData[0];
+    uiData[1] = sElement.uiData[1];
+    uiData[2] = sElement.uiData[2];
+    uiShift = 0; uiLastCnt = 1; uiSumData[0] = uiData[0]; uiSumData[1] = uiData[1]; uiSumData[2] = uiData[2];
+  }
+  Void copyAllFrom(SortingElement sElement) {
+    copyDataFrom(sElement); uiCnt = sElement.uiCnt;
+    uiSumData[0] = sElement.uiSumData[0]; uiSumData[1] = sElement.uiSumData[1]; uiSumData[2] = sElement.uiSumData[2];
+    uiLastCnt = sElement.uiLastCnt; uiShift = sElement.uiShift;
+  }
+
+  Void addElement(const SortingElement& sElement)
+  {
+    uiCnt++;
+    for ( int i=0; i<3; i++ )
+    {
+      uiSumData[i] += sElement.uiData[i];
+    }
+    if( uiCnt>1 && uiCnt==2*uiLastCnt )
+    {
+      UInt uiRnd;
+      if( uiCnt == 2 )
+      {
+        uiShift = 0;
+        uiRnd   = 1;
+      }
+      else
+      {
+        uiRnd = 1<<uiShift;
+      }
+      uiShift++;
+      for ( int i=0; i<3; i++ )
+      {
+        uiData[i] = (uiSumData[i] + uiRnd) >> uiShift;
+      }
+      uiLastCnt = uiCnt;
+    }
+  }
+};
+
+
 //! \}
 
 #endif

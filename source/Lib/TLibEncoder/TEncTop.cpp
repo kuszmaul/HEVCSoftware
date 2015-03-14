@@ -88,11 +88,14 @@ Void TEncTop::create ()
 {
   // initialize global variables
   initROM();
+  TComHash::initBlockSizeToIndex();
 
   // create processing unit classes
   m_cGOPEncoder.        create( );
   m_cSliceEncoder.      create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth );
-  m_cCuEncoder.         create( m_maxTotalCUDepth, m_maxCUWidth, m_maxCUHeight, m_chromaFormatIDC );
+  m_cCuEncoder.         create( m_maxTotalCUDepth, m_maxCUWidth, m_maxCUHeight, m_chromaFormatIDC
+                         ,m_uiPLTMaxSize, m_uiPLTMaxPredSize
+     );
   if (m_bUseSAO)
   {
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth, m_saoOffsetBitShift[CHANNEL_TYPE_LUMA], m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] );
@@ -492,13 +495,13 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
     if ( getUseAdaptiveQP() )
     {
       TEncPic* pcEPic = new TEncPic;
-      pcEPic->create( m_cSPS, m_cPPS, m_cPPS.getMaxCuDQPDepth()+1, false);
+      pcEPic->create( m_cSPS, m_cPPS, m_cPPS.getMaxCuDQPDepth()+1, m_cSPS.getPLTMaxSize(), m_cSPS.getPLTMaxPredSize(), false);
       rpcPic = pcEPic;
     }
     else
     {
       rpcPic = new TComPic;
-      rpcPic->create( m_cSPS, m_cPPS, false );
+      rpcPic->create( m_cSPS, m_cPPS, m_cSPS.getPLTMaxSize(), m_cSPS.getPLTMaxPredSize(), false );
     }
 
     m_cListPic.pushBack( rpcPic );
@@ -511,6 +514,14 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+  rpcPic->getHashMap()->clearAll();
+  if( getRGBFormatFlag() && getUseColourTrans() )
+  {
+    if( rpcPic->getPicYuvCSC() == NULL )
+    {
+      rpcPic->allocateCSCBuffer( m_iSourceWidth, m_iSourceHeight, m_chromaFormatIDC, m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth );
+    }
+  }
 }
 
 Void TEncTop::xInitVPS()
@@ -590,6 +601,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
 
   m_cSPS.setTMVPFlagsPresent((getTMVPModeId() == 2 || getTMVPModeId() == 1));
+  m_cSPS.setDisableIntraBoundaryFilter( m_disableIntraBoundaryFilter );
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
 
@@ -606,6 +618,7 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setUseExtendedPrecision(m_useExtendedPrecision);
+  m_cSPS.setUseIntraBlockCopy(m_useIntraBlockCopy);
   m_cSPS.setUseHighPrecisionPredictionWeighting(m_useHighPrecisionPredictionWeighting);
 
   m_cSPS.setUseSAO( m_bUseSAO );
@@ -613,6 +626,14 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseSingleSignificanceMapContext(m_useSingleSignificanceMapContext);
   m_cSPS.setUseGolombRiceParameterAdaptation(m_useGolombRiceParameterAdaptation);
   m_cSPS.setAlignCABACBeforeBypass(m_alignCABACBeforeBypass);
+  m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
+  m_cSPS.setPLTMaxSize                  (       m_uiPLTMaxSize       );
+  m_cSPS.setPLTMaxPredSize              (       m_uiPLTMaxPredSize   );
+#if SCM_T0069_AMVR_REFINEMENT
+  m_cSPS.setMotionVectorResolutionControlIdc( m_motionVectorResolutionControlIdc );
+#else
+  m_cSPS.setUseAdaptiveMvResolution( m_useAdaptiveMvResolution );
+#endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
@@ -734,6 +755,12 @@ Void TEncTop::xInitPPS()
   m_cPPS.setQpOffset(COMPONENT_Cb, m_chromaCbQpOffset );
   m_cPPS.setQpOffset(COMPONENT_Cr, m_chromaCrQpOffset );
 
+#if SCM_T0140_ACT_QP_OFFSET
+  m_cPPS.setActQpOffset(COMPONENT_Y, m_actYQpOffset );
+  m_cPPS.setActQpOffset(COMPONENT_Cb, m_actCbQpOffset );
+  m_cPPS.setActQpOffset(COMPONENT_Cr, m_actCrQpOffset );
+#endif
+
   m_cPPS.setEntropyCodingSyncEnabledFlag( m_iWaveFrontSynchro > 0 );
   m_cPPS.setTilesEnabledFlag( (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0) );
   m_cPPS.setUseWP( m_useWeightedPred );
@@ -794,7 +821,18 @@ Void TEncTop::xInitPPS()
     }
   }
   assert(bestPos <= 15);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( m_cSPS.getUseIntraBlockCopy() )
+  {
+    m_cPPS.setNumRefIdxL0DefaultActive( bestPos + 1 );
+  }
+  else
+  {
+    m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
+  }
+#else
   m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
+#endif
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());
   m_cPPS.setUseTransformSkip( m_useTransformSkip );
@@ -804,6 +842,7 @@ Void TEncTop::xInitPPS()
   {
     m_cPPS.setDependentSliceSegmentsEnabledFlag( true );
   }
+  m_cPPS.setUseColourTrans( m_useColourTrans );
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.

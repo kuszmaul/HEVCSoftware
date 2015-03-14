@@ -113,6 +113,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
   const UInt uiNumSubstreams = pcSlice->getNumberOfSubstreamSizes()+1;
+//  const UInt uiNumSubstreams = pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() ? pcSlice->getNumberOfSubstreamSizes()+1 : pcSlice->getPPS()->getNumSubstreams();
 
   // init each couple {EntropyDecoder, Substream}
   ppcSubstreams    = new TComInputBitstream*[uiNumSubstreams];
@@ -145,6 +146,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( pcPic );
 
+
   if( pcSlice->getSPS()->getUseSAO() )
   {
     m_pcSAO->reconstructBlkSAOParams(pcPic, pcPic->getPicSym()->getSAOBlkParam());
@@ -154,6 +156,14 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 
   pcPic->compressMotion();
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if(pcSlice->isIntra() && pcSlice->getSPS()->getUseIntraBlockCopy())
+  {
+    c = 'P';
+    assert(pcSlice->getNumRefIdx(REF_PIC_LIST_0) == 1);
+  }
+#endif
+
   if (!pcSlice->isReferenced())
   {
     c += 32;

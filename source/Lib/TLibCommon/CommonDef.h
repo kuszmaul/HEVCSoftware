@@ -48,6 +48,7 @@
 // disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
+
 #include "TypeDef.h"
 
 #ifdef _MSC_VER
@@ -63,7 +64,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.4"                 ///< Current software version
+#define NV_VERSION        "16.4_SCM3.2"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -134,6 +135,8 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 
 #define NOT_VALID                   -1
 
+#define PLT_SIZE_INVALID            0xff
+
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
@@ -141,7 +144,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 template <typename T> inline T Clip3 (const T minVal, const T maxVal, const T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
 template <typename T> inline T ClipBD(const T x, const Int bitDepth)             { return Clip3(T(0), T((1 << bitDepth)-1), x);           }
 
-template <typename T> inline Void Check3( T minVal, T maxVal, T a)
+template <typename T> inline void Check3( T minVal, T maxVal, T a)
 {
   if ((a > maxVal) || (a < minVal))
   {

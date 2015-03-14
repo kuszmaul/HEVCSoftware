@@ -138,7 +138,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
   {
     rpcPic = new TComPic();
 
-    rpcPic->create ( sps, pps, true);
+    rpcPic->create ( sps, pps, sps.getPLTMaxSize(), sps.getPLTMaxPredSize(), true);
 
     m_cListPic.pushBack( rpcPic );
 
@@ -175,7 +175,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( sps, pps, true);
+  rpcPic->create ( sps, pps, sps.getPLTMaxSize(), sps.getPLTMaxPredSize(), true);
 }
 
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
@@ -296,7 +296,6 @@ Void TDecTop::xActivateParameterSets()
     // NOTE: globals were set up here originally. You can now use:
     // g_uiMaxCUDepth = sps->getMaxTotalCUDepth();
     // g_uiAddCUDepth = sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()
-
     //  Get a new picture buffer. This will also set up m_pcPic, and therefore give us a SPS and PPS pointer that we can use.
     xGetNewPicBuffer (*(sps), *(pps), m_pcPic, m_apcSlicePilot->getTLayer());
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
@@ -332,7 +331,6 @@ Void TDecTop::xActivateParameterSets()
         isTopField = (pictureTiming->m_picStruct == 1) || (pictureTiming->m_picStruct == 9) || (pictureTiming->m_picStruct == 11);
       }
     }
-
     //Set Field/Frame coding mode
     m_pcPic->setField(isField);
     m_pcPic->setTopField(isTopField);
@@ -342,7 +340,7 @@ Void TDecTop::xActivateParameterSets()
     m_SEIs.clear();
 
     // Recursive structure
-    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc() );
+    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc(), sps->getPLTMaxSize(), sps->getPLTMaxPredSize() );
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( sps->getMaxTrSize() );
 
@@ -604,6 +602,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       pcSlice->setCheckLDC(bLowDelay);
     }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
+    {
+      // add the current picture into the LIST_0 as the last picture
+      Int orgRefNumInList0 = pcSlice->getNumRefIdx( REF_PIC_LIST_0 );
+      pcSlice->setRefPic( m_pcPic, REF_PIC_LIST_0, orgRefNumInList0 );
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, orgRefNumInList0+1 );
+      pcSlice->getRefPic( REF_PIC_LIST_0, orgRefNumInList0 )->setIsLongTerm( true );
+      pcSlice->setIsUsedAsLongTerm( REF_PIC_LIST_0, orgRefNumInList0, true );
+    }
+#endif
     //---------------
     pcSlice->setRefPOCList();
   }
@@ -643,6 +652,13 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
+  {
+    pcSlice->getRefPic( REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) - 1 )->setIsLongTerm( false );
+  }
+#endif
 
   return false;
 }
