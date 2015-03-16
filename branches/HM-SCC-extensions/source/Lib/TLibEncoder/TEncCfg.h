@@ -638,8 +638,8 @@ public:
   Void setAlignCABACBeforeBypass                       (const Bool value)  { m_alignCABACBeforeBypass = value; }
   Void setRGBFormatFlag                                (const Bool value)  { m_bRGBformat                  = value;  }
   Bool getRGBFormatFlag                                ()            const { return                    m_bRGBformat; }
-  Bool getUseColourTrans                                ()            const { return                  m_useColourTrans;}
-  Void setUseColourTrans                                (const Bool value)  { m_useColourTrans               = value;  }
+  Bool getUseColourTrans                               ()            const { return                  m_useColourTrans;}
+  Void setUseColourTrans                               (const Bool value)  { m_useColourTrans               = value;  }
   Bool getUseLossless                                  ()            const { return m_useLL;}
   Void setUseLossless                                  (const Bool value)  { m_useLL= value;}
   Void setUsePLTMode                                   (const Bool value)  { m_usePaletteMode = value; }
@@ -649,7 +649,7 @@ public:
   Void setPLTMaxPredSize                                (const UInt value) { m_uiPLTMaxPredSize = value; }
   UInt getPLTMaxPredSize()                                           const { return m_uiPLTMaxPredSize; }
 #if SCM_T0069_AMVR_REFINEMENT
-  Void setMotionVectorResolutionControlIdc             ( Int idc )          { m_motionVectorResolutionControlIdc = idc; }
+  Void setMotionVectorResolutionControlIdc             ( Int idc )         { m_motionVectorResolutionControlIdc = idc; }
   Int  getMotionVectorResolutionControlIdc             ()            const { return m_motionVectorResolutionControlIdc; }
 #else
   Void setUseAdaptiveMvResolution                      ( Bool b )          { m_useAdaptiveMvResolution = b; }

@@ -1733,7 +1733,8 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           UInt           uiAddr      = (tuRect.x0 + uiStride*tuRect.y0);
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
-          QpParam cQP(*pcCU, compID);
+
+    const QpParam cQP(*pcCU, compID);
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
@@ -3649,10 +3650,10 @@ Void TComTrQuant::crossComponentPrediction(       TComTU      & rTu,
 
 Void TComTrQuant::adjustBitDepthandLambdaForColourTrans(Int delta_QP)
 {
-  double lamdbaAdjustRate = 1;
+  Double lamdbaAdjustRate = 1;
 
 #if !SCM_T0140_ACT_QP_OFFSET
-  static int pairCheck = 0;
+  static Int pairCheck = 0;
 
   if (delta_QP < 0)
   {

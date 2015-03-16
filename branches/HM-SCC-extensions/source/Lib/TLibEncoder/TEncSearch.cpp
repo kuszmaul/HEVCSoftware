@@ -2139,7 +2139,6 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   return alpha;
 }
 
-
 Void
 TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
                                       TComYuv*    pcPredYuv,
@@ -2781,8 +2780,6 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
   uiPUDistC += uiSingleDist[CHANNEL_TYPE_CHROMA];
   dPUCost   += dSingleCost;
 }
-
-
 
 
 Void
@@ -3859,8 +3856,6 @@ TEncSearch::estIntraPredChromaQTWithModeReuse(TComDataCU* pcCU,
   
   m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[uiDepthCU][CI_CURR_BEST] );
 }
-
-
 
 
 /** Function for encoding and reconstructing luma/chroma samples of a PCM mode CU.

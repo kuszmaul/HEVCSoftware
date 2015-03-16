@@ -141,6 +141,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   // This calculates the common offset for all substreams in this slice.
   const UInt subStreamOffset=pcPic->getSubstreamForCtuAddr(startCtuRsAddr, true, pcSlice);
 
+
   if (depSliceSegmentsEnabled)
   {
     // modify initial contexts with previous slice segment if this is a dependent slice.
@@ -167,7 +168,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       }
     }
   }
-
 
   // for every CTU in the slice segment...
 
@@ -223,7 +223,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
           }
         }
       }
-
     }
 
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)

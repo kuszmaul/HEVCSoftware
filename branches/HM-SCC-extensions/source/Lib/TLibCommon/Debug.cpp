@@ -48,7 +48,7 @@ static const UInt settingValueWidth = 3;
 
 #ifdef DEBUG_STRING
 // these strings are used to reorder the debug output so that the encoder and decoder match.
-const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1]
+const Char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1]
  = {
      {"Start of channel 0 inter debug\n", "Start of channel 1 inter debug\n", "Start of channel 2 inter debug\n", "End of inter residual debug\n"},
      {"Start of channel 0 intra-bc debug\n", "Start of channel 1 intra-bc debug\n", "Start of channel 2 intra-bc debug\n", "End of intra-bc residual debug\n"}
@@ -180,7 +180,7 @@ Void printMacroSettings()
   PRINT_CONSTANT(RExt__HIGH_PRECISION_FORWARD_TRANSFORM,                            settingNameWidth, settingValueWidth);
 
   PRINT_CONSTANT(O0043_BEST_EFFORT_DECODING,                                        settingNameWidth, settingValueWidth);
-  
+
   PRINT_CONSTANT(RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL,                              settingNameWidth, settingValueWidth);
 
   //------------------------------------------------

@@ -949,21 +949,21 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
 
   if( !pcCU->getSlice()->getPPS()->getUseColourTrans () )
   {
-  const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
-  for (UInt chType=CHANNEL_TYPE_LUMA; chType<numChType; chType++)
-  {
-    const ChannelType chanType=ChannelType(chType);
-    const Bool NxNPUHas4Parts = ::isChroma(chanType) ? enable4ChromaPUsInIntraNxNCU(pcCU->getPic()->getChromaFormat()) : true;
-    const UInt uiInitTrDepth = ( pcCU->getPartitionSize(0) != SIZE_2Nx2N && NxNPUHas4Parts ? 1 : 0 );
-
-    TComTURecurse tuRecurseCU(pcCU, 0);
-    TComTURecurse tuRecurseWithPU(tuRecurseCU, false, (uiInitTrDepth==0)?TComTU::DONT_SPLIT : TComTU::QUAD_SPLIT);
-
-    do
+    const UInt numChType = pcCU->getPic()->getChromaFormat()!=CHROMA_400 ? 2 : 1;
+    for (UInt chType=CHANNEL_TYPE_LUMA; chType<numChType; chType++)
     {
-      xIntraRecQT( m_ppcYuvReco[uiDepth], m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], chanType, tuRecurseWithPU );
-    } while (tuRecurseWithPU.nextSection(tuRecurseCU));
-  }
+      const ChannelType chanType=ChannelType(chType);
+      const Bool NxNPUHas4Parts = ::isChroma(chanType) ? enable4ChromaPUsInIntraNxNCU(pcCU->getPic()->getChromaFormat()) : true;
+      const UInt uiInitTrDepth = ( pcCU->getPartitionSize(0) != SIZE_2Nx2N && NxNPUHas4Parts ? 1 : 0 );
+
+      TComTURecurse tuRecurseCU(pcCU, 0);
+      TComTURecurse tuRecurseWithPU(tuRecurseCU, false, (uiInitTrDepth==0)?TComTU::DONT_SPLIT : TComTU::QUAD_SPLIT);
+
+      do
+      {
+        xIntraRecQT( m_ppcYuvReco[uiDepth], m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], chanType, tuRecurseWithPU );
+      } while (tuRecurseWithPU.nextSection(tuRecurseCU));
+    }
   }
   else
   {

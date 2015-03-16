@@ -398,7 +398,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             {
                READ_FLAG( uiCode, "pps_slice_act_qp_offset_present_flag"    ); pcPPS->setUseSliceACTOffset(uiCode != 0);
                
-               int actQpOffset; 
+               Int actQpOffset; 
                READ_SVLC(actQpOffset, "pps_act_y_qp_offset_plus5");  pcPPS->setActQpOffset(COMPONENT_Y, actQpOffset - 5 );
                READ_SVLC(actQpOffset, "pps_act_cb_qp_offset_plus5"); pcPPS->setActQpOffset(COMPONENT_Cb, actQpOffset - 5 );
                READ_SVLC(actQpOffset, "pps_act_cr_qp_offset_plus3"); pcPPS->setActQpOffset(COMPONENT_Cr, actQpOffset - 3 );
@@ -1805,7 +1805,7 @@ Void TDecCavlc::parsePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 
 Void TDecCavlc::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-    assert(0);
+  assert(0);
 }
 
 #if !SCM_T0064_REMOVE_PLT_SHARING
