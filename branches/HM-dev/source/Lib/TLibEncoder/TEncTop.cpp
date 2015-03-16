@@ -270,17 +270,19 @@ Void TEncTop::xInitScalingLists()
     assert(0);
   }
 
-  // Prepare delta's:
-  for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
+  if (getUseScalingListId() != SCALING_LIST_OFF)
   {
-    const Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
-
-    for(UInt listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
+    // Prepare delta's:
+    for(UInt sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
     {
-      m_cSPS.getScalingList().checkPredMode( sizeId, listId );
+      const Int predListStep = (sizeId == SCALING_LIST_32x32? (SCALING_LIST_NUM/NUMBER_OF_PREDICTION_MODES) : 1); // if 32x32, skip over chroma entries.
+
+      for(UInt listId = 0; listId < SCALING_LIST_NUM; listId+=predListStep)
+      {
+        m_cSPS.getScalingList().checkPredMode( sizeId, listId );
+      }
     }
   }
-
 }
 
 // ====================================================================================================================
