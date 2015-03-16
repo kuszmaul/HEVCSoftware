@@ -39,7 +39,7 @@
 #include "TComDataCU.h"
 #include "TComTU.h"
 #include "TComPic.h"
-#include <math.h>
+#include <cmath>
 //! \ingroup TLibCommon
 //! \{
 

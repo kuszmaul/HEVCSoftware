@@ -1072,7 +1072,7 @@ private:
   Bool             m_listsModificationPresentFlag;
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
-  Bool     m_useColourTrans;
+  Bool             m_useColourTrans;
 #if SCM_T0048_PLT_PRED_IN_PPS
   UInt             m_uiNumPLTPred;
   Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
@@ -1355,7 +1355,7 @@ private:
   Bool                       m_useIntegerMv;
 
 #if SCM_T0116_IBCSEARCH_OPTIMIZE
-  TComPic                    *m_pcLastEncPic;
+  TComPic*                   m_pcLastEncPic;
 #endif
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.

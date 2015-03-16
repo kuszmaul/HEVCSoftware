@@ -47,8 +47,8 @@
 #include <TLibCommon/CommonDef.h>
 
 #ifdef DEBUG_STRING
-extern const char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1];
-extern const char *partSizeToString[NUMBER_OF_PART_SIZES];
+extern const Char *debug_reorder_data_token[2/*Inter=0, Intra block copy=1*/][MAX_NUM_COMPONENT+1];
+extern const Char *partSizeToString[NUMBER_OF_PART_SIZES];
 #endif
 
 // ---------------------------------------------------------------------------------------------- //

@@ -296,6 +296,7 @@ Void TDecTop::xActivateParameterSets()
     // NOTE: globals were set up here originally. You can now use:
     // g_uiMaxCUDepth = sps->getMaxTotalCUDepth();
     // g_uiAddCUDepth = sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()
+
     //  Get a new picture buffer. This will also set up m_pcPic, and therefore give us a SPS and PPS pointer that we can use.
     xGetNewPicBuffer (*(sps), *(pps), m_pcPic, m_apcSlicePilot->getTLayer());
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
@@ -331,6 +332,7 @@ Void TDecTop::xActivateParameterSets()
         isTopField = (pictureTiming->m_picStruct == 1) || (pictureTiming->m_picStruct == 9) || (pictureTiming->m_picStruct == 11);
       }
     }
+
     //Set Field/Frame coding mode
     m_pcPic->setField(isField);
     m_pcPic->setTopField(isTopField);

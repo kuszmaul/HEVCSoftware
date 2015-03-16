@@ -490,7 +490,7 @@ Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  P
 
 Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP, const BitDepths &bitDepths)
 {
-  double lamdbaAdjustRate;
+  Double lamdbaAdjustRate;
 
 #if SCM_T0140_ACT_QP_OFFSET
   lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);

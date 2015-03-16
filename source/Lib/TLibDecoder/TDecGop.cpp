@@ -113,7 +113,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
   const UInt uiNumSubstreams = pcSlice->getNumberOfSubstreamSizes()+1;
-//  const UInt uiNumSubstreams = pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag() ? pcSlice->getNumberOfSubstreamSizes()+1 : pcSlice->getPPS()->getNumSubstreams();
 
   // init each couple {EntropyDecoder, Substream}
   ppcSubstreams    = new TComInputBitstream*[uiNumSubstreams];
@@ -145,7 +144,6 @@ Void TDecGop::filterPicture(TComPic* pcPic)
   Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( pcPic );
-
 
   if( pcSlice->getSPS()->getUseSAO() )
   {
