@@ -97,8 +97,7 @@ TEncGOP::TEncGOP()
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_ltRefPicUsedByCurrPicFlag, 0, sizeof(m_ltRefPicUsedByCurrPicFlag));
   m_lastBPSEI         = 0;
-  xResetNonNestedSEIPresentFlags();
-  xResetNestedSEIPresentFlags();
+  m_bufferingPeriodSEIPresentInAU = false;
   m_associatedIRAPType = NAL_UNIT_CODED_SLICE_IDR_N_LP;
   m_associatedIRAPPOC  = 0;
   return;
@@ -378,7 +377,6 @@ Void TEncGOP::xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TCo
     SEIActiveParameterSets *sei = new SEIActiveParameterSets;
     m_seiEncoder.initSEIActiveParameterSets (sei, m_pcCfg->getVPS(), sps);
     seiMessages.push_back(sei);
-    m_activeParameterSetSEIPresentInAU = true;
   }
 
   if(m_pcCfg->getFramePackingArrangementSEIEnabled())
@@ -627,17 +625,12 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
     {
       pictureTimingSEI->m_picStruct = (isField && slice->getPic()->isTopField())? 1 : isField? 2 : 0;
       seiMessages.push_back(pictureTimingSEI);
-      m_pictureTimingSEIPresentInAU = true;
 
       if ( m_pcCfg->getScalableNestingSEIEnabled() ) // put picture timing SEI into scalable nesting SEI
       {
-        if (m_pcCfg->getScalableNestingSEIEnabled())
-        {
-          SEIPictureTiming *pictureTimingSEIcopy = new SEIPictureTiming();
-          pictureTimingSEI->copyTo(*pictureTimingSEIcopy);
-          nestedSeiMessages.push_back(pictureTimingSEIcopy);
-        }
-        m_nestedPictureTimingSEIPresentInAU = true;
+        SEIPictureTiming *pictureTimingSEIcopy = new SEIPictureTiming();
+        pictureTimingSEI->copyTo(*pictureTimingSEIcopy);
+        nestedSeiMessages.push_back(pictureTimingSEIcopy);
       }
     }
 
@@ -1501,6 +1494,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       m_bSeqFirst = false;
     }
 
+    // reset presence of BP SEI indication
+    m_bufferingPeriodSEIPresentInAU = false;
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
 
@@ -1719,9 +1714,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     xWriteLeadingSEIMessages(leadingSeiMessages, duInfoSeiMessages, accessUnit, pcSlice->getTLayer(), pcSlice->getSPS(), duData);
     leadingSeiMessages.clear();
     xWriteDuSEIMessages(duInfoSeiMessages, accessUnit, pcSlice->getTLayer(), pcSlice->getSPS(), duData);
-
-    xResetNonNestedSEIPresentFlags();
-    xResetNestedSEIPresentFlags();
 
     pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
