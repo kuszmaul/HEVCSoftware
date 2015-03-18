@@ -1440,10 +1440,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
 
   xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getCtuRsAddr(), rpcBestCU->getZorderIdxInCtu(), uiDepth, uiDepth, rpcBestCU, uiLPelX, uiTPelY );   // Copy Yuv data to picture Yuv
-  if (bBoundary)
-  {
-    return;
-  }
+#if SCM_FIX_PLT_MEM_LEAK
   for (UInt ch = 0; ch < numValidComp; ch++)
   {
     if (lastPLT[ch])
@@ -1452,6 +1449,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       lastPLT[ch] = NULL;
     }
   }
+#endif
+  if (bBoundary)
+  {
+    return;
+  }
+#if !SCM_FIX_PLT_MEM_LEAK
+  for (UInt ch = 0; ch < numValidComp; ch++)
+  {
+    if (lastPLT[ch])
+    {
+      xFree(lastPLT[ch]);
+      lastPLT[ch] = NULL;
+    }
+  }
+#endif
   // Assert if Best prediction mode is NONE
   // Selected mode's RD-cost must be not MAX_DOUBLE.
   assert( rpcBestCU->getPartitionSize ( 0 ) != NUMBER_OF_PART_SIZES       );
